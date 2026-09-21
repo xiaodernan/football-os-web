@@ -66,6 +66,7 @@ export function CommandPalette() {
       { id: "dynamic-world", label: t("nav.world"), group: "Go to", run: nav("/world") },
       { id: "film", label: t("nav.film"), group: "Go to", run: nav("/film") },
       { id: "data", label: t("nav.data"), group: "Go to", run: nav("/data") },
+      { id: "transfers", label: t("nav.transfers"), group: "Go to", run: nav("/transfers") },
       { id: "community", label: t("nav.community"), group: "Go to", run: nav("/community") },
     ];
     if (state.onboarded) {
