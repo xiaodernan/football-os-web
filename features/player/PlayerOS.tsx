@@ -360,12 +360,19 @@ function Training() {
         {history.length ? (
           <div className="divide-y">
             {history.map((s) => (
-              <div key={s.id} className="flex items-center justify-between py-2 text-sm">
-                <div>
-                  <div>{s.title}</div>
+              <div key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                <div className="min-w-0">
+                  <div className="truncate">{s.title}</div>
                   <div className="text-xs text-muted-foreground">{new Date(s.completedAt!).toLocaleDateString()} · rated {s.selfRating}/5</div>
+                  {s.growth && s.growth.some((g) => g.delta > 0) && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {s.growth.filter((g) => g.delta > 0).map((g) => (
+                        <span key={g.key} className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">{g.label} +{g.delta}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <Badge variant="outline" className="font-mono text-success">+{s.xpAwarded} XP</Badge>
+                <Badge variant="outline" className="shrink-0 font-mono text-success">+{s.xpAwarded} XP</Badge>
               </div>
             ))}
           </div>

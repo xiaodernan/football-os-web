@@ -129,7 +129,7 @@ function reducer(state: OsState, action: Action): OsState {
       // Attribute growth: only trained focus rises, scaled by quality; capped &
       // diminishing so gamification never fakes unrealistic jumps. Same math the
       // completion UI and projection reuse, so shown == persisted.
-      const { attributes: attrs } = applyFocusGrowth(state.profile.attributes, session.focusAttributes, rating);
+      const { attributes: attrs, deltas } = applyFocusGrowth(state.profile.attributes, session.focusAttributes, rating);
       const newXp = state.profile.xp + awarded;
       const newLevel = levelFromXp(newXp);
       const overall = overallRating(attrs);
@@ -146,6 +146,7 @@ function reducer(state: OsState, action: Action): OsState {
         selfRating: rating,
         xpAwarded: awarded,
         notes: action.notes,
+        growth: deltas,
       };
       return {
         ...state,

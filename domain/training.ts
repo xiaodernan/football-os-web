@@ -1,4 +1,4 @@
-import type { Attributes, PositionGroup, TrainingExercise, TrainingSession } from "./types";
+import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, TrainingSession } from "./types";
 import { ATTRIBUTE_KEYS, attributeLabel } from "./attributes";
 import { makeRng, pick } from "@/lib/rng";
 
@@ -116,13 +116,7 @@ export function perSessionGain(current: number, rating: number): number {
   return clamp(rating * 0.5 * Math.max(0.15, room), 0, 2);
 }
 
-export interface GrowthDelta {
-  key: string;
-  label: string;
-  from: number;
-  to: number;
-  delta: number;
-}
+export type GrowthDelta = AttributeDelta;
 
 /** Apply one session's growth to every trained focus, returning new attributes
  *  plus the per-attribute deltas actually applied. */

@@ -130,6 +130,14 @@ export interface TrainingExercise {
   phase: "warmup" | "technique" | "decision" | "game" | "cooldown";
 }
 
+export interface AttributeDelta {
+  key: string;
+  label: string;
+  from: number;
+  to: number;
+  delta: number;
+}
+
 export interface TrainingSession {
   id: string;
   date: string; // ISO date
@@ -142,6 +150,7 @@ export interface TrainingSession {
   selfRating?: number; // 1..5
   xpAwarded?: number;
   notes?: string;
+  growth?: AttributeDelta[]; // attributes that actually rose on completion
 }
 
 export interface AiMemoryEntry {
