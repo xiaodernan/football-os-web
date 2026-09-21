@@ -10,6 +10,7 @@ import { PlayerOS } from "@/features/player/PlayerOS";
 import { FootballWorld } from "@/features/football/FootballWorld";
 import { AiStudio } from "@/features/ai/AiStudio";
 import { SimulationLab } from "@/features/sim/SimulationLab";
+import { TacticalStudio } from "@/features/tactical/TacticalStudio";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { EmptyState } from "@/ui/primitives";
@@ -38,6 +39,7 @@ function Routes() {
   if (path === "/player" || path.startsWith("/player/")) inner = <PlayerOS />;
   else if (path === "/ai") inner = <AiStudio initialTab="chat" />;
   else if (path === "/knowledge") inner = <AiStudio initialTab="graph" />;
+  else if (path === "/tactical-studio") inner = <TacticalStudio />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 
