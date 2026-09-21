@@ -72,6 +72,7 @@ export function CommandPalette() {
       { id: "profile", label: t("nav.profile"), group: "Go to", run: nav("/profile") },
       { id: "review", label: t("nav.review"), group: "Go to", run: nav("/review") },
       { id: "load", label: t("nav.load"), group: "Go to", run: nav("/load") },
+      { id: "development", label: t("nav.development"), group: "Go to", run: nav("/development") },
       { id: "achievements", label: t("nav.achievements"), group: "Go to", run: nav("/achievements") },
       { id: "settings", label: t("nav.settings"), group: "Go to", run: nav("/settings") },
       { id: "history", label: t("nav.history"), group: "Go to", run: nav("/history") },

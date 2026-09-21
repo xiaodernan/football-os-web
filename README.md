@@ -37,6 +37,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | Activity History | `/history` | A day-grouped timeline merged from your real completed sessions, AI coach plans and coach-memory records, filterable by event type, sorted newest-first — nothing invented, every row reads straight from local state. |
 | Weekly Review | `/review` | A coach-style period digest (7/30/90-day windows) compiled only from your local log: sessions, minutes, XP, streak, overall trend, self-rated quality, focus mix, an honest highlight list and a next-focus recommendation — each labelled with a confidence score and the evidence behind it, no external model called. |
 | Load & Recovery | `/load` | Training-load management from your completed sessions (duration × session-RPE): acute 7-day vs chronic 28-day average daily load, an ACWR with colour-coded under/optimal/caution/high-risk bands, weekly monotony and strain, and a guidance card with confidence — a relative-load estimate, not a medical claim. |
+| Role Gap Analysis | `/development` | Compares your saved attributes against a heuristic archetype for any position group at your current level: a role-readiness score weighted to role-critical traits, ranked development priorities and role strengths, a switchable target role, and evidence + confidence + sources. A demo training guide, explicitly not real scouting data. |
 | Command palette | `⌘K` / `Ctrl-K` | Jump to any route or search entities across the world. |
 
 ## Architecture

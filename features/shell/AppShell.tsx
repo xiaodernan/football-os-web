@@ -45,6 +45,7 @@ const I = {
   settings: "⚙",
   review: "◷",
   load: "◔",
+  dev: "◈",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -65,6 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     modes.push({ to: "/profile", label: t("nav.profile"), icon: I.user, match: ["/profile"] });
     modes.push({ to: "/review", label: t("nav.review"), icon: I.review, match: ["/review"] });
     modes.push({ to: "/load", label: t("nav.load"), icon: I.load, match: ["/load"] });
+    modes.push({ to: "/development", label: t("nav.development"), icon: I.dev, match: ["/development"] });
     modes.push({ to: "/achievements", label: t("nav.achievements"), icon: I.trophy, match: ["/achievements"] });
     modes.push({ to: "/history", label: t("nav.history"), icon: I.timeline, match: ["/history"] });
   }
