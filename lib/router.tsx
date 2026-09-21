@@ -67,11 +67,13 @@ export function matchRoute(
 ): Record<string, string> | null {
   const pp = pattern.split("/").filter(Boolean);
   const cp = path.split("/").filter(Boolean);
-  if (pp.length !== cp.length) return null;
+  const required = pp.filter((s) => !s.endsWith("?")).length;
+  if (cp.length < required || cp.length > pp.length) return null;
   const params: Record<string, string> = {};
-  for (let i = 0; i < pp.length; i++) {
-    if (pp[i].startsWith(":")) params[pp[i].slice(1)] = decodeURIComponent(cp[i]);
-    else if (pp[i] !== cp[i]) return null;
+  for (let i = 0; i < cp.length; i++) {
+    const seg = pp[i];
+    if (seg.startsWith(":")) params[seg.slice(1).replace(/\?$/, "")] = decodeURIComponent(cp[i]);
+    else if (seg !== cp[i]) return null;
   }
   return params;
 }

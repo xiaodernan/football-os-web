@@ -6,6 +6,8 @@ import { AppShell } from "@/features/shell/AppShell";
 import { Landing } from "@/features/landing/Landing";
 import { Onboarding } from "@/features/onboarding/Onboarding";
 import { Dashboard } from "@/features/dashboard/Dashboard";
+import { PlayerOS } from "@/features/player/PlayerOS";
+import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { EmptyState } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -24,7 +26,9 @@ function Routes() {
   }
   if (path === "/onboarding") return <Onboarding />;
 
-  const inner = <NotReady />;
+  let inner: ReactNode = <NotReady />;
+  if (path === "/player" || path.startsWith("/player/")) inner = <PlayerOS />;
+
   return <AppShell>{inner}</AppShell>;
 }
 
