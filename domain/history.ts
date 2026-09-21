@@ -3,6 +3,8 @@
 // and coach-memory entries. Nothing is invented; each timeline row points back to
 // a concrete record. Pure module: no React, no IO, so it is trivially testable.
 
+import type { AttributeDelta } from "./types";
+
 export type TimelineKind = "session" | "plan" | "memory";
 
 export interface TimelineEvent {
@@ -13,6 +15,7 @@ export interface TimelineEvent {
   detail?: string;
   score?: number; // self-rating for sessions (1..5)
   xp?: number;
+  growth?: AttributeDelta[]; // attribute gains from a completed session
 }
 
 interface SessionSeed {
@@ -23,6 +26,7 @@ interface SessionSeed {
   date: string;
   selfRating?: number;
   xpAwarded?: number;
+  growth?: AttributeDelta[];
 }
 interface PlanSeed {
   id: string;
@@ -60,6 +64,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       title: s.title,
       score: s.selfRating,
       xp: s.xpAwarded,
+      growth: s.growth,
     });
   }
 
