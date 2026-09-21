@@ -11,9 +11,12 @@ import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primi
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-function GapRow({ item, kind }: { item: GapItem; kind: "priority" | "strength" }) {
+import type { ReactNode } from "react";
+
+function GapRow({ item, kind, action }: { item: GapItem; kind: "priority" | "strength"; action?: ReactNode }) {
   const max = Math.max(item.actual, item.target, 1);
   return (
     <div className="rounded-lg border border-border/60 bg-secondary/20 p-3">
@@ -25,6 +28,7 @@ function GapRow({ item, kind }: { item: GapItem; kind: "priority" | "strength" }
           <Badge variant="outline" className={cn(kind === "priority" ? "text-warning" : "text-success")}>
             {item.delta > 0 ? `−${item.delta}` : `+${Math.abs(item.delta)}`}
           </Badge>
+          {action}
         </span>
       </div>
       <div className="relative mt-2 h-2 rounded-full bg-secondary">
@@ -44,7 +48,7 @@ function GapRow({ item, kind }: { item: GapItem; kind: "priority" | "strength" }
 
 export function DevelopmentPage() {
   const { t } = useI18n();
-  const { state } = useOs();
+  const { state, addGoal } = useOs();
   const { navigate } = useRouter();
   const profile = state.profile;
   const [group, setGroup] = useState<PositionGroup>(profile?.positionGroup ?? "CM");
@@ -64,6 +68,12 @@ export function DevelopmentPage() {
     const after = analyzeGap({ attributes: proj.projectedAttributes, group });
     return { proj, after };
   }, [analysis, profile, group, weeks, perWeek]);
+
+  const isTracked = (key: string) => state.goals.some((g) => g.metric === "attribute" && g.key === key);
+  const track = (it: GapItem) => {
+    addGoal({ title: t("dv.goalTitle").replace("{a}", it.label), metric: "attribute", key: it.key, target: Math.round(it.target), current: Math.round(it.actual), unit: "rating" });
+    toast.success(t("dv.goalToast").replace("{a}", it.label));
+  };
 
   if (!profile || !analysis) {
     return (
@@ -139,7 +149,20 @@ export function DevelopmentPage() {
           />
           {analysis.priorities.length ? (
             <div className="mt-3 space-y-2">
-              {analysis.priorities.map((it) => <GapRow key={it.key} item={it} kind="priority" />)}
+              {analysis.priorities.map((it) => (
+                <GapRow
+                  key={it.key}
+                  item={it}
+                  kind="priority"
+                  action={
+                    isTracked(it.key) ? (
+                      <Badge variant="outline" className="text-success">{t("dv.tracked")} ✓</Badge>
+                    ) : (
+                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => track(it)}>{t("dv.track")}</Button>
+                    )
+                  }
+                />
+              ))}
             </div>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">{t("dv.noGaps")}</p>

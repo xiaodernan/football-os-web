@@ -168,6 +168,7 @@ export interface Goal {
   id: string;
   title: string;
   metric: string;
+  key?: string; // for metric="attribute": the attribute key this goal tracks
   target: number;
   current: number;
   unit: string;

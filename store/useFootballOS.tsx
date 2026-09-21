@@ -158,7 +158,7 @@ function reducer(state: OsState, action: Action): OsState {
         streak: { current: continues, lastCompletedDate: today },
         progress: [...state.progress, { date: new Date().toISOString(), overall, xp: newXp }].slice(-120),
         goals: state.goals.map((g) =>
-          g.metric === "xp" ? { ...g, current: g.current + awarded } : g.metric === "sessions" ? { ...g, current: g.current + 1 } : g.metric === "level" ? { ...g, current: newLevel } : g,
+          g.metric === "xp" ? { ...g, current: g.current + awarded } : g.metric === "sessions" ? { ...g, current: g.current + 1 } : g.metric === "level" ? { ...g, current: newLevel } : g.metric === "attribute" && g.key ? { ...g, current: attrs[g.key] ?? g.current } : g,
         ).map((g) => ({ ...g, done: g.done || g.current >= g.target })),
         memory: [
           {
