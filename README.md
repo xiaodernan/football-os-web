@@ -15,7 +15,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | --- | --- | --- |
 | Landing / Onboarding | `/`, `/onboarding` | Introduces the product and creates a profile + mode. |
 | Command Center | `/` (post-onboarding) | Dashboard of fixtures, news, trending players and your progress. |
-| Football World | `/football`, `/players`, `/clubs`, `/competitions`, `/matches`, `/news`, `/search` | Browse a synthetic world of 39 clubs, 318 players, 8 competitions and their fixtures/standings; entity detail pages with source-grounded news. |
+| Football World | `/football`, `/players`, `/clubs`, `/competitions`, `/matches`, `/news`, `/search` | Browse a synthetic world of 39 clubs, 318 players, 8 competitions and their fixtures/standings; entity detail pages with source-grounded news, and a per-article "Impact read" that resolves affected clubs/players to real standings and scores its own confidence. |
 | Player OS | `/player` | Training plan loop: AI coach → session → complete → XP, attribute growth, streaks and goals. |
 | Manager OS | `/manager` | Take charge of a club: play fixtures, buy/sell players, set team instructions, and climb a live league table. |
 | Football AI | `/ai` | RAG-style chat grounded in the world dataset, always with evidence, sources and a confidence score. |

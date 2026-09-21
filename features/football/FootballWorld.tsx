@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PlayerDetail, ClubDetail, MatchDetail } from "@/features/football/Details";
+import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -304,6 +305,39 @@ function NewsList() {
 
 function NewsDetail({ id }: { id: string }) {
   const n = getNews(id);
+  const impact = useMemo(() => {
+    if (!n) return null;
+    const entities: ImpactEntity[] = [];
+    const clubIds = new Set<string>();
+    for (const e of n.entityIds) {
+      const p = getPlayer(e);
+      if (p) {
+        const club = getClub(p.clubId);
+        const comp = club ? getCompetition(club.competitionId) : undefined;
+        entities.push({ id: p.id, label: p.name, role: "player", to: `/players/${p.id}`, clubName: club?.name, competitionName: comp?.name });
+        if (club) clubIds.add(club.id);
+        continue;
+      }
+      const c = getClub(e);
+      if (c) {
+        const comp = getCompetition(c.competitionId);
+        entities.push({ id: c.id, label: c.name, role: "club", to: `/clubs/${c.id}`, clubName: c.name, competitionName: comp?.name });
+        clubIds.add(c.id);
+      }
+    }
+    const standings: ClubStandingFact[] = [];
+    for (const cid of clubIds) {
+      const club = getClub(cid);
+      if (!club) continue;
+      const table = footballProvider.standings(club.competitionId);
+      const pos = table.findIndex((s) => s.clubId === cid);
+      if (pos >= 0) {
+        const comp = getCompetition(club.competitionId);
+        standings.push({ clubLabel: club.name, competitionName: comp?.name ?? "the league", position: pos + 1, total: table.length, points: table[pos].points });
+      }
+    }
+    return buildImpact({ article: n, entities, standings });
+  }, [n]);
   if (!n) return <EmptyState title="Article not found" />;
   const entities = n.entityIds.map((e) => getPlayer(e) ? { label: getPlayer(e)!.name, to: `/players/${e}` } : getClub(e) ? { label: getClub(e)!.name, to: `/clubs/${e}` } : null).filter(Boolean) as { label: string; to: string }[];
   return (
@@ -319,6 +353,33 @@ function NewsDetail({ id }: { id: string }) {
         <p className="text-muted-foreground">This is synthetic demo content for the Football OS world dataset. The original reporting lives at the source link below — no third-party copy is stored locally.</p>
         <div className="flex flex-wrap gap-1.5 pt-1">{n.topics.map((tp) => <Badge key={tp} variant="secondary" className="text-xs">#{tp}</Badge>)}</div>
       </Panel>
+
+      {impact && (
+        <Panel className="p-4">
+          <div className="flex items-center justify-between gap-2">
+            <SectionTitle title="Impact read" hint="Grounded in the world dataset — no new facts invented" />
+            <span className={cn("shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-medium uppercase tracking-widest", CERTAINTY_TONE[impact.certainty])}>
+              {impact.certainty} · {impact.confidence}%
+            </span>
+          </div>
+          {impact.context.length > 0 && (
+            <ul className="mt-2 space-y-1 text-sm">
+              {impact.context.map((c, i) => <li key={i} className="flex gap-1.5"><span className="text-primary">›</span><span>{c}</span></li>)}
+            </ul>
+          )}
+          <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+            {impact.watch.map((w, i) => <li key={i} className="flex gap-1.5"><span>•</span><span>{w}</span></li>)}
+          </ul>
+          <details className="mt-2 rounded-md border bg-card/30 p-2 text-xs">
+            <summary className="cursor-pointer uppercase tracking-widest text-muted-foreground">Evidence &amp; sources</summary>
+            <ul className="mt-1.5 list-disc pl-5 text-muted-foreground">
+              {impact.evidence.map((ev, i) => <li key={i}>{ev}</li>)}
+            </ul>
+            <p className="mt-1.5">Source link below reflects the original reporting; standings positions come from the live world dataset.</p>
+          </details>
+        </Panel>
+      )}
+
       {entities.length > 0 && (
         <Panel className="p-4">
           <SectionTitle title="Related entities" />
