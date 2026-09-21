@@ -1,11 +1,12 @@
 // The activity timeline is assembled ONLY from events that already exist in the
-// user's real, locally-stored state — completed training sessions, AI coach plans
-// and coach-memory entries. Nothing is invented; each timeline row points back to
-// a concrete record. Pure module: no React, no IO, so it is trivially testable.
+// user's real, locally-stored state — completed training sessions, AI coach plans,
+// coach-memory entries and academy completions. Nothing is invented; each timeline
+// row points back to a concrete record. Pure module: no React, no IO, so it is
+// trivially testable.
 
 import type { AttributeDelta } from "./types";
 
-export type TimelineKind = "session" | "plan" | "memory";
+export type TimelineKind = "session" | "plan" | "memory" | "learn";
 
 export interface TimelineEvent {
   id: string;
@@ -40,11 +41,19 @@ interface MemorySeed {
   text: string;
   at: string;
 }
+interface LearnSeed {
+  id: string;
+  title: string;
+  completedAt: string;
+  quizCorrect: boolean;
+  attempts: number;
+}
 
 export interface HistoryInput {
   sessions: SessionSeed[];
   plans: PlanSeed[];
   memory: MemorySeed[];
+  learn?: LearnSeed[];
 }
 
 const ts = (iso: string) => {
@@ -85,6 +94,20 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       at: m.at,
       title: m.text,
       detail: m.kind,
+    });
+  }
+
+  for (const l of input.learn ?? []) {
+    // Only records with a real completion timestamp are history; progress migrated
+    // from the old store has no time attached, so it is left off the timeline
+    // rather than shown under a made-up date.
+    if (!l.completedAt || Number.isNaN(new Date(l.completedAt).getTime())) continue;
+    events.push({
+      id: `learn-${l.id}`,
+      kind: "learn",
+      at: l.completedAt,
+      title: l.title,
+      detail: l.quizCorrect ? "Academy · check quiz passed" : l.attempts ? `Academy · check missed (${l.attempts} attempt${l.attempts === 1 ? "" : "s"})` : "Academy · read only",
     });
   }
 

@@ -3,6 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildTimeline, groupByDay, type TimelineKind } from "@/domain/history";
+import { LESSONS, parseLearnRecords, type LearnRecord } from "@/domain/learn";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -11,12 +12,14 @@ const KINDS: { id: TimelineKind | "all"; icon: string; label: string }[] = [
   { id: "all", icon: "≡", label: "hist.all" },
   { id: "session", icon: "●", label: "hist.kind.session" },
   { id: "plan", icon: "⚡", label: "hist.kind.plan" },
+  { id: "learn", icon: "◈", label: "hist.kind.learn" },
   { id: "memory", icon: "❉", label: "hist.kind.memory" },
 ];
 
 const KIND_META: Record<TimelineKind, { icon: string; label: string; tone: string }> = {
   session: { icon: "●", label: "hist.kind.session", tone: "text-primary" },
   plan: { icon: "⚡", label: "hist.kind.plan", tone: "text-info" },
+  learn: { icon: "◈", label: "hist.kind.learn", tone: "text-warning" },
   memory: { icon: "❉", label: "hist.kind.memory", tone: "text-muted-foreground" },
 };
 
@@ -25,9 +28,29 @@ export function HistoryPage() {
   const { state } = useOs();
   const [filter, setFilter] = useState<TimelineKind | "all">("all");
 
+  const learn = useMemo<LearnRecord[]>(() => {
+    try {
+      return parseLearnRecords(JSON.parse(localStorage.getItem("football-os.learn.v2") ?? "null"));
+    } catch {
+      return [];
+    }
+  }, []);
+
   const all = useMemo(
-    () => buildTimeline({ sessions: state.sessions, plans: state.plans, memory: state.memory }),
-    [state],
+    () =>
+      buildTimeline({
+        sessions: state.sessions,
+        plans: state.plans,
+        memory: state.memory,
+        learn: learn.map((r) => ({
+          id: r.id,
+          title: LESSONS.find((l) => l.id === r.id)?.title ?? r.id,
+          completedAt: r.completedAt,
+          quizCorrect: r.quizCorrect,
+          attempts: r.attempts,
+        })),
+      }),
+    [state, learn],
   );
   const filtered = useMemo(() => (filter === "all" ? all : all.filter((e) => e.kind === filter)), [all, filter]);
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
