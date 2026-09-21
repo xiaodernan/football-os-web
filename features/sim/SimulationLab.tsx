@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { footballProvider, getClub, getCompetition, playersByClub, clubIdsByCompetition } from "@/data/footballService";
 import { simulateMatch, type TeamInput, type SimResult } from "@/domain/matchEngine";
+import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,8 @@ export function SimulationLab() {
   const [awayTac, setAwayTac] = useState<Tactics>({ ...DEFAULT_TACTICS, mentality: 1 });
   const [nonce, setNonce] = useState(1);
   const [result, setResult] = useState<SimResult | null>(null);
+  const [prob, setProb] = useState<MatchProbability | null>(null);
+  const [probBusy, setProbBusy] = useState(false);
   const [season, setSeason] = useState<{ compId: string; table: SeasonRow[] } | null>(null);
 
   const home = getClub(homeId)!;
@@ -60,6 +63,23 @@ export function SimulationLab() {
     setResult(simulateMatch({ seed: `${homeId}|${awayId}|v${nonce}`, home: baseInput(homeId, homeTac), away: baseInput(awayId, awayTac) }));
   };
   const reroll = () => { setNonce((n) => n + 1); };
+
+  const runProb = () => {
+    if (homeId === awayId) return;
+    setProbBusy(true);
+    // Yield one frame so the busy state paints before the synchronous model run.
+    setTimeout(() => {
+      setProb(
+        matchProbability({
+          seedBase: `prob:${homeId}|${awayId}|${homeTac.mentality},${homeTac.tempo},${homeTac.press},${homeTac.fatigue}|${awayTac.mentality},${awayTac.tempo},${awayTac.press},${awayTac.fatigue}`,
+          home: baseInput(homeId, homeTac),
+          away: baseInput(awayId, awayTac),
+          runs: 250,
+        }),
+      );
+      setProbBusy(false);
+    }, 30);
+  };
 
   const runSeason = (compId: string) => setSeason({ compId, table: simulateSeason(compId, nonce) });
 
@@ -82,6 +102,7 @@ export function SimulationLab() {
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={runMatch} disabled={homeId === awayId}>{result ? "Re-run fixture" : "▶ Run match"}</Button>
           <Button variant="outline" onClick={reroll} disabled={!result}>New variation (same tactics)</Button>
+          <Button variant="secondary" onClick={runProb} disabled={homeId === awayId || probBusy}>{probBusy ? "Running 250 sims…" : "Run probability model (250)"}</Button>
           <span className="text-xs text-muted-foreground">Seed {homeId}·{awayId}·v{nonce}</span>
           {homeId === awayId && <Badge variant="outline" className="text-warning">Pick two different clubs</Badge>}
         </div>
@@ -89,6 +110,8 @@ export function SimulationLab() {
           <div className="mt-3"><EmptyState title="No simulation yet" hint="Set the tactics and run a fixture." icon="▷" /></div>
         )}
       </Panel>
+
+      {prob && <ProbabilityPanel prob={prob} />}
 
       <Panel className="p-4">
         <SectionTitle title="Season simulation" hint="Full round-robin through the engine" />
@@ -168,6 +191,46 @@ function ResultView({ result, home, away }: { result: SimResult; home: string; a
         <div><div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">Match summary</div><ul className="space-y-1 text-xs text-muted-foreground">{result.summary.map((x, i) => <li key={i}>• {x}</li>)}</ul></div>
       </div>
     </div>
+  );
+}
+
+function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
+  const pct = (v: number) => `${Math.round(v * 100)}%`;
+  const seg = (v: number) => `${v * 100}%`;
+  return (
+    <Panel className="p-4">
+      <div className="flex items-center justify-between">
+        <SectionTitle title="Outcome probability" hint={`${prob.runs} deterministic engine runs`} />
+        <DemoBadge />
+      </div>
+      <div className="mt-3">
+        <div className="flex h-3 w-full overflow-hidden rounded">
+          <div className="bg-primary" style={{ width: seg(prob.homeWinPct) }} />
+          <div className="bg-muted-foreground/40" style={{ width: seg(prob.drawPct) }} />
+          <div className="bg-info" style={{ width: seg(prob.awayWinPct) }} />
+        </div>
+        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
+          <div><div className="truncate text-xs text-muted-foreground">{prob.homeName} win</div><div className="font-mono font-semibold text-primary">{pct(prob.homeWinPct)}</div></div>
+          <div><div className="text-xs text-muted-foreground">Draw</div><div className="font-mono font-semibold">{pct(prob.drawPct)}</div></div>
+          <div><div className="truncate text-xs text-muted-foreground">{prob.awayName} win</div><div className="font-mono font-semibold text-info">{pct(prob.awayWinPct)}</div></div>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Avg goals</div><div className="font-mono text-sm">{prob.avgHomeGoals.toFixed(2)}–{prob.avgAwayGoals.toFixed(2)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Avg xG</div><div className="font-mono text-sm">{prob.avgHomeXg.toFixed(2)}–{prob.avgAwayXg.toFixed(2)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Both score</div><div className="font-mono text-sm">{pct(prob.bttsPct)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Over 2.5</div><div className="font-mono text-sm">{pct(prob.over25Pct)}</div></div>
+      </div>
+      <div className="mt-4">
+        <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Most likely scorelines</div>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {prob.mostLikely.map((s) => (
+            <span key={s.score} className="rounded-md border bg-card/40 px-2 py-1 text-sm"><span className="font-mono font-semibold">{s.score}</span> <span className="text-xs text-muted-foreground">{pct(s.pct)}</span></span>
+          ))}
+        </div>
+      </div>
+      <p className="mt-3 text-[11px] text-muted-foreground">Modelled from the Match Engine over {prob.runs} seeded runs — a projection, not a played result. Fully reproducible for this setup.</p>
+    </Panel>
   );
 }
 
