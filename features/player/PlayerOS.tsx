@@ -12,7 +12,7 @@ import {
   strongestAttributes,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
-import { SUPPORTED_MINUTES, sessionIntensity } from "@/domain/training";
+import { SUPPORTED_MINUTES, sessionIntensity, type GrowthDelta } from "@/domain/training";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { getClub, getPlayer } from "@/data/footballService";
@@ -377,7 +377,7 @@ function Training() {
   );
 }
 
-function SessionCard({ session, onComplete }: { session: TrainingSession; onComplete: (id: string, r: number, notes?: string) => void }) {
+function SessionCard({ session, onComplete }: { session: TrainingSession; onComplete: (id: string, r: number, notes?: string) => GrowthDelta[] }) {
   const [rating, setRating] = useState("4");
   const [notes, setNotes] = useState("");
   const [open, setOpen] = useState(false);
@@ -412,7 +412,11 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
         <div className="flex-1">
           <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (optional)" className="h-8 text-xs" />
         </div>
-        <Button size="sm" onClick={() => { onComplete(session.id, Number(rating), notes || undefined); toast.success("Session complete — XP + attribute growth applied"); }}>Complete</Button>
+        <Button size="sm" onClick={() => {
+          const deltas = onComplete(session.id, Number(rating), notes || undefined);
+          const grew = deltas.filter((d) => d.delta > 0).map((d) => `${d.label} +${d.delta}`).join(" · ");
+          toast.success(grew ? `Session complete — ${grew}` : "Session complete — XP awarded");
+        }}>Complete</Button>
       </div>
     </div>
   );

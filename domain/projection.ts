@@ -1,5 +1,6 @@
 import type { Attributes } from "./types";
 import { attributeLabel, overallRating } from "./attributes";
+import { perSessionGain } from "./training";
 
 // Development Projection: simulates the *same* diminishing-returns per-session
 // gain the store applies when a session is completed, replayed over a weekly
@@ -8,13 +9,6 @@ import { attributeLabel, overallRating } from "./attributes";
 
 function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v));
-}
-
-// Mirrors useFootballOS COMPLETE: room shrinks toward the 95 ceiling, gain is
-// capped at 2 points per session so gamification never fakes unrealistic jumps.
-function gainPerSession(cur: number, rating: number): number {
-  const room = (95 - cur) / 45;
-  return clamp(rating * 0.5 * Math.max(0.15, room), 0, 2);
 }
 
 export interface ProjectionItem {
@@ -56,7 +50,7 @@ export function projectGrowth(input: ProjectionInput): Projection {
     const from = attributes[key];
     let cur = from;
     for (let i = 0; i < weeks * sessionsPerWeek; i++) {
-      cur = clamp(Math.round((cur + gainPerSession(cur, rating)) * 10) / 10, 1, 99);
+      cur = clamp(Math.round((cur + perSessionGain(cur, rating)) * 10) / 10, 1, 99);
     }
     return { key, label: attributeLabel(key), from, to: cur, delta: Math.round((cur - from) * 10) / 10 };
   });

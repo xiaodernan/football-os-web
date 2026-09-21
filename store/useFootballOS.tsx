@@ -22,6 +22,7 @@ import {
   POSITION_BY_GROUP,
 } from "@/domain/attributes";
 import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
+import { applyFocusGrowth, type GrowthDelta } from "@/domain/training";
 import { buildLoad } from "@/domain/load";
 import { coachProvider, type PlanInput } from "@/data/ai";
 
@@ -126,14 +127,9 @@ function reducer(state: OsState, action: Action): OsState {
       const awarded = baseXp + streakBonus(continues) * 5;
 
       // Attribute growth: only trained focus rises, scaled by quality; capped &
-      // diminishing so gamification never fakes unrealistic jumps.
-      const attrs = { ...state.profile.attributes };
-      for (const focus of session.focusAttributes) {
-        const cur = attrs[focus] ?? 50;
-        const room = (95 - cur) / 45; // diminishing returns near the top
-        const gain = clamp(rating * 0.5 * Math.max(0.15, room), 0, 2);
-        attrs[focus] = clamp(Math.round((cur + gain) * 10) / 10, 1, 99);
-      }
+      // diminishing so gamification never fakes unrealistic jumps. Same math the
+      // completion UI and projection reuse, so shown == persisted.
+      const { attributes: attrs } = applyFocusGrowth(state.profile.attributes, session.focusAttributes, rating);
       const newXp = state.profile.xp + awarded;
       const newLevel = levelFromXp(newXp);
       const overall = overallRating(attrs);
@@ -202,7 +198,7 @@ interface OsContext {
   onboarding: (input: { mode: Mode; displayName: string; positionGroup: PositionGroup; ageGroup: string; goal: string; skill: number; favoriteClubId?: string; favoritePlayerId?: string; favoriteCompetitionId?: string }) => void;
   setMode: (m: Mode) => void;
   requestPlan: (prompt: string, availableMinutes: number, focusKeys?: string[]) => Promise<CoachPlan>;
-  completeSession: (sessionId: string, selfRating: number, notes?: string) => void;
+  completeSession: (sessionId: string, selfRating: number, notes?: string) => GrowthDelta[];
   setFavorite: (key: "club" | "player" | "competition", id: string | null) => void;
   toggleWatch: (playerId: string) => void;
   addGoal: (g: Omit<Goal, "id" | "createdAt" | "done">) => void;
@@ -282,7 +278,14 @@ export function OsProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "PLAN", plan });
         return plan;
       },
-      completeSession: (id, rating, notes) => dispatch({ type: "COMPLETE", sessionId: id, selfRating: rating, notes }),
+      completeSession: (id, rating, notes) => {
+        const session = state.sessions.find((s) => s.id === id);
+        const deltas = state.profile && session && session.status !== "completed"
+          ? applyFocusGrowth(state.profile.attributes, session.focusAttributes, rating).deltas
+          : [];
+        dispatch({ type: "COMPLETE", sessionId: id, selfRating: rating, notes });
+        return deltas;
+      },
       setFavorite: (key, id) => dispatch({ type: "FAVORITE", key, id }),
       toggleWatch: (playerId) => dispatch({ type: "WATCH", playerId }),
       addGoal: (g) => dispatch({ type: "GOAL_ADD", goal: { ...g, id: `g-${Date.now()}`, createdAt: new Date().toISOString(), done: false } }),

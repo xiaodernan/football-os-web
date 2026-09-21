@@ -1,4 +1,4 @@
-import type { PositionGroup, TrainingExercise, TrainingSession } from "./types";
+import type { Attributes, PositionGroup, TrainingExercise, TrainingSession } from "./types";
 import { ATTRIBUTE_KEYS, attributeLabel } from "./attributes";
 import { makeRng, pick } from "@/lib/rng";
 
@@ -99,3 +99,46 @@ export function phaseSummary(session: TrainingSession): Record<string, number> {
 }
 
 export const ALL_FOCUS = ATTRIBUTE_KEYS;
+
+// ---- Attribute growth: single source of truth ----
+// The COMPLETE reducer, the development projection and the completion feedback UI
+// must all agree on how a trained focus attribute rises, so the number a player
+// sees is exactly the number that gets persisted. Diminishing returns toward the
+// 95 ceiling, hard-capped at +2 per session so gamification never fakes a jump.
+
+function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+/** Gain a single focus attribute earns from one session rated `rating` (1..5). */
+export function perSessionGain(current: number, rating: number): number {
+  const room = (95 - current) / 45;
+  return clamp(rating * 0.5 * Math.max(0.15, room), 0, 2);
+}
+
+export interface GrowthDelta {
+  key: string;
+  label: string;
+  from: number;
+  to: number;
+  delta: number;
+}
+
+/** Apply one session's growth to every trained focus, returning new attributes
+ *  plus the per-attribute deltas actually applied. */
+export function applyFocusGrowth(
+  attributes: Attributes,
+  focusKeys: string[],
+  rating: number,
+): { attributes: Attributes; deltas: GrowthDelta[] } {
+  const next: Attributes = { ...attributes };
+  const deltas: GrowthDelta[] = [];
+  for (const focus of focusKeys) {
+    const cur = next[focus] ?? 50;
+    const to = clamp(Math.round((cur + perSessionGain(cur, rating)) * 10) / 10, 1, 99);
+    next[focus] = to;
+    deltas.push({ key: focus, label: attributeLabel(focus), from: cur, to, delta: Math.round((to - cur) * 10) / 10 });
+  }
+  return { attributes: next, deltas };
+}
+
