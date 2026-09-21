@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useOs } from "@/store/useFootballOS";
 import {
+  footballProvider,
   getClub,
   getPlayer,
   getCompetition,
@@ -16,6 +17,7 @@ import {
 } from "@/data/footballService";
 import { simulateMatch, type SimResult, type TeamInput } from "@/domain/matchEngine";
 import { modelPlayerProfile } from "@/domain/scouting";
+import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar } from "@/ui/primitives";
@@ -170,6 +172,18 @@ export function ClubDetail({ id }: { id: string }) {
   const attack = avgBy(squad, ["ST", "W", "AM"]);
   const midfield = avgBy(squad, ["CM", "DM"]);
   const defense = avgBy(squad, ["CB", "FB", "GK"]);
+  const metrics = useMemo(() => teamMetrics(c.competitionId, footballProvider.matches(), footballProvider.clubs()), [c.competitionId]);
+  const mine = metrics.find((m) => m.clubId === id) ?? null;
+  const next = upcoming[0];
+  const preview = useMemo(() => {
+    if (!mine || !next || next.status !== "SCHEDULED") return null;
+    const oppId = next.homeClubId === id ? next.awayClubId : next.homeClubId;
+    const opp = metrics.find((m) => m.clubId === oppId);
+    if (!opp) return null;
+    const homeIsUs = next.homeClubId === id;
+    const xg = expectedGoals(homeIsUs ? mine : opp, homeIsUs ? opp : mine);
+    return { oppName: getClub(oppId)?.name ?? oppId, us: homeIsUs ? xg.home : xg.away, them: homeIsUs ? xg.away : xg.home };
+  }, [mine, next, metrics, id]);
   return (
     <div className="space-y-6">
       <EntityHeader
@@ -201,6 +215,41 @@ export function ClubDetail({ id }: { id: string }) {
           </div>
         </Panel>
         <div className="space-y-4">
+          <Panel className="p-4">
+            <SectionTitle title="Season analytics" hint={mine ? `${mine.played} finished matches · modelled vs league average` : "No finished matches in window"} />
+            {mine ? (
+              <div className="mt-2 space-y-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Form (last 5)</span>
+                  <span className="flex gap-1">
+                    {mine.form.map((f, i) => (
+                      <span key={i} className={cn("grid h-5 w-5 place-items-center rounded text-[10px] font-bold", f === "W" ? "bg-success/20 text-success" : f === "D" ? "bg-muted text-muted-foreground" : "bg-destructive/20 text-destructive")}>{f}</span>
+                    ))}
+                    {!mine.form.length && <span className="text-xs text-muted-foreground">—</span>}
+                  </span>
+                </div>
+                <Ratio label="Attack" value={mine.attack} goodHigh />
+                <Ratio label="Defence (lower concedes)" value={mine.defence} />
+                <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Pts / game</div><div className="font-mono text-sm">{mine.ppg.toFixed(2)}</div></div>
+                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Clean sheets</div><div className="font-mono text-sm">{mine.cleanSheets}</div></div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <Split label="Home" s={mine.home} />
+                  <Split label="Away" s={mine.away} />
+                </div>
+                {preview && (
+                  <div className="rounded-md border bg-card/40 px-3 py-2 text-xs">
+                    <span className="text-muted-foreground">Next up vs {preview.oppName} · modelled xG </span>
+                    <span className="font-mono">{preview.us.toFixed(2)}–{preview.them.toFixed(2)}</span>
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground">Ratings are relative to league average (1.00): attack above 1 scores more, defence below 1 concedes less. Computed from the dataset's finished matches; the next-fixture xG is a model, not a prediction of real events.</p>
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">No finished matches for this club in the current dataset window — nothing to compute yet.</p>
+            )}
+          </Panel>
           <MiniMatches title="Last results" matches={recent} />
           <MiniMatches title="Next up" matches={upcoming} />
         </div>
@@ -213,6 +262,32 @@ function avgBy(squad: PlayerRef[], groups: string[]): number {
   const pick = squad.filter((p) => groups.includes(p.positionGroup));
   if (!pick.length) return 0;
   return Math.round(pick.reduce((s, p) => s + p.overall, 0) / pick.length);
+}
+
+function Ratio({ label, value, goodHigh = false }: { label: string; value: number; goodHigh?: boolean }) {
+  const good = goodHigh ? value >= 1 : value <= 1;
+  const pct = Math.max(4, Math.min(100, (value / 2) * 100));
+  return (
+    <div>
+      <div className="flex justify-between text-[11px]">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={cn("font-mono", good ? "text-success" : "text-destructive")}>{value.toFixed(2)}</span>
+      </div>
+      <div className="relative mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
+        <div className={cn("h-full", good ? "bg-success" : "bg-destructive")} style={{ width: `${pct}%` }} />
+        <div className="absolute inset-y-0 left-1/2 w-px bg-border" />
+      </div>
+    </div>
+  );
+}
+
+function Split({ label, s }: { label: string; s: { played: number; won: number; drawn: number; lost: number; gf: number; ga: number } }) {
+  return (
+    <div className="rounded-md border bg-card/30 px-2 py-1.5">
+      <div className="text-muted-foreground">{label} · {s.played} played</div>
+      <div className="font-mono text-sm">{s.won}-{s.drawn}-{s.lost} <span className="text-muted-foreground">({s.gf}:{s.ga})</span></div>
+    </div>
+  );
 }
 
 function MiniMatches({ title, matches }: { title: string; matches: ReturnType<typeof getMatch>[] }) {
