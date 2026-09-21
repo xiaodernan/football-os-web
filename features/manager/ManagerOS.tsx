@@ -14,6 +14,7 @@ import {
   positionOf,
   careerForm,
   seasonOutlook,
+  seasonSummary,
   askingFee,
   sellFee,
   clubInput,
@@ -176,8 +177,38 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
             </ul>
           ) : <p className="mt-2 text-xs text-muted-foreground">No matches played yet.</p>}
         </Panel>
+        {career.results.length > 0 && <SeasonSummaryPanel career={career} />}
       </div>
     </div>
+  );
+}
+
+function SeasonSummaryPanel({ career }: { career: CareerState }) {
+  const s = seasonSummary(career);
+  const money = (v: number) => (v >= 1_000_000 ? `€${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M` : `€${Math.round(v / 1000)}k`);
+  const tone = s.honour?.tone === "good" ? "text-success" : s.honour?.tone === "bad" ? "text-destructive" : "text-info";
+  return (
+    <Panel className="p-4">
+      <div className="flex items-center justify-between">
+        <SectionTitle title="Season summary" hint="From your results" />
+        {s.honour && <span className={cn("text-xs font-semibold", tone)}>{s.honour.label}</span>}
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
+        <Fact label="W-D-L" value={`${s.won}-${s.drawn}-${s.lost}`} />
+        <Fact label="GF-GA" value={`${s.gf}-${s.ga}`} />
+        <Fact label="PPG" value={s.ppg.toFixed(2)} />
+        <Fact label="Clean sheets" value={s.cleanSheets} />
+        <Fact label="Position" value={`#${s.position}`} />
+        <Fact label="Prize won" value={money(s.prizeTotal)} />
+      </div>
+      {(s.bestWin || s.worstLoss) && (
+        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+          {s.bestWin && <div> Biggest win <span className="text-foreground">{s.bestWin.score}</span> vs {s.bestWin.opponent}</div>}
+          {s.worstLoss && <div> Heaviest defeat <span className="text-foreground">{s.worstLoss.score}</span> vs {s.worstLoss.opponent}</div>}
+        </div>
+      )}
+      <p className="mt-2 text-[11px] text-muted-foreground">{s.complete ? "Season complete — every scheduled fixture played." : `${Math.max(0, (s.clubCount - 1) * 2 - s.played)} fixtures remaining.`}</p>
+    </Panel>
   );
 }
 

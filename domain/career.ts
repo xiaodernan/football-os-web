@@ -367,6 +367,95 @@ export function restSquad(state: CareerState): CareerState {
   return { ...state, fatigue: clamp(state.fatigue - 0.5, 0.05, 1) };
 }
 
+export interface SeasonSummary {
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  gd: number;
+  points: number;
+  ppg: number;
+  cleanSheets: number;
+  prizeTotal: number;
+  bestWin: { opponent: string; score: string } | null;
+  worstLoss: { opponent: string; score: string } | null;
+  position: number;
+  clubCount: number;
+  complete: boolean;
+  honour: { label: string; tone: "good" | "mixed" | "bad" } | null;
+  evidence: string[];
+}
+
+// Retrospective digest of the career played SO FAR — every figure is summed
+// directly from CareerState.results (which only ever contains real engine
+// outcomes), so it reads as a record, not a prediction. Prize money is
+// recomputed with the exact roundFee() ladder playNextFixture credited, so the
+// total reconciles against the budget.
+export function seasonSummary(state: CareerState): SeasonSummary {
+  const rs = state.results;
+  const clubCount = clubIdsByCompetition(state.competitionId).length;
+  const totalFixtures = Math.max(1, (clubCount - 1) * 2);
+  let won = 0, drawn = 0, lost = 0, gf = 0, ga = 0, cleanSheets = 0, prizeTotal = 0;
+  let best: { opponent: string; score: string; diff: number } | null = null;
+  let worst: { opponent: string; score: string; diff: number } | null = null;
+  for (const r of rs) {
+    gf += r.ourGoals;
+    ga += r.oppGoals;
+    const diff = r.ourGoals - r.oppGoals;
+    const prize = roundFee(r.ourGoals > r.oppGoals ? 2_000_000 : r.ourGoals === r.oppGoals ? 800_000 : 300_000);
+    prizeTotal += prize;
+    if (r.oppGoals === 0) cleanSheets++;
+    if (diff > 0) won++;
+    else if (diff === 0) drawn++;
+    else lost++;
+    const opp = getClub(r.opponent)?.name ?? r.opponent;
+    if (!best || diff > best.diff) best = { opponent: opp, score: `${r.ourGoals}-${r.oppGoals}`, diff };
+    if (!worst || diff < worst.diff) worst = { opponent: opp, score: `${r.ourGoals}-${r.oppGoals}`, diff };
+  }
+  const points = won * 3 + drawn;
+  const gd = gf - ga;
+  const played = rs.length;
+  const position = positionOf(state);
+  const complete = played >= totalFixtures;
+  const pct = clubCount ? (position - 1) / clubCount : 1;
+  const honour: SeasonSummary["honour"] = !played
+    ? null
+    : position === 1 && complete
+      ? { label: "Champions", tone: "good" }
+      : position === 1
+        ? { label: "Top of the table", tone: "good" }
+        : pct <= 0.25
+          ? { label: "Title contenders", tone: "good" }
+          : pct <= 0.6
+            ? { label: "Midtable", tone: "mixed" }
+            : { label: "Relegation battle", tone: "bad" };
+
+  const evidence = [
+    played ? `${won}-${drawn}-${lost} from ${played} fixtures · ${gf} scored, ${ga} conceded (GD ${gd >= 0 ? "+" : ""}${gd})` : "No fixtures played yet.",
+    played ? `${points} pts · ${(points / played).toFixed(2)} pts/game · ${cleanSheets} clean sheet${cleanSheets === 1 ? "" : "s"}` : "",
+    played ? `Prize money earned ${formatMoney(prizeTotal)} across ${played} matches` : "",
+    best && best.diff > 0 ? `Biggest win ${best.score} vs ${best.opponent}` : "",
+    worst && worst.diff < 0 ? `Heaviest defeat ${worst.score} vs ${worst.opponent}` : "",
+    complete ? "Season complete." : `${Math.max(0, totalFixtures - played)} fixtures remaining.`,
+  ].filter(Boolean);
+
+  return {
+    played, won, drawn, lost, gf, ga, gd: gf - ga, points,
+    ppg: played ? Math.round((points / played) * 100) / 100 : 0,
+    cleanSheets, prizeTotal,
+    bestWin: best && best.diff > 0 ? { opponent: best.opponent, score: best.score } : null,
+    worstLoss: worst && worst.diff < 0 ? { opponent: worst.opponent, score: worst.score } : null,
+    position, clubCount, complete, honour, evidence,
+  };
+}
+
+function formatMoney(v: number): string {
+  if (v >= 1_000_000) return `€${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M`;
+  return `€${Math.round(v / 1000)}k`;
+}
+
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
 }
