@@ -36,6 +36,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | Settings & Data | `/settings` | Switch mode / language / theme, see how many records and how much storage your activity uses, export the full local state as JSON, and a guarded reset — all entirely on-device. |
 | Activity History | `/history` | A day-grouped timeline merged from your real completed sessions, AI coach plans and coach-memory records, filterable by event type, sorted newest-first — nothing invented, every row reads straight from local state. |
 | Weekly Review | `/review` | A coach-style period digest (7/30/90-day windows) compiled only from your local log: sessions, minutes, XP, streak, overall trend, self-rated quality, focus mix, an honest highlight list and a next-focus recommendation — each labelled with a confidence score and the evidence behind it, no external model called. |
+| Load & Recovery | `/load` | Training-load management from your completed sessions (duration × session-RPE): acute 7-day vs chronic 28-day average daily load, an ACWR with colour-coded under/optimal/caution/high-risk bands, weekly monotony and strain, and a guidance card with confidence — a relative-load estimate, not a medical claim. |
 | Command palette | `⌘K` / `Ctrl-K` | Jump to any route or search entities across the world. |
 
 ## Architecture
