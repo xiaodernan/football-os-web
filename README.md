@@ -27,6 +27,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | Scouting | `/scouting` | Club-needs profile, best-value picks and a filterable prospect table with compare; shortlist feeds the Command Center watchlist. |
 | Dynamic World | `/world` | Deterministic season-by-season simulation layered over the dataset: players age and develop, get re-priced, retire and are replaced by academy prospects, and league champions are crowned each step. |
 | Film Room | `/film` | Standalone video-analysis pillar: upload or drop clips, run the pipeline stage-by-stage, keep a local library of reports, review detected events/frames with confidence, and build a training plan from a finding. |
+| Data Room | `/data` | Advanced team analytics derived deterministically from the world's finished matches: league-pace attack/defence ratings, form, home/away splits, clean sheets and a modelled expected-goals clash. |
 | Command palette | `⌘K` / `Ctrl-K` | Jump to any route or search entities across the world. |
 
 ## Architecture

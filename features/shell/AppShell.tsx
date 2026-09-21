@@ -37,6 +37,7 @@ const I = {
   trophy: "♛",
   timeline: "⧗",
   film: "✂",
+  chart: "▨",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -63,6 +64,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/learn", label: t("nav.learn"), icon: I.book, match: ["/learn"] },
     { to: "/scouting", label: t("nav.scouting"), icon: I.scope, match: ["/scouting"] },
     { to: "/film", label: t("nav.film"), icon: I.film, match: ["/film"] },
+    { to: "/data", label: t("nav.data"), icon: I.chart, match: ["/data"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },
   ];
   const search: NavItem[] = [{ to: "/search", label: t("nav.search"), icon: I.search, match: ["/search"] }];

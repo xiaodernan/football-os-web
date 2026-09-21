@@ -239,6 +239,7 @@ const MODULE_LINKS = [
   { to: "/scouting", label: "nav.scouting", icon: "⌖" },
   { to: "/world", label: "nav.world", icon: "⧗" },
   { to: "/film", label: "nav.film", icon: "✂" },
+  { to: "/data", label: "nav.data", icon: "▨" },
   { to: "/tactical-studio", label: "nav.tactical", icon: "⛶" },
   { to: "/simulation", label: "nav.simulation", icon: "▷" },
   { to: "/ai", label: "nav.ai", icon: "⚡" },
