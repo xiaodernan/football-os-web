@@ -11,6 +11,7 @@ import { FootballWorld } from "@/features/football/FootballWorld";
 import { AiStudio } from "@/features/ai/AiStudio";
 import { SimulationLab } from "@/features/sim/SimulationLab";
 import { TacticalStudio } from "@/features/tactical/TacticalStudio";
+import { ManagerOS } from "@/features/manager/ManagerOS";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { EmptyState } from "@/ui/primitives";
@@ -37,6 +38,7 @@ function Routes() {
 
   let inner: ReactNode = <NotReady />;
   if (path === "/player" || path.startsWith("/player/")) inner = <PlayerOS />;
+  else if (path === "/manager" || path.startsWith("/manager/")) inner = <ManagerOS />;
   else if (path === "/ai") inner = <AiStudio initialTab="chat" />;
   else if (path === "/knowledge") inner = <AiStudio initialTab="graph" />;
   else if (path === "/tactical-studio") inner = <TacticalStudio />;
