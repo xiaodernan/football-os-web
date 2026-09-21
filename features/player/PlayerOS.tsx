@@ -13,6 +13,7 @@ import {
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
 import { SUPPORTED_MINUTES, sessionIntensity } from "@/domain/training";
+import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { getClub, getPlayer } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, AttributeBar, EmptyState, LoadingBlock, Crest } from "@/ui/primitives";
@@ -176,6 +177,14 @@ function Coach() {
   const [busy, setBusy] = useState(false);
   const [planId, setPlanId] = useState<string | null>(null);
   const plan = state.plans.find((x) => x.id === planId) ?? state.plans[0];
+  const load = useMemo(() => buildLoad({ nowMs: Date.now(), sessions: state.sessions }), [state.sessions]);
+  const LOAD_TONE: Record<LoadZone, string> = {
+    none: "border-border text-muted-foreground",
+    under: "border-primary/40 bg-primary/10 text-primary",
+    optimal: "border-success/40 bg-success/10 text-success",
+    caution: "border-warning/40 bg-warning/10 text-warning",
+    high: "border-destructive/40 bg-destructive/10 text-destructive",
+  };
 
   const run = async () => {
     if (!prompt.trim()) {
@@ -218,6 +227,18 @@ function Coach() {
         <Button className="mt-4 w-full" onClick={run} disabled={busy}>
           {busy ? "Coach is thinking…" : "Generate training plan"}
         </Button>
+        {load.hasData && (
+          <Link
+            to="/load"
+            className={cn("mt-3 flex items-center justify-between rounded-lg border px-3 py-2 text-xs transition-colors hover:bg-secondary/40", LOAD_TONE[load.zone])}
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="font-semibold uppercase tracking-widest">{ZONE_LABEL[load.zone]}</span>
+              <span className="font-mono">ACWR {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
+            </span>
+            <span className="text-muted-foreground">Coach adapts to this →</span>
+          </Link>
+        )}
         <p className="mt-2 text-[11px] text-muted-foreground">Provider: {plan?.provider ?? "demo-coach-v1"} · deterministic Demo Mode · swap to a Cloud Agent without UI changes.</p>
       </Panel>
 

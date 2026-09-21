@@ -22,6 +22,7 @@ import {
   POSITION_BY_GROUP,
 } from "@/domain/attributes";
 import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
+import { buildLoad } from "@/domain/load";
 import { coachProvider, type PlanInput } from "@/data/ai";
 
 export const STORAGE_KEY = "football-os.state.v2";
@@ -268,7 +269,14 @@ export function OsProvider({ children }: { children: ReactNode }) {
       requestPlan: async (prompt, availableMinutes) => {
         if (!state.profile) throw new Error("no profile");
         const history = aggregateFocus(state.sessions);
-        const planInput: PlanInput = { prompt, profile: state.profile, history, availableMinutes };
+        const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
+        const planInput: PlanInput = {
+          prompt,
+          profile: state.profile,
+          history,
+          availableMinutes,
+          load: load.hasData ? { zone: load.zone, acwr: load.acwr, weekLoad: load.weekLoad } : undefined,
+        };
         const plan = await coachProvider.generatePlan(planInput);
         dispatch({ type: "PLAN", plan });
         return plan;

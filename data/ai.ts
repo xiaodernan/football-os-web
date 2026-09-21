@@ -2,6 +2,7 @@ import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
 import { attributeLabel, weakestAttributes, strongestAttributes } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna } from "@/domain/playerDna";
+import { buildLoad, type LoadZone } from "@/domain/load";
 import { makeRng, hashString } from "@/lib/rng";
 
 // ---- Provider abstraction (spec §6, §50, §57) ----
@@ -14,11 +15,18 @@ export interface CoachProvider {
   generatePlan(input: PlanInput): Promise<CoachPlan>;
 }
 
+export interface LoadContext {
+  zone: LoadZone;
+  acwr: number | null;
+  weekLoad: number;
+}
+
 export interface PlanInput {
   prompt: string;
   profile: UserProfile;
   history: { focus: string; completed: number }[];
   availableMinutes: number;
+  load?: LoadContext;
 }
 
 const ATTRIBUTE_HINTS: [RegExp, string][] = [
@@ -68,7 +76,12 @@ class DeterministicCoachProvider implements CoachProvider {
       input.prompt,
       input.profile.attributes,
     );
-    const targetMinutes = clampMinutes(available ?? input.availableMinutes);
+    let targetMinutes = clampMinutes(available ?? input.availableMinutes);
+    const load = input.load;
+    // Load-awareness: when recent load is spiking, cap the session so the coach
+    // never prescribes extra volume on top of a high acute:chronic ratio.
+    if (load?.zone === "high") targetMinutes = Math.min(targetMinutes, 20);
+    else if (load?.zone === "caution") targetMinutes = Math.min(targetMinutes, 30);
     const seed = `coach-${hashString(input.prompt + input.profile.displayName)}`;
     const session = buildSession({
       id: `S${Date.now().toString(36).slice(-5)}`,
@@ -84,6 +97,18 @@ class DeterministicCoachProvider implements CoachProvider {
       .reduce((s, h) => s + h.completed, 0);
 
     const diagnosisParts: string[] = [];
+    if (load && load.zone === "high")
+      diagnosisParts.push(
+        `Your acute:chronic load ratio is ${load.acwr?.toFixed(2) ?? "high"} — a spike. I've kept this session short and lighter to protect you from piling volume on a spiking load.`,
+      );
+    else if (load && load.zone === "caution")
+      diagnosisParts.push(
+        `Your load ratio is ${load.acwr?.toFixed(2) ?? "elevated"}, climbing toward the risk band — this session is capped and stays technical.`,
+      );
+    else if (load && load.zone === "under" && load.weekLoad > 0)
+      diagnosisParts.push(
+        `Your load ratio is ${load.acwr?.toFixed(2) ?? "low"} — under your recent average, so you have headroom to progress today.`,
+      );
     if (requested.length)
       diagnosisParts.push(`You flagged ${requested.map(attributeLabel).join(" and ")}.`);
     diagnosisParts.push(
@@ -121,6 +146,7 @@ class DeterministicCoachProvider implements CoachProvider {
         "Football OS Training Methodology (demo knowledge base)",
         `Your saved attributes (overall ${Math.round(input.profile.xp / 100 + 40)})`,
         "Position baseline model",
+        ...(load ? [`Your training-load log (ACWR ${load.acwr?.toFixed(2) ?? "n/a"} · ${load.zone})`] : []),
       ],
       provider: this.id,
     };
