@@ -39,6 +39,7 @@ const I = {
   film: "✂",
   chart: "▨",
   transfer: "⇄",
+  compare: "⚖",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -67,6 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/film", label: t("nav.film"), icon: I.film, match: ["/film"] },
     { to: "/data", label: t("nav.data"), icon: I.chart, match: ["/data"] },
     { to: "/transfers", label: t("nav.transfers"), icon: I.transfer, match: ["/transfers"] },
+    { to: "/compare", label: t("nav.compare"), icon: I.compare, match: ["/compare"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },
   ];
   const search: NavItem[] = [{ to: "/search", label: t("nav.search"), icon: I.search, match: ["/search"] }];

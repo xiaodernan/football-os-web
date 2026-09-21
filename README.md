@@ -29,6 +29,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | Film Room | `/film` | Standalone video-analysis pillar: upload or drop clips, run the pipeline stage-by-stage, keep a local library of reports, review detected events/frames with confidence, and build a training plan from a finding. |
 | Data Room | `/data` | Advanced team analytics derived deterministically from the world's finished matches: league-pace attack/defence ratings, form, home/away splits, clean sheets and a modelled expected-goals clash. |
 | Transfer Centre | `/transfers` | Rumour board built from the world's own news feed: each linked target carries its source + credibility, a transparent asking-fee estimate, value index and headroom, plus a squad-fit score against your favourite club's depth. |
+| Player Comparison | `/compare` | Head-to-head duel built only from the dataset's real fields (overall, potential, age, value): metric-by-metric diffs with a relative bar, a win count and a transparent verdict that blends quality, upside and prime-window length. |
 | Command palette | `⌘K` / `Ctrl-K` | Jump to any route or search entities across the world. |
 
 ## Architecture

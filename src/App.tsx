@@ -28,6 +28,7 @@ const DynamicWorld = lazy(() => import("@/features/world/DynamicWorld").then((m)
 const FilmRoom = lazy(() => import("@/features/film/FilmRoom").then((m) => ({ default: m.FilmRoom })));
 const DataRoom = lazy(() => import("@/features/analytics/DataRoom").then((m) => ({ default: m.DataRoom })));
 const TransferCentre = lazy(() => import("@/features/transfers/TransferCentre").then((m) => ({ default: m.TransferCentre })));
+const ComparePage = lazy(() => import("@/features/compare/ComparePage").then((m) => ({ default: m.ComparePage })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
@@ -76,6 +77,7 @@ function Routes() {
   else if (path === "/film") inner = <FilmRoom />;
   else if (path === "/data") inner = <DataRoom />;
   else if (path === "/transfers") inner = <TransferCentre />;
+  else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 
