@@ -40,6 +40,7 @@ const I = {
   chart: "▨",
   transfer: "⇄",
   compare: "⚖",
+  star: "☆",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -69,6 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/data", label: t("nav.data"), icon: I.chart, match: ["/data"] },
     { to: "/transfers", label: t("nav.transfers"), icon: I.transfer, match: ["/transfers"] },
     { to: "/compare", label: t("nav.compare"), icon: I.compare, match: ["/compare"] },
+    { to: "/watchlist", label: t("nav.watch"), icon: I.star, match: ["/watchlist"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },
   ];
   const search: NavItem[] = [{ to: "/search", label: t("nav.search"), icon: I.search, match: ["/search"] }];

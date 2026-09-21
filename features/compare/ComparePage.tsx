@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "@/lib/router";
+import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { compare, type CompareMetric } from "@/domain/compare";
@@ -10,13 +10,21 @@ import { cn } from "@/lib/utils";
 
 export function ComparePage() {
   const { t } = useI18n();
+  const { query } = useRouter();
   const players = useMemo(() => footballProvider.players(), []);
+  const ids = useMemo(() => new Set(players.map((p) => p.id)), [players]);
   const defaults = useMemo(
     () => [...players].sort((a, b) => b.overall - a.overall).slice(0, 2).map((p) => p.id),
     [players],
   );
-  const [aId, setAId] = useState(defaults[0] ?? "");
-  const [bId, setBId] = useState(defaults[1] ?? "");
+  const [aId, setAId] = useState(() => {
+    const q = query.get("a") ?? "";
+    return ids.has(q) ? q : defaults[0] ?? "";
+  });
+  const [bId, setBId] = useState(() => {
+    const q = query.get("b") ?? "";
+    return ids.has(q) && q !== (query.get("a") ?? "") ? q : defaults[1] ?? "";
+  });
 
   const result = useMemo(() => (aId && bId ? compare(aId, bId) : null), [aId, bId]);
 
