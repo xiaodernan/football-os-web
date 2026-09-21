@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { attributeLabel } from "@/domain/attributes";
+import { buildFilmInsights } from "@/domain/filmInsights";
 import { useOnline } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, LoadingBlock, ErrorState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -104,6 +105,20 @@ export function FilmRoom() {
   };
 
   const current = useMemo(() => clips.find((c) => c.clipId === selected) ?? null, [clips, selected]);
+
+  const insights = useMemo(
+    () =>
+      buildFilmInsights(
+        clips.map((c) => ({
+          at: c.addedAt,
+          durationSec: c.report.durationSec,
+          confidence: c.report.confidence,
+          events: c.report.events.map((e) => ({ kind: e.kind })),
+          recommendedFocus: c.report.recommendedFocus,
+        })),
+      ),
+    [clips],
+  );
 
   const buildTraining = async () => {
     if (!current) return;
@@ -256,6 +271,69 @@ export function FilmRoom() {
           )}
         </div>
       </div>
+
+      {clips.length > 0 && (
+        <Panel className="p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <SectionTitle title="Library insights" hint={`${insights.clips} clips · ${insights.analysedMinutes.toFixed(1)} min analysed`} />
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <DemoBadge />
+              <span>Confidence {insights.confidence}%</span>
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Actions / min</div><div className="font-mono text-sm">{insights.actionsPerMinute.toFixed(2)}</div></div>
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Scans / min</div><div className="font-mono text-sm">{insights.scanPerMinute.toFixed(2)}</div></div>
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Scan trend</div><div className={cn("font-mono text-sm", insights.scanTrend == null ? "text-muted-foreground" : insights.scanTrend >= 0 ? "text-success" : "text-destructive")}>{insights.scanTrend == null ? "—" : `${insights.scanTrend >= 0 ? "+" : ""}${insights.scanTrend.toFixed(2)}`}</div></div>
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Mean detect conf.</div><div className="font-mono text-sm">{insights.avgConfidence}%</div></div>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Detections per minute by type</div>
+              <div className="mt-2 space-y-2">
+                {insights.byKind.filter((k) => k.count > 0).map((k) => {
+                  const max = insights.byKind[0].perMinute || 1;
+                  return (
+                    <div key={k.kind}>
+                      <div className="flex justify-between text-xs">
+                        <span className={KIND_TONE[k.kind]}>{k.kind}</span>
+                        <span className="font-mono text-muted-foreground">{k.perMinute.toFixed(2)} · ×{k.count}</span>
+                      </div>
+                      <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
+                        <div className="h-full bg-primary" style={{ width: `${Math.max(3, (k.perMinute / max) * 100)}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {!insights.byKind.some((k) => k.count > 0) && <p className="text-xs text-muted-foreground">No detections in the library yet.</p>}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Recurring coaching focus</div>
+              {insights.topFocus.length ? (
+                <ul className="mt-2 space-y-1.5 text-xs">
+                  {insights.topFocus.map((f) => (
+                    <li key={f.key} className="flex items-center justify-between gap-2">
+                      <span>{f.label}</span>
+                      <span className="font-mono text-muted-foreground">×{f.clips} clip{f.clips === 1 ? "" : "s"}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-xs text-muted-foreground">No recommended focus recorded yet.</p>
+              )}
+              <div className="mt-3 text-[11px] uppercase tracking-widest text-muted-foreground">Evidence</div>
+              <ul className="mt-1 space-y-1 text-[11px] text-muted-foreground">
+                {insights.evidence.map((e, i) => <li key={i}>› {e}</li>)}
+              </ul>
+              <div className="mt-2 text-[11px] text-muted-foreground">Sources: {insights.sources.join(" · ")}</div>
+            </div>
+          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">Aggregated only from clips stored on this device. Rates are detections per minute of analysed footage; the demo provider's detections are labelled DEMO and are not real pose-model output.</p>
+        </Panel>
+      )}
     </div>
   );
 }
