@@ -194,6 +194,19 @@ export function ReviewPage() {
                   <p className="mt-1 text-sm text-muted-foreground">{t("rv.focusEmpty")}</p>
                 )}
               </Panel>
+
+              {review.attributeGains.length > 0 && (
+                <Panel className="p-4">
+                  <SectionTitle title={t("rv.gainsTitle")} hint={t("rv.gainsHint")} />
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {review.attributeGains.map((g) => (
+                      <span key={g.key} className="rounded-md border border-success/40 bg-success/10 px-2 py-1 text-xs font-medium text-success">
+                        {g.label} <span className="font-mono">+{g.delta}</span>
+                      </span>
+                    ))}
+                  </div>
+                </Panel>
+              )}
             </div>
           </div>
 

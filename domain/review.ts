@@ -22,6 +22,12 @@ export interface FocusStat {
   sessions: number;
 }
 
+export interface AttributeGain {
+  key: string;
+  label: string;
+  delta: number;
+}
+
 export type InsightKind = "positive" | "watch" | "plan";
 
 export interface ReviewInsight {
@@ -50,6 +56,7 @@ export interface WeeklyReview {
   overallDelta: number | null;
   streak: number;
   topFocus: FocusStat[];
+  attributeGains: AttributeGain[];
   goalsTotal: number;
   goalsDone: number;
   insights: ReviewInsight[];
@@ -98,6 +105,15 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const topFocus: FocusStat[] = [...focusMap.entries()]
     .map(([key, sessions]) => ({ key, label: attributeLabel(key), sessions }))
     .sort((a, b) => b.sessions - a.sessions || a.label.localeCompare(b.label));
+
+  // Total attribute growth actually earned this window, summed from each
+  // completed session's recorded deltas — real training effect, not a projection.
+  const gainMap = new Map<string, number>();
+  for (const s of completed) for (const g of s.growth ?? []) gainMap.set(g.key, (gainMap.get(g.key) ?? 0) + g.delta);
+  const attributeGains: AttributeGain[] = [...gainMap.entries()]
+    .map(([key, delta]) => ({ key, label: attributeLabel(key), delta: Math.round(delta * 10) / 10 }))
+    .filter((g) => g.delta > 0)
+    .sort((a, b) => b.delta - a.delta || a.label.localeCompare(b.label));
 
   const goalsDone = input.goals.filter((g) => g.done).length;
   const goalsTotal = input.goals.length;
@@ -157,6 +173,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     overallDelta,
     streak: input.streak,
     topFocus: topFocus.slice(0, 4),
+    attributeGains,
     goalsTotal,
     goalsDone,
     insights,
