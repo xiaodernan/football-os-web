@@ -8,6 +8,7 @@ import { Onboarding } from "@/features/onboarding/Onboarding";
 import { Dashboard } from "@/features/dashboard/Dashboard";
 import { PlayerOS } from "@/features/player/PlayerOS";
 import { FootballWorld } from "@/features/football/FootballWorld";
+import { AiStudio } from "@/features/ai/AiStudio";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { EmptyState } from "@/ui/primitives";
@@ -34,6 +35,8 @@ function Routes() {
 
   let inner: ReactNode = <NotReady />;
   if (path === "/player" || path.startsWith("/player/")) inner = <PlayerOS />;
+  else if (path === "/ai") inner = <AiStudio initialTab="chat" />;
+  else if (path === "/knowledge") inner = <AiStudio initialTab="graph" />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 
   return <AppShell>{inner}</AppShell>;

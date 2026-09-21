@@ -52,6 +52,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     modes.push({ to: "/manager", label: t("nav.manager"), icon: I.board, match: ["/manager"] });
   }
   const studio: NavItem[] = [
+    { to: "/ai", label: "Football AI", icon: I.bolt, match: ["/ai"] },
+    { to: "/knowledge", label: "Knowledge graph", icon: I.users, match: ["/knowledge"] },
     { to: "/tactical-studio", label: t("nav.tactical"), icon: I.pitch, match: ["/tactical-studio"] },
     { to: "/simulation", label: t("nav.simulation"), icon: I.sim, match: ["/simulation"] },
     { to: "/learn", label: t("nav.learn"), icon: I.book, match: ["/learn"] },
