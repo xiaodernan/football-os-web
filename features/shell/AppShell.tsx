@@ -42,6 +42,7 @@ const I = {
   compare: "⚖",
   star: "☆",
   user: "☺",
+  settings: "⚙",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -75,6 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/compare", label: t("nav.compare"), icon: I.compare, match: ["/compare"] },
     { to: "/watchlist", label: t("nav.watch"), icon: I.star, match: ["/watchlist"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },
+    { to: "/settings", label: t("nav.settings"), icon: I.settings, match: ["/settings"] },
   ];
   const search: NavItem[] = [{ to: "/search", label: t("nav.search"), icon: I.search, match: ["/search"] }];
 

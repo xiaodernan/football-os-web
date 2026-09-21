@@ -24,7 +24,7 @@ import {
 import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
 import { coachProvider, type PlanInput } from "@/data/ai";
 
-const STORAGE_KEY = "football-os.state.v2";
+export const STORAGE_KEY = "football-os.state.v2";
 
 export interface OsState {
   onboarded: boolean;

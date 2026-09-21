@@ -71,6 +71,7 @@ export function CommandPalette() {
       { id: "watchlist", label: t("nav.watch"), group: "Go to", run: nav("/watchlist") },
       { id: "profile", label: t("nav.profile"), group: "Go to", run: nav("/profile") },
       { id: "achievements", label: t("nav.achievements"), group: "Go to", run: nav("/achievements") },
+      { id: "settings", label: t("nav.settings"), group: "Go to", run: nav("/settings") },
       { id: "community", label: t("nav.community"), group: "Go to", run: nav("/community") },
     ];
     if (state.onboarded) {
