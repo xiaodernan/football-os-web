@@ -13,6 +13,7 @@ import {
   liveStandings,
   positionOf,
   careerForm,
+  seasonOutlook,
   askingFee,
   sellFee,
   clubInput,
@@ -28,13 +29,14 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const KEY = "football-os.career.v1";
-type Tab = "overview" | "squad" | "transfers" | "tactics" | "table";
+type Tab = "overview" | "squad" | "transfers" | "tactics" | "table" | "outlook";
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "squad", label: "Squad" },
   { id: "transfers", label: "Transfers" },
   { id: "tactics", label: "Tactics" },
   { id: "table", label: "League table" },
+  { id: "outlook", label: "Season outlook" },
 ];
 
 export function ManagerOS() {
@@ -78,6 +80,7 @@ export function ManagerOS() {
       {tab === "transfers" && <Transfers career={career} onBuy={(id) => { update((s) => transferIn(s, id)); toast("Signing completed"); }} />}
       {tab === "tactics" && <TacticsPanel career={career} onChange={(t) => update((s) => setTactics(s, t))} onRest={() => { update(restSquad); toast("Squad rested") }} />}
       {tab === "table" && <Table career={career} />}
+      {tab === "outlook" && <Outlook career={career} />}
     </div>
   );
 }
@@ -294,6 +297,88 @@ function Table({ career }: { career: CareerState }) {
         </table>
       </div>
     </Panel>
+  );
+}
+
+function Outlook({ career }: { career: CareerState }) {
+  const o = seasonOutlook(career);
+  const pct = (v: number) => `${Math.round(v * 100)}%`;
+  const zoneTone = o.zone.tone === "good" ? "text-success" : o.zone.tone === "bad" ? "text-destructive" : "text-info";
+  return (
+    <div className="grid gap-4 lg:grid-cols-3">
+      <div className="space-y-4 lg:col-span-2">
+        <Panel className="p-4">
+          <div className="flex items-center justify-between">
+            <SectionTitle title="Season outlook" hint="Modelled projection" />
+            <DemoBadge />
+          </div>
+          {career.results.length === 0 && (
+            <p className="mt-2 rounded-md border border-info/30 bg-info/10 px-3 py-2 text-xs text-info">
+              No fixtures played yet — this is a projection from the seeded table and sharpens as you play.
+            </p>
+          )}
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Metric label="Current pos" value={`#${o.position}`} />
+            <Metric label="Projected pos" value={`#${o.projectedPosition}`} />
+            <Metric label="Expected finish" value={`≈${o.expectedFinish}`} />
+            <Metric label="Zone" value={o.zone.label} />
+          </div>
+          <div className="mt-4">
+            <div className="flex justify-between text-xs"><span className="text-muted-foreground">Title chance</span><span className={cn("font-mono font-semibold", zoneTone)}>{pct(o.titleChance)}</span></div>
+            <div className="mt-1 h-2 overflow-hidden rounded bg-muted"><div className="h-full bg-primary" style={{ width: `${Math.max(2, o.titleChance * 100)}%` }} /></div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+            <Fact label="Played / total" value={`${o.played} / ${o.totalFixtures}`} />
+            <Fact label="Pts (PPG)" value={`${o.points} (${o.pointsPerGame.toFixed(2)})`} />
+            <Fact label="Projected pts" value={o.projectedPoints} />
+            <Fact label="Rounds left" value={o.remaining} />
+            <Fact label="Proj. leader" value={o.leaderName} />
+            <Fact label="Gap to leader" value={o.gapToProjectedLeader === 0 ? "Leading" : o.gapToProjectedLeader} />
+          </div>
+        </Panel>
+
+        <Panel className="p-4">
+          <SectionTitle title="Closest rivals" hint="Modelled chance they finish above you" />
+          <div className="mt-2 space-y-2">
+            {o.rivalRows.map((r) => (
+              <div key={r.clubId}>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2">
+                    <span>{r.clubName}</span>
+                    <span className="text-[11px] text-muted-foreground">PPG {r.currentPpg.toFixed(2)} · proj {r.projectedPoints}</span>
+                  </span>
+                  <span className={cn("font-mono text-xs", r.beatUsChance >= 0.5 ? "text-destructive" : "text-muted-foreground")}>{pct(r.beatUsChance)}</span>
+                </div>
+                <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full", r.beatUsChance >= 0.5 ? "bg-destructive" : "bg-primary/60")} style={{ width: `${Math.max(2, r.beatUsChance * 100)}%` }} /></div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </div>
+
+      <div className="space-y-4">
+        <Panel className="p-4">
+          <SectionTitle title="Confidence" />
+          <div className="mt-2 flex items-center gap-3">
+            <div className="h-2 flex-1 overflow-hidden rounded bg-muted"><div className="h-full bg-info" style={{ width: `${o.confidence}%` }} /></div>
+            <span className="font-mono text-xs">{o.confidence}%</span>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">Rises as more of the season is decided by real results rather than projection.</p>
+        </Panel>
+        <Panel className="p-4">
+          <SectionTitle title="Evidence" />
+          <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
+            {o.evidence.map((e, i) => (
+              <li key={i} className="flex items-start gap-1.5"><span className="text-primary">›</span><span>{e}</span></li>
+            ))}
+          </ul>
+          <div className="mt-3 border-t pt-2 text-[11px] text-muted-foreground">
+            <div className="uppercase tracking-wide">Sources</div>
+            <ul className="mt-1 space-y-0.5">{o.sources.map((s, i) => <li key={i}>· {s}</li>)}</ul>
+          </div>
+        </Panel>
+      </div>
+    </div>
   );
 }
 

@@ -163,6 +163,129 @@ export function positionOf(state: CareerState): number {
   return liveStandings(state).findIndex((r) => r.clubId === state.clubId) + 1;
 }
 
+export interface OutlookRow {
+  clubId: string;
+  clubName: string;
+  currentPpg: number;
+  projectedPoints: number;
+  aheadOfUs: boolean;
+  beatUsChance: number; // modelled chance they finish above us
+}
+
+export interface SeasonOutlook {
+  played: number;
+  totalFixtures: number;
+  remaining: number;
+  position: number;
+  points: number;
+  pointsPerGame: number;
+  projectedPoints: number;
+  projectedPosition: number;
+  gapToProjectedLeader: number; // >= 0; 0 when we are projected top
+  leaderName: string;
+  titleChance: number; // 0..1
+  expectedFinish: number; // modelled expected league position
+  zone: { label: string; tone: "good" | "mixed" | "bad" };
+  rivalRows: OutlookRow[]; // the clubs closest to us in the projected table
+  evidence: string[];
+  confidence: number; // 0..100
+  sources: string[];
+}
+
+const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
+
+// Modelled end-of-season view, computed ONLY from the live table (real seeded
+// standings + our deterministic career results) and current form. Every club is
+// projected by extrapolating its actual points-per-game over its remaining
+// fixtures; per-match uncertainty (~1.4 pts of variance) widens the error bars
+// the more games are left, so early projections stay deliberately cautious.
+export function seasonOutlook(state: CareerState): SeasonOutlook {
+  const rows = liveStandings(state);
+  const ours = rows.find((r) => r.clubId === state.clubId) ?? {
+    clubId: state.clubId, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0,
+  };
+  const clubCount = clubIdsByCompetition(state.competitionId).length;
+  const totalFixtures = Math.max(1, (clubCount - 1) * 2); // home + away round robin
+  const played = state.results.length;
+  const remaining = Math.max(0, totalFixtures - played);
+
+  const ppg = (r: StandingRow) => r.points / Math.max(1, r.played);
+  // Blend season ppg with recent career form (-1..1 -> -0.30..+0.30 pts/game).
+  const form = careerForm(state);
+  const ourPpg = Math.max(0, Math.min(3, ppg(ours) + form * 0.3));
+  const projectedOf = (r: StandingRow) =>
+    r.clubId === state.clubId
+      ? ours.points + ourPpg * remaining
+      : r.points + ppg(r) * Math.max(0, totalFixtures - r.played);
+
+  const projected = rows.map((r) => ({ row: r, pts: projectedOf(r) }));
+  const byProjected = [...projected].sort((a, b) => b.pts - a.pts);
+  const projectedPosition = byProjected.findIndex((p) => p.row.clubId === state.clubId) + 1;
+  const projLeader = byProjected[0];
+  const ourProj = projected.find((p) => p.row.clubId === state.clubId)!.pts;
+  const gapToProjectedLeader = Math.max(0, projLeader.pts - ourProj);
+
+  // P(rival finishes above us): margin over a sigma that grows with the number
+  // of rounds still to play (difference of two schedules -> sqrt(2) factor).
+  const sigma = 1.4 * Math.sqrt(2 * Math.max(remaining, 1));
+  const rivalRows: OutlookRow[] = rows
+    .filter((r) => r.clubId !== state.clubId)
+    .map((r) => {
+      const theirProj = projected.find((p) => p.row.clubId === r.clubId)!.pts;
+      const gdEdge = (ours.gf - ours.ga) - (r.gf - r.ga);
+      const beat = sigmoid((theirProj - ourProj + gdEdge * 0.08) / sigma);
+      return {
+        clubId: r.clubId,
+        clubName: getClub(r.clubId)?.name ?? r.clubId,
+        currentPpg: Math.round(ppg(r) * 100) / 100,
+        projectedPoints: Math.round(theirProj * 10) / 10,
+        aheadOfUs: theirProj > ourProj,
+        beatUsChance: beat,
+      };
+    })
+    .sort((a, b) => b.beatUsChance - a.beatUsChance);
+
+  const titleChance = rivalRows.reduce((chance, r) => chance * (1 - r.beatUsChance), 1);
+  const expectedFinish = 1 + rivalRows.reduce((sum, r) => sum + (1 - r.beatUsChance), 0);
+
+  const position = rows.findIndex((r) => r.clubId === state.clubId) + 1;
+  const pct = clubCount ? (position - 1) / clubCount : 1;
+  const zone =
+    pct <= 0.25
+      ? { label: "Title race", tone: "good" as const }
+      : pct <= 0.6
+        ? { label: "Upper midtable", tone: "mixed" as const }
+        : { label: "Drop zone", tone: "bad" as const };
+
+  const evidence = [
+    `#${position} with ${ours.points} pts from ${played} career fixtures (${totalFixtures} scheduled this season)`,
+    `Projected to ${Math.round(ourProj * 10) / 10} pts — ${gapToProjectedLeader === 0 ? "level with or ahead of" : `${Math.round(gapToProjectedLeader * 10) / 10} pts behind`} projected leader ${getClub(projLeader.row.clubId)?.name ?? projLeader.row.clubId}`,
+    `Form ${form >= 0 ? "+" : ""}${form.toFixed(2)} adjusts points/game to ${ourPpg.toFixed(2)}`,
+    `Each rival extrapolated from its own points-per-game over ${remaining} rounds left; results are modelled estimates, not fixtures played`,
+  ];
+  const confidence = Math.min(85, 12 + played * 9);
+
+  return {
+    played,
+    totalFixtures,
+    remaining,
+    position,
+    points: ours.points,
+    pointsPerGame: Math.round(ppg(ours) * 100) / 100,
+    projectedPoints: Math.round(ourProj * 10) / 10,
+    projectedPosition,
+    gapToProjectedLeader: Math.round(gapToProjectedLeader * 10) / 10,
+    leaderName: getClub(projLeader.row.clubId)?.name ?? projLeader.row.clubId,
+    titleChance,
+    expectedFinish: Math.round(expectedFinish * 10) / 10,
+    zone,
+    rivalRows: rivalRows.slice(0, 4),
+    evidence,
+    confidence,
+    sources: ["Live league table (seeded standings + your career results)", "Career form (last 5 fixtures)", "Deterministic projection model (demo)"],
+  };
+}
+
 export function createCareer(clubId: string): CareerState {
   const club = getClub(clubId)!;
   return {
