@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { ThemeProvider } from "@/lib/theme";
 import { I18nProvider } from "@/i18n";
 import { RouterProvider, useRouter } from "@/lib/router";
@@ -5,23 +6,40 @@ import { OsProvider, useOs } from "@/store/useFootballOS";
 import { AppShell } from "@/features/shell/AppShell";
 import { Landing } from "@/features/landing/Landing";
 import { Onboarding } from "@/features/onboarding/Onboarding";
-import { Dashboard } from "@/features/dashboard/Dashboard";
-import { PlayerOS } from "@/features/player/PlayerOS";
-import { FootballWorld } from "@/features/football/FootballWorld";
-import { AiStudio } from "@/features/ai/AiStudio";
-import { SimulationLab } from "@/features/sim/SimulationLab";
-import { TacticalStudio } from "@/features/tactical/TacticalStudio";
-import { ManagerOS } from "@/features/manager/ManagerOS";
-import { LearnHub } from "@/features/learn/LearnHub";
-import { CommunityHub } from "@/features/community/CommunityHub";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { EmptyState } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Route-level code splitting keeps the first paint lean; heavy, chart-backed
+// features load on demand.
+const Dashboard = lazy(() => import("@/features/dashboard/Dashboard").then((m) => ({ default: m.Dashboard })));
+const PlayerOS = lazy(() => import("@/features/player/PlayerOS").then((m) => ({ default: m.PlayerOS })));
+const FootballWorld = lazy(() => import("@/features/football/FootballWorld").then((m) => ({ default: m.FootballWorld })));
+const AiStudio = lazy(() => import("@/features/ai/AiStudio").then((m) => ({ default: m.AiStudio })));
+const SimulationLab = lazy(() => import("@/features/sim/SimulationLab").then((m) => ({ default: m.SimulationLab })));
+const TacticalStudio = lazy(() => import("@/features/tactical/TacticalStudio").then((m) => ({ default: m.TacticalStudio })));
+const ManagerOS = lazy(() => import("@/features/manager/ManagerOS").then((m) => ({ default: m.ManagerOS })));
+const LearnHub = lazy(() => import("@/features/learn/LearnHub").then((m) => ({ default: m.LearnHub })));
+const CommunityHub = lazy(() => import("@/features/community/CommunityHub").then((m) => ({ default: m.CommunityHub })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
   return FOOTBALL_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
+}
+
+function RouteFallback() {
+  return (
+    <div className="space-y-4 pt-2">
+      <Skeleton className="h-10 w-64 max-w-full" />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Skeleton className="h-40 lg:col-span-2" />
+        <Skeleton className="h-40" />
+      </div>
+      <Skeleton className="h-24 w-full" />
+    </div>
+  );
 }
 
 function Routes() {
@@ -32,7 +50,9 @@ function Routes() {
     if (!state.onboarded) return <Landing />;
     return (
       <AppShell>
-        <Dashboard />
+        <Suspense fallback={<RouteFallback />}>
+          <Dashboard />
+        </Suspense>
       </AppShell>
     );
   }
