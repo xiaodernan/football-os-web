@@ -15,6 +15,7 @@ import {
   careerForm,
   seasonOutlook,
   seasonSummary,
+  matchPrep,
   askingFee,
   sellFee,
   clubInput,
@@ -30,7 +31,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const KEY = "football-os.career.v1";
-type Tab = "overview" | "squad" | "transfers" | "tactics" | "table" | "outlook";
+type Tab = "overview" | "squad" | "transfers" | "tactics" | "table" | "outlook" | "prep";
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "squad", label: "Squad" },
@@ -38,6 +39,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "tactics", label: "Tactics" },
   { id: "table", label: "League table" },
   { id: "outlook", label: "Season outlook" },
+  { id: "prep", label: "Match prep" },
 ];
 
 export function ManagerOS() {
@@ -82,6 +84,7 @@ export function ManagerOS() {
       {tab === "tactics" && <TacticsPanel career={career} onChange={(t) => update((s) => setTactics(s, t))} onRest={() => { update(restSquad); toast("Squad rested") }} />}
       {tab === "table" && <Table career={career} />}
       {tab === "outlook" && <Outlook career={career} />}
+      {tab === "prep" && <MatchPrepPanel career={career} onApply={(t) => { update((s) => setTactics(s, t)); toast("Recommended tactics applied"); }} />}
     </div>
   );
 }
@@ -407,6 +410,70 @@ function Outlook({ career }: { career: CareerState }) {
             <div className="uppercase tracking-wide">Sources</div>
             <ul className="mt-1 space-y-0.5">{o.sources.map((s, i) => <li key={i}>· {s}</li>)}</ul>
           </div>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t: Tactics) => void }) {
+  const p = matchPrep(career);
+  const ment = ["Park the bus", "Defensive", "Balanced", "Attacking", "All-out"];
+  const pressLabel = (v: number) => (v < 0.35 ? "Deep block" : v < 0.7 ? "Medium press" : "High press");
+  const tempoLabel = (v: number) => (v < 0.35 ? "Low" : v < 0.7 ? "Medium" : "High");
+  const isCurrent = career.tactics.mentality === p.recommended.mentality && Math.abs(career.tactics.press - p.recommended.press) < 0.01 && Math.abs(career.tactics.tempo - p.recommended.tempo) < 0.01;
+  const vs = (label: string, a: number, b: number) => (
+    <div className="flex items-center justify-between rounded-md border bg-card/30 px-3 py-2 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-mono">{a} <span className="text-muted-foreground">v</span> {b}</span>
+      <span className={cn("font-mono text-xs", a >= b ? "text-success" : "text-destructive")}>{a - b >= 0 ? "+" : ""}{a - b}</span>
+    </div>
+  );
+  return (
+    <div className="grid gap-4 lg:grid-cols-3">
+      <div className="space-y-4 lg:col-span-2">
+        <Panel className="p-4">
+          <div className="flex items-center justify-between">
+            <SectionTitle title={`vs ${p.opponentName} (${p.venue})`} hint="Engine-input comparison" />
+            <DemoBadge />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Both sides run through the same Match Engine inputs your fixture will use, under neutral tactics.</p>
+          <div className="mt-3 space-y-1.5">
+            {vs("Attack vs their defense", p.us.attack, p.them.defense)}
+            {vs("Our defense vs their attack", p.us.defense, p.them.attack)}
+            {vs("Midfield battle", p.us.midfield, p.them.midfield)}
+          </div>
+        </Panel>
+        <Panel className="p-4">
+          <SectionTitle title="Recommended shape" />
+          <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
+            <Fact label="Mentality" value={ment[p.recommended.mentality + 2]} />
+            <Fact label="Press" value={pressLabel(p.recommended.press)} />
+            <Fact label="Tempo" value={tempoLabel(p.recommended.tempo)} />
+          </div>
+          <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+            {p.rationale.map((r, i) => (
+              <li key={i} className="flex items-start gap-1.5"><span className="text-primary">›</span><span>{r}</span></li>
+            ))}
+          </ul>
+          <div className="mt-3 flex items-center gap-3">
+            <Button size="sm" disabled={isCurrent} onClick={() => onApply(p.recommended)}>{isCurrent ? "Already applied" : "Apply these tactics"}</Button>
+            <Link to="/tactical-studio" className="text-xs text-primary hover:underline">Fine-tune in Tactical Studio →</Link>
+          </div>
+        </Panel>
+      </div>
+      <div className="space-y-4">
+        <Panel className="p-4">
+          <SectionTitle title="Confidence" />
+          <div className="mt-2 flex items-center gap-3">
+            <div className="h-2 flex-1 overflow-hidden rounded bg-muted"><div className="h-full bg-info" style={{ width: `${p.confidence}%` }} /></div>
+            <span className="font-mono text-xs">{p.confidence}%</span>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">Stronger when the on-paper edges are large; even matchups get a cautious recommendation.</p>
+        </Panel>
+        <Panel className="p-4">
+          <SectionTitle title="Sources" />
+          <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">{p.sources.map((s, i) => <li key={i}>· {s}</li>)}</ul>
         </Panel>
       </div>
     </div>

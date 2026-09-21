@@ -367,6 +367,83 @@ export function restSquad(state: CareerState): CareerState {
   return { ...state, fatigue: clamp(state.fatigue - 0.5, 0.05, 1) };
 }
 
+export interface MatchPrep {
+  opponentName: string;
+  weHome: boolean;
+  venue: "Home" | "Away";
+  us: { attack: number; midfield: number; defense: number };
+  them: { attack: number; midfield: number; defense: number };
+  attackEdge: number; // our attack - their defense
+  defenseEdge: number; // their attack - our defense (positive = we're exposed)
+  midfieldEdge: number; // our midfield - their midfield
+  recommended: Tactics;
+  rationale: string[];
+  confidence: number; // 0..100
+  sources: string[];
+}
+
+// Pre-match tactic advice, computed by feeding BOTH sides through the same
+// clubInput() the Match Engine will use — so the recommendation is grounded in
+// the exact quantities the simulation keys off, not a separate heuristic. Each
+// rule is stated with the number that triggered it.
+export function matchPrep(state: CareerState): MatchPrep {
+  const fx = fixtureAt(state.competitionId, state.clubId, state.results.length);
+  const form = careerForm(state);
+  const neutral: Tactics = { mentality: 0, tempo: 0.5, press: 0.5 };
+  const ourIn = clubInput(state.clubId, state.moved, neutral, form, state.morale, state.fatigue);
+  const theirIn = clubInput(fx.opponent, state.moved, neutral, 0, 0, 0);
+
+  const attackEdge = ourIn.attack - theirIn.defense;
+  const defenseEdge = theirIn.attack - ourIn.defense; // + means their attack beats our D
+  const midfieldEdge = ourIn.midfield - theirIn.midfield;
+
+  const rationale: string[] = [];
+  let mentality = 0;
+  if (attackEdge >= 4 && defenseEdge <= 2) {
+    mentality = attackEdge >= 12 ? 2 : 1;
+    rationale.push(`Attack edge +${attackEdge.toFixed(0)} over their defense with a safe back line → ${mentality > 1 ? "all-out" : "attacking"} mentality.`);
+  } else if (defenseEdge > 4) {
+    mentality = -1;
+    rationale.push(`Their attack outruns our defense by ${defenseEdge.toFixed(0)} → drop to a defensive mentality first.`);
+  } else if (attackEdge < -4) {
+    mentality = -1;
+    rationale.push(`We are the weaker side on paper (attack edge ${attackEdge.toFixed(0)}) → stay compact and counter.`);
+  } else rationale.push("Even matchup on paper → keep a balanced mentality.");
+
+  let press = 0.5;
+  if (midfieldEdge >= 3) {
+    press = 0.75;
+    rationale.push(`We win the midfield by ${midfieldEdge.toFixed(0)} → a high press converts possession into chances.`);
+  } else if (midfieldEdge <= -3) {
+    press = 0.3;
+    rationale.push(`They control midfield (${midfieldEdge.toFixed(0)}) → hold a deeper block and stay organized.`);
+  } else rationale.push("Midfield is balanced → a medium press keeps it neutral.");
+
+  let tempo = 0.5;
+  if (state.fatigue > 0.6) {
+    tempo = 0.35;
+    rationale.push(`Fatigue is ${Math.round(state.fatigue * 100)}% → slow the tempo to preserve legs.`);
+  } else if (attackEdge >= 6) {
+    tempo = 0.7;
+    rationale.push(`Clear attacking edge (+${attackEdge.toFixed(0)}) → play at a higher tempo to press the advantage.`);
+  } else rationale.push("No strong tempo signal → keep a medium tempo.");
+
+  return {
+    opponentName: getClub(fx.opponent)?.name ?? fx.opponent,
+    weHome: fx.weHome,
+    venue: fx.weHome ? "Home" : "Away",
+    us: { attack: Math.round(ourIn.attack), midfield: Math.round(ourIn.midfield), defense: Math.round(ourIn.defense) },
+    them: { attack: Math.round(theirIn.attack), midfield: Math.round(theirIn.midfield), defense: Math.round(theirIn.defense) },
+    attackEdge: Math.round(attackEdge),
+    defenseEdge: Math.round(defenseEdge),
+    midfieldEdge: Math.round(midfieldEdge),
+    recommended: { mentality, tempo, press },
+    rationale,
+    confidence: Math.min(90, Math.round(55 + Math.abs(attackEdge) + Math.abs(midfieldEdge) / 2 + Math.abs(defenseEdge))),
+    sources: ["Match Engine clubInput (your squad + tactics)", "Opponent effective squad", "Current morale, fatigue and form"],
+  };
+}
+
 export interface SeasonSummary {
   played: number;
   won: number;
