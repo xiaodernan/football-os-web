@@ -13,6 +13,7 @@ import { SimulationLab } from "@/features/sim/SimulationLab";
 import { TacticalStudio } from "@/features/tactical/TacticalStudio";
 import { ManagerOS } from "@/features/manager/ManagerOS";
 import { LearnHub } from "@/features/learn/LearnHub";
+import { CommunityHub } from "@/features/community/CommunityHub";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { EmptyState } from "@/ui/primitives";
@@ -44,6 +45,7 @@ function Routes() {
   else if (path === "/knowledge") inner = <AiStudio initialTab="graph" />;
   else if (path === "/tactical-studio") inner = <TacticalStudio />;
   else if (path === "/learn") inner = <LearnHub />;
+  else if (path === "/community") inner = <CommunityHub />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 
