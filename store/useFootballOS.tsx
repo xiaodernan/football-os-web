@@ -71,6 +71,25 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
 }
 
+// Records persisted by earlier builds can omit array fields that consumers
+// iterate (a session without `exercises` blanked the whole Dashboard). Repair
+// them once at the storage boundary instead of guarding every read site.
+function normalizeHydrated(s: OsState): OsState {
+  return {
+    ...s,
+    sessions: (s.sessions ?? []).map((x) => ({
+      ...x,
+      exercises: x.exercises ?? [],
+      focusAttributes: x.focusAttributes ?? [],
+    })),
+    plans: s.plans ?? [],
+    goals: s.goals ?? [],
+    memory: s.memory ?? [],
+    watchlist: s.watchlist ?? [],
+    progress: s.progress ?? [],
+  };
+}
+
 function reducer(state: OsState, action: Action): OsState {
   switch (action.type) {
     case "HYDRATE":
@@ -215,7 +234,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) dispatch({ type: "HYDRATE", state: { ...initialState, ...JSON.parse(raw) } });
+      if (raw) dispatch({ type: "HYDRATE", state: normalizeHydrated({ ...initialState, ...(JSON.parse(raw) as Partial<OsState>) }) });
     } catch {
       /* fall back to fresh state */
     }
