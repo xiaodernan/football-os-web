@@ -63,6 +63,8 @@ export function CommandPalette() {
       { id: "sim", label: t("nav.simulation"), group: "Go to", run: nav("/simulation") },
       { id: "learn", label: t("nav.learn"), group: "Go to", run: nav("/learn") },
       { id: "scouting", label: t("nav.scouting"), group: "Go to", run: nav("/scouting") },
+      { id: "dynamic-world", label: t("nav.world"), group: "Go to", run: nav("/world") },
+      { id: "film", label: t("nav.film"), group: "Go to", run: nav("/film") },
       { id: "community", label: t("nav.community"), group: "Go to", run: nav("/community") },
     ];
     if (state.onboarded) {
