@@ -13,10 +13,13 @@ import {
   formatValue,
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
+import { overallRating } from "@/domain/attributes";
+import { evaluateAchievements, type AchievementInput } from "@/domain/achievements";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -47,6 +50,29 @@ export function Dashboard() {
   const nextSession = state.sessions.find((s) => s.status === "planned");
   const upcoming = profile?.favoriteClubId ? upcomingMatchesForClub(profile.favoriteClubId, 3) : [];
   const progressPts = state.progress.map((p, i) => ({ label: i === 0 ? "start" : `${i}`, value: p.overall }));
+
+  const growth = useMemo(() => {
+    if (!profile) return null;
+    const completed = state.sessions.filter((s) => s.status === "completed");
+    const input: AchievementInput = {
+      level: info?.level ?? 1,
+      xp: profile.xp,
+      sessions: completed.length,
+      streak: state.streak.current,
+      goalsDone: state.goals.filter((g) => g.done).length,
+      watchlist: state.watchlist.length,
+      plans: state.plans.length,
+    };
+    const list = evaluateAchievements(input);
+    const locked = list
+      .filter((a) => !a.unlocked)
+      .sort((a, b) => b.pct - a.pct || a.target - b.target);
+    const next = locked[0] ?? null;
+    const last = completed
+      .slice()
+      .sort((a, b) => new Date(b.completedAt ?? b.date).getTime() - new Date(a.completedAt ?? a.date).getTime())[0];
+    return { next, total: list.length, unlocked: list.length - locked.length, last };
+  }, [profile, info, state]);
 
   return (
     <div className="space-y-6">
@@ -116,7 +142,7 @@ export function Dashboard() {
                 <>
                   <ProgressLine points={progressPts} height={120} />
                   <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                    <span>Overall {Math.round(Object.values(profile.attributes).reduce((a, b) => a + b, 0) / 33)}</span>
+                    <span>Overall {profile ? overallRating(profile.attributes) : 0}</span>
                     <span>{t("common.nextLevel")}: {info && info.forNext - info.intoLevel} XP</span>
                   </div>
                 </>
@@ -145,6 +171,48 @@ export function Dashboard() {
 
         {/* right column */}
         <div className="space-y-4">
+          {growth && (
+            <Panel className="p-4">
+              <SectionTitle
+                title={t("dash.growth")}
+                action={<span className="font-mono text-xs text-muted-foreground tabular-nums">{growth.unlocked}/{growth.total}</span>}
+              />
+              {growth.next ? (
+                <Link to="/achievements" className="block rounded-lg border border-border/60 bg-secondary/20 p-3 transition-colors hover:border-primary/40 hover:bg-secondary/40">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>🔒</span>
+                    <span className="uppercase tracking-wide">{t("dash.nextBadge")}</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/15 text-sm text-primary">{growth.next.icon}</span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">{t(`ach.name.${growth.next.id}`)}</span>
+                    <span className="font-mono text-xs text-muted-foreground tabular-nums">{Math.min(growth.next.value, growth.next.target)}/{growth.next.target}</span>
+                  </div>
+                  <div className="mt-2"><Progress value={growth.next.pct * 100} /></div>
+                  <div className="mt-1 text-[11px] text-muted-foreground">{t(`ach.desc.${growth.next.id}`)}</div>
+                </Link>
+              ) : (
+                <Link to="/achievements" className="block rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-success">
+                  {t("dash.allBadges")} →
+                </Link>
+              )}
+              <div className="mt-3 border-t pt-3">
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span className="uppercase tracking-wide text-muted-foreground">{t("dash.recent")}</span>
+                  <Link to="/history" className="text-primary hover:underline">{t("dash.viewHistory")} →</Link>
+                </div>
+                {growth.last ? (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="min-w-0 truncate">{growth.last.title}</span>
+                    <span className="ml-2 shrink-0 text-[11px] text-muted-foreground">{relTime(growth.last.completedAt ?? growth.last.date)}</span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">{t("dash.noActivity")}</p>
+                )}
+              </div>
+            </Panel>
+          )}
+
           <Panel className="p-4">
             <SectionTitle title="Your attributes" />
             {profile ? (
