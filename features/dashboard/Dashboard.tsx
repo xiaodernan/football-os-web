@@ -305,6 +305,7 @@ const MODULE_LINKS = [
   { to: "/player", label: "nav.player", icon: "●" },
   { to: "/manager", label: "nav.manager", icon: "▤" },
   { to: "/profile", label: "nav.profile", icon: "☺" },
+  { to: "/review", label: "nav.review", icon: "◷" },
   { to: "/achievements", label: "nav.achievements", icon: "♛" },
   { to: "/settings", label: "nav.settings", icon: "⚙" },
   { to: "/history", label: "nav.history", icon: "⧗" },

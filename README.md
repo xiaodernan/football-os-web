@@ -35,6 +35,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | Achievements & Trophies | `/achievements` | Badges grouped by Training, Consistency, Growth and Explorer — each unlocked only from a genuine signal already in your local state (sessions logged, streak kept, goals met, plans requested, players watched, level reached), with transparent progress bars and trophy points. |
 | Settings & Data | `/settings` | Switch mode / language / theme, see how many records and how much storage your activity uses, export the full local state as JSON, and a guarded reset — all entirely on-device. |
 | Activity History | `/history` | A day-grouped timeline merged from your real completed sessions, AI coach plans and coach-memory records, filterable by event type, sorted newest-first — nothing invented, every row reads straight from local state. |
+| Weekly Review | `/review` | A coach-style period digest (7/30/90-day windows) compiled only from your local log: sessions, minutes, XP, streak, overall trend, self-rated quality, focus mix, an honest highlight list and a next-focus recommendation — each labelled with a confidence score and the evidence behind it, no external model called. |
 | Command palette | `⌘K` / `Ctrl-K` | Jump to any route or search entities across the world. |
 
 ## Architecture
