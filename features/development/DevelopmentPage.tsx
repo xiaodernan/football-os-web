@@ -3,6 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { analyzeGap, type GapItem } from "@/domain/gap";
+import { projectGrowth } from "@/domain/projection";
 import { POSITION_GROUPS } from "@/domain/attributes";
 import type { PositionGroup } from "@/domain/types";
 import { DEMO_MODE } from "@/data/footballService";
@@ -47,11 +48,22 @@ export function DevelopmentPage() {
   const { navigate } = useRouter();
   const profile = state.profile;
   const [group, setGroup] = useState<PositionGroup>(profile?.positionGroup ?? "CM");
+  const [weeks, setWeeks] = useState(8);
+  const [perWeek, setPerWeek] = useState(3);
 
   const analysis = useMemo(
     () => (profile ? analyzeGap({ attributes: profile.attributes, group }) : null),
     [profile, group],
   );
+
+  const projection = useMemo(() => {
+    if (!analysis || !profile) return null;
+    const focus = analysis.priorities.slice(0, 4).map((p) => p.key);
+    if (!focus.length) return null;
+    const proj = projectGrowth({ attributes: profile.attributes, focusKeys: focus, sessionsPerWeek: perWeek, weeks, rating: 4 });
+    const after = analyzeGap({ attributes: proj.projectedAttributes, group });
+    return { proj, after };
+  }, [analysis, profile, group, weeks, perWeek]);
 
   if (!profile || !analysis) {
     return (
@@ -133,6 +145,52 @@ export function DevelopmentPage() {
             <p className="mt-2 text-sm text-muted-foreground">{t("dv.noGaps")}</p>
           )}
         </Panel>
+
+        {projection && (
+          <Panel className="p-4">
+            <SectionTitle
+              title={t("dv.projTitle")}
+              hint={t("dv.projHint")}
+              action={
+                <div className="flex items-center gap-3 text-xs">
+                  <label className="flex items-center gap-1 text-muted-foreground">
+                    {t("dv.projWeeks")}
+                    <select value={weeks} onChange={(e) => setWeeks(Number(e.target.value))} className="rounded border border-border/60 bg-transparent px-1 py-0.5 text-foreground">
+                      {[4, 8, 12, 16].map((w) => <option key={w} value={w}>{w}</option>)}
+                    </select>
+                  </label>
+                  <label className="flex items-center gap-1 text-muted-foreground">
+                    {t("dv.projPerWeek")}
+                    <select value={perWeek} onChange={(e) => setPerWeek(Number(e.target.value))} className="rounded border border-border/60 bg-transparent px-1 py-0.5 text-foreground">
+                      {[1, 2, 3, 4, 5].map((w) => <option key={w} value={w}>{w}</option>)}
+                    </select>
+                  </label>
+                </div>
+              }
+            />
+            <div className="mt-3 flex items-center gap-4 rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
+              <div>
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t("dv.readiness")}</div>
+                <div className="font-mono tabular-nums">{analysis.readiness}% → <span className="text-success">{projection.after.readiness}%</span></div>
+              </div>
+              <div>
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{t("dv.overall")}</div>
+                <div className="font-mono tabular-nums">{projection.proj.overallBefore} → <span className="text-success">{projection.proj.overallAfter}</span></div>
+              </div>
+            </div>
+            <div className="mt-3 space-y-2">
+              {projection.proj.items.map((it) => (
+                <div key={it.key} className="flex items-center justify-between text-sm">
+                  <span className="min-w-0 truncate">{it.label}</span>
+                  <span className="ml-2 shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+                    {it.from} → {it.to} <span className="text-success">+{it.delta}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-[11px] text-muted-foreground">{t("dv.projDisclaimer").replace("{n}", String(projection.proj.items.length))}</p>
+          </Panel>
+        )}
 
         <Panel className="p-4">
           <SectionTitle title={t("dv.strengths")} hint={t("dv.strengthsHint")} />
