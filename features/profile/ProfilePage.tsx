@@ -189,10 +189,11 @@ export function ProfilePage() {
         </Panel>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <LinkCard to="/player" icon="●" title={t("prof.cardTraining")} hint={t("prof.cardTrainingHint")} />
         <LinkCard to="/scouting" icon="⌖" title={t("prof.cardScouting")} hint={t("prof.cardScoutingHint")} />
         <LinkCard to="/watchlist" icon="☆" title={t("prof.cardWatchlist")} hint={t("prof.cardWatchlistHint")} />
+        <LinkCard to="/achievements" icon="♛" title={t("prof.cardAchievements")} hint={t("prof.cardAchievementsHint")} />
       </div>
 
       <p className="text-[11px] text-muted-foreground">{t("prof.disclaimer")}</p>

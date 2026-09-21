@@ -237,6 +237,7 @@ const MODULE_LINKS = [
   { to: "/player", label: "nav.player", icon: "●" },
   { to: "/manager", label: "nav.manager", icon: "▤" },
   { to: "/profile", label: "nav.profile", icon: "☺" },
+  { to: "/achievements", label: "nav.achievements", icon: "♛" },
   { to: "/scouting", label: "nav.scouting", icon: "⌖" },
   { to: "/world", label: "nav.world", icon: "⧗" },
   { to: "/film", label: "nav.film", icon: "✂" },
