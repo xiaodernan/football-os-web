@@ -30,6 +30,7 @@ const DataRoom = lazy(() => import("@/features/analytics/DataRoom").then((m) => 
 const TransferCentre = lazy(() => import("@/features/transfers/TransferCentre").then((m) => ({ default: m.TransferCentre })));
 const ComparePage = lazy(() => import("@/features/compare/ComparePage").then((m) => ({ default: m.ComparePage })));
 const WatchlistBoard = lazy(() => import("@/features/watchlist/WatchlistBoard").then((m) => ({ default: m.WatchlistBoard })));
+const ProfilePage = lazy(() => import("@/features/profile/ProfilePage").then((m) => ({ default: m.ProfilePage })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
@@ -80,6 +81,7 @@ function Routes() {
   else if (path === "/transfers") inner = <TransferCentre />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
+  else if (path === "/profile") inner = <ProfilePage />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 

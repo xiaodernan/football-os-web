@@ -31,6 +31,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | Transfer Centre | `/transfers` | Rumour board built from the world's own news feed: each linked target carries its source + credibility, a transparent asking-fee estimate, value index and headroom, plus a squad-fit score against your favourite club's depth. |
 | Player Comparison | `/compare` | Head-to-head duel built only from the dataset's real fields (overall, potential, age, value): metric-by-metric diffs with a relative bar, a win count and a transparent verdict that blends quality, upside and prime-window length. |
 | Watchlist Board | `/watchlist` | Your device-local starred players in one sortable board (value, potential, overall, age) with derived asking estimates — tick any two to open a head-to-head in the Compare tool. |
+| My Profile | `/profile` | A personal growth dashboard built entirely from your locally-stored activity: level and XP curve, ability radar with strengths and focus areas, overall-rating trend, toggleable goals, recent sessions and favourites. |
 | Command palette | `⌘K` / `Ctrl-K` | Jump to any route or search entities across the world. |
 
 ## Architecture

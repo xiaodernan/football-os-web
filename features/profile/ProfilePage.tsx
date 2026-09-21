@@ -1,0 +1,228 @@
+import { useMemo, type ReactNode } from "react";
+import { Link, useRouter } from "@/lib/router";
+import { useI18n } from "@/i18n";
+import { getClub, getPlayer } from "@/data/footballService";
+import { useOs } from "@/store/useFootballOS";
+import { levelInfo } from "@/domain/xp";
+import { overallRating, attributeLabel, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
+import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
+import { AttributeRadar, ProgressLine } from "@/ui/charts";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+export function ProfilePage() {
+  const { t } = useI18n();
+  const { state, toggleGoal } = useOs();
+  const { navigate } = useRouter();
+  const p = state.profile;
+
+  const completed = useMemo(() => state.sessions.filter((s) => s.status === "completed"), [state.sessions]);
+  const goalsDone = state.goals.filter((g) => g.done).length;
+
+  const ranked = useMemo(() => {
+    if (!p) return [];
+    return ATTRIBUTE_DEFS.map((d) => ({ key: d.key, value: p.attributes[d.key] ?? 0 })).sort((a, b) => b.value - a.value);
+  }, [p]);
+  const strengths = ranked.slice(0, 4);
+  const focus = p ? weakestAttributes(p.attributes, 4) : [];
+
+  const points = useMemo(
+    () => state.progress.slice(-24).map((r) => ({ label: fmtDate(r.date), value: r.overall })),
+    [state.progress],
+  );
+
+  if (!p) {
+    return (
+      <Panel className="p-6">
+        <EmptyState title={t("prof.noProfile")} icon="☺" hint={t("prof.noProfileHint")} />
+        <div className="mt-4 flex justify-center">
+          <Button size="sm" onClick={() => navigate("/onboarding")}>{t("prof.createProfile")}</Button>
+        </div>
+      </Panel>
+    );
+  }
+
+  const info = levelInfo(p.xp);
+  const overall = overallRating(p.attributes);
+  const club = p.favoriteClubId ? getClub(p.favoriteClubId) : undefined;
+  const favPlayer = p.favoritePlayerId ? getPlayer(p.favoritePlayerId) : undefined;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/15 text-2xl font-bold text-primary">
+            {p.displayName.slice(0, 1).toUpperCase()}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight">{p.displayName}</h1>
+              <DemoBadge />
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              <Badge variant="outline" className="text-primary capitalize">{t(`prof.mode.${p.mode}`)}</Badge>
+              <span>·</span>
+              <span>{p.position}</span>
+              <span>·</span>
+              <span>{t("prof.created")} {fmtDate(p.createdAt)}</span>
+            </div>
+          </div>
+        </div>
+        <Link to="/player" className="text-sm text-primary hover:underline">{t("prof.goTraining")} →</Link>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatTile label={t("common.level")} value={info.level} sub={`${info.intoLevel}/${info.forNext} XP`} />
+        <StatTile label={t("common.overall")} value={overall} tone="up" />
+        <StatTile label={t("prof.xp")} value={p.xp} />
+        <StatTile label={t("prof.streak")} value={`${state.streak.current}d`} sub={state.streak.lastCompletedDate ? t("prof.active") : t("prof.idle")} />
+      </div>
+
+      <Panel className="p-4">
+        <div className="mb-1 flex items-center justify-between">
+          <SectionTitle title={t("prof.toNextLevel")} />
+          <span className="font-mono text-xs text-muted-foreground tabular-nums">{Math.round(info.progress * 100)}%</span>
+        </div>
+        <Progress value={info.progress * 100} />
+      </Panel>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel className="p-4">
+          <SectionTitle title={t("prof.abilities")} hint={t("prof.abilitiesHint")} />
+          <AttributeRadar attrs={p.attributes} />
+          <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5">
+            {strengths.map((s) => (
+              <div key={`s-${s.key}`} className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">{attributeLabel(s.key)}</span>
+                <span className="font-mono font-semibold tabular-nums text-success">{s.value}</span>
+              </div>
+            ))}
+            {focus.map((s) => (
+              <div key={`f-${s.key}`} className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">{attributeLabel(s.key)}</span>
+                <span className="font-mono tabular-nums text-warning">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+
+        <Panel className="p-4">
+          <SectionTitle title={t("prof.progress")} hint={t("prof.progressHint")} />
+          {points.length > 1 ? (
+            <ProgressLine points={points} />
+          ) : (
+            <div className="py-10 text-center text-xs text-muted-foreground">{t("prof.needMoreData")}</div>
+          )}
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <Mini label={t("prof.sessions")} value={completed.length} />
+            <Mini label={t("prof.goalsDone")} value={`${goalsDone}/${state.goals.length}`} />
+            <Mini label={t("prof.watchlist")} value={state.watchlist.length} />
+          </div>
+        </Panel>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel className="p-4">
+          <SectionTitle title={t("prof.goals")} hint={t("prof.goalsHint")} />
+          {state.goals.length ? (
+            <div className="mt-2 space-y-3">
+              {state.goals.map((g) => {
+                const pct = g.target > 0 ? Math.min(100, Math.round((g.current / g.target) * 100)) : 0;
+                return (
+                  <button key={g.id} onClick={() => toggleGoal(g.id)} className="block w-full text-left">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className={cn("font-medium", g.done && "text-muted-foreground line-through")}>
+                        <span className={cn("mr-1.5", g.done ? "text-success" : "text-muted-foreground")}>{g.done ? "☑" : "☐"}</span>
+                        {g.title}
+                      </span>
+                      <span className="font-mono text-xs text-muted-foreground tabular-nums">{g.current}/{g.target} {g.unit}</span>
+                    </div>
+                    <div className="mt-1"><Progress value={pct} /></div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-6 text-center text-xs text-muted-foreground">{t("prof.noGoals")}</div>
+          )}
+        </Panel>
+
+        <Panel className="p-4">
+          <SectionTitle title={t("prof.recent")} hint={t("prof.recentHint")} />
+          {completed.length ? (
+            <div className="mt-2 divide-y">
+              {completed.slice(0, 6).map((s) => (
+                <div key={s.id} className="flex items-center justify-between py-2 text-sm">
+                  <div className="min-w-0">
+                    <div className="truncate">{s.title}</div>
+                    <div className="text-[11px] text-muted-foreground">{fmtDate(s.completedAt ?? s.date)}{s.selfRating ? ` · ${s.selfRating}/5` : ""}</div>
+                  </div>
+                  <Badge variant="outline" className="shrink-0 font-mono text-success">+{s.xpAwarded ?? 0} XP</Badge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-6 text-center text-xs text-muted-foreground">{t("prof.noSessions")}</div>
+          )}
+        </Panel>
+      </div>
+
+      {(club || favPlayer) && (
+        <Panel className="p-4">
+          <SectionTitle title={t("prof.favourites")} />
+          <div className="mt-2 flex flex-wrap gap-4">
+            {club && (
+              <Link to={`/clubs/${club.id}`} className="flex items-center gap-2 text-sm hover:text-primary">
+                <Crest colors={club.colors} short={club.short} size={28} />
+                <span>{club.name}</span>
+              </Link>
+            )}
+            {favPlayer && (
+              <Link to={`/players/${favPlayer.id}`} className="flex items-center gap-2 text-sm hover:text-primary">
+                <Crest colors={getClub(favPlayer.clubId)?.colors} short={getClub(favPlayer.clubId)?.short} size={28} />
+                <span>{favPlayer.name}</span>
+              </Link>
+            )}
+          </div>
+        </Panel>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <LinkCard to="/player" icon="●" title={t("prof.cardTraining")} hint={t("prof.cardTrainingHint")} />
+        <LinkCard to="/scouting" icon="⌖" title={t("prof.cardScouting")} hint={t("prof.cardScoutingHint")} />
+        <LinkCard to="/watchlist" icon="☆" title={t("prof.cardWatchlist")} hint={t("prof.cardWatchlistHint")} />
+      </div>
+
+      <p className="text-[11px] text-muted-foreground">{t("prof.disclaimer")}</p>
+    </div>
+  );
+}
+
+function Mini({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="rounded-lg border bg-card/50 px-2 py-1.5">
+      <div className="text-lg font-semibold tabular-nums">{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+function LinkCard({ to, icon, title, hint }: { to: string; icon: string; title: string; hint: string }) {
+  return (
+    <Link to={to} className="flex items-center gap-3 rounded-xl border border-border/60 bg-secondary/20 px-3.5 py-3 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/40">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary">{icon}</span>
+      <span className="min-w-0">
+        <span className="block font-medium">{title}</span>
+        <span className="block truncate text-xs text-muted-foreground">{hint}</span>
+      </span>
+    </Link>
+  );
+}
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}

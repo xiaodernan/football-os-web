@@ -41,6 +41,7 @@ const I = {
   transfer: "⇄",
   compare: "⚖",
   star: "☆",
+  user: "☺",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -58,6 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (state.onboarded) {
     modes.push({ to: "/player", label: t("nav.player"), icon: I.ball, match: ["/player"] });
     modes.push({ to: "/manager", label: t("nav.manager"), icon: I.board, match: ["/manager"] });
+    modes.push({ to: "/profile", label: t("nav.profile"), icon: I.user, match: ["/profile"] });
   }
   const studio: NavItem[] = [
     { to: "/ai", label: t("nav.ai"), icon: I.bolt, match: ["/ai"] },

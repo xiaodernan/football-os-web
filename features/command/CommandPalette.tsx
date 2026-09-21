@@ -69,6 +69,7 @@ export function CommandPalette() {
       { id: "transfers", label: t("nav.transfers"), group: "Go to", run: nav("/transfers") },
       { id: "compare", label: t("nav.compare"), group: "Go to", run: nav("/compare") },
       { id: "watchlist", label: t("nav.watch"), group: "Go to", run: nav("/watchlist") },
+      { id: "profile", label: t("nav.profile"), group: "Go to", run: nav("/profile") },
       { id: "community", label: t("nav.community"), group: "Go to", run: nav("/community") },
     ];
     if (state.onboarded) {
