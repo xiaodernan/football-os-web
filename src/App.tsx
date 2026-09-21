@@ -23,6 +23,7 @@ const TacticalStudio = lazy(() => import("@/features/tactical/TacticalStudio").t
 const ManagerOS = lazy(() => import("@/features/manager/ManagerOS").then((m) => ({ default: m.ManagerOS })));
 const LearnHub = lazy(() => import("@/features/learn/LearnHub").then((m) => ({ default: m.LearnHub })));
 const CommunityHub = lazy(() => import("@/features/community/CommunityHub").then((m) => ({ default: m.CommunityHub })));
+const ScoutingPanel = lazy(() => import("@/features/scouting/ScoutingPanel").then((m) => ({ default: m.ScoutingPanel })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
@@ -66,6 +67,7 @@ function Routes() {
   else if (path === "/tactical-studio") inner = <TacticalStudio />;
   else if (path === "/learn") inner = <LearnHub />;
   else if (path === "/community") inner = <CommunityHub />;
+  else if (path === "/scouting") inner = <ScoutingPanel />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 

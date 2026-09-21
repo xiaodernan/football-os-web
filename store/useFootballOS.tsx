@@ -234,7 +234,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
   // Persist after hydration completes to avoid clobbering stored data.
   const ready = true;
   useEffect(() => {
-    if (state.onboarded || state.sessions.length || state.progress.length) persist(state);
+    if (state.onboarded || state.sessions.length || state.progress.length || state.watchlist.length || state.plans.length) persist(state);
   }, [state, persist]);
 
   const value = useMemo<OsContext>(

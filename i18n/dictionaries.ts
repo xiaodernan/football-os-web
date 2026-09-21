@@ -28,6 +28,7 @@ const en: Dict = {
   "nav.ai": "Football AI",
   "nav.knowledge": "Knowledge Graph",
   "nav.community": "Community",
+  "nav.scouting": "Scouting",
   "nav.search": "Search",
   "nav.mode": "Mode",
 
@@ -118,6 +119,7 @@ const zhCN: Dict = {
   "nav.ai": "足球 AI",
   "nav.knowledge": "知识图谱",
   "nav.community": "社区",
+  "nav.scouting": "球探",
   "nav.search": "搜索",
   "nav.mode": "模式",
   "cta.enter": "进入 Football OS",
@@ -201,6 +203,7 @@ const zhTW: Dict = {
   "nav.ai": "足球 AI",
   "nav.knowledge": "知識圖譜",
   "nav.community": "社群",
+  "nav.scouting": "球探",
   "cta.enter": "進入 Football OS",
   "cta.explore": "探索足球世界",
   "cta.continue": "繼續",

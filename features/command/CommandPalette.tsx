@@ -62,6 +62,7 @@ export function CommandPalette() {
       { id: "tactical", label: t("nav.tactical"), group: "Go to", run: nav("/tactical-studio") },
       { id: "sim", label: t("nav.simulation"), group: "Go to", run: nav("/simulation") },
       { id: "learn", label: t("nav.learn"), group: "Go to", run: nav("/learn") },
+      { id: "scouting", label: t("nav.scouting"), group: "Go to", run: nav("/scouting") },
       { id: "community", label: t("nav.community"), group: "Go to", run: nav("/community") },
     ];
     if (state.onboarded) {
