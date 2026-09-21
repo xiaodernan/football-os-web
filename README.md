@@ -24,6 +24,8 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | Simulation Lab | `/simulation` | Tune tactics and run the deterministic Match Engine for a single fixture or a full season. |
 | Knowledge Academy | `/learn` | Short football-analytics and tactics lessons with comprehension checks and progress. |
 | Community | `/community` | Discussion threads seeded from live world data; reply and like (stored on device). |
+| Scouting | `/scouting` | Club-needs profile, best-value picks and a filterable prospect table with compare; shortlist feeds the Command Center watchlist. |
+| Dynamic World | `/world` | Deterministic season-by-season simulation layered over the dataset: players age and develop, get re-priced, retire and are replaced by academy prospects, and league champions are crowned each step. |
 | Command palette | `⌘K` / `Ctrl-K` | Jump to any route or search entities across the world. |
 
 ## Architecture

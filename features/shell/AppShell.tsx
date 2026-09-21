@@ -35,6 +35,7 @@ const I = {
   search: "⌕",
   scope: "⌖",
   trophy: "♛",
+  timeline: "⧗",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -46,6 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const primary: NavItem[] = [
     { to: "/", label: t("nav.home"), icon: I.grid, match: ["/"] },
     { to: "/football", label: t("nav.football"), icon: I.globe, match: ["/football", "/players", "/clubs", "/competitions", "/matches", "/news"] },
+    { to: "/world", label: t("nav.world"), icon: I.timeline, match: ["/world"] },
   ];
   const modes: NavItem[] = [];
   if (state.onboarded) {

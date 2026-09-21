@@ -24,6 +24,7 @@ const ManagerOS = lazy(() => import("@/features/manager/ManagerOS").then((m) => 
 const LearnHub = lazy(() => import("@/features/learn/LearnHub").then((m) => ({ default: m.LearnHub })));
 const CommunityHub = lazy(() => import("@/features/community/CommunityHub").then((m) => ({ default: m.CommunityHub })));
 const ScoutingPanel = lazy(() => import("@/features/scouting/ScoutingPanel").then((m) => ({ default: m.ScoutingPanel })));
+const DynamicWorld = lazy(() => import("@/features/world/DynamicWorld").then((m) => ({ default: m.DynamicWorld })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
@@ -68,10 +69,15 @@ function Routes() {
   else if (path === "/learn") inner = <LearnHub />;
   else if (path === "/community") inner = <CommunityHub />;
   else if (path === "/scouting") inner = <ScoutingPanel />;
+  else if (path === "/world") inner = <DynamicWorld />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 
-  return <AppShell>{inner}</AppShell>;
+  return (
+    <AppShell>
+      <Suspense fallback={<RouteFallback />}>{inner}</Suspense>
+    </AppShell>
+  );
 }
 
 function NotReady() {
