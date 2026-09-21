@@ -1,56 +1,85 @@
-# Qoder Sites React starter
+# Football OS
 
-A React, TypeScript, Vite and Tailwind frontend with a bundled Shadcn component catalog. Vite produces static files in `dist/`. Server behavior belongs in the optional Qoder Sites Function, not a Node or framework server.
+A football operating system that combines a football world, personal development, an
+AI coach, a knowledge graph, tactical tools and a deterministic match engine. Three
+native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset.
+
+> **Runs fully in Demo Mode.** No API keys, no AI provider, no football data feed and
+> no video model are required. Every number, fixture, player and "highlight" is
+> generated deterministically from a seeded synthetic dataset, and is labelled
+> `● DEMO DATA · synthetic` in the UI. This is not real football data.
+
+## What is here
+
+| Area | Route(s) | What it does |
+| --- | --- | --- |
+| Landing / Onboarding | `/`, `/onboarding` | Introduces the product and creates a profile + mode. |
+| Command Center | `/` (post-onboarding) | Dashboard of fixtures, news, trending players and your progress. |
+| Football World | `/football`, `/players`, `/clubs`, `/competitions`, `/matches`, `/news`, `/search` | Browse a synthetic world of 39 clubs, 318 players, 8 competitions and their fixtures/standings; entity detail pages with source-grounded news. |
+| Player OS | `/player` | Training plan loop: AI coach → session → complete → XP, attribute growth, streaks and goals. |
+| Manager OS | `/manager` | Take charge of a club: play fixtures, buy/sell players, set team instructions, and climb a live league table. |
+| Football AI | `/ai` | RAG-style chat grounded in the world dataset, always with evidence, sources and a confidence score. |
+| Knowledge Graph | `/knowledge` | Radial graph linking clubs, players, competitions and news; click a node to navigate. |
+| Tactical Studio | `/tactical-studio` | Draggable 2D coaching board with formation presets, mentality and shape read-out. |
+| Simulation Lab | `/simulation` | Tune tactics and run the deterministic Match Engine for a single fixture or a full season. |
+| Knowledge Academy | `/learn` | Short football-analytics and tactics lessons with comprehension checks and progress. |
+| Community | `/community` | Discussion threads seeded from live world data; reply and like (stored on device). |
+| Command palette | `⌘K` / `Ctrl-K` | Jump to any route or search entities across the world. |
+
+## Architecture
+
+```
+domain/     pure, deterministic logic — match engine, career model, community seeding,
+            attributes, XP. No React, no I/O: the testable core.
+data/       provider layer + synthetic world seed. The UI never reads the seed directly.
+store/      global user state (reducer + Context) persisted to localStorage.
+features/   route-level UI, split into lazily-loaded chunks.
+lib/        router (hash-based), i18n, theme, hooks, rng.
+ui/         shared primitives.   components/ui: Shadcn primitives.
+src/        entry (App.tsx routes), globals.css, main.
+```
+
+- **Provider abstraction.** `footballProvider` (world data), `coachProvider` (AI
+  plans), a video provider (`data/video.ts`) and the intelligence layer
+  (`data/intelligence.ts`) each sit behind an interface, so a real backend or model can
+  replace the Demo implementation without touching components.
+- **Determinism.** A seeded PRNG (`lib/rng.ts`, mulberry32 + FNV) drives world
+  generation and every simulation, so identical inputs always reproduce identical
+  results — required by the simulation contract.
+- **Persistence.** User profiles, training, saved formations, manager careers, academy
+  progress and community posts live in `localStorage` (device-local), with clear
+  `provider` seams for later server storage. No credentials or secrets are ever
+  placed in the frontend.
+- **Every state is handled.** Views include loading, empty, error and offline/degraded
+  states; the language switcher covers English / 简体中文 / 繁體中文.
 
 ## Develop
 
-Use Node 22.12 or later in the 22.x series:
+Use Node 22.12+ (22.x):
 
 ```sh
 npm ci
-npm run dev
+npm run dev      # Vite on the printed loopback URL (e.g. http://127.0.0.1:5173/)
+npm run build    # type-check + static export into dist/
+npm run preview  # serve the built output
 ```
 
-Use the loopback URL printed by Vite. Edit `src/App.tsx`, `src/globals.css` and the title/description in `index.html`. Replace the sample page with the requested product before presenting a first meaningful preview. Import existing UI primitives from `@/components/ui/<component>` and compose them for the site's design. The neutral starter theme is a starting point, not the finished visual direction.
+The app is a static SPA with hash routing, so deep links work without a server.
+Route-level code splitting keeps the initial chunk small; chart-heavy screens load on
+demand.
 
-For production output:
+## Roadmap status
 
-```sh
-npm run build
-npm run preview
-```
+Built and verified: shell + onboarding, Player OS loop, Football World browse, AI chat +
+knowledge graph, Tactical Studio, Simulation Lab, Manager career, Knowledge Academy,
+Community, i18n and code-splitting.
 
-The build fixes `NODE_ENV=production` before loading Vite, independently of the terminal environment. It checks the frontend and bundled component types and emits `dist/index.html` and assets. `npm run preview` serves this output locally. Reuse passing checks while source is unchanged; no additional unit-test suite or browser QA is required by the template.
+Next: deeper i18n of long-form content, a Video Analysis module over the existing video
+provider, a multi-season dynamic world, and a real data/AI provider behind the existing
+seams.
 
-## Optional Function
+## Deploying
 
-The default page is entirely static and does not call a Function. For server behavior, adapt the public, credential-free example in `functions/handler.ts`. `functions/index.ts` is the Deno deployment entry point. With Deno installed, use a separate terminal:
-
-```sh
-npm run check:function
-npm run dev:function
-```
-
-The local service binds to `127.0.0.1:8000`; Vite development and built preview proxy `/functions/v1/app` to it, preserving the path. For example:
-
-```sh
-curl --fail 'http://127.0.0.1:5173/functions/v1/app?name=Visitor'
-```
-
-Use Vite's actual port if it differs. The same frontend request after deployment is routed by Qoder Sites. Local proxy configuration is not production routing. Keep local-only servers and fixtures in `dev/`, outside both publication directories. The included Function has no dependencies; add self-contained runtime imports as required. Frontend npm dependencies are not automatically installed in Functions.
-
-## Publish with Qoder Sites
-
-Open a local conversation in this project and follow the `sites-hosting` skill. Workspace registration is optional. Use the directory returned by `get_local_context` with:
-
-- `webDirectory: "dist"` after the build.
-- `spa: false` for the default single page; use `true` when adding client-side deep routes that need fallback.
-- `functionDirectory: "functions"` only if the application uses the Function. Omit it for static-only delivery.
-
-The Sites tools prepare artifacts and generate the publication descriptor; publish completed hosted work by default, unless the user explicitly requests a preview first or defers publication. Do not upload the project root, `node_modules`, `dev`, or source as the web artifact. A successful build or release does not prove an external integration works.
-
-For a database-backed React page, the installed `sites-building` Skill provides `assets/database-react/App.tsx` and a matching three-file database Function. Follow its `references/database.md` to connect the page, apply the reviewed schema and publish. These optional assets stay in the Skill rather than being copied into every static project.
-
-For database or Storage, follow the corresponding `sites-building` references and `sites-management` capability workflow. For AI, follow `sites-build-agent-app` and keep Cloud Agents access in the Function. Application credentials belong in server-side Sites Settings; frontend environment variables are public. This starter does not implement visitor login, database permissions, Cloud resource coordination or QCA sessions; add those only for the requested feature using the existing skills.
-
-See `PROVENANCE.md` and `vendor/` for source attribution and the preserved stylesheet license.
+To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a
+deliberate step and has **not** been performed for this project — it is currently local
+only. See `PROVENANCE.md` for asset and stylesheet attribution.
