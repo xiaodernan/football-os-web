@@ -13,6 +13,7 @@ import {
   formatValue,
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
+import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { overallRating } from "@/domain/attributes";
 import { evaluateAchievements, type AchievementInput } from "@/domain/achievements";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
@@ -31,9 +32,16 @@ function relTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+const RECOVERY_TONE: Record<LoadZone, string> = {
+  none: "border-border text-muted-foreground",
+  under: "border-primary/40 bg-primary/10 text-primary",
+  optimal: "border-success/40 bg-success/10 text-success",
+  caution: "border-warning/40 bg-warning/10 text-warning",
+  high: "border-destructive/40 bg-destructive/10 text-destructive",
+};
+
 export function Dashboard() {
-  const { t } = useI18n();
-  const { state, completeSession } = useOs();
+  const { t } = useI18n();const { state, completeSession } = useOs();
   const { navigate } = useRouter();
   const profile = state.profile;
   const info = profile ? levelInfo(profile.xp) : null;
@@ -71,7 +79,8 @@ export function Dashboard() {
     const last = completed
       .slice()
       .sort((a, b) => new Date(b.completedAt ?? b.date).getTime() - new Date(a.completedAt ?? a.date).getTime())[0];
-    return { next, total: list.length, unlocked: list.length - locked.length, last };
+    const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
+    return { next, total: list.length, unlocked: list.length - locked.length, last, recovery: load.hasData ? { acwr: load.acwr, zone: load.zone } : null };
   }, [profile, info, state]);
 
   return (
@@ -210,6 +219,22 @@ export function Dashboard() {
                   <p className="text-xs text-muted-foreground">{t("dash.noActivity")}</p>
                 )}
               </div>
+              {growth.recovery && (
+                <Link
+                  to="/load"
+                  className={cn(
+                    "mt-3 flex items-center justify-between rounded-lg border px-3 py-2 text-xs transition-colors hover:brightness-110",
+                    RECOVERY_TONE[growth.recovery.zone]
+                  )}
+                >
+                  <span className="font-medium uppercase tracking-wide">{t("dash.recovery")}</span>
+                  <span className="flex items-center gap-2">
+                    <span>{ZONE_LABEL[growth.recovery.zone]}</span>
+                    <span className="font-mono tabular-nums">ACWR {growth.recovery.acwr?.toFixed(2) ?? "—"}</span>
+                    <span aria-hidden>→</span>
+                  </span>
+                </Link>
+              )}
             </Panel>
           )}
 

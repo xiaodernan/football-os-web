@@ -411,6 +411,7 @@ const en: Dict = {
   "dash.recent": "Recent",
   "dash.viewHistory": "History",
   "dash.noActivity": "No activity yet — complete a session to begin.",
+  "dash.recovery": "Recovery",
   "dash.recommended": "Recommended Learning",
 
   "player.profile": "Profile",
@@ -842,6 +843,7 @@ const zhCN: Dict = {
   "dash.recent": "最近",
   "dash.viewHistory": "历史",
   "dash.noActivity": "还没有活动——完成一次训练以开始。",
+  "dash.recovery": "恢复",
   "dash.recommended": "推荐学习",
   "player.profile": "档案",
   "player.attributes": "属性",
@@ -1267,6 +1269,7 @@ const zhTW: Dict = {
   "dash.recent": "最近",
   "dash.viewHistory": "歷史",
   "dash.noActivity": "還沒有活動——完成一次訓練以開始。",
+  "dash.recovery": "恢復",
   "dash.recommended": "推薦學習",
   "player.coach": "AI 教練",
   "player.workload": "負荷",
