@@ -48,12 +48,13 @@ function GapRow({ item, kind, action }: { item: GapItem; kind: "priority" | "str
 
 export function DevelopmentPage() {
   const { t } = useI18n();
-  const { state, addGoal } = useOs();
+  const { state, addGoal, requestPlan } = useOs();
   const { navigate } = useRouter();
   const profile = state.profile;
   const [group, setGroup] = useState<PositionGroup>(profile?.positionGroup ?? "CM");
   const [weeks, setWeeks] = useState(8);
   const [perWeek, setPerWeek] = useState(3);
+  const [blocking, setBlocking] = useState(false);
 
   const analysis = useMemo(
     () => (profile ? analyzeGap({ attributes: profile.attributes, group }) : null),
@@ -73,6 +74,21 @@ export function DevelopmentPage() {
   const track = (it: GapItem) => {
     addGoal({ title: t("dv.goalTitle").replace("{a}", it.label), metric: "attribute", key: it.key, target: Math.round(it.target), current: Math.round(it.actual), unit: "rating" });
     toast.success(t("dv.goalToast").replace("{a}", it.label));
+  };
+
+  const startBlock = async () => {
+    const keys = (analysis?.priorities ?? []).slice(0, 2).map((p) => p.key);
+    if (!keys.length) return;
+    setBlocking(true);
+    try {
+      const plan = await requestPlan(t("dv.blockPrompt"), 30, keys);
+      toast.success(t("dv.blockDone").replace("{n}", String(plan.session.exercises.length)).replace("{m}", String(plan.session.targetMinutes)));
+      navigate("/player/training");
+    } catch {
+      toast.error(t("dv.blockError"));
+    } finally {
+      setBlocking(false);
+    }
   };
 
   if (!profile || !analysis) {
@@ -166,6 +182,14 @@ export function DevelopmentPage() {
             </div>
           ) : (
             <p className="mt-2 text-sm text-muted-foreground">{t("dv.noGaps")}</p>
+          )}
+          {analysis.priorities.length > 0 && (
+            <div className="mt-3 border-t border-border/50 pt-3">
+              <Button size="sm" disabled={blocking} onClick={startBlock}>
+                {blocking ? t("dv.blockBusy") : t("dv.blockCta")}
+              </Button>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">{t("dv.blockHint")}</p>
+            </div>
           )}
         </Panel>
 

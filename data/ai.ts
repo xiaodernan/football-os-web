@@ -1,5 +1,5 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
-import { attributeLabel, weakestAttributes, strongestAttributes } from "@/domain/attributes";
+import { attributeLabel, weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna } from "@/domain/playerDna";
 import { buildLoad, type LoadZone } from "@/domain/load";
@@ -27,6 +27,7 @@ export interface PlanInput {
   history: { focus: string; completed: number }[];
   availableMinutes: number;
   load?: LoadContext;
+  focusKeys?: string[]; // explicit target attributes (e.g. role-gap priorities); overrides inferred focus
 }
 
 const ATTRIBUTE_HINTS: [RegExp, string][] = [
@@ -76,6 +77,10 @@ class DeterministicCoachProvider implements CoachProvider {
       input.prompt,
       input.profile.attributes,
     );
+    // Explicit target attributes (role-gap priorities) win over inferred focus.
+    const targeted = [...new Set((input.focusKeys ?? []).filter((k) => ATTRIBUTE_KEYS.includes(k)))].slice(0, 2);
+    const effFocus = targeted.length ? targeted : focus;
+    const isTargeted = targeted.length > 0;
     let targetMinutes = clampMinutes(available ?? input.availableMinutes);
     const load = input.load;
     // Load-awareness: when recent load is spiking, cap the session so the coach
@@ -87,16 +92,20 @@ class DeterministicCoachProvider implements CoachProvider {
       id: `S${Date.now().toString(36).slice(-5)}`,
       date: new Date().toISOString(),
       targetMinutes,
-      focusAttributes: focus.length ? focus : ["first_touch"],
+      focusAttributes: effFocus.length ? effFocus : ["first_touch"],
       group: input.profile.positionGroup,
       seed,
     });
 
     const trainedRecently = input.history
-      .filter((h) => focus.includes(h.focus))
+      .filter((h) => effFocus.includes(h.focus))
       .reduce((s, h) => s + h.completed, 0);
 
     const diagnosisParts: string[] = [];
+    if (isTargeted)
+      diagnosisParts.push(
+        `You chose to work on ${effFocus.map(attributeLabel).join(" and ")} — the role-gap priorities you flagged. This block is built around exactly those.`,
+      );
     if (load && load.zone === "high")
       diagnosisParts.push(
         `Your acute:chronic load ratio is ${load.acwr?.toFixed(2) ?? "high"} — a spike. I've kept this session short and lighter to protect you from piling volume on a spiking load.`,
@@ -117,20 +126,20 @@ class DeterministicCoachProvider implements CoachProvider {
     diagnosisParts.push(`Your profile's strengths are ${strengths.map(attributeLabel).join(", ")}.`);
     if (trainedRecently > 0)
       diagnosisParts.push(
-        `You have logged ${trainedRecently} recent block(s) on ${focus.map(attributeLabel).join("/")} — we continue progressive overload.`,
+        `You have logged ${trainedRecently} recent block(s) on ${effFocus.map(attributeLabel).join("/")} — we continue progressive overload.`,
       );
 
     const dna = computeDna(input.profile.attributes);
     const rationale = [
       `Warm-up activates movement before technique work.`,
-      `Primary focus ${focus.map(attributeLabel).join(" + ")} targets your current biggest measurable gap.`,
+      `Primary focus ${effFocus.map(attributeLabel).join(" + ")} targets your ${isTargeted ? "selected role-gap priorities" : "current biggest measurable gap"}.`,
       `A decision-making block trains scanning under time pressure.`,
       `A game-realistic drill transfers the technique into match context.`,
       `DNA read: ${dna.primary.label} (${dna.evolutionPath}) — session shaped to your role.`,
     ];
 
     const confidence = Math.round(
-      (0.55 + (requested.length ? 0.2 : 0) + (input.history.length ? 0.15 : 0)) * 100,
+      (0.55 + (requested.length || isTargeted ? 0.2 : 0) + (input.history.length ? 0.15 : 0)) * 100,
     );
 
     return {
@@ -138,7 +147,7 @@ class DeterministicCoachProvider implements CoachProvider {
       createdAt: new Date().toISOString(),
       prompt: input.prompt,
       diagnosis: diagnosisParts.join(" "),
-      focus,
+      focus: effFocus,
       session,
       rationale,
       confidence: Math.min(95, confidence),

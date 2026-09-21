@@ -201,7 +201,7 @@ interface OsContext {
   ready: boolean;
   onboarding: (input: { mode: Mode; displayName: string; positionGroup: PositionGroup; ageGroup: string; goal: string; skill: number; favoriteClubId?: string; favoritePlayerId?: string; favoriteCompetitionId?: string }) => void;
   setMode: (m: Mode) => void;
-  requestPlan: (prompt: string, availableMinutes: number) => Promise<CoachPlan>;
+  requestPlan: (prompt: string, availableMinutes: number, focusKeys?: string[]) => Promise<CoachPlan>;
   completeSession: (sessionId: string, selfRating: number, notes?: string) => void;
   setFavorite: (key: "club" | "player" | "competition", id: string | null) => void;
   toggleWatch: (playerId: string) => void;
@@ -266,7 +266,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "ONBOARD", mode: input.mode, profile, goals });
       },
       setMode: (m) => dispatch({ type: "SET_MODE", mode: m }),
-      requestPlan: async (prompt, availableMinutes) => {
+      requestPlan: async (prompt, availableMinutes, focusKeys) => {
         if (!state.profile) throw new Error("no profile");
         const history = aggregateFocus(state.sessions);
         const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
@@ -276,6 +276,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
           history,
           availableMinutes,
           load: load.hasData ? { zone: load.zone, acwr: load.acwr, weekLoad: load.weekLoad } : undefined,
+          focusKeys,
         };
         const plan = await coachProvider.generatePlan(planInput);
         dispatch({ type: "PLAN", plan });
