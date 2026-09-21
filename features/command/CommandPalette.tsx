@@ -57,10 +57,12 @@ export function CommandPalette() {
       { id: "players", label: t("nav.players"), group: "Go to", run: nav("/players") },
       { id: "clubs", label: t("nav.clubs"), group: "Go to", run: nav("/clubs") },
       { id: "news", label: t("nav.news"), group: "Go to", run: nav("/news") },
+      { id: "ai", label: t("nav.ai"), group: "Go to", run: nav("/ai") },
+      { id: "knowledge", label: t("nav.knowledge"), group: "Go to", run: nav("/knowledge") },
       { id: "tactical", label: t("nav.tactical"), group: "Go to", run: nav("/tactical-studio") },
       { id: "sim", label: t("nav.simulation"), group: "Go to", run: nav("/simulation") },
       { id: "learn", label: t("nav.learn"), group: "Go to", run: nav("/learn") },
-      { id: "community", label: "Community", group: "Go to", run: nav("/community") },
+      { id: "community", label: t("nav.community"), group: "Go to", run: nav("/community") },
     ];
     if (state.onboarded) {
       base.unshift({ id: "player", label: t("nav.player"), group: "Your modes", run: nav("/player") });
