@@ -1,5 +1,6 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import type { PlayerRef, PositionGroup } from "./types";
+import { baselineAttributes, strongestAttributes, attributeLabel } from "./attributes";
+import type { Attributes, PlayerRef, PositionGroup } from "./types";
 
 // Scouting model (spec §28). Deliberately built only from fields the dataset
 // actually provides (overall, potential, value, age, archetype, foot) — it never
@@ -70,4 +71,43 @@ export function squadProfile(clubId: string): { bucket: Exclude<PosBucket, "ALL"
     const g = squad.filter((p) => bucketOf(p.positionGroup) === b);
     return { bucket: b, count: g.length, avg: g.length ? Math.round(g.reduce((s, p) => s + p.overall, 0) / g.length) : 0 };
   });
+}
+
+export interface ModelledAttribute {
+  key: string;
+  label: string;
+  value: number;
+}
+
+export interface ModelledProfile {
+  attributes: ModelledAttribute[];
+  skill: number;
+  hasData: boolean;
+  confidence: number;
+  note: string;
+  sources: string[];
+}
+
+// The dataset ships an overall rating + position group per player but not a full
+// 32-attribute vector. Rather than invent real-looking numbers, we expose a
+// clearly-labelled MODELLED profile: the demo attribute baseline for this
+// position, at a skill level implied by the overall. It uses the exact
+// baselineAttributes() the Player development tools use, so it is consistent
+// across the app — and it is labelled an estimate, never measured data.
+export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
+  const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
+  const attrs: Attributes = baselineAttributes(p.positionGroup as PositionGroup, skill);
+  const attributes: ModelledAttribute[] = strongestAttributes(attrs, top).map((a) => ({
+    key: a.key,
+    label: attributeLabel(a.key),
+    value: a.value,
+  }));
+  return {
+    attributes,
+    skill: Math.round(skill * 100) / 100,
+    hasData: p.overall > 0,
+    confidence: Math.round(Math.max(35, Math.min(70, 40 + skill * 30))),
+    note: "Modelled from overall rating + position using the demo attribute baseline — an estimate, not measured scouting data.",
+    sources: ["World dataset (overall, position group)", "Demo attribute model (baselineAttributes)"],
+  };
 }

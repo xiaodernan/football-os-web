@@ -15,6 +15,7 @@ import {
   DEMO_MODE,
 } from "@/data/footballService";
 import { simulateMatch, type SimResult, type TeamInput } from "@/domain/matchEngine";
+import { modelPlayerProfile } from "@/domain/scouting";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar } from "@/ui/primitives";
@@ -61,6 +62,7 @@ export function PlayerDetail({ id }: { id: string }) {
   const club = getClub(p.clubId);
   const comp = getClub(p.clubId) ? getCompetition(club!.competitionId) : undefined;
   const [a, b] = comparePlayers(p.id, againstId);
+  const profile = modelPlayerProfile(p);
 
   return (
     <div className="space-y-6">
@@ -108,6 +110,20 @@ export function PlayerDetail({ id }: { id: string }) {
           {a && b && <CompareBars a={a} b={b} />}
         </Panel>
       </div>
+
+      <Panel className="p-4">
+        <SectionTitle title="Modelled attribute profile" hint="Estimate · not measured data" />
+        <div className="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+          {profile.attributes.map((at) => (
+            <div key={at.key} className="flex items-center gap-2">
+              <span className="w-28 shrink-0 truncate text-xs text-muted-foreground">{at.label}</span>
+              <div className="flex-1"><AttributeBar label="" value={at.value} max={99} /></div>
+              <span className="w-7 text-right font-mono text-xs">{at.value}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[11px] text-muted-foreground">{profile.note} Confidence {profile.confidence}% · Sources: {profile.sources.join(" · ")}</p>
+      </Panel>
     </div>
   );
 }
