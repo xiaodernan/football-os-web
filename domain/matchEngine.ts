@@ -178,7 +178,7 @@ export function simulateMatch(input: SimInput): SimResult {
     mid > 1 ? `${home.name} controlled the middle of the pitch.` : mid < -1 ? `${away.name} won the midfield battle.` : `The midfield was finely balanced.`,
   ];
 
-  return { seed: input.seed, homeGoals: hg, awayGoals: ag, timeline, stats: { home: statsHome, away: statsAway }, summary };
+  return { seed: input.seed, homeGoals: hg, awayGoals: ag, timeline: events, stats: { home: statsHome, away: statsAway }, summary };
 }
 
 function shotType(rng: () => number, xg: number): string {

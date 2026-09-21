@@ -7,10 +7,16 @@ import { Landing } from "@/features/landing/Landing";
 import { Onboarding } from "@/features/onboarding/Onboarding";
 import { Dashboard } from "@/features/dashboard/Dashboard";
 import { PlayerOS } from "@/features/player/PlayerOS";
+import { FootballWorld } from "@/features/football/FootballWorld";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { EmptyState } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
+
+const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
+function isFootballRoute(path: string) {
+  return FOOTBALL_PREFIXES.some((p) => path === p || path.startsWith(p + "/"));
+}
 
 function Routes() {
   const { path } = useRouter();
@@ -28,6 +34,7 @@ function Routes() {
 
   let inner: ReactNode = <NotReady />;
   if (path === "/player" || path.startsWith("/player/")) inner = <PlayerOS />;
+  else if (isFootballRoute(path)) inner = <FootballWorld />;
 
   return <AppShell>{inner}</AppShell>;
 }
