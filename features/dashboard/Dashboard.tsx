@@ -193,7 +193,7 @@ export function Dashboard() {
           )}
 
           <Panel className="p-4">
-            <SectionTitle title={t("dash.watchlist")} action={<Link to="/players" className="text-xs text-primary hover:underline">Scout →</Link>} />
+            <SectionTitle title={t("dash.watchlist")} action={<Link to="/scouting" className="text-xs text-primary hover:underline">Scout →</Link>} />
             {state.watchlist.length ? (
               <div className="space-y-1">
                 {state.watchlist.slice(0, 5).map((id) => {
@@ -211,11 +211,40 @@ export function Dashboard() {
               <p className="text-sm text-muted-foreground">Tap "Scout watch" on any player to track them here.</p>
             )}
           </Panel>
+
+          <Panel className="p-4">
+            <SectionTitle title={t("dash.modules")} hint="Everything in your Football OS" />
+            <div className="mt-1 grid grid-cols-2 gap-1.5">
+              {MODULE_LINKS.map((m) => (
+                <Link
+                  key={m.to}
+                  to={m.to}
+                  className="flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/20 px-2.5 py-2 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/50"
+                >
+                  <span className="grid w-5 place-items-center text-base leading-none text-primary">{m.icon}</span>
+                  <span className="truncate">{t(m.label)}</span>
+                </Link>
+              ))}
+            </div>
+          </Panel>
         </div>
       </div>
     </div>
   );
 }
+
+const MODULE_LINKS = [
+  { to: "/player", label: "nav.player", icon: "●" },
+  { to: "/manager", label: "nav.manager", icon: "▤" },
+  { to: "/scouting", label: "nav.scouting", icon: "⌖" },
+  { to: "/tactical-studio", label: "nav.tactical", icon: "⛶" },
+  { to: "/simulation", label: "nav.simulation", icon: "▷" },
+  { to: "/ai", label: "nav.ai", icon: "⚡" },
+  { to: "/knowledge", label: "nav.knowledge", icon: "☰" },
+  { to: "/learn", label: "nav.learn", icon: "✎" },
+  { to: "/community", label: "nav.community", icon: "❉" },
+  { to: "/football", label: "nav.football", icon: "◎" },
+];
 
 function LiveCell({ m }: { m: Match }) {
   const h = getClub(m.homeClubId);

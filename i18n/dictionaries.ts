@@ -66,6 +66,7 @@ const en: Dict = {
   "dash.progress": "My Progress",
   "dash.upcoming": "Upcoming Matches",
   "dash.watchlist": "Scout Watchlist",
+  "dash.modules": "Your Modules",
   "dash.recommended": "Recommended Learning",
 
   "player.profile": "Profile",
@@ -152,6 +153,7 @@ const zhCN: Dict = {
   "dash.progress": "我的进度",
   "dash.upcoming": "即将开始",
   "dash.watchlist": "球探关注",
+  "dash.modules": "你的模块",
   "dash.recommended": "推荐学习",
   "player.profile": "档案",
   "player.attributes": "属性",
@@ -232,6 +234,7 @@ const zhTW: Dict = {
   "dash.progress": "我的進度",
   "dash.upcoming": "即將開始",
   "dash.watchlist": "球探關注",
+  "dash.modules": "你的模組",
   "dash.recommended": "推薦學習",
   "player.coach": "AI 教練",
   "player.workload": "負荷",
