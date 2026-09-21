@@ -83,6 +83,7 @@ export function ComparePage() {
 }
 
 function MetricRow({ m }: { m: CompareMetric }) {
+  const { t } = useI18n();
   const aBetter = m.dir !== "info" && m.a !== m.b && (m.dir === "high" ? m.a > m.b : m.a < m.b);
   const bBetter = m.dir !== "info" && m.a !== m.b && !aBetter;
   // Normalise the two "info"-free bars for a subtle relative fill; info rows skip bars.
@@ -97,7 +98,7 @@ function MetricRow({ m }: { m: CompareMetric }) {
           </span>
         )}
       </div>
-      <div className="text-center text-[11px] uppercase tracking-wider text-muted-foreground">{m.label}</div>
+      <div className="text-center text-[11px] uppercase tracking-wider text-muted-foreground">{t(`compare.m.${m.key}`)}</div>
       <div className="flex items-center gap-2">
         {m.dir !== "info" && (
           <span className="relative h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
@@ -111,6 +112,7 @@ function MetricRow({ m }: { m: CompareMetric }) {
 }
 
 function SideHead({ p, club, win, align }: { p: PlayerRef; club: string; win: boolean; align?: "right" }) {
+  const { t } = useI18n();
   return (
     <div className={cn("min-w-0", align === "right" && "text-right")}>
       <div className={cn("flex items-center gap-2", align === "right" && "flex-row-reverse")}>
@@ -124,7 +126,7 @@ function SideHead({ p, club, win, align }: { p: PlayerRef; club: string; win: bo
         </div>
       </div>
       <div className="mt-1 truncate text-[11px] text-muted-foreground">{club}</div>
-      {win && <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-success">▲ edge</div>}
+      {win && <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-success">▲ {t("compare.edge")}</div>}
     </div>
   );
 }
@@ -136,6 +138,7 @@ function PlayerPicker({ players, value, onChange, exclude, side }: {
   exclude: string;
   side: "A" | "B";
 }) {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const selected = players.find((p) => p.id === value) ?? null;
   const matches = useMemo(() => {
@@ -149,7 +152,7 @@ function PlayerPicker({ players, value, onChange, exclude, side }: {
   return (
     <Panel className="p-3">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Player {side}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("compare.player")} {side}</span>
         {selected && <span className="text-xs text-muted-foreground">{selected.archetype}</span>}
       </div>
       {selected ? (
@@ -162,7 +165,7 @@ function PlayerPicker({ players, value, onChange, exclude, side }: {
           <button onClick={() => { onChange(""); setQ(""); }} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
         </div>
       ) : (
-        <Input placeholder={side === "A" ? "Search a player…" : "Search a player…"} value={q} onChange={(e) => setQ(e.target.value)} />
+        <Input placeholder={t("compare.searchPlaceholder")} value={q} onChange={(e) => setQ(e.target.value)} />
       )}
       {!selected && (
         <div className="mt-2 max-h-56 space-y-0.5 overflow-y-auto">
@@ -177,7 +180,7 @@ function PlayerPicker({ players, value, onChange, exclude, side }: {
               <span className="shrink-0 text-xs text-muted-foreground">{p.position} · {p.overall}</span>
             </button>
           ))}
-          {!matches.length && <div className="px-2 py-3 text-center text-xs text-muted-foreground">No players match “{q}”.</div>}
+          {!matches.length && <div className="px-2 py-3 text-center text-xs text-muted-foreground">{t("compare.noMatch")} “{q}”.</div>}
         </div>
       )}
     </Panel>
