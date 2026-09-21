@@ -16,6 +16,7 @@ import {
   seasonOutlook,
   seasonSummary,
   matchPrep,
+  projectFixture,
   askingFee,
   sellFee,
   clubInput,
@@ -24,6 +25,7 @@ import {
   type MatchOutcome,
   type Tactics,
 } from "@/domain/career";
+import type { MatchProbability } from "@/domain/matchProbability";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router";
@@ -422,6 +424,14 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
   const pressLabel = (v: number) => (v < 0.35 ? "Deep block" : v < 0.7 ? "Medium press" : "High press");
   const tempoLabel = (v: number) => (v < 0.35 ? "Low" : v < 0.7 ? "Medium" : "High");
   const isCurrent = career.tactics.mentality === p.recommended.mentality && Math.abs(career.tactics.press - p.recommended.press) < 0.01 && Math.abs(career.tactics.tempo - p.recommended.tempo) < 0.01;
+  const [odds, setOdds] = useState<MatchProbability | null>(null);
+  const [oddsBusy, setOddsBusy] = useState(false);
+  const runOdds = () => {
+    setOddsBusy(true);
+    setTimeout(() => { setOdds(projectFixture(career, 150)); setOddsBusy(false); }, 30);
+  };
+  const ourWin = odds ? (p.weHome ? odds.homeWinPct : odds.awayWinPct) : 0;
+  const theirWin = odds ? (p.weHome ? odds.awayWinPct : odds.homeWinPct) : 0;
   const vs = (label: string, a: number, b: number) => (
     <div className="flex items-center justify-between rounded-md border bg-card/30 px-3 py-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
@@ -456,11 +466,32 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
               <li key={i} className="flex items-start gap-1.5"><span className="text-primary">›</span><span>{r}</span></li>
             ))}
           </ul>
-          <div className="mt-3 flex items-center gap-3">
+          <div className="mt-3 flex flex-wrap items-center gap-3">
             <Button size="sm" disabled={isCurrent} onClick={() => onApply(p.recommended)}>{isCurrent ? "Already applied" : "Apply these tactics"}</Button>
+            <Button size="sm" variant="outline" onClick={runOdds} disabled={oddsBusy}>{oddsBusy ? "Projecting…" : "Project odds (150 runs)"}</Button>
             <Link to="/tactical-studio" className="text-xs text-primary hover:underline">Fine-tune in Tactical Studio →</Link>
           </div>
         </Panel>
+
+        {odds && (
+          <Panel className="p-4">
+            <div className="flex items-center justify-between">
+              <SectionTitle title="Projected fixture odds" hint="Recommended tactics · 150 engine runs" />
+              <DemoBadge />
+            </div>
+            <div className="mt-3 flex h-3 w-full overflow-hidden rounded">
+              <div className="bg-primary" style={{ width: `${ourWin * 100}%` }} />
+              <div className="bg-muted-foreground/40" style={{ width: `${odds.drawPct * 100}%` }} />
+              <div className="bg-info" style={{ width: `${theirWin * 100}%` }} />
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
+              <div><div className="text-xs text-muted-foreground">Us win</div><div className="font-mono font-semibold text-primary">{Math.round(ourWin * 100)}%</div></div>
+              <div><div className="text-xs text-muted-foreground">Draw</div><div className="font-mono font-semibold">{Math.round(odds.drawPct * 100)}%</div></div>
+              <div><div className="truncate text-xs text-muted-foreground">{p.opponentName} win</div><div className="font-mono font-semibold text-info">{Math.round(theirWin * 100)}%</div></div>
+            </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">Modelled under the recommended shape — a projection from the Match Engine, not a played result. Avg goals {odds.avgHomeGoals.toFixed(2)}–{odds.avgAwayGoals.toFixed(2)} · over 2.5 {Math.round(odds.over25Pct * 100)}%.</p>
+          </Panel>
+        )}
       </div>
       <div className="space-y-4">
         <Panel className="p-4">

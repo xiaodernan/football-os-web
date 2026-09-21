@@ -1,5 +1,6 @@
 import { footballProvider, getClub, clubIdsByCompetition } from "@/data/footballService";
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
+import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
@@ -442,6 +443,25 @@ export function matchPrep(state: CareerState): MatchPrep {
     confidence: Math.min(90, Math.round(55 + Math.abs(attackEdge) + Math.abs(midfieldEdge) / 2 + Math.abs(defenseEdge))),
     sources: ["Match Engine clubInput (your squad + tactics)", "Opponent effective squad", "Current morale, fatigue and form"],
   };
+}
+
+// Run the match-prep recommendation through the SAME probabilistic engine the
+// Simulation Lab uses: simulate the upcoming fixture many times under the
+// recommended tactics and express the outcome as our-win / draw / their-win
+// odds. Deterministic for a given squad + seed.
+export function projectFixture(state: CareerState, runs = 150): MatchProbability {
+  const fx = fixtureAt(state.competitionId, state.clubId, state.results.length);
+  const form = careerForm(state);
+  const rec = matchPrep(state).recommended;
+  const neutral: Tactics = { mentality: 0, tempo: 0.5, press: 0.5 };
+  const ourIn = clubInput(state.clubId, state.moved, rec, form, state.morale, state.fatigue);
+  const theirIn = clubInput(fx.opponent, state.moved, neutral, 0, 0, 0);
+  return matchProbability({
+    seedBase: `prepcareer:${state.clubId}:${fx.opponent}:${state.results.length}`,
+    home: fx.weHome ? ourIn : theirIn,
+    away: fx.weHome ? theirIn : ourIn,
+    runs,
+  });
 }
 
 export interface SeasonSummary {
