@@ -1,14 +1,56 @@
-import { useState } from "react";
+import { ThemeProvider } from "@/lib/theme";
+import { I18nProvider } from "@/i18n";
+import { RouterProvider, useRouter } from "@/lib/router";
+import { OsProvider, useOs } from "@/store/useFootballOS";
+import { AppShell } from "@/features/shell/AppShell";
+import { Landing } from "@/features/landing/Landing";
+import { Onboarding } from "@/features/onboarding/Onboarding";
+import { Dashboard } from "@/features/dashboard/Dashboard";
+import { Toaster } from "@/components/ui/sonner";
+import { EmptyState } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 
-export default function App() {
-  const [count, setCount] = useState(0);
+function Routes() {
+  const { path } = useRouter();
+  const { state } = useOs();
+
+  if (path === "/") {
+    if (!state.onboarded) return <Landing />;
+    return (
+      <AppShell>
+        <Dashboard />
+      </AppShell>
+    );
+  }
+  if (path === "/onboarding") return <Onboarding />;
+
+  const inner = <NotReady />;
+  return <AppShell>{inner}</AppShell>;
+}
+
+function NotReady() {
+  const { navigate } = useRouter();
   return (
-    <main className="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-6 p-8">
-      <h1 className="text-4xl font-semibold tracking-tight">A place to begin</h1>
-      <p className="text-base text-muted-foreground">Shape this page around what you want to do.</p>
-      <div><Button onClick={() => setCount((value) => value + 1)}>Try an interaction</Button></div>
-      <p role="status">{count === 0 ? "Ready when you are." : `Clicked ${count} times.`}</p>
-    </main>
+    <div className="mx-auto max-w-md pt-10">
+      <EmptyState title="This module is next in the build queue" hint="Core shell, dashboard and Player OS are live. Other modules are being wired up." />
+      <div className="mt-4 flex justify-center">
+        <Button variant="outline" onClick={() => navigate("/")}>Back to Command Center</Button>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <I18nProvider>
+        <RouterProvider>
+          <OsProvider>
+            <Routes />
+            <Toaster theme="dark" position="bottom-right" />
+          </OsProvider>
+        </RouterProvider>
+      </I18nProvider>
+    </ThemeProvider>
   );
 }
