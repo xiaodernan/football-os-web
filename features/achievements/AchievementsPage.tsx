@@ -4,6 +4,8 @@ import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { levelInfo } from "@/domain/xp";
 import { evaluateAchievements, summary, type AchievementStatus, type Tier } from "@/domain/achievements";
+import { summarizeLearn } from "@/domain/learn";
+import { useLearnRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -20,17 +22,20 @@ const GROUPS: { id: string; label: string }[] = [
   { id: "consistency", label: "ach.group.consistency" },
   { id: "growth", label: "ach.group.growth" },
   { id: "explorer", label: "ach.group.explorer" },
+  { id: "scholar", label: "ach.group.scholar" },
 ];
 
 export function AchievementsPage() {
   const { t } = useI18n();
   const { state } = useOs();
   const { navigate } = useRouter();
+  const learn = useLearnRecords();
 
   const input = useMemo(() => {
     const sessions = state.sessions.filter((s) => s.status === "completed").length;
     const goalsDone = state.goals.filter((g) => g.done).length;
     const level = state.profile ? levelInfo(state.profile.xp).level : 1;
+    const lessons = summarizeLearn(learn);
     return {
       level,
       xp: state.profile?.xp ?? 0,
@@ -39,8 +44,10 @@ export function AchievementsPage() {
       goalsDone,
       watchlist: state.watchlist.length,
       plans: state.plans.length,
+      lessonsCompleted: lessons.completed,
+      lessonsMastered: lessons.mastered,
     };
-  }, [state]);
+  }, [state, learn]);
 
   const list = useMemo(() => evaluateAchievements(input), [input]);
   const stat = summary(list);

@@ -16,6 +16,8 @@ import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { overallRating, attributeLabel } from "@/domain/attributes";
 import { evaluateAchievements, type AchievementInput } from "@/domain/achievements";
+import { summarizeLearn } from "@/domain/learn";
+import { useLearnRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,7 @@ const RECOVERY_TONE: Record<LoadZone, string> = {
 export function Dashboard() {
   const { t } = useI18n();const { state, completeSession } = useOs();
   const { navigate } = useRouter();
+  const learn = useLearnRecords();
   const profile = state.profile;
   const info = profile ? levelInfo(profile.xp) : null;
 
@@ -62,6 +65,7 @@ export function Dashboard() {
   const growth = useMemo(() => {
     if (!profile) return null;
     const completed = state.sessions.filter((s) => s.status === "completed");
+    const learnSummary = summarizeLearn(learn);
     const input: AchievementInput = {
       level: info?.level ?? 1,
       xp: profile.xp,
@@ -70,6 +74,8 @@ export function Dashboard() {
       goalsDone: state.goals.filter((g) => g.done).length,
       watchlist: state.watchlist.length,
       plans: state.plans.length,
+      lessonsCompleted: learnSummary.completed,
+      lessonsMastered: learnSummary.mastered,
     };
     const list = evaluateAchievements(input);
     const locked = list
@@ -86,7 +92,7 @@ export function Dashboard() {
       .sort((a, b) => b.pct - a.pct)
       .slice(0, 3);
     return { next, total: list.length, unlocked: list.length - locked.length, last, recovery: load.hasData ? { acwr: load.acwr, zone: load.zone } : null, focusGoals };
-  }, [profile, info, state]);
+  }, [profile, info, state, learn]);
 
   return (
     <div className="space-y-6">

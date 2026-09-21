@@ -12,13 +12,15 @@ export interface AchievementInput {
   goalsDone: number;
   watchlist: number;
   plans: number;
+  lessonsCompleted: number;
+  lessonsMastered: number; // completed AND check quiz passed
 }
 
 export type Tier = "bronze" | "silver" | "gold";
 
 export interface AchievementDef {
   id: string;
-  group: "training" | "consistency" | "growth" | "explorer";
+  group: "training" | "consistency" | "growth" | "explorer" | "scholar";
   icon: string;
   tier: Tier;
   target: number;
@@ -51,6 +53,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: "watch_one", group: "explorer", icon: "☆", tier: "bronze", target: 1, current: (i) => i.watchlist },
   { id: "watch_five", group: "explorer", icon: "★", tier: "silver", target: 5, current: (i) => i.watchlist },
   { id: "watch_fifteen", group: "explorer", icon: "☰", tier: "gold", target: 15, current: (i) => i.watchlist },
+  // Scholar — driven by recorded academy completions and passed check quizzes
+  { id: "first_lesson", group: "scholar", icon: "◈", tier: "bronze", target: 1, current: (i) => i.lessonsCompleted },
+  { id: "scholar", group: "scholar", icon: "❐", tier: "silver", target: 3, current: (i) => i.lessonsMastered },
+  { id: "polymath", group: "scholar", icon: "✵", tier: "gold", target: 6, current: (i) => i.lessonsMastered },
 ];
 
 export const TIER_ORDER: Tier[] = ["gold", "silver", "bronze"];

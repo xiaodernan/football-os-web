@@ -3,7 +3,8 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildTimeline, groupByDay, type TimelineKind } from "@/domain/history";
-import { LESSONS, parseLearnRecords, type LearnRecord } from "@/domain/learn";
+import { LESSONS } from "@/domain/learn";
+import { useLearnRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -28,13 +29,7 @@ export function HistoryPage() {
   const { state } = useOs();
   const [filter, setFilter] = useState<TimelineKind | "all">("all");
 
-  const learn = useMemo<LearnRecord[]>(() => {
-    try {
-      return parseLearnRecords(JSON.parse(localStorage.getItem("football-os.learn.v2") ?? "null"));
-    } catch {
-      return [];
-    }
-  }, []);
+  const learn = useLearnRecords();
 
   const all = useMemo(
     () =>

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { LEARN_STORE_KEY, parseLearnRecords, type LearnRecord } from "@/domain/learn";
 
 export type AsyncStatus = "idle" | "loading" | "success" | "error";
 
@@ -76,6 +77,18 @@ export function useLocalStorage<T>(key: string, initial: T) {
     }
   }, [key, value]);
   return [value, setValue] as const;
+}
+
+/** Read-only view of the locally-stored academy records, shared by every pillar
+ *  that needs lesson progress (achievements, history, dashboard). */
+export function useLearnRecords(): LearnRecord[] {
+  return useMemo(() => {
+    try {
+      return parseLearnRecords(JSON.parse(localStorage.getItem(LEARN_STORE_KEY) ?? "null"));
+    } catch {
+      return [];
+    }
+  }, []);
 }
 
 /** True when the visitor can reach the network (drives offline/degraded states). */

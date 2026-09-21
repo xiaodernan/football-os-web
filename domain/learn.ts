@@ -129,6 +129,9 @@ export const LESSONS: Lesson[] = [
 
 export const LESSON_IDS = LESSONS.map((l) => l.id);
 
+export const LEARN_STORE_KEY = "football-os.learn.v2";
+export const LEGACY_LEARN_KEY = "football-os.learn.v1";
+
 export interface LearnRecord {
   id: string;
   completedAt: string;

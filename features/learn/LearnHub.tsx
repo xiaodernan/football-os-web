@@ -5,6 +5,8 @@ import { useOs } from "@/store/useFootballOS";
 import { weakestAttributes } from "@/domain/attributes";
 import {
   LESSONS,
+  LEGACY_LEARN_KEY,
+  LEARN_STORE_KEY,
   isCompleted,
   parseLearnRecords,
   recommendLessons,
@@ -18,9 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-
-const STORE_KEY = "football-os.learn.v2";
-const LEGACY_KEY = "football-os.learn.v1";
 
 const LEVEL_COLOR: Record<Level, string> = {
   Beginner: "text-success",
@@ -43,18 +42,18 @@ function readLength(key: string): number {
 
 export function LearnHub() {
   const { state } = useOs();
-  const [records, setRecords] = useLocalStorage<LearnRecord[]>(STORE_KEY, []);
+  const [records, setRecords] = useLocalStorage<LearnRecord[]>(LEARN_STORE_KEY, []);
   const [category, setCategory] = useState<"All" | string>("All");
   const [openId, setOpenId] = useState<string | null>(null);
 
   // One-time upgrade of pre-existing on-device progress (plain id list).
   useEffect(() => {
     try {
-      const legacy = localStorage.getItem(LEGACY_KEY);
+      const legacy = localStorage.getItem(LEGACY_LEARN_KEY);
       if (!legacy) return;
       const migrated = parseLearnRecords(JSON.parse(legacy));
       if (migrated.length) setRecords((cur) => (cur.length ? cur : migrated));
-      localStorage.removeItem(LEGACY_KEY);
+      localStorage.removeItem(LEGACY_LEARN_KEY);
     } catch {
       /* unreadable legacy store — start fresh rather than crash the page */
     }
