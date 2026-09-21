@@ -14,6 +14,7 @@ export interface ReviewInput {
   progress: { date: string; overall: number; xp: number }[];
   attributes: Attributes;
   streak: number;
+  learn?: { at: string; quizCorrect: boolean }[]; // academy completions
 }
 
 export interface FocusStat {
@@ -57,6 +58,8 @@ export interface WeeklyReview {
   streak: number;
   topFocus: FocusStat[];
   attributeGains: AttributeGain[];
+  lessonsCompleted: number;
+  lessonsMastered: number;
   goalsTotal: number;
   goalsDone: number;
   insights: ReviewInsight[];
@@ -118,6 +121,12 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const goalsDone = input.goals.filter((g) => g.done).length;
   const goalsTotal = input.goals.length;
 
+  // Academy activity inside the window, counted from the learner's own completion
+  // records. "Mastered" only ever means a recorded passed check quiz.
+  const learnIn = (input.learn ?? []).filter((l) => withinWindow(l.at, fromMs, nowMs));
+  const lessonsCompleted = learnIn.length;
+  const lessonsMastered = learnIn.filter((l) => l.quizCorrect).length;
+
   const insights = buildInsights({
     completed: completed.length,
     planned: planned.length,
@@ -130,6 +139,8 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     topFocus,
     attributes: input.attributes,
     windowDays,
+    lessonsCompleted,
+    lessonsMastered,
   });
 
   const recommendation = buildRecommendation(input.attributes, topFocus, completed.length, ratings.length);
@@ -145,6 +156,8 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     topFocus,
     goalsDone,
     goalsTotal,
+    lessonsCompleted,
+    lessonsMastered,
   });
 
   // Confidence rises with the amount of real signal available; a review with no
@@ -154,10 +167,12 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     (overallDelta != null ? 18 : 0) +
     (avgRating != null ? 12 : 0) +
     Math.min(input.streak, 7) * 2 +
-    (goalsTotal ? 8 : 0);
+    (goalsTotal ? 8 : 0) +
+    Math.min(lessonsMastered, 3) * 4;
   const confidence = completed.length === 0 ? Math.min(signal, 30) : Math.min(95, 45 + signal);
 
-  const hasData = input.sessions.length > 0 || input.progress.length > 1 || goalsTotal > 0 || input.streak > 0;
+  const hasData =
+    input.sessions.length > 0 || input.progress.length > 1 || goalsTotal > 0 || input.streak > 0 || lessonsCompleted > 0;
 
   return {
     windowDays,
@@ -174,6 +189,8 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     streak: input.streak,
     topFocus: topFocus.slice(0, 4),
     attributeGains,
+    lessonsCompleted,
+    lessonsMastered,
     goalsTotal,
     goalsDone,
     insights,
@@ -184,6 +201,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
       "Your on-device training log",
       "Football OS progress history",
       "Attribute model (demo baseline)",
+      ...(input.learn?.length ? ["Your academy completion records"] : []),
     ],
     hasData,
   };
@@ -201,6 +219,8 @@ function buildInsights(a: {
   topFocus: FocusStat[];
   attributes: Attributes;
   windowDays: number;
+  lessonsCompleted: number;
+  lessonsMastered: number;
 }): ReviewInsight[] {
   const out: ReviewInsight[] = [];
 
@@ -255,6 +275,18 @@ function buildInsights(a: {
     }
   }
 
+  if (a.lessonsMastered > 0) {
+    out.push({
+      kind: "positive",
+      text: `You passed the check quiz on ${a.lessonsMastered} academy lesson${a.lessonsMastered === 1 ? "" : "s"} in this window.`,
+    });
+  } else if (a.lessonsCompleted > 0) {
+    out.push({
+      kind: "watch",
+      text: `${a.lessonsCompleted} academy lesson${a.lessonsCompleted === 1 ? "" : "s"} completed but none with a passed check — retaking the quiz is what turns reading into retention.`,
+    });
+  }
+
   return out;
 }
 
@@ -295,6 +327,8 @@ function buildEvidence(a: {
   topFocus: FocusStat[];
   goalsDone: number;
   goalsTotal: number;
+  lessonsCompleted: number;
+  lessonsMastered: number;
 }): string[] {
   const e: string[] = [];
   e.push(`Window: last ${a.windowDays} days`);
@@ -304,5 +338,6 @@ function buildEvidence(a: {
   if (a.streak) e.push(`Current streak ${a.streak}d`);
   if (a.topFocus.length) e.push(`Focus mix: ${a.topFocus.map((f) => `${f.label} ×${f.sessions}`).join(", ")}`);
   if (a.goalsTotal) e.push(`Goals met ${a.goalsDone}/${a.goalsTotal}`);
+  if (a.lessonsCompleted) e.push(`Academy ${a.lessonsCompleted} completed · ${a.lessonsMastered} with a passed check`);
   return e;
 }

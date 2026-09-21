@@ -3,6 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import { buildReview, type WeeklyReview } from "@/domain/review";
+import { useLearnRecords } from "@/lib/hooks";
 import { DEMO_MODE } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
@@ -22,6 +23,7 @@ export function ReviewPage() {
   const { t } = useI18n();
   const { state } = useOs();
   const { navigate } = useRouter();
+  const learn = useLearnRecords();
   const [days, setDays] = useState(7);
   const [compiling, setCompiling] = useState(false);
 
@@ -36,9 +38,10 @@ export function ReviewPage() {
             progress: state.progress,
             attributes: state.profile.attributes,
             streak: state.streak.current,
+            learn: learn.map((l) => ({ at: l.completedAt, quizCorrect: l.quizCorrect })),
           })
         : null,
-    [state, days],
+    [state, days, learn],
   );
 
   const info = state.profile ? levelInfo(state.profile.xp) : null;
@@ -113,7 +116,7 @@ export function ReviewPage() {
           </Panel>
 
           {/* headline stats */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             <StatTile label={t("rv.statSessions")} value={review.completed} sub={`${review.planned} ${t("rv.planned")} · ${review.missed} ${t("rv.missed")}`} />
             <StatTile label={t("rv.statMinutes")} value={review.minutes} sub={t("rv.minutesUnit")} />
             <StatTile label={t("rv.statXp")} value={`+${review.xpGained}`} tone="up" sub={info ? `Lv ${info.level}` : undefined} />
@@ -125,6 +128,7 @@ export function ReviewPage() {
               sub={review.overallDelta != null ? `${review.overallDelta >= 0 ? "+" : ""}${review.overallDelta}` : t("rv.noChange")}
             />
             <StatTile label={t("rv.quality")} value={review.avgRating ?? "—"} sub={review.avgRating != null ? t("rv.outOf5") : t("rv.noRating")} />
+            <StatTile label={t("rv.statAcademy")} value={review.lessonsCompleted} sub={t("rv.statAcademyPassed").replace("{n}", String(review.lessonsMastered))} />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
