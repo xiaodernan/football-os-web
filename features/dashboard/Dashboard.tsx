@@ -14,7 +14,7 @@ import {
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
-import { overallRating } from "@/domain/attributes";
+import { overallRating, attributeLabel } from "@/domain/attributes";
 import { evaluateAchievements, type AchievementInput } from "@/domain/achievements";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
@@ -80,7 +80,12 @@ export function Dashboard() {
       .slice()
       .sort((a, b) => new Date(b.completedAt ?? b.date).getTime() - new Date(a.completedAt ?? a.date).getTime())[0];
     const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
-    return { next, total: list.length, unlocked: list.length - locked.length, last, recovery: load.hasData ? { acwr: load.acwr, zone: load.zone } : null };
+    const focusGoals = state.goals
+      .filter((g) => g.metric === "attribute" && g.key && !g.done)
+      .map((g) => ({ key: g.key!, label: attributeLabel(g.key!), current: g.current, target: g.target, pct: Math.max(0, Math.min(1, g.target ? g.current / g.target : 0)) }))
+      .sort((a, b) => b.pct - a.pct)
+      .slice(0, 3);
+    return { next, total: list.length, unlocked: list.length - locked.length, last, recovery: load.hasData ? { acwr: load.acwr, zone: load.zone } : null, focusGoals };
   }, [profile, info, state]);
 
   return (
@@ -234,6 +239,25 @@ export function Dashboard() {
                     <span aria-hidden>→</span>
                   </span>
                 </Link>
+              )}
+              {growth.focusGoals.length > 0 && (
+                <div className="mt-3 border-t pt-3">
+                  <div className="mb-1.5 flex items-center justify-between text-xs">
+                    <span className="uppercase tracking-wide text-muted-foreground">{t("dash.focusGoals")}</span>
+                    <Link to="/development" className="text-primary hover:underline">{t("dash.develop")} →</Link>
+                  </div>
+                  <div className="space-y-2">
+                    {growth.focusGoals.map((f) => (
+                      <div key={f.key}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="min-w-0 truncate">{f.label}</span>
+                          <span className="ml-2 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{f.current}/{f.target}</span>
+                        </div>
+                        <Progress value={f.pct * 100} className="mt-1 h-1.5" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </Panel>
           )}
