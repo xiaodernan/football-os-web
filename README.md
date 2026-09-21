@@ -34,6 +34,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | My Profile | `/profile` | A personal growth dashboard built entirely from your locally-stored activity: level and XP curve, ability radar with strengths and focus areas, overall-rating trend, toggleable goals, recent sessions and favourites. |
 | Achievements & Trophies | `/achievements` | Badges grouped by Training, Consistency, Growth and Explorer — each unlocked only from a genuine signal already in your local state (sessions logged, streak kept, goals met, plans requested, players watched, level reached), with transparent progress bars and trophy points. |
 | Settings & Data | `/settings` | Switch mode / language / theme, see how many records and how much storage your activity uses, export the full local state as JSON, and a guarded reset — all entirely on-device. |
+| Activity History | `/history` | A day-grouped timeline merged from your real completed sessions, AI coach plans and coach-memory records, filterable by event type, sorted newest-first — nothing invented, every row reads straight from local state. |
 | Command palette | `⌘K` / `Ctrl-K` | Jump to any route or search entities across the world. |
 
 ## Architecture

@@ -62,6 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     modes.push({ to: "/manager", label: t("nav.manager"), icon: I.board, match: ["/manager"] });
     modes.push({ to: "/profile", label: t("nav.profile"), icon: I.user, match: ["/profile"] });
     modes.push({ to: "/achievements", label: t("nav.achievements"), icon: I.trophy, match: ["/achievements"] });
+    modes.push({ to: "/history", label: t("nav.history"), icon: I.timeline, match: ["/history"] });
   }
   const studio: NavItem[] = [
     { to: "/ai", label: t("nav.ai"), icon: I.bolt, match: ["/ai"] },
