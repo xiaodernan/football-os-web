@@ -22,7 +22,7 @@ const TONE: Record<WeeklyReview["insights"][number]["kind"], string> = {
 
 export function ReviewPage() {
   const { t } = useI18n();
-  const { state, requestPlan } = useOs();
+  const { state, requestPlan, addGoal } = useOs();
   const { navigate } = useRouter();
   const learn = useLearnRecords();
   const film = useFilmClips();
@@ -72,6 +72,24 @@ export function ReviewPage() {
     } finally {
       setBuilding(false);
     }
+  };
+
+  const recoKey = review?.recommendation?.attributeKey;
+  const recoTracked = !!recoKey && state.goals.some((g) => g.metric === "attribute" && g.key === recoKey);
+  const trackRecommendation = () => {
+    const reco = review?.recommendation;
+    if (!reco || !state.profile || recoTracked) return;
+    const current = Math.round(state.profile.attributes[reco.attributeKey] ?? 0);
+    const target = Math.min(99, current + 5);
+    addGoal({
+      title: t("rv.trackTitle").replace("{a}", reco.attributeLabel),
+      metric: "attribute",
+      key: reco.attributeKey,
+      target,
+      current,
+      unit: "rating",
+    });
+    toast.success(t("rv.trackDone").replace("{a}", reco.attributeLabel).replace("{t}", String(target)));
   };
 
   const points = useMemo(() => {
@@ -200,6 +218,15 @@ export function ReviewPage() {
                     </div>
                     <Button size="sm" className="mt-3 w-full" onClick={buildForRecommendation} disabled={building}>
                       {building ? t("rv.recoBusy") : t("rv.planForIt")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 w-full"
+                      onClick={trackRecommendation}
+                      disabled={recoTracked}
+                    >
+                      {recoTracked ? t("rv.trackedCta") : t("rv.trackCta")}
                     </Button>
                   </div>
                 ) : (
