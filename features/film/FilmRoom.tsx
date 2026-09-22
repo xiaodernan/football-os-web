@@ -41,6 +41,7 @@ export function FilmRoom() {
   const [clips, setClips] = useState<FilmClip[]>(() => loadFilmClips());
   const [selected, setSelected] = useState<string | null>(() => loadFilmClips()[0]?.clipId ?? null);
   const [busy, setBusy] = useState(false);
+  const [planning, setPlanning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<Error | null>(null);
 
@@ -88,11 +89,29 @@ export function FilmRoom() {
   const insights = useMemo(() => buildFilmInsights(toClipInputs(clips)), [clips]);
 
   const buildTraining = async () => {
-    if (!current) return;
-    const focus = current.report.recommendedFocus.map(attributeLabel).join(" and ");
-    await requestPlan(`Film review flagged: ${current.report.improvements[0]}. Build a session on ${focus}.`, 30);
-    toast.success("Training created from film");
-    navigate("/player/training");
+    if (!current || planning) return;
+    const keys = current.report.recommendedFocus;
+    if (!keys.length) {
+      toast.error("This clip didn't flag a focus to train.");
+      return;
+    }
+    const focus = keys.map(attributeLabel).join(" and ");
+    setPlanning(true);
+    try {
+      const plan = await requestPlan(
+        `Film review flagged: ${current.report.improvements[0]}. Build a session on ${focus}.`,
+        30,
+        keys,
+      );
+      toast.success(
+        `Training built from this clip — ${plan.session.targetMinutes}′ · ${plan.session.exercises.length} blocks on ${focus}.`,
+      );
+      navigate("/player/training");
+    } catch {
+      toast.error("Couldn't build training from this clip. Try again.");
+    } finally {
+      setPlanning(false);
+    }
   };
 
   return (
@@ -202,7 +221,7 @@ export function FilmRoom() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button size="sm" onClick={buildTraining}>Build a training from this →</Button>
+                  <Button size="sm" onClick={buildTraining} disabled={planning}>{planning ? "Building…" : "Build a training from this →"}</Button>
                   <span className="self-center text-[11px] text-muted-foreground">Recommended focus: {current.report.recommendedFocus.map(attributeLabel).join(", ")}</span>
                 </div>
               </Panel>
