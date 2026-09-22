@@ -114,3 +114,90 @@ export function seedThreads(): Thread[] {
 export function allTags(): string[] {
   return ["All", "General", "Tactics", "Transfers", "Rumours", "Debates", "News"];
 }
+
+export interface StarterInput {
+  career?: {
+    clubName: string;
+    position: number;
+    clubCount: number;
+    won: number;
+    drawn: number;
+    lost: number;
+    pointsPerGame: number;
+    gamesRemaining: number;
+  };
+  training?: { sessions: number; minutes: number; topFocusLabel?: string; topFocusSessions?: number; avgRating: number | null };
+  academy?: { completed: number; mastered: number; lastLesson?: string };
+  watchlist?: number;
+}
+
+export interface StarterDraft {
+  id: string;
+  title: string;
+  body: string;
+  tag: string;
+  evidence: string[];
+}
+
+// Drafts assembled ONLY from numbers the user's own pillars actually produced.
+// Each one carries the figures it was built from so the suggestion can be
+// checked, and none is offered unless the underlying record exists.
+export function buildStarters(input: StarterInput, limit = 3): StarterDraft[] {
+  const out: StarterDraft[] = [];
+
+  if (input.career && input.career.won + input.career.drawn + input.career.lost >= 3) {
+    const c = input.career;
+    const feels = c.pointsPerGame >= 1.8 ? "ahead of" : c.pointsPerGame >= 1.2 ? "in line with" : "behind";
+    out.push({
+      id: "starter-career",
+      tag: "Tactics",
+      title: `${c.clubName}: ${c.won}-${c.drawn}-${c.lost} at ${c.pointsPerGame.toFixed(2)} pts/game — playing to the record or against it?`,
+      body: `Running ${c.clubName} with ${c.gamesRemaining} fixtures left, currently #${c.position} of ${c.clubCount}. The underlying performances feel ${feels} the points, so what would you change about the approach?`,
+      evidence: [
+        `${c.won}-${c.drawn}-${c.lost}`,
+        `${c.pointsPerGame.toFixed(2)} pts/game`,
+        `#${c.position} of ${c.clubCount}`,
+        `${c.gamesRemaining} fixtures left`,
+      ],
+    });
+  }
+
+  if (input.training && input.training.sessions >= 2 && input.training.topFocusLabel) {
+    const t = input.training;
+    out.push({
+      id: "starter-training",
+      tag: "General",
+      title: `Most of my work is ${t.topFocusLabel} (${t.topFocusSessions} of ${t.sessions} sessions) — bias or plan?`,
+      body: `I have logged ${t.sessions} sessions totalling ${t.minutes} minutes${t.avgRating != null ? `, self-rated ${t.avgRating}/5 on average` : ""}, and ${t.topFocusSessions} of them hit ${t.topFocusLabel}. At what point does focus become neglect of everything else?`,
+      evidence: [
+        `${t.sessions} sessions · ${t.minutes} min`,
+        `${t.topFocusLabel} ×${t.topFocusSessions}`,
+        t.avgRating != null ? `avg self-rating ${t.avgRating}/5` : "no self-ratings yet",
+      ],
+    });
+  }
+
+  if (input.academy && input.academy.completed > 0 && input.academy.lastLesson) {
+    const a = input.academy;
+    out.push({
+      id: "starter-academy",
+      tag: "Debates",
+      title: `The academy says ${a.lastLesson} — does that kind of theory show up under pressure?`,
+      body: `Academy so far: ${a.completed} lesson${a.completed === 1 ? "" : "s"} completed, ${a.mastered} with a passed check, most recently ${a.lastLesson}. Has anyone seen a measurable difference in their own games from this kind of study, or is it mostly coaching language?`,
+      evidence: [`${a.completed} completed`, `${a.mastered} passed check${a.mastered === 1 ? "" : "s"}`, `latest lesson: ${a.lastLesson}`],
+    });
+  }
+
+  if (input.watchlist && input.watchlist > 0) {
+    const w = input.watchlist;
+    out.push({
+      id: "starter-watchlist",
+      tag: "Transfers",
+      title: `Watching ${w} player${w === 1 ? "" : "s"} — what would actually make you sign one?`,
+      body: `I have ${w} on my watchlist. Rather than arguing about names: what is your decision rule — age and resale, immediate contribution, or squad fit?`,
+      evidence: [`${w} watched`],
+    });
+  }
+
+  return out.slice(0, limit);
+}

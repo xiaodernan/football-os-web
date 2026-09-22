@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
-import { useOnline } from "@/lib/hooks";
-import { seedThreads, allTags, type Thread, type Comment } from "@/domain/community";
+import { useOnline, useLearnRecords } from "@/lib/hooks";
+import { useOs } from "@/store/useFootballOS";
+import { buildStarters, allTags, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
+import { LESSONS, isCompleted, summarizeLearn } from "@/domain/learn";
+import { seasonSummary, type CareerState } from "@/domain/career";
+import { getClub } from "@/data/footballService";
+import { attributeLabel } from "@/domain/attributes";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +35,8 @@ function timeAgo(iso: string): string {
 
 export function CommunityHub() {
   const online = useOnline();
+  const { state } = useOs();
+  const learn = useLearnRecords();
   const [store, setStore] = useState<CommunityStore>(load);
   const [tag, setTag] = useState("All");
   const [sort, setSort] = useState<"recent" | "top">("recent");
@@ -57,6 +64,55 @@ export function CommunityHub() {
     }),
     [store],
   );
+
+  // Draft topics built only from figures the user's own pillars produced.
+  const starters = useMemo<StarterDraft[]>(() => {
+    let career: StarterInput["career"];
+    try {
+      const raw = localStorage.getItem("football-os.career.v1");
+      if (raw) {
+        const cs = JSON.parse(raw) as CareerState;
+        const s = seasonSummary(cs);
+        career = {
+          clubName: getClub(cs.clubId)?.name ?? cs.clubId,
+          position: s.position,
+          clubCount: s.clubCount,
+          won: s.won,
+          drawn: s.drawn,
+          lost: s.lost,
+          pointsPerGame: s.ppg,
+          gamesRemaining: Math.max(0, (s.clubCount - 1) * 2 - s.played),
+        };
+      }
+    } catch {
+      /* unreadable career — that starter is simply not offered */
+    }
+
+    const done = state.sessions.filter((x) => x.status === "completed");
+    const focus = new Map<string, number>();
+    for (const x of done) for (const k of x.focusAttributes) focus.set(k, (focus.get(k) ?? 0) + 1);
+    const top = [...focus.entries()].sort((a, b) => b[1] - a[1])[0];
+    const ratings = done.map((x) => x.selfRating).filter((r): r is number => typeof r === "number");
+    const lessons = summarizeLearn(learn);
+    const latest = learn.filter((r) => isCompleted(r)).sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())[0];
+
+    return buildStarters({
+      career,
+      training: done.length
+        ? {
+            sessions: done.length,
+            minutes: done.reduce((s, x) => s + x.targetMinutes, 0),
+            topFocusLabel: top ? attributeLabel(top[0]) : undefined,
+            topFocusSessions: top ? top[1] : undefined,
+            avgRating: ratings.length ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : null,
+          }
+        : undefined,
+      academy: lessons.completed
+        ? { completed: lessons.completed, mastered: lessons.mastered, lastLesson: latest ? LESSONS.find((l) => l.id === latest.id)?.title : undefined }
+        : undefined,
+      watchlist: state.watchlist.length,
+    });
+  }, [state, learn]);
 
   const visible = useMemo(() => {
     let list = merged;
@@ -116,7 +172,7 @@ export function CommunityHub() {
 
       {!online && <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">You're offline — new posts save to this device and remain when you reconnect.</div>}
 
-      {composing && <Composer onSubmit={addThread} onCancel={() => setComposing(false)} />}
+      {composing && <Composer starters={starters} onSubmit={addThread} onCancel={() => setComposing(false)} />}
 
       <div className="flex flex-wrap items-center gap-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search discussions…" className="w-52 rounded-md border bg-card px-3 py-1.5 text-sm" />
@@ -160,20 +216,46 @@ export function CommunityHub() {
   );
 }
 
-function Composer({ onSubmit, onCancel }: { onSubmit: (t: string, b: string, tag: string) => void; onCancel: () => void }) {
+function Composer({ starters, onSubmit, onCancel }: { starters: StarterDraft[]; onSubmit: (t: string, b: string, tag: string) => void; onCancel: () => void }) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [tag, setTag] = useState("General");
   const [err, setErr] = useState<string | null>(null);
+  const [usedStarter, setUsedStarter] = useState<StarterDraft | null>(null);
   const submit = () => {
     if (title.trim().length < 4) return setErr("Give your thread a title of at least 4 characters.");
     if (!body.trim()) return setErr("Add a message to start the discussion.");
     onSubmit(title.trim(), body.trim(), tag);
   };
+  const apply = (s: StarterDraft) => {
+    setTitle(s.title);
+    setBody(s.body);
+    setTag(allTags().includes(s.tag) ? s.tag : "General");
+    setErr(null);
+    setUsedStarter(s);
+  };
   return (
     <Panel className="p-4">
       <SectionTitle title="Start a discussion" />
-      <div className="space-y-2">
+      {starters.length > 0 && (
+        <div className="mt-2 rounded-md border bg-card/30 p-3">
+          <div className="text-xs font-medium">Start from your data</div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Drafted from figures in your own career, training log, academy and watchlist. Edit anything before posting.</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {starters.map((s) => (
+              <button key={s.id} onClick={() => apply(s)} className={cn("rounded-md border px-2.5 py-1 text-xs", usedStarter?.id === s.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
+                {s.tag} · {s.evidence[0]}
+              </button>
+            ))}
+          </div>
+          {usedStarter && (
+            <div className="mt-2 text-[11px] text-muted-foreground">
+              Built from: {usedStarter.evidence.join(" · ")}
+            </div>
+          )}
+        </div>
+      )}
+      <div className="mt-3 space-y-2">
         <input value={title} onChange={(e) => { setTitle(e.target.value); setErr(null); }} placeholder="Title" className="w-full rounded-md border bg-card px-3 py-2 text-sm" />
         <textarea value={body} onChange={(e) => { setBody(e.target.value); setErr(null); }} placeholder="What do you want to talk about?" rows={3} className="w-full rounded-md border bg-card px-3 py-2 text-sm" />
         <div className="flex items-center justify-between gap-2">
