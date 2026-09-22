@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
-import { teamMetrics, leaders, expectedGoals, outcomeOdds, formPoints, type TeamMetrics, type FormLetter } from "@/domain/analytics";
+import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
@@ -68,8 +68,9 @@ export function DataRoom() {
       .map((m) => {
         const h = byId.get(m.homeClubId);
         const a = byId.get(m.awayClubId);
-        if (!h || !a || h.played < 1 || a.played < 1) return null;
-        return { match: m, odds: outcomeOdds(h, a), sample: Math.min(h.played, a.played) };
+        if (!h || !a || h.played < 2 || a.played < 2) return null;
+        const odds = outcomeOdds(h, a);
+        return { match: m, odds, pct: oddsPercents(odds), sample: Math.min(h.played, a.played) };
       })
       .filter((x): x is NonNullable<typeof x> => x !== null)
       .slice(0, 4);
@@ -215,7 +216,7 @@ export function DataRoom() {
         <Panel className="p-4">
           <SectionTitle title="Matchday forecast" hint={`${forecast.length} scheduled fixtures · Poisson · league avg ${metrics[0]?.leagueAvg.toFixed(2)} goals/team`} />
           <div className="mt-3 space-y-3">
-            {forecast.map(({ match, odds, sample }) => {
+            {forecast.map(({ match, odds, pct, sample }) => {
               const h = getClub(match.homeClubId);
               const a = getClub(match.awayClubId);
               return (
@@ -233,14 +234,14 @@ export function DataRoom() {
                     </span>
                   </div>
                   <div className="mt-2 flex h-2 w-full overflow-hidden rounded">
-                    <div className="bg-primary" style={{ width: `${odds.home * 100}%` }} />
-                    <div className="bg-muted-foreground/40" style={{ width: `${odds.draw * 100}%` }} />
-                    <div className="bg-info" style={{ width: `${odds.away * 100}%` }} />
+                    <div className="bg-primary" style={{ width: `${pct.home}%` }} />
+                    <div className="bg-muted-foreground/40" style={{ width: `${pct.draw}%` }} />
+                    <div className="bg-info" style={{ width: `${pct.away}%` }} />
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                    <span><span className="font-mono text-foreground">{Math.round(odds.home * 100)}%</span> {h?.short}</span>
-                    <span><span className="font-mono text-foreground">{Math.round(odds.draw * 100)}%</span> draw</span>
-                    <span><span className="font-mono text-foreground">{Math.round(odds.away * 100)}%</span> {a?.short}</span>
+                    <span><span className="font-mono text-foreground">{pct.home}%</span> {h?.short}</span>
+                    <span><span className="font-mono text-foreground">{pct.draw}%</span> draw</span>
+                    <span><span className="font-mono text-foreground">{pct.away}%</span> {a?.short}</span>
                     <span>xG {odds.lambdaHome.toFixed(2)}–{odds.lambdaAway.toFixed(2)}</span>
                     <span>most likely {odds.mostLikelyScore} ({Math.round(odds.mostLikelyPct * 100)}%)</span>
                     <span>{sample} match{sample === 1 ? "" : "es"} of form data</span>

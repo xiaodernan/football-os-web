@@ -1,4 +1,5 @@
 import { WORLD } from "./footballSeed";
+import { oddsPercents, outcomeOdds, teamMetrics, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, Standing } from "@/domain/types";
 
 // Data Provider Layer (spec §11): the UI never talks to the seed directly, so a
@@ -73,6 +74,56 @@ export function upcomingMatchesForClub(clubId: string, limit = 5): Match[] {
 
 export function matchesByStatus(status: Match["status"]): Match[] {
   return WORLD.matches.filter((m) => m.status === status);
+}
+
+// Per-competition attack/defence ratings are expensive to rebuild per row, and
+// the demo dataset is immutable, so index them once per competition.
+const metricsIndex = new Map<string, Map<string, TeamMetrics>>();
+
+function metricsFor(compId: string): Map<string, TeamMetrics> {
+  let idx = metricsIndex.get(compId);
+  if (!idx) {
+    idx = new Map(teamMetrics(compId, WORLD.matches, WORLD.clubs).map((m) => [m.clubId, m]));
+    metricsIndex.set(compId, idx);
+  }
+  return idx;
+}
+
+export interface FixtureForecast {
+  /** Whole percentages that total 100. */
+  homePct: number;
+  drawPct: number;
+  awayPct: number;
+  lambdaHome: number;
+  lambdaAway: number;
+  mostLikelyScore: string;
+  sample: number; // matches of form data behind the quieter side
+}
+
+/**
+ * Modelled pre-match odds for one scheduled fixture, derived from each side's
+ * attack/defence ratings over the matches actually played in this dataset.
+ * Returns null when there is too little form data to say anything honest — a
+ * fixture with no sample is left unforecast rather than guessed at.
+ */
+export function fixtureForecast(matchId: string): FixtureForecast | null {
+  const m = matchById.get(matchId);
+  if (!m || m.status === "FINISHED") return null;
+  const idx = metricsFor(m.competitionId);
+  const h = idx.get(m.homeClubId);
+  const a = idx.get(m.awayClubId);
+  if (!h || !a || h.played < 2 || a.played < 2) return null;
+  const odds = outcomeOdds(h, a);
+  const pct = oddsPercents(odds);
+  return {
+    homePct: pct.home,
+    drawPct: pct.draw,
+    awayPct: pct.away,
+    lambdaHome: odds.lambdaHome,
+    lambdaAway: odds.lambdaAway,
+    mostLikelyScore: odds.mostLikelyScore,
+    sample: Math.min(h.played, a.played),
+  };
 }
 
 export function trendingPlayers(n = 6): PlayerRef[] {

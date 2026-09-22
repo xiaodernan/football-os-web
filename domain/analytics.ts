@@ -208,6 +208,23 @@ export function outcomeOdds(home: TeamMetrics, away: TeamMetrics, leagueAvg?: nu
   };
 }
 
+/**
+ * Whole-number percentages that always total 100. Rounding each outcome
+ * independently can leave 99% or 101% rows, which reads as a bug even when the
+ * underlying model is fine — so the largest remainder absorbs the difference.
+ */
+export function oddsPercents(odds: { home: number; draw: number; away: number }): { home: number; draw: number; away: number } {
+  const raw: [number, number, number] = [odds.home * 100, odds.draw * 100, odds.away * 100];
+  const floor = raw.map(Math.floor) as [number, number, number];
+  let left = 100 - (floor[0] + floor[1] + floor[2]);
+  const order = [0, 1, 2].sort((a, b) => (raw[b] - floor[b]) - (raw[a] - floor[a]));
+  for (let i = 0; left > 0; i = (i + 1) % order.length) {
+    floor[order[i]]++;
+    left--;
+  }
+  return { home: floor[0], draw: floor[1], away: floor[2] };
+}
+
 export interface Leaders {
   bestForm: TeamMetrics | null;
   strongestAttack: TeamMetrics | null;

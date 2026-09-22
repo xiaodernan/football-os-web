@@ -8,6 +8,7 @@ import {
   getNews,
   clubIdsByCompetition,
   matchesByStatus,
+  fixtureForecast,
   trendingPlayers,
   newsFeed,
   globalSearch,
@@ -107,6 +108,7 @@ function MatchRow({ m }: { m: Match }) {
   const away = getClub(m.awayClubId);
   const comp = getCompetition(m.competitionId);
   const score = m.status === "SCHEDULED" ? fmtDateTime(m.kickoff) : `${m.homeGoals} – ${m.awayGoals}`;
+  const fc = m.status === "SCHEDULED" ? fixtureForecast(m.id) : null;
   return (
     <EntityLink to={`/matches/${m.id}`}>
       <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -120,6 +122,17 @@ function MatchRow({ m }: { m: Match }) {
         <Crest colors={away?.colors} short={away?.short} size={24} />
         <span className="flex-1 truncate text-sm">{away?.name}</span>
       </div>
+      {fc && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
+          <span className="rounded border px-1 py-px uppercase tracking-wide">model</span>
+          <span className="font-mono tabular-nums">
+            {fc.homePct} · {fc.drawPct} · {fc.awayPct}%
+          </span>
+          <span>xG {fc.lambdaHome.toFixed(2)}–{fc.lambdaAway.toFixed(2)}</span>
+          <span>likely {fc.mostLikelyScore}</span>
+          <span>{fc.sample} match{fc.sample === 1 ? "" : "es"} of form</span>
+        </div>
+      )}
     </EntityLink>
   );
 }
