@@ -63,11 +63,11 @@ type Baseline = Partial<Record<string, number>> & { _base: number };
 
 const GROUP_BASELINE: Record<PositionGroup, Baseline> = {
   GK: { _base: 52, positioning: 68, concentration: 68, composure: 62, decision_making: 60, strength: 55, mobility: 60, defensive_awareness: 66, first_touch: 50, ball_control: 48 },
-  CB: { _base: 52, positioning: 66, defensive_awareness: 68, strength: 64, concentration: 66, heading_like_def: 0, aerial: 0, composure: 58, passing: 55, decision_making: 58, off_ball_movement: 40 },
+  CB: { _base: 52, positioning: 66, defensive_awareness: 68, strength: 64, concentration: 66, composure: 58, passing: 55, decision_making: 58, off_ball_movement: 40 },
   FB: { _base: 52, sprint: 66, stamina: 66, crossing: 62, acceleration: 64, positioning: 58, defensive_awareness: 58, ball_control: 56, off_ball_movement: 58, transition_awareness: 60 },
   DM: { _base: 52, positioning: 62, defensive_awareness: 64, passing: 62, decision_making: 62, scanning: 60, strength: 58, concentration: 62, press_resistance: 58, transition_awareness: 60 },
   CM: { _base: 52, passing: 64, first_touch: 62, scanning: 62, decision_making: 62, ball_control: 60, space_awareness: 58, press_resistance: 58, stamina: 58, composure: 58 },
-  AM: { _base: 52, ball_control: 62, first_touch: 62, dribbling: 62, passing: 60, vision: 0, composure: 58, space_awareness: 60, off_ball_movement: 60, long_passing: 56, shooting: 54 },
+  AM: { _base: 52, ball_control: 62, first_touch: 62, dribbling: 62, passing: 60, game_intelligence: 60, composure: 58, space_awareness: 60, off_ball_movement: 60, long_passing: 56, shooting: 54 },
   W: { _base: 52, dribbling: 64, acceleration: 66, sprint: 66, first_touch: 60, ball_control: 62, crossing: 58, off_ball_movement: 60, agility: 62, finishing: 52 },
   ST: { _base: 52, finishing: 62, off_ball_movement: 62, composure: 58, shooting: 60, positioning: 56, strength: 56, first_touch: 58, acceleration: 58, game_intelligence: 56 },
 };

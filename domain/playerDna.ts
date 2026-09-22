@@ -16,7 +16,7 @@ const avg = (a: Attributes, ks: string[]) =>
 export const ARCHETYPES: Archetype[] = [
   {
     key: "creator", label: "Creator", blurb: "Turns possession into chances in the final third.",
-    score: (a) => avg(a, ["passing", "long_passing", "vision" as string, "dribbling", "set_pieces"]) * 0.7 + g(a, "game_intelligence") * 0.3,
+    score: (a) => avg(a, ["passing", "long_passing", "crossing", "dribbling", "set_pieces"]) * 0.7 + g(a, "game_intelligence") * 0.3,
   },
   {
     key: "progressor", label: "Progressor", blurb: "Moves the ball up the pitch through carries and line-breaking passes.",
