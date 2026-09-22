@@ -5,6 +5,7 @@ import { useOs } from "@/store/useFootballOS";
 import { levelInfo } from "@/domain/xp";
 import { evaluateAchievements, summary, type AchievementStatus, type Tier } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
+import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Progress } from "@/components/ui/progress";
@@ -23,6 +24,7 @@ const GROUPS: { id: string; label: string }[] = [
   { id: "growth", label: "ach.group.growth" },
   { id: "explorer", label: "ach.group.explorer" },
   { id: "scholar", label: "ach.group.scholar" },
+  { id: "analyst", label: "ach.group.analyst" },
 ];
 
 export function AchievementsPage() {
@@ -46,6 +48,7 @@ export function AchievementsPage() {
       plans: state.plans.length,
       lessonsCompleted: lessons.completed,
       lessonsMastered: lessons.mastered,
+      filmClips: loadFilmClips().length,
     };
   }, [state, learn]);
 

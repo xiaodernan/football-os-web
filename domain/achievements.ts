@@ -1,8 +1,8 @@
 // Achievements are derived ONLY from genuine, completed behaviour already stored
-// in the user's local state — never from level alone and never fabricated. Each
-// rule reads a real signal (sessions logged, streak kept, goals met, players
-// watched, plans requested, level reached) so an unlocked badge always has an
-// evidential basis. Pure module: no React, no IO.
+// on this device — never from level alone and never fabricated. Each rule reads
+// a real signal (sessions logged, streak kept, goals met, players watched, plans
+// requested, level reached, academy lessons completed, film clips analysed) so
+// an unlocked badge always has an evidential basis. Pure module: no React, no IO.
 
 export interface AchievementInput {
   level: number;
@@ -14,13 +14,14 @@ export interface AchievementInput {
   plans: number;
   lessonsCompleted: number;
   lessonsMastered: number; // completed AND check quiz passed
+  filmClips: number; // clips actually analysed on this device (video report present)
 }
 
 export type Tier = "bronze" | "silver" | "gold";
 
 export interface AchievementDef {
   id: string;
-  group: "training" | "consistency" | "growth" | "explorer" | "scholar";
+  group: "training" | "consistency" | "growth" | "explorer" | "scholar" | "analyst";
   icon: string;
   tier: Tier;
   target: number;
@@ -57,6 +58,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: "first_lesson", group: "scholar", icon: "◈", tier: "bronze", target: 1, current: (i) => i.lessonsCompleted },
   { id: "scholar", group: "scholar", icon: "❐", tier: "silver", target: 3, current: (i) => i.lessonsMastered },
   { id: "polymath", group: "scholar", icon: "✵", tier: "gold", target: 6, current: (i) => i.lessonsMastered },
+  // Analyst — driven by real, provider-analysed clips in the local film library
+  { id: "first_clip", group: "analyst", icon: "▣", tier: "bronze", target: 1, current: (i) => i.filmClips },
+  { id: "five_clips", group: "analyst", icon: "◫", tier: "silver", target: 5, current: (i) => i.filmClips },
+  { id: "ten_clips", group: "analyst", icon: "⧉", tier: "gold", target: 10, current: (i) => i.filmClips },
 ];
 
 export const TIER_ORDER: Tier[] = ["gold", "silver", "bronze"];

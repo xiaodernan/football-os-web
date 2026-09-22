@@ -17,6 +17,7 @@ import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { overallRating, attributeLabel } from "@/domain/attributes";
 import { evaluateAchievements, type AchievementInput } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
+import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
@@ -76,6 +77,7 @@ export function Dashboard() {
       plans: state.plans.length,
       lessonsCompleted: learnSummary.completed,
       lessonsMastered: learnSummary.mastered,
+      filmClips: loadFilmClips().length,
     };
     const list = evaluateAchievements(input);
     const locked = list
