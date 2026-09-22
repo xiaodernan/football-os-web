@@ -345,6 +345,7 @@ function Training() {
   const { state, completeSession } = useOs();
   const { t } = useI18n();
   const planned = state.sessions.filter((s) => s.status === "planned");
+  const missed = state.sessions.filter((s) => s.status === "missed").slice(0, 8);
   const history = state.sessions.filter((s) => s.status === "completed").slice(0, 20);
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -356,6 +357,22 @@ function Training() {
           <EmptyState title="No planned sessions" hint="Ask the AI coach to build one." icon="⚑" />
         )}
       </Panel>
+      {missed.length > 0 && (
+        <Panel className="p-4">
+          <SectionTitle title="Missed" hint={`${missed.length} slipped`} />
+          <div className="divide-y">
+            {missed.map((s) => (
+              <div key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                <div className="min-w-0">
+                  <div className="truncate">{s.title}</div>
+                  <div className="text-xs text-muted-foreground">{new Date(s.date).toLocaleDateString()} · {s.targetMinutes}′ · not completed</div>
+                </div>
+                <Badge variant="outline" className="shrink-0 font-mono text-muted-foreground">missed</Badge>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      )}
       <Panel className="p-4">
         <SectionTitle title="History" hint={`${history.length} completed`} />
         {history.length ? (

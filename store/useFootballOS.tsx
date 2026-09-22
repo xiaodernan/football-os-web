@@ -22,7 +22,7 @@ import {
   POSITION_BY_GROUP,
 } from "@/domain/attributes";
 import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
-import { applyFocusGrowth, type GrowthDelta } from "@/domain/training";
+import { applyFocusGrowth, sweepOverdueSessions, type GrowthDelta } from "@/domain/training";
 import { buildLoad } from "@/domain/load";
 import { coachProvider, type PlanInput } from "@/data/ai";
 import { OS_STATE_KEY } from "@/domain/localData";
@@ -76,13 +76,17 @@ function clamp(v: number, lo: number, hi: number) {
 // iterate (a session without `exercises` blanked the whole Dashboard). Repair
 // them once at the storage boundary instead of guarding every read site.
 function normalizeHydrated(s: OsState): OsState {
+  const repaired = (s.sessions ?? []).map((x) => ({
+    ...x,
+    exercises: x.exercises ?? [],
+    focusAttributes: x.focusAttributes ?? [],
+  }));
   return {
     ...s,
-    sessions: (s.sessions ?? []).map((x) => ({
-      ...x,
-      exercises: x.exercises ?? [],
-      focusAttributes: x.focusAttributes ?? [],
-    })),
+    // Planned sessions whose scheduled day has passed are genuinely missed —
+    // flip them here so the review's missed count and slipped-session insight
+    // reflect reality instead of staying permanently at zero.
+    sessions: sweepOverdueSessions(repaired),
     plans: s.plans ?? [],
     goals: s.goals ?? [],
     memory: s.memory ?? [],

@@ -85,6 +85,21 @@ export function buildSession(input: BuildSessionInput): TrainingSession {
   };
 }
 
+/** Flip planned sessions whose scheduled day has fully passed into `missed`.
+ *  A session dated before the start of `nowMs`'s local day can no longer be done
+ *  as planned, and the weekly review only reports missed sessions if some path
+ *  actually produces that status — otherwise the count is permanently zero. */
+export function sweepOverdueSessions(sessions: TrainingSession[], nowMs: number = Date.now()): TrainingSession[] {
+  const now = new Date(nowMs);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return sessions.map((s) => {
+    if (s.status !== "planned") return s;
+    const t = new Date(s.date).getTime();
+    if (Number.isNaN(t) || t >= startOfToday) return s;
+    return { ...s, status: "missed" };
+  });
+}
+
 export function sessionIntensity(session: TrainingSession): number {
   const load = session.exercises.reduce((s, e) => s + e.intensity * e.minutes, 0);
   const mins = session.exercises.reduce((s, e) => s + e.minutes, 0) || 1;
