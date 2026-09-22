@@ -3,7 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { getPlayer, getClub, formatValue } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
-import { headroom, valueIndex, primeYears } from "@/domain/scouting";
+import { headroom, valueIndex, primeYears, templateEdge } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -135,6 +135,20 @@ export function WatchlistBoard() {
                   <div className="font-mono text-sm tabular-nums">+{headroom(p)}</div>
                   <div className="text-[11px] text-muted-foreground">{t("watch.headroom")}</div>
                 </div>
+                {(() => {
+                  const edge = templateEdge(p);
+                  if (!edge) return null;
+                  return (
+                    <div className="hidden w-28 text-right xl:block" title={t("watch.templateHint")}>
+                      <div className={cn("font-mono text-sm tabular-nums", edge.bestDelta > 0 ? "text-success" : "text-muted-foreground")}>
+                        {edge.bestLabel} {edge.bestDelta > 0 ? `+${edge.bestDelta}` : edge.bestDelta}
+                      </div>
+                      <div className={cn("text-[11px] tabular-nums", edge.worstDelta < 0 ? "text-destructive" : "text-muted-foreground")}>
+                        {edge.worstLabel} {edge.worstDelta > 0 ? `+${edge.worstDelta}` : edge.worstDelta}
+                      </div>
+                    </div>
+                  );
+                })()}
                 <div className="hidden w-16 text-right lg:block">
                   <div className="font-mono text-sm tabular-nums">{primeYears(p)}</div>
                   <div className="text-[11px] text-muted-foreground">{t("watch.prime")}</div>

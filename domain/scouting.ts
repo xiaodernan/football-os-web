@@ -127,8 +127,9 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
 
   const strengths = edges.filter((e) => e.delta > 0).slice(0, top);
   const concerns = [...edges].reverse().filter((e) => e.delta < 0).slice(0, top).reverse();
+  const templateCats = categoryAverages(template);
   const cats: CategoryEdgeRow[] = categoryAverages(real).map((ca, i) => {
-    const tmpl = categoryAverages(template)[i];
+    const tmpl = templateCats[i];
     return { category: ca.category, label: ca.label, value: ca.value, template: tmpl.value, delta: ca.value - tmpl.value };
   });
 
@@ -165,6 +166,31 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
 }
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
+
+export interface TemplateEdgeSummary {
+  bestLabel: string;
+  bestDelta: number;
+  worstLabel: string;
+  worstDelta: number;
+}
+
+/**
+ * Cheap category-level version of the scout report for list rows: two averaged
+ * vectors and a comparison, with no per-attribute sorting, so it stays
+ * negligible across a long table. Null when the player has no vector.
+ */
+export function templateEdge(p: PlayerRef): TemplateEdgeSummary | null {
+  const real = p.attributes && Object.keys(p.attributes).length >= 8 ? p.attributes : null;
+  if (!real) return null;
+  const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
+  const tmpl = categoryAverages(baselineAttributes(p.positionGroup as PositionGroup, skill));
+  const own = categoryAverages(real);
+  const deltas = own.map((c, i) => ({ label: c.label, delta: c.value - tmpl[i].value }));
+  const sorted = [...deltas].sort((a, b) => b.delta - a.delta);
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+  return { bestLabel: best.label, bestDelta: best.delta, worstLabel: worst.label, worstDelta: worst.delta };
+}
 
 // Squad profile of a club by position bucket — where it is thin vs. deep.
 export function squadProfile(clubId: string): { bucket: Exclude<PosBucket, "ALL">; count: number; avg: number }[] {
