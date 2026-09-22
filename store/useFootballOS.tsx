@@ -285,7 +285,8 @@ export function OsProvider({ children }: { children: ReactNode }) {
       },
       setMode: (m) => dispatch({ type: "SET_MODE", mode: m }),
       requestPlan: async (prompt, availableMinutes, focusKeys) => {
-        if (!state.profile) throw new Error("no profile");
+        if (!state.profile) throw new Error("Complete onboarding before asking the coach.");
+        if (!coachProvider.available) throw new Error("The coach provider is unavailable right now — try again shortly.");
         const history = aggregateFocus(state.sessions);
         const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
         const planInput: PlanInput = {

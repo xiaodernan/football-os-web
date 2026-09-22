@@ -197,8 +197,8 @@ function Coach() {
       const p = await requestPlan(prompt, minutes);
       setPlanId(p.id);
       toast.success("Training plan generated");
-    } catch {
-      toast.error("Coach is unavailable");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not build a plan");
     } finally {
       setBusy(false);
     }
