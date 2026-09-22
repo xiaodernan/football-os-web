@@ -1,10 +1,13 @@
 import { makeRng, rngInt, pick } from "@/lib/rng";
 import { footballProvider, getClub, getCompetition, newsFeed } from "@/data/footballService";
 
-// Community is a genuine discussion surface that runs fully in Demo Mode: seed
-// threads are derived deterministically from the real world dataset (fixtures and
-// news), and anything a visitor posts persists on their device. A future backend
-// provider can replace `seedThreads` + local storage without touching the UI.
+// Community in Demo Mode is a local discussion surface, not a networked one.
+// Thread topics are derived deterministically from the real world dataset
+// (standings and news), but their authors and replies are GENERATED SAMPLE
+// CONTENT and are flagged `seeded` / `sample` so the UI can label them — no real
+// people are behind them and sample posts never claim likes. Anything the
+// visitor writes is stored on their own device. A future backend provider can
+// replace `seedThreads` + local storage without touching the UI.
 
 export interface Comment {
   id: string;
@@ -12,6 +15,7 @@ export interface Comment {
   body: string;
   at: string;
   likes: number;
+  sample: boolean; // generated demonstration content, not a real person
 }
 
 export interface Thread {
@@ -60,9 +64,10 @@ function seededComments(threadSeed: string): Comment[] {
       author: pick(rng, HANDLES),
       body: bank[(rngInt(rng, 0, bank.length - 1)) % bank.length],
       at: ago(rngInt(rng, 0, 6)),
-      likes: rngInt(rng, 0, 42),
+      likes: 0, // generated replies never claim popularity they don't have
+      sample: true,
     };
-  }).sort((a, b) => b.likes - a.likes);
+  });
 }
 
 export function seedThreads(): Thread[] {

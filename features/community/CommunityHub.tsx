@@ -36,6 +36,7 @@ export function CommunityHub() {
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
+  const [mine, setMine] = useState(false);
 
   const save = (next: CommunityStore) => { setStore(next); try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* quota */ } };
 
@@ -46,22 +47,34 @@ export function CommunityHub() {
 
   const likeCount = (id: string, base: number) => base + (store.likes.includes(id) ? 1 : 0);
 
+  // Everything here is counted from what this device actually holds — the only
+  // community numbers that are real in Demo Mode.
+  const activity = useMemo(
+    () => ({
+      threads: store.userThreads.length,
+      replies: Object.values(store.replies).reduce((s, a) => s + a.length, 0),
+      likes: store.likes.length,
+    }),
+    [store],
+  );
+
   const visible = useMemo(() => {
     let list = merged;
+    if (mine) list = list.filter((t) => t.author === MY);
     if (tag !== "All") list = list.filter((t) => t.tag === tag);
     if (q.trim()) { const n = q.toLowerCase(); list = list.filter((t) => (t.title + t.body).toLowerCase().includes(n)); }
     const score = (t: Thread) => (t.seeded ? t.comments.length : t.comments.length + 2) + likeCount(t.id, 0) * 2;
     return [...list].sort((a, b) => sort === "top"
       ? score(b) - score(a)
       : Math.max(new Date(b.at).getTime(), ...b.comments.map((c) => new Date(c.at).getTime())) - Math.max(new Date(a.at).getTime(), ...a.comments.map((c) => new Date(c.at).getTime())));
-  }, [merged, tag, q, sort, store.likes]);
+  }, [merged, tag, q, sort, mine, store.likes]);
 
   const open = openId ? merged.find((t) => t.id === openId) ?? null : null;
 
   const toggleLike = (id: string) => save({ ...store, likes: store.likes.includes(id) ? store.likes.filter((x) => x !== id) : [...store.likes, id] });
 
   const addReply = (threadId: string, body: string) => {
-    const c: Comment = { id: `u-${Date.now()}`, author: MY, body, at: new Date().toISOString(), likes: 0 };
+    const c: Comment = { id: `u-${Date.now()}`, author: MY, body, at: new Date().toISOString(), likes: 0, sample: false };
     save({ ...store, replies: { ...store.replies, [threadId]: [c, ...(store.replies[threadId] ?? [])] } });
     toast("Comment posted");
   };
@@ -82,10 +95,24 @@ export function CommunityHub() {
         <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">☍</div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2"><h1 className="text-xl font-bold">Community</h1><DemoBadge /></div>
-          <p className="text-xs text-muted-foreground">Fan discussion seeded from live world data. Posts and replies stay on this device (Demo).</p>
+          <p className="text-xs text-muted-foreground">Discussion topics are generated from the world dataset. Your posts and replies stay on this device.</p>
         </div>
         <Button size="sm" onClick={() => setComposing(true)}>＋ New thread</Button>
       </div>
+
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Your activity on this device</span> · {activity.threads} thread{activity.threads === 1 ? "" : "s"} · {activity.replies} repl{activity.replies === 1 ? "y" : "ies"} · {activity.likes} like{activity.likes === 1 ? "" : "s"} given
+          </div>
+          <button onClick={() => setMine((m) => !m)} className={cn("rounded-md border px-2.5 py-1 text-xs", mine ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
+            {mine ? "Showing yours" : "Show only mine"}
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          No network is connected. Posts labelled <span className="font-medium">sample</span> are generated demonstration discussion from the demo dataset — they are not real people, and they carry no audience metrics. Only your own posts are genuine.
+        </p>
+      </Panel>
 
       {!online && <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">You're offline — new posts save to this device and remain when you reconnect.</div>}
 
@@ -110,12 +137,16 @@ export function CommunityHub() {
           <button key={t.id} onClick={() => setOpenId(t.id)} className="flex w-full items-start gap-3 rounded-xl border bg-card/50 p-4 text-left hover:border-primary/50">
             <div className="flex w-12 shrink-0 flex-col items-center rounded-md border py-1.5 text-center">
               <span className="text-sm font-semibold text-primary">{likeCount(t.id, 0)}</span>
-              <span className="text-[10px] text-muted-foreground">likes</span>
+              <span className="text-[10px] text-muted-foreground">your likes</span>
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="text-[10px]">{t.tag}</Badge>
-                {!t.seeded && <Badge className="bg-primary/15 text-primary text-[10px]">yours</Badge>}
+                {t.seeded ? (
+                  <Badge variant="outline" className="border-warning/40 text-[10px] text-warning">sample</Badge>
+                ) : (
+                  <Badge className="bg-primary/15 text-primary text-[10px]">yours</Badge>
+                )}
                 <span className="text-xs text-muted-foreground">{t.author} · {timeAgo(t.at)}</span>
               </div>
               <div className="mt-1 font-medium leading-snug">{t.title}</div>
@@ -170,11 +201,17 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
       <Panel className="p-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="text-[10px]">{thread.tag}</Badge>
+          {thread.seeded ? (
+            <Badge variant="outline" className="border-warning/40 text-[10px] text-warning">sample post</Badge>
+          ) : (
+            <Badge className="bg-primary/15 text-primary text-[10px]">yours</Badge>
+          )}
           <span className="text-xs text-muted-foreground">{thread.author} · {timeAgo(thread.at)}</span>
         </div>
         <h1 className="mt-2 text-xl font-bold">{thread.title}</h1>
         <p className="mt-2 whitespace-pre-line text-sm text-foreground/90">{thread.body}</p>
         <div className="mt-3"><Button size="sm" variant={liked ? "secondary" : "outline"} onClick={onLike}>{liked ? "♥ Liked" : "♡ Like"}</Button></div>
+        {thread.seeded && <p className="mt-2 text-[11px] text-muted-foreground">Generated from the demo dataset to show how the board works. It is not a real person and has no audience.</p>}
       </Panel>
 
       <Panel className="p-4">
@@ -188,9 +225,17 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
             const cLiked = likedComments.includes(c.id);
             return (
               <div key={c.id} className="rounded-lg border bg-card/40 p-3">
-                <div className="flex items-center justify-between text-xs text-muted-foreground"><span className="font-medium text-foreground/80">{c.author}</span><span>{timeAgo(c.at)}</span></div>
+                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-2">
+                    <span className={cn("font-medium", c.sample ? "text-warning" : "text-foreground/80")}>{c.author}</span>
+                    {c.sample && <Badge variant="outline" className="border-warning/40 text-[10px] text-warning">sample reply</Badge>}
+                  </span>
+                  <span>{timeAgo(c.at)}</span>
+                </div>
                 <p className="mt-1 text-sm">{c.body}</p>
-                <button onClick={() => onLikeComment(c.id)} className={cn("mt-2 text-xs", cLiked ? "text-primary" : "text-muted-foreground hover:text-primary")}>{cLiked ? "♥" : "♡"} {c.likes + (cLiked ? 1 : 0)}</button>
+                {!c.sample && (
+                  <button onClick={() => onLikeComment(c.id)} className={cn("mt-2 text-xs", cLiked ? "text-primary" : "text-muted-foreground hover:text-primary")}>{cLiked ? "♥" : "♡"} {c.likes + (cLiked ? 1 : 0)}</button>
+                )}
               </div>
             );
           }) : <p className="text-sm text-muted-foreground">No replies yet — start the conversation.</p>}
