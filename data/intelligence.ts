@@ -4,6 +4,8 @@
 // provider. Answers always carry evidence, sources and confidence.
 
 import { archetypeLabel } from "@/domain/playerDna";
+import { scoutReport } from "@/domain/scouting";
+import { careerArc } from "@/domain/careerArc";
 import {
   globalSearch,
   getClub,
@@ -14,6 +16,7 @@ import {
   footballProvider,
   playersByClub,
   matchesByStatus,
+  fixtureForecast,
   formatValue,
   type SearchResult,
 } from "@/data/footballService";
@@ -68,10 +71,29 @@ function playerFacts(pid: string): EvidenceFact[] {
   const p = getPlayer(pid);
   if (!p) return [];
   const c = getClub(p.clubId);
-  return [
-    { label: p.name, text: `${p.name} — ${p.position}, ${p.age}y, ${p.nation}, at ${c?.name}. Overall ${p.overall}, potential ${p.potential}, value ${formatValue(p.value)}, ${p.foot} foot.`, to: `/players/${p.id}` },
+  const out: EvidenceFact[] = [
+    { label: p.name, text: `${p.name} — ${p.position}, ${p.age}y, ${p.nation}, at ${c?.name}. Overall ${p.overall}, potential ${p.potential}, worth ${formatValue(p.value)}, ${p.foot} foot.`, to: `/players/${p.id}` },
     { label: "Profile", text: `Scouting archetype: ${archetypeLabel(p.archetype)}.`, to: `/players/${p.id}` },
   ];
+  const report = scoutReport(p);
+  if (report.hasVector) {
+    const up = report.strengths.slice(0, 3).map((s) => `${s.label} +${s.delta}`).join(", ");
+    const down = report.concerns.slice(-3).reverse().map((s) => `${s.label} ${s.delta}`).join(", ");
+    out.push({
+      label: "Template edge",
+      text: `Against a ${p.positionGroup} of the same implied skill: ${report.headline}.${up ? ` Above template — ${up}.` : ""}${down ? ` Below template — ${down}.` : ""}`,
+      to: `/players/${p.id}`,
+    });
+  }
+  const arc = careerArc(p);
+  if (arc.hasData) {
+    out.push({
+      label: "Career arc",
+      text: `${arc.trajectory} at ${arc.age}: modelled peak ${arc.projectedPeak} around ${arc.peakAge} (${arc.yearsToPeak} year${arc.yearsToPeak === 1 ? "" : "s"} away), ${arc.remainingPrimeYears} prime year${arc.remainingPrimeYears === 1 ? "" : "s"} left. Age-curve model, not a forecast about a real person.`,
+      to: `/players/${p.id}`,
+    });
+  }
+  return out;
 }
 
 function matchFacts(mid: string): EvidenceFact[] {
@@ -81,7 +103,16 @@ function matchFacts(mid: string): EvidenceFact[] {
   const a = getClub(m.awayClubId);
   const base = `${h?.name} v ${a?.name} — ${getCompetition(m.competitionId)?.name}, round ${m.round}.`;
   const status = m.status === "SCHEDULED" ? `Kickoff ${new Date(m.kickoff).toLocaleString()}.` : `Result ${m.homeGoals}–${m.awayGoals}.`;
-  return [{ label: "Fixture", text: `${base} ${status}`, to: `/matches/${m.id}` }];
+  const out: EvidenceFact[] = [{ label: "Fixture", text: `${base} ${status}`, to: `/matches/${m.id}` }];
+  const fc = m.status === "SCHEDULED" ? fixtureForecast(m.id) : null;
+  if (fc) {
+    out.push({
+      label: "Model",
+      text: `Poisson model on current form: ${h?.name} ${fc.homePct}% · draw ${fc.drawPct}% · ${a?.name} ${fc.awayPct}%; expected goals ${fc.lambdaHome.toFixed(2)}–${fc.lambdaAway.toFixed(2)}, most likely ${fc.mostLikelyScore}. Based on ${fc.sample} match${fc.sample === 1 ? "" : "es"} of form data — a projection, not a result.`,
+      to: `/matches/${m.id}`,
+    });
+  }
+  return out;
 }
 
 function newsFacts(nid: string): EvidenceFact[] {
