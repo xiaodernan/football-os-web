@@ -138,18 +138,30 @@ export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): Te
 
 // Attack/defence are ratios against THIS competition's average goals per team
 // per game, so the projection must use that same denominator — a hardcoded 1.4
-// on a league averaging 0.5 inflates every scoreline. Small samples also let a
-// ratio blow up (a 7-game defence figure), so λ is clamped to a believable band.
+// on a league averaging 0.5 inflates every scoreline.
+//
+// Those ratios are also noisy at this sample size: seven games can produce a
+// 0.27 defence rating, and multiplying two such extremes together yields
+// absurd lines (71% draw odds in a derby). Ratings are therefore regressed
+// toward the league mean in proportion to how many matches back them —
+// played/(played+k), the standard shrinkage-toward-the-mean correction. With
+// k=6 a 7-game sample keeps 54% of its deviation and a 38-game sample 86%.
+const SHRINK_K = 6;
 const LAMBDA_MIN = 0.15;
 const LAMBDA_MAX = 3.5;
+
+const shrink = (value: number, played: number) => {
+  const weight = played / (played + SHRINK_K);
+  return 1 + (value - 1) * weight;
+};
 
 const clampLambda = (v: number) => Math.max(LAMBDA_MIN, Math.min(LAMBDA_MAX, v));
 
 /** Modelled expected goals for a single fixture from the two sides' ratings. */
 export function expectedGoals(home: TeamMetrics, away: TeamMetrics, leagueAvg?: number): { home: number; away: number } {
   const base = leagueAvg ?? Math.min(home.leagueAvg || 1.4, away.leagueAvg || 1.4);
-  const h = clampLambda(base * home.attack * away.defence * 1.12);
-  const a = clampLambda(base * away.attack * home.defence * 0.92);
+  const h = clampLambda(base * shrink(home.attack, home.played) * shrink(away.defence, away.played) * 1.12);
+  const a = clampLambda(base * shrink(away.attack, away.played) * shrink(home.defence, home.played) * 0.92);
   return { home: Math.round(h * 100) / 100, away: Math.round(a * 100) / 100 };
 }
 

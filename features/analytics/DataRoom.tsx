@@ -251,7 +251,7 @@ export function DataRoom() {
             })}
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">
-            Closed-form Poisson estimate built from each side's attack and defence ratings relative to the league average. A model output, not a prediction of what will happen — the Simulation Lab runs the full match engine instead, and the two need not agree.
+            Closed-form Poisson estimate built from each side's attack and defence ratings relative to the league average, with small samples regressed back toward that average so seven odd games cannot dominate a line. A model output, not a prediction of what will happen — the Simulation Lab runs the full match engine instead, and the two need not agree.
           </p>
         </Panel>
       )}
