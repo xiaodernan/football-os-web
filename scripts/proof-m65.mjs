@@ -64,13 +64,13 @@ const ok = (name, cond, detail = "") => checks.push([cond ? "PASS" : "FAIL", nam
 const r7 = base(7);
 ok("7d window counts only in-window clips", r7.filmClips === 2, `filmClips=${r7.filmClips}`);
 ok("7d minutes = (120+180)/60", r7.filmMinutes === 5, `filmMinutes=${r7.filmMinutes}`);
-ok("7d detections = 2 in-window clips", r7.filmDetections === 38, `filmDetections=${r7.filmDetections}`);
+ok("7d detections = 2 in-window clips (35 scans + 4 others)", r7.filmDetections === 39, `filmDetections=${r7.filmDetections}`);
 ok(
   "7d scan rate = 35 scans / 5 min",
   Math.abs(r7.filmScanRate - 7) < 0.01,
   `filmScanRate=${r7.filmScanRate}`,
 );
-ok("older clip excluded from trend", r7.filmScanTrend != null && Math.abs(r7.filmScanTrend - (-5)) < 0.01, `trend=${r7.filmScanTrend}`);
+ok("trend compares the older and newer in-window half", r7.filmScanTrend === -3.33, `trend=${r7.filmScanTrend}`);
 
 const r90 = base(90);
 ok("90d window includes the 60-day clip", r90.filmClips === 3, `filmClips=${r90.filmClips}`);
@@ -79,7 +79,7 @@ ok("no lifetime numbers leak into the 7d digest", r7.filmClips !== r90.filmClips
 const texts = r7.insights.map((i) => i.text);
 ok(
   "film digest insight present",
-  texts.some((t) => t.includes("2 film clips") && t.includes("38 detections") && t.includes("78% mean provider confidence")),
+  texts.some((t) => t.includes("2 film clips") && t.includes("39 detections") && t.includes("78% mean provider confidence")),
   texts.find((t) => t.includes("film clip")) ?? "(none)",
 );
 ok(
@@ -87,7 +87,7 @@ ok(
   texts.some((t) => t.startsWith("Scanning off the ball averaged 7.00 per minute")),
   texts.find((t) => t.startsWith("Scanning")) ?? "(none)",
 );
-ok("older-vs-newer half quoted", texts.some((t) => t.includes("2.00 → 7.00 per minute") && t.includes("(-5)")));
+ok("older-vs-newer half quoted", texts.some((t) => t.includes("8.33 → 5.00 per minute") && t.includes("(-3.33)")));
 ok(
   "film-vs-training mismatch surfaced as a plan",
   r7.insights.some((i) => i.kind === "plan" && i.text.includes("Flagged by the clips but absent from your training")),
@@ -95,13 +95,21 @@ ok(
 );
 
 const ev = r7.evidence;
-ok("evidence carries the film line", ev.some((e) => e === "Film 2 clips · 5.0 min · 38 detections"), ev.find((e) => e.startsWith("Film")) ?? "(none)");
-ok("evidence carries the scanning line", ev.some((e) => e === "Scanning 7.00/min (trend -5)"), ev.find((e) => e.startsWith("Scanning")) ?? "(none)");
+ok("evidence carries the film line", ev.some((e) => e === "Film 2 clips · 5.0 min · 39 detections"), ev.find((e) => e.startsWith("Film")) ?? "(none)");
+ok("evidence carries the scanning line", ev.some((e) => e === "Scanning 7.00/min (trend -3.33)"), ev.find((e) => e.startsWith("Scanning")) ?? "(none)");
 ok("sources name the film library", r7.sources.some((s) => s.includes("film library")), r7.sources.join(" | "));
 
 const rNoFilm = base(7, { film: [] });
 ok("no film -> zeroed fields, no film lines", rNoFilm.filmClips === 0 && rNoFilm.sources.every((s) => !s.includes("film library")));
-ok("film signal raises review confidence", r7.confidence > rNoFilm.confidence, `${rNoFilm.confidence}% -> ${r7.confidence}%`);
+const thin = { film: [clip(now - 2 * DAY, 120, 10), clip(now - 5 * DAY, 180, 25)] };
+const thinBase = { sessions: [], goals: [], progress: [], streak: 0, learn: [] };
+const rThinFilm = base(7, { ...thinBase, film: thin.film });
+const rThinNone = base(7, { ...thinBase, film: [] });
+ok(
+  "film is real signal: it lifts confidence on a thin log",
+  rThinFilm.confidence > rThinNone.confidence && rThinFilm.confidence <= 30,
+  `${rThinNone.confidence}% -> ${rThinFilm.confidence}%`,
+);
 ok("film insight never invented without clips", !rNoFilm.insights.some((i) => i.text.includes("Scanning")));
 
 ok(
