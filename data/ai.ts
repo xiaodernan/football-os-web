@@ -204,7 +204,7 @@ export async function askFootballAI(
   const lower = question.toLowerCase();
   let lead: string;
   if (/who|player|rating|star|最重要/.test(lower))
-    lead = `Based on the match data, the most influential figure stands out in ${context.facts[0] ?? "the key actions"}.`;
+    lead = "Demo Mode has no player-influence ranking, so I won't invent a decisive individual — here is what the seeded match record actually supports:";
   else if (/why|how|怎么|为什么/.test(lower))
     lead = `The short answer: the pattern in the underlying events explains it.`;
   else lead = `Here is the read from Football OS intelligence for ${context.label}.`;

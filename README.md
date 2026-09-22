@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M90 are committed, one per milestone. Everything added in the current line
+Milestones M0–M91 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -165,7 +165,12 @@ anyone under 7 logged sessions is pinned at 1.00 and disagrees with the canonica
 rolling model the Load page and Dashboard use — the same page could show two different ACWR
 values under one name. It now calls the shared `buildLoad` for acute/chronic/ACWR/zone (and
 the same day-window weekly volumes for the bars), so the app has exactly one ACWR source; the
-spike warning keys off `zone === "high"` instead of a hand-rolled threshold (M90).
+spike warning keys off `zone === "high"` instead of a hand-rolled threshold (M90). A fourth
+fix removed a fabricated AI answer: for "who/player/rating/star" questions `askFootballAI`
+led with "the most influential figure stands out in …" while interpolating `facts[0]` — a
+fixture label of the two *club* names, never a player. It now states plainly that Demo Mode
+has no player-influence ranking and refuses to invent a decisive individual, then hands over
+the real seeded fact it is actually citing (M91).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
