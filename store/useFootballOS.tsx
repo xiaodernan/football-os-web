@@ -60,7 +60,6 @@ type Action =
   | { type: "ONBOARD"; mode: Mode; profile: UserProfile; goals: Goal[] }
   | { type: "SET_MODE"; mode: Mode }
   | { type: "PLAN"; plan: CoachPlan }
-  | { type: "SCHEDULE"; session: TrainingSession }
   | { type: "COMPLETE"; sessionId: string; selfRating: number; notes?: string }
   | { type: "FAVORITE"; key: "club" | "player" | "competition"; id: string | null }
   | { type: "WATCH"; playerId: string }
@@ -135,8 +134,6 @@ function reducer(state: OsState, action: Action): OsState {
           ...state.memory,
         ].slice(0, 60),
       };
-    case "SCHEDULE":
-      return { ...state, sessions: [action.session, ...state.sessions] };
     case "COMPLETE": {
       if (!state.profile) return state;
       const session = state.sessions.find((s) => s.id === action.sessionId);
