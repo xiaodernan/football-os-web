@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M68 are committed, one per milestone. Everything added in the current line
+Milestones M0–M71 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -106,12 +106,16 @@ World (multi-season), Film Room with cross-clip library insights, Data Room with
 matchday forecast, Profile/Progress, Achievements, Weekly Review, Load & Recovery, Role
 Gap Analysis, Activity History, Settings with a full local-data registry (inventory,
 lossless export/import, activity-only reset), i18n (EN / 简体中文 / 繁體中文), the ⌘K
-command palette and route-level code splitting. Recent work (M65–M68) threads the film
+command palette and route-level code splitting. Recent work (M65–M71) threads the film
 library through the rest of the product via one shared reader — the Weekly Review and the
 cross-mode profile record cite in-window clip detections, analysed clips appear as dated
 events on the Activity History timeline, the Achievements "Analyst" group unlocks from real
 clip counts, and the Player OS progress checklist reports the actual library instead of a
-hardcoded signal.
+hardcoded signal. It also closes two dead-end recommendation surfaces: the Weekly Review's
+suggested focus and the Load & Recovery guidance now each act on their own advice (build a
+load-aware session via the shared `requestPlan` path, and the review can additionally track
+its recommended attribute as a self-updating goal), with the Load page honestly withholding
+a session only in the high-risk spike band where the advice is to rest.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
@@ -22,13 +23,38 @@ const ACWR_TONE = (z: LoadZone): "up" | "down" | "neutral" =>
 
 export function LoadPage() {
   const { t } = useI18n();
-  const { state } = useOs();
+  const { state, requestPlan } = useOs();
   const { navigate } = useRouter();
+  const [building, setBuilding] = useState(false);
 
   const load = useMemo(
     () => buildLoad({ nowMs: Date.now(), sessions: state.sessions }),
     [state.sessions],
   );
+
+  // A session only helps in the zones where adding load is the point. In the
+  // high-risk spike band the honest advice is to rest, so we withhold the
+  // "plan a session" action there rather than contradict the guidance.
+  const canPlan = load.zone === "under" || load.zone === "optimal" || load.zone === "caution";
+  const planMinutes = load.zone === "caution" ? 20 : 30;
+
+  const buildForLoad = async () => {
+    if (!canPlan || building) return;
+    setBuilding(true);
+    try {
+      const plan = await requestPlan(t("ld.trainPrompt"), planMinutes);
+      toast.success(
+        t("ld.trainDone")
+          .replace("{m}", String(plan.session.targetMinutes))
+          .replace("{n}", String(plan.session.exercises.length)),
+      );
+      navigate("/player/training");
+    } catch {
+      toast.error(t("ld.trainError"));
+    } finally {
+      setBuilding(false);
+    }
+  };
 
   const dailyPoints = useMemo(
     () =>
@@ -120,9 +146,13 @@ export function LoadPage() {
                       </div>
                       <span className="font-mono">{load.recommendation.confidence}%</span>
                     </div>
-                    <Button size="sm" className="mt-3 w-full" onClick={() => navigate("/player/coach")}>
-                      {t("ld.plan")}
-                    </Button>
+                    {canPlan ? (
+                      <Button size="sm" className="mt-3 w-full" onClick={buildForLoad} disabled={building}>
+                        {building ? t("ld.trainBusy") : t("ld.plan")}
+                      </Button>
+                    ) : (
+                      <p className="mt-3 text-xs text-muted-foreground">{t("ld.restNote")}</p>
+                    )}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">{t("ld.recoEmpty")}</p>
