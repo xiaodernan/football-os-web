@@ -6,7 +6,7 @@
 
 import type { AttributeDelta } from "./types";
 
-export type TimelineKind = "session" | "plan" | "memory" | "learn";
+export type TimelineKind = "session" | "plan" | "memory" | "learn" | "film";
 
 export interface TimelineEvent {
   id: string;
@@ -48,12 +48,23 @@ interface LearnSeed {
   quizCorrect: boolean;
   attempts: number;
 }
+interface FilmSeed {
+  id: string;
+  at: string;
+  fileName: string;
+  durationSec: number;
+  detections: number;
+  scans: number;
+  confidence: number;
+  recommendedFocus?: string[];
+}
 
 export interface HistoryInput {
   sessions: SessionSeed[];
   plans: PlanSeed[];
   memory: MemorySeed[];
   learn?: LearnSeed[];
+  film?: FilmSeed[];
 }
 
 const ts = (iso: string) => {
@@ -108,6 +119,20 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       at: l.completedAt,
       title: l.title,
       detail: l.quizCorrect ? "Academy · check quiz passed" : l.attempts ? `Academy · check missed (${l.attempts} attempt${l.attempts === 1 ? "" : "s"})` : "Academy · read only",
+    });
+  }
+
+  for (const c of input.film ?? []) {
+    // A clip is history only once it has actually been analysed, so the entry
+    // carries the detections the provider returned rather than a vague "reviewed".
+    if (!c.at || Number.isNaN(new Date(c.at).getTime())) continue;
+    const perMin = c.durationSec > 0 ? (c.detections / (c.durationSec / 60)).toFixed(1) : "0";
+    events.push({
+      id: `film-${c.id}`,
+      kind: "film",
+      at: c.at,
+      title: `${c.fileName} analysed`,
+      detail: `${c.detections} detections (${c.scans} scans) · ${(c.durationSec / 60).toFixed(1)} min · ${perMin}/min · ${c.confidence}% provider confidence`,
     });
   }
 

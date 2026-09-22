@@ -4,7 +4,7 @@ import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildTimeline, groupByDay, type TimelineKind } from "@/domain/history";
 import { LESSONS } from "@/domain/learn";
-import { useLearnRecords } from "@/lib/hooks";
+import { useLearnRecords, useFilmRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ const KINDS: { id: TimelineKind | "all"; icon: string; label: string }[] = [
   { id: "session", icon: "●", label: "hist.kind.session" },
   { id: "plan", icon: "⚡", label: "hist.kind.plan" },
   { id: "learn", icon: "◈", label: "hist.kind.learn" },
+  { id: "film", icon: "▣", label: "hist.kind.film" },
   { id: "memory", icon: "❉", label: "hist.kind.memory" },
 ];
 
@@ -21,6 +22,7 @@ const KIND_META: Record<TimelineKind, { icon: string; label: string; tone: strin
   session: { icon: "●", label: "hist.kind.session", tone: "text-primary" },
   plan: { icon: "⚡", label: "hist.kind.plan", tone: "text-info" },
   learn: { icon: "◈", label: "hist.kind.learn", tone: "text-warning" },
+  film: { icon: "▣", label: "hist.kind.film", tone: "text-success" },
   memory: { icon: "❉", label: "hist.kind.memory", tone: "text-muted-foreground" },
 };
 
@@ -30,6 +32,7 @@ export function HistoryPage() {
   const [filter, setFilter] = useState<TimelineKind | "all">("all");
 
   const learn = useLearnRecords();
+  const film = useFilmRecords();
 
   const all = useMemo(
     () =>
@@ -44,8 +47,18 @@ export function HistoryPage() {
           quizCorrect: r.quizCorrect,
           attempts: r.attempts,
         })),
+        film: film.map((c) => ({
+          id: c.clipId,
+          at: c.addedAt,
+          fileName: c.report.fileName,
+          durationSec: c.report.durationSec ?? 0,
+          detections: c.report.events?.length ?? 0,
+          scans: (c.report.events ?? []).filter((e) => e.kind === "scan").length,
+          confidence: c.report.confidence ?? 0,
+          recommendedFocus: c.report.recommendedFocus ?? [],
+        })),
       }),
-    [state, learn],
+    [state, learn, film],
   );
   const filtered = useMemo(() => (filter === "all" ? all : all.filter((e) => e.kind === filter)), [all, filter]);
   const groups = useMemo(() => groupByDay(filtered), [filtered]);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LEARN_STORE_KEY, parseLearnRecords, type LearnRecord } from "@/domain/learn";
-import { loadFilmClips, toClipInputs } from "@/domain/filmLibrary";
+import { loadFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { type FilmClipInput } from "@/domain/filmInsights";
 
 export type AsyncStatus = "idle" | "loading" | "success" | "error";
@@ -97,6 +97,12 @@ export function useLearnRecords(): LearnRecord[] {
  *  pillar that reasons about clips (film room, weekly review) parses it the same way. */
 export function useFilmClips(): FilmClipInput[] {
   return useMemo(() => toClipInputs(loadFilmClips()), []);
+}
+
+/** The same library with the provider report attached, for surfaces that need the
+ *  file name or per-clip counts rather than the analysis input. */
+export function useFilmRecords(): FilmClip[] {
+  return useMemo(() => loadFilmClips(), []);
 }
 
 /** True when the visitor can reach the network (drives offline/degraded states). */
