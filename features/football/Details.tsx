@@ -566,8 +566,10 @@ function StatCompare({ sim, home, away }: { sim: SimResult; home: string; away: 
     { label: "On target", h: sim.stats.home.onTarget, a: sim.stats.away.onTarget },
     { label: "Expected goals", h: sim.stats.home.xg, a: sim.stats.away.xg, fmt: (n) => n.toFixed(2) },
     { label: "Passes", h: sim.stats.home.passes, a: sim.stats.away.passes },
+    { label: "Pass accuracy", h: sim.stats.home.passAcc, a: sim.stats.away.passAcc, fmt: (n) => `${Math.round(n)}%` },
     { label: "Corners", h: sim.stats.home.corners, a: sim.stats.away.corners },
     { label: "Tackles", h: sim.stats.home.tackles, a: sim.stats.away.tackles },
+    { label: "Duels", h: sim.stats.home.duels, a: sim.stats.away.duels },
     { label: "Fouls", h: sim.stats.home.fouls, a: sim.stats.away.fouls },
   ];
   return (

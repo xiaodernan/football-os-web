@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M91 are committed, one per milestone. Everything added in the current line
+Milestones M0–M92 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -170,7 +170,10 @@ fix removed a fabricated AI answer: for "who/player/rating/star" questions `askF
 led with "the most influential figure stands out in …" while interpolating `facts[0]` — a
 fixture label of the two *club* names, never a player. It now states plainly that Demo Mode
 has no player-influence ranking and refuses to invent a decisive individual, then hands over
-the real seeded fact it is actually citing (M91).
+the real seeded fact it is actually citing (M91). The match engine has long computed two
+per-side stats — pass accuracy and duels won — that no screen ever displayed; they now sit in
+the Simulation Lab's head-to-head stat comparison on the match detail page, so every number
+the engine produces is one the user can actually read (M92).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
