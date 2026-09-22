@@ -158,7 +158,7 @@ export interface TrainingSession {
 
 export interface AiMemoryEntry {
   id: string;
-  kind: "coach" | "training" | "profile" | "tactical";
+  kind: "coach" | "training" | "profile";
   text: string;
   at: string;
 }
