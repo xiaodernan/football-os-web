@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M73 are committed, one per milestone. Everything added in the current line
+Milestones M0–M74 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -123,7 +123,11 @@ ever set a session to `missed` — is now backed by a deterministic overdue swee
 hydration boundary that flips planned sessions whose scheduled day has passed into `missed`
 (a pure `sweepOverdueSessions`, provably excluded from the load model since it counts only
 completed sessions), with the slipped rows surfaced in a Missed panel on the Training page
-(M73).
+(M73). And the Player OS "AI memory · What your coach remembers" panel — which previously
+only *displayed* stored memories while `generatePlan` ignored them — is now backed by real
+continuity: `requestPlan` hands the newest plan's focus to the coach, which frames the next
+diagnosis as continuing or rotating from that focus and adds a grounded "Coach memory"
+evidence line naming it (M74).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
