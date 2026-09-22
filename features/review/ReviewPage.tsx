@@ -24,11 +24,12 @@ export function ReviewPage() {
   const { t } = useI18n();
   const { state, requestPlan, addGoal } = useOs();
   const { navigate } = useRouter();
-  const learn = useLearnRecords();
-  const film = useFilmClips();
   const [days, setDays] = useState(7);
   const [compiling, setCompiling] = useState(false);
   const [building, setBuilding] = useState(false);
+  const [rev, setRev] = useState(0);
+  const learn = useLearnRecords(rev);
+  const film = useFilmClips(rev);
 
   const review = useMemo(
     () =>
@@ -52,6 +53,7 @@ export function ReviewPage() {
 
   const recompyle = () => {
     setCompiling(true);
+    setRev((r) => r + 1);
     window.setTimeout(() => setCompiling(false), 420);
   };
 

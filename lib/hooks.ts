@@ -32,27 +32,29 @@ export function useLocalStorage<T>(key: string, initial: T) {
 }
 
 /** Read-only view of the locally-stored academy records, shared by every pillar
- *  that needs lesson progress (achievements, history, dashboard). */
-export function useLearnRecords(): LearnRecord[] {
+ *  that needs lesson progress (achievements, history, dashboard). Pass a changing
+ *  `rev` to force a genuine re-read of localStorage (e.g. a "recompile" action). */
+export function useLearnRecords(rev = 0): LearnRecord[] {
   return useMemo(() => {
     try {
       return parseLearnRecords(JSON.parse(localStorage.getItem(LEARN_STORE_KEY) ?? "null"));
     } catch {
       return [];
     }
-  }, []);
+  }, [rev]);
 }
 
 /** Read-only view of the locally-stored film library as analysis input, so every
- *  pillar that reasons about clips (film room, weekly review) parses it the same way. */
-export function useFilmClips(): FilmClipInput[] {
-  return useMemo(() => toClipInputs(loadFilmClips()), []);
+ *  pillar that reasons about clips (film room, weekly review) parses it the same way.
+ *  Pass a changing `rev` to re-read the store. */
+export function useFilmClips(rev = 0): FilmClipInput[] {
+  return useMemo(() => toClipInputs(loadFilmClips()), [rev]);
 }
 
 /** The same library with the provider report attached, for surfaces that need the
  *  file name or per-clip counts rather than the analysis input. */
-export function useFilmRecords(): FilmClip[] {
-  return useMemo(() => loadFilmClips(), []);
+export function useFilmRecords(rev = 0): FilmClip[] {
+  return useMemo(() => loadFilmClips(), [rev]);
 }
 
 /** True when the visitor can reach the network (drives offline/degraded states). */

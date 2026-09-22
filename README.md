@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M93 are committed, one per milestone. Everything added in the current line
+Milestones M0–M94 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -178,7 +178,12 @@ the engine produces is one the user can actually read (M92). The store has expos
 and player were frozen forever after first-run setup even though the Dashboard, scouting
 default and Simulation Lab all key off `favoriteClubId`. The club and player detail pages now
 carry a ★ "Set as my club/player" toggle that drives `setFavorite`, so the choice is changeable
-and every downstream consumer updates with it (M93).
+and every downstream consumer updates with it (M93). The Weekly Review's "Recompile" button
+was theatre — a 420 ms flash that recomputed nothing, because the academy and film stores it
+reads from are memoised once on mount and never re-fetched. Those read-only hooks now take an
+optional `rev` re-read dependency, and Recompile bumps it, so pressing it genuinely re-reads
+the local stores (and rebuilds the window with the current time) instead of pretending to.
+Existing callers pass no `rev` and are unchanged (M94).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
