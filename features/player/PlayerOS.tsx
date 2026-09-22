@@ -15,6 +15,7 @@ import { computeDna } from "@/domain/playerDna";
 import { SUPPORTED_MINUTES, sessionIntensity, type GrowthDelta } from "@/domain/training";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
+import { loadFilmClips } from "@/domain/filmLibrary";
 import { getClub, getPlayer } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, AttributeBar, EmptyState, LoadingBlock, Crest } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
@@ -436,12 +437,13 @@ function ProgressView() {
   const pts = state.progress.map((x, i) => ({ label: i === 0 ? "start" : `${i}`, value: x.overall }));
   const achievements = useMemo(() => {
     const completed = state.sessions.filter((s) => s.status === "completed").length;
+    const clips = loadFilmClips().length;
     return [
       { label: "First session", ok: completed >= 1 },
       { label: "Level 5", ok: info.level >= 5 },
       { label: "7-day streak", ok: state.streak.current >= 7 },
       { label: "1000 XP", ok: p.xp >= 1000 },
-      { label: "Analysed video", ok: false },
+      { label: clips > 0 ? `${clips} clip${clips === 1 ? "" : "s"} analysed` : "Analyse a video", ok: clips >= 1 },
       { label: "10 sessions", ok: completed >= 10 },
     ];
   }, [state, info.level, p.xp]);

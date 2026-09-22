@@ -32,9 +32,9 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | Player Comparison | `/compare` | Head-to-head duel built from the dataset's real fields: rating/age/value metrics with a relative bar and a win count, **plus** a category profile and the eight biggest attribute differences taken from each player's own attribute vector. The verdict blends quality, upside and prime-window length. When a provider ships no vectors, the page says so instead of inventing a profile. |
 | Watchlist Board | `/watchlist` | Your device-local starred players in one sortable board (value, potential, overall, age) with derived asking estimates — tick any two to open a head-to-head in the Compare tool. |
 | My Profile | `/profile` | A personal growth dashboard built entirely from your locally-stored activity: level and XP curve, ability radar with strengths and focus areas, overall-rating trend, toggleable goals, recent sessions and favourites. |
-| Achievements & Trophies | `/achievements` | Badges grouped by Training, Consistency, Growth and Explorer — each unlocked only from a genuine signal already in your local state (sessions logged, streak kept, goals met, plans requested, players watched, level reached), with transparent progress bars and trophy points. |
+| Achievements & Trophies | `/achievements` | Badges grouped by Training, Consistency, Growth, Explorer, Scholar and Analyst — each unlocked only from a genuine signal already in your local state (sessions logged, streak kept, goals met, plans requested, players watched, level reached, academy lessons completed, film clips analysed), with transparent progress bars and trophy points. |
 | Settings & Data | `/settings` | Switch mode / language / theme, and see a real inventory of every registered `football-os.*` store (records + bytes per store, activity vs preference). Export **all** stores as one lossless bundle, import a bundle back with validation, and a guarded reset that clears activity but keeps preferences — all entirely on-device. |
-| Activity History | `/history` | A day-grouped timeline merged from your real completed sessions, AI coach plans and coach-memory records, filterable by event type, sorted newest-first — nothing invented, every row reads straight from local state. |
+| Activity History | `/history` | A day-grouped timeline merged from your real completed sessions, AI coach plans, academy completions, film clips analysed and coach-memory records, filterable by event type, sorted newest-first — nothing invented, every row reads straight from local state. |
 | Weekly Review | `/review` | A coach-style period digest (7/30/90-day windows) compiled only from your local records: sessions, minutes, XP, streak, overall trend, self-rated quality, focus mix, attribute gains actually earned, academy completions and the detections from film clips analysed inside the window (scanning rate, older-vs-newer trend, repeated coaching focus), plus a next-focus recommendation that yields to observed film evidence when the two agree — each labelled with a confidence score and the evidence behind it, no external model called. |
 | Load & Recovery | `/load` | Training-load management from your completed sessions (duration × session-RPE): acute 7-day vs chronic 28-day average daily load, an ACWR with colour-coded under/optimal/caution/high-risk bands, weekly monotony and strain, and a guidance card with confidence — a relative-load estimate, not a medical claim. |
 | Role Gap Analysis | `/development` | Compares your saved attributes against a heuristic archetype for any position group at your current level: a role-readiness score weighted to role-critical traits, ranked development priorities and role strengths, a switchable target role, and evidence + confidence + sources. A demo training guide, explicitly not real scouting data. |
@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M62 are committed, one per milestone. Everything added in the current line
+Milestones M0–M68 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -106,7 +106,12 @@ World (multi-season), Film Room with cross-clip library insights, Data Room with
 matchday forecast, Profile/Progress, Achievements, Weekly Review, Load & Recovery, Role
 Gap Analysis, Activity History, Settings with a full local-data registry (inventory,
 lossless export/import, activity-only reset), i18n (EN / 简体中文 / 繁體中文), the ⌘K
-command palette and route-level code splitting.
+command palette and route-level code splitting. Recent work (M65–M68) threads the film
+library through the rest of the product via one shared reader — the Weekly Review and the
+cross-mode profile record cite in-window clip detections, analysed clips appear as dated
+events on the Activity History timeline, the Achievements "Analyst" group unlocks from real
+clip counts, and the Player OS progress checklist reports the actual library instead of a
+hardcoded signal.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
