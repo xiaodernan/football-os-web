@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M94 are committed, one per milestone. Everything added in the current line
+Milestones M0–M95 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -183,7 +183,11 @@ was theatre — a 420 ms flash that recomputed nothing, because the academy and 
 reads from are memoised once on mount and never re-fetched. Those read-only hooks now take an
 optional `rev` re-read dependency, and Recompile bumps it, so pressing it genuinely re-reads
 the local stores (and rebuilds the window with the current time) instead of pretending to.
-Existing callers pass no `rev` and are unchanged (M94).
+Existing callers pass no `rev` and are unchanged (M94). The Player OS "Log a match
+performance" list claimed it "Feeds your analysis and progress", but its rows are stored under
+their own key that nothing in the analytics, load, XP or footprint models ever reads — it is a
+private log surfaced only in the Settings export. The hint now says exactly that instead of
+promising an integration that does not exist (M95).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

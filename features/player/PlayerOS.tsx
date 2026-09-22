@@ -686,7 +686,7 @@ function Matches() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel className="p-4">
-        <SectionTitle title="Log a match performance" hint="Feeds your analysis and progress" />
+        <SectionTitle title="Log a match performance" hint="Local log · saved on this device and included in Settings export" />
         <div className="space-y-3">
           <div><Label>Opponent</Label><Input value={form.opp} onChange={(e) => setForm({ ...form, opp: e.target.value })} className="mt-1" placeholder="e.g. Rovers" /></div>
           <div className="grid grid-cols-3 gap-3">
