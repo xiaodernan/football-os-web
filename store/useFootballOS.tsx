@@ -298,6 +298,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
           availableMinutes,
           load: load.hasData ? { zone: load.zone, acwr: load.acwr, weekLoad: load.weekLoad } : undefined,
           focusKeys,
+          lastFocus: state.plans[0]?.focus,
         };
         const plan = await coachProvider.generatePlan(planInput);
         dispatch({ type: "PLAN", plan });

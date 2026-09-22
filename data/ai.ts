@@ -28,6 +28,7 @@ export interface PlanInput {
   availableMinutes: number;
   load?: LoadContext;
   focusKeys?: string[]; // explicit target attributes (e.g. role-gap priorities); overrides inferred focus
+  lastFocus?: string[]; // focus of the most recent stored plan — lets the coach continue vs rotate
 }
 
 const ATTRIBUTE_HINTS: [RegExp, string][] = [
@@ -130,6 +131,24 @@ class DeterministicCoachProvider implements CoachProvider {
       );
 
     const dna = computeDna(input.profile.attributes);
+
+    // Session-to-session continuity: the coach remembers the focus of the last
+    // plan it wrote (from real stored history) and either continues progressive
+    // overload on an overlapping attribute or rotates to a different gap.
+    const lastFocus = [...new Set((input.lastFocus ?? []).filter((k) => ATTRIBUTE_KEYS.includes(k)))];
+    const continuing = lastFocus.filter((k) => effFocus.includes(k));
+    const rotatedFrom = lastFocus.filter((k) => !effFocus.includes(k));
+    if (lastFocus.length) {
+      if (continuing.length)
+        diagnosisParts.push(
+          `We picked up where we left off — last session we worked ${continuing.map(attributeLabel).join(" and ")}, so this block continues that progression.`,
+        );
+      else
+        diagnosisParts.push(
+          `Last session we worked ${lastFocus.map(attributeLabel).join(" and ")}; today we rotate to ${effFocus.map(attributeLabel).join(" and ")} to build a different gap.`,
+        );
+    }
+
     const rationale = [
       `Warm-up activates movement before technique work.`,
       `Primary focus ${effFocus.map(attributeLabel).join(" + ")} targets your ${isTargeted ? "selected role-gap priorities" : "current biggest measurable gap"}.`,
@@ -156,6 +175,7 @@ class DeterministicCoachProvider implements CoachProvider {
         `Your saved attributes (overall ${Math.round(input.profile.xp / 100 + 40)})`,
         "Position baseline model",
         ...(load ? [`Your training-load log (ACWR ${load.acwr?.toFixed(2) ?? "n/a"} · ${load.zone})`] : []),
+        ...(lastFocus.length ? [`Coach memory — last session focused on ${lastFocus.map(attributeLabel).join(" + ")}`] : []),
       ],
       provider: this.id,
     };
