@@ -89,6 +89,7 @@ class DeterministicCoachProvider implements CoachProvider {
     if (load?.zone === "high") targetMinutes = Math.min(targetMinutes, 20);
     else if (load?.zone === "caution") targetMinutes = Math.min(targetMinutes, 30);
     const seed = `coach-${hashString(input.prompt + input.profile.displayName)}`;
+    const dna = computeDna(input.profile.attributes);
     const session = buildSession({
       id: `S${Date.now().toString(36).slice(-5)}`,
       date: new Date().toISOString(),
@@ -96,6 +97,7 @@ class DeterministicCoachProvider implements CoachProvider {
       focusAttributes: effFocus.length ? effFocus : ["first_touch"],
       group: input.profile.positionGroup,
       seed,
+      roleGameFocus: dna.primary.gameFocus,
     });
 
     const trainedRecently = input.history
@@ -130,8 +132,6 @@ class DeterministicCoachProvider implements CoachProvider {
         `You have logged ${trainedRecently} recent block(s) on ${effFocus.map(attributeLabel).join("/")} — we continue progressive overload.`,
       );
 
-    const dna = computeDna(input.profile.attributes);
-
     // Session-to-session continuity: the coach remembers the focus of the last
     // plan it wrote (from real stored history) and either continues progressive
     // overload on an overlapping attribute or rotates to a different gap.
@@ -153,7 +153,7 @@ class DeterministicCoachProvider implements CoachProvider {
       `Warm-up activates movement before technique work.`,
       `Primary focus ${effFocus.map(attributeLabel).join(" + ")} targets your ${isTargeted ? "selected role-gap priorities" : "current biggest measurable gap"}.`,
       `A decision-making block trains scanning under time pressure.`,
-      `A game-realistic drill transfers the technique into match context.`,
+      `The game-realistic block is your ${attributeLabel(dna.primary.gameFocus)} drill — ${dna.primary.label}s express themselves there.`,
       `DNA read: ${dna.primary.label} (${dna.evolutionPath}) — session shaped to your role.`,
     ];
 

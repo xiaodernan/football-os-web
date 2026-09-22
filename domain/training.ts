@@ -42,6 +42,7 @@ export interface BuildSessionInput {
   focusAttributes: string[];
   group: PositionGroup;
   seed?: string;
+  roleGameFocus?: string; // DNA signature; steers the game-realistic block to the role
 }
 
 /** Build a coherent session that fits (as closely as possible) the target minutes. */
@@ -66,7 +67,11 @@ export function buildSession(input: BuildSessionInput): TrainingSession {
     exercises.push(decision);
     total += decision.minutes;
   }
-  const game = pick(rng, DRILLS.filter((d) => d.phase === "game"));
+  const gamePool = DRILLS.filter((d) => d.phase === "game");
+  // When the caller supplies a role signature, the game-realistic block trains
+  // that attribute (making "shaped to your role" literal); otherwise we keep the
+  // seeded random game drill.
+  const game = (input.roleGameFocus && gamePool.find((d) => d.focus === input.roleGameFocus)) || pick(rng, gamePool);
   if (total + game.minutes <= input.targetMinutes - 4) {
     exercises.push(game);
     total += game.minutes;
