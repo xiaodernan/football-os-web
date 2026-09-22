@@ -45,6 +45,8 @@ ok("invalid date stays planned", byId("f").status === "planned");
 ok("sweep preserves other fields", byId("a").targetMinutes === 20 && byId("a").title === "Session");
 ok("sweep is pure (input unchanged)", JSON.stringify(input) === frozenSnapshot);
 ok("sweep returns a new array", out !== input);
+// Idempotent: sweeping the swept result changes nothing further.
+ok("sweep is idempotent", JSON.stringify(sweepOverdueSessions(out, NOW)) === JSON.stringify(out));
 
 // 2. buildReview now sees a real missed count + the slipped-session insight.
 const swept = sweepOverdueSessions([
