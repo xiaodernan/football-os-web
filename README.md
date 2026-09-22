@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M87 are committed, one per milestone. Everything added in the current line
+Milestones M0–M88 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -153,7 +153,10 @@ deleted the leftovers an honest audit surfaces but nothing ever reads: an unrefe
 `getCompetition` import in the command palette, and the entirely dead async-boundary
 abstraction (`useAsync`/`AsyncState`/`AsyncStatus`/`AsyncBoundary`) — the live loading /
 error / retry states features actually use (`LoadingBlock`/`ErrorState`/`EmptyState`) are
-untouched, so nothing shipped lost a state (M87).
+untouched, so nothing shipped lost a state (M87). The academy's quiz `recordAttempt`
+handler likewise dropped the `correct` flag it was handed; the fix clarifies the contract
+rather than blurring it — an attempt only counts tries, while correctness is recorded by
+`markLearned` at completion, so "mastered" still requires an actual passed check (M88).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

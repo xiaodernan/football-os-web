@@ -65,7 +65,9 @@ export function LearnHub() {
   const list = LESSONS.filter((l) => category === "All" || l.category === category);
   const open = openId ? LESSONS.find((l) => l.id === openId) ?? null : null;
 
-  const recordAttempt = (id: string, correct: boolean) =>
+  // An attempt only counts tries; correctness is recorded by markLearned at the
+  // point the learner commits the lesson, so "mastered" always needs a passed check.
+  const recordAttempt = (id: string) =>
     setRecords((cur) => {
       const found = cur.find((r) => r.id === id);
       if (found) return cur.map((r) => (r.id === id ? { ...r, attempts: r.attempts + 1 } : r));
@@ -190,7 +192,7 @@ export function LearnHub() {
 function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: {
   lesson: Lesson;
   record: LearnRecord | null;
-  onAttempt: (id: string, correct: boolean) => void;
+  onAttempt: (id: string) => void;
   onLearned: (id: string, correct: boolean) => void;
   onUndo: (id: string) => void;
   onBack: () => void;
@@ -201,9 +203,8 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
 
   const answer = (i: number) => {
     if (choice !== null) return;
-    const isRight = i === lesson.quiz.answer;
     setChoice(i);
-    onAttempt(lesson.id, isRight);
+    onAttempt(lesson.id);
   };
 
   return (
