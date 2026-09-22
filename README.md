@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M74 are committed, one per milestone. Everything added in the current line
+Milestones M0–M79 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -127,7 +127,15 @@ completed sessions), with the slipped rows surfaced in a Missed panel on the Tra
 only *displayed* stored memories while `generatePlan` ignored them — is now backed by real
 continuity: `requestPlan` hands the newest plan's focus to the coach, which frames the next
 diagnosis as continuing or rotating from that focus and adds a grounded "Coach memory"
-evidence line naming it (M74).
+evidence line naming it (M74). A follow-on honesty sweep then closed four more
+computed-but-disconnected signals: the training-session note the user types at
+completion is now carried onto the Activity History timeline instead of vanishing
+(M75); the plan's "saved attributes (overall N)" source prints the real
+`overallRating(attributes)` rather than a stale XP figure (M76); the coach's "session
+shaped to your role" claim is now literal — each archetype carries a `gameFocus` and
+the built session's game-realistic block actually trains it (M77); the never-dispatched
+`SCHEDULE` reducer branch was removed as dead code (M78); and the Weekly Review's
+overall tile shows its previously-dropped `64 → 71` baseline (M79).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
