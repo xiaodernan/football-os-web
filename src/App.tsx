@@ -56,9 +56,23 @@ function RouteFallback() {
   );
 }
 
+function BootFallback() {
+  return (
+    <div className="mx-auto w-full max-w-5xl px-4 py-6">
+      <RouteFallback />
+    </div>
+  );
+}
+
 function Routes() {
   const { path } = useRouter();
-  const { state } = useOs();
+  const { state, ready } = useOs();
+
+  // Hold rendering until the stored state has been read back. Without this gate a
+  // returning user briefly sees the logged-out Landing / "set up your profile"
+  // empty state (initialState) before the hydration effect flips them into the
+  // shell — a visible flash on every load.
+  if (!ready) return <BootFallback />;
 
   if (path === "/") {
     if (!state.onboarded) return <Landing />;

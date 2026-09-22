@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useState,
   type ReactNode,
 } from "react";
 import type {
@@ -232,6 +233,7 @@ const Ctx = createContext<OsContext | null>(null);
 
 export function OsProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
@@ -239,6 +241,8 @@ export function OsProvider({ children }: { children: ReactNode }) {
       if (raw) dispatch({ type: "HYDRATE", state: normalizeHydrated({ ...initialState, ...(JSON.parse(raw) as Partial<OsState>) }) });
     } catch {
       /* fall back to fresh state */
+    } finally {
+      setHydrated(true);
     }
   }, []);
 
@@ -250,11 +254,15 @@ export function OsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Persist after hydration completes to avoid clobbering stored data.
-  const ready = true;
+  // Don't expose `ready` (and don't persist) until the stored state has been read
+  // back, otherwise the first paint briefly renders the logged-out Landing / empty
+  // shell before hydration flips it, flashing every returning user. `hydrated` is
+  // only ever set in the effect above, so this is SSR-safe (server stays false).
+  const ready = hydrated;
   useEffect(() => {
+    if (!hydrated) return;
     if (state.onboarded || state.sessions.length || state.progress.length || state.watchlist.length || state.plans.length) persist(state);
-  }, [state, persist]);
+  }, [state, persist, hydrated]);
 
   const value = useMemo<OsContext>(
     () => ({
