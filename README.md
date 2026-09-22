@@ -15,25 +15,25 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | --- | --- | --- |
 | Landing / Onboarding | `/`, `/onboarding` | Introduces the product and creates a profile + mode. |
 | Command Center | `/` (post-onboarding) | Dashboard of fixtures, news, trending players and your progress. |
-| Football World | `/football`, `/players`, `/clubs`, `/competitions`, `/matches`, `/news`, `/search` | Browse a synthetic world of 39 clubs, 318 players, 8 competitions and their fixtures/standings; entity detail pages with source-grounded news, and a per-article "Impact read" that resolves affected clubs/players to real standings and scores its own confidence. |
+| Football World | `/football`, `/players`, `/clubs`, `/competitions`, `/matches`, `/news`, `/search` | Browse a synthetic world of 39 clubs, 318 players, 8 competitions and their fixtures/standings; entity detail pages with source-grounded news, and a per-article "Impact read" that resolves affected clubs/players to real standings and scores its own confidence. Player pages carry the dataset's real attribute vector (radar + top traits), a scout report against the positional template at matched skill, and a modelled career arc; club pages carry season analytics and a next-fixture xG; scheduled fixtures carry a model line. |
 | Player OS | `/player` | Training plan loop: AI coach → session → complete → XP, attribute growth, streaks and goals. |
-| Manager OS | `/manager` | Take charge of a club: play fixtures, buy/sell players, set team instructions, and climb a live league table. |
+| Manager OS | `/manager` | Take charge of a club: play fixtures, buy/sell players, set team instructions, and climb a live league table. Adds a **season outlook** (title chance and expected finish projected from the live table), a retrospective **season summary** with honours, and a **match prep** advisor that recommends tactics from the same engine inputs the fixture will use and can project odds for it. |
 | Football AI | `/ai` | RAG-style chat grounded in the world dataset, always with evidence, sources and a confidence score. |
 | Knowledge Graph | `/knowledge` | Radial graph linking clubs, players, competitions and news; click a node to navigate. |
 | Tactical Studio | `/tactical-studio` | Draggable 2D coaching board with formation presets, mentality and shape read-out. |
 | Simulation Lab | `/simulation` | Tune tactics and run the deterministic Match Engine for a single fixture or a full season. |
-| Knowledge Academy | `/learn` | Short football-analytics and tactics lessons with comprehension checks and progress. |
-| Community | `/community` | Discussion threads seeded from live world data; reply and like (stored on device). |
+| Knowledge Academy | `/learn` | Short football-analytics and tactics lessons with comprehension checks. Progress is evidence-based, not self-declared: every answer is recorded as an attempt, "completed" and "check passed" are tracked separately, and next lessons are ranked from your own training log, watchlist, career and film data — each suggestion quotes the number that triggered it. Passed checks unlock Scholar achievements, and completions appear on the activity timeline. |
+| Community | `/community` | A device-local discussion board. Thread **topics** are generated from the world dataset (standings races, news items), but their authors and replies are clearly labelled `sample` — they are not real people and they carry no audience metrics. Only your own posts, replies and likes are counted, in a "Your activity" summary. |
 | Scouting | `/scouting` | Club-needs profile, best-value picks and a filterable prospect table with compare; shortlist feeds the Command Center watchlist. |
 | Dynamic World | `/world` | Deterministic season-by-season simulation layered over the dataset: players age and develop, get re-priced, retire and are replaced by academy prospects, and league champions are crowned each step. |
-| Film Room | `/film` | Standalone video-analysis pillar: upload or drop clips, run the pipeline stage-by-stage, keep a local library of reports, review detected events/frames with confidence, and build a training plan from a finding. |
-| Data Room | `/data` | Advanced team analytics derived deterministically from the world's finished matches: league-pace attack/defence ratings, form, home/away splits, clean sheets and a modelled expected-goals clash. |
+| Film Room | `/film` | Standalone video-analysis pillar: upload or drop clips, run the pipeline stage-by-stage, keep a local library of reports, review detected events/frames with confidence, and build a training plan from a finding. Across the whole library it computes detections per minute by type, actions/scans per minute, an older-vs-newer scanning trend (unlocked at two clips) and recurring coaching focus. |
+| Data Room | `/data` | Advanced team analytics derived deterministically from the world's finished matches: league-pace attack/defence ratings, form, home/away splits and clean sheets, a **Poisson matchday forecast** for upcoming fixtures (win/draw/loss, expected goals, most likely scoreline) and modelled next-fixture xG. Small samples are regressed toward the league mean so a few odd games cannot dominate a line. |
 | Transfer Centre | `/transfers` | Rumour board built from the world's own news feed: each linked target carries its source + credibility, a transparent asking-fee estimate, value index and headroom, plus a squad-fit score against your favourite club's depth. |
-| Player Comparison | `/compare` | Head-to-head duel built only from the dataset's real fields (overall, potential, age, value): metric-by-metric diffs with a relative bar, a win count and a transparent verdict that blends quality, upside and prime-window length. |
+| Player Comparison | `/compare` | Head-to-head duel built from the dataset's real fields: rating/age/value metrics with a relative bar and a win count, **plus** a category profile and the eight biggest attribute differences taken from each player's own attribute vector. The verdict blends quality, upside and prime-window length. When a provider ships no vectors, the page says so instead of inventing a profile. |
 | Watchlist Board | `/watchlist` | Your device-local starred players in one sortable board (value, potential, overall, age) with derived asking estimates — tick any two to open a head-to-head in the Compare tool. |
 | My Profile | `/profile` | A personal growth dashboard built entirely from your locally-stored activity: level and XP curve, ability radar with strengths and focus areas, overall-rating trend, toggleable goals, recent sessions and favourites. |
 | Achievements & Trophies | `/achievements` | Badges grouped by Training, Consistency, Growth and Explorer — each unlocked only from a genuine signal already in your local state (sessions logged, streak kept, goals met, plans requested, players watched, level reached), with transparent progress bars and trophy points. |
-| Settings & Data | `/settings` | Switch mode / language / theme, see how many records and how much storage your activity uses, export the full local state as JSON, and a guarded reset — all entirely on-device. |
+| Settings & Data | `/settings` | Switch mode / language / theme, and see a real inventory of every registered `football-os.*` store (records + bytes per store, activity vs preference). Export **all** stores as one lossless bundle, import a bundle back with validation, and a guarded reset that clears activity but keeps preferences — all entirely on-device. |
 | Activity History | `/history` | A day-grouped timeline merged from your real completed sessions, AI coach plans and coach-memory records, filterable by event type, sorted newest-first — nothing invented, every row reads straight from local state. |
 | Weekly Review | `/review` | A coach-style period digest (7/30/90-day windows) compiled only from your local log: sessions, minutes, XP, streak, overall trend, self-rated quality, focus mix, an honest highlight list and a next-focus recommendation — each labelled with a confidence score and the evidence behind it, no external model called. |
 | Load & Recovery | `/load` | Training-load management from your completed sessions (duration × session-RPE): acute 7-day vs chronic 28-day average daily load, an ACWR with colour-coded under/optimal/caution/high-risk bands, weekly monotony and strain, and a guidance card with confidence — a relative-load estimate, not a medical claim. |
@@ -43,8 +43,11 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 ## Architecture
 
 ```
-domain/     pure, deterministic logic — match engine, career model, community seeding,
-            attributes, XP. No React, no I/O: the testable core.
+domain/     pure, deterministic logic — match engine and its probability model, career
+            model (outlook, summary, match prep), attributes and role gap, growth and
+            projection, career arc, scouting and scout report, film insights, academy
+            progress, analytics, community seeding, cross-mode footprint, local-data
+            registry, XP. No React, no I/O: the testable core.
 data/       provider layer + synthetic world seed. The UI never reads the seed directly.
 store/      global user state (reducer + Context) persisted to localStorage.
 features/   route-level UI, split into lazily-loaded chunks.
@@ -61,9 +64,15 @@ src/        entry (App.tsx routes), globals.css, main.
   generation and every simulation, so identical inputs always reproduce identical
   results — required by the simulation contract.
 - **Persistence.** User profiles, training, saved formations, manager careers, academy
-  progress and community posts live in `localStorage` (device-local), with clear
-  `provider` seams for later server storage. No credentials or secrets are ever
+  progress, film reports and community posts live in `localStorage` (device-local), with
+  clear `provider` seams for later server storage. Every key is registered in
+  `domain/localData.ts`, which drives the Settings inventory, the lossless export/import
+  bundle and the activity-only reset — a new `football-os.*` key must be added there or it
+  would silently be left out of backups. No credentials or secrets are ever
   placed in the frontend.
+- **Models are labelled models.** Projections (season outlook, Poisson matchday forecast,
+  career arc, attribute estimates) state their inputs, sample size, confidence and
+  sources on screen, and are never presented as results or as measured scouting data.
 - **Every state is handled.** Views include loading, empty, error and offline/degraded
   states; the language switcher covers English / 简体中文 / 繁體中文.
 
@@ -84,13 +93,26 @@ demand.
 
 ## Roadmap status
 
-Built and verified: shell + onboarding, Player OS loop, Football World browse, AI chat +
-knowledge graph, Tactical Studio, Simulation Lab, Manager career, Knowledge Academy,
-Community, i18n and code-splitting.
+Milestones M0–M62 are committed, one per milestone. Everything added in the current line
+of work (M37 onward) was built green and checked in a browser against a fresh production
+preview with a clean console before it was committed. Built and verified: shell + onboarding,
+the Player OS training loop with a single source of truth for attribute growth, Football
+World browse and entity detail (player attribute profile, scout report, career arc; club
+season analytics), AI chat + knowledge graph, Tactical Studio, Simulation Lab with a
+probabilistic match model, Manager career (season outlook, summary, match prep, projected
+odds), Knowledge Academy with evidence-based progress, Community as an explicitly
+sample-labelled local board, Scouting, Transfer Centre, Compare, Watchlist, Dynamic
+World (multi-season), Film Room with cross-clip library insights, Data Room with a
+matchday forecast, Profile/Progress, Achievements, Weekly Review, Load & Recovery, Role
+Gap Analysis, Activity History, Settings with a full local-data registry (inventory,
+lossless export/import, activity-only reset), i18n (EN / 简体中文 / 繁體中文), the ⌘K
+command palette and route-level code splitting.
 
-Next: deeper i18n of long-form content, a Video Analysis module over the existing video
-provider, a multi-season dynamic world, and a real data/AI provider behind the existing
-seams.
+**Still outstanding** (deliberately not faked): real data / AI / video providers behind
+the existing seams, server-side multi-user persistence and shared community content, a
+database designed for millions of rows, long-form i18n of editorial content, and
+publishing (this project is intentionally local-only; `sites-hosting` has never been
+run).
 
 ## Deploying
 
