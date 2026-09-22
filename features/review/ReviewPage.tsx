@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
@@ -21,12 +22,13 @@ const TONE: Record<WeeklyReview["insights"][number]["kind"], string> = {
 
 export function ReviewPage() {
   const { t } = useI18n();
-  const { state } = useOs();
+  const { state, requestPlan } = useOs();
   const { navigate } = useRouter();
   const learn = useLearnRecords();
   const film = useFilmClips();
   const [days, setDays] = useState(7);
   const [compiling, setCompiling] = useState(false);
+  const [building, setBuilding] = useState(false);
 
   const review = useMemo(
     () =>
@@ -51,6 +53,25 @@ export function ReviewPage() {
   const recompyle = () => {
     setCompiling(true);
     window.setTimeout(() => setCompiling(false), 420);
+  };
+
+  const buildForRecommendation = async () => {
+    const key = review?.recommendation?.attributeKey;
+    if (!key || building) return;
+    setBuilding(true);
+    try {
+      const plan = await requestPlan(t("rv.recoPrompt"), 30, [key]);
+      toast.success(
+        t("rv.recoDone")
+          .replace("{m}", String(plan.session.targetMinutes))
+          .replace("{n}", String(plan.session.exercises.length)),
+      );
+      navigate("/player/training");
+    } catch {
+      toast.error(t("rv.recoError"));
+    } finally {
+      setBuilding(false);
+    }
   };
 
   const points = useMemo(() => {
@@ -177,8 +198,8 @@ export function ReviewPage() {
                       </div>
                       <span className="font-mono">{review.recommendation.confidence}%</span>
                     </div>
-                    <Button size="sm" className="mt-3 w-full" onClick={() => navigate("/player/coach")}>
-                      {t("rv.planForIt")}
+                    <Button size="sm" className="mt-3 w-full" onClick={buildForRecommendation} disabled={building}>
+                      {building ? t("rv.recoBusy") : t("rv.planForIt")}
                     </Button>
                   </div>
                 ) : (
