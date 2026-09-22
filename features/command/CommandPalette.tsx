@@ -84,7 +84,7 @@ export function CommandPalette() {
     }
     base.push(
       { id: "theme", label: `Toggle ${theme === "dark" ? "light" : "dark"} theme`, hint: "Appearance", group: "Actions", run: () => { toggle(); } },
-      { id: "ask", label: "Ask Football AI", hint: `from ${path}`, group: "Actions", run: nav("/search?ai=1") },
+      { id: "ask", label: "Ask Football AI", hint: `from ${path}`, group: "Actions", run: nav("/ai") },
     );
     if (state.onboarded) {
       (["FAN", "PLAYER", "MANAGER"] as const).forEach((m) =>
