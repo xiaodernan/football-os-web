@@ -37,6 +37,7 @@ export function FilmRoom() {
   const { navigate } = useRouter();
   const online = useOnline();
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastFileRef = useRef<File | null>(null);
 
   const [clips, setClips] = useState<FilmClip[]>(() => loadFilmClips());
   const [selected, setSelected] = useState<string | null>(() => loadFilmClips()[0]?.clipId ?? null);
@@ -51,6 +52,7 @@ export function FilmRoom() {
 
   const analyze = useCallback(
     async (file: File) => {
+      lastFileRef.current = file;
       if (!state.profile) {
         setError(new Error("Complete onboarding so the analysis can reference your attributes."));
         return;
@@ -179,7 +181,7 @@ export function FilmRoom() {
 
         {/* Report */}
         <div className="space-y-4">
-          {error && <ErrorState error={error} retry={() => setError(null)} />}
+          {error && <ErrorState error={error} retry={() => lastFileRef.current && analyze(lastFileRef.current)} />}
           {busy ? (
             <Panel className="p-4">
               <Progress value={progress} className="h-1.5" />
