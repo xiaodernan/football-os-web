@@ -687,6 +687,7 @@ function Matches() {
     save([{ id: `m${Date.now()}`, opp: form.opp, date: new Date().toISOString(), g: Number(form.g), a: Number(form.a), r: Number(form.r) }, ...rows]);
     setForm({ opp: "", g: "0", a: "0", r: "7" });
   };
+  const remove = (id: string) => save(rows.filter((r) => r.id !== id));
   const club = state.profile?.favoriteClubId ? getClub(state.profile.favoriteClubId) : undefined;
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -707,9 +708,12 @@ function Matches() {
         {rows.length ? (
           <div className="divide-y">
             {rows.map((r) => (
-              <div key={r.id} className="flex items-center justify-between py-2 text-sm">
+              <div key={r.id} className="group flex items-center justify-between py-2 text-sm">
                 <div><div>{r.opp}</div><div className="text-xs text-muted-foreground">{new Date(r.date).toLocaleDateString()}</div></div>
-                <div className="flex items-center gap-3 font-mono text-xs"><span>{r.g}G {r.a}A</span><Badge variant="outline">{r.r.toFixed(1)}</Badge></div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 font-mono text-xs"><span>{r.g}G {r.a}A</span><Badge variant="outline">{r.r.toFixed(1)}</Badge></div>
+                  <button onClick={() => remove(r.id)} aria-label={`Delete match vs ${r.opp}`} className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus:opacity-100 group-hover:opacity-100">✕</button>
+                </div>
               </div>
             ))}
           </div>
