@@ -166,7 +166,7 @@ export function ReviewPage() {
               label={t("rv.overall")}
               value={review.overallEnd ?? "—"}
               tone={review.overallDelta && review.overallDelta > 0 ? "up" : review.overallDelta && review.overallDelta < 0 ? "down" : "neutral"}
-              sub={review.overallDelta != null ? `${review.overallDelta >= 0 ? "+" : ""}${review.overallDelta}` : t("rv.noChange")}
+              sub={review.overallDelta != null ? `${review.overallStart ?? "—"} → ${review.overallEnd ?? "—"}` : t("rv.noChange")}
             />
             <StatTile label={t("rv.quality")} value={review.avgRating ?? "—"} sub={review.avgRating != null ? t("rv.outOf5") : t("rv.noRating")} />
             <StatTile label={t("rv.statAcademy")} value={review.lessonsCompleted} sub={t("rv.statAcademyPassed").replace("{n}", String(review.lessonsMastered))} />
