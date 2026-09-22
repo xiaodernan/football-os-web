@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
-import { teamMetrics, leaders, expectedGoals, formPoints, type TeamMetrics, type FormLetter } from "@/domain/analytics";
+import { teamMetrics, leaders, expectedGoals, outcomeOdds, formPoints, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +57,23 @@ export function DataRoom() {
   const comp = getCompetition(compId);
   const pickedTeam = metrics.find((m) => m.clubId === picked) ?? null;
   const clash = metrics.length >= 2 ? { top: metrics[0], second: metrics[1], xg: expectedGoals(metrics[0], metrics[1]) } : null;
+
+  // Closed-form Poisson forecast over the competition's own scheduled fixtures,
+  // using attack/defence ratings computed from the matches actually played.
+  const forecast = useMemo(() => {
+    const byId = new Map(metrics.map((m) => [m.clubId, m]));
+    return matches
+      .filter((m) => m.competitionId === compId && m.status === "SCHEDULED")
+      .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
+      .map((m) => {
+        const h = byId.get(m.homeClubId);
+        const a = byId.get(m.awayClubId);
+        if (!h || !a || h.played < 1 || a.played < 1) return null;
+        return { match: m, odds: outcomeOdds(h, a), sample: Math.min(h.played, a.played) };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+      .slice(0, 4);
+  }, [matches, metrics, compId]);
 
   return (
     <div className="space-y-5">
@@ -192,6 +209,50 @@ export function DataRoom() {
             )}
           </div>
         </div>
+      )}
+
+      {forecast.length > 0 && (
+        <Panel className="p-4">
+          <SectionTitle title="Matchday forecast" hint={`${forecast.length} scheduled fixtures · Poisson · league avg ${metrics[0]?.leagueAvg.toFixed(2)} goals/team`} />
+          <div className="mt-3 space-y-3">
+            {forecast.map(({ match, odds, sample }) => {
+              const h = getClub(match.homeClubId);
+              const a = getClub(match.awayClubId);
+              return (
+                <div key={match.id} className="rounded-lg border bg-card/40 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                    <Link to={`/matches/${match.id}`} className="flex items-center gap-2 hover:text-primary">
+                      <Crest colors={h?.colors} short={h?.short} size={20} />
+                      <span className="truncate font-medium">{h?.name}</span>
+                      <span className="text-xs text-muted-foreground">v</span>
+                      <span className="truncate font-medium">{a?.name}</span>
+                      <Crest colors={a?.colors} short={a?.short} size={20} />
+                    </Link>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {new Date(match.kickoff).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex h-2 w-full overflow-hidden rounded">
+                    <div className="bg-primary" style={{ width: `${odds.home * 100}%` }} />
+                    <div className="bg-muted-foreground/40" style={{ width: `${odds.draw * 100}%` }} />
+                    <div className="bg-info" style={{ width: `${odds.away * 100}%` }} />
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                    <span><span className="font-mono text-foreground">{Math.round(odds.home * 100)}%</span> {h?.short}</span>
+                    <span><span className="font-mono text-foreground">{Math.round(odds.draw * 100)}%</span> draw</span>
+                    <span><span className="font-mono text-foreground">{Math.round(odds.away * 100)}%</span> {a?.short}</span>
+                    <span>xG {odds.lambdaHome.toFixed(2)}–{odds.lambdaAway.toFixed(2)}</span>
+                    <span>most likely {odds.mostLikelyScore} ({Math.round(odds.mostLikelyPct * 100)}%)</span>
+                    <span>{sample} match{sample === 1 ? "" : "es"} of form data</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            Closed-form Poisson estimate built from each side's attack and defence ratings relative to the league average. A model output, not a prediction of what will happen — the Simulation Lab runs the full match engine instead, and the two need not agree.
+          </p>
+        </Panel>
       )}
 
       <p className="text-[11px] text-muted-foreground">{t("data.disclaimer")}</p>

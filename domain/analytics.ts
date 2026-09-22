@@ -37,6 +37,9 @@ export interface TeamMetrics {
   away: Split;
   attack: number;
   defence: number;
+  /** Goals per team per game in this competition — the denominator `attack`
+   *  and `defence` were measured against, so projections stay in the same units. */
+  leagueAvg: number;
 }
 
 function emptySplit(): Split {
@@ -127,16 +130,82 @@ export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): Te
       away: a.away,
       attack: leagueAvg ? Math.round((gfAvg / leagueAvg) * 100) / 100 : 0,
       defence: leagueAvg ? Math.round((gaAvg / leagueAvg) * 100) / 100 : 0,
+      leagueAvg: Math.round(leagueAvg * 100) / 100,
     });
   }
   return out.sort((x, y) => y.points - x.points || y.gd - x.gd || y.gf - x.gf);
 }
 
+// Attack/defence are ratios against THIS competition's average goals per team
+// per game, so the projection must use that same denominator — a hardcoded 1.4
+// on a league averaging 0.5 inflates every scoreline. Small samples also let a
+// ratio blow up (a 7-game defence figure), so λ is clamped to a believable band.
+const LAMBDA_MIN = 0.15;
+const LAMBDA_MAX = 3.5;
+
+const clampLambda = (v: number) => Math.max(LAMBDA_MIN, Math.min(LAMBDA_MAX, v));
+
 /** Modelled expected goals for a single fixture from the two sides' ratings. */
-export function expectedGoals(home: TeamMetrics, away: TeamMetrics, leagueAvg = 1.4): { home: number; away: number } {
-  const h = leagueAvg * home.attack * away.defence * 1.12;
-  const a = leagueAvg * away.attack * home.defence * 0.92;
+export function expectedGoals(home: TeamMetrics, away: TeamMetrics, leagueAvg?: number): { home: number; away: number } {
+  const base = leagueAvg ?? Math.min(home.leagueAvg || 1.4, away.leagueAvg || 1.4);
+  const h = clampLambda(base * home.attack * away.defence * 1.12);
+  const a = clampLambda(base * away.attack * home.defence * 0.92);
   return { home: Math.round(h * 100) / 100, away: Math.round(a * 100) / 100 };
+}
+
+// Goals in a football match are close enough to Poisson-distributed for a
+// pre-match read, and unlike the Match Engine simulation this is a closed-form
+// model: same inputs, same answer, no sampling. Kept deliberately separate from
+// the engine so the two approaches can be compared rather than confused.
+const MAX_GOALS = 8;
+
+function poisson(k: number, lambda: number): number {
+  let p = 1;
+  for (let i = 1; i <= k; i++) p *= lambda / i;
+  return p * Math.exp(-lambda);
+}
+
+export interface OutcomeOdds {
+  home: number; // 0..1
+  draw: number;
+  away: number;
+  mostLikelyScore: string;
+  mostLikelyPct: number;
+  expectedTotalGoals: number;
+  lambdaHome: number;
+  lambdaAway: number;
+}
+
+export function outcomeOdds(home: TeamMetrics, away: TeamMetrics, leagueAvg?: number): OutcomeOdds {
+  const xg = expectedGoals(home, away, leagueAvg);
+  const lH = Math.max(0.05, xg.home);
+  const lA = Math.max(0.05, xg.away);
+
+  let ph = 0, pd = 0, pa = 0, best = 0, bestScore = "0-0";
+  for (let h = 0; h <= MAX_GOALS; h++) {
+    for (let a = 0; a <= MAX_GOALS; a++) {
+      const p = poisson(h, lH) * poisson(a, lA);
+      if (h > a) ph += p;
+      else if (h === a) pd += p;
+      else pa += p;
+      if (p > best) {
+        best = p;
+        bestScore = `${h}-${a}`;
+      }
+    }
+  }
+  const total = ph + pd + pa || 1; // renormalise the truncated tail
+  const r3 = (v: number) => Math.round(v * 1000) / 1000;
+  return {
+    home: r3(ph / total),
+    draw: r3(pd / total),
+    away: r3(pa / total),
+    mostLikelyScore: bestScore,
+    mostLikelyPct: r3(best / total),
+    expectedTotalGoals: Math.round((lH + lA) * 100) / 100,
+    lambdaHome: Math.round(lH * 100) / 100,
+    lambdaAway: Math.round(lA * 100) / 100,
+  };
 }
 
 export interface Leaders {
