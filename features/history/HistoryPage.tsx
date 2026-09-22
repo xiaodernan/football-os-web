@@ -134,6 +134,11 @@ export function HistoryPage() {
                           ))}
                         </div>
                       )}
+                      {e.note && (
+                        <div className="mt-1 border-l-2 border-border/60 pl-2 text-xs italic text-muted-foreground">
+                          “{e.note}”
+                        </div>
+                      )}
                     </li>
                   );
                 })}

@@ -17,6 +17,7 @@ export interface TimelineEvent {
   score?: number; // self-rating for sessions (1..5)
   xp?: number;
   growth?: AttributeDelta[]; // attribute gains from a completed session
+  note?: string; // the user's own free-text note captured at completion
 }
 
 interface SessionSeed {
@@ -28,6 +29,7 @@ interface SessionSeed {
   selfRating?: number;
   xpAwarded?: number;
   growth?: AttributeDelta[];
+  notes?: string;
 }
 interface PlanSeed {
   id: string;
@@ -85,6 +87,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       score: s.selfRating,
       xp: s.xpAwarded,
       growth: s.growth,
+      note: s.notes?.trim() ? s.notes.trim() : undefined,
     });
   }
 
