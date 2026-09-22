@@ -3,8 +3,12 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { getClub, getPlayer } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
+import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
 import { overallRating, attributeLabel, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
+import { isCompleted, summarizeLearn } from "@/domain/learn";
+import { seasonSummary, type CareerState } from "@/domain/career";
+import { buildFootprint } from "@/domain/footprint";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Badge } from "@/components/ui/badge";
@@ -12,14 +16,100 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+const ts = (iso?: string) => {
+  if (!iso) return 0;
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? 0 : t;
+};
+
 export function ProfilePage() {
   const { t } = useI18n();
   const { state, toggleGoal } = useOs();
   const { navigate } = useRouter();
+  const learn = useLearnRecords();
   const p = state.profile;
 
   const completed = useMemo(() => state.sessions.filter((s) => s.status === "completed"), [state.sessions]);
   const goalsDone = state.goals.filter((g) => g.done).length;
+
+  // One record across every pillar, read from what this device actually holds.
+  const footprint = useMemo(() => {
+    const lessons = summarizeLearn(learn);
+    const lastLesson = learn.filter((r) => isCompleted(r)).sort((a, b) => ts(b.completedAt) - ts(a.completedAt))[0];
+
+    let manager = { active: false, matches: 0 } as Parameters<typeof buildFootprint>[0]["manager"];
+    try {
+      const raw = localStorage.getItem("football-os.career.v1");
+      if (raw) {
+        const cs = JSON.parse(raw) as CareerState;
+        const s = seasonSummary(cs);
+        const lastResult = cs.results[cs.results.length - 1];
+        manager = {
+          active: true,
+          clubName: getClub(cs.clubId)?.name,
+          matches: s.played,
+          pointsPerGame: s.ppg,
+          position: s.position,
+          clubCount: s.clubCount,
+          lastMatchAt: lastResult?.at,
+        };
+      }
+    } catch {
+      /* unreadable career — reported as not started */
+    }
+
+    let film = { clips: 0, minutes: 0 } as Parameters<typeof buildFootprint>[0]["film"];
+    try {
+      const arr = JSON.parse(localStorage.getItem("football-os.film.v1") ?? "[]");
+      if (Array.isArray(arr) && arr.length) {
+        film = {
+          clips: arr.length,
+          minutes: arr.reduce((n: number, c) => n + (c?.report?.durationSec ?? 0), 0) / 60,
+          lastClipAt: arr[0]?.addedAt,
+        };
+      }
+    } catch {
+      /* ignore */
+    }
+
+    let posts = 0;
+    let replies = 0;
+    let lastPostAt: string | undefined;
+    try {
+      const st = JSON.parse(localStorage.getItem("football-os.community.v1") ?? "null");
+      const threads = Array.isArray(st?.userThreads) ? st.userThreads : [];
+      posts = threads.length;
+      lastPostAt = threads[0]?.at;
+      const groups = st?.replies && typeof st.replies === "object" ? Object.values(st.replies as Record<string, unknown[]>) : [];
+      replies = groups.reduce((n, a) => n + (Array.isArray(a) ? a.length : 0), 0);
+    } catch {
+      /* ignore */
+    }
+
+    return buildFootprint({
+      player: {
+        sessionsCompleted: completed.length,
+        minutes: completed.reduce((s, x) => s + x.targetMinutes, 0),
+        xp: p?.xp ?? 0,
+        level: p ? levelInfo(p.xp).level : 1,
+        plans: state.plans.length,
+        goalsDone,
+        lessonsCompleted: lessons.completed,
+        lessonsMastered: lessons.mastered,
+        lastSessionAt: completed.map((x) => x.completedAt ?? x.date).sort().slice(-1)[0],
+        lastLessonAt: lastLesson?.completedAt,
+      },
+      manager,
+      film,
+      fan: {
+        watchlist: state.watchlist.length,
+        posts,
+        replies,
+        favouriteClubName: p?.favoriteClubId ? getClub(p.favoriteClubId)?.name : undefined,
+        lastPostAt,
+      },
+    });
+  }, [state, learn, completed, goalsDone, p]);
 
   const ranked = useMemo(() => {
     if (!p) return [];
@@ -188,6 +278,35 @@ export function ProfilePage() {
           </div>
         </Panel>
       )}
+
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionTitle title={t("prof.footprint")} hint={t("prof.footprintHint").replace("{n}", String(footprint.pillarsTouched))} />
+          <DemoBadge />
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {footprint.rows.map((r) => (
+            <Link key={r.id} to={r.to} className="rounded-lg border bg-card/40 p-3 hover:border-primary/50">
+              <div className="flex items-center justify-between gap-2">
+                <span className={cn("text-sm font-semibold", r.active ? "text-foreground" : "text-muted-foreground")}>{t(`prof.mode.${r.id}`)}</span>
+                <span className={cn("rounded border px-1.5 py-px text-[10px] uppercase tracking-wide", r.active ? "border-success/40 text-success" : "border-border text-muted-foreground")}>
+                  {r.active ? "active" : "not started"}
+                </span>
+              </div>
+              <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground">
+                {r.lines.map((l, i) => <li key={i}>{l}</li>)}
+              </ul>
+              {r.lastAt && ts(r.lastAt) > 0 && (
+                <div className="mt-1.5 text-[10px] text-muted-foreground">{t("prof.lastActivity")} {new Date(r.lastAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+              )}
+            </Link>
+          ))}
+        </div>
+        <ul className="mt-3 space-y-0.5 text-[11px] text-muted-foreground">
+          {footprint.evidence.map((e, i) => <li key={i}>› {e}</li>)}
+        </ul>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">Sources: {footprint.sources.join(" · ")}</p>
+      </Panel>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <LinkCard to="/player" icon="●" title={t("prof.cardTraining")} hint={t("prof.cardTrainingHint")} />
