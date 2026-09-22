@@ -25,8 +25,9 @@ import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
 import { applyFocusGrowth, type GrowthDelta } from "@/domain/training";
 import { buildLoad } from "@/domain/load";
 import { coachProvider, type PlanInput } from "@/data/ai";
+import { OS_STATE_KEY } from "@/domain/localData";
 
-export const STORAGE_KEY = "football-os.state.v2";
+export const STORAGE_KEY = OS_STATE_KEY;
 
 export interface OsState {
   onboarded: boolean;

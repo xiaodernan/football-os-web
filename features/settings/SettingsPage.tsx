@@ -3,6 +3,7 @@ import { useI18n } from "@/i18n";
 import { LOCALES, type Locale } from "@/i18n/dictionaries";
 import { useTheme } from "@/lib/theme";
 import { useOs, STORAGE_KEY } from "@/store/useFootballOS";
+import { applyImport, buildExport, clearActivity, inventory, readImport } from "@/domain/localData";
 import { DEMO_MODE, footballProvider } from "@/data/footballService";
 import type { Mode } from "@/domain/types";
 import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
@@ -17,36 +18,21 @@ export function SettingsPage() {
   const { theme, toggle } = useTheme();
   const { state, setMode, reset } = useOs();
   const [confirming, setConfirming] = useState(false);
+  const [imported, setImported] = useState<{ keys: number } | null>(null);
 
-  const bytes = useMemo(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? new Blob([raw]).size : 0;
-    } catch {
-      return 0;
-    }
-  }, [state]);
+  const inv = useMemo(() => inventory(localStorage), [state]);
 
-  const counts = useMemo(
-    () => [
-      { label: t("set.sessions"), value: state.sessions.length },
-      { label: t("set.plans"), value: state.plans.length },
-      { label: t("set.goals"), value: state.goals.length },
-      { label: t("set.watchlist"), value: state.watchlist.length },
-      { label: t("set.memory"), value: state.memory.length },
-      { label: t("set.progress"), value: state.progress.length },
-    ],
-    [state, t],
-  );
+  const activityEntries = inv.entries.filter((e) => e.kind === "activity");
+  const prefEntries = inv.entries.filter((e) => e.kind === "preference");
 
   function exportData() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
+      const bundle = buildExport(localStorage);
+      if (!Object.keys(bundle.sections).length) {
         toast(t("set.nothingToExport"));
         return;
       }
-      const blob = new Blob([raw], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -55,16 +41,38 @@ export function SettingsPage() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast(t("set.exported"));
+      toast(t("set.exported").replace("{n}", String(Object.keys(bundle.sections).length)));
     } catch {
       toast(t("set.exportFailed"));
     }
   }
 
+  async function importData(file: File) {
+    try {
+      const text = await file.text();
+      const parsed = readImport(text);
+      if ("error" in parsed) {
+        toast(t("set.importNotBundle"));
+        return;
+      }
+      const result = applyImport(localStorage, parsed.bundle);
+      if (!result.ok) {
+        toast(t("set.importFailed"));
+        return;
+      }
+      setImported({ keys: result.keys });
+      toast(t("set.imported").replace("{n}", String(result.keys)));
+    } catch {
+      toast(t("set.importFailed"));
+    }
+  }
+
   function doReset() {
     reset();
+    const cleared = clearActivity(localStorage);
     setConfirming(false);
-    toast(t("set.resetDone"));
+    setImported(null);
+    toast(t("set.resetDone").replace("{n}", String(cleared)));
   }
 
   return (
@@ -125,22 +133,61 @@ export function SettingsPage() {
       </Panel>
 
       <Panel className="p-4">
-        <SectionTitle title={t("set.data")} hint={t("set.dataHint")} />
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-          {counts.map((c) => (
-            <div key={c.label} className="rounded-lg border bg-card/50 px-3 py-2 text-center">
-              <div className="text-lg font-semibold tabular-nums">{c.value}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{c.label}</div>
-            </div>
-          ))}
+        <SectionTitle title={t("set.data")} hint={t("set.dataHint").replace("{n}", String(inv.present)).replace("{t}", String(inv.entries.length))} />
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+              <tr>
+                <th className="px-2 py-1.5">{t("set.colStore")}</th>
+                <th className="px-2 py-1.5 text-right">{t("set.colRecords")}</th>
+                <th className="px-2 py-1.5 text-right">{t("set.colSize")}</th>
+                <th className="px-2 py-1.5">{t("set.colKind")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...activityEntries, ...prefEntries].map((e) => (
+                <tr key={e.key} className="border-t">
+                  <td className="px-2 py-1.5">
+                    <span className={cn(e.present ? "text-foreground" : "text-muted-foreground")}>{t(e.labelKey)}</span>
+                    <span className="ml-2 font-mono text-[10px] text-muted-foreground">{e.key}</span>
+                  </td>
+                  <td className="px-2 py-1.5 text-right font-mono text-xs tabular-nums">{e.present ? e.records : "—"}</td>
+                  <td className="px-2 py-1.5 text-right font-mono text-xs tabular-nums">{e.present ? formatBytes(e.bytes) : "—"}</td>
+                  <td className="px-2 py-1.5 text-[11px] text-muted-foreground">{t(e.kind === "activity" ? "set.kind.activity" : "set.kind.preference")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+
         <div className="mt-3 flex items-center justify-between rounded-lg border bg-secondary/20 px-3 py-2 text-xs">
           <span className="text-muted-foreground">{t("set.storageUsed")}</span>
-          <span className="font-mono tabular-nums">{formatBytes(bytes)}</span>
+          <span className="font-mono tabular-nums">
+            {formatBytes(inv.bytes)} · {t("set.totals").replace("{r}", String(inv.records)).replace("{k}", String(inv.present))}
+          </span>
         </div>
+        {imported && (
+          <p className="mt-2 rounded-lg border border-success/40 bg-success/5 px-3 py-2 text-xs text-success">
+            {t("set.importedNote").replace("{n}", String(imported.keys))}{" "}
+            <button className="underline" onClick={() => window.location.reload()}>{t("set.reloadToApply")}</button>
+          </p>
+        )}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={exportData}>{t("set.export")}</Button>
+          <label className="inline-flex">
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void importData(f);
+                e.target.value = "";
+              }}
+            />
+            <span className="inline-flex h-8 cursor-pointer items-center rounded-md border bg-card px-3 text-xs font-medium text-foreground hover:bg-secondary/50">{t("set.import")}</span>
+          </label>
           {!confirming ? (
             <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setConfirming(true)}>
               {t("set.reset")}
@@ -153,6 +200,7 @@ export function SettingsPage() {
             </div>
           )}
         </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">{t("set.resetKeepsPrefs")}</p>
       </Panel>
 
       <Panel className="p-4">
@@ -160,7 +208,7 @@ export function SettingsPage() {
         <dl className="space-y-1.5 text-xs">
           <Line k={t("set.provider")} v={`${footballProvider.id} · ${DEMO_MODE ? t("set.demoMode") : t("set.liveMode")}`} />
           <Line k={t("set.version")} v="0.1.0" />
-          <Line k={t("set.storageKey")} v={STORAGE_KEY} />
+          <Line k={t("set.storageKey")} v={`${inv.entries.length} · ${STORAGE_KEY}`} />
         </dl>
         <p className="mt-3 text-[11px] text-muted-foreground">{t("set.privacy")}</p>
       </Panel>
