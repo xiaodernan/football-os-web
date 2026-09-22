@@ -54,6 +54,29 @@ export function attributesByCategory(category: AttributeDef["category"]): Attrib
   return ATTRIBUTE_DEFS.filter((a) => a.category === category);
 }
 
+export const CATEGORY_LABEL: Record<AttributeDef["category"], string> = {
+  technical: "Technical",
+  physical: "Physical",
+  tactical: "Tactical",
+  mental: "Mental",
+};
+
+export interface CategoryAverage {
+  category: AttributeDef["category"];
+  label: string;
+  value: number;
+}
+
+/** Mean attribute value per category — the shape used by radar charts and by
+ *  head-to-head comparisons, so both read the same numbers. */
+export function categoryAverages(attrs: Attributes): CategoryAverage[] {
+  return CATEGORY_ORDER.map((category) => {
+    const defs = attributesByCategory(category);
+    const value = Math.round(defs.reduce((s, d) => s + (attrs[d.key] ?? 0), 0) / (defs.length || 1));
+    return { category, label: CATEGORY_LABEL[category], value };
+  });
+}
+
 export function attributeLabel(key: string): string {
   return ATTRIBUTE_DEFS.find((a) => a.key === key)?.label ?? key;
 }

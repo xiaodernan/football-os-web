@@ -12,24 +12,12 @@ import {
   CartesianGrid,
 } from "recharts";
 import type { Attributes } from "@/domain/types";
-import { CATEGORY_ORDER, attributesByCategory } from "@/domain/attributes";
+import { categoryAverages } from "@/domain/attributes";
 import { useTheme } from "@/lib/theme";
-
-const CAT_LABEL: Record<string, string> = {
-  technical: "Technical",
-  physical: "Physical",
-  tactical: "Tactical",
-  mental: "Mental",
-};
-
-function catAvg(attrs: Attributes, cat: (typeof CATEGORY_ORDER)[number]): number {
-  const defs = attributesByCategory(cat);
-  return Math.round(defs.reduce((s, d) => s + (attrs[d.key] ?? 0), 0) / defs.length);
-}
 
 export function AttributeRadar({ attrs, height = 260 }: { attrs: Attributes; height?: number }) {
   const { theme } = useTheme();
-  const data = CATEGORY_ORDER.map((c) => ({ axis: CAT_LABEL[c], value: catAvg(attrs, c) }));
+  const data = categoryAverages(attrs).map((c) => ({ axis: c.label, value: c.value }));
   const stroke = theme === "dark" ? "#ffffff22" : "#00000018";
   return (
     <div style={{ height }}>

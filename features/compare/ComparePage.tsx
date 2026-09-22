@@ -74,6 +74,56 @@ export function ComparePage() {
               {result.metrics.map((m) => <MetricRow key={m.key} m={m} />)}
             </div>
           </Panel>
+
+          {result.hasAttributes ? (
+            <>
+              <Panel className="p-4">
+                <SectionTitle title={t("compare.categories")} hint={t("compare.categoriesHint")} />
+                <div className="mt-3 space-y-3">
+                  {result.categoryEdges.map((c) => {
+                    const max = Math.max(c.a, c.b, 1);
+                    return (
+                      <div key={c.category} className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-sm">
+                        <div className="flex items-center justify-end gap-2">
+                          <span className={cn("font-mono tabular-nums", c.favor === "a" && "font-semibold text-success")}>{c.a}</span>
+                          <span className="relative h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
+                            <span className="absolute inset-y-0 right-0 rounded-full bg-primary/50" style={{ width: `${(c.a / max) * 100}%` }} />
+                          </span>
+                        </div>
+                        <div className="text-center text-[11px] uppercase tracking-wider text-muted-foreground">{t(`compare.cat.${c.category}`)}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="relative h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
+                            <span className="absolute inset-y-0 left-0 rounded-full bg-primary/50" style={{ width: `${(c.b / max) * 100}%` }} />
+                          </span>
+                          <span className={cn("font-mono tabular-nums", c.favor === "b" && "font-semibold text-success")}>{c.b}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Panel>
+
+              <Panel className="p-4">
+                <SectionTitle title={t("compare.attributes")} hint={t("compare.attributesHint")} />
+                <div className="mt-2 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+                  {result.attributeEdges.map((e) => (
+                    <div key={e.key} className="flex items-center justify-between gap-2 text-xs">
+                      <span className="min-w-0 flex-1 truncate text-muted-foreground">{e.label}</span>
+                      <span className={cn("font-mono tabular-nums", e.favor === "a" ? "text-success" : "text-muted-foreground")}>{e.a}</span>
+                      <span className="w-10 text-center font-mono tabular-nums text-muted-foreground">{e.delta > 0 ? `+${e.delta}` : e.delta}</span>
+                      <span className={cn("font-mono tabular-nums", e.favor === "b" ? "text-success" : "text-muted-foreground")}>{e.b}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-[11px] text-muted-foreground">{t("compare.attributesNote")}</p>
+              </Panel>
+            </>
+          ) : (
+            <Panel className="p-4">
+              <SectionTitle title={t("compare.attributes")} />
+              <p className="mt-2 text-xs text-muted-foreground">{t("compare.noAttributes")}</p>
+            </Panel>
+          )}
         </>
       )}
 
