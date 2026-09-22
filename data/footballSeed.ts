@@ -204,6 +204,7 @@ function makeWorld() {
       archetype: dna.primary.key,
       value: marketValue(overall, age),
       foot,
+      attributes: attrs,
     });
   }
 

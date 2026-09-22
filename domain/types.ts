@@ -25,6 +25,9 @@ export interface PlayerRef {
   archetype: string;
   value: number; // market value in EUR
   foot: "L" | "R";
+  /** The attribute vector this player's overall was computed from. Optional
+   *  because providers may ship ratings without a full vector. */
+  attributes?: Attributes;
 }
 
 export interface Club {

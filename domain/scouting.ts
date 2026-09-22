@@ -83,20 +83,22 @@ export interface ModelledProfile {
   attributes: ModelledAttribute[];
   skill: number;
   hasData: boolean;
+  /** true when these are the dataset's own per-player values rather than a
+   *  position-group estimate */
+  measured: boolean;
   confidence: number;
   note: string;
   sources: string[];
 }
 
-// The dataset ships an overall rating + position group per player but not a full
-// 32-attribute vector. Rather than invent real-looking numbers, we expose a
-// clearly-labelled MODELLED profile: the demo attribute baseline for this
-// position, at a skill level implied by the overall. It uses the exact
-// baselineAttributes() the Player development tools use, so it is consistent
-// across the app — and it is labelled an estimate, never measured data.
+// When the dataset carries the attribute vector the player's overall was built
+// from, that vector is reported directly. Only when it is absent (a leaner
+// provider) does this fall back to the demo baseline for the position, and the
+// note and confidence say which of the two the reader is looking at.
 export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
   const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
-  const attrs: Attributes = baselineAttributes(p.positionGroup as PositionGroup, skill);
+  const real = p.attributes && Object.keys(p.attributes).length >= 8 ? p.attributes : null;
+  const attrs: Attributes = real ?? baselineAttributes(p.positionGroup as PositionGroup, skill);
   const attributes: ModelledAttribute[] = strongestAttributes(attrs, top).map((a) => ({
     key: a.key,
     label: attributeLabel(a.key),
@@ -106,8 +108,13 @@ export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
     attributes,
     skill: Math.round(skill * 100) / 100,
     hasData: p.overall > 0,
-    confidence: Math.round(Math.max(35, Math.min(70, 40 + skill * 30))),
-    note: "Modelled from overall rating + position using the demo attribute baseline — an estimate, not measured scouting data.",
-    sources: ["World dataset (overall, position group)", "Demo attribute model (baselineAttributes)"],
+    measured: !!real,
+    confidence: real ? 92 : Math.round(Math.max(35, Math.min(70, 40 + skill * 30))),
+    note: real
+      ? "These are the attribute values this player's overall rating is derived from in the world dataset."
+      : "Modelled from overall rating + position using the demo attribute baseline — an estimate, not measured data.",
+    sources: real
+      ? ["World dataset (per-player attribute vector)", "Attribute model (labels and ranking)"]
+      : ["World dataset (overall, position group)", "Demo attribute model (baselineAttributes)"],
   };
 }

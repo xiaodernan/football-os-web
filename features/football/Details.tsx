@@ -22,6 +22,7 @@ import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar } from "@/ui/primitives";
+import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -101,7 +102,11 @@ export function PlayerDetail({ id }: { id: string }) {
             <dt className="text-muted-foreground">Club</dt><dd className="text-right"><Link to={`/clubs/${club?.id}`} className="hover:text-primary">{club?.name}</Link></dd>
             <dt className="text-muted-foreground">Overall / Potential</dt><dd className="text-right font-mono">{p.overall} / {p.potential}</dd>
           </dl>
-          <p className="mt-3 text-xs text-muted-foreground">Detailed attribute vectors are provided by a live data source in production mode; Demo Mode ships overall ratings and archetypes only, so no numbers are invented here.</p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {profile.measured
+              ? "The radar and the values below are the per-player attribute vector this dataset actually stores — the same numbers his overall rating is computed from."
+              : "Detailed attribute vectors are not provided for this player, so the values below are a labelled model estimate from his overall and position — no numbers are invented beyond that model."}
+          </p>
         </Panel>
 
         <Panel className="p-4">
@@ -117,17 +122,30 @@ export function PlayerDetail({ id }: { id: string }) {
       </div>
 
       <Panel className="p-4">
-        <SectionTitle title="Modelled attribute profile" hint="Estimate · not measured data" />
-        <div className="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2">
-          {profile.attributes.map((at) => (
-            <div key={at.key} className="flex items-center gap-2">
-              <span className="w-28 shrink-0 truncate text-xs text-muted-foreground">{at.label}</span>
-              <div className="flex-1"><AttributeBar label="" value={at.value} max={99} /></div>
-              <span className="w-7 text-right font-mono text-xs">{at.value}</span>
-            </div>
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionTitle title={profile.measured ? "Attribute profile" : "Modelled attribute profile"} hint={profile.measured ? "Dataset values" : "Estimate · not measured data"} />
+          <Badge variant="outline" className={profile.measured ? "border-success/40 text-success" : "border-warning/40 text-warning"}>
+            {profile.measured ? "dataset" : "model"} · {profile.confidence}%
+          </Badge>
         </div>
-        <p className="mt-3 text-[11px] text-muted-foreground">{profile.note} Confidence {profile.confidence}% · Sources: {profile.sources.join(" · ")}</p>
+        {p.attributes && (
+          <div className="mt-2 grid gap-4 lg:grid-cols-[280px_1fr]">
+            <AttributeRadar attrs={p.attributes} height={230} />
+            <div className="grid gap-x-6 gap-y-2 self-center sm:grid-cols-2">
+              {profile.attributes.map((at) => (
+                <AttributeBar key={at.key} label={at.label} value={at.value} max={99} />
+              ))}
+            </div>
+          </div>
+        )}
+        {!p.attributes && (
+          <div className="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+            {profile.attributes.map((at) => (
+              <AttributeBar key={at.key} label={at.label} value={at.value} max={99} />
+            ))}
+          </div>
+        )}
+        <p className="mt-3 text-[11px] text-muted-foreground">{profile.note} Sources: {profile.sources.join(" · ")}</p>
       </Panel>
 
       <Panel className="p-4">
