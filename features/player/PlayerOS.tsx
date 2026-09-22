@@ -17,7 +17,7 @@ import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { getClub, getPlayer } from "@/data/footballService";
-import { Panel, SectionTitle, StatTile, AttributeBar, EmptyState, LoadingBlock, Crest } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, AttributeBar, EmptyState, LoadingBlock, ErrorState, Crest } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -579,23 +579,37 @@ function Video() {
   const { t } = useI18n();
   const { navigate } = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastFileRef = useRef<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [report, setReport] = useState<VideoReport | null>(null);
   const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<Error | null>(null);
 
   const analyze = async (file: File) => {
+    lastFileRef.current = file;
+    if (!state.profile) {
+      setError(new Error("Complete onboarding so the analysis can reference your attributes."));
+      return;
+    }
     setBusy(true);
     setReport(null);
+    setError(null);
     setProgress(0);
     const stages = ["Uploading", "Extracting frames", "Detecting players", "Pose / movement", "Event detection", "AI analysis"];
-    for (let i = 0; i < stages.length; i++) {
-      await new Promise((r) => setTimeout(r, 260));
-      setProgress(Math.round(((i + 1) / stages.length) * 100));
+    try {
+      for (let i = 0; i < stages.length; i++) {
+        await new Promise((r) => setTimeout(r, 260));
+        setProgress(Math.round(((i + 1) / stages.length) * 100));
+      }
+      const rep = await videoProvider.analyze({ fileId: `${file.name}-${file.size}`, fileName: file.name, sizeBytes: file.size, attrs: state.profile.attributes });
+      setReport(rep);
+      toast.success("Video analysed (demo provider)");
+    } catch (e) {
+      setError(e instanceof Error ? e : new Error("Analysis failed"));
+    } finally {
+      setBusy(false);
+      setProgress(0);
     }
-    const rep = await videoProvider.analyze({ fileId: `${file.name}-${file.size}`, fileName: file.name, sizeBytes: file.size, attrs: state.profile!.attributes });
-    setReport(rep);
-    setBusy(false);
-    toast.success("Video analysed (demo provider)");
   };
 
   return (
@@ -622,7 +636,8 @@ function Video() {
       </Panel>
       <Panel className="p-4">
         <SectionTitle title="Report" />
-        {!report && !busy && <EmptyState title="No analysis yet" icon="▶" />}
+        {error && <ErrorState error={error} retry={() => lastFileRef.current && analyze(lastFileRef.current)} />}
+        {!error && !report && !busy && <EmptyState title="No analysis yet" icon="▶" />}
         {busy && <LoadingBlock rows={4} />}
         {report && (
           <div className="space-y-3 text-sm">
