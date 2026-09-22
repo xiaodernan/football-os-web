@@ -97,7 +97,7 @@ export function TacticalStudio() {
             <Button size="sm" variant="outline" onClick={() => compact(1)}>Wide</Button>
             <Button size="sm" variant="outline" onClick={() => applyFormation(formation)}>Reset shape</Button>
             <Button size="sm" onClick={save}>Save formation</Button>
-            <Link to="/simulation"><Button size="sm" variant="ghost">Take to Simulation Lab →</Button></Link>
+            <Link to={`/simulation?mt=${mentality}&shape=${encodeURIComponent(formation)}`}><Button size="sm" variant="ghost">Take to Simulation Lab →</Button></Link>
           </div>
         </Panel>
 

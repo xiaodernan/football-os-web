@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { footballProvider, getClub, getCompetition, playersByClub, clubIdsByCompetition } from "@/data/footballService";
+import { useRouter } from "@/lib/router";
 import { simulateMatch, type TeamInput, type SimResult } from "@/domain/matchEngine";
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
@@ -15,6 +16,7 @@ interface Tactics {
 }
 
 const DEFAULT_TACTICS: Tactics = { mentality: 0, tempo: 0.5, press: 0.5, fatigue: 0 };
+const MENTALITY_LABELS = ["Very defensive", "Defensive", "Balanced", "Attacking", "Very attacking"];
 
 function baseInput(clubId: string, tac: Tactics): TeamInput {
   const c = getClub(clubId)!;
@@ -44,10 +46,21 @@ function baseInput(clubId: string, tac: Tactics): TeamInput {
 }
 
 export function SimulationLab() {
+  const { query } = useRouter();
   const clubs = useMemo(() => [...footballProvider.clubs()].sort((a, b) => b.overall - a.overall), []);
   const [homeId, setHomeId] = useState(clubs.find((c) => c.name.includes("City"))?.id ?? clubs[0].id);
   const [awayId, setAwayId] = useState(clubs.find((c) => c.name.includes("Madrid"))?.id ?? clubs[1].id);
-  const [homeTac, setHomeTac] = useState<Tactics>(DEFAULT_TACTICS);
+  // Tactical Studio's "Take to Simulation Lab" carries the mentality you set there
+  // (stored 0..4 → engine −2..+2) plus the shape label. Read once on mount so the
+  // lab genuinely starts from your saved tactics instead of the engine default.
+  const carriedMt = query.get("mt");
+  const carriedShape = query.get("shape");
+  const studioMentality = carriedMt !== null && !Number.isNaN(Number(carriedMt))
+    ? Math.max(0, Math.min(4, Number(carriedMt)))
+    : null;
+  const [homeTac, setHomeTac] = useState<Tactics>(
+    studioMentality !== null ? { ...DEFAULT_TACTICS, mentality: studioMentality - 2 } : DEFAULT_TACTICS,
+  );
   const [awayTac, setAwayTac] = useState<Tactics>({ ...DEFAULT_TACTICS, mentality: 1 });
   const [nonce, setNonce] = useState(1);
   const [result, setResult] = useState<SimResult | null>(null);
@@ -92,6 +105,16 @@ export function SimulationLab() {
           <p className="text-xs text-muted-foreground">Tune tactics and run the deterministic Match Engine — the same model behind live projections.</p>
         </div>
       </div>
+
+      {studioMentality !== null && (
+        <Panel className="p-3">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <Badge variant="outline" className="border-primary/40 text-primary">From Tactical Studio</Badge>
+            <span>Home side starts in your <b>{MENTALITY_LABELS[studioMentality]}</b> mentality{carriedShape ? <span className="text-muted-foreground"> · shape {carriedShape}</span> : null}.</span>
+            <span className="text-xs text-muted-foreground">Tempo / press / fatigue still start at engine defaults — adjust below.</span>
+          </div>
+        </Panel>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <TeamPanel title="Home" club={home.id} colors={home.colors} short={home.short} value={homeTac} onChange={setHomeTac} clubs={clubs} selected={homeId} onSelect={setHomeId} />
