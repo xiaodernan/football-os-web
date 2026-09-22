@@ -9,6 +9,7 @@ import {
   valueIndex,
   primeYears,
   bucketOf,
+  templateEdge,
   type PosBucket,
   type ScoutSort,
 } from "@/domain/scouting";
@@ -125,7 +126,7 @@ export function ScoutingPanel() {
 
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">Pos</th><th className="px-2 py-1">Player</th><th className="px-2 py-1 text-right">Age</th><th className="px-2 py-1 text-right">OVR</th><th className="px-2 py-1 text-right">POT</th><th className="px-2 py-1 text-right">Value</th><th className="px-2 py-1 text-right">OVR/€M</th><th className="px-2 py-1 text-center">Watch</th><th className="px-2 py-1 text-center">Cmp</th></tr></thead>
+            <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">Pos</th><th className="px-2 py-1">Player</th><th className="px-2 py-1 text-right">Age</th><th className="px-2 py-1 text-right">OVR</th><th className="px-2 py-1 text-right">POT</th><th className="px-2 py-1 text-right">Value</th><th className="px-2 py-1 text-right">OVR/€M</th><th className="px-2 py-1 text-right" title="Strongest and weakest category against a player of the same position group and same implied skill, from the dataset's own attribute vector.">vs template</th><th className="px-2 py-1 text-center">Watch</th><th className="px-2 py-1 text-center">Cmp</th></tr></thead>
             <tbody>
               {results.map((p) => (
                 <tr key={p.id} className={cn("border-t", compare.includes(p.id) && "bg-primary/5")}>
@@ -136,6 +137,16 @@ export function ScoutingPanel() {
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{p.potential}<span className="text-success"> +{headroom(p)}</span></td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{formatValue(p.value)}</td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{valueIndex(p).toFixed(1)}</td>
+                  {(() => {
+                    const edge = templateEdge(p);
+                    if (!edge) return <td className="px-2 py-1.5 text-right text-xs text-muted-foreground">—</td>;
+                    return (
+                      <td className="px-2 py-1.5 text-right font-mono text-xs whitespace-nowrap">
+                        <span className={edge.bestDelta > 0 ? "text-success" : "text-muted-foreground"}>{edge.bestLabel} {edge.bestDelta > 0 ? `+${edge.bestDelta}` : edge.bestDelta}</span>
+                        <span className={cn("ml-2", edge.worstDelta < 0 ? "text-destructive" : "text-muted-foreground")}>{edge.worstLabel} {edge.worstDelta > 0 ? `+${edge.worstDelta}` : edge.worstDelta}</span>
+                      </td>
+                    );
+                  })()}
                   <td className="px-2 py-1.5 text-center"><button onClick={() => toggleWatch(p.id)} className={state.watchlist.includes(p.id) ? "text-primary" : "text-muted-foreground hover:text-primary"}>{state.watchlist.includes(p.id) ? "★" : "☆"}</button></td>
                   <td className="px-2 py-1.5 text-center"><input type="checkbox" checked={compare.includes(p.id)} onChange={() => toggleCompare(p.id)} className="accent-[var(--color-primary)]" /></td>
                 </tr>
