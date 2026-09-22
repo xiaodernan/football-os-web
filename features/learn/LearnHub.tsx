@@ -3,6 +3,7 @@ import { Link } from "@/lib/router";
 import { useLocalStorage } from "@/lib/hooks";
 import { useOs } from "@/store/useFootballOS";
 import { weakestAttributes } from "@/domain/attributes";
+import { loadFilmClips } from "@/domain/filmLibrary";
 import {
   LESSONS,
   LEGACY_LEARN_KEY,
@@ -26,19 +27,6 @@ const LEVEL_COLOR: Record<Level, string> = {
   Intermediate: "text-warning",
   Advanced: "text-destructive",
 };
-
-function readLength(key: string): number {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return 0;
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed.length;
-    if (parsed && typeof parsed === "object") return Object.keys(parsed).length;
-    return 0;
-  } catch {
-    return 0;
-  }
-}
 
 export function LearnHub() {
   const { state } = useOs();
@@ -66,7 +54,7 @@ export function LearnHub() {
       completedSessions: state.sessions.filter((s) => s.status === "completed").length,
       weakestAttributes: state.profile ? weakestAttributes(state.profile.attributes, 3).map((a) => a.key) : [],
       hasCareer: !!localStorage.getItem("football-os.career.v1"),
-      filmClips: readLength("football-os.film.v1"),
+      filmClips: loadFilmClips().length,
       watchlist: state.watchlist.length,
     }),
     [state.sessions, state.profile, state.watchlist],

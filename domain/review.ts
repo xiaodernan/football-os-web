@@ -1,10 +1,12 @@
 import type { Attributes, Goal, TrainingSession } from "./types";
 import { attributeLabel, weakestAttributes } from "./attributes";
+import { buildFilmInsights, type FilmClipInput } from "./filmInsights";
 
-// A period digest compiled purely from the user's local training log, goals and
-// progress history. Nothing here is invented — every figure traces back to a
-// real record, and the recommendation is framed with the evidence and a
-// confidence level that reflects how much data backs it (spec §6, §57, §60).
+// A period digest compiled purely from the user's local training log, goals,
+// progress history, academy records and analysed film. Nothing here is invented —
+// every figure traces back to a real record, and the recommendation is framed
+// with the evidence and a confidence level that reflects how much data backs it
+// (spec §6, §57, §60).
 
 export interface ReviewInput {
   nowMs: number;
@@ -15,6 +17,7 @@ export interface ReviewInput {
   attributes: Attributes;
   streak: number;
   learn?: { at: string; quizCorrect: boolean }[]; // academy completions
+  film?: FilmClipInput[]; // clips analysed on this device
 }
 
 export interface FocusStat {
@@ -22,6 +25,8 @@ export interface FocusStat {
   label: string;
   sessions: number;
 }
+
+type FilmSummary = ReturnType<typeof buildFilmInsights>;
 
 export interface AttributeGain {
   key: string;
@@ -60,6 +65,14 @@ export interface WeeklyReview {
   attributeGains: AttributeGain[];
   lessonsCompleted: number;
   lessonsMastered: number;
+  filmClips: number;
+  filmMinutes: number;
+  filmScanRate: number;
+  filmScanTrend: number | null;
+  filmDetections: number;
+  filmConfidence: number;
+  filmKinds: { kind: string; count: number; perMinute: number }[];
+  filmFocus: { key: string; label: string; clips: number }[];
   goalsTotal: number;
   goalsDone: number;
   insights: ReviewInsight[];
@@ -127,6 +140,15 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const lessonsCompleted = learnIn.length;
   const lessonsMastered = learnIn.filter((l) => l.quizCorrect).length;
 
+  // The film library is cumulative, so only clips analysed inside the window are
+  // digested here — a lifetime rate quoted under a "last 7 days" heading would
+  // misrepresent the period. Rates themselves come from real detections.
+  const filmIn = (input.film ?? []).filter((c) => withinWindow(c.at, fromMs, nowMs));
+  const filmDigest = filmIn.length ? buildFilmInsights(filmIn) : null;
+  // A clip with no usable duration yields zero analyable footage — report "no film"
+  // rather than a row of zeros.
+  const film = filmDigest && filmDigest.clips > 0 ? filmDigest : null;
+
   const insights = buildInsights({
     completed: completed.length,
     planned: planned.length,
@@ -141,9 +163,11 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     windowDays,
     lessonsCompleted,
     lessonsMastered,
+    film,
   });
 
-  const recommendation = buildRecommendation(input.attributes, topFocus, completed.length, ratings.length);
+  const filmFocus = film?.topFocus[0] ? { key: film.topFocus[0].key, clips: film.topFocus[0].clips } : null;
+  const recommendation = buildRecommendation(input.attributes, topFocus, completed.length, ratings.length, filmFocus);
 
   const evidence = buildEvidence({
     windowDays,
@@ -158,6 +182,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     goalsTotal,
     lessonsCompleted,
     lessonsMastered,
+    film,
   });
 
   // Confidence rises with the amount of real signal available; a review with no
@@ -168,11 +193,17 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     (avgRating != null ? 12 : 0) +
     Math.min(input.streak, 7) * 2 +
     (goalsTotal ? 8 : 0) +
-    Math.min(lessonsMastered, 3) * 4;
+    Math.min(lessonsMastered, 3) * 4 +
+    Math.min(film?.clips ?? 0, 3) * 4;
   const confidence = completed.length === 0 ? Math.min(signal, 30) : Math.min(95, 45 + signal);
 
   const hasData =
-    input.sessions.length > 0 || input.progress.length > 1 || goalsTotal > 0 || input.streak > 0 || lessonsCompleted > 0;
+    input.sessions.length > 0 ||
+    input.progress.length > 1 ||
+    goalsTotal > 0 ||
+    input.streak > 0 ||
+    lessonsCompleted > 0 ||
+    (film?.clips ?? 0) > 0;
 
   return {
     windowDays,
@@ -191,6 +222,14 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     attributeGains,
     lessonsCompleted,
     lessonsMastered,
+    filmClips: film?.clips ?? 0,
+    filmMinutes: film ? Math.round(film.analysedMinutes * 10) / 10 : 0,
+    filmScanRate: film?.scanPerMinute ?? 0,
+    filmScanTrend: film?.scanTrend ?? null,
+    filmDetections: film?.detections ?? 0,
+    filmConfidence: film?.avgConfidence ?? 0,
+    filmKinds: film ? film.byKind.filter((k) => k.count > 0).slice(0, 5) : [],
+    filmFocus: film ? film.topFocus.slice(0, 3).map((f) => ({ key: f.key, label: f.label, clips: f.clips })) : [],
     goalsTotal,
     goalsDone,
     insights,
@@ -202,6 +241,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
       "Football OS progress history",
       "Attribute model (demo baseline)",
       ...(input.learn?.length ? ["Your academy completion records"] : []),
+      ...(film ? ["Your local film library (demo video provider)"] : []),
     ],
     hasData,
   };
@@ -221,6 +261,7 @@ function buildInsights(a: {
   windowDays: number;
   lessonsCompleted: number;
   lessonsMastered: number;
+  film: FilmSummary | null;
 }): ReviewInsight[] {
   const out: ReviewInsight[] = [];
 
@@ -287,6 +328,40 @@ function buildInsights(a: {
     });
   }
 
+  if (a.film && a.film.clips > 0) {
+    const f = a.film;
+    out.push({
+      kind: "positive",
+      text: `You analysed ${f.clips} film clip${f.clips === 1 ? "" : "s"} in this window — ${f.analysedMinutes.toFixed(1)} min of video, ${f.detections} detection${f.detections === 1 ? "" : "s"} at ${f.avgConfidence}% mean provider confidence.`,
+    });
+    const trendClause =
+      f.scanTrend != null
+        ? ` — ${f.olderScanRate?.toFixed(2)} → ${f.newerScanRate?.toFixed(2)} per minute between the older and newer half (${f.scanTrend >= 0 ? "+" : ""}${f.scanTrend}).`
+        : f.clips === 1
+          ? " — analyse a second clip to see which way it is moving."
+          : "";
+    out.push({
+      kind: f.scanTrend == null ? "positive" : f.scanTrend >= 0 ? "positive" : "watch",
+      text: `Scanning off the ball averaged ${f.scanPerMinute.toFixed(2)} per minute of analysed video${trendClause}`,
+    });
+    if (f.topFocus.length) {
+      const trainedKeys = new Set(a.topFocus.map((x) => x.key));
+      const unfed = f.topFocus.filter((x) => !trainedKeys.has(x.key));
+      if (unfed.length) {
+        out.push({
+          kind: "plan",
+          text: `Flagged by the clips but absent from your training: ${unfed.map((u) => `${u.label} (×${u.clips})`).join(", ")}. No completed session in this window carried ${unfed.length === 1 ? "that focus" : "those focuses"} — the plan and the film are pointing different ways.`,
+        });
+      } else {
+        const top = f.topFocus[0];
+        out.push({
+          kind: "positive",
+          text: `The focus your clips repeated most — ${top.label} on ${top.clips} clip${top.clips === 1 ? "" : "s"} — is also in your completed training mix, so plan and observed evidence agree.`,
+        });
+      }
+    }
+  }
+
   return out;
 }
 
@@ -295,6 +370,7 @@ function buildRecommendation(
   topFocus: FocusStat[],
   completed: number,
   ratedCount: number,
+  filmFocus: { key: string; clips: number } | null,
 ): ReviewRecommendation | null {
   const weak = weakestAttributes(attributes, 5);
   if (!weak.length) return null;
@@ -306,13 +382,18 @@ function buildRecommendation(
     if (aT !== bT) return bT - aT; // neglect under-trained first
     return a.value - b.value; // then the weakest
   });
-  const pick = ranked[0] ?? weak[0];
+  // Observed film evidence outranks the heuristic: if the provider kept flagging
+  // an attribute that is genuinely low, that is the better-prioritised target.
+  const filmPick = filmFocus ? weak.find((w) => w.key === filmFocus.key) : undefined;
+  const pick = filmPick ?? ranked[0] ?? weak[0];
   const already = trained.get(pick.key) ?? 0;
-  const reason = already > 0
-    ? `${attributeLabel(pick.key)} sits at ${pick.value} and you already logged ${already} block${already === 1 ? "" : "s"} — progressive overload should move it next.`
-    : `${attributeLabel(pick.key)} is your lowest untapped attribute at ${pick.value}. A focused block would raise your overall ceiling fastest.`;
+  const reason = filmPick && filmFocus
+    ? `${attributeLabel(pick.key)} is what your analysed clips repeated (${filmFocus.clips} clip${filmFocus.clips === 1 ? "" : "s"} this window) and it sits at ${pick.value} — observed evidence and development ceiling point the same way.`
+    : already > 0
+      ? `${attributeLabel(pick.key)} sits at ${pick.value} and you already logged ${already} block${already === 1 ? "" : "s"} — progressive overload should move it next.`
+      : `${attributeLabel(pick.key)} is your lowest untapped attribute at ${pick.value}. A focused block would raise your overall ceiling fastest.`;
 
-  const conf = Math.min(90, 50 + completed * 5 + ratedCount * 3 + (already > 0 ? 10 : 0));
+  const conf = Math.min(90, 50 + completed * 5 + ratedCount * 3 + (already > 0 ? 10 : 0) + (filmPick ? 12 : 0));
   return { attributeKey: pick.key, attributeLabel: attributeLabel(pick.key), reason, confidence: conf };
 }
 
@@ -329,6 +410,7 @@ function buildEvidence(a: {
   goalsTotal: number;
   lessonsCompleted: number;
   lessonsMastered: number;
+  film: FilmSummary | null;
 }): string[] {
   const e: string[] = [];
   e.push(`Window: last ${a.windowDays} days`);
@@ -339,5 +421,9 @@ function buildEvidence(a: {
   if (a.topFocus.length) e.push(`Focus mix: ${a.topFocus.map((f) => `${f.label} ×${f.sessions}`).join(", ")}`);
   if (a.goalsTotal) e.push(`Goals met ${a.goalsDone}/${a.goalsTotal}`);
   if (a.lessonsCompleted) e.push(`Academy ${a.lessonsCompleted} completed · ${a.lessonsMastered} with a passed check`);
+  if (a.film) {
+    e.push(`Film ${a.film.clips} clip${a.film.clips === 1 ? "" : "s"} · ${a.film.analysedMinutes.toFixed(1)} min · ${a.film.detections} detections`);
+    e.push(`Scanning ${a.film.scanPerMinute.toFixed(2)}/min${a.film.scanTrend != null ? ` (trend ${a.film.scanTrend >= 0 ? "+" : ""}${a.film.scanTrend})` : ""}`);
+  }
   return e;
 }

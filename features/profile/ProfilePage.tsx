@@ -9,6 +9,8 @@ import { overallRating, attributeLabel, weakestAttributes, ATTRIBUTE_DEFS } from
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { seasonSummary, type CareerState } from "@/domain/career";
 import { buildFootprint } from "@/domain/footprint";
+import { buildFilmInsights } from "@/domain/filmInsights";
+import { loadFilmClips, newestClipAt, toClipInputs } from "@/domain/filmLibrary";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Badge } from "@/components/ui/badge";
@@ -59,17 +61,18 @@ export function ProfilePage() {
     }
 
     let film = { clips: 0, minutes: 0 } as Parameters<typeof buildFootprint>[0]["film"];
-    try {
-      const arr = JSON.parse(localStorage.getItem("football-os.film.v1") ?? "[]");
-      if (Array.isArray(arr) && arr.length) {
-        film = {
-          clips: arr.length,
-          minutes: arr.reduce((n: number, c) => n + (c?.report?.durationSec ?? 0), 0) / 60,
-          lastClipAt: arr[0]?.addedAt,
-        };
-      }
-    } catch {
-      /* ignore */
+    const clips = loadFilmClips();
+    if (clips.length) {
+      const fi = buildFilmInsights(toClipInputs(clips));
+      film = {
+        clips: fi.clips,
+        minutes: clips.reduce((n, c) => n + (c.report?.durationSec ?? 0), 0) / 60,
+        lastClipAt: newestClipAt(clips),
+        detections: fi.detections,
+        scanPerMinute: fi.scanPerMinute,
+        avgConfidence: fi.avgConfidence,
+        recurringFocus: fi.topFocus.slice(0, 3).map((f) => ({ label: f.label, clips: f.clips })),
+      };
     }
 
     let posts = 0;

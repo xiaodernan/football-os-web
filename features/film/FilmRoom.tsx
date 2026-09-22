@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
-import { videoProvider, type VideoReport } from "@/data/video";
+import { videoProvider } from "@/data/video";
 import { attributeLabel } from "@/domain/attributes";
-import { buildFilmInsights } from "@/domain/filmInsights";
+import { buildFilmInsights, type FilmEventKind } from "@/domain/filmInsights";
+import { loadFilmClips, saveFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { useOnline } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, LoadingBlock, ErrorState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -18,27 +19,9 @@ import { cn } from "@/lib/utils";
 // a deterministic file fingerprint — never impersonating a real pose model) and the
 // resulting reports are kept in a local library so you can compare across sessions.
 
-interface Clip {
-  clipId: string;
-  addedAt: string;
-  report: VideoReport;
-}
-
-const STORE_KEY = "football-os.film.v1";
 const STAGES = ["Uploading", "Extracting frames", "Detecting players", "Pose / movement", "Event detection", "AI analysis"];
 
-function loadClips(): Clip[] {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? (arr as Clip[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-const KIND_TONE: Record<VideoReport["events"][number]["kind"], string> = {
+const KIND_TONE: Record<FilmEventKind, string> = {
   scan: "text-info",
   touch: "text-success",
   pass: "text-info",
@@ -55,18 +38,14 @@ export function FilmRoom() {
   const online = useOnline();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [clips, setClips] = useState<Clip[]>(() => loadClips());
-  const [selected, setSelected] = useState<string | null>(() => loadClips()[0]?.clipId ?? null);
+  const [clips, setClips] = useState<FilmClip[]>(() => loadFilmClips());
+  const [selected, setSelected] = useState<string | null>(() => loadFilmClips()[0]?.clipId ?? null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify(clips));
-    } catch {
-      /* storage may be unavailable; session still works in-memory */
-    }
+    saveFilmClips(clips);
   }, [clips]);
 
   const analyze = useCallback(
@@ -85,7 +64,7 @@ export function FilmRoom() {
         }
         const fileId = `${file.name}-${file.size}`;
         const report = await videoProvider.analyze({ fileId, fileName: file.name, sizeBytes: file.size, attrs: state.profile.attributes });
-        const clip: Clip = { clipId: `${Date.now()}`, addedAt: new Date().toISOString(), report };
+        const clip: FilmClip = { clipId: `${Date.now()}`, addedAt: new Date().toISOString(), report };
         setClips((c) => [clip, ...c]);
         setSelected(clip.clipId);
         toast.success("Clip analysed (demo provider)");
@@ -106,19 +85,7 @@ export function FilmRoom() {
 
   const current = useMemo(() => clips.find((c) => c.clipId === selected) ?? null, [clips, selected]);
 
-  const insights = useMemo(
-    () =>
-      buildFilmInsights(
-        clips.map((c) => ({
-          at: c.addedAt,
-          durationSec: c.report.durationSec,
-          confidence: c.report.confidence,
-          events: c.report.events.map((e) => ({ kind: e.kind })),
-          recommendedFocus: c.report.recommendedFocus,
-        })),
-      ),
-    [clips],
-  );
+  const insights = useMemo(() => buildFilmInsights(toClipInputs(clips)), [clips]);
 
   const buildTraining = async () => {
     if (!current) return;

@@ -31,6 +31,10 @@ export interface FilmInput {
   clips: number;
   minutes: number;
   lastClipAt?: string;
+  detections?: number;
+  scanPerMinute?: number;
+  avgConfidence?: number;
+  recurringFocus?: { label: string; clips: number }[];
 }
 
 export interface FanInput {
@@ -122,7 +126,18 @@ export function buildFootprint(i: FootprintInput): Footprint {
     label: "Film",
     to: "/film",
     active: f.clips > 0,
-    lines: f.clips > 0 ? [`${f.clips} clip${f.clips === 1 ? "" : "s"} analysed · ${mins(f.minutes)} min of footage`] : ["No clips analysed on this device."],
+    lines:
+      f.clips > 0
+        ? [
+            `${f.clips} clip${f.clips === 1 ? "" : "s"} analysed · ${mins(f.minutes)} min of footage`,
+            f.detections != null && f.scanPerMinute != null
+              ? `${f.detections} detections · ${f.scanPerMinute.toFixed(2)} scans/min${f.avgConfidence ? ` · ${f.avgConfidence}% mean confidence` : ""}`
+              : "",
+            f.recurringFocus && f.recurringFocus.length
+              ? `Repeated coaching focus: ${f.recurringFocus.map((x) => `${x.label} ×${x.clips}`).join(", ")}`
+              : "",
+          ].filter(Boolean)
+        : ["No clips analysed on this device."],
     lastAt: f.lastClipAt,
   });
 

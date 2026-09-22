@@ -31,6 +31,7 @@ export interface FilmInsights {
   clips: number;
   analysedSeconds: number;
   analysedMinutes: number;
+  detections: number;
   byKind: KindRate[];
   actionsPerMinute: number;
   scanPerMinute: number;
@@ -111,6 +112,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
     clips: valid.length,
     analysedSeconds,
     analysedMinutes: Math.round(analysedMinutes * 100) / 100,
+    detections: totalEvents,
     byKind,
     actionsPerMinute: Math.round(perMin(totalEvents) * 100) / 100,
     scanPerMinute: Math.round(perMin(scans) * 100) / 100,

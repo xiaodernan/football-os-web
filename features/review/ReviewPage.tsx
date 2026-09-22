@@ -3,7 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import { buildReview, type WeeklyReview } from "@/domain/review";
-import { useLearnRecords } from "@/lib/hooks";
+import { useLearnRecords, useFilmClips } from "@/lib/hooks";
 import { DEMO_MODE } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
@@ -24,6 +24,7 @@ export function ReviewPage() {
   const { state } = useOs();
   const { navigate } = useRouter();
   const learn = useLearnRecords();
+  const film = useFilmClips();
   const [days, setDays] = useState(7);
   const [compiling, setCompiling] = useState(false);
 
@@ -39,9 +40,10 @@ export function ReviewPage() {
             attributes: state.profile.attributes,
             streak: state.streak.current,
             learn: learn.map((l) => ({ at: l.completedAt, quizCorrect: l.quizCorrect })),
+            film,
           })
         : null,
-    [state, days, learn],
+    [state, days, learn, film],
   );
 
   const info = state.profile ? levelInfo(state.profile.xp) : null;
@@ -129,6 +131,15 @@ export function ReviewPage() {
             />
             <StatTile label={t("rv.quality")} value={review.avgRating ?? "—"} sub={review.avgRating != null ? t("rv.outOf5") : t("rv.noRating")} />
             <StatTile label={t("rv.statAcademy")} value={review.lessonsCompleted} sub={t("rv.statAcademyPassed").replace("{n}", String(review.lessonsMastered))} />
+            <StatTile
+              label={t("rv.statFilm")}
+              value={review.filmClips || "—"}
+              sub={
+                review.filmClips
+                  ? `${t("rv.statFilmMinutes").replace("{n}", String(review.filmMinutes))} · ${review.filmScanRate.toFixed(2)} ${t("rv.scansPerMin")}`
+                  : t("rv.noFilm")
+              }
+            />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
@@ -211,6 +222,49 @@ export function ReviewPage() {
                   </div>
                 </Panel>
               )}
+              {review.filmClips > 0 && (
+                <Panel className="p-4">
+                  <SectionTitle title={t("rv.filmTitle")} hint={t("rv.filmHint")} />
+                  <div className="mt-2 space-y-2">
+                    {review.filmKinds.map((k) => {
+                      const max = review.filmKinds[0].perMinute || 1;
+                      return (
+                        <div key={k.kind}>
+                          <div className="flex justify-between text-xs">
+                            <span className="capitalize">{k.kind}</span>
+                            <span className="font-mono text-muted-foreground">
+                              {k.perMinute.toFixed(2)} {t("rv.filmPerMin")} · ×{k.count}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
+                            <div className="h-full bg-primary" style={{ width: `${(k.perMinute / max) * 100}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {review.filmFocus.length > 0 && (
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] text-muted-foreground">{t("rv.filmFocus")}:</span>
+                      {review.filmFocus.map((f) => (
+                        <span key={f.key} className="rounded-md border px-2 py-0.5 text-[11px] text-muted-foreground">
+                          {f.label} ×{f.clips}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    {review.filmDetections} {t("rv.filmDetections")} · {review.filmConfidence}% {t("rv.filmConfidence")}
+                    {review.filmScanTrend != null && (
+                      <>
+                        {" · "}
+                        {t("rv.filmTrend")} {review.filmScanTrend >= 0 ? "+" : ""}
+                        {review.filmScanTrend}
+                      </>
+                    )}
+                  </p>
+                </Panel>
+              )}
             </div>
           </div>
 
@@ -240,6 +294,8 @@ export function ReviewPage() {
             <Link to="/history" className="text-xs text-primary hover:underline">{t("rv.linkHistory")} →</Link>
             <span className="text-muted-foreground">·</span>
             <Link to="/achievements" className="text-xs text-primary hover:underline">{t("rv.linkAchievements")} →</Link>
+            <span className="text-muted-foreground">·</span>
+            <Link to="/film" className="text-xs text-primary hover:underline">{t("rv.linkFilm")} →</Link>
           </div>
         </div>
       )}
