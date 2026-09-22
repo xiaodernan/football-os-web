@@ -1,5 +1,5 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
-import { attributeLabel, weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS } from "@/domain/attributes";
+import { attributeLabel, weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna } from "@/domain/playerDna";
 import { buildLoad, type LoadZone } from "@/domain/load";
@@ -172,7 +172,7 @@ class DeterministicCoachProvider implements CoachProvider {
       confidence: Math.min(95, confidence),
       sources: [
         "Football OS Training Methodology (demo knowledge base)",
-        `Your saved attributes (overall ${Math.round(input.profile.xp / 100 + 40)})`,
+        `Your saved attributes (overall ${overallRating(input.profile.attributes)})`,
         "Position baseline model",
         ...(load ? [`Your training-load log (ACWR ${load.acwr?.toFixed(2) ?? "n/a"} · ${load.zone})`] : []),
         ...(lastFocus.length ? [`Coach memory — last session focused on ${lastFocus.map(attributeLabel).join(" + ")}`] : []),

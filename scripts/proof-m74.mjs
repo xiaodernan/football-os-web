@@ -57,6 +57,15 @@ ok("deterministic sources", JSON.stringify(a.sources) === JSON.stringify(b.sourc
 const labels = a.sources.find((s) => /Coach memory/.test(s)) || "";
 ok("memory source cites a human label not a raw key", /Passing/.test(labels) && !/passing\b/.test(labels.replace("Passing", "")));
 
+// 8. The "saved attributes (overall N)" source prints the REAL attribute rating,
+//    not an XP-derived figure (M76 honesty fix).
+const { overallRating } = await server.ssrLoadModule("/domain/attributes.ts");
+const xpFigure = Math.round(profile.xp / 100 + 40);
+const realOverall = overallRating(profile.attributes);
+const srcLine = a.sources.find((s) => /saved attributes \(overall/.test(s)) || "";
+ok("overall source uses overallRating(attributes)", srcLine === `Your saved attributes (overall ${realOverall})`);
+ok("overall source is NOT the xp-derived figure", realOverall !== xpFigure && !srcLine.includes(`overall ${xpFigure})`));
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);
