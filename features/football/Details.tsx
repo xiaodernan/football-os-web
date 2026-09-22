@@ -16,7 +16,7 @@ import {
   DEMO_MODE,
 } from "@/data/footballService";
 import { simulateMatch, type SimResult, type TeamInput } from "@/domain/matchEngine";
-import { modelPlayerProfile } from "@/domain/scouting";
+import { modelPlayerProfile, scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
 import { archetypeLabel } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
@@ -69,6 +69,7 @@ export function PlayerDetail({ id }: { id: string }) {
   const comp = getClub(p.clubId) ? getCompetition(club!.competitionId) : undefined;
   const [a, b] = comparePlayers(p.id, againstId);
   const profile = modelPlayerProfile(p);
+  const report = scoutReport(p);
   const arc = careerArc(p);
 
   return (
@@ -147,6 +148,54 @@ export function PlayerDetail({ id }: { id: string }) {
           </div>
         )}
         <p className="mt-3 text-[11px] text-muted-foreground">{profile.note} Sources: {profile.sources.join(" · ")}</p>
+      </Panel>
+
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionTitle title="Scout report" hint={`vs a ${p.positionGroup} of matched skill`} />
+          <Badge variant="outline" className="text-[11px]">{report.hasVector ? `template delta · ${report.confidence}%` : "no vector"}</Badge>
+        </div>
+        <p className="mt-1 text-sm">{report.headline}</p>
+        {report.hasVector && (
+          <div className="mt-3 grid gap-4 sm:grid-cols-3">
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Categories</div>
+              <ul className="mt-1 space-y-1 text-xs">
+                {report.categories.map((c) => (
+                  <li key={c.category} className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground">{c.label}</span>
+                    <span className="font-mono tabular-nums">{c.value}</span>
+                    <span className={cn("w-10 text-right font-mono tabular-nums", c.delta > 0 ? "text-success" : c.delta < 0 ? "text-destructive" : "text-muted-foreground")}>
+                      {c.delta > 0 ? `+${c.delta}` : c.delta}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-success">Above template</div>
+              <ul className="mt-1 space-y-1 text-xs">
+                {report.strengths.map((s) => (
+                  <li key={s.key} className="flex items-center justify-between gap-2"><span className="truncate text-muted-foreground">{s.label}</span><span className="font-mono tabular-nums">+{s.delta}</span></li>
+                ))}
+                {!report.strengths.length && <li className="text-muted-foreground">None above the template.</li>}
+              </ul>
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-widest text-destructive">Below template</div>
+              <ul className="mt-1 space-y-1 text-xs">
+                {report.concerns.map((s) => (
+                  <li key={s.key} className="flex items-center justify-between gap-2"><span className="truncate text-muted-foreground">{s.label}</span><span className="font-mono tabular-nums">{s.delta}</span></li>
+                ))}
+                {!report.concerns.length && <li className="text-muted-foreground">Nothing below the template.</li>}
+              </ul>
+            </div>
+          </div>
+        )}
+        <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground">
+          {report.evidence.map((e, i) => <li key={i}>› {e}</li>)}
+        </ul>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">Sources: {report.sources.join(" · ")}</p>
       </Panel>
 
       <Panel className="p-4">

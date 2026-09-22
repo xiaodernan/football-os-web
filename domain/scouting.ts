@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages } from "./attributes";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
 
 // Scouting model (spec §28). Deliberately built only from fields the dataset
@@ -62,6 +62,109 @@ export function bestValueAt(bucket: Exclude<PosBucket, "ALL">, minOverall = 70):
   const p = pool.reduce((best, cur) => (valueIndex(cur) > valueIndex(best) ? cur : best));
   return { player: p, clubName: getClub(p.clubId)?.name ?? "—" };
 }
+
+export interface TemplateEdge {
+  key: string;
+  label: string;
+  value: number;
+  template: number;
+  delta: number;
+}
+
+export interface CategoryEdgeRow {
+  category: string;
+  label: string;
+  value: number;
+  template: number;
+  delta: number;
+}
+
+export interface ScoutReport {
+  playerId: string;
+  name: string;
+  /** true when the dataset ships this player's own attribute vector */
+  hasVector: boolean;
+  skill: number;
+  categories: CategoryEdgeRow[];
+  strengths: TemplateEdge[];
+  concerns: TemplateEdge[];
+  headline: string;
+  evidence: string[];
+  confidence: number;
+  sources: string[];
+}
+
+// The reference point is the positional template implied by the player's own
+// rating: what baselineAttributes() produces for his position group at his
+// skill level. Differences therefore describe what makes this player
+// *different from a same-rated archetype peer*, computed from two real vectors
+// rather than an opinion. Without a vector this reports that plainly.
+export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
+  const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
+  const real = p.attributes && Object.keys(p.attributes).length >= 8 ? p.attributes : null;
+
+  if (!real) {
+    return {
+      playerId: p.id,
+      name: p.name,
+      hasVector: false,
+      skill: Math.round(skill * 100) / 100,
+      categories: [],
+      strengths: [],
+      concerns: [],
+      headline: "No attribute vector provided for this player",
+      evidence: [`Overall ${p.overall} · potential ${p.potential} · ${p.positionGroup}`],
+      confidence: 20,
+      sources: ["World dataset (ratings only)"],
+    };
+  }
+
+  const template = baselineAttributes(p.positionGroup as PositionGroup, skill);
+  const edges: TemplateEdge[] = Object.keys(real)
+    .filter((k) => typeof template[k] === "number")
+    .map((k) => ({ key: k, label: attributeLabel(k), value: real[k], template: template[k], delta: real[k] - template[k] }))
+    .sort((a, b) => b.delta - a.delta || a.label.localeCompare(b.label));
+
+  const strengths = edges.filter((e) => e.delta > 0).slice(0, top);
+  const concerns = [...edges].reverse().filter((e) => e.delta < 0).slice(0, top).reverse();
+  const cats: CategoryEdgeRow[] = categoryAverages(real).map((ca, i) => {
+    const tmpl = categoryAverages(template)[i];
+    return { category: ca.category, label: ca.label, value: ca.value, template: tmpl.value, delta: ca.value - tmpl.value };
+  });
+
+  const sorted = [...cats].sort((a, b) => b.delta - a.delta);
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+  const headline =
+    best.delta > 0 && worst.delta < 0
+      ? `${best.label} runs ahead of the ${p.positionGroup} template; ${worst.label} is the shortfall`
+      : best.delta > 0 && worst.delta >= 0
+        ? `Above the ${p.positionGroup} template in every category — strongest is ${best.label} (+${best.delta})`
+        : best.delta > 0
+          ? `${best.label} is the clear above-template strength; ${worst.label} sits at or below the template`
+          : "At or below the positional template across categories";
+
+  return {
+    playerId: p.id,
+    name: p.name,
+    hasVector: true,
+    skill: Math.round(skill * 100) / 100,
+    categories: cats,
+    strengths,
+    concerns,
+    headline,
+    evidence: [
+      `Compared with a ${p.positionGroup} of the same implied skill (${skill.toFixed(2)})`,
+      strengths.length ? `Above template: ${strengths.slice(0, 3).map((s) => `${s.label} +${s.delta}`).join(", ")}` : "Nothing above the template",
+      concerns.length ? `Below template: ${concerns.slice(-3).reverse().map((s) => `${s.label} ${s.delta}`).join(", ")}` : "Nothing below the template",
+      `Headroom to potential: +${headroom(p)} · value index ${round1(valueIndex(p))}`,
+    ],
+    confidence: 80,
+    sources: ["World dataset (per-player attribute vector)", "Positional template (baselineAttributes at matched skill)", "Scouting metrics (headroom, value index)"],
+  };
+}
+
+const round1 = (n: number) => Math.round(n * 10) / 10;
 
 // Squad profile of a club by position bucket — where it is thin vs. deep.
 export function squadProfile(clubId: string): { bucket: Exclude<PosBucket, "ALL">; count: number; avg: number }[] {
