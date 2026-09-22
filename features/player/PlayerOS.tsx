@@ -532,28 +532,22 @@ function Goals() {
 function Workload() {
   const { state } = useOs();
   const completed = state.sessions.filter((s) => s.status === "completed");
-  // Acute:chronic load from the last 7 vs 28 sessions (training-load × minutes).
-  const load = (s: TrainingSession) => sessionIntensity(s) * s.targetMinutes;
-  const recent = completed.slice(0, 7);
-  const chronic = completed.slice(0, 28);
-  const acute = recent.reduce((sum, s) => sum + load(s), 0) / Math.max(1, recent.length);
-  const base = chronic.reduce((sum, s) => sum + load(s), 0) / Math.max(1, chronic.length);
-  const acwr = base > 0 ? +(acute / base).toFixed(2) : 0;
-  const byWeek = Array.from({ length: 6 }).map((_, i) => {
-    const slice = completed.slice(i * 3, i * 3 + 3);
-    return { label: `w${6 - i}`, value: slice.reduce((s, x) => s + load(x), 0) };
-  }).reverse();
+  // Single source of truth: use the canonical rolling 7-/28-DAY model the Load
+  // page and Dashboard already use, so this panel can never disagree with them.
+  const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
+  const acwr = load.acwr;
+  const byWeek = load.weekly.map((w, i) => ({ label: `w${i + 1}`, value: w.load }));
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <div className="grid grid-cols-2 gap-3 lg:col-span-1">
-        <StatTile label="Acute load" value={Math.round(acute)} sub="last 7 sessions" />
-        <StatTile label="Chronic" value={Math.round(base)} sub="last 28" />
-        <StatTile label="ACWR" value={acwr || "—"} tone={acwr > 1.5 ? "down" : acwr > 0.8 ? "up" : "neutral"} sub="ratio" />
+        <StatTile label="Acute load" value={load.acute} sub="7-day daily avg" />
+        <StatTile label="Chronic" value={load.chronic} sub="28-day daily avg" />
+        <StatTile label="ACWR" value={acwr ?? "—"} tone={acwr && acwr > 1.5 ? "down" : acwr && acwr >= 0.8 ? "up" : "neutral"} sub={ZONE_LABEL[load.zone]} />
         <StatTile label="Sessions" value={completed.length} />
       </div>
       <Panel className="p-4 lg:col-span-2">
-        <SectionTitle title="Training volume" hint="load = intensity × minutes" />
-        {completed.length ? (
+        <SectionTitle title="Training volume" hint="weekly load · intensity × duration (AU)" />
+        {load.hasData ? (
           <div className="flex h-48 items-end gap-2">
             {byWeek.map((w) => {
               const max = Math.max(...byWeek.map((x) => x.value), 1);
@@ -568,7 +562,7 @@ function Workload() {
         ) : (
           <EmptyState title="No training load yet" hint="Complete sessions to build your workload." icon="⚖" />
         )}
-        {acwr > 1.5 && <p className="mt-3 text-xs text-warning">⚠ ACWR above 1.5 — spike risk. Consider a recovery session.</p>}
+        {load.zone === "high" && <p className="mt-3 text-xs text-warning">⚠ ACWR {acwr?.toFixed(2)} is above the 1.5 spike threshold — consider a recovery session.</p>}
       </Panel>
     </div>
   );

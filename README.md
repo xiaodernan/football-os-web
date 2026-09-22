@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M89 are committed, one per milestone. Everything added in the current line
+Milestones M0–M90 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -159,6 +159,13 @@ rather than blurring it — an attempt only counts tries, while correctness is r
 `markLearned` at completion, so "mastered" still requires an actual passed check (M88). And
 the `AiMemoryEntry` kind union lost a `tactical` variant no write path ever produced and no
 consumer ever matched — only `coach`/`training`/`profile` memories are actually emitted (M89).
+A third sweep then targeted a divergent second model: the Player OS "Workload" tab computed
+its own ACWR from session-count slices (`completed.slice(0,7)` vs `slice(0,28)`), which for
+anyone under 7 logged sessions is pinned at 1.00 and disagrees with the canonical 7-/28-*day*
+rolling model the Load page and Dashboard use — the same page could show two different ACWR
+values under one name. It now calls the shared `buildLoad` for acute/chronic/ACWR/zone (and
+the same day-window weekly volumes for the bars), so the app has exactly one ACWR source; the
+spike warning keys off `zone === "high"` instead of a hand-rolled threshold (M90).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
