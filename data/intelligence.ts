@@ -59,10 +59,20 @@ function clubFacts(clubId: string): EvidenceFact[] {
     out.push({ label: "Standings", text: `They sit ${pos + 1}${ord(pos + 1)} with ${s.points} pts (${s.won}W ${s.drawn}D ${s.lost}L, GD ${s.gf - s.ga}).`, to: `/competitions/${c.competitionId}` });
   }
   if (squad[0]) out.push({ label: "Key man", text: `Top-rated in the squad is ${squad[0].name} (${squad[0].position}, OVR ${squad[0].overall}, ${formatValue(squad[0].value)}).`, to: `/players/${squad[0].id}` });
-  const fixture = [...matchesByStatus("SCHEDULED").filter((m) => m.homeClubId === clubId || m.awayClubId === clubId)][0];
+  const fixture = [...matchesByStatus("SCHEDULED").filter((m) => m.homeClubId === clubId || m.awayClubId === clubId)].sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
   if (fixture) {
     const opp = fixture.homeClubId === clubId ? getClub(fixture.awayClubId) : getClub(fixture.homeClubId);
     out.push({ label: "Next fixture", text: `Next up vs ${opp?.name} in ${getCompetition(fixture.competitionId)?.name}.`, to: `/matches/${fixture.id}` });
+    const fc = fixtureForecast(fixture.id);
+    if (fc) {
+      const home = getClub(fixture.homeClubId);
+      const away = getClub(fixture.awayClubId);
+      out.push({
+        label: "Next fixture model",
+        text: `Poisson projection for ${home?.name} v ${away?.name}: ${fc.homePct}% home · ${fc.drawPct}% draw · ${fc.awayPct}% away; expected goals ${fc.lambdaHome.toFixed(2)}–${fc.lambdaAway.toFixed(2)}, most likely ${fc.mostLikelyScore}. From ${fc.sample} match${fc.sample === 1 ? "" : "es"} of form data — a model output, not a result.`,
+        to: `/matches/${fixture.id}`,
+      });
+    }
   }
   return out;
 }
