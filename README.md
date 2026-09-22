@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M79 are committed, one per milestone. Everything added in the current line
+Milestones M0–M86 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -135,7 +135,18 @@ completion is now carried onto the Activity History timeline instead of vanishin
 shaped to your role" claim is now literal — each archetype carries a `gameFocus` and
 the built session's game-realistic block actually trains it (M77); the never-dispatched
 `SCHEDULE` reducer branch was removed as dead code (M78); and the Weekly Review's
-overall tile shows its previously-dropped `64 → 71` baseline (M79).
+overall tile shows its previously-dropped `64 → 71` baseline (M79). A second sweep then
+targeted broken affordances and dead seams rather than only unwired math: Film Room's and
+Player OS's video "Retry" now genuinely re-runs the analysis instead of just dismissing the
+error (M80), the Player OS Video tab gained the `try/catch/finally` + error surface it was
+missing (it could hang on "Processing… 100%" forever), the ⌘K "Ask Football AI" command
+routes to the real assistant at `/ai` instead of a `/search?ai=1` param nothing read (M82),
+logged match performances can finally be deleted (M83), `coachProvider.available` went from
+a field no one consulted into a real `requestPlan` gate with an accurate error surfaced in
+the Coach UI (M84), Tactical Studio's "Take to Simulation Lab" now actually carries your
+mentality + shape into the lab instead of the link being decorative (M85), and the
+hardcoded `ready = true` hydration flag became a real gate so returning users no longer
+flash the logged-out Landing before their stored state loads (M86).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
