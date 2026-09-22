@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M86 are committed, one per milestone. Everything added in the current line
+Milestones M0–M87 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -146,7 +146,14 @@ a field no one consulted into a real `requestPlan` gate with an accurate error s
 the Coach UI (M84), Tactical Studio's "Take to Simulation Lab" now actually carries your
 mentality + shape into the lab instead of the link being decorative (M85), and the
 hardcoded `ready = true` hydration flag became a real gate so returning users no longer
-flash the logged-out Landing before their stored state loads (M86).
+flash the logged-out Landing before their stored state loads (M86). A dead-code pass then
+deleted the leftovers an honest audit surfaces but nothing ever reads: an unreferenced
+`nearestWeakAttr` helper, the never-called `phaseSummary`/`ALL_FOCUS` training exports
+(and the `PHASE_ORDER` const they alone used), an unused `TIER_ORDER` array, a stray
+`getCompetition` import in the command palette, and the entirely dead async-boundary
+abstraction (`useAsync`/`AsyncState`/`AsyncStatus`/`AsyncBoundary`) — the live loading /
+error / retry states features actually use (`LoadingBlock`/`ErrorState`/`EmptyState`) are
+untouched, so nothing shipped lost a state (M87).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

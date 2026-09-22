@@ -1,57 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LEARN_STORE_KEY, parseLearnRecords, type LearnRecord } from "@/domain/learn";
 import { loadFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { type FilmClipInput } from "@/domain/filmInsights";
-
-export type AsyncStatus = "idle" | "loading" | "success" | "error";
-
-export interface AsyncState<T> {
-  data: T | null;
-  error: Error | null;
-  status: AsyncStatus;
-  reload: () => void;
-}
-
-/**
- * Runs an async producer with loading/error/retry. This is the single seam where
- * synchronous Demo reads can be swapped for real `/functions/v1/app` fetches
- * without touching feature components.
- */
-export function useAsync<T>(fn: () => Promise<T> | T, deps: unknown[] = []): AsyncState<T> {
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-  const [status, setStatus] = useState<AsyncStatus>("idle");
-  const [nonce, setNonce] = useState(0);
-  const latest = useRef(0);
-
-  useEffect(() => {
-    const id = ++latest.current;
-    let alive = true;
-    setStatus("loading");
-    setError(null);
-    (async () => {
-      try {
-        const result = await fn();
-        if (alive && id === latest.current) {
-          setData(result);
-          setStatus("success");
-        }
-      } catch (e) {
-        if (alive && id === latest.current) {
-          setError(e instanceof Error ? e : new Error(String(e)));
-          setStatus("error");
-        }
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, nonce]);
-
-  const reload = useCallback(() => setNonce((n) => n + 1), []);
-  return { data, error, status, reload };
-}
 
 export function useDebounced<T>(value: T, ms = 250): T {
   const [v, setV] = useState(value);

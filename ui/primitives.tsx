@@ -5,7 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DEMO_MODE } from "@/data/footballService";
-import type { AsyncState } from "@/lib/hooks";
 
 export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
   return (
@@ -113,21 +112,6 @@ export function ErrorState({ error, retry }: { error?: Error | null; retry?: () 
       )}
     </div>
   );
-}
-
-/** Wraps an async resource into loading / error / empty / success — spec §11, §41. */
-export function AsyncBoundary<T>({ state, skeleton, empty, render, minItems }: {
-  state: AsyncState<T>;
-  skeleton?: ReactNode;
-  empty?: ReactNode;
-  render: (data: T) => ReactNode;
-  minItems?: (data: T) => boolean;
-}) {
-  if (state.status === "loading" || state.status === "idle") return <>{skeleton ?? <LoadingBlock />}</>;
-  if (state.status === "error") return <ErrorState error={state.error} retry={state.reload} />;
-  const data = state.data as T;
-  if (minItems && !minItems(data)) return <>{empty ?? <EmptyState />}</>;
-  return <>{render(data)}</>;
 }
 
 export function Sparkline({ points, className, stroke = "var(--color-primary)" }: { points: number[]; className?: string; stroke?: string }) {

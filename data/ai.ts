@@ -51,10 +51,6 @@ const ATTRIBUTE_HINTS: [RegExp, string][] = [
   [/composure|冷静|抗压/i, "composure"],
 ];
 
-function nearestWeakAttr(prompt: string, attrs: Attributes): string {
-  return weakestAttributes(attrs, 1)[0].key;
-}
-
 function analyze(prompt: string, attrs: Attributes) {
   const requested: string[] = [];
   for (const [re, key] of ATTRIBUTE_HINTS) if (re.test(prompt)) requested.push(key);

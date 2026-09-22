@@ -15,7 +15,6 @@ import { useTheme } from "@/lib/theme";
 import { useOs } from "@/store/useFootballOS";
 import { globalSearch } from "@/data/footballService";
 import { useDebounced } from "@/lib/hooks";
-import { getCompetition } from "@/data/footballService";
 
 interface ActionCmd {
   id: string;

@@ -64,8 +64,6 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: "ten_clips", group: "analyst", icon: "⧉", tier: "gold", target: 10, current: (i) => i.filmClips },
 ];
 
-export const TIER_ORDER: Tier[] = ["gold", "silver", "bronze"];
-
 export function evaluateAchievements(input: AchievementInput): AchievementStatus[] {
   return ACHIEVEMENTS.map((a) => {
     const value = Math.max(0, a.current(input));

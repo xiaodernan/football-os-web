@@ -1,5 +1,5 @@
 import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, TrainingSession } from "./types";
-import { ATTRIBUTE_KEYS, attributeLabel } from "./attributes";
+import { attributeLabel } from "./attributes";
 import { makeRng, pick } from "@/lib/rng";
 
 // Training database: exercises keyed to the attributes they develop, organised by
@@ -27,8 +27,6 @@ const DRILLS: TrainingExercise[] = [
   { key: "sprint_intervals", label: "Speed endurance intervals", focus: "sprint", minutes: 10, intensity: 5, phase: "game" },
   { key: "cooldown_breathe", label: "Cool-down jog + breathing + reflection", focus: "composure", minutes: 6, intensity: 1, phase: "cooldown" },
 ];
-
-const PHASE_ORDER: TrainingExercise["phase"][] = ["warmup", "technique", "decision", "game", "cooldown"];
 
 function focusDrills(focus: string): TrainingExercise[] {
   const direct = DRILLS.filter((d) => d.focus === focus);
@@ -110,15 +108,6 @@ export function sessionIntensity(session: TrainingSession): number {
   const mins = session.exercises.reduce((s, e) => s + e.minutes, 0) || 1;
   return Math.max(1, Math.min(5, Math.round(load / mins)));
 }
-
-export function phaseSummary(session: TrainingSession): Record<string, number> {
-  const out: Record<string, number> = {};
-  for (const p of PHASE_ORDER) out[p] = 0;
-  for (const e of session.exercises) out[e.phase] = (out[e.phase] ?? 0) + e.minutes;
-  return out;
-}
-
-export const ALL_FOCUS = ATTRIBUTE_KEYS;
 
 // ---- Attribute growth: single source of truth ----
 // The COMPLETE reducer, the development projection and the completion feedback UI
