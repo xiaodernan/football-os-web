@@ -17,12 +17,14 @@ import {
 } from "@/data/footballService";
 import { simulateMatch, type SimResult, type TeamInput } from "@/domain/matchEngine";
 import { modelPlayerProfile } from "@/domain/scouting";
+import { careerArc } from "@/domain/careerArc";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const fmtDateTime = (iso: string) =>
@@ -65,6 +67,7 @@ export function PlayerDetail({ id }: { id: string }) {
   const comp = getClub(p.clubId) ? getCompetition(club!.competitionId) : undefined;
   const [a, b] = comparePlayers(p.id, againstId);
   const profile = modelPlayerProfile(p);
+  const arc = careerArc(p);
 
   return (
     <div className="space-y-6">
@@ -126,12 +129,59 @@ export function PlayerDetail({ id }: { id: string }) {
         </div>
         <p className="mt-3 text-[11px] text-muted-foreground">{profile.note} Confidence {profile.confidence}% · Sources: {profile.sources.join(" · ")}</p>
       </Panel>
+
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <SectionTitle title="Career arc" hint="Modelled from age, potential and position" />
+          <Badge variant="outline" className={cn(arc.trajectory === "rising" ? "border-success/40 text-success" : arc.trajectory === "declining" ? "border-warning/40 text-warning" : "text-muted-foreground")}>
+            {arc.trajectory}
+          </Badge>
+        </div>
+
+        <div className="mt-3 flex items-end gap-[3px]" title="Modelled overall by age">
+          {arc.points.map((pt) => (
+            <div key={pt.age} className="flex flex-1 flex-col items-center gap-1">
+              <div
+                className={cn("w-full rounded-t", pt.phase === "decline" ? "bg-warning/60" : pt.overall > arc.current ? "bg-success/70" : "bg-primary/70")}
+                style={{ height: `${Math.max(4, ((pt.overall - 35) / 64) * 90)}px` }}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+          <span>{arc.age}</span>
+          <span>peak {arc.projectedPeak} at {arc.points.reduce((b, p) => (p.overall > b.overall ? p : b), arc.points[0]).age}</span>
+          <span>{arc.points[arc.points.length - 1].age}</span>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
+          <Fact label="Position peak" value={arc.peakAge} />
+          <Fact label="Years to peak" value={arc.yearsToPeak} />
+          <Fact label="Decline from" value={arc.declineFromAge} />
+          <Fact label="Prime years left" value={arc.remainingPrimeYears} />
+        </div>
+
+        <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground">
+          {arc.evidence.map((e, i) => <li key={i}>› {e}</li>)}
+        </ul>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Confidence {arc.confidence}% · a demo model over dataset fields, not a forecast about a real person · Sources: {arc.sources.join(" · ")}
+        </p>
+      </Panel>
     </div>
   );
 }
 
-function CompareBars({ a, b }: { a: PlayerRef; b: PlayerRef }) {
-  const rows: { label: string; av: number; bv: number; max: number }[] = [
+function Fact({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-md border bg-card/30 px-2 py-1.5">
+      <div className="text-[10px] text-muted-foreground">{label}</div>
+      <div className="font-mono text-sm">{value}</div>
+    </div>
+  );
+}
+
+function CompareBars({ a, b }: { a: PlayerRef; b: PlayerRef }) {  const rows: { label: string; av: number; bv: number; max: number }[] = [
     { label: "Overall", av: a.overall, bv: b.overall, max: 99 },
     { label: "Potential", av: a.potential, bv: b.potential, max: 99 },
     { label: "Age", av: a.age, bv: b.age, max: 40 },
