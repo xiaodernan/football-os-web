@@ -13,6 +13,7 @@ import {
   type ScoutSort,
 } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
+import { archetypeLabel } from "@/domain/playerDna";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -129,7 +130,7 @@ export function ScoutingPanel() {
               {results.map((p) => (
                 <tr key={p.id} className={cn("border-t", compare.includes(p.id) && "bg-primary/5")}>
                   <td className="px-2 py-1.5 font-mono text-xs text-muted-foreground">{p.position}</td>
-                  <td className="px-2 py-1.5"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link><span className="ml-2 text-xs text-muted-foreground">{getClub(p.clubId)?.short} · {p.archetype}</span></td>
+                  <td className="px-2 py-1.5"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link><span className="ml-2 text-xs text-muted-foreground">{getClub(p.clubId)?.short} · {archetypeLabel(p.archetype)}</span></td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{p.age}</td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs font-semibold">{p.overall}</td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{p.potential}<span className="text-success"> +{headroom(p)}</span></td>

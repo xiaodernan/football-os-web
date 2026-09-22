@@ -3,6 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { compare, type CompareMetric } from "@/domain/compare";
+import { archetypeLabel } from "@/domain/playerDna";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
@@ -203,7 +204,7 @@ function PlayerPicker({ players, value, onChange, exclude, side }: {
     <Panel className="p-3">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("compare.player")} {side}</span>
-        {selected && <span className="text-xs text-muted-foreground">{selected.archetype}</span>}
+        {selected && <span className="text-xs text-muted-foreground">{archetypeLabel(selected.archetype)}</span>}
       </div>
       {selected ? (
         <div className="flex items-center gap-2">

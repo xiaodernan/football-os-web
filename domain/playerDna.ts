@@ -78,3 +78,9 @@ export function computeDna(a: Attributes): Dna {
 export function archetypeByKey(key: string): Archetype | undefined {
   return ARCHETYPES.find((a) => a.key === key);
 }
+
+/** Players store only the archetype key, so every display site resolves it
+ *  here rather than printing a slug like `ball_winner` to the user. */
+export function archetypeLabel(key: string): string {
+  return archetypeByKey(key)?.label ?? key;
+}

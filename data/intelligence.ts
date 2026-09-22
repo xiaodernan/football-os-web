@@ -3,6 +3,7 @@
 // entities, pull concrete facts, then hand a grounded context to the coach
 // provider. Answers always carry evidence, sources and confidence.
 
+import { archetypeLabel } from "@/domain/playerDna";
 import {
   globalSearch,
   getClub,
@@ -69,7 +70,7 @@ function playerFacts(pid: string): EvidenceFact[] {
   const c = getClub(p.clubId);
   return [
     { label: p.name, text: `${p.name} — ${p.position}, ${p.age}y, ${p.nation}, at ${c?.name}. Overall ${p.overall}, potential ${p.potential}, value ${formatValue(p.value)}, ${p.foot} foot.`, to: `/players/${p.id}` },
-    { label: "Profile", text: `Scouting archetype: ${p.archetype}.`, to: `/players/${p.id}` },
+    { label: "Profile", text: `Scouting archetype: ${archetypeLabel(p.archetype)}.`, to: `/players/${p.id}` },
   ];
 }
 

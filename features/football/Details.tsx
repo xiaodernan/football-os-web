@@ -18,6 +18,7 @@ import {
 import { simulateMatch, type SimResult, type TeamInput } from "@/domain/matchEngine";
 import { modelPlayerProfile } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
+import { archetypeLabel } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, PlayerRef } from "@/domain/types";
@@ -88,7 +89,7 @@ export function PlayerDetail({ id }: { id: string }) {
         <StatTile label="Overall" value={p.overall} tone="up" />
         <StatTile label="Potential" value={p.potential} sub={p.potential > p.overall ? `+${p.potential - p.overall}` : "peak"} />
         <StatTile label="Market value" value={formatValue(p.value)} />
-        <StatTile label="Archetype" value={<span className="text-base">{p.archetype}</span>} sub={comp?.name} />
+        <StatTile label="Archetype" value={<span className="text-base">{archetypeLabel(p.archetype)}</span>} sub={comp?.name} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
