@@ -93,7 +93,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M92 are committed, one per milestone. Everything added in the current line
+Milestones M0–M93 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -173,7 +173,12 @@ has no player-influence ranking and refuses to invent a decisive individual, the
 the real seeded fact it is actually citing (M91). The match engine has long computed two
 per-side stats — pass accuracy and duels won — that no screen ever displayed; they now sit in
 the Simulation Lab's head-to-head stat comparison on the match detail page, so every number
-the engine produces is one the user can actually read (M92).
+the engine produces is one the user can actually read (M92). The store has exposed a
+`setFavorite` action since onboarding, but no screen ever dispatched it — your favourite club
+and player were frozen forever after first-run setup even though the Dashboard, scouting
+default and Simulation Lab all key off `favoriteClubId`. The club and player detail pages now
+carry a ★ "Set as my club/player" toggle that drives `setFavorite`, so the choice is changeable
+and every downstream consumer updates with it (M93).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

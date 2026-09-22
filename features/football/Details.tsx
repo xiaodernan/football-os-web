@@ -58,6 +58,17 @@ function WatchButton({ playerId }: { playerId: string }) {
   );
 }
 
+function FavoriteButton({ kind, id, activeText, idleText }: { kind: "club" | "player"; id: string; activeText: string; idleText: string }) {
+  const { state, setFavorite } = useOs();
+  const current = kind === "club" ? state.profile?.favoriteClubId : state.profile?.favoritePlayerId;
+  const active = current === id;
+  return (
+    <Button size="sm" variant={active ? "default" : "outline"} onClick={() => setFavorite(kind, active ? null : id)}>
+      {active ? `★ ${activeText}` : `☆ ${idleText}`}
+    </Button>
+  );
+}
+
 // ---------------- Player detail ----------------
 export function PlayerDetail({ id }: { id: string }) {
   const p = getPlayer(id);
@@ -83,6 +94,7 @@ export function PlayerDetail({ id }: { id: string }) {
 
       <div className="flex gap-2">
         <WatchButton playerId={p.id} />
+        <FavoriteButton kind="player" id={p.id} activeText="My player" idleText="Set as my player" />
         <Button size="sm" variant="outline" onClick={() => navigate(`/search?q=${encodeURIComponent(p.name)}`)}>Related coverage</Button>
       </div>
 
@@ -310,6 +322,9 @@ export function ClubDetail({ id }: { id: string }) {
         crest={<Crest colors={c.colors} short={c.short} size={64} />}
         subtitle={<span>{c.nation} · <Link to={`/competitions/${c.competitionId}`} className="hover:text-primary">{comp?.name}</Link> · {c.stadium}</span>}
       />
+      <div className="flex gap-2">
+        <FavoriteButton kind="club" id={id} activeText="My club" idleText="Set as my club" />
+      </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatTile label="Overall" value={c.overall} />
         <StatTile label="Attack" value={attack || "—"} />
