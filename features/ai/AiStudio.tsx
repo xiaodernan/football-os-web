@@ -2,7 +2,6 @@ import { useMemo, useRef, useState } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useLocalStorage, useOnline } from "@/lib/hooks";
 import { askIntelligence, buildGraph, type EvidenceFact, type KgGraph } from "@/data/intelligence";
-import type { SearchResult } from "@/data/footballService";
 import { AI_CHAT_KEY } from "@/domain/localData";
 import { Panel, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 type ChatMsg =
   | { role: "user"; content: string; at: string }
-  | { role: "ai"; content: string; facts?: EvidenceFact[]; sources?: string[]; confidence?: number; retrieved?: SearchResult[]; at: string };
+  | { role: "ai"; content: string; facts?: EvidenceFact[]; sources?: string[]; confidence?: number; at: string };
 
 const SUGGESTIONS = [
   "Who is the key player at Real Madrid?",
@@ -62,7 +61,7 @@ function Chat() {
     setBusy(true);
     await new Promise((r) => setTimeout(r, 420));
     const a = askIntelligence(question);
-    setLog((l) => [...l, { role: "ai", content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, retrieved: a.retrieved, at: a.at }]);
+    setLog((l) => [...l, { role: "ai", content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, at: a.at }]);
     setBusy(false);
     requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
   };

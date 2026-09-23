@@ -41,7 +41,6 @@ export interface RagAnswer {
   facts: EvidenceFact[];
   sources: string[];
   confidence: number;
-  retrieved: SearchResult[];
   at: string;
 }
 
@@ -239,7 +238,6 @@ export function askIntelligence(question: string): RagAnswer {
     facts: ctx.facts,
     sources: ctx.sources,
     confidence: ctx.confidence,
-    retrieved: ctx.hits,
     at: new Date().toISOString(),
   };
 }
@@ -251,7 +249,7 @@ function ord(n: number) {
 }
 
 // ---- Knowledge graph (spec §45) ----
-export interface KgNode { id: string; label: string; type: "club" | "player" | "competition" | "news" | "match"; to: string; weight?: number }
+export interface KgNode { id: string; label: string; type: "club" | "player" | "competition" | "news" | "match"; to: string }
 export interface KgEdge { from: string; to: string; relation: string }
 export interface KgGraph { root: string | null; nodes: KgNode[]; edges: KgEdge[] }
 
@@ -268,7 +266,7 @@ export function buildGraph(query: string): KgGraph {
       const compN: KgNode = { id: "competition:" + c.competitionId, label: getCompetition(c.competitionId)?.name ?? c.competitionId, type: "competition", to: `/competitions/${c.competitionId}` };
       add(compN); edges.push({ from: "club:" + c.id, to: compN.id, relation: "competes in" });
       for (const p of playersByClub(c.id).sort((a, b) => b.overall - a.overall).slice(0, 6)) {
-        const pn: KgNode = { id: "player:" + p.id, label: p.name, type: "player", to: `/players/${p.id}`, weight: p.overall };
+        const pn: KgNode = { id: "player:" + p.id, label: p.name, type: "player", to: `/players/${p.id}` };
         add(pn); edges.push({ from: "club:" + c.id, to: pn.id, relation: "has player" });
       }
     }
@@ -289,7 +287,7 @@ export function buildGraph(query: string): KgGraph {
       for (const s of table.slice(0, 8)) {
         const c = getClub(s.clubId);
         if (!c) continue;
-        const cn: KgNode = { id: "club:" + c.id, label: c.name, type: "club", to: `/clubs/${c.id}`, weight: s.points };
+        const cn: KgNode = { id: "club:" + c.id, label: c.name, type: "club", to: `/clubs/${c.id}` };
         add(cn); edges.push({ from: "competition:" + h.id, to: cn.id, relation: `${s.points} pts` });
       }
     }
