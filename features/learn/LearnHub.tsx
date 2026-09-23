@@ -54,7 +54,17 @@ export function LearnHub() {
     () => ({
       completedSessions: state.sessions.filter((s) => s.status === "completed").length,
       weakestAttributes: state.profile ? weakestAttributes(state.profile.attributes, 3).map((a) => a.key) : [],
-      hasCareer: !!localStorage.getItem(CAREER_KEY),
+      // useLocalStorage writes JSON.stringify(null) = "null" the moment anyone
+      // opens /manager, so a mere key presence is not a career — only a stored
+      // value that parses back to a real object counts (matches CommunityHub).
+      hasCareer: (() => {
+        try {
+          const raw = localStorage.getItem(CAREER_KEY);
+          return raw != null && JSON.parse(raw) != null;
+        } catch {
+          return false;
+        }
+      })(),
       filmClips: loadFilmClips().length,
       watchlist: state.watchlist.length,
     }),
