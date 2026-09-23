@@ -59,10 +59,10 @@ export function Landing() {
           {[
             { k: "coach", d: "A coach that reads your history, finds the gap and builds the next session." },
             { k: "world", d: "Live fixtures, standings, scouting-grade player data and news intelligence." },
-            { k: "studio", d: "Drag, shape and animate formations on an interactive tactical pitch." },
-            { k: "dev", k2: "dev", d: "Attributes, XP and skill trees tied to real training you actually complete." },
+            { k: "studio", d: "Build and reshape formations on a draggable tactical pitch, then save them or send them to the Simulation Lab." },
+            { k: "dev", k2: "dev", d: "Attributes, XP and level progression tied to real training you actually complete." },
             { k: "intel", d: "Deterministic match engine with xG, events, ratings and match chat." },
-            { k: "manager", d: "Run a club: squad, transfers, contracts, finances, seasons." },
+            { k: "manager", d: "Run a club: squad, transfers, finances and seasons." },
           ].map((p) => (
             <div key={p.k} className="group rounded-xl border bg-card/40 p-5 transition hover:border-primary/40 hover:bg-card/70">
               <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">{t(`landing.pillars.${p.k}`)}</div>
