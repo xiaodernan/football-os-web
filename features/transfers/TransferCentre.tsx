@@ -56,7 +56,7 @@ export function TransferCentre() {
                   <Crest colors={viewerClub.colors} short={viewerClub.short} size={16} />
                   {viewerClub.name}
                 </span>{" "}
-                — <Link to="/manager" className="text-primary hover:underline">{t("transfers.changeClub")}</Link>
+                — <Link to="/clubs" className="text-primary hover:underline">{t("transfers.changeClub")}</Link>
               </>
             ) : (
               t("transfers.subtitle")
