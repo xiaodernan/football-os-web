@@ -363,7 +363,7 @@ function NewsDetail({ id }: { id: string }) {
       </div>
       <Panel className="space-y-3 p-5 text-sm leading-relaxed">
         <p className="text-base">{n.summary}</p>
-        <p className="text-muted-foreground">This is synthetic demo content for the Football OS world dataset. The original reporting lives at the source link below — no third-party copy is stored locally.</p>
+        <p className="text-muted-foreground">This is synthetic demo content generated for the Football OS world dataset. The byline is a fictional sample source and no external article exists — when a real news provider is connected, a genuine reference link appears here.</p>
         <div className="flex flex-wrap gap-1.5 pt-1">{n.topics.map((tp) => <Badge key={tp} variant="secondary" className="text-xs">#{tp}</Badge>)}</div>
       </Panel>
 
@@ -388,7 +388,7 @@ function NewsDetail({ id }: { id: string }) {
             <ul className="mt-1.5 list-disc pl-5 text-muted-foreground">
               {impact.evidence.map((ev, i) => <li key={i}>{ev}</li>)}
             </ul>
-            <p className="mt-1.5">Source link below reflects the original reporting; standings positions come from the live world dataset.</p>
+            <p className="mt-1.5">The byline is a fictional demo source; standings positions come from the live world dataset.</p>
           </details>
         </Panel>
       )}
@@ -399,7 +399,9 @@ function NewsDetail({ id }: { id: string }) {
           <div className="mt-2 flex flex-wrap gap-2">{entities.map((e) => <Link key={e.to} to={e.to} className="rounded-md border px-2.5 py-1 text-sm hover:border-primary/50">{e.label}</Link>)}</div>
         </Panel>
       )}
-      <a href={n.url} target="_blank" rel="noopener noreferrer"><Button variant="outline" className="w-full">Read at source ↗</Button></a>
+      {n.url && (
+        <a href={n.url} target="_blank" rel="noopener noreferrer"><Button variant="outline" className="w-full">Read full report at {n.source} ↗</Button></a>
+      )}
     </div>
   );
 }

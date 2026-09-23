@@ -97,7 +97,10 @@ export interface NewsArticle {
   title: string;
   summary: string;
   source: string;
-  url: string;
+  // Genuine external reference a real news provider can supply. Demo Mode never
+  // fabricates one, so the article UI only shows a "read at source" link when a
+  // real provider has actually attached a resolvable url.
+  url?: string;
   publishedAt: string;
   credibility: number; // 0..1
   kind: "Confirmed" | "Reported" | "Rumor" | "Opinion" | "Analysis";

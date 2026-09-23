@@ -334,7 +334,6 @@ function buildNews(clubs: Club[], players: PlayerRef[], rng: () => number): News
       title,
       summary: `${title}. Our intelligence layer cross-checks this against ${club.name}'s recent match data and ${player.name}'s form. Flagged as ${kind[0]} with ${Math.round(cred * 100)}% source confidence.`,
       source: src.name,
-      url: `https://demo.football-os.local/news/${i + 1}`,
       publishedAt: new Date(anchor - rngInt(rng, 0, 72) * 3600000).toISOString(),
       credibility: Math.round(cred * 100) / 100,
       kind: kind[0],
