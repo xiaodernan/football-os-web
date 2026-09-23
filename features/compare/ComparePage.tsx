@@ -3,9 +3,9 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { compare, type CompareMetric } from "@/domain/compare";
-import { archetypeLabel } from "@/domain/playerDna";
+import { archetypeLabel, playerDna } from "@/domain/playerDna";
 import type { PlayerRef } from "@/domain/types";
-import { Panel, SectionTitle, Crest, PositionTag, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, PositionTag, EmptyState, DemoBadge, DnaCard } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,8 @@ export function ComparePage() {
   });
 
   const result = useMemo(() => (aId && bId ? compare(aId, bId) : null), [aId, bId]);
+  const dnaA = result ? playerDna(result.a.attributes) : null;
+  const dnaB = result ? playerDna(result.b.attributes) : null;
 
   return (
     <div className="space-y-5">
@@ -75,6 +77,25 @@ export function ComparePage() {
               {result.metrics.map((m) => <MetricRow key={m.key} m={m} />)}
             </div>
           </Panel>
+
+          {(dnaA || dnaB) && (
+            <Panel className="p-4">
+              <SectionTitle title={t("compare.dna")} hint={t("compare.dnaHint")} />
+              <div className="mt-1 grid gap-3 sm:grid-cols-2">
+                <DnaCard
+                  dna={dnaA}
+                  fallbackLabel={archetypeLabel(result.a.archetype)}
+                  fallbackNote={t("compare.dnaNoVector")}
+                />
+                <DnaCard
+                  dna={dnaB}
+                  fallbackLabel={archetypeLabel(result.b.archetype)}
+                  fallbackNote={t("compare.dnaNoVector")}
+                />
+              </div>
+              <p className="mt-3 text-[11px] text-muted-foreground">{t("compare.dnaNote")}</p>
+            </Panel>
+          )}
 
           {result.hasAttributes ? (
             <>
