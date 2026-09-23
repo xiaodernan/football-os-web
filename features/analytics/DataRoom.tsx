@@ -48,7 +48,8 @@ export function DataRoom() {
   const clubs = useMemo(() => footballProvider.clubs(), []);
   const matches = useMemo(() => footballProvider.matches(), []);
 
-  const favComp = state.profile?.favoriteClubId ? getClub(state.profile.favoriteClubId)?.competitionId : undefined;
+  const favComp = state.profile?.favoriteCompetitionId
+    ?? (state.profile?.favoriteClubId ? getClub(state.profile.favoriteClubId)?.competitionId : undefined);
   const [compId, setCompId] = useState<string>(favComp && competitions.some((c) => c.id === favComp) ? favComp : competitions[0]?.id ?? "");
   const [picked, setPicked] = useState<string | null>(null);
 
