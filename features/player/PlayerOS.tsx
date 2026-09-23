@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import {
   ATTRIBUTE_DEFS,
+  ATTRIBUTE_KEYS,
   CATEGORY_ORDER,
   attributesByCategory,
   attributeLabel,
@@ -168,8 +169,21 @@ function Overview() {
 function Coach() {
   const { state, requestPlan } = useOs();
   const { t } = useI18n();
-  const { navigate } = useRouter();
-  const [prompt, setPrompt] = useState("");
+  const { navigate, query } = useRouter();
+  // A "Plan these in Coach" handoff from the Development page carries the
+  // player's top role-gap priorities in `?f=`. Validate them against the real
+  // attribute keys and cap at two (mirroring generatePlan's own limit); while
+  // they're active the coach targets them explicitly rather than inferring from
+  // the prompt. Editing the prompt or hitting "New" hands focus back to the text.
+  const carriedFocus = useMemo(() => {
+    const raw = query.get("f");
+    if (!raw) return [] as string[];
+    return [...new Set(raw.split(",").map((k) => k.trim()).filter((k) => ATTRIBUTE_KEYS.includes(k)))].slice(0, 2);
+  }, [query]);
+  const [carryKeys, setCarryKeys] = useState<string[]>(carriedFocus);
+  const [prompt, setPrompt] = useState(() =>
+    carriedFocus.length ? t("player.coachCarry").replace("{labels}", carriedFocus.map(attributeLabel).join(", ")) : "",
+  );
   const [minutes, setMinutes] = useState(45);
   const [busy, setBusy] = useState(false);
   const [planId, setPlanId] = useState<string | null>(() => state.plans[0]?.id ?? null);
@@ -183,6 +197,11 @@ function Coach() {
     high: "border-destructive/40 bg-destructive/10 text-destructive",
   };
 
+  const onPromptChange = (v: string) => {
+    setPrompt(v);
+    if (carryKeys.length) setCarryKeys([]);
+  };
+
   const run = async () => {
     if (!prompt.trim()) {
       toast.error("Tell the coach what to work on");
@@ -190,7 +209,7 @@ function Coach() {
     }
     setBusy(true);
     try {
-      const p = await requestPlan(prompt, minutes);
+      const p = await requestPlan(prompt, minutes, carryKeys.length ? carryKeys : undefined);
       setPlanId(p.id);
       toast.success("Training plan generated");
     } catch (e) {
@@ -206,11 +225,16 @@ function Coach() {
         <SectionTitle title={t("player.coach")} hint="Describe your situation — the coach reads your history" />
         <Textarea
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => onPromptChange(e.target.value)}
           rows={4}
           placeholder="e.g. I only have 45 minutes today, my right foot is weak and my first touch was poor in the last match."
           className="resize-none"
         />
+        {carryKeys.length > 0 && (
+          <p className="mt-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-[11px] text-muted-foreground">
+            {t("player.coachCarryHint")} <span className="font-medium text-primary">{carryKeys.map(attributeLabel).join(", ")}</span>
+          </p>
+        )}
         <div className="mt-3">
           <Label>Available time</Label>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -270,7 +294,7 @@ function Coach() {
             </details>
             <div className="flex gap-2">
               <Button size="sm" className="flex-1" onClick={() => navigate("/player/training")}>Schedule & train →</Button>
-              <Button size="sm" variant="outline" onClick={() => { setPrompt(""); setPlanId(null); }}>New</Button>
+              <Button size="sm" variant="outline" onClick={() => { setPrompt(""); setCarryKeys([]); setPlanId(null); }}>New</Button>
             </div>
           </div>
         )}

@@ -161,7 +161,16 @@ export function DevelopmentPage() {
           <SectionTitle
             title={t("dv.priorities")}
             hint={t("dv.prioritiesHint")}
-            action={<Link to="/player/coach" className="text-xs text-primary hover:underline">{t("dv.planFocus")} →</Link>}
+            action={
+              analysis.priorities.length ? (
+                <Link
+                  to={`/player/coach?f=${analysis.priorities.slice(0, 2).map((p) => p.key).join(",")}`}
+                  className="text-xs text-primary hover:underline"
+                >
+                  {t("dv.planFocus")} →
+                </Link>
+              ) : undefined
+            }
           />
           {analysis.priorities.length ? (
             <div className="mt-3 space-y-2">
