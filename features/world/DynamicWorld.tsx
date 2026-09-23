@@ -3,11 +3,12 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { runWorld, seasonLabel, formatMarket, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
+import { WORLD_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const STORE_KEY = "football-os.world.v1";
+const STORE_KEY = WORLD_KEY;
 
 function loadElapsed(): number {
   try {

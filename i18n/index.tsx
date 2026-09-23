@@ -8,8 +8,9 @@ import {
   type ReactNode,
 } from "react";
 import { DICTIONARIES, type Locale, LOCALES } from "./dictionaries";
+import { LOCALE_KEY } from "@/domain/localData";
 
-const STORAGE_KEY = "football-os.locale";
+const STORAGE_KEY = LOCALE_KEY;
 
 interface I18nValue {
   locale: Locale;

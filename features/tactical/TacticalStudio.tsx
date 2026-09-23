@@ -3,6 +3,7 @@ import { Link } from "@/lib/router";
 import { useLocalStorage } from "@/lib/hooks";
 import { useOs } from "@/store/useFootballOS";
 import { getClub, playersByClub } from "@/data/footballService";
+import { TACTICS_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,7 @@ export function TacticalStudio() {
   const [formation, setFormation] = useState("4-3-3");
   const [mentality, setMentality] = useState(2);
   const [tokens, setTokens] = useState<Token[]>(() => build("4-3-3"));
-  const [saved, setSaved] = useLocalStorage<Saved[]>("football-os.tactics.v1", []);
+  const [saved, setSaved] = useLocalStorage<Saved[]>(TACTICS_KEY, []);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef<{ id: string } | null>(null);
 

@@ -4,6 +4,7 @@ import { useOs } from "@/store/useFootballOS";
 import { buildStarters, allTags, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
 import { LESSONS, isCompleted, summarizeLearn } from "@/domain/learn";
 import { seasonSummary, type CareerState } from "@/domain/career";
+import { CAREER_KEY, COMMUNITY_KEY } from "@/domain/localData";
 import { getClub } from "@/data/footballService";
 import { attributeLabel } from "@/domain/attributes";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
@@ -12,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-const KEY = "football-os.community.v1";
+const KEY = COMMUNITY_KEY;
 const MY = "You";
 
 interface CommunityStore {
@@ -69,7 +70,7 @@ export function CommunityHub() {
   const starters = useMemo<StarterDraft[]>(() => {
     let career: StarterInput["career"];
     try {
-      const raw = localStorage.getItem("football-os.career.v1");
+      const raw = localStorage.getItem(CAREER_KEY);
       if (raw) {
         const cs = JSON.parse(raw) as CareerState;
         const s = seasonSummary(cs);

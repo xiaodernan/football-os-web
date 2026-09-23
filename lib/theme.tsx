@@ -7,9 +7,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { THEME_KEY } from "@/domain/localData";
 
 type Theme = "dark" | "light";
-const STORAGE_KEY = "football-os.theme";
+const STORAGE_KEY = THEME_KEY;
 
 interface ThemeContextValue {
   theme: Theme;

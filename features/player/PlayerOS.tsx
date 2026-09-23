@@ -16,6 +16,7 @@ import { SUPPORTED_MINUTES, sessionIntensity, type GrowthDelta } from "@/domain/
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
+import { FIXTURES_KEY } from "@/domain/localData";
 import { getClub, getPlayer } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, AttributeBar, EmptyState, LoadingBlock, ErrorState, Crest } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
@@ -672,10 +673,10 @@ function Video() {
 function Matches() {
   const { state } = useOs();
   const [rows, setRows] = useState<{ id: string; opp: string; date: string; g: number; a: number; r: number }[]>(() => {
-    try { return JSON.parse(localStorage.getItem("football-os.matches") || "[]"); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem(FIXTURES_KEY) || "[]"); } catch { return []; }
   });
   const [form, setForm] = useState({ opp: "", g: "0", a: "0", r: "7" });
-  const save = (next: typeof rows) => { setRows(next); try { localStorage.setItem("football-os.matches", JSON.stringify(next)); } catch { /* ignore */ } };
+  const save = (next: typeof rows) => { setRows(next); try { localStorage.setItem(FIXTURES_KEY, JSON.stringify(next)); } catch { /* ignore */ } };
   const add = () => {
     if (!form.opp.trim()) return;
     save([{ id: `m${Date.now()}`, opp: form.opp, date: new Date().toISOString(), g: Number(form.g), a: Number(form.a), r: Number(form.r) }, ...rows]);

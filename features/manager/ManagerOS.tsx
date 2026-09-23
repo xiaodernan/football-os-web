@@ -26,13 +26,14 @@ import {
   type Tactics,
 } from "@/domain/career";
 import type { MatchProbability } from "@/domain/matchProbability";
+import { CAREER_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-const KEY = "football-os.career.v1";
+const KEY = CAREER_KEY;
 type Tab = "overview" | "squad" | "transfers" | "tactics" | "table" | "outlook" | "prep";
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },

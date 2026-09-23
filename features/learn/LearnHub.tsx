@@ -4,6 +4,7 @@ import { useLocalStorage } from "@/lib/hooks";
 import { useOs } from "@/store/useFootballOS";
 import { weakestAttributes } from "@/domain/attributes";
 import { loadFilmClips } from "@/domain/filmLibrary";
+import { CAREER_KEY } from "@/domain/localData";
 import {
   LESSONS,
   LEGACY_LEARN_KEY,
@@ -53,7 +54,7 @@ export function LearnHub() {
     () => ({
       completedSessions: state.sessions.filter((s) => s.status === "completed").length,
       weakestAttributes: state.profile ? weakestAttributes(state.profile.attributes, 3).map((a) => a.key) : [],
-      hasCareer: !!localStorage.getItem("football-os.career.v1"),
+      hasCareer: !!localStorage.getItem(CAREER_KEY),
       filmClips: loadFilmClips().length,
       watchlist: state.watchlist.length,
     }),

@@ -11,6 +11,7 @@ import { seasonSummary, type CareerState } from "@/domain/career";
 import { buildFootprint } from "@/domain/footprint";
 import { buildFilmInsights } from "@/domain/filmInsights";
 import { loadFilmClips, newestClipAt, toClipInputs } from "@/domain/filmLibrary";
+import { CAREER_KEY, COMMUNITY_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +42,7 @@ export function ProfilePage() {
 
     let manager = { active: false, matches: 0 } as Parameters<typeof buildFootprint>[0]["manager"];
     try {
-      const raw = localStorage.getItem("football-os.career.v1");
+      const raw = localStorage.getItem(CAREER_KEY);
       if (raw) {
         const cs = JSON.parse(raw) as CareerState;
         const s = seasonSummary(cs);
@@ -79,7 +80,7 @@ export function ProfilePage() {
     let replies = 0;
     let lastPostAt: string | undefined;
     try {
-      const st = JSON.parse(localStorage.getItem("football-os.community.v1") ?? "null");
+      const st = JSON.parse(localStorage.getItem(COMMUNITY_KEY) ?? "null");
       const threads = Array.isArray(st?.userThreads) ? st.userThreads : [];
       posts = threads.length;
       lastPostAt = threads[0]?.at;

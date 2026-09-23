@@ -3,6 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useLocalStorage, useOnline } from "@/lib/hooks";
 import { askIntelligence, buildGraph, type EvidenceFact, type KgGraph } from "@/data/intelligence";
 import type { SearchResult } from "@/data/footballService";
+import { AI_CHAT_KEY } from "@/domain/localData";
 import { Panel, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +49,7 @@ export function AiStudio({ initialTab = "chat" }: { initialTab?: "chat" | "graph
 
 function Chat() {
   const online = useOnline();
-  const [log, setLog] = useLocalStorage<ChatMsg[]>("football-os.ai.chat.v1", []);
+  const [log, setLog] = useLocalStorage<ChatMsg[]>(AI_CHAT_KEY, []);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
