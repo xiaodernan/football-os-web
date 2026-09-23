@@ -58,9 +58,9 @@ function WatchButton({ playerId }: { playerId: string }) {
   );
 }
 
-function FavoriteButton({ kind, id, activeText, idleText }: { kind: "club" | "player"; id: string; activeText: string; idleText: string }) {
+export function FavoriteButton({ kind, id, activeText, idleText }: { kind: "club" | "player" | "competition"; id: string; activeText: string; idleText: string }) {
   const { state, setFavorite } = useOs();
-  const current = kind === "club" ? state.profile?.favoriteClubId : state.profile?.favoritePlayerId;
+  const current = kind === "club" ? state.profile?.favoriteClubId : kind === "player" ? state.profile?.favoritePlayerId : state.profile?.favoriteCompetitionId;
   const active = current === id;
   return (
     <Button size="sm" variant={active ? "default" : "outline"} onClick={() => setFavorite(kind, active ? null : id)}>

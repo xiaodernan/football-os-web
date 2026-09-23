@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { PlayerDetail, ClubDetail, MatchDetail } from "@/features/football/Details";
+import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
 
 const fmtDate = (iso: string) =>
@@ -415,6 +415,9 @@ function CompetitionDetail({ id }: { id: string }) {
   return (
     <div className="space-y-6">
       <PageHeader title={comp.name} hint={`${comp.nation} · Tier ${comp.tier} · ${clubs.length} teams`} back="/competitions" />
+      <div className="flex justify-end">
+        <FavoriteButton kind="competition" id={id} activeText="My league" idleText="Set as my league" />
+      </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Panel className="p-1">

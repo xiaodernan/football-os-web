@@ -103,7 +103,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M102 are committed, one per milestone. Everything added in the current line
+Milestones M0–M103 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -220,7 +220,13 @@ rather than a fabricated timeline; `m.events` stays the seam a real provider fil
 value question had a subtler break: the "How much is X worth?" answer matched a literal
 `value …` in the retrieved fact, but the fact phrases it as `worth €316M`, so the regex never
 fired and every value answer degraded to "sits at listed". M102 extracts the actual currency
-token, so the real listed figure now surfaces (and the no-value case reads honestly).
+token, so the real listed figure now surfaces (and the no-value case reads honestly). The
+`FAVORITE` reducer also carried an unreachable third arm: `setFavorite("competition", …)` and
+its `favoriteCompetitionId` write were never triggered, because `FavoriteButton` only offered
+club and player. M103 wires that arm to a real control — competition pages now expose a
+"Set as my league" star — so the field is user-settable beyond onboarding and the Data Room
+follows it, making the onboarding promise that favourites personalise the app genuinely true
+for all three favourite kinds.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
