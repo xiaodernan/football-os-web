@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DEMO_MODE } from "@/data/footballService";
+import type { Dna } from "@/domain/playerDna";
 
 export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
   return (
@@ -78,6 +79,34 @@ export function AttributeBar({ label, value, max = 99 }: { label: string; value:
       <div className="w-8 shrink-0 text-right font-mono text-xs tabular-nums">{Math.round(value)}</div>
     </div>
   );
+}
+
+export function DnaCard({ dna, note, fallbackLabel, fallbackNote, bare }: { dna?: Dna | null; note?: ReactNode; fallbackLabel?: string; fallbackNote?: ReactNode; bare?: boolean }) {
+  // Without a vector there is no honest archetype read, so the caller passes the
+  // dataset's stored primary label and the card states what is missing rather
+  // than inventing a secondary archetype.
+  const body = !dna ? (
+    <>
+      {!bare && <div className="text-xs uppercase tracking-widest text-muted-foreground">Football DNA</div>}
+      <div className="mt-1 text-lg font-semibold text-primary">{fallbackLabel ?? "—"}</div>
+      {fallbackNote && <p className="mt-1 text-xs text-muted-foreground">{fallbackNote}</p>}
+    </>
+  ) : (
+    <>
+      {!bare && <div className="text-xs uppercase tracking-widest text-muted-foreground">Football DNA</div>}
+      <div className="mt-1 text-lg font-semibold text-primary">{dna.primary.label}</div>
+      <p className="text-xs text-muted-foreground">{dna.primary.blurb}</p>
+      <div className="mt-2 text-xs">
+        Secondary: <span className="font-medium">{dna.secondary.label}</span>
+        <span className="text-muted-foreground"> · {dna.evolutionPath}</span>
+      </div>
+      {note && <p className="mt-2 text-[11px] text-muted-foreground">{note}</p>}
+    </>
+  );
+  // `bare` lets the card drop its own frame and header so it can sit inside a
+  // Panel that already supplies a title, instead of nesting box inside box.
+  if (bare) return <div>{body}</div>;
+  return <div className="rounded-lg border bg-card/40 p-3">{body}</div>;
 }
 
 export function LoadingBlock({ rows = 3 }: { rows?: number }) {

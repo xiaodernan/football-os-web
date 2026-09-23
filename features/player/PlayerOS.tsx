@@ -18,7 +18,7 @@ import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { FIXTURES_KEY } from "@/domain/localData";
 import { getClub, getPlayer } from "@/data/footballService";
-import { Panel, SectionTitle, StatTile, AttributeBar, EmptyState, LoadingBlock, ErrorState, Crest } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, Crest } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -121,12 +121,7 @@ function Overview() {
         <div className="grid gap-4 sm:grid-cols-2">
           <AttributeRadar attrs={p.attributes} />
           <div className="space-y-3">
-            <div className="rounded-lg border bg-card/40 p-3">
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">Football DNA</div>
-              <div className="mt-1 text-lg font-semibold text-primary">{dna.primary.label}</div>
-              <p className="text-xs text-muted-foreground">{dna.primary.blurb}</p>
-              <div className="mt-2 text-xs">Secondary: <span className="font-medium">{dna.secondary.label}</span> · {dna.evolutionPath}</div>
-            </div>
+            <DnaCard dna={dna} />
             <div className="rounded-lg border bg-card/40 p-3">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Biggest gaps</div>
               <div className="mt-2 space-y-2">

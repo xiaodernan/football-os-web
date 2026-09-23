@@ -1,5 +1,6 @@
 import { footballProvider, getClub } from "@/data/footballService";
 import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages } from "./attributes";
+import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
 
 // Scouting model (spec §28). Deliberately built only from fields the dataset
@@ -101,7 +102,7 @@ export interface ScoutReport {
 // rather than an opinion. Without a vector this reports that plainly.
 export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
   const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
-  const real = p.attributes && Object.keys(p.attributes).length >= 8 ? p.attributes : null;
+  const real = playerVector(p.attributes);
 
   if (!real) {
     return {
@@ -180,7 +181,7 @@ export interface TemplateEdgeSummary {
  * negligible across a long table. Null when the player has no vector.
  */
 export function templateEdge(p: PlayerRef): TemplateEdgeSummary | null {
-  const real = p.attributes && Object.keys(p.attributes).length >= 8 ? p.attributes : null;
+  const real = playerVector(p.attributes);
   if (!real) return null;
   const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
   const tmpl = categoryAverages(baselineAttributes(p.positionGroup as PositionGroup, skill));
@@ -226,7 +227,7 @@ export interface ModelledProfile {
 // note and confidence say which of the two the reader is looking at.
 export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
   const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
-  const real = p.attributes && Object.keys(p.attributes).length >= 8 ? p.attributes : null;
+  const real = playerVector(p.attributes);
   const attrs: Attributes = real ?? baselineAttributes(p.positionGroup as PositionGroup, skill);
   const attributes: ModelledAttribute[] = strongestAttributes(attrs, top).map((a) => ({
     key: a.key,

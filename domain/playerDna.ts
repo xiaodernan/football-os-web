@@ -83,6 +83,26 @@ export function archetypeByKey(key: string): Archetype | undefined {
   return ARCHETYPES.find((a) => a.key === key);
 }
 
+/** The minimum vector length we treat as "the dataset ships this player's own
+ *  attributes" rather than a ratings-only record. One threshold, one place, so
+ *  every consumer agrees on what "has a vector" means. */
+export const VECTOR_MIN_KEYS = 8;
+
+/** The player's own attribute vector, or null when the provider shipped only a
+ *  rating. Callers use this to decide measured vs modelled rather than each
+ *  re-testing the threshold. */
+export function playerVector(attributes?: Attributes): Attributes | null {
+  return attributes && Object.keys(attributes).length >= VECTOR_MIN_KEYS ? attributes : null;
+}
+
+/** Football DNA for a player whose vector may be absent. Returns null when
+ *  there is no vector — an archetype read off a ratings-only record would be
+ *  invented, so callers must say so instead. */
+export function playerDna(attributes?: Attributes): Dna | null {
+  const vector = playerVector(attributes);
+  return vector ? computeDna(vector) : null;
+}
+
 /** Players store only the archetype key, so every display site resolves it
  *  here rather than printing a slug like `ball_winner` to the user. */
 export function archetypeLabel(key: string): string {

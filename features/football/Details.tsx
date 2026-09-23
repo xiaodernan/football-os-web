@@ -18,11 +18,11 @@ import {
 import { simulateMatch, type SimResult, type TeamInput } from "@/domain/matchEngine";
 import { modelPlayerProfile, scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
-import { archetypeLabel } from "@/domain/playerDna";
+import { archetypeLabel, playerDna } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, PlayerRef } from "@/domain/types";
-import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard } from "@/ui/primitives";
 import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +82,7 @@ export function PlayerDetail({ id }: { id: string }) {
   const profile = modelPlayerProfile(p);
   const report = scoutReport(p);
   const arc = careerArc(p);
+  const dna = playerDna(p.attributes);
 
   return (
     <div className="space-y-6">
@@ -134,6 +135,20 @@ export function PlayerDetail({ id }: { id: string }) {
           {a && b && <CompareBars a={a} b={b} />}
         </Panel>
       </div>
+
+      <Panel className="p-4">
+        <SectionTitle
+          title="Football DNA"
+          hint={dna ? "Archetypes scored against this player's own dataset vector" : "Ratings-only record — nothing to score an archetype from"}
+        />
+        <DnaCard
+          bare
+          dna={dna}
+          fallbackLabel={archetypeLabel(p.archetype)}
+          fallbackNote="Primary archetype comes from the world dataset. The secondary archetype and the evolution path are scored from the per-player attribute vector, which this provider does not ship for him — they are withheld rather than invented."
+          note="Both archetypes are scored from the same attribute vector his overall rating is built from."
+        />
+      </Panel>
 
       <Panel className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
