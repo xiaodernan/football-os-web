@@ -216,7 +216,7 @@ function composeAnswer(question: string, ctx: RagContext): string {
   const primary = ctx.facts[0]?.text ?? top.subtitle;
   let lead: string;
   if (/value|worth|cost|price|费用|身价/.test(q) && top.type === "player")
-    lead = `${top.title}'s current market value sits at ${primary.match(/value \$?€?[\d.]+[MBK]?/)?.[0] ?? "listed"} — see the full profile.`;
+    lead = `${top.title}'s current market value is ${primary.match(/€[\d.]+[MBK]?/)?.[0] ?? "not in the retrieved data"} — see the full profile.`;
   else if (/who|which|best|top|key|star|核心|谁/.test(q))
     lead = `Based on the retrieved data about ${top.title}: ${primary}`;
   else if (/stand|position|table|排名|榜首|第几/.test(q))

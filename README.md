@@ -103,7 +103,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M101 are committed, one per milestone. Everything added in the current line
+Milestones M0–M102 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -216,7 +216,11 @@ recorded" because the Simulate button was gated off for played fixtures, so ther
 to see any timeline or stats. M101 removes that gate and makes it honest — finished matches
 now offer a "Reconstruct with Match Engine" run, the real scoreline is never overwritten, and
 the result is labelled throughout as an illustrative reconstruction (not the recorded events)
-rather than a fabricated timeline; `m.events` stays the seam a real provider fills in.
+rather than a fabricated timeline; `m.events` stays the seam a real provider fills in. The
+value question had a subtler break: the "How much is X worth?" answer matched a literal
+`value …` in the retrieved fact, but the fact phrases it as `worth €316M`, so the regex never
+fired and every value answer degraded to "sits at listed". M102 extracts the actual currency
+token, so the real listed figure now surfaces (and the no-value case reads honestly).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
