@@ -92,7 +92,9 @@ Domain behaviour is pinned by runnable proof scripts — each loads the modules 
 Vite's SSR runtime and asserts the claims a milestone rests on:
 
 ```sh
-node scripts/proof-m99.mjs   # Football DNA: vector rule, archetype derivation, determinism
+node scripts/proof-m99.mjs         # Football DNA: vector rule, archetype derivation, determinism
+node scripts/proof-ai-grounding.mjs # AI answers: grounded value extraction, no invented ranking, determinism
+node scripts/proof-localdata.mjs   # registry: lossless export/import, activity-only reset, i18n labels
 ```
 
 They are plain Node and exit non-zero on failure, so there is no test runner to install.
@@ -103,7 +105,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M103 are committed, one per milestone. Everything added in the current line
+Milestones M0–M109 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -226,7 +228,17 @@ its `favoriteCompetitionId` write were never triggered, because `FavoriteButton`
 club and player. M103 wires that arm to a real control — competition pages now expose a
 "Set as my league" star — so the field is user-settable beyond onboarding and the Data Room
 follows it, making the onboarding promise that favourites personalise the app genuinely true
-for all three favourite kinds.
+for all three favourite kinds. A dead-output sweep then removed computed values that nothing
+ever read: an unreachable scout-report/coach branch (M104), the never-called `nextSeason`
+wrapper and a write-only `NewsImpact.affected` field the news panel already re-derives
+(M105), `KgNode.weight` and the raw-hits field persisted onto every AI answer despite the
+Evidence block already showing facts/sources/confidence (M106, which also stopped that
+storage bloat), and the derivable identity/skill fields on the scout report and modelled
+profile (M107). That work was then pinned with two runnable proofs so a future edit cannot
+silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty contract
+(grounded value extraction, no invented ranking, determinism) and `scripts/proof-localdata.mjs`
+guards the backup/recovery contract (lossless export/import, activity-only reset, the
+registry↔i18n label invariant).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
