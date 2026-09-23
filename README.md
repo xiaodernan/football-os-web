@@ -15,7 +15,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | --- | --- | --- |
 | Landing / Onboarding | `/`, `/onboarding` | Introduces the product and creates a profile + mode. |
 | Command Center | `/` (post-onboarding) | Dashboard of fixtures, news, trending players and your progress. |
-| Football World | `/football`, `/players`, `/clubs`, `/competitions`, `/matches`, `/news`, `/search` | Browse a synthetic world of 39 clubs, 318 players, 8 competitions and their fixtures/standings; entity detail pages with source-grounded news, and a per-article "Impact read" that resolves affected clubs/players to real standings and scores its own confidence. Player pages carry the dataset's real attribute vector (radar + top traits), a scout report against the positional template at matched skill, and a modelled career arc; club pages carry season analytics and a next-fixture xG; scheduled fixtures carry a model line. |
+| Football World | `/football`, `/players`, `/clubs`, `/competitions`, `/matches`, `/news`, `/search` | Browse a synthetic world of 39 clubs, 318 players, 8 competitions and their fixtures/standings; entity detail pages with source-grounded news, and a per-article "Impact read" that resolves affected clubs/players to real standings and scores its own confidence. Player pages carry the dataset's real attribute vector (radar + top traits), a **Football DNA** read (primary + secondary archetype and evolution path, scored from that same vector), a scout report against the positional template at matched skill, and a modelled career arc; club pages carry season analytics and a next-fixture xG; scheduled fixtures carry a model line. |
 | Player OS | `/player` | Training plan loop: AI coach → session → complete → XP, attribute growth, streaks and goals. |
 | Manager OS | `/manager` | Take charge of a club: play fixtures, buy/sell players, set team instructions, and climb a live league table. Adds a **season outlook** (title chance and expected finish projected from the live table), a retrospective **season summary** with honours, and a **match prep** advisor that recommends tactics from the same engine inputs the fixture will use and can project odds for it. |
 | Football AI | `/ai` | RAG-style chat grounded in the world dataset, always with evidence, sources and a confidence score. |
@@ -29,7 +29,7 @@ native modes — **FAN**, **PLAYER** and **MANAGER** — share one world dataset
 | Film Room | `/film` | Standalone video-analysis pillar: upload or drop clips, run the pipeline stage-by-stage, keep a local library of reports, review detected events/frames with confidence, and build a training plan from a finding. Across the whole library it computes detections per minute by type, actions/scans per minute, an older-vs-newer scanning trend (unlocked at two clips) and recurring coaching focus. |
 | Data Room | `/data` | Advanced team analytics derived deterministically from the world's finished matches: league-pace attack/defence ratings, form, home/away splits and clean sheets, a **Poisson matchday forecast** for upcoming fixtures (win/draw/loss, expected goals, most likely scoreline) and modelled next-fixture xG. Small samples are regressed toward the league mean so a few odd games cannot dominate a line. |
 | Transfer Centre | `/transfers` | Rumour board built from the world's own news feed: each linked target carries its source + credibility, a transparent asking-fee estimate, value index and headroom, plus a squad-fit score against your favourite club's depth. |
-| Player Comparison | `/compare` | Head-to-head duel built from the dataset's real fields: rating/age/value metrics with a relative bar and a win count, **plus** a category profile and the eight biggest attribute differences taken from each player's own attribute vector. The verdict blends quality, upside and prime-window length. When a provider ships no vectors, the page says so instead of inventing a profile. |
+| Player Comparison | `/compare` | Head-to-head duel built from the dataset's real fields: rating/age/value metrics with a relative bar and a win count, **plus** a category profile, the eight biggest attribute differences taken from each player's own attribute vector, and a **style & role** panel comparing each side's Football DNA. The verdict blends quality, upside and prime-window length. When a provider ships no vectors, the page says so instead of inventing a profile. |
 | Watchlist Board | `/watchlist` | Your device-local starred players in one sortable board (value, potential, overall, age) with derived asking estimates — tick any two to open a head-to-head in the Compare tool. |
 | My Profile | `/profile` | A personal growth dashboard built entirely from your locally-stored activity: level and XP curve, ability radar with strengths and focus areas, overall-rating trend, toggleable goals, recent sessions and favourites. |
 | Achievements & Trophies | `/achievements` | Badges grouped by Training, Consistency, Growth, Explorer, Scholar and Analyst — each unlocked only from a genuine signal already in your local state (sessions logged, streak kept, goals met, plans requested, players watched, level reached, academy lessons completed, film clips analysed), with transparent progress bars and trophy points. |
@@ -68,8 +68,9 @@ src/        entry (App.tsx routes), globals.css, main.
   clear `provider` seams for later server storage. Every key is registered in
   `domain/localData.ts`, which drives the Settings inventory, the lossless export/import
   bundle and the activity-only reset — a new `football-os.*` key must be added there or it
-  would silently be left out of backups. No credentials or secrets are ever
-  placed in the frontend.
+  would silently be left out of backups. Every module reads its key from that registry
+  rather than repeating the string, so versioning a key cannot leave a stale reader behind.
+  No credentials or secrets are ever placed in the frontend.
 - **Models are labelled models.** Projections (season outlook, Poisson matchday forecast,
   career arc, attribute estimates) state their inputs, sample size, confidence and
   sources on screen, and are never presented as results or as measured scouting data.
@@ -87,13 +88,22 @@ npm run build    # type-check + static export into dist/
 npm run preview  # serve the built output
 ```
 
+Domain behaviour is pinned by runnable proof scripts — each loads the modules through
+Vite's SSR runtime and asserts the claims a milestone rests on:
+
+```sh
+node scripts/proof-m99.mjs   # Football DNA: vector rule, archetype derivation, determinism
+```
+
+They are plain Node and exit non-zero on failure, so there is no test runner to install.
+
 The app is a static SPA with hash routing, so deep links work without a server.
 Route-level code splitting keeps the initial chunk small; chart-heavy screens load on
 demand.
 
 ## Roadmap status
 
-Milestones M0–M95 are committed, one per milestone. Everything added in the current line
+Milestones M0–M100 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -187,7 +197,20 @@ Existing callers pass no `rev` and are unchanged (M94). The Player OS "Log a mat
 performance" list claimed it "Feeds your analysis and progress", but its rows are stored under
 their own key that nothing in the analytics, load, XP or footprint models ever reads — it is a
 private log surfaced only in the Settings export. The hint now says exactly that instead of
-promising an integration that does not exist (M95).
+promising an integration that does not exist (M95). The work then turned to the data contract
+rather than unwired numbers: the never-produced `SUB` match-event variant and its glyph were
+deleted (M96), and the ten modules that repeated `football-os.*` key strings as literals now
+import them from the registry, so versioning a key can no longer leave a stale reader behind
+(M97). A copy sweep then fixed a half-translated placeholder on the match page (`mid场`) and
+removed three regex alternatives an earlier branch made unreachable, adding `dev/scan-cjk.mjs`
+so a stray non-English glyph in UI code is a one-command check (M98). Two spec gaps closed
+next: world player pages now carry a full Football DNA read — primary and secondary archetype
+plus the evolution path, scored from the player's own dataset vector and withheld rather than
+invented when a provider ships ratings only, with the vector-presence rule deduplicated into
+`domain/playerDna.ts` (M99); and the Compare page gained the style & role dimension §29 asks
+for, putting both players' DNA side by side (M100). `scripts/proof-m99.mjs` pins the
+load-bearing claim — re-deriving the archetype from a player's stored vector reproduces the
+dataset's own `archetype` key for every seeded player — and passes 20/20.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
