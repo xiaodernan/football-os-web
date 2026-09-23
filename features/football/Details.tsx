@@ -493,7 +493,9 @@ export function MatchDetail({ id }: { id: string }) {
   const home = getClub(m.homeClubId)!;
   const away = getClub(m.awayClubId)!;
   const comp = getCompetition(m.competitionId);
-  const events: MatchEvent[] = (m.status === "FINISHED" && m.events?.length) ? m.events : sim?.timeline ?? [];
+  const played = m.status === "FINISHED";
+  const usingRecorded = played && !!m.events?.length;
+  const events: MatchEvent[] = usingRecorded ? m.events! : sim?.timeline ?? [];
 
   const runSim = () => {
     const r = simulateMatch({ seed: `${m.id}:${m.round}`, home: clubTeamInput(home.id), away: clubTeamInput(away.id) });
@@ -531,28 +533,30 @@ export function MatchDetail({ id }: { id: string }) {
           </div>
           <Link to={`/clubs/${away.id}`} className="flex flex-col items-center gap-2 hover:text-primary"><Crest colors={away.colors} short={away.short} size={56} /><span className="text-center text-sm font-medium">{away.name}</span></Link>
         </div>
-        {m.status !== "FINISHED" && (
-          <div className="mt-4 flex justify-center">
-            <Button onClick={runSim} variant={sim ? "outline" : "default"}>{sim ? "Re-run Match Engine" : "▶ Simulate with Match Engine"}</Button>
-          </div>
-        )}
-        {sim && <div className="mt-2 text-center text-[11px] text-muted-foreground">Deterministic simulation from squad strength · seed {sim.seed.slice(0, 8)} · demo engine</div>}
+        <div className="mt-4 flex justify-center">
+          <Button onClick={runSim} variant={sim ? "outline" : "default"}>
+            {sim
+              ? played ? "Re-run reconstruction" : "Re-run Match Engine"
+              : played ? "▶ Reconstruct with Match Engine" : "▶ Simulate with Match Engine"}
+          </Button>
+        </div>
+        {sim && <div className="mt-2 text-center text-[11px] text-muted-foreground">{played ? "Illustrative reconstruction from squad strength — not the recorded events" : "Deterministic simulation from squad strength"} · seed {sim.seed.slice(0, 8)} · demo engine</div>}
       </Panel>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel className="p-4">
-          <SectionTitle title={sim ? "Projected stats" : "Match engine output"} />
+          <SectionTitle title={sim ? (played ? "Reconstructed stats" : "Projected stats") : "Match engine output"} />
           {sim ? <StatCompare sim={sim} home={home.name} away={away.name} /> : (
-            <EmptyState title="No simulation yet" hint="Run the match engine to see possession, shots, xG and ratings." icon="▶" />
+            <EmptyState title={played ? "No reconstruction yet" : "No simulation yet"} hint={played ? "Run the Match Engine to reconstruct possession, shots, xG and ratings for this fixture." : "Run the match engine to see possession, shots, xG and ratings."} icon="▶" />
           )}
         </Panel>
         <Panel className="p-4">
-          <SectionTitle title={m.status === "FINISHED" ? "Timeline" : sim ? "Projected timeline" : "Events"} />
+          <SectionTitle title={usingRecorded ? "Timeline" : sim ? (played ? "Reconstructed timeline" : "Projected timeline") : "Events"} />
           {events.length ? (
             <ul className="mt-1 space-y-1.5">
               {events.map((e, i) => <EventRow key={i} e={e} home={home.name} away={away.name} />)}
             </ul>
-          ) : <EmptyState title="No events recorded" />}
+          ) : <EmptyState title="No events recorded" hint={played ? "Demo fixtures carry no recorded event log — run the Match Engine to see an illustrative reconstruction." : undefined} />}
         </Panel>
       </div>
 

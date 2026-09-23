@@ -103,7 +103,7 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M100 are committed, one per milestone. Everything added in the current line
+Milestones M0–M101 are committed, one per milestone. Everything added in the current line
 of work (M37 onward) was built green and checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
@@ -210,7 +210,13 @@ invented when a provider ships ratings only, with the vector-presence rule dedup
 `domain/playerDna.ts` (M99); and the Compare page gained the style & role dimension §29 asks
 for, putting both players' DNA side by side (M100). `scripts/proof-m99.mjs` pins the
 load-bearing claim — re-deriving the archetype from a player's stored vector reproduces the
-dataset's own `archetype` key for every seeded player — and passes 20/20.
+dataset's own `archetype` key for every seeded player — and passes 20/20. A finished match
+then had a dead affordance: its "Timeline" heading was paired with a permanent "No events
+recorded" because the Simulate button was gated off for played fixtures, so there was no way
+to see any timeline or stats. M101 removes that gate and makes it honest — finished matches
+now offer a "Reconstruct with Match Engine" run, the real scoreline is never overwritten, and
+the result is labelled throughout as an illustrative reconstruction (not the recorded events)
+rather than a fabricated timeline; `m.events` stays the seam a real provider fills in.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
