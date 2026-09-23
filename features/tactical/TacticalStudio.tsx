@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { Link } from "@/lib/router";
+import { Link, useRouter } from "@/lib/router";
 import { useLocalStorage } from "@/lib/hooks";
 import { useOs } from "@/store/useFootballOS";
 import { getClub, playersByClub } from "@/data/footballService";
@@ -27,11 +27,19 @@ function build(formation: string): Token[] {
 }
 
 export function TacticalStudio() {
+  const { query } = useRouter();
   const { state } = useOs();
   const clubId = state.profile?.favoriteClubId ?? playersByClub("ars")[0]?.clubId ?? "ars";
   const club = getClub(clubId) ?? getClub("ars")!;
+  // A Manager OS tactic recommendation carries its mentality index (0..4) here so
+  // "Fine-tune in Tactical Studio" opens on that shape instead of a blank board.
+  const carriedMt = query.get("mt");
+  const carriedMentality =
+    carriedMt !== null && Number.isFinite(Number(carriedMt))
+      ? Math.max(0, Math.min(4, Math.round(Number(carriedMt))))
+      : null;
   const [formation, setFormation] = useState("4-3-3");
-  const [mentality, setMentality] = useState(2);
+  const [mentality, setMentality] = useState(carriedMentality ?? 2);
   const [tokens, setTokens] = useState<Token[]>(() => build("4-3-3"));
   const [saved, setSaved] = useLocalStorage<Saved[]>(TACTICS_KEY, []);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -107,6 +115,12 @@ export function TacticalStudio() {
             <SectionTitle title="Mentality" />
             <input type="range" min={0} max={4} step={1} value={mentality} onChange={(e) => setMentality(Number(e.target.value))} className="mt-2 w-full accent-[var(--color-primary)]" />
             <div className="mt-1 text-sm text-primary">{MENTALITIES[mentality]}</div>
+            {carriedMentality !== null && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                Opened from a Manager OS recommendation · starting in your <b>{MENTALITIES[carriedMentality]}</b> mentality.
+                This is a sandbox — nothing here changes your career until you apply tactics in Manager OS.
+              </p>
+            )}
           </Panel>
           <Panel className="p-4">
             <SectionTitle title="Shape read-out" />

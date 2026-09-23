@@ -470,7 +470,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <Button size="sm" disabled={isCurrent} onClick={() => onApply(p.recommended)}>{isCurrent ? "Already applied" : "Apply these tactics"}</Button>
             <Button size="sm" variant="outline" onClick={runOdds} disabled={oddsBusy}>{oddsBusy ? "Projecting…" : "Project odds (150 runs)"}</Button>
-            <Link to="/tactical-studio" className="text-xs text-primary hover:underline">Fine-tune in Tactical Studio →</Link>
+            <Link to={`/tactical-studio?mt=${p.recommended.mentality + 2}`} className="text-xs text-primary hover:underline">Fine-tune in Tactical Studio →</Link>
           </div>
         </Panel>
 
