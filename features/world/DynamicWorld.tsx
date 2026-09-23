@@ -26,6 +26,7 @@ export function DynamicWorld() {
   const [elapsed, setElapsed] = useState<number>(() => loadElapsed());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
     try {
@@ -52,7 +53,7 @@ export function DynamicWorld() {
       setError(e instanceof Error ? e : new Error("Simulation failed"));
       return null;
     }
-  }, [base, elapsed]);
+  }, [base, elapsed, nonce]);
 
   const advance = useCallback(() => {
     setBusy(true);
@@ -95,7 +96,7 @@ export function DynamicWorld() {
       </div>
 
       {!snapshot ? (
-        <ErrorState error={error} retry={() => setElapsed((n) => n)} />
+        <ErrorState error={error} retry={() => setNonce((n) => n + 1)} />
       ) : busy ? (
         <Panel className="p-4"><LoadingBlock rows={4} /></Panel>
       ) : elapsed === 0 ? (
