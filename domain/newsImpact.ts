@@ -36,7 +36,6 @@ export type Certainty = "high" | "moderate" | "low";
 export interface NewsImpact {
   confidence: number;
   certainty: Certainty;
-  affected: ImpactEntity[];
   context: string[];
   watch: string[];
   evidence: string[];
@@ -91,7 +90,7 @@ export function buildImpact(input: ImpactInput): NewsImpact {
     ...standings.map((s) => `${s.clubLabel}: ${ordinal(s.position)}/${s.total}, ${s.points} pts`),
   ];
 
-  return { confidence, certainty, affected: entities, context, watch, evidence };
+  return { confidence, certainty, context, watch, evidence };
 }
 
 function ordinal(n: number): string {

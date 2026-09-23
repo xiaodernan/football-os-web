@@ -244,11 +244,6 @@ export function runWorld(base: WorldInput, seasonsElapsed: number): WorldSnapsho
   return { players, seasonsElapsed, history };
 }
 
-/** Single next-season preview without persisting — same determinism as advancing. */
-export function nextSeason(base: WorldInput, seasonsElapsed: number): SeasonStep {
-  return runWorld(base, seasonsElapsed + 1).history[seasonsElapsed];
-}
-
 export function formatMarket(v: number): string {
   if (v >= 1_000_000_000) return `€${(v / 1_000_000_000).toFixed(2)}B`;
   return `€${Math.round(v / 1_000_000)}M`;
