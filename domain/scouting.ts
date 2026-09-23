@@ -140,11 +140,9 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
   const headline =
     best.delta > 0 && worst.delta < 0
       ? `${best.label} runs ahead of the ${p.positionGroup} template; ${worst.label} is the shortfall`
-      : best.delta > 0 && worst.delta >= 0
+      : best.delta > 0
         ? `Above the ${p.positionGroup} template in every category — strongest is ${best.label} (+${best.delta})`
-        : best.delta > 0
-          ? `${best.label} is the clear above-template strength; ${worst.label} sits at or below the template`
-          : "At or below the positional template across categories";
+        : "At or below the positional template across categories";
 
   return {
     playerId: p.id,

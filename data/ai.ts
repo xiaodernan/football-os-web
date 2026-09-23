@@ -57,7 +57,7 @@ function analyze(prompt: string, attrs: Attributes) {
   const weaknesses = weakestAttributes(attrs, 3).map((w) => w.key);
   const strengths = strongestAttributes(attrs, 3).map((w) => w.key);
   // Focus = explicit request first, else the biggest gap for the profile.
-  const focus = [...new Set([...requested, ...weaknesses])].slice(0, requested.length ? 2 : 2);
+  const focus = [...new Set([...requested, ...weaknesses])].slice(0, 2);
   const minutesMatch = prompt.match(/(\d{1,3})\s*(min|minute|分钟|mins)/i);
   const available = minutesMatch ? parseInt(minutesMatch[1], 10) : null;
   return { requested, weaknesses, strengths, focus, available };
