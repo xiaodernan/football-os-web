@@ -172,8 +172,8 @@ function Coach() {
   const [prompt, setPrompt] = useState("");
   const [minutes, setMinutes] = useState(45);
   const [busy, setBusy] = useState(false);
-  const [planId, setPlanId] = useState<string | null>(null);
-  const plan = state.plans.find((x) => x.id === planId) ?? state.plans[0];
+  const [planId, setPlanId] = useState<string | null>(() => state.plans[0]?.id ?? null);
+  const plan = state.plans.find((x) => x.id === planId) ?? null;
   const load = useMemo(() => buildLoad({ nowMs: Date.now(), sessions: state.sessions }), [state.sessions]);
   const LOAD_TONE: Record<LoadZone, string> = {
     none: "border-border text-muted-foreground",
