@@ -563,7 +563,7 @@ export function MatchDetail({ id }: { id: string }) {
 }
 
 function EventRow({ e, home, away }: { e: MatchEvent; home: string; away: string }) {
-  const glyph: Record<string, string> = { GOAL: "⚽", YELLOW: "🟨", RED: "🟥", SUB: "🔁", SHOT: "🎯", SAVE: "🧤", VAR: "📺" };
+  const glyph: Record<string, string> = { GOAL: "⚽", YELLOW: "🟨", RED: "🟥", SHOT: "🎯", SAVE: "🧤", VAR: "📺" };
   return (
     <li className="flex items-center gap-2 text-sm">
       <span className="w-9 text-right font-mono text-xs text-muted-foreground">{e.minute}'</span>

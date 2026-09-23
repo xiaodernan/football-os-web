@@ -276,7 +276,6 @@ export function Dashboard() {
               <>
                 <AttributeRadar attrs={profile.attributes} height={220} />
                 <div className="mt-3 space-y-2">
-                  {Object.entries(profile.attributes).slice(0, 0)}
                   <AttributeBar label="First Touch" value={profile.attributes.first_touch} />
                   <AttributeBar label="Passing" value={profile.attributes.passing} />
                   <AttributeBar label="Decision Making" value={profile.attributes.decision_making} />

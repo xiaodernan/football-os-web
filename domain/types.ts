@@ -80,7 +80,6 @@ export type MatchEventType =
   | "GOAL"
   | "YELLOW"
   | "RED"
-  | "SUB"
   | "SHOT"
   | "SAVE"
   | "VAR";
