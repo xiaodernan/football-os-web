@@ -81,11 +81,8 @@ export interface CategoryEdgeRow {
 }
 
 export interface ScoutReport {
-  playerId: string;
-  name: string;
   /** true when the dataset ships this player's own attribute vector */
   hasVector: boolean;
-  skill: number;
   categories: CategoryEdgeRow[];
   strengths: TemplateEdge[];
   concerns: TemplateEdge[];
@@ -106,10 +103,7 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
 
   if (!real) {
     return {
-      playerId: p.id,
-      name: p.name,
       hasVector: false,
-      skill: Math.round(skill * 100) / 100,
       categories: [],
       strengths: [],
       concerns: [],
@@ -145,10 +139,7 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
         : "At or below the positional template across categories";
 
   return {
-    playerId: p.id,
-    name: p.name,
     hasVector: true,
-    skill: Math.round(skill * 100) / 100,
     categories: cats,
     strengths,
     concerns,
@@ -209,8 +200,6 @@ export interface ModelledAttribute {
 
 export interface ModelledProfile {
   attributes: ModelledAttribute[];
-  skill: number;
-  hasData: boolean;
   /** true when these are the dataset's own per-player values rather than a
    *  position-group estimate */
   measured: boolean;
@@ -234,8 +223,6 @@ export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
   }));
   return {
     attributes,
-    skill: Math.round(skill * 100) / 100,
-    hasData: p.overall > 0,
     measured: !!real,
     confidence: real ? 92 : Math.round(Math.max(35, Math.min(70, 40 + skill * 30))),
     note: real
