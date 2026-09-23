@@ -40,12 +40,12 @@ const ATTRIBUTE_HINTS: [RegExp, string][] = [
   [/shoot|finish|射门|射术|终结/i, "finishing"],
   [/dribbl|过人|盘带/i, "dribbling"],
   [/press|压迫|摆脱/i, "press_resistance"],
-  [/scan|观察|回头|scanning/i, "scanning"],
+  [/scan|观察|回头/i, "scanning"],
   [/position|站位|选位/i, "positioning"],
   [/defen|防守/i, "defensive_awareness"],
   [/stamina|体能|耐力|fitness/i, "stamina"],
   [/speed|pace|速度/i, "sprint"],
-  [/decision|决定|选择|选择球/i, "decision_making"],
+  [/decision|决定|选择/i, "decision_making"],
   [/cross|传中/i, "crossing"],
   [/set piece|定位球|任意球/i, "set_pieces"],
   [/composure|冷静|抗压/i, "composure"],
@@ -58,7 +58,7 @@ function analyze(prompt: string, attrs: Attributes) {
   const strengths = strongestAttributes(attrs, 3).map((w) => w.key);
   // Focus = explicit request first, else the biggest gap for the profile.
   const focus = [...new Set([...requested, ...weaknesses])].slice(0, requested.length ? 2 : 2);
-  const minutesMatch = prompt.match(/(\d{1,3})\s*(min|minute|分钟|分钟|mins)/i);
+  const minutesMatch = prompt.match(/(\d{1,3})\s*(min|minute|分钟|mins)/i);
   const available = minutesMatch ? parseInt(minutesMatch[1], 10) : null;
   return { requested, weaknesses, strengths, focus, available };
 }

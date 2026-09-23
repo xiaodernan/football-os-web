@@ -544,7 +544,7 @@ export function MatchDetail({ id }: { id: string }) {
       <Panel className="p-4">
         <SectionTitle title="Ask Football AI" hint="Answers cite evidence + confidence — Demo provider, no API key" />
         <div className="mt-2 flex gap-2">
-          <Input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} placeholder="Who was decisive? Why did the mid场 battle matter?" className="flex-1" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} placeholder="Who was decisive? Why did the midfield battle matter?" className="flex-1" />
           <Button onClick={ask} disabled={busy}>{busy ? "Thinking…" : "Ask"}</Button>
         </div>
         {ai && (
