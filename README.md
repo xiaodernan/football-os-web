@@ -89,15 +89,21 @@ npm run preview  # serve the built output
 ```
 
 Domain behaviour is pinned by runnable proof scripts — each loads the modules through
-Vite's SSR runtime and asserts the claims a milestone rests on:
+Vite's SSR runtime and asserts the claims a milestone rests on. They cover the numeric
+cores (analytics, match engine, fixture probability, development projections, XP curve,
+role-gap analysis, film insights, career arc, comparisons, transfers) and the honesty
+contracts (AI grounding, local-data registry, offline wording, feed ranking). Run them all:
 
 ```sh
-node scripts/proof-m99.mjs         # Football DNA: vector rule, archetype derivation, determinism
-node scripts/proof-ai-grounding.mjs # AI answers: grounded value extraction, no invented ranking, determinism
-node scripts/proof-localdata.mjs   # registry: lossless export/import, activity-only reset, i18n labels
+npm run proof                        # = npm test: every scripts/proof-*.mjs, with per-script counts
+node scripts/proof-m99.mjs           # Football DNA: vector rule, archetype derivation, determinism
+node scripts/proof-ai-grounding.mjs  # AI answers: grounded value extraction, no invented ranking, determinism
+node scripts/proof-localdata.mjs     # registry: lossless export/import, activity-only reset, i18n labels
 ```
 
 They are plain Node and exit non-zero on failure, so there is no test runner to install.
+`npm run proof` prints the live script and check counts; the README deliberately does not,
+because a checked-in total goes stale the moment a proof is added.
 
 The app is a static SPA with hash routing, so deep links work without a server.
 Route-level code splitting keeps the initial chunk small; chart-heavy screens load on
@@ -105,8 +111,9 @@ demand.
 
 ## Roadmap status
 
-Milestones M0–M109 are committed, one per milestone. Everything added in the current line
-of work (M37 onward) was built green and checked in a browser against a fresh production
+Work ships one milestone per commit and is currently at M141 (a few numbers in that range
+were skipped). Everything added in the current line of work (M37 onward) was built green
+and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
 World browse and entity detail (player attribute profile, scout report, career arc; club
@@ -239,6 +246,31 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 (grounded value extraction, no invented ranking, determinism) and `scripts/proof-localdata.mjs`
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
+
+The M108–M141 line of work is a different kind of progress: it makes the earlier claims
+checkable, and closes the remaining gaps between what the interface says and what the code
+does. The numeric cores behind displayed figures have been pinned one at a time with
+runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
+probability (M119), XP curve (M120), role gap (M121), comparison (M124), development
+projection (M126), film insights (M128), career arc (M129), Academy accounting and its
+try-it targets (M134), offline wording (M139), club-ranked feed (M140) and the transfer
+board (M141) — behind one runner so a check cannot silently rot (M111). In the same range,
+each overclaim became either a real affordance or accurate wording: the Dynamic World error
+Retry re-runs the simulation (M115), the Academy "has a career" signal no longer fires on a
+null career (M116), the Transfer Centre's "change club" goes to the club picker (M117), the
+match advisor carries its recommended mentality into Tactical Studio (M118), the landing
+pillars stopped promising animation, skill trees and contracts the app does not have (M122),
+the coach's "New" button clears the plan it displays (M123), the role-gap panel hands its
+priorities to the session planner (M125), the news detail no longer shows a source link that
+resolves nowhere (M127), every Academy lesson's try-it link lands on the screen that performs
+the action (M133), the empty-watchlist hint names the control it points at (M135), and three
+offline notices now state the on-device mechanism instead of implying a network call or a
+reconnect queue (M136–M138). M140 turns onboarding's "personalises your feed" into a real,
+order-only club ranking that labels itself only when the chosen club genuinely appears in
+the feed. M130–M132 localised the Football World browse surface, the Tactical Studio and
+the Football AI. A sweep of the remaining panels still owes a few untranslated UI strings
+— the Dashboard's "% confidence" suffix and its "News →" link are two known ones — so they
+are listed here as outstanding rather than described as finished.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
