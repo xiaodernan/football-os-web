@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DEMO_MODE } from "@/data/footballService";
+import { useI18n } from "@/i18n";
 import type { Dna } from "@/domain/playerDna";
 
 export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
@@ -28,10 +29,11 @@ export function SectionTitle({ title, hint, action }: { title: string; hint?: st
 }
 
 export function DemoBadge() {
+  const { t } = useI18n();
   if (!DEMO_MODE) return null;
   return (
     <Badge variant="outline" className="border-warning/40 bg-warning/10 text-warning font-mono text-[10px]">
-      ● DEMO DATA · synthetic
+      ● {t("common.demo")} · {t("common.synthetic")}
     </Badge>
   );
 }
@@ -110,8 +112,9 @@ export function DnaCard({ dna, note, fallbackLabel, fallbackNote, bare }: { dna?
 }
 
 export function LoadingBlock({ rows = 3 }: { rows?: number }) {
+  const { t } = useI18n();
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2.5" role="status" aria-label={t("cta.loading")}>
       {Array.from({ length: rows }).map((_, i) => (
         <Skeleton key={i} className="h-12 w-full rounded-lg" />
       ))}
@@ -119,24 +122,26 @@ export function LoadingBlock({ rows = 3 }: { rows?: number }) {
   );
 }
 
-export function EmptyState({ title = "Nothing here yet", hint, icon }: { title?: string; hint?: string; icon?: ReactNode }) {
+export function EmptyState({ title, hint, icon }: { title?: string; hint?: string; icon?: ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="grid place-items-center rounded-xl border border-dashed py-12 text-center">
       <div className="text-3xl opacity-40">{icon ?? "◇"}</div>
-      <div className="mt-2 text-sm font-medium">{title}</div>
+      <div className="mt-2 text-sm font-medium">{title ?? t("common.empty")}</div>
       {hint && <div className="mt-1 max-w-xs text-xs text-muted-foreground">{hint}</div>}
     </div>
   );
 }
 
 export function ErrorState({ error, retry }: { error?: Error | null; retry?: () => void }) {
+  const { t } = useI18n();
   return (
     <div className="grid place-items-center rounded-xl border border-destructive/30 bg-destructive/5 py-10 text-center">
-      <div className="text-sm font-medium text-destructive">Something went wrong</div>
-      <div className="mt-1 max-w-sm text-xs text-muted-foreground">{error?.message ?? "Unexpected error while loading this view."}</div>
+      <div className="text-sm font-medium text-destructive">{t("common.error")}</div>
+      <div className="mt-1 max-w-sm text-xs text-muted-foreground">{error?.message ?? t("common.errorDetail")}</div>
       {retry && (
         <Button size="sm" variant="outline" className="mt-3" onClick={retry}>
-          Retry
+          {t("cta.retry")}
         </Button>
       )}
     </div>

@@ -14,7 +14,9 @@
 //      spread and this check keeps it from coming back),
 //   7. a 简体 character surviving inside a zh-TW value,
 //   8. a screen whose labels live in a variable (so check 4 cannot see them)
-//      carrying raw text instead of dictionary keys.
+//      carrying raw text instead of dictionary keys,
+//   9. a shared primitive falling back to a hardcoded English string, which would
+//      go untranslated on every screen at once.
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
@@ -156,6 +158,20 @@ ok(`every tab label is a key all three dictionaries declare (${rawLabels.join(",
   rawLabels.length === 0);
 const tTab = /\{t\(\s*tab\.label\s*\)\}/.test(tabSrc);
 ok("the tab strip renders its labels through t() rather than as stored text", tTab);
+// 9. The shared primitives sit on nearly every screen, so a literal inside one of
+//    them is untranslated UI everywhere at once. M144 moved the demo badge, the
+//    loading status, and the empty/error states into the dictionary; both halves
+//    are pinned, because deleting the `t()` call and re-typing the English are
+//    different regressions.
+const prim = readFileSync(join(root, "ui", "primitives.tsx"), "utf8");
+const PRIMITIVE_KEYS = ["common.demo", "common.synthetic", "common.empty", "common.error", "common.errorDetail", "cta.retry", "cta.loading"];
+const unwired = PRIMITIVE_KEYS.filter((k) => !prim.includes(`t("${k}")`));
+ok(`the primitives read all ${PRIMITIVE_KEYS.length} of their own labels from the dictionary (${unwired.join(", ") || "none"})`,
+  unwired.length === 0);
+const STRUCK = ["● DEMO DATA", "Something went wrong", "Unexpected error while loading", `title = "Nothing here yet"`];
+const backslid = STRUCK.filter((s) => prim.includes(s));
+ok(`no primitive still hardcodes the English M144 replaced (${backslid.join(" | ") || "none"})`, backslid.length === 0);
+
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);
 await server.close();

@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M143 (a few numbers in that range
+Work ships one milestone per commit and is currently at M144 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M143 line of work is a different kind of progress: it makes the earlier claims
+The M108–M144 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -291,6 +291,22 @@ forms, not Simplified. A sweep of the remaining panels still owes a few untransl
 strings — the Dashboard's "% confidence" suffix and its "News →" link are two known ones,
 and Manager OS's whole tab strip is hardcoded English — so they are listed here as
 outstanding rather than described as finished.
+
+M144 asked the dictionary a different question: not whether a locale is complete, but
+whether a key can reach the screen at all. An audit that resolves keys held in variables
+rather than scanning only literal `t("…")` calls found 22 labels no code path names. Five of
+them belong to the shared primitives every screen renders — the demo badge, the loading
+status, the empty and error states — so a Chinese visitor was reading the app's most common
+chrome in English. Those five now come from the dictionary, plus two keys M144 added
+(`common.synthetic`, `common.errorDetail`), and proof-i18n pins both directions: that each
+primitive reads its own label through `t()`, and that the English literals it replaced do
+not come back. Two halves of this are verified from source rather than seen on screen, and
+are claimed as such: `EmptyState`'s default title is a fallback no current call site takes,
+and the loading block's new accessible label was read, not observed during a live loading
+pass. 17 unreachable labels remain, each with a disposition — six are dead duplicates of a
+`set.key.*` family Settings already renders, the rest get wired to the control they describe
+or deleted — and the audit itself still owes a permanent gate, so a label cannot be added
+again without naming a place that renders it.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
