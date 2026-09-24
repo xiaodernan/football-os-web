@@ -332,7 +332,7 @@ export function Dashboard() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Tap "Scout watch" on any player to track them here.</p>
+              <p className="text-sm text-muted-foreground">{t("dash.watchlistEmpty")}</p>
             )}
           </Panel>
 
