@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useLocalStorage } from "@/lib/hooks";
+import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { getClub, playersByClub } from "@/data/footballService";
 import { TACTICS_KEY } from "@/domain/localData";
@@ -20,13 +21,17 @@ const FORMATIONS: Record<string, Array<[number, number, Token["role"], string]>>
 };
 
 const ROLE_COLOR: Record<Token["role"], string> = { GK: "var(--color-chart-4)", DEF: "var(--color-info)", MID: "var(--color-primary)", ATT: "var(--color-destructive)" };
-const MENTALITIES = ["Very defensive", "Defensive", "Balanced", "Attacking", "Very attacking"];
+// Mentality is persisted as an index 0..4, so its label is resolved through the
+// dictionary rather than by array position — a saved shape reads back in the
+// language it is viewed in.
+const mentalityLabel = (t: (k: string) => string, i: number) => t(`tac.mentality.${i}`);
 
 function build(formation: string): Token[] {
   return FORMATIONS[formation].map(([x, y, role, label], i) => ({ id: `t${i}`, label, x, y, role }));
 }
 
 export function TacticalStudio() {
+  const { t } = useI18n();
   const { query } = useRouter();
   const { state } = useOs();
   const clubId = state.profile?.favoriteClubId ?? playersByClub("ars")[0]?.clubId ?? "ars";
@@ -68,19 +73,19 @@ export function TacticalStudio() {
   const shapeLabel = `${balance.backs}-${balance.mids}-${balance.atts}`;
 
   const save = () => {
-    const entry: Saved = { name: `${formation} · ${MENTALITIES[mentality]}`, mentality, tokens };
+    const entry: Saved = { name: `${formation} · ${mentalityLabel(t, mentality)}`, mentality, tokens };
     setSaved((s) => [entry, ...s].slice(0, 12));
-    toast.success("Formation saved to this device");
+    toast.success(t("tac.toastSaved"));
   };
-  const load = (s: Saved) => { setTokens(s.tokens); setMentality(s.mentality); toast("Formation loaded"); };
+  const load = (s: Saved) => { setTokens(s.tokens); setMentality(s.mentality); toast(t("tac.toastLoaded")); };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">⛶</div>
         <div>
-          <div className="flex items-center gap-2"><h1 className="text-xl font-bold">Tactical Studio</h1>{<DemoBadge />}</div>
-          <p className="text-xs text-muted-foreground">Drag players to build a shape. A coaching board — positions live in your browser.</p>
+          <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("tac.title")}</h1>{<DemoBadge />}</div>
+          <p className="text-xs text-muted-foreground">{t("tac.subtitle")}</p>
         </div>
       </div>
 
@@ -102,45 +107,44 @@ export function TacticalStudio() {
             ))}
           </svg>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => compact(-1)}>Narrow</Button>
-            <Button size="sm" variant="outline" onClick={() => compact(1)}>Wide</Button>
-            <Button size="sm" variant="outline" onClick={() => applyFormation(formation)}>Reset shape</Button>
-            <Button size="sm" onClick={save}>Save formation</Button>
-            <Link to={`/simulation?mt=${mentality}&shape=${encodeURIComponent(formation)}`}><Button size="sm" variant="ghost">Take to Simulation Lab →</Button></Link>
+            <Button size="sm" variant="outline" onClick={() => compact(-1)}>{t("tac.narrow")}</Button>
+            <Button size="sm" variant="outline" onClick={() => compact(1)}>{t("tac.wide")}</Button>
+            <Button size="sm" variant="outline" onClick={() => applyFormation(formation)}>{t("tac.reset")}</Button>
+            <Button size="sm" onClick={save}>{t("tac.save")}</Button>
+            <Link to={`/simulation?mt=${mentality}&shape=${encodeURIComponent(formation)}`}><Button size="sm" variant="ghost">{t("tac.toSim")}</Button></Link>
           </div>
         </Panel>
 
         <div className="space-y-4">
           <Panel className="p-4">
-            <SectionTitle title="Mentality" />
+            <SectionTitle title={t("tac.mentality")} />
             <input type="range" min={0} max={4} step={1} value={mentality} onChange={(e) => setMentality(Number(e.target.value))} className="mt-2 w-full accent-[var(--color-primary)]" />
-            <div className="mt-1 text-sm text-primary">{MENTALITIES[mentality]}</div>
+            <div className="mt-1 text-sm text-primary">{mentalityLabel(t, mentality)}</div>
             {carriedMentality !== null && (
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Opened from a Manager OS recommendation · starting in your <b>{MENTALITIES[carriedMentality]}</b> mentality.
-                This is a sandbox — nothing here changes your career until you apply tactics in Manager OS.
+                {t("tac.carriedNote", { m: mentalityLabel(t, carriedMentality) })}
               </p>
             )}
           </Panel>
           <Panel className="p-4">
-            <SectionTitle title="Shape read-out" />
+            <SectionTitle title={t("tac.shape")} />
             <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-              <Stat label="Detected shape" value={shapeLabel} />
-              <Stat label="Defensive line" value={`${Math.round((1 - balance.line) * 100)}% high`} />
-              <Stat label="Width" value={`${Math.round(balance.spread * 200)}%`} />
-              <Stat label="Players" value={tokens.length} />
+              <Stat label={t("tac.detected")} value={shapeLabel} />
+              <Stat label={t("tac.line")} value={t("tac.lineValue", { n: Math.round((1 - balance.line) * 100) })} />
+              <Stat label={t("tac.width")} value={`${Math.round(balance.spread * 200)}%`} />
+              <Stat label={t("tac.players")} value={tokens.length} />
             </div>
           </Panel>
           <Panel className="p-4">
-            <SectionTitle title="Saved formations" />
+            <SectionTitle title={t("tac.saved")} />
             {saved.length ? (
               <div className="mt-2 space-y-1.5">{saved.map((s, i) => (
                 <div key={i} className="flex items-center justify-between rounded-md border px-2.5 py-1.5 text-sm">
                   <span className="truncate">{s.name}</span>
-                  <button onClick={() => load(s)} className="text-xs text-primary hover:underline">load</button>
+                  <button onClick={() => load(s)} className="text-xs text-primary hover:underline">{t("tac.load")}</button>
                 </div>
               ))}</div>
-            ) : <EmptyState title="Nothing saved yet" hint="Save a shape to reuse it on this device." />}
+            ) : <EmptyState title={t("tac.savedEmpty")} hint={t("tac.savedEmptyHint")} />}
           </Panel>
         </div>
       </div>
