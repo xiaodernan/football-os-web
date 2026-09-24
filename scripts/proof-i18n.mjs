@@ -1,11 +1,20 @@
 // Proof for the i18n contract. The dictionary is a loose Record<string,string>
 // and `t()` falls back to English then to the raw key, so a missing translation
 // never fails loudly — a Chinese user just sees English, or a bare `fw.hub.title`.
-// This pins the three ways that goes wrong:
-//   1. a locale missing a key the others have (zh-TW spreads zh-CN, so a new key
-//      silently inherits Simplified Chinese unless it is written out),
+// This pins the ways that goes wrong:
+//   1. a locale missing a key the others have,
 //   2. a key present but blank,
-//   3. a `t("...")` call site naming a key the dictionary does not define.
+//   3. a placeholder a locale drops, so `t()` leaves `{n}` on screen,
+//   4. a `t("...")` call site naming a key the dictionary does not define,
+//   5. a dynamic `t()` prefix that resolves to nothing,
+//   6. a dictionary inheriting from a sibling — zh-TW used to open with
+//      `...zhCN`, which both served Simplified text to Traditional readers and
+//      made check 1 structurally incapable of failing, since the assembled object
+//      always had every key (M142's mutation test proved that; M143 removed the
+//      spread and this check keeps it from coming back),
+//   7. a 简体 character surviving inside a zh-TW value,
+//   8. a screen whose labels live in a variable (so check 4 cannot see them)
+//      carrying raw text instead of dictionary keys.
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
@@ -89,6 +98,64 @@ const deadPrefix = [...dynPrefixes].filter((p) => !enKeys.some((k) => k.startsWi
 ok(`every dynamic t() prefix resolves (${dynPrefixes.size} checked)`, deadPrefix.length === 0);
 if (deadPrefix.length) console.log("       dead prefix: " + deadPrefix.join(", "));
 
+// 6. No dictionary may inherit from another. zh-TW used to open with `...zhCN`,
+//    which silently served 简体中文 to a 繁體中文 visitor for 18 keys AND made
+//    check 1 above structurally unable to fail (the assembled object always had
+//    every key). M143 wrote the block out; this keeps the spread from returning.
+const dictSrc = readFileSync(join(root, "i18n", "dictionaries.ts"), "utf8");
+const declAt = (n) => dictSrc.indexOf(`const ${n}: Dict = {`);
+const dictEnd = dictSrc.indexOf("export const DICTIONARIES");
+const bounds = [["en", declAt("en")], ["zh-CN", declAt("zhCN")], ["zh-TW", declAt("zhTW")]];
+ok("all three dictionary literal blocks are locatable by name (else the checks below slice garbage)",
+  bounds.every(([, at]) => at > 0) && dictEnd > declAt("zhTW"));
+// Key + value pairs read out of a block's own literal text. Comments are prose
+// and must not be mistaken for something the interface renders.
+const KEYVAL = /"([^"]+)"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+const sliceOf = (i) => dictSrc.slice(bounds[i][1], i + 1 < bounds.length ? bounds[i + 1][1] : dictEnd);
+const pairsOf = (i) => [...sliceOf(i).matchAll(KEYVAL)].map((m) => [m[1], m[2]]);
+const valuesOf = (i) => pairsOf(i).map(([, v]) => v);
+// Keys per block, not the assembled object: a key zh-TW inherits would look
+// defined here and that is exactly the hole M143 closed.
+const keysOf = (i) => pairsOf(i).map(([k]) => k);
+for (let i = 0; i < bounds.length; i++) {
+  // Comment lines are excluded: the zh-TW block documents in prose that it used to
+  // spread zh-CN, and a gate that reads that as the spread itself is not a gate.
+  const code = sliceOf(i).split(/\r?\n/).filter((l) => !/^\s*\/\//.test(l)).join("\n");
+  ok(`${bounds[i][0]} declares its own keys instead of spreading a sibling dictionary`,
+    !/\.\.\.(en|zhCN|zhTW)\b/.test(code));
+}
+
+// 7. Script regression, for the characters that were actually wrong here. These
+//    sixteen are exactly the 简体 forms the M143 audit found inside strings a
+//    繁體中文 reader was shown (located with OpenCC's STCharacters table, then
+//    hand-adjudicated — the variant forms 峰 and 群 were left alone, since they
+//    are ordinary Traditional). This is a closed list, NOT a converter: a
+//    simplified character this file had never used would slip through, so the
+//    general defence is check 6 plus review. Widening it to the full 3800-char
+//    table would fail on legitimate variants and would mean vendoring a converter
+//    into a proof script for a static site.
+const SIMPLIFIED_SEEN = "赛进档属训练标视频术体战经验龄评画并";
+const twValues = valuesOf(2);
+const strays = [...new Set(twValues.flatMap((v) => [...v]).filter((c) => SIMPLIFIED_SEEN.includes(c)))];
+ok(`no zh-TW value reintroduces one of the 16 简体 characters M143 corrected (${strays.join("") || "none"})`,
+  strays.length === 0);
+
+// 8. A label held in a variable is invisible to check 4 — `t(tab.label)` contains
+//    no literal key to match. The player tab strip is the case that matters: the
+//    tab labels M143 rewrote into 繁體 only reach the screen if the strip reads
+//    them from the dictionary, so pin both halves of that contract.
+const tabSrc = readFileSync(join(root, "features", "player", "PlayerOS.tsx"), "utf8");
+const tabBlock = tabSrc.match(/const TABS = \[[\s\S]*?\];/)?.[0] ?? "";
+ok("the player TABS array is locatable (else check 8 is vacuous)", tabBlock.length > 0);
+const tabLabels = [...tabBlock.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
+ok(`all ten tabs carry a label (${tabLabels.length})`, tabLabels.length === 10);
+// Raw English would still render perfectly for an English visitor, which is why
+// the parity and the t() call are checked instead of the glyphs.
+const rawLabels = tabLabels.filter((l) => !bounds.every((_, i) => keysOf(i).includes(l)));
+ok(`every tab label is a key all three dictionaries declare (${rawLabels.join(", ") || "none"})`,
+  rawLabels.length === 0);
+const tTab = /\{t\(\s*tab\.label\s*\)\}/.test(tabSrc);
+ok("the tab strip renders its labels through t() rather than as stored text", tTab);
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);
 await server.close();

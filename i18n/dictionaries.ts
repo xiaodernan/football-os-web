@@ -554,6 +554,7 @@ const en: Dict = {
   "dash.develop": "Develop",
   "dash.recommended": "Recommended Learning",
 
+  "player.overview": "Overview",
   "player.profile": "Profile",
   "player.attributes": "Attributes",
   "player.skills": "Skills",
@@ -1267,6 +1268,7 @@ const zhCN: Dict = {
   "dash.focusGoals": "发展重点",
   "dash.develop": "去发展",
   "dash.recommended": "推荐学习",
+  "player.overview": "概览",
   "player.profile": "档案",
   "player.attributes": "属性",
   "player.skills": "技能",
@@ -1428,7 +1430,6 @@ const zhCN: Dict = {
 };
 
 const zhTW: Dict = {
-  ...zhCN,
   "brand.name": "Football OS",
   "brand.tagline": "足球操作系統",
   "nav.home": "指揮中心",
@@ -1651,7 +1652,7 @@ const zhTW: Dict = {
   "rv.overall": "綜合",
   "rv.quality": "品質",
   "rv.noChange": "無變化",
-  "rv.outOf5": "自评 / 5",
+  "rv.outOf5": "自評 / 5",
   "rv.noRating": "未評分",
   "rv.statAcademy": "學院",
   "rv.statAcademyPassed": "{n} 門通過測驗",
@@ -1831,7 +1832,7 @@ const zhTW: Dict = {
   "compare.diffPosition": "這兩名球員處於不同的位置分組，因此請把結論視為價值/潛力的解讀，而非同位置的直接替換。",
   "compare.metrics": "逐項指標",
   "compare.metricsHint": "綠色標記更優一方；進度條為相對值。",
-  "compare.categories": "類別画像",
+  "compare.categories": "類別畫像",
   "compare.categoriesHint": "按類別計算的平均屬性值，來自球員自身數據",
   "compare.cat.technical": "技術",
   "compare.cat.physical": "身體",
@@ -1840,7 +1841,7 @@ const zhTW: Dict = {
   "compare.attributes": "屬性差異最大項",
   "compare.attributesHint": "顯示差距最大的 8 項，格式為 A · 差值 · B",
   "compare.attributesNote": "這些是資料集自身的球員屬性值——與其綜合評分來源一致。",
-  "compare.noAttributes": "數據提供方未包含這些球員的屬性數據，因此不顯示画像，也不編造數值。",
+  "compare.noAttributes": "數據提供方未包含這些球員的屬性數據，因此不顯示畫像，也不編造數值。",
   "compare.disclaimer": "示範模式：對比使用合成世界資料集的綜合分、潛力、年齡、市場價值以及每位球員自身的屬性向量，不做任何估算。結論融合了當前實力、剩餘潛力、巔峰視窗長度與輕微的成本懲罰——是透明的啟發式判斷，而非球探指令。",
   "compare.player": "球員",
   "compare.edge": "佔優",
@@ -1877,7 +1878,7 @@ const zhTW: Dict = {
   "watch.templateHint": "與相同位置、相近水平的球員模板相比，最強與最弱的類別差異，數據來自資料集自帶的屬性。",
   "watch.prime": "巔峰年",
   "watch.empty": "尚未儲存任何球員",
-  "watch.emptyHint": "在球探或足球世界中标星一名球員，它就會出現在這裡。",
+  "watch.emptyHint": "在球探或足球世界中標星一名球員，它就會出現在這裡。",
   "watch.goScouting": "開啟球探",
   "watch.goWorld": "瀏覽世界",
   "watch.disclaimer": "示範模式：本看板讀取你裝置本地的關注列表，並完全從合成世界資料集派生所有數字。報價估算為 1.1 × 市場價；這裡沒有任何真實的轉會報價。",
@@ -1907,7 +1908,7 @@ const zhTW: Dict = {
   "world.retired": "退役",
   "world.emptyTitle": "世界尚未推進",
   "world.emptyHint": "模擬一個賽季，讓球員老化、提拔青訓並產生冠軍。完全確定——無需 API 或金鑰。",
-  "world.disclaimer": "示範模式：疊加在內建資料集上的確定性模擬。球員會老化、按真實曲線發展、重新定價、退役并由青訓新秀補上；聯賽冠軍由俱樂部實力模擬產生。不會影響即時足球世界的積分榜。",
+  "world.disclaimer": "示範模式：疊加在內建資料集上的確定性模擬。球員會老化、按真實曲線發展、重新定價、退役並由青訓新秀補上；聯賽冠軍由俱樂部實力模擬產生。不會影響即時足球世界的積分榜。",
   "nav.matches": "比賽",
   "nav.players": "球員",
   "nav.clubs": "俱樂部",
@@ -2107,6 +2108,29 @@ const zhTW: Dict = {
   "ai.graphMeta": "{nodes} 個節點 · {edges} 條關係",
   "ai.graphAria": "知識圖譜",
   "community.offline": "已離線——兩種狀態下帖子都保存在本機，重新連線時不會上傳任何內容。",
+
+  // M143: this block used to open with `...zhCN`, which is how 18 labels
+  // reached a Traditional-Chinese reader as Simplified. Every key is written out
+  // here now, and proof-i18n fails if a dictionary starts inheriting again.
+  "nav.search": "搜尋",
+  "nav.mode": "模式",
+  "dash.today": "今日比賽",
+  "dash.live": "進行中",
+  "player.overview": "總覽",
+  "player.profile": "檔案",
+  "player.attributes": "屬性",
+  "player.skills": "技能",
+  "player.training": "訓練",
+  "player.goals": "目標",
+  "player.progress": "進度",
+  "player.matches": "比賽",
+  "player.video": "影片分析",
+  "attr.technical": "技術",
+  "attr.physical": "身體",
+  "attr.tactical": "戰術",
+  "attr.mental": "心理",
+  "common.xp": "經驗",
+  "common.age": "年齡",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

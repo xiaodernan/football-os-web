@@ -33,16 +33,16 @@ import { cn } from "@/lib/utils";
 import type { TrainingSession } from "@/domain/types";
 
 const TABS = [
-  { key: "", label: "Overview" },
-  { key: "coach", label: "AI Coach" },
-  { key: "attributes", label: "Attributes" },
-  { key: "skills", label: "Skills" },
-  { key: "training", label: "Training" },
-  { key: "progress", label: "Progress" },
-  { key: "goals", label: "Goals" },
-  { key: "workload", label: "Workload" },
-  { key: "video", label: "Video" },
-  { key: "matches", label: "Matches" },
+  { key: "", label: "player.overview" },
+  { key: "coach", label: "player.coach" },
+  { key: "attributes", label: "player.attributes" },
+  { key: "skills", label: "player.skills" },
+  { key: "training", label: "player.training" },
+  { key: "progress", label: "player.progress" },
+  { key: "goals", label: "player.goals" },
+  { key: "workload", label: "player.workload" },
+  { key: "video", label: "player.video" },
+  { key: "matches", label: "player.matches" },
 ];
 
 export function PlayerOS() {
@@ -87,7 +87,7 @@ export function PlayerOS() {
             onClick={() => navigate(`/player${tab.key ? "/" + tab.key : ""}`)}
             className={cn("whitespace-nowrap rounded-t-md px-3 py-2 text-sm transition", active === tab.key ? "border-b-2 border-primary font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}
           >
-            {tab.label}
+            {t(tab.label)}
           </button>
         ))}
       </div>

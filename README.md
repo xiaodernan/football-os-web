@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M141 (a few numbers in that range
+Work ships one milestone per commit and is currently at M143 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,14 +247,16 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M141 line of work is a different kind of progress: it makes the earlier claims
+The M108–M143 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
 probability (M119), XP curve (M120), role gap (M121), comparison (M124), development
 projection (M126), film insights (M128), career arc (M129), Academy accounting and its
-try-it targets (M134), offline wording (M139), club-ranked feed (M140) and the transfer
-board (M141) — behind one runner so a check cannot silently rot (M111). In the same range,
+try-it targets (M134), offline wording (M139), club-ranked feed (M140), the transfer
+board (M141), the forecast figure a reader can add up by hand (M142) and the
+dictionary's own completeness and script (M143) — behind one runner so a check cannot
+silently rot (M111). In the same range,
 each overclaim became either a real affordance or accurate wording: the Dynamic World error
 Retry re-runs the simulation (M115), the Academy "has a career" signal no longer fires on a
 null career (M116), the Transfer Centre's "change club" goes to the club picker (M117), the
@@ -268,9 +270,27 @@ offline notices now state the on-device mechanism instead of implying a network 
 reconnect queue (M136–M138). M140 turns onboarding's "personalises your feed" into a real,
 order-only club ranking that labels itself only when the chosen club genuinely appears in
 the feed. M130–M132 localised the Football World browse surface, the Tactical Studio and
-the Football AI. A sweep of the remaining panels still owes a few untranslated UI strings
-— the Dashboard's "% confidence" suffix and its "News →" link are two known ones — so they
-are listed here as outstanding rather than described as finished.
+the Football AI. M142 put the analytics engine's expected-total-goals figure on both
+forecast panels — the model had been computing it with no reader — and deleted two
+exported fields that only restated another one. M143 then found that the 繁體中文
+dictionary opened with `...zhCN`: 18 of its labels were arriving from the
+Simplified dictionary untouched, 14 of those displayed 简体 characters, and 5 more had
+been written out with a 简体 character in them — so 19 strings a Traditional reader was
+shown were in the wrong script, the sidebar's search entry among them. Eight of the 18
+were the player page's tab-strip labels, and those were not reaching the screen at all:
+the strip rendered its own hardcoded English, so correcting them in the dictionary would
+have changed nothing a reader sees. The strip now reads its labels from the dictionary,
+including a new `player.overview` key, and proof-i18n pins both halves — a raw label or
+a dropped `t()` at the render site each turn the check red. The same
+spread had also made the locale-parity check structurally incapable of failing, because
+the assembled object always contained every key; deleting a zh-TW line left the proof
+green. The block is now self-contained and the proof detects both a reintroduced spread
+and a reintroduced Simplified character, each mutation-tested. Two characters the audit
+flagged and left alone — 峰, in three strings, and 群 — are ordinary Traditional variant
+forms, not Simplified. A sweep of the remaining panels still owes a few untranslated UI
+strings — the Dashboard's "% confidence" suffix and its "News →" link are two known ones,
+and Manager OS's whole tab strip is hardcoded English — so they are listed here as
+outstanding rather than described as finished.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
