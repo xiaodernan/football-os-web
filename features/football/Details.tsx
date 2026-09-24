@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
+import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import {
   footballProvider,
@@ -72,6 +73,7 @@ export function FavoriteButton({ kind, id, activeText, idleText }: { kind: "club
 // ---------------- Player detail ----------------
 export function PlayerDetail({ id }: { id: string }) {
   const p = getPlayer(id);
+  const { t } = useI18n();
   const { navigate } = useRouter();
   const top = useMemo(() => trendingPlayers(20), []);
   const [againstId, setAgainstId] = useState(top.find((x) => x.id !== id)?.id ?? "");
@@ -108,19 +110,17 @@ export function PlayerDetail({ id }: { id: string }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel className="p-4">
-          <SectionTitle title="Scouting profile" hint="Fields come straight from the world dataset" />
+          <SectionTitle title={t("fw.prof.title")} hint={t("fw.prof.hint")} />
           <dl className="mt-2 grid grid-cols-2 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Position group</dt><dd className="text-right font-mono">{p.positionGroup}</dd>
-            <dt className="text-muted-foreground">Age</dt><dd className="text-right font-mono">{p.age}</dd>
-            <dt className="text-muted-foreground">Nation</dt><dd className="text-right">{p.nation}</dd>
-            <dt className="text-muted-foreground">Preferred foot</dt><dd className="text-right font-mono">{p.foot}</dd>
-            <dt className="text-muted-foreground">Club</dt><dd className="text-right"><Link to={`/clubs/${club?.id}`} className="hover:text-primary">{club?.name}</Link></dd>
-            <dt className="text-muted-foreground">Overall / Potential</dt><dd className="text-right font-mono">{p.overall} / {p.potential}</dd>
+            <dt className="text-muted-foreground">{t("fw.pgroup")}</dt><dd className="text-right font-mono">{p.positionGroup}</dd>
+            <dt className="text-muted-foreground">{t("common.age")}</dt><dd className="text-right font-mono">{p.age}</dd>
+            <dt className="text-muted-foreground">{t("common.nation")}</dt><dd className="text-right">{p.nation}</dd>
+            <dt className="text-muted-foreground">{t("fw.foot")}</dt><dd className="text-right font-mono">{p.foot}</dd>
+            <dt className="text-muted-foreground">{t("common.club")}</dt><dd className="text-right"><Link to={`/clubs/${club?.id}`} className="hover:text-primary">{club?.name}</Link></dd>
+            <dt className="text-muted-foreground">{t("fw.ovrPot")}</dt><dd className="text-right font-mono">{p.overall} / {p.potential}</dd>
           </dl>
           <p className="mt-3 text-xs text-muted-foreground">
-            {profile.measured
-              ? "The radar and the values below are the per-player attribute vector this dataset actually stores — the same numbers his overall rating is computed from."
-              : "Detailed attribute vectors are not provided for this player, so the values below are a labelled model estimate from his overall and position — no numbers are invented beyond that model."}
+            {profile.measured ? t("fw.prof.measured") : t("fw.prof.modelled")}
           </p>
         </Panel>
 

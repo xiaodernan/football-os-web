@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M145 (a few numbers in that range
+Work ships one milestone per commit and is currently at M146 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M145 line of work is a different kind of progress: it makes the earlier claims
+The M108–M146 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -333,6 +333,43 @@ from the tooltip above), with a clean console. The measured debt this makes visi
 350 of 386 visible-text lines across the feature files are still untranslated — Manager OS
 (84 lines, no `t()` at all), Player OS (61), player detail (56), community (23),
 simulation lab (22), film room (16), dashboard (15), academy (13), onboarding (12).
+
+M146 spent the 15 keys M145 left behind and then removed the need to do that by hand
+again. Two independent audits — one matching `t("key")` literals, one also accepting
+a key that appears as a quoted string anywhere in app code — agreed at 15, which is the
+count worth trusting; the second audit first reported 58 because it did not yet know labels
+can be held in a variable. 13 keys were deleted, for measured reasons rather than assumed
+ones: `dash.recommended` named a "Recommended Learning" block that is no longer on the
+dashboard, `nav.competitions` duplicated the live `fw.comps.title`, and `common.position`'s only
+call sites are screens that are still entirely English. 2 keys were wired instead:
+`nav.mode` is now the accessible name of the mode-switch group (its three single-letter
+buttons had no group at all) and `common.nation` went into the player detail fact list,
+together with 7 new keys so that block reads in one script instead of mixing Chinese labels
+with English ones. 727 keys per locale.
+
+The point of doing it by hand was only ever to reach a gate that does not need a human.
+Checks 16–18 now require each of the 24 dynamic `t()` sites to name, in the proof file,
+the expression it interpolates and the code that supplies its values — 13 value spaces read
+out of `ACHIEVEMENTS`, `CATEGORY_ORDER`, the `Mode` union, the comparison metrics array, the Football
+World status and result-type lists, the landing pillars, the footprint row ids, the watchlist
+sorts and the mentality slider's own `min`/`max` — and then require every dictionary key
+to be claimed by a literal, a quoted label, or one of those expansions, with no exception list
+at all. Adding a dynamic site the table was never told about fails, and so does renaming or
+deleting one. Eight mutations each turned it red, including an orphan key present in all three
+locales — which the parity check on its own waves through — and a value space whose source
+array moved out from under its anchor.
+
+Enumerating those spaces surfaced the class M145 found, at a larger scale, and it is M147's
+work rather than this milestone's: `attributeLabel()` hands the comparison panel English
+attribute names that render through `features/compare/ComparePage.tsx:133`, and
+`modelPlayerProfile()` hands the player detail page English `note` and `sources` strings — so the fact
+list M146 localised sits directly above text that is still English in every locale.
+`Landing.tsx:63` also carries a `k2: "dev"` field nothing reads. Verified in a browser against a
+fresh production build in all three locales: the fact list reads 位置分组 / 年龄 / 国籍 / 惯用脚 /
+俱乐部 and their 繁體 equivalents while the dataset's own values (DM, Portugal, R, Paris
+Saint-Germain) stay as data, the mode group is announced as 模式 / Mode, and an English
+reader sees the pre-M146 wording unchanged, console clean in each. proof-i18n is now 58
+checks and the suite 973.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

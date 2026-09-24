@@ -26,7 +26,12 @@
 //  14. a domain function handing a board an untranslated display label — the
 //      shape checks 10-12 cannot see, because it arrives as an interpolation,
 //  15. a value of a dynamic key's real value space (CATEGORY_ORDER) missing from
-//      a locale, which check 5's prefix-only test cannot catch.
+//      a locale, which check 5's prefix-only test cannot catch,
+//  16. a dynamic `t()` site that is not in the declared table, or a table entry
+//      whose site has been renamed or deleted,
+//  17. a declared value space whose members lack a key in some locale,
+//  18. a dictionary key nothing can reach — not a literal, not a variable-held
+//      label, not a value any dynamic site can build.
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
@@ -266,6 +271,188 @@ ok(`both boards translate both template-edge categories (${untranslatedEdge.join
 const missingCat = CATEGORY_ORDER.filter((c) => !bounds.every((_, i) => keysOf(i).includes(`compare.cat.${c}`)));
 ok(`all ${CATEGORY_ORDER.length} categories have compare.cat.* in every locale (${missingCat.join(", ") || "none"})`,
   CATEGORY_ORDER.length >= 4 && missingCat.length === 0);
+
+// 16-18. Key reachability with NO exception list. Checks 4 and 5 each cover one
+//      shape and leave the rest to human reading: a key held in a variable is
+//      invisible to 4, and 5 can only prove a dynamic prefix resolves to
+//      *something* — `t(\`prof.mode.${r.id}\`)` would happily pass while the
+//      dictionary held a `prof.mode.coach` nothing could ever ask for. M145 cut
+//      17 dead keys and M146 13 more by hand; that does not scale, so from here
+//      every key in the dictionary must be claimed by one of exactly three
+//      rules, and every dynamic site must name the code that builds its values:
+//        (a) a `t("key")` literal,
+//        (b) the key as a quoted string in app code — a label held in a variable
+//            (checks 8 and 10), or in a config array,
+//        (c) a declared dynamic site whose real value space, read out of the
+//            source that feeds it, produces the key.
+//      A new dynamic site that is not in DYN_SITES fails check 16, so the table
+//      cannot quietly fall behind the code, and no key can be added to the
+//      dictionary without a caller.
+const rel = (f) => f.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");
+// Comment lines cannot claim a key: prose that quotes a key is not a caller.
+const codeOf = (src) => src.split(/\r?\n/).filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]));
+
+const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
+const quoted = /"([^"]+)"/g;
+// Read a value space out of the source that feeds it. `anchor` locates the
+// literal (and is checked, so a moved array reports red instead of passing
+// vacuously on an empty list); `field` picks the values out of it.
+const spaceOf = (path, anchor, field) => {
+  const src = appSrc.get(path) ?? "";
+  const hit = src.match(anchor);
+  if (!hit) { ok(`the ${path} anchor for a dynamic value space is locatable`, false); return []; }
+  return [...hit[0].matchAll(field)].map((m) => m[1]);
+};
+const MODES_UPPER = spaceOf("domain/types.ts", /export type Mode = [^;]+;/, quoted);
+const ACH_IDS = ACHIEVEMENTS.map((a) => a.id);
+const ACH_TIERS = [...new Set(ACHIEVEMENTS.map((a) => a.tier))];
+const lower = (xs) => xs.map((x) => x.toLowerCase());
+
+// Each entry: the file holding the site, the interpolated expression as written,
+// the key prefix/suffix it builds, and the code-derived set of values it can
+// take. `expr` is matched verbatim, so renaming what is interpolated counts as
+// a new site rather than silently re-pointing an old one.
+const DYN_SITES = [
+  { path: "features/achievements/AchievementsPage.tsx", expr: "a.id", prefix: "ach.name.", suffix: "" },
+  { path: "features/dashboard/Dashboard.tsx", expr: "growth.next.id", prefix: "ach.name.", suffix: "" },
+  { path: "features/achievements/AchievementsPage.tsx", expr: "a.id", prefix: "ach.desc.", suffix: "" },
+  { path: "features/dashboard/Dashboard.tsx", expr: "growth.next.id", prefix: "ach.desc.", suffix: "" },
+  { path: "features/achievements/AchievementsPage.tsx", expr: "a.tier", prefix: "ach.tier.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
+  { path: "features/compare/ComparePage.tsx", expr: "c.category", prefix: "compare.cat.", suffix: "" },
+  { path: "features/scouting/ScoutingPanel.tsx", expr: "edge.bestCategory", prefix: "compare.cat.", suffix: "" },
+  { path: "features/scouting/ScoutingPanel.tsx", expr: "edge.worstCategory", prefix: "compare.cat.", suffix: "" },
+  { path: "features/watchlist/WatchlistBoard.tsx", expr: "edge.bestCategory", prefix: "compare.cat.", suffix: "" },
+  { path: "features/watchlist/WatchlistBoard.tsx", expr: "edge.worstCategory", prefix: "compare.cat.", suffix: "" },
+  { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
+  { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
+  { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
+  { path: "features/football/FootballWorld.tsx", expr: "type", prefix: "fw.type.", suffix: "" },
+  { path: "features/landing/Landing.tsx", expr: "p.k", prefix: "landing.pillars.", suffix: "" },
+  { path: "features/onboarding/Onboarding.tsx", expr: "m.toLowerCase()", prefix: "onboarding.", suffix: "" },
+  { path: "features/shell/AppShell.tsx", expr: "m.toLowerCase()", prefix: "onboarding.", suffix: "" },
+  { path: "features/onboarding/Onboarding.tsx", expr: "m.toLowerCase()", prefix: "onboarding.", suffix: ".desc" },
+  { path: "features/profile/ProfilePage.tsx", expr: "p.mode", prefix: "prof.mode.", suffix: "" },
+  { path: "features/profile/ProfilePage.tsx", expr: "r.id", prefix: "prof.mode.", suffix: "" },
+  { path: "features/settings/SettingsPage.tsx", expr: "m", prefix: "set.mode.", suffix: "" },
+  { path: "features/tactical/TacticalStudio.tsx", expr: "i", prefix: "tac.mentality.", suffix: "" },
+  { path: "features/watchlist/WatchlistBoard.tsx", expr: "s", prefix: "watch.sort.", suffix: "" },
+];
+// One space per (prefix, expression) pair: the two `prof.mode.` sites take the
+// same prefix from different code, which is why the space is not keyed on the
+// prefix alone. Several sites can share one space object, and check 16 requires
+// every site's pair to appear here.
+const S_ACH = { name: "achievement ids", values: ACH_IDS };
+const S_CAT = { name: "attribute categories", values: CATEGORY_ORDER };
+const S_MODE = { name: "Mode union", values: MODES_UPPER };
+const SPACES = new Map([
+  ["ach.name.|a.id", S_ACH],
+  ["ach.name.|growth.next.id", S_ACH],
+  ["ach.desc.|a.id", S_ACH],
+  ["ach.desc.|growth.next.id", S_ACH],
+  ["ach.tier.|a.tier", { name: "achievement tiers", values: ACH_TIERS }],
+  ["attr.|cat", S_CAT],
+  ["compare.cat.|c.category", S_CAT],
+  ["compare.cat.|edge.bestCategory", S_CAT],
+  ["compare.cat.|edge.worstCategory", S_CAT],
+  ["compare.m.|m.key", {
+    name: "comparison metrics",
+    values: spaceOf("domain/compare.ts", /\{ key: "overall",[\s\S]*?\n  \];/, /\{ key: "([^"]+)",/g),
+  }],
+  ["fw.status.|tab.toLowerCase()", {
+    name: "match statuses",
+    values: lower(spaceOf("features/football/FootballWorld.tsx", /\["LIVE"[\s\S]*?\] as const/, quoted)),
+  }],
+  ["fw.type.|type", {
+    name: "search result types",
+    values: spaceOf("features/football/FootballWorld.tsx", /\["player"[^\]]*\] as const/, quoted),
+  }],
+  ["landing.pillars.|p.k", {
+    name: "landing pillar keys",
+    values: spaceOf("features/landing/Landing.tsx", /\{ k: "coach",[\s\S]*?\n          \]/, /\{ k: "([^"]+)",/g),
+  }],
+  ["onboarding.|m.toLowerCase()", {
+    name: "modes, lower-cased by the site",
+    values: lower(MODES_UPPER),
+  }],
+  ["prof.mode.|p.mode", S_MODE],
+  ["prof.mode.|r.id", {
+    name: "cross-mode record rows",
+    values: spaceOf("domain/footprint.ts", /^\s+id: "player",[\s\S]*?^\s+id: "fan",$/m, /^\s+id: "([^"]+)",$/gm),
+  }],
+  ["set.mode.|m", S_MODE],
+  ["tac.mentality.|i", {
+    // The slider's own range, which is also what the incoming deep link is
+    // clamped to, so 0..4 is the real space rather than a hand-typed count.
+    name: "mentality slider",
+    values: (() => {
+      const m = (appSrc.get("features/tactical/TacticalStudio.tsx") ?? "").match(/type="range"[^>]*min=\{(\d+)\} max=\{(\d+)\}/);
+      if (!m) { ok("the mentality slider range is locatable", false); return []; }
+      return Array.from({ length: Number(m[2]) - Number(m[1]) + 1 }, (_, i) => String(Number(m[1]) + i));
+    })(),
+  }],
+  ["watch.sort.|s", {
+    name: "watchlist sorts",
+    values: spaceOf("features/watchlist/WatchlistBoard.tsx", /\["value"[\s\S]*?\] as Sort\[\]/, quoted),
+  }],
+]);
+
+// 16. The table and the source must agree in both directions.
+const SITE = /\bt\(\s*`([^`]*)\$\{([^}]*)\}([^`]*)`/g;
+const live = new Map();
+for (const [path, src] of appSrc) {
+  for (const m of src.matchAll(SITE)) {
+    const k = `${path}|${m[1]}|${m[2].trim()}|${m[3]}`;
+    live.set(k, (live.get(k) ?? 0) + 1);
+  }
+}
+const declared = new Map();
+for (const s of DYN_SITES) {
+  const k = `${s.path}|${s.prefix}|${s.expr}|${s.suffix}`;
+  declared.set(k, (declared.get(k) ?? 0) + 1);
+}
+const undeclared = [...live.keys()].filter((k) => !declared.has(k));
+const stale = [...declared.keys()].filter((k) => !live.has(k));
+const countDrift = [...declared].filter(([k, n]) => live.get(k) && live.get(k) !== n).map(([k, n]) => `${k} (${n} vs ${live.get(k)})`);
+ok(`every dynamic t() site is declared, and every declaration is live (${live.size} sites / ${undeclared.length} undeclared / ${stale.length} stale)`,
+  live.size > 0 && undeclared.length === 0 && stale.length === 0 && countDrift.length === 0);
+for (const u of undeclared.slice(0, 8)) console.log("       undeclared: " + u);
+for (const s of stale.slice(0, 8)) console.log("       stale: " + s);
+for (const c of countDrift.slice(0, 8)) console.log("       count: " + c);
+
+// 17. Each declared space is complete in all three locales, so a value the code
+//     can produce never renders as its own key. Reported once per distinct
+//     (prefix, suffix, expression) rather than once per call site.
+const SPACE_SITES = new Map();
+for (const s of DYN_SITES) {
+  const k = `${s.prefix}|${s.expr}|${s.suffix}`;
+  if (!SPACE_SITES.has(k)) SPACE_SITES.set(k, s);
+}
+for (const s of SPACE_SITES.values()) {
+  const sp = SPACES.get(`${s.prefix}|${s.expr}`);
+  if (!sp) { ok(`a value space is declared for ${s.prefix}…${s.suffix}`, false); continue; }
+  const keys = sp.values.map((v) => s.prefix + v + s.suffix);
+  const missing = keys.filter((k) => !bounds.every((_, i) => keysOf(i).includes(k)));
+  ok(`${s.prefix}…${s.suffix} · ${sp.name}: all ${keys.length} values keyed in every locale (${missing.join(", ") || "none"})`,
+    keys.length > 0 && missing.length === 0);
+}
+
+// 18. The headline: no key in the dictionary is unreachable.
+const claimed = new Set();
+const KEY_LIKE = /["']([A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+)["']/g;
+for (const [, src] of appSrc) {
+  for (const m of src.matchAll(STATIC)) claimed.add(m[1]);
+  for (const m of src.matchAll(KEY_LIKE)) claimed.add(m[1]);
+}
+const dynKeys = new Set(DYN_SITES.flatMap((s) => (SPACES.get(`${s.prefix}|${s.expr}`)?.values ?? []).map((v) => s.prefix + v + s.suffix)));
+const unreachable = enKeys.filter((k) => !claimed.has(k) && !dynKeys.has(k));
+ok(`every dictionary key is reachable — static, quoted, or a value a dynamic site can build (${unreachable.join(", ") || "none"})`,
+  unreachable.length === 0);
+// Anti-vacuity: the scan has to be reading real claims, not passing because a
+// regex stopped matching anything.
+ok(`the reachability scan claims the dictionary rather than nothing (${claimed.size} static/quoted + ${dynKeys.size} dynamic)`,
+  claimed.size + dynKeys.size >= enKeys.length && claimed.size > 500 && dynKeys.size > 50);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

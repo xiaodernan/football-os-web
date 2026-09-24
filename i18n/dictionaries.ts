@@ -170,12 +170,6 @@ const en: Dict = {
   "set.key.fixtures": "Custom fixtures",
   "set.key.locale": "Language",
   "set.key.theme": "Theme",
-  "set.sessions": "Sessions",
-  "set.plans": "AI plans",
-  "set.goals": "Goals",
-  "set.watchlist": "Watchlist",
-  "set.memory": "Memory",
-  "set.progress": "Log points",
   "set.storageUsed": "Storage used",
   "set.export": "Export all (JSON)",
   "set.import": "Import bundle",
@@ -493,7 +487,6 @@ const en: Dict = {
   "nav.matches": "Matches",
   "nav.players": "Players",
   "nav.clubs": "Clubs",
-  "nav.competitions": "Competitions",
   "nav.news": "News",
   "nav.player": "Player OS",
   "nav.manager": "Manager OS",
@@ -552,10 +545,8 @@ const en: Dict = {
   "dash.recovery": "Recovery",
   "dash.focusGoals": "Development focus",
   "dash.develop": "Develop",
-  "dash.recommended": "Recommended Learning",
 
   "player.overview": "Overview",
-  "player.profile": "Profile",
   "player.attributes": "Attributes",
   "player.skills": "Skills",
   "player.training": "Training",
@@ -574,10 +565,8 @@ const en: Dict = {
   "attr.mental": "Mental",
 
   "common.level": "Level",
-  "common.xp": "XP",
   "common.nextLevel": "Next level",
   "common.overall": "Overall",
-  "common.position": "Position",
   "common.age": "Age",
   "common.nation": "Nation",
   "common.club": "Club",
@@ -588,8 +577,6 @@ const en: Dict = {
   "common.errorDetail": "Unexpected error while loading this view.",
   "common.confidence": "Confidence",
   "common.sources": "Sources",
-  "common.search": "Search",
-  "common.results": "results",
   "common.back": "Back",
   // Football World browse (spec §12–§13, §28): hub, lists, search, news, standings.
   "fw.hub.title": "Football World",
@@ -764,6 +751,16 @@ const en: Dict = {
   "scout.groupNote": "Same position group: {same} · Feet: {feet}",
   "scout.yes": "yes",
   "scout.no": "no",
+  // Player detail: the scouting-profile fact list. The values it prints are
+  // dataset codes (GK/CB/CM, L/R) or dataset names, so they stay as they are.
+  "fw.pgroup": "Position group",
+  "fw.foot": "Preferred foot",
+  "fw.ovrPot": "Overall / Potential",
+  "fw.prof.title": "Scouting profile",
+  "fw.prof.hint": "Fields come straight from the world dataset",
+  "fw.prof.measured": "The radar and the values below are the per-player attribute vector this dataset actually stores — the same numbers his overall rating is computed from.",
+  "fw.prof.modelled": "Detailed attribute vectors are not provided for this player, so the values below are a labelled model estimate from his overall and position — no numbers are invented beyond that model.",
+
 };
 
 const zhCN: Dict = {
@@ -928,12 +925,6 @@ const zhCN: Dict = {
   "set.key.fixtures": "自定义赛程",
   "set.key.locale": "语言",
   "set.key.theme": "主题",
-  "set.sessions": "训练",
-  "set.plans": "AI 计划",
-  "set.goals": "目标",
-  "set.watchlist": "关注",
-  "set.memory": "记忆",
-  "set.progress": "记录点",
   "set.storageUsed": "已用存储",
   "set.export": "全部导出 (JSON)",
   "set.import": "导入备份",
@@ -1251,7 +1242,6 @@ const zhCN: Dict = {
   "nav.matches": "比赛",
   "nav.players": "球员",
   "nav.clubs": "俱乐部",
-  "nav.competitions": "赛事",
   "nav.news": "新闻",
   "nav.player": "球员系统",
   "nav.manager": "经理系统",
@@ -1306,9 +1296,7 @@ const zhCN: Dict = {
   "dash.recovery": "恢复",
   "dash.focusGoals": "发展重点",
   "dash.develop": "去发展",
-  "dash.recommended": "推荐学习",
   "player.overview": "概览",
-  "player.profile": "档案",
   "player.attributes": "属性",
   "player.skills": "技能",
   "player.training": "训练",
@@ -1325,10 +1313,8 @@ const zhCN: Dict = {
   "attr.tactical": "战术",
   "attr.mental": "心理",
   "common.level": "等级",
-  "common.xp": "经验",
   "common.nextLevel": "下一级",
   "common.overall": "综合",
-  "common.position": "位置",
   "common.age": "年龄",
   "common.nation": "国籍",
   "common.club": "俱乐部",
@@ -1339,8 +1325,6 @@ const zhCN: Dict = {
   "common.errorDetail": "加载此视图时出现意外错误。",
   "common.confidence": "置信度",
   "common.sources": "来源",
-  "common.search": "搜索",
-  "common.results": "条结果",
   "common.back": "返回",
   "fw.hub.title": "足球世界",
   "fw.hub.hint": "来自种子世界数据集的俱乐部、球员、赛事、比赛与新闻。",
@@ -1505,6 +1489,16 @@ const zhCN: Dict = {
   "scout.groupNote": "相同位置组：{same} · 惯用脚：{feet}",
   "scout.yes": "是",
   "scout.no": "否",
+  // 球员详情：球探档案事实表。它打印的取值是数据集代码（GK/CB/CM、L/R）
+  // 或数据集名称，因此原样保留。
+  "fw.pgroup": "位置分组",
+  "fw.foot": "惯用脚",
+  "fw.ovrPot": "综合 / 潜力",
+  "fw.prof.title": "球探档案",
+  "fw.prof.hint": "字段直接来自世界数据集",
+  "fw.prof.measured": "雷达图和下面的数值，就是这份数据集实际存储的每位球员属性向量——他的综合评分正是由同一批数值算出来的。",
+  "fw.prof.modelled": "这份数据没有为该球员提供详细属性向量，所以下面的数值是依据他的综合评分和位置给出的、带明确标注的模型估算——除该模型外没有编造任何数值。",
+
 };
 
 const zhTW: Dict = {
@@ -1667,12 +1661,6 @@ const zhTW: Dict = {
   "set.key.fixtures": "自訂賽程",
   "set.key.locale": "語言",
   "set.key.theme": "主題",
-  "set.sessions": "訓練",
-  "set.plans": "AI 計畫",
-  "set.goals": "目標",
-  "set.watchlist": "關注",
-  "set.memory": "記憶",
-  "set.progress": "記錄點",
   "set.storageUsed": "已用儲存",
   "set.export": "全部匯出 (JSON)",
   "set.import": "匯入備份",
@@ -1990,7 +1978,6 @@ const zhTW: Dict = {
   "nav.matches": "比賽",
   "nav.players": "球員",
   "nav.clubs": "俱樂部",
-  "nav.competitions": "賽事",
   "nav.news": "新聞",
   "nav.player": "球員系統",
   "nav.manager": "經理系統",
@@ -2041,7 +2028,6 @@ const zhTW: Dict = {
   "dash.recovery": "恢復",
   "dash.focusGoals": "發展重點",
   "dash.develop": "去發展",
-  "dash.recommended": "推薦學習",
   "player.coach": "AI 教練",
   "player.workload": "負荷",
   "player.coachCarry": "幫我針對最大的位置差距安排一節訓練：{labels}。",
@@ -2049,7 +2035,6 @@ const zhTW: Dict = {
   "common.level": "等級",
   "common.nextLevel": "下一級",
   "common.overall": "綜合",
-  "common.position": "位置",
   "common.nation": "國籍",
   "common.club": "俱樂部",
   "common.empty": "暫無內容。",
@@ -2059,8 +2044,6 @@ const zhTW: Dict = {
   "common.errorDetail": "載入此視圖時發生未預期的錯誤。",
   "common.confidence": "信心度",
   "common.sources": "來源",
-  "common.search": "搜尋",
-  "common.results": "條結果",
   "common.back": "返回",
   "fw.hub.title": "足球世界",
   "fw.hub.hint": "來自種子世界資料集的俱樂部、球員、賽事、比賽與新聞。",
@@ -2197,7 +2180,6 @@ const zhTW: Dict = {
   "dash.today": "今日比賽",
   "dash.live": "進行中",
   "player.overview": "總覽",
-  "player.profile": "檔案",
   "player.attributes": "屬性",
   "player.skills": "技能",
   "player.training": "訓練",
@@ -2209,7 +2191,6 @@ const zhTW: Dict = {
   "attr.physical": "身體",
   "attr.tactical": "戰術",
   "attr.mental": "心理",
-  "common.xp": "經驗",
   "common.age": "年齡",
 // Scouting board. OVR / POT / €M and the GK-DEF-MID-ATT bucket codes stay
 // untranslated on purpose: they are stat codes the app shows in monospace in
@@ -2248,6 +2229,16 @@ const zhTW: Dict = {
   "scout.groupNote": "相同位置組：{same} · 慣用腳：{feet}",
   "scout.yes": "是",
   "scout.no": "否",
+  // 球員詳情：球探檔案事實表。它列印的取值是資料集代碼（GK/CB/CM、L/R）
+  // 或資料集名稱，因此原樣保留。
+  "fw.pgroup": "位置分組",
+  "fw.foot": "慣用腳",
+  "fw.ovrPot": "綜合 / 潛力",
+  "fw.prof.title": "球探檔案",
+  "fw.prof.hint": "欄位直接來自世界資料集",
+  "fw.prof.measured": "雷達圖和下面的數值，就是這份資料集實際儲存的每位球員屬性向量——他的綜合評分正是由同一批數值算出來的。",
+  "fw.prof.modelled": "這份資料沒有為該球員提供詳細屬性向量，所以下面的數值是依據他的綜合評分與位置給出的、帶明確標註的模型估算——除該模型外沒有編造任何數值。",
+
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {
