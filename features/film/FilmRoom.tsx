@@ -127,13 +127,13 @@ export function FilmRoom() {
           <p className="mt-1 text-sm text-muted-foreground">{t("film.subtitle")}</p>
         </div>
         <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={(e) => e.target.files?.[0] && analyze(e.target.files[0])} />
-        <Button size="sm" onClick={() => inputRef.current?.click()} disabled={busy || !online}>
+        <Button size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
           {busy ? t("film.analysing") : "Analyse a clip"}
         </Button>
       </div>
 
       {!online && (
-        <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">{t("common.offline")}</div>
+        <div className="rounded-lg border border-info/40 bg-info/10 px-3 py-2 text-xs text-info">{t("film.offline")}</div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
