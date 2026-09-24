@@ -173,7 +173,7 @@ export function LoadPage() {
 
           {/* evidence + sources */}
           <Panel className="p-4">
-            <SectionTitle title={t("ld.evidenceTitle")} hint={t("ld.evidenceHint")} />
+            <SectionTitle title={t("common.evidence")} hint={t("ld.evidenceHint")} />
             <ul className="mt-2 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
               {load.evidence.map((e, i) => (
                 <li key={i} className="flex items-start gap-1.5">

@@ -86,7 +86,7 @@ ok("prime years remaining for a 19-yo ST (peak 28) is 11", careerArc(player({ po
 const declining = careerArc(player({ positionGroup: "ST", age: 36, overall: 80, potential: 80 }));
 ok("a late-career player past the peak is 'declining'", declining.trajectory === "declining" && declining.declineFromAge <= declining.age + 1);
 const atPeak = careerArc(player({ positionGroup: "AM", age: 27, overall: 85, potential: 85 })); // AM peak 27
-ok("a player at his ceiling and peak age is 'at peak' (not rising, not declining)", atPeak.trajectory === "at peak" && atPeak.yearsToPeak === 0);
+ok("a player at his ceiling and peak age is 'peak' (not rising, not declining)", atPeak.trajectory === "peak" && atPeak.yearsToPeak === 0);
 ok("remainingPrimeYears never goes negative for an old player", careerArc(player({ positionGroup: "CM", age: 37 })).remainingPrimeYears === 0);
 
 // ---------------------------------------------------------------------------

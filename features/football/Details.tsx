@@ -34,11 +34,12 @@ const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 function EntityHeader({ title, subtitle, back, crest }: { title: string; subtitle?: ReactNode; back?: string; crest?: ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-wrap items-center gap-4">
       {crest}
       <div className="min-w-0 flex-1">
-        {back && <Link to={back} className="text-xs text-muted-foreground hover:text-foreground">← Back</Link>}
+        {back && <Link to={back} className="text-xs text-muted-foreground hover:text-foreground">← {t("common.back")}</Link>}
         <div className="flex items-center gap-2">
           <h1 className="truncate text-2xl font-bold tracking-tight">{title}</h1>
           {DEMO_MODE && <DemoBadge />}
@@ -51,21 +52,25 @@ function EntityHeader({ title, subtitle, back, crest }: { title: string; subtitl
 
 function WatchButton({ playerId }: { playerId: string }) {
   const { state, toggleWatch } = useOs();
+  const { t } = useI18n();
   const watching = state.watchlist.includes(playerId);
   return (
     <Button size="sm" variant={watching ? "default" : "outline"} onClick={() => toggleWatch(playerId)}>
-      {watching ? "★ Watching" : "☆ Watch"}
+      {watching ? `★ ${t("det.watch.active")}` : `☆ ${t("det.watch.idle")}`}
     </Button>
   );
 }
 
-export function FavoriteButton({ kind, id, activeText, idleText }: { kind: "club" | "player" | "competition"; id: string; activeText: string; idleText: string }) {
+// The control's copy follows from what it is favouriting, so the caller passes the
+// kind rather than two hand-translated strings.
+export function FavoriteButton({ kind, id }: { kind: "club" | "player" | "competition"; id: string }) {
   const { state, setFavorite } = useOs();
+  const { t } = useI18n();
   const current = kind === "club" ? state.profile?.favoriteClubId : kind === "player" ? state.profile?.favoritePlayerId : state.profile?.favoriteCompetitionId;
   const active = current === id;
   return (
     <Button size="sm" variant={active ? "default" : "outline"} onClick={() => setFavorite(kind, active ? null : id)}>
-      {active ? `★ ${activeText}` : `☆ ${idleText}`}
+      {active ? `★ ${t(`fav.${kind}.active`)}` : `☆ ${t(`fav.${kind}.idle`)}`}
     </Button>
   );
 }
@@ -77,7 +82,7 @@ export function PlayerDetail({ id }: { id: string }) {
   const { navigate } = useRouter();
   const top = useMemo(() => trendingPlayers(20), []);
   const [againstId, setAgainstId] = useState(top.find((x) => x.id !== id)?.id ?? "");
-  if (!p) return <EmptyState title="Player not found" hint="This athlete is not in the world dataset." />;
+  if (!p) return <EmptyState title={t("det.notFound.player")} hint={t("det.notFound.playerHint")} />;
   const club = getClub(p.clubId);
   const comp = getClub(p.clubId) ? getCompetition(club!.competitionId) : undefined;
   const [a, b] = comparePlayers(p.id, againstId);
@@ -97,15 +102,15 @@ export function PlayerDetail({ id }: { id: string }) {
 
       <div className="flex gap-2">
         <WatchButton playerId={p.id} />
-        <FavoriteButton kind="player" id={p.id} activeText="My player" idleText="Set as my player" />
-        <Button size="sm" variant="outline" onClick={() => navigate(`/search?q=${encodeURIComponent(p.name)}`)}>Related coverage</Button>
+        <FavoriteButton kind="player" id={p.id} />
+        <Button size="sm" variant="outline" onClick={() => navigate(`/search?q=${encodeURIComponent(p.name)}`)}>{t("det.related")}</Button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatTile label="Overall" value={p.overall} tone="up" />
-        <StatTile label="Potential" value={p.potential} sub={p.potential > p.overall ? `+${p.potential - p.overall}` : "peak"} />
-        <StatTile label="Market value" value={formatValue(p.value)} />
-        <StatTile label="Archetype" value={<span className="text-base">{archetypeLabel(p.archetype)}</span>} sub={comp?.name} />
+        <StatTile label={t("common.overall")} value={p.overall} tone="up" />
+        <StatTile label={t("compare.m.potential")} value={p.potential} sub={p.potential > p.overall ? `+${p.potential - p.overall}` : t("det.peak")} />
+        <StatTile label={t("compare.m.value")} value={formatValue(p.value)} />
+        <StatTile label={t("det.archetype")} value={<span className="text-base">{archetypeLabel(p.archetype)}</span>} sub={comp?.name} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -125,9 +130,9 @@ export function PlayerDetail({ id }: { id: string }) {
         </Panel>
 
         <Panel className="p-4">
-          <SectionTitle title="Head-to-head comparison" />
+          <SectionTitle title={t("det.compareTitle")} />
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-            <span>vs</span>
+            <span>{t("det.vs")}</span>
             <select value={againstId} onChange={(e) => setAgainstId(e.target.value)} className="flex-1 rounded-md border bg-card px-2 py-1.5 text-sm text-foreground">
               {top.filter((x) => x.id !== p.id).map((x) => <option key={x.id} value={x.id}>{x.name} ({x.overall})</option>)}
             </select>
@@ -138,23 +143,23 @@ export function PlayerDetail({ id }: { id: string }) {
 
       <Panel className="p-4">
         <SectionTitle
-          title="Football DNA"
-          hint={dna ? "Archetypes scored against this player's own dataset vector" : "Ratings-only record — nothing to score an archetype from"}
+          title={t("det.dna.title")}
+          hint={dna ? t("det.dna.hintScored") : t("det.dna.hintNoVector")}
         />
         <DnaCard
           bare
           dna={dna}
           fallbackLabel={archetypeLabel(p.archetype)}
-          fallbackNote="Primary archetype comes from the world dataset. The secondary archetype and the evolution path are scored from the per-player attribute vector, which this provider does not ship for him — they are withheld rather than invented."
-          note="Both archetypes are scored from the same attribute vector his overall rating is built from."
+          fallbackNote={t("det.dna.fallbackNote")}
+          note={t("det.dna.note")}
         />
       </Panel>
 
       <Panel className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <SectionTitle title={profile.measured ? "Attribute profile" : "Modelled attribute profile"} hint={profile.measured ? "Dataset values" : "Estimate · not measured data"} />
+          <SectionTitle title={t(profile.measured ? "det.attrs.title" : "det.attrs.titleModelled")} hint={t(profile.measured ? "det.attrs.hintDataset" : "det.attrs.hintEstimate")} />
           <Badge variant="outline" className={profile.measured ? "border-success/40 text-success" : "border-warning/40 text-warning"}>
-            {profile.measured ? "dataset" : "model"} · {profile.confidence}%
+            {t(profile.measured ? "det.attrs.badgeDataset" : "det.attrs.badgeModel")} · {profile.confidence}%
           </Badge>
         </div>
         {p.attributes && (
@@ -174,19 +179,19 @@ export function PlayerDetail({ id }: { id: string }) {
             ))}
           </div>
         )}
-        <p className="mt-3 text-[11px] text-muted-foreground">{profile.note} Sources: {profile.sources.join(" · ")}</p>
+        <p className="mt-3 text-[11px] text-muted-foreground">{profile.note} {t("common.sources")}: {profile.sources.join(" · ")}</p>
       </Panel>
 
       <Panel className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <SectionTitle title="Scout report" hint={`vs a ${p.positionGroup} of matched skill`} />
-          <Badge variant="outline" className="text-[11px]">{report.hasVector ? `template delta · ${report.confidence}%` : "no vector"}</Badge>
+          <SectionTitle title={t("det.scout.title")} hint={t("det.scout.hint", { group: p.positionGroup })} />
+          <Badge variant="outline" className="text-[11px]">{report.hasVector ? t("det.scout.badgeDelta", { n: report.confidence }) : t("det.scout.badgeNone")}</Badge>
         </div>
         <p className="mt-1 text-sm">{report.headline}</p>
         {report.hasVector && (
           <div className="mt-3 grid gap-4 sm:grid-cols-3">
             <div>
-              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Categories</div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("det.scout.categories")}</div>
               <ul className="mt-1 space-y-1 text-xs">
                 {report.categories.map((c) => (
                   <li key={c.category} className="flex items-center justify-between gap-2">
@@ -200,21 +205,21 @@ export function PlayerDetail({ id }: { id: string }) {
               </ul>
             </div>
             <div>
-              <div className="text-[11px] uppercase tracking-widest text-success">Above template</div>
+              <div className="text-[11px] uppercase tracking-widest text-success">{t("det.scout.above")}</div>
               <ul className="mt-1 space-y-1 text-xs">
                 {report.strengths.map((s) => (
                   <li key={s.key} className="flex items-center justify-between gap-2"><span className="truncate text-muted-foreground">{t(`attr.name.${s.key}`)}</span><span className="font-mono tabular-nums">+{s.delta}</span></li>
                 ))}
-                {!report.strengths.length && <li className="text-muted-foreground">None above the template.</li>}
+                {!report.strengths.length && <li className="text-muted-foreground">{t("det.scout.noneAbove")}</li>}
               </ul>
             </div>
             <div>
-              <div className="text-[11px] uppercase tracking-widest text-destructive">Below template</div>
+              <div className="text-[11px] uppercase tracking-widest text-destructive">{t("det.scout.below")}</div>
               <ul className="mt-1 space-y-1 text-xs">
                 {report.concerns.map((s) => (
                   <li key={s.key} className="flex items-center justify-between gap-2"><span className="truncate text-muted-foreground">{t(`attr.name.${s.key}`)}</span><span className="font-mono tabular-nums">{s.delta}</span></li>
                 ))}
-                {!report.concerns.length && <li className="text-muted-foreground">Nothing below the template.</li>}
+                {!report.concerns.length && <li className="text-muted-foreground">{t("det.scout.noneBelow")}</li>}
               </ul>
             </div>
           </div>
@@ -222,18 +227,18 @@ export function PlayerDetail({ id }: { id: string }) {
         <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground">
           {report.evidence.map((e, i) => <li key={i}>› {e}</li>)}
         </ul>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">Sources: {report.sources.join(" · ")}</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">{t("common.sources")}: {report.sources.join(" · ")}</p>
       </Panel>
 
       <Panel className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <SectionTitle title="Career arc" hint="Modelled from age, potential and position" />
+          <SectionTitle title={t("det.arc.title")} hint={t("det.arc.hint")} />
           <Badge variant="outline" className={cn(arc.trajectory === "rising" ? "border-success/40 text-success" : arc.trajectory === "declining" ? "border-warning/40 text-warning" : "text-muted-foreground")}>
-            {arc.trajectory}
+            {t(`det.arc.${arc.trajectory}`)}
           </Badge>
         </div>
 
-        <div className="mt-3 flex items-end gap-[3px]" title="Modelled overall by age">
+        <div className="mt-3 flex items-end gap-[3px]" title={t("det.arc.chartTitle")}>
           {arc.points.map((pt) => (
             <div key={pt.age} className="flex flex-1 flex-col items-center gap-1">
               <div
@@ -245,22 +250,22 @@ export function PlayerDetail({ id }: { id: string }) {
         </div>
         <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
           <span>{arc.age}</span>
-          <span>peak {arc.projectedPeak} at {arc.points.reduce((b, p) => (p.overall > b.overall ? p : b), arc.points[0]).age}</span>
+          <span>{t("det.arc.peakAt", { overall: arc.projectedPeak, age: arc.points.reduce((b, p) => (p.overall > b.overall ? p : b), arc.points[0]).age })}</span>
           <span>{arc.points[arc.points.length - 1].age}</span>
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-          <Fact label="Position peak" value={arc.peakAge} />
-          <Fact label="Years to peak" value={arc.yearsToPeak} />
-          <Fact label="Decline from" value={arc.declineFromAge} />
-          <Fact label="Prime years left" value={arc.remainingPrimeYears} />
+          <Fact label={t("det.arc.factPeak")} value={arc.peakAge} />
+          <Fact label={t("det.arc.factYears")} value={arc.yearsToPeak} />
+          <Fact label={t("det.arc.factDecline")} value={arc.declineFromAge} />
+          <Fact label={t("det.arc.factPrime")} value={arc.remainingPrimeYears} />
         </div>
 
         <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground">
           {arc.evidence.map((e, i) => <li key={i}>› {e}</li>)}
         </ul>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Confidence {arc.confidence}% · a demo model over dataset fields, not a forecast about a real person · Sources: {arc.sources.join(" · ")}
+          {t("det.arc.note", { confidence: arc.confidence, sources: arc.sources.join(" · ") })}
         </p>
       </Panel>
     </div>
@@ -276,11 +281,13 @@ function Fact({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-function CompareBars({ a, b }: { a: PlayerRef; b: PlayerRef }) {  const rows: { label: string; av: number; bv: number; max: number }[] = [
-    { label: "Overall", av: a.overall, bv: b.overall, max: 99 },
-    { label: "Potential", av: a.potential, bv: b.potential, max: 99 },
-    { label: "Age", av: a.age, bv: b.age, max: 40 },
-    { label: "Value (M€)", av: Math.round(a.value / 1e6), bv: Math.round(b.value / 1e6), max: Math.max(Math.round(a.value / 1e6), Math.round(b.value / 1e6), 1) },
+function CompareBars({ a, b }: { a: PlayerRef; b: PlayerRef }) {
+  const { t } = useI18n();
+  const rows: { labelKey: string; av: number; bv: number; max: number }[] = [
+    { labelKey: "common.overall", av: a.overall, bv: b.overall, max: 99 },
+    { labelKey: "compare.m.potential", av: a.potential, bv: b.potential, max: 99 },
+    { labelKey: "common.age", av: a.age, bv: b.age, max: 40 },
+    { labelKey: "det.valueM", av: Math.round(a.value / 1e6), bv: Math.round(b.value / 1e6), max: Math.max(Math.round(a.value / 1e6), Math.round(b.value / 1e6), 1) },
   ];
   return (
     <div className="mt-3 space-y-3">
@@ -291,9 +298,9 @@ function CompareBars({ a, b }: { a: PlayerRef; b: PlayerRef }) {  const rows: { 
         const aWin = r.av >= r.bv;
         const bWin = r.bv >= r.av;
         return (
-          <div key={r.label}>
+          <div key={r.labelKey}>
             <div className="mb-1 flex justify-between text-[11px] text-muted-foreground">
-              <span className="font-mono">{r.av}</span><span>{r.label}</span><span className="font-mono">{r.bv}</span>
+              <span className="font-mono">{r.av}</span><span>{t(r.labelKey)}</span><span className="font-mono">{r.bv}</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="flex flex-1 justify-end"><div className={cn("h-2 rounded-l", aWin ? "bg-primary" : "bg-muted")} style={{ width: `${(r.av / r.max) * 100}%` }} /></div>
@@ -309,17 +316,17 @@ function CompareBars({ a, b }: { a: PlayerRef; b: PlayerRef }) {  const rows: { 
 // ---------------- Club detail ----------------
 export function ClubDetail({ id }: { id: string }) {
   const c = getClub(id);
-  if (!c) return <EmptyState title="Club not found" />;
-  const comp = getCompetition(c.competitionId);
-  const squad = playersByClub(id).sort((a, b) => b.overall - a.overall);
-  const recent = recentMatchesForClub(id, 5);
-  const upcoming = upcomingMatchesForClub(id, 5);
-  const attack = avgBy(squad, ["ST", "W", "AM"]);
-  const midfield = avgBy(squad, ["CM", "DM"]);
-  const defense = avgBy(squad, ["CB", "FB", "GK"]);
-  const metrics = useMemo(() => teamMetrics(c.competitionId, footballProvider.matches(), footballProvider.clubs()), [c.competitionId]);
-  const mine = metrics.find((m) => m.clubId === id) ?? null;
+  const { t } = useI18n();
+  const upcoming = c ? upcomingMatchesForClub(id, 5) : [];
   const next = upcoming[0];
+  // Both hooks run on every render, including the club-missing render: a memo
+  // that only exists while the club does would change the hook count between
+  // navigations from a valid club to an unknown id.
+  const metrics = useMemo(
+    () => (c ? teamMetrics(c.competitionId, footballProvider.matches(), footballProvider.clubs()) : []),
+    [c],
+  );
+  const mine = metrics.find((m) => m.clubId === id) ?? null;
   const preview = useMemo(() => {
     if (!mine || !next || next.status !== "SCHEDULED") return null;
     const oppId = next.homeClubId === id ? next.awayClubId : next.homeClubId;
@@ -329,6 +336,13 @@ export function ClubDetail({ id }: { id: string }) {
     const xg = expectedGoals(homeIsUs ? mine : opp, homeIsUs ? opp : mine);
     return { oppName: getClub(oppId)?.name ?? oppId, us: homeIsUs ? xg.home : xg.away, them: homeIsUs ? xg.away : xg.home };
   }, [mine, next, metrics, id]);
+  if (!c) return <EmptyState title={t("det.notFound.club")} />;
+  const comp = getCompetition(c.competitionId);
+  const squad = playersByClub(id).sort((a, b) => b.overall - a.overall);
+  const recent = recentMatchesForClub(id, 5);
+  const attack = avgBy(squad, ["ST", "W", "AM"]);
+  const midfield = avgBy(squad, ["CM", "DM"]);
+  const defense = avgBy(squad, ["CB", "FB", "GK"]);
   return (
     <div className="space-y-6">
       <EntityHeader
@@ -338,18 +352,18 @@ export function ClubDetail({ id }: { id: string }) {
         subtitle={<span>{c.nation} · <Link to={`/competitions/${c.competitionId}`} className="hover:text-primary">{comp?.name}</Link> · {c.stadium}</span>}
       />
       <div className="flex gap-2">
-        <FavoriteButton kind="club" id={id} activeText="My club" idleText="Set as my club" />
+        <FavoriteButton kind="club" id={id} />
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <StatTile label="Overall" value={c.overall} />
-        <StatTile label="Attack" value={attack || "—"} />
-        <StatTile label="Midfield" value={midfield || "—"} />
-        <StatTile label="Defense" value={defense || "—"} />
-        <StatTile label="Squad size" value={squad.length} />
+        <StatTile label={t("common.overall")} value={c.overall} />
+        <StatTile label={t("data.attack")} value={attack || "—"} />
+        <StatTile label={t("det.midfield")} value={midfield || "—"} />
+        <StatTile label={t("data.defence")} value={defense || "—"} />
+        <StatTile label={t("det.squad.size")} value={squad.length} />
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel className="p-1 lg:col-span-2">
-          <SectionTitle title="Squad" action={<Link to={`/players?club=${c.id}`} className="text-xs text-primary">Browse all →</Link>} />
+          <SectionTitle title={t("det.squad.title")} action={<Link to={`/players?club=${c.id}`} className="text-xs text-primary">{t("det.squad.browseAll")} →</Link>} />
           <div className="divide-y">
             {squad.map((p) => (
               <Link key={p.id} to={`/players/${p.id}`} className="flex items-center gap-3 px-2 py-1.5 hover:bg-card/50">
@@ -364,11 +378,11 @@ export function ClubDetail({ id }: { id: string }) {
         </Panel>
         <div className="space-y-4">
           <Panel className="p-4">
-            <SectionTitle title="Season analytics" hint={mine ? `${mine.played} finished matches · modelled vs league average` : "No finished matches in window"} />
+            <SectionTitle title={t("det.analytics.title")} hint={mine ? t("det.analytics.hint", { n: mine.played }) : t("det.analytics.noWindow")} />
             {mine ? (
               <div className="mt-2 space-y-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Form (last 5)</span>
+                  <span className="text-xs text-muted-foreground">{t("det.analytics.form")}</span>
                   <span className="flex gap-1">
                     {mine.form.map((f, i) => (
                       <span key={i} className={cn("grid h-5 w-5 place-items-center rounded text-[10px] font-bold", f === "W" ? "bg-success/20 text-success" : f === "D" ? "bg-muted text-muted-foreground" : "bg-destructive/20 text-destructive")}>{f}</span>
@@ -376,30 +390,30 @@ export function ClubDetail({ id }: { id: string }) {
                     {!mine.form.length && <span className="text-xs text-muted-foreground">—</span>}
                   </span>
                 </div>
-                <Ratio label="Attack" value={mine.attack} goodHigh />
-                <Ratio label="Defence (lower concedes)" value={mine.defence} />
+                <Ratio label={t("data.attack")} value={mine.attack} goodHigh />
+                <Ratio label={t("det.analytics.ratioDefence")} value={mine.defence} />
                 <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Pts / game</div><div className="font-mono text-sm">{mine.ppg.toFixed(2)}</div></div>
-                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Clean sheets</div><div className="font-mono text-sm">{mine.cleanSheets}</div></div>
+                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("det.analytics.ppg")}</div><div className="font-mono text-sm">{mine.ppg.toFixed(2)}</div></div>
+                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("det.analytics.cleanSheets")}</div><div className="font-mono text-sm">{mine.cleanSheets}</div></div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <Split label="Home" s={mine.home} />
-                  <Split label="Away" s={mine.away} />
+                  <Split label={t("data.home")} s={mine.home} />
+                  <Split label={t("data.away")} s={mine.away} />
                 </div>
                 {preview && (
                   <div className="rounded-md border bg-card/40 px-3 py-2 text-xs">
-                    <span className="text-muted-foreground">Next up vs {preview.oppName} · modelled xG </span>
+                    <span className="text-muted-foreground">{t("det.analytics.nextUp", { club: preview.oppName })} </span>
                     <span className="font-mono">{preview.us.toFixed(2)}–{preview.them.toFixed(2)}</span>
                   </div>
                 )}
-                <p className="text-[11px] text-muted-foreground">Ratings are relative to league average (1.00): attack above 1 scores more, defence below 1 concedes less. Computed from the dataset's finished matches; the next-fixture xG is a model, not a prediction of real events.</p>
+                <p className="text-[11px] text-muted-foreground">{t("det.analytics.ratioNote")}</p>
               </div>
             ) : (
-              <p className="mt-2 text-xs text-muted-foreground">No finished matches for this club in the current dataset window — nothing to compute yet.</p>
+              <p className="mt-2 text-xs text-muted-foreground">{t("det.analytics.empty")}</p>
             )}
           </Panel>
-          <MiniMatches title="Last results" matches={recent} />
-          <MiniMatches title="Next up" matches={upcoming} />
+          <MiniMatches title={t("det.results.last")} matches={recent} />
+          <MiniMatches title={t("det.results.next")} matches={upcoming} />
         </div>
       </div>
     </div>
@@ -430,15 +444,17 @@ function Ratio({ label, value, goodHigh = false }: { label: string; value: numbe
 }
 
 function Split({ label, s }: { label: string; s: { played: number; won: number; drawn: number; lost: number; gf: number; ga: number } }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-md border bg-card/30 px-2 py-1.5">
-      <div className="text-muted-foreground">{label} · {s.played} played</div>
+      <div className="text-muted-foreground">{label} · {t("det.split.played", { n: s.played })}</div>
       <div className="font-mono text-sm">{s.won}-{s.drawn}-{s.lost} <span className="text-muted-foreground">({s.gf}:{s.ga})</span></div>
     </div>
   );
 }
 
 function MiniMatches({ title, matches }: { title: string; matches: ReturnType<typeof getMatch>[] }) {
+  const { t } = useI18n();
   const list = matches.filter(Boolean);
   return (
     <Panel className="p-4">
@@ -459,7 +475,7 @@ function MiniMatches({ title, matches }: { title: string; matches: ReturnType<ty
             );
           })}
         </div>
-      ) : <p className="mt-2 text-xs text-muted-foreground">None in the current window.</p>}
+      ) : <p className="mt-2 text-xs text-muted-foreground">{t("det.results.none")}</p>}
     </Panel>
   );
 }
@@ -489,7 +505,8 @@ export function MatchDetail({ id }: { id: string }) {
   const [ai, setAi] = useState<AiAnswer | null>(null);
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
-  if (!m) return <EmptyState title="Match not found" />;
+  const { t } = useI18n();
+  if (!m) return <EmptyState title={t("det.notFound.match")} />;
   const home = getClub(m.homeClubId)!;
   const away = getClub(m.awayClubId)!;
   const comp = getCompetition(m.competitionId);
@@ -520,7 +537,7 @@ export function MatchDetail({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <EntityHeader title={`${home.name} v ${away.name}`} back="/matches" subtitle={<span>{comp?.name} · Round {m.round} · {m.status === "SCHEDULED" ? fmtDateTime(m.kickoff) : m.status}</span>} />
+      <EntityHeader title={`${home.name} v ${away.name}`} back="/matches" subtitle={<span>{comp?.name} · {t("det.round")} {m.round} · {m.status === "SCHEDULED" ? fmtDateTime(m.kickoff) : t(`fw.status.${m.status.toLowerCase()}`)}</span>} />
 
       <Panel className="p-5">
         <div className="grid grid-cols-3 items-center gap-2">
@@ -529,50 +546,50 @@ export function MatchDetail({ id }: { id: string }) {
             <div className="font-mono text-4xl font-bold">
               {m.status === "SCHEDULED" ? (sim ? `${sim.homeGoals}–${sim.awayGoals}` : "– : –") : `${m.homeGoals}–${m.awayGoals}`}
             </div>
-            {m.status === "SCHEDULED" && <div className="mt-1 text-[11px] uppercase tracking-widest text-muted-foreground">{sim ? "Engine projection" : "Not played"}</div>}
+            {m.status === "SCHEDULED" && <div className="mt-1 text-[11px] uppercase tracking-widest text-muted-foreground">{sim ? t("det.engine.projected") : t("det.engine.notPlayed")}</div>}
           </div>
           <Link to={`/clubs/${away.id}`} className="flex flex-col items-center gap-2 hover:text-primary"><Crest colors={away.colors} short={away.short} size={56} /><span className="text-center text-sm font-medium">{away.name}</span></Link>
         </div>
         <div className="mt-4 flex justify-center">
           <Button onClick={runSim} variant={sim ? "outline" : "default"}>
             {sim
-              ? played ? "Re-run reconstruction" : "Re-run Match Engine"
-              : played ? "▶ Reconstruct with Match Engine" : "▶ Simulate with Match Engine"}
+              ? t(played ? "det.engine.rerunRecon" : "det.engine.rerunSim")
+              : `▶ ${t(played ? "det.engine.runRecon" : "det.engine.runSim")}`}
           </Button>
         </div>
-        {sim && <div className="mt-2 text-center text-[11px] text-muted-foreground">{played ? "Illustrative reconstruction from squad strength — not the recorded events" : "Deterministic simulation from squad strength"} · seed {sim.seed.slice(0, 8)} · demo engine</div>}
+        {sim && <div className="mt-2 text-center text-[11px] text-muted-foreground">{t(played ? "det.engine.reconNote" : "det.engine.simNote")} · {t("det.engine.seed")} {sim.seed.slice(0, 8)} · {t("det.engine.demoEngine")}</div>}
       </Panel>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel className="p-4">
-          <SectionTitle title={sim ? (played ? "Reconstructed stats" : "Projected stats") : "Match engine output"} />
+          <SectionTitle title={t(sim ? (played ? "det.engine.statsRecon" : "det.engine.statsProj") : "det.engine.statsNone")} />
           {sim ? <StatCompare sim={sim} home={home.name} away={away.name} /> : (
-            <EmptyState title={played ? "No reconstruction yet" : "No simulation yet"} hint={played ? "Run the Match Engine to reconstruct possession, shots, xG and ratings for this fixture." : "Run the match engine to see possession, shots, xG and ratings."} icon="▶" />
+            <EmptyState title={t(played ? "det.engine.emptyReconTitle" : "det.engine.emptySimTitle")} hint={t(played ? "det.engine.emptyReconHint" : "det.engine.emptySimHint")} icon="▶" />
           )}
         </Panel>
         <Panel className="p-4">
-          <SectionTitle title={usingRecorded ? "Timeline" : sim ? (played ? "Reconstructed timeline" : "Projected timeline") : "Events"} />
+          <SectionTitle title={t(usingRecorded ? "det.timeline.recorded" : sim ? (played ? "det.timeline.recon" : "det.timeline.proj") : "det.timeline.events")} />
           {events.length ? (
             <ul className="mt-1 space-y-1.5">
               {events.map((e, i) => <EventRow key={i} e={e} home={home.name} away={away.name} />)}
             </ul>
-          ) : <EmptyState title="No events recorded" hint={played ? "Demo fixtures carry no recorded event log — run the Match Engine to see an illustrative reconstruction." : undefined} />}
+          ) : <EmptyState title={t("det.timeline.emptyTitle")} hint={played ? t("det.timeline.emptyHint") : undefined} />}
         </Panel>
       </div>
 
       <Panel className="p-4">
-        <SectionTitle title="Ask Football AI" hint="Answers cite evidence + confidence — Demo provider, no API key" />
+        <SectionTitle title={t("det.ai.title")} hint={t("det.ai.hint")} />
         <div className="mt-2 flex gap-2">
-          <Input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} placeholder="Who was decisive? Why did the midfield battle matter?" className="flex-1" />
-          <Button onClick={ask} disabled={busy}>{busy ? "Thinking…" : "Ask"}</Button>
+          <Input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && ask()} placeholder={t("det.ai.placeholder")} className="flex-1" />
+          <Button onClick={ask} disabled={busy}>{t(busy ? "det.ai.thinking" : "det.ai.ask")}</Button>
         </div>
         {ai && (
           <div className="mt-3 space-y-2 rounded-lg border bg-card/40 p-3 text-sm">
             <p>{ai.text}</p>
-            <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">Evidence</div><ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{ai.evidence.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+            <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("common.evidence")}</div><ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{ai.evidence.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
             <div className="flex items-center gap-3 text-xs">
-              <span>Confidence <span className="font-mono text-primary">{ai.confidence}%</span></span>
-              <span className="text-muted-foreground">Sources: {ai.sources.join(" · ")}</span>
+              <span>{t("common.confidence")} <span className="font-mono text-primary">{ai.confidence}%</span></span>
+              <span className="text-muted-foreground">{t("common.sources")}: {ai.sources.join(" · ")}</span>
             </div>
           </div>
         )}
@@ -594,17 +611,18 @@ function EventRow({ e, home, away }: { e: MatchEvent; home: string; away: string
 }
 
 function StatCompare({ sim, home, away }: { sim: SimResult; home: string; away: string }) {
-  const rows: { label: string; h: number; a: number; fmt?: (n: number) => string }[] = [
-    { label: "Possession", h: sim.stats.home.possession, a: sim.stats.away.possession, fmt: (n) => `${Math.round(n)}%` },
-    { label: "Shots", h: sim.stats.home.shots, a: sim.stats.away.shots },
-    { label: "On target", h: sim.stats.home.onTarget, a: sim.stats.away.onTarget },
-    { label: "Expected goals", h: sim.stats.home.xg, a: sim.stats.away.xg, fmt: (n) => n.toFixed(2) },
-    { label: "Passes", h: sim.stats.home.passes, a: sim.stats.away.passes },
-    { label: "Pass accuracy", h: sim.stats.home.passAcc, a: sim.stats.away.passAcc, fmt: (n) => `${Math.round(n)}%` },
-    { label: "Corners", h: sim.stats.home.corners, a: sim.stats.away.corners },
-    { label: "Tackles", h: sim.stats.home.tackles, a: sim.stats.away.tackles },
-    { label: "Duels", h: sim.stats.home.duels, a: sim.stats.away.duels },
-    { label: "Fouls", h: sim.stats.home.fouls, a: sim.stats.away.fouls },
+  const { t } = useI18n();
+  const rows: { labelKey: string; h: number; a: number; fmt?: (n: number) => string }[] = [
+    { labelKey: "ms.possession", h: sim.stats.home.possession, a: sim.stats.away.possession, fmt: (n) => `${Math.round(n)}%` },
+    { labelKey: "ms.shots", h: sim.stats.home.shots, a: sim.stats.away.shots },
+    { labelKey: "ms.onTarget", h: sim.stats.home.onTarget, a: sim.stats.away.onTarget },
+    { labelKey: "ms.xg", h: sim.stats.home.xg, a: sim.stats.away.xg, fmt: (n) => n.toFixed(2) },
+    { labelKey: "ms.passes", h: sim.stats.home.passes, a: sim.stats.away.passes },
+    { labelKey: "ms.passAcc", h: sim.stats.home.passAcc, a: sim.stats.away.passAcc, fmt: (n) => `${Math.round(n)}%` },
+    { labelKey: "ms.corners", h: sim.stats.home.corners, a: sim.stats.away.corners },
+    { labelKey: "ms.tackles", h: sim.stats.home.tackles, a: sim.stats.away.tackles },
+    { labelKey: "ms.duels", h: sim.stats.home.duels, a: sim.stats.away.duels },
+    { labelKey: "ms.fouls", h: sim.stats.home.fouls, a: sim.stats.away.fouls },
   ];
   return (
     <div className="mt-2 space-y-2.5">
@@ -613,8 +631,8 @@ function StatCompare({ sim, home, away }: { sim: SimResult; home: string; away: 
         const total = r.h + r.a || 1;
         const fmt = r.fmt ?? ((n: number) => String(n));
         return (
-          <div key={r.label}>
-            <div className="flex justify-between text-[11px]"><span className="font-mono">{fmt(r.h)}</span><span className="text-muted-foreground">{r.label}</span><span className="font-mono">{fmt(r.a)}</span></div>
+          <div key={r.labelKey}>
+            <div className="flex justify-between text-[11px]"><span className="font-mono">{fmt(r.h)}</span><span className="text-muted-foreground">{t(r.labelKey)}</span><span className="font-mono">{fmt(r.a)}</span></div>
             <div className="mt-0.5 flex h-1.5 overflow-hidden rounded bg-muted">
               <div className="bg-primary" style={{ width: `${(r.h / total) * 100}%` }} />
               <div className="flex-1 bg-muted-foreground/40" />
@@ -623,7 +641,7 @@ function StatCompare({ sim, home, away }: { sim: SimResult; home: string; away: 
         );
       })}
       <details className="mt-1 rounded-md border bg-card/30 p-2 text-xs">
-        <summary className="cursor-pointer uppercase tracking-widest text-muted-foreground">Key player ratings</summary>
+        <summary className="cursor-pointer uppercase tracking-widest text-muted-foreground">{t("det.ratings.key")}</summary>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <RatingsCol title={home} ratings={sim.stats.home.ratings} />
           <RatingsCol title={away} ratings={sim.stats.away.ratings} />

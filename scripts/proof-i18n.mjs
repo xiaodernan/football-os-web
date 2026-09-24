@@ -46,6 +46,7 @@
 //      which prints `{a}` on the screen in every locale.
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
+import { scanSource, lookupsIn } from "./lib/rawUiScan.mjs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -392,6 +393,12 @@ const DYN_SITES = [
   { path: "features/settings/SettingsPage.tsx", expr: "m", prefix: "set.mode.", suffix: "" },
   { path: "features/tactical/TacticalStudio.tsx", expr: "i", prefix: "tac.mentality.", suffix: "" },
   { path: "features/watchlist/WatchlistBoard.tsx", expr: "s", prefix: "watch.sort.", suffix: "" },
+  // M148: the favourite control derives its own copy from the kind it favours, and
+  // the career-arc badge prints the trajectory the model returned.
+  { path: "features/football/Details.tsx", expr: "kind", prefix: "fav.", suffix: ".active" },
+  { path: "features/football/Details.tsx", expr: "kind", prefix: "fav.", suffix: ".idle" },
+  { path: "features/football/Details.tsx", expr: "arc.trajectory", prefix: "det.arc.", suffix: "" },
+  { path: "features/football/Details.tsx", expr: "m.status.toLowerCase()", prefix: "fw.status.", suffix: "" },
 ];
 // One space per (prefix, expression) pair: the two `prof.mode.` sites take the
 // same prefix from different code, which is why the space is not keyed on the
@@ -417,9 +424,25 @@ const SPACES = new Map([
     name: "comparison metrics",
     values: spaceOf("domain/compare.ts", /\{ key: "overall",[\s\S]*?\n  \];/, /\{ key: "([^"]+)",/g),
   }],
+  ["det.arc.|arc.trajectory", {
+    name: "career trajectories",
+    values: spaceOf("domain/careerArc.ts", /export type Trajectory = [^;]+;/, quoted),
+  }],
+  ["fav.|kind", {
+    // The store's own action signature: it is what every caller must satisfy, so
+    // it is the space the control can actually be handed.
+    name: "favourite kinds",
+    values: spaceOf("store/useFootballOS.tsx", /setFavorite: \(key: "[a-z]+"(?: \| "[a-z]+")+/, quoted),
+  }],
   ["fw.status.|tab.toLowerCase()", {
     name: "match statuses",
     values: lower(spaceOf("features/football/FootballWorld.tsx", /\["LIVE"[\s\S]*?\] as const/, quoted)),
+  }],
+  ["fw.status.|m.status.toLowerCase()", {
+    // A fixture's own status field, not the filter tabs: the union the type says
+    // a match can carry is the space this site can be handed.
+    name: "match status field, lower-cased by the site",
+    values: lower(spaceOf("domain/types.ts", /export type MatchStatus = [^;]+;/, quoted)),
   }],
   ["fw.type.|type", {
     name: "search result types",
@@ -671,6 +694,89 @@ ok(`every placeholder key is read by a call that fills it (${substituted} filled
   unsubstituted.length === 0);
 for (const u of unsubstituted.slice(0, 15)) console.log("       bare: " + u);
 ok(`the placeholder scan is reading real interpolated calls rather than nothing (${substituted})`, substituted >= 5);
+
+// 22. Raw UI text, measured across the whole app rather than one screen at a
+//     time. scripts/lib/rawUiScan.mjs reads the three positions a reader of the
+//     interface actually sees — a JSX text node, a display prop or in-line
+//     expression, and a row that carries a label instead of a key. M148 localised
+//     the player/club/match detail screen with it; the covered set keeps that
+//     screen at zero while the ceiling measures the debt that is left, so a new
+//     hard-coded label is a red check instead of a new untranslated corner.
+//
+//     The gate is planted with its own fixture first. Every exemption it applies —
+//     a t() argument at any position, a value being compared against, a template
+//     whose holes carry the copy — is a way for real leak to hide, so each one is
+//     paid for by a literal the fixture proves is *not* reported, and by the
+//     three literals it proves *is*.
+const RAW_FIXTURE = [
+  `export function Demo({ x }: { x: number }) {`,
+  `  const { t } = useI18n();`,
+  `  const rows = [{ label: "Planted row label", k: "ms.possession" }];`,
+  `  return (`,
+  `    <Panel title="Planted title" hint={t("planted.key")}>`,
+  `      <div>Planted text node</div>`,
+  `      <Badge>{t(x > 1 ? "planted.a" : "planted.b")}</Badge>`,
+  `      <span>{x === "LIVE" ? t("planted.c") : null}</span>`,
+  "      <i>{t(`fav.${x}.active`)}</i>",
+  `      <Link to="/players">{"← " + t("common.back")}</Link>`,
+  `    </Panel>`,
+  `  );`,
+  `}`,
+  ``,
+].join("\n");
+const planted = scanSource(RAW_FIXTURE).hits;
+ok(`the raw-UI scan reports exactly the copy planted in its fixture (${planted.map((h) => h.kind).join(", ") || "nothing"})`,
+  planted.length === 3 && planted.every((h) => h.text.startsWith("Planted")));
+const plantedLookups = lookupsIn(RAW_FIXTURE);
+ok(`the fixture's t() lookups are read as lookups, not as interface copy (${plantedLookups.join(", ")})`,
+  plantedLookups.length === 5 && planted.every((h) => !plantedLookups.includes(h.text)));
+
+const RAW_COVERED = [
+  "features/compare/ComparePage.tsx",
+  "features/football/Details.tsx",
+  "features/review/ReviewPage.tsx",
+  "features/settings/SettingsPage.tsx",
+  "features/shell/AppShell.tsx",
+  "features/tactical/TacticalStudio.tsx",
+  "features/transfers/TransferCentre.tsx",
+  "ui/charts.tsx",
+];
+// The ceiling is the debt that is not in the covered set. Lower it when a screen
+// is localised; it may only ever go down on purpose.
+//
+// Measured over every .tsx in the repo — which is wider than the features/ui/
+// components tree (store/useFootballOS.tsx carries 4, src/App.tsx 3). 607 as of
+// M148, when Details.tsx went from 122 raw strings to 0.
+const RAW_UI_CEILING = 607;
+const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
+const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
+const leaks = RAW_COVERED
+  .filter((p) => appSrc.has(p))
+  .map((p) => [p, scanSource(appSrc.get(p)).hits])
+  .filter(([, h]) => h.length > 0)
+  .map(([p, h]) => `${p} (${h.length}: ${h[0].text.slice(0, 30)})`);
+ok(`the ${RAW_COVERED.length} localised files still render no raw UI text (${[...missing.map((p) => p + " (gone)"), ...leaks].join(", ") || "none"})`,
+  RAW_COVERED.length >= 8 && missing.length === 0 && leaks.length === 0);
+const openRows = tsxSrc
+  .filter(([p]) => !RAW_COVERED.includes(p))
+  .map(([p, src]) => [scanSource(src).hits.length, p])
+  .filter(([n]) => n > 0);
+const openTotal = openRows.reduce((s, [n]) => s + n, 0);
+ok(`the raw-UI debt outside the covered set has not grown (${openTotal} across ${openRows.length} files, ceiling ${RAW_UI_CEILING})`,
+  openTotal <= RAW_UI_CEILING);
+for (const [n, p] of openRows.sort((a, b) => b[0] - a[0]).slice(0, 6)) console.log(`       debt: ${String(n).padStart(4)} ${p}`);
+ok(`the debt scan is reading files that do carry raw text (${openRows.length} files)`,
+  tsxSrc.length >= 60 && openRows.length >= 20 && openTotal >= 400);
+
+// The exemption's own audit: a literal the scan chose not to report because it
+// looks like a t() lookup has to be one. This is the check that would have caught
+// the four keys M148 deleted out from under their callers.
+const allLookups = tsxSrc.flatMap(([p, src]) => lookupsIn(src).map((k) => [p, k]));
+const enSet = new Set(enKeys);
+const badLookups = allLookups.filter(([, k]) => !enSet.has(k));
+ok(`every literal the raw-UI exemption treats as a t() lookup is a real key (${allLookups.length} lookups, ${[...new Set(badLookups.map(([p, k]) => `${p}: ${k}`))].slice(0, 8).join(", ") || "no unknown"})`,
+  badLookups.length === 0);
+ok(`the exemption audit is reading real lookups rather than nothing (${allLookups.length})`, allLookups.length >= 500);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

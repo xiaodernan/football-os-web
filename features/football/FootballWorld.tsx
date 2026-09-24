@@ -437,7 +437,7 @@ function CompetitionDetail({ id }: { id: string }) {
     <div className="space-y-6">
       <PageHeader title={comp.name} hint={t("fw.comp.hint", { nation: comp.nation, tier: comp.tier, teams: clubs.length })} back="/competitions" />
       <div className="flex justify-end">
-        <FavoriteButton kind="competition" id={id} activeText={t("fw.comp.myLeague")} idleText={t("fw.comp.setLeague")} />
+        <FavoriteButton kind="competition" id={id} />
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">

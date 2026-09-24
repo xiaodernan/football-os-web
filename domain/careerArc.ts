@@ -16,7 +16,7 @@ export interface ArcPoint {
   phase: ArcPhase;
 }
 
-export type Trajectory = "rising" | "at peak" | "declining";
+export type Trajectory = "rising" | "peak" | "declining";
 
 export interface CareerArc {
   playerId: string;
@@ -95,7 +95,7 @@ export function careerArc(p: PlayerRef): CareerArc {
   const declineFromAge = points.find((pt) => pt.phase === "decline")?.age ?? LAST_AGE;
   const remainingPrimeYears = Math.max(0, Math.min(LAST_AGE, peakAge + 2) - startAge);
   const trajectory: Trajectory =
-    yearsToPeak > 0 && peakPoint.overall > current + 0.4 ? "rising" : declineFromAge <= startAge + 1 ? "declining" : "at peak";
+    yearsToPeak > 0 && peakPoint.overall > current + 0.4 ? "rising" : declineFromAge <= startAge + 1 ? "declining" : "peak";
 
   const evidence = [
     `${group} profile peaks around ${peakAge}; this player is ${startAge}`,

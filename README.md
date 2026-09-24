@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M147 (a few numbers in that range
+Work ships one milestone per commit and is currently at M148 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M147 line of work is a different kind of progress: it makes the earlier claims
+The M108–M148 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -433,6 +433,72 @@ no runtime-rendering claim, only the static and mutation evidence above. Walking
 three locales on a fresh production preview is queued as its own follow-up rather than
 recorded as done.
 
+
+M148 localised the player detail screen — the largest single block of raw English still in
+the app, and the page a visitor is most likely to land on from a search — and turned the
+scan that measured it into a permanent gate. `features/football/Details.tsx` had 122
+string literals reaching the interface with no `t()` in sight: every `SectionTitle` and
+`Panel` title, the `StatTile` labels, the Football DNA notes, the scout-report column
+heads, the career-arc fact tiles, the club analytics panel, the match-engine controls and
+the whole Ask-Football-AI block. 109 new keys per locale take that file to 0, so the
+dictionary is at 868 (763 + 109 − 4). The four deletions are two evidence titles that
+duplicated each other (`rv.evidenceTitle`, `ld.evidenceTitle`) and two favourite labels
+(`fw.comp.myLeague`, `fw.comp.setLeague`) that the `fav.*` family already carries. Rows
+keep M147's rule: the comparison tables that built `{ label: "Possession" }` now carry
+`labelKey`, 10 `ms.*` keys plus `common.overall`, `compare.m.potential`, `common.age`
+and `det.valueM`. The club tiles' `"Defense"` — spelled that way on one screen and
+`"Defence"` on another — now read `data.attack` / `data.defence` with a new
+`det.midfield`, which is the first time those two spellings have agreed anywhere.
+
+Three consequences were not cosmetic. `arc.trajectory` was one of the display strings the
+domain returned rather than a code, so the `Trajectory` union member `"at peak"` became
+`"peak"` to work as a key suffix — the union, its own proof and its four readers moved in
+the same commit. `ClubDetail` ran its `useMemo` calls after the club-missing early
+return, so adding `useI18n` would have turned a latent rule violation into a crash when
+navigating from a valid club to an unknown id; both memos now run unconditionally. And the
+keys that interpolate (`{n} finished matches`, `peak {overall} at {age}`, `vs a
+{group} of matched skill`) had to be declared in the dynamic-site and value-space tables,
+taking the declared dynamic `t()` sites from 45 to 49.
+
+Check 22 in proof-i18n is that gate, backed by `scripts/lib/rawUiScan.mjs`. It reports a
+literal that reaches the interface in one of three positions — a JSX text node, a display
+prop or in-line expression, a row carrying a label — and it was wrong four separate times
+before it was trustworthy: a generic `<` counted arrow functions and generics as tag
+opens (until it is followed by a name, `/` or `>`); quotes inside JSX text are copy, not
+JS boundaries; an interpolation hole carries no copy of its own; and a literal must be
+answered for by its *tightest* enclosing region, so a nested element's attributes are not
+the outer prop's prose. Exemptions are deliberately narrow — a literal shaped like a key
+that closes a `t(` call at any argument position, a literal being compared against
+(`side === "home"`), a placeholder pattern, a row-key position — and every one of them is
+a way for a real leak to hide, so the check plants a fixture and counts both sides of it:
+3 literals it must report, 5 lookups it must not. Its companion audit then reads every
+literal the exemption waved through back against the dictionary — 732 of them, 0 unknown
+— so a call site left naming a key the dictionaries no longer contain turns this red even
+though parity holds, because all three locales lost that key together.
+
+What the gate also measures is the debt it does not cover. `RAW_COVERED` names the 8 files
+that must stay at 0 (compare page, football detail, review, settings, app shell, tactical
+studio, transfer centre, chart primitives); everything else counts against a ceiling that
+may only move down on purpose — 607 raw literals across 31 files, measured over every
+`.tsx` in the repo, which is wider than the feature tree alone (600: `store/useFootballOS.tsx`
+contributes 4 achievement and activity strings, `src/App.tsx` 3). The largest open files are
+Manager OS (133), Player OS (103), Simulation Lab (51) and the Dashboard (44), and they are
+listed here as outstanding rather than described as localised.
+
+Two limits are part of the contract, not oversights. The scan reads literal-shaped text, so
+a label built by a function and passed through a variable — M145's `templateEdge()` — stays
+invisible to it, which is why M147's row-carries-a-key rule still governs `domain/`. And
+the demo provider's answer prose in `data/ai.ts` is English in every locale; it reaches the
+screen as `AiAnswer.text`, so no scan over source literals can find it, and localising or
+restating those sentences is queued as its own milestone rather than counted here.
+
+Not browser-verified either. `npx tsc --noEmit` exits 0, `npm run build` succeeds, the suite
+is 25 scripts / 1012 checks (proof-i18n 82 -> 93), and 5 mutation probes each turn the
+named check red and the runner non-zero: a raw `title="..."` in a covered file, a planted
+label in an uncovered one, a covered file that disappears, a scanner that reports nothing,
+and a lookup whose key no longer exists. Every file is restored from a byte copy and
+re-verified by sha256 after each probe, and the in-app browser is still wedged, so the
+three-locale walk remains an open follow-up rather than a claim.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

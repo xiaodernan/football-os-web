@@ -320,7 +320,7 @@ export function ReviewPage() {
 
           {/* evidence + sources */}
           <Panel className="p-4">
-            <SectionTitle title={t("rv.evidenceTitle")} hint={t("rv.evidenceHint")} />
+            <SectionTitle title={t("common.evidence")} hint={t("rv.evidenceHint")} />
             <ul className="mt-2 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
               {review.evidence.map((e, i) => (
                 <li key={i} className="flex items-start gap-1.5">
