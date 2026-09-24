@@ -34,8 +34,10 @@ ok("analyzeGap never mutates the attributes it is given", JSON.stringify(fixture
 // --- items mirror the attribute catalogue exactly ---------------------------
 ok("items cover every ATTRIBUTE_DEF key, in order",
   a.items.length === KEYS.length && a.items.every((it, i) => it.key === KEYS[i]));
-ok("each item's label comes from attributeLabel, not a new string",
-  a.items.every((it) => it.label === attributeLabel(it.key)));
+ok("each item row carries keys and numbers, never a display label",
+  a.items.every((it) => Object.keys(it).sort().join(",") === "actual,criticality,delta,key,target"));
+ok("every item key resolves in the attribute name table, so the dictionary can name it",
+  a.items.every((it) => attributeLabel(it.key) !== it.key));
 ok("delta = round(target - actual, 1) and criticality = max(0, target - floor)",
   a.items.every((it) => it.delta === r1(it.target - it.actual) && it.criticality === Math.max(0, it.target - ROLE_FLOOR)));
 ok("criticality is never negative", a.items.every((it) => it.criticality >= 0));
@@ -101,7 +103,8 @@ ok("partial data flips hasData true", analyzeGap({ attributes: { [KEYS[0]]: 60 }
 // --- groupLabel resolution + unknown fallback --------------------------------
 ok("groupLabel maps known groups to human labels", groupLabel("ST") === "Striker" && groupLabel("GK") === "Goalkeeper");
 ok("groupLabel echoes an unknown id rather than inventing one", groupLabel("XX") === "XX");
-ok("the analysis carries the resolved group label through", a.groupLabel === groupLabel("ST"));
+ok("the analysis hands the UI the group id, not a resolved label",
+  a.group === "ST" && !("groupLabel" in a));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

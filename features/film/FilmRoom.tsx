@@ -224,7 +224,7 @@ export function FilmRoom() {
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button size="sm" onClick={buildTraining} disabled={planning}>{planning ? "Building…" : "Build a training from this →"}</Button>
-                  <span className="self-center text-[11px] text-muted-foreground">Recommended focus: {current.report.recommendedFocus.map(attributeLabel).join(", ")}</span>
+                  <span className="self-center text-[11px] text-muted-foreground">Recommended focus: {current.report.recommendedFocus.map((k) => t(`attr.name.${k}`)).join(", ")}</span>
                 </div>
               </Panel>
 
@@ -304,7 +304,7 @@ export function FilmRoom() {
                 <ul className="mt-2 space-y-1.5 text-xs">
                   {insights.topFocus.map((f) => (
                     <li key={f.key} className="flex items-center justify-between gap-2">
-                      <span>{f.label}</span>
+                      <span>{t(`attr.name.${f.key}`)}</span>
                       <span className="font-mono text-muted-foreground">×{f.clips} clip{f.clips === 1 ? "" : "s"}</span>
                     </li>
                   ))}

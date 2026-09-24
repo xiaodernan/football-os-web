@@ -31,7 +31,19 @@
 //      whose site has been renamed or deleted,
 //  17. a declared value space whose members lack a key in some locale,
 //  18. a dictionary key nothing can reach — not a literal, not a variable-held
-//      label, not a value any dynamic site can build.
+//      label, not a value any dynamic site can build,
+//  19. the domain name tables drifting away from the dictionary's English values:
+//      they now only compose prose, so a rename that skips the dictionary would
+//      print the old name in a generated sentence and the new one on screen,
+//  20. a second category namespace coming back — compare.cat.* duplicated attr.*,
+//  21. the domain name tables being referenced from UI text again instead of
+//      staying in the prose layer (the coach-prompt builders that legitimately
+//      reference them are declared and count-checked),
+//  22. an attribute's English name handed to a UI slot as a literal prop or text
+//      node, which no key-level check can see,
+//  23. the specific row interpolations M147 converted coming back,
+//  24. a caller reading an interpolated key without filling its placeholders,
+//      which prints `{a}` on the screen in every locale.
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
@@ -252,24 +264,30 @@ ok(`no Scouting string reintroduces the English M145 replaced (${scoutBack.join(
 //     string prop. `templateEdge` used to return `bestLabel: "Tactical"`, which the
 //     two list boards printed as English on a 繁體中文 page; only the browser showed
 //     it. It now returns the category id and each board translates it.
-const { CATEGORY_ORDER } = await server.ssrLoadModule("/domain/attributes.ts");
+const { CATEGORY_ORDER, ATTRIBUTE_DEFS, POSITION_GROUPS } = await server.ssrLoadModule("/domain/attributes.ts");
+const SCOUT_DOMAIN = readFileSync(join(root, "domain", "scouting.ts"), "utf8");
 const EDGE_SOURCES = [
-  ["domain/scouting.ts", readFileSync(join(root, "domain", "scouting.ts"), "utf8")],
   ["the Scouting board", scoutSrc],
   ["the watchlist board", readFileSync(join(root, "features", "watchlist", "WatchlistBoard.tsx"), "utf8")],
 ];
 const leakedLabels = EDGE_SOURCES.flatMap(([name, src]) => [...src.matchAll(/\b(?:best|worst)Label\b/g)].map(() => name));
-ok(`no template-edge display label survives in the domain or either board (${leakedLabels.join(", ") || "none"})`, leakedLabels.length === 0);
-const untranslatedEdge = EDGE_SOURCES.slice(1)
-  .filter(([, src]) => !src.includes("compare.cat.${edge.bestCategory}") || !src.includes("compare.cat.${edge.worstCategory}"))
+ok(`no template-edge display label reaches either board (${leakedLabels.join(", ") || "none"})`, leakedLabels.length === 0);
+// The row types themselves: M147 removed `label` from TemplateEdge,
+// CategoryEdgeRow and ModelledAttribute, so the compiler — not a reading of the
+// prose — is what stops a label being re-added and printed. A proof that only
+// looked at the boards would pass while the domain quietly kept a label field.
+const scoutLabelFields = [...SCOUT_DOMAIN.matchAll(/^\s+label: string;$/gm)].length;
+ok(`the scout-report rows domain/scouting.ts exports carry no label field (${scoutLabelFields})`, scoutLabelFields === 0);
+const untranslatedEdge = EDGE_SOURCES
+  .filter(([, src]) => !src.includes("attr.${edge.bestCategory}") || !src.includes("attr.${edge.worstCategory}"))
   .map(([name]) => name);
 ok(`both boards translate both template-edge categories (${untranslatedEdge.join(", ") || "none"})`, untranslatedEdge.length === 0);
 
 // 15. That render site is a dynamic key, and check 5 can only prove the prefix
 //     resolves to *something*. A category the dictionary misses would print its
 //     raw key at runtime, so pin the whole value space against the real array.
-const missingCat = CATEGORY_ORDER.filter((c) => !bounds.every((_, i) => keysOf(i).includes(`compare.cat.${c}`)));
-ok(`all ${CATEGORY_ORDER.length} categories have compare.cat.* in every locale (${missingCat.join(", ") || "none"})`,
+const missingCat = CATEGORY_ORDER.filter((c) => !bounds.every((_, i) => keysOf(i).includes(`attr.${c}`)));
+ok(`all ${CATEGORY_ORDER.length} categories have attr.* in every locale (${missingCat.join(", ") || "none"})`,
   CATEGORY_ORDER.length >= 4 && missingCat.length === 0);
 
 // 16-18. Key reachability with NO exception list. Checks 4 and 5 each cover one
@@ -320,11 +338,47 @@ const DYN_SITES = [
   { path: "features/dashboard/Dashboard.tsx", expr: "growth.next.id", prefix: "ach.desc.", suffix: "" },
   { path: "features/achievements/AchievementsPage.tsx", expr: "a.tier", prefix: "ach.tier.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
-  { path: "features/compare/ComparePage.tsx", expr: "c.category", prefix: "compare.cat.", suffix: "" },
-  { path: "features/scouting/ScoutingPanel.tsx", expr: "edge.bestCategory", prefix: "compare.cat.", suffix: "" },
-  { path: "features/scouting/ScoutingPanel.tsx", expr: "edge.worstCategory", prefix: "compare.cat.", suffix: "" },
-  { path: "features/watchlist/WatchlistBoard.tsx", expr: "edge.bestCategory", prefix: "compare.cat.", suffix: "" },
-  { path: "features/watchlist/WatchlistBoard.tsx", expr: "edge.worstCategory", prefix: "compare.cat.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
+  { path: "ui/charts.tsx", expr: "c.category", prefix: "attr.", suffix: "" },
+  { path: "features/compare/ComparePage.tsx", expr: "c.category", prefix: "attr.", suffix: "" },
+  { path: "features/football/Details.tsx", expr: "c.category", prefix: "attr.", suffix: "" },
+  { path: "features/scouting/ScoutingPanel.tsx", expr: "edge.bestCategory", prefix: "attr.", suffix: "" },
+  { path: "features/scouting/ScoutingPanel.tsx", expr: "edge.worstCategory", prefix: "attr.", suffix: "" },
+  { path: "features/watchlist/WatchlistBoard.tsx", expr: "edge.bestCategory", prefix: "attr.", suffix: "" },
+  { path: "features/watchlist/WatchlistBoard.tsx", expr: "edge.worstCategory", prefix: "attr.", suffix: "" },
+  // M147: an attribute name is a key lookup, wherever the row came from. Each of
+  // these interpolates a key out of a domain row (edge, item, growth delta,
+  // focus chip, projection line), so the space is the attribute table itself.
+  { path: "features/compare/ComparePage.tsx", expr: "e.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/dashboard/Dashboard.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/development/DevelopmentPage.tsx", expr: "item.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/development/DevelopmentPage.tsx", expr: "it.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/development/DevelopmentPage.tsx", expr: "it.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/development/DevelopmentPage.tsx", expr: "it.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/development/DevelopmentPage.tsx", expr: "analysis.group", prefix: "group.", suffix: "" },
+  { path: "features/film/FilmRoom.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/film/FilmRoom.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
+  { path: "features/football/Details.tsx", expr: "at.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/football/Details.tsx", expr: "at.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/football/Details.tsx", expr: "s.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/football/Details.tsx", expr: "s.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/history/HistoryPage.tsx", expr: "g.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "d.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "d.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "d.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "f", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "g.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "w.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/profile/ProfilePage.tsx", expr: "s.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/profile/ProfilePage.tsx", expr: "s.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/review/ReviewPage.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/review/ReviewPage.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/review/ReviewPage.tsx", expr: "g.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/review/ReviewPage.tsx", expr: "reco.attributeKey", prefix: "attr.name.", suffix: "" },
+  { path: "features/review/ReviewPage.tsx", expr: "reco.attributeKey", prefix: "attr.name.", suffix: "" },
+  { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
@@ -345,6 +399,8 @@ const DYN_SITES = [
 // every site's pair to appear here.
 const S_ACH = { name: "achievement ids", values: ACH_IDS };
 const S_CAT = { name: "attribute categories", values: CATEGORY_ORDER };
+const S_ATTR = { name: "attribute keys", values: ATTRIBUTE_DEFS.map((d) => d.key) };
+const S_GROUP = { name: "position groups", values: POSITION_GROUPS.map((g) => g.id) };
 const S_MODE = { name: "Mode union", values: MODES_UPPER };
 const SPACES = new Map([
   ["ach.name.|a.id", S_ACH],
@@ -353,9 +409,10 @@ const SPACES = new Map([
   ["ach.desc.|growth.next.id", S_ACH],
   ["ach.tier.|a.tier", { name: "achievement tiers", values: ACH_TIERS }],
   ["attr.|cat", S_CAT],
-  ["compare.cat.|c.category", S_CAT],
-  ["compare.cat.|edge.bestCategory", S_CAT],
-  ["compare.cat.|edge.worstCategory", S_CAT],
+  ["attr.|c.category", S_CAT],
+  ["attr.|edge.bestCategory", S_CAT],
+  ["attr.|edge.worstCategory", S_CAT],
+  ["group.|analysis.group", S_GROUP],
   ["compare.m.|m.key", {
     name: "comparison metrics",
     values: spaceOf("domain/compare.ts", /\{ key: "overall",[\s\S]*?\n  \];/, /\{ key: "([^"]+)",/g),
@@ -397,6 +454,11 @@ const SPACES = new Map([
     values: spaceOf("features/watchlist/WatchlistBoard.tsx", /\["value"[\s\S]*?\] as Sort\[\]/, quoted),
   }],
 ]);
+// Every `attr.name.…` site interpolates an attribute key out of some domain row,
+// so they all take the same space, and listing it 20 times would only invite the
+// copies to drift. Check 16 still requires every *site* to be declared by file
+// and expression, which is what stops a new leak reading as already covered.
+for (const s of DYN_SITES) if (s.prefix === "attr.name.") SPACES.set(`attr.name.|${s.expr}`, S_ATTR);
 
 // 16. The table and the source must agree in both directions.
 const SITE = /\bt\(\s*`([^`]*)\$\{([^}]*)\}([^`]*)`/g;
@@ -440,10 +502,14 @@ for (const s of SPACE_SITES.values()) {
 
 // 18. The headline: no key in the dictionary is unreachable.
 const claimed = new Set();
-const KEY_LIKE = /["']([A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+)["']/g;
+// Properly-paired key literals only. A template that interpolates (`attr.name.$
+// {f.key}`) cannot match, because `$` and `{` are outside the character class and
+// the group has to end at the same delimiter it started at — those sites are
+// claimed through DYN_SITES instead, which is the point of check 16.
+const KEY_LIKE = /(?:"([A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+)"|'([A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+)'|`([A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+)`)/g;
 for (const [, src] of appSrc) {
   for (const m of src.matchAll(STATIC)) claimed.add(m[1]);
-  for (const m of src.matchAll(KEY_LIKE)) claimed.add(m[1]);
+  for (const m of src.matchAll(KEY_LIKE)) claimed.add(m[1] ?? m[2] ?? m[3]);
 }
 const dynKeys = new Set(DYN_SITES.flatMap((s) => (SPACES.get(`${s.prefix}|${s.expr}`)?.values ?? []).map((v) => s.prefix + v + s.suffix)));
 const unreachable = enKeys.filter((k) => !claimed.has(k) && !dynKeys.has(k));
@@ -453,6 +519,158 @@ ok(`every dictionary key is reachable — static, quoted, or a value a dynamic s
 // regex stopped matching anything.
 ok(`the reachability scan claims the dictionary rather than nothing (${claimed.size} static/quoted + ${dynKeys.size} dynamic)`,
   claimed.size + dynKeys.size >= enKeys.length && claimed.size > 500 && dynKeys.size > 50);
+
+// 19. The domain name tables and the dictionary's English values must stay one
+//     fact. Since M147 the tables only compose prose, so a rename that misses the
+//     dictionary would print the old name inside a generated sentence and the new
+//     name in the slot beside it — two spellings on one screen, which is worse
+//     than the English-only leak this milestone removed.
+const attrDrift = ATTRIBUTE_DEFS.filter((d) => en[`attr.name.${d.key}`] !== d.label);
+ok(`en attr.name.* still equals the domain attribute table, all ${ATTRIBUTE_DEFS.length} of them (${attrDrift.map((d) => d.key).join(", ") || "none"})`,
+  ATTRIBUTE_DEFS.length >= 32 && attrDrift.length === 0);
+const groupDrift = POSITION_GROUPS.filter((g) => en[`group.${g.id}`] !== g.label);
+ok(`en group.* still equals the domain position-group table, all ${POSITION_GROUPS.length} of them (${groupDrift.map((g) => g.id).join(", ") || "none"})`,
+  POSITION_GROUPS.length >= 8 && groupDrift.length === 0);
+
+// 20. One namespace per concept. `compare.cat.*` was a second copy of the same
+//     four category names; a screen reading one and a radar reading the other is
+//     how two translations of one noun survive. Neither half may come back.
+const dupCatKeys = [0, 1, 2].flatMap((i) => keysOf(i).filter((k) => k.startsWith("compare.cat.")));
+const dupCatSites = [...appSrc].filter(([, code]) => code.includes("compare.cat.")).map(([p]) => p);
+ok(`compare.cat.* stays deleted from every locale and every caller (${[...new Set(dupCatKeys)].join(", ") || "no keys"} / ${dupCatSites.join(", ") || "no sites"})`,
+  dupCatKeys.length === 0 && dupCatSites.length === 0);
+
+// 21. The English name tables belong to the prose layer. A UI file that mentions
+//     `attributeLabel` is composing a display string in English — the exact
+//     shape no key-level check can see. Two callers are declared, and they are
+//     not display: both build the prompt text sent to the coach provider, which
+//     is model input and stays English in every locale. The counts are pinned in
+//     both directions, so widening the surface means changing this table on purpose.
+//     The match is on the identifier, not on `name(`: both surviving sites pass it
+//     to `.map(...)` as a function reference, and a call-shaped regex read zero
+//     uses while the two prompt builders were still there (M147's mutation test
+//     found that — a gate that is green because it cannot see anything).
+//     Imports are stripped first, because `import { attributeLabel }` is a
+//     reference the interface never renders.
+const NAME_PROMPT_SITES = new Map([
+  ["features/player/PlayerOS.tsx", 1], // requestPlan(`Video analysis flagged: … build a session on …`)
+  ["features/film/FilmRoom.tsx", 1], // buildTraining's prompt for the same provider
+]);
+const withoutImports = (code) => {
+  let inImport = false;
+  return code
+    .split("\n")
+    .filter((l) => {
+      if (inImport) {
+        if (/from\s+["']/.test(l)) inImport = false;
+        return false;
+      }
+      if (/^\s*import\b/.test(l)) {
+        if (!/from\s+["']/.test(l)) inImport = true;
+        return false;
+      }
+      return true;
+    })
+    .join("\n");
+};
+const nameCalls = new Map();
+for (const [path, code] of appSrc) {
+  if (!/^(features|ui)\//.test(path)) continue;
+  const n = [...withoutImports(code).matchAll(/\b(?:attributeLabel|groupLabel)\b/g)].length;
+  if (n) nameCalls.set(path, n);
+}
+const undeclaredNameCalls = [...nameCalls].filter(([p, n]) => NAME_PROMPT_SITES.get(p) !== n);
+const staleNameSites = [...NAME_PROMPT_SITES].filter(([p, n]) => (nameCalls.get(p) ?? 0) !== n);
+const declaredCalls = [...nameCalls.values()].reduce((s, n) => s + n, 0);
+ok(`the English name tables are referenced only from the ${NAME_PROMPT_SITES.size} declared coach-prompt builders and from no UI display path (${undeclaredNameCalls.join(", ") || "none"} / ${staleNameSites.map(([p]) => p).join(", ") || "none"})`,
+  declaredCalls > 0 && undeclaredNameCalls.length === 0 && staleNameSites.length === 0);
+
+// 22. An attribute's English name typed into a UI slot is invisible to every
+//     key-level check: there is no key to look up, and the screen looks perfect
+//     to an English reader. This is the shape the Dashboard used to have
+//     (`<AttributeBar label="First Touch" …>`), three of them at once.
+const escName = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const NAME_PATTERNS = ATTRIBUTE_DEFS.flatMap((d) => [
+  [`label="${d.label}"`, new RegExp(`\\blabel="${escName(d.label)}"`)],
+  [`>${d.label}<`, new RegExp(`>${escName(d.label)}<`)],
+]);
+const typedNames = [];
+const labelProps = [];
+for (const [path, code] of appSrc) {
+  if (!/^(features|ui)\//.test(path)) continue;
+  labelProps.push([path, [...code.matchAll(/\blabel=/g)].length]);
+  for (const [shape, re] of NAME_PATTERNS) if (re.test(code)) typedNames.push(`${path}: ${shape}`);
+}
+ok(`no UI file passes an attribute's English name as a literal prop or text node (${typedNames.join(" | ") || "none"})`,
+  typedNames.length === 0);
+const labelPropCount = labelProps.reduce((s, [, n]) => s + n, 0);
+ok(`the literal-name scan is reading a UI that does pass label props (${labelPropCount})`, labelPropCount > 20);
+
+// 23. The row interpolations M147 converted, struck by shape. Check 21 catches a
+//     name-table call; it cannot catch a row that grew its `label` field back and
+//     is printed as `{f.label}` — which type-checks the moment the domain adds the
+//     field, and reads fine in English. These are the exact expressions that were
+//     converted, per file.
+const STRUCK_ROWS = [
+  ["features/compare/ComparePage.tsx", ["{e.label}"]],
+  ["features/dashboard/Dashboard.tsx", ["{f.label}"]],
+  ["features/development/DevelopmentPage.tsx", ["{item.label}", "{it.label}", "{analysis.groupLabel}"]],
+  ["features/film/FilmRoom.tsx", ["{current.report.recommendedFocus.map(attributeLabel)"]],
+  ["features/football/Details.tsx", ["{at.label}", "{s.label}", "{c.label}"]],
+  ["features/history/HistoryPage.tsx", ["{g.label}"]],
+  ["features/player/PlayerOS.tsx", ["{d.label}", "{g.label}", "{attributeLabel(w.key)}", "{attributeLabel(f)}"]],
+  ["features/review/ReviewPage.tsx", ["{f.label}", "{g.label}", "{reco.attributeLabel}", "{review.recommendation.attributeLabel}"]],
+];
+const revived = STRUCK_ROWS.flatMap(([path, exprs]) => {
+  const code = appSrc.get(path);
+  if (code === undefined) return [`${path} (file gone: the strike list is stale)`];
+  return exprs.filter((e) => code.includes(e)).map((e) => `${path}: ${e}`);
+});
+ok(`none of the ${STRUCK_ROWS.reduce((s, [, e]) => s + e.length, 0)} converted row reads came back (${revived.join(" | ") || "none"})`,
+  revived.length === 0);
+
+// 24. A key whose value interpolates is only complete once the caller supplies
+//     the value: `t()` substitutes `{a}` from its `vars` argument, and a caller
+//     can also chain `.replace("{a}", …)`. Either way, a call site that forgets
+//     prints the brace text on the screen — in every locale, because the braces
+//     live in all three. M147 added seven such chains in DevelopmentPage; a
+//     dropped one type-checks, builds and reads fine in English.
+// Only var-less calls are matched (`t("k", { a })` has a second argument, so the
+// closing paren does not follow the key). A template with `${}` is skipped: its
+// key is unknown here and its value space is check 16/17's job.
+const PLAIN = /\bt\(\s*(?:"([^"$\{\}]+)"|`([^$\{\}]*)`)\s*\)/g;
+const unsubstituted = [];
+let substituted = 0;
+for (const [path, code] of appSrc) {
+  if (!/^(features|ui)\//.test(path)) continue;
+  for (const m of code.matchAll(PLAIN)) {
+    const key = m[1] ?? m[2];
+    if (!key || !(key in en)) continue;
+    const phs = [...new Set((en[key].match(/\{(\w+)\}/g) ?? []).map((s) => s.slice(1, -1)))];
+    if (!phs.length) continue;
+    // The fill must be in the *chain* — the `.replace(…)` links that follow this
+    // call with nothing but whitespace between them. A fixed character window was
+    // satisfied by an unrelated `.replace("{a}"` on the next line, which is how a
+    // dropped fill hid from this gate while M147's mutation test was written; the
+    // chain stops at the first link that is not a `.replace`, so the next
+    // statement can no longer answer for this one.
+    const LINK = /^\s*\.replace\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)/;
+    let pos = m.index + m[0].length, chain = "";
+    for (;;) {
+      const step = LINK.exec(code.slice(pos));
+      if (!step) break;
+      chain += step[0];
+      pos += step[0].length;
+    }
+    const missed = phs.filter((p) => !new RegExp(`replace\\(\\s*["'\`]\\{${p}\\}`).test(chain));
+    if (missed.length) unsubstituted.push(`${path}: ${key} {${missed.join(",")}}`);
+    else substituted++;
+  }
+}
+ok(`every placeholder key is read by a call that fills it (${substituted} filled, ${unsubstituted.length} bare)`,
+  unsubstituted.length === 0);
+for (const u of unsubstituted.slice(0, 15)) console.log("       bare: " + u);
+ok(`the placeholder scan is reading real interpolated calls rather than nothing (${substituted})`, substituted >= 5);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

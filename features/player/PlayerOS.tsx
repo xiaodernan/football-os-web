@@ -126,7 +126,7 @@ function Overview() {
             <div className="rounded-lg border bg-card/40 p-3">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Biggest gaps</div>
               <div className="mt-2 space-y-2">
-                {weak.map((w) => <AttributeBar key={w.key} label={attributeLabel(w.key)} value={w.value} />)}
+                {weak.map((w) => <AttributeBar key={w.key} label={t(`attr.name.${w.key}`)} value={w.value} />)}
               </div>
             </div>
           </div>
@@ -182,7 +182,7 @@ function Coach() {
   }, [query]);
   const [carryKeys, setCarryKeys] = useState<string[]>(carriedFocus);
   const [prompt, setPrompt] = useState(() =>
-    carriedFocus.length ? t("player.coachCarry").replace("{labels}", carriedFocus.map(attributeLabel).join(", ")) : "",
+    carriedFocus.length ? t("player.coachCarry").replace("{labels}", carriedFocus.map((k) => t(`attr.name.${k}`)).join(", ")) : "",
   );
   const [minutes, setMinutes] = useState(45);
   const [busy, setBusy] = useState(false);
@@ -232,7 +232,7 @@ function Coach() {
         />
         {carryKeys.length > 0 && (
           <p className="mt-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-[11px] text-muted-foreground">
-            {t("player.coachCarryHint")} <span className="font-medium text-primary">{carryKeys.map(attributeLabel).join(", ")}</span>
+            {t("player.coachCarryHint")} <span className="font-medium text-primary">{carryKeys.map((k) => t(`attr.name.${k}`)).join(", ")}</span>
           </p>
         )}
         <div className="mt-3">
@@ -271,7 +271,7 @@ function Coach() {
           <div className="space-y-3">
             <div className="rounded-lg border bg-card/40 p-3 text-sm">{plan.diagnosis}</div>
             <div className="flex flex-wrap gap-1.5">
-              {plan.focus.map((f) => <Badge key={f} variant="outline" className="text-primary">{attributeLabel(f)}</Badge>)}
+              {plan.focus.map((f) => <Badge key={f} variant="outline" className="text-primary">{t(`attr.name.${f}`)}</Badge>)}
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Session · {plan.session.targetMinutes}′</div>
@@ -318,7 +318,7 @@ function Attributes() {
           <Panel key={cat} className="p-4">
             <SectionTitle title={t(`attr.${cat}`)} />
             <div className="space-y-2">
-              {attributesByCategory(cat).map((d) => <AttributeBar key={d.key} label={d.label} value={p.attributes[d.key]} />)}
+              {attributesByCategory(cat).map((d) => <AttributeBar key={d.key} label={t(`attr.name.${d.key}`)} value={p.attributes[d.key]} />)}
             </div>
           </Panel>
         ))}
@@ -329,13 +329,14 @@ function Attributes() {
 
 function Skills() {
   const { state } = useOs();
+  const { t } = useI18n();
   const p = state.profile!;
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {CATEGORY_ORDER.map((cat) => (
         <Panel key={cat} className="p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold capitalize">{cat}</h3>
+            <h3 className="text-sm font-semibold">{t(`attr.${cat}`)}</h3>
             <span className="font-mono text-xs text-muted-foreground">{Math.round(attributesByCategory(cat).reduce((s, d) => s + p.attributes[d.key], 0) / attributesByCategory(cat).length)}</span>
           </div>
           <div className="space-y-2.5">
@@ -348,7 +349,7 @@ function Skills() {
                     {nodeLevel}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs">{d.label}</div>
+                    <div className="truncate text-xs">{t(`attr.name.${d.key}`)}</div>
                     <Progress value={v} className="mt-1 h-1" />
                   </div>
                 </div>
@@ -405,7 +406,7 @@ function Training() {
                   {s.growth && s.growth.some((g) => g.delta > 0) && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {s.growth.filter((g) => g.delta > 0).map((g) => (
-                        <span key={g.key} className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">{g.label} +{g.delta}</span>
+                        <span key={g.key} className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">{t(`attr.name.${g.key}`)} +{g.delta}</span>
                       ))}
                     </div>
                   )}
@@ -423,6 +424,7 @@ function Training() {
 }
 
 function SessionCard({ session, onComplete }: { session: TrainingSession; onComplete: (id: string, r: number, notes?: string) => GrowthDelta[] }) {
+  const { t } = useI18n();
   const [rating, setRating] = useState("4");
   const [notes, setNotes] = useState("");
   const [open, setOpen] = useState(false);
@@ -459,7 +461,7 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
         </div>
         <Button size="sm" onClick={() => {
           const deltas = onComplete(session.id, Number(rating), notes || undefined);
-          const grew = deltas.filter((d) => d.delta > 0).map((d) => `${d.label} +${d.delta}`).join(" · ");
+          const grew = deltas.filter((d) => d.delta > 0).map((d) => `${t(`attr.name.${d.key}`)} +${d.delta}`).join(" · ");
           toast.success(grew ? `Session complete — ${grew}` : "Session complete — XP awarded");
         }}>Complete</Button>
       </div>

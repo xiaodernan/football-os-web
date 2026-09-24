@@ -144,8 +144,8 @@ export function ScoutingPanel() {
                     if (!edge) return <td className="px-2 py-1.5 text-right text-xs text-muted-foreground">—</td>;
                     return (
                       <td className="px-2 py-1.5 text-right font-mono text-xs whitespace-nowrap">
-                        <span className={edge.bestDelta > 0 ? "text-success" : "text-muted-foreground"}>{t(`compare.cat.${edge.bestCategory}`)} {edge.bestDelta > 0 ? `+${edge.bestDelta}` : edge.bestDelta}</span>
-                        <span className={cn("ml-2", edge.worstDelta < 0 ? "text-destructive" : "text-muted-foreground")}>{t(`compare.cat.${edge.worstCategory}`)} {edge.worstDelta > 0 ? `+${edge.worstDelta}` : edge.worstDelta}</span>
+                        <span className={edge.bestDelta > 0 ? "text-success" : "text-muted-foreground"}>{t(`attr.${edge.bestCategory}`)} {edge.bestDelta > 0 ? `+${edge.bestDelta}` : edge.bestDelta}</span>
+                        <span className={cn("ml-2", edge.worstDelta < 0 ? "text-destructive" : "text-muted-foreground")}>{t(`attr.${edge.worstCategory}`)} {edge.worstDelta > 0 ? `+${edge.worstDelta}` : edge.worstDelta}</span>
                       </td>
                     );
                   })()}

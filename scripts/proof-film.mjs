@@ -78,12 +78,14 @@ for (const c of A) for (const k of new Set(c.recommendedFocus)) focusCount[k] = 
 ok("A: topFocus counts how many clips flagged each key (deduped within a clip)",
   JSON.stringify(Object.fromEntries(a.topFocus.map((f) => [f.key, f.clips]))) ===
   JSON.stringify({ scanning: 2, first_touch: 1, passing: 1 }));
-ok("A: topFocus labels come from attributeLabel, not raw keys",
-  a.topFocus.every((f) => f.label === attributeLabel(f.key)));
-ok("A: topFocus ranked clip-count desc, then label asc",
+ok("A: topFocus rows carry key + clip count only — the dictionary owns the name",
+  a.topFocus.every((f) => Object.keys(f).sort().join(",") === "clips,key"));
+ok("A: every topFocus key resolves in the attribute name table (a raw key would echo itself)",
+  a.topFocus.every((f) => attributeLabel(f.key) !== f.key));
+ok("A: topFocus ranked clip-count desc, then key asc",
   a.topFocus.every((f, i) => i === 0 || (() => {
     const p = a.topFocus[i - 1];
-    return p.clips > f.clips || (p.clips === f.clips && p.label <= f.label);
+    return p.clips > f.clips || (p.clips === f.clips && p.key <= f.key);
   })()));
 ok("A: topFocus leading entry is the twice-flagged 'scanning'", a.topFocus[0]?.key === "scanning" && a.topFocus[0]?.clips === 2);
 

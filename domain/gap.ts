@@ -16,7 +16,6 @@ const ROLE_FLOOR = 52; // neutral baseline every group shares for non-emphasised
 
 export interface GapItem {
   key: string;
-  label: string;
   actual: number;
   target: number;
   delta: number; // target - actual; >0 means room to develop for this role
@@ -25,7 +24,6 @@ export interface GapItem {
 
 export interface GapAnalysis {
   group: PositionGroup;
-  groupLabel: string;
   overall: number;
   skill: number; // 0..1 tier the archetype is calibrated to
   readiness: number; // 0..100 weighted coverage of role-relevant targets
@@ -65,7 +63,6 @@ export function analyzeGap(input: GapInput): GapAnalysis {
     const t = target[k] ?? ROLE_FLOOR;
     return {
       key: k,
-      label: attributeLabel(k),
       actual,
       target: t,
       delta: Math.round((t - actual) * 10) / 10,
@@ -99,8 +96,8 @@ export function analyzeGap(input: GapInput): GapAnalysis {
     evidence.push(`Overall ${overall} → archetype calibrated to level tier ${(skill * 100).toFixed(0)}%.`);
     const roleTraits = items.filter((it) => it.criticality > 0).length;
     evidence.push(`${roleTraits} role-emphasised traits compared for ${groupLabel(group)}.`);
-    if (priorities[0]) evidence.push(`Largest role gap: ${priorities[0].label} (${priorities[0].actual} vs ${priorities[0].target} target, −${Math.abs(priorities[0].delta)}).`);
-    if (strengths[0]) evidence.push(`Strongest relative to role: ${strengths[0].label} (${strengths[0].actual} vs ${strengths[0].target} target).`);
+    if (priorities[0]) evidence.push(`Largest role gap: ${attributeLabel(priorities[0].key)} (${priorities[0].actual} vs ${priorities[0].target} target, −${Math.abs(priorities[0].delta)}).`);
+    if (strengths[0]) evidence.push(`Strongest relative to role: ${attributeLabel(strengths[0].key)} (${strengths[0].actual} vs ${strengths[0].target} target).`);
     evidence.push(`Role-relevant target coverage (readiness): ${readiness}%.`);
   } else {
     evidence.push("No saved attributes to compare.");
@@ -115,8 +112,7 @@ export function analyzeGap(input: GapInput): GapAnalysis {
 
   return {
     group,
-    groupLabel: groupLabel(group),
-    overall,
+      overall,
     skill,
     readiness,
     items,

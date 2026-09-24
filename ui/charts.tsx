@@ -14,10 +14,12 @@ import {
 import type { Attributes } from "@/domain/types";
 import { categoryAverages } from "@/domain/attributes";
 import { useTheme } from "@/lib/theme";
+import { useI18n } from "@/i18n";
 
 export function AttributeRadar({ attrs, height = 260 }: { attrs: Attributes; height?: number }) {
   const { theme } = useTheme();
-  const data = categoryAverages(attrs).map((c) => ({ axis: c.label, value: c.value }));
+  const { t } = useI18n();
+  const data = categoryAverages(attrs).map((c) => ({ axis: t(`attr.${c.category}`), value: c.value }));
   const stroke = theme === "dark" ? "#ffffff22" : "#00000018";
   return (
     <div style={{ height }}>

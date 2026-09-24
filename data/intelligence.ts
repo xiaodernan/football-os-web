@@ -3,6 +3,7 @@
 // entities, pull concrete facts, then hand a grounded context to the coach
 // provider. Answers always carry evidence, sources and confidence.
 
+import { attributeLabel } from "@/domain/attributes";
 import { archetypeLabel } from "@/domain/playerDna";
 import { scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
@@ -86,8 +87,8 @@ function playerFacts(pid: string): EvidenceFact[] {
   ];
   const report = scoutReport(p);
   if (report.hasVector) {
-    const up = report.strengths.slice(0, 3).map((s) => `${s.label} +${s.delta}`).join(", ");
-    const down = report.concerns.slice(-3).reverse().map((s) => `${s.label} ${s.delta}`).join(", ");
+    const up = report.strengths.slice(0, 3).map((s) => `${attributeLabel(s.key)} +${s.delta}`).join(", ");
+    const down = report.concerns.slice(-3).reverse().map((s) => `${attributeLabel(s.key)} ${s.delta}`).join(", ");
     out.push({
       label: "Template edge",
       text: `Against a ${p.positionGroup} of the same implied skill: ${report.headline}.${up ? ` Above template — ${up}.` : ""}${down ? ` Below template — ${down}.` : ""}`,

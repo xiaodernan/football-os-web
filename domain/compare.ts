@@ -7,14 +7,13 @@
 
 import { getPlayer, getClub } from "@/data/footballService";
 import type { PlayerRef } from "./types";
-import { attributeLabel, categoryAverages } from "./attributes";
+import { categoryAverages } from "./attributes";
 import { headroom, valueIndex, primeYears, bucketOf } from "./scouting";
 
 export type MetricDir = "high" | "low" | "info";
 
 export interface CompareMetric {
   key: string;
-  label: string;
   dir: MetricDir; // "high" bigger is better, "low" smaller is better, "info" neutral
   a: number;
   b: number;
@@ -39,7 +38,6 @@ export interface CompareResult {
 
 export interface AttributeEdge {
   key: string;
-  label: string;
   a: number;
   b: number;
   /** a − b; positive favours player A */
@@ -49,7 +47,6 @@ export interface AttributeEdge {
 
 export interface CategoryEdge {
   category: string;
-  label: string;
   a: number;
   b: number;
   delta: number;
@@ -75,13 +72,13 @@ export function compare(aId: string, bId: string): CompareResult | null {
   if (!a || !b || a.id === b.id) return null;
 
   const metrics: CompareMetric[] = [
-    { key: "overall", label: "Overall", dir: "high", a: a.overall, b: b.overall, display: (v) => `${v}` },
-    { key: "potential", label: "Potential", dir: "high", a: a.potential, b: b.potential, display: (v) => `${v}` },
-    { key: "headroom", label: "Headroom", dir: "high", a: headroom(a), b: headroom(b), display: (v) => `+${v}` },
-    { key: "age", label: "Age", dir: "low", a: a.age, b: b.age, display: (v) => `${v}` },
-    { key: "prime", label: "Prime years", dir: "high", a: primeYears(a), b: primeYears(b), display: (v) => `${v}` },
-    { key: "value", label: "Market value", dir: "info", a: a.value, b: b.value, display: (v) => formatEUR(v) },
-    { key: "valueIndex", label: "Value index", dir: "high", a: round1(valueIndex(a)), b: round1(valueIndex(b)), display: (v) => `${v.toFixed(1)}` },
+    { key: "overall", dir: "high", a: a.overall, b: b.overall, display: (v) => `${v}` },
+    { key: "potential", dir: "high", a: a.potential, b: b.potential, display: (v) => `${v}` },
+    { key: "headroom", dir: "high", a: headroom(a), b: headroom(b), display: (v) => `+${v}` },
+    { key: "age", dir: "low", a: a.age, b: b.age, display: (v) => `${v}` },
+    { key: "prime", dir: "high", a: primeYears(a), b: primeYears(b), display: (v) => `${v}` },
+    { key: "value", dir: "info", a: a.value, b: b.value, display: (v) => formatEUR(v) },
+    { key: "valueIndex", dir: "high", a: round1(valueIndex(a)), b: round1(valueIndex(b)), display: (v) => `${v.toFixed(1)}` },
   ];
 
   let aWins = 0;
@@ -109,9 +106,9 @@ export function compare(aId: string, bId: string): CompareResult | null {
         const av = aAttrs[k];
         const bv = bAttrs[k];
         const delta = av - bv;
-        return { key: k, label: attributeLabel(k), a: av, b: bv, delta, favor: delta > 0 ? "a" as const : delta < 0 ? "b" as const : "even" as const };
+        return { key: k, a: av, b: bv, delta, favor: delta > 0 ? "a" as const : delta < 0 ? "b" as const : "even" as const };
       })
-      .sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta) || x.label.localeCompare(y.label))
+      .sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta) || x.key.localeCompare(y.key))
       .slice(0, 8);
     const bCats = categoryAverages(bAttrs);
     categoryEdges = categoryAverages(aAttrs).map((ca, i) => {
@@ -119,7 +116,6 @@ export function compare(aId: string, bId: string): CompareResult | null {
       const delta = ca.value - cb.value;
       return {
         category: ca.category,
-        label: ca.label,
         a: ca.value,
         b: cb.value,
         delta,

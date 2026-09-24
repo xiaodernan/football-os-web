@@ -4,6 +4,8 @@
 // pillars a visitor has never used rather than quietly hiding them.
 // Pure: every input is passed in, no IO, no React.
 
+import { attributeLabel } from "./attributes";
+
 export interface PlayerInput {
   sessionsCompleted: number;
   minutes: number;
@@ -34,7 +36,7 @@ export interface FilmInput {
   detections?: number;
   scanPerMinute?: number;
   avgConfidence?: number;
-  recurringFocus?: { label: string; clips: number }[];
+  recurringFocus?: { key: string; clips: number }[];
 }
 
 export interface FanInput {
@@ -134,7 +136,7 @@ export function buildFootprint(i: FootprintInput): Footprint {
               ? `${f.detections} detections · ${f.scanPerMinute.toFixed(2)} scans/min${f.avgConfidence ? ` · ${f.avgConfidence}% mean confidence` : ""}`
               : "",
             f.recurringFocus && f.recurringFocus.length
-              ? `Repeated coaching focus: ${f.recurringFocus.map((x) => `${x.label} ×${x.clips}`).join(", ")}`
+              ? `Repeated coaching focus: ${f.recurringFocus.map((x) => `${attributeLabel(x.key)} ×${x.clips}`).join(", ")}`
               : "",
           ].filter(Boolean)
         : ["No clips analysed on this device."],

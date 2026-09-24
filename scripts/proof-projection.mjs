@@ -79,11 +79,13 @@ ok("items.length equals the count of valid focus keys", messy.items.length === 2
 
 // --- per-item field formulas -------------------------------------------------
 for (const it of p.items) {
-  ok(`item ${it.key}: label from attributeLabel, from = the stored attribute`,
-    it.label === attributeLabel(it.key) && it.from === attrs[it.key]);
+  ok(`item ${it.key}: row is key + endpoints only, from = the stored attribute`,
+    Object.keys(it).sort().join(",") === "delta,from,key,to" && it.from === attrs[it.key]);
   ok(`item ${it.key}: delta = round(to - from, 1)`, it.delta === r1(it.to - it.from));
   ok(`item ${it.key}: to stays within the [1,99] clamp`, it.to >= 1 && it.to <= 99);
 }
+ok("every projected key resolves in the attribute name table (the screen reads attr.name.*)",
+  p.items.every((it) => attributeLabel(it.key) !== it.key));
 ok("training a positive-rating focus never lowers the attribute", p.items.every((it) => it.to >= it.from));
 
 // --- THE load-bearing cross-check: projection == actually completing N sessions

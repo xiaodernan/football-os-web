@@ -17,11 +17,12 @@ import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
 function GapRow({ item, kind, action }: { item: GapItem; kind: "priority" | "strength"; action?: ReactNode }) {
+  const { t } = useI18n();
   const max = Math.max(item.actual, item.target, 1);
   return (
     <div className="rounded-lg border border-border/60 bg-secondary/20 p-3">
       <div className="flex items-center justify-between text-sm">
-        <span className="min-w-0 truncate font-medium">{item.label}</span>
+        <span className="min-w-0 truncate font-medium">{t(`attr.name.${item.key}`)}</span>
         <span className="ml-2 flex shrink-0 items-center gap-2 font-mono text-xs tabular-nums">
           <span>{item.actual}</span>
           <span className="text-muted-foreground">/ {item.target}</span>
@@ -72,8 +73,8 @@ export function DevelopmentPage() {
 
   const isTracked = (key: string) => state.goals.some((g) => g.metric === "attribute" && g.key === key);
   const track = (it: GapItem) => {
-    addGoal({ title: t("dv.goalTitle").replace("{a}", it.label), metric: "attribute", key: it.key, target: Math.round(it.target), current: Math.round(it.actual), unit: "rating" });
-    toast.success(t("dv.goalToast").replace("{a}", it.label));
+    addGoal({ title: t("dv.goalTitle").replace("{a}", t(`attr.name.${it.key}`)), metric: "attribute", key: it.key, target: Math.round(it.target), current: Math.round(it.actual), unit: "rating" });
+    toast.success(t("dv.goalToast").replace("{a}", t(`attr.name.${it.key}`)));
   };
 
   const startBlock = async () => {
@@ -145,7 +146,7 @@ export function DevelopmentPage() {
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label={t("dv.readiness")} value={`${analysis.readiness}%`} tone={readinessTone} sub={analysis.groupLabel} />
+          <StatTile label={t("dv.readiness")} value={`${analysis.readiness}%`} tone={readinessTone} sub={t(`group.${analysis.group}`)} />
           <StatTile label={t("dv.overall")} value={analysis.overall} sub={t("dv.tier").replace("{n}", String(Math.round(analysis.skill * 100)))} />
           <StatTile label={t("dv.priorities")} value={analysis.priorities.length} sub={t("dv.toWork")} />
           <StatTile label={t("dv.strengths")} value={analysis.strengths.length} tone="up" sub={t("dv.atTarget")} />
@@ -237,7 +238,7 @@ export function DevelopmentPage() {
             <div className="mt-3 space-y-2">
               {projection.proj.items.map((it) => (
                 <div key={it.key} className="flex items-center justify-between text-sm">
-                  <span className="min-w-0 truncate">{it.label}</span>
+                  <span className="min-w-0 truncate">{t(`attr.name.${it.key}`)}</span>
                   <span className="ml-2 shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                     {it.from} → {it.to} <span className="text-success">+{it.delta}</span>
                   </span>

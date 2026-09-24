@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -67,15 +67,13 @@ export function bestValueAt(bucket: Exclude<PosBucket, "ALL">, minOverall = 70):
 
 export interface TemplateEdge {
   key: string;
-  label: string;
   value: number;
   template: number;
   delta: number;
 }
 
 export interface CategoryEdgeRow {
-  category: string;
-  label: string;
+  category: CategoryAverage["category"];
   value: number;
   template: number;
   delta: number;
@@ -118,25 +116,27 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
   const template = baselineAttributes(p.positionGroup as PositionGroup, skill);
   const edges: TemplateEdge[] = Object.keys(real)
     .filter((k) => typeof template[k] === "number")
-    .map((k) => ({ key: k, label: attributeLabel(k), value: real[k], template: template[k], delta: real[k] - template[k] }))
-    .sort((a, b) => b.delta - a.delta || a.label.localeCompare(b.label));
+    .map((k) => ({ key: k, value: real[k], template: template[k], delta: real[k] - template[k] }))
+    .sort((a, b) => b.delta - a.delta || a.key.localeCompare(b.key));
 
   const strengths = edges.filter((e) => e.delta > 0).slice(0, top);
   const concerns = [...edges].reverse().filter((e) => e.delta < 0).slice(0, top).reverse();
   const templateCats = categoryAverages(template);
   const cats: CategoryEdgeRow[] = categoryAverages(real).map((ca, i) => {
     const tmpl = templateCats[i];
-    return { category: ca.category, label: ca.label, value: ca.value, template: tmpl.value, delta: ca.value - tmpl.value };
+    return { category: ca.category, value: ca.value, template: tmpl.value, delta: ca.value - tmpl.value };
   });
 
   const sorted = [...cats].sort((a, b) => b.delta - a.delta);
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
+  const bestLabel = CATEGORY_LABEL[best.category];
+  const worstLabel = CATEGORY_LABEL[worst.category];
   const headline =
     best.delta > 0 && worst.delta < 0
-      ? `${best.label} runs ahead of the ${p.positionGroup} template; ${worst.label} is the shortfall`
+      ? `${bestLabel} runs ahead of the ${p.positionGroup} template; ${worstLabel} is the shortfall`
       : best.delta > 0
-        ? `Above the ${p.positionGroup} template in every category — strongest is ${best.label} (+${best.delta})`
+        ? `Above the ${p.positionGroup} template in every category — strongest is ${bestLabel} (+${best.delta})`
         : "At or below the positional template across categories";
 
   return {
@@ -147,8 +147,8 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
     headline,
     evidence: [
       `Compared with a ${p.positionGroup} of the same implied skill (${skill.toFixed(2)})`,
-      strengths.length ? `Above template: ${strengths.slice(0, 3).map((s) => `${s.label} +${s.delta}`).join(", ")}` : "Nothing above the template",
-      concerns.length ? `Below template: ${concerns.slice(-3).reverse().map((s) => `${s.label} ${s.delta}`).join(", ")}` : "Nothing below the template",
+      strengths.length ? `Above template: ${strengths.slice(0, 3).map((s) => `${attributeLabel(s.key)} +${s.delta}`).join(", ")}` : "Nothing above the template",
+      concerns.length ? `Below template: ${concerns.slice(-3).reverse().map((s) => `${attributeLabel(s.key)} ${s.delta}`).join(", ")}` : "Nothing below the template",
       `Headroom to potential: +${headroom(p)} · value index ${round1(valueIndex(p))}`,
     ],
     confidence: 80,
@@ -181,7 +181,7 @@ export function templateEdge(p: PlayerRef): TemplateEdgeSummary | null {
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
   // Carries the category id, not CATEGORY_LABEL: the two list rows that show
-  // this render in every locale, and the dictionary already has compare.cat.*.
+  // this render in every locale, and the dictionary owns attr.*.
   return { bestCategory: best.category, bestDelta: best.delta, worstCategory: worst.category, worstDelta: worst.delta };
 }
 
@@ -197,7 +197,6 @@ export function squadProfile(clubId: string): { bucket: Exclude<PosBucket, "ALL"
 
 export interface ModelledAttribute {
   key: string;
-  label: string;
   value: number;
 }
 
@@ -221,7 +220,6 @@ export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
   const attrs: Attributes = real ?? baselineAttributes(p.positionGroup as PositionGroup, skill);
   const attributes: ModelledAttribute[] = strongestAttributes(attrs, top).map((a) => ({
     key: a.key,
-    label: attributeLabel(a.key),
     value: a.value,
   }));
   return {

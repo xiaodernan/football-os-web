@@ -1,4 +1,5 @@
 import { makeRng, rngInt, pick } from "@/lib/rng";
+import { attributeLabel } from "./attributes";
 import { footballProvider, getClub, getCompetition, newsFeed } from "@/data/footballService";
 
 // Community in Demo Mode is a local discussion surface, not a networked one.
@@ -126,7 +127,7 @@ export interface StarterInput {
     pointsPerGame: number;
     gamesRemaining: number;
   };
-  training?: { sessions: number; minutes: number; topFocusLabel?: string; topFocusSessions?: number; avgRating: number | null };
+  training?: { sessions: number; minutes: number; topFocusKey?: string; topFocusSessions?: number; avgRating: number | null };
   academy?: { completed: number; mastered: number; lastLesson?: string };
   watchlist?: number;
 }
@@ -162,16 +163,17 @@ export function buildStarters(input: StarterInput, limit = 3): StarterDraft[] {
     });
   }
 
-  if (input.training && input.training.sessions >= 2 && input.training.topFocusLabel) {
+  if (input.training && input.training.sessions >= 2 && input.training.topFocusKey) {
     const t = input.training;
+    const focus = attributeLabel(t.topFocusKey!);
     out.push({
       id: "starter-training",
       tag: "General",
-      title: `Most of my work is ${t.topFocusLabel} (${t.topFocusSessions} of ${t.sessions} sessions) — bias or plan?`,
-      body: `I have logged ${t.sessions} sessions totalling ${t.minutes} minutes${t.avgRating != null ? `, self-rated ${t.avgRating}/5 on average` : ""}, and ${t.topFocusSessions} of them hit ${t.topFocusLabel}. At what point does focus become neglect of everything else?`,
+      title: `Most of my work is ${focus} (${t.topFocusSessions} of ${t.sessions} sessions) — bias or plan?`,
+      body: `I have logged ${t.sessions} sessions totalling ${t.minutes} minutes${t.avgRating != null ? `, self-rated ${t.avgRating}/5 on average` : ""}, and ${t.topFocusSessions} of them hit ${focus}. At what point does focus become neglect of everything else?`,
       evidence: [
         `${t.sessions} sessions · ${t.minutes} min`,
-        `${t.topFocusLabel} ×${t.topFocusSessions}`,
+        `${focus} ×${t.topFocusSessions}`,
         t.avgRating != null ? `avg self-rating ${t.avgRating}/5` : "no self-ratings yet",
       ],
     });

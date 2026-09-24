@@ -162,7 +162,7 @@ export function PlayerDetail({ id }: { id: string }) {
             <AttributeRadar attrs={p.attributes} height={230} />
             <div className="grid gap-x-6 gap-y-2 self-center sm:grid-cols-2">
               {profile.attributes.map((at) => (
-                <AttributeBar key={at.key} label={at.label} value={at.value} max={99} />
+                <AttributeBar key={at.key} label={t(`attr.name.${at.key}`)} value={at.value} max={99} />
               ))}
             </div>
           </div>
@@ -170,7 +170,7 @@ export function PlayerDetail({ id }: { id: string }) {
         {!p.attributes && (
           <div className="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2">
             {profile.attributes.map((at) => (
-              <AttributeBar key={at.key} label={at.label} value={at.value} max={99} />
+              <AttributeBar key={at.key} label={t(`attr.name.${at.key}`)} value={at.value} max={99} />
             ))}
           </div>
         )}
@@ -190,7 +190,7 @@ export function PlayerDetail({ id }: { id: string }) {
               <ul className="mt-1 space-y-1 text-xs">
                 {report.categories.map((c) => (
                   <li key={c.category} className="flex items-center justify-between gap-2">
-                    <span className="text-muted-foreground">{c.label}</span>
+                    <span className="text-muted-foreground">{t(`attr.${c.category}`)}</span>
                     <span className="font-mono tabular-nums">{c.value}</span>
                     <span className={cn("w-10 text-right font-mono tabular-nums", c.delta > 0 ? "text-success" : c.delta < 0 ? "text-destructive" : "text-muted-foreground")}>
                       {c.delta > 0 ? `+${c.delta}` : c.delta}
@@ -203,7 +203,7 @@ export function PlayerDetail({ id }: { id: string }) {
               <div className="text-[11px] uppercase tracking-widest text-success">Above template</div>
               <ul className="mt-1 space-y-1 text-xs">
                 {report.strengths.map((s) => (
-                  <li key={s.key} className="flex items-center justify-between gap-2"><span className="truncate text-muted-foreground">{s.label}</span><span className="font-mono tabular-nums">+{s.delta}</span></li>
+                  <li key={s.key} className="flex items-center justify-between gap-2"><span className="truncate text-muted-foreground">{t(`attr.name.${s.key}`)}</span><span className="font-mono tabular-nums">+{s.delta}</span></li>
                 ))}
                 {!report.strengths.length && <li className="text-muted-foreground">None above the template.</li>}
               </ul>
@@ -212,7 +212,7 @@ export function PlayerDetail({ id }: { id: string }) {
               <div className="text-[11px] uppercase tracking-widest text-destructive">Below template</div>
               <ul className="mt-1 space-y-1 text-xs">
                 {report.concerns.map((s) => (
-                  <li key={s.key} className="flex items-center justify-between gap-2"><span className="truncate text-muted-foreground">{s.label}</span><span className="font-mono tabular-nums">{s.delta}</span></li>
+                  <li key={s.key} className="flex items-center justify-between gap-2"><span className="truncate text-muted-foreground">{t(`attr.name.${s.key}`)}</span><span className="font-mono tabular-nums">{s.delta}</span></li>
                 ))}
                 {!report.concerns.length && <li className="text-muted-foreground">Nothing below the template.</li>}
               </ul>

@@ -86,13 +86,16 @@ ok("dataset players both carry vectors", r.hasAttributes === true);
 ok("attributeEdges is capped at 8", r.attributeEdges.length <= 8);
 const sharedKeys = Object.keys(pa.attributes).filter((k) => typeof pb.attributes[k] === "number");
 const expEdges = sharedKeys
-  .map((k) => { const d = pa.attributes[k] - pb.attributes[k]; return { key: k, label: attributeLabel(k), a: pa.attributes[k], b: pb.attributes[k], delta: d, favor: d > 0 ? "a" : d < 0 ? "b" : "even" }; })
-  .sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta) || x.label.localeCompare(y.label))
+  .map((k) => { const d = pa.attributes[k] - pb.attributes[k]; return { key: k, a: pa.attributes[k], b: pb.attributes[k], delta: d, favor: d > 0 ? "a" : d < 0 ? "b" : "even" }; })
+  .sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta) || x.key.localeCompare(y.key))
   .slice(0, 8);
 ok("attribute edges equal the fully recomputed shared-key set", JSON.stringify(r.attributeEdges) === JSON.stringify(expEdges));
 ok("each edge's delta is exactly a − b and favor tracks its sign",
   r.attributeEdges.every((e) => e.delta === e.a - e.b && e.favor === (e.delta > 0 ? "a" : e.delta < 0 ? "b" : "even")));
-ok("edge labels are human labels, not raw keys", r.attributeEdges.every((e) => e.label === attributeLabel(e.key) && !/_/.test(e.label)));
+ok("every attribute edge carries its key and numbers only — no display label reaches the UI",
+  r.attributeEdges.every((e) => Object.keys(e).sort().join(",") === "a,b,delta,favor,key"));
+ok("each edge key resolves in the attribute name table (an unknown key would echo itself, a raw key reads as snake_case)",
+  r.attributeEdges.every((e) => attributeLabel(e.key) !== e.key && !/_/.test(attributeLabel(e.key))));
 const sortedDesc = r.attributeEdges.every((e, i) => i === 0 || Math.abs(r.attributeEdges[i - 1].delta) >= Math.abs(e.delta));
 ok("edges are ordered by |delta| descending", sortedDesc);
 

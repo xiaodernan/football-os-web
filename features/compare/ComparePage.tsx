@@ -112,7 +112,7 @@ export function ComparePage() {
                             <span className="absolute inset-y-0 right-0 rounded-full bg-primary/50" style={{ width: `${(c.a / max) * 100}%` }} />
                           </span>
                         </div>
-                        <div className="text-center text-[11px] uppercase tracking-wider text-muted-foreground">{t(`compare.cat.${c.category}`)}</div>
+                        <div className="text-center text-[11px] uppercase tracking-wider text-muted-foreground">{t(`attr.${c.category}`)}</div>
                         <div className="flex items-center gap-2">
                           <span className="relative h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
                             <span className="absolute inset-y-0 left-0 rounded-full bg-primary/50" style={{ width: `${(c.b / max) * 100}%` }} />
@@ -130,7 +130,7 @@ export function ComparePage() {
                 <div className="mt-2 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
                   {result.attributeEdges.map((e) => (
                     <div key={e.key} className="flex items-center justify-between gap-2 text-xs">
-                      <span className="min-w-0 flex-1 truncate text-muted-foreground">{e.label}</span>
+                      <span className="min-w-0 flex-1 truncate text-muted-foreground">{t(`attr.name.${e.key}`)}</span>
                       <span className={cn("font-mono tabular-nums", e.favor === "a" ? "text-success" : "text-muted-foreground")}>{e.a}</span>
                       <span className="w-10 text-center font-mono tabular-nums text-muted-foreground">{e.delta > 0 ? `+${e.delta}` : e.delta}</span>
                       <span className={cn("font-mono tabular-nums", e.favor === "b" ? "text-success" : "text-muted-foreground")}>{e.b}</span>

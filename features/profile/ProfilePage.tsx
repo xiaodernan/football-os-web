@@ -5,7 +5,7 @@ import { getClub, getPlayer } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
-import { overallRating, attributeLabel, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
+import { overallRating, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { seasonSummary, type CareerState } from "@/domain/career";
 import { buildFootprint } from "@/domain/footprint";
@@ -72,7 +72,7 @@ export function ProfilePage() {
         detections: fi.detections,
         scanPerMinute: fi.scanPerMinute,
         avgConfidence: fi.avgConfidence,
-        recurringFocus: fi.topFocus.slice(0, 3).map((f) => ({ label: f.label, clips: f.clips })),
+        recurringFocus: fi.topFocus.slice(0, 3).map((f) => ({ key: f.key, clips: f.clips })),
       };
     }
 
@@ -189,13 +189,13 @@ export function ProfilePage() {
           <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5">
             {strengths.map((s) => (
               <div key={`s-${s.key}`} className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">{attributeLabel(s.key)}</span>
+                <span className="text-muted-foreground">{t(`attr.name.${s.key}`)}</span>
                 <span className="font-mono font-semibold tabular-nums text-success">{s.value}</span>
               </div>
             ))}
             {focus.map((s) => (
               <div key={`f-${s.key}`} className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">{attributeLabel(s.key)}</span>
+                <span className="text-muted-foreground">{t(`attr.name.${s.key}`)}</span>
                 <span className="font-mono tabular-nums text-warning">{s.value}</span>
               </div>
             ))}

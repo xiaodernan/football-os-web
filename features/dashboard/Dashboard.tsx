@@ -13,7 +13,7 @@ import {
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
-import { overallRating, attributeLabel } from "@/domain/attributes";
+import { overallRating } from "@/domain/attributes";
 import { evaluateAchievements, type AchievementInput } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
 import { loadFilmClips } from "@/domain/filmLibrary";
@@ -90,7 +90,7 @@ export function Dashboard() {
     const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
     const focusGoals = state.goals
       .filter((g) => g.metric === "attribute" && g.key && !g.done)
-      .map((g) => ({ key: g.key!, label: attributeLabel(g.key!), current: g.current, target: g.target, pct: Math.max(0, Math.min(1, g.target ? g.current / g.target : 0)) }))
+      .map((g) => ({ key: g.key!, current: g.current, target: g.target, pct: Math.max(0, Math.min(1, g.target ? g.current / g.target : 0)) }))
       .sort((a, b) => b.pct - a.pct)
       .slice(0, 3);
     return { next, total: list.length, unlocked: list.length - locked.length, last, recovery: load.hasData ? { acwr: load.acwr, zone: load.zone } : null, focusGoals };
@@ -262,7 +262,7 @@ export function Dashboard() {
                     {growth.focusGoals.map((f) => (
                       <div key={f.key}>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="min-w-0 truncate">{f.label}</span>
+                          <span className="min-w-0 truncate">{t(`attr.name.${f.key}`)}</span>
                           <span className="ml-2 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{f.current}/{f.target}</span>
                         </div>
                         <Progress value={f.pct * 100} className="mt-1 h-1.5" />
@@ -280,9 +280,9 @@ export function Dashboard() {
               <>
                 <AttributeRadar attrs={profile.attributes} height={220} />
                 <div className="mt-3 space-y-2">
-                  <AttributeBar label="First Touch" value={profile.attributes.first_touch} />
-                  <AttributeBar label="Passing" value={profile.attributes.passing} />
-                  <AttributeBar label="Decision Making" value={profile.attributes.decision_making} />
+                  <AttributeBar label={t(`attr.name.first_touch`)} value={profile.attributes.first_touch} />
+                  <AttributeBar label={t(`attr.name.passing`)} value={profile.attributes.passing} />
+                  <AttributeBar label={t(`attr.name.decision_making`)} value={profile.attributes.decision_making} />
                 </div>
               </>
             ) : (

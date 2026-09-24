@@ -140,7 +140,7 @@ export function applyFocusGrowth(
     const cur = next[focus] ?? 50;
     const to = clamp(Math.round((cur + perSessionGain(cur, rating)) * 10) / 10, 1, 99);
     next[focus] = to;
-    deltas.push({ key: focus, label: attributeLabel(focus), from: cur, to, delta: Math.round((to - cur) * 10) / 10 });
+    deltas.push({ key: focus, from: cur, to, delta: Math.round((to - cur) * 10) / 10 });
   }
   return { attributes: next, deltas };
 }

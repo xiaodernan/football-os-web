@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M146 (a few numbers in that range
+Work ships one milestone per commit and is currently at M147 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M146 line of work is a different kind of progress: it makes the earlier claims
+The M108–M147 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -368,8 +368,71 @@ list M146 localised sits directly above text that is still English in every loca
 fresh production build in all three locales: the fact list reads 位置分组 / 年龄 / 国籍 / 惯用脚 /
 俱乐部 and their 繁體 equivalents while the dataset's own values (DM, Portugal, R, Paris
 Saint-Germain) stay as data, the mode group is announced as 模式 / Mode, and an English
-reader sees the pre-M146 wording unchanged, console clean in each. proof-i18n is now 58
+reader sees the pre-M146 wording unchanged, console clean in each. proof-i18n was at 58
 checks and the suite 973.
+
+M147 did the work that note pointed at, and did it by a rule rather than a list of
+edits: a row handed to the interface carries a **key**, never a display label.
+`domain/` keeps its English name tables — `ATTRIBUTE_DEFS[].label`,
+`CATEGORY_LABEL`, `attributeLabel()`, `groupLabel()` — only where they compose prose
+the domain owns: the coach and model prompts, which are English by design because
+they are model input rather than UI text. Everything reaching a screen now resolves
+through the dictionary: 32 new `attr.name.<attributeKey>` keys, 8 new
+`group.<POSITION_GROUP_ID>` keys, and the 4-key `attr.<category>` family, which
+turned out to be a duplicated namespace rather than a missing one — `compare.cat.*`
+held the same four categories a second time, so it is gone from all three locales and
+from every caller. 763 keys per locale: 727 + 32 + 8 - 4.
+
+Purging the `label` fields was a way of making the compiler enumerate the readers,
+since every place that rendered one becomes a type error. It also exposed the class
+of reader type-checking cannot see: two labels that were written and then read by
+nobody — `ModelledAttribute.label` at `domain/scouting.ts:223`, and all seven
+`CompareMetric.label` writes in `domain/compare.ts`. A value built inside `.map()` is
+inferred, so an extra property on it is not an error, and the stale English string
+kept being manufactured for a UI that never asked for it.
+
+Check 21 — the gate that keeps the name tables out of UI text — had been passing
+without looking at anything. It matched the call shape `attributeLabel(`, while both
+survivors pass the function *by reference* (`.map(attributeLabel)`, building the coach
+prompt). Matching the identifier instead, over a pass that first strips `import`
+statements so an import is not itself counted as a reference, made the gate see — and
+it immediately turned up a third reader M146's audit had missed:
+`features/profile/ProfilePage.tsx:192,198` rendering `attributeLabel(s.key)` straight
+into the development-log rows, now a dictionary lookup on `attr.name.` + the row's
+own key. The gate names the 2 remaining references and fails if that count moves in
+either direction.
+
+Two more gates came out of the same sweep. A key interpolated inside a template
+literal was not being counted as a claim, so the reachability set (check 18) now reads
+backticks as well as quotes — otherwise 40 new keys would have looked unreachable. And
+check 24 requires that a key whose value contains `{placeholder}` is read by a call
+that actually fills it: 21 filled, 0 bare. That is the other half of reachability,
+because `t("x")` on `"{a} of {b}"` renders a brace pair and reads as odd copy rather
+than a broken call. Making it honest took two rounds: a 200-character look-ahead
+accepted an unrelated `.replace("{a}"` on the *next* line as the fill, and bounding
+the search to one line broke the calls that chain across lines, so it walks the
+`.replace()` chain instead — which then had to learn that `String(Object.keys(x).length)`
+nests two levels deep, not one.
+
+The dynamic-site table grew from the 24 sites M146 described to 45, and the
+reachability scan now claims 655 static/quoted + 135 dynamic keys while the literal
+scan confirms the UI really does pass 148 label props — anti-vacuity numbers, because
+a gate that reports "none" for every family is also a gate that would pass with the
+dictionaries deleted. `npx tsc --noEmit` exits 0, `npm run build` succeeds, the suite
+is 25 scripts / 1001 checks (proof-i18n 58 -> 82), and 17 mutations each turn the gate
+red: a domain row growing a `label: string;` field back, an English name-table string
+drifting from its dictionary partner, `compare.cat.technical` re-added to one locale,
+a `{t("compare.cat.technical")}` call site coming back, `label={attributeLabel(...)}`
+on the Dashboard, the `.map(attributeLabel)` reference deleted from the declared
+table, one ProfilePage dynamic-site row dropped, a single zh-TW `attr.name.*` key
+removed, a `{f.label}` read restored, and a placeholder filled with the wrong name.
+
+Not browser-verified: the in-app browser's page session is wedged — `navigate_page`
+returns, every `evaluate_script` and console read times out — so this milestone makes
+no runtime-rendering claim, only the static and mutation evidence above. Walking the
+three locales on a fresh production preview is queued as its own follow-up rather than
+recorded as done.
+
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

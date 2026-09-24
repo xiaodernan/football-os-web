@@ -1,5 +1,5 @@
 import type { Attributes } from "./types";
-import { attributeLabel, overallRating } from "./attributes";
+import { overallRating } from "./attributes";
 import { perSessionGain } from "./training";
 
 // Development Projection: simulates the *same* diminishing-returns per-session
@@ -13,7 +13,6 @@ function clamp(v: number, min: number, max: number): number {
 
 export interface ProjectionItem {
   key: string;
-  label: string;
   from: number;
   to: number;
   delta: number;
@@ -51,7 +50,7 @@ export function projectGrowth(input: ProjectionInput): Projection {
     for (let i = 0; i < weeks * sessionsPerWeek; i++) {
       cur = clamp(Math.round((cur + perSessionGain(cur, rating)) * 10) / 10, 1, 99);
     }
-    return { key, label: attributeLabel(key), from, to: cur, delta: Math.round((cur - from) * 10) / 10 };
+    return { key, from, to: cur, delta: Math.round((cur - from) * 10) / 10 };
   });
   for (const it of items) projected[it.key] = it.to;
 

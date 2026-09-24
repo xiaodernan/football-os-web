@@ -22,7 +22,6 @@ export interface ReviewInput {
 
 export interface FocusStat {
   key: string;
-  label: string;
   sessions: number;
 }
 
@@ -30,7 +29,6 @@ type FilmSummary = ReturnType<typeof buildFilmInsights>;
 
 export interface AttributeGain {
   key: string;
-  label: string;
   delta: number;
 }
 
@@ -43,7 +41,6 @@ export interface ReviewInsight {
 
 export interface ReviewRecommendation {
   attributeKey: string;
-  attributeLabel: string;
   reason: string;
   confidence: number;
 }
@@ -72,7 +69,7 @@ export interface WeeklyReview {
   filmDetections: number;
   filmConfidence: number;
   filmKinds: { kind: string; count: number; perMinute: number }[];
-  filmFocus: { key: string; label: string; clips: number }[];
+  filmFocus: { key: string; clips: number }[];
   goalsTotal: number;
   goalsDone: number;
   insights: ReviewInsight[];
@@ -119,17 +116,17 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const focusMap = new Map<string, number>();
   for (const s of completed) for (const f of s.focusAttributes) focusMap.set(f, (focusMap.get(f) ?? 0) + 1);
   const topFocus: FocusStat[] = [...focusMap.entries()]
-    .map(([key, sessions]) => ({ key, label: attributeLabel(key), sessions }))
-    .sort((a, b) => b.sessions - a.sessions || a.label.localeCompare(b.label));
+    .map(([key, sessions]) => ({ key, sessions }))
+    .sort((a, b) => b.sessions - a.sessions || a.key.localeCompare(b.key));
 
   // Total attribute growth actually earned this window, summed from each
   // completed session's recorded deltas — real training effect, not a projection.
   const gainMap = new Map<string, number>();
   for (const s of completed) for (const g of s.growth ?? []) gainMap.set(g.key, (gainMap.get(g.key) ?? 0) + g.delta);
   const attributeGains: AttributeGain[] = [...gainMap.entries()]
-    .map(([key, delta]) => ({ key, label: attributeLabel(key), delta: Math.round(delta * 10) / 10 }))
+    .map(([key, delta]) => ({ key, delta: Math.round(delta * 10) / 10 }))
     .filter((g) => g.delta > 0)
-    .sort((a, b) => b.delta - a.delta || a.label.localeCompare(b.label));
+    .sort((a, b) => b.delta - a.delta || a.key.localeCompare(b.key));
 
   const goalsDone = input.goals.filter((g) => g.done).length;
   const goalsTotal = input.goals.length;
@@ -229,7 +226,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     filmDetections: film?.detections ?? 0,
     filmConfidence: film?.avgConfidence ?? 0,
     filmKinds: film ? film.byKind.filter((k) => k.count > 0).slice(0, 5) : [],
-    filmFocus: film ? film.topFocus.slice(0, 3).map((f) => ({ key: f.key, label: f.label, clips: f.clips })) : [],
+    filmFocus: film ? film.topFocus.slice(0, 3).map((f) => ({ key: f.key, clips: f.clips })) : [],
     goalsTotal,
     goalsDone,
     insights,
@@ -311,7 +308,7 @@ function buildInsights(a: {
     if (weakest && strongest.key !== weakest.key && (a.attributes[weakest.key] ?? 0) < strongest.sessions + 55) {
       out.push({
         kind: "watch",
-        text: `Most of your work hit ${strongest.label}, but ${attributeLabel(weakest.key)} is still your lowest attribute. Rotating some attention there keeps development balanced.`,
+        text: `Most of your work hit ${attributeLabel(strongest.key)}, but ${attributeLabel(weakest.key)} is still your lowest attribute. Rotating some attention there keeps development balanced.`,
       });
     }
   }
@@ -350,13 +347,13 @@ function buildInsights(a: {
       if (unfed.length) {
         out.push({
           kind: "plan",
-          text: `Flagged by the clips but absent from your training: ${unfed.map((u) => `${u.label} (×${u.clips})`).join(", ")}. No completed session in this window carried ${unfed.length === 1 ? "that focus" : "those focuses"} — the plan and the film are pointing different ways.`,
+          text: `Flagged by the clips but absent from your training: ${unfed.map((u) => `${attributeLabel(u.key)} (×${u.clips})`).join(", ")}. No completed session in this window carried ${unfed.length === 1 ? "that focus" : "those focuses"} — the plan and the film are pointing different ways.`,
         });
       } else {
         const top = f.topFocus[0];
         out.push({
           kind: "positive",
-          text: `The focus your clips repeated most — ${top.label} on ${top.clips} clip${top.clips === 1 ? "" : "s"} — is also in your completed training mix, so plan and observed evidence agree.`,
+          text: `The focus your clips repeated most — ${attributeLabel(top.key)} on ${top.clips} clip${top.clips === 1 ? "" : "s"} — is also in your completed training mix, so plan and observed evidence agree.`,
         });
       }
     }
@@ -394,7 +391,7 @@ function buildRecommendation(
       : `${attributeLabel(pick.key)} is your lowest untapped attribute at ${pick.value}. A focused block would raise your overall ceiling fastest.`;
 
   const conf = Math.min(90, 50 + completed * 5 + ratedCount * 3 + (already > 0 ? 10 : 0) + (filmPick ? 12 : 0));
-  return { attributeKey: pick.key, attributeLabel: attributeLabel(pick.key), reason, confidence: conf };
+  return { attributeKey: pick.key, reason, confidence: conf };
 }
 
 function buildEvidence(a: {
@@ -418,7 +415,7 @@ function buildEvidence(a: {
   if (a.avgRating != null) e.push(`Average self-rating ${a.avgRating}/5`);
   if (a.overallDelta != null) e.push(`Overall change ${a.overallDelta >= 0 ? "+" : ""}${a.overallDelta}`);
   if (a.streak) e.push(`Current streak ${a.streak}d`);
-  if (a.topFocus.length) e.push(`Focus mix: ${a.topFocus.map((f) => `${f.label} ×${f.sessions}`).join(", ")}`);
+  if (a.topFocus.length) e.push(`Focus mix: ${a.topFocus.map((f) => `${attributeLabel(f.key)} ×${f.sessions}`).join(", ")}`);
   if (a.goalsTotal) e.push(`Goals met ${a.goalsDone}/${a.goalsTotal}`);
   if (a.lessonsCompleted) e.push(`Academy ${a.lessonsCompleted} completed · ${a.lessonsMastered} with a passed check`);
   if (a.film) {

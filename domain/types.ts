@@ -137,7 +137,6 @@ export interface TrainingExercise {
 
 export interface AttributeDelta {
   key: string;
-  label: string;
   from: number;
   to: number;
   delta: number;

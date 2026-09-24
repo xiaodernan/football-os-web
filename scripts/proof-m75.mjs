@@ -10,7 +10,7 @@ const base = { plans: [], memory: [] };
 const completed = (over = {}) => ({
   id: "S1", title: "Passing block", status: "completed",
   completedAt: "2026-01-05T10:00:00.000Z", date: "2026-01-05T09:00:00.000Z",
-  selfRating: 4, xpAwarded: 30, growth: [{ key: "passing", label: "Passing", delta: 2 }],
+  selfRating: 4, xpAwarded: 30, growth: [{ key: "passing", delta: 2 }],
   ...over,
 });
 

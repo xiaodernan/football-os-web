@@ -54,6 +54,10 @@ export function attributesByCategory(category: AttributeDef["category"]): Attrib
   return ATTRIBUTE_DEFS.filter((a) => a.category === category);
 }
 
+// The English names used to *compose domain prose* (coach answers, scout
+// headlines, review reasons). They are not display labels: a UI slot reads
+// `attr.name.*` / `attr.*` from the dictionary instead, so a row handed to the
+// interface carries a key and cannot smuggle an untranslated noun onto a screen.
 export const CATEGORY_LABEL: Record<AttributeDef["category"], string> = {
   technical: "Technical",
   physical: "Physical",
@@ -63,7 +67,6 @@ export const CATEGORY_LABEL: Record<AttributeDef["category"], string> = {
 
 export interface CategoryAverage {
   category: AttributeDef["category"];
-  label: string;
   value: number;
 }
 
@@ -73,7 +76,7 @@ export function categoryAverages(attrs: Attributes): CategoryAverage[] {
   return CATEGORY_ORDER.map((category) => {
     const defs = attributesByCategory(category);
     const value = Math.round(defs.reduce((s, d) => s + (attrs[d.key] ?? 0), 0) / (defs.length || 1));
-    return { category, label: CATEGORY_LABEL[category], value };
+    return { category, value };
   });
 }
 

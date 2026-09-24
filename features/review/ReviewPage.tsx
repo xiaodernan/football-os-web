@@ -84,14 +84,14 @@ export function ReviewPage() {
     const current = Math.round(state.profile.attributes[reco.attributeKey] ?? 0);
     const target = Math.min(99, current + 5);
     addGoal({
-      title: t("rv.trackTitle").replace("{a}", reco.attributeLabel),
+      title: t("rv.trackTitle").replace("{a}", t(`attr.name.${reco.attributeKey}`)),
       metric: "attribute",
       key: reco.attributeKey,
       target,
       current,
       unit: "rating",
     });
-    toast.success(t("rv.trackDone").replace("{a}", reco.attributeLabel).replace("{t}", String(target)));
+    toast.success(t("rv.trackDone").replace("{a}", t(`attr.name.${reco.attributeKey}`)).replace("{t}", String(target)));
   };
 
   const points = useMemo(() => {
@@ -209,7 +209,7 @@ export function ReviewPage() {
                 <SectionTitle title={t("rv.recoTitle")} hint={t("rv.recoHint")} />
                 {review.recommendation ? (
                   <div className="mt-1">
-                    <div className="text-sm font-medium text-primary">{review.recommendation.attributeLabel}</div>
+                    <div className="text-sm font-medium text-primary">{t(`attr.name.${review.recommendation.attributeKey}`)}</div>
                     <p className="mt-1 text-sm">{review.recommendation.reason}</p>
                     <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                       <span>{t("rv.confidence")}</span>
@@ -245,7 +245,7 @@ export function ReviewPage() {
                       return (
                         <div key={f.key}>
                           <div className="flex justify-between text-xs">
-                            <span>{f.label}</span>
+                            <span>{t(`attr.name.${f.key}`)}</span>
                             <span className="font-mono text-muted-foreground">×{f.sessions}</span>
                           </div>
                           <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
@@ -266,7 +266,7 @@ export function ReviewPage() {
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {review.attributeGains.map((g) => (
                       <span key={g.key} className="rounded-md border border-success/40 bg-success/10 px-2 py-1 text-xs font-medium text-success">
-                        {g.label} <span className="font-mono">+{g.delta}</span>
+                        {t(`attr.name.${g.key}`)} <span className="font-mono">+{g.delta}</span>
                       </span>
                     ))}
                   </div>
@@ -298,7 +298,7 @@ export function ReviewPage() {
                       <span className="text-[11px] text-muted-foreground">{t("rv.filmFocus")}:</span>
                       {review.filmFocus.map((f) => (
                         <span key={f.key} className="rounded-md border px-2 py-0.5 text-[11px] text-muted-foreground">
-                          {f.label} ×{f.clips}
+                          {t(`attr.name.${f.key}`)} ×{f.clips}
                         </span>
                       ))}
                     </div>

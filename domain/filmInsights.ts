@@ -1,9 +1,10 @@
-import { attributeLabel } from "./attributes";
 
 // Library-level film analysis (spec §19). A single clip report answers "what
 // happened in this video"; this answers "what keeps happening across the clips
 // you have analysed". Input is the user's own locally-stored clip library, so
 // every rate is a real count over real detections — nothing is invented.
+
+import { attributeLabel } from "./attributes";
 
 export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
 
@@ -23,7 +24,6 @@ export interface KindRate {
 
 export interface FocusStat {
   key: string;
-  label: string;
   clips: number; // how many separate clips flagged it
 }
 
@@ -87,8 +87,8 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   const focusMap = new Map<string, number>();
   for (const c of valid) for (const key of new Set(c.recommendedFocus)) focusMap.set(key, (focusMap.get(key) ?? 0) + 1);
   const topFocus: FocusStat[] = [...focusMap.entries()]
-    .map(([key, clipCount]) => ({ key, label: attributeLabel(key), clips: clipCount }))
-    .sort((a, b) => b.clips - a.clips || a.label.localeCompare(b.label))
+    .map(([key, clipCount]) => ({ key, clips: clipCount }))
+    .sort((a, b) => b.clips - a.clips || a.key.localeCompare(b.key))
     .slice(0, 5);
 
   const avgConfidence = valid.length ? Math.round(valid.reduce((s, c) => s + c.confidence, 0) / valid.length) : 0;
@@ -102,7 +102,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
       : valid.length < 2
         ? "Add a second clip to unlock the older-vs-newer trend"
         : "Trend unavailable — clips have no usable duration",
-    topFocus.length ? `Recurring coaching focus: ${topFocus.map((f) => `${f.label} ×${f.clips}`).join(", ")}` : "No recommended focus yet",
+    topFocus.length ? `Recurring coaching focus: ${topFocus.map((f) => `${attributeLabel(f.key)} ×${f.clips}`).join(", ")}` : "No recommended focus yet",
   ].filter(Boolean);
 
   const confidence = valid.length === 0 ? 0 : Math.min(85, 20 + valid.length * 16);
