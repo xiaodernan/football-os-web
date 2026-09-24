@@ -717,6 +717,10 @@ const en: Dict = {
   "ai.legend.news": "News",
   "ai.graphMeta": "{nodes} nodes · {edges} relations",
   "ai.graphAria": "Knowledge graph",
+
+  // Demo Mode has no community server: posts live on this device in either
+  // connection state, so this notice must not imply a queue that sends later.
+  "community.offline": "Offline — posts are saved on this device in either state, and nothing is uploaded when you reconnect.",
 };
 
 const zhCN: Dict = {
@@ -1414,6 +1418,7 @@ const zhCN: Dict = {
   "ai.legend.news": "新闻",
   "ai.graphMeta": "{nodes} 个节点 · {edges} 条关系",
   "ai.graphAria": "知识图谱",
+  "community.offline": "已离线——两种状态下帖子都保存在本机，重新联网时不会上传任何内容。",
 };
 
 const zhTW: Dict = {
@@ -2092,6 +2097,7 @@ const zhTW: Dict = {
   "ai.legend.news": "新聞",
   "ai.graphMeta": "{nodes} 個節點 · {edges} 條關係",
   "ai.graphAria": "知識圖譜",
+  "community.offline": "已離線——兩種狀態下帖子都保存在本機，重新連線時不會上傳任何內容。",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

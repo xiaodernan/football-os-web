@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useOnline, useLearnRecords } from "@/lib/hooks";
+import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildStarters, allTags, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
 import { LESSONS, isCompleted, summarizeLearn } from "@/domain/learn";
@@ -35,6 +36,7 @@ function timeAgo(iso: string): string {
 }
 
 export function CommunityHub() {
+  const { t } = useI18n();
   const online = useOnline();
   const { state } = useOs();
   const learn = useLearnRecords();
@@ -171,7 +173,7 @@ export function CommunityHub() {
         </p>
       </Panel>
 
-      {!online && <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning">You're offline — new posts save to this device and remain when you reconnect.</div>}
+      {!online && <div className="rounded-md border border-info/40 bg-info/10 px-3 py-2 text-xs text-info">{t("community.offline")}</div>}
 
       {composing && <Composer starters={starters} onSubmit={addThread} onCancel={() => setComposing(false)} />}
 
