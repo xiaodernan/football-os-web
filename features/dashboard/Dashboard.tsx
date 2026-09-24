@@ -4,7 +4,6 @@ import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import {
   matchesByStatus,
-  newsFeed,
   trendingPlayers,
   getClub,
   getCompetition,
@@ -18,7 +17,7 @@ import { overallRating, attributeLabel } from "@/domain/attributes";
 import { evaluateAchievements, type AchievementInput } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
 import { loadFilmClips } from "@/domain/filmLibrary";
-import { useLearnRecords } from "@/lib/hooks";
+import { useLearnRecords, usePersonalNews } from "@/lib/hooks";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
@@ -47,6 +46,7 @@ export function Dashboard() {
   const { t } = useI18n();const { state, completeSession } = useOs();
   const { navigate } = useRouter();
   const learn = useLearnRecords();
+  const personalNews = usePersonalNews();
   const profile = state.profile;
   const info = profile ? levelInfo(profile.xp) : null;
 
@@ -57,7 +57,7 @@ export function Dashboard() {
       .filter((m) => Math.abs(new Date(m.kickoff).getTime() - now) < 2 * 86400000)
       .slice(0, 5);
   }, []);
-  const breaking = newsFeed.slice(0, 4);
+  const breaking = personalNews.items.slice(0, 4);
   const trending = trendingPlayers(6);
   const nextSession = state.sessions.find((s) => s.status === "planned");
   const upcoming = profile?.favoriteClubId ? upcomingMatchesForClub(profile.favoriteClubId, 3) : [];
@@ -176,7 +176,11 @@ export function Dashboard() {
 
           {/* breaking */}
           <Panel className="p-4">
-            <SectionTitle title={t("dash.breaking")} action={<Link to="/news" className="text-xs text-primary hover:underline">News →</Link>} />
+            <SectionTitle
+              title={t("dash.breaking")}
+              hint={personalNews.orderedFor ? t("news.forClub", { club: personalNews.orderedFor, n: personalNews.matched }) : undefined}
+              action={<Link to="/news" className="text-xs text-primary hover:underline">News →</Link>}
+            />
             <div className="divide-y">
               {breaking.map((n) => (
                 <Link key={n.id} to={`/news/${n.id}`} className="flex items-start gap-3 py-2.5 hover:bg-secondary/40">

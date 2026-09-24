@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { LEARN_STORE_KEY, parseLearnRecords, type LearnRecord } from "@/domain/learn";
 import { loadFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { type FilmClipInput } from "@/domain/filmInsights";
+import { rankNewsForClub } from "@/domain/newsImpact";
+import { getClub, newsFeed, playersByClub } from "@/data/footballService";
+import { useOs } from "@/store/useFootballOS";
 
 export function useDebounced<T>(value: T, ms = 250): T {
   const [v, setV] = useState(value);
@@ -71,4 +74,18 @@ export function useOnline(): boolean {
     };
   }, []);
   return online;
+}
+
+/** The news feed ordered so stories about the visitor's favorite club lead.
+ *  `matched` counts articles that really reference that club (or one of its
+ *  registered players); `orderedFor` is the club's name only when the count is
+ *  non-zero, so a screen can label the ordering without overclaiming it. */
+export function usePersonalNews() {
+  const { state } = useOs();
+  const clubId = state.profile?.favoriteClubId ?? null;
+  return useMemo(() => {
+    const ranked = rankNewsForClub(newsFeed, clubId, clubId ? playersByClub(clubId).map((p) => p.id) : []);
+    const name = clubId ? getClub(clubId)?.name : undefined;
+    return { ...ranked, orderedFor: ranked.matched && name ? name : undefined };
+  }, [clubId]);
 }

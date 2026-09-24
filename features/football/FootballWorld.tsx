@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
 
@@ -167,11 +168,12 @@ function kindTone(kind: string): string {
 // ---------- Hub ----------
 function FootballHub() {
   const { t } = useI18n();
+  const personalNews = usePersonalNews();
   const comps = footballProvider.competitions();
   const live = matchesByStatus("LIVE").slice(0, 6);
   const upcoming = matchesByStatus("SCHEDULED").slice(0, 6);
   const trending = trendingPlayers(8);
-  const news = newsFeed.slice(0, 6);
+  const news = personalNews.items.slice(0, 6);
   return (
     <div className="space-y-6">
       <PageHeader title={t("fw.hub.title")} hint={t("fw.hub.hint")} />
@@ -197,7 +199,11 @@ function FootballHub() {
             <div className="mt-1 divide-y">{trending.map((p) => <PlayerRowCompact key={p.id} p={p} />)}</div>
           </Panel>
           <Panel className="p-4">
-            <SectionTitle title={t("fw.hub.news")} action={<Link to="/news" className="text-xs text-primary">{t("fw.hub.all")}</Link>} />
+            <SectionTitle
+              title={t("fw.hub.news")}
+              hint={personalNews.orderedFor ? t("news.forClub", { club: personalNews.orderedFor, n: personalNews.matched }) : undefined}
+              action={<Link to="/news" className="text-xs text-primary">{t("fw.hub.all")}</Link>}
+            />
             <div className="mt-2 space-y-2">{news.map((n) => <NewsRow key={n.id} id={n.id} compact />)}</div>
           </Panel>
         </div>
@@ -314,10 +320,14 @@ function MatchesList() {
 
 function NewsList() {
   const { t } = useI18n();
+  const personalNews = usePersonalNews();
   return (
     <div className="space-y-5">
       <PageHeader title={t("fw.newsList.title")} hint={t("fw.newsList.hint", { n: newsFeed.length })} back="/football" />
-      <Panel className="divide-y p-1">{newsFeed.map((n) => <NewsRow key={n.id} id={n.id} />)}</Panel>
+      {personalNews.orderedFor && (
+        <p className="-mt-3 text-xs text-muted-foreground">{t("news.forClub", { club: personalNews.orderedFor, n: personalNews.matched })}</p>
+      )}
+      <Panel className="divide-y p-1">{personalNews.items.map((n) => <NewsRow key={n.id} id={n.id} />)}</Panel>
     </div>
   );
 }

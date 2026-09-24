@@ -93,6 +93,29 @@ export function buildImpact(input: ImpactInput): NewsImpact {
   return { confidence, certainty, context, watch, evidence };
 }
 
+// Feed personalisation for a visitor who picked a club during onboarding. This
+// only reorders: a story moves up when its OWN entityIds mention that club (or
+// one of the players registered to it in the world dataset). Nothing is
+// filtered out, added or rewritten, so a club with no coverage leaves the feed
+// byte-identical and `matched` reports 0 rather than inventing relevance.
+export interface RankedNews<T> {
+  items: T[];
+  matched: number;
+}
+
+export function rankNewsForClub<T extends Pick<NewsArticle, "entityIds">>(
+  articles: readonly T[],
+  clubId: string | null | undefined,
+  clubPlayerIds: readonly string[] = []
+): RankedNews<T> {
+  if (!clubId) return { items: [...articles], matched: 0 };
+  const related = new Set<string>([clubId, ...clubPlayerIds]);
+  const about: T[] = [];
+  const rest: T[] = [];
+  for (const a of articles) (a.entityIds.some((id) => related.has(id)) ? about : rest).push(a);
+  return { items: [...about, ...rest], matched: about.length };
+}
+
 function ordinal(n: number): string {
   const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
