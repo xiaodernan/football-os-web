@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useLocalStorage, useOnline } from "@/lib/hooks";
+import { useI18n } from "@/i18n";
 import { askIntelligence, buildGraph, type EvidenceFact, type KgGraph } from "@/data/intelligence";
 import { AI_CHAT_KEY } from "@/domain/localData";
 import { Panel, EmptyState, DemoBadge } from "@/ui/primitives";
@@ -13,6 +14,9 @@ type ChatMsg =
   | { role: "user"; content: string; at: string }
   | { role: "ai"; content: string; facts?: EvidenceFact[]; sources?: string[]; confidence?: number; at: string };
 
+// Sample prompts stay in English deliberately: they are queries sent to the
+// demo provider, which composes its answers in English only. Translating them
+// would have the app ask in one language and answer in another.
 const SUGGESTIONS = [
   "Who is the key player at Real Madrid?",
   "Where do Arsenal sit in the Premier League?",
@@ -21,6 +25,7 @@ const SUGGESTIONS = [
 ];
 
 export function AiStudio({ initialTab = "chat" }: { initialTab?: "chat" | "graph" }) {
+  const { t } = useI18n();
   const { navigate } = useRouter();
   const [tab, setTab] = useState(initialTab);
   return (
@@ -29,14 +34,14 @@ export function AiStudio({ initialTab = "chat" }: { initialTab?: "chat" | "graph
         <div className="flex items-center gap-2">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">✦</div>
           <div>
-            <div className="flex items-center gap-2"><h1 className="text-xl font-bold">Football AI</h1>{<DemoBadge />}</div>
-            <p className="text-xs text-muted-foreground">Answers are grounded in the world dataset — with evidence, sources & confidence. Demo provider, no API key.</p>
+            <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("ai.title")}</h1>{<DemoBadge />}</div>
+            <p className="text-xs text-muted-foreground">{t("ai.subtitle")}</p>
           </div>
         </div>
         <div className="flex gap-1.5">
-          {(["chat", "graph"] as const).map((t) => (
-            <button key={t} onClick={() => { setTab(t); navigate(t === "chat" ? "/ai" : "/knowledge"); }} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === t ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
-              {t === "chat" ? "Chat" : "Knowledge graph"}
+          {(["chat", "graph"] as const).map((k) => (
+            <button key={k} onClick={() => { setTab(k); navigate(k === "chat" ? "/ai" : "/knowledge"); }} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === k ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
+              {k === "chat" ? t("ai.tab.chat") : t("ai.tab.graph")}
             </button>
           ))}
         </div>
@@ -47,6 +52,7 @@ export function AiStudio({ initialTab = "chat" }: { initialTab?: "chat" | "graph
 }
 
 function Chat() {
+  const { t } = useI18n();
   const online = useOnline();
   const [log, setLog] = useLocalStorage<ChatMsg[]>(AI_CHAT_KEY, []);
   const [input, setInput] = useState("");
@@ -68,11 +74,11 @@ function Chat() {
 
   return (
     <Panel className="flex h-[62vh] flex-col p-0">
-      {!online && <div className="border-b border-warning/40 bg-warning/10 px-4 py-2 text-xs text-warning">You are offline. Answers use the last-loaded dataset only; retrieval is not refreshed.</div>}
+      {!online && <div className="border-b border-warning/40 bg-warning/10 px-4 py-2 text-xs text-warning">{t("ai.offline")}</div>}
       <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto p-4">
         {log.length === 0 && (
           <div className="space-y-3">
-            <EmptyState title="Ask about any club, player, fixture or headline" hint="Each answer cites the retrieved evidence and a confidence score." icon="✦" />
+            <EmptyState title={t("ai.empty")} hint={t("ai.emptyHint")} icon="✦" />
             <div className="flex flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((s) => <button key={s} onClick={() => send(s)} className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/50 hover:text-foreground">{s}</button>)}
             </div>
@@ -85,26 +91,26 @@ function Chat() {
             <div className="rounded-2xl rounded-bl-sm border bg-card/50 px-3.5 py-2 text-sm leading-relaxed">{m.content}</div>
             {m.facts?.length ? (
               <div className="rounded-lg border bg-card/30 p-2.5 text-xs">
-                <div className="mb-1 font-semibold uppercase tracking-widest text-muted-foreground">Evidence ({m.facts.length})</div>
+                <div className="mb-1 font-semibold uppercase tracking-widest text-muted-foreground">{t("ai.evidence", { n: m.facts.length })}</div>
                 <ul className="space-y-1">
                   {m.facts.map((f, j) => <li key={j}>{f.to ? <Link to={f.to} className="text-primary hover:underline">{f.label}</Link> : <span className="font-medium">{f.label}</span>}<span className="text-muted-foreground"> — {f.text}</span></li>)}
                 </ul>
                 <div className="mt-2 flex flex-wrap items-center gap-2 border-t pt-2 text-muted-foreground">
-                  <span>Confidence <span className="font-mono text-primary">{m.confidence}%</span></span>
+                  <span>{t("common.confidence")} <span className="font-mono text-primary">{m.confidence}%</span></span>
                   <span>·</span>
-                  <span>Sources: {(m.sources ?? []).join(", ")}</span>
+                  <span>{t("common.sources")}: {(m.sources ?? []).join(", ")}</span>
                 </div>
               </div>
             ) : null}
           </div>
         ))}
-        {busy && <div className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-2 w-2 animate-ping rounded-full bg-primary" /> Retrieving from the football world…</div>}
+        {busy && <div className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-2 w-2 animate-ping rounded-full bg-primary" /> {t("ai.retrieving")}</div>}
       </div>
       <div className="border-t p-3">
-        {log.length > 0 && <button onClick={() => setLog([])} className="mb-2 text-xs text-muted-foreground hover:text-foreground">Clear conversation</button>}
+        {log.length > 0 && <button onClick={() => setLog([])} className="mb-2 text-xs text-muted-foreground hover:text-foreground">{t("ai.clear")}</button>}
         <form className="flex items-end gap-2" onSubmit={(e) => { e.preventDefault(); send(input); }}>
-          <Textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }} rows={1} placeholder="Ask the Football OS analyst…" className="max-h-32 min-h-[40px] flex-1 resize-none" />
-          <Button type="submit" disabled={busy || !input.trim()}>Send</Button>
+          <Textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }} rows={1} placeholder={t("ai.placeholder")} className="max-h-32 min-h-[40px] flex-1 resize-none" />
+          <Button type="submit" disabled={busy || !input.trim()}>{t("ai.send")}</Button>
         </form>
       </div>
     </Panel>
@@ -112,20 +118,21 @@ function Chat() {
 }
 
 function Graph() {
+  const { t } = useI18n();
   const [q, setQ] = useState("Manchester City");
   const graph = useMemo<KgGraph>(() => buildGraph(q), [q]);
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search an entity to map its relations…" className="max-w-md" />
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("ai.graphPlaceholder")} className="max-w-md" />
       </div>
       <Panel className="p-2">
-        {graph.nodes.length ? <GraphCanvas graph={graph} /> : <div className="p-6"><EmptyState title="No entity found" hint="Try a club, player, competition or headline." /></div>}
+        {graph.nodes.length ? <GraphCanvas graph={graph} ariaLabel={t("ai.graphAria")} /> : <div className="p-6"><EmptyState title={t("ai.graphEmpty")} hint={t("ai.graphEmptyHint")} /></div>}
       </Panel>
       {graph.nodes.length > 0 && (
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-          <Legend color="var(--color-primary)" label="Club" /><Legend color="var(--color-info)" label="Player" /><Legend color="var(--color-chart-4)" label="Competition" /><Legend color="var(--color-warning)" label="News" />
-          <span className="ml-auto font-mono">{graph.nodes.length} nodes · {graph.edges.length} relations</span>
+          <Legend color="var(--color-primary)" label={t("ai.legend.club")} /><Legend color="var(--color-info)" label={t("ai.legend.player")} /><Legend color="var(--color-chart-4)" label={t("ai.legend.competition")} /><Legend color="var(--color-warning)" label={t("ai.legend.news")} />
+          <span className="ml-auto font-mono">{t("ai.graphMeta", { nodes: graph.nodes.length, edges: graph.edges.length })}</span>
         </div>
       )}
     </div>
@@ -138,7 +145,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 
 const TYPE_COLOR: Record<string, string> = { club: "var(--color-primary)", player: "var(--color-info)", competition: "var(--color-chart-4)", news: "var(--color-warning)", match: "var(--color-destructive)" };
 
-function GraphCanvas({ graph }: { graph: KgGraph }) {
+function GraphCanvas({ graph, ariaLabel }: { graph: KgGraph; ariaLabel?: string }) {
   const W = 720; const H = 460;
   // Radial layout: root in the centre, everything else on a ring, clustered by type.
   const pos = useMemo(() => {
@@ -155,7 +162,7 @@ function GraphCanvas({ graph }: { graph: KgGraph }) {
   }, [graph]);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-[460px] w-full" role="img" aria-label="Knowledge graph">
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-[460px] w-full" role="img" aria-label={ariaLabel ?? "Knowledge graph"}>
       <defs><radialGradient id="kg-bg" cx="50%" cy="45%" r="70%"><stop offset="0%" stopColor="var(--color-card)" /><stop offset="100%" stopColor="transparent" /></radialGradient></defs>
       <rect width={W} height={H} fill="url(#kg-bg)" />
       {graph.edges.map((e, i) => {
