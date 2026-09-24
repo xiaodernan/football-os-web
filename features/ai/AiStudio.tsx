@@ -74,7 +74,7 @@ function Chat() {
 
   return (
     <Panel className="flex h-[62vh] flex-col p-0">
-      {!online && <div className="border-b border-warning/40 bg-warning/10 px-4 py-2 text-xs text-warning">{t("ai.offline")}</div>}
+      {!online && <div className="border-b border-info/40 bg-info/10 px-4 py-2 text-xs text-info">{t("ai.offline")}</div>}
       <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto p-4">
         {log.length === 0 && (
           <div className="space-y-3">
