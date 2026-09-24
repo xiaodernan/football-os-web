@@ -141,10 +141,10 @@ export function WatchlistBoard() {
                   return (
                     <div className="hidden w-28 text-right xl:block" title={t("watch.templateHint")}>
                       <div className={cn("font-mono text-sm tabular-nums", edge.bestDelta > 0 ? "text-success" : "text-muted-foreground")}>
-                        {edge.bestLabel} {edge.bestDelta > 0 ? `+${edge.bestDelta}` : edge.bestDelta}
+                        {t(`compare.cat.${edge.bestCategory}`)} {edge.bestDelta > 0 ? `+${edge.bestDelta}` : edge.bestDelta}
                       </div>
                       <div className={cn("text-[11px] tabular-nums", edge.worstDelta < 0 ? "text-destructive" : "text-muted-foreground")}>
-                        {edge.worstLabel} {edge.worstDelta > 0 ? `+${edge.worstDelta}` : edge.worstDelta}
+                        {t(`compare.cat.${edge.worstCategory}`)} {edge.worstDelta > 0 ? `+${edge.worstDelta}` : edge.worstDelta}
                       </div>
                     </div>
                   );

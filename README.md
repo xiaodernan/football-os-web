@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M144 (a few numbers in that range
+Work ships one milestone per commit and is currently at M145 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M144 line of work is a different kind of progress: it makes the earlier claims
+The M108–M145 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -307,6 +307,32 @@ pass. 17 unreachable labels remain, each with a disposition — six are dead dup
 `set.key.*` family Settings already renders, the rest get wired to the control they describe
 or deleted — and the audit itself still owes a permanent gate, so a label cannot be added
 again without naming a place that renders it.
+
+M145 localised the scouting board, which was 236 lines with no `t()` call in them at all:
+34 new `scout.*` keys per locale (733 keys in total now), and two keys that had been
+written but never rendered (`watch.template`, `common.age`) came into use, taking the
+unreachable count from 17 to 15. The board's own tooltip was a hand-typed copy of
+`watch.templateHint`, so collapsing the duplicate changed one English word on screen —
+"strongest and weakest category *against* a player" now reads "*compared with* a player".
+What the source-level checks could not see turned out to be the more interesting find: a
+live pass in the browser showed English ("Tactical +3 · Physical 0") sitting inside a
+fully translated 繁體中文 table, because `templateEdge()` handed both the scouting and
+watchlist boards a display label rather than a category id, and a label that arrives as an
+interpolation is invisible to a scan for string props and text nodes. The domain now
+returns the id and both boards translate it; checks 14–15 pin that shape, and 15 checks
+all four categories against the real `CATEGORY_ORDER` rather than only the key prefix.
+Nine mutations (M10a–M15a) each turned the gate red. Declared carve-outs, not oversights:
+OVR, POT, OVR/€M, `vs` and the GK/DEF/MID/ATT bucket codes are codes the app prints
+identically in every locale, and values that come out of the dataset — player names, club
+short codes, archetype labels — stay English in every locale, in the same class as nation
+names. The honest blind spot is unchanged: check 12 still cannot see prose that follows a
+`{…}` inside a node, which is why 13 and 14 exist. Verified in a browser at a fresh
+production build in all three locales (the placeholder-bearing `短名單 · 1` and the
+`巔峰約 0 年` row both rendered, and an English reader sees the pre-M145 wording apart
+from the tooltip above), with a clean console. The measured debt this makes visible:
+350 of 386 visible-text lines across the feature files are still untranslated — Manager OS
+(84 lines, no `t()` at all), Player OS (61), player detail (56), community (23),
+simulation lab (22), film room (16), dashboard (15), academy (13), onboarding (12).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

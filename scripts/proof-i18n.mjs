@@ -16,7 +16,17 @@
 //   8. a screen whose labels live in a variable (so check 4 cannot see them)
 //      carrying raw text instead of dictionary keys,
 //   9. a shared primitive falling back to a hardcoded English string, which would
-//      go untranslated on every screen at once.
+//      go untranslated on every screen at once,
+//  10. a panel whose labels live in a variable rendering stored text (Scouting),
+//  11. a string prop on that panel carrying raw English, which no key-level check
+//      can see,
+//  12. a JSX text node on that panel carrying raw English beyond a declared list
+//      of stat codes,
+//  13. the specific English prose M145 moved into the dictionary coming back,
+//  14. a domain function handing a board an untranslated display label — the
+//      shape checks 10-12 cannot see, because it arrives as an interpolation,
+//  15. a value of a dynamic key's real value space (CATEGORY_ORDER) missing from
+//      a locale, which check 5's prefix-only test cannot catch.
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
@@ -171,6 +181,91 @@ ok(`the primitives read all ${PRIMITIVE_KEYS.length} of their own labels from th
 const STRUCK = ["● DEMO DATA", "Something went wrong", "Unexpected error while loading", `title = "Nothing here yet"`];
 const backslid = STRUCK.filter((s) => prim.includes(s));
 ok(`no primitive still hardcodes the English M144 replaced (${backslid.join(" | ") || "none"})`, backslid.length === 0);
+
+// 10. M145 localised the Scouting board. Two of its label arrays keep the key in
+//     a variable, the same shape check 8 had to reach, so both arrays and both
+//     render sites are pinned.
+const scoutSrc = readFileSync(join(root, "features", "scouting", "ScoutingPanel.tsx"), "utf8");
+const SCOUT_ARRAYS = [
+  ["SORTS", /const SORTS[\s\S]*?\];/],
+  ["comparison rows", /const rows[\s\S]*?\];/],
+];
+for (const [name, re] of SCOUT_ARRAYS) {
+  const block = scoutSrc.match(re)?.[0] ?? "";
+  ok(`the Scouting ${name} array is locatable (else this check is vacuous)`, block.length > 0);
+  const ls = [...block.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
+  ok(`Scouting ${name} carries ${ls.length} labels`, ls.length > 0);
+  const raw = ls.filter((l) => !bounds.every((_, i) => keysOf(i).includes(l)));
+  ok(`every Scouting ${name} label is a key all three dictionaries declare (${raw.join(", ") || "none"})`, raw.length === 0);
+}
+ok("both Scouting label arrays render through t()",
+  /\{t\(s\.label\)\}/.test(scoutSrc) && /\{t\(r\.label\)\}/.test(scoutSrc));
+
+// 11. A `title="English"` prop is invisible to check 4 (there is no key to look
+//     up) and to check 10 (it is not in an array), so it is matched by shape.
+const engProps = [...scoutSrc.matchAll(/\b(?:title|hint|label|placeholder|description|aria-label)="[^"]*[A-Za-z]{2}[^"]*"/g)].map((m) => m[0]);
+ok(`no Scouting string prop still carries raw English (${engProps.join(" | ") || "none"})`, engProps.length === 0);
+
+// 12. Same for JSX text nodes, in both shapes they take: text that runs into a
+//     tag, and text that runs into an interpolation ("Foo: {x}"). The carve-out
+//     is the honest remainder — OVR, POT and OVR/€M are monospace stat codes the
+//     app prints identically in all three locales, and "vs" is a separator. A
+//     node that mixes prose with an interpolation *after* a `{…}` is still a
+//     blind spot here; check 13 covers the specific sentences M145 moved.
+const CODE_TEXT = ["OVR", "POT", "OVR/€M", "vs"];
+// `(?<!=)` skips arrow functions: `() => scoutCandidates({` would otherwise read
+// as a text node running into an interpolation.
+const nodeTexts = [
+  ...[...scoutSrc.matchAll(/(?<!=)>[^<>{}\n]+(?=<)/g)].map((m) => m[0].slice(1)),
+  ...[...scoutSrc.matchAll(/(?<!=)>[^<>{}\n]+(?=\{)/g)].map((m) => m[0].slice(1)),
+].map((x) => x.trim()).filter((x) => /[A-Za-z]{2}/.test(x) && !/[):;=}&|]/.test(x));
+const strayTexts = nodeTexts.filter((x) => !CODE_TEXT.includes(x));
+ok(`the Scouting board renders no English text node beyond its ${CODE_TEXT.length} stat codes (${strayTexts.join(" | ") || "none"})`,
+  strayTexts.length === 0);
+ok(`the text-node scan sees nodes rather than nothing (${nodeTexts.length} found)`, nodeTexts.length >= CODE_TEXT.length);
+
+// 13. The prose M145 moved into the dictionary, struck as literals. The panel's
+//     own tooltip used to be a hand-typed copy of watch.templateHint, so pinning
+//     the sentence also pins the point that only one copy exists.
+const SCOUT_STRUCK = [
+  "Explainable shortlists from the world dataset",
+  "Your club needs",
+  "Amber = thin or below-average group",
+  "Highest overall per €1M among eligible players",
+  "Discover targets",
+  "Loosen the overall, age or value filters",
+  "Strongest and weakest category against a player",
+  "Saved on this device",
+  "Use the Cmp checkboxes",
+  "Growth headroom",
+];
+const scoutBack = SCOUT_STRUCK.filter((s) => scoutSrc.includes(s));
+ok(`no Scouting string reintroduces the English M145 replaced (${scoutBack.join(" | ") || "none"})`, scoutBack.length === 0);
+
+// 14. A domain function that hands the UI a *display label* is invisible to every
+//     check above: it reaches the screen as an interpolation, not a text node or a
+//     string prop. `templateEdge` used to return `bestLabel: "Tactical"`, which the
+//     two list boards printed as English on a 繁體中文 page; only the browser showed
+//     it. It now returns the category id and each board translates it.
+const { CATEGORY_ORDER } = await server.ssrLoadModule("/domain/attributes.ts");
+const EDGE_SOURCES = [
+  ["domain/scouting.ts", readFileSync(join(root, "domain", "scouting.ts"), "utf8")],
+  ["the Scouting board", scoutSrc],
+  ["the watchlist board", readFileSync(join(root, "features", "watchlist", "WatchlistBoard.tsx"), "utf8")],
+];
+const leakedLabels = EDGE_SOURCES.flatMap(([name, src]) => [...src.matchAll(/\b(?:best|worst)Label\b/g)].map(() => name));
+ok(`no template-edge display label survives in the domain or either board (${leakedLabels.join(", ") || "none"})`, leakedLabels.length === 0);
+const untranslatedEdge = EDGE_SOURCES.slice(1)
+  .filter(([, src]) => !src.includes("compare.cat.${edge.bestCategory}") || !src.includes("compare.cat.${edge.worstCategory}"))
+  .map(([name]) => name);
+ok(`both boards translate both template-edge categories (${untranslatedEdge.join(", ") || "none"})`, untranslatedEdge.length === 0);
+
+// 15. That render site is a dynamic key, and check 5 can only prove the prefix
+//     resolves to *something*. A category the dictionary misses would print its
+//     raw key at runtime, so pin the whole value space against the real array.
+const missingCat = CATEGORY_ORDER.filter((c) => !bounds.every((_, i) => keysOf(i).includes(`compare.cat.${c}`)));
+ok(`all ${CATEGORY_ORDER.length} categories have compare.cat.* in every locale (${missingCat.join(", ") || "none"})`,
+  CATEGORY_ORDER.length >= 4 && missingCat.length === 0);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

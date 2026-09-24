@@ -1,5 +1,6 @@
 import { footballProvider, getClub } from "@/data/footballService";
 import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages } from "./attributes";
+import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
 
@@ -158,9 +159,9 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export interface TemplateEdgeSummary {
-  bestLabel: string;
+  bestCategory: CategoryAverage["category"];
   bestDelta: number;
-  worstLabel: string;
+  worstCategory: CategoryAverage["category"];
   worstDelta: number;
 }
 
@@ -175,11 +176,13 @@ export function templateEdge(p: PlayerRef): TemplateEdgeSummary | null {
   const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
   const tmpl = categoryAverages(baselineAttributes(p.positionGroup as PositionGroup, skill));
   const own = categoryAverages(real);
-  const deltas = own.map((c, i) => ({ label: c.label, delta: c.value - tmpl[i].value }));
+  const deltas = own.map((c, i) => ({ category: c.category, delta: c.value - tmpl[i].value }));
   const sorted = [...deltas].sort((a, b) => b.delta - a.delta);
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
-  return { bestLabel: best.label, bestDelta: best.delta, worstLabel: worst.label, worstDelta: worst.delta };
+  // Carries the category id, not CATEGORY_LABEL: the two list rows that show
+  // this render in every locale, and the dictionary already has compare.cat.*.
+  return { bestCategory: best.category, bestDelta: best.delta, worstCategory: worst.category, worstDelta: worst.delta };
 }
 
 // Squad profile of a club by position bucket — where it is thin vs. deep.
