@@ -281,7 +281,7 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
           </div>
         )}
       </Panel>
-      {lesson.tryIt && <EmptyState title="Put it into practice" hint="The best way to learn a concept is to apply it in the studio or lab." icon="→" />}
+      {lesson.tryIt && <EmptyState title="Put it into practice" hint="The try-it link above opens the screen where this idea has a control you can actually move." icon="→" />}
     </div>
   );
 }
