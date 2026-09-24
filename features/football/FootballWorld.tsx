@@ -130,6 +130,7 @@ function MatchRow({ m }: { m: Match }) {
             {fc.homePct} · {fc.drawPct} · {fc.awayPct}%
           </span>
           <span>xG {fc.lambdaHome.toFixed(2)}–{fc.lambdaAway.toFixed(2)}</span>
+          <span>{t("fw.match.total", { n: fc.expectedTotalGoals.toFixed(2) })}</span>
           <span>{t("fw.match.likely", { score: fc.mostLikelyScore })}</span>
           <span>{t(fc.sample === 1 ? "fw.match.formOne" : "fw.match.form", { n: fc.sample })}</span>
         </div>

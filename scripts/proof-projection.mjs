@@ -1,4 +1,9 @@
 import { createServer } from "vite";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 // Pins domain/projection.ts — the "if you train these N×/week for W weeks" engine
 // behind /development's projection panel (the same screen whose priorities feed the
@@ -106,18 +111,26 @@ ok("projectedAttributes has no extra keys and none missing",
 // --- overall figures re-derived from the shared weighting --------------------
 ok("overallBefore equals overallRating of the input attributes", p.overallBefore === overallRating(attrs));
 ok("overallAfter equals overallRating of the projected attributes", p.overallAfter === overallRating(p.projectedAttributes));
-ok("overallDelta equals after minus before", p.overallDelta === p.overallAfter - p.overallBefore);
+// The panel shows `overallBefore → overallAfter`, so a third exported figure for
+// their difference was write-only (M142 removed it). Pin the absence AND the fact
+// that the two endpoints really are what a visitor sees, so nobody re-adds a
+// derived field or deletes the display that made it redundant.
+ok("no write-only overallDelta is exported", !("overallDelta" in p));
+ok("the projection panel renders both endpoints the reader subtracts by hand", (() => {
+  const page = readFileSync(resolve(root, "features/development/DevelopmentPage.tsx"), "utf8");
+  return page.includes("projection.proj.overallBefore") && page.includes("projection.proj.overallAfter");
+})());
 ok("lifting two focus attributes does not lower overall", p.overallAfter >= p.overallBefore);
 
 // --- hasData gate: config-driven, independent of whether anything actually moved
 ok("hasData is true with items, weeks and sessionsPerWeek all positive", p.hasData === true);
 ok("weeks=0 → every item lands on its start, hasData false, overall unmoved", (() => {
   const z = projectGrowth({ attributes: attrs, focusKeys: ["first_touch"], sessionsPerWeek: 3, weeks: 0, rating: 4 });
-  return z.hasData === false && z.items.every((it) => it.to === it.from && it.delta === 0) && z.overallDelta === 0;
+  return z.hasData === false && z.items.every((it) => it.to === it.from && it.delta === 0) && z.overallAfter === z.overallBefore;
 })());
 ok("empty focus list → no items, projected equals input, hasData false", (() => {
   const e = projectGrowth({ attributes: attrs, focusKeys: [], sessionsPerWeek: 3, weeks: 8, rating: 4 });
-  return e.items.length === 0 && e.hasData === false && JSON.stringify(e.projectedAttributes) === JSON.stringify(Object.fromEntries(Object.entries(attrs))) && e.overallDelta === 0;
+  return e.items.length === 0 && e.hasData === false && JSON.stringify(e.projectedAttributes) === JSON.stringify(Object.fromEntries(Object.entries(attrs))) && e.overallAfter === e.overallBefore;
 })());
 ok("rating 0 still reports items (hasData tracks cadence, not movement) but moves nothing", (() => {
   const r = projectGrowth({ attributes: attrs, focusKeys: ["first_touch"], sessionsPerWeek: 3, weeks: 8, rating: 0 });

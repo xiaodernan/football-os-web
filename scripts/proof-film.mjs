@@ -37,7 +37,8 @@ const a = buildFilmInsights(A);
 
 // -- validity + raw totals --------------------------------------------------
 ok("A: all four positive-duration clips are counted", a.clips === 4);
-ok("A: analysedSeconds is the exact sum of valid durations", a.analysedSeconds === 300);
+ok("A: no write-only analysedSeconds total is exported (minutes is the single duration output)",
+  !("analysedSeconds" in a));
 ok("A: analysedMinutes is seconds/60 rounded to 2dp", a.analysedMinutes === r2(300 / 60));
 ok("A: detections equals the total event count", a.detections === 8 && A.reduce((s, c) => s + c.events.length, 0) === 8);
 
@@ -118,7 +119,7 @@ const C = [
   clip("2022-01-05T00:00:00Z", 120, 100, [], ["scanning"]), // valid but NO detections
 ];
 const c = buildFilmInsights(C);
-ok("C: only the positive-duration clip survives the filter", c.clips === 1 && c.analysedSeconds === 120);
+ok("C: only the positive-duration clip survives the filter", c.clips === 1 && c.analysedMinutes === 2);
 ok("C: zero-detection clip still yields all-seven byKind rows (all zero)",
   c.byKind.length === 7 && c.byKind.every((k) => k.count === 0 && k.perMinute === 0));
 ok("C: a clip with no detections hasData is FALSE (cadence of real findings only)", c.hasData === false);
@@ -132,7 +133,7 @@ ok("C: avgConfidence over the single valid clip", c.avgConfidence === 100 && c.c
 // ---------------------------------------------------------------------------
 // Empty library — the honest all-zero shape.
 const e = buildFilmInsights([]);
-ok("empty: zero clips/seconds/detections, confidence 0", e.clips === 0 && e.analysedSeconds === 0 && e.detections === 0 && e.confidence === 0);
+ok("empty: zero clips/minutes/detections, confidence 0", e.clips === 0 && e.analysedMinutes === 0 && e.detections === 0 && e.confidence === 0);
 ok("empty: byKind still lists all kinds at zero (a legend never loses a row)",
   e.byKind.length === 7 && e.byKind.every((k) => k.count === 0 && k.perMinute === 0));
 ok("empty: rates and trend are 0 / null, not NaN",

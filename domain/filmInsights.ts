@@ -29,7 +29,6 @@ export interface FocusStat {
 
 export interface FilmInsights {
   clips: number;
-  analysedSeconds: number;
   analysedMinutes: number;
   detections: number;
   byKind: KindRate[];
@@ -110,7 +109,6 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
 
   return {
     clips: valid.length,
-    analysedSeconds,
     analysedMinutes: Math.round(analysedMinutes * 100) / 100,
     detections: totalEvents,
     byKind,

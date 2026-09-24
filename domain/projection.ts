@@ -35,7 +35,6 @@ export interface Projection {
   projectedAttributes: Attributes;
   overallBefore: number;
   overallAfter: number;
-  overallDelta: number;
   hasData: boolean;
 }
 
@@ -66,7 +65,6 @@ export function projectGrowth(input: ProjectionInput): Projection {
     projectedAttributes: projected,
     overallBefore,
     overallAfter,
-    overallDelta: overallAfter - overallBefore,
     hasData: items.length > 0 && weeks > 0 && sessionsPerWeek > 0,
   };
 }

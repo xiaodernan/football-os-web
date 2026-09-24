@@ -183,7 +183,7 @@ export interface OutcomeOdds {
   away: number;
   mostLikelyScore: string;
   mostLikelyPct: number;
-  expectedTotalGoals: number;
+  expectedTotalGoals: number; // lambdaHome + lambdaAway, on the same 2-dp grid
   lambdaHome: number;
   lambdaAway: number;
 }
@@ -208,15 +208,20 @@ export function outcomeOdds(home: TeamMetrics, away: TeamMetrics, leagueAvg?: nu
   }
   const total = ph + pd + pa || 1; // renormalise the truncated tail
   const r3 = (v: number) => Math.round(v * 1000) / 1000;
+  const lambdaHome = Math.round(lH * 100) / 100;
+  const lambdaAway = Math.round(lA * 100) / 100;
   return {
     home: r3(ph / total),
     draw: r3(pd / total),
     away: r3(pa / total),
     mostLikelyScore: bestScore,
     mostLikelyPct: r3(best / total),
-    expectedTotalGoals: Math.round((lH + lA) * 100) / 100,
-    lambdaHome: Math.round(lH * 100) / 100,
-    lambdaAway: Math.round(lA * 100) / 100,
+    // Sums the two λ figures this is displayed beside, so the line can never
+    // contradict the arithmetic a visitor does on screen. expectedGoals already
+    // hands back 2-dp lambdas today; this keeps that true if it ever stops.
+    expectedTotalGoals: Math.round((lambdaHome + lambdaAway) * 100) / 100,
+    lambdaHome,
+    lambdaAway,
   };
 }
 

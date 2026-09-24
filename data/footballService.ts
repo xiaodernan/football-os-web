@@ -96,6 +96,8 @@ export interface FixtureForecast {
   awayPct: number;
   lambdaHome: number;
   lambdaAway: number;
+  /** Always lambdaHome + lambdaAway — the two figures a reader sees beside it. */
+  expectedTotalGoals: number;
   mostLikelyScore: string;
   sample: number; // matches of form data behind the quieter side
 }
@@ -121,6 +123,7 @@ export function fixtureForecast(matchId: string): FixtureForecast | null {
     awayPct: pct.away,
     lambdaHome: odds.lambdaHome,
     lambdaAway: odds.lambdaAway,
+    expectedTotalGoals: odds.expectedTotalGoals,
     mostLikelyScore: odds.mostLikelyScore,
     sample: Math.min(h.played, a.played),
   };

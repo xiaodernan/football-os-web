@@ -244,6 +244,7 @@ export function DataRoom() {
                     <span><span className="font-mono text-foreground">{pct.draw}%</span> draw</span>
                     <span><span className="font-mono text-foreground">{pct.away}%</span> {a?.short}</span>
                     <span>xG {odds.lambdaHome.toFixed(2)}–{odds.lambdaAway.toFixed(2)}</span>
+                    <span>{t("data.totalGoals", { n: odds.expectedTotalGoals.toFixed(2) })}</span>
                     <span>most likely {odds.mostLikelyScore} ({Math.round(odds.mostLikelyPct * 100)}%)</span>
                     <span>{sample} match{sample === 1 ? "" : "es"} of form data</span>
                   </div>
