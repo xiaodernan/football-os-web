@@ -89,7 +89,6 @@ export function ReviewPage() {
       key: reco.attributeKey,
       target,
       current,
-      unit: "rating",
     });
     toast.success(t("rv.trackDone").replace("{a}", t(`attr.name.${reco.attributeKey}`)).replace("{t}", String(target)));
   };

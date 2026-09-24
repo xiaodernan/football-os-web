@@ -2,28 +2,28 @@ import { useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
-import { buildTimeline, groupByDay, type TimelineKind } from "@/domain/history";
+import { buildTimeline, groupByDay, rowLine, type TimelineKind } from "@/domain/history";
 import { LESSONS } from "@/domain/learn";
 import { useLearnRecords, useFilmRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const KINDS: { id: TimelineKind | "all"; icon: string; label: string }[] = [
-  { id: "all", icon: "≡", label: "hist.all" },
-  { id: "session", icon: "●", label: "hist.kind.session" },
-  { id: "plan", icon: "⚡", label: "hist.kind.plan" },
-  { id: "learn", icon: "◈", label: "hist.kind.learn" },
-  { id: "film", icon: "▣", label: "hist.kind.film" },
-  { id: "memory", icon: "❉", label: "hist.kind.memory" },
+const KINDS: { id: TimelineKind | "all"; icon: string; labelKey: string }[] = [
+  { id: "all", icon: "≡", labelKey: "hist.all" },
+  { id: "session", icon: "●", labelKey: "hist.kind.session" },
+  { id: "plan", icon: "⚡", labelKey: "hist.kind.plan" },
+  { id: "learn", icon: "◈", labelKey: "hist.kind.learn" },
+  { id: "film", icon: "▣", labelKey: "hist.kind.film" },
+  { id: "memory", icon: "❉", labelKey: "hist.kind.memory" },
 ];
 
-const KIND_META: Record<TimelineKind, { icon: string; label: string; tone: string }> = {
-  session: { icon: "●", label: "hist.kind.session", tone: "text-primary" },
-  plan: { icon: "⚡", label: "hist.kind.plan", tone: "text-info" },
-  learn: { icon: "◈", label: "hist.kind.learn", tone: "text-warning" },
-  film: { icon: "▣", label: "hist.kind.film", tone: "text-success" },
-  memory: { icon: "❉", label: "hist.kind.memory", tone: "text-muted-foreground" },
+const KIND_META: Record<TimelineKind, { icon: string; labelKey: string; tone: string }> = {
+  session: { icon: "●", labelKey: "hist.kind.session", tone: "text-primary" },
+  plan: { icon: "⚡", labelKey: "hist.kind.plan", tone: "text-info" },
+  learn: { icon: "◈", labelKey: "hist.kind.learn", tone: "text-warning" },
+  film: { icon: "▣", labelKey: "hist.kind.film", tone: "text-success" },
+  memory: { icon: "❉", labelKey: "hist.kind.memory", tone: "text-muted-foreground" },
 };
 
 export function HistoryPage() {
@@ -89,7 +89,7 @@ export function HistoryPage() {
               )}
             >
               <span>{k.icon}</span>
-              <span>{t(k.label)}</span>
+              <span>{t(k.labelKey)}</span>
               <span className="font-mono tabular-nums opacity-70">{count}</span>
             </button>
           );
@@ -108,13 +108,14 @@ export function HistoryPage() {
               <ol className="relative space-y-3 border-l border-border/60 pl-5">
                 {g.items.map((e) => {
                   const meta = KIND_META[e.kind];
+                  const detail = rowLine(e.detail, t);
                   return (
                     <li key={e.id} className="relative">
                       <span className={cn("absolute -left-[26px] top-0.5 grid h-4 w-4 place-items-center rounded-full border bg-card text-[9px]", meta.tone)}>
                         {meta.icon}
                       </span>
                       <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <span className="font-medium">{e.title}</span>
+                        <span className="font-medium">{rowLine(e.title, t)}</span>
                         {typeof e.xp === "number" && e.xp > 0 && (
                           <Badge variant="outline" className="font-mono text-success">+{e.xp} XP</Badge>
                         )}
@@ -123,8 +124,8 @@ export function HistoryPage() {
                         )}
                       </div>
                       <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                        <span className={cn("uppercase tracking-wide", meta.tone)}>{t(meta.label)}</span>
-                        {e.detail && <span>· {e.detail}</span>}
+                        <span className={cn("uppercase tracking-wide", meta.tone)}>{t(meta.labelKey)}</span>
+                        {detail && <span>· {detail}</span>}
                         <span>· {fmtTime(e.at)}</span>
                       </div>
                       {e.growth && e.growth.some((g) => g.delta > 0) && (

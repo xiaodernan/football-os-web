@@ -73,7 +73,7 @@ export function DevelopmentPage() {
 
   const isTracked = (key: string) => state.goals.some((g) => g.metric === "attribute" && g.key === key);
   const track = (it: GapItem) => {
-    addGoal({ title: t("dv.goalTitle").replace("{a}", t(`attr.name.${it.key}`)), metric: "attribute", key: it.key, target: Math.round(it.target), current: Math.round(it.actual), unit: "rating" });
+    addGoal({ title: t("dv.goalTitle").replace("{a}", t(`attr.name.${it.key}`)), metric: "attribute", key: it.key, target: Math.round(it.target), current: Math.round(it.actual) });
     toast.success(t("dv.goalToast").replace("{a}", t(`attr.name.${it.key}`)));
   };
 

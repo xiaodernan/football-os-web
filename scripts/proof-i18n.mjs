@@ -43,7 +43,13 @@
 //      node, which no key-level check can see,
 //  23. the specific row interpolations M147 converted coming back,
 //  24. a caller reading an interpolated key without filling its placeholders,
-//      which prints `{a}` on the screen in every locale.
+//      which prints `{a}` on the screen in every locale,
+//  25. a key a *domain* module composes (`goal.unit.${metric}`) being incomplete,
+//      drifting from the type union it reads, or left behind by a deleted composer
+//      — the same three ways check 17 catches a component site, which cannot see it,
+//  26. a row handed from a domain module to the interface carrying a key that is
+//      not in the dictionary, a placeholder the row never supplies, or a sentence
+//      the module wrote itself — which no JSX-scanning check can see (M149).
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { scanSource, lookupsIn } from "./lib/rawUiScan.mjs";
@@ -524,6 +530,22 @@ for (const s of SPACE_SITES.values()) {
 }
 
 // 18. The headline: no key in the dictionary is unreachable.
+// A domain module can compose a key too (`goal.unit.${metric}` in domain/goals.ts),
+// and no component literal spells its values out, so those keys are claimed here by
+// the same rule check 17 applies to a component site. The composing template is
+// re-read from the source that claims it, so a deleted composer stops claiming
+// rather than leaving its keys reachable on paper — check 25 audits it.
+const { GOAL_METRICS } = await server.ssrLoadModule("/domain/goals.ts");
+const DOMAIN_SPACES = [
+  {
+    name: "goal metrics",
+    values: GOAL_METRICS,
+    prefix: "goal.unit.",
+    path: "domain/goals.ts",
+    compose: /`goal\.unit\.\$\{metric\}`/,
+    union: ["domain/types.ts", /export type GoalMetric = [^;]+;/],
+  },
+];
 const claimed = new Set();
 // Properly-paired key literals only. A template that interpolates (`attr.name.$
 // {f.key}`) cannot match, because `$` and `{` are outside the character class and
@@ -535,6 +557,7 @@ for (const [, src] of appSrc) {
   for (const m of src.matchAll(KEY_LIKE)) claimed.add(m[1] ?? m[2] ?? m[3]);
 }
 const dynKeys = new Set(DYN_SITES.flatMap((s) => (SPACES.get(`${s.prefix}|${s.expr}`)?.values ?? []).map((v) => s.prefix + v + s.suffix)));
+for (const sp of DOMAIN_SPACES) for (const v of sp.values) dynKeys.add(sp.prefix + v);
 const unreachable = enKeys.filter((k) => !claimed.has(k) && !dynKeys.has(k));
 ok(`every dictionary key is reachable — static, quoted, or a value a dynamic site can build (${unreachable.join(", ") || "none"})`,
   unreachable.length === 0);
@@ -734,6 +757,7 @@ ok(`the fixture's t() lookups are read as lookups, not as interface copy (${plan
 const RAW_COVERED = [
   "features/compare/ComparePage.tsx",
   "features/football/Details.tsx",
+  "features/history/HistoryPage.tsx",
   "features/review/ReviewPage.tsx",
   "features/settings/SettingsPage.tsx",
   "features/shell/AppShell.tsx",
@@ -745,9 +769,10 @@ const RAW_COVERED = [
 // is localised; it may only ever go down on purpose.
 //
 // Measured over every .tsx in the repo — which is wider than the features/ui/
-// components tree (store/useFootballOS.tsx carries 4, src/App.tsx 3). 607 as of
-// M148, when Details.tsx went from 122 raw strings to 0.
-const RAW_UI_CEILING = 607;
+// components tree (store/useFootballOS.tsx carries 4, src/App.tsx 3). 596 as of
+// M149, when the activity timeline's rows went onto keys and HistoryPage's own
+// `label` fields became `labelKey`, which is what the scan reads as a key.
+const RAW_UI_CEILING = 596;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -777,6 +802,56 @@ const badLookups = allLookups.filter(([, k]) => !enSet.has(k));
 ok(`every literal the raw-UI exemption treats as a t() lookup is a real key (${allLookups.length} lookups, ${[...new Set(badLookups.map(([p, k]) => `${p}: ${k}`))].slice(0, 8).join(", ") || "no unknown"})`,
   badLookups.length === 0);
 ok(`the exemption audit is reading real lookups rather than nothing (${allLookups.length})`, allLookups.length >= 500);
+
+// 25. A key a domain module composes is as exposed to the reader as one a component
+//     spells out. domain/goals.ts turns a stored metric code into `goal.unit.<code>`
+//     and the profile prints whatever comes back, so: the composing template has to
+//     still be in the file that claims it, the value space has to still be the
+//     TypeScript union rows are typed against, and every value has to be keyed in
+//     every locale — or a Chinese profile reads "goal.unit.xp".
+for (const sp of DOMAIN_SPACES) {
+  const src = appSrc.get(sp.path);
+  ok(`${sp.path} still composes its ${sp.prefix}… keys`, src !== undefined && sp.compose.test(src));
+  const [unionPath, unionRe] = sp.union;
+  const members = (((appSrc.get(unionPath) ?? "").match(unionRe) ?? [""])[0].match(/"([^"]+)"/g) ?? []).map((s) => s.slice(1, -1));
+  ok(`${sp.prefix}… · ${sp.name}: the domain table and the ${unionPath} union are one list (${members.join(", ")} / ${sp.values.join(", ")})`,
+    members.length > 0 && members.length === sp.values.length && members.every((m) => sp.values.includes(m)));
+  const missing = sp.values.map((v) => sp.prefix + v).filter((k) => !bounds.every((_, i) => keysOf(i).includes(k)));
+  ok(`${sp.prefix}… · ${sp.name}: all ${sp.values.length} values keyed in every locale (${missing.join(", ") || "none"})`,
+    sp.values.length > 0 && missing.length === 0);
+}
+
+// 26. A row a domain module hands the interface carries a key or a recorded value —
+//     never a sentence the module wrote itself. This class is invisible to check 22
+//     (the raw-UI scan reads JSX, and a domain module is not JSX), and `t()`'s
+//     raw-key fallback means a mistyped key prints *itself* on screen while still
+//     type-checking, building and reading fine in English. So for every module that
+//     declares the row union: each key literal must be a real dictionary key, must
+//     be supplied with exactly the placeholders its English value interpolates
+//     (no more, no fewer), and no row value may be a literal typed in that module.
+const ROW_FILES = [...appSrc].filter(([, src]) => /\bRowText\b/.test(src));
+// No closing-brace requirement: a row written across several lines ends `…},\n  },`,
+// and demanding the literal close here matched 8 of the 9 rows and silently skipped
+// the multi-line one — which is the row whose five variables most needed auditing.
+// M149's mutation run found that by deleting a variable nothing complained about.
+const ROW_LITERAL = /\{\s*key:\s*"([^"]+)"(?:\s*,\s*vars:\s*\{([^{}]*)\})?/g;
+const badRows = [];
+let rowKeys = 0;
+for (const [path, src] of ROW_FILES) {
+  for (const m of src.matchAll(ROW_LITERAL)) {
+    rowKeys++;
+    const key = m[1];
+    if (!(key in en)) { badRows.push(`${path}: ${key} is not a dictionary key`); continue; }
+    const phs = [...new Set((en[key].match(/\{(\w+)\}/g) ?? []).map((s) => s.slice(1, -1)))].sort();
+    const given = [...new Set((m[2] ?? "").split(",").map((p) => (p.match(/^\s*(\w+)\s*:/) ?? [])[1]).filter(Boolean))].sort();
+    if (phs.join(",") !== given.join(",")) badRows.push(`${path}: ${key} interpolates {${phs.join(",")}} · the row supplies {${given.join(",")}}`);
+  }
+  for (const m of src.matchAll(/\{\s*value:\s*["'`]/g)) badRows.push(`${path}: a row value is prose typed in this module (${m[0]})`);
+}
+ok(`every row text a domain module hands the screen is a real key with exactly its placeholders (${rowKeys} keys, ${badRows.slice(0, 6).join(" | ") || "clean"})`,
+  badRows.length === 0);
+ok(`the row-text scan is reading modules that actually carry the union (${ROW_FILES.length} files, ${rowKeys} keys)`,
+  ROW_FILES.length >= 1 && rowKeys >= 9);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

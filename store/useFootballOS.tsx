@@ -286,8 +286,8 @@ export function OsProvider({ children }: { children: ReactNode }) {
           createdAt: new Date().toISOString(),
         };
         const goals: Goal[] = [
-          { id: `g-${Date.now()}`, title: "Earn 500 XP", metric: "xp", target: 500, current: 0, unit: "XP", createdAt: new Date().toISOString(), done: false },
-          { id: `g-${Date.now() + 1}`, title: "Complete 5 training sessions", metric: "sessions", target: 5, current: 0, unit: "sessions", createdAt: new Date().toISOString(), done: false },
+          { id: `g-${Date.now()}`, title: "Earn 500 XP", metric: "xp", target: 500, current: 0, createdAt: new Date().toISOString(), done: false },
+          { id: `g-${Date.now() + 1}`, title: "Complete 5 training sessions", metric: "sessions", target: 5, current: 0, createdAt: new Date().toISOString(), done: false },
         ];
         dispatch({ type: "ONBOARD", mode: input.mode, profile, goals });
       },

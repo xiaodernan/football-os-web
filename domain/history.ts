@@ -3,22 +3,38 @@
 // coach-memory entries and academy completions. Nothing is invented; each timeline
 // row points back to a concrete record. Pure module: no React, no IO, so it is
 // trivially testable.
+//
+// A row's text is therefore one of exactly two things: a dictionary key this module
+// chose, or a value that came straight out of the record it names. A sentence
+// composed here would be English in every locale AND invisible to the raw-UI scan,
+// which only reads component source — so the union is the gate, not a style rule.
 
 import type { AttributeDelta } from "./types";
 
 export type TimelineKind = "session" | "plan" | "memory" | "learn" | "film";
 
+export type RowVars = Record<string, string | number>;
+export type RowText = { key: string; vars?: RowVars } | { value: string };
+
 export interface TimelineEvent {
   id: string;
   kind: TimelineKind;
   at: string; // ISO timestamp
-  title: string;
-  detail?: string;
+  title: RowText;
+  detail?: RowText;
   score?: number; // self-rating for sessions (1..5)
   xp?: number;
   growth?: AttributeDelta[]; // attribute gains from a completed session
   note?: string; // the user's own free-text note captured at completion
 }
+
+// The stored subtype of a coach-memory entry, keyed rather than passed through as
+// the raw code the profile writes.
+const MEMORY_DETAIL: Record<string, RowText> = {
+  coach: { key: "hist.mem.coach" },
+  training: { key: "hist.mem.training" },
+  profile: { key: "hist.mem.profile" },
+};
 
 interface SessionSeed {
   id: string;
@@ -74,6 +90,18 @@ const ts = (iso: string) => {
   return Number.isNaN(t) ? 0 : t;
 };
 
+/** Resolve one row's text against the reader's own dictionary — the only place the
+ *  union is interpreted, so a screen cannot half-do it and print a `{key}` string.
+ *  A value stored by a record is shown exactly as it was written; nothing here
+ *  translates a user's own session title or coach prompt. */
+export function rowLine(
+  row: RowText | undefined,
+  t: (key: string, vars?: RowVars) => string,
+): string | undefined {
+  if (!row) return undefined;
+  return "key" in row ? t(row.key, row.vars) : row.value;
+}
+
 export function buildTimeline(input: HistoryInput): TimelineEvent[] {
   const events: TimelineEvent[] = [];
 
@@ -83,7 +111,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       id: `session-${s.id}`,
       kind: "session",
       at: s.completedAt ?? s.date,
-      title: s.title,
+      title: { value: s.title },
       score: s.selfRating,
       xp: s.xpAwarded,
       growth: s.growth,
@@ -96,8 +124,8 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       id: `plan-${p.id}`,
       kind: "plan",
       at: p.createdAt,
-      title: p.prompt,
-      detail: p.provider,
+      title: { value: p.prompt },
+      detail: { value: p.provider },
     });
   }
 
@@ -106,8 +134,11 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       id: `memory-${m.id}`,
       kind: "memory",
       at: m.at,
-      title: m.text,
-      detail: m.kind,
+      // The entry's own text is a stored value, so it passes through; its subtype
+      // is a code, so it becomes a key. An unknown code resolves to no label at the
+      // render site rather than printing the bare code.
+      title: { value: m.text },
+      detail: MEMORY_DETAIL[m.kind],
     });
   }
 
@@ -120,8 +151,17 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       id: `learn-${l.id}`,
       kind: "learn",
       at: l.completedAt,
-      title: l.title,
-      detail: l.quizCorrect ? "Academy · check quiz passed" : l.attempts ? `Academy · check missed (${l.attempts} attempt${l.attempts === 1 ? "" : "s"})` : "Academy · read only",
+      title: { value: l.title },
+      // The kind chip already prints "Academy", so these say only what the record
+      // proves. Singular and plural are separate keys because no `{n}` can pick an
+      // English "-s"; the branch reads the record's own count, never a label.
+      detail: l.quizCorrect
+        ? { key: "hist.learn.passed" }
+        : l.attempts === 1
+          ? { key: "hist.learn.missedOne" }
+          : l.attempts > 1
+            ? { key: "hist.learn.missed", vars: { n: l.attempts } }
+            : { key: "hist.learn.read" },
     });
   }
 
@@ -134,8 +174,17 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       id: `film-${c.id}`,
       kind: "film",
       at: c.at,
-      title: `${c.fileName} analysed`,
-      detail: `${c.detections} detections (${c.scans} scans) · ${(c.durationSec / 60).toFixed(1)} min · ${perMin}/min · ${c.confidence}% provider confidence`,
+      title: { key: "hist.film.analysed", vars: { f: c.fileName } },
+      detail: {
+        key: "hist.film.stats",
+        vars: {
+          d: c.detections,
+          s: c.scans,
+          min: (c.durationSec / 60).toFixed(1),
+          per: perMin,
+          conf: c.confidence,
+        },
+      },
     });
   }
 

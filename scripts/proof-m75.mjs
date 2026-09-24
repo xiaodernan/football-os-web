@@ -1,7 +1,7 @@
 import { createServer } from "vite";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { buildTimeline } = await server.ssrLoadModule("/domain/history.ts");
+const { buildTimeline, rowLine } = await server.ssrLoadModule("/domain/history.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -38,9 +38,14 @@ const withNote = buildTimeline({
 });
 ok("only the session event has a note", withNote.filter((e) => e.note).length === 1 && withNote.find((e) => e.note).kind === "session");
 
-// 6. Existing session fields are untouched by the addition.
+// 6. Existing session fields are untouched by the addition. M149 made a row's text
+//    either a dictionary key or a recorded value; a session title is the user's own
+//    stored words, so it has to reach the reader verbatim — and without a lookup,
+//    because there is nothing in any dictionary that could hold it.
 ev = buildTimeline({ ...base, sessions: [completed({ notes: "n" })] })[0];
-ok("session row keeps title/score/xp/growth", ev.title === "Passing block" && ev.score === 4 && ev.xp === 30 && ev.growth.length === 1);
+const looked = [];
+const shown = rowLine(ev.title, (k) => (looked.push(k), `«${k}»`));
+ok("session row keeps title/score/xp/growth", shown === "Passing block" && looked.length === 0 && ev.score === 4 && ev.xp === 30 && ev.growth.length === 1);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

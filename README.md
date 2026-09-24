@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M148 (a few numbers in that range
+Work ships one milestone per commit and is currently at M149 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M148 line of work is a different kind of progress: it makes the earlier claims
+The M108–M149 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -499,6 +499,58 @@ label in an uncovered one, a covered file that disappears, a scanner that report
 and a lookup whose key no longer exists. Every file is restored from a byte copy and
 re-verified by sha256 after each probe, and the in-app browser is still wedged, so the
 three-locale walk remains an open follow-up rather than a claim.
+
+M148's gate reads component source, which is precisely where it cannot reach: a row built in
+`domain/` arrives at the interface as a plain string, and nothing in the file the scan reads
+says where its words came from. Two producers were doing exactly that. A goal row stored a
+display word of its own in `Goal.unit`, written by whichever control created it — "XP" and
+"sessions" from onboarding, "rating" from the development and review pages, and the metric
+code itself from Player OS, so a goal the visitor typed read `12/20 xp` on the profile in
+every locale. Four writers, four behaviours, one field rendered verbatim. The field is gone:
+`Goal.metric` is now the `GoalMetric` union, and `domain/goals.ts` answers a stored code with
+a `goal.unit.…` key — or `null` for a code the app does not name, so a row imported from an
+older build shows no unit word, which is honest, rather than the literal text
+`goal.unit.foo`, which is not.
+
+`domain/history.ts` was composing English. Its academy branch wrote "Academy · check quiz
+passed", "Academy · check missed (3 attempts)" and "Academy · read only"; its film branch wrote
+`${fileName} analysed` and a five-number sentence — 12 detections (4 scans) · 1.5 min · 8/min ·
+72% provider confidence. The memory and plan branches handed the raw `kind` and `provider`
+codes to the screen as `detail`. `RowText = { key, vars? } | { value }` is the gate now, and
+not a style rule: a row's text is either a dictionary key this module chose or a value that
+came straight out of the record it names, and `rowLine` is the only thing that turns one into
+words. The composed sentences became 9 `hist.*` keys carrying the numbers as `vars`; the three
+stored memory subtypes go through `MEMORY_DETAIL`, and an unrecognised kind yields no detail
+instead of the code. Session, plan and memory titles keep `value`, because those words are the
+user's own. 13 new keys per locale take the dictionary to 881.
+
+HistoryPage's 11 raw hits turned out not to be English at all. `KINDS` and `KIND_META` held
+dictionary keys in fields named `label`, and `label` is the name the scan reads as interface
+copy — the file was passing the gate's own check while failing its count. Renaming them to
+`labelKey`, the convention M148 set in the comparison tables, took it to 0 hits, so it joined
+`RAW_COVERED` as the 9th file that must stay at 0 and the ceiling moved from 607 across 31
+files to 596 across 30.
+
+The gate had to be paid for. Proof-i18n checks 25 and 26 (93 → 98) read every row literal in a
+module that exports the union: the key has to exist in all three locales, and the `vars` a row
+supplies have to be exactly the placeholders that key interpolates. The first version of that
+check was a lie — its pattern required a closing brace, so the one literal that spans several
+lines (the film sentence, with all five of its numbers) went silently un-audited, and only a
+mutation probe that deleted it and saw nothing go red found out. `scripts/proof-timeline.mjs`
+is new at 50 checks, and its load-bearing one asserts that every string these rows show is a
+subset of the strings the input records carry — which a module cannot satisfy by writing a
+sentence.
+
+15 mutation probes each turn one named check red and the runner non-zero, then restore the file
+from a byte copy and re-verify it by sha256. Two of them check dictionary content TypeScript
+cannot express: four metrics that count four different things must not read as one word, and a
+locale that does not write Latin must not be showing the English table.
+
+Not browser-verified. `npx tsc --noEmit` exits 0, `npm run build` succeeds and the suite is 26
+scripts / 1067 checks. Two write-time strings survive and are queued rather than counted here:
+onboarding's goal titles ("Earn 500 XP", "Complete 5 training sessions") and the coach's
+remembered entries in `AiMemoryEntry.text` are English stored when written and rendered
+wherever they land — the same defect, one layer above `Goal.unit`.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

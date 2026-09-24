@@ -30,7 +30,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { TrainingSession } from "@/domain/types";
+import type { GoalMetric, TrainingSession } from "@/domain/types";
 
 const TABS = [
   { key: "", label: "player.overview" },
@@ -518,7 +518,7 @@ function Goals() {
   const { state, addGoal } = useOs();
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("5");
-  const [metric, setMetric] = useState("sessions");
+  const [metric, setMetric] = useState<GoalMetric>("sessions");
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel className="p-4">
@@ -541,10 +541,10 @@ function Goals() {
         <div className="space-y-3">
           <div><Label>Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" placeholder="e.g. Reach level 6" /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Metric</Label><select value={metric} onChange={(e) => setMetric(e.target.value)} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm"><option value="xp">XP</option><option value="sessions">Sessions</option><option value="level">Level</option></select></div>
+            <div><Label>Metric</Label><select value={metric} onChange={(e) => setMetric(e.target.value as GoalMetric)} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm"><option value="xp">XP</option><option value="sessions">Sessions</option><option value="level">Level</option></select></div>
             <div><Label>Target</Label><Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} className="mt-1" /></div>
           </div>
-          <Button onClick={() => { if (!title.trim()) return; addGoal({ title, metric, target: Number(target), current: metric === "xp" ? state.profile!.xp : metric === "level" ? state.profile!.level : state.sessions.filter((s) => s.status === "completed").length, unit: metric }); setTitle(""); toast.success("Goal added"); }}>Add goal</Button>
+          <Button onClick={() => { if (!title.trim()) return; addGoal({ title, metric, target: Number(target), current: metric === "xp" ? state.profile!.xp : metric === "level" ? state.profile!.level : state.sessions.filter((s) => s.status === "completed").length }); setTitle(""); toast.success("Goal added"); }}>Add goal</Button>
         </div>
       </Panel>
     </div>

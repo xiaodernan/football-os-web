@@ -177,14 +177,18 @@ export interface CoachPlan {
   provider: string;
 }
 
+// The four things a goal can count. A row stores the code, never the word: the
+// unit label is resolved through the dictionary where the row is read, so a goal
+// created in one locale does not freeze its own wording for every later reader.
+export type GoalMetric = "xp" | "sessions" | "level" | "attribute";
+
 export interface Goal {
   id: string;
   title: string;
-  metric: string;
+  metric: GoalMetric;
   key?: string; // for metric="attribute": the attribute key this goal tracks
   target: number;
   current: number;
-  unit: string;
   createdAt: string;
   done: boolean;
 }
