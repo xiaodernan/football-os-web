@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M166 (a few numbers in that range
+Work ships one milestone per commit and is currently at M167 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1256,6 +1256,55 @@ Suite is now 26 scripts / 1139 checks (proof-i18n 121), covered set 18 files, op
 across 22 files with the ceiling pinned at exactly that measurement. `npx tsc --noEmit` exits
 0 and the production build succeeds. The two largest remaining items are unchanged: PlayerOS
 at 90 and SimulationLab at 51.
+
+### M167 — pin the other direction of the variable contract (gate-only)
+
+M166 changed interface copy and *I* wrote a bad English value ("Switch to {theme}" instead of
+"Switch to the {theme} theme"), and no gate noticed — I found it by reading my own verification
+output. That class of bug is the caller's side of the contract: `t()` fills `{var}` by regex and
+silently ignores a name the value never mentions, so a call can hand over a variable that no
+locale reads, and the UI just fails to say the thing the author thought it said. Check 24 already
+pinned the direction that produces a visible artefact (every placeholder in a value must be
+supplied by some call — an unfilled `{path}` on screen); nothing pinned the direction that
+produces a silent one.
+
+This milestone writes no app code. Two clauses in `scripts/proof-i18n.mjs`:
+
+- **`no literal-key call throws a variable away`** — for the same literal-key call sites check 24
+  walks, the supplied names must be a subset of the placeholders the value interpolates. Measured
+  over **83 var-carrying sites, 0 dropped**.
+- **`a template site that passes variables supplies only what its space interpolates`** — the same
+  two directions at the dynamic sites, using the `SPACES` table that already enumerates every key
+  a `\`prof.mode.${m}\``-style call can resolve to: each reachable key's placeholders must be
+  supplied, and no supplied name may fall outside their union.
+
+Being straight about the second one: it reads **69 dynamic sites and exactly 0 of them pass a
+variable today**, so it currently catches nothing in the repo. It is not decoration — the three
+locale blocks and the prefix tables it leans on are maintained by other checks, and the clause is
+proven live by probe rather than by usage. If a template key ever grows a placeholder, this is the
+check that requires the call to fill it.
+
+The measurement step earned its keep again. I planned a third gate for reading vars objects and
+had already written `scripts/lib/objectVars.mjs` when I opened check 24 and found `varNames()` —
+a reader that already handles ES6 shorthand (`{ path }`), nested braces, strings, and *refuses to
+guess* by returning null. The helper was deleted. It also cost me a false finding: my own throwaway
+scanner reported "3 mismatches", all three of them bugs in my scanner (shorthand at two sites, and
+a ternary `? p : b` read as if it were a key). **Read the existing gate before writing one, and
+treat a fresh measurement as a claim until it agrees with the code on disk.**
+
+Three probes, each caught by a named check and restored byte-for-byte. Supplying `{ season: 2026 }`
+at `t("cmd.from", { path })` reddens only the new literal clause; `t(\`prof.mode.${m}\`, { colour:
+"red" })` reddens only the new template clause; adding `{window}` to `cmd.from` reddens the
+locale-drift check *and* check 24 (2 reds, and correctly so — that mutation breaks both facts).
+One probe anchor was wrong first time: I targeted `label: t(\`prof.mode.${m}\`)` and it matched 0
+times, because the template is nested inside `t("cmd.mode", { mode: … })`. The probe script treats
+a non-unique anchor as a hard failure, so that came out as `SKIP` plus a non-zero exit instead of a
+pass — which is the only reason the mistake was visible.
+
+Suite is now 26 scripts / 1141 checks (proof-i18n 123); covered set 18 files and open debt 265
+across 22 files are unchanged, because nothing outside the gate was touched. `npx tsc --noEmit`
+exits 0 and the production build succeeds. The browser is still in the state M166 reported, and
+this milestone renders no string, so nothing here needed pixels.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

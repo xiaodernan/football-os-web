@@ -43,10 +43,15 @@
 //      node, which no key-level check can see,
 //  23. the specific row interpolations M147 converted coming back,
 //  24. a caller reading an interpolated key without filling its placeholders,
-//      which prints `{a}` on the screen in every locale,
+//      which prints `{a}` on the screen in every locale — and, from M167, the other
+//      direction too: a placeholder the caller fills that no locale interpolates,
+//      which is a number the visitor never sees,
+//  24b. both directions again at a *template* call site, where the key is not a literal
+//       so the check above never reaches it,
 //  25. a key a *domain* module composes (`goal.unit.${metric}`) being incomplete,
 //      drifting from the type union it reads, or left behind by a deleted composer
-//      — the same three ways check 17 catches a component site, which cannot see it,//  26. a row handed from a domain module to the interface carrying a key that is
+//      — the same three ways check 17 catches a component site, which cannot see it,
+//  26. a row handed from a domain module to the interface carrying a key that is
 //      not in the dictionary, a placeholder the row never supplies, or a sentence
 //      the module wrote itself — which no JSX-scanning check can see (M149).
 // Run: node scripts/proof-i18n.mjs
@@ -798,6 +803,13 @@ const STATIC_T = /\bt\(\s*"([A-Za-z0-9_.$-]+)"/g;
 const unsubstituted = [];
 let substituted = 0;
 const unreadable = [];
+// The other direction: a variable the call supplies and no locale's value interpolates is
+// silently thrown away. The screen still reads as complete, so this is not a broken-output
+// bug but a lost-number one — the caller computed something and the visitor never sees it.
+// M167 measured 83 var-carrying literal sites and 0 of these, which is what makes the
+// clause cheap to hold rather than cheap to skip.
+const droppedVars = [];
+let varSites = 0;
 
 // The top-level arguments of a call, from its open paren. String and template
 // contents are opaque, so a comma inside "a, b" never splits an argument.
@@ -832,6 +844,9 @@ for (const [path, code] of appSrc) {
     const missed = phs.filter((x) => !given.includes(x));
     if (missed.length) unsubstituted.push(`${path}: ${key} {missed ${missed.join(",")}} not supplied`);
     else substituted++;
+    varSites++;
+    const unused = given.filter((g) => !phs.includes(g));
+    if (unused.length) droppedVars.push(`${path}: ${key} supplies {${unused.join(",")}} no locale interpolates`);
   }
 }
 ok(`every placeholder key is read by a call that supplies its variables (${substituted} filled, ${unsubstituted.length} short)`,
@@ -839,6 +854,47 @@ ok(`every placeholder key is read by a call that supplies its variables (${subst
 for (const u of unsubstituted.slice(0, 15)) console.log("       short: " + u);
 ok(`the placeholder scan reads t()'s own variable filling, and everything it looks at is readable (${substituted} filled, ${unreadable.length} unreadable)`,
   substituted >= 20 && unreadable.length === 0);
+ok(`no literal-key call throws a variable away — every name it supplies is interpolated by the value (${varSites} var-carrying sites, ${droppedVars.length} dropped)`,
+  varSites >= 60 && droppedVars.length === 0);
+for (const d of droppedVars.slice(0, 8)) console.log("       dropped: " + d);
+
+// 24b. The same contract at a *template* site, which the loop above cannot see because its
+//      first argument is not a literal. Nothing in the repo passes variables at a dynamic
+//      site today (measured: 0 of 69), so this clause is written to be provable rather than
+//      plausible — it reports how many sites it read, and the milestone's mutation probe
+//      supplies variables at one of them to show the disagreement path is live.
+//      Two rules, and the second is deliberately weaker than per-key: a space may hold a
+//      `{a}` row and a `{b}` row, so a site legitimately supplying both is only wrong if a
+//      name appears in *neither*.
+const DYN_T = /\bt\(\s*`([^`]*)\$\{([^}]*)\}([^`]*)`/g;
+const dynBad = [];
+let dynSites = 0, dynVarSites = 0;
+for (const [path, code] of appSrc) {
+  for (const m of code.matchAll(DYN_T)) {
+    dynSites++;
+    const args = callArgs(code, code.indexOf("(", m.index));
+    if (!args || args.length < 2 || !args[1].trim().startsWith("{")) continue;
+    dynVarSites++;
+    const given = varNames(args[1].trim().replace(/^\{/, "").replace(/\}$/, ""));
+    if (!given) { dynBad.push(`${path}: ${m[0].slice(0, 44)} vars object cannot be read`); continue; }
+    const sp = SPACES.get(`${m[1]}|${m[2].trim()}`);
+    if (!sp) { dynBad.push(`${path}: ${m[1]}…${m[3]} passes variables but its value space is undeclared`); continue; }
+    const union = new Set();
+    for (const v of sp.values) {
+      const key = m[1] + v + m[3];
+      if (!(key in en)) continue; // check 17 already reports an incomplete space
+      const need = [...new Set((en[key].match(/\{(\w+)\}/g) ?? []).map((s) => s.slice(1, -1)))];
+      need.forEach((x) => union.add(x));
+      const missed = need.filter((x) => !given.includes(x));
+      if (missed.length) dynBad.push(`${path}: ${key} interpolates {${missed.join(",")}} the site never supplies`);
+    }
+    const unused = given.filter((g) => !union.has(g));
+    if (unused.length) dynBad.push(`${path}: ${m[1]}…${m[3]} supplies {${unused.join(",")}} no key in its space interpolates`);
+  }
+}
+ok(`a template site that passes variables supplies only what its space interpolates (${dynSites} dynamic sites read, ${dynVarSites} carrying variables, ${dynBad.length} disagreement(s))`,
+  dynSites >= 60 && dynBad.length === 0);
+for (const d of dynBad.slice(0, 8)) console.log("       dyn: " + d);
 
 // 28. The other half of the row contract. Checks 18/26 make sure a domain module hands
 //     out a key; nothing made the screen resolve it. Handing the row object to React
