@@ -90,9 +90,9 @@ export function DynamicWorld() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label={t("world.seasons")} value={elapsed} sub={seasonLabel(elapsed)} />
-        <StatTile label={t("world.squad")} value={snapshot ? snapshot.players.length : base.players.length} sub="players tracked" />
+        <StatTile label={t("world.squad")} value={snapshot ? snapshot.players.length : base.players.length} sub={t("world.sub.tracked")} />
         <StatTile label={t("world.avgOvr")} value={avgNow} tone={last && last.developments.length ? "up" : "neutral"} />
-        <StatTile label={t("world.market")} value={formatMarket(marketNow)} sub="aggregate value" />
+        <StatTile label={t("world.market")} value={formatMarket(marketNow)} sub={t("world.sub.market")} />
       </div>
 
       {!snapshot ? (
@@ -115,14 +115,14 @@ export function DynamicWorld() {
                     <div className="truncate text-sm font-medium">{c.clubName}</div>
                     <div className="truncate text-xs text-muted-foreground">{c.compName}</div>
                   </div>
-                  <span className="font-mono text-xs text-muted-foreground">{c.points} pts</span>
+                  <span className="font-mono text-xs text-muted-foreground">{t("world.pts", { points: c.points })}</span>
                 </div>
               ))}
             </div>
           </Panel>
 
           <Panel className="p-4">
-            <SectionTitle title={t("world.developments")} hint="Biggest season-over-season gains" />
+            <SectionTitle title={t("world.developments")} hint={t("world.dev.hint")} />
             {last && last.developments.length ? (
               <div className="space-y-1.5">
                 {last.developments.map((d) => (
@@ -130,7 +130,7 @@ export function DynamicWorld() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No movement this season.</p>
+              <p className="text-sm text-muted-foreground">{t("world.dev.empty")}</p>
             )}
             {last && last.declines.length > 0 && (
               <>
@@ -143,7 +143,7 @@ export function DynamicWorld() {
           </Panel>
 
           <Panel className="p-4">
-            <SectionTitle title={t("world.prospects")} hint="Promoted from the academy" />
+            <SectionTitle title={t("world.prospects")} hint={t("world.prospects.hint")} />
             {last && last.prospects.length ? (
               <div className="space-y-1.5">
                 {last.prospects.slice(0, 10).map((p) => (
@@ -157,23 +157,23 @@ export function DynamicWorld() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No new prospects generated.</p>
+              <p className="text-sm text-muted-foreground">{t("world.prospects.empty")}</p>
             )}
           </Panel>
 
           <Panel className="p-4">
-            <SectionTitle title={t("world.retired")} hint="Aged out of the game" />
+            <SectionTitle title={t("world.retired")} hint={t("world.retired.hint")} />
             {last && last.retired.length ? (
               <div className="space-y-1.5">
                 {last.retired.map((r) => (
                   <div key={r.id} className="flex items-center justify-between rounded-lg px-1 py-1.5 text-sm">
                     <span className="truncate">{r.name} <span className="text-xs text-muted-foreground">· {getClub(r.clubId)?.name ?? r.clubId}</span></span>
-                    <span className="font-mono text-xs text-muted-foreground">{r.age}y · OVR {r.to}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{t("world.ageOvr", { age: r.age, ovr: r.to })}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Nobody retired this season.</p>
+              <p className="text-sm text-muted-foreground">{t("world.retired.empty")}</p>
             )}
           </Panel>
         </div>

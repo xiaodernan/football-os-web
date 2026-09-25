@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M167 (a few numbers in that range
+Work ships one milestone per commit and is currently at M168 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1305,6 +1305,39 @@ Suite is now 26 scripts / 1141 checks (proof-i18n 123); covered set 18 files and
 across 22 files are unchanged, because nothing outside the gate was touched. `npx tsc --noEmit`
 exits 0 and the production build succeeds. The browser is still in the state M166 reported, and
 this milestone renders no string, so nothing here needed pixels.
+
+### M168 — Localise the season-simulation screen, including its units
+
+`features/world/DynamicWorld.tsx` had 10 raw items, and the two that justified the milestone were
+not labels: a bare `{c.points} pts` and an `{r.age}y · OVR {r.to}` fragment. A unit written outside
+the dictionary is the hardest kind of untranslated copy to notice, because in isolation it does not
+look like a sentence anyone meant to translate — a 简体中文 visitor reads "38 pts" and "31y · OVR 74"
+in a column that otherwise says 分和岁. Both are now one key with the number in a variable
+(`world.pts`, `world.ageOvr`), so the unit is a decision recorded three times instead of a typing
+habit. The rest were two `StatTile` subs, three `SectionTitle` hints and three empty-state lines.
+
+10 keys × 3 locales took the dictionary from 1208 to 1218. `DynamicWorld.tsx` joined `RAW_COVERED`
+(19 files) and the open-debt ceiling moved 265 → **255**, measured on the gate line rather than
+subtracted: 21 files still carry debt, led by PlayerOS 90 and SimulationLab 51. No gate can catch a
+bad translation, and one of mine was caught only by reading the rows back: `players tracked` first
+went in as 名在册球员, which opens with a measure word and reads as a fragment of a longer count.
+It is now 在册球员 / 在册球員. Same failure mode as M166's "Switch to {theme}", same remedy.
+
+Three probes. Putting `sub="players tracked"` back reddens the per-file clause and names the file
+(2 reds — the orphaned key also fails reachability, which is the gate noticing on its own that the
+call disappeared). Typing `t("world.ptss")` at the points site reddens 3 checks, including the
+undefined-key-site clause and the exemption audit. Deleting only the zh-TW `world.retired.empty` row
+reddens exactly one check, the locale key-parity clause (`zh-TW: no keys missing`). Disclosure:
+that third probe was written with "any red counts" and its `named` field is therefore not an
+independent claim — the red it reported is the parity check, read off the gate's own output, but the
+probe would also have passed if a different check had fired. The first two are named in advance.
+
+`tsc --noEmit` exits 0, the build succeeds, and the suite holds at 26 scripts / **1141 checks** —
+M168 adds no checks, only a bigger covered set and a lower ceiling, so a count that did not move is
+the expected result rather than a sign nothing happened. Not browser-verified: the in-app window
+still commits no React tree (M166), so these ten strings are verified by the gate that reads every
+one of them out of the dictionary and by the render sites being plain `t("literal")` calls with no
+branching in between.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

@@ -996,6 +996,11 @@ const RAW_COVERED = [
   "features/community/CommunityHub.tsx",
   "features/tactical/TacticalStudio.tsx",
   "features/transfers/TransferCentre.tsx",
+  // M168. Ten items, and the two worth naming were not labels: a bare `pts` suffix and
+  // an `{age}y · OVR {ovr}` fragment, i.e. units and abbreviations that read as nothing
+  // in isolation to a visitor whose language writes 分 and 岁. Keying the row is what
+  // forces the unit to be a decision rather than a typing habit.
+  "features/world/DynamicWorld.tsx",
   "ui/charts.tsx",
   // Not a screen: the store is where persisted rows are minted, and the one file a
   // composed sentence can hide in without any component-scoped scan ever seeing it.
@@ -1064,7 +1069,11 @@ const RAW_COVERED = [
 // (see rawUiScan's `heading`) added no debt anywhere else in the tree — the palette is
 // the only file in the repo that hands a prop named `heading` copy — so 265 is the same
 // tree read with one more eye on it, and one of its overlays now says 前往 instead.
-const RAW_UI_CEILING = 265;
+// 255 as of M168, measured on the gate line again: the season-simulation screen is
+// covered and its 10 counted hits left the open count. Nothing about the widening
+// changed here — the drop is exactly the file's own debt, which is the shape this
+// number is supposed to have when a screen is actually localised.
+const RAW_UI_CEILING = 255;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
