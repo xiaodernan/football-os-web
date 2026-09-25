@@ -84,22 +84,29 @@ export function AttributeBar({ label, value, max = 99 }: { label: string; value:
 }
 
 export function DnaCard({ dna, note, fallbackLabel, fallbackNote, bare }: { dna?: Dna | null; note?: ReactNode; fallbackLabel?: string; fallbackNote?: ReactNode; bare?: boolean }) {
+  const { t } = useI18n();
   // Without a vector there is no honest archetype read, so the caller passes the
   // dataset's stored primary label and the card states what is missing rather
   // than inventing a secondary archetype.
+  // The two branches carry an identical heading, so it is written once here instead
+  // of twice — which is also why it went unnoticed: a duplicated literal is the one
+  // form a per-file debt count reports as two.
+  const heading = !bare && (
+    <div className="text-xs uppercase tracking-widest text-muted-foreground">{t("dna.title")}</div>
+  );
   const body = !dna ? (
     <>
-      {!bare && <div className="text-xs uppercase tracking-widest text-muted-foreground">Football DNA</div>}
+      {heading}
       <div className="mt-1 text-lg font-semibold text-primary">{fallbackLabel ?? "—"}</div>
       {fallbackNote && <p className="mt-1 text-xs text-muted-foreground">{fallbackNote}</p>}
     </>
   ) : (
     <>
-      {!bare && <div className="text-xs uppercase tracking-widest text-muted-foreground">Football DNA</div>}
+      {heading}
       <div className="mt-1 text-lg font-semibold text-primary">{dna.primary.label}</div>
       <p className="text-xs text-muted-foreground">{dna.primary.blurb}</p>
       <div className="mt-2 text-xs">
-        Secondary: <span className="font-medium">{dna.secondary.label}</span>
+        {t("dna.secondary")} <span className="font-medium">{dna.secondary.label}</span>
         <span className="text-muted-foreground"> · {dna.evolutionPath}</span>
       </div>
       {note && <p className="mt-2 text-[11px] text-muted-foreground">{note}</p>}

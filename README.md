@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M171 (a few numbers in that range
+Work ships one milestone per commit and is currently at M172 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1465,6 +1465,47 @@ deleted (2 reds — key parity plus placeholder agreement).
 
 Suite is now 26 scripts / **1142 checks** (proof-i18n 124 — again no new clause), covered set
 **24 files**, open debt **237 across 16 files** with the ceiling at exactly that. `tsc --noEmit`
+exits 0 and the build succeeds.
+
+### M172 — The shared DNA card, and a key that was in the wrong namespace
+
+`ui/primitives.tsx` is not a screen, but three screens render it (`Details`, `ComparePage`,
+`PlayerOS`), and its own heading was the same English words on all three. Two of its three
+counted hits were **the same literal written twice** — the `!bare &&` heading appeared in both
+branches of `body`, so a duplicated string was being reported as two pieces of debt. Hoisting it
+into one `heading` element above the branches makes the count honest as well as localised.
+
+`det.dna.title` → **`dna.title`**. The rename is the substance of this milestone, not a side
+effect: four of the five `det.dna.*` keys are the detail page's own section copy that the page
+hands the card as props (`hint`, `note`, `fallbackNote`), so they belong to `det.*`. The title is
+different — the card renders it itself, whenever it is not `bare`, which is the case on the two
+screens that are not the detail page. A shared component reaching into a page's namespace would
+have been the first key rename this project avoided rather than fixed. Check 4 (a call site
+naming a key the dictionary does not define) and check 18 (a key nothing can reach) are what make
+a half-done rename impossible rather than merely unlucky.
+
+`dna.secondary` is the one new key (1220 → **1221**), and its Chinese value is 次要原型： — the term
+`compare.dnaHint` and `det.dna.fallbackNote` already use for "secondary archetype", read out of
+the neighbouring rows instead of invented.
+
+**Rendered, not just gated.** `DnaCard` is exported and takes its `dna` as a prop, so unlike the
+M171 screens it needs no store hydration to be exercised: the harness fed it
+`computeDna(baselineAttributes("CM", 74))` — the project's own baseline model, not a fixture — and
+matched the heading out of the HTML in all three locales: `Football DNA` / `足球 DNA` / `足球 DNA`,
+plus the fallback branch (no vector) under zh-CN, which carries its own copy of that heading.
+
+The same output shows what is **not** yet fixed: `label="Progressor"` and
+`path="Progressor → Creator"` stay English under zh. Those are `domain/playerDna.ts`'s archetype
+names, which is task #150 (M160) — the card's frame is now localised while the domain vocabulary
+inside it is not.
+
+Four probes, all red: the heading back to raw words (names `ui/primitives.tsx`), one caller left
+on `det.dna.title` (2 reds — undefined key, plus the exemption-list check naming the file and the
+key), `Secondary:` back in the JSX (2 reds — the raw-text clause **and** `dna.secondary` becoming
+an unreachable key), and the zh-TW row deleted (key parity).
+
+Suite is now 26 scripts / **1142 checks** (proof-i18n 124 — still no new clause), covered set
+**25 files**, open debt **234 across 15 files** with the ceiling at exactly that. `tsc --noEmit`
 exits 0 and the build succeeds.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind

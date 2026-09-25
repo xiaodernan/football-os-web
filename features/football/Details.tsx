@@ -143,7 +143,7 @@ export function PlayerDetail({ id }: { id: string }) {
 
       <Panel className="p-4">
         <SectionTitle
-          title={t("det.dna.title")}
+          title={t("dna.title")}
           hint={dna ? t("det.dna.hintScored") : t("det.dna.hintNoVector")}
         />
         <DnaCard

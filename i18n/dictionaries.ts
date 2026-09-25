@@ -1105,7 +1105,11 @@ const en: Dict = {
   "det.vs": "vs",
   "det.compareTitle": "Head-to-head comparison",
   "det.valueM": "Value (M€)",
-  "det.dna.title": "Football DNA",
+  // `dna.*` rather than `det.dna.*`: these two are rendered by the shared DnaCard
+  // itself (ComparePage, PlayerOS), while the four below are the detail page's own
+  // section copy that it hands the card as props.
+  "dna.title": "Football DNA",
+  "dna.secondary": "Secondary:",
   "det.dna.hintScored": "Archetypes scored against this player's own dataset vector",
   "det.dna.hintNoVector": "Ratings-only record — nothing to score an archetype from",
   "det.dna.fallbackNote": "Primary archetype comes from the world dataset. The secondary archetype and the evolution path are scored from the per-player attribute vector, which this provider does not ship for him — they are withheld rather than invented.",
@@ -2341,7 +2345,8 @@ const zhCN: Dict = {
   "det.vs": "对比",
   "det.compareTitle": "逐项直接对比",
   "det.valueM": "价值（百万€）",
-  "det.dna.title": "足球 DNA",
+  "dna.title": "足球 DNA",
+  "dna.secondary": "次要原型：",
   "det.dna.hintScored": "按该球员自身数据集属性向量打分的角色原型",
   "det.dna.hintNoVector": "只有评分记录——没有可以拿来给原型打分的属性向量",
   "det.dna.fallbackNote": "主要角色原型来自世界数据集。次要原型与演进路径由每个球员的属性向量打分，而该数据提供方没有为他提供这个向量——因此选择留空，而不是凭空编造。",
@@ -3574,7 +3579,8 @@ const zhTW: Dict = {
   "det.vs": "對比",
   "det.compareTitle": "逐項直接對比",
   "det.valueM": "價值（百萬€）",
-  "det.dna.title": "足球 DNA",
+  "dna.title": "足球 DNA",
+  "dna.secondary": "次要原型：",
   "det.dna.hintScored": "按該球員自身資料集屬性向量打分的角色原型",
   "det.dna.hintNoVector": "只有評分記錄——沒有可以拿來給原型打分的屬性向量",
   "det.dna.fallbackNote": "主要角色原型來自世界資料集。次要原型與演進路徑由每位球員的屬性向量打分，而該資料提供方並未附帶他的這個向量——因此選擇留空，而不是憑空編造。",

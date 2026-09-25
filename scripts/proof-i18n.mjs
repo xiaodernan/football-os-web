@@ -1035,6 +1035,13 @@ const RAW_COVERED = [
   "features/dashboard/Dashboard.tsx",
   "features/development/DevelopmentPage.tsx",
   "features/load/LoadPage.tsx",
+  // M172. Not a screen but a shared primitive, which is why it matters more than its
+  // three counted hits suggest: `DnaCard` renders on the player detail page, the
+  // comparison page and Player OS, so its own heading was the same English words on
+  // three screens at once. The heading's key moved out of the detail page's namespace
+  // (`det.dna.title` -> `dna.title`) because the string is authored by the card, not
+  // by the page that passes the other four `det.dna.*` rows in as props.
+  "ui/primitives.tsx",
   "ui/charts.tsx",
   // Not a screen: the store is where persisted rows are minted, and the one file a
   // composed sentence can hide in without any component-scoped scan ever seeing it.
@@ -1117,7 +1124,9 @@ const RAW_COVERED = [
 // 237 as of M171, measured on the gate line: three screens at one hit each. This is the
 // first drop that is not "one screen's whole debt", because the files were already down to
 // their last word — the open count fell by exactly the number of new covered files.
-const RAW_UI_CEILING = 237;
+// 234 as of M172, measured on the gate line: the shared DnaCard is covered and its 3 left
+// the open count — 2 of those 3 were the same literal written twice in two branches.
+const RAW_UI_CEILING = 234;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
