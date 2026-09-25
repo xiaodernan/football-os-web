@@ -836,7 +836,10 @@ const RAW_COVERED = [
 // which also meant giving the file a useI18n import it never had.
 // 440 as of M158 step 1: Manager OS's tab strip and the market's position buckets are
 // keys now, and the strip's map variable stops shadowing the translator.
-const RAW_UI_CEILING = 440;
+// 410 as of M158 step 2: the career-empty state, the market row, the league-table header
+// and the whole season-outlook panel are keyed, and the four panels that received them
+// (Table, Outlook, MatchPrepPanel, ClubPicker) each take the translator hook.
+const RAW_UI_CEILING = 410;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

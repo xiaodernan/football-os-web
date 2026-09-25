@@ -68,8 +68,8 @@ export function ManagerOS() {
   if (!club)
     return (
       <div className="space-y-3">
-        <EmptyState title="Career club missing" hint="The stored club is not in the current dataset." />
-        <div className="flex justify-center"><Button variant="outline" onClick={() => setCareer(null)}>Start a new career</Button></div>
+        <EmptyState title={t("mgr.noClubTitle")} hint={t("mgr.noClubHint")} />
+        <div className="flex justify-center"><Button variant="outline" onClick={() => setCareer(null)}>{t("mgr.newCareer")}</Button></div>
       </div>
     );
 
@@ -284,7 +284,7 @@ function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string)
           const from = getClub(p.id in career.moved ? career.moved[p.id] : p.clubId);
           return (
             <div key={p.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-              <div className="min-w-0"><Link to={`/players/${p.id}`} className="truncate hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{p.position} · {p.age} · OVR {p.overall} · {from?.name ?? "Free agent"}</span></div>
+              <div className="min-w-0"><Link to={`/players/${p.id}`} className="truncate hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{p.position} · {p.age} · {t("mgr.thOvr")} {p.overall} · {from?.name ?? t("mgr.freeAgent")}</span></div>
               <Button size="sm" disabled={!afford} onClick={() => onBuy(p.id)} title={afford ? t("mgr.sign") : t("mgr.noBudget")}>{afford ? t("mgr.signFee", { fee: formatValue(fee) }) : t("mgr.needFee", { fee: formatValue(fee) })}</Button>
             </div>
           );
@@ -323,14 +323,15 @@ function TacticsPanel({ career, onChange, onRest }: { career: CareerState; onCha
 }
 
 function Table({ career }: { career: CareerState }) {
+  const { t } = useI18n();
   const rows = liveStandings(career);
   const comp = getCompetition(career.competitionId);
   return (
     <Panel className="p-4">
-      <SectionTitle title={`${comp?.name ?? "League"} table`} hint="Real standings updated with your career results" />
+      <SectionTitle title={`${comp?.name ?? t("mgr.leagueWord")} ${t("mgr.tableWord")}`} hint={t("mgr.tableHint")} />
       <div className="mt-2 overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">#</th><th className="px-2 py-1">Club</th><th className="px-2 py-1 text-right">P</th><th className="px-2 py-1 text-right">W</th><th className="px-2 py-1 text-right">D</th><th className="px-2 py-1 text-right">L</th><th className="px-2 py-1 text-right">GD</th><th className="px-2 py-1 text-right">Pts</th></tr></thead>
+          <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">#</th><th className="px-2 py-1">{t("mgr.thClub")}</th><th className="px-2 py-1 text-right">P</th><th className="px-2 py-1 text-right">W</th><th className="px-2 py-1 text-right">D</th><th className="px-2 py-1 text-right">L</th><th className="px-2 py-1 text-right">GD</th><th className="px-2 py-1 text-right">{t("mgr.thPts")}</th></tr></thead>
           <tbody>
             {rows.map((r, i) => {
               const c = getClub(r.clubId);
@@ -356,6 +357,7 @@ function Table({ career }: { career: CareerState }) {
 }
 
 function Outlook({ career }: { career: CareerState }) {
+  const { t } = useI18n();
   const o = seasonOutlook(career);
   const pct = (v: number) => `${Math.round(v * 100)}%`;
   const zoneTone = o.zone.tone === "good" ? "text-success" : o.zone.tone === "bad" ? "text-destructive" : "text-info";
@@ -364,43 +366,43 @@ function Outlook({ career }: { career: CareerState }) {
       <div className="space-y-4 lg:col-span-2">
         <Panel className="p-4">
           <div className="flex items-center justify-between">
-            <SectionTitle title="Season outlook" hint="Modelled projection" />
+            <SectionTitle title={t("mgr.tabOutlook")} hint={t("mgr.outlookHint")} />
             <DemoBadge />
           </div>
           {career.results.length === 0 && (
             <p className="mt-2 rounded-md border border-info/30 bg-info/10 px-3 py-2 text-xs text-info">
-              No fixtures played yet — this is a projection from the seeded table and sharpens as you play.
+              {t("mgr.projectionNote")}
             </p>
           )}
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Metric label="Current pos" value={`#${o.position}`} />
-            <Metric label="Projected pos" value={`#${o.projectedPosition}`} />
-            <Metric label="Expected finish" value={`≈${o.expectedFinish}`} />
+            <Metric label={t("mgr.currentPos")} value={`#${o.position}`} />
+            <Metric label={t("mgr.projectedPos")} value={`#${o.projectedPosition}`} />
+            <Metric label={t("mgr.expectedFinish")} value={`≈${o.expectedFinish}`} />
             <Metric label="Zone" value={o.zone.label} />
           </div>
           <div className="mt-4">
-            <div className="flex justify-between text-xs"><span className="text-muted-foreground">Title chance</span><span className={cn("font-mono font-semibold", zoneTone)}>{pct(o.titleChance)}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t("mgr.titleChance")}</span><span className={cn("font-mono font-semibold", zoneTone)}>{pct(o.titleChance)}</span></div>
             <div className="mt-1 h-2 overflow-hidden rounded bg-muted"><div className="h-full bg-primary" style={{ width: `${Math.max(2, o.titleChance * 100)}%` }} /></div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-            <Fact label="Played / total" value={`${o.played} / ${o.totalFixtures}`} />
-            <Fact label="Pts (PPG)" value={`${o.points} (${o.pointsPerGame.toFixed(2)})`} />
-            <Fact label="Projected pts" value={o.projectedPoints} />
-            <Fact label="Rounds left" value={o.remaining} />
-            <Fact label="Proj. leader" value={o.leaderName} />
-            <Fact label="Gap to leader" value={o.gapToProjectedLeader === 0 ? "Leading" : o.gapToProjectedLeader} />
+            <Fact label={t("mgr.playedTotal")} value={`${o.played} / ${o.totalFixtures}`} />
+            <Fact label={t("mgr.ppgPts")} value={`${o.points} (${o.pointsPerGame.toFixed(2)})`} />
+            <Fact label={t("mgr.projectedPts")} value={o.projectedPoints} />
+            <Fact label={t("mgr.roundsLeft")} value={o.remaining} />
+            <Fact label={t("mgr.projLeader")} value={o.leaderName} />
+            <Fact label={t("mgr.gapToLeader")} value={o.gapToProjectedLeader === 0 ? t("mgr.leading") : o.gapToProjectedLeader} />
           </div>
         </Panel>
 
         <Panel className="p-4">
-          <SectionTitle title="Closest rivals" hint="Modelled chance they finish above you" />
+          <SectionTitle title={t("mgr.closestRivals")} hint={t("mgr.rivalNote")} />
           <div className="mt-2 space-y-2">
             {o.rivalRows.map((r) => (
               <div key={r.clubId}>
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
                     <span>{r.clubName}</span>
-                    <span className="text-[11px] text-muted-foreground">PPG {r.currentPpg.toFixed(2)} · proj {r.projectedPoints}</span>
+                    <span className="text-[11px] text-muted-foreground">{t("mgr.ppg")} {r.currentPpg.toFixed(2)} · {t("mgr.projWord")} {r.projectedPoints}</span>
                   </span>
                   <span className={cn("font-mono text-xs", r.beatUsChance >= 0.5 ? "text-destructive" : "text-muted-foreground")}>{pct(r.beatUsChance)}</span>
                 </div>
@@ -413,15 +415,15 @@ function Outlook({ career }: { career: CareerState }) {
 
       <div className="space-y-4">
         <Panel className="p-4">
-          <SectionTitle title="Confidence" />
+          <SectionTitle title={t("common.confidence")} />
           <div className="mt-2 flex items-center gap-3">
             <div className="h-2 flex-1 overflow-hidden rounded bg-muted"><div className="h-full bg-info" style={{ width: `${o.confidence}%` }} /></div>
             <span className="font-mono text-xs">{o.confidence}%</span>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Rises as more of the season is decided by real results rather than projection.</p>
+          <p className="mt-2 text-xs text-muted-foreground">{t("mgr.confidenceRise")}</p>
         </Panel>
         <Panel className="p-4">
-          <SectionTitle title="Evidence" />
+          <SectionTitle title={t("mgr.evidenceTitle")} />
           <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
             {o.evidence.map((e, i) => (
               <li key={i} className="flex items-start gap-1.5"><span className="text-primary">›</span><span>{e}</span></li>
@@ -438,6 +440,7 @@ function Outlook({ career }: { career: CareerState }) {
 }
 
 function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t: Tactics) => void }) {
+  const { t } = useI18n();
   const p = matchPrep(career);
   const ment = ["Park the bus", "Defensive", "Balanced", "Attacking", "All-out"];
   const pressLabel = (v: number) => (v < 0.35 ? "Deep block" : v < 0.7 ? "Medium press" : "High press");
@@ -514,7 +517,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
       </div>
       <div className="space-y-4">
         <Panel className="p-4">
-          <SectionTitle title="Confidence" />
+          <SectionTitle title={t("common.confidence")} />
           <div className="mt-2 flex items-center gap-3">
             <div className="h-2 flex-1 overflow-hidden rounded bg-muted"><div className="h-full bg-info" style={{ width: `${p.confidence}%` }} /></div>
             <span className="font-mono text-xs">{p.confidence}%</span>
@@ -531,6 +534,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
 }
 
 function ClubPicker({ onStart }: { onStart: (clubId: string) => void }) {
+  const { t } = useI18n();
   const comps = footballProvider.competitions();
   const [compId, setCompId] = useState(comps[0]?.id ?? "");
   const clubs = useMemo(() => footballProvider.clubs().filter((c) => c.competitionId === compId).sort((a, b) => b.overall - a.overall), [compId]);
