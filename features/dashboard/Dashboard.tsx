@@ -61,7 +61,7 @@ export function Dashboard() {
   const trending = trendingPlayers(6);
   const nextSession = state.sessions.find((s) => s.status === "planned");
   const upcoming = profile?.favoriteClubId ? upcomingMatchesForClub(profile.favoriteClubId, 3) : [];
-  const progressPts = state.progress.map((p, i) => ({ label: i === 0 ? t("dash.chartStart") : `${i}`, value: p.overall }));
+  const progressPts = state.progress.map((p, i) => ({ label: i === 0 ? t("common.chartStart") : `${i}`, value: p.overall }));
 
   const growth = useMemo(() => {
     if (!profile) return null;

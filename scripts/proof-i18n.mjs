@@ -62,7 +62,10 @@
 //      it declares, and a module that hands rows to a screen must name that screen in
 //      KEY_ROW_CONSUMERS. The rename with the translation left out would otherwise keep
 //      a raw-UI count down forever, and "somebody reads .labelKey somewhere" is not a
-//      check while seven files share the name.
+//      check while seven files share the name,
+//  30. a word the app shows in two places being keyed twice — which is how one screen
+//      gets translated and the other keeps the old English (M172's "Demo mode", M175's
+//      chart origin), with the bare literal and the second reader both refused.
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { scanSource, lookupsIn } from "./lib/rawUiScan.mjs";
@@ -195,15 +198,23 @@ ok(`no zh-TW value reintroduces one of the 16 简体 characters M143 corrected (
 //    them from the dictionary, so pin both halves of that contract.
 const tabSrc = readFileSync(join(root, "features", "player", "PlayerOS.tsx"), "utf8");
 const tabBlock = tabSrc.match(/const TABS = \[[\s\S]*?\];/)?.[0] ?? "";
-ok("the player TABS array is locatable (else check 8 is vacuous)", tabBlock.length > 0);
-const tabLabels = [...tabBlock.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
+// The field holding these keys is `labelKey` since M175. Check 8 used to spell `label`
+// twice — once to read the values, once to find the t() call — so the rename went red on
+// both, which is the check working. It was also one rename away from going *quiet*: a
+// future milestone that renamed the field and updated only the value regex would keep
+// asserting a render site that no longer exists. So the field name is read out of the
+// array once and used for both halves; the rename stays legal, the contract does not.
+const TAB_FIELD = tabBlock.match(/\b(\w*[lL]abel\w*)\s*:\s*"/)?.[1] ?? "";
+ok(`the player TABS array is locatable and names its label field (${TAB_FIELD || "none"})`,
+  tabBlock.length > 0 && /^\w+$/.test(TAB_FIELD));
+const tabLabels = [...tabBlock.matchAll(new RegExp(`\\b${TAB_FIELD}\\s*:\\s*"([^"]+)"`, "g"))].map((m) => m[1]);
 ok(`all ten tabs carry a label (${tabLabels.length})`, tabLabels.length === 10);
 // Raw English would still render perfectly for an English visitor, which is why
 // the parity and the t() call are checked instead of the glyphs.
 const rawLabels = tabLabels.filter((l) => !bounds.every((_, i) => keysOf(i).includes(l)));
 ok(`every tab label is a key all three dictionaries declare (${rawLabels.join(", ") || "none"})`,
   rawLabels.length === 0);
-const tTab = /\{t\(\s*tab\.label\s*\)\}/.test(tabSrc);
+const tTab = new RegExp(`\\{t\\(\\s*tab\\.${TAB_FIELD}\\s*\\)\\}`).test(tabSrc);
 ok("the tab strip renders its labels through t() rather than as stored text", tTab);
 // 9. The shared primitives sit on nearly every screen, so a literal inside one of
 //    them is untranslated UI everywhere at once. M144 moved the demo badge, the
@@ -1223,7 +1234,11 @@ const RAW_COVERED = [
 // their 13 left the open count — which is also why checks 28/29 landed with them, since
 // 6 of those 13 were a field rename and nothing else. Only four files are still in debt
 // now, and all four are the big screens this arc has been walking toward.
-const RAW_UI_CEILING = 200;
+// 189 as of M175: the player tab strip's ten `label:` fields were renamed to `labelKey`
+// and the growth chart's origin tick stopped being a bare English "start". Those 11 are
+// the *same* kind of removal checks 28/29 now police, so this milestone's registration
+// came with the gate that reads a rename as a rename, not as a translation.
+const RAW_UI_CEILING = 189;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -1434,11 +1449,43 @@ ok(`every *Key field is read back through t(), so a rename can never dodge the s
   unresolved.length === 0);
 
 // Non-vacuity for the pair above: the counts come from the tree, and a floor on them is
-// a floor on how much of the app relies on this hatch — 89 sites / 8 files as measured
-// at M174, of which the three files registered this milestone contribute 6 (the
-// achievements page's group names).
+// a floor on how much of the app relies on this hatch — 99 sites / 9 files as measured
+// at M175, of which the three files registered at M174 contribute 6 (the achievements
+// page's group names) and the player tab strip contributes 10.
 ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.size} files, ${keySites} sites)`,
   keyFiles.size >= 8 && keySites >= 80);
+
+// 30. A word the interface shows on more than one screen gets ONE dictionary key. M172
+//     found "Demo mode" sitting under two namespaces; M175 found the growth chart's
+//     origin label half-keyed (`dash.chartStart`) and half-bare (a raw "start" in the
+//     player screen's copy of the very same chart). Two carriers of one word is how a
+//     translation lands on one screen and misses the other, and the drift is invisible to
+//     every check above: each key stays reachable, each locale stays complete, each
+//     literal stays inside the ceiling.
+//     A global one-key-per-word rule is not available — 130 of the English values repeat
+//     legitimately, because "Pass" as a stat name and "Pass" as a button verb are
+//     different strings with different futures. So this is a declared list that only a
+//     milestone may lengthen, and each entry is pinned three ways: exactly one English
+//     value carries the word, at least two call sites read that key (single-sourcing a
+//     word one reader uses is decoration, not sharing), and no screen renders the bare
+//     word as copy again.
+const SHARED_WORDS = [
+  { word: "start", key: "common.chartStart" },
+];
+const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+for (const s of SHARED_WORDS) {
+  const carriers = pairsOf(0).filter(([, v]) => v.trim().toLowerCase() === s.word).map(([k]) => k);
+  ok(`"${s.word}" is carried by exactly one English key (${carriers.join(", ") || "none"})`,
+    carriers.length === 1 && carriers[0] === s.key);
+  const readerRe = new RegExp("\\bt\\(\\s*[\"'`]" + escRe(s.key) + "[\"'`]\\s*[,)]", "g");
+  const readers = [...appSrc.values()].reduce((n, code) => n + (code.match(readerRe) ?? []).length, 0);
+  ok(`${s.key} is read by ${readers} call sites, so the shared row really is shared`, readers >= 2);
+  const bare = tsxSrc.flatMap(([p, code]) => scanSource(code).hits
+    .filter((h) => h.text.replace(/^["'`]|["'`]$/g, "").trim().toLowerCase() === s.word)
+    .map((h) => `${p} (${h.kind})`));
+  ok(`no screen renders "${s.word}" as raw copy any more (${bare.slice(0, 4).join(" | ") || "none"})`,
+    bare.length === 0);
+}
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

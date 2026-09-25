@@ -34,17 +34,20 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { GoalMetric, TrainingSession } from "@/domain/types";
 
+// `labelKey`, not `label`: every value here is already a `player.*` dictionary key and
+// the tab strip below renders it through t(). As `label` the raw-UI scan read all ten as
+// display copy, which is the point of the convention — a key field is not copy.
 const TABS = [
-  { key: "", label: "player.overview" },
-  { key: "coach", label: "player.coach" },
-  { key: "attributes", label: "player.attributes" },
-  { key: "skills", label: "player.skills" },
-  { key: "training", label: "player.training" },
-  { key: "progress", label: "player.progress" },
-  { key: "goals", label: "player.goals" },
-  { key: "workload", label: "player.workload" },
-  { key: "video", label: "player.video" },
-  { key: "matches", label: "player.matches" },
+  { key: "", labelKey: "player.overview" },
+  { key: "coach", labelKey: "player.coach" },
+  { key: "attributes", labelKey: "player.attributes" },
+  { key: "skills", labelKey: "player.skills" },
+  { key: "training", labelKey: "player.training" },
+  { key: "progress", labelKey: "player.progress" },
+  { key: "goals", labelKey: "player.goals" },
+  { key: "workload", labelKey: "player.workload" },
+  { key: "video", labelKey: "player.video" },
+  { key: "matches", labelKey: "player.matches" },
 ];
 
 export function PlayerOS() {
@@ -89,7 +92,7 @@ export function PlayerOS() {
             onClick={() => navigate(`/player${tab.key ? "/" + tab.key : ""}`)}
             className={cn("whitespace-nowrap rounded-t-md px-3 py-2 text-sm transition", active === tab.key ? "border-b-2 border-primary font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}
           >
-            {t(tab.label)}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
@@ -472,10 +475,11 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
 }
 
 function ProgressView() {
+  const { t } = useI18n();
   const { state } = useOs();
   const p = state.profile!;
   const info = levelInfo(p.xp);
-  const pts = state.progress.map((x, i) => ({ label: i === 0 ? "start" : `${i}`, value: x.overall }));
+  const pts = state.progress.map((x, i) => ({ label: i === 0 ? t("common.chartStart") : `${i}`, value: x.overall }));
   const achievements = useMemo(() => {
     const completed = state.sessions.filter((s) => s.status === "completed").length;
     const clips = loadFilmClips().length;

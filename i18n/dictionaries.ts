@@ -619,7 +619,6 @@ const en: Dict = {
   "dash.noFixtures": "No upcoming fixtures.",
   "dash.scoutLink": "Scout →",
   "dash.modulesHint": "Everything in your Football OS",
-  "dash.chartStart": "start",
   "dash.xpBadge": "{n} XP",
   "dash.streakDays": "{n}d",
   "dash.logged": "Logged — XP awarded.",
@@ -728,6 +727,7 @@ const en: Dict = {
   "common.confidence": "Confidence",
   "common.sources": "Sources",
   "common.back": "Back",
+  "common.chartStart": "start",
   // `ui.*` is the chrome layer's own namespace: components/ui/* is the generic
   // component library the screens are built out of, and its labels are the ones a
   // reader sees on every route at once (pagination, breadcrumb, sidebar, dialog).
@@ -1892,7 +1892,6 @@ const zhCN: Dict = {
   "dash.noFixtures": "没有接下来的赛程。",
   "dash.scoutLink": "球探 →",
   "dash.modulesHint": "你的 Football OS 全部功能",
-  "dash.chartStart": "起点",
   "dash.xpBadge": "{n} 经验",
   "dash.streakDays": "{n} 天",
   "dash.logged": "已记录——经验已发放。",
@@ -1998,6 +1997,7 @@ const zhCN: Dict = {
   "common.confidence": "置信度",
   "common.sources": "来源",
   "common.back": "返回",
+  "common.chartStart": "起点",
   "ui.pagination": "分页",
   "ui.previous": "上一页",
   "ui.next": "下一页",
@@ -3134,7 +3134,6 @@ const zhTW: Dict = {
   "dash.noFixtures": "沒有接下來的賽程。",
   "dash.scoutLink": "球探 →",
   "dash.modulesHint": "你的 Football OS 全部功能",
-  "dash.chartStart": "起點",
   "dash.xpBadge": "{n} 經驗",
   "dash.streakDays": "{n} 天",
   "dash.logged": "已記錄——經驗已發放。",
@@ -3170,6 +3169,7 @@ const zhTW: Dict = {
   "common.confidence": "信心度",
   "common.sources": "來源",
   "common.back": "返回",
+  "common.chartStart": "起點",
   "ui.pagination": "分頁",
   "ui.previous": "上一頁",
   "ui.next": "下一頁",

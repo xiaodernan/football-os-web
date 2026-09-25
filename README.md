@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M174 (a few numbers in that range
+Work ships one milestone per commit and is currently at M175 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -1629,6 +1629,70 @@ Suite is now 26 scripts / **1148 checks** (proof-i18n **130** — checks 28/29 p
 floor on the *Key surface they read), covered set **36 files**, open debt **200 across 4
 files** (PlayerOS 90, SimulationLab 51, FilmRoom 30, DataRoom 29) with the ceiling at exactly
 that. `tsc --noEmit` exits 0 and the build succeeds.
+
+### M175 — Ten tab keys, one word two charts share, and a check that follows a rename instead of spelling it
+
+Eleven of the player screen's 90 counted literals left the debt table, and the milestone is
+mostly about what that number is made of. Ten are `PlayerOS`'s tab strip: its `TABS` array
+held ten `player.*` **keys** in a field named `label`, which is the field name the raw-UI scan
+reads as copy, while the strip itself has always rendered them through `t()`. Renaming the
+field to `labelKey` — the convention M149/M155/M165 established and M174 gated — is the whole
+of those ten. The eleventh is the one a visitor could actually have seen in the wrong
+language: the growth chart's origin tick.
+
+That tick is the interesting half, and it is a **namespace** bug rather than a missing
+translation. `Dashboard` and the player's Progress tab draw the same `ProgressLine` from the
+same `state.progress`, and the dashboard asked the dictionary for `dash.chartStart` while the
+player screen wrote `"start"` inline. So the word existed twice — once keyed under one
+screen's private prefix, once not keyed at all — which is M172's "Demo mode" shape exactly.
+The row moved to `common.chartStart` (3 rows × 1 key, key count unchanged at **1237**), both
+charts now read it, and the value that was only ever English is now 起点 / 起點 for the two
+Chinese locales.
+
+**A rename is only safe if the gate can still see it, and here it could not.** Check 8 has
+pinned this exact tab strip since M143, in two halves: a regex reading the label values out of
+`const TABS`, and a regex looking for the render site. Both halves spelled the word `label`.
+After the rename the first matched nothing and the second matched nothing, so the check went
+red — correctly, but *by luck*: a milestone that renamed the field and updated only the value
+regex would have kept asserting a `t(tab.label)` render site that no longer existed anywhere.
+Check 8 now reads the field name out of the array once and uses it for both halves, so the
+rename stays legal while "ten keys, all present in three locales, all rendered through `t()`"
+stays pinned. This is the second time the key-vs-copy convention bit a gate (check 16's source
+anchor was the first, at M174), which is the pattern to watch: **every hatch the scan looks
+through is a hatch some check reads through as well.**
+
+**New check 30 refuses the two-carriers-of-one-word shape directly.** Nothing above would
+have caught a second `chartStart` being added back: each key stays reachable, each locale
+stays complete, each literal stays inside the ceiling, and the drift only shows up the first
+time someone edits one copy. A global "one key per word" rule is not available — measured on
+the en block, **130 keys hold a value another key already holds**, because "Pass" as a stat
+name and "Pass" as a button verb are different strings with different futures. So it is a
+declared list (`SHARED_WORDS`, today: `start` → `common.chartStart`) that a milestone may
+lengthen and nothing else may, with three clauses per entry: exactly one English value carries
+the word, at least **2** call sites read that key (single-sourcing a word one reader uses is
+decoration), and no `.tsx` in the tree renders the bare word as copy again.
+
+Five mutation probes, all red, all restored byte-identical, each naming its own clause in the
+FAIL list: the inline `"start"` coming back (3 reds — the bare-word clause, the reader count,
+and the ceiling at 190 > 189); the dashboard reader pointed at another key (`read by 1 call
+site`); the old `dash.chartStart` row re-added to the en block (`carried by exactly one
+English key (common.chartStart, dash.chartStart)`, plus parity and reachability); a **partial**
+rename of the tab field to `labelText` on one entry only, which produced *two* reds — `all ten
+tabs carry a label (1)` and the render-site clause — showing the derived field name still
+bites; and a `labelKey` pointing at `player.coachX`, caught by both check 28 and check 8's
+dictionary-parity half.
+
+Verification boundary is unchanged from M174 and still applies to this file: `PlayerOS` reads
+`useOs()`, the SSR harness cannot reach a hydrated store, and the in-app browser is still
+machine-broken, so no rendered-string claim is made here — the evidence is `tsc`, the build,
+the static gates and the probe record above.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is now 26 scripts /
+**1151 checks** (proof-i18n **133** — check 30's three clauses). Covered set stays **36
+files**: the player screen still carries **79** counted literals, so it remains in debt and
+was *not* registered. Open debt is **189 across 4 files** (PlayerOS 79, SimulationLab 51,
+FilmRoom 30, DataRoom 29) with the ceiling at exactly that measured number, and the *Key
+surface checks 28/29 police is now **99 sites across 9 files**.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
