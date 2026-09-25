@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M151 (a few numbers in that range
+Work ships one milestone per commit and is currently at M152 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M151 line of work is a different kind of progress: it makes the earlier claims
+The M108–M152 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -639,6 +639,50 @@ the aria-label, put an English label back in the panel (that one trips two indep
 the ceiling and key reachability), and delete one locale's copy of a new key. Still open here:
 a goal is deleted immediately with no undo, which is honest for a local demo but is the first
 thing to revisit if goals grow a history.
+
+M152 closed the last row the app wrote in one language and stored forever. The coach's
+memory panel — "AI memory · What your coach remembers" — rendered `AiMemoryEntry.text`,
+and three reducer branches composed that text as English sentences when the event happened:
+`Created player profile · CM · goal: …`, `Coach focused on passing, ball_control (30′)`,
+`Completed … · +54 XP · rated 4/5 · level 3`. The rows are persisted, so the wording belonged
+to whoever was reading at the moment the event fired, and it travelled into the activity
+timeline unchanged.
+
+The rows are `RowText` now, built by three functions in `domain/memory.ts`, and the union's
+interpreter moved fully into `domain/rowText.ts`: `goalLine` is gone, because a goal title and
+a remembered line are the same problem and there is now exactly one function that turns either
+into words. Code variables are resolved **by name, not by value** — `mode`, `group`, `a` and
+`focus` are the only ones a lookup is allowed to touch — because a session really can be titled
+"CM", and a person's own words must never be re-read as a key. `focus` holds a comma-joined list
+of attribute codes and is resolved part by part, rejoined with " + ", so a stored row keeps the
+codes and the reader gets the names. `MODES` moved into `domain/types.ts` beside the `Mode` union
+it mirrors, and the gate requires the two to be one list, which is the only thing standing between
+a stored mode and a screen that prints `prof.mode.`.
+
+A library stored while these were sentences is repaired at the hydration boundary, like goal
+titles: the English stays, verbatim, because it is what the app actually wrote — now honestly
+labelled as the writer's own value rather than a key. `domain/history.ts` forwards the memory row
+instead of re-wording it, so the timeline resolves the same stored object the panel does. The
+panel's three labels went into the dictionary too, which took `store/useFootballOS.tsx` to 0 raw
+literals — the file that mints persisted rows — and it joined `RAW_COVERED` as the tenth file that
+must stay there. Repo debt 584 → 579 across 29 files; Player OS 93 → 90.
+
+The row audit found its third blind spot in as many milestones: it read `vars: { a: x }` but not
+`vars: { mode, group, goal }`, and the first fix — a regex over comma-split parts — silently skipped
+every other property because it consumed the comma it needed to find the next. Both are replaced by a
+segment walker that tracks strings and nesting, and it **refuses to answer** when a segment is not a
+property it knows, rather than returning a shorter list that still prints "clean". A probe plants
+`[k as string]: goal` to keep that refusal honest.
+
+proof-timeline is 71 → 85 checks and proof-i18n 99 → 104 (901 keys × 3 locales). 11 mutation probes
+each turn a named check red and restore by sha256: mode resolution removed, the focus list not split,
+codes resolved by value instead of name, a memory key that does not exist, an unknown `vars` shape,
+the bulk space claim clobbering a hand-declared one (which is a real bug this session hit — it
+quietly dropped four live keys out of reach), the mode table drifting from the union, the repair
+unwired, the panel printing the row, and the timeline stringifying it. Not browser-verified: the
+in-app browser is still wedged. Still queued, and unchanged here: the demo provider's answer prose in
+`data/ai.ts`, including the "Coach memory — last session focused on …" source line, is English text
+generated per request rather than a stored row, so it needs its own milestone.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

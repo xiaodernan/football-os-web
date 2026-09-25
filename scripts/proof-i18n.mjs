@@ -382,7 +382,9 @@ const DYN_SITES = [
   { path: "features/review/ReviewPage.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "g.key", prefix: "attr.name.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "reco.attributeKey", prefix: "attr.name.", suffix: "" },
-  { path: "domain/goals.ts", expr: "raw", prefix: "attr.name.", suffix: "" },
+  { path: "domain/rowText.ts", expr: "code", prefix: "attr.name.", suffix: "" },
+  { path: "domain/rowText.ts", expr: "code", prefix: "group.", suffix: "" },
+  { path: "domain/rowText.ts", expr: "code", prefix: "prof.mode.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
@@ -485,7 +487,21 @@ const SPACES = new Map([
 // so they all take the same space, and listing it 20 times would only invite the
 // copies to drift. Check 16 still requires every *site* to be declared by file
 // and expression, which is what stops a new leak reading as already covered.
-for (const s of DYN_SITES) if (s.prefix === "attr.name.") SPACES.set(`attr.name.|${s.expr}`, S_ATTR);
+// A declared site's expression also has to name a value space. Claimed here by prefix
+// so a new site of a known family is covered the moment it is declared — but only when
+// the site does not already carry its own declaration, because a same-named variable
+// can hold a different set: `prof.mode.${r.id}` walks the footprint's record rows, not
+// the Mode union, and overwriting it silently drops four real keys out of reach.
+const claimByPrefix = (prefix, space) => {
+  for (const s of DYN_SITES) {
+    if (s.prefix !== prefix) continue;
+    const k = `${prefix}|${s.expr}`;
+    if (!SPACES.has(k)) SPACES.set(k, space);
+  }
+};
+claimByPrefix("attr.name.", S_ATTR);
+claimByPrefix("group.", S_GROUP);
+claimByPrefix("prof.mode.", S_MODE);
 
 // 16. The table and the source must agree in both directions.
 const SITE = /\bt\(\s*`([^`]*)\$\{([^}]*)\}([^`]*)`/g;
@@ -534,6 +550,7 @@ for (const s of SPACE_SITES.values()) {
 // re-read from the source that claims it, so a deleted composer stops claiming
 // rather than leaving its keys reachable on paper — check 25 audits it.
 const { GOAL_METRICS } = await server.ssrLoadModule("/domain/goals.ts");
+const { MODES } = await server.ssrLoadModule("/domain/types.ts");
 const DOMAIN_SPACES = [
   {
     name: "goal metrics",
@@ -542,6 +559,17 @@ const DOMAIN_SPACES = [
     path: "domain/goals.ts",
     compose: /`goal\.unit\.\$\{metric\}`/,
     union: ["domain/types.ts", /export type GoalMetric = [^;]+;/],
+  },
+  {
+    // The three modes a remembered row can name. types.ts holds both the union and the
+    // runtime list it mirrors, so this is the only thing that stops the two from
+    // drifting apart and a stored `mode` silently falling back to printing its code.
+    name: "modes",
+    values: MODES,
+    prefix: "prof.mode.",
+    path: "domain/rowText.ts",
+    compose: /`prof\.mode\.\$\{code\}`/,
+    union: ["domain/types.ts", /export type Mode = [^;]+;/],
   },
 ];
 const claimed = new Set();
@@ -762,6 +790,10 @@ const RAW_COVERED = [
   "features/tactical/TacticalStudio.tsx",
   "features/transfers/TransferCentre.tsx",
   "ui/charts.tsx",
+  // Not a screen: the store is where persisted rows are minted, and the one file a
+  // composed sentence can hide in without any component-scoped scan ever seeing it.
+  // It reached 0 raw literals at M152 and has to stay there.
+  "store/useFootballOS.tsx",
 ];
 // The ceiling is the debt that is not in the covered set. Lower it when a screen
 // is localised; it may only ever go down on purpose.
@@ -773,7 +805,9 @@ const RAW_COVERED = [
 // of M150, when onboarding's two goal titles stopped being sentences stored in a row.
 // 584 as of M151, when the Player OS goal panel — the one place you manage goals —
 // stopped being English-only.
-const RAW_UI_CEILING = 584;
+// 579 as of M152: the three sentences the coach used to write into memory, and the
+// memory panel's own labels, are keys now.
+const RAW_UI_CEILING = 579;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -836,6 +870,31 @@ const ROW_FILES = [...appSrc].filter(([, src]) => /\bRowText\b/.test(src));
 // the multi-line one — which is the row whose five variables most needed auditing.
 // M149's mutation run found that by deleting a variable nothing complained about.
 const ROW_LITERAL = /\{\s*key:\s*"([^"]+)"(?:\s*,\s*vars:\s*\{([^{}]*)\})?/g;
+// Top-level property names of a `vars: { … }` body. Returns null rather than a partial
+// answer when a segment is not recognisably `name` or `name:` — an audit that guesses
+// is worse than one that stops, because a guessed list still prints "clean".
+function varNames(body) {
+  if (!body.trim()) return [];
+  const segs = [];
+  let cur = "", depth = 0, str = null;
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i];
+    if (str) { cur += c; if (c === str && body[i - 1] !== "\\") str = null; continue; }
+    if (c === '"' || c === "'" || c === "`") { str = c; cur += c; continue; }
+    if ("([{".includes(c)) depth++;
+    if (")]}".includes(c)) depth--;
+    if (c === "," && depth === 0) { segs.push(cur); cur = ""; continue; }
+    cur += c;
+  }
+  if (cur.trim()) segs.push(cur);
+  const names = [];
+  for (const seg of segs) {
+    const m = seg.trim().match(/^([A-Za-z_$][\w$]*)\s*(?::|$)/);
+    if (!m) return null;
+    names.push(m[1]);
+  }
+  return names;
+}
 const badRows = [];
 let rowKeys = 0;
 for (const [path, src] of ROW_FILES) {
@@ -844,7 +903,14 @@ for (const [path, src] of ROW_FILES) {
     const key = m[1];
     if (!(key in en)) { badRows.push(`${path}: ${key} is not a dictionary key`); continue; }
     const phs = [...new Set((en[key].match(/\{(\w+)\}/g) ?? []).map((s) => s.slice(1, -1)))].sort();
-    const given = [...new Set((m[2] ?? "").split(",").map((p) => (p.match(/^\s*(\w+)\s*:/) ?? [])[1]).filter(Boolean))].sort();
+    // The names the row supplies, read segment by segment so `vars: { mode, goal }`
+    // (a shorthand property) counts exactly like `vars: { mode: m, goal: g }`. A naive
+    // comma split would cut `focus.join(",")` in half and a plain regex that consumes
+    // its own separator silently skipped every other property, so this walks the body,
+    // tracks strings and nesting, and REFUSES to guess when a segment is not a property.
+    const given0 = varNames(m[2] ?? "");
+    if (!given0) { badRows.push(`${path}: ${key} has a vars body this audit cannot read (${m[2]})`); continue; }
+    const given = [...new Set(given0)].sort();
     if (phs.join(",") !== given.join(",")) badRows.push(`${path}: ${key} interpolates {${phs.join(",")}} · the row supplies {${given.join(",")}}`);
   }
   for (const m of src.matchAll(/\{\s*value:\s*["'`]/g)) badRows.push(`${path}: a row value is prose typed in this module (${m[0]})`);
@@ -852,11 +918,11 @@ for (const [path, src] of ROW_FILES) {
 ok(`every row text a domain module hands the screen is a real key with exactly its placeholders (${rowKeys} keys, ${badRows.slice(0, 6).join(" | ") || "clean"})`,
   badRows.length === 0);
 ok(`the row-text scan is reading modules that actually carry the union (${ROW_FILES.length} files, ${rowKeys} keys)`,
-  // 4 files / 12 keys as of M150: history.ts's 9 timeline rows, goals.ts's 3 title
+  // 5 files / 15 keys as of M152: history.ts's 9 timeline rows, goals.ts's 3 title
   // rows, rowText.ts and types.ts as the two modules that name the union. A row built
   // as a bare string in a table escapes this pattern — that is how 2 of the 12 first
   // went unnoticed — so the floor is the measured count, never a round number.
-  ROW_FILES.length >= 4 && rowKeys >= 12);
+  ROW_FILES.length >= 5 && rowKeys >= 15);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

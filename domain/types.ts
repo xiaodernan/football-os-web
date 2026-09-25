@@ -4,6 +4,11 @@ import type { RowText } from "./rowText";
 
 export type Mode = "FAN" | "PLAYER" | "MANAGER";
 
+// The same three codes as the union, spelled once at runtime so a reader that has to
+// recognise a stored mode (domain/rowText.ts) can be checked against this list rather
+// than keeping a second copy that nothing audits. proof-i18n fails if the two drift.
+export const MODES: readonly Mode[] = ["FAN", "PLAYER", "MANAGER"];
+
 export type PositionGroup = "GK" | "CB" | "FB" | "DM" | "CM" | "AM" | "W" | "ST";
 
 export interface NamedValue {
@@ -162,7 +167,9 @@ export interface TrainingSession {
 export interface AiMemoryEntry {
   id: string;
   kind: "coach" | "training" | "profile";
-  text: string;
+  // Keyed row: the app composes these lines, so their words belong to the reader. See
+  // ./rowText and ./memory.
+  text: RowText;
   at: string;
 }
 

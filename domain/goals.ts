@@ -5,8 +5,8 @@
 // typed, in every locale. Its `title` had the same defect one layer up, and is now a
 // RowText for the same reason.
 import type { Goal, GoalMetric } from "./types";
-import { ATTRIBUTE_KEYS } from "./attributes";
-import type { RowText, Translate } from "./rowText";
+import type { RowText } from "./rowText";
+import { asRowText } from "./rowText";
 
 // Mirrors the `GoalMetric` union in ./types; proof-timeline fails if the two drift,
 // because both the compiler and the dictionary have to agree on this list.
@@ -39,26 +39,15 @@ export function attributeGoalTitle(attributeKey: string): RowText {
   return { key: "goal.title.attrTarget", vars: { a: attributeKey } };
 }
 
-/** The one place a goal row becomes a sentence. */
-export function goalLine(goal: Goal, t: Translate): string {
-  const title = goal.title;
-  if ("value" in title) return title.value;
-  const vars: Record<string, string | number> = {};
-  for (const [name, raw] of Object.entries(title.vars ?? {})) {
-    // A stored variable that IS an attribute code is a reference, not copy, so its
-    // word is resolved here. Anything else (a number of XP, a count of sessions)
-    // is the value itself and passes through.
-    vars[name] = typeof raw === "string" && ATTRIBUTE_KEYS.includes(raw) ? t(`attr.name.${raw}`) : raw;
-  }
-  return t(title.key, vars);
-}
-
-/** Rows written before titles were keyed hold a plain string; the same string is the
- *  visitor's own words, so it becomes a value rather than a guess at a key. Run at the
- *  hydration boundary like `sweepOverdueSessions`, so no read site has to defend. */
+// The one place a goal row becomes a sentence is rowLine, in ./rowText — the same
+// interpreter the coach's memory rows use.
+/** Rows written before titles were keyed hold a plain string; that string is the
+ *  visitor's own words, so it becomes a value rather than a guess at a key. A keyed
+ *  title is read with rowLine, the one interpreter every keyed row in the app shares. */
 export function repairGoalTitles(goals: Goal[]): Goal[] {
+  if (!goals.some((g) => typeof (g.title as unknown) === "string")) return goals;
   return goals.map((g) =>
-    typeof (g.title as unknown) === "string" ? { ...g, title: { value: g.title as unknown as string } } : g,
+    typeof (g.title as unknown) === "string" ? { ...g, title: asRowText(g.title) } : g,
   );
 }
 

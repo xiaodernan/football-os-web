@@ -53,7 +53,9 @@ interface PlanSeed {
 interface MemorySeed {
   id: string;
   kind: string;
-  text: string;
+  // Already a keyed row (see ./memory): the timeline forwards it rather than
+  // re-wording it, so the same remembered line reads in the reader's locale here too.
+  text: RowText;
   at: string;
 }
 interface LearnSeed {
@@ -122,7 +124,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       // The entry's own text is a stored value, so it passes through; its subtype
       // is a code, so it becomes a key. An unknown code resolves to no label at the
       // render site rather than printing the bare code.
-      title: { value: m.text },
+      title: m.text,
       detail: MEMORY_DETAIL[m.kind],
     });
   }

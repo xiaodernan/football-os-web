@@ -25,6 +25,7 @@ import {
 import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
 import { applyFocusGrowth, sweepOverdueSessions, type GrowthDelta } from "@/domain/training";
 import { countGoalTitle, repairGoalTitles } from "@/domain/goals";
+import { coachMemory, profileMemory, repairMemoryTexts, trainingMemory } from "@/domain/memory";
 import { buildLoad } from "@/domain/load";
 import { coachProvider, type PlanInput } from "@/data/ai";
 import { OS_STATE_KEY } from "@/domain/localData";
@@ -93,7 +94,9 @@ function normalizeHydrated(s: OsState): OsState {
     // Rows written before a goal title was a keyed row hold a plain string; that
     // string is the visitor's own words, so it is kept verbatim as a value.
     goals: repairGoalTitles(s.goals ?? []),
-    memory: s.memory ?? [],
+    // Same repair for the coach's remembered rows: an entry written while these were
+    // English sentences keeps those words, now honestly stored as a value.
+    memory: repairMemoryTexts(s.memory ?? []),
     watchlist: s.watchlist ?? [],
     progress: s.progress ?? [],
   };
@@ -116,7 +119,7 @@ function reducer(state: OsState, action: Action): OsState {
           {
             id: `mem-${Date.now()}`,
             kind: "profile",
-            text: `Created ${action.mode.toLowerCase()} profile · ${action.profile.position} · goal: ${action.profile.goal}`,
+            text: profileMemory(action.mode, action.profile.positionGroup, action.profile.goal),
             at: new Date().toISOString(),
           },
         ],
@@ -133,7 +136,7 @@ function reducer(state: OsState, action: Action): OsState {
           {
             id: `mem-${Date.now()}`,
             kind: "coach" as const,
-            text: `Coach focused on ${action.plan.focus.join(", ")} (${action.plan.session.targetMinutes}′)`,
+            text: coachMemory(action.plan.focus, action.plan.session.targetMinutes),
             at: new Date().toISOString(),
           },
           ...state.memory,
@@ -187,7 +190,7 @@ function reducer(state: OsState, action: Action): OsState {
           {
             id: `mem-${Date.now()}`,
             kind: "training" as const,
-            text: `Completed ${session.title} · +${awarded} XP · rated ${rating}/5 · level ${newLevel}`,
+            text: trainingMemory(session.title, awarded, rating, newLevel),
             at: new Date().toISOString(),
           },
           ...state.memory,

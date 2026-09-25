@@ -18,7 +18,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const server = await createServer({ root, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { buildTimeline, groupByDay } = await server.ssrLoadModule("/domain/history.ts");
 const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
-const { GOAL_METRICS, goalUnitKey, countGoalTitle, attributeGoalTitle, goalLine, repairGoalTitles, isValidGoalTarget, goalProgressPct } =
+const { GOAL_METRICS, goalUnitKey, countGoalTitle, attributeGoalTitle, repairGoalTitles, isValidGoalTarget, goalProgressPct } =
   await server.ssrLoadModule("/domain/goals.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 
@@ -42,7 +42,7 @@ const session = (over = {}) => ({
   ...over,
 });
 const plan = (over = {}) => ({ id: "p1", createdAt: "2026-03-02T10:00:00.000Z", prompt: "Plan prompt B", provider: "demo-coach-v1", ...over });
-const memory = (over = {}) => ({ id: "m1", kind: "coach", text: "Memory text C", at: "2026-03-03T11:00:00.000Z", ...over });
+const memory = (over = {}) => ({ id: "m1", kind: "coach", text: { value: "Memory text C" }, at: "2026-03-03T11:00:00.000Z", ...over });
 const learn = (over = {}) => ({ id: "l1", title: "Lesson title D", completedAt: "2026-03-04T12:00:00.000Z", quizCorrect: true, attempts: 0, ...over });
 const clip = (over = {}) => ({
   id: "f1", at: "2026-03-05T13:00:00.000Z", fileName: "clip-01.mp4",
@@ -55,7 +55,7 @@ const one = (over = {}) => buildTimeline({ ...empty, ...over });
 const rich = buildTimeline({
   sessions: [session(), session({ id: "s2", title: "Session title E", completedAt: "2026-03-06T08:00:00.000Z" })],
   plans: [plan(), plan({ id: "p2", prompt: "Plan prompt F" })],
-  memory: [memory(), memory({ id: "m2", kind: "training", text: "Memory text G" })],
+  memory: [memory(), memory({ id: "m2", kind: "training", text: { value: "Memory text G" } })],
   learn: [learn(), learn({ id: "l2", title: "Lesson title H", quizCorrect: false, attempts: 2 })],
   film: [clip(), clip({ id: "f2", fileName: "clip-02.mp4", at: "2026-03-07T14:00:00.000Z" })],
 });
@@ -121,8 +121,9 @@ ok("a whitespace-only note yields no note", one({ sessions: [session({ notes: " 
 const p = one({ plans: [plan()] })[0];
 ok("a plan row shows the user's own prompt and the provider that answered it",
   p.title.value === "Plan prompt B" && p.detail.value === "demo-coach-v1");
-const m = one({ memory: [memory()] })[0];
-ok("a memory row keeps the stored sentence as its value", m.title.value === "Memory text C");
+const memSeed = memory();
+const m = one({ memory: [memSeed] })[0];
+ok("a memory row is forwarded as the row it stores, not re-worded here", m.title === memSeed.text);
 ok("the three stored memory subtypes each resolve through a key",
   eq(["coach", "training", "profile"].map((k) => one({ memory: [memory({ kind: k })] })[0].detail),
     [{ key: "hist.mem.coach" }, { key: "hist.mem.training" }, { key: "hist.mem.profile" }]));
@@ -226,7 +227,7 @@ const attrKey = "passing";
 const attrRow = goalRow(attributeGoalTitle(attrKey));
 
 seen = [];
-const attrLine = goalLine(attrRow, t);
+const attrLine = rowLine(attrRow.title, t);
 ok("an attribute goal resolves the attribute word at read time, then its own title",
   attrLine === "{goal.title.attrTarget|a={attr.name.passing}}" &&
   eq(seen, [["attr.name.passing", undefined], ["goal.title.attrTarget", { a: "{attr.name.passing}" }]]));
@@ -244,7 +245,7 @@ ok(`no machine-built goal row stores a display word from any locale (${frozen.jo
   frozen.length === 0);
 
 // Same row, three readers, three languages — the assertion the defect fails.
-const readBy = (loc) => goalLine(attrRow, (k, v) => {
+const readBy = (loc) => rowLine(attrRow.title, (k, v) => {
   let s = DICTIONARIES[loc][k] ?? k;
   for (const [n, val] of Object.entries(v ?? {})) s = s.split(`{${n}}`).join(String(val));
   return s;
@@ -258,7 +259,7 @@ ok("the English reading is the dictionary's own sentence for that row",
   enRead === DICTIONARIES.en["goal.title.attrTarget"].split("{a}").join(DICTIONARIES.en[`attr.name.${attrKey}`]));
 
 seen = [];
-const typed = goalLine(goalRow({ value: "Finish the season unbeaten" }), t);
+const typed = rowLine(goalRow({ value: "Finish the season unbeaten" }).title, t);
 ok("a visitor's own title is shown verbatim and never reaches the dictionary",
   typed === "Finish the season unbeaten" && seen.length === 0);
 
@@ -312,6 +313,66 @@ ok("removing a goal is one of them, and the goals panel actually offers it",
 // nothing else in the app would notice the glyph going bare.
 ok("the remove control names itself to assistive tech instead of being a bare glyph",
   /aria-label=\{t\("player\.goalRemoveAria"\)\}/.test(read("features/player/PlayerOS.tsx")));
+
+// ---- 13. The coach's remembered rows. They are persisted, so their wording used to
+// belong to whoever was reading when the event happened — forever.
+const { profileMemory, coachMemory, trainingMemory, repairMemoryTexts } =
+  await server.ssrLoadModule("/domain/memory.ts");
+
+ok("a remembered profile row stores the mode, the group and the visitor's own goal",
+  eq(profileMemory("PLAYER", "CM", "Win the league"),
+    { key: "mem.line.profile", vars: { mode: "PLAYER", group: "CM", goal: "Win the league" } }));
+
+seen = [];
+const profLine = rowLine(profileMemory("PLAYER", "CM", "Win the league"), t);
+ok("reading it resolves the mode and the group, and leaves the visitor's words alone",
+  profLine === "{mem.line.profile|goal=Win the league,group={group.CM},mode={prof.mode.PLAYER}}" &&
+  eq(seen.map((s) => s[0]), ["prof.mode.PLAYER", "group.CM", "mem.line.profile"]));
+
+const focusRow = coachMemory(["passing", "ball_control"], 30);
+ok("a focus list is stored as codes, not as words",
+  eq(focusRow, { key: "mem.line.coach", vars: { focus: "passing,ball_control", minutes: 30 } }));
+seen = [];
+const coachLine = rowLine(focusRow, t);
+ok("each code in the list is looked up on its own and rejoined for the reader",
+  coachLine === "{mem.line.coach|focus={attr.name.passing} + {attr.name.ball_control},minutes=30}" &&
+  eq(seen.map((s) => s[0]), ["attr.name.passing", "attr.name.ball_control", "mem.line.coach"]));
+
+// Name-based resolution is what keeps a person's own words safe: a session really
+// titled "CM" must never be re-read as a position-group lookup.
+seen = [];
+const cmTitle = rowLine(trainingMemory("CM", 50, 4, 3), t);
+ok("a stored value that happens to read like a code is still shown as the writer's text",
+  cmTitle === "{mem.line.training|level=3,rating=4,title=CM,xp=50}" &&
+  eq(seen.map((s) => s[0]), ["mem.line.training"]));
+
+const memRow = (text, extra) => ({ id: "M1", kind: "coach", text, at: "2026-01-02T00:00:00.000Z", ...extra });
+const keyedMem = memRow(coachMemory(["passing"], 25));
+const mRepaired = repairMemoryTexts([memRow("Coach focused on passing (25′)"), keyedMem]);
+ok("a remembered row stored while these were sentences keeps its words as a value",
+  eq(mRepaired[0].text, { value: "Coach focused on passing (25′)" }));
+ok("and a row already keyed is left alone, identity included", mRepaired[1] === keyedMem);
+ok("repair keeps every other field of a legacy memory row",
+  mRepaired[0].id === "M1" && mRepaired[0].kind === "coach" && mRepaired[0].at === "2026-01-02T00:00:00.000Z");
+ok("repair is safe on an empty library", repairMemoryTexts([]).length === 0);
+const cleanMem = [keyedMem];
+ok("a library with nothing to repair is returned as the same array, not a rebuild",
+  repairMemoryTexts(cleanMem) === cleanMem && repairMemoryTexts(cleanMem)[0] === keyedMem);
+const cleanGoals = [keyedRow];
+ok("and the same holds for goal rows, which hydrate on every load",
+  repairGoalTitles(cleanGoals) === cleanGoals && repairGoalTitles(cleanGoals)[0] === keyedRow);
+
+// The timeline forwards the row instead of re-wording it, so /history resolves the
+// same stored object the panel does — one row, one wording, in either screen.
+const tl = buildTimeline({ sessions: [], plans: [], memory: [keyedMem] });
+ok("the activity timeline carries the memory row's own keyed text, not a stringified one",
+  tl.length === 1 && tl[0].title === keyedMem.text);
+
+const storeSrc2 = read("store/useFootballOS.tsx");
+ok("the hydration boundary repairs remembered rows on the way in",
+  /memory:\s*repairMemoryTexts\(/.test(storeSrc2));
+ok("and the memory panel resolves the row rather than printing it",
+  /rowLine\(m\.text, t\)/.test(read("features/player/PlayerOS.tsx")));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

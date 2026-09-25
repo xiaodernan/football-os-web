@@ -18,7 +18,8 @@ import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { FIXTURES_KEY } from "@/domain/localData";
-import { goalLine, goalProgressPct, isValidGoalTarget } from "@/domain/goals";
+import { goalProgressPct, isValidGoalTarget } from "@/domain/goals";
+import { rowLine } from "@/domain/rowText";
 import { getClub, getPlayer } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, Crest } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
@@ -151,15 +152,15 @@ function Overview() {
           )}
         </Panel>
         <Panel className="p-4">
-          <SectionTitle title="AI memory" hint="What your coach remembers" />
+          <SectionTitle title={t("player.aiMemoryTitle")} hint={t("player.aiMemoryHint")} />
           <div className="space-y-2">
             {state.memory.slice(0, 4).map((m) => (
               <div key={m.id} className="flex gap-2 text-xs">
                 <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
-                <span className="text-muted-foreground">{m.text}</span>
+                <span className="text-muted-foreground">{rowLine(m.text, t)}</span>
               </div>
             ))}
-            {state.memory.length === 0 && <p className="text-xs text-muted-foreground">No memory yet.</p>}
+            {state.memory.length === 0 && <p className="text-xs text-muted-foreground">{t("player.noMemory")}</p>}
           </div>
         </Panel>
       </div>
@@ -530,7 +531,7 @@ function Goals() {
           {state.goals.map((g) => (
             <div key={g.id} className="group rounded-lg border bg-card/40 p-3">
               <div className="flex items-center justify-between text-sm">
-                <span className={cn("min-w-0 truncate", g.done && "text-muted-foreground line-through")}>{goalLine(g, t)}</span>
+                <span className={cn("min-w-0 truncate", g.done && "text-muted-foreground line-through")}>{rowLine(g.title, t)}</span>
                 <span className="ml-2 flex shrink-0 items-center gap-1.5">
                   <span className="font-mono text-xs">{Math.min(g.current, g.target)}/{g.target}</span>
                   <button onClick={() => { removeGoal(g.id); toast.success(t("player.goalRemoved")); }} aria-label={t("player.goalRemoveAria")} className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus:opacity-100 group-hover:opacity-100">✕</button>

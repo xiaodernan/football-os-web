@@ -5,7 +5,8 @@ import { getClub, getPlayer } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
-import { goalLine, goalProgressPct, goalUnitKey } from "@/domain/goals";
+import { goalProgressPct, goalUnitKey } from "@/domain/goals";
+import { rowLine } from "@/domain/rowText";
 import { overallRating, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { seasonSummary, type CareerState } from "@/domain/career";
@@ -228,7 +229,7 @@ export function ProfilePage() {
                 // the reader's: a goal made in English no longer prints "sessions"
                 // beside a Chinese profile. An unrecognised code shows no word.
                 const unit = goalUnitKey(g.metric);
-                const title = goalLine(g, t);
+                const title = rowLine(g.title, t);
                 return (
                   <button key={g.id} onClick={() => toggleGoal(g.id)} className="block w-full text-left">
                     <div className="flex items-center justify-between text-sm">
