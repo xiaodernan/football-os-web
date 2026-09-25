@@ -854,6 +854,11 @@ const RAW_COVERED = [
   "features/review/ReviewPage.tsx",
   "features/settings/SettingsPage.tsx",
   "features/shell/AppShell.tsx",
+  // Reached 0 at M161 but only registered here, at M163, because the locale walk made
+  // the difference visible: the file renders no raw text, yet until this line an
+  // English literal added to it would have moved one aggregate number, not named the
+  // file. Registration is what turns "this screen is localised" into a held property.
+  "features/community/CommunityHub.tsx",
   "features/tactical/TacticalStudio.tsx",
   "features/transfers/TransferCentre.tsx",
   "ui/charts.tsx",

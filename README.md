@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M162 (a few numbers in that range
+Work ships one milestone per commit and is currently at M163 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1035,8 +1035,70 @@ a third adds one literal to an open screen and turns the ceiling red at 308/307.
 three restore their file byte-for-byte and re-verify the sha256.
 
 `npx tsc --noEmit` exits 0, `npm run build` succeeds, the suite is 26 scripts / 1130
-checks (proof-i18n 112), and the 3 probes above each turn a named check red. Not
-browser-verified: the in-app browser is still wedged (#142).
+checks (proof-i18n 112), and the 3 probes above each turn a named check red. This commit
+was not browser-verified when it landed; M163's walk below covers the route it changed.
+
+M163 is the first leg of task #142 — the walk every localisation milestone since M147 has
+had to leave open, because the in-app browser has been reporting a 0×0 hidden window. It
+turns out the window being invisible does not stop it rendering: React mounts, and
+`document.body.innerText` is readable. Screenshots are still impossible, so this is a
+*text* walk, not a visual QA pass, and the claim below is written to that limit. With the
+preview server up on a fresh port, all 25 routes were visited in `zh-CN` and again in
+`zh-TW`, and each screen's rendered text was scanned for the two defects a static scan
+structurally cannot see: a dictionary key that reaches the page undecoded, and a
+`{placeholder}` whose variable the caller never supplied.
+
+Result: on neither locale did any route render a raw key or an unfilled placeholder. The
+only dotted strings the walk found are on `/settings`, and they belong there — that screen
+is the local-data inventory and prints the storage keys (`football-os.state.v2`, …) on
+purpose, so they are on the detector's exclusion list rather than quietly whitelisted.
+The `zh-TW` pass also re-checks M143's fix from the reader's side: across the accumulated
+text, the twelve Traditional markers this repo's dictionary uses (`模擬`, `訓練`, `資料`,
+`設置`, `開發`, `模組`, `級別`, `統計`, `繼續`, `球員`, `轉會`, `戰術`) appeared 71 times and
+their twelve Simplified counterparts appeared zero times — no Simplified bleeds into a
+Traditional reader. And the M162 fallback was caught doing its job: an unknown route
+rendered `该模块是下一个开发对象`, which is the first time that string has been *seen*
+resolving rather than only asserted by a gate.
+
+Two honest limits on this, both of which cost turns to discover. Timers in the hidden
+window are throttled hard — an 8-route walk at 380 ms per stop blew the 15 s ceiling on a
+single `evaluate_script` call — so every sweep above had to fit in 6 routes, and the full
+25-route coverage was assembled from four calls plus a locale reload. The per-route text
+lengths and opening lines did differ (`/scouting` 4059 characters, `/film` 303, `/players`
+16214, `/onboarding` 106), which is what makes the "no raw key rendered" result a
+measurement rather than four reads of the same stale DOM — but it is not the same evidence
+as a screenshot, and it cannot prove anything about a state the walk never reached. And the
+walk began by suggesting a bug that is not one: the shell's command bar text appeared in
+`innerText` on every route, which reads like a dialog left mounted for a screen reader —
+querying `[role=dialog], dialog, [aria-modal]` returned zero elements, so it is an ordinary
+visible top bar whose English copy is already counted as Command Palette debt.
+
+Registration is the second half of this milestone, and it came out of doing the walk rather
+than out of what the walk found: `features/community/CommunityHub.tsx` was zeroed at M161 but
+never entered `RAW_COVERED`, so the gate went on treating a fully localised screen as an
+unlocalised one. The covered set is 15 files now and the ceiling is unchanged at 307 — a file
+with no hits contributes nothing to debt either way, which is exactly why the omission was
+invisible. Two probes separate the two gates. Registered, an English literal planted in the
+hub reddens the per-file leak check and names the file, while the ceiling holds at 307.
+With the registration line deleted, the identical literal leaves the leak check green and
+reddens only the aggregate: `308 across 26 files`. A screen can therefore gain English copy
+and be reported, per screen, only if someone remembered to register it — which is the
+property M161 asserted and this commit actually holds. Both probes restore their file
+byte-for-byte.
+
+What #142 still owes: the same walk with screenshots, once a viewport exists, plus a pass
+over screens that need completed onboarding or a saved career to render their *populated*
+state (today's walk covered fresh-state empty states and the dataset-backed world screens,
+which is why several routes returned a few hundred characters). `en` was not walked, and the
+reason is worth keeping: a key that never resolved would still be caught there, but a string
+that simply *is* English cannot be told apart from a string that was correctly translated
+into English, so the `en` pass could only ever repeat half of what the other two measured.
+
+`npx tsc --noEmit` exits 0, `npm run build` succeeds and the suite is 26 scripts / 1130
+checks (proof-i18n 112 — the covered set gained a 15th file, which is not a new check), and
+the two probes above each turn a named check red. No app source changed in this commit, so
+the walk and the gate describe the same tree: the strings the browser rendered came from the
+same build the proofs scanned.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
