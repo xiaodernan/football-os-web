@@ -25,7 +25,31 @@ export const headroom = (p: PlayerRef) => Math.max(0, p.potential - p.overall);
 export const valueIndex = (p: PlayerRef) => (p.value > 0 ? p.overall / (p.value / 1_000_000) : p.overall);
 
 // Rough prime window: younger + higher potential keeps value high for longer.
-export const primeYears = (p: PlayerRef) => Math.max(0, Math.min(10, Math.round((p.potential - p.overall) / 2 + (27 - p.age))));
+//
+// The window is measured on a scale that runs from about -7 to +16 across the seeded
+// world, and the DISPLAY bound is 0..10 — so 65% of players sit on one of the bound's
+// two edges (measured: 127 at 0, 78 at 10 of 318). `capped` is what lets a screen say
+// "10+" instead of presenting the bound as if it had been measured.
+export interface PrimeWindow {
+  years: number;
+  raw: number;
+  capped: boolean;
+}
+
+export const primeWindow = (p: PlayerRef): PrimeWindow => {
+  const raw = (p.potential - p.overall) / 2 + (27 - p.age);
+  return { years: Math.max(0, Math.min(10, Math.round(raw))), raw, capped: raw > 10 };
+};
+
+export const primeYears = (p: PlayerRef) => primeWindow(p).years;
+
+// The window as a model input: floored at zero, but NOT capped at the display bound.
+// Feeding the comparison the clamped figure made a quarter of all players tie on the
+// term that is supposed to separate them; a presentation limit is not a model limit.
+export const primeHold = (p: PlayerRef) => Math.max(0, primeWindow(p).raw);
+
+// How the window is shown. Never a bare number at the ceiling.
+export const primeYearsLabel = (p: PlayerRef) => (primeWindow(p).capped ? "10+" : `${primeYears(p)}`);
 
 export interface ScoutFilters {
   bucket: PosBucket;

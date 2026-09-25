@@ -3,7 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { getPlayer, getClub, formatValue } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
-import { headroom, valueIndex, primeYears, templateEdge } from "@/domain/scouting";
+import { headroom, valueIndex, primeYearsLabel, templateEdge } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -150,7 +150,7 @@ export function WatchlistBoard() {
                   );
                 })()}
                 <div className="hidden w-16 text-right lg:block">
-                  <div className="font-mono text-sm tabular-nums">{primeYears(p)}</div>
+                  <div className="font-mono text-sm tabular-nums">{primeYearsLabel(p)}</div>
                   <div className="text-[11px] text-muted-foreground">{t("watch.prime")}</div>
                 </div>
                 <button onClick={() => toggleWatch(p.id)} className="shrink-0 text-muted-foreground hover:text-destructive" aria-label={`Remove ${p.name}`}>✕</button>

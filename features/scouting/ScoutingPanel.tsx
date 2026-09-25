@@ -7,7 +7,7 @@ import {
   squadProfile,
   headroom,
   valueIndex,
-  primeYears,
+  primeYearsLabel,
   bucketOf,
   templateEdge,
   type PosBucket,
@@ -179,7 +179,7 @@ function Watchlist({ watch, onRemove, onCompare, comparing }: { watch: PlayerRef
         <div className="space-y-1.5">
           {watch.map((p) => (
             <div key={p.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm">
-              <div className="min-w-0"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{p.position} · OVR {p.overall} · {t("scout.primeY", { n: primeYears(p) })}</span></div>
+              <div className="min-w-0"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{p.position} · OVR {p.overall} · {t("scout.primeY", { n: primeYearsLabel(p) })}</span></div>
               <div className="flex items-center gap-1">
                 <Button size="sm" variant={comparing.includes(p.id) ? "secondary" : "ghost"} onClick={() => onCompare(p.id)}>⇄</Button>
                 <Button size="sm" variant="ghost" onClick={() => onRemove(p.id)}>✕</Button>

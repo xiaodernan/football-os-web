@@ -8,7 +8,7 @@
 import { getPlayer, getClub } from "@/data/footballService";
 import type { PlayerRef } from "./types";
 import { categoryAverages } from "./attributes";
-import { headroom, valueIndex, primeYears, bucketOf } from "./scouting";
+import { headroom, valueIndex, primeHold, bucketOf } from "./scouting";
 
 export type MetricDir = "high" | "low" | "info";
 
@@ -61,7 +61,7 @@ function advantage(p: PlayerRef): number {
   return (
     p.overall + // current quality
     headroom(p) * 0.6 + // growth still available
-    primeYears(p) * 1.5 - // how long value holds
+    primeHold(p) * 1.5 - // how long value holds
     Math.min(20, p.value / 100_000_000) // mild cost/ageing penalty for big spends
   );
 }
@@ -76,7 +76,7 @@ export function compare(aId: string, bId: string): CompareResult | null {
     { key: "potential", dir: "high", a: a.potential, b: b.potential, display: (v) => `${v}` },
     { key: "headroom", dir: "high", a: headroom(a), b: headroom(b), display: (v) => `+${v}` },
     { key: "age", dir: "low", a: a.age, b: b.age, display: (v) => `${v}` },
-    { key: "prime", dir: "high", a: primeYears(a), b: primeYears(b), display: (v) => `${v}` },
+    { key: "prime", dir: "high", a: Math.round(primeHold(a)), b: Math.round(primeHold(b)), display: (v) => `${v}` },
     { key: "value", dir: "info", a: a.value, b: b.value, display: (v) => formatEUR(v) },
     { key: "valueIndex", dir: "high", a: round1(valueIndex(a)), b: round1(valueIndex(b)), display: (v) => `${v.toFixed(1)}` },
   ];

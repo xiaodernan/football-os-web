@@ -5,10 +5,12 @@
 // quietly make the "who has the edge" read contradict its own stated rule.
 // Run: node scripts/proof-compare.mjs
 import { createServer } from "vite";
+import { readFileSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { compare } = await server.ssrLoadModule("/domain/compare.ts");
-const { headroom, valueIndex, primeYears, bucketOf } = await server.ssrLoadModule("/domain/scouting.ts");
+const { headroom, valueIndex, primeYears, primeWindow, primeHold, primeYearsLabel, bucketOf } =
+  await server.ssrLoadModule("/domain/scouting.ts");
 const { categoryAverages, attributeLabel } = await server.ssrLoadModule("/domain/attributes.ts");
 const { footballProvider, getPlayer } = await server.ssrLoadModule("/data/footballService.ts");
 
@@ -18,7 +20,7 @@ const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } 
 // Independent re-implementations of the private helpers compare.ts relies on.
 const round1 = (n) => Math.round(n * 10) / 10;
 const advantage = (p) =>
-  p.overall + headroom(p) * 0.6 + primeYears(p) * 1.5 - Math.min(20, p.value / 100_000_000);
+  p.overall + headroom(p) * 0.6 + primeHold(p) * 1.5 - Math.min(20, p.value / 100_000_000);
 const dataOnly = (r) => JSON.stringify({
   aId: r.a.id, bId: r.b.id, sameBucket: r.sameBucket, aWins: r.aWins, bWins: r.bWins,
   verdict: r.verdict, hasAttributes: r.hasAttributes,
@@ -58,7 +60,7 @@ const srcMatch =
   metric(r, "potential").a === pa.potential &&
   metric(r, "headroom").a === headroom(pa) && metric(r, "headroom").b === headroom(pb) &&
   metric(r, "age").a === pa.age &&
-  metric(r, "prime").a === primeYears(pa) && metric(r, "prime").b === primeYears(pb) &&
+  metric(r, "prime").a === Math.round(primeHold(pa)) && metric(r, "prime").b === Math.round(primeHold(pb)) &&
   metric(r, "value").a === pa.value &&
   metric(r, "valueIndex").a === round1(valueIndex(pa)) && metric(r, "valueIndex").b === round1(valueIndex(pb));
 ok("every metric value traces to the stored player fields (nothing estimated)", srcMatch);
@@ -145,6 +147,58 @@ ok("€ raw below 1K", money(500) === "€500");
 ok("overall displays as a bare integer", metric(r, "overall").display(70) === "70");
 ok("headroom displays with an explicit + sign", metric(r, "headroom").display(5) === "+5");
 ok("valueIndex displays one decimal", metric(r, "valueIndex").display(3.14) === "3.1");
+
+// --- The prime window: a display bound, and what the reader is told when it bites --
+// The window is measured on a scale from about -7 to +20 and shown on 0..10, so for
+// most players the bound is what they are actually seeing. That is a fine display rule
+// and a wrong model input, which is the distinction these checks hold apart.
+const P = (potential, overall, age) => ({ potential, overall, age });
+const past = P(77, 77, 34);      // raw -7   below the floor
+const justIn = P(89, 70, 27);    // raw 9.5  rounds onto the bound without passing it
+const onBound = P(90, 70, 27);   // raw 10   exactly the bound
+const past10 = P(91, 70, 27);    // raw 10.5 through it
+const far = P(96, 70, 20);       // raw 20   far beyond it
+
+ok("beyond the bound: years show the bound, and raw plus capped keep the truth",
+  primeWindow(far).raw === 20 && primeYears(far) === 10 && primeWindow(far).capped === true &&
+  primeYearsLabel(far) === "10+" && primeHold(far) === 20);
+ok("a measurement that lands on the bound is not labelled as a bound",
+  primeWindow(onBound).raw === 10 && primeWindow(onBound).capped === false &&
+  primeYearsLabel(onBound) === "10" && primeYearsLabel(past10) === "10+" &&
+  primeWindow(justIn).capped === false && primeYears(justIn) === 10);
+ok("below the floor the window reads 0 to a reader but never negative to the model",
+  primeWindow(past).raw === -7 && primeYears(past) === 0 && primeHold(past) === 0 &&
+  primeYearsLabel(past) === "0" && primeWindow(past).capped === false);
+ok("the bound flattens players the window itself can tell apart",
+  primeYears(justIn) === primeYears(far) &&
+  Math.round(primeHold(justIn)) === 10 && Math.round(primeHold(far)) === 20);
+ok("one year of age moves the window by one, two points of headroom by one",
+  primeHold(P(80, 70, 24)) - primeHold(P(80, 70, 25)) === 1 &&
+  primeHold(P(82, 70, 25)) - primeHold(P(80, 70, 25)) === 1);
+
+const all = footballProvider.players();
+const capped = all.filter((p) => primeWindow(p).capped);
+const floored = all.filter((p) => primeWindow(p).raw < 0);
+const bareAtCap = capped.filter((p) => primeYearsLabel(p) !== "10+").map((p) => p.id);
+ok(`the dataset really reaches both edges of the bound (${capped.length} past the cap, ${floored.length} past the floor, of ${all.length})`,
+  capped.length > 0 && floored.length > 0);
+ok(`no player at the ceiling is shown as a bare measurement (${bareAtCap.length} wrong)`,
+  bareAtCap.length === 0);
+const shownYears = new Set(all.map(primeYears)).size;
+const shownHold = new Set(all.map((p) => Math.round(primeHold(p)))).size;
+ok(`the window the verdict reads tells more players apart than the display bound does (${shownHold} vs ${shownYears} distinct values)`,
+  shownHold > shownYears && shownYears >= 2);
+
+const cmpSrc = readFileSync("domain/compare.ts", "utf8");
+ok("the verdict reads the uncapped window, and the clamped figure is gone from that file",
+  cmpSrc.includes("primeHold(p) * 1.5") && !/\bprimeYears\(/.test(cmpSrc));
+
+// The label is only honest if the screens actually use it — a bare {primeYears(p)} in
+// JSX renders "10" for a 20-year window and nothing else would notice.
+const readers = ["features/scouting/ScoutingPanel.tsx", "features/watchlist/WatchlistBoard.tsx"];
+const bareReaders = readers.filter((f) => /\bprimeYears\(/.test(readFileSync(f, "utf8")));
+ok(`both prime columns print the labelled window, never the raw bound (${bareReaders.join(", ") || "none bare"})`,
+  bareReaders.length === 0 && readers.every((f) => readFileSync(f, "utf8").includes("primeYearsLabel(")));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

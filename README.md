@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M153 (a few numbers in that range
+Work ships one milestone per commit and is currently at M154 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M153 line of work is a different kind of progress: it makes the earlier claims
+The M108–M154 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -719,6 +719,43 @@ variables on one call, supply a name the sentence does not use, put a `.replace`
 `tsc --noEmit` exits 0, the build succeeds, the suite is 26 scripts / 1109 checks, and 901
 keys are unchanged — no key was added, renamed or reworded. Not browser-verified: the
 in-app browser is still wedged, so these screens are read by the gate rather than clicked.
+
+M154 is a defect in a number rather than a word. `primeYears` clamps a scale that runs
+from about -7 to +20 onto 0..10, and three screens printed the result as a plain count —
+the scouting list's "prime ~{n}y", the watchlist's "prime yr" column, the comparison's
+"Prime years" row. Measured over the 318 seeded players, 127 of them (40%) sit at 0 and 78
+(25%) at 10: 65% of the figures on screen were a bound, not a measurement, and the whole
+player base shared just 10 distinct values. `compare.ts` then multiplied that same clamped
+number by 1.5 inside the verdict, so a quarter of all players tied on the one term meant to
+separate them by how long their value holds.
+
+The model now keeps the two apart. `primeWindow(p)` returns `{ years, raw, capped }`;
+`primeYears` is still the display bound; `primeYearsLabel` prints `"10+"` whenever the bound
+is what a reader is actually being shown, and a value that lands exactly on 10 is not
+labelled that way, because a measurement and a limit are different facts. `primeHold` —
+floored at zero, uncapped — is what the verdict reads, and it distinguishes 17 values from
+the 10 the bound allowed. The comparison row follows the model rather than the display
+bound, which is why its label is now "Peak-value window"/"巅峰价值窗口": the number beside
+it can exceed ten, and calling that "years" in a row headed "Prime years" would be a new
+overclaim. The scouting chip reads "prime window 10+" for the same reason.
+
+One measurement of mine was wrong and is worth recording: `valueIndex` first looked just as
+degenerate as the prime column — four distinct values across 318 players — but that was my
+probe rounding a continuous ratio to integers. Raw, it spans 0.20 to 2.86 with a 0.47
+median, and nothing about it changed. A distribution only counts if it is measured at the
+precision the model uses.
+
+proof-compare went 43 → 53 checks: the bound's edges, the label's "+", the floor staying
+non-negative for the model, one year of age and two points of headroom each moving the
+window by one, and a census over the real dataset that fails if any capped player is ever
+shown a bare "10", or if the verdict's input stops separating more players than the
+display bound does. Two more read source — the verdict must not reach for the clamped
+figure, and neither prime column may print it unlabeled. Five mutation probes each turn a
+named check red and restore by sha256: clamp the term again, print the bound bare in a
+column, drop the plus sign, treat a value sitting on 10 as past it, and cap the model input
+like the display. tsc clean, build clean, 26 scripts / 1119 checks; labels were reworded
+in all three locales, so the key count is unchanged at 901. Not browser-verified: the
+in-app browser is still wedged.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
