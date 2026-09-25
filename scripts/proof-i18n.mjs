@@ -54,6 +54,8 @@
 //  26. a row handed from a domain module to the interface carrying a key that is
 //      not in the dictionary, a placeholder the row never supplies, or a sentence
 //      the module wrote itself — which no JSX-scanning check can see (M149).
+//  27. a file in the chrome layer (components/ui/*) falling back to its own English
+//      word — check 9 one layer down, so it reaches every screen at once.
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { scanSource, lookupsIn } from "./lib/rawUiScan.mjs";
@@ -209,6 +211,55 @@ ok(`the primitives read all ${PRIMITIVE_KEYS.length} of their own labels from th
 const STRUCK = ["● DEMO DATA", "Something went wrong", "Unexpected error while loading", `title = "Nothing here yet"`];
 const backslid = STRUCK.filter((s) => prim.includes(s));
 ok(`no primitive still hardcodes the English M144 replaced (${backslid.join(" | ") || "none"})`, backslid.length === 0);
+
+// 9b. M173. The same defect one layer down: `components/ui/*` is the generic chrome
+//     every screen is built out of, and its 21 literals were all accessibility copy —
+//     landmark names, icon-button labels, sr-only "Close" — which a screen reader reads
+//     out in the visitor's language only if the file asks the dictionary. The table is
+//     the wiring half of the proof, and it pins *positions*, not just names: the third
+//     number on each row is how many of the file's counted literals that key replaced,
+//     so the totals come back to 21 and pointing one call site at a neighbouring key
+//     stays red. (The first version of this check asked only whether a key appeared
+//     *somewhere* in the file; probe 3 turned up that swapping one of sidebar's three
+//     "Toggle Sidebar" sites for `ui.sidebar` passed it, because the other two were
+//     still there. `cta.loading` in the table is deliberate — "Loading" was already in
+//     the dictionary, so the spinner reads that row instead of minting a second key for
+//     the same word, and the last clause below keeps that decision from being reversed.)
+const CHROME_WIRING = [
+  ["components/ui/pagination.tsx", "ui.pagination", 1],
+  ["components/ui/pagination.tsx", "ui.prevPage", 1],
+  ["components/ui/pagination.tsx", "ui.previous", 1],
+  ["components/ui/pagination.tsx", "ui.nextPage", 1],
+  ["components/ui/pagination.tsx", "ui.next", 1],
+  ["components/ui/pagination.tsx", "ui.morePages", 1],
+  ["components/ui/sidebar.tsx", "ui.sidebar", 1],
+  ["components/ui/sidebar.tsx", "ui.sidebarMobile", 1],
+  ["components/ui/sidebar.tsx", "ui.toggleSidebar", 3],
+  ["components/ui/breadcrumb.tsx", "ui.breadcrumb", 1],
+  ["components/ui/breadcrumb.tsx", "ui.more", 1],
+  ["components/ui/carousel.tsx", "ui.prevSlide", 1],
+  ["components/ui/carousel.tsx", "ui.nextSlide", 1],
+  ["components/ui/dialog.tsx", "ui.close", 2],
+  ["components/ui/sheet.tsx", "ui.close", 1],
+  ["components/ui/message-scroller.tsx", "ui.scrollToEnd", 1],
+  ["components/ui/message-scroller.tsx", "ui.scrollToStart", 1],
+  ["components/ui/spinner.tsx", "cta.loading", 1],
+];
+const chromeFiles = [...new Set(CHROME_WIRING.map(([p]) => p))];
+const chromeSrc = new Map(chromeFiles.map((p) => [p, readFileSync(join(root, ...p.split("/")), "utf8")]));
+const chromeBad = CHROME_WIRING.filter(([p, k, n]) => chromeSrc.get(p).split(`t("${k}")`).length - 1 !== n)
+  .map(([p, k, n]) => `${p}:${k} wants ${n} call site(s), found ${chromeSrc.get(p).split(`t("${k}")`).length - 1}`);
+ok(`the ${chromeFiles.length} chrome files read their own labels from the dictionary at all ${CHROME_WIRING.reduce((s, [, , n]) => s + n, 0)} positions (${chromeBad.join(" | ") || "none"})`,
+  chromeBad.length === 0);
+const CHROME_ENGLISH = ['aria-label="pagination"', 'aria-label="breadcrumb"', 'aria-label="Loading"',
+  'aria-label="Toggle Sidebar"', 'title="Toggle Sidebar"', '"Go to previous page"', '"Go to next page"',
+  ">Previous<", ">Next<", "More pages", "Scroll to end", "Scroll to start", "Previous slide", "Next slide",
+  "Displays the mobile sidebar.", ">Close<", ">Sidebar<"];
+const chromeBackslid = CHROME_ENGLISH.filter((s) => [...chromeSrc.values()].some((src) => src.includes(s)));
+ok(`no chrome file still hardcodes the English M173 replaced (${chromeBackslid.join(" | ") || "none"})`, chromeBackslid.length === 0);
+const uiKeys = Object.keys(en).filter((k) => k.startsWith("ui."));
+ok(`the chrome namespace holds exactly its 16 labels, and mints no second key for the word cta.loading already carries (${uiKeys.length})`,
+  uiKeys.length === 16 && !uiKeys.some((k) => en[k] === en["cta.loading"]));
 
 // 10. M145 localised the Scouting board. Two of its label arrays keep the key in
 //     a variable, the same shape check 8 had to reach, so both arrays and both
@@ -1042,6 +1093,21 @@ const RAW_COVERED = [
   // (`det.dna.title` -> `dna.title`) because the string is authored by the card, not
   // by the page that passes the other four `det.dna.*` rows in as props.
   "ui/primitives.tsx",
+  // M173. The chrome layer at once: every file under components/ui/* that still spoke
+  // English out loud. They are registered as a group because they are one audience —
+  // a screen reader, on every route, whatever the page itself does. Sidebar's three
+  // "Toggle Sidebar" hits are one label rendered as text, aria-label and title on two
+  // different controls, and dialog's two are the same word in an sr-only span and a
+  // visible footer button, so the 21 counted literals were 17 distinct words — 16 new
+  // keys, since "Loading" was already in the dictionary and the spinner reads that row.
+  "components/ui/pagination.tsx",
+  "components/ui/sidebar.tsx",
+  "components/ui/breadcrumb.tsx",
+  "components/ui/carousel.tsx",
+  "components/ui/dialog.tsx",
+  "components/ui/sheet.tsx",
+  "components/ui/message-scroller.tsx",
+  "components/ui/spinner.tsx",
   "ui/charts.tsx",
   // Not a screen: the store is where persisted rows are minted, and the one file a
   // composed sentence can hide in without any component-scoped scan ever seeing it.
@@ -1126,7 +1192,10 @@ const RAW_COVERED = [
 // their last word — the open count fell by exactly the number of new covered files.
 // 234 as of M172, measured on the gate line: the shared DnaCard is covered and its 3 left
 // the open count — 2 of those 3 were the same literal written twice in two branches.
-const RAW_UI_CEILING = 234;
+// 213 as of M173, measured on the gate line: the whole chrome layer at once, 21 literals
+// across 8 files. This is the largest single drop since M168 because the milestone is the
+// largest single registration — after it, every remaining open file is a screen.
+const RAW_UI_CEILING = 213;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -1153,9 +1222,14 @@ for (const [p, h] of openRows.sort((a, b) => b[1].length - a[1].length).slice(0,
 // not only in the fixture we tuned it against. Both survive a fully localised repo
 // being *reported*, and when the second one stops holding the honest fix is to delete
 // this check — the debt has reached the kind of zero it was never meant to guard.
+// M173 removed the third conjunct, `openRows.length >= 15`. Registering eight chrome
+// files at once took the open file count to 7, and that clause had already contradicted
+// the paragraph above it: a floor on how many files still owe work is a floor on the
+// quantity every milestone is trying to shrink, so it went red while the scanner was
+// working perfectly. The two properties the comment names are the two that remain.
 const openKinds = new Set(openRows.flatMap(([, h]) => h.map((x) => x.kind)));
 ok(`the debt scan still walks a real tree and still tells copy positions apart in it (${tsxSrc.length} files, ${openRows.length} in debt, ${openKinds.size} distinct positions: ${[...openKinds].sort().join(", ")})`,
-  tsxSrc.length >= 60 && openRows.length >= 15 && openKinds.size >= 6);
+  tsxSrc.length >= 60 && openKinds.size >= 6);
 
 // The exemption's own audit: a literal the scan chose not to report because it
 // looks like a t() lookup has to be one. This is the check that would have caught

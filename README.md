@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M172 (a few numbers in that range
+Work ships one milestone per commit and is currently at M173 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1507,6 +1507,63 @@ an unreachable key), and the zh-TW row deleted (key parity).
 Suite is now 26 scripts / **1142 checks** (proof-i18n 124 — still no new clause), covered set
 **25 files**, open debt **234 across 15 files** with the ceiling at exactly that. `tsc --noEmit`
 exits 0 and the build succeeds.
+
+### M173 — The chrome layer: 21 accessibility strings that were English on every route
+
+Eight files under `components/ui/*` went into the covered set at once, which is not how
+the last twenty milestones worked. The reason is that this is not a screen: it is the
+generic library the screens are built out of, and every one of its 21 counted literals was
+accessibility copy — landmark names, the label on an icon-only button, the `sr-only` "Close"
+inside a dialog. A visitor with a screen reader hears those in the wrong language on *every*
+route, whichever page they were on, and no page-level milestone could fix it by localising
+its own file. Check 9 has done this since M144 for the project's own primitives; the layer
+underneath it had never been reached.
+
+**21 literals, 17 distinct words, 16 new keys.** The gap is the discipline: "Loading" was
+already in the dictionary (`cta.loading`, which `LoadingState` has read since M144), so
+`spinner.tsx` reads that row instead of minting `ui.loading`, and the third clause added
+this milestone fails if a later one mints a second key for the word the first key carries.
+The other gap, 17 → 16, is that 21 counted positions were never 21 strings: sidebar renders
+one label three ways (`sr-only` text, the rail's `aria-label`, the rail's `title`), and
+dialog has "Close" both as screen-reader text and as a visible footer button.
+
+**The new check counts positions, not names.** The first version asked whether each key
+appears somewhere in its file; probe 3 was written against that version and came back *green*
+— pointing one of sidebar's three `ui.toggleSidebar` sites at `ui.sidebar` still left two
+behind, so "the key appears" stayed true while a label on screen was wrong. The table now
+carries an expected call-site count per (file, key) pair and asserts equality, so one site
+missing is red and one site duplicated is red too, and the counts sum to 21 — every literal
+the eight files used to carry is now a lookup. That is what makes the table the same kind of
+claim as check 9's, one layer down.
+
+**This milestone also caught a gate bug, not just a code bug.** The debt scan's non-vacuity
+clause read `openRows.length >= 15` — a floor on how many files still owe work, i.e. exactly
+the quantity every milestone is trying to shrink, and one that contradicted the paragraph
+printed directly above it ("deliberately *not* a floor on the total"). Registering eight
+chrome files at once took the open file count to 7 and the clause went red while the scanner
+was working perfectly. It is gone; the two properties that paragraph actually names — the
+scan walks a real tree, and it distinguishes ≥6 syntactic positions in real source — are what
+remains.
+
+**Rendered in three locales where that was possible.** `Spinner`, `Pagination` and
+`Breadcrumb` take no context, so the SSR harness rendered them under `I18nProvider` with the
+stored locale set per run and matched 6 labels each: the landmark names, the previous-page
+`aria-label` and its visible text, the ellipsis `sr-only`, and the spinner's status label —
+`Loading / 加载中 / 載入中`, `pagination / 分页 / 分頁`, `breadcrumb / 面包屑 / 麵包屑`. The
+other five files are bound to `SidebarProvider`, Radix portals, embla or the message-scroller
+primitive, so their proof is the gate and nothing more; the harness prints that line rather
+than leaving it out.
+
+Five probes, all red and all restored byte-identical: the spinner back to
+`aria-label="Loading"` (3 reds — positions, backslide, covered-file leak), a second key minted
+for that same word (1), one sidebar site pointed at the neighbouring key (1, the case the weak
+version of the check could not see), a duplicated `t("ui.close")` in `dialog.tsx` (1), and one
+locale losing a `ui.*` row (key parity).
+
+Suite is now 26 scripts / **1145 checks** (proof-i18n **127** — three new clauses, one
+stale floor deleted), covered set **33 files**, open debt **213 across 7 files** with the
+ceiling at exactly that. After this, every file still in the debt table is a screen.
+`tsc --noEmit` exits 0 and the build succeeds.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
