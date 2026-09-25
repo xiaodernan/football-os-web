@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M163 (a few numbers in that range
+Work ships one milestone per commit and is currently at M164 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1099,6 +1099,46 @@ checks (proof-i18n 112 — the covered set gained a 15th file, which is not a ne
 the two probes above each turn a named check red. No app source changed in this commit, so
 the walk and the gate describe the same tree: the strings the browser rendered came from the
 same build the proofs scanned.
+
+M164 took the landing page from 18 raw literals to none: ten new keys per locale
+(1183 → 1193), the covered set at 16 files, and the ceiling re-measured in the same commit
+rather than carried over — 307 → 289, which is what the gate reads now.
+
+Six of those 18 were never copy. They were the pillar *ids* — `"coach"`, `"world"`, … —
+reported because the array holding them sat inside a `{…}` hole in JSX, which the scanner
+reads as children, and `hasProse()` is satisfied by any run of three letters. Keying the
+descriptions did not touch them, and neither should it have: an id list is data, not
+interface text, so the fix was to move the list to module scope and let each id drive both
+`landing.pillars.<id>` and `landing.pillarDesc.<id>`, with the range of `<id>` enumerated
+by the gate out of the array itself. The same array carried a `k2: "dev"` field with no
+reader anywhere in the repository; it is gone rather than renamed.
+
+That move opens a hole worth naming, because a milestone that quietly widens what the scan
+can see is worse than one that leaves English on screen. A hoisted array is no longer
+visible to the copy scan at all, so a sentence smuggled into it would be reported by
+nothing on that side of the gate. Three probes say who catches it instead. Planting prose
+back into the JSX reddens the per-file leak check and names `Landing.tsx`, with the ceiling
+unmoved. Appending `"A brand new pillar"` to the array leaves both of those checks green
+and reddens the value-space check — `landing.pillars.… · landing pillar ids: all 7 values
+keyed in every locale` — so the array is guarded by key reachability, not by being legible
+as prose. Deleting the `landing.pillarDesc.` site declaration would make that second
+result a silent pass, which is why the declaration and the array are read against each
+other rather than written down twice. All three restore their file byte-for-byte.
+
+Unusually for this line of work, M164 was then looked at in a browser — the first time the
+walk M163 unblocked has been used on a milestone's own change. Against a fresh production
+build on its own preview port, the landing route was read in `zh-CN` and then `zh-TW`: 618
+characters of rendered text in each locale, zero raw keys, zero unfilled placeholders. The
+new strings are visible doing their jobs — `318 名球员 · 39 家俱乐部 · 252 场比赛 · 演示世界`
+in Simplified, the same line as `318 名球員 · 39 家俱樂部 · 252 場比賽 · 示範世界` in
+Traditional, and eleven Traditional markers with no Simplified counterpart anywhere in the
+screen's text. The English descriptions are absent from the page in both. What this still
+does not establish: the viewport is 0×0, so nothing here was *seen* — the claim is about
+text that reached the DOM, on a page a visitor reaches without onboarding.
+
+`npx tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is 26 scripts / 1131
+checks — one more than M163's 1130, because a second dynamic site had to be declared for
+the pillar descriptions to have a guard of their own.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

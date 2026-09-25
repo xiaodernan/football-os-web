@@ -392,7 +392,8 @@ const DYN_SITES = [
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "type", prefix: "fw.type.", suffix: "" },
-  { path: "features/landing/Landing.tsx", expr: "p.k", prefix: "landing.pillars.", suffix: "" },
+  { path: "features/landing/Landing.tsx", expr: "k", prefix: "landing.pillars.", suffix: "" },
+  { path: "features/landing/Landing.tsx", expr: "k", prefix: "landing.pillarDesc.", suffix: "" },
   { path: "features/onboarding/Onboarding.tsx", expr: "m.toLowerCase()", prefix: "onboarding.", suffix: "" },
   { path: "features/shell/AppShell.tsx", expr: "m.toLowerCase()", prefix: "onboarding.", suffix: "" },
   { path: "features/onboarding/Onboarding.tsx", expr: "m.toLowerCase()", prefix: "onboarding.", suffix: ".desc" },
@@ -418,6 +419,12 @@ const DYN_SITES = [
 // prefix alone. Several sites can share one space object, and check 16 requires
 // every site's pair to appear here.
 const S_ACH = { name: "achievement ids", values: ACH_IDS };
+// M164: the landing page's pillar strip is one id list driving two key sites, so both
+// sites share one value space read out of the array itself.
+const S_PILLAR = {
+  name: "landing pillar ids",
+  values: spaceOf("features/landing/Landing.tsx", /const PILLARS = \[[^\]]*\]/, /"([^"]+)"/g),
+};
 const S_CAT = { name: "attribute categories", values: CATEGORY_ORDER };
 const S_ATTR = { name: "attribute keys", values: ATTRIBUTE_DEFS.map((d) => d.key) };
 const S_GROUP = { name: "position groups", values: POSITION_GROUPS.map((g) => g.id) };
@@ -465,10 +472,8 @@ const SPACES = new Map([
     name: "search result types",
     values: spaceOf("features/football/FootballWorld.tsx", /\["player"[^\]]*\] as const/, quoted),
   }],
-  ["landing.pillars.|p.k", {
-    name: "landing pillar keys",
-    values: spaceOf("features/landing/Landing.tsx", /\{ k: "coach",[\s\S]*?\n          \]/, /\{ k: "([^"]+)",/g),
-  }],
+  ["landing.pillars.|k", S_PILLAR],
+  ["landing.pillarDesc.|k", S_PILLAR],
   ["onboarding.|m.toLowerCase()", {
     name: "modes, lower-cased by the site",
     values: lower(MODES_UPPER),
@@ -848,6 +853,11 @@ const RAW_COVERED = [
   "features/compare/ComparePage.tsx",
   "features/football/Details.tsx",
   "features/history/HistoryPage.tsx",
+  // The landing page is the one screen a visitor can reach without onboarding, so it
+  // is the first place an untranslated sentence is seen at all. It reached 0 at M164,
+  // which needed its pillar list moved out of the JSX: an array inlined in a render
+  // hole is scanned as children, so its own ids counted as copy.
+  "features/landing/Landing.tsx",
   "features/learn/LearnHub.tsx",
   "features/manager/ManagerOS.tsx",
   "features/onboarding/Onboarding.tsx",
@@ -913,7 +923,13 @@ const RAW_COVERED = [
 // by subtraction, and both terms are measured rather than recalled: 354 - 44 (the
 // Community Hub file at 7093fad vs. at HEAD) - 3 (src/App.tsx's not-found fallback,
 // keyed in this pass) = 307.
-const RAW_UI_CEILING = 307;
+// 289 as of M164: Landing's 18 hits are keys now and the file is covered. Six of those
+// 18 were never copy — they were the pillar ids, counted because the array holding them
+// was inlined in a JSX hole, which the scan reads as children. Moving the list to module
+// scope is what let the file reach 0, and the value space is still enumerated here (see
+// DYN_SITES' `landing.pillars.|p.k`), so the ids are gated by key reachability rather
+// than by being visible as prose.
+const RAW_UI_CEILING = 289;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

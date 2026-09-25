@@ -5,6 +5,12 @@ import { WORLD } from "@/data/footballSeed";
 import { trendingPlayers, getClub } from "@/data/footballService";
 import { Crest } from "@/ui/primitives";
 
+// The six pillars, as ids only. Every word a pillar shows — its name and its one-line
+// description — is keyed off `k`, and proof-i18n enumerates this array as the whole
+// value range of both sites, so a seventh pillar with no `landing.pillars.*` /
+// `landing.pillarDesc.*` rows fails the suite instead of printing a raw key.
+const PILLARS = ["coach", "world", "studio", "dev", "intel", "manager"];
+
 export function Landing() {
   const { t } = useI18n();
   const stars = trendingPlayers(5);
@@ -31,7 +37,7 @@ export function Landing() {
         <div className="fo-grid absolute inset-0 opacity-60" />
         <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-16 text-center sm:pt-24">
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border bg-card/50 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-            <span className="fo-live-dot h-1.5 w-1.5 rounded-full bg-success" /> {WORLD.players.length} players · {WORLD.clubs.length} clubs · {WORLD.matches.length} matches · demo world
+            <span className="fo-live-dot h-1.5 w-1.5 rounded-full bg-success" /> {t("landing.statLine", { players: WORLD.players.length, clubs: WORLD.clubs.length, matches: WORLD.matches.length })}
           </div>
           <h1 className="text-5xl font-black leading-[0.95] tracking-tighter sm:text-7xl md:text-8xl">
             {t("landing.hero.1")}
@@ -56,24 +62,17 @@ export function Landing() {
 
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { k: "coach", d: "A coach that reads your history, finds the gap and builds the next session." },
-            { k: "world", d: "Live fixtures, standings, scouting-grade player data and news intelligence." },
-            { k: "studio", d: "Build and reshape formations on a draggable tactical pitch, then save them or send them to the Simulation Lab." },
-            { k: "dev", k2: "dev", d: "Attributes, XP and level progression tied to real training you actually complete." },
-            { k: "intel", d: "Deterministic match engine with xG, events, ratings and match chat." },
-            { k: "manager", d: "Run a club: squad, transfers, finances and seasons." },
-          ].map((p) => (
-            <div key={p.k} className="group rounded-xl border bg-card/40 p-5 transition hover:border-primary/40 hover:bg-card/70">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">{t(`landing.pillars.${p.k}`)}</div>
-              <p className="text-sm text-muted-foreground">{p.d}</p>
+          {PILLARS.map((k) => (
+            <div key={k} className="group rounded-xl border bg-card/40 p-5 transition hover:border-primary/40 hover:bg-card/70">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">{t(`landing.pillars.${k}`)}</div>
+              <p className="text-sm text-muted-foreground">{t(`landing.pillarDesc.${k}`)}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-20">
-        <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Trending in the demo world</div>
+        <div className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("landing.trending")}</div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {stars.map((p) => {
             const club = getClub(p.clubId);
@@ -84,7 +83,7 @@ export function Landing() {
                   <div className="text-right text-lg font-bold tabular-nums">{p.overall}</div>
                 </div>
                 <div className="mt-3 truncate text-sm font-semibold">{p.name}</div>
-                <div className="text-xs text-muted-foreground">{p.position} · {p.age}y · {club?.name}</div>
+                <div className="text-xs text-muted-foreground">{p.position} · {t("landing.ageSuffix", { age: p.age })} · {club?.name}</div>
               </Link>
             );
           })}
@@ -92,7 +91,7 @@ export function Landing() {
       </section>
 
       <footer className="border-t px-6 py-8 text-center text-xs text-muted-foreground">
-        Football OS — a football intelligence, development, simulation & management platform. All world data shown is deterministic DEMO data.
+        {t("landing.footer")}
       </footer>
     </div>
   );
