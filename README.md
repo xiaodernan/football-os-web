@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M170 (a few numbers in that range
+Work ships one milestone per commit and is currently at M171 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1415,6 +1415,57 @@ One machine-level finding to keep: `sed -i` on this box rewrote `i18n/dictionari
 LF, so a dictionary-insertion script must anchor on `\r?\n` rather than the ending the file used to
 have. Git's index normalisation hid the conversion (numstat still reported the intended 30 lines),
 which is why it went unnoticed for a milestone.
+
+### M171 — The three screens that carried exactly one English word each
+
+Every previous debt milestone took a whole screen down to zero. This one took the tail of
+the table instead: `Dashboard.tsx`, `LoadPage.tsx` and `DevelopmentPage.tsx` each had
+**one** counted hit left, which is why the sorted debt list put them last and why nine
+milestones walked past them. A one-word file is still an unregistered file — the gate's
+per-file clause only exists for files named in `RAW_COVERED`, so an English literal added
+to the Dashboard moved an aggregate number rather than naming the Dashboard.
+
+What the three words were:
+
+- **Dashboard's `LIVE` badge.** The key for it already existed and was already used on the
+  same screen (`dash.live`, line 121, the section heading). The badge could not have used
+  it: `LiveCell` never called `useI18n()` at all, so raw English was the only thing that
+  file was capable of rendering. Adding the hook and reusing the key also fixed a small
+  inconsistency the raw string had created — the heading said "Live" and the badge shouted
+  "LIVE" at the same word.
+- **Load & Recovery's `ACWR` readout.** `ld.acwr` already labels the stat tile two rows
+  below the banner that prints the same metric, and its zh values (急慢比) are exactly the
+  translation a visitor needs in both places. One abbreviation typed twice in one file,
+  only one of them keyed.
+- **Development's `role target {n}` tooltip.** The only genuinely new key (`dv.roleTarget`,
+  1219 → **1220** keys). Its zh wording is 位置目标, copied from `dv.strengthsHint` in the
+  same block rather than invented — reading the neighbour row is how the term stays one
+  term. The old template literal also had a stray trailing space.
+
+**Verified in a real render, for the one change that needed it.** The Dashboard edit added
+a hook to a leaf component, which is a behaviour change, not a text change — so the SSR
+harness rendered the whole Dashboard under all three locales. The badge's own span was
+matched out of the HTML: 4 badges, `Live` / `进行中` / `進行中`. A locale that had not
+switched would have printed English under the zh runs.
+
+The same harness came back **empty** for the other two screens, and that is a finding about
+the harness, not the code: `OsProvider` hydrates inside `useEffect`, which `renderToString`
+never runs, so every SSR page render is the *un-hydrated* state — Load & Recovery has no
+sessions to compute a ratio from, and Development has no profile to find gaps in. So the
+populated-state branch of those two screens is not reachable through this substitute at all,
+which is the precise reason task #142 (browser walk of populated screens) is still open. What
+those two edits do have, and what the gate prints, is: the key exists in all three locales,
+its placeholders agree, and the call site supplies every one of them.
+
+Four probes, all red and all naming what they broke: the badge back to `LIVE` (the covered-set
+clause names `features/dashboard/Dashboard.tsx`), the banner back to `ACWR` (names
+`features/load/LoadPage.tsx`), the tooltip call stopped supplying `target` (`every placeholder
+key is read by a call that supplies its variables (85 filled, 1 short)`), and the zh-TW row
+deleted (2 reds — key parity plus placeholder agreement).
+
+Suite is now 26 scripts / **1142 checks** (proof-i18n 124 — again no new clause), covered set
+**24 files**, open debt **237 across 16 files** with the ceiling at exactly that. `tsc --noEmit`
+exits 0 and the build succeeds.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

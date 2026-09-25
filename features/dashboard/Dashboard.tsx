@@ -387,11 +387,12 @@ const MODULE_LINKS = [
 ];
 
 function LiveCell({ m }: { m: Match }) {
+  const { t } = useI18n();
   const h = getClub(m.homeClubId);
   const a = getClub(m.awayClubId);
   return (
     <Link to={`/matches/${m.id}`} className="flex flex-col gap-1 p-3 hover:bg-secondary/40">
-      <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{getCompetition(m.competitionId)?.name}</span><span className="fo-live-dot text-destructive">LIVE</span></div>
+      <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{getCompetition(m.competitionId)?.name}</span><span className="fo-live-dot text-destructive">{t("dash.live")}</span></div>
       <div className="space-y-0.5">
         <TeamLine name={h?.name} goals={m.homeGoals} />
         <TeamLine name={a?.name} goals={m.awayGoals} />

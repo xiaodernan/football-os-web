@@ -1025,6 +1025,16 @@ const RAW_COVERED = [
   // Only the first two were copy; the third was moved out rather than translated,
   // because a format specifier is not a word a visitor reads.
   "features/profile/ProfilePage.tsx",
+  // M171. Three screens that each carried exactly one English word, and the reason
+  // they are registered together is that a one-word file is still an unregistered
+  // file: the debt table ranked them last, so they were invisible to every previous
+  // milestone. Two of the three were pure reuse (`dash.live` was already on the same
+  // screen, `ld.acwr` already labelled the stat tile two rows below the readout), and
+  // the Dashboard one explains itself: `LiveCell` had no `useI18n()` at all, so raw
+  // English was the only thing it could have rendered.
+  "features/dashboard/Dashboard.tsx",
+  "features/development/DevelopmentPage.tsx",
+  "features/load/LoadPage.tsx",
   "ui/charts.tsx",
   // Not a screen: the store is where persisted rows are minted, and the one file a
   // composed sentence can hide in without any component-scoped scan ever seeing it.
@@ -1104,7 +1114,10 @@ const RAW_COVERED = [
 // dictionary already had 进行中/已安排/已结束.
 // 240 as of M170, measured on the gate line: the profile screen is covered and its 7 left
 // the open count, of which 4 were format specifiers rather than copy.
-const RAW_UI_CEILING = 240;
+// 237 as of M171, measured on the gate line: three screens at one hit each. This is the
+// first drop that is not "one screen's whole debt", because the files were already down to
+// their last word — the open count fell by exactly the number of new covered files.
+const RAW_UI_CEILING = 237;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

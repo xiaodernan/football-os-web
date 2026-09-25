@@ -41,7 +41,7 @@ function GapRow({ item, kind, action }: { item: GapItem; kind: "priority" | "str
         <div
           className="absolute inset-y-0 w-0.5 bg-foreground/60"
           style={{ left: `${(item.target / max) * 100}%` }}
-          title={`role target ${item.target}`}
+          title={t("dv.roleTarget", { target: item.target })}
         />
       </div>
     </div>

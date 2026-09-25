@@ -90,7 +90,7 @@ export function LoadPage() {
           <div className={cn("rounded-xl border px-4 py-3", ZONE_TONE[load.zone])}>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-semibold uppercase tracking-widest">{ZONE_LABEL[load.zone]}</span>
-              <span className="font-mono text-sm">ACWR {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
+              <span className="font-mono text-sm">{t("ld.acwr")} {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
             </div>
             <p className="mt-1 text-sm">{load.advice}</p>
           </div>
