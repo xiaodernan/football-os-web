@@ -297,6 +297,13 @@ function CompetitionsList() {
   );
 }
 
+// Both lists are filter/search codes, not copy — but an array written inside a render hole
+// is scanned as JSX children, so every code in it counted as untranslated interface text
+// until it moved out (the Landing page learned this at M164). The status buttons below
+// print the keyed word, so the codes never reach a visitor.
+const MATCH_STATUSES = ["LIVE", "SCHEDULED", "FINISHED"] as const;
+const SEARCH_TYPES = ["player", "club", "competition", "match", "news"] as const;
+
 function MatchesList() {
   const { t } = useI18n();
   const { query } = useRouter();
@@ -308,8 +315,8 @@ function MatchesList() {
     <div className="space-y-5">
       <PageHeader title={t("fw.matches.title")} hint={t("fw.matches.hint", { n: rows.length, status: t(`fw.status.${tab.toLowerCase()}`) })} back="/football" />
       <div className="flex gap-1.5">
-        {(["LIVE", "SCHEDULED", "FINISHED"] as const).map((s) => (
-          <button key={s} onClick={() => setTab(s)} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === s ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{s}</button>
+        {MATCH_STATUSES.map((s) => (
+          <button key={s} onClick={() => setTab(s)} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === s ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(`fw.status.${s.toLowerCase()}`)}</button>
         ))}
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
@@ -523,7 +530,7 @@ function SearchPage() {
       />
       {!term.trim() && <EmptyState title={t("fw.search.empty")} hint={t("fw.search.emptyHint")} />}
       {term.trim() && results.length === 0 && <EmptyState title={t("fw.search.noMatch", { term })} />}
-      {(["player", "club", "competition", "match", "news"] as const).map((type) => {
+      {SEARCH_TYPES.map((type) => {
         const items = grouped[type];
         if (!items?.length) return null;
         return (

@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M168 (a few numbers in that range
+Work ships one milestone per commit and is currently at M169 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1338,6 +1338,45 @@ the expected result rather than a sign nothing happened. Not browser-verified: t
 still commits no React tree (M166), so these ten strings are verified by the gate that reads every
 one of them out of the dictionary and by the render sites being plain `t("literal")` calls with no
 branching in between.
+
+### M169 — Football World's status tabs, and one prediction I got wrong
+
+`features/football/FootballWorld.tsx` reported 8 raw items. Five were not copy at all: they were
+the codes of two arrays written inside a render hole — `{(["LIVE","SCHEDULED","FINISHED"] as const).map(…)}`
+and the search-type equivalent — which the scan reads as JSX children because that is where a JSX
+text node can be. Both arrays are now module-level `MATCH_STATUSES` / `SEARCH_TYPES`, so they are
+gated as the key spaces they are (checks 16/17) instead of counted as prose.
+
+The other three were a real defect a visitor could see: the filter buttons rendered `{s}`, the code
+itself, so a 简体中文 reader reached a screen whose only English was LIVE / SCHEDULED / FINISHED —
+while the page's own hint line on the very same screen was already rendering 进行中 / 已安排 / 已结束
+from `fw.status.*`. The keys existed; the button just never asked for them. It now calls
+`t(\`fw.status.${s.toLowerCase()}\`)`, which added a third dynamic site to the declaration table and
+a new value space (`fw.status.|s.toLowerCase()`) whose values are read out of the hoisted array
+rather than typed by hand.
+
+One consequence worth stating instead of hiding: the en values are lowercase words
+("live"/"scheduled"/"finished"), so the tab strip lost the caps the codes carried. No gate covers
+that choice, and no CSS `uppercase` was added, because forcing the caps back would re-impose an
+English-typography convention on 进行中.
+
+Four probes, and the fourth was written as a negative control. Three named checks fired as
+intended: a literal `LIVE` back on the button reddens the per-file clause (and reaches 2 reds
+because the orphaned dynamic site goes stale); a fourth status code with no key reddens both
+`fw.status` space rows, which is what "values are read from the array" buys; dropping `.toLowerCase()`
+reddens the declaration check alone. The fourth mutation replaced the keyed call with `{s}` — printing
+the code, which the raw-UI scan structurally cannot see, since there is no literal left in the file.
+**I predicted that one would pass every gate, and it did not:** it reddened
+`every dynamic t() site is declared, and every declaration is live`, because removing the call site
+leaves its declaration stale. The site→space link is load-bearing in both directions, so a code
+printed where a keyed word belongs is caught by the declaration table even though the scanner is
+blind to it. That is a stronger property than I thought this file had, and it was found by trying to
+demonstrate the weakness.
+
+Suite is now 26 scripts / **1142 checks** (proof-i18n 124), covered set **20 files**, open debt
+**247 across 20 files** with the ceiling at exactly that measurement — the largest remaining are
+PlayerOS 90, SimulationLab 51, FilmRoom 30, DataRoom 29. `tsc --noEmit` exits 0, the build succeeds.
+Not browser-verified: the in-app window still commits no React tree (M166).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

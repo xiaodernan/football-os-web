@@ -440,6 +440,11 @@ const DYN_SITES = [
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
+  // M169: the filter buttons themselves. Until this line they printed the raw code, so a
+  // 简体中文 visitor saw LIVE / SCHEDULED / FINISHED as the only English on the screen —
+  // and the gate could not see it, because the words came from an array inlined in a
+  // render hole, which reads as children copy rather than as a label slot.
+  { path: "features/football/FootballWorld.tsx", expr: "s.toLowerCase()", prefix: "fw.status.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "type", prefix: "fw.type.", suffix: "" },
   { path: "features/landing/Landing.tsx", expr: "k", prefix: "landing.pillars.", suffix: "" },
   { path: "features/landing/Landing.tsx", expr: "k", prefix: "landing.pillarDesc.", suffix: "" },
@@ -521,6 +526,12 @@ const SPACES = new Map([
   }],
   ["fw.status.|tab.toLowerCase()", {
     name: "match statuses",
+    values: lower(spaceOf("features/football/FootballWorld.tsx", /\["LIVE"[\s\S]*?\] as const/, quoted)),
+  }],
+  ["fw.status.|s.toLowerCase()", {
+    // The filter tab loop: the same three codes, reached from the hoisted list rather
+    // than from the route query, so it is a separate site and gets its own declaration.
+    name: "match status filter buttons",
     values: lower(spaceOf("features/football/FootballWorld.tsx", /\["LIVE"[\s\S]*?\] as const/, quoted)),
   }],
   ["fw.status.|m.status.toLowerCase()", {
@@ -1001,6 +1012,11 @@ const RAW_COVERED = [
   // in isolation to a visitor whose language writes 分 and 岁. Keying the row is what
   // forces the unit to be a decision rather than a typing habit.
   "features/world/DynamicWorld.tsx",
+  // M169. Eight "hits", and only one of them was a translation gap: five were codes in
+  // arrays inlined in a render hole, which the scan cannot tell apart from copy, and the
+  // other three were the status buttons printing those codes. Both are fixed, so the
+  // buttons now say 进行中 / 已安排 / 已结束 and the file's codes are gated as data.
+  "features/football/FootballWorld.tsx",
   "ui/charts.tsx",
   // Not a screen: the store is where persisted rows are minted, and the one file a
   // composed sentence can hide in without any component-scoped scan ever seeing it.
@@ -1073,7 +1089,12 @@ const RAW_COVERED = [
 // covered and its 10 counted hits left the open count. Nothing about the widening
 // changed here — the drop is exactly the file's own debt, which is the shape this
 // number is supposed to have when a screen is actually localised.
-const RAW_UI_CEILING = 255;
+// 247 as of M169, measured the same way: Football World's 8 left the open count, and 5 of
+// those 8 were never copy — codes in an array inlined in a render hole. Hoisting them is
+// the honest fix (they are gated as a key space by checks 16/17), the 3 real ones were
+// the status buttons, which printed LIVE/SCHEDULED/FINISHED at a visitor whose
+// dictionary already had 进行中/已安排/已结束.
+const RAW_UI_CEILING = 247;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
