@@ -861,12 +861,16 @@ const RAW_COVERED = [
   // composed sentence can hide in without any component-scoped scan ever seeing it.
   // It reached 0 raw literals at M152 and has to stay there.
   "store/useFootballOS.tsx",
+  // Also not a screen, but the one place a route that does not exist yet speaks to a
+  // visitor: the not-found/build-queue fallback. It reached 0 at M162.
+  "src/App.tsx",
 ];
 // The ceiling is the debt that is not in the covered set. Lower it when a screen
 // is localised; it may only ever go down on purpose.
 //
 // Measured over every .tsx in the repo — which is wider than the features/ui/
-// components tree (store/useFootballOS.tsx carries 4, src/App.tsx 3). 596 as of
+// components tree (at M149, store/useFootballOS.tsx carried 4 and src/App.tsx 3; both
+// have since been keyed, and both are now in the covered set above). 596 as of
 // M149, when the activity timeline's rows went onto keys and HistoryPage's own
 // `label` fields became `labelKey`, which is what the scan reads as a key. 594 as
 // of M150, when onboarding's two goal titles stopped being sentences stored in a row.
@@ -898,7 +902,13 @@ const RAW_COVERED = [
 // rule also grew from `toast("` to the whole argument list, which found no new debt
 // (the only conditional toast in the repo was Learn Hub's own, and it is keyed), so
 // 354 is a measurement of the same tree with two more eyes on it.
-const RAW_UI_CEILING = 354;
+// 307 as of M162, and the ceiling was overdue: Community Hub's 44 hits went to zero
+// at M161 without this number moving, so for a whole milestone 354 described a tree
+// that no longer existed rather than the debt that did. The reading is now reconciled
+// by subtraction, and both terms are measured rather than recalled: 354 - 44 (the
+// Community Hub file at 7093fad vs. at HEAD) - 3 (src/App.tsx's not-found fallback,
+// keyed in this pass) = 307.
+const RAW_UI_CEILING = 307;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -910,14 +920,24 @@ ok(`the ${RAW_COVERED.length} localised files still render no raw UI text (${[..
   RAW_COVERED.length >= 8 && missing.length === 0 && leaks.length === 0);
 const openRows = tsxSrc
   .filter(([p]) => !RAW_COVERED.includes(p))
-  .map(([p, src]) => [scanSource(src).hits.length, p])
-  .filter(([n]) => n > 0);
-const openTotal = openRows.reduce((s, [n]) => s + n, 0);
+  .map(([p, src]) => [p, scanSource(src).hits])
+  .filter(([, h]) => h.length > 0);
+const openTotal = openRows.reduce((s, [, h]) => s + h.length, 0);
 ok(`the raw-UI debt outside the covered set has not grown (${openTotal} across ${openRows.length} files, ceiling ${RAW_UI_CEILING})`,
   openTotal <= RAW_UI_CEILING);
-for (const [n, p] of openRows.sort((a, b) => b[0] - a[0]).slice(0, 6)) console.log(`       debt: ${String(n).padStart(4)} ${p}`);
-ok(`the debt scan is reading files that do carry raw text (${openRows.length} files)`,
-  tsxSrc.length >= 60 && openRows.length >= 20 && openTotal >= 300);
+for (const [p, h] of openRows.sort((a, b) => b[1].length - a[1].length).slice(0, 6)) console.log(`       debt: ${String(h.length).padStart(4)} ${p}`);
+// Non-vacuity, and deliberately *not* a floor on the total. The previous clause read
+// `openTotal >= 300`, which is a bound on the exact quantity every milestone is trying
+// to shrink: localise three more screens and the check goes red while the scan is
+// working perfectly. That is the same mistake as pinning a floor to a measurement.
+// What has to stay true as the repo empties is that the scanner still (a) walks the
+// tree and (b) classifies copy into more than one syntactic position in real source,
+// not only in the fixture we tuned it against. Both survive a fully localised repo
+// being *reported*, and when the second one stops holding the honest fix is to delete
+// this check — the debt has reached the kind of zero it was never meant to guard.
+const openKinds = new Set(openRows.flatMap(([, h]) => h.map((x) => x.kind)));
+ok(`the debt scan still walks a real tree and still tells copy positions apart in it (${tsxSrc.length} files, ${openRows.length} in debt, ${openKinds.size} distinct positions: ${[...openKinds].sort().join(", ")})`,
+  tsxSrc.length >= 60 && openRows.length >= 15 && openKinds.size >= 6);
 
 // The exemption's own audit: a literal the scan chose not to report because it
 // looks like a t() lookup has to be one. This is the check that would have caught

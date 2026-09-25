@@ -1218,6 +1218,10 @@ const en: Dict = {
   "comm.tag.News": "News",
   "comm.tag.Tactics": "Tactics",
   "comm.tag.Transfers": "Transfers",
+  // The placeholder shown for a route that has not been wired up yet.
+  "app.notReady": "This module is next in the build queue",
+  "app.notReadyHint": "Core shell, dashboard and Player OS are live. Other modules are being wired up.",
+  "app.backHome": "Back to Command Center",
 };
 
 const zhCN: Dict = {
@@ -2409,6 +2413,9 @@ const zhCN: Dict = {
   "comm.tag.News": "新闻",
   "comm.tag.Tactics": "战术",
   "comm.tag.Transfers": "转会",
+  "app.notReady": "该模块是下一个开发对象",
+  "app.notReadyHint": "核心外壳、指挥中心与 Player OS 已上线。其余模块正在接入中。",
+  "app.backHome": "返回指挥中心",
 };
 
 const zhTW: Dict = {
@@ -3602,6 +3609,9 @@ const zhTW: Dict = {
   "comm.tag.News": "新聞",
   "comm.tag.Tactics": "戰術",
   "comm.tag.Transfers": "轉會",
+  "app.notReady": "此模組是下一個開發對象",
+  "app.notReadyHint": "核心外殼、指揮中心與 Player OS 已上線。其餘模組正在接入中。",
+  "app.backHome": "返回指揮中心",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M161 (a few numbers in that range
+Work ships one milestone per commit and is currently at M162 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -893,13 +893,13 @@ prose — that one was caught by key reachability and would also fail the type c
 by the row-literal audit, whose pattern recognises `{key: …}` and `{value: …}` and not a
 `{label: "prose"}` field; the expectation was mine to fix, not the gate's.
 
-Still outstanding, unchanged: Player OS (89 hits), Simulation Lab (51), Community Hub (0 —
-closed by M161), Learn Hub (37), Film Room (30), Data Room (29), Landing (18),
-`src/App.tsx` (3), plus the
-three `toast()` strings in Manager OS that no scan reports because they are call arguments
-and not JSX — which is M159's neighbourhood alongside the demo coach's generated prose.
-Nothing here was clicked in a browser: the in-app browser remains wedged, so task #142's
-three-locale walk is still owed.
+Still open, as measured at M162 (the ceiling's own reading, not an estimate): 307
+literal copies across 25 screens — Player OS 90, Simulation Lab 51, Film Room 30, Data
+Room 29, Landing 18, Scouting Panel 15, Dynamic World 10, Command Palette 9, Football
+World 8, Profile 7, and 15 more below the cut. Learn Hub, Community Hub and `src/App.tsx`
+are no longer in that list because they now resolve every string they show through the
+dictionary, and are held there by the covered set. Nothing here was clicked in a browser:
+the in-app browser remains wedged, so task #142's three-locale walk is still owed.
 
 M161 took Community Hub from 42 raw literals to none. The board is the one screen where
 most words are *not* the app's — a thread's title, body and author are the user's or the
@@ -1002,6 +1002,41 @@ disabled (the fixture goes quiet), and a raw toast argument and a raw JSX text n
 each put back in the covered screen. Not browser-verified: the in-app browser is still
 wedged (#142), and this screen is a strong candidate for that walk, because the whole
 point of a lesson is somebody reading it in their own language.
+
+M162 is mostly an accounting fix, and the kind worth writing down because it was
+invisible while it was wrong. The raw-UI ceiling had gone stale: M161 emptied Community
+Hub's 44 literals but left the ceiling at 354, so for a whole milestone the gate that
+exists to notice debt *growing* was reading a tree that no longer existed, and would
+have waved through 47 new English strings before it said anything. The number is now
+307, reconciled by subtraction where both terms are measured rather than recalled —
+354 minus the 44 hits the Community Hub file had at the previous commit (0 at HEAD),
+minus the 3 in `src/App.tsx`'s not-found fallback, which this pass keyed and registered
+in the covered set (now 14 files). That fallback is the copy a visitor sees when they
+follow a route that is not built yet, and until now it was English in all three locales.
+
+The second half of the pass removed a trap I had set myself. The scan's non-vacuity
+clause read `openTotal >= 300` — a floor on exactly the quantity every milestone is
+trying to shrink. Three more localised screens and it would have gone red while the
+scanner was working perfectly, which is the same mistake as pinning a floor to a
+measurement: it converts success into a failure and teaches whoever hits it to raise
+the floor rather than read it. What the check actually needs to notice is a scan that
+stopped reading, so it now asks three things that survive the repo emptying: the walk
+still finds its files (96 `.tsx`), enough of them still carry copy that it reports
+copy (25), and it still tells *positions* apart in real source rather than only in the
+fixture it was tuned against (11 distinct syntactic positions, floor 6).
+
+That last clause is the one carrying weight, and a probe is what says so. With the
+scanner patched to report nothing at all, the ceiling check stays green and prints
+"0 across 0 files" — a broken measurement is precisely the case an upper bound cannot
+see — while the non-vacuity check goes red. A second probe puts raw English back into
+the newly covered `src/App.tsx` and turns only the leak check red, not the ceiling
+(covered files are not counted as debt, which is the difference between the two gates);
+a third adds one literal to an open screen and turns the ceiling red at 308/307. All
+three restore their file byte-for-byte and re-verify the sha256.
+
+`npx tsc --noEmit` exits 0, `npm run build` succeeds, the suite is 26 scripts / 1130
+checks (proof-i18n 112), and the 3 probes above each turn a named check red. Not
+browser-verified: the in-app browser is still wedged (#142).
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

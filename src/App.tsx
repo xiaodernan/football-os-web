@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { ThemeProvider } from "@/lib/theme";
 import { I18nProvider } from "@/i18n";
 import { RouterProvider, useRouter } from "@/lib/router";
+import { useI18n } from "@/i18n";
 import { OsProvider, useOs } from "@/store/useFootballOS";
 import { AppShell } from "@/features/shell/AppShell";
 import { Landing } from "@/features/landing/Landing";
@@ -119,12 +120,13 @@ function Routes() {
 }
 
 function NotReady() {
+  const { t } = useI18n();
   const { navigate } = useRouter();
   return (
     <div className="mx-auto max-w-md pt-10">
-      <EmptyState title="This module is next in the build queue" hint="Core shell, dashboard and Player OS are live. Other modules are being wired up." />
+      <EmptyState title={t("app.notReady")} hint={t("app.notReadyHint")} />
       <div className="mt-4 flex justify-center">
-        <Button variant="outline" onClick={() => navigate("/")}>Back to Command Center</Button>
+        <Button variant="outline" onClick={() => navigate("/")}>{t("app.backHome")}</Button>
       </div>
     </div>
   );
