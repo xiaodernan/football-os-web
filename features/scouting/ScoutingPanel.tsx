@@ -23,11 +23,14 @@ import { Link } from "@/lib/router";
 import { cn } from "@/lib/utils";
 
 const BUCKETS: PosBucket[] = ["ALL", "GK", "DEF", "MID", "ATT"];
-const SORTS: { id: ScoutSort; label: string }[] = [
-  { id: "value", label: "scout.sort.value" },
-  { id: "potential", label: "scout.sort.potential" },
-  { id: "overall", label: "scout.sort.overall" },
-  { id: "age", label: "scout.sort.age" },
+// `labelKey`, not `label`: a row field named `label` is one of the positions the
+// raw-UI scan reads as a display string, so a key parked in one is counted as copy
+// even though the render site below resolves it through t().
+const SORTS: { id: ScoutSort; labelKey: string }[] = [
+  { id: "value", labelKey: "scout.sort.value" },
+  { id: "potential", labelKey: "scout.sort.potential" },
+  { id: "overall", labelKey: "scout.sort.overall" },
+  { id: "age", labelKey: "scout.sort.age" },
 ];
 const NO_CAP = Number.MAX_SAFE_INTEGER;
 
@@ -94,7 +97,7 @@ export function ScoutingPanel() {
             {picks.map((p) => (
               <div key={p.b} className="flex items-center gap-3 rounded-md border bg-card/40 px-3 py-2">
                 <Badge variant="outline" className="text-[10px]">{p.b}</Badge>
-                <div className="min-w-0 flex-1"><Link to={`/players/${p.player.id}`} className="truncate text-sm hover:text-primary hover:underline">{p.player.name}</Link><div className="text-[11px] text-muted-foreground">{p.clubName} · OVR {p.player.overall} · {formatValue(p.player.value)}</div></div>
+                <div className="min-w-0 flex-1"><Link to={`/players/${p.player.id}`} className="truncate text-sm hover:text-primary hover:underline">{p.player.name}</Link><div className="text-[11px] text-muted-foreground">{p.clubName} · {t("scout.ovr")} {p.player.overall} · {formatValue(p.player.value)}</div></div>
                 <Button size="sm" variant={state.watchlist.includes(p.player.id) ? "secondary" : "outline"} onClick={() => toggleWatch(p.player.id)}>{state.watchlist.includes(p.player.id) ? "★" : "☆"}</Button>
               </div>
             ))}
@@ -110,7 +113,7 @@ export function ScoutingPanel() {
           ))}
           <span className="mx-1 h-4 w-px bg-border" />
           {SORTS.map((s) => (
-            <button key={s.id} onClick={() => setSort(s.id)} className={cn("rounded-md border px-2.5 py-1 text-xs", sort === s.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(s.label)}</button>
+            <button key={s.id} onClick={() => setSort(s.id)} className={cn("rounded-md border px-2.5 py-1 text-xs", sort === s.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(s.labelKey)}</button>
           ))}
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
@@ -128,7 +131,7 @@ export function ScoutingPanel() {
 
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">{t("scout.colPos")}</th><th className="px-2 py-1">{t("compare.player")}</th><th className="px-2 py-1 text-right">{t("common.age")}</th><th className="px-2 py-1 text-right">OVR</th><th className="px-2 py-1 text-right">POT</th><th className="px-2 py-1 text-right">{t("scout.colValue")}</th><th className="px-2 py-1 text-right">OVR/€M</th><th className="px-2 py-1 text-right" title={t("watch.templateHint")}>{t("watch.template")}</th><th className="px-2 py-1 text-center">{t("scout.colWatch")}</th><th className="px-2 py-1 text-center">{t("scout.colCmp")}</th></tr></thead>
+            <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">{t("scout.colPos")}</th><th className="px-2 py-1">{t("compare.player")}</th><th className="px-2 py-1 text-right">{t("common.age")}</th><th className="px-2 py-1 text-right">{t("scout.ovr")}</th><th className="px-2 py-1 text-right">{t("scout.pot")}</th><th className="px-2 py-1 text-right">{t("scout.colValue")}</th><th className="px-2 py-1 text-right">{t("scout.vindex")}</th><th className="px-2 py-1 text-right" title={t("watch.templateHint")}>{t("watch.template")}</th><th className="px-2 py-1 text-center">{t("scout.colWatch")}</th><th className="px-2 py-1 text-center">{t("scout.colCmp")}</th></tr></thead>
             <tbody>
               {results.map((p) => (
                 <tr key={p.id} className={cn("border-t", compare.includes(p.id) && "bg-primary/5")}>
@@ -179,7 +182,7 @@ function Watchlist({ watch, onRemove, onCompare, comparing }: { watch: PlayerRef
         <div className="space-y-1.5">
           {watch.map((p) => (
             <div key={p.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm">
-              <div className="min-w-0"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{p.position} · OVR {p.overall} · {t("scout.primeY", { n: primeYearsLabel(p) })}</span></div>
+              <div className="min-w-0"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{p.position} · {t("scout.ovr")} {p.overall} · {t("scout.primeY", { n: primeYearsLabel(p) })}</span></div>
               <div className="flex items-center gap-1">
                 <Button size="sm" variant={comparing.includes(p.id) ? "secondary" : "ghost"} onClick={() => onCompare(p.id)}>⇄</Button>
                 <Button size="sm" variant="ghost" onClick={() => onRemove(p.id)}>✕</Button>
@@ -194,13 +197,13 @@ function Watchlist({ watch, onRemove, onCompare, comparing }: { watch: PlayerRef
 
 function CompareView({ a, b }: { a: PlayerRef; b: PlayerRef }) {
   const { t } = useI18n();
-  const rows: { label: string; av: number; bv: number; better: "hi" | "lo" }[] = [
-    { label: "compare.m.overall", av: a.overall, bv: b.overall, better: "hi" },
-    { label: "compare.m.potential", av: a.potential, bv: b.potential, better: "hi" },
-    { label: "scout.rowHeadroom", av: headroom(a), bv: headroom(b), better: "hi" },
-    { label: "common.age", av: a.age, bv: b.age, better: "lo" },
-    { label: "scout.rowValue", av: +(a.value / 1e6).toFixed(1), bv: +(b.value / 1e6).toFixed(1), better: "lo" },
-    { label: "scout.rowVindex", av: +valueIndex(a).toFixed(1), bv: +valueIndex(b).toFixed(1), better: "hi" },
+  const rows: { labelKey: string; av: number; bv: number; better: "hi" | "lo" }[] = [
+    { labelKey: "compare.m.overall", av: a.overall, bv: b.overall, better: "hi" },
+    { labelKey: "compare.m.potential", av: a.potential, bv: b.potential, better: "hi" },
+    { labelKey: "scout.rowHeadroom", av: headroom(a), bv: headroom(b), better: "hi" },
+    { labelKey: "common.age", av: a.age, bv: b.age, better: "lo" },
+    { labelKey: "scout.rowValue", av: +(a.value / 1e6).toFixed(1), bv: +(b.value / 1e6).toFixed(1), better: "lo" },
+    { labelKey: "scout.rowVindex", av: +valueIndex(a).toFixed(1), bv: +valueIndex(b).toFixed(1), better: "hi" },
   ];
   return (
     <div className="mt-2">
@@ -212,9 +215,9 @@ function CompareView({ a, b }: { a: PlayerRef; b: PlayerRef }) {
           const aWins = r.better === "hi" ? r.av > r.bv : r.av < r.bv;
           const bWins = r.better === "hi" ? r.bv > r.av : r.bv < r.av;
           return (
-            <div key={r.label} className="flex items-center justify-between text-sm">
+            <div key={r.labelKey} className="flex items-center justify-between text-sm">
               <span className={cn("w-16 text-right font-mono", aWins && "text-primary font-semibold")}>{r.av}</span>
-              <span className="text-xs text-muted-foreground">{t(r.label)}</span>
+              <span className="text-xs text-muted-foreground">{t(r.labelKey)}</span>
               <span className={cn("w-16 font-mono", bWins && "text-primary font-semibold")}>{r.bv}</span>
             </div>
           );

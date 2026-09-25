@@ -207,7 +207,11 @@ ok(`no primitive still hardcodes the English M144 replaced (${backslid.join(" | 
 
 // 10. M145 localised the Scouting board. Two of its label arrays keep the key in
 //     a variable, the same shape check 8 had to reach, so both arrays and both
-//     render sites are pinned.
+//     render sites are pinned. M165 renamed the field `label` → `labelKey`: a row
+//     property called `label` is one of the positions the raw-UI scan reads as a
+//     display string, so a *key* sitting in one is counted as copy exactly like a
+//     sentence, and ten of this board's fifteen debt items were keys the render
+//     site already resolved through t(). The rename is what let the file reach 0.
 const scoutSrc = readFileSync(join(root, "features", "scouting", "ScoutingPanel.tsx"), "utf8");
 const SCOUT_ARRAYS = [
   ["SORTS", /const SORTS[\s\S]*?\];/],
@@ -216,13 +220,18 @@ const SCOUT_ARRAYS = [
 for (const [name, re] of SCOUT_ARRAYS) {
   const block = scoutSrc.match(re)?.[0] ?? "";
   ok(`the Scouting ${name} array is locatable (else this check is vacuous)`, block.length > 0);
-  const ls = [...block.matchAll(/label:\s*"([^"]+)"/g)].map((m) => m[1]);
-  ok(`Scouting ${name} carries ${ls.length} labels`, ls.length > 0);
+  const ls = [...block.matchAll(/labelKey:\s*"([^"]+)"/g)].map((m) => m[1]);
+  ok(`Scouting ${name} carries ${ls.length} label keys`, ls.length > 0);
   const raw = ls.filter((l) => !bounds.every((_, i) => keysOf(i).includes(l)));
-  ok(`every Scouting ${name} label is a key all three dictionaries declare (${raw.join(", ") || "none"})`, raw.length === 0);
+  ok(`every Scouting ${name} label key is one all three dictionaries declare (${raw.join(", ") || "none"})`, raw.length === 0);
+  // The old field name, struck rather than merely absent from the new regex: a
+  // third array added here as `{ label: "some.key" }` would satisfy the reads above
+  // and put the file back in debt through the scan.
+  const oldField = [...block.matchAll(/\blabel:\s*"/g)].length;
+  ok(`Scouting ${name} holds no key in a field named \`label\` (${oldField})`, oldField === 0);
 }
 ok("both Scouting label arrays render through t()",
-  /\{t\(s\.label\)\}/.test(scoutSrc) && /\{t\(r\.label\)\}/.test(scoutSrc));
+  /\{t\(s\.labelKey\)\}/.test(scoutSrc) && /\{t\(r\.labelKey\)\}/.test(scoutSrc));
 
 // 11. A `title="English"` prop is invisible to check 4 (there is no key to look
 //     up) and to check 10 (it is not in an array), so it is matched by shape.
@@ -230,22 +239,36 @@ const engProps = [...scoutSrc.matchAll(/\b(?:title|hint|label|placeholder|descri
 ok(`no Scouting string prop still carries raw English (${engProps.join(" | ") || "none"})`, engProps.length === 0);
 
 // 12. Same for JSX text nodes, in both shapes they take: text that runs into a
-//     tag, and text that runs into an interpolation ("Foo: {x}"). The carve-out
-//     is the honest remainder — OVR, POT and OVR/€M are monospace stat codes the
-//     app prints identically in all three locales, and "vs" is a separator. A
-//     node that mixes prose with an interpolation *after* a `{…}` is still a
-//     blind spot here; check 13 covers the specific sentences M145 moved.
-const CODE_TEXT = ["OVR", "POT", "OVR/€M", "vs"];
+//     tag, and text that runs into an interpolation ("Foo: {x}").
+//
+//     This is the SHORT-text gate, and it is not subsumed by the covered-file
+//     check further down: hasProse() needs three letters, so a two-letter node is
+//     invisible to the scanner however many raw strings the file holds. M165
+//     turned the three stat codes this check used to excuse — OVR, POT and OVR/€M
+//     — into keys, because the dictionary already has a word for each of them on
+//     this very screen (compare.m.overall is 综合/綜合 and scout.noMatchHint says
+//     综合分), and a code the dictionary names is copy, not a code. What is left is
+//     "vs": a separator between two names that reads the same in all three locales.
+//     It is listed as a decision, not as a gated fact — nothing would catch it
+//     turning into prose, which is why the scan below walks every node it can find.
+const CODE_TEXT = ["vs"];
 // `(?<!=)` skips arrow functions: `() => scoutCandidates({` would otherwise read
 // as a text node running into an interpolation.
 const nodeTexts = [
   ...[...scoutSrc.matchAll(/(?<!=)>[^<>{}\n]+(?=<)/g)].map((m) => m[0].slice(1)),
   ...[...scoutSrc.matchAll(/(?<!=)>[^<>{}\n]+(?=\{)/g)].map((m) => m[0].slice(1)),
-].map((x) => x.trim()).filter((x) => /[A-Za-z]{2}/.test(x) && !/[):;=}&|]/.test(x));
-const strayTexts = nodeTexts.filter((x) => !CODE_TEXT.includes(x));
-ok(`the Scouting board renders no English text node beyond its ${CODE_TEXT.length} stat codes (${strayTexts.join(" | ") || "none"})`,
+].map((x) => x.trim());
+// Two letters or more, and not a fragment of code — `r.bv : r.av`, `0 ? ` — that
+// a brace-free regex cannot tell apart from markup.
+const wordTexts = nodeTexts.filter((x) => /[A-Za-z]{2}/.test(x) && !/[):;=}&|]/.test(x));
+const strayTexts = wordTexts.filter((x) => !CODE_TEXT.includes(x));
+ok(`the Scouting board renders no untranslated short text node (${strayTexts.join(" | ") || "none"})`,
   strayTexts.length === 0);
-ok(`the text-node scan sees nodes rather than nothing (${nodeTexts.length} found)`, nodeTexts.length >= CODE_TEXT.length);
+// Vacuity is pinned on the *pre-filter* count. After M165 only one node survives
+// the filters, so a floor on the survivors would go vacuous the moment "vs" is
+// keyed too; the nodes these regexes find is what proves they still read the file.
+ok(`the text-node scan still walks the board's markup (${nodeTexts.length} nodes, ${wordTexts.length} words)`,
+  nodeTexts.length >= 10 && wordTexts.length >= CODE_TEXT.length);
 
 // 13. The prose M145 moved into the dictionary, struck as literals. The panel's
 //     own tooltip used to be a hand-typed copy of watch.templateHint, so pinning
@@ -862,6 +885,13 @@ const RAW_COVERED = [
   "features/manager/ManagerOS.tsx",
   "features/onboarding/Onboarding.tsx",
   "features/review/ReviewPage.tsx",
+  // M165. The board's last two debts were of two different kinds: ten dictionary
+  // keys sitting in a field named `label`, which the scan reads as a display slot
+  // even though the render site already resolved them, and three stat codes that an
+  // earlier check had formally excused as codes. Both were measurement artefacts of
+  // the same mistake — treating a word the dictionary translates as if it were not
+  // copy — and both are gone, so an English literal added here now names the file.
+  "features/scouting/ScoutingPanel.tsx",
   "features/settings/SettingsPage.tsx",
   "features/shell/AppShell.tsx",
   // Reached 0 at M161 but only registered here, at M163, because the locale walk made
@@ -929,7 +959,12 @@ const RAW_COVERED = [
 // scope is what let the file reach 0, and the value space is still enumerated here (see
 // DYN_SITES' `landing.pillars.|p.k`), so the ids are gated by key reachability rather
 // than by being visible as prose.
-const RAW_UI_CEILING = 289;
+// 274 as of M165, measured rather than subtracted: the Scouting board is covered and
+// its 15 hits left the open count. Ten were keys held in a field named `label` — so
+// this number came down without a single new translation, which is what a misnamed
+// field costs. The other five were the OVR/POT/€M stat codes check 12 used to excuse,
+// now keyed because the dictionaries on that very screen already say 综合分 and 潜力.
+const RAW_UI_CEILING = 274;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

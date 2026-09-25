@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M164 (a few numbers in that range
+Work ships one milestone per commit and is currently at M165 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1139,6 +1139,61 @@ text that reached the DOM, on a page a visitor reaches without onboarding.
 `npx tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is 26 scripts / 1131
 checks — one more than M163's 1130, because a second dynamic site had to be declared for
 the pillar descriptions to have a guard of their own.
+
+M165 took the Scouting board from 15 raw items to none and registered the file, so the
+covered set is 17. Only three of the fifteen needed a translation. Ten were dictionary keys
+*already* resolved through `t()` — the four sort names in `SORTS` and the six metric names
+in the comparison rows — counted as interface copy for one reason: the field holding them
+is named `label`, which is one of the positions `rawUiScan` reads as a display slot, and it
+does not care that the value is a key. Renaming the field to `labelKey` is the entire fix
+for those ten. The lesson is the same one HistoryPage taught at M149 and the Dashboard at
+M155, now applied a fourth time: read the hits before estimating the work, because a debt
+count is not a count of English.
+
+The other five were `OVR`, `POT` and `OVR/€M`, which check 12 had *formally excused* as
+stat codes. The excuse was wrong, and the proof is in the same file: `compare.m.overall`
+is 综合/綜合, `scout.noMatchHint` says 综合分, and `scout.rowVindex` reads "OVR per €M"
+directly under a header that says "OVR/€M" — the board gave one metric two names, and
+translated neither. A code the dictionary already has a word for is copy, so the three
+codes are keys now (1193 → 1196) and the carve-out shrank to `"vs"`.
+
+That leaves check 12 doing a different job than it was doing, and the check says so.
+`hasProse()` needs three letters, so `OVR` was only ever visible to it by an accident of
+length — the covered-file scan sees it either way — while a two-letter node is invisible to
+that scan no matter what else is true. Check 12 is therefore now the *short-text* gate, and
+its non-vacuity floor moved off the survivors and onto the pre-filter node count (measured:
+14 nodes, 3 carrying letters, 1 kept), which is what keeps it meaningful if `"vs"` is keyed
+too. The other new clause is inside check 10: reverting the rename would have been caught
+by the covered-file check anyway, but it reports `(1: compare.m.overall)` — a key, not
+prose — so it names the file without naming the mistake. The new clause says "holds no key
+in a field named `label`", and it has to be asserted per array because a third list added
+later with the old field name satisfies every read above it.
+
+Three probes, each restored byte-for-byte. A header back to raw `OVR` reddens two checks —
+the short-text one and the per-file leak, which names `features/scouting/ScoutingPanel.tsx
+(1: OVR)`. Renaming the comparison rows' field *and* its render site back to `label` — a
+mutation that stays valid TypeScript, so the red has to come from the gate — reddens three,
+including the new clause. Deleting `scout.pot` from the Traditional block leaves exactly one
+failure, `zh-TW: no keys missing (1)`.
+
+The board was then read in a browser against the rebuilt preview, in `zh-CN` and `zh-TW`:
+4081 and 4080 characters, with the table headers rendering as 位置 球员 年龄 综合分 潜力
+身价 综合分/€M 对比模板 关注 对比 and 位置 球員 年齡 綜合分 潛力 身價 綜合分/€M 對比模板
+關注 對比. `OVR`/`POT` appear nowhere in either screen's text and no raw key does; the
+inline stat carries the new word too (`Feyenoord · 綜合分 71 · €35M`). One caution about
+the measurement rather than the code: my first pass at this flagged 合成 as leaked
+Simplified characters — 合 and 成 are simply the same glyph in both locales, and the gate's
+own 16-character list from M143, which excludes them, stayed green. What this still does
+not establish: the viewport is 0×0, the compare panel needs two checked rows and the
+shortlist needs a starred player, so both of those blocks rendered their empty states and
+their new labels went unexercised at runtime — and the command palette overlay is still
+English under both locales, which is CommandPalette's own 9 open debt items, not something
+this commit touched.
+
+`npx tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is 26 scripts / 1133
+checks (proof-i18n 115 — the two new clauses, one per array). The open debt is 274 across
+23 files, re-measured rather than subtracted, and the two largest items are unchanged:
+PlayerOS at 90 and SimulationLab at 51.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
