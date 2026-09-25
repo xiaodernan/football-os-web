@@ -5,16 +5,13 @@
 // trivially testable.
 //
 // A row's text is therefore one of exactly two things: a dictionary key this module
-// chose, or a value that came straight out of the record it names. A sentence
-// composed here would be English in every locale AND invisible to the raw-UI scan,
-// which only reads component source — so the union is the gate, not a style rule.
+// chose, or a value that came straight out of the record it names — see ./rowText,
+// which the goal rows use the same way.
 
 import type { AttributeDelta } from "./types";
+import type { RowText } from "./rowText";
 
 export type TimelineKind = "session" | "plan" | "memory" | "learn" | "film";
-
-export type RowVars = Record<string, string | number>;
-export type RowText = { key: string; vars?: RowVars } | { value: string };
 
 export interface TimelineEvent {
   id: string;
@@ -89,18 +86,6 @@ const ts = (iso: string) => {
   const t = new Date(iso).getTime();
   return Number.isNaN(t) ? 0 : t;
 };
-
-/** Resolve one row's text against the reader's own dictionary — the only place the
- *  union is interpreted, so a screen cannot half-do it and print a `{key}` string.
- *  A value stored by a record is shown exactly as it was written; nothing here
- *  translates a user's own session title or coach prompt. */
-export function rowLine(
-  row: RowText | undefined,
-  t: (key: string, vars?: RowVars) => string,
-): string | undefined {
-  if (!row) return undefined;
-  return "key" in row ? t(row.key, row.vars) : row.value;
-}
 
 export function buildTimeline(input: HistoryInput): TimelineEvent[] {
   const events: TimelineEvent[] = [];

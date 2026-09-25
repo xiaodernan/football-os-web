@@ -5,7 +5,7 @@ import { getClub, getPlayer } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
-import { goalUnitKey } from "@/domain/goals";
+import { goalLine, goalUnitKey } from "@/domain/goals";
 import { overallRating, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { seasonSummary, type CareerState } from "@/domain/career";
@@ -229,12 +229,13 @@ export function ProfilePage() {
                 // the reader's: a goal made in English no longer prints "sessions"
                 // beside a Chinese profile. An unrecognised code shows no word.
                 const unit = goalUnitKey(g.metric);
+                const title = goalLine(g, t);
                 return (
                   <button key={g.id} onClick={() => toggleGoal(g.id)} className="block w-full text-left">
                     <div className="flex items-center justify-between text-sm">
                       <span className={cn("font-medium", g.done && "text-muted-foreground line-through")}>
                         <span className={cn("mr-1.5", g.done ? "text-success" : "text-muted-foreground")}>{g.done ? "☑" : "☐"}</span>
-                        {g.title}
+                        {title}
                       </span>
                       <span className="font-mono text-xs text-muted-foreground tabular-nums">{g.current}/{g.target}{unit ? ` ${t(unit)}` : ""}</span>
                     </div>

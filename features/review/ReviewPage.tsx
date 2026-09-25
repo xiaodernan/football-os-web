@@ -4,6 +4,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import { buildReview, type WeeklyReview } from "@/domain/review";
+import { attributeGoalTitle } from "@/domain/goals";
 import { useLearnRecords, useFilmClips } from "@/lib/hooks";
 import { DEMO_MODE } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
@@ -84,13 +85,13 @@ export function ReviewPage() {
     const current = Math.round(state.profile.attributes[reco.attributeKey] ?? 0);
     const target = Math.min(99, current + 5);
     addGoal({
-      title: t("rv.trackTitle").replace("{a}", t(`attr.name.${reco.attributeKey}`)),
+      title: attributeGoalTitle(reco.attributeKey),
       metric: "attribute",
       key: reco.attributeKey,
       target,
       current,
     });
-    toast.success(t("rv.trackDone").replace("{a}", t(`attr.name.${reco.attributeKey}`)).replace("{t}", String(target)));
+    toast.success(t("rv.trackDone", { a: t(`attr.name.${reco.attributeKey}`), t: target }));
   };
 
   const points = useMemo(() => {

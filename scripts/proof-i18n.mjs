@@ -46,8 +46,7 @@
 //      which prints `{a}` on the screen in every locale,
 //  25. a key a *domain* module composes (`goal.unit.${metric}`) being incomplete,
 //      drifting from the type union it reads, or left behind by a deleted composer
-//      — the same three ways check 17 catches a component site, which cannot see it,
-//  26. a row handed from a domain module to the interface carrying a key that is
+//      — the same three ways check 17 catches a component site, which cannot see it,//  26. a row handed from a domain module to the interface carrying a key that is
 //      not in the dictionary, a placeholder the row never supplies, or a sentence
 //      the module wrote itself — which no JSX-scanning check can see (M149).
 // Run: node scripts/proof-i18n.mjs
@@ -361,7 +360,6 @@ const DYN_SITES = [
   { path: "features/development/DevelopmentPage.tsx", expr: "item.key", prefix: "attr.name.", suffix: "" },
   { path: "features/development/DevelopmentPage.tsx", expr: "it.key", prefix: "attr.name.", suffix: "" },
   { path: "features/development/DevelopmentPage.tsx", expr: "it.key", prefix: "attr.name.", suffix: "" },
-  { path: "features/development/DevelopmentPage.tsx", expr: "it.key", prefix: "attr.name.", suffix: "" },
   { path: "features/development/DevelopmentPage.tsx", expr: "analysis.group", prefix: "group.", suffix: "" },
   { path: "features/film/FilmRoom.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
   { path: "features/film/FilmRoom.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
@@ -384,7 +382,7 @@ const DYN_SITES = [
   { path: "features/review/ReviewPage.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "g.key", prefix: "attr.name.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "reco.attributeKey", prefix: "attr.name.", suffix: "" },
-  { path: "features/review/ReviewPage.tsx", expr: "reco.attributeKey", prefix: "attr.name.", suffix: "" },
+  { path: "domain/goals.ts", expr: "raw", prefix: "attr.name.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
@@ -771,8 +769,9 @@ const RAW_COVERED = [
 // Measured over every .tsx in the repo — which is wider than the features/ui/
 // components tree (store/useFootballOS.tsx carries 4, src/App.tsx 3). 596 as of
 // M149, when the activity timeline's rows went onto keys and HistoryPage's own
-// `label` fields became `labelKey`, which is what the scan reads as a key.
-const RAW_UI_CEILING = 596;
+// `label` fields became `labelKey`, which is what the scan reads as a key. 594 as
+// of M150, when onboarding's two goal titles stopped being sentences stored in a row.
+const RAW_UI_CEILING = 594;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -851,7 +850,11 @@ for (const [path, src] of ROW_FILES) {
 ok(`every row text a domain module hands the screen is a real key with exactly its placeholders (${rowKeys} keys, ${badRows.slice(0, 6).join(" | ") || "clean"})`,
   badRows.length === 0);
 ok(`the row-text scan is reading modules that actually carry the union (${ROW_FILES.length} files, ${rowKeys} keys)`,
-  ROW_FILES.length >= 1 && rowKeys >= 9);
+  // 4 files / 12 keys as of M150: history.ts's 9 timeline rows, goals.ts's 3 title
+  // rows, rowText.ts and types.ts as the two modules that name the union. A row built
+  // as a bare string in a table escapes this pattern — that is how 2 of the 12 first
+  // went unnoticed — so the floor is the measured count, never a round number.
+  ROW_FILES.length >= 4 && rowKeys >= 12);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M149 (a few numbers in that range
+Work ships one milestone per commit and is currently at M150 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M149 line of work is a different kind of progress: it makes the earlier claims
+The M108–M150 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -551,6 +551,53 @@ scripts / 1067 checks. Two write-time strings survive and are queued rather than
 onboarding's goal titles ("Earn 500 XP", "Complete 5 training sessions") and the coach's
 remembered entries in `AiMemoryEntry.text` are English stored when written and rendered
 wherever they land — the same defect, one layer above `Goal.unit`.
+
+M150 closed the same defect one field up. `Goal.title` was a string built by whichever
+control created the row, so onboarding stored the literal sentences "Earn 500 XP" and
+"Complete 5 training sessions" and the development and review pages interpolated an
+attribute word — in the writer's language — into a sentence and saved that. Switching to
+Chinese after creating a goal left the goal list speaking the old language, which is
+precisely what a row that stores words does.
+
+The row now stores one of the two things `RowText` admits, and the union moved to its own
+module (`domain/rowText.ts`) because both `history.ts` and `types.ts` need it and neither
+should own the other's import. `domain/goals.ts` builds the machine rows: `countGoalTitle
+("xp", 500)` yields `{ key: "goal.title.earnXp", vars: { n: 500 } }`, and
+`attributeGoalTitle("passing")` yields `{ key: "goal.title.attrTarget", vars: { a:
+"passing" } }` — the *code*, never the word. `goalLine` is the one interpreter: it looks up
+any variable whose value is a known attribute code through `attr.name.…`, then fills the
+sentence, so the attribute's word belongs to the reader as much as the title's does. A goal
+the visitor types is their own text and stays `{ value: … }`; nothing in the app translates
+it. Rows written before this change are repaired at the hydration boundary next to
+`sweepOverdueSessions`: a stored string becomes a value, keeping the same words, never
+guessed at as a key. Three new keys went in and two came out (`dv.goalTitle`,
+`rv.trackTitle`) because the reachability gate punishes a key no caller names; the tracking
+toast now passes its variables to `t()` instead of hand-rolling `.replace("{a}", …)`.
+
+The audit floor paid for itself again. The first version kept the two counted titles in a
+`Record` of bare key strings, which is not the shape the row-literal scan reads, so 10 of
+the 12 rows were audited and the gate reported clean — the same silent hole M149 found in
+itself, one shape over. The fix went into the source rather than the gate: the two titles
+are spelled as row literals, and the floor is the measured count (4 files, 12 keys) so the
+next row shape that escapes has to take the count down with it. The raw-UI debt moved 596 →
+594, which is exactly the two onboarding sentences stopping being prose stored in a row.
+
+proof-timeline went from 50 to 64 checks and now carries the goal rows: the resolution order
+an attribute title needs, a stored row containing no display word from any of the three
+dictionaries, one row reading differently to three readers, a typed title never reaching the
+dictionary, and what the repair does to a legacy row and what it refuses to touch. Two of
+them read source, because forgetting to call `repairGoalTitles` type-checks perfectly — the
+hydration boundary must actually route stored rows through it. proof-i18n is 98 → 99. 12
+mutation probes each turn a named check red and restore by sha256, including a title key
+that no builder produces (unreachable), a row that stores the English word "Passing" instead
+of its code, and a repair that turns a legacy string into a guessed key.
+
+Not browser-verified; `npx tsc --noEmit` exits 0, `npm run build` succeeds and the suite is
+26 scripts / 1082 checks. Rendering a goal title directly is now a compile error rather than
+silently translated text — the row is an object, and React refuses it — so the two screens
+that list goals read them through `goalLine`. Still queued and not fixed here:
+`AiMemoryEntry.text`, which the coach provider persists as English prose and two screens
+render.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

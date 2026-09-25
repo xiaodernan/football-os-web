@@ -1,20 +1,25 @@
-// Proof for the activity row contract (domain/history.ts + domain/goals.ts).
+// Proof for the row contract (domain/rowText.ts + domain/history.ts + domain/goals.ts).
 //
-// These two modules sit between a stored record and a reader's screen, and they are
-// invisible to the component-scoped raw-UI scan: nothing in them is JSX. So every
-// way a row can lie about where its words came from is pinned here instead. The
-// load-bearing check is #1: the strings a row shows must be a subset of the strings
-// the input records carry, which a module cannot satisfy by writing a sentence.
+// These modules sit between a stored record and a reader's screen, and they are
+// invisible to the component-scoped raw-UI scan: nothing in them is JSX. So every way
+// a row can lie about where its words came from is pinned here instead. Two checks
+// carry it: #1, the strings a timeline row shows must be a subset of the strings the
+// input records carry, which a module cannot satisfy by writing a sentence; and #11, a
+// goal row must store no display word from ANY locale, which is what makes the same
+// stored row readable in the reader's language rather than the writer's.
 //
 // Run: node scripts/proof-timeline.mjs
 import { createServer } from "vite";
+import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const server = await createServer({ root, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { buildTimeline, rowLine, groupByDay } = await server.ssrLoadModule("/domain/history.ts");
-const { GOAL_METRICS, goalUnitKey } = await server.ssrLoadModule("/domain/goals.ts");
+const { buildTimeline, groupByDay } = await server.ssrLoadModule("/domain/history.ts");
+const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
+const { GOAL_METRICS, goalUnitKey, countGoalTitle, attributeGoalTitle, goalLine, repairGoalTitles } =
+  await server.ssrLoadModule("/domain/goals.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 
 let pass = 0, fail = 0;
@@ -209,6 +214,73 @@ ok("each locale's four unit words are four different words",
   ["en", "zh-CN", "zh-TW"].every((l) => new Set(unitWords(l)).size === 4));
 ok("both Chinese locales show translated unit words, not the English table",
   ["zh-CN", "zh-TW"].every((l) => unitWords(l).every((w) => typeof w === "string" && w !== "" && !/^[\x00-\x7F]+$/.test(w))));
+
+// ---- 11. A goal's title: made by the app it is a key, typed by a visitor it is
+// their own words, and either way read in the READER's locale — M150's whole claim.
+const { ATTRIBUTE_KEYS } = await server.ssrLoadModule("/domain/attributes.ts");
+const goalRow = (title, extra) => ({
+  id: "G1", title, metric: "attribute", key: "passing", target: 62, current: 50,
+  createdAt: "2026-01-01T00:00:00.000Z", done: false, ...extra,
+});
+const attrKey = "passing";
+const attrRow = goalRow(attributeGoalTitle(attrKey));
+
+seen = [];
+const attrLine = goalLine(attrRow, t);
+ok("an attribute goal resolves the attribute word at read time, then its own title",
+  attrLine === "{goal.title.attrTarget|a={attr.name.passing}}" &&
+  eq(seen, [["attr.name.passing", undefined], ["goal.title.attrTarget", { a: "{attr.name.passing}" }]]));
+ok("a counted goal stores its number, not a sentence about it",
+  eq(countGoalTitle("xp", 500), { key: "goal.title.earnXp", vars: { n: 500 } }) &&
+  eq(countGoalTitle("sessions", 5), { key: "goal.title.trainSessions", vars: { n: 5 } }));
+ok("the two counted metrics do not collapse onto one title key",
+  countGoalTitle("xp", 500).key !== countGoalTitle("sessions", 5).key);
+
+// The row is locale-free, which is the property the old string title lacked: no word
+// from any of the three dictionaries appears anywhere in what gets stored.
+const stored = JSON.stringify([countGoalTitle("xp", 500), countGoalTitle("sessions", 5), attributeGoalTitle(attrKey)]);
+const frozen = ATTRIBUTE_KEYS.filter((k) => ["en", "zh-CN", "zh-TW"].some((l) => stored.includes(DICTIONARIES[l][`attr.name.${k}`])));
+ok(`no machine-built goal row stores a display word from any locale (${frozen.join(", ") || "none"})`,
+  frozen.length === 0);
+
+// Same row, three readers, three languages — the assertion the defect fails.
+const readBy = (loc) => goalLine(attrRow, (k, v) => {
+  let s = DICTIONARIES[loc][k] ?? k;
+  for (const [n, val] of Object.entries(v ?? {})) s = s.split(`{${n}}`).join(String(val));
+  return s;
+});
+const [enRead, cnRead, twRead] = ["en", "zh-CN", "zh-TW"].map(readBy);
+ok("one stored row reads differently to readers in different locales",
+  enRead !== cnRead && enRead !== twRead && cnRead !== twRead);
+ok("a resolved goal title shows no placeholder and no bare key to any reader",
+  [enRead, cnRead, twRead].every((s) => s && !s.includes("{") && !s.startsWith("goal.")));
+ok("the English reading is the dictionary's own sentence for that row",
+  enRead === DICTIONARIES.en["goal.title.attrTarget"].split("{a}").join(DICTIONARIES.en[`attr.name.${attrKey}`]));
+
+seen = [];
+const typed = goalLine(goalRow({ value: "Finish the season unbeaten" }), t);
+ok("a visitor's own title is shown verbatim and never reaches the dictionary",
+  typed === "Finish the season unbeaten" && seen.length === 0);
+
+const keyedRow = goalRow(attributeGoalTitle(attrKey));
+const repaired = repairGoalTitles([goalRow("Earn 500 XP"), keyedRow]);
+ok("a row stored before titles were keyed keeps its words as a value, not a guessed key",
+  eq(repaired[0].title, { value: "Earn 500 XP" }));
+ok("repair leaves an already-keyed row alone, object identity included", repaired[1] === keyedRow);
+ok("repair carries every other field of a legacy row across",
+  repaired[0].id === "G1" && repaired[0].metric === "attribute" && repaired[0].key === "passing" &&
+  repaired[0].target === 62 && repaired[0].current === 50 && repaired[0].done === false);
+ok("repair is safe on an empty library", repairGoalTitles([]).length === 0);
+
+// A proof that only loads the module cannot see whether the app calls it. The render
+// half needs no gate — a `Goal.title` is an object now, and printing it is a tsc error
+// — but forgetting the hydration repair type-checks perfectly, so the call site is
+// read from source instead.
+const read = (p) => readFileSync(resolve(root, p), "utf8");
+ok("the hydration boundary actually repairs stored goal titles",
+  /goals:\s*repairGoalTitles\(/.test(read("store/useFootballOS.tsx")));
+ok("and the repair runs on the same boundary that backfills sessions, not a read site",
+  /sessions:\s*sweepOverdueSessions\(/.test(read("store/useFootballOS.tsx")));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

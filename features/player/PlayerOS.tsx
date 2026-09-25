@@ -18,6 +18,7 @@ import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { FIXTURES_KEY } from "@/domain/localData";
+import { goalLine } from "@/domain/goals";
 import { getClub, getPlayer } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, Crest } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
@@ -515,6 +516,7 @@ function ProgressView() {
 }
 
 function Goals() {
+  const { t } = useI18n();
   const { state, addGoal } = useOs();
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("5");
@@ -527,7 +529,7 @@ function Goals() {
           {state.goals.map((g) => (
             <div key={g.id} className="rounded-lg border bg-card/40 p-3">
               <div className="flex items-center justify-between text-sm">
-                <span className={cn(g.done && "text-muted-foreground line-through")}>{g.title}</span>
+                <span className={cn(g.done && "text-muted-foreground line-through")}>{goalLine(g, t)}</span>
                 <span className="font-mono text-xs">{Math.min(g.current, g.target)}/{g.target}</span>
               </div>
               <Progress value={(Math.min(g.current, g.target) / g.target) * 100} className="mt-2 h-1.5" />
@@ -544,7 +546,7 @@ function Goals() {
             <div><Label>Metric</Label><select value={metric} onChange={(e) => setMetric(e.target.value as GoalMetric)} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm"><option value="xp">XP</option><option value="sessions">Sessions</option><option value="level">Level</option></select></div>
             <div><Label>Target</Label><Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} className="mt-1" /></div>
           </div>
-          <Button onClick={() => { if (!title.trim()) return; addGoal({ title, metric, target: Number(target), current: metric === "xp" ? state.profile!.xp : metric === "level" ? state.profile!.level : state.sessions.filter((s) => s.status === "completed").length }); setTitle(""); toast.success("Goal added"); }}>Add goal</Button>
+          <Button onClick={() => { if (!title.trim()) return; addGoal({ title: { value: title.trim() }, metric, target: Number(target), current: metric === "xp" ? state.profile!.xp : metric === "level" ? state.profile!.level : state.sessions.filter((s) => s.status === "completed").length }); setTitle(""); toast.success("Goal added"); }}>Add goal</Button>
         </div>
       </Panel>
     </div>

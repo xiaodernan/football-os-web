@@ -1,5 +1,7 @@
 // Core domain types shared across the Football OS product.
 
+import type { RowText } from "./rowText";
+
 export type Mode = "FAN" | "PLAYER" | "MANAGER";
 
 export type PositionGroup = "GK" | "CB" | "FB" | "DM" | "CM" | "AM" | "W" | "ST";
@@ -184,7 +186,10 @@ export type GoalMetric = "xp" | "sessions" | "level" | "attribute";
 
 export interface Goal {
   id: string;
-  title: string;
+  // A goal made by the app names a dictionary key; a goal the visitor types is their
+  // own words and stays a value. See ./rowText — the title used to be a string built
+  // at creation time, so it froze one locale's wording for every later reader.
+  title: RowText;
   metric: GoalMetric;
   key?: string; // for metric="attribute": the attribute key this goal tracks
   target: number;

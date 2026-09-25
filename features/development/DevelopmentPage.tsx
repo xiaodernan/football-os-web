@@ -5,6 +5,7 @@ import { useOs } from "@/store/useFootballOS";
 import { analyzeGap, type GapItem } from "@/domain/gap";
 import { projectGrowth } from "@/domain/projection";
 import { POSITION_GROUPS } from "@/domain/attributes";
+import { attributeGoalTitle } from "@/domain/goals";
 import type { PositionGroup } from "@/domain/types";
 import { DEMO_MODE } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
@@ -73,7 +74,7 @@ export function DevelopmentPage() {
 
   const isTracked = (key: string) => state.goals.some((g) => g.metric === "attribute" && g.key === key);
   const track = (it: GapItem) => {
-    addGoal({ title: t("dv.goalTitle").replace("{a}", t(`attr.name.${it.key}`)), metric: "attribute", key: it.key, target: Math.round(it.target), current: Math.round(it.actual) });
+    addGoal({ title: attributeGoalTitle(it.key), metric: "attribute", key: it.key, target: Math.round(it.target), current: Math.round(it.actual) });
     toast.success(t("dv.goalToast").replace("{a}", t(`attr.name.${it.key}`)));
   };
 

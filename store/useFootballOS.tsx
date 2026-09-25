@@ -24,6 +24,7 @@ import {
 } from "@/domain/attributes";
 import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
 import { applyFocusGrowth, sweepOverdueSessions, type GrowthDelta } from "@/domain/training";
+import { countGoalTitle, repairGoalTitles } from "@/domain/goals";
 import { buildLoad } from "@/domain/load";
 import { coachProvider, type PlanInput } from "@/data/ai";
 import { OS_STATE_KEY } from "@/domain/localData";
@@ -88,7 +89,9 @@ function normalizeHydrated(s: OsState): OsState {
     // reflect reality instead of staying permanently at zero.
     sessions: sweepOverdueSessions(repaired),
     plans: s.plans ?? [],
-    goals: s.goals ?? [],
+    // Rows written before a goal title was a keyed row hold a plain string; that
+    // string is the visitor's own words, so it is kept verbatim as a value.
+    goals: repairGoalTitles(s.goals ?? []),
     memory: s.memory ?? [],
     watchlist: s.watchlist ?? [],
     progress: s.progress ?? [],
@@ -286,8 +289,8 @@ export function OsProvider({ children }: { children: ReactNode }) {
           createdAt: new Date().toISOString(),
         };
         const goals: Goal[] = [
-          { id: `g-${Date.now()}`, title: "Earn 500 XP", metric: "xp", target: 500, current: 0, createdAt: new Date().toISOString(), done: false },
-          { id: `g-${Date.now() + 1}`, title: "Complete 5 training sessions", metric: "sessions", target: 5, current: 0, createdAt: new Date().toISOString(), done: false },
+          { id: `g-${Date.now()}`, title: countGoalTitle("xp", 500), metric: "xp", target: 500, current: 0, createdAt: new Date().toISOString(), done: false },
+          { id: `g-${Date.now() + 1}`, title: countGoalTitle("sessions", 5), metric: "sessions", target: 5, current: 0, createdAt: new Date().toISOString(), done: false },
         ];
         dispatch({ type: "ONBOARD", mode: input.mode, profile, goals });
       },

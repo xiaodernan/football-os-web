@@ -1,7 +1,8 @@
 import { createServer } from "vite";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { buildTimeline, rowLine } = await server.ssrLoadModule("/domain/history.ts");
+const { buildTimeline } = await server.ssrLoadModule("/domain/history.ts");
+const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
