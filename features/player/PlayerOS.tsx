@@ -19,7 +19,7 @@ import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { FIXTURES_KEY } from "@/domain/localData";
 import { goalProgressPct, isValidGoalTarget } from "@/domain/goals";
-import { rowLine } from "@/domain/rowText";
+import { ageGroupLabel, goalLabel, rowLine } from "@/domain/rowText";
 import { getClub, getPlayer } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, Crest } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
@@ -72,7 +72,7 @@ export function PlayerOS() {
           <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/15 text-primary">⚽</span>
           <div>
             <h1 className="text-xl font-bold">{t("nav.player")} · {state.profile.displayName}</h1>
-            <div className="text-sm text-muted-foreground">{state.profile.position} · {state.profile.ageGroup} · goal: {state.profile.goal}</div>
+            <div className="text-sm text-muted-foreground">{state.profile.position} · {ageGroupLabel(state.profile.ageGroup, t)} · {t("player.goalWord")}: {goalLabel(state.profile.goal, t)}</div>
           </div>
         </div>
         <div className="flex items-center gap-2">

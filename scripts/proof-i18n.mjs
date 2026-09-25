@@ -385,6 +385,8 @@ const DYN_SITES = [
   { path: "domain/rowText.ts", expr: "code", prefix: "attr.name.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "group.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "prof.mode.", suffix: "" },
+  { path: "domain/rowText.ts", expr: "code", prefix: "onb.goal.", suffix: "" },
+  { path: "domain/rowText.ts", expr: "code", prefix: "onb.age.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
@@ -415,6 +417,10 @@ const S_CAT = { name: "attribute categories", values: CATEGORY_ORDER };
 const S_ATTR = { name: "attribute keys", values: ATTRIBUTE_DEFS.map((d) => d.key) };
 const S_GROUP = { name: "position groups", values: POSITION_GROUPS.map((g) => g.id) };
 const S_MODE = { name: "Mode union", values: MODES_UPPER };
+const ONB_GOAL_CODES = spaceOf("domain/onboarding.ts", /export const GOAL_CODES[^;]+;/, quoted);
+const ONB_AGE_WORDS = spaceOf("domain/onboarding.ts", /export const TRANSLATED_AGE_GROUPS[^;]+;/, quoted);
+const S_ONB_GOAL = { name: "onboarding goal codes", values: ONB_GOAL_CODES };
+const S_ONB_AGE = { name: "translated age bands", values: ONB_AGE_WORDS };
 const SPACES = new Map([
   ["ach.name.|a.id", S_ACH],
   ["ach.name.|growth.next.id", S_ACH],
@@ -502,6 +508,8 @@ const claimByPrefix = (prefix, space) => {
 claimByPrefix("attr.name.", S_ATTR);
 claimByPrefix("group.", S_GROUP);
 claimByPrefix("prof.mode.", S_MODE);
+claimByPrefix("onb.goal.", S_ONB_GOAL);
+claimByPrefix("onb.age.", S_ONB_AGE);
 
 // 16. The table and the source must agree in both directions.
 const SITE = /\bt\(\s*`([^`]*)\$\{([^}]*)\}([^`]*)`/g;
@@ -795,6 +803,7 @@ const RAW_COVERED = [
   "features/compare/ComparePage.tsx",
   "features/football/Details.tsx",
   "features/history/HistoryPage.tsx",
+  "features/onboarding/Onboarding.tsx",
   "features/review/ReviewPage.tsx",
   "features/settings/SettingsPage.tsx",
   "features/shell/AppShell.tsx",
@@ -820,7 +829,7 @@ const RAW_COVERED = [
 // memory panel's own labels, are keys now. 536 as of M155: the Dashboard's 44 hits were
 // 22 dictionary keys sitting in a field named `label` (the launcher) plus 21 sentences of
 // English copy; only the provider's "LIVE" status code is left, which is a query argument.
-const RAW_UI_CEILING = 536;
+const RAW_UI_CEILING = 514;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -857,6 +866,14 @@ ok(`the exemption audit is reading real lookups rather than nothing (${allLookup
 //     still be in the file that claims it, the value space has to still be the
 //     TypeScript union rows are typed against, and every value has to be keyed in
 //     every locale — or a Chinese profile reads "goal.unit.xp".
+const unionOf = (name) => spaceOf("domain/types.ts", new RegExp(`export type ${name} =[^;]+;`), quoted);
+ok(`onb.goal.… · the code table in domain/onboarding.ts is the OnboardingGoalCode union (${ONB_GOAL_CODES.join(", ")} / ${unionOf("OnboardingGoalCode").join(", ")})`,
+  ONB_GOAL_CODES.length > 0 && unionOf("OnboardingGoalCode").length === ONB_GOAL_CODES.length &&
+    ONB_GOAL_CODES.every((c) => unionOf("OnboardingGoalCode").includes(c)));
+ok(`onb.age.… · the word list in domain/onboarding.ts is the AgeGroupWord union (${ONB_AGE_WORDS.join(", ")} / ${unionOf("AgeGroupWord").join(", ")})`,
+  ONB_AGE_WORDS.length > 0 && unionOf("AgeGroupWord").length === ONB_AGE_WORDS.length &&
+    ONB_AGE_WORDS.every((c) => unionOf("AgeGroupWord").includes(c)));
+
 for (const sp of DOMAIN_SPACES) {
   const src = appSrc.get(sp.path);
   ok(`${sp.path} still composes its ${sp.prefix}… keys`, src !== undefined && sp.compose.test(src));

@@ -191,6 +191,22 @@ export interface CoachPlan {
 // created in one locale does not freeze its own wording for every later reader.
 export type GoalMetric = "xp" | "sessions" | "level" | "attribute";
 
+// The goal a visitor picks during onboarding, stored as a code: profile.goal is persisted
+// and read back on the profile header and the coach's memory line, so a sentence stored
+// there would stay English for every later reader. Mirrored at runtime by GOAL_CODES in
+// ./onboarding, which proof-i18n requires to be the same list.
+export type OnboardingGoalCode =
+  | "firstTouch"
+  | "getFaster"
+  | "finishBetter"
+  | "playSmarter"
+  | "holdUpPlay"
+  | "twoFooted";
+
+// The age bands whose codes happen to be English words. "U15" needs no lookup; these four
+// do, and the list is mirrored by TRANSLATED_AGE_GROUPS in ./onboarding.
+export type AgeGroupWord = "Amateur" | "Semi-pro" | "Pro" | "Veteran";
+
 export interface Goal {
   id: string;
   // A goal made by the app names a dictionary key; a goal the visitor types is their

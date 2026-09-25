@@ -26,6 +26,7 @@ import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
 import { applyFocusGrowth, sweepOverdueSessions, type GrowthDelta } from "@/domain/training";
 import { countGoalTitle, repairGoalTitles } from "@/domain/goals";
 import { coachMemory, profileMemory, repairMemoryTexts, trainingMemory } from "@/domain/memory";
+import { normalizeGoalChoice } from "@/domain/onboarding";
 import { buildLoad } from "@/domain/load";
 import { coachProvider, type PlanInput } from "@/data/ai";
 import { OS_STATE_KEY } from "@/domain/localData";
@@ -86,6 +87,10 @@ function normalizeHydrated(s: OsState): OsState {
   }));
   return {
     ...s,
+    // A profile stored before onboarding kept its goal as a code carries the English
+    // sentence itself; the same text is on screen in every locale afterwards, so it is
+    // mapped here rather than at each of the three places that print it.
+    profile: s.profile ? { ...s.profile, goal: normalizeGoalChoice(s.profile.goal) } : s.profile,
     // Planned sessions whose scheduled day has passed are genuinely missed —
     // flip them here so the review's missed count and slipped-session insight
     // reflect reality instead of staying permanently at zero.

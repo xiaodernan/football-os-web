@@ -374,6 +374,22 @@ ok("the hydration boundary repairs remembered rows on the way in",
 ok("and the memory panel resolves the row rather than printing it",
   /rowLine\(m\.text, t\)/.test(read("features/player/PlayerOS.tsx")));
 
+// 14. Onboarding choices: the field stores a code, and a profile saved while it held
+// the English sentence is repaired into that code on the way in.
+const { toGoalCode, normalizeGoalChoice, GOAL_CODES } = await server.ssrLoadModule("/domain/onboarding.ts");
+ok("every legacy goal sentence maps to the code its picker now stores",
+  GOAL_CODES.every((c) => toGoalCode(c) === c));
+ok("a stored sentence becomes its code, and anything unrecognised is left as written",
+  toGoalCode("Play smarter (scanning/decisions)") === "playSmarter" &&
+  normalizeGoalChoice("Become a two-footed player") === "twoFooted" &&
+  normalizeGoalChoice("a visitor's own words") === "a visitor's own words" &&
+  toGoalCode("firstTouch") === "firstTouch" && toGoalCode("not-a-code") === null);
+ok("the profile header resolves both stored choices instead of printing a code",
+  read("features/player/PlayerOS.tsx").includes("goalLabel(state.profile.goal, t)") &&
+  read("features/player/PlayerOS.tsx").includes("ageGroupLabel(state.profile.ageGroup, t)"));
+ok("the hydration boundary normalizes the stored goal choice",
+  /goal: normalizeGoalChoice\(s\.profile\.goal\)/.test(read("store/useFootballOS.tsx")));
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

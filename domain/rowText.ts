@@ -10,6 +10,7 @@
 
 import { ATTRIBUTE_KEYS, POSITION_GROUPS } from "./attributes";
 import { MODES } from "./types";
+import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 export type RowVars = Record<string, string | number>;
 
@@ -20,9 +21,9 @@ export type Translate = (key: string, vars?: RowVars) => string;
 // The variable names the builders in this app are allowed to hold a CODE in. Matched
 // by name rather than by value on purpose: a visitor's own goal text or session title
 // could read "CM" or "Passing", and their words must never be re-interpreted as a
-// lookup. `group` carries a PositionGroup id, `mode` a Mode, `a` one attribute key and
-// `focus` a comma-separated list of them.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "focus"];
+// lookup. `group` carries a PositionGroup id, `mode` a Mode, `a` one attribute key,
+// `focus` a comma-separated list of them, and `goal`/`ageGroup` an onboarding choice.
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "focus", "goal", "ageGroup"];
 
 function codeWord(code: string, t: Translate): string {
   // `focus` is the one variable that holds a list, so a comma-separated code list is
@@ -33,10 +34,19 @@ function codeWord(code: string, t: Translate): string {
   if ((ATTRIBUTE_KEYS as readonly string[]).includes(code)) return t(`attr.name.${code}`);
   if ((POSITION_GROUPS.map((g) => g.id) as readonly string[]).includes(code)) return t(`group.${code}`);
   if ((MODES as readonly string[]).includes(code)) return t(`prof.mode.${code}`);
+  if (isGoalCode(code)) return t(`onb.goal.${code}`);
+  if (isAgeGroupWord(code)) return t(`onb.age.${code}`);
   // An unknown code stays as written: printing `attr.name.foo` on screen would be a
   // worse lie than printing the code the record actually carried.
   return code;
 }
+
+/** The word for an onboarding choice rendered outside a row — the picker itself and the
+ *  profile headers, which read profile.goal and profile.ageGroup straight off the
+ *  stored profile. Both go through codeWord so this file stays the only place that
+ *  composes these keys. */
+export const goalLabel = (goal: string, t: Translate): string => codeWord(goal, t);
+export const ageGroupLabel = (ageGroup: string, t: Translate): string => codeWord(ageGroup, t);
 
 export function isCodeVar(name: string): boolean {
   return CODE_VARS.includes(name);

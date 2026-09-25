@@ -1,0 +1,64 @@
+// The choices onboarding offers, as codes.
+//
+// These lists used to be arrays of display sentences living in the component, and two of
+// the fields they fill — profile.goal and profile.ageGroup — are PERSISTED and then read
+// again on the profile header, the Player OS header and the coach's remembered line. So an
+// English choice made during setup kept appearing in English to a reader who later switched
+// to Chinese: the same defect M149–M152 removed from the rows that display these values,
+// one layer down at the values themselves.
+//
+// The word for a code is composed in exactly one place — domain/rowText.ts, which already
+// resolves attribute, group and mode codes the same way — and proof-i18n's domain-space
+// check holds that template, the code tables here and the unions in ./types together.
+
+import type { AgeGroupWord, OnboardingGoalCode } from "./types";
+
+// The age bands on offer. U15/U17/U19 need no translation; the four that are English words
+// resolve through `onb.age.*`, so their codes stay exactly as stored.
+export const AGE_GROUPS = ["U15", "U17", "U19", "Amateur", "Semi-pro", "Pro", "Veteran"] as const;
+export type AgeGroup = (typeof AGE_GROUPS)[number];
+
+// Mirrors the `AgeGroupWord` union in ./types; the gate fails if the two drift, because
+// every one of these has to be keyed in all three locales or the header prints `onb.age.Pro`.
+export const TRANSLATED_AGE_GROUPS: readonly AgeGroupWord[] = ["Amateur", "Semi-pro", "Pro", "Veteran"];
+
+export const GOAL_CODES: readonly OnboardingGoalCode[] = [
+  "firstTouch",
+  "getFaster",
+  "finishBetter",
+  "playSmarter",
+  "holdUpPlay",
+  "twoFooted",
+];
+
+// What a profile stored before the field held a code. Left here rather than in a repair
+// helper so the mapping is one list, and unknown text is never guessed at.
+const LEGACY_GOAL_TEXT: Record<string, OnboardingGoalCode> = {
+  "Improve first touch": "firstTouch",
+  "Get faster": "getFaster",
+  "Finish better": "finishBetter",
+  "Play smarter (scanning/decisions)": "playSmarter",
+  "Hold up play": "holdUpPlay",
+  "Become a two-footed player": "twoFooted",
+};
+
+export function isGoalCode(value: string): value is OnboardingGoalCode {
+  return (GOAL_CODES as readonly string[]).includes(value);
+}
+
+export function isAgeGroupWord(value: string): value is AgeGroupWord {
+  return (TRANSLATED_AGE_GROUPS as readonly string[]).includes(value as AgeGroupWord);
+}
+
+/** A stored goal read as a code: recognised legacy text becomes its code, anything else
+ *  is left exactly as written rather than guessed at. */
+export function toGoalCode(goal: string): OnboardingGoalCode | null {
+  if (isGoalCode(goal)) return goal;
+  return LEGACY_GOAL_TEXT[goal] ?? null;
+}
+
+/** The goal choice of a hydrated profile, so a row written while the field held a
+ *  sentence starts resolving through the dictionary like a new one. */
+export function normalizeGoalChoice(goal: string): string {
+  return toGoalCode(goal) ?? goal;
+}

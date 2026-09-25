@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M155 (a few numbers in that range
+Work ships one milestone per commit and is currently at M156 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M155 line of work is a different kind of progress: it makes the earlier claims
+The M108–M156 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -789,6 +789,44 @@ and key reachability go red, because the key it displaced stops being read), ren
 tsc clean, build clean, 26 scripts / 1119 checks. Not browser-verified: the in-app browser
 is still wedged, so the Chinese and English Dashboard were compared by reading what the
 gate reads, not by looking at the page — which is exactly the follow-up task #142 still owes.
+
+M156 went one layer below the labels. Onboarding's two option lists lived in the component
+as arrays of English sentences, and one of them — `GOALS`, six of them — was written
+straight into `profile.goal`, which the profile header, the Player OS header and the
+coach's remembered line all read back later. A visitor who set up in English and switched
+to Chinese afterwards kept seeing "Play smarter (scanning/decisions)" in a Chinese
+interface: the same family as every row M149–M152 fixed, just stored on a profile field.
+
+The lists moved to `domain/onboarding.ts` as codes — `GOAL_CODES` mirrored by the
+`OnboardingGoalCode` union in `domain/types.ts`, the four English age bands by
+`AgeGroupWord` — and the word for a code is composed in exactly one place, `codeWord` in
+`domain/rowText.ts`, which already resolves attribute, position-group and mode codes the
+same way. Resolution stays name-gated: a variable has to be called `goal` or `ageGroup`
+for a lookup to happen, so words someone typed themselves are never re-read as a key. A
+profile saved with the old sentence is mapped to its code at the hydration boundary, and
+anything unrecognised is left exactly as written rather than guessed at.
+
+The screen's other 21 rendered literals went to keys — 26 new per locale, including the
+six goal words and four age words, reusing `common.level`, `cta.back` and `cta.enter`
+rather than duplicating them — and the mode buttons now iterate the store's own `MODES`
+table instead of restating its three codes. Onboarding joins the covered set as the 11th
+file that must render no raw UI text, and repo debt moves 536 → 514 across 28 files.
+
+Two things the gates taught on the way. A literal inside a JSX expression is counted as a
+child of the element whatever it holds — the step rail's keys were flagged until the array
+moved to module scope, which is also just better code. And one of my new source checks
+used a regex with unescaped parens, so it matched nothing while looking exactly like a
+regression in the thing it guarded; that check now reads `includes()`, which has no
+escaping to get wrong. Six mutation probes cover the new ground: an English label back in a
+covered screen, the code table losing a member the union still declares, one locale missing
+a goal word, a legacy sentence mapped to the wrong code, the header printing the raw code,
+and the hydration normalize unwired — each turns its named check red and restores by
+sha256.
+
+proof-i18n is 109 checks, proof-timeline 89, the suite 26 scripts / 1127 checks, and the
+dictionary 950 keys × 3 locales; tsc and the build are clean. Not browser-verified: the
+in-app browser is still wedged, so the three-locale walk on a fresh preview (task #142)
+is still the biggest thing this line owes.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
