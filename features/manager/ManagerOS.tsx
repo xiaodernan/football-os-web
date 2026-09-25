@@ -63,7 +63,7 @@ export function ManagerOS() {
   const [tab, setTab] = useState<Tab>("overview");
   const [last, setLast] = useState<MatchOutcome | null>(null);
 
-  if (!career) return <ClubPicker onStart={(id) => { setCareer(createCareer(id)); toast("Career started"); }} />;
+  if (!career) return <ClubPicker onStart={(id) => { setCareer(createCareer(id)); toast(t("mgr.careerStarted")); }} />;
 
   const club = getClub(career.clubId);
   if (!club)
@@ -81,8 +81,8 @@ export function ManagerOS() {
     setCareer(out.state);
     setLast(out);
     if (out.ourGoals > out.oppGoals) toast.success(`Won ${out.ourGoals}–${out.oppGoals} vs ${out.opponentName}`);
-    else if (out.ourGoals === out.oppGoals) toast(`Drew ${out.ourGoals}–${out.oppGoals} vs ${out.opponentName}`);
-    else toast(`Lost ${out.ourGoals}–${out.oppGoals} vs ${out.opponentName}`);
+    else if (out.ourGoals === out.oppGoals) toast(t("mgr.drew", { us: out.ourGoals, them: out.oppGoals, opp: out.opponentName }));
+    else toast(t("mgr.lost", { us: out.ourGoals, them: out.oppGoals, opp: out.opponentName }));
   };
 
   return (
@@ -95,12 +95,12 @@ export function ManagerOS() {
       </div>
 
       {tab === "overview" && <Overview career={career} last={last} />}
-      {tab === "squad" && <Squad career={career} onSell={(id) => { update((s) => transferOut(s, id)); toast("Player sold"); }} />}
-      {tab === "transfers" && <Transfers career={career} onBuy={(id) => { update((s) => transferIn(s, id)); toast("Signing completed"); }} />}
-      {tab === "tactics" && <TacticsPanel career={career} onChange={(t) => update((s) => setTactics(s, t))} onRest={() => { update(restSquad); toast("Squad rested") }} />}
+      {tab === "squad" && <Squad career={career} onSell={(id) => { update((s) => transferOut(s, id)); toast(t("mgr.sold")); }} />}
+      {tab === "transfers" && <Transfers career={career} onBuy={(id) => { update((s) => transferIn(s, id)); toast(t("mgr.signed")); }} />}
+      {tab === "tactics" && <TacticsPanel career={career} onChange={(t) => update((s) => setTactics(s, t))} onRest={() => { update(restSquad); toast(t("mgr.rested")) }} />}
       {tab === "table" && <Table career={career} />}
       {tab === "outlook" && <Outlook career={career} />}
-      {tab === "prep" && <MatchPrepPanel career={career} onApply={(t) => { update((s) => setTactics(s, t)); toast("Recommended tactics applied"); }} />}
+      {tab === "prep" && <MatchPrepPanel career={career} onApply={(next) => { update((s) => setTactics(s, next)); toast(t("mgr.tacticsApplied")); }} />}
     </div>
   );
 }

@@ -168,7 +168,7 @@ export function FilmRoom() {
                       {c.report.durationSec}s · {c.report.confidence}% · {new Date(c.addedAt).toLocaleDateString()}
                     </div>
                   </button>
-                  <button aria-label="Delete clip" onClick={() => remove(c.clipId)} className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100">
+                  <button aria-label={t("film.deleteClip")} onClick={() => remove(c.clipId)} className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100">
                     ✕
                   </button>
                 </div>

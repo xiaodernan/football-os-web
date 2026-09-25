@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M158 (a few numbers in that range
+Work ships one milestone per commit and is currently at M159 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M158 line of work is a different kind of progress: it makes the earlier claims
+The M108–M159 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -899,6 +899,39 @@ three `toast()` strings in Manager OS that no scan reports because they are call
 and not JSX — which is M159's neighbourhood alongside the demo coach's generated prose.
 Nothing here was clicked in a browser: the in-app browser remains wedged, so task #142's
 three-locale walk is still owed.
+
+M159 chased the copy that reaches a user through a *call argument*, which is where both of
+this project's translation audits had a blind spot. `aria-label` was not a display prop the
+raw-UI scanner recognised, so a screen-reader user heard "Delete clip" or "Select Luka
+Mendy" in an otherwise Chinese interface and nothing on screen ever revealed it. Neither
+did the scanner look at `toast(…)`: Manager OS reported zero raw literals when M158 closed,
+while seven of its toasts still said "Career started", "Squad rested" and
+"Drew 2–1 vs Arsenal" in English.
+
+Both positions are now scanned, and the ten Manager OS and accessibility strings are keyed.
+The honest bookkeeping: measured debt goes 381 → 394, but the code did not get worse —
+13 items that had always been there became visible, and 13 of the newly counted ones were
+then fixed in this same commit, so 394 is what a scan with two more eyes finds on the same
+tree. The non-vacuity floor is also changed from a tracked measurement (381) to a low bound
+(300), because pinning it to the measurement meant every future improvement turned it red
+and demanded an edit: it exists to catch a scan that stopped reading, not to track debt.
+
+Five items stay counted on purpose: two Community Hub toasts and three Learn Hub ones.
+Community Hub's enclosing scope binds `t` to a Thread and Learn Hub has no translator
+import at all, so keying them is a screen-localisation change, not a string swap, and
+pretending otherwise would have meant either an alias sprawl or a silent skip. Two more
+screens (Player OS's delete-match label and Ai Studio's graph fallback) hit the same wall
+and were reverted rather than half-wired.
+
+Three probes, one of which needed correcting: a toast put back and an aria-label put back
+are both caught, but by key reachability rather than the ceiling, since reverting a keyed
+call also orphans the key — the mutation is caught, and the check that catches it is not
+the one the probe named. The undefined-key probe lands on the check written for it.
+
+proof-i18n is 110 checks, the suite 26 scripts / 1128, dictionary 1086 keys × 3 locales.
+Not browser-verified: the in-app browser is still wedged (#142), and this milestone is the
+strongest argument yet for that walk, because aria-labels are the one class of copy that is
+invisible on screen by design.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

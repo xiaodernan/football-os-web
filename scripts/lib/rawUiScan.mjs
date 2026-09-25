@@ -31,7 +31,13 @@ const DISPLAY_PROPS = new Set([
   "label", "title", "hint", "sub", "activeText", "idleText", "placeholder",
   "note", "fallbackNote", "fallbackLabel", "subtitle", "empty", "error",
   "retry", "action", "text", "desc", "description", "cta", "tooltip", "message",
+  // An aria-label is read aloud to a screen-reader user, so an untranslated one is the
+  // same defect as an untranslated caption -- only less visible, because nothing on
+  // screen ever shows it. These were invisible to the scan until M159.
+  "aria-label",
 ]);
+// Copy handed to the user through a function call rather than rendered as an element.
+const CALL_COPY = /\b(?:toast|window\.alert|alert)\(\s*(?:"([^"]{4,})"|'([^']{4,})'|`([^`]{4,})`)/g;
 const ROW_PROPS = ["label", "title", "hint", "sub", "text", "desc", "note"];
 
 function stripComments(s) {
@@ -369,6 +375,16 @@ export function scanSource(src) {
     const text = m[2] === BT ? holeless(m[3]) : m[3];
     if (!hasProse(text)) continue;
     hits.push({ pos: m.index, kind: "row:" + m[1], text });
+  }
+
+  // Copy handed straight to the user through a function call. It is neither JSX text nor
+  // a display attribute, so none of the positions above can see it: a toast that says
+  // "Player sold" in English is as untranslated as a caption that does, and was invisible
+  // to this scanner until M159 counted it.
+  for (const m of s.matchAll(CALL_COPY)) {
+    const text = m[1] ?? m[2] ?? m[3];
+    if (!hasProse(text)) continue;
+    hits.push({ pos: m.index, kind: "call", text });
   }
 
   const seen = new Set();

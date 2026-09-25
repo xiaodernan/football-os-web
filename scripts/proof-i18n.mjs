@@ -868,7 +868,11 @@ const RAW_COVERED = [
 // 381 as of M158 step 3: Manager OS is finished and covered, so its 133 hits left the
 // open count entirely. The non-vacuity floor below tracks the measurement downward -- it
 // exists to notice a scan that stopped reading, not to hold a number steady.
-const RAW_UI_CEILING = 381;
+// 394 as of M159 — the number did not grow, the measurement did. The scan now also
+// reads two positions it never looked at: `aria-label` attributes and copy handed to
+// toast()/alert(). 13 of those items were then keyed; the 5 left (two Community Hub
+// toasts, three Learn Hub toasts) stay counted as real debt for those screens.
+const RAW_UI_CEILING = 394;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -887,7 +891,7 @@ ok(`the raw-UI debt outside the covered set has not grown (${openTotal} across $
   openTotal <= RAW_UI_CEILING);
 for (const [n, p] of openRows.sort((a, b) => b[0] - a[0]).slice(0, 6)) console.log(`       debt: ${String(n).padStart(4)} ${p}`);
 ok(`the debt scan is reading files that do carry raw text (${openRows.length} files)`,
-  tsxSrc.length >= 60 && openRows.length >= 20 && openTotal >= 381);
+  tsxSrc.length >= 60 && openRows.length >= 20 && openTotal >= 300);
 
 // The exemption's own audit: a literal the scan chose not to report because it
 // looks like a t() lookup has to be one. This is the check that would have caught

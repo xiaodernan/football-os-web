@@ -106,7 +106,7 @@ export function WatchlistBoard() {
                   type="checkbox"
                   checked={on}
                   onChange={() => togglePick(p.id)}
-                  aria-label={`Select ${p.name}`}
+                  aria-label={t("watch.selectAria", { name: p.name })}
                   className="h-4 w-4 accent-[var(--primary)]"
                 />
                 <Crest colors={club?.colors} short={club?.short} size={30} />
@@ -153,7 +153,7 @@ export function WatchlistBoard() {
                   <div className="font-mono text-sm tabular-nums">{primeYearsLabel(p)}</div>
                   <div className="text-[11px] text-muted-foreground">{t("watch.prime")}</div>
                 </div>
-                <button onClick={() => toggleWatch(p.id)} className="shrink-0 text-muted-foreground hover:text-destructive" aria-label={`Remove ${p.name}`}>✕</button>
+                <button onClick={() => toggleWatch(p.id)} className="shrink-0 text-muted-foreground hover:text-destructive" aria-label={t("watch.removeAria", { name: p.name })}>✕</button>
               </div>
             );
           })}
