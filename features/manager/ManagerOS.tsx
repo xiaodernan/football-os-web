@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router";
 import { cn } from "@/lib/utils";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
+import { rowLine } from "@/domain/rowText";
 
 const KEY = CAREER_KEY;
 type Tab = "overview" | "squad" | "transfers" | "tactics" | "table" | "outlook" | "prep";
@@ -212,7 +213,7 @@ function SeasonSummaryPanel({ career }: { career: CareerState }) {
     <Panel className="p-4">
       <div className="flex items-center justify-between">
         <SectionTitle title={t("mgr.seasonTitle")} hint={t("mgr.seasonFrom")} />
-        {s.honour && <span className={cn("text-xs font-semibold", tone)}>{s.honour.label}</span>}
+        {s.honour && <span className={cn("text-xs font-semibold", tone)}>{rowLine(s.honour.label, t)}</span>}
       </div>
       <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
         <Fact label={t("mgr.wdl")} value={`${s.won}-${s.drawn}-${s.lost}`} />
@@ -378,7 +379,7 @@ function Outlook({ career }: { career: CareerState }) {
             <Metric label={t("mgr.currentPos")} value={`#${o.position}`} />
             <Metric label={t("mgr.projectedPos")} value={`#${o.projectedPosition}`} />
             <Metric label={t("mgr.expectedFinish")} value={`≈${o.expectedFinish}`} />
-            <Metric label="Zone" value={o.zone.label} />
+            <Metric label={t("mgr.zone")} value={rowLine(o.zone.label, t)} />
           </div>
           <div className="mt-4">
             <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t("mgr.titleChance")}</span><span className={cn("font-mono font-semibold", zoneTone)}>{pct(o.titleChance)}</span></div>
@@ -430,7 +431,7 @@ function Outlook({ career }: { career: CareerState }) {
             ))}
           </ul>
           <div className="mt-3 border-t pt-2 text-[11px] text-muted-foreground">
-            <div className="uppercase tracking-wide">Sources</div>
+            <div className="uppercase tracking-wide">{t("mgr.sourcesTitle")}</div>
             <ul className="mt-1 space-y-0.5">{o.sources.map((s, i) => <li key={i}>· {s}</li>)}</ul>
           </div>
         </Panel>
@@ -466,22 +467,22 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
       <div className="space-y-4 lg:col-span-2">
         <Panel className="p-4">
           <div className="flex items-center justify-between">
-            <SectionTitle title={`vs ${p.opponentName} (${p.venue})`} hint="Engine-input comparison" />
+            <SectionTitle title={`vs ${p.opponentName} (${p.venue})`} hint={t("mgr.engineCompare")} />
             <DemoBadge />
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">Both sides run through the same Match Engine inputs your fixture will use, under neutral tactics.</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("mgr.engineCompareHint")}</p>
           <div className="mt-3 space-y-1.5">
-            {vs("Attack vs their defense", p.us.attack, p.them.defense)}
-            {vs("Our defense vs their attack", p.us.defense, p.them.attack)}
-            {vs("Midfield battle", p.us.midfield, p.them.midfield)}
+            {vs(t("mgr.attackVsDef"), p.us.attack, p.them.defense)}
+            {vs(t("mgr.defVsAttack"), p.us.defense, p.them.attack)}
+            {vs(t("mgr.midBattle"), p.us.midfield, p.them.midfield)}
           </div>
         </Panel>
         <Panel className="p-4">
-          <SectionTitle title="Recommended shape" />
+          <SectionTitle title={t("mgr.recommendedShape")} />
           <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
-            <Fact label="Mentality" value={ment[p.recommended.mentality + 2]} />
-            <Fact label="Press" value={pressLabel(p.recommended.press)} />
-            <Fact label="Tempo" value={tempoLabel(p.recommended.tempo)} />
+            <Fact label={t("tac.mentality")} value={ment[p.recommended.mentality + 2]} />
+            <Fact label={t("mgr.press")} value={pressLabel(p.recommended.press)} />
+            <Fact label={t("mgr.tempo")} value={tempoLabel(p.recommended.tempo)} />
           </div>
           <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
             {p.rationale.map((r, i) => (
@@ -489,16 +490,16 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
             ))}
           </ul>
           <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Button size="sm" disabled={isCurrent} onClick={() => onApply(p.recommended)}>{isCurrent ? "Already applied" : "Apply these tactics"}</Button>
-            <Button size="sm" variant="outline" onClick={runOdds} disabled={oddsBusy}>{oddsBusy ? "Projecting…" : "Project odds (150 runs)"}</Button>
-            <Link to={`/tactical-studio?mt=${p.recommended.mentality + 2}`} className="text-xs text-primary hover:underline">Fine-tune in Tactical Studio →</Link>
+            <Button size="sm" disabled={isCurrent} onClick={() => onApply(p.recommended)}>{isCurrent ? t("mgr.appliedAlready") : t("mgr.applyTactics")}</Button>
+            <Button size="sm" variant="outline" onClick={runOdds} disabled={oddsBusy}>{oddsBusy ? t("mgr.projecting") : t("mgr.projectOdds", { n: 150 })}</Button>
+            <Link to={`/tactical-studio?mt=${p.recommended.mentality + 2}`} className="text-xs text-primary hover:underline">{t("mgr.fineTune")} →</Link>
           </div>
         </Panel>
 
         {odds && (
           <Panel className="p-4">
             <div className="flex items-center justify-between">
-              <SectionTitle title="Projected fixture odds" hint="Recommended tactics · 150 engine runs" />
+              <SectionTitle title={t("mgr.oddsTitle")} hint={t("mgr.oddsHint", { n: 150 })} />
               <DemoBadge />
             </div>
             <div className="mt-3 flex h-3 w-full overflow-hidden rounded">
@@ -507,11 +508,11 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
               <div className="bg-info" style={{ width: `${theirWin * 100}%` }} />
             </div>
             <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
-              <div><div className="text-xs text-muted-foreground">Us win</div><div className="font-mono font-semibold text-primary">{Math.round(ourWin * 100)}%</div></div>
-              <div><div className="text-xs text-muted-foreground">Draw</div><div className="font-mono font-semibold">{Math.round(odds.drawPct * 100)}%</div></div>
-              <div><div className="truncate text-xs text-muted-foreground">{p.opponentName} win</div><div className="font-mono font-semibold text-info">{Math.round(theirWin * 100)}%</div></div>
+              <div><div className="text-xs text-muted-foreground">{t("mgr.usWin")}</div><div className="font-mono font-semibold text-primary">{Math.round(ourWin * 100)}%</div></div>
+              <div><div className="text-xs text-muted-foreground">{t("mgr.draw")}</div><div className="font-mono font-semibold">{Math.round(odds.drawPct * 100)}%</div></div>
+              <div><div className="truncate text-xs text-muted-foreground">{p.opponentName} {t("mgr.winWord")}</div><div className="font-mono font-semibold text-info">{Math.round(theirWin * 100)}%</div></div>
             </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">Modelled under the recommended shape — a projection from the Match Engine, not a played result. Avg goals {odds.avgHomeGoals.toFixed(2)}–{odds.avgAwayGoals.toFixed(2)} · over 2.5 {Math.round(odds.over25Pct * 100)}%.</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">{t("mgr.oddsNote")} {t("mgr.avgGoals")} {odds.avgHomeGoals.toFixed(2)}–{odds.avgAwayGoals.toFixed(2)} · {t("mgr.overWord", { n: 2.5 })} {Math.round(odds.over25Pct * 100)}%.</p>
           </Panel>
         )}
       </div>
@@ -522,10 +523,10 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
             <div className="h-2 flex-1 overflow-hidden rounded bg-muted"><div className="h-full bg-info" style={{ width: `${p.confidence}%` }} /></div>
             <span className="font-mono text-xs">{p.confidence}%</span>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Stronger when the on-paper edges are large; even matchups get a cautious recommendation.</p>
+          <p className="mt-2 text-xs text-muted-foreground">{t("mgr.strengthNote")}</p>
         </Panel>
         <Panel className="p-4">
-          <SectionTitle title="Sources" />
+          <SectionTitle title={t("mgr.sourcesTitle")} />
           <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">{p.sources.map((s, i) => <li key={i}>· {s}</li>)}</ul>
         </Panel>
       </div>
@@ -543,12 +544,12 @@ function ClubPicker({ onStart }: { onStart: (clubId: string) => void }) {
       <div className="flex items-center gap-2">
         <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">♟</div>
         <div>
-          <div className="flex items-center gap-2"><h1 className="text-xl font-bold">Manager OS</h1><DemoBadge /></div>
-          <p className="text-xs text-muted-foreground">Take charge of a club: play fixtures, move players and climb the league — all on the deterministic engine.</p>
+          <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("nav.manager")}</h1><DemoBadge /></div>
+          <p className="text-xs text-muted-foreground">{t("mgr.subtitle")}</p>
         </div>
       </div>
       <Panel className="p-4">
-        <SectionTitle title="Choose your club" />
+        <SectionTitle title={t("mgr.chooseClub")} />
         <div className="mt-2 flex flex-wrap gap-1.5">
           {comps.map((c) => (
             <button key={c.id} onClick={() => setCompId(c.id)} className={cn("rounded-md border px-2.5 py-1 text-xs", compId === c.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{c.name}</button>
@@ -558,7 +559,7 @@ function ClubPicker({ onStart }: { onStart: (clubId: string) => void }) {
           {clubs.map((c) => (
             <button key={c.id} onClick={() => onStart(c.id)} className="flex items-center gap-3 rounded-lg border px-3 py-2 text-left hover:border-primary/50 hover:bg-primary/5">
               <Crest colors={c.colors} short={c.short} size={34} />
-              <div className="min-w-0"><div className="truncate text-sm font-medium">{c.name}</div><div className="text-xs text-muted-foreground">OVR {c.overall} · {c.nation}</div></div>
+              <div className="min-w-0"><div className="truncate text-sm font-medium">{c.name}</div><div className="text-xs text-muted-foreground">{t("mgr.thOvr")} {c.overall} · {c.nation}</div></div>
             </button>
           ))}
         </div>
@@ -567,7 +568,9 @@ function ClubPicker({ onStart }: { onStart: (clubId: string) => void }) {
   );
 }
 
-function Metric({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
+// value is a computed string at every call site, and a resolved row can be absent, so
+// the prop says what the callers actually hand it.
+function Metric({ label, value, tone }: { label: string; value: string | undefined; tone?: "good" | "bad" }) {
   return (
     <div className="rounded-md border bg-card/40 px-3 py-2">
       <div className="text-[11px] text-muted-foreground">{label}</div>

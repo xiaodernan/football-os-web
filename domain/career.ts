@@ -2,6 +2,7 @@ import { footballProvider, getClub, clubIdsByCompetition } from "@/data/football
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
+import type { RowText } from "./rowText";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
 // runs entirely in Demo Mode with no backend, yet a real save/load contract could
@@ -186,7 +187,7 @@ export interface SeasonOutlook {
   leaderName: string;
   titleChance: number; // 0..1
   expectedFinish: number; // modelled expected league position
-  zone: { label: string; tone: "good" | "mixed" | "bad" };
+  zone: { label: RowText; tone: "good" | "mixed" | "bad" };
   rivalRows: OutlookRow[]; // the clubs closest to us in the projected table
   evidence: string[];
   confidence: number; // 0..100
@@ -253,10 +254,10 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
   const pct = clubCount ? (position - 1) / clubCount : 1;
   const zone =
     pct <= 0.25
-      ? { label: "Title race", tone: "good" as const }
+      ? { label: { key: "mgr.zoneTitle" }, tone: "good" as const }
       : pct <= 0.6
-        ? { label: "Upper midtable", tone: "mixed" as const }
-        : { label: "Drop zone", tone: "bad" as const };
+        ? { label: { key: "mgr.zoneUpperMid" }, tone: "mixed" as const }
+        : { label: { key: "mgr.zoneDrop" }, tone: "bad" as const };
 
   const evidence = [
     `#${position} with ${ours.points} pts from ${played} career fixtures (${totalFixtures} scheduled this season)`,
@@ -481,7 +482,7 @@ export interface SeasonSummary {
   position: number;
   clubCount: number;
   complete: boolean;
-  honour: { label: string; tone: "good" | "mixed" | "bad" } | null;
+  honour: { label: RowText; tone: "good" | "mixed" | "bad" } | null;
   evidence: string[];
 }
 
@@ -520,14 +521,14 @@ export function seasonSummary(state: CareerState): SeasonSummary {
   const honour: SeasonSummary["honour"] = !played
     ? null
     : position === 1 && complete
-      ? { label: "Champions", tone: "good" }
+      ? { label: { key: "mgr.honourChampions" }, tone: "good" }
       : position === 1
-        ? { label: "Top of the table", tone: "good" }
+        ? { label: { key: "mgr.honourTop" }, tone: "good" }
         : pct <= 0.25
-          ? { label: "Title contenders", tone: "good" }
+          ? { label: { key: "mgr.honourContenders" }, tone: "good" }
           : pct <= 0.6
-            ? { label: "Midtable", tone: "mixed" }
-            : { label: "Relegation battle", tone: "bad" };
+            ? { label: { key: "mgr.honourMidtable" }, tone: "mixed" }
+            : { label: { key: "mgr.honourRelegation" }, tone: "bad" };
 
   const evidence = [
     played ? `${won}-${drawn}-${lost} from ${played} fixtures · ${gf} scored, ${ga} conceded (GD ${gd >= 0 ? "+" : ""}${gd})` : "No fixtures played yet.",

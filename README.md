@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M157 (a few numbers in that range
+Work ships one milestone per commit and is currently at M158 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M157 line of work is a different kind of progress: it makes the earlier claims
+The M108–M158 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -861,6 +861,44 @@ Not done, deliberately: Manager OS still has 70 hits in its league table, season
 match-prep panel, club picker and the small Metric/Fact/Slider primitives, so it cannot
 join the covered set yet — that is M158. Nothing here was looked at in a browser; the
 in-app browser is still wedged and task #142's three-locale walk remains owed.
+
+M158 finished Manager OS — 133 raw literals to none — and it was the last screen that had
+never been connected to translation at all: the file had no `useI18n` import, so the seven
+panels each take the hook now. Landed in three commits (steps 1 and 2 earlier; step 3 here),
+each verified with tsc before it was committed. The screen joins the covered set as the 12th
+file that must render no raw UI text, and repo debt is 381 across 27 files, with the
+dictionary at 1076 keys.
+
+Reuse over duplication again did most of the work: the tab strip's seven names were already
+keys sitting in a field called `label`, which is the name the scan reads as interface copy,
+so that was a rename rather than a translation; and the market's position filters stopped
+restating `PosBucket` as an inline literal union, sharing one `{code, labelKey}` table whose
+first entry the state default reads. Attack / Midfield / Defence, Reset, Age, Position,
+Mentality and Manager OS itself all resolved to keys that already existed elsewhere.
+
+Two domain rows came with it. The season outlook's zone and honour labels were English
+prose built in `domain/career.ts` and merely displayed — the fifth instance of the class
+M149–M152 kept finding — so both are keyed rows now, read through `rowLine`, and
+`Metric`'s `value` prop says what callers actually pass (`string | undefined`) instead of
+forcing a cast or a fake placeholder.
+
+That exposed a hole worth its own gate: `rowLine` was only ever checked on the way out of
+the domain. A screen could take a keyed row and print it — `{String(o.zone.label)}` renders
+"[object Object]", type-checks because ReactNode accepts objects, builds, and every gate
+stayed green. Check 28 now requires each read of a known keyed-row property to sit inside a
+`rowLine(` call. Four probes: the printing-instead-of-resolving swap (caught by 28, the
+bug it was written for), an English heading back inside the newly covered screen (caught),
+a manager key nothing reads (caught by reachability), and a domain honour row reverted to
+prose — that one was caught by key reachability and would also fail the type check, but not
+by the row-literal audit, whose pattern recognises `{key: …}` and `{value: …}` and not a
+`{label: "prose"}` field; the expectation was mine to fix, not the gate's.
+
+Still outstanding, unchanged: Player OS (89 hits), Simulation Lab (51), Community Hub (42),
+Learn Hub (37), Film Room (30), Data Room (29), Landing (18), `src/App.tsx` (3), plus the
+three `toast()` strings in Manager OS that no scan reports because they are call arguments
+and not JSX — which is M159's neighbourhood alongside the demo coach's generated prose.
+Nothing here was clicked in a browser: the in-app browser remains wedged, so task #142's
+three-locale walk is still owed.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

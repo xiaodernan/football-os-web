@@ -763,6 +763,31 @@ for (const u of unsubstituted.slice(0, 15)) console.log("       short: " + u);
 ok(`the placeholder scan reads t()'s own variable filling, and everything it looks at is readable (${substituted} filled, ${unreadable.length} unreadable)`,
   substituted >= 20 && unreadable.length === 0);
 
+// 28. The other half of the row contract. Checks 18/26 make sure a domain module hands
+//     out a key; nothing made the screen resolve it. Handing the row object to React
+//     renders "[object Object]", type-checks (ReactNode accepts objects), builds and reads
+//     fine in English -- so a probe that swapped rowLine(x.label, t) for String(x.label)
+//     walked through every gate green. Every read of a known keyed-row property now has to
+//     sit inside a rowLine( call.
+const KEYED_ROW_READS = [/\bzone\.label\b/, /\bhonour\.label\b/, /\bm\.text\b/, /\bg\.title\b/, /\brow\.title\b/];
+const unresolvedRows = [];
+let keyedRowReads = 0;
+for (const [p, body] of appSrc) {
+  if (!p.endsWith(".tsx")) continue;
+  for (const re of KEYED_ROW_READS) {
+    for (const hit of body.matchAll(new RegExp(re.source, "g"))) {
+      keyedRowReads++;
+      const before = body.slice(Math.max(0, hit.index - 24), hit.index);
+      // rowLine(s.honour.label, t) -- the receiver sits between the call and the
+      // property, so the test is "rowLine( opened within the last few characters".
+      if (!/rowLine\([^)]{0,12}$/.test(before)) unresolvedRows.push(p + ": " + hit[0]);
+    }
+  }
+}
+ok("every read of a keyed row is resolved by rowLine (" + keyedRowReads + " reads, " + unresolvedRows.length + " bare)",
+  keyedRowReads >= 4 && unresolvedRows.length === 0);
+for (const u of unresolvedRows.slice(0, 8)) console.log("       bare read: " + u);
+
 // 22. Raw UI text, measured across the whole app rather than one screen at a
 //     time. scripts/lib/rawUiScan.mjs reads the three positions a reader of the
 //     interface actually sees — a JSX text node, a display prop or in-line
@@ -803,6 +828,7 @@ const RAW_COVERED = [
   "features/compare/ComparePage.tsx",
   "features/football/Details.tsx",
   "features/history/HistoryPage.tsx",
+  "features/manager/ManagerOS.tsx",
   "features/onboarding/Onboarding.tsx",
   "features/review/ReviewPage.tsx",
   "features/settings/SettingsPage.tsx",
@@ -839,7 +865,10 @@ const RAW_COVERED = [
 // 410 as of M158 step 2: the career-empty state, the market row, the league-table header
 // and the whole season-outlook panel are keyed, and the four panels that received them
 // (Table, Outlook, MatchPrepPanel, ClubPicker) each take the translator hook.
-const RAW_UI_CEILING = 410;
+// 381 as of M158 step 3: Manager OS is finished and covered, so its 133 hits left the
+// open count entirely. The non-vacuity floor below tracks the measurement downward -- it
+// exists to notice a scan that stopped reading, not to hold a number steady.
+const RAW_UI_CEILING = 381;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -858,7 +887,7 @@ ok(`the raw-UI debt outside the covered set has not grown (${openTotal} across $
   openTotal <= RAW_UI_CEILING);
 for (const [n, p] of openRows.sort((a, b) => b[0] - a[0]).slice(0, 6)) console.log(`       debt: ${String(n).padStart(4)} ${p}`);
 ok(`the debt scan is reading files that do carry raw text (${openRows.length} files)`,
-  tsxSrc.length >= 60 && openRows.length >= 20 && openTotal >= 400);
+  tsxSrc.length >= 60 && openRows.length >= 20 && openTotal >= 381);
 
 // The exemption's own audit: a literal the scan chose not to report because it
 // looks like a t() lookup has to be one. This is the check that would have caught
