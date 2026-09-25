@@ -5,7 +5,7 @@ import { getClub, getPlayer } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
-import { goalLine, goalUnitKey } from "@/domain/goals";
+import { goalLine, goalProgressPct, goalUnitKey } from "@/domain/goals";
 import { overallRating, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { seasonSummary, type CareerState } from "@/domain/career";
@@ -224,7 +224,6 @@ export function ProfilePage() {
           {state.goals.length ? (
             <div className="mt-2 space-y-3">
               {state.goals.map((g) => {
-                const pct = g.target > 0 ? Math.min(100, Math.round((g.current / g.target) * 100)) : 0;
                 // The row stores a metric code, never a unit word, so the label is
                 // the reader's: a goal made in English no longer prints "sessions"
                 // beside a Chinese profile. An unrecognised code shows no word.
@@ -239,7 +238,7 @@ export function ProfilePage() {
                       </span>
                       <span className="font-mono text-xs text-muted-foreground tabular-nums">{g.current}/{g.target}{unit ? ` ${t(unit)}` : ""}</span>
                     </div>
-                    <div className="mt-1"><Progress value={pct} /></div>
+                    <div className="mt-1"><Progress value={goalProgressPct(g)} /></div>
                   </button>
                 );
               })}

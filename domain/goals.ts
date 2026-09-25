@@ -61,3 +61,22 @@ export function repairGoalTitles(goals: Goal[]): Goal[] {
     typeof (g.title as unknown) === "string" ? { ...g, title: { value: g.title as unknown as string } } : g,
   );
 }
+
+// A goal counts something, so zero is not a target: the completion rule
+// `current >= target` would mark it finished the moment it exists, and the progress
+// bar would divide by zero. The add form takes whatever its number field holds —
+// `Number("")` is 0 — so the rule lives here, shared by every writer and readable by
+// a proof, rather than being re-guessed at each call site.
+export function isValidGoalTarget(target: number): boolean {
+  return Number.isInteger(target) && target > 0;
+}
+
+// Percent complete, capped at 100. A row whose target is not a positive number — one
+// stored before the add form checked, or a value parsed out of an empty field — reads
+// as 0% rather than NaN, which is what the two goal lists disagreed about while each
+// did the division itself.
+export function goalProgressPct(goal: Goal): number {
+  if (!(goal.target > 0)) return 0;
+  const pct = Math.round((Math.min(goal.current, goal.target) / goal.target) * 100);
+  return Math.max(0, Math.min(100, pct));
+}

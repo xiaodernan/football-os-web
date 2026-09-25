@@ -18,7 +18,7 @@ import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { FIXTURES_KEY } from "@/domain/localData";
-import { goalLine } from "@/domain/goals";
+import { goalLine, goalProgressPct, isValidGoalTarget } from "@/domain/goals";
 import { getClub, getPlayer } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, Crest } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
@@ -517,36 +517,41 @@ function ProgressView() {
 
 function Goals() {
   const { t } = useI18n();
-  const { state, addGoal } = useOs();
+  const { state, addGoal, removeGoal } = useOs();
   const [title, setTitle] = useState("");
   const [target, setTarget] = useState("5");
   const [metric, setMetric] = useState<GoalMetric>("sessions");
+  const targetOk = isValidGoalTarget(Number(target));
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel className="p-4">
-        <SectionTitle title="Your goals" />
+        <SectionTitle title={t("player.goalsTitle")} />
         <div className="space-y-3">
           {state.goals.map((g) => (
-            <div key={g.id} className="rounded-lg border bg-card/40 p-3">
+            <div key={g.id} className="group rounded-lg border bg-card/40 p-3">
               <div className="flex items-center justify-between text-sm">
-                <span className={cn(g.done && "text-muted-foreground line-through")}>{goalLine(g, t)}</span>
-                <span className="font-mono text-xs">{Math.min(g.current, g.target)}/{g.target}</span>
+                <span className={cn("min-w-0 truncate", g.done && "text-muted-foreground line-through")}>{goalLine(g, t)}</span>
+                <span className="ml-2 flex shrink-0 items-center gap-1.5">
+                  <span className="font-mono text-xs">{Math.min(g.current, g.target)}/{g.target}</span>
+                  <button onClick={() => { removeGoal(g.id); toast.success(t("player.goalRemoved")); }} aria-label={t("player.goalRemoveAria")} className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus:opacity-100 group-hover:opacity-100">✕</button>
+                </span>
               </div>
-              <Progress value={(Math.min(g.current, g.target) / g.target) * 100} className="mt-2 h-1.5" />
+              <Progress value={goalProgressPct(g)} className="mt-2 h-1.5" />
             </div>
           ))}
-          {state.goals.length === 0 && <EmptyState title="No goals" icon="◎" />}
+          {state.goals.length === 0 && <EmptyState title={t("prof.noGoals")} icon="◎" />}
         </div>
       </Panel>
       <Panel className="p-4">
-        <SectionTitle title="Add goal" />
+        <SectionTitle title={t("player.goalsAdd")} />
         <div className="space-y-3">
-          <div><Label>Title</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" placeholder="e.g. Reach level 6" /></div>
+          <div><Label>{t("player.goalFieldTitle")}</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" placeholder={t("player.goalPlaceholder")} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>Metric</Label><select value={metric} onChange={(e) => setMetric(e.target.value as GoalMetric)} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm"><option value="xp">XP</option><option value="sessions">Sessions</option><option value="level">Level</option></select></div>
-            <div><Label>Target</Label><Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} className="mt-1" /></div>
+            <div><Label>{t("player.goalFieldMetric")}</Label><select value={metric} onChange={(e) => setMetric(e.target.value as GoalMetric)} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm"><option value="xp">{t("player.goalMetricXp")}</option><option value="sessions">{t("player.goalMetricSessions")}</option><option value="level">{t("player.goalMetricLevel")}</option></select></div>
+            <div><Label>{t("player.goalFieldTarget")}</Label><Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} className="mt-1" /></div>
           </div>
-          <Button onClick={() => { if (!title.trim()) return; addGoal({ title: { value: title.trim() }, metric, target: Number(target), current: metric === "xp" ? state.profile!.xp : metric === "level" ? state.profile!.level : state.sessions.filter((s) => s.status === "completed").length }); setTitle(""); toast.success("Goal added"); }}>Add goal</Button>
+          {!targetOk && <p className="text-[11px] text-destructive">{t("player.goalTargetHint")}</p>}
+          <Button disabled={!targetOk || !title.trim()} onClick={() => { addGoal({ title: { value: title.trim() }, metric, target: Number(target), current: metric === "xp" ? state.profile!.xp : metric === "level" ? state.profile!.level : state.sessions.filter((s) => s.status === "completed").length }); setTitle(""); toast.success(t("player.goalAdded")); }}>{t("player.goalsAdd")}</Button>
         </div>
       </Panel>
     </div>

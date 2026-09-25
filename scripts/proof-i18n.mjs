@@ -771,7 +771,9 @@ const RAW_COVERED = [
 // M149, when the activity timeline's rows went onto keys and HistoryPage's own
 // `label` fields became `labelKey`, which is what the scan reads as a key. 594 as
 // of M150, when onboarding's two goal titles stopped being sentences stored in a row.
-const RAW_UI_CEILING = 594;
+// 584 as of M151, when the Player OS goal panel — the one place you manage goals —
+// stopped being English-only.
+const RAW_UI_CEILING = 584;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

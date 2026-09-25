@@ -67,6 +67,7 @@ type Action =
   | { type: "WATCH"; playerId: string }
   | { type: "GOAL_ADD"; goal: Goal }
   | { type: "GOAL_TOGGLE"; id: string }
+  | { type: "GOAL_REMOVE"; id: string }
   | { type: "RESET" };
 
 function clamp(v: number, lo: number, hi: number) {
@@ -211,6 +212,8 @@ function reducer(state: OsState, action: Action): OsState {
       return { ...state, goals: [action.goal, ...state.goals] };
     case "GOAL_TOGGLE":
       return { ...state, goals: state.goals.map((g) => (g.id === action.id ? { ...g, done: !g.done } : g)) };
+    case "GOAL_REMOVE":
+      return { ...state, goals: state.goals.filter((g) => g.id !== action.id) };
     case "RESET":
       return { ...initialState };
     default:
@@ -229,6 +232,7 @@ interface OsContext {
   toggleWatch: (playerId: string) => void;
   addGoal: (g: Omit<Goal, "id" | "createdAt" | "done">) => void;
   toggleGoal: (id: string) => void;
+  removeGoal: (id: string) => void;
   reset: () => void;
 }
 
@@ -325,6 +329,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
       toggleWatch: (playerId) => dispatch({ type: "WATCH", playerId }),
       addGoal: (g) => dispatch({ type: "GOAL_ADD", goal: { ...g, id: `g-${Date.now()}`, createdAt: new Date().toISOString(), done: false } }),
       toggleGoal: (id) => dispatch({ type: "GOAL_TOGGLE", id }),
+      removeGoal: (id) => dispatch({ type: "GOAL_REMOVE", id }),
       reset: () => {
         try {
           localStorage.removeItem(STORAGE_KEY);

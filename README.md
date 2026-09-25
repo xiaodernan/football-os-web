@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M150 (a few numbers in that range
+Work ships one milestone per commit and is currently at M151 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M150 line of work is a different kind of progress: it makes the earlier claims
+The M108–M151 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -598,6 +598,47 @@ silently translated text — the row is an object, and React refuses it — so t
 that list goals read them through `goalLine`. Still queued and not fixed here:
 `AiMemoryEntry.text`, which the coach provider persists as English prose and two screens
 render.
+
+M151 left the dictionary for the surface that uses it. Goals were add-only: the store
+dispatched `GOAL_ADD` and `GOAL_TOGGLE` and nothing else, so a tracked goal stayed forever
+and the only way to clear one was Settings → reset, which removes everything else with it.
+The panel where you manage them — Player OS → Goals — was also still English: "Your goals",
+"Add goal", "Title", "Metric", "Target", "No goals", "Goal added", and the three metric
+options, so a reader who had just switched to Chinese was asked to manage goals in a
+language they had not chosen. 13 keys per locale take that panel to 0 raw literals, and the
+repo's debt ceiling moves 594 → 584 (Player OS 103 → 93).
+
+Two defects came out of the add form on the way in. Its target field feeds `Number(target)`,
+and an emptied number field is `Number("")`, which is 0 — and the completion rule is
+`done: current >= target`, so the goal was finished the moment it was created. The same row
+then divided by its own target for the progress bar. The two goal lists had already diverged
+on that: the profile guarded `target > 0` and the Player OS panel did not, so one row could
+read 0% on one screen and NaN on the other. Both rules are functions in `domain/goals.ts`
+now — `isValidGoalTarget` refuses 0, -3, 2.5, NaN and Infinity, and `goalProgressPct` returns
+a whole percent inside 0..100, 0 for any row whose target is not a count — and the panel
+disables Add with a stated reason (`player.goalTargetHint`) instead of accepting a value it
+cannot count toward.
+
+Removal is a ✕ on each row, following the match-log control M83 added: named for a screen
+reader (`player.goalRemoveAria`), revealed on hover or focus rather than crowding the row,
+and confirmed by a toast in the reader's language.
+
+The gates moved with it. proof-timeline is 64 → 71 and now holds the target and progress
+rules, three source-read checks, and one rule that replaces a whole hunt: every `case` label
+in the store's reducer must have a `dispatch({ type: … })` that can reach it (11 cases, none
+dead). That is exactly the defect M78 found by hand — a `SCHEDULE` branch nothing dispatched —
+which was a one-off cleanup until now; renaming a case so nothing sends it turns this red. The
+other two say that removing a goal is not just a reducer branch but a control the panel
+actually offers, and that the icon-only button does not go bare.
+
+Not browser-verified — the in-app browser is still wedged. `npx tsc --noEmit` exits 0,
+`npm run build` succeeds, the suite is 26 scripts / 1089 checks, and 7 mutation probes each
+turn a named check red and restore the file by sha256: accept zero as a target, let a NaN
+target reach the division, rename the case so nothing dispatches it, take the ✕ away, drop
+the aria-label, put an English label back in the panel (that one trips two independent gates —
+the ceiling and key reachability), and delete one locale's copy of a new key. Still open here:
+a goal is deleted immediately with no undo, which is honest for a local demo but is the first
+thing to revisit if goals grow a history.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

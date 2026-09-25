@@ -18,7 +18,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const server = await createServer({ root, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { buildTimeline, groupByDay } = await server.ssrLoadModule("/domain/history.ts");
 const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
-const { GOAL_METRICS, goalUnitKey, countGoalTitle, attributeGoalTitle, goalLine, repairGoalTitles } =
+const { GOAL_METRICS, goalUnitKey, countGoalTitle, attributeGoalTitle, goalLine, repairGoalTitles, isValidGoalTarget, goalProgressPct } =
   await server.ssrLoadModule("/domain/goals.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 
@@ -281,6 +281,37 @@ ok("the hydration boundary actually repairs stored goal titles",
   /goals:\s*repairGoalTitles\(/.test(read("store/useFootballOS.tsx")));
 ok("and the repair runs on the same boundary that backfills sessions, not a read site",
   /sessions:\s*sweepOverdueSessions\(/.test(read("store/useFootballOS.tsx")));
+
+// ---- 12. What a goal is allowed to count, and how far it has come.
+const countRow = (target, current) => goalRow({ value: "Training goal" }, { target, current });
+ok("a target must be a whole number above zero — 0, -3, 2.5, NaN and Infinity refused",
+  isValidGoalTarget(1) && isValidGoalTarget(500) &&
+  !isValidGoalTarget(0) && !isValidGoalTarget(-3) && !isValidGoalTarget(2.5) &&
+  !isValidGoalTarget(Number.NaN) && !isValidGoalTarget(Number.POSITIVE_INFINITY));
+// The defect this closes: an emptied number field is `Number("")`, which is 0, and a
+// goal with target 0 is `done: current >= 0` — finished before it started.
+ok("the exact value an emptied target field produces is the one refused",
+  Number("") === 0 && !isValidGoalTarget(Number("")));
+ok("progress is a whole percent between 0 and 100",
+  goalProgressPct(countRow(100, 50)) === 50 && goalProgressPct(countRow(100, 150)) === 100 &&
+  goalProgressPct(countRow(3, 1)) === 33 && goalProgressPct(countRow(5, 0)) === 0);
+ok("a row whose target is not a count reads 0%, never NaN",
+  [0, -2, Number.NaN].every((t0) => goalProgressPct(countRow(t0, 5)) === 0));
+
+// A reducer branch nothing dispatches is dead weight the compiler cannot see (M78 found
+// one), so every case label has to answer to a dispatch in the same file.
+const storeSrc = read("store/useFootballOS.tsx");
+const cases = [...new Set([...storeSrc.matchAll(/^\s*case "([A-Z_]+)":/gm)].map((m) => m[1]))];
+const dispatched = new Set([...storeSrc.matchAll(/type:\s*"([A-Z_]+)"/g)].map((m) => m[1]));
+const dead = cases.filter((c) => !dispatched.has(c));
+ok(`every reducer case has a dispatch that can reach it (${cases.length} cases; ${dead.join(", ") || "none dead"})`,
+  cases.length >= 10 && dead.length === 0);
+ok("removing a goal is one of them, and the goals panel actually offers it",
+  cases.includes("GOAL_REMOVE") && /removeGoal\(g\.id\)/.test(read("features/player/PlayerOS.tsx")));
+// An icon-only control is unnamed to a screen reader unless it says what it does, and
+// nothing else in the app would notice the glyph going bare.
+ok("the remove control names itself to assistive tech instead of being a bare glyph",
+  /aria-label=\{t\("player\.goalRemoveAria"\)\}/.test(read("features/player/PlayerOS.tsx")));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
