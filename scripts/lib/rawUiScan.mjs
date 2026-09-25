@@ -35,6 +35,12 @@ const DISPLAY_PROPS = new Set([
   // same defect as an untranslated caption -- only less visible, because nothing on
   // screen ever shows it. These were invisible to the scan until M159.
   "aria-label",
+  // CommandGroup renders `heading` as the section title on screen (it is the
+  // cmdk-group-heading the theme styles), and the command palette's four section
+  // names reached a 简体中文 visitor in English through it while the scan reported
+  // the file as nearly clean. Found at M166 by reading what the palette actually
+  // shows rather than what the count said it showed.
+  "heading",
 ]);
 // Copy handed to the user through a function call rather than rendered as an element.
 // The whole argument list is read, not only a literal sitting straight after the open

@@ -233,6 +233,27 @@ for (const [name, re] of SCOUT_ARRAYS) {
 ok("both Scouting label arrays render through t()",
   /\{t\(s\.labelKey\)\}/.test(scoutSrc) && /\{t\(r\.labelKey\)\}/.test(scoutSrc));
 
+// 10b. M166 localised the command palette — the one overlay reachable from every
+//      screen. Its rows carry a `group` code that the render site interpolates into
+//      `cmd.group.…`, and a row whose group string had drifted out of GROUPS would
+//      print the key itself to the visitor while three separate gates stayed green:
+//      the scan does not read a `group:` field as a display slot, check 17 derives its
+//      value space from GROUPS rather than from the rows, and check 16 only walks
+//      template sites, of which there is exactly one. So the rows are read here.
+const cmdSrc = readFileSync(join(root, "features", "command", "CommandPalette.tsx"), "utf8");
+const CMD_CODES = [...(cmdSrc.match(/const GROUPS = \[([^\]]*)\]/)?.[1] ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+ok(`the palette's group list is locatable and holds codes (${CMD_CODES.join(", ") || "none"})`, CMD_CODES.length > 0);
+// A code, not a sentence: that is what makes `cmd.group.${group}` a lookup at all.
+ok(`the palette's group codes are codes (${CMD_CODES.join(", ")})`,
+  CMD_CODES.every((g) => /^[a-z]+$/.test(g)));
+const rowGroups = [...cmdSrc.matchAll(/\bgroup:\s*"([^"]+)"/g)].map((m) => m[1]);
+ok(`every palette row names one of its declared groups (${[...new Set(rowGroups)].sort().join(", ")})`,
+  rowGroups.length >= 28 && rowGroups.every((g) => CMD_CODES.includes(g)));
+const cmdKeys = [...cmdSrc.matchAll(/\bt\("((?:cmd|nav|set\.theme)\.[a-z.]+)"/g)].map((m) => m[1]);
+const cmdRaw = cmdKeys.filter((k) => !bounds.every((_, i) => keysOf(i).includes(k)));
+ok(`the palette's ${cmdKeys.length} spelled-out keys exist in all three locales (${cmdRaw.join(", ") || "none"})`,
+  cmdKeys.length >= 12 && cmdRaw.length === 0);
+
 // 11. A `title="English"` prop is invisible to check 4 (there is no key to look
 //     up) and to check 10 (it is not in an array), so it is matched by shape.
 const engProps = [...scoutSrc.matchAll(/\b(?:title|hint|label|placeholder|description|aria-label)="[^"]*[A-Za-z]{2}[^"]*"/g)].map((m) => m[0]);
@@ -436,6 +457,12 @@ const DYN_SITES = [
   // them rather than against a hand-typed list.
   { path: "features/community/CommunityHub.tsx", expr: "tag", prefix: "comm.tag.", suffix: "" },
   { path: "features/community/CommunityHub.tsx", expr: "s", prefix: "comm.sort.", suffix: "" },
+  // M166: the palette's section headings come out of its own group list, and its mode
+  // switch rows reuse the Mode union. Both were invisible to the gate before this
+  // milestone for different reasons — the heading reached the screen through a prop the
+  // scan did not read, the mode name through a key nobody had declared.
+  { path: "features/command/CommandPalette.tsx", expr: "group", prefix: "cmd.group.", suffix: "" },
+  { path: "features/command/CommandPalette.tsx", expr: "m", prefix: "prof.mode.", suffix: "" },
 ];
 // One space per (prefix, expression) pair: the two `prof.mode.` sites take the
 // same prefix from different code, which is why the space is not keyed on the
@@ -456,6 +483,12 @@ const ONB_GOAL_CODES = spaceOf("domain/onboarding.ts", /export const GOAL_CODES[
 const ONB_AGE_WORDS = spaceOf("domain/onboarding.ts", /export const TRANSLATED_AGE_GROUPS[^;]+;/, quoted);
 const S_ONB_GOAL = { name: "onboarding goal codes", values: ONB_GOAL_CODES };
 const S_ONB_AGE = { name: "translated age bands", values: ONB_AGE_WORDS };
+// M166: the palette groups its own rows, so the codes it can hand to `cmd.group.` are
+// exactly the members of its group list. A fourth group without a key fails here.
+const S_CMD_GROUP = {
+  name: "command palette group codes",
+  values: spaceOf("features/command/CommandPalette.tsx", /const GROUPS = \[[^\]]*\] as const/, quoted),
+};
 const SPACES = new Map([
   ["ach.name.|a.id", S_ACH],
   ["ach.name.|growth.next.id", S_ACH],
@@ -531,6 +564,7 @@ const SPACES = new Map([
     name: "community sorts",
     values: spaceOf("features/community/CommunityHub.tsx", /\["recent", "top"\] as const/, quoted),
   }],
+  ["cmd.group.|group", S_CMD_GROUP],
 ]);
 // Every `attr.name.…` site interpolates an attribute key out of some domain row,
 // so they all take the same space, and listing it 20 times would only invite the
@@ -873,6 +907,11 @@ ok(`the fixture's t() lookups are read as lookups, not as interface copy (${plan
   plantedLookups.length === 6 && planted.every((h) => !plantedLookups.includes(h.text)));
 
 const RAW_COVERED = [
+  // M166. The palette was the one overlay reachable from every screen, and it was also
+  // the reason the scan learned to read `heading`: its four section names reached a
+  // 简体中文 visitor in English while this file reported nearly no debt, because
+  // CommandGroup's heading prop was not a display slot the scanner knew about.
+  "features/command/CommandPalette.tsx",
   "features/compare/ComparePage.tsx",
   "features/football/Details.tsx",
   "features/history/HistoryPage.tsx",
@@ -964,7 +1003,12 @@ const RAW_COVERED = [
 // this number came down without a single new translation, which is what a misnamed
 // field costs. The other five were the OVR/POT/€M stat codes check 12 used to excuse,
 // now keyed because the dictionaries on that very screen already say 综合分 and 潜力.
-const RAW_UI_CEILING = 274;
+// 265 as of M166, measured on the gate line rather than subtracted: the command palette
+// is covered and its 9 counted hits left the open count. The widening that found them
+// (see rawUiScan's `heading`) added no debt anywhere else in the tree — the palette is
+// the only file in the repo that hands a prop named `heading` copy — so 265 is the same
+// tree read with one more eye on it, and one of its overlays now says 前往 instead.
+const RAW_UI_CEILING = 265;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

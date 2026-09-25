@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M165 (a few numbers in that range
+Work ships one milestone per commit and is currently at M166 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1194,6 +1194,68 @@ this commit touched.
 checks (proof-i18n 115 — the two new clauses, one per array). The open debt is 274 across
 23 files, re-measured rather than subtracted, and the two largest items are unchanged:
 PlayerOS at 90 and SimulationLab at 51.
+
+M166 localised the command palette, and the interesting part is how the file looked clean
+while it was doing it. `Ctrl+K` opens an overlay whose section names — Go to, Your modes,
+Actions, Football World — reached a 简体中文 visitor in English, because `heading` is not
+one of the prop names `rawUiScan` reads as a display slot. cmdk renders it into
+`cmdk-group-heading`, so it is copy on the screen and invisible to the gate; the file's own
+count said 9 while the overlay showed 13 English strings. The prop was added the same way
+M159 added `aria-label` and the toast arguments: widen the measurement first, then let the
+number move. Worth stating plainly, because it is the honest version — the widening found
+**no** debt anywhere else in the tree. `CommandPalette.tsx` is the only file in the repo
+that passes a `heading` prop at all (verified by grep, not by recall), so 265 is not 274
+minus the palette's sins elsewhere; it is the same tree read with one more eye on it, minus
+one overlay that now says 前往.
+
+Twelve keys went in (1196 → 1208). One of them is a caution about what localising a string
+can do to the locale you localise *from*: my first `cmd.theme` was "Switch to {theme}",
+which rendered "Switch to Light" — the word 主题 is in the Chinese value, so the English
+value quietly lost a noun the sentence it replaced had always carried. It is now "Switch to
+the {theme} theme". A dictionary row is copy in three languages, and the source locale can
+be written badly inside it.
+
+Check 10b is new, and it exists for a hole the existing gates could not see. A row's `group`
+is a code that the render site interpolates into `cmd.group.${group}`, so a row whose group
+string drifted out of `GROUPS` would print the key itself to the visitor — while three
+gates stayed green, because the scan does not read a `group:` field as a display slot,
+check 17 derives its value space from `GROUPS` rather than from the rows, and check 16 walks
+template sites, of which this file has exactly one. TypeScript would reject it, but the gate
+runs on the repo's real strings, so now it reads the rows too: every `group:` value must be
+one of the declared codes, the codes must be lowercase tokens rather than sentences, and
+every key the file spells out by name must exist in all three locales. The two dynamic sites
+are declared in `DYN_SITES`; `cmd.group.` gets its own space read out of the palette's group
+list, and `prof.mode.${m}` needed no new declaration at all — `claimByPrefix("prof.mode.")`
+picks it up on the day it appears, which is the only reason that mechanism exists.
+
+The browser could not verify this one. The in-app window's tree no longer commits at all:
+`#root` reports 0 children on every route even after the lazy chunks load, and the same
+call sequence that read 4000-character screens at M165 now returns an empty body with no
+console error. So the copy was verified through the app's *own* translator instead — the
+palette's composition replayed in Node over `react-dom/server` with `I18nProvider`, 16
+strings per locale, three locales: no value equals its own key, no `{var}` survives
+interpolation, every zh row carries Han characters, and `zh-TW` differs from `zh-CN` in
+every row outside the decided set (前往 / 你的模式 / 操作 / 足球世界 are the same glyphs in
+both scripts; 外观/外觀 and 指挥中心/指揮中心 are not). What that proves is the copy; what
+it does not prove is the pixels, and this milestone has none.
+
+Three probes, each caught by exactly one named check and restored byte-for-byte. Reverting
+`heading={t("nav.football")}` to `heading="Football World"` reddens the per-file leak clause,
+which now names `features/command/CommandPalette.tsx` — that is the whole point of the
+widening, and it is the probe that would have been invisible before it. Adding a fourth code
+to `GROUPS` without a key reddens check 17 (`all 4 values keyed`). Setting one row's group to
+`"Go to"` reddens check 10b and only 10b. One behaviour change is worth naming rather than
+skating past: the palette filters rows on their translated `label`, so the rows that used to
+be English literals (theme, ask, mode switch) now match the reader's language instead —
+under `zh-CN`, "fan" no longer finds 切换到球迷模式, and 球迷 does. The nav rows filtered on
+translated labels before this commit too, so this is the intended consequence of localising
+a row, not a defect introduced here. `{r.type}` in the search results stays raw: it is a
+data code (player/club/match), not interface copy.
+
+Suite is now 26 scripts / 1139 checks (proof-i18n 121), covered set 18 files, open debt 265
+across 22 files with the ceiling pinned at exactly that measurement. `npx tsc --noEmit` exits
+0 and the production build succeeds. The two largest remaining items are unchanged: PlayerOS
+at 90 and SimulationLab at 51.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

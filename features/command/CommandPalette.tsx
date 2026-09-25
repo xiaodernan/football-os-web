@@ -20,9 +20,17 @@ interface ActionCmd {
   id: string;
   label: string;
   hint?: string;
-  group: string;
+  group: Group;
   run: () => void;
 }
+
+// The palette's sections, as codes. A command row stores one of these and the
+// heading is looked up from it, so no screen text is ever held in a row — and
+// because `ActionCmd.group` is typed against this list, a row that tries to carry
+// its own display string is a compile error rather than a translation bug.
+// proof-i18n reads the list below as the whole value range of `cmd.group.…`.
+const GROUPS = ["goto", "modes", "actions"] as const;
+type Group = (typeof GROUPS)[number];
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -50,44 +58,46 @@ export function CommandPalette() {
       setOpen(false);
     };
     const base: ActionCmd[] = [
-      { id: "home", label: t("nav.home"), group: "Go to", run: nav("/") },
-      { id: "world", label: t("nav.football"), group: "Go to", run: nav("/football") },
-      { id: "matches", label: t("nav.matches"), group: "Go to", run: nav("/matches") },
-      { id: "players", label: t("nav.players"), group: "Go to", run: nav("/players") },
-      { id: "clubs", label: t("nav.clubs"), group: "Go to", run: nav("/clubs") },
-      { id: "news", label: t("nav.news"), group: "Go to", run: nav("/news") },
-      { id: "ai", label: t("nav.ai"), group: "Go to", run: nav("/ai") },
-      { id: "knowledge", label: t("nav.knowledge"), group: "Go to", run: nav("/knowledge") },
-      { id: "tactical", label: t("nav.tactical"), group: "Go to", run: nav("/tactical-studio") },
-      { id: "sim", label: t("nav.simulation"), group: "Go to", run: nav("/simulation") },
-      { id: "learn", label: t("nav.learn"), group: "Go to", run: nav("/learn") },
-      { id: "scouting", label: t("nav.scouting"), group: "Go to", run: nav("/scouting") },
-      { id: "dynamic-world", label: t("nav.world"), group: "Go to", run: nav("/world") },
-      { id: "film", label: t("nav.film"), group: "Go to", run: nav("/film") },
-      { id: "data", label: t("nav.data"), group: "Go to", run: nav("/data") },
-      { id: "transfers", label: t("nav.transfers"), group: "Go to", run: nav("/transfers") },
-      { id: "compare", label: t("nav.compare"), group: "Go to", run: nav("/compare") },
-      { id: "watchlist", label: t("nav.watch"), group: "Go to", run: nav("/watchlist") },
-      { id: "profile", label: t("nav.profile"), group: "Go to", run: nav("/profile") },
-      { id: "review", label: t("nav.review"), group: "Go to", run: nav("/review") },
-      { id: "load", label: t("nav.load"), group: "Go to", run: nav("/load") },
-      { id: "development", label: t("nav.development"), group: "Go to", run: nav("/development") },
-      { id: "achievements", label: t("nav.achievements"), group: "Go to", run: nav("/achievements") },
-      { id: "settings", label: t("nav.settings"), group: "Go to", run: nav("/settings") },
-      { id: "history", label: t("nav.history"), group: "Go to", run: nav("/history") },
-      { id: "community", label: t("nav.community"), group: "Go to", run: nav("/community") },
+      { id: "home", label: t("nav.home"), group: "goto", run: nav("/") },
+      { id: "world", label: t("nav.football"), group: "goto", run: nav("/football") },
+      { id: "matches", label: t("nav.matches"), group: "goto", run: nav("/matches") },
+      { id: "players", label: t("nav.players"), group: "goto", run: nav("/players") },
+      { id: "clubs", label: t("nav.clubs"), group: "goto", run: nav("/clubs") },
+      { id: "news", label: t("nav.news"), group: "goto", run: nav("/news") },
+      { id: "ai", label: t("nav.ai"), group: "goto", run: nav("/ai") },
+      { id: "knowledge", label: t("nav.knowledge"), group: "goto", run: nav("/knowledge") },
+      { id: "tactical", label: t("nav.tactical"), group: "goto", run: nav("/tactical-studio") },
+      { id: "sim", label: t("nav.simulation"), group: "goto", run: nav("/simulation") },
+      { id: "learn", label: t("nav.learn"), group: "goto", run: nav("/learn") },
+      { id: "scouting", label: t("nav.scouting"), group: "goto", run: nav("/scouting") },
+      { id: "dynamic-world", label: t("nav.world"), group: "goto", run: nav("/world") },
+      { id: "film", label: t("nav.film"), group: "goto", run: nav("/film") },
+      { id: "data", label: t("nav.data"), group: "goto", run: nav("/data") },
+      { id: "transfers", label: t("nav.transfers"), group: "goto", run: nav("/transfers") },
+      { id: "compare", label: t("nav.compare"), group: "goto", run: nav("/compare") },
+      { id: "watchlist", label: t("nav.watch"), group: "goto", run: nav("/watchlist") },
+      { id: "profile", label: t("nav.profile"), group: "goto", run: nav("/profile") },
+      { id: "review", label: t("nav.review"), group: "goto", run: nav("/review") },
+      { id: "load", label: t("nav.load"), group: "goto", run: nav("/load") },
+      { id: "development", label: t("nav.development"), group: "goto", run: nav("/development") },
+      { id: "achievements", label: t("nav.achievements"), group: "goto", run: nav("/achievements") },
+      { id: "settings", label: t("nav.settings"), group: "goto", run: nav("/settings") },
+      { id: "history", label: t("nav.history"), group: "goto", run: nav("/history") },
+      { id: "community", label: t("nav.community"), group: "goto", run: nav("/community") },
     ];
     if (state.onboarded) {
-      base.unshift({ id: "player", label: t("nav.player"), group: "Your modes", run: nav("/player") });
-      base.unshift({ id: "manager", label: t("nav.manager"), group: "Your modes", run: nav("/manager") });
+      base.unshift({ id: "player", label: t("nav.player"), group: "modes", run: nav("/player") });
+      base.unshift({ id: "manager", label: t("nav.manager"), group: "modes", run: nav("/manager") });
     }
     base.push(
-      { id: "theme", label: `Toggle ${theme === "dark" ? "light" : "dark"} theme`, hint: "Appearance", group: "Actions", run: () => { toggle(); } },
-      { id: "ask", label: "Ask Football AI", hint: `from ${path}`, group: "Actions", run: nav("/ai") },
+      // The theme words are the settings screen's own keys, so the palette can never
+      // call 浅色 something the settings page calls 亮色.
+      { id: "theme", label: t("cmd.theme", { theme: theme === "dark" ? t("set.theme.light") : t("set.theme.dark") }), hint: t("cmd.appearance"), group: "actions", run: () => { toggle(); } },
+      { id: "ask", label: t("cmd.ask"), hint: t("cmd.from", { path }), group: "actions", run: nav("/ai") },
     );
     if (state.onboarded) {
       (["FAN", "PLAYER", "MANAGER"] as const).forEach((m) =>
-        base.push({ id: `mode-${m}`, label: `Switch to ${m} mode`, group: "Actions", run: () => { setMode(m); setOpen(false); } }),
+        base.push({ id: `mode-${m}`, label: t("cmd.mode", { mode: t(`prof.mode.${m}`) }), group: "actions", run: () => { setMode(m); setOpen(false); } }),
       );
     }
     return base;
@@ -106,15 +116,15 @@ export function CommandPalette() {
   }, [filteredActions]);
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen} title="Football OS Command" description="Search entities or run a command">
+    <CommandDialog open={open} onOpenChange={setOpen} title={t("cmd.title")} description={t("cmd.description")}>
       <Command shouldFilter={false}>
-        <CommandInput placeholder="Search players, clubs, matches… or type a command" value={query} onValueChange={setQuery} />
+        <CommandInput placeholder={t("cmd.placeholder")} value={query} onValueChange={setQuery} />
         <CommandList>
-          <CommandEmpty>No results.</CommandEmpty>
+          <CommandEmpty>{t("cmd.empty")}</CommandEmpty>
 
           {searchResults.length > 0 && (
             <>
-              <CommandGroup heading="Football World">
+              <CommandGroup heading={t("nav.football")}>
                 {searchResults.map((r) => (
                   <CommandItem
                     key={`${r.type}-${r.id}`}
@@ -135,7 +145,7 @@ export function CommandPalette() {
           )}
 
           {groups.map(([group, items]) => (
-            <CommandGroup key={group} heading={group}>
+            <CommandGroup key={group} heading={t(`cmd.group.${group}`)}>
               {items.map((a) => (
                 <CommandItem key={a.id} value={a.id} onSelect={a.run}>
                   <span>{a.label}</span>
