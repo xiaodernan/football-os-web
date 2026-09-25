@@ -184,7 +184,7 @@ function Coach() {
   }, [query]);
   const [carryKeys, setCarryKeys] = useState<string[]>(carriedFocus);
   const [prompt, setPrompt] = useState(() =>
-    carriedFocus.length ? t("player.coachCarry").replace("{labels}", carriedFocus.map((k) => t(`attr.name.${k}`)).join(", ")) : "",
+    carriedFocus.length ? t("player.coachCarry", { labels: carriedFocus.map((k) => t(`attr.name.${k}`)).join(", ") }) : "",
   );
   const [minutes, setMinutes] = useState(45);
   const [busy, setBusy] = useState(false);

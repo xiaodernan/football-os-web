@@ -75,7 +75,7 @@ export function DevelopmentPage() {
   const isTracked = (key: string) => state.goals.some((g) => g.metric === "attribute" && g.key === key);
   const track = (it: GapItem) => {
     addGoal({ title: attributeGoalTitle(it.key), metric: "attribute", key: it.key, target: Math.round(it.target), current: Math.round(it.actual) });
-    toast.success(t("dv.goalToast").replace("{a}", t(`attr.name.${it.key}`)));
+    toast.success(t("dv.goalToast", { a: t(`attr.name.${it.key}`) }));
   };
 
   const startBlock = async () => {
@@ -84,7 +84,7 @@ export function DevelopmentPage() {
     setBlocking(true);
     try {
       const plan = await requestPlan(t("dv.blockPrompt"), 30, keys);
-      toast.success(t("dv.blockDone").replace("{n}", String(plan.session.exercises.length)).replace("{m}", String(plan.session.targetMinutes)));
+      toast.success(t("dv.blockDone", { n: plan.session.exercises.length, m: plan.session.targetMinutes }));
       navigate("/player/training");
     } catch {
       toast.error(t("dv.blockError"));
@@ -148,7 +148,7 @@ export function DevelopmentPage() {
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile label={t("dv.readiness")} value={`${analysis.readiness}%`} tone={readinessTone} sub={t(`group.${analysis.group}`)} />
-          <StatTile label={t("dv.overall")} value={analysis.overall} sub={t("dv.tier").replace("{n}", String(Math.round(analysis.skill * 100)))} />
+          <StatTile label={t("dv.overall")} value={analysis.overall} sub={t("dv.tier", { n: Math.round(analysis.skill * 100) })} />
           <StatTile label={t("dv.priorities")} value={analysis.priorities.length} sub={t("dv.toWork")} />
           <StatTile label={t("dv.strengths")} value={analysis.strengths.length} tone="up" sub={t("dv.atTarget")} />
         </div>
@@ -246,7 +246,7 @@ export function DevelopmentPage() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">{t("dv.projDisclaimer").replace("{n}", String(projection.proj.items.length))}</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">{t("dv.projDisclaimer", { n: projection.proj.items.length })}</p>
           </Panel>
         )}
 

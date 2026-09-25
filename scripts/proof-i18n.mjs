@@ -701,48 +701,59 @@ const revived = STRUCK_ROWS.flatMap(([path, exprs]) => {
 ok(`none of the ${STRUCK_ROWS.reduce((s, [, e]) => s + e.length, 0)} converted row reads came back (${revived.join(" | ") || "none"})`,
   revived.length === 0);
 
-// 24. A key whose value interpolates is only complete once the caller supplies
-//     the value: `t()` substitutes `{a}` from its `vars` argument, and a caller
-//     can also chain `.replace("{a}", …)`. Either way, a call site that forgets
-//     prints the brace text on the screen — in every locale, because the braces
-//     live in all three. M147 added seven such chains in DevelopmentPage; a
-//     dropped one type-checks, builds and reads fine in English.
-// Only var-less calls are matched (`t("k", { a })` has a second argument, so the
-// closing paren does not follow the key). A template with `${}` is skipped: its
-// key is unknown here and its value space is check 16/17's job.
-const PLAIN = /\bt\(\s*(?:"([^"$\{\}]+)"|`([^$\{\}]*)`)\s*\)/g;
+// 24. A key whose value interpolates is only complete once the caller supplies the
+//     value: t() fills {a} from its second argument, and a call that forgets it prints
+//     the brace text on the screen — in every locale, because the braces live in all
+//     three. This scan used to read only the hand-rolled `.replace("{a}", …)` chains
+//     and counted 21 "filled" calls; when M153 moved all of them onto t()'s own
+//     variables, its non-vacuity floor went red at 0, which is how it came out that the
+//     real interpolation path had never been checked at all. It now reads the call's
+//     argument list, and it reports what it cannot read instead of passing it.
+const STATIC_T = /\bt\(\s*"([A-Za-z0-9_.$-]+)"/g;
 const unsubstituted = [];
 let substituted = 0;
+const unreadable = [];
+
+// The top-level arguments of a call, from its open paren. String and template
+// contents are opaque, so a comma inside "a, b" never splits an argument.
+function callArgs(code, open) {
+  let depth = 1, str = null, cur = "";
+  const parts = [];
+  for (let i = open + 1; i < code.length; i++) {
+    const c = code[i];
+    if (str) { cur += c; if (c === str && code[i - 1] !== "\\") str = null; continue; }
+    if (c === '"' || c === "'" || c === "`") { str = c; cur += c; continue; }
+    if ("([{`".includes(c) && c !== "`") depth++;
+    if (")]}".includes(c)) { depth--; if (depth === 0) { parts.push(cur); return parts; } }
+    if (c === "," && depth === 1) { parts.push(cur); cur = ""; continue; }
+    cur += c;
+  }
+  return null;
+}
+
 for (const [path, code] of appSrc) {
-  if (!/^(features|ui)\//.test(path)) continue;
-  for (const m of code.matchAll(PLAIN)) {
-    const key = m[1] ?? m[2];
-    if (!key || !(key in en)) continue;
+  if (!/^(features|ui|store|domain|lib)\//.test(path)) continue;
+  for (const m of code.matchAll(STATIC_T)) {
+    const key = m[1];
+    if (!(key in en)) continue;
     const phs = [...new Set((en[key].match(/\{(\w+)\}/g) ?? []).map((s) => s.slice(1, -1)))];
     if (!phs.length) continue;
-    // The fill must be in the *chain* — the `.replace(…)` links that follow this
-    // call with nothing but whitespace between them. A fixed character window was
-    // satisfied by an unrelated `.replace("{a}"` on the next line, which is how a
-    // dropped fill hid from this gate while M147's mutation test was written; the
-    // chain stops at the first link that is not a `.replace`, so the next
-    // statement can no longer answer for this one.
-    const LINK = /^\s*\.replace\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)/;
-    let pos = m.index + m[0].length, chain = "";
-    for (;;) {
-      const step = LINK.exec(code.slice(pos));
-      if (!step) break;
-      chain += step[0];
-      pos += step[0].length;
-    }
-    const missed = phs.filter((p) => !new RegExp(`replace\\(\\s*["'\`]\\{${p}\\}`).test(chain));
-    if (missed.length) unsubstituted.push(`${path}: ${key} {${missed.join(",")}}`);
+    const args = callArgs(code, code.indexOf("(", m.index));
+    if (!args) { unreadable.push(`${path}: ${key} call cannot be parsed`); continue; }
+    if (args.length < 2) { unsubstituted.push(`${path}: ${key} {phs ${phs.join(",")}} called with no variables`); continue; }
+    const body = args[1].trim().replace(/^\{/, "").replace(/\}$/, "");
+    const given = varNames(body);
+    if (!given) { unreadable.push(`${path}: ${key} vars object cannot be read`); continue; }
+    const missed = phs.filter((x) => !given.includes(x));
+    if (missed.length) unsubstituted.push(`${path}: ${key} {missed ${missed.join(",")}} not supplied`);
     else substituted++;
   }
 }
-ok(`every placeholder key is read by a call that fills it (${substituted} filled, ${unsubstituted.length} bare)`,
+ok(`every placeholder key is read by a call that supplies its variables (${substituted} filled, ${unsubstituted.length} short)`,
   unsubstituted.length === 0);
-for (const u of unsubstituted.slice(0, 15)) console.log("       bare: " + u);
-ok(`the placeholder scan is reading real interpolated calls rather than nothing (${substituted})`, substituted >= 5);
+for (const u of unsubstituted.slice(0, 15)) console.log("       short: " + u);
+ok(`the placeholder scan reads t()'s own variable filling, and everything it looks at is readable (${substituted} filled, ${unreadable.length} unreadable)`,
+  substituted >= 20 && unreadable.length === 0);
 
 // 22. Raw UI text, measured across the whole app rather than one screen at a
 //     time. scripts/lib/rawUiScan.mjs reads the three positions a reader of the
@@ -917,12 +928,24 @@ for (const [path, src] of ROW_FILES) {
 }
 ok(`every row text a domain module hands the screen is a real key with exactly its placeholders (${rowKeys} keys, ${badRows.slice(0, 6).join(" | ") || "clean"})`,
   badRows.length === 0);
-ok(`the row-text scan is reading modules that actually carry the union (${ROW_FILES.length} files, ${rowKeys} keys)`,
-  // 5 files / 15 keys as of M152: history.ts's 9 timeline rows, goals.ts's 3 title
+ok(`the row-text scan is reading modules that actually carry the union (${ROW_FILES.length} files, ${rowKeys} keys)`,  // 5 files / 15 keys as of M152: history.ts's 9 timeline rows, goals.ts's 3 title
   // rows, rowText.ts and types.ts as the two modules that name the union. A row built
   // as a bare string in a table escapes this pattern — that is how 2 of the 12 first
   // went unnoticed — so the floor is the measured count, never a round number.
   ROW_FILES.length >= 5 && rowKeys >= 15);
+
+// 27. A second interpolator. t(key, vars) fills every occurrence of a placeholder;
+//     `String.prototype.replace` with a string needle fills only the FIRST, so a key
+//     that repeats a token renders half-filled — and every new key would have to know
+//     which path reads it. 21 hand-rolled call sites were collapsed onto t()'s own
+//     variables at M153; this is what stops them coming back one at a time.
+//     data/ is exempt: it fills a seeded news headline template, not a dictionary string.
+const HANDROLLED = /\.replace\(\s*["'`]\{/g;
+const handRolled = [...appSrc]
+  .filter(([p, src]) => !p.startsWith("data/") && src.match(HANDROLLED))
+  .map(([p, src]) => `${p} (${src.match(HANDROLLED).length})`);
+ok(`t()'s variable filling is the only interpolator in the UI source (${handRolled.join(", ") || "none"})`,
+  handRolled.length === 0);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

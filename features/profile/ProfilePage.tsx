@@ -291,7 +291,7 @@ export function ProfilePage() {
 
       <Panel className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <SectionTitle title={t("prof.footprint")} hint={t("prof.footprintHint").replace("{n}", String(footprint.pillarsTouched))} />
+          <SectionTitle title={t("prof.footprint")} hint={t("prof.footprintHint", { n: footprint.pillarsTouched })} />
           <DemoBadge />
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">

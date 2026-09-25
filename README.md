@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M152 (a few numbers in that range
+Work ships one milestone per commit and is currently at M153 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M152 line of work is a different kind of progress: it makes the earlier claims
+The M108–M153 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -683,6 +683,42 @@ unwired, the panel printing the row, and the timeline stringifying it. Not brows
 in-app browser is still wedged. Still queued, and unchanged here: the demo provider's answer prose in
 `data/ai.ts`, including the "Coach memory — last session focused on …" source line, is English text
 generated per request rather than a stored row, so it needs its own milestone.
+
+M153 was one of those cleanups that turned out to be a bug report. 25 calls across 21
+lines in six screens interpolated by hand — `t("rv.window").replace("{n}", String(w))` —
+even though `t()` has taken a variables object since it was written. The two are not the
+same function: `t()` fills every occurrence of a placeholder, while `String.prototype
+.replace` with a string needle fills the FIRST one only. No key in the dictionary repeats
+a token today — measured, 0 of 901 — which is the only reason nothing on screen was
+half-filled; the moment a copywriter writes "in {n} weeks, {n} weeks", the hand-rolled
+path is wrong and the keyed path is right, and every new key would have to know which
+one reads it. All 18 sites now pass variables to `t()`, the app source has no
+`.replace("{` left in it, and `data/footballSeed.ts` keeps its two on purpose: it fills a
+seeded headline template, not a dictionary string, and the new check says so.
+
+Removing them is also what found the real defect. Proof-i18n check 24 is titled "every
+placeholder key is read by a call that fills it" and had been reporting "21 filled, 0
+bare" for five milestones. Its pattern matched only *var-less* `t("key")` calls, then
+walked the `.replace` chain after them — so it had been watching the hand-rolled path
+exclusively and had never once looked at `t(key, vars)`. With the chains gone its own
+non-vacuity floor went red at zero, which is the third time in this arc that a floor
+value earned its keep by refusing to be quietly satisfied.
+
+It was rewritten rather than deleted. It now reads a call's argument list with a
+string- and nesting-aware scanner (so a comma inside `"a, b"` never splits an argument),
+checks the property names the caller supplies — shorthand included, from M152's walker —
+against the placeholders the key interpolates, and asserts that everything it looked at
+was readable. It sees 53 interpolated call sites where it saw 21, and reports 0 short and
+0 unreadable. A call that drops its second argument now fails the gate instead of printing
+`{n}` on the screen in all three locales.
+
+proof-i18n is 104 → 105 checks. Four mutation probes, all restoring by sha256: forget the
+variables on one call, supply a name the sentence does not use, put a `.replace` chain back
+(that one trips both new rules at once), and hand the scanner a vars object shaped like
+`{ ...extra }` to confirm it declares itself unable to read rather than reading less.
+`tsc --noEmit` exits 0, the build succeeds, the suite is 26 scripts / 1109 checks, and 901
+keys are unchanged — no key was added, renamed or reworded. Not browser-verified: the
+in-app browser is still wedged, so these screens are read by the gate rather than clicked.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

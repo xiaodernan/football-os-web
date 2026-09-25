@@ -44,9 +44,7 @@ export function LoadPage() {
     try {
       const plan = await requestPlan(t("ld.trainPrompt"), planMinutes);
       toast.success(
-        t("ld.trainDone")
-          .replace("{m}", String(plan.session.targetMinutes))
-          .replace("{n}", String(plan.session.exercises.length)),
+        t("ld.trainDone", { m: plan.session.targetMinutes, n: plan.session.exercises.length }),
       );
       navigate("/player/training");
     } catch {

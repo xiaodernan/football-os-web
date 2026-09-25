@@ -65,9 +65,7 @@ export function ReviewPage() {
     try {
       const plan = await requestPlan(t("rv.recoPrompt"), 30, [key]);
       toast.success(
-        t("rv.recoDone")
-          .replace("{m}", String(plan.session.targetMinutes))
-          .replace("{n}", String(plan.session.exercises.length)),
+        t("rv.recoDone", { m: plan.session.targetMinutes, n: plan.session.exercises.length }),
       );
       navigate("/player/training");
     } catch {
@@ -122,7 +120,7 @@ export function ReviewPage() {
                 days === w ? "border-primary bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50",
               )}
             >
-              {t("rv.window").replace("{n}", String(w))}
+              {t("rv.window", { n: w })}
             </button>
           ))}
           <Button size="sm" variant="outline" onClick={recompyle} disabled={compiling}>
@@ -150,7 +148,7 @@ export function ReviewPage() {
           {/* confidence strip */}
           <Panel className="p-4">
             <div className="flex items-center justify-between gap-3 text-sm">
-              <div className="font-medium">{t("rv.basedOn")} · {t("rv.window").replace("{n}", String(review.windowDays))}</div>
+              <div className="font-medium">{t("rv.basedOn")} · {t("rv.window", { n: review.windowDays })}</div>
               <div className="text-xs text-muted-foreground">
                 {t("rv.confidence")} <span className="font-mono text-primary">{review.confidence}%</span>
               </div>
@@ -171,13 +169,13 @@ export function ReviewPage() {
               sub={review.overallDelta != null ? `${review.overallStart ?? "—"} → ${review.overallEnd ?? "—"}` : t("rv.noChange")}
             />
             <StatTile label={t("rv.quality")} value={review.avgRating ?? "—"} sub={review.avgRating != null ? t("rv.outOf5") : t("rv.noRating")} />
-            <StatTile label={t("rv.statAcademy")} value={review.lessonsCompleted} sub={t("rv.statAcademyPassed").replace("{n}", String(review.lessonsMastered))} />
+            <StatTile label={t("rv.statAcademy")} value={review.lessonsCompleted} sub={t("rv.statAcademyPassed", { n: review.lessonsMastered })} />
             <StatTile
               label={t("rv.statFilm")}
               value={review.filmClips || "—"}
               sub={
                 review.filmClips
-                  ? `${t("rv.statFilmMinutes").replace("{n}", String(review.filmMinutes))} · ${review.filmScanRate.toFixed(2)} ${t("rv.scansPerMin")}`
+                  ? `${t("rv.statFilmMinutes", { n: review.filmMinutes })} · ${review.filmScanRate.toFixed(2)} ${t("rv.scansPerMin")}`
                   : t("rv.noFilm")
               }
             />

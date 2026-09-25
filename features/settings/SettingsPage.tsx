@@ -41,7 +41,7 @@ export function SettingsPage() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast(t("set.exported").replace("{n}", String(Object.keys(bundle.sections).length)));
+      toast(t("set.exported", { n: Object.keys(bundle.sections).length }));
     } catch {
       toast(t("set.exportFailed"));
     }
@@ -61,7 +61,7 @@ export function SettingsPage() {
         return;
       }
       setImported({ keys: result.keys });
-      toast(t("set.imported").replace("{n}", String(result.keys)));
+      toast(t("set.imported", { n: result.keys }));
     } catch {
       toast(t("set.importFailed"));
     }
@@ -72,7 +72,7 @@ export function SettingsPage() {
     const cleared = clearActivity(localStorage);
     setConfirming(false);
     setImported(null);
-    toast(t("set.resetDone").replace("{n}", String(cleared)));
+    toast(t("set.resetDone", { n: cleared }));
   }
 
   return (
@@ -133,7 +133,7 @@ export function SettingsPage() {
       </Panel>
 
       <Panel className="p-4">
-        <SectionTitle title={t("set.data")} hint={t("set.dataHint").replace("{n}", String(inv.present)).replace("{t}", String(inv.entries.length))} />
+        <SectionTitle title={t("set.data")} hint={t("set.dataHint", { n: inv.present, t: inv.entries.length })} />
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
@@ -163,12 +163,12 @@ export function SettingsPage() {
         <div className="mt-3 flex items-center justify-between rounded-lg border bg-secondary/20 px-3 py-2 text-xs">
           <span className="text-muted-foreground">{t("set.storageUsed")}</span>
           <span className="font-mono tabular-nums">
-            {formatBytes(inv.bytes)} · {t("set.totals").replace("{r}", String(inv.records)).replace("{k}", String(inv.present))}
+            {formatBytes(inv.bytes)} · {t("set.totals", { r: inv.records, k: inv.present })}
           </span>
         </div>
         {imported && (
           <p className="mt-2 rounded-lg border border-success/40 bg-success/5 px-3 py-2 text-xs text-success">
-            {t("set.importedNote").replace("{n}", String(imported.keys))}{" "}
+            {t("set.importedNote", { n: imported.keys })}{" "}
             <button className="underline" onClick={() => window.location.reload()}>{t("set.reloadToApply")}</button>
           </p>
         )}
