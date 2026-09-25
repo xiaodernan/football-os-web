@@ -826,10 +826,15 @@ const RAW_COVERED = [
 // 584 as of M151, when the Player OS goal panel — the one place you manage goals —
 // stopped being English-only.
 // 579 as of M152: the three sentences the coach used to write into memory, and the
-// memory panel's own labels, are keys now. 536 as of M155: the Dashboard's 44 hits were
+// memory panel's own labels, are keys now.
+// 536 as of M155: the Dashboard's 44 hits were
 // 22 dictionary keys sitting in a field named `label` (the launcher) plus 21 sentences of
 // English copy; only the provider's "LIVE" status code is left, which is a query argument.
-const RAW_UI_CEILING = 514;
+// 514 as of M156: onboarding's screen copy is keyed and its two option lists now
+// store codes rather than sentences. 451 as of M157: Manager OS's header, overview,
+// season summary, squad, transfer market and tactics panels are keyed (133 hits -> 70),
+// which also meant giving the file a useI18n import it never had.
+const RAW_UI_CEILING = 451;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -947,7 +952,8 @@ for (const [path, src] of ROW_FILES) {
 }
 ok(`every row text a domain module hands the screen is a real key with exactly its placeholders (${rowKeys} keys, ${badRows.slice(0, 6).join(" | ") || "clean"})`,
   badRows.length === 0);
-ok(`the row-text scan is reading modules that actually carry the union (${ROW_FILES.length} files, ${rowKeys} keys)`,  // 5 files / 15 keys as of M152: history.ts's 9 timeline rows, goals.ts's 3 title
+ok(`the row-text scan is reading modules that actually carry the union (${ROW_FILES.length} files, ${rowKeys} keys)`,
+  // 5 files / 15 keys as of M152: history.ts's 9 timeline rows, goals.ts's 3 title
   // rows, rowText.ts and types.ts as the two modules that name the union. A row built
   // as a bare string in a table escapes this pattern — that is how 2 of the 12 first
   // went unnoticed — so the floor is the measured count, never a round number.

@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M156 (a few numbers in that range
+Work ships one milestone per commit and is currently at M157 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M156 line of work is a different kind of progress: it makes the earlier claims
+The M108–M157 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -827,6 +827,40 @@ proof-i18n is 109 checks, proof-timeline 89, the suite 26 scripts / 1127 checks,
 dictionary 950 keys × 3 locales; tsc and the build are clean. Not browser-verified: the
 in-app browser is still wedged, so the three-locale walk on a fresh preview (task #142)
 is still the biggest thing this line owes.
+
+M157 opened Manager OS and found the reason it had 133 raw literals: the file had no
+`useI18n` import at all. Career mode was not missing strings here and there — it had never
+been wired to the translator, so every panel rendered whatever the component author typed.
+This milestone keys six of its panels: the career header, the overview with its match
+result, the season summary, the squad table, the transfer market and the tactics panel.
+55 keys per locale, hits in the file 133 → 70, repo debt 514 → 451, dictionary 950 → 1005.
+
+Reusing what already existed mattered more than usual: Attack / Midfield / Defence came
+from the data-room and club-detail keys rather than getting manager-mode copies, which
+also closes the "Defense" vs "Defence" spelling split M148 started, and Reset, Age,
+Position and Mentality came from `common.*`, `onb.*` and `tac.*`.
+
+The interesting bug was not a string. TacticsPanel named its local tactics object `t` —
+the same name every screen in this app uses for the translator — so adding the hook
+produced "Cannot redeclare block-scoped variable 't'" and the three sliders read
+`t.mentality` off the translator. Fixed by renaming the local to `tactics` rather than
+aliasing the hook: a prop that shadows the translator is a trap for whoever edits next,
+and types found it only because the hook was added at all.
+
+Repairing my own earlier work came with the territory: an M156 edit had spliced a comment
+onto the same line as a check's `ok(` call (the check still ran, but its argument lost its
+line) and M156's ceiling note never landed at all. Both are fixed here, and the ceiling is
+set to the measured 451 rather than a rounder number.
+
+Four mutation probes restore by sha256: an English panel label put back, one locale
+missing a manager key, a call that names its variable differently from the sentence it
+fills (the placeholder scan now sees 65 filled calls where it saw 53), and a manager label
+nothing reads any more. tsc clean, build clean, 26 scripts / 1127 checks.
+
+Not done, deliberately: Manager OS still has 70 hits in its league table, season outlook,
+match-prep panel, club picker and the small Metric/Fact/Slider primitives, so it cannot
+join the covered set yet — that is M158. Nothing here was looked at in a browser; the
+in-app browser is still wedged and task #142's three-locale walk remains owed.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

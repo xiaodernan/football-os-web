@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useI18n } from "@/i18n";
 import { footballProvider, getClub, getCompetition, formatValue } from "@/data/footballService";
 import { useLocalStorage } from "@/lib/hooks";
 import {
@@ -93,6 +94,7 @@ export function ManagerOS() {
 }
 
 function CareerHeader({ career, onChange, onPlay, onReset }: { career: CareerState; onChange: (fn: (s: CareerState) => CareerState) => void; onPlay: () => void; onReset: () => void }) {
+  const { t } = useI18n();
   const club = getClub(career.clubId)!;
   const comp = getCompetition(career.competitionId);
   const pos = positionOf(career);
@@ -102,36 +104,37 @@ function CareerHeader({ career, onChange, onPlay, onReset }: { career: CareerSta
         <Crest colors={club.colors} short={club.short} size={48} />
         <div className="min-w-[10rem] flex-1">
           <div className="flex items-center gap-2"><h1 className="text-lg font-bold">{club.name}</h1><DemoBadge /></div>
-          <p className="text-xs text-muted-foreground">{comp?.name} · Manager career · {career.results.length} matches played</p>
+          <p className="text-xs text-muted-foreground">{t("mgr.careerLine", { comp: comp?.name ?? "—", n: career.results.length })}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Metric label="Budget" value={formatValue(career.budget)} />
-          <Metric label="League pos" value={pos ? `#${pos}` : "—"} />
-          <Metric label="Morale" value={`${Math.round(((career.morale + 1) / 2) * 100)}%`} tone={career.morale >= 0 ? "good" : "bad"} />
-          <Metric label="Fatigue" value={`${Math.round(career.fatigue * 100)}%`} tone={career.fatigue > 0.6 ? "bad" : "good"} />
+          <Metric label={t("mgr.budget")} value={formatValue(career.budget)} />
+          <Metric label={t("mgr.leaguePos")} value={pos ? `#${pos}` : "—"} />
+          <Metric label={t("mgr.morale")} value={`${Math.round(((career.morale + 1) / 2) * 100)}%`} tone={career.morale >= 0 ? "good" : "bad"} />
+          <Metric label={t("mgr.fatigue")} value={`${Math.round(career.fatigue * 100)}%`} tone={career.fatigue > 0.6 ? "bad" : "good"} />
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={onPlay}>▶ Play next fixture</Button>
-          <Button variant="ghost" size="sm" onClick={onReset}>Reset</Button>
+          <Button onClick={onPlay}>▶ {t("mgr.playNext")}</Button>
+          <Button variant="ghost" size="sm" onClick={onReset}>{t("common.reset")}</Button>
         </div>
       </div>
       <div className="mt-3 text-xs text-muted-foreground">
-        Next opponent: <span className="text-foreground">{getClub(fixtureAt(career.competitionId, career.clubId, career.results.length).opponent)?.name}</span>
+        {t("mgr.nextOpponent")} <span className="text-foreground">{getClub(fixtureAt(career.competitionId, career.clubId, career.results.length).opponent)?.name}</span>
         {" · "}
-        <Link to="/tactical-studio" className="text-primary hover:underline">Design shape in Tactical Studio</Link>
+        <Link to="/tactical-studio" className="text-primary hover:underline">{t("mgr.designShape")}</Link>
       </div>
     </Panel>
   );
 }
 
 function Overview({ career, last }: { career: CareerState; last: MatchOutcome | null }) {
+  const { t } = useI18n();
   const squad = effectiveSquad(career.clubId, career.moved);
   const inp = clubInput(career.clubId, career.moved, career.tactics, careerForm(career), career.morale, career.fatigue);
   const recent = [...career.results].slice(-5).reverse();
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <Panel className="p-4 lg:col-span-2">
-        <SectionTitle title="Latest result" hint="Deterministic Match Engine" />
+        <SectionTitle title={t("mgr.latestResult")} hint={t("mgr.engineHint")} />
         {last ? (
           <div className="mt-2">
             <div className="flex items-center justify-center gap-6 py-2">
@@ -141,34 +144,34 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <Fact label="xG (us)" value={last.ourXg.toFixed(2)} />
-              <Fact label="xG (them)" value={last.oppXg.toFixed(2)} />
-              <Fact label="Prize money" value={formatValue(last.prize)} />
+              <Fact label={t("mgr.xgThem")} value={last.oppXg.toFixed(2)} />
+              <Fact label={t("mgr.prizeMoney")} value={formatValue(last.prize)} />
             </div>
-            <div className="mt-3 text-[11px] uppercase tracking-widest text-muted-foreground">Key moments</div>
+            <div className="mt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("mgr.keyMoments")}</div>
             <ul className="mt-1 max-h-40 space-y-1 overflow-y-auto text-xs">
               {last.sim.timeline.filter((e) => e.type === "GOAL" || e.type === "RED").slice(0, 12).map((e, i) => (
                 <li key={i} className="flex gap-2"><span className="w-8 font-mono text-muted-foreground">{e.minute}'</span><span className="truncate">{e.type === "GOAL" ? "⚽" : "🟥"} {e.player}</span></li>
               ))}
-              {!last.sim.timeline.some((e) => e.type === "GOAL" || e.type === "RED") && <li className="text-muted-foreground">No goals or sending-offs.</li>}
+              {!last.sim.timeline.some((e) => e.type === "GOAL" || e.type === "RED") && <li className="text-muted-foreground">{t("mgr.noKeyMoments")}</li>}
             </ul>
           </div>
         ) : (
-          <div className="mt-3"><EmptyState title="No fixture played yet" hint="Press Play next fixture to run your first match." icon="▷" /></div>
+          <div className="mt-3"><EmptyState title={t("mgr.noFixture")} hint={t("mgr.noFixtureHint")} icon="▷" /></div>
         )}
       </Panel>
       <div className="space-y-4">
         <Panel className="p-4">
-          <SectionTitle title="Team profile" />
+          <SectionTitle title={t("mgr.teamProfile")} />
           <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <Fact label="Attack" value={Math.round(inp.attack)} />
-            <Fact label="Midfield" value={Math.round(inp.midfield)} />
-            <Fact label="Defense" value={Math.round(inp.defense)} />
-            <Fact label="Form" value={`${careerForm(career).toFixed(2)}`} />
+            <Fact label={t("data.attack")} value={Math.round(inp.attack)} />
+            <Fact label={t("det.midfield")} value={Math.round(inp.midfield)} />
+            <Fact label={t("data.defence")} value={Math.round(inp.defense)} />
+            <Fact label={t("mgr.form")} value={`${careerForm(career).toFixed(2)}`} />
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Squad of {squad.length} · shaped by your transfers and tactics.</p>
+          <p className="mt-2 text-xs text-muted-foreground">{t("mgr.squadOf", { n: squad.length })}</p>
         </Panel>
         <Panel className="p-4">
-          <SectionTitle title="Recent results" />
+          <SectionTitle title={t("mgr.recentResults")} />
           {recent.length ? (
             <ul className="mt-2 space-y-1 text-sm">
               {recent.map((r, i) => {
@@ -181,7 +184,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
                 );
               })}
             </ul>
-          ) : <p className="mt-2 text-xs text-muted-foreground">No matches played yet.</p>}
+          ) : <p className="mt-2 text-xs text-muted-foreground">{t("mgr.noMatches")}</p>}
         </Panel>
         {career.results.length > 0 && <SeasonSummaryPanel career={career} />}
       </div>
@@ -190,42 +193,44 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
 }
 
 function SeasonSummaryPanel({ career }: { career: CareerState }) {
+  const { t } = useI18n();
   const s = seasonSummary(career);
   const money = (v: number) => (v >= 1_000_000 ? `€${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M` : `€${Math.round(v / 1000)}k`);
   const tone = s.honour?.tone === "good" ? "text-success" : s.honour?.tone === "bad" ? "text-destructive" : "text-info";
   return (
     <Panel className="p-4">
       <div className="flex items-center justify-between">
-        <SectionTitle title="Season summary" hint="From your results" />
+        <SectionTitle title={t("mgr.seasonTitle")} hint={t("mgr.seasonFrom")} />
         {s.honour && <span className={cn("text-xs font-semibold", tone)}>{s.honour.label}</span>}
       </div>
       <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
-        <Fact label="W-D-L" value={`${s.won}-${s.drawn}-${s.lost}`} />
-        <Fact label="GF-GA" value={`${s.gf}-${s.ga}`} />
-        <Fact label="PPG" value={s.ppg.toFixed(2)} />
-        <Fact label="Clean sheets" value={s.cleanSheets} />
-        <Fact label="Position" value={`#${s.position}`} />
-        <Fact label="Prize won" value={money(s.prizeTotal)} />
+        <Fact label={t("mgr.wdl")} value={`${s.won}-${s.drawn}-${s.lost}`} />
+        <Fact label={t("mgr.gfGa")} value={`${s.gf}-${s.ga}`} />
+        <Fact label={t("mgr.ppg")} value={s.ppg.toFixed(2)} />
+        <Fact label={t("mgr.cleanSheets")} value={s.cleanSheets} />
+        <Fact label={t("onb.position")} value={`#${s.position}`} />
+        <Fact label={t("mgr.prizeWon")} value={money(s.prizeTotal)} />
       </div>
       {(s.bestWin || s.worstLoss) && (
         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-          {s.bestWin && <div> Biggest win <span className="text-foreground">{s.bestWin.score}</span> vs {s.bestWin.opponent}</div>}
-          {s.worstLoss && <div> Heaviest defeat <span className="text-foreground">{s.worstLoss.score}</span> vs {s.worstLoss.opponent}</div>}
+          {s.bestWin && <div> {t("mgr.biggestWin")} <span className="text-foreground">{s.bestWin.score}</span> vs {s.bestWin.opponent}</div>}
+          {s.worstLoss && <div> {t("mgr.heaviestDefeat")} <span className="text-foreground">{s.worstLoss.score}</span> vs {s.worstLoss.opponent}</div>}
         </div>
       )}
-      <p className="mt-2 text-[11px] text-muted-foreground">{s.complete ? "Season complete — every scheduled fixture played." : `${Math.max(0, (s.clubCount - 1) * 2 - s.played)} fixtures remaining.`}</p>
+      <p className="mt-2 text-[11px] text-muted-foreground">{s.complete ? t("mgr.seasonDone") : t("mgr.fixturesLeft", { n: Math.max(0, (s.clubCount - 1) * 2 - s.played) })}</p>
     </Panel>
   );
 }
 
 function Squad({ career, onSell }: { career: CareerState; onSell: (id: string) => void }) {
+  const { t } = useI18n();
   const squad = effectiveSquad(career.clubId, career.moved);
   return (
     <Panel className="p-4">
-      <SectionTitle title={`Squad · ${squad.length}`} hint="Selling recovers ~85% of market value" />
+      <SectionTitle title={t("mgr.squadTitle", { n: squad.length })} hint={t("mgr.sellHint")} />
       <div className="mt-2 overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">Pos</th><th className="px-2 py-1">Player</th><th className="px-2 py-1 text-right">Age</th><th className="px-2 py-1 text-right">OVR</th><th className="px-2 py-1 text-right">Value</th><th className="px-2 py-1 text-right">Sell</th></tr></thead>
+          <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">{t("mgr.thPos")}</th><th className="px-2 py-1">{t("mgr.thPlayer")}</th><th className="px-2 py-1 text-right">{t("common.age")}</th><th className="px-2 py-1 text-right">{t("mgr.thOvr")}</th><th className="px-2 py-1 text-right">{t("mgr.thValue")}</th><th className="px-2 py-1 text-right">{t("mgr.sell")}</th></tr></thead>
           <tbody>
             {squad.map((p) => (
               <tr key={p.id} className="border-t">
@@ -245,6 +250,7 @@ function Squad({ career, onSell }: { career: CareerState; onSell: (id: string) =
 }
 
 function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string) => void }) {
+  const { t } = useI18n();
   const [pos, setPos] = useState<"ALL" | "GK" | "DEF" | "MID" | "ATT">("ALL");
   const targets = useMemo(() => marketTargets(career, 200), [career]);
   const groupOf = (g: string) => (g === "GK" || g === "CB" || g === "FB" ? "DEF" : g === "CM" || g === "DM" ? "MID" : g === "AM" || g === "W" || g === "ST" ? "ATT" : "DEF");
@@ -252,8 +258,8 @@ function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string)
   return (
     <Panel className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <SectionTitle title="Transfer market" hint="Asking fees include a small premium" />
-        <div className="text-sm">Budget <span className="font-mono font-semibold text-primary">{formatValue(career.budget)}</span></div>
+        <SectionTitle title={t("mgr.market")} hint={t("mgr.marketHint")} />
+        <div className="text-sm">{t("mgr.budget")} <span className="font-mono font-semibold text-primary">{formatValue(career.budget)}</span></div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {(["ALL", "GK", "DEF", "MID", "ATT"] as const).map((g) => (
@@ -268,37 +274,38 @@ function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string)
           return (
             <div key={p.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
               <div className="min-w-0"><Link to={`/players/${p.id}`} className="truncate hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{p.position} · {p.age} · OVR {p.overall} · {from?.name ?? "Free agent"}</span></div>
-              <Button size="sm" disabled={!afford} onClick={() => onBuy(p.id)} title={afford ? "Sign" : "Insufficient budget"}>{afford ? `Sign ${formatValue(fee)}` : `Need ${formatValue(fee)}`}</Button>
+              <Button size="sm" disabled={!afford} onClick={() => onBuy(p.id)} title={afford ? t("mgr.sign") : t("mgr.noBudget")}>{afford ? t("mgr.signFee", { fee: formatValue(fee) }) : t("mgr.needFee", { fee: formatValue(fee) })}</Button>
             </div>
           );
         })}
-        {!shown.length && <EmptyState title="No targets" hint="Try a different position filter." />}
+        {!shown.length && <EmptyState title={t("mgr.noTargets")} hint={t("mgr.noTargetsHint")} />}
       </div>
     </Panel>
   );
 }
 
 function TacticsPanel({ career, onChange, onRest }: { career: CareerState; onChange: (t: Tactics) => void; onRest: () => void }) {
-  const t = career.tactics;
+  const { t } = useI18n();
+  const tactics = career.tactics;
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel className="p-4">
-        <SectionTitle title="Team instructions" />
+        <SectionTitle title={t("mgr.instructions")} />
         <div className="mt-3 space-y-4">
-          <Slider label="Mentality" min={-2} max={2} step={1} value={t.mentality} onChange={(v) => onChange({ ...t, mentality: v })} format={(v) => ["Park the bus", "Defensive", "Balanced", "Attacking", "All-out"][v + 2]} />
-          <Slider label="Tempo" min={0} max={1} step={0.05} value={t.tempo} onChange={(v) => onChange({ ...t, tempo: v })} format={(v) => (v < 0.35 ? "Low" : v < 0.7 ? "Medium" : "High")} />
-          <Slider label="Press" min={0} max={1} step={0.05} value={t.press} onChange={(v) => onChange({ ...t, press: v })} format={(v) => (v < 0.35 ? "Deep block" : v < 0.7 ? "Medium" : "High press")} />
+          <Slider label={t("tac.mentality")} min={-2} max={2} step={1} value={tactics.mentality} onChange={(v) => onChange({ ...tactics, mentality: v })} format={(v) => ["Park the bus", "Defensive", "Balanced", "Attacking", "All-out"][v + 2]} />
+          <Slider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={tactics.tempo} onChange={(v) => onChange({ ...tactics, tempo: v })} format={(v) => (v < 0.35 ? "Low" : v < 0.7 ? "Medium" : "High")} />
+          <Slider label={t("mgr.press")} min={0} max={1} step={0.05} value={tactics.press} onChange={(v) => onChange({ ...tactics, press: v })} format={(v) => (v < 0.35 ? "Deep block" : v < 0.7 ? "Medium" : "High press")} />
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">Instructions feed straight into the Match Engine for your fixtures.</p>
+        <p className="mt-3 text-xs text-muted-foreground">{t("mgr.instrHint")}</p>
       </Panel>
       <Panel className="p-4">
-        <SectionTitle title="Recovery" />
+        <SectionTitle title={t("mgr.recovery")} />
         <div className="mt-2 flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-          <span className="text-muted-foreground">Current fatigue</span>
+          <span className="text-muted-foreground">{t("mgr.currentFatigue")}</span>
           <span className="font-mono">{Math.round(career.fatigue * 100)}%</span>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">High fatigue suppresses attack, midfield and defense ratings in the next match.</p>
-        <Button className="mt-3" variant="outline" onClick={onRest} disabled={career.fatigue <= 0.06}>Rest the squad</Button>
+        <p className="mt-2 text-xs text-muted-foreground">{t("mgr.fatigueHint")}</p>
+        <Button className="mt-3" variant="outline" onClick={onRest} disabled={career.fatigue <= 0.06}>{t("mgr.rest")}</Button>
       </Panel>
     </div>
   );
