@@ -27,6 +27,16 @@ const ts = (iso?: string) => {
   return Number.isNaN(t) ? 0 : t;
 };
 
+// A date-format option bag is not interface copy, but written inside a render hole the
+// raw-UI scan reads every string literal there as a child text node — three hits on one
+// line. Hoisting it is the same remedy the Landing page needed at M164.
+const ACTIVITY_TIME: Intl.DateTimeFormatOptions = {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+};
+
 export function ProfilePage() {
   const { t } = useI18n();
   const { state, toggleGoal } = useOs();
@@ -300,14 +310,14 @@ export function ProfilePage() {
               <div className="flex items-center justify-between gap-2">
                 <span className={cn("text-sm font-semibold", r.active ? "text-foreground" : "text-muted-foreground")}>{t(`prof.mode.${r.id}`)}</span>
                 <span className={cn("rounded border px-1.5 py-px text-[10px] uppercase tracking-wide", r.active ? "border-success/40 text-success" : "border-border text-muted-foreground")}>
-                  {r.active ? "active" : "not started"}
+                  {r.active ? t("prof.active") : t("prof.notStarted")}
                 </span>
               </div>
               <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground">
                 {r.lines.map((l, i) => <li key={i}>{l}</li>)}
               </ul>
               {r.lastAt && ts(r.lastAt) > 0 && (
-                <div className="mt-1.5 text-[10px] text-muted-foreground">{t("prof.lastActivity")} {new Date(r.lastAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+                <div className="mt-1.5 text-[10px] text-muted-foreground">{t("prof.lastActivity")} {new Date(r.lastAt).toLocaleString(undefined, ACTIVITY_TIME)}</div>
               )}
             </Link>
           ))}
@@ -315,7 +325,7 @@ export function ProfilePage() {
         <ul className="mt-3 space-y-0.5 text-[11px] text-muted-foreground">
           {footprint.evidence.map((e, i) => <li key={i}>› {e}</li>)}
         </ul>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">Sources: {footprint.sources.join(" · ")}</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">{t("common.sources")}: {footprint.sources.join(" · ")}</p>
       </Panel>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

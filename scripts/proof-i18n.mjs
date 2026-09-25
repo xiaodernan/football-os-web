@@ -1017,6 +1017,14 @@ const RAW_COVERED = [
   // other three were the status buttons printing those codes. Both are fixed, so the
   // buttons now say 进行中 / 已安排 / 已结束 and the file's codes are gated as data.
   "features/football/FootballWorld.tsx",
+  // M170. Seven hits in three kinds: a badge that printed "active"/"not started" in
+  // English on a screen where every other word came from the dictionary (2), a `Sources:`
+  // label that already has a key every other screen uses (1), and four
+  // `Intl.DateTimeFormatOptions` strings — `short`, `numeric`, `2-digit` twice — that the
+  // scan read as JSX children only because the option bag sat inside a render hole.
+  // Only the first two were copy; the third was moved out rather than translated,
+  // because a format specifier is not a word a visitor reads.
+  "features/profile/ProfilePage.tsx",
   "ui/charts.tsx",
   // Not a screen: the store is where persisted rows are minted, and the one file a
   // composed sentence can hide in without any component-scoped scan ever seeing it.
@@ -1094,7 +1102,9 @@ const RAW_COVERED = [
 // the honest fix (they are gated as a key space by checks 16/17), the 3 real ones were
 // the status buttons, which printed LIVE/SCHEDULED/FINISHED at a visitor whose
 // dictionary already had 进行中/已安排/已结束.
-const RAW_UI_CEILING = 247;
+// 240 as of M170, measured on the gate line: the profile screen is covered and its 7 left
+// the open count, of which 4 were format specifiers rather than copy.
+const RAW_UI_CEILING = 240;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

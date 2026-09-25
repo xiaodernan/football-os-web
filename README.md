@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M169 (a few numbers in that range
+Work ships one milestone per commit and is currently at M170 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -1377,6 +1377,44 @@ Suite is now 26 scripts / **1142 checks** (proof-i18n 124), covered set **20 fil
 **247 across 20 files** with the ceiling at exactly that measurement — the largest remaining are
 PlayerOS 90, SimulationLab 51, FilmRoom 30, DataRoom 29. `tsc --noEmit` exits 0, the build succeeds.
 Not browser-verified: the in-app window still commits no React tree (M166).
+
+### M170 — The profile's cross-mode badge, and four strings that were never copy
+
+`features/profile/ProfilePage.tsx` reported 7 items in three kinds. The real one: the cross-mode
+record panel's status badge rendered `r.active ? "active" : "not started"`, so a 简体中文 visitor's
+own record rows were the only English on the screen. `prof.active` ("Active"/"活跃"/"活躍") already
+existed and is what every other screen uses, so the badge reuses it and only `prof.notStarted` had
+to be added (dictionary 1218 → 1219). The third was a `Sources:` caption for which `common.sources`
+is the key the other six screens already call — the label had drifted into prose purely because
+someone typed it at that site.
+
+The remaining four were `Intl.DateTimeFormatOptions`: `{ month: "short", day: "numeric", hour:
+"2-digit", minute: "2-digit" }` written inside a render hole, which the scan reads as JSX children,
+so four format specifiers counted as untranslated interface text. They moved to a module-level
+`ACTIVITY_TIME`. That is the M164/M169 remedy for the same structural artefact, and it is worth
+saying plainly that **no translation happened there** — the count went down because the strings
+stopped sitting where a text node can be, not because anybody's language got better. One real
+locale limitation stays, and this milestone does not fix it: `toLocaleString(undefined, …)` resolves
+the browser's locale, not the app's, so a visitor who picks 简体中文 in a browser set to `en-US`
+still gets "Sep 3, 2026, 07:14 PM". Pinning that to the app locale needs a formatter seam, and it is
+now the known next step for this file rather than a hidden one.
+
+Three probes, all caught by a named check: the English badge back (2 reds — the orphaned
+`prof.notStarted` fails reachability on its own), the option bag back inside the render hole
+(1 red, the per-file clause), and deleting the zh-TW row (1 red, key parity).
+
+Written down because it is the mistake this project has a rule about: the first draft of this
+section said the dictionary went 1218 → 1221. Three rows in one file add **one** key, and the gate
+prints 1219. The number was recalled instead of copied, and only the re-run caught it.
+
+Suite is now 26 scripts / **1142 checks** (proof-i18n 124 — no new clauses, so the total is M169's),
+covered set **21 files**, open debt **240 across 19 files** with the ceiling at exactly that.
+`tsc --noEmit` exits 0 and the build succeeds. Not browser-verified (M166).
+
+One machine-level finding to keep: `sed -i` on this box rewrote `i18n/dictionaries.ts` from CRLF to
+LF, so a dictionary-insertion script must anchor on `\r?\n` rather than the ending the file used to
+have. Git's index normalisation hid the conversion (numstat still reported the intended 30 lines),
+which is why it went unnoticed for a milestone.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
