@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useI18n } from "@/i18n";
 
 const LEVEL_COLOR: Record<Level, string> = {
   Beginner: "text-success",
@@ -30,6 +31,7 @@ const LEVEL_COLOR: Record<Level, string> = {
 };
 
 export function LearnHub() {
+  const { t } = useI18n();
   const { state } = useOs();
   const [records, setRecords] = useLocalStorage<LearnRecord[]>(LEARN_STORE_KEY, []);
   const [category, setCategory] = useState<"All" | string>("All");
@@ -114,21 +116,21 @@ export function LearnHub() {
       <div className="flex items-center gap-2">
         <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">◈</div>
         <div>
-          <div className="flex items-center gap-2"><h1 className="text-xl font-bold">Knowledge Academy</h1><DemoBadge /></div>
-          <p className="text-xs text-muted-foreground">Short, honest lessons on how football actually works — with places to try each idea live.</p>
+          <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("learn.title")}</h1><DemoBadge /></div>
+          <p className="text-xs text-muted-foreground">{t("learn.subtitle")}</p>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel className="p-4 lg:col-span-2">
-          <SectionTitle title="Your progress" hint="Recorded on this device" />
+          <SectionTitle title={t("learn.progress")} hint={t("learn.onDevice")} />
           <div className="mt-3 space-y-3">
             <div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Completed</span><span className="font-mono">{summary.completed}/{summary.totalLessons} · {summary.pct}%</span></div>
+              <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t("learn.completed")}</span><span className="font-mono">{summary.completed}/{summary.totalLessons} · {summary.pct}%</span></div>
               <div className="mt-1 h-1.5 overflow-hidden rounded bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${summary.pct}%` }} /></div>
             </div>
             <div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Check quiz passed</span><span className="font-mono text-success">{summary.mastered}/{summary.totalLessons} · {summary.masteredPct}%</span></div>
+              <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t("learn.quizPassed")}</span><span className="font-mono text-success">{summary.mastered}/{summary.totalLessons} · {summary.masteredPct}%</span></div>
               <div className="mt-1 h-1.5 overflow-hidden rounded bg-muted"><div className="h-full bg-success transition-all" style={{ width: `${summary.masteredPct}%` }} /></div>
             </div>
           </div>
@@ -143,29 +145,29 @@ export function LearnHub() {
             {summary.evidence.map((e, i) => <li key={i}>› {e}</li>)}
           </ul>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-            <span>Sources: {summary.sources.join(" · ")}</span>
-            {records.length > 0 && <Button variant="ghost" size="sm" onClick={() => { setRecords([]); toast("Progress cleared"); }}>Reset progress</Button>}
+            <span>{t("learn.sources")} {summary.sources.join(" · ")}</span>
+            {records.length > 0 && <Button variant="ghost" size="sm" onClick={() => { setRecords([]); toast(t("learn.cleared")); }}>{t("learn.reset")}</Button>}
           </div>
         </Panel>
 
         <Panel className="p-4">
-          <SectionTitle title="Recommended next" hint="From your own data" />
+          <SectionTitle title={t("learn.reco")} hint={t("learn.fromData")} />
           {picks.length ? (
             <div className="mt-2 space-y-3">
               {picks.map((p) => (
                 <button key={p.lesson.id} onClick={() => setOpenId(p.lesson.id)} className="block w-full rounded-lg border bg-card/40 p-3 text-left hover:border-primary/50">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium">{p.lesson.title}</span>
-                    <span className="shrink-0 text-[11px] text-muted-foreground">{p.lesson.minutes} min</span>
+                    <span className="shrink-0 text-[11px] text-muted-foreground">{p.lesson.minutes} {t("ld.minutesUnit")}</span>
                   </div>
                   <p className="mt-1 text-[11px] text-muted-foreground">{p.reason}</p>
                 </button>
               ))}
             </div>
           ) : (
-            <EmptyState title="Catalogue complete" hint="You have finished every lesson in the catalogue." icon="✓" />
+            <EmptyState title={t("learn.allDone")} hint={t("learn.allDoneHint")} icon="✓" />
           )}
-          <p className="mt-3 text-[11px] text-muted-foreground">Suggestions are ranked from your training log, watchlist, career and film library — the reason quotes the signal that triggered it.</p>
+          <p className="mt-3 text-[11px] text-muted-foreground">{t("learn.rankNote")}</p>
         </Panel>
       </div>
 
@@ -184,14 +186,14 @@ export function LearnHub() {
               <div className="flex items-center justify-between">
                 <Badge variant="outline" className="text-[10px]">{l.category}</Badge>
                 {done ? (
-                  <span className={cn("text-xs", rec?.quizCorrect ? "text-success" : "text-muted-foreground")}>{rec?.quizCorrect ? "✓ passed" : "✓ learned"}</span>
+                  <span className={cn("text-xs", rec?.quizCorrect ? "text-success" : "text-muted-foreground")}>{rec?.quizCorrect ? t("learn.tickPassed") : t("learn.tickLearned")}</span>
                 ) : rec?.attempts ? (
-                  <span className="text-xs text-warning">· attempted</span>
+                  <span className="text-xs text-warning">{t("learn.attempted")}</span>
                 ) : null}
               </div>
               <div className="mt-2 font-semibold group-hover:text-primary">{l.title}</div>
               <p className="mt-1 flex-1 text-xs text-muted-foreground">{l.summary}</p>
-              <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground"><span className={LEVEL_COLOR[l.level]}>{l.level}</span>·<span>{l.minutes} min</span></div>
+              <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground"><span className={LEVEL_COLOR[l.level]}>{l.level}</span>·<span>{l.minutes} {t("ld.minutesUnit")}</span></div>
             </button>
           );
         })}
@@ -208,6 +210,7 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
   onUndo: (id: string) => void;
   onBack: () => void;
 }) {
+  const { t } = useI18n();
   const [choice, setChoice] = useState<number | null>(null);
   const correct = choice !== null && choice === lesson.quiz.answer;
   const done = isCompleted(record ?? undefined);
@@ -220,13 +223,13 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Button variant="ghost" size="sm" onClick={onBack}>← All lessons</Button>
+      <Button variant="ghost" size="sm" onClick={onBack}>{t("learn.back")}</Button>
       <div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Badge variant="outline">{lesson.category}</Badge>
           <span className={LEVEL_COLOR[lesson.level]}>{lesson.level}</span>
-          <span>· {lesson.minutes} min</span>
-          {record?.attempts ? <span>· {record.attempts} quiz attempt{record.attempts === 1 ? "" : "s"} recorded</span> : null}
+          <span>· {lesson.minutes} {t("ld.minutesUnit")}</span>
+          {record?.attempts ? <span>· {record.attempts === 1 ? t("learn.attemptOne", { n: record.attempts }) : t("learn.attemptMany", { n: record.attempts })}</span> : null}
         </div>
         <h1 className="mt-2 text-2xl font-bold">{lesson.title}</h1>
       </div>
@@ -236,12 +239,12 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
         </div>
         {lesson.tryIt && (
           <Link to={lesson.tryIt.to} className="mt-4 inline-flex">
-            <Button size="sm" variant="secondary">Try it: {lesson.tryIt.label} →</Button>
+            <Button size="sm" variant="secondary">{t("learn.tryIt")} {lesson.tryIt.label} →</Button>
           </Link>
         )}
       </Panel>
       <Panel className="p-5">
-        <SectionTitle title="Check your understanding" hint="Your answer is recorded as an attempt" />
+        <SectionTitle title={t("learn.checkTitle")} hint={t("learn.attemptNote")} />
         <p className="text-sm">{lesson.quiz.q}</p>
         <div className="mt-3 space-y-2">
           {lesson.quiz.options.map((o, i) => {
@@ -259,29 +262,29 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
         {choice !== null && (
           <div className="mt-3 space-y-2">
             <div className={cn("text-sm", correct ? "text-success" : `text-destructive`)}>
-              {correct ? "Correct." : `Not quite — the answer is ${String.fromCharCode(65 + lesson.quiz.answer)}.`}
+              {correct ? t("learn.correct") : t("learn.notQuite", { a: String.fromCharCode(65 + lesson.quiz.answer) })}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {done && record?.quizCorrect ? (
-                <Button size="sm" variant="outline" disabled>Completed · check passed</Button>
+                <Button size="sm" variant="outline" disabled>{t("learn.donePassed")}</Button>
               ) : done && correct ? (
-                <Button size="sm" onClick={() => { onLearned(lesson.id, true); toast("Passed check recorded"); }}>Record passed check</Button>
+                <Button size="sm" onClick={() => { onLearned(lesson.id, true); toast(t("learn.passRecorded")); }}>{t("learn.recordPassed")}</Button>
               ) : (
-                <Button size="sm" variant={done ? "outline" : "default"} disabled={done} onClick={() => { onLearned(lesson.id, correct); toast(correct ? "Lesson completed — check passed" : "Lesson completed — check missed"); }}>
-                  {done ? "Completed" : correct ? "Mark as learned (check passed)" : "Mark as reviewed (check missed)"}
+                <Button size="sm" variant={done ? "outline" : "default"} disabled={done} onClick={() => { onLearned(lesson.id, correct); toast(correct ? t("learn.doneToast") : t("learn.missedToast")); }}>
+                  {done ? t("learn.completed") : correct ? t("learn.markLearned") : t("learn.markReviewed")}
                 </Button>
               )}
-              {done && !record?.quizCorrect && <Button size="sm" variant="ghost" onClick={() => { onUndo(lesson.id); toast("Progress removed"); }}>Undo</Button>}
+              {done && !record?.quizCorrect && <Button size="sm" variant="ghost" onClick={() => { onUndo(lesson.id); toast(t("learn.removed")); }}>{t("learn.undo")}</Button>}
             </div>
             <p className="text-[11px] text-muted-foreground">
               {record?.quizCorrect
-                ? "You have passed this check before, so it stays counted as mastered."
-                : "Marking a lesson learned without a passed check is recorded as reviewed — the progress panel keeps the two apart."}
+                ? t("learn.staysMastered")
+                : t("learn.reviewedNote")}
             </p>
           </div>
         )}
       </Panel>
-      {lesson.tryIt && <EmptyState title="Put it into practice" hint="The try-it link above opens the screen where this idea has a control you can actually move." icon="→" />}
+      {lesson.tryIt && <EmptyState title={t("learn.practice")} hint={t("learn.practiceNote")} icon="→" />}
     </div>
   );
 }

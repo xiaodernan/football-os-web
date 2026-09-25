@@ -37,7 +37,24 @@ const DISPLAY_PROPS = new Set([
   "aria-label",
 ]);
 // Copy handed to the user through a function call rather than rendered as an element.
-const CALL_COPY = /\b(?:toast|window\.alert|alert)\(\s*(?:"([^"]{4,})"|'([^']{4,})'|`([^`]{4,})`)/g;
+// The whole argument list is read, not only a literal sitting straight after the open
+// paren: `toast(cond ? "Signed" : "Sold")` puts copy in the call's arguments and was
+// invisible to M159's `toast("` shape. Every literal inside the call is a candidate,
+// and the exemptions below (a t() argument, a compared value) still apply.
+const CALL_NAME = /\b(?:toast|alert)\(/g;
+// Index of the `)` closing the `(` at `open`, quote- and nesting-aware.
+function callEnd(s, open) {
+  let d = 0;
+  let i = open;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === '"' || c === "'" || c === "`") { i = skipQuoted(s, i); continue; }
+    if (c === "(") d++;
+    else if (c === ")") { d--; if (!d) return i; }
+    i++;
+  }
+  return -1;
+}
 const ROW_PROPS = ["label", "title", "hint", "sub", "text", "desc", "note"];
 
 function stripComments(s) {
@@ -380,11 +397,16 @@ export function scanSource(src) {
   // Copy handed straight to the user through a function call. It is neither JSX text nor
   // a display attribute, so none of the positions above can see it: a toast that says
   // "Player sold" in English is as untranslated as a caption that does, and was invisible
-  // to this scanner until M159 counted it.
-  for (const m of s.matchAll(CALL_COPY)) {
-    const text = m[1] ?? m[2] ?? m[3];
-    if (!hasProse(text)) continue;
-    hits.push({ pos: m.index, kind: "call", text });
+  // to this scanner until M159 counted it. M159's shape stopped at `toast("…`; this reads
+  // the call's arguments, so a conditional toast is counted too.
+  for (const m of s.matchAll(CALL_NAME)) {
+    const open = m.index + m[0].length - 1;
+    const end = callEnd(s, open);
+    if (end < 0) continue;
+    for (const L of literals(s, open + 1, end)) {
+      if (skipLiteral(s, L)) continue;
+      hits.push({ pos: L.start, kind: "call", text: L.text });
+    }
   }
 
   const seen = new Set();

@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M159 (a few numbers in that range
+Work ships one milestone per commit and is currently at M160 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -932,6 +932,60 @@ proof-i18n is 110 checks, the suite 26 scripts / 1128, dictionary 1086 keys × 3
 Not browser-verified: the in-app browser is still wedged (#142), and this milestone is the
 strongest argument yet for that walk, because aria-labels are the one class of copy that is
 invisible on screen by design.
+
+M160 localised Knowledge Academy — the last screen of its size that had never been
+connected to the translator at all: `features/learn/LearnHub.tsx` carried 40 raw
+literals and no `useI18n` import, so a reader who had set the app to Chinese was asked
+"Check your understanding" and told "Not quite — the answer is C." in English. 38 keys
+per locale take the file to 0 (1086 → 1124 keys), it joins the covered set as the 13th
+file that must render no raw UI text, and repo debt moves 394 → 354 across 27 files.
+The largest remaining files are unchanged: Player OS (90), Simulation Lab (51),
+Community Hub (44), Film Room (30), Data Room (29), Landing (18).
+
+Six of the 40 were not reachable by the rewrite the other 34 went through, because
+their copy runs into an interpolation: `Sources: {list}`, `{n} min` in three places,
+`Try it: {label} →`, the `· {n} quiz attempt{s} recorded` line, and the template
+`Not quite — the answer is ${…}.` Each is a declared patch rather than a pattern
+guessing at prose, and two of them became keyed sentences that carry variables: the
+attempt line is `learn.attemptOne` / `learn.attemptMany` filled from `{n}` (so the
+English plural is a real agreement instead of a conditional `"" : "s"`), and
+`learn.notQuite` takes `{a}` — which puts it under check 24 like any other
+interpolated key, because a bare call prints `{a}` on screen in all three locales.
+
+The interesting find was two strings the scan could not see. M159 taught it to read
+copy handed to `toast(…)` and `aria-label`, but that rule matched a literal sitting
+directly after the open paren — so Learn Hub's three plain toasts were counted while
+the fourth, `toast(correct ? "…" : "…")` on the completed-lesson button, was not: the
+argument is conditional and no position the scanner reads looked inside it. The rule
+now reads the call's whole argument list, quote- and nesting-aware, through the same
+exemptions a `t()` argument and a compared value already had, and the fixture that
+guards the scanner plants both shapes — 5 literals reported, 2 of them `call` kind,
+with a keyed `toast(t(…))` in the same fixture that must stay unreported. The effect
+on this repo's own debt was nil: that Learn Hub toast was the only conditional
+call-copy in the source, so 354 is the same tree read with one more eye on it.
+
+Two of the tools I wrote for this were wrong before they were trustworthy, and both
+failures were caught by gates rather than by reading the output. The bulk rewrite put
+the translator hook inside `LessonDetail`'s *type annotation* — a parameter list
+carrying `{ lesson: Lesson; … }` also ends in `{`, so the first brace it found was not
+the body's — which `tsc` refused immediately. And its dictionary writer landed every
+zh-TW key inside the zh-CN block, because the Simplified and Traditional `common.back`
+anchors are the same line and a single `findIndex` always answers with the first: 38
+duplicate keys and an empty locale, which `tsc` and the parity check both refused.
+The writer now takes both anchor positions from the file before it inserts, fills the
+blocks bottom-up so no index moves under it, and asserts every key it touched appears
+exactly three times.
+
+`npx tsc --noEmit` exits 0, `npm run build` succeeds, the suite is 26 scripts / 1128
+checks (proof-i18n 110), and 7 mutation probes each turn one named check red and
+restore the file from a byte copy verified by sha256: an English display prop back in
+the covered screen, a conditional toast in an open file (the ceiling — which is the new
+call position doing the work), a key deleted from all three locales while its call site
+still names it, an interpolated key read without its variables, the call rule itself
+disabled (the fixture goes quiet), and a raw toast argument and a raw JSX text node
+each put back in the covered screen. Not browser-verified: the in-app browser is still
+wedged (#142), and this screen is a strong candidate for that walk, because the whole
+point of a lesson is somebody reading it in their own language.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

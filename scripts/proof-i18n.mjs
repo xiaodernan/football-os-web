@@ -800,11 +800,15 @@ for (const u of unresolvedRows.slice(0, 8)) console.log("       bare read: " + u
 //     a t() argument at any position, a value being compared against, a template
 //     whose holes carry the copy — is a way for real leak to hide, so each one is
 //     paid for by a literal the fixture proves is *not* reported, and by the
-//     three literals it proves *is*.
+//     five literals it proves *is*. The two call literals are the position M160
+//     added: copy handed to toast() through a conditional argument, which the
+//     `toast("` shape M159 wrote could not see at all.
 const RAW_FIXTURE = [
   `export function Demo({ x }: { x: number }) {`,
   `  const { t } = useI18n();`,
   `  const rows = [{ label: "Planted row label", k: "ms.possession" }];`,
+  `  toast(x > 1 ? "Planted toast taken" : "Planted toast missed");`,
+  `  toast(t("planted.toasted"));`,
   `  return (`,
   `    <Panel title="Planted title" hint={t("planted.key")}>`,
   `      <div>Planted text node</div>`,
@@ -819,15 +823,17 @@ const RAW_FIXTURE = [
 ].join("\n");
 const planted = scanSource(RAW_FIXTURE).hits;
 ok(`the raw-UI scan reports exactly the copy planted in its fixture (${planted.map((h) => h.kind).join(", ") || "nothing"})`,
-  planted.length === 3 && planted.every((h) => h.text.startsWith("Planted")));
+  planted.length === 5 && planted.filter((h) => h.kind === "call").length === 2 &&
+    planted.every((h) => h.text.startsWith("Planted")));
 const plantedLookups = lookupsIn(RAW_FIXTURE);
 ok(`the fixture's t() lookups are read as lookups, not as interface copy (${plantedLookups.join(", ")})`,
-  plantedLookups.length === 5 && planted.every((h) => !plantedLookups.includes(h.text)));
+  plantedLookups.length === 6 && planted.every((h) => !plantedLookups.includes(h.text)));
 
 const RAW_COVERED = [
   "features/compare/ComparePage.tsx",
   "features/football/Details.tsx",
   "features/history/HistoryPage.tsx",
+  "features/learn/LearnHub.tsx",
   "features/manager/ManagerOS.tsx",
   "features/onboarding/Onboarding.tsx",
   "features/review/ReviewPage.tsx",
@@ -872,7 +878,12 @@ const RAW_COVERED = [
 // reads two positions it never looked at: `aria-label` attributes and copy handed to
 // toast()/alert(). 13 of those items were then keyed; the 5 left (two Community Hub
 // toasts, three Learn Hub toasts) stay counted as real debt for those screens.
-const RAW_UI_CEILING = 394;
+// 354 as of M160: Learn Hub — the last screen whose file had no translator import at
+// all — is keyed and covered, so its 40 hits left the open count entirely. The call
+// rule also grew from `toast("` to the whole argument list, which found no new debt
+// (the only conditional toast in the repo was Learn Hub's own, and it is keyed), so
+// 354 is a measurement of the same tree with two more eyes on it.
+const RAW_UI_CEILING = 354;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
