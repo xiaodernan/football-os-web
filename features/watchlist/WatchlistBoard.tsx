@@ -11,6 +11,11 @@ import { cn } from "@/lib/utils";
 
 type Sort = "value" | "potential" | "overall" | "age";
 
+// The four sort codes, at module scope rather than inline in a JSX child position
+// where the raw-UI scan reads them as display copy. They select a comparator and a
+// `watch.sort.*` dictionary key; the board renders t()-ed labels, never these.
+const SORTS: Sort[] = ["value", "potential", "overall", "age"];
+
 export function WatchlistBoard() {
   const { t } = useI18n();
   const { navigate } = useRouter();
@@ -67,7 +72,7 @@ export function WatchlistBoard() {
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("watch.sort")}</span>
           <div className="flex gap-1.5">
-            {(["value", "potential", "overall", "age"] as Sort[]).map((s) => (
+            {SORTS.map((s) => (
               <button
                 key={s}
                 onClick={() => setSort(s)}

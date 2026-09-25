@@ -55,7 +55,14 @@
 //      not in the dictionary, a placeholder the row never supplies, or a sentence
 //      the module wrote itself — which no JSX-scanning check can see (M149).
 //  27. a file in the chrome layer (components/ui/*) falling back to its own English
-//      word — check 9 one layer down, so it reaches every screen at once.
+//      word — check 9 one layer down, so it reaches every screen at once,
+//  28. a `*Key` field (the one naming convention that makes the raw-UI scan look away
+//      from a string) holding something that is not a dictionary row in every locale,
+//  29. the same field never being read back through t(): a component must resolve what
+//      it declares, and a module that hands rows to a screen must name that screen in
+//      KEY_ROW_CONSUMERS. The rename with the translation left out would otherwise keep
+//      a raw-UI count down forever, and "somebody reads .labelKey somewhere" is not a
+//      check while seven files share the name.
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { scanSource, lookupsIn } from "./lib/rawUiScan.mjs";
@@ -619,7 +626,11 @@ const SPACES = new Map([
   }],
   ["watch.sort.|s", {
     name: "watchlist sorts",
-    values: spaceOf("features/watchlist/WatchlistBoard.tsx", /\["value"[\s\S]*?\] as Sort\[\]/, quoted),
+    // M174 moved the four codes from an inline `[… ] as Sort[]` in a JSX hole to the
+    // module-scope SORTS the board now maps over — which is precisely the anchor
+    // relocation check 16 is built to notice: it went red on the hoist, and the value
+    // space is still read out of the source rather than written down here.
+    values: spaceOf("features/watchlist/WatchlistBoard.tsx", /const SORTS: Sort\[\] = \[[\s\S]*?\]/, quoted),
   }],
   ["comm.tag.|tag", {
     // The tag words the board filters and stores, straight from the only place
@@ -1108,6 +1119,19 @@ const RAW_COVERED = [
   "components/ui/sheet.tsx",
   "components/ui/message-scroller.tsx",
   "components/ui/spinner.tsx",
+  // M174. The three shortest screens, and the reason the `*Key` rule below exists.
+  // 13 counted literals between them, and not one of them was words a reader saw: 12
+  // were codes sitting where the scan could only read them as children — AiStudio's
+  // two tab codes, the watchlist board's four sort codes, the achievements page's six
+  // group keys — and the 13th was `"Knowledge graph"`, the fallback behind an ariaLabel
+  // whose only caller has always passed a translated label. Two lists moved to module
+  // scope, one misnamed field (`label` → `labelKey`) stopped lying about what it holds,
+  // and the dead fallback was deleted instead of minting a key for a string that
+  // cannot render. Renaming a field is the one way to leave a raw-UI count without
+  // translating anything, so it is now gated from the other side by checks 28/29.
+  "features/ai/AiStudio.tsx",
+  "features/watchlist/WatchlistBoard.tsx",
+  "features/achievements/AchievementsPage.tsx",
   "ui/charts.tsx",
   // Not a screen: the store is where persisted rows are minted, and the one file a
   // composed sentence can hide in without any component-scoped scan ever seeing it.
@@ -1195,7 +1219,11 @@ const RAW_COVERED = [
 // 213 as of M173, measured on the gate line: the whole chrome layer at once, 21 literals
 // across 8 files. This is the largest single drop since M168 because the milestone is the
 // largest single registration — after it, every remaining open file is a screen.
-const RAW_UI_CEILING = 213;
+// 200 as of M174, measured on the gate line: the three shortest screens are covered and
+// their 13 left the open count — which is also why checks 28/29 landed with them, since
+// 6 of those 13 were a field rename and nothing else. Only four files are still in debt
+// now, and all four are the big screens this arc has been walking toward.
+const RAW_UI_CEILING = 200;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -1347,6 +1375,70 @@ const handRolled = [...appSrc]
   .map(([p, src]) => `${p} (${src.match(HANDROLLED).length})`);
 ok(`t()'s variable filling is the only interpolator in the UI source (${handRolled.join(", ") || "none"})`,
   handRolled.length === 0);
+
+// 28-29. The scan's own escape hatch, pinned from the other side. A raw-UI count can go
+//      down without a single translation being written: rename a row's `label` field to
+//      `labelKey` and the scan stops reading it as copy (ROW_PROPS matches `label` and
+//      nothing else). M149/M155/M165 did that rename legitimately — the strings were
+//      already dictionary keys — and M174 did it again on the achievements page, which
+//      is six of that milestone's 13 "fixed" literals. The rename is only honest if the
+//      key it names exists and something actually resolves it, so both halves are now
+//      checked, over the whole tree rather than only the three files touched this time:
+//        28 every literal a `*Key` field carries is a dictionary key, present and
+//          non-blank in EVERY locale — a renamed field pointing at nothing prints the
+//          bare key text on screen, which is the exact bug class checks 4/5 exist for;
+//        29 the field is read back through t() — by the declaring file itself when that
+//          file is a screen, or by the consumer a module names in KEY_ROW_CONSUMERS when
+//          it is a row registry (localData's KeySpec, read by the settings screen). A
+//          *Key field nothing resolves is the rename with the translation left out, and
+//          it would otherwise keep a raw-UI count down forever.
+//      The regex skips `labelKey?: string` and friends by requiring a quoted value, so
+//      a type declaration contributes no site and cannot pad the numbers below.
+const KEY_FIELD = /\b([A-Za-z_$][\w$]*Key)\s*:\s*(["'])((?:[^"'\\]|\\.)*)\2/g;
+// Who renders a key row declared outside a component. Adding a *Key-carrying module
+// without a row here fails check 29, so this table cannot fall behind the code.
+const KEY_ROW_CONSUMERS = [
+  { path: "domain/localData.ts", prop: "labelKey", consumer: "features/settings/SettingsPage.tsx" },
+];
+const badKeys = [], unresolved = [];
+let keySites = 0;
+const keyFiles = new Set();
+for (const [path, code] of appSrc) {
+  const props = new Set();
+  for (const m of code.matchAll(KEY_FIELD)) {
+    keySites++;
+    keyFiles.add(path);
+    props.add(m[1]);
+    const key = m[3];
+    if (key.includes("{")) { badKeys.push(`${path}: ${m[1]} holds a key with a placeholder in it (${key})`); continue; }
+    const missing = L.filter((loc) => !(key in D[loc.id]) || !D[loc.id][key].trim()).map((loc) => loc.id);
+    if (missing.length) badKeys.push(`${path}: ${m[1]} → ${key} is missing or blank in ${missing.join(",")}`);
+  }
+  for (const prop of props) {
+    const read = new RegExp(`\\bt\\(\\s*[\\w$.]*\\.${prop}\\s*[,)]`);
+    if (read.test(code)) continue;
+    // A screen has to resolve what it declares. A non-component module that hands its
+    // rows out to a screen (localData's KeySpec → the settings page) instead names its
+    // consumer here, and the entry has to be true — because "somebody in the tree reads
+    // `.labelKey`" is worth nothing when seven files share that property name, which is
+    // exactly what the probe that deleted SettingsPage's t() call returned green for.
+    const declared = KEY_ROW_CONSUMERS.find((e) => e.path === path && e.prop === prop);
+    if (!declared) { unresolved.push(`${path}: ${prop} — a key field with no declared renderer`); continue; }
+    if (!read.test(appSrc.get(declared.consumer) ?? ""))
+      unresolved.push(`${path}: ${prop} → ${declared.consumer} no longer renders it through t()`);
+  }
+}
+ok(`every key held in a *Key field is a real dictionary row in all ${L.length} locales (${keySites} sites across ${keyFiles.size} files, ${badKeys.slice(0, 4).join(" | ") || "clean"})`,
+  badKeys.length === 0);
+ok(`every *Key field is read back through t(), so a rename can never dodge the scan by leaving the translation out (${unresolved.slice(0, 4).join(" | ") || "all resolved"})`,
+  unresolved.length === 0);
+
+// Non-vacuity for the pair above: the counts come from the tree, and a floor on them is
+// a floor on how much of the app relies on this hatch — 89 sites / 8 files as measured
+// at M174, of which the three files registered this milestone contribute 6 (the
+// achievements page's group names).
+ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.size} files, ${keySites} sites)`,
+  keyFiles.size >= 8 && keySites >= 80);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

@@ -111,10 +111,13 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M173 (a few numbers in that range
-were skipped). Everything added in the current line of work (M37 onward) was built green
-and — where it changed what a visitor sees — checked in a browser against a fresh production
-preview with a clean console before it was committed. Built and verified: shell + onboarding,
+Work ships one milestone per commit and is currently at M174 (a few numbers in that range
+were skipped). Everything added in the current line of work (M37 onward) was built green, and
+was checked in a browser against a fresh production preview with a clean console up to M165;
+from M166 on the in-app browser stopped committing a React tree at the machine level, so the
+evidence for a change is now the proof suite plus, where a component renders without the
+store, a server-rendered string check in all three locales — stated per milestone rather than
+assumed. Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
 World browse and entity detail (player attribute profile, scout report, career arc; club
 season analytics), AI chat + knowledge graph, Tactical Studio, Simulation Lab with a
@@ -1564,6 +1567,68 @@ Suite is now 26 scripts / **1145 checks** (proof-i18n **127** — three new clau
 stale floor deleted), covered set **33 files**, open debt **213 across 7 files** with the
 ceiling at exactly that. After this, every file still in the debt table is a screen.
 `tsc --noEmit` exits 0 and the build succeeds.
+
+### M174 — The last 13 literals outside the big screens, and the gate that refuses a rename pretending to be a translation
+
+Three files were left in the debt table that were not one of the four big screens:
+`features/ai/AiStudio.tsx` (3 counted literals), `features/watchlist/WatchlistBoard.tsx` (4)
+and `features/achievements/AchievementsPage.tsx` (6). Registering all three took the covered
+set from 33 to 36 files and the open debt from 213 to **200 across 4 files** — and it is the
+milestone where the arithmetic had to be interrogated rather than celebrated, because **not
+one of those 13 was a word a visitor ever saw in the wrong language.**
+
+Twelve were *codes* sitting in a position the scanner can only read as children: the two tab
+ids `AiStudio` maps over (`["chat","graph"] as const`, next to which the button text already
+read `t("ai.tab.chat")`), the four sort ids the watchlist board maps over (labels already
+`t(\`watch.sort.${s}\`)`), and the six achievement-group keys (already `t(g.label)` — under a
+field named `label`, which is the field name the scanner treats as copy). The thirteenth was
+`"Knowledge graph"`, the `??` fallback behind `GraphCanvas`'s `ariaLabel`, whose only call
+site has always passed `t("ai.graphAria")`. Two lists moved to module scope, one field was
+renamed to say what it holds, the dead fallback and its optional prop were deleted rather
+than given a dictionary row, and `tsc` confirms the required prop is satisfied.
+
+**Which is precisely how a raw-UI count goes down without a translation being written.** The
+scan exempts a string when it lives in a field it does not recognise as copy — `labelKey`
+instead of `label` — and that hatch has been used legitimately since M149, M155 and M165.
+Checks 28/29 close the abuse case over the whole tree, not just this milestone's files: every
+literal a `*Key` field holds must be a dictionary row present and non-blank in all three
+locales (89 sites across 8 files today), and every such field must be read back through
+`t()` — by its own file when that file is a screen. A row registry that hands its keys to a
+screen names its consumer in `KEY_ROW_CONSUMERS` (today: `domain/localData.ts`'s `labelKey` →
+the settings screen), and that entry is asserted rather than assumed.
+
+**P3 was written against a version of this check that passed, and it should not have.** The
+first implementation let a `.ts` module off by searching the whole tree for any
+`t(….labelKey)` read — and deleting the settings screen's `t(e.labelKey)` came back **green**,
+because seven other files share that property name and any one of them excused it. The
+fallback is now an explicit, per-(file, prop) declared consumer, and the same mutation
+produces `FAIL every *Key field is read back through t() … domain/localData.ts: labelKey →
+features/settings/SettingsPage.tsx no longer renders it through t()`. Five probes, all red,
+all restored byte-identical: a `*Key` pointing at a non-existent row (2 reds, incl. key
+reachability), a screen that stops resolving its own key field, the settings screen above, a
+`*Key` value holding a placeholder (a composed key hidden as a static one), and a registry
+renaming its field so the consumer table falls behind.
+
+**The gate also caught the hoist, which is the other half of why hoisting is safe.** Check 16
+reads the watchlist sort space out of the source that feeds it, anchored on the old inline
+`["value" … ] as Sort[]`; the moment the array moved to `const SORTS`, the anchor stopped
+locating it and the suite went red — three failures, including four `watch.sort.*` keys
+suddenly unreachable. Updating the anchor to `const SORTS: Sort[] = [...]` is a relocation,
+not a widening: the value space is still read from the code rather than written down here, so
+a fifth sort id without a dictionary row goes red on its own.
+
+Verification boundary, stated rather than glossed: all three screens read `useOs()`, so the
+SSR harness cannot reach their populated states (`OsProvider` hydrates in an effect React
+never runs under `renderToString`), and the in-app browser is still machine-broken (M166).
+What this milestone rests on is therefore `tsc`, the build, the static gates above and the
+probe record — no rendered-string claim is made for these three files, and the roadmap line
+at the top of this section has been corrected to say so instead of promising a browser pass
+it no longer performs.
+
+Suite is now 26 scripts / **1148 checks** (proof-i18n **130** — checks 28/29 plus a measured
+floor on the *Key surface they read), covered set **36 files**, open debt **200 across 4
+files** (PlayerOS 90, SimulationLab 51, FilmRoom 30, DataRoom 29) with the ceiling at exactly
+that. `tsc --noEmit` exits 0 and the build succeeds.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

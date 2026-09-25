@@ -24,6 +24,11 @@ const SUGGESTIONS = [
   "Any transfer news about Haaland?",
 ];
 
+// The two tab codes. At module scope rather than inline in a JSX child position,
+// where the raw-UI scan reads them as display copy: they are keys into `ai.tab.*`,
+// and the buttons below render t()-ed labels.
+const TABS = ["chat", "graph"] as const;
+
 export function AiStudio({ initialTab = "chat" }: { initialTab?: "chat" | "graph" }) {
   const { t } = useI18n();
   const { navigate } = useRouter();
@@ -39,7 +44,7 @@ export function AiStudio({ initialTab = "chat" }: { initialTab?: "chat" | "graph
           </div>
         </div>
         <div className="flex gap-1.5">
-          {(["chat", "graph"] as const).map((k) => (
+          {TABS.map((k) => (
             <button key={k} onClick={() => { setTab(k); navigate(k === "chat" ? "/ai" : "/knowledge"); }} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === k ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
               {k === "chat" ? t("ai.tab.chat") : t("ai.tab.graph")}
             </button>
@@ -145,7 +150,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 
 const TYPE_COLOR: Record<string, string> = { club: "var(--color-primary)", player: "var(--color-info)", competition: "var(--color-chart-4)", news: "var(--color-warning)", match: "var(--color-destructive)" };
 
-function GraphCanvas({ graph, ariaLabel }: { graph: KgGraph; ariaLabel?: string }) {
+function GraphCanvas({ graph, ariaLabel }: { graph: KgGraph; ariaLabel: string }) {
   const W = 720; const H = 460;
   // Radial layout: root in the centre, everything else on a ring, clustered by type.
   const pos = useMemo(() => {
@@ -162,7 +167,7 @@ function GraphCanvas({ graph, ariaLabel }: { graph: KgGraph; ariaLabel?: string 
   }, [graph]);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-[460px] w-full" role="img" aria-label={ariaLabel ?? "Knowledge graph"}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-[460px] w-full" role="img" aria-label={ariaLabel}>
       <defs><radialGradient id="kg-bg" cx="50%" cy="45%" r="70%"><stop offset="0%" stopColor="var(--color-card)" /><stop offset="100%" stopColor="transparent" /></radialGradient></defs>
       <rect width={W} height={H} fill="url(#kg-bg)" />
       {graph.edges.map((e, i) => {

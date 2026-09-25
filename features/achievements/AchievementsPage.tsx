@@ -18,13 +18,15 @@ const TONE: Record<Tier, string> = {
   bronze: "text-muted-foreground border-border bg-secondary/30",
 };
 
-const GROUPS: { id: string; label: string }[] = [
-  { id: "training", label: "ach.group.training" },
-  { id: "consistency", label: "ach.group.consistency" },
-  { id: "growth", label: "ach.group.growth" },
-  { id: "explorer", label: "ach.group.explorer" },
-  { id: "scholar", label: "ach.group.scholar" },
-  { id: "analyst", label: "ach.group.analyst" },
+// `labelKey`, not `label`: these strings are dictionary keys the panel below
+// resolves through t(), which is what tells the raw-UI scan they are not copy.
+const GROUPS: { id: string; labelKey: string }[] = [
+  { id: "training", labelKey: "ach.group.training" },
+  { id: "consistency", labelKey: "ach.group.consistency" },
+  { id: "growth", labelKey: "ach.group.growth" },
+  { id: "explorer", labelKey: "ach.group.explorer" },
+  { id: "scholar", labelKey: "ach.group.scholar" },
+  { id: "analyst", labelKey: "ach.group.analyst" },
 ];
 
 export function AchievementsPage() {
@@ -98,7 +100,7 @@ export function AchievementsPage() {
         return (
           <Panel key={g.id} className="p-4">
             <SectionTitle
-              title={t(g.label)}
+              title={t(g.labelKey)}
               action={<span className="font-mono text-xs text-muted-foreground tabular-nums">{gs?.unlocked ?? 0}/{gs?.total ?? 0}</span>}
             />
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
