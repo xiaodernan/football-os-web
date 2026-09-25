@@ -61,7 +61,7 @@ export function Dashboard() {
   const trending = trendingPlayers(6);
   const nextSession = state.sessions.find((s) => s.status === "planned");
   const upcoming = profile?.favoriteClubId ? upcomingMatchesForClub(profile.favoriteClubId, 3) : [];
-  const progressPts = state.progress.map((p, i) => ({ label: i === 0 ? "start" : `${i}`, value: p.overall }));
+  const progressPts = state.progress.map((p, i) => ({ label: i === 0 ? t("dash.chartStart") : `${i}`, value: p.overall }));
 
   const growth = useMemo(() => {
     if (!profile) return null;
@@ -103,13 +103,13 @@ export function Dashboard() {
           <h1 className="text-2xl font-bold tracking-tight">
             {profile ? `${t("nav.home")} · ${profile.displayName}` : t("nav.home")}
           </h1>
-          <p className="text-sm text-muted-foreground">What's happening in football — and what your own game should do next.</p>
+          <p className="text-sm text-muted-foreground">{t("dash.subtitle")}</p>
         </div>
         {info && (
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="font-mono">Lv {info.level}</Badge>
-            <Badge variant="outline" className="font-mono text-primary">{profile?.xp} XP</Badge>
-            <Badge variant="outline" className="font-mono">🔥 {state.streak.current}d</Badge>
+            <Badge variant="outline" className="font-mono text-primary">{t("dash.xpBadge", { n: profile?.xp ?? 0 })}</Badge>
+            <Badge variant="outline" className="font-mono">🔥 {t("dash.streakDays", { n: state.streak.current })}</Badge>
           </div>
         )}
       </div>
@@ -130,13 +130,13 @@ export function Dashboard() {
         <div className="space-y-4 lg:col-span-2">
           {/* today's matches */}
           <Panel className="p-4">
-            <SectionTitle title={t("dash.today")} hint="Next up in the demo world" action={<Link to="/matches" className="text-xs text-primary hover:underline">All matches →</Link>} />
+            <SectionTitle title={t("dash.today")} hint={t("dash.nextUpHint")} action={<Link to="/matches" className="text-xs text-primary hover:underline">{t("dash.allMatches")}</Link>} />
             {today.length ? (
               <div className="divide-y">
                 {today.map((m) => <FixtureRow key={m.id} m={m} />)}
               </div>
             ) : (
-              <EmptyState title="No matches in the next 48h window" icon="⚽" />
+              <EmptyState title={t("dash.noMatches")} icon="⚽" />
             )}
           </Panel>
 
@@ -147,12 +147,12 @@ export function Dashboard() {
               {nextSession ? (
                 <div>
                   <div className="text-sm font-medium">{nextSession.title}</div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">{nextSession.targetMinutes}′ · {nextSession.exercises.length} blocks</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground">{nextSession.targetMinutes}′ · {t("dash.blocks", { n: nextSession.exercises.length })}</div>
                   <CompleteQuick sessionId={nextSession.id} onDone={(r) => completeSession(nextSession.id, r)} />
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-muted-foreground">No session planned yet. Let the AI coach build one.</p>
+                  <p className="text-sm text-muted-foreground">{t("dash.noSession")}</p>
                   <Button size="sm" className="mt-3" onClick={() => navigate("/player/coach")}>{t("dash.coach")} →</Button>
                 </div>
               )}
@@ -164,12 +164,12 @@ export function Dashboard() {
                 <>
                   <ProgressLine points={progressPts} height={120} />
                   <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                    <span>Overall {profile ? overallRating(profile.attributes) : 0}</span>
+                    <span>{t("dash.overallN", { n: profile ? overallRating(profile.attributes) : 0 })}</span>
                     <span>{t("common.nextLevel")}: {info && info.forNext - info.intoLevel} XP</span>
                   </div>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">Complete a training session to start your growth curve.</p>
+                <p className="text-sm text-muted-foreground">{t("dash.noGrowth")}</p>
               )}
             </Panel>
           </div>
@@ -179,7 +179,7 @@ export function Dashboard() {
             <SectionTitle
               title={t("dash.breaking")}
               hint={personalNews.orderedFor ? t("news.forClub", { club: personalNews.orderedFor, n: personalNews.matched }) : undefined}
-              action={<Link to="/news" className="text-xs text-primary hover:underline">News →</Link>}
+              action={<Link to="/news" className="text-xs text-primary hover:underline">{t("dash.newsLink")}</Link>}
             />
             <div className="divide-y">
               {breaking.map((n) => (
@@ -187,7 +187,7 @@ export function Dashboard() {
                   <Badge variant="outline" className={cn("mt-0.5 shrink-0 text-[10px]", n.kind === "Rumor" && "border-warning/50 text-warning")}>{n.kind}</Badge>
                   <div className="min-w-0">
                     <div className="truncate text-sm">{n.title}</div>
-                    <div className="text-xs text-muted-foreground">{n.source} · {Math.round(n.credibility * 100)}% confidence</div>
+                    <div className="text-xs text-muted-foreground">{n.source} · {t("dash.confidence", { n: Math.round(n.credibility * 100) })}</div>
                   </div>
                 </Link>
               ))}
@@ -247,7 +247,7 @@ export function Dashboard() {
                   <span className="font-medium uppercase tracking-wide">{t("dash.recovery")}</span>
                   <span className="flex items-center gap-2">
                     <span>{ZONE_LABEL[growth.recovery.zone]}</span>
-                    <span className="font-mono tabular-nums">ACWR {growth.recovery.acwr?.toFixed(2) ?? "—"}</span>
+                    <span className="font-mono tabular-nums">{t("dash.acwrN", { n: growth.recovery.acwr?.toFixed(2) ?? "—" })}</span>
                     <span aria-hidden>→</span>
                   </span>
                 </Link>
@@ -275,7 +275,7 @@ export function Dashboard() {
           )}
 
           <Panel className="p-4">
-            <SectionTitle title="Your attributes" />
+            <SectionTitle title={t("dash.attributesTitle")} />
             {profile ? (
               <>
                 <AttributeRadar attrs={profile.attributes} height={220} />
@@ -286,7 +286,7 @@ export function Dashboard() {
                 </div>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">Finish onboarding to see your radar.</p>
+              <p className="text-sm text-muted-foreground">{t("dash.noRadar")}</p>
             )}
           </Panel>
 
@@ -315,13 +315,13 @@ export function Dashboard() {
               {upcoming.length ? (
                 <div className="divide-y">{upcoming.map((m) => <FixtureRow key={m.id} m={m} />)}</div>
               ) : (
-                <p className="text-xs text-muted-foreground">No upcoming fixtures.</p>
+                <p className="text-xs text-muted-foreground">{t("dash.noFixtures")}</p>
               )}
             </Panel>
           )}
 
           <Panel className="p-4">
-            <SectionTitle title={t("dash.watchlist")} action={<Link to="/scouting" className="text-xs text-primary hover:underline">Scout →</Link>} />
+            <SectionTitle title={t("dash.watchlist")} action={<Link to="/scouting" className="text-xs text-primary hover:underline">{t("dash.scoutLink")}</Link>} />
             {state.watchlist.length ? (
               <div className="space-y-1">
                 {state.watchlist.slice(0, 5).map((id) => {
@@ -341,7 +341,7 @@ export function Dashboard() {
           </Panel>
 
           <Panel className="p-4">
-            <SectionTitle title={t("dash.modules")} hint="Everything in your Football OS" />
+            <SectionTitle title={t("dash.modules")} hint={t("dash.modulesHint")} />
             <div className="mt-1 grid grid-cols-2 gap-1.5">
               {MODULE_LINKS.map((m) => (
                 <Link
@@ -350,7 +350,7 @@ export function Dashboard() {
                   className="flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/20 px-2.5 py-2 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/50"
                 >
                   <span className="grid w-5 place-items-center text-base leading-none text-primary">{m.icon}</span>
-                  <span className="truncate">{t(m.label)}</span>
+                  <span className="truncate">{t(m.labelKey)}</span>
                 </Link>
               ))}
             </div>
@@ -362,28 +362,28 @@ export function Dashboard() {
 }
 
 const MODULE_LINKS = [
-  { to: "/player", label: "nav.player", icon: "●" },
-  { to: "/manager", label: "nav.manager", icon: "▤" },
-  { to: "/profile", label: "nav.profile", icon: "☺" },
-  { to: "/review", label: "nav.review", icon: "◷" },
-  { to: "/load", label: "nav.load", icon: "◔" },
-  { to: "/achievements", label: "nav.achievements", icon: "♛" },
-  { to: "/settings", label: "nav.settings", icon: "⚙" },
-  { to: "/history", label: "nav.history", icon: "⧗" },
-  { to: "/scouting", label: "nav.scouting", icon: "⌖" },
-  { to: "/world", label: "nav.world", icon: "⧗" },
-  { to: "/film", label: "nav.film", icon: "✂" },
-  { to: "/data", label: "nav.data", icon: "▨" },
-  { to: "/transfers", label: "nav.transfers", icon: "⇄" },
-  { to: "/compare", label: "nav.compare", icon: "⚖" },
-  { to: "/watchlist", label: "nav.watch", icon: "☆" },
-  { to: "/tactical-studio", label: "nav.tactical", icon: "⛶" },
-  { to: "/simulation", label: "nav.simulation", icon: "▷" },
-  { to: "/ai", label: "nav.ai", icon: "⚡" },
-  { to: "/knowledge", label: "nav.knowledge", icon: "☰" },
-  { to: "/learn", label: "nav.learn", icon: "✎" },
-  { to: "/community", label: "nav.community", icon: "❉" },
-  { to: "/football", label: "nav.football", icon: "◎" },
+  { to: "/player", labelKey: "nav.player", icon: "●" },
+  { to: "/manager", labelKey: "nav.manager", icon: "▤" },
+  { to: "/profile", labelKey: "nav.profile", icon: "☺" },
+  { to: "/review", labelKey: "nav.review", icon: "◷" },
+  { to: "/load", labelKey: "nav.load", icon: "◔" },
+  { to: "/achievements", labelKey: "nav.achievements", icon: "♛" },
+  { to: "/settings", labelKey: "nav.settings", icon: "⚙" },
+  { to: "/history", labelKey: "nav.history", icon: "⧗" },
+  { to: "/scouting", labelKey: "nav.scouting", icon: "⌖" },
+  { to: "/world", labelKey: "nav.world", icon: "⧗" },
+  { to: "/film", labelKey: "nav.film", icon: "✂" },
+  { to: "/data", labelKey: "nav.data", icon: "▨" },
+  { to: "/transfers", labelKey: "nav.transfers", icon: "⇄" },
+  { to: "/compare", labelKey: "nav.compare", icon: "⚖" },
+  { to: "/watchlist", labelKey: "nav.watch", icon: "☆" },
+  { to: "/tactical-studio", labelKey: "nav.tactical", icon: "⛶" },
+  { to: "/simulation", labelKey: "nav.simulation", icon: "▷" },
+  { to: "/ai", labelKey: "nav.ai", icon: "⚡" },
+  { to: "/knowledge", labelKey: "nav.knowledge", icon: "☰" },
+  { to: "/learn", labelKey: "nav.learn", icon: "✎" },
+  { to: "/community", labelKey: "nav.community", icon: "❉" },
+  { to: "/football", labelKey: "nav.football", icon: "◎" },
 ];
 
 function LiveCell({ m }: { m: Match }) {
@@ -431,18 +431,19 @@ function FixtureRow({ m }: { m: Match }) {
 }
 
 function CompleteQuick({ sessionId, onDone }: { sessionId: string; onDone: (rating: number) => void }) {
+  const { t } = useI18n();
   const [rating, setRating] = useState("4");
   const [done, setDone] = useState(false);
   const { navigate } = useRouter();
   if (done)
     return (
       <div className="mt-3 rounded-lg border border-success/40 bg-success/10 p-2 text-xs text-success">
-        Logged — XP awarded. <button className="underline" onClick={() => navigate("/player/progress")}>View progress</button>
+        {t("dash.logged")} <button className="underline" onClick={() => navigate("/player/progress")}>{t("dash.viewProgress")}</button>
       </div>
     );
   return (
     <div className="mt-3">
-      <div className="mb-1 text-xs text-muted-foreground">How did it feel?</div>
+      <div className="mb-1 text-xs text-muted-foreground">{t("dash.howFelt")}</div>
       <RadioGroup value={rating} onValueChange={setRating} className="flex gap-3">
         {[1, 2, 3, 4, 5].map((n) => (
           <div key={n} className="flex items-center gap-1">
@@ -452,7 +453,7 @@ function CompleteQuick({ sessionId, onDone }: { sessionId: string; onDone: (rati
         ))}
       </RadioGroup>
       <Button size="sm" className="mt-3 w-full" onClick={() => { onDone(Number(rating)); setDone(true); }}>
-        Complete session
+        {t("dash.completeSession")}
       </Button>
     </div>
   );

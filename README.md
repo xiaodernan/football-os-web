@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M154 (a few numbers in that range
+Work ships one milestone per commit and is currently at M155 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -247,7 +247,7 @@ silently regress it — `scripts/proof-ai-grounding.mjs` guards the AI honesty c
 guards the backup/recovery contract (lossless export/import, activity-only reset, the
 registry↔i18n label invariant).
 
-The M108–M154 line of work is a different kind of progress: it makes the earlier claims
+The M108–M155 line of work is a different kind of progress: it makes the earlier claims
 checkable, and closes the remaining gaps between what the interface says and what the code
 does. The numeric cores behind displayed figures have been pinned one at a time with
 runnable proofs — analytics (M112), Dynamic World (M113), match engine (M114), fixture
@@ -756,6 +756,39 @@ column, drop the plus sign, treat a value sitting on 10 as past it, and cap the 
 like the display. tsc clean, build clean, 26 scripts / 1119 checks; labels were reworded
 in all three locales, so the key count is unchanged at 901. Not browser-verified: the
 in-app browser is still wedged.
+
+M155 took the Dashboard — the screen every user lands on — from 44 raw literals to 1,
+and 22 of those 44 were never English at all: the module launcher held its dictionary keys
+in a field named `label`, which is the name the raw-UI scan reads as interface copy, so the
+file was already calling `t()` correctly and still counted as untranslated. Renaming the
+field to `labelKey`, M148's convention, moved them without touching a word. (This is the
+second time that distinction mattered; HistoryPage had the same story at M149.)
+
+The other 22 were real English, and the notable ones are the quick-log widget: "Logged — XP
+awarded.", "View progress", "How did it feel?" and "Complete session" had never been keyed
+at all, so a reader who set the app to Chinese was asked "How did it feel?" at the exact
+moment they completed a session — the product's core action, in a language they had not
+chosen. Alongside them went the hero subtitle, the section hints, the four empty states
+("No matches in the next 48h window", "No session planned yet. Let the AI coach build one.",
+"Finish onboarding to see your radar.", "No upcoming fixtures."), the inline links
+("All matches →", "News →", "Scout →") and the figure templates ("{n} blocks",
+"{n}% confidence", "Overall {n}", "ACWR {n}", "{n} XP", "{n}d", and the growth chart's
+"start" tick). 23 keys per locale, 924 in the dictionary, and `CompleteQuick` gained the
+`useI18n` it never had.
+
+One hit remains and it is not copy: `matchesByStatus("LIVE")` asks the provider for live
+fixtures. Pulling "LIVE" into a module constant did not help — the scan counts a top-level
+`const X = "LIVE"` as reachable copy too, which is a defensible reading of a literal that
+could be printed from anywhere — so the constant was reverted rather than widening the
+scanner to make a number look better. The debt ceiling is therefore 536 across 29 files,
+and Player OS's 90, Manager OS's 133 and the Simulation Lab's 51 are still outstanding.
+
+Three mutation probes restore by sha256: put an English panel line back (both the ceiling
+and key reachability go red, because the key it displaced stops being read), rename a
+`labelKey` back to `label` (ceiling +1), and delete one locale's copy of a new key (parity).
+tsc clean, build clean, 26 scripts / 1119 checks. Not browser-verified: the in-app browser
+is still wedged, so the Chinese and English Dashboard were compared by reading what the
+gate reads, not by looking at the page — which is exactly the follow-up task #142 still owes.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

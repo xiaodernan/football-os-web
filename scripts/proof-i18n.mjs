@@ -817,8 +817,10 @@ const RAW_COVERED = [
 // 584 as of M151, when the Player OS goal panel — the one place you manage goals —
 // stopped being English-only.
 // 579 as of M152: the three sentences the coach used to write into memory, and the
-// memory panel's own labels, are keys now.
-const RAW_UI_CEILING = 579;
+// memory panel's own labels, are keys now. 536 as of M155: the Dashboard's 44 hits were
+// 22 dictionary keys sitting in a field named `label` (the launcher) plus 21 sentences of
+// English copy; only the provider's "LIVE" status code is left, which is a query argument.
+const RAW_UI_CEILING = 536;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
