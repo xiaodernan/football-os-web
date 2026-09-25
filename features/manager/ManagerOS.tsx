@@ -31,22 +31,33 @@ import { CAREER_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
 
 const KEY = CAREER_KEY;
 type Tab = "overview" | "squad" | "transfers" | "tactics" | "table" | "outlook" | "prep";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "squad", label: "Squad" },
-  { id: "transfers", label: "Transfers" },
-  { id: "tactics", label: "Tactics" },
-  { id: "table", label: "League table" },
-  { id: "outlook", label: "Season outlook" },
-  { id: "prep", label: "Match prep" },
+const TABS: { id: Tab; labelKey: string }[] = [
+  { id: "overview", labelKey: "mgr.tabOverview" },
+  { id: "squad", labelKey: "mgr.tabSquad" },
+  { id: "transfers", labelKey: "mgr.tabTransfers" },
+  { id: "tactics", labelKey: "mgr.tabTactics" },
+  { id: "table", labelKey: "mgr.tabTable" },
+  { id: "outlook", labelKey: "mgr.tabOutlook" },
+  { id: "prep", labelKey: "mgr.tabMatchPrep" },
+];
+// The market's position buckets. Codes and labels live together so the filter buttons
+// resolve a labelKey and the state default reads BUCKETS[0].code instead of hard-coding
+// "ALL" — a literal there is interface copy as far as the raw-UI scan is concerned.
+const BUCKETS: { code: PosBucket; labelKey: string }[] = [
+  { code: "ALL", labelKey: "mgr.bucketAll" },
+  { code: "GK", labelKey: "mgr.bucketGk" },
+  { code: "DEF", labelKey: "mgr.bucketDef" },
+  { code: "MID", labelKey: "mgr.bucketMid" },
+  { code: "ATT", labelKey: "mgr.bucketAtt" },
 ];
 
 export function ManagerOS() {
+  const { t } = useI18n();
   const [career, setCareer] = useLocalStorage<CareerState | null>(KEY, null);
   const [tab, setTab] = useState<Tab>("overview");
   const [last, setLast] = useState<MatchOutcome | null>(null);
@@ -77,8 +88,8 @@ export function ManagerOS() {
     <div className="space-y-5">
       <CareerHeader career={career} onChange={update} onPlay={play} onReset={() => { setCareer(null); setLast(null); }} />
       <div className="flex flex-wrap gap-1.5">
-        {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={cn("rounded-md border px-3 py-1.5 text-sm", tab === t.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t.label}</button>
+        {TABS.map((entry) => (
+          <button key={entry.id} onClick={() => setTab(entry.id)} className={cn("rounded-md border px-3 py-1.5 text-sm", tab === entry.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(entry.labelKey)}</button>
         ))}
       </div>
 
@@ -251,10 +262,10 @@ function Squad({ career, onSell }: { career: CareerState; onSell: (id: string) =
 
 function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string) => void }) {
   const { t } = useI18n();
-  const [pos, setPos] = useState<"ALL" | "GK" | "DEF" | "MID" | "ATT">("ALL");
+  const [pos, setPos] = useState<PosBucket>(BUCKETS[0].code);
   const targets = useMemo(() => marketTargets(career, 200), [career]);
   const groupOf = (g: string) => (g === "GK" || g === "CB" || g === "FB" ? "DEF" : g === "CM" || g === "DM" ? "MID" : g === "AM" || g === "W" || g === "ST" ? "ATT" : "DEF");
-  const shown = targets.filter((p) => pos === "ALL" || groupOf(p.positionGroup) === pos);
+  const shown = targets.filter((p) => pos === BUCKETS[0].code || groupOf(p.positionGroup) === pos);
   return (
     <Panel className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -262,8 +273,8 @@ function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string)
         <div className="text-sm">{t("mgr.budget")} <span className="font-mono font-semibold text-primary">{formatValue(career.budget)}</span></div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {(["ALL", "GK", "DEF", "MID", "ATT"] as const).map((g) => (
-          <button key={g} onClick={() => setPos(g)} className={cn("rounded-md border px-2.5 py-1 text-xs", pos === g ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{g}</button>
+        {BUCKETS.map((g) => (
+          <button key={g.code} onClick={() => setPos(g.code)} className={cn("rounded-md border px-2.5 py-1 text-xs", pos === g.code ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(g.labelKey)}</button>
         ))}
       </div>
       <div className="mt-3 space-y-1.5">

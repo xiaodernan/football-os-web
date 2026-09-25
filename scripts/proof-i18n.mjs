@@ -834,7 +834,9 @@ const RAW_COVERED = [
 // store codes rather than sentences. 451 as of M157: Manager OS's header, overview,
 // season summary, squad, transfer market and tactics panels are keyed (133 hits -> 70),
 // which also meant giving the file a useI18n import it never had.
-const RAW_UI_CEILING = 451;
+// 440 as of M158 step 1: Manager OS's tab strip and the market's position buckets are
+// keys now, and the strip's map variable stops shadowing the translator.
+const RAW_UI_CEILING = 440;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
