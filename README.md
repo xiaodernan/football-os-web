@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M160 (a few numbers in that range
+Work ships one milestone per commit and is currently at M161 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green
 and — where it changed what a visitor sees — checked in a browser against a fresh production
 preview with a clean console before it was committed. Built and verified: shell + onboarding,
@@ -893,12 +893,28 @@ prose — that one was caught by key reachability and would also fail the type c
 by the row-literal audit, whose pattern recognises `{key: …}` and `{value: …}` and not a
 `{label: "prose"}` field; the expectation was mine to fix, not the gate's.
 
-Still outstanding, unchanged: Player OS (89 hits), Simulation Lab (51), Community Hub (42),
-Learn Hub (37), Film Room (30), Data Room (29), Landing (18), `src/App.tsx` (3), plus the
+Still outstanding, unchanged: Player OS (89 hits), Simulation Lab (51), Community Hub (0 —
+closed by M161), Learn Hub (37), Film Room (30), Data Room (29), Landing (18),
+`src/App.tsx` (3), plus the
 three `toast()` strings in Manager OS that no scan reports because they are call arguments
 and not JSX — which is M159's neighbourhood alongside the demo coach's generated prose.
 Nothing here was clicked in a browser: the in-app browser remains wedged, so task #142's
 three-locale walk is still owed.
+
+M161 took Community Hub from 42 raw literals to none. The board is the one screen where
+most words are *not* the app's — a thread's title, body and author are the user's or the
+dataset's own text, so the work was marking that boundary rather than translating it: only
+the board's own copy is keyed, and `comm.you` exists because `MY = "You"` is written into
+stored records and must keep matching them while displaying in the reader's language. The
+six tags are the same shape — `comm.tag.*` translates their display while the raw string
+stays the filter and the stored value. `timeAgo` was the reason this screen resisted
+keying: a helper returning a composed string is invisible to a scan that reads component
+source, so it now returns `RowText` and the three call sites resolve it through `rowLine`.
+That also finished the repair M159 opened — `visible.map((t) => …)` bound a Thread to the
+name the translator already had, which is why the list's copy could not be keyed; every
+callback is `th` now. Two new dynamic sites (`comm.tag.`, `comm.sort.`) are declared in the
+proof against the arrays that actually produce their values, so a new tag fails the suite
+until it has a key. 112/112 checks pass over 1180 keys × 3 locales.
 
 M159 chased the copy that reaches a user through a *call argument*, which is where both of
 this project's translation audits had a blind spot. `aria-label` was not a display prop the

@@ -407,6 +407,11 @@ const DYN_SITES = [
   { path: "features/football/Details.tsx", expr: "kind", prefix: "fav.", suffix: ".idle" },
   { path: "features/football/Details.tsx", expr: "arc.trajectory", prefix: "det.arc.", suffix: "" },
   { path: "features/football/Details.tsx", expr: "m.status.toLowerCase()", prefix: "fw.status.", suffix: "" },
+  // M161: the board's six tags and two sorts are data strings read out of the
+  // domain/Tab strip, so their sites are declared against the arrays that produce
+  // them rather than against a hand-typed list.
+  { path: "features/community/CommunityHub.tsx", expr: "tag", prefix: "comm.tag.", suffix: "" },
+  { path: "features/community/CommunityHub.tsx", expr: "s", prefix: "comm.sort.", suffix: "" },
 ];
 // One space per (prefix, expression) pair: the two `prof.mode.` sites take the
 // same prefix from different code, which is why the space is not keyed on the
@@ -487,6 +492,16 @@ const SPACES = new Map([
   ["watch.sort.|s", {
     name: "watchlist sorts",
     values: spaceOf("features/watchlist/WatchlistBoard.tsx", /\["value"[\s\S]*?\] as Sort\[\]/, quoted),
+  }],
+  ["comm.tag.|tag", {
+    // The tag words the board filters and stores, straight from the only place
+    // that defines them — so a new tag fails here until it has a key.
+    name: "community tags",
+    values: spaceOf("domain/community.ts", /export function allTags\(\): string\[\] \{[\s\S]*?\n\}/, quoted),
+  }],
+  ["comm.sort.|s", {
+    name: "community sorts",
+    values: spaceOf("features/community/CommunityHub.tsx", /\["recent", "top"\] as const/, quoted),
   }],
 ]);
 // Every `attr.name.…` site interpolates an attribute key out of some domain row,
