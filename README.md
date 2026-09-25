@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M175 (a few numbers in that range
+Work ships one milestone per commit and is currently at M176 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -1693,6 +1693,76 @@ files**: the player screen still carries **79** counted literals, so it remains 
 was *not* registered. Open debt is **189 across 4 files** (PlayerOS 79, SimulationLab 51,
 FilmRoom 30, DataRoom 29) with the ceiling at exactly that measured number, and the *Key
 surface checks 28/29 police is now **99 sites across 9 files**.
+
+### M176 — The badge panel that named a badge which does not exist, and the one derivation three screens shared
+
+The growth tab of the player screen claimed six "badges to earn next". They were typed in
+by hand, and one of them — `"1000 XP"` — names a badge that exists nowhere in the app: not
+in the catalogue, and not derivable from it, because no rule in `domain/achievements.ts`
+has a target of 1000 (check 14 pins that). The rest restated real rules with numbers the
+engine could disagree with: they were prose about progress, not progress. Meanwhile the
+same `AchievementInput` was being assembled by hand in two screens and re-derived by a
+third, each mapping `sessions` → completed count, `goals` → done count, `xp` → level.
+
+Both halves collapse into the domain. `achievementInput` takes what the store actually
+holds — session rows, goal rows, arrays, the academy summary — and returns the badge-facing
+shape; `nextBadges(list, n)` is the ranking the Dashboard tile and the panel now share
+(locked only, `pct` desc, tie-break on the lower target). The panel renders the catalogue's
+own rows through `t(\`ach.name.${a.id}\`)`, so a row cannot name a badge that is not in the
+dictionary space check 17 already proves complete, and its empty branch says so.
+
+**This is the milestone where `tsc` found the second bug of the M175 family.** Replacing the
+Dashboard's hand-built input left `unlocked: list.length - locked.length` referring to a
+`locked` that no longer existed — the same shape as M175's `tab.label` after the rename:
+*the write-side of a rename is never the whole rename.* It was not cosmetic: that expression
+feeds the "N of 21" figure on the growth card, and the compiler refused it rather than let a
+counter quietly mean something else.
+
+The proof grew from 20 checks to 39 (`scripts/proof-m67.mjs`): the mapper's output shape is
+asserted **equal to the interface's key set**, so a new `AchievementInput` field cannot be
+added without a derivation line; each field is traced to its formula on a fixture where the
+counts differ from the totals (2 of 4 sessions completed, 2 of 3 goals done); `level` is
+cross-checked against the XP ladder rather than restated; the mapper does not touch its
+input (the callers pass live store arrays); and a streak-only change differs in exactly one
+field, which is what refuses a mapper that re-derived streak from sessions and so would
+have passed the field-by-field checks. `nextBadges` gets its order, its cap, its
+locked-only filter, a `0`-rows call, and a promise that it does not reorder the list it was
+handed. Then three source-text checks (the M134 technique — a proof may not import a
+component, but it can read its file): no screen calls `evaluateAchievements({` with an
+inline literal, every screen calls `achievementInput(`, the panel interpolates its badge
+names through `t()`, and the string `"1000 XP"` is gone. Comments are stripped before those
+checks run, because the milestone's own explanatory comment quotes the deleted label, and
+*prose about a dead string must not satisfy a check about the shipped UI.*
+
+**The gate change on the i18n side started red, which is the point.** The new
+`t(\`ach.name.${a.id}\`)` site made check 16 report `61 sites / 1 undeclared`: a fourth
+screen interpolating a key family has to declare itself, or the key-reachability arithmetic
+silently loses a caller. With the declaration added, the ten literals that left PlayerOS are
+real visitor-facing copy — panel headings, the empty-curve hint, the XP line, the "every
+badge unlocked" branch — and for the first file in this arc **not one of the removed hits
+was a code or a rename**. The ceiling moved 189 → **179** on the gate's own line.
+
+Nine mutation probes, all red on their own clause and all restored byte-identical: a
+session counting toward badges whether completed or not; `level` pinned to 1; the ranking
+flipping to easiest-first; the cap dropped; a badge name typed into the panel; a screen
+spreading a hand literal *next to* the mapper (so the red is attributable to the literal,
+not to the missing call); `"1000 XP"` restored; the interpolation removed, which strands
+the new declaration and prints `0 undeclared / 1 stale`; and one heading back to raw
+English, which prints `(180 across 4 files, ceiling 179)`. The first draft of the cap probe
+used `Math.max(n, 1)`, which kept the `caps at n` assertion green — a probe that cannot go
+red is not a probe, so it was rewritten to delete the slice.
+
+Verification boundary is unchanged from M175: `PlayerOS` reads `useOs()`, the SSR harness
+cannot reach a hydrated store, and the in-app browser is still machine-broken, so no
+rendered-string claim is made for this panel — the evidence is `tsc`, the build, the static
+gates and the probe record above.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is now 26 scripts /
+**1170 checks** (proof-i18n **133**, proof-m67 **39** up from 20). Covered set stays **36
+files**; the player screen still carries **69** counted literals, so it remains in debt.
+Open debt is **179 across 4 files** (PlayerOS 69, SimulationLab 51, FilmRoom 30,
+DataRoom 29) with the ceiling at exactly that measured number, **61** dynamic `t()` sites
+all declared and live, and the dictionary at **1243 keys × 3 locales**.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

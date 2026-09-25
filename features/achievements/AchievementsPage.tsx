@@ -2,8 +2,7 @@ import { useMemo } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
-import { levelInfo } from "@/domain/xp";
-import { evaluateAchievements, summary, type AchievementStatus, type Tier } from "@/domain/achievements";
+import { achievementInput, evaluateAchievements, summary, type AchievementStatus, type Tier } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords } from "@/lib/hooks";
@@ -35,24 +34,16 @@ export function AchievementsPage() {
   const { navigate } = useRouter();
   const learn = useLearnRecords();
 
-  const input = useMemo(() => {
-    const sessions = state.sessions.filter((s) => s.status === "completed").length;
-    const goalsDone = state.goals.filter((g) => g.done).length;
-    const level = state.profile ? levelInfo(state.profile.xp).level : 1;
-    const lessons = summarizeLearn(learn);
-    return {
-      level,
-      xp: state.profile?.xp ?? 0,
-      sessions,
-      streak: state.streak.current,
-      goalsDone,
-      watchlist: state.watchlist.length,
-      plans: state.plans.length,
-      lessonsCompleted: lessons.completed,
-      lessonsMastered: lessons.mastered,
-      filmClips: loadFilmClips().length,
-    };
-  }, [state, learn]);
+  const input = useMemo(() => achievementInput({
+    xp: state.profile?.xp ?? 0,
+    sessions: state.sessions,
+    goals: state.goals,
+    streak: state.streak.current,
+    watchlist: state.watchlist,
+    plans: state.plans,
+    lessons: summarizeLearn(learn),
+    filmClips: loadFilmClips().length,
+  }), [state, learn]);
 
   const list = useMemo(() => evaluateAchievements(input), [input]);
   const stat = summary(list);

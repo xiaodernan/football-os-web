@@ -14,7 +14,7 @@ import {
 import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { overallRating } from "@/domain/attributes";
-import { evaluateAchievements, type AchievementInput } from "@/domain/achievements";
+import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords, usePersonalNews } from "@/lib/hooks";
@@ -66,24 +66,17 @@ export function Dashboard() {
   const growth = useMemo(() => {
     if (!profile) return null;
     const completed = state.sessions.filter((s) => s.status === "completed");
-    const learnSummary = summarizeLearn(learn);
-    const input: AchievementInput = {
-      level: info?.level ?? 1,
+    const list = evaluateAchievements(achievementInput({
       xp: profile.xp,
-      sessions: completed.length,
+      sessions: state.sessions,
+      goals: state.goals,
       streak: state.streak.current,
-      goalsDone: state.goals.filter((g) => g.done).length,
-      watchlist: state.watchlist.length,
-      plans: state.plans.length,
-      lessonsCompleted: learnSummary.completed,
-      lessonsMastered: learnSummary.mastered,
+      watchlist: state.watchlist,
+      plans: state.plans,
+      lessons: summarizeLearn(learn),
       filmClips: loadFilmClips().length,
-    };
-    const list = evaluateAchievements(input);
-    const locked = list
-      .filter((a) => !a.unlocked)
-      .sort((a, b) => b.pct - a.pct || a.target - b.target);
-    const next = locked[0] ?? null;
+    }));
+    const next = nextBadges(list, 1)[0] ?? null;
     const last = completed
       .slice()
       .sort((a, b) => new Date(b.completedAt ?? b.date).getTime() - new Date(a.completedAt ?? a.date).getTime())[0];
@@ -93,7 +86,7 @@ export function Dashboard() {
       .map((g) => ({ key: g.key!, current: g.current, target: g.target, pct: Math.max(0, Math.min(1, g.target ? g.current / g.target : 0)) }))
       .sort((a, b) => b.pct - a.pct)
       .slice(0, 3);
-    return { next, total: list.length, unlocked: list.length - locked.length, last, recovery: load.hasData ? { acwr: load.acwr, zone: load.zone } : null, focusGoals };
+    return { next, total: list.length, unlocked: list.filter((a) => a.unlocked).length, last, recovery: load.hasData ? { acwr: load.acwr, zone: load.zone } : null, focusGoals };
   }, [profile, info, state, learn]);
 
   return (

@@ -32,6 +32,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useLearnRecords } from "@/lib/hooks";
+import { summarizeLearn } from "@/domain/learn";
+import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
 import type { GoalMetric, TrainingSession } from "@/domain/types";
 
 // `labelKey`, not `label`: every value here is already a `player.*` dictionary key and
@@ -477,42 +480,48 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
 function ProgressView() {
   const { t } = useI18n();
   const { state } = useOs();
+  const learn = useLearnRecords();
   const p = state.profile!;
   const info = levelInfo(p.xp);
   const pts = state.progress.map((x, i) => ({ label: i === 0 ? t("common.chartStart") : `${i}`, value: x.overall }));
-  const achievements = useMemo(() => {
-    const completed = state.sessions.filter((s) => s.status === "completed").length;
-    const clips = loadFilmClips().length;
-    return [
-      { label: "First session", ok: completed >= 1 },
-      { label: "Level 5", ok: info.level >= 5 },
-      { label: "7-day streak", ok: state.streak.current >= 7 },
-      { label: "1000 XP", ok: p.xp >= 1000 },
-      { label: clips > 0 ? `${clips} clip${clips === 1 ? "" : "s"} analysed` : "Analyse a video", ok: clips >= 1 },
-      { label: "10 sessions", ok: completed >= 10 },
-    ];
-  }, [state, info.level, p.xp]);
+  // The badge list IS the catalogue on /achievements, ranked by the same comparator the
+  // Dashboard tile uses. It used to be six hand-written rows, one of which ("1000 XP")
+  // named a badge that exists nowhere in the app.
+  const next = useMemo(() => nextBadges(evaluateAchievements(achievementInput({
+    xp: p.xp,
+    sessions: state.sessions,
+    goals: state.goals,
+    streak: state.streak.current,
+    watchlist: state.watchlist,
+    plans: state.plans,
+    lessons: summarizeLearn(learn),
+    filmClips: loadFilmClips().length,
+  })), 6), [state, p.xp, learn]);
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <Panel className="p-4 lg:col-span-2">
-        <SectionTitle title="Growth curve" hint="Overall rating as you complete real training" />
-        {pts.length > 1 ? <ProgressLine points={pts} height={220} /> : <EmptyState title="Complete a session to plot your curve" icon="📈" />}
+        <SectionTitle title={t("player.growthCurve")} hint={t("player.growthCurveHint")} />
+        {pts.length > 1 ? <ProgressLine points={pts} height={220} /> : <EmptyState title={t("player.plotCurve")} icon="📈" />}
       </Panel>
       <div className="space-y-4">
         <Panel className="p-4">
-          <SectionTitle title="Level" />
+          <SectionTitle title={t("common.level")} />
           <div className="mb-1 flex justify-between text-xs text-muted-foreground"><span>Lv {info.level}</span><span>Lv {info.level + 1}</span></div>
           <Progress value={info.progress * 100} className="h-2" />
-          <div className="mt-2 text-xs text-muted-foreground">{info.forNext - info.intoLevel} XP to next · total {p.xp} XP</div>
+          <div className="mt-2 text-xs text-muted-foreground">{t("player.xpToNextTotal", { a: info.forNext - info.intoLevel, b: p.xp })}</div>
         </Panel>
         <Panel className="p-4">
-          <SectionTitle title="Achievements" />
-          <div className="grid grid-cols-2 gap-2">
-            {achievements.map((a) => (
-              <div key={a.label} className={cn("rounded-lg border px-3 py-2 text-xs", a.ok ? "border-success/40 bg-success/10 text-success" : "text-muted-foreground")}>
-                {a.ok ? "★" : "☆"} {a.label}
+          <SectionTitle title={t("player.nextBadges")} />
+          <div className="space-y-2">
+            {next.map((a) => (
+              <div key={a.id} className="flex items-center gap-2 text-xs">
+                <span className="w-4 shrink-0 text-center">{a.icon}</span>
+                <span className="min-w-0 flex-1 truncate">{t(`ach.name.${a.id}`)}</span>
+                <Progress value={a.pct * 100} className="h-1.5 w-14 shrink-0" />
+                <span className="shrink-0 font-mono tabular-nums text-muted-foreground">{Math.min(a.value, a.target)}/{a.target}</span>
               </div>
             ))}
+            {next.length === 0 && <div className="text-xs text-muted-foreground">{t("player.allBadgesUnlocked")}</div>}
           </div>
         </Panel>
       </div>

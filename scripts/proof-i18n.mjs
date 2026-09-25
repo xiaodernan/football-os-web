@@ -457,6 +457,10 @@ const lower = (xs) => xs.map((x) => x.toLowerCase());
 // a new site rather than silently re-pointing an old one.
 const DYN_SITES = [
   { path: "features/achievements/AchievementsPage.tsx", expr: "a.id", prefix: "ach.name.", suffix: "" },
+  // M176: Player OS's growth tab now walks the /achievements catalogue for its "badges to
+  // earn next" panel, so the same interpolation exists on that screen as well. It used to
+  // be six hand-written strings, one of which named a badge the catalogue does not have.
+  { path: "features/player/PlayerOS.tsx", expr: "a.id", prefix: "ach.name.", suffix: "" },
   { path: "features/dashboard/Dashboard.tsx", expr: "growth.next.id", prefix: "ach.name.", suffix: "" },
   { path: "features/achievements/AchievementsPage.tsx", expr: "a.id", prefix: "ach.desc.", suffix: "" },
   { path: "features/dashboard/Dashboard.tsx", expr: "growth.next.id", prefix: "ach.desc.", suffix: "" },
@@ -1238,7 +1242,10 @@ const RAW_COVERED = [
 // and the growth chart's origin tick stopped being a bare English "start". Those 11 are
 // the *same* kind of removal checks 28/29 now police, so this milestone's registration
 // came with the gate that reads a rename as a rename, not as a translation.
-const RAW_UI_CEILING = 189;
+// 179 as of M176, measured on the gate line: PlayerOS 79 → 69. The ten that left are the
+// growth tab's panel headings, and unlike M174/M175 none of them is a code or a rename —
+// every one is a word a visitor reads. The panel also stopped inventing a badge.
+const RAW_UI_CEILING = 179;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

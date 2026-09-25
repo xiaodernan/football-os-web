@@ -3,6 +3,8 @@
 // a real signal (sessions logged, streak kept, goals met, players watched, plans
 // requested, level reached, academy lessons completed, film clips analysed) so
 // an unlocked badge always has an evidential basis. Pure module: no React, no IO.
+import { levelInfo } from "./xp";
+import type { Goal, TrainingSession } from "./types";
 
 export interface AchievementInput {
   level: number;
@@ -63,6 +65,48 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: "five_clips", group: "analyst", icon: "◫", tier: "silver", target: 5, current: (i) => i.filmClips },
   { id: "ten_clips", group: "analyst", icon: "⧉", tier: "gold", target: 10, current: (i) => i.filmClips },
 ];
+
+/**
+ * The one derivation of an AchievementInput. Three surfaces used to build this object by
+ * hand, and the two counts every training/consistency badge hangs on — completed sessions
+ * and finished goals — are exactly where a screen can quietly disagree with the badge page
+ * it mirrors, so the filters live here and a caller passes what it stores.
+ */
+export function achievementInput(src: {
+  xp: number;
+  sessions: Pick<TrainingSession, "status">[];
+  goals: Pick<Goal, "done">[];
+  streak: number;
+  watchlist: unknown[];
+  plans: unknown[];
+  lessons: { completed: number; mastered: number };
+  filmClips: number;
+}): AchievementInput {
+  return {
+    level: levelInfo(src.xp).level,
+    xp: src.xp,
+    sessions: src.sessions.filter((s) => s.status === "completed").length,
+    streak: src.streak,
+    goalsDone: src.goals.filter((g) => g.done).length,
+    watchlist: src.watchlist.length,
+    plans: src.plans.length,
+    lessonsCompleted: src.lessons.completed,
+    lessonsMastered: src.lessons.mastered,
+    filmClips: src.filmClips,
+  };
+}
+
+/**
+ * The badges still locked, closest to earning first: progress down, then the smaller
+ * target, so a 4/5 badge outranks a 40/50 one. Shared because the Dashboard's "next
+ * badge" tile and the player Progress tab must not rank the same list differently.
+ */
+export function nextBadges(list: AchievementStatus[], n: number): AchievementStatus[] {
+  return list
+    .filter((a) => !a.unlocked)
+    .sort((a, b) => b.pct - a.pct || a.target - b.target)
+    .slice(0, n);
+}
 
 export function evaluateAchievements(input: AchievementInput): AchievementStatus[] {
   return ACHIEVEMENTS.map((a) => {
