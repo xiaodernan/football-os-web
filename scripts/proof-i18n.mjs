@@ -534,6 +534,8 @@ const DYN_SITES = [
   { path: "domain/rowText.ts", expr: "code", prefix: "ai.legend.", suffix: "" },
   // M184: an answer that names a career trajectory resolves it through the player page's
   // own `det.arc.*` rows, so the AI cannot invent a fourth word for the shape of an arc.
+  // M186: a scout headline names attribute categories through the charts' own rows.
+  { path: "domain/rowText.ts", expr: "code", prefix: "attr.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "det.arc.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "onb.goal.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "onb.age.", suffix: "" },
@@ -689,6 +691,9 @@ const SPACES = new Map([
     name: "knowledge-graph entity kinds",
     values: spaceOf("features/ai/AiStudio.tsx", /const TYPE_COLOR[^=]*=[\s\S]*?\};/, /([a-z]+)\s*:\s*"var\(/g),
   }],
+  // M186: a scout headline names two attribute categories by code (`cat` / `cat2`), so it
+  // joins the other category lookups on the same space rather than restating the list.
+  ["attr.|code", S_CAT],
   ["ai.legend.|code", {
     // M183: a source chip resolves its kind through the SAME space the legend uses, and the
     // two lists come from two different files — the retrieval kinds the AI can produce
@@ -1773,13 +1778,13 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // literals across 14 of 31 modules (was 339 across 17 — see the rule note above). The next
 // milestone to localise a module lowers this number and writes the new one here; it never
 // raises it.
-const DOMAIN_PROSE_CEILING = 312;
+const DOMAIN_PROSE_CEILING = 277;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
 // them at 1, 3 and 5 "literals" — an ISO date builder, three €-format arms and five
 // scoreline templates), so pinning them now is free and stops a real sentence landing there.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-file, not just in the total: 24 literals can leave load.ts and enter review.ts and
@@ -1792,7 +1797,7 @@ for (const done of PROSE_ZERO) {
 ok(`the zero list names modules that really are in the tree (${PROSE_ZERO.length})`,
   PROSE_ZERO.every((p) => domainFiles.includes(p.split("/")[1])));
 ok(`the scan is reading the modules that carry the debt (${debtFiles.length} of ${domainFiles.length} files, ${debtTotal} hits)`,
-  domainFiles.length >= 30 && debtFiles.length >= 12 && debtTotal >= 280);
+  domainFiles.length >= 30 && debtFiles.length >= 12 && debtTotal >= 250);
 
 // 31b. The exemption's one hole, closed by name. `data/` is out of scope above because it
 //      carries authored sample copy a reader expects to be prose — lesson texts, news

@@ -3,6 +3,7 @@ import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverag
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
+import type { RowText } from "./rowText";
 
 // Scouting model (spec §28). Deliberately built only from fields the dataset
 // actually provides (overall, potential, value, age, archetype, foot) — it never
@@ -109,10 +110,14 @@ export interface ScoutReport {
   categories: CategoryEdgeRow[];
   strengths: TemplateEdge[];
   concerns: TemplateEdge[];
-  headline: string;
-  evidence: string[];
+  /** The verdict, the ledger lines and the provenance are rows: this module computes
+   *  them from two real vectors, but the words it publishes are the app's, and the app
+   *  has three locales. `attributeLabel`/`CATEGORY_LABEL` stay in the file only as the
+   *  English fallbacks the prose layer uses. */
+  headline: RowText;
+  evidence: RowText[];
   confidence: number;
-  sources: string[];
+  sources: RowText[];
 }
 
 // The reference point is the positional template implied by the player's own
@@ -130,10 +135,10 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
       categories: [],
       strengths: [],
       concerns: [],
-      headline: "No attribute vector provided for this player",
-      evidence: [`Overall ${p.overall} · potential ${p.potential} · ${p.positionGroup}`],
+      headline: { key: "sc.out.head.noVector" },
+      evidence: [{ key: "sc.out.ev.ratings", vars: { overall: p.overall, potential: p.potential, group: p.positionGroup } }],
       confidence: 20,
-      sources: ["World dataset (ratings only)"],
+      sources: [{ key: "sc.out.src.ratingsOnly" }],
     };
   }
 
@@ -154,14 +159,12 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
   const sorted = [...cats].sort((a, b) => b.delta - a.delta);
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
-  const bestLabel = CATEGORY_LABEL[best.category];
-  const worstLabel = CATEGORY_LABEL[worst.category];
-  const headline =
+  const headline: RowText =
     best.delta > 0 && worst.delta < 0
-      ? `${bestLabel} runs ahead of the ${p.positionGroup} template; ${worstLabel} is the shortfall`
+      ? { key: "sc.out.head.mixed", vars: { group: p.positionGroup, cat: best.category, cat2: worst.category } }
       : best.delta > 0
-        ? `Above the ${p.positionGroup} template in every category — strongest is ${bestLabel} (+${best.delta})`
-        : "At or below the positional template across categories";
+        ? { key: "sc.out.head.above", vars: { group: p.positionGroup, cat: best.category, delta: round1(best.delta) } }
+        : { key: "sc.out.head.flat" };
 
   return {
     hasVector: true,
@@ -170,13 +173,21 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
     concerns,
     headline,
     evidence: [
-      `Compared with a ${p.positionGroup} of the same implied skill (${skill.toFixed(2)})`,
-      strengths.length ? `Above template: ${strengths.slice(0, 3).map((s) => `${attributeLabel(s.key)} +${s.delta}`).join(", ")}` : "Nothing above the template",
-      concerns.length ? `Below template: ${concerns.slice(-3).reverse().map((s) => `${attributeLabel(s.key)} ${s.delta}`).join(", ")}` : "Nothing below the template",
-      `Headroom to potential: +${headroom(p)} · value index ${round1(valueIndex(p))}`,
+      { key: "sc.out.ev.compare", vars: { group: p.positionGroup, skill: skill.toFixed(2) } },
+      strengths.length
+        ? { key: "sc.out.ev.above", vars: { focus: strengths.slice(0, 3).map((s) => s.key).join(",") } }
+        : { key: "sc.out.ev.noneAbove" },
+      concerns.length
+        ? { key: "sc.out.ev.below", vars: { focus: concerns.slice(-3).reverse().map((s) => s.key).join(",") } }
+        : { key: "sc.out.ev.noneBelow" },
+      { key: "sc.out.ev.headroom", vars: { headroom: headroom(p), vi: round1(valueIndex(p)) } },
     ],
     confidence: 80,
-    sources: ["World dataset (per-player attribute vector)", "Positional template (baselineAttributes at matched skill)", "Scouting metrics (headroom, value index)"],
+    sources: [
+      { key: "sc.out.src.vector" },
+      { key: "sc.out.src.template" },
+      { key: "sc.out.src.metrics" },
+    ],
   };
 }
 

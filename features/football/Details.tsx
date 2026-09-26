@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
+import { rowLine } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import {
   footballProvider,
@@ -187,7 +188,7 @@ export function PlayerDetail({ id }: { id: string }) {
           <SectionTitle title={t("det.scout.title")} hint={t("det.scout.hint", { group: p.positionGroup })} />
           <Badge variant="outline" className="text-[11px]">{report.hasVector ? t("det.scout.badgeDelta", { n: report.confidence }) : t("det.scout.badgeNone")}</Badge>
         </div>
-        <p className="mt-1 text-sm">{report.headline}</p>
+        <p className="mt-1 text-sm">{rowLine(report.headline, t)}</p>
         {report.hasVector && (
           <div className="mt-3 grid gap-4 sm:grid-cols-3">
             <div>
@@ -225,9 +226,9 @@ export function PlayerDetail({ id }: { id: string }) {
           </div>
         )}
         <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground">
-          {report.evidence.map((e, i) => <li key={i}>› {e}</li>)}
+          {report.evidence.map((e, i) => <li key={i}>› {rowLine(e, t)}</li>)}
         </ul>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">{t("common.sources")}: {report.sources.join(" · ")}</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">{t("common.sources")}: {report.sources.map((s) => rowLine(s, t)).join(" · ")}</p>
       </Panel>
 
       <Panel className="p-4">

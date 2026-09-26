@@ -58,6 +58,13 @@ export function attributesByCategory(category: AttributeDef["category"]): Attrib
 // headlines, review reasons). They are not display labels: a UI slot reads
 // `attr.name.*` / `attr.*` from the dictionary instead, so a row handed to the
 // interface carries a key and cannot smuggle an untranslated noun onto a screen.
+/** Every attribute category, in table order. `attr.*` holds the display words; a row
+ *  names a category by one of these codes. CATEGORY_LABEL below is the English
+ *  fallback for prose-layer callers only — the i18n gate audits that the two agree. */
+export const CATEGORIES: readonly AttributeDef["category"][] = [
+  ...new Set(ATTRIBUTE_DEFS.map((d) => d.category)),
+];
+
 export const CATEGORY_LABEL: Record<AttributeDef["category"], string> = {
   technical: "Technical",
   physical: "Physical",
