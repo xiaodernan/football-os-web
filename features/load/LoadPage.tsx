@@ -45,11 +45,11 @@ export function LoadPage() {
     try {
       const plan = await requestPlan(t("ld.trainPrompt"), planMinutes);
       toast.success(
-        t("ld.trainDone", { m: plan.session.targetMinutes, n: plan.session.exercises.length }),
+        t("common.buildDone", { m: plan.session.targetMinutes, n: plan.session.exercises.length }),
       );
       navigate("/player/training");
     } catch {
-      toast.error(t("ld.trainError"));
+      toast.error(t("common.buildError"));
     } finally {
       setBuilding(false);
     }
@@ -150,7 +150,7 @@ export function LoadPage() {
                     </div>
                     {canPlan ? (
                       <Button size="sm" className="mt-3 w-full" onClick={buildForLoad} disabled={building}>
-                        {building ? t("ld.trainBusy") : t("ld.plan")}
+                        {building ? t("common.buildBusy") : t("ld.plan")}
                       </Button>
                     ) : (
                       <p className="mt-3 text-xs text-muted-foreground">{t("ld.restNote")}</p>

@@ -1,5 +1,6 @@
 import type { Attributes, Goal, TrainingSession } from "./types";
-import { attributeLabel, weakestAttributes } from "./attributes";
+import type { RowText } from "./rowText";
+import { weakestAttributes } from "./attributes";
 import { buildFilmInsights, type FilmClipInput } from "./filmInsights";
 
 // A period digest compiled purely from the user's local training log, goals,
@@ -36,14 +37,18 @@ export type InsightKind = "positive" | "watch" | "plan";
 
 export interface ReviewInsight {
   kind: InsightKind;
-  text: string;
+  text: RowText;
 }
 
 export interface ReviewRecommendation {
   attributeKey: string;
-  reason: string;
+  reason: RowText;
   confidence: number;
 }
+
+// A signed figure, so the `+` a rising rating earns lives in the number the row
+// interpolates and not in a clause the module stitches onto an English sentence.
+const signed = (n: number) => (n >= 0 ? "+" + n : String(n));
 
 export interface WeeklyReview {
   windowDays: number;
@@ -74,9 +79,9 @@ export interface WeeklyReview {
   goalsDone: number;
   insights: ReviewInsight[];
   recommendation: ReviewRecommendation | null;
-  evidence: string[];
+  evidence: RowText[];
   confidence: number;
-  sources: string[];
+  sources: RowText[];
   hasData: boolean;
 }
 
@@ -234,11 +239,11 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     evidence,
     confidence,
     sources: [
-      "Your on-device training log",
-      "Football OS progress history",
-      "Attribute model (demo baseline)",
-      ...(input.learn?.length ? ["Your academy completion records"] : []),
-      ...(film ? ["Your local film library (demo video provider)"] : []),
+      { key: "common.src.log" },
+      { key: "rv.src.progress" },
+      { key: "rv.src.attrModel" },
+      ...(input.learn?.length ? [{ key: "rv.src.academy" }] : []),
+      ...(film ? [{ key: "rv.src.film" }] : []),
     ],
     hasData,
   };
@@ -265,12 +270,15 @@ function buildInsights(a: {
   if (a.completed === 0) {
     out.push({
       kind: "plan",
-      text: `No sessions completed in this window. A single short block restarts the habit — consistency beats volume when you're rebuilding.`,
+      text: { key: "rv.ins.none" },
     });
   } else {
     out.push({
       kind: "positive",
-      text: `You completed ${a.completed} session${a.completed === 1 ? "" : "s"} totalling ${a.minutes} minutes and earned ${a.xpGained} XP.`,
+      text:
+        a.completed === 1
+          ? { key: "rv.ins.doneOne", vars: { min: a.minutes, xp: a.xpGained } }
+          : { key: "rv.ins.doneMany", vars: { n: a.completed, min: a.minutes, xp: a.xpGained } },
     });
   }
 
@@ -279,27 +287,38 @@ function buildInsights(a: {
       kind: a.avgRating >= 4 ? "positive" : "watch",
       text:
         a.avgRating >= 4
-          ? `Your self-rated quality averaged ${a.avgRating}/5 — strong execution; keep the focus tight.`
-          : `Quality averaged ${a.avgRating}/5. Lower ratings often point to fatigue or overly long blocks — consider shorter, sharper sessions.`,
+          ? { key: "rv.ins.qualityHigh", vars: { r: a.avgRating } }
+          : { key: "rv.ins.qualityLow", vars: { r: a.avgRating } },
     });
   }
 
   if (a.overallDelta != null && a.overallDelta !== 0) {
+    const up = a.overallDelta > 0;
+    const n = Math.abs(a.overallDelta);
     out.push({
-      kind: a.overallDelta > 0 ? "positive" : "watch",
-      text:
-        a.overallDelta > 0
-          ? `Your overall rating rose ${a.overallDelta} point${a.overallDelta === 1 ? "" : "s"} across the window.`
-          : `Your weighted overall dipped ${Math.abs(a.overallDelta)} point${Math.abs(a.overallDelta) === 1 ? "" : "s"} — usually a sign focus drifted from priority areas.`,
+      kind: up ? "positive" : "watch",
+      text: up
+        ? n === 1
+          ? { key: "rv.ins.riseOne" }
+          : { key: "rv.ins.riseMany", vars: { n } }
+        : n === 1
+          ? { key: "rv.ins.dipOne" }
+          : { key: "rv.ins.dipMany", vars: { n } },
     });
   }
 
   if (a.streak >= 3) {
-    out.push({ kind: "positive", text: `You're on a ${a.streak}-day streak. Protecting the chain is your biggest lever right now.` });
+    out.push({ kind: "positive", text: { key: "rv.ins.streak", vars: { n: a.streak } } });
   }
 
   if (a.missed > 0 && a.completed > 0) {
-    out.push({ kind: "watch", text: `${a.missed} planned session${a.missed === 1 ? "" : "s"} slipped. Smaller targets are easier to keep.` });
+    out.push({
+      kind: "watch",
+      text:
+        a.missed === 1
+          ? { key: "rv.ins.missedOne" }
+          : { key: "rv.ins.missedMany", vars: { n: a.missed } },
+    });
   }
 
   if (a.topFocus.length) {
@@ -308,7 +327,7 @@ function buildInsights(a: {
     if (weakest && strongest.key !== weakest.key && (a.attributes[weakest.key] ?? 0) < strongest.sessions + 55) {
       out.push({
         kind: "watch",
-        text: `Most of your work hit ${attributeLabel(strongest.key)}, but ${attributeLabel(weakest.key)} is still your lowest attribute. Rotating some attention there keeps development balanced.`,
+        text: { key: "rv.ins.imbalanced", vars: { a: strongest.key, b: weakest.key } },
       });
     }
   }
@@ -316,12 +335,18 @@ function buildInsights(a: {
   if (a.lessonsMastered > 0) {
     out.push({
       kind: "positive",
-      text: `You passed the check quiz on ${a.lessonsMastered} academy lesson${a.lessonsMastered === 1 ? "" : "s"} in this window.`,
+      text:
+        a.lessonsMastered === 1
+          ? { key: "rv.ins.lessonsDoneOne" }
+          : { key: "rv.ins.lessonsDoneMany", vars: { n: a.lessonsMastered } },
     });
   } else if (a.lessonsCompleted > 0) {
     out.push({
       kind: "watch",
-      text: `${a.lessonsCompleted} academy lesson${a.lessonsCompleted === 1 ? "" : "s"} completed but none with a passed check — retaking the quiz is what turns reading into retention.`,
+      text:
+        a.lessonsCompleted === 1
+          ? { key: "rv.ins.lessonsReadOne" }
+          : { key: "rv.ins.lessonsReadMany", vars: { n: a.lessonsCompleted } },
     });
   }
 
@@ -329,17 +354,14 @@ function buildInsights(a: {
     const f = a.film;
     out.push({
       kind: "positive",
-      text: `You analysed ${f.clips} film clip${f.clips === 1 ? "" : "s"} in this window — ${f.analysedMinutes.toFixed(1)} min of video, ${f.detections} detection${f.detections === 1 ? "" : "s"} at ${f.avgConfidence}% mean provider confidence.`,
+      text:
+        f.clips === 1
+          ? { key: "rv.ins.filmOne", vars: { min: f.analysedMinutes.toFixed(1), conf: f.avgConfidence, d: f.detections } }
+          : { key: "rv.ins.filmMany", vars: { n: f.clips, min: f.analysedMinutes.toFixed(1), conf: f.avgConfidence, d: f.detections } },
     });
-    const trendClause =
-      f.scanTrend != null
-        ? ` — ${f.olderScanRate?.toFixed(2)} → ${f.newerScanRate?.toFixed(2)} per minute between the older and newer half (${f.scanTrend >= 0 ? "+" : ""}${f.scanTrend}).`
-        : f.clips === 1
-          ? " — analyse a second clip to see which way it is moving."
-          : "";
     out.push({
       kind: f.scanTrend == null ? "positive" : f.scanTrend >= 0 ? "positive" : "watch",
-      text: `Scanning off the ball averaged ${f.scanPerMinute.toFixed(2)} per minute of analysed video${trendClause}`,
+      text: scanInsight(f),
     });
     if (f.topFocus.length) {
       const trainedKeys = new Set(a.topFocus.map((x) => x.key));
@@ -347,19 +369,43 @@ function buildInsights(a: {
       if (unfed.length) {
         out.push({
           kind: "plan",
-          text: `Flagged by the clips but absent from your training: ${unfed.map((u) => `${attributeLabel(u.key)} (×${u.clips})`).join(", ")}. No completed session in this window carried ${unfed.length === 1 ? "that focus" : "those focuses"} — the plan and the film are pointing different ways.`,
+          text:
+            unfed.length === 1
+              ? { key: "rv.ins.unfedOne", vars: { focus: unfed.map((u) => u.key).join(",") } }
+              : { key: "rv.ins.unfedMany", vars: { focus: unfed.map((u) => u.key).join(",") } },
         });
       } else {
         const top = f.topFocus[0];
         out.push({
           kind: "positive",
-          text: `The focus your clips repeated most — ${attributeLabel(top.key)} on ${top.clips} clip${top.clips === 1 ? "" : "s"} — is also in your completed training mix, so plan and observed evidence agree.`,
+          text:
+            top.clips === 1
+              ? { key: "rv.ins.focusAgreeOne", vars: { a: top.key } }
+              : { key: "rv.ins.focusAgreeMany", vars: { a: top.key, n: top.clips } },
         });
       }
     }
   }
 
   return out;
+}
+
+// The scanning line used to be one sentence plus a clause the module appended in code:
+// `{base}{trendClause}`. That is untranslatable by construction — a target language
+// with the direction word before the figure would need the fragments reordered, not
+// rejoined — so each of the three shapes the model can be in is now a row of its own,
+// carrying every figure it names.
+function scanInsight(f: FilmSummary): RowText {
+  const rate = f.scanPerMinute.toFixed(2);
+  const older = f.olderScanRate;
+  const newer = f.newerScanRate;
+  if (f.scanTrend != null && older != null && newer != null) {
+    return {
+      key: "rv.ins.scanTrend",
+      vars: { rate, older: older.toFixed(2), newer: newer.toFixed(2), trend: signed(f.scanTrend) },
+    };
+  }
+  return f.clips === 1 ? { key: "rv.ins.scanSecond", vars: { rate } } : { key: "rv.ins.scan", vars: { rate } };
 }
 
 function buildRecommendation(
@@ -384,11 +430,15 @@ function buildRecommendation(
   const filmPick = filmFocus ? weak.find((w) => w.key === filmFocus.key) : undefined;
   const pick = filmPick ?? ranked[0] ?? weak[0];
   const already = trained.get(pick.key) ?? 0;
-  const reason = filmPick && filmFocus
-    ? `${attributeLabel(pick.key)} is what your analysed clips repeated (${filmFocus.clips} clip${filmFocus.clips === 1 ? "" : "s"} this window) and it sits at ${pick.value} — observed evidence and development ceiling point the same way.`
+  const reason: RowText = filmPick && filmFocus
+    ? filmFocus.clips === 1
+      ? { key: "rv.reco.filmOne", vars: { a: pick.key, v: pick.value } }
+      : { key: "rv.reco.filmMany", vars: { a: pick.key, n: filmFocus.clips, v: pick.value } }
     : already > 0
-      ? `${attributeLabel(pick.key)} sits at ${pick.value} and you already logged ${already} block${already === 1 ? "" : "s"} — progressive overload should move it next.`
-      : `${attributeLabel(pick.key)} is your lowest untapped attribute at ${pick.value}. A focused block would raise your overall ceiling fastest.`;
+      ? already === 1
+        ? { key: "rv.reco.trainedOne", vars: { a: pick.key, v: pick.value } }
+        : { key: "rv.reco.trainedMany", vars: { a: pick.key, n: already, v: pick.value } }
+      : { key: "rv.reco.untapped", vars: { a: pick.key, v: pick.value } };
 
   const conf = Math.min(90, 50 + completed * 5 + ratedCount * 3 + (already > 0 ? 10 : 0) + (filmPick ? 12 : 0));
   return { attributeKey: pick.key, reason, confidence: conf };
@@ -408,19 +458,30 @@ function buildEvidence(a: {
   lessonsCompleted: number;
   lessonsMastered: number;
   film: FilmSummary | null;
-}): string[] {
-  const e: string[] = [];
-  e.push(`Window: last ${a.windowDays} days`);
-  e.push(`${a.completed} completed · ${a.minutes} min · ${a.xpGained} XP`);
-  if (a.avgRating != null) e.push(`Average self-rating ${a.avgRating}/5`);
-  if (a.overallDelta != null) e.push(`Overall change ${a.overallDelta >= 0 ? "+" : ""}${a.overallDelta}`);
-  if (a.streak) e.push(`Current streak ${a.streak}d`);
-  if (a.topFocus.length) e.push(`Focus mix: ${a.topFocus.map((f) => `${attributeLabel(f.key)} ×${f.sessions}`).join(", ")}`);
-  if (a.goalsTotal) e.push(`Goals met ${a.goalsDone}/${a.goalsTotal}`);
-  if (a.lessonsCompleted) e.push(`Academy ${a.lessonsCompleted} completed · ${a.lessonsMastered} with a passed check`);
+}): RowText[] {
+  const e: RowText[] = [];
+  e.push({ key: "rv.ev.window", vars: { n: a.windowDays } });
+  e.push({ key: "rv.ev.done", vars: { n: a.completed, min: a.minutes, xp: a.xpGained } });
+  if (a.avgRating != null) e.push({ key: "rv.ev.rating", vars: { r: a.avgRating } });
+  if (a.overallDelta != null) e.push({ key: "rv.ev.delta", vars: { value: signed(a.overallDelta) } });
+  if (a.streak) e.push({ key: "rv.ev.streak", vars: { n: a.streak } });
+  if (a.topFocus.length)
+    e.push({
+      key: "rv.ev.focus",
+      vars: { focus: a.topFocus.map((f) => f.key).join(","), n: a.topFocus.reduce((s, f) => s + f.sessions, 0) },
+    });
+  if (a.goalsTotal) e.push({ key: "rv.ev.goals", vars: { done: a.goalsDone, total: a.goalsTotal } });
+  if (a.lessonsCompleted) e.push({ key: "rv.ev.academy", vars: { n: a.lessonsCompleted, m: a.lessonsMastered } });
   if (a.film) {
-    e.push(`Film ${a.film.clips} clip${a.film.clips === 1 ? "" : "s"} · ${a.film.analysedMinutes.toFixed(1)} min · ${a.film.detections} detections`);
-    e.push(`Scanning ${a.film.scanPerMinute.toFixed(2)}/min${a.film.scanTrend != null ? ` (trend ${a.film.scanTrend >= 0 ? "+" : ""}${a.film.scanTrend})` : ""}`);
+    const min = a.film.analysedMinutes.toFixed(1);
+    const d = a.film.detections;
+    e.push(
+      a.film.clips === 1
+        ? { key: "rv.ev.filmOne", vars: { min, d } }
+        : { key: "rv.ev.filmMany", vars: { n: a.film.clips, min, d } },
+    );
+    const rate = a.film.scanPerMinute.toFixed(2);
+    e.push(a.film.scanTrend != null ? { key: "rv.ev.scanTrend", vars: { rate, trend: signed(a.film.scanTrend) } } : { key: "rv.ev.scan", vars: { rate } });
   }
   return e;
 }

@@ -21,6 +21,21 @@ interface I18nValue {
 
 const I18nContext = createContext<I18nValue | null>(null);
 
+/** The app's ONE interpolator: read the reader's own row and fill every occurrence of
+ *  `{name}`. Exported as a plain function so the proof scripts resolve rows through this
+ *  same code path instead of a hand-copy of it — a copy can drift from what the screen
+ *  prints, and then the gate measures the copy. */
+export function translate(locale: Locale, key: string, vars?: Record<string, string | number>): string {
+  const table = DICTIONARIES[locale] ?? DICTIONARIES.en;
+  let str = table[key] ?? DICTIONARIES.en[key] ?? key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      str = str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+    }
+  }
+  return str;
+}
+
 function detectLocale(): Locale {
   if (typeof localStorage !== "undefined") {
     const s = localStorage.getItem(STORAGE_KEY) as Locale | null;
@@ -49,16 +64,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const setLocale = useCallback((l: Locale) => setLocaleState(l), []);
 
   const t = useCallback(
-    (key: string, vars?: Record<string, string | number>) => {
-      const table = DICTIONARIES[locale] ?? DICTIONARIES.en;
-      let str = table[key] ?? DICTIONARIES.en[key] ?? key;
-      if (vars) {
-        for (const [k, v] of Object.entries(vars)) {
-          str = str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
-        }
-      }
-      return str;
-    },
+    (key: string, vars?: Record<string, string | number>) => translate(locale, key, vars),
     [locale],
   );
 

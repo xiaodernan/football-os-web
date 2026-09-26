@@ -127,7 +127,7 @@ export function buildLoad(input: LoadInput): LoadSummary {
   const evidence = buildEvidence(totalSessions, durationMin, weekLoad, acute, chronic, acwr, activeWeeks, weekly.length, monotony, strain);
 
   const sources: RowText[] = [
-    { key: "ld.src.log" },
+    { key: "common.src.log" },
     { key: "ld.src.rpe" },
     { key: "ld.src.bands" },
   ];

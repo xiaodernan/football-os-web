@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M178 (a few numbers in that range
+Work ships one milestone per commit and is currently at M179 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -1890,6 +1890,68 @@ sentence written back into `load.ts` (which trips both the per-file zero and the
 Verification boundary unchanged from M175–M177: the in-app browser still does not commit a
 React tree, so no rendered-page claim is made here — the evidence is `tsc`, the build, the
 two gates and the probe record.
+
+### M179 — The weekly review speaks in rows, and nine dictionary rows turned out to be three sentences
+
+`domain/review.ts` was the last model on a shipped screen that still wrote its own English:
+37 sentence-shaped literals — the highlight lines, the suggested-focus reason, the evidence
+ledger, the source chips — which `ReviewPage` printed raw as `{ins.text}`, `{e}` and `{s}`.
+They are 51 rows now, ×3 locales, and every read site on the screen goes through `rowLine`.
+
+Three things the conversion turned up that a straight "move the strings" pass would have
+walked past:
+
+- **The scanning sentence was two fragments joined in code.** `{base}{trendClause}` is not a
+  sentence a translator can fix after the fact — the target language's word order decides
+  whether the fragment reads at all. It is three rows now (`rv.ins.scan`, `.scanTrend`,
+  `.scanSecond`), each carrying every figure it names, chosen by the model's own branch.
+- **A sentence can need two attribute names.** `rv.ins.imbalanced` compares the focus you
+  trained most with your lowest attribute, so `CODE_VARS` gained `b` beside `a`: a row
+  variable whose *value* is a code, resolved through the reader's dictionary by the one
+  interpreter. The One/Many arms follow the convention the app already had (`learn.attemptOne`,
+  `comm.nThreadsOne`); where a sentence held a second countable, it is phrased plural-neutral
+  ("detection count {d}") rather than multiplied into four arms. One honest narrowing: the
+  "flagged by the clips but absent from your training" line names the focuses and no longer
+  repeats each one's clip tally — the "Repeated focus" chips beside it carry those numbers.
+- **Two screens had minted the same sentences twice.** `rv.recoBusy/recoDone/recoError` and
+  `ld.trainBusy/ld.trainDone/ld.trainError` were byte-identical in *all three* locales — nine
+  rows for one shared toast trio, and the training-log source chip was a tenth shared by
+  `/load`. They are `common.build*` and `common.src.log` now, and check 32 keeps the class
+  shut: no English sentence of 20+ characters may be carried by two keys (441 sentences
+  screened, 0 shared).
+
+Check 28's hand-written list of row read-sites was the milestone's own miss. Its probe —
+print `{ins.text}` raw instead of interpreting it — stayed green, because the list named
+`m.text` and `g.title` and nobody had added this screen. So 28c derives the property names
+from the `RowText` annotations in the interfaces themselves and resolves them **per
+component**: a name only gates where that file cannot confuse it with a plain-string field
+of the same name. Gating on the global intersection instead measured 2 fields and 1 read
+site, i.e. a gate that guards nothing, which is why the shadowing is per reader. Screened
+against the same logic, check 7's simplified-character list was also stale about itself —
+its name said 16, its string held 18, and a wider pass over all 1,313 zh-TW values found one
+pre-existing 后 where 後 was meant. The count is derived now and the list is 19.
+
+The proof side got one structural fix: `i18n`'s interpolator is an exported `translate()`
+and `scripts/lib/rows.mjs` hands it to the gates, so `proof-review`, `proof-load`,
+`proof-m65` and `proof-m73` resolve rows through the code the screen runs instead of four
+hand-copies of it. The new `scripts/proof-review.mjs` is 49 checks over 6 fixtures: 95 rows
+read in 3 locales, no key or placeholder leaked, the right One/Many arm for each count,
+every One/Many pair carrying the same figures apart from its number, and each sentence's
+digits equal to what the model computed.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is now **27 scripts / 1280
+checks** (proof-i18n **143**, proof-review **49** new). Dictionary **1313 keys × 3 locales**
+(1269 + 51 − 7 collapsed). The domain-prose ceiling falls **376 → 339 literals**, 18 files →
+17, and the per-file zero list is declared: `load.ts` and `review.ts`. Covered set stays 36
+files, raw-UI debt 179 across 4 — this milestone moved prose out of a model, not out of a
+component. Twelve mutation probes, all red on their own clause and all restored
+byte-identical: One/Many arms swapped, a row dropping its XP variable, a placeholder renamed
+in one locale only, `b` out of `CODE_VARS`, an insight printed raw, a signed number spelled
+in English again (which trips the ceiling *and* the per-file zero), a second key for a
+sentence the dictionary already carried, the app's own interpolator told to stop filling
+variables, focus blocks counted as lines, the trend arm of the scanning row deleted, the
+academy chip advertised with no academy records, and P5 rerun against both gates.
+Verification boundary unchanged: no rendered-page claim is made here.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

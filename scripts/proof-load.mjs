@@ -1,22 +1,14 @@
 import { createServer } from "vite";
 import { readFileSync } from "node:fs";
+import { makeSay } from "./lib/rows.mjs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { buildLoad, ACUTE_DAYS, CHRONIC_DAYS, ZONE_LABEL, ZONE_LEGEND, ACWR_BANDS, WEEKS_TO_SETTLE, classifyZone } = await server.ssrLoadModule("/domain/load.ts");
-const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
-const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 
-// Resolve a row the way the screen does. t() in i18n/index.tsx fills every occurrence of
-// `{name}` by global replace, and proof-i18n check 27 pins that shape, so a row which
-// leaks a placeholder here is a row which leaks one on the page.
-const localeT = (locale) => (key, vars) => {
-  let str = DICTIONARIES[locale][key];
-  if (str === undefined) return "⟨missing:" + key + "⟩";
-  for (const [name, v] of Object.entries(vars ?? {})) str = str.split("{" + name + "}").join(String(v));
-  return str;
-};
-const DICT_LOCALES = Object.keys(DICTIONARIES);
-const say = (locale) => (row) => rowLine(row, localeT(locale));
+// Resolve a row the way the screen does: through i18n's own translate(), not a copy of
+// it, so the gate cannot drift from what the page prints. proof-i18n check 27 pins the
+// fill-every-occurrence shape that function has.
+const { say, rowLine, DICTIONARIES, locales: DICT_LOCALES } = await makeSay(server);
 
 // Fixed, midday "now" so day-window boundaries (7d / 28d) never straddle a
 // partial day — every session below sits unambiguously inside or outside each
@@ -243,7 +235,7 @@ ok("the load model emits prose only as rows (" + ALL_ROWS.length + " rows over "
 const leaks = [];
 for (const loc of DICT_LOCALES) for (const x of FIX) for (const r of ROWS(x)) {
   const s = say(loc)(r);
-  if (s === "" || /⟨missing:|\{|ld\.[a-z]/.test(s)) leaks.push(loc + ": " + s.slice(0, 64));
+  if (s === "" || /\{|ld\.[a-z]/.test(s)) leaks.push(loc + ": " + s.slice(0, 64));
 }
 ok("no row leaks a key, an unfilled placeholder or an empty line in any locale (" + leaks.length + " leaks)",
   DICT_LOCALES.length === 3 && leaks.length === 0);

@@ -1,9 +1,14 @@
 import { createServer } from "vite";
+import { makeSay } from "./lib/rows.mjs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { sweepOverdueSessions } = await server.ssrLoadModule("/domain/training.ts");
 const { buildReview } = await server.ssrLoadModule("/domain/review.ts");
 const { buildLoad } = await server.ssrLoadModule("/domain/load.ts");
+// M179: review insights are rows now, so the slipped-session check reads them the way
+// the screen does instead of testing a string the module no longer returns.
+const { say: sayIn } = await makeSay(server);
+const say = sayIn("en");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -59,7 +64,7 @@ const review = buildReview({
 });
 ok("review counts 2 missed", review.missed === 2);
 ok("review counts 1 completed", review.completed === 1);
-ok("review slipped insight fires", review.insights.some((i) => i.kind === "watch" && /slipped/.test(i.text)));
+ok("review slipped insight fires", review.insights.some((i) => i.kind === "watch" && /slipped/.test(say(i.text))));
 
 // Without the sweep the missed count was permanently zero (the dead signal).
 const unswept = buildReview({

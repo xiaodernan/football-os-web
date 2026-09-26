@@ -1,8 +1,16 @@
 import { createServer } from "vite";
+import { makeSay } from "./lib/rows.mjs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { buildReview } = await server.ssrLoadModule("/domain/review.ts");
 const { baselineAttributes } = await server.ssrLoadModule("/domain/attributes.ts");
+
+// M179: the review model stopped typing English and started publishing rows, so every
+// prose assertion below has to say the row the way the /review screen does — through
+// i18n's own translate(), so a row that leaks a key or an unfilled placeholder fails
+// here rather than on the visitor's screen.
+const { say: sayIn } = await makeSay(server);
+const say = sayIn("en");
 
 const DAY = 86400000;
 const now = Date.parse("2026-09-22T12:00:00Z");
@@ -76,10 +84,10 @@ const r90 = base(90);
 ok("90d window includes the 60-day clip", r90.filmClips === 3, `filmClips=${r90.filmClips}`);
 ok("no lifetime numbers leak into the 7d digest", r7.filmClips !== r90.filmClips);
 
-const texts = r7.insights.map((i) => i.text);
+const texts = r7.insights.map((i) => say(i.text));
 ok(
   "film digest insight present",
-  texts.some((t) => t.includes("2 film clips") && t.includes("39 detections") && t.includes("78% mean provider confidence")),
+  texts.some((t) => t.includes("2 film clips") && t.includes("detection count 39") && t.includes("78% mean provider confidence")),
   texts.find((t) => t.includes("film clip")) ?? "(none)",
 );
 ok(
@@ -90,17 +98,23 @@ ok(
 ok("older-vs-newer half quoted", texts.some((t) => t.includes("8.33 → 5.00 per minute") && t.includes("(-3.33)")));
 ok(
   "film-vs-training mismatch surfaced as a plan",
-  r7.insights.some((i) => i.kind === "plan" && i.text.includes("Flagged by the clips but absent from your training")),
-  r7.insights.find((i) => i.text.includes("Flagged by"))?.text ?? "(none)",
+  r7.insights.some((i) => i.kind === "plan" && say(i.text).includes("Flagged by the clips but absent from your training")),
+  texts.filter((t) => t.startsWith("Flagged"))[0] ?? "(none)",
+);
+ok(
+  "the unfed focus is named as a code the reader's own locale resolves",
+  r7.insights.some((i) => say(i.text).includes("Game Intelligence") && !say(i.text).includes("game_intelligence")),
+  texts.filter((t) => t.startsWith("Flagged"))[0] ?? "(none)",
 );
 
-const ev = r7.evidence;
-ok("evidence carries the film line", ev.some((e) => e === "Film 2 clips · 5.0 min · 39 detections"), ev.find((e) => e.startsWith("Film")) ?? "(none)");
+const ev = r7.evidence.map(say);
+ok("evidence carries the film line", ev.some((e) => e === "Film · 2 clips · 5.0 min · detection count 39"), ev.find((e) => e.startsWith("Film")) ?? "(none)");
 ok("evidence carries the scanning line", ev.some((e) => e === "Scanning 7.00/min (trend -3.33)"), ev.find((e) => e.startsWith("Scanning")) ?? "(none)");
-ok("sources name the film library", r7.sources.some((s) => s.includes("film library")), r7.sources.join(" | "));
+const srcs = r7.sources.map(say);
+ok("sources name the film library", srcs.some((s) => s.includes("film library")), srcs.join(" | "));
 
 const rNoFilm = base(7, { film: [] });
-ok("no film -> zeroed fields, no film lines", rNoFilm.filmClips === 0 && rNoFilm.sources.every((s) => !s.includes("film library")));
+ok("no film -> zeroed fields, no film lines", rNoFilm.filmClips === 0 && rNoFilm.sources.every((s) => !say(s).includes("film library")));
 const thin = { film: [clip(now - 2 * DAY, 120, 10), clip(now - 5 * DAY, 180, 25)] };
 const thinBase = { sessions: [], goals: [], progress: [], streak: 0, learn: [] };
 const rThinFilm = base(7, { ...thinBase, film: thin.film });
@@ -110,26 +124,26 @@ ok(
   rThinFilm.confidence > rThinNone.confidence && rThinFilm.confidence <= 30,
   `${rThinNone.confidence}% -> ${rThinFilm.confidence}%`,
 );
-ok("film insight never invented without clips", !rNoFilm.insights.some((i) => i.text.includes("Scanning")));
+ok("film insight never invented without clips", !rNoFilm.insights.some((i) => say(i.text).includes("Scanning")));
 
 ok(
   "recommendation defers to repeated film evidence",
-  r7.recommendation?.attributeKey === "game_intelligence" && r7.recommendation.reason.includes("clips repeated"),
-  `${r7.recommendation?.attributeKey}: ${r7.recommendation?.reason}`,
+  r7.recommendation?.attributeKey === "game_intelligence" && say(r7.recommendation.reason).includes("clips repeated"),
+  `${r7.recommendation?.attributeKey}: ${say(r7.recommendation?.reason)}`,
 );
 ok(
   "without film the recommendation is the plain heuristic",
-  rNoFilm.recommendation?.reason.includes("untapped") || rNoFilm.recommendation?.reason.includes("progressive overload"),
-  rNoFilm.recommendation?.reason ?? "(none)",
+  /untapped|progressive overload/.test(say(rNoFilm.recommendation.reason)),
+  say(rNoFilm.recommendation.reason),
 );
 
 const r3 = base(3);
 ok("single clip -> no trend invented", r3.filmClips === 1 && r3.filmScanTrend === null, `clips=${r3.filmClips} trend=${r3.filmScanTrend}`);
-ok("single clip asks for a second instead of a fake trend", r3.insights.some((i) => i.text.includes("analyse a second clip")));
+ok("single clip asks for a second instead of a fake trend", r3.insights.some((i) => say(i.text).includes("analyse a second clip")));
 
 const filmOnly = base(7, { sessions: [] });
 ok("film alone still makes a review worth showing", filmOnly.hasData && filmOnly.filmClips === 2);
-ok("film-only review keeps the empty-training plan line", filmOnly.insights[0].kind === "plan" && filmOnly.insights[0].text.includes("No sessions completed"));
+ok("film-only review keeps the empty-training plan line", filmOnly.insights[0].kind === "plan" && say(filmOnly.insights[0].text).includes("No sessions completed"));
 
 const kinds = r7.filmKinds.map((k) => `${k.kind}:${k.count}:${k.perMinute}`);
 ok("per-kind rates exposed for the panel", kinds.includes("scan:35:7") && kinds.includes("pass:2:0.4"), kinds.join(", "));

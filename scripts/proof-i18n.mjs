@@ -186,10 +186,14 @@ for (let i = 0; i < bounds.length; i++) {
 //    general defence is check 6 plus review. Widening it to the full 3800-char
 //    table would fail on legitimate variants and would mean vendoring a converter
 //    into a proof script for a static site.
-const SIMPLIFIED_SEEN = "赛进档属训练标视频术体战经验龄评画并";
+//    M179 added 后: all 1313 zh-TW values were screened against a much wider simplified
+//    table and it was the single survivor — in "…請求一份計畫，然后再回來", where the
+//    writer means 後 ("then") and 后 is an empress. That is a pre-existing row, not one
+//    this milestone wrote, which is the point of screening the whole block.
+const SIMPLIFIED_SEEN = "赛进档属训练标视频术体战经验龄评画并后";
 const twValues = valuesOf(2);
 const strays = [...new Set(twValues.flatMap((v) => [...v]).filter((c) => SIMPLIFIED_SEEN.includes(c)))];
-ok(`no zh-TW value reintroduces one of the 16 简体 characters M143 corrected (${strays.join("") || "none"})`,
+ok(`no zh-TW value reintroduces one of the ${SIMPLIFIED_SEEN.length} 简体 characters the audits corrected (${strays.join("") || "none"})`,
   strays.length === 0);
 
 // 8. A label held in a variable is invisible to check 4 — `t(tab.label)` contains
@@ -1036,6 +1040,60 @@ ok("every read of a RowText map is resolved by rowLine (" + ROW_MAPS.length + " 
   ROW_MAPS.length >= 2 && mapReads >= 5 && bareMapReads.length === 0);
 for (const b of bareMapReads.slice(0, 8)) console.log("       bare map read: " + b);
 
+// 28c. The same fact, one step further: which names the derivation above is ALLOWED to
+//      read. A component that prints a row field raw renders "[object Object]" — check 28
+//      covers a hand-written list of read sites and check 28b derived RowText maps, and
+//      M179's probe found the /review screen's `{ins.text}` outside both. The type
+//      annotation in the domain interface is the fact, so the field names come from there.
+//      A name is only usable where it is unambiguous AT THE READER: a component that
+//      imports review.ts (`evidence: RowText[]`) and also a module typing `evidence:
+//      string[]` cannot be checked by name, so shadowing is computed per component rather
+//      than across the whole tree — gating on the global intersection measured 2 fields
+//      and 1 read site, i.e. a gate that guards nothing.
+const domainTs = [...appSrc].filter(([p2]) => p2.endsWith(".ts") && !p2.endsWith("rowText.ts"));
+const rowFields = new Map();
+const stringFields = new Map();
+for (const [dp, code] of domainTs) {
+  for (const m of code.matchAll(/^\s*(\w+)\s*:\s*(?:readonly\s+)?RowText(?:\[\])?;$/gm)) {
+    if (!rowFields.has(m[1])) rowFields.set(m[1], []);
+    if (!rowFields.get(m[1]).includes(dp)) rowFields.get(m[1]).push(dp);
+  }
+  for (const m of code.matchAll(/^\s*(\w+)\s*:\s*(?:readonly\s+)?string(?:\[\])?;$/gm)) {
+    if (!stringFields.has(m[1])) stringFields.set(m[1], []);
+    if (!stringFields.get(m[1]).includes(dp)) stringFields.get(m[1]).push(dp);
+  }
+}
+const bareRowReads = [];
+const gatedReads = new Map();
+for (const [p2, body] of TSX) {
+  const imports = new Set([...body.matchAll(/from\s+"@\/([^"]+)"/g)].map((m) => m[1].replace(/\.tsx?$/, "")));
+  for (const [field, mods] of rowFields) {
+    const rowsHere = mods.filter((m) => imports.has(m.replace(/\.ts$/, "")));
+    if (!rowsHere.length) continue;
+    if ((stringFields.get(field) ?? []).some((m) => imports.has(m.replace(/\.ts$/, "")))) continue;
+    for (const hit of body.matchAll(new RegExp("\\{\\s*(rowLine\\(\\s*)?([A-Za-z_$][\\w$.]*\\.)?" + field + "\\s*[,}]", "g"))) {
+      const key = `${p2.split("/").pop()} · ${field}`;
+      gatedReads.set(key, (gatedReads.get(key) ?? 0) + 1);
+      if (hit[1]) continue; // wrapped: `{rowLine(x.field, t)}`
+      bareRowReads.push(`${p2}: {${hit[2] ?? ""}${field}…}`);
+    }
+  }
+}
+const gatedSites = [...gatedReads.keys()];
+const gatedCount = [...gatedReads.values()].reduce((n, k) => n + k, 0);
+ok(`every JSX read of a row field the reader cannot confuse is resolved by rowLine (${gatedSites.length} file/field pairs, ${gatedCount} reads, ${bareRowReads.length} bare)`,
+  bareRowReads.length === 0);
+for (const b of bareRowReads.slice(0, 8)) console.log("       bare row read: " + b);
+// Non-vacuity: the rule has to be reading the review screen's rows, which is the site
+// that started this. A pattern that matched nothing would pass the check above. Array
+// fields are not in scope here — a bare one renders its ELEMENT, not the array, so the
+// map itself looks identical either way; those are check 28b's and proof-review's.
+ok(`the derivation is reading the /review screen's prose fields (${gatedSites.filter((k) => k.includes("ReviewPage")).length} of them)`,
+  gatedSites.includes("ReviewPage.tsx · text") &&
+  gatedSites.includes("ReviewPage.tsx · reason") &&
+  gatedSites.includes("LoadPage.tsx · advice"));
+
+
 // 22. Raw UI text, measured across the whole app rather than one screen at a
 //     time. scripts/lib/rawUiScan.mjs reads the three positions a reader of the
 //     interface actually sees — a JSX text node, a display prop or in-line
@@ -1558,19 +1616,50 @@ const domainFiles = readdirSync(join(root, "domain")).filter((f) => f.endsWith("
 const debt = domainFiles.map((f) => ["domain/" + f, proseDebt("domain/" + f)]);
 const debtTotal = debt.reduce((n, [, h]) => n + h.length, 0);
 const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
-const loadDebt = debt.find(([p]) => p === "domain/load.ts")?.[1] ?? [];
-// Measured on the gate line at M178, after load.ts reached zero: 376 literals across 18
+// Measured on the gate line at M179, after review.ts reached zero: 339 literals across 17
 // of 31 modules. The next milestone to localise a module lowers this number and writes
 // the new one here — it never raises it.
-const DOMAIN_PROSE_CEILING = 376;
+const DOMAIN_PROSE_CEILING = 339;
+// Modules whose prose is fully keyed. A milestone adds its module to this list in the
+// same commit that empties it; nothing removes an entry without putting the words back.
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-file, not just in the total: 24 literals can leave load.ts and enter review.ts and
 // the ceiling above still passes. A module that reaches zero stays at zero.
-ok(`domain/load.ts publishes no sentence of its own (${loadDebt.length} left on lines ${loadDebt.slice(0, 6).join(",")})`,
-  loadDebt.length === 0);
+for (const done of PROSE_ZERO) {
+  const left = debt.find(([p]) => p === done)?.[1] ?? [];
+  ok(`${done} publishes no sentence of its own (${left.length} left on lines ${left.slice(0, 6).join(",")})`,
+    left.length === 0);
+}
+ok(`the zero list names modules that really are in the tree (${PROSE_ZERO.length})`,
+  PROSE_ZERO.every((p) => domainFiles.includes(p.split("/")[1])));
 ok(`the scan is reading the modules that carry the debt (${debtFiles.length} of ${domainFiles.length} files, ${debtTotal} hits)`,
   domainFiles.length >= 30 && debtFiles.length >= 15 && debtTotal >= 300);
+
+// 32. One English sentence, one key. Check 30 pins a handful of declared shared words;
+// this is the same drift class measured across the whole dictionary instead of a list
+// someone has to remember to lengthen. M179 found it while moving the review prose: the
+// `/review` and `/load` "build my session" buttons carried their own byte-identical
+// triples — `rv.recoBusy/Done/Error` and `ld.trainBusy/Done/Error`, nine rows across the
+// three locales — so a translation could land on one screen and miss the other while
+// every check above stayed green. Short labels are excluded on purpose ("Pass" as a stat
+// name and "Pass" as a verb are different strings with different futures); a sentence is
+// not.
+const SENTENCE_MIN = 20;
+const shared = new Map();
+for (const [k, v] of pairsOf(0)) {
+  const t = v.trim();
+  if (t.length < SENTENCE_MIN) continue;
+  if (!shared.has(t)) shared.set(t, []);
+  shared.get(t).push(k);
+}
+const twiceCarried = [...shared.entries()].filter(([, ks]) => ks.length > 1);
+ok(`no English sentence is carried by two keys (${twiceCarried.length} of ${shared.size} sentences shared)`,
+  twiceCarried.length === 0);
+for (const [v, ks] of twiceCarried.slice(0, 5)) console.log(`       duplicated: ${ks.join(" | ")} — ${v.slice(0, 60)}`);
+ok(`the collapsed triples are read as one row by both screens (${[...appSrc.values()].reduce((n, c) => n + (c.match(/\bt\(\s*"common\.build/g) ?? []).length, 0)} sites)`,
+  [...appSrc.values()].reduce((n, c) => n + (c.match(/\bt\(\s*"common\.build/g) ?? []).length, 0) === 6);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

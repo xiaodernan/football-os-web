@@ -4,6 +4,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import { buildReview, type WeeklyReview } from "@/domain/review";
+import { rowLine } from "@/domain/rowText";
 import { attributeGoalTitle } from "@/domain/goals";
 import { useLearnRecords, useFilmClips } from "@/lib/hooks";
 import { DEMO_MODE } from "@/data/footballService";
@@ -65,11 +66,11 @@ export function ReviewPage() {
     try {
       const plan = await requestPlan(t("rv.recoPrompt"), 30, [key]);
       toast.success(
-        t("rv.recoDone", { m: plan.session.targetMinutes, n: plan.session.exercises.length }),
+        t("common.buildDone", { m: plan.session.targetMinutes, n: plan.session.exercises.length }),
       );
       navigate("/player/training");
     } catch {
-      toast.error(t("rv.recoError"));
+      toast.error(t("common.buildError"));
     } finally {
       setBuilding(false);
     }
@@ -188,7 +189,7 @@ export function ReviewPage() {
               <div className="mt-2 space-y-2">
                 {review.insights.map((ins, i) => (
                   <div key={i} className={cn("rounded-lg border px-3 py-2 text-sm", TONE[ins.kind])}>
-                    {ins.text}
+                    {rowLine(ins.text, t)}
                   </div>
                 ))}
               </div>
@@ -208,7 +209,7 @@ export function ReviewPage() {
                 {review.recommendation ? (
                   <div className="mt-1">
                     <div className="text-sm font-medium text-primary">{t(`attr.name.${review.recommendation.attributeKey}`)}</div>
-                    <p className="mt-1 text-sm">{review.recommendation.reason}</p>
+                    <p className="mt-1 text-sm">{rowLine(review.recommendation.reason, t)}</p>
                     <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                       <span>{t("rv.confidence")}</span>
                       <div className="h-1.5 flex-1 overflow-hidden rounded bg-muted">
@@ -217,7 +218,7 @@ export function ReviewPage() {
                       <span className="font-mono">{review.recommendation.confidence}%</span>
                     </div>
                     <Button size="sm" className="mt-3 w-full" onClick={buildForRecommendation} disabled={building}>
-                      {building ? t("rv.recoBusy") : t("rv.planForIt")}
+                      {building ? t("common.buildBusy") : t("rv.planForIt")}
                     </Button>
                     <Button
                       size="sm"
@@ -323,14 +324,14 @@ export function ReviewPage() {
               {review.evidence.map((e, i) => (
                 <li key={i} className="flex items-start gap-1.5">
                   <span className="text-primary">›</span>
-                  <span>{e}</span>
+                  <span>{rowLine(e, t)}</span>
                 </li>
               ))}
             </ul>
             <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               <span>{t("rv.sources")}:</span>
               {review.sources.map((s, i) => (
-                <span key={i} className="rounded border px-1.5 py-0.5">{s}</span>
+                <span key={i} className="rounded border px-1.5 py-0.5">{rowLine(s, t)}</span>
               ))}
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">{t("rv.disclaimer")}</p>
