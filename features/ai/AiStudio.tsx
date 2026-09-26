@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 type ChatMsg =
   | { role: "user"; content: string; at: string }
-  | { role: "ai"; content: string; facts?: EvidenceFact[]; sources?: RowText[]; confidence?: number; at: string };
+  | { role: "ai"; content: RowText[]; facts?: EvidenceFact[]; sources?: RowText[]; confidence?: number; at: string };
 
 // Sample prompts stay in English deliberately: they are queries sent to the
 // demo provider, which composes its answers in English only. Translating them
@@ -74,7 +74,10 @@ function Chat() {
           ? m
           : {
               ...m,
-              facts: m.facts?.map((f) => ({ ...f, label: asRowText(f.label as string | RowText) })),
+              // A log written before answers became rows holds one English string; it stays
+              // visible exactly as it was written — a value row, never a key to resolve.
+              content: Array.isArray(m.content) ? m.content : [asRowText(m.content as string | RowText)],
+              facts: m.facts?.map((f) => ({ ...f, label: asRowText(f.label as string | RowText), text: asRowText(f.text as string | RowText) })),
               sources: m.sources?.map((s) => asRowText(s as string | RowText)),
             },
       ),
@@ -110,12 +113,16 @@ function Chat() {
           <div key={i} className="flex justify-end"><div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary/90 px-3.5 py-2 text-sm text-primary-foreground">{m.content}</div></div>
         ) : (
           <div key={i} className="max-w-[92%] space-y-2">
-            <div className="rounded-2xl rounded-bl-sm border bg-card/50 px-3.5 py-2 text-sm leading-relaxed">{m.content}</div>
+            <div className="rounded-2xl rounded-bl-sm border bg-card/50 px-3.5 py-2 text-sm leading-relaxed">
+              {Array.isArray(m.content)
+                ? m.content.map((r, j) => <p key={j} className={j ? "mt-1" : undefined}>{rowLine(r, t)}</p>)
+                : m.content}
+            </div>
             {m.facts?.length ? (
               <div className="rounded-lg border bg-card/30 p-2.5 text-xs">
                 <div className="mb-1 font-semibold uppercase tracking-widest text-muted-foreground">{t("ai.evidence", { n: m.facts.length })}</div>
                 <ul className="space-y-1">
-                  {m.facts.map((f, j) => <li key={j}>{f.to ? <Link to={f.to} className="text-primary hover:underline">{rowLine(f.label, t)}</Link> : <span className="font-medium">{rowLine(f.label, t)}</span>}<span className="text-muted-foreground"> — {f.text}</span></li>)}
+                  {m.facts.map((f, j) => <li key={j}>{f.to ? <Link to={f.to} className="text-primary hover:underline">{rowLine(f.label, t)}</Link> : <span className="font-medium">{rowLine(f.label, t)}</span>}<span className="text-muted-foreground"> — {rowLine(f.text, t)}</span></li>)}
                 </ul>
                 <div className="mt-2 flex flex-wrap items-center gap-2 border-t pt-2 text-muted-foreground">
                   <span>{t("common.confidence")} <span className="font-mono text-primary">{m.confidence}%</span></span>

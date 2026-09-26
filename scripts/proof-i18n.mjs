@@ -532,6 +532,9 @@ const DYN_SITES = [
   // M183: the retrieval kinds a source chip names resolve through the legend's own space,
   // which is why one list (`SEARCH_KINDS`) has to serve both.
   { path: "domain/rowText.ts", expr: "code", prefix: "ai.legend.", suffix: "" },
+  // M184: an answer that names a career trajectory resolves it through the player page's
+  // own `det.arc.*` rows, so the AI cannot invent a fourth word for the shape of an arc.
+  { path: "domain/rowText.ts", expr: "code", prefix: "det.arc.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "onb.goal.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "onb.age.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
@@ -730,6 +733,11 @@ const S_DNA = {
 };
 claimByPrefix("dna.arch.", S_DNA);
 claimByPrefix("dna.blurb.", S_DNA);
+const S_TRAJ = {
+  name: "career-arc trajectories",
+  values: spaceOf("domain/careerArc.ts", /export const TRAJECTORIES[^=]*=[\s\S]*?\];/, /"([a-z]+)"/g),
+};
+claimByPrefix("det.arc.", S_TRAJ);
 // Both directions, because a space read from the table only proves the table is covered.
 // An archetype deleted from the model would otherwise leave its words behind as keys no
 // site can build — reachable-looking, because the prefix claim still spells them out.
@@ -1793,7 +1801,10 @@ ok(`the scan is reading the modules that carry the debt (${debtFiles.length} of 
 //      voice by any definition. M180 keyed its graph labels; the sentences in its evidence
 //      facts and its answer lead are still English (the queue's #165), so the file gets a
 //      named cap that may only fall rather than staying invisible behind the exemption.
-const EXTRA_PROSE = [{ path: "data/intelligence.ts", cap: 29 }];
+// Measured at M184, after the AI's own sentences moved onto keys: 2 counted literals left,
+// and both are fragments of the question parser's regexes rather than prose a reader sees.
+// The cap is the measurement, so it may not drift back up.
+const EXTRA_PROSE = [{ path: "data/intelligence.ts", cap: 2 }];
 for (const { path, cap } of EXTRA_PROSE) {
   const hits = proseDebt(path);
   ok(`${path} prose has not grown (${hits.length} literals, ceiling ${cap})`, hits.length <= cap);

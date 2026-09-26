@@ -24,11 +24,12 @@ import {
 } from "@/data/footballService";
 
 export interface EvidenceFact {
-  /** The chip in front of the evidence line. A word the app chooses ("Standings") is a
-   *  keyed row; the entity the fact is about (a club name, a headline kind) is a value
-   *  row, because those words came out of the record. */
+  /** Both halves are rows. A chip word the app chooses ("Standings") is a keyed row; the
+   *  entity the fact is about (a club name, a headline kind) is a value row, because those
+   *  words came out of the record. A sentence composed here reaches a 繁體中文 reader as
+   *  English with no gate able to see it — the raw-UI scan reads components only. */
   label: RowText;
-  text: string;
+  text: RowText;
   to?: string;
 }
 
@@ -45,7 +46,10 @@ export interface RagContext {
 
 export interface RagAnswer {
   question: string;
-  answer: string;
+  /** The lead row plus the retrieved facts it stands on, as rows. `composeAnswer` used to
+   *  return one string joining a lead, a fact and two more facts with spaces — a paragraph
+   *  no target language could reorder. The panel renders these in order. */
+  answer: RowText[];
   facts: EvidenceFact[];
   sources: RowText[];
   confidence: number;
@@ -59,24 +63,46 @@ function clubFacts(clubId: string): EvidenceFact[] {
   const table = footballProvider.standings(c.competitionId);
   const pos = table.findIndex((s) => s.clubId === clubId);
   const out: EvidenceFact[] = [
-    { label: { value: c.name }, text: `${c.name} (${c.short}) play in ${getCompetition(c.competitionId)?.name}, overall ${c.overall}, at ${c.stadium}.`, to: `/clubs/${c.id}` },
+    {
+      label: { value: c.name },
+      text: { key: "ai.fact.club", vars: { name: c.name, short: c.short, comp: getCompetition(c.competitionId)?.name ?? "", overall: c.overall, stadium: c.stadium } },
+      to: `/clubs/${c.id}`,
+    },
   ];
   if (pos >= 0) {
     const s = table[pos];
-    out.push({ label: { key: "ai.lab.standings" }, text: `They sit ${pos + 1}${ord(pos + 1)} with ${s.points} pts (${s.won}W ${s.drawn}D ${s.lost}L, GD ${s.gf - s.ga}).`, to: `/competitions/${c.competitionId}` });
+    out.push({
+      label: { key: "ai.lab.standings" },
+      // The English ordinal suffix (`1st`) is gone: a rank is a number, and `1st` is
+      // morphology no other language in this app shares.
+      text: { key: "ai.fact.standings", vars: { pos: pos + 1, points: s.points, w: s.won, d: s.drawn, l: s.lost, gd: s.gf - s.ga } },
+      to: `/competitions/${c.competitionId}`,
+    });
   }
-  if (squad[0]) out.push({ label: { key: "ai.lab.keyMan" }, text: `Top-rated in the squad is ${squad[0].name} (${squad[0].position}, OVR ${squad[0].overall}, ${formatValue(squad[0].value)}).`, to: `/players/${squad[0].id}` });
+  if (squad[0])
+    out.push({
+      label: { key: "ai.lab.keyMan" },
+      text: { key: "ai.fact.keyMan", vars: { name: squad[0].name, position: squad[0].position, overall: squad[0].overall, value: formatValue(squad[0].value) } },
+      to: `/players/${squad[0].id}`,
+    });
   const fixture = [...matchesByStatus("SCHEDULED").filter((m) => m.homeClubId === clubId || m.awayClubId === clubId)].sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
   if (fixture) {
     const opp = fixture.homeClubId === clubId ? getClub(fixture.awayClubId) : getClub(fixture.homeClubId);
-    out.push({ label: { key: "ai.lab.nextFixture" }, text: `Next up vs ${opp?.name} in ${getCompetition(fixture.competitionId)?.name}.`, to: `/matches/${fixture.id}` });
+    out.push({
+      label: { key: "ai.lab.nextFixture" },
+      text: { key: "ai.fact.nextFixture", vars: { opponent: opp?.name ?? "", comp: getCompetition(fixture.competitionId)?.name ?? "" } },
+      to: `/matches/${fixture.id}`,
+    });
     const fc = fixtureForecast(fixture.id);
     if (fc) {
       const home = getClub(fixture.homeClubId);
       const away = getClub(fixture.awayClubId);
       out.push({
         label: { key: "ai.lab.nextFixtureModel" },
-        text: `Poisson projection for ${home?.name} v ${away?.name}: ${fc.homePct}% home · ${fc.drawPct}% draw · ${fc.awayPct}% away; expected goals ${fc.lambdaHome.toFixed(2)}–${fc.lambdaAway.toFixed(2)}, most likely ${fc.mostLikelyScore}. From ${fc.sample} match${fc.sample === 1 ? "" : "es"} of form data — a model output, not a result.`,
+        text:
+          fc.sample === 1
+            ? { key: "ai.fact.poissonClubOne", vars: { home: home?.name ?? "", away: away?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fc.lambdaHome.toFixed(2), la: fc.lambdaAway.toFixed(2), score: fc.mostLikelyScore } }
+            : { key: "ai.fact.poissonClubMany", vars: { n: fc.sample, home: home?.name ?? "", away: away?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fc.lambdaHome.toFixed(2), la: fc.lambdaAway.toFixed(2), score: fc.mostLikelyScore } },
         to: `/matches/${fixture.id}`,
       });
     }
@@ -89,24 +115,50 @@ function playerFacts(pid: string): EvidenceFact[] {
   if (!p) return [];
   const c = getClub(p.clubId);
   const out: EvidenceFact[] = [
-    { label: { value: p.name }, text: `${p.name} — ${p.position}, ${p.age}y, ${p.nation}, at ${c?.name}. Overall ${p.overall}, potential ${p.potential}, worth ${formatValue(p.value)}, ${p.foot} foot.`, to: `/players/${p.id}` },
-    { label: { key: "ai.lab.profile" }, text: `Scouting archetype: ${archetypeLabelEn(p.archetype)}.`, to: `/players/${p.id}` },
+    {
+      label: { value: p.name },
+      text: { key: "ai.fact.player", vars: { name: p.name, position: p.position, age: p.age, nation: p.nation, club: c?.name ?? "", overall: p.overall, potential: p.potential, value: formatValue(p.value), foot: p.foot } },
+      to: `/players/${p.id}`,
+    },
+    { label: { key: "ai.lab.profile" }, text: { key: "ai.fact.archetype", vars: { arch: p.archetype } }, to: `/players/${p.id}` },
   ];
+  let up = "";
+  let down = "";
   const report = scoutReport(p);
   if (report.hasVector) {
-    const up = report.strengths.slice(0, 3).map((s) => `${attributeLabel(s.key)} +${s.delta}`).join(", ");
-    const down = report.concerns.slice(-3).reverse().map((s) => `${attributeLabel(s.key)} ${s.delta}`).join(", ");
+// Attribute CODES joined, not names with deltas: the reader's own words name them, and
+// the per-attribute figures stay where they are already rendered (the scouting panel),
+// because "Passing +3, Dribbling +2" is a string no translation can rebuild.
+    up = report.strengths.slice(0, 3).map((s) => s.key).join(",");
+    down = report.concerns.slice(-3).reverse().map((s) => s.key).join(",");
     out.push({
       label: { key: "ai.lab.templateEdge" },
-      text: `Against a ${p.positionGroup} of the same implied skill: ${report.headline}.${up ? ` Above template — ${up}.` : ""}${down ? ` Below template — ${down}.` : ""}`,
+      // `report.headline` is still composed English inside domain/scouting.ts, so this row
+      // names the comparison and the two rows after it name the attributes; the headline
+      // itself joins when scouting.ts is keyed.
+      text: { key: "ai.fact.templateEdge", vars: { group: p.positionGroup } },
       to: `/players/${p.id}`,
     });
   }
+  if (up)
+    out.push({ label: { key: "det.scout.above" }, text: { key: "ai.fact.aboveTemplate", vars: { focus: up } }, to: `/players/${p.id}` });
+  if (down)
+    out.push({ label: { key: "det.scout.below" }, text: { key: "ai.fact.belowTemplate", vars: { focus: down } }, to: `/players/${p.id}` });
   const arc = careerArc(p);
   if (arc.hasData) {
     out.push({
       label: { key: "ai.lab.careerArc" },
-      text: `${arc.trajectory} at ${arc.age}: modelled peak ${arc.projectedPeak} around ${arc.peakAge} (${arc.yearsToPeak} year${arc.yearsToPeak === 1 ? "" : "s"} away), ${arc.remainingPrimeYears} prime year${arc.remainingPrimeYears === 1 ? "" : "s"} left. Age-curve model, not a forecast about a real person.`,
+      text: { key: "ai.fact.arcPeak", vars: { age: arc.age, traj: arc.trajectory, peak: arc.projectedPeak, peakAge: arc.peakAge } },
+      to: `/players/${p.id}`,
+    });
+    out.push({
+      label: { key: "ai.lab.careerArc" },
+      // The runway is its own row: two countables in one sentence means two One/Many
+      // pairs and four arms, so the second figure is phrased as a label and value.
+      text:
+        arc.yearsToPeak === 1
+          ? { key: "ai.fact.arcRunwayOne", vars: { m: arc.remainingPrimeYears } }
+          : { key: "ai.fact.arcRunwayMany", vars: { n: arc.yearsToPeak, m: arc.remainingPrimeYears } },
       to: `/players/${p.id}`,
     });
   }
@@ -118,14 +170,25 @@ function matchFacts(mid: string): EvidenceFact[] {
   if (!m) return [];
   const h = getClub(m.homeClubId);
   const a = getClub(m.awayClubId);
-  const base = `${h?.name} v ${a?.name} — ${getCompetition(m.competitionId)?.name}, round ${m.round}.`;
-  const status = m.status === "SCHEDULED" ? `Kickoff ${new Date(m.kickoff).toLocaleString()}.` : `Result ${m.homeGoals}–${m.awayGoals}.`;
-  const out: EvidenceFact[] = [{ label: { key: "ai.lab.fixture" }, text: `${base} ${status}`, to: `/matches/${m.id}` }];
+// Base and status used to be joined by hand; one row per state now carries both.
+  const out: EvidenceFact[] = [
+    {
+      label: { key: "ai.lab.fixture" },
+      text:
+        m.status === "SCHEDULED"
+          ? { key: "ai.fact.fixtureScheduled", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, when: new Date(m.kickoff).toLocaleString() } }
+          : { key: "ai.fact.fixtureResult", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, hg: String(m.homeGoals ?? "—"), ag: String(m.awayGoals ?? "—") } },
+      to: `/matches/${m.id}`,
+    },
+  ];
   const fc = m.status === "SCHEDULED" ? fixtureForecast(m.id) : null;
   if (fc) {
     out.push({
       label: { key: "ai.lab.model" },
-      text: `Poisson model on current form: ${h?.name} ${fc.homePct}% · draw ${fc.drawPct}% · ${a?.name} ${fc.awayPct}%; expected goals ${fc.lambdaHome.toFixed(2)}–${fc.lambdaAway.toFixed(2)}, most likely ${fc.mostLikelyScore}. Based on ${fc.sample} match${fc.sample === 1 ? "" : "es"} of form data — a projection, not a result.`,
+      text:
+        fc.sample === 1
+          ? { key: "ai.fact.poissonMatchOne", vars: { home: h?.name ?? "", away: a?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fc.lambdaHome.toFixed(2), la: fc.lambdaAway.toFixed(2), score: fc.mostLikelyScore } }
+          : { key: "ai.fact.poissonMatchMany", vars: { n: fc.sample, home: h?.name ?? "", away: a?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fc.lambdaHome.toFixed(2), la: fc.lambdaAway.toFixed(2), score: fc.mostLikelyScore } },
       to: `/matches/${m.id}`,
     });
   }
@@ -135,7 +198,13 @@ function matchFacts(mid: string): EvidenceFact[] {
 function newsFacts(nid: string): EvidenceFact[] {
   const n = getNews(nid);
   if (!n) return [];
-  return [{ label: { value: n.kind }, text: `${n.title} — ${n.summary} (Source: ${n.source})`, to: `/news/${n.id}` }];
+  return [
+    {
+      label: { value: n.kind },
+      text: { key: "ai.fact.news", vars: { title: n.title, summary: n.summary, source: n.source } },
+      to: `/news/${n.id}`,
+    },
+  ];
 }
 
 function factsFor(hit: SearchResult): EvidenceFact[] {
@@ -149,7 +218,15 @@ function factsFor(hit: SearchResult): EvidenceFact[] {
       if (!comp) return [];
       const table = footballProvider.standings(hit.id);
       const leader = table[0] ? getClub(table[0].clubId) : null;
-      return [{ label: { value: comp.name }, text: `${comp.name} (${comp.nation}, Tier ${comp.tier}) has ${comp.clubIds.length} teams.${leader ? ` Current leaders: ${leader.name} (${table[0].points} pts).` : ""}`, to: `/competitions/${comp.id}` }];
+      return [
+        {
+          label: { value: comp.name },
+          text: leader
+            ? { key: "ai.fact.competitionLeaders", vars: { name: comp.name, nation: comp.nation, tier: comp.tier, n: comp.clubIds.length, leader: leader.name, points: table[0].points } }
+            : { key: "ai.fact.competition", vars: { name: comp.name, nation: comp.nation, tier: comp.tier, n: comp.clubIds.length } },
+          to: `/competitions/${comp.id}`,
+        },
+      ];
     }
   }
 }
@@ -194,7 +271,8 @@ export function retrieve(question: string): RagContext {
   const seen = new Set<string>();
   for (const h of ranked) {
     for (const f of factsFor(h)) {
-      const key = f.text.slice(0, 40);
+      // Rows dedupe by identity, not by a slice of English text.
+      const key = "key" in f.text ? f.text.key + JSON.stringify(f.text.vars ?? null) : "value:" + f.text.value;
       if (seen.has(key)) continue;
       seen.add(key);
       facts.push(f);
@@ -221,28 +299,28 @@ export function retrieve(question: string): RagContext {
 
 // Deterministic answer synthesis over retrieved facts. Swappable for a real
 // Cloud Agent: replace composeAnswer with an agent call using the same shape.
-function composeAnswer(question: string, ctx: RagContext): string {
+// The answer is rows, in order: a lead and the retrieved facts it stands on. It used to
+// be one string — a lead with the first fact interpolated into it, then two more facts
+// appended with spaces — which is the shape a translator cannot rebuild, because the
+// host sentence's word order decides whether the fragments even read.
+function composeAnswer(question: string, ctx: RagContext): RowText[] {
   const q = question.toLowerCase();
-  if (!ctx.hits.length) {
-    return `I could not find that in the football world dataset, so I will not invent an answer. Try naming a club, player, competition, fixture or headline. (Demo retrieval provider — no live model or API key.)`;
-  }
+  if (!ctx.hits.length) return [{ key: "ai.answer.refusal" }];
   const top = ctx.hits[0];
-  const primary = ctx.facts[0]?.text ?? top.subtitle;
-  let lead: string;
-  if (/value|worth|cost|price|费用|身价/.test(q) && top.type === "player")
-    lead = `${top.title}'s current market value is ${primary.match(/€[\d.]+[MBK]?/)?.[0] ?? "not in the retrieved data"} — see the full profile.`;
-  else if (/who|which|best|top|key|star|核心|谁/.test(q))
-    lead = `Based on the retrieved data about ${top.title}: ${primary}`;
-  else if (/stand|position|table|排名|榜首|第几/.test(q))
-    lead = `League-position read for ${top.title}: ${primary}`;
-  else if (/when|kickoff|fixture|next|time|何时|比赛/.test(q))
-    lead = `Fixture detail for ${top.title}: ${primary}`;
-  else lead = `Here is what the football world data says about ${top.title}: ${primary}`;
-
-  const extras = ctx.facts.slice(1, 3).map((f) => f.text);
-  return extras.length
-    ? `${lead} ${extras.join(" ")}`
-    : lead;
+  // The value read used to scrape a €figure out of an already-rendered sentence with a
+  // regex. The record carries that figure, so it is taken from the record and handed to
+  // the row as a value — the same M102 guarantee (the answer states the listed figure),
+  // without depending on how the figure was once worded.
+  const player = top.type === "player" ? getPlayer(top.id) : null;
+  const askingValue = /value|worth|cost|price|费用|身价/.test(q);
+  let lead: RowText;
+  if (askingValue && player) lead = { key: "ai.answer.value", vars: { title: top.title, v: formatValue(player.value) } };
+  else if (askingValue) lead = { key: "ai.answer.valueUnknown", vars: { title: top.title } };
+  else if (/who|which|best|top|key|star|核心|谁/.test(q)) lead = { key: "ai.answer.given", vars: { title: top.title } };
+  else if (/stand|position|table|排名|榜首|第几/.test(q)) lead = { key: "ai.answer.standing", vars: { title: top.title } };
+  else if (/when|kickoff|fixture|next|time|何时|比赛/.test(q)) lead = { key: "ai.answer.fixture", vars: { title: top.title } };
+  else lead = { key: "ai.answer.default", vars: { title: top.title } };
+  return [lead, ...ctx.facts.slice(0, 3).map((f) => f.text)];
 }
 
 export function askIntelligence(question: string): RagAnswer {
@@ -255,12 +333,6 @@ export function askIntelligence(question: string): RagAnswer {
     confidence: ctx.confidence,
     at: new Date().toISOString(),
   };
-}
-
-function ord(n: number) {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return s[(v - 20) % 10] || s[v] || s[0];
 }
 
 // ---- Knowledge graph (spec §45) ----
