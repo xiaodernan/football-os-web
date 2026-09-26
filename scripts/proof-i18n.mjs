@@ -1602,6 +1602,14 @@ for (const s of SHARED_WORDS) {
 //     Scope is domain/ only, deliberately. data/ carries sample copy (lesson texts,
 //     news items) that screens label as demo content and a reader expects to be authored
 //     prose; a domain module's strings are the model's own voice.
+//     M181 narrowed what the rule counts. It asked only for "a letter and a space", so it
+//     also charged the ratchet for FORMATS — `€${(v / 1e6).toFixed(1)}M`, the ISO date
+//     builder, a scoreline that is two record names around a score, a rounded figure. None
+//     of those carries English a dictionary could improve on. Measured on the tree, 27 of
+//     domain/'s 339 literals were formats, and that mis-attribution was the only reason
+//     history.ts, compare.ts and worldEngine.ts looked like prose debtors when they hold no
+//     sentence at all. So a literal counts only when it still contains a word of two or
+//     more letters after its `${…}` holes are cut out.
 const PROSE_LIT = /(["'`])(?:\\.|(?!\1)[^\\])*\1/g;
 const NOT_PROSE = [
   /^["'][@.]/,            // import specifiers
@@ -1609,6 +1617,10 @@ const NOT_PROSE = [
   /^[a-z][a-z0-9]*$/,     // a single lowercase token: a key fragment or enum code
   /^[A-Za-z0-9_ -]{1,3}$/,
 ];
+// True when the literal still names something in English with its interpolated values cut
+// out. `€${…}M` and `${home.name} ${hg} – ${ag} ${away.name}` do not; "Window: last {n}
+// days" does.
+const hasOwnWord = (inner) => /[A-Za-z]{2}/.test(inner.replace(/\$\{[^}]*\}/g, " "));
 function proseDebt(relPath) {
   const lines = readFileSync(join(root, ...relPath.split("/")), "utf8").split(/\r?\n/);
   const hits = [];
@@ -1619,22 +1631,60 @@ function proseDebt(relPath) {
       if (NOT_PROSE.some((re) => re.test(inner))) continue;
       if (!/[A-Za-z]/.test(inner)) continue;
       if (!/ /.test(inner) && !/[.!?]$/.test(inner)) continue;
+      if (!hasOwnWord(inner)) continue;
       hits.push(i + 1);
     }
   });
   return hits;
 }
+// The rule's own two-sided test. A validator whose first run is also its first pass proves
+// nothing, and M181's change can fail in BOTH directions: too strict and the ratchet stops
+// seeing real sentences (the very regression this file exists to catch), too loose and it
+// keeps counting formats. These literals are copied out of the tree they measure.
+const PROSE_SAMPLES = [
+  [true, '"You completed 3 sessions totalling 100 minutes and earned 150 XP."'],
+  [true, '"No saved attributes to compare."'],
+  [true, '"decline accelerates from 24; 3 prime years remaining"'],
+  [true, '"Your on-device training log"'],
+  // Every word in this one is three letters or fewer. It is the sample that stops the rule
+  // from being quietly over-tightened to "a long word": a mutation demanding four or more
+  // letters fails here even though the format samples all still classify correctly.
+  [true, '"Ask now to see the fix log"'],
+  [false, '`€${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`'],
+  [false, '`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`'],
+  [false, '`${home.name} ${hg} – ${ag} ${away.name}`'],
+  [false, '"M."'],
+  [false, '"attr.name.passing"'],
+];
+const classifyProse = (raw) => {
+  const inner = raw.slice(1, -1);
+  if (NOT_PROSE.some((re) => re.test(inner))) return false;
+  if (!/[A-Za-z]/.test(inner)) return false;
+  if (!/ /.test(inner) && !/[.!?]$/.test(inner)) return false;
+  return hasOwnWord(inner);
+};
+const wrong = PROSE_SAMPLES.filter(([want, raw]) => classifyProse(raw) !== want).map(([, raw]) => raw.slice(0, 40));
+ok(`the prose rule calls a sentence a sentence and a format a format (${wrong.length} wrong of ${PROSE_SAMPLES.length})`,
+  wrong.length === 0);
+for (const w of wrong) console.log("       mis-classified: " + w);
+ok(`the rule is tested in both directions (${PROSE_SAMPLES.filter(([w]) => w).length} sentences, ${PROSE_SAMPLES.filter(([w]) => !w).length} non-sentences)`,
+  PROSE_SAMPLES.filter(([w]) => w).length >= 5 && PROSE_SAMPLES.filter(([w]) => !w).length >= 5);
+
 const domainFiles = readdirSync(join(root, "domain")).filter((f) => f.endsWith(".ts")).sort();
 const debt = domainFiles.map((f) => ["domain/" + f, proseDebt("domain/" + f)]);
 const debtTotal = debt.reduce((n, [, h]) => n + h.length, 0);
 const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
-// Measured on the gate line at M179, after review.ts reached zero: 339 literals across 17
-// of 31 modules. The next milestone to localise a module lowers this number and writes
-// the new one here — it never raises it.
-const DOMAIN_PROSE_CEILING = 339;
+// Measured on the gate line at M181, with the format literals no longer counted: 312
+// literals across 14 of 31 modules (was 339 across 17 — see the rule note above). The next
+// milestone to localise a module lowers this number and writes the new one here; it never
+// raises it.
+const DOMAIN_PROSE_CEILING = 312;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts"];
+// The three at the end hold no sentence at all once formats stop counting (M181 measured
+// them at 1, 3 and 5 "literals" — an ISO date builder, three €-format arms and five
+// scoreline templates), so pinning them now is free and stops a real sentence landing there.
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-file, not just in the total: 24 literals can leave load.ts and enter review.ts and
@@ -1647,7 +1697,7 @@ for (const done of PROSE_ZERO) {
 ok(`the zero list names modules that really are in the tree (${PROSE_ZERO.length})`,
   PROSE_ZERO.every((p) => domainFiles.includes(p.split("/")[1])));
 ok(`the scan is reading the modules that carry the debt (${debtFiles.length} of ${domainFiles.length} files, ${debtTotal} hits)`,
-  domainFiles.length >= 30 && debtFiles.length >= 15 && debtTotal >= 300);
+  domainFiles.length >= 30 && debtFiles.length >= 12 && debtTotal >= 280);
 
 // 31b. The exemption's one hole, closed by name. `data/` is out of scope above because it
 //      carries authored sample copy a reader expects to be prose — lesson texts, news
@@ -1656,7 +1706,7 @@ ok(`the scan is reading the modules that carry the debt (${debtFiles.length} of 
 //      voice by any definition. M180 keyed its graph labels; the sentences in its evidence
 //      facts and its answer lead are still English (the queue's #165), so the file gets a
 //      named cap that may only fall rather than staying invisible behind the exemption.
-const EXTRA_PROSE = [{ path: "data/intelligence.ts", cap: 34 }];
+const EXTRA_PROSE = [{ path: "data/intelligence.ts", cap: 29 }];
 for (const { path, cap } of EXTRA_PROSE) {
   const hits = proseDebt(path);
   ok(`${path} prose has not grown (${hits.length} literals, ceiling ${cap})`, hits.length <= cap);

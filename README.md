@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M180 (a few numbers in that range
+Work ships one milestone per commit and is currently at M181 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -1997,6 +1997,42 @@ row-shape guard first and now reports red.
 checks** (proof-i18n **146**, proof-graph **22** new). Dictionary **1319 keys × 3 locales**.
 Domain-prose ceiling unchanged at **339**; the new `data/intelligence.ts` cap is **34**.
 Covered set 36 files, raw-UI debt 179 across 4.
+
+### M181 — The prose ratchet learned the difference between a sentence and a number format
+
+Check 31 counts sentence-shaped literals in `domain/*.ts`, and the shape it asked for was
+"a literal containing a letter and a space". That is also true of `€${(v / 1_000_000).toFixed(1)}M`,
+of the ISO-date builder in `history.ts`, of the scoreline `${home.name} ${hg} – ${ag} ${away.name}`
+template, of `"M."` in a list of simulated players' initials, and of five rounded-figure
+templates in `worldEngine.ts`. Twenty-seven of the 339 literals the ratchet was carrying are
+formats — strings with no English inside for a dictionary to improve on. That is not exactly
+a wrong count, but it spends the ceiling on things no translation can fix.
+
+So the rule now cuts every `${…}` hole out first and asks whether a word of two or more
+letters survives. Measured on the tree: **312 literals across 14 of 31 modules** (was 339
+across 17), and `data/intelligence.ts`'s separate cap from 34 to **29**. The re-base is not a
+discount handed to the code — the three modules the change freed, `history.ts`, `compare.ts`
+and `worldEngine.ts`, are pinned at zero in the same commit, so their formats cannot come
+back dressed as prose and no real sentence may arrive there either.
+
+A narrowed validator has to be tested in the direction it was narrowed toward, so the gate
+now carries ten literals copied out of the tree — five sentences, five formats — and
+classifies each. The one that earns its place is `"Ask now to see the fix log"`: every word
+in it is three letters or fewer, so a mutation that tightens the rule past its own intention
+(four letters and up) fails there even though every format still classifies the way a naive
+check would expect. Four probes, all caught, all restored byte-identical: the word rule
+switched off (339 against a ceiling of 312, and the three freshly pinned modules reporting
+their formats back as debt), the interpolations no longer stripped (328, three samples
+mis-classified), the rule tightened to four letters (one sample wrong), and a real sentence
+typed into `worldEngine.ts` (313, its own zero-pin naming the line).
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is **28 scripts / 1310
+checks** (proof-i18n **151**, five of them the new classifier pair). No application source
+changed in this milestone, which is why the three new zero-pins rather than the ceiling
+number are the part that can go red again.
+
+Verification boundary unchanged: the numbers here
+come from the gate's own run; no rendered-page claim is made.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
