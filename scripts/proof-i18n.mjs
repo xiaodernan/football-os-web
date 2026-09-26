@@ -1787,6 +1787,32 @@ const DOMAIN_PROSE_CEILING = 271;
 const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
+// Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
+// from `gap.ts` into `learn.ts` and still pass, which is how M178's per-file zero list was
+// earned for files that had already emptied. These are the counts the inventory line below
+// printed at M188 (sum 271 = the global ceiling); a milestone lowers its own number when it
+// keys a module, and may never raise one.
+const PROSE_CAPS = {
+  "domain/learn.ts": 83,
+  "domain/community.ts": 36,
+  "domain/career.ts": 29,
+  "domain/footprint.ts": 25,
+  "domain/attributes.ts": 19,
+  "domain/newsImpact.ts": 19,
+  "domain/training.ts": 19,
+  "domain/filmInsights.ts": 12,
+  "domain/gap.ts": 8,
+  "domain/matchEngine.ts": 8,
+  "domain/careerArc.ts": 7,
+  "domain/onboarding.ts": 6,
+};
+const capBreaches = Object.entries(PROSE_CAPS)
+  .map(([f, cap]) => [f, proseDebt(f).length, cap])
+  .filter(([, n, cap]) => n > cap);
+ok(`no module's own prose debt has grown (${capBreaches.length ? capBreaches.map(([f, n, cap]) => `${f} ${n}>${cap}`).join(", ") : "all 12 at or under cap"})`,
+  capBreaches.length === 0);
+ok(`the per-module caps cover the whole counted debt (${Object.values(PROSE_CAPS).reduce((a, b) => a + b, 0)} capped vs ${debtTotal} counted)`,
+  Object.values(PROSE_CAPS).reduce((a, b) => a + b, 0) === debtTotal);
 // Per-module inventory, printed so a re-base reads from the gate instead of from memory:
 // the total alone lets literals migrate from one module into another and still pass.
 console.log("       inventory: " + debt.filter(([, h]) => h.length).map(([p, h]) => `${p.replace("domain/", "")}=${h.length}`).join(" "));
