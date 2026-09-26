@@ -92,7 +92,8 @@ Domain behaviour is pinned by runnable proof scripts — each loads the modules 
 Vite's SSR runtime and asserts the claims a milestone rests on. They cover the numeric
 cores (analytics, match engine, fixture probability, development projections, XP curve,
 role-gap analysis, film insights, career arc, comparisons, transfers) and the honesty
-contracts (AI grounding, local-data registry, offline wording, feed ranking). Run them all:
+contracts (AI grounding, local-data registry, offline wording, feed ranking, the weekly
+review's prose, and the words the knowledge graph draws). Run them all:
 
 ```sh
 npm run proof                        # = npm test: every scripts/proof-*.mjs, with per-script counts
@@ -111,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M179 (a few numbers in that range
+Work ships one milestone per commit and is currently at M180 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -1952,6 +1953,50 @@ sentence the dictionary already carried, the app's own interpolator told to stop
 variables, focus blocks counted as lines, the trend arm of the scanning row deleted, the
 academy chip advertised with no academy records, and P5 rerun against both gates.
 Verification boundary unchanged: no rendered-page claim is made here.
+
+### M180 — The knowledge graph named its relations in the reader's language, and its legend stopped being a hand-drawn list
+
+The `/ai` "Knowledge graph" tab drew its edge labels from strings typed into
+`data/intelligence.ts` — `plays for`, `has player`, `competes in`, `mentions`, `21 pts` —
+so a 繁體中文 reader got a Chinese interface carrying an English diagram. They are rows now
+(`KgEdge.relation: RowText`, six new keys ×3 locales), resolved by `rowLine` in the canvas.
+
+Two things fell out of doing it that way:
+
+- **The legend could not name a kind it was already colouring.** `TYPE_COLOR` lists five
+  entity kinds and the legend hardcoded four chips, and a club query really does put a
+  `match` node on the canvas (measured: `club, competition, player, match`) — a colour with
+  no word. The table now owns the answer: it is typed `Record<KgNode["type"], string>` so a
+  kind cannot exist without a colour, `KG_KINDS` is derived from its keys, the legend maps
+  that list, and `ai.legend.…` is a declared value space whose members proof-i18n reads out
+  of the table itself, so a sixth kind is a red gate until it also has a word in all three
+  locales. Deriving it also removed a false positive the raw-UI scan would otherwise have
+  had to be told to ignore: the cast that named the kind list inside a JSX hole read as
+  interface copy.
+- **`data/` was a hole in the prose ratchet.** Check 31 exempts `data/` because that is
+  where authored sample copy lives, and the exemption is right for lesson texts and news
+  items — but `data/intelligence.ts` is the assistant composing an answer out of retrieved
+  records, which is model voice. It now carries its own falling cap (**34** literals after
+  this milestone; the evidence facts and answer leads are the queue's #165), so prose can
+  no longer escape the ratchet by moving one directory over.
+
+`scripts/proof-graph.mjs` is new (22 checks): every edge label is a row, each of the five
+relation words is actually drawn by a query a reader can type (the behavioural half of
+reachability — check 18 only proves a key is *quoted* somewhere, not that any edge can
+carry it), every label resolves in all three locales with no placeholder left open, the
+points figure equals the standing table's own column in table order, and the legend is
+derived rather than restated. Nine mutation probes, all caught, all restored
+byte-identical: a relation back to a bare string, the points figure dropped from the row,
+the 繁體 word for "Fixture" deleted, the lookup moved to an undeclared prefix, a hand-added
+chip, the legend hand-restated, a sixth kind with no word, the relation printed raw on the
+canvas, and the points edge never drawn at all. Three of those initially crashed the new
+proof instead of failing a clause, which is not evidence, so the gate grew its own
+row-shape guard first and now reports red.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is **28 scripts / 1305
+checks** (proof-i18n **146**, proof-graph **22** new). Dictionary **1319 keys × 3 locales**.
+Domain-prose ceiling unchanged at **339**; the new `data/intelligence.ts` cap is **34**.
+Covered set 36 files, raw-UI debt 179 across 4.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

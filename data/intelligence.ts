@@ -4,6 +4,7 @@
 // provider. Answers always carry evidence, sources and confidence.
 
 import { attributeLabel } from "@/domain/attributes";
+import type { RowText } from "@/domain/rowText";
 import { archetypeLabel } from "@/domain/playerDna";
 import { scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
@@ -251,7 +252,9 @@ function ord(n: number) {
 
 // ---- Knowledge graph (spec §45) ----
 export interface KgNode { id: string; label: string; type: "club" | "player" | "competition" | "news" | "match"; to: string }
-export interface KgEdge { from: string; to: string; relation: string }
+// An edge's label is a word the app chooses ("plays for"), not a value a record
+// carries, so it publishes a row and the canvas resolves it — see domain/rowText.ts.
+export interface KgEdge { from: string; to: string; relation: RowText }
 export interface KgGraph { root: string | null; nodes: KgNode[]; edges: KgEdge[] }
 
 export function buildGraph(query: string): KgGraph {
@@ -265,22 +268,22 @@ export function buildGraph(query: string): KgGraph {
     if (h.type === "club") {
       const c = getClub(h.id)!;
       const compN: KgNode = { id: "competition:" + c.competitionId, label: getCompetition(c.competitionId)?.name ?? c.competitionId, type: "competition", to: `/competitions/${c.competitionId}` };
-      add(compN); edges.push({ from: "club:" + c.id, to: compN.id, relation: "competes in" });
+      add(compN); edges.push({ from: "club:" + c.id, to: compN.id, relation: { key: "ai.rel.competes" } });
       for (const p of playersByClub(c.id).sort((a, b) => b.overall - a.overall).slice(0, 6)) {
         const pn: KgNode = { id: "player:" + p.id, label: p.name, type: "player", to: `/players/${p.id}` };
-        add(pn); edges.push({ from: "club:" + c.id, to: pn.id, relation: "has player" });
+        add(pn); edges.push({ from: "club:" + c.id, to: pn.id, relation: { key: "ai.rel.hasPlayer" } });
       }
     }
     if (h.type === "player") {
       const p = getPlayer(h.id)!;
       const cn: KgNode = { id: "club:" + p.clubId, label: getClub(p.clubId)?.name ?? p.clubId, type: "club", to: `/clubs/${p.clubId}` };
-      add(cn); edges.push({ from: "player:" + p.id, to: cn.id, relation: "plays for" });
+      add(cn); edges.push({ from: "player:" + p.id, to: cn.id, relation: { key: "ai.rel.playsFor" } });
     }
     if (h.type === "news") {
       const n = getNews(h.id)!;
       for (const e of n.entityIds) {
-        if (getPlayer(e)) { const pn: KgNode = { id: "player:" + e, label: getPlayer(e)!.name, type: "player", to: `/players/${e}` }; add(pn); edges.push({ from: "news:" + n.id, to: pn.id, relation: "mentions" }); }
-        else if (getClub(e)) { const cn: KgNode = { id: "club:" + e, label: getClub(e)!.name, type: "club", to: `/clubs/${e}` }; add(cn); edges.push({ from: "news:" + n.id, to: cn.id, relation: "mentions" }); }
+        if (getPlayer(e)) { const pn: KgNode = { id: "player:" + e, label: getPlayer(e)!.name, type: "player", to: `/players/${e}` }; add(pn); edges.push({ from: "news:" + n.id, to: pn.id, relation: { key: "ai.rel.mentions" } }); }
+        else if (getClub(e)) { const cn: KgNode = { id: "club:" + e, label: getClub(e)!.name, type: "club", to: `/clubs/${e}` }; add(cn); edges.push({ from: "news:" + n.id, to: cn.id, relation: { key: "ai.rel.mentions" } }); }
       }
     }
     if (h.type === "competition") {
@@ -289,7 +292,7 @@ export function buildGraph(query: string): KgGraph {
         const c = getClub(s.clubId);
         if (!c) continue;
         const cn: KgNode = { id: "club:" + c.id, label: c.name, type: "club", to: `/clubs/${c.id}` };
-        add(cn); edges.push({ from: "competition:" + h.id, to: cn.id, relation: `${s.points} pts` });
+        add(cn); edges.push({ from: "competition:" + h.id, to: cn.id, relation: { key: "ai.kg.pts", vars: { n: s.points } } });
       }
     }
   }

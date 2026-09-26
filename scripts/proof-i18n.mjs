@@ -469,6 +469,10 @@ const DYN_SITES = [
   { path: "features/achievements/AchievementsPage.tsx", expr: "a.id", prefix: "ach.desc.", suffix: "" },
   { path: "features/dashboard/Dashboard.tsx", expr: "growth.next.id", prefix: "ach.desc.", suffix: "" },
   { path: "features/achievements/AchievementsPage.tsx", expr: "a.tier", prefix: "ach.tier.", suffix: "" },
+  // M180: the graph's legend is derived from TYPE_COLOR, the one table that names every
+  // kind the canvas can draw, so a sixth kind cannot appear without a word for it. The
+  // value space below reads that table rather than restating it.
+  { path: "features/ai/AiStudio.tsx", expr: "kind", prefix: "ai.legend.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
   { path: "ui/charts.tsx", expr: "c.category", prefix: "attr.", suffix: "" },
@@ -656,6 +660,14 @@ const SPACES = new Map([
     // that defines them — so a new tag fails here until it has a key.
     name: "community tags",
     values: spaceOf("domain/community.ts", /export function allTags\(\): string\[\] \{[\s\S]*?\n\}/, quoted),
+  }],
+  ["ai.legend.|kind", {
+    // The five entity kinds the knowledge graph can put on the canvas, read out of the
+    // colour table the legend now maps over. A kind with no key would print
+    // `ai.legend.match` inside a legend chip, and a key nobody can reach is deleted by
+    // check 18 — so the two directions are both covered by this one anchor.
+    name: "knowledge-graph entity kinds",
+    values: spaceOf("features/ai/AiStudio.tsx", /const TYPE_COLOR[^=]*=[\s\S]*?\};/, /([a-z]+)\s*:\s*"var\(/g),
   }],
   ["comm.sort.|s", {
     name: "community sorts",
@@ -1636,6 +1648,21 @@ ok(`the zero list names modules that really are in the tree (${PROSE_ZERO.length
   PROSE_ZERO.every((p) => domainFiles.includes(p.split("/")[1])));
 ok(`the scan is reading the modules that carry the debt (${debtFiles.length} of ${domainFiles.length} files, ${debtTotal} hits)`,
   domainFiles.length >= 30 && debtFiles.length >= 15 && debtTotal >= 300);
+
+// 31b. The exemption's one hole, closed by name. `data/` is out of scope above because it
+//      carries authored sample copy a reader expects to be prose — lesson texts, news
+//      items. `data/intelligence.ts` is the exception inside that directory: its strings
+//      are the Football AI composing an answer out of retrieved records, which is model
+//      voice by any definition. M180 keyed its graph labels; the sentences in its evidence
+//      facts and its answer lead are still English (the queue's #165), so the file gets a
+//      named cap that may only fall rather than staying invisible behind the exemption.
+const EXTRA_PROSE = [{ path: "data/intelligence.ts", cap: 34 }];
+for (const { path, cap } of EXTRA_PROSE) {
+  const hits = proseDebt(path);
+  ok(`${path} prose has not grown (${hits.length} literals, ceiling ${cap})`, hits.length <= cap);
+}
+ok(`the extra scope is reading a module that really carries debt (${EXTRA_PROSE.reduce((n, e) => n + proseDebt(e.path).length, 0)} hits)`,
+  EXTRA_PROSE.every((e) => proseDebt(e.path).length > 0));
 
 // 32. One English sentence, one key. Check 30 pins a handful of declared shared words;
 // this is the same drift class measured across the whole dictionary instead of a list
