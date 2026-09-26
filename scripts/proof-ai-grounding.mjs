@@ -18,7 +18,10 @@ const { asRowText, rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
 const { say, locales, DICTIONARIES } = await makeSay(server);
 // What the panel shows for one answer: the lead row and the fact rows after it, each
 // resolved in English the way the screen resolves them for its reader.
-const AT = (x) => x.answer.map((r) => say("en")(r)).join(" ");
+const isRow = (x) => !!x && typeof x === "object" && ("key" in x || "value" in x);
+// A module that goes back to composing English hands the panel a bare string; resolving
+// that would throw, and a crashed proof proves nothing about which rule broke.
+const AT = (x) => x.answer.map((r) => (isRow(r) ? say("en")(r) : "⟨NOT A ROW⟩")).join(" ");
 
 // M183: a source is a row now — `{kind, name}` — because the retrieval layer's own
 // identifier (`club:mci`) is a code, and the panel used to print it to the visitor.
@@ -57,6 +60,14 @@ if (vf) {
   ok("value answer states the market-value lead", /current market value is/.test(AT(vf.ans)));
   ok("value answer embeds the exact listed figure", AT(vf.ans).includes(formatValue(vf.p.value)));
   ok("value answer carries a real € token", /€[\d.]+[MBK]?/.test(AT(vf.ans)));
+  // Predicted from the records, not from whatever the answer happened to contain: the
+  // three priciest players in the dataset, each asked by name, must each be answered with
+  // that player's own listed figure. A hardcoded €-string cannot match three values, and
+  // the regex-scraping this replaced could quietly satisfy one player out of four hundred.
+  const rich = footballProvider.players().slice().sort((x, y) => y.value - x.value).slice(0, 3);
+  const wrongFigure = rich.filter((x) => !AT(askIntelligence(`How much is ${x.name} worth?`)).includes(formatValue(x.value)));
+  ok("the three most valuable players each get their own figure back (" + wrongFigure.length + " wrong)",
+    wrongFigure.length === 0);
   // The M102 bug degraded every value answer to these stubs; assert neither returns.
   ok("value answer is NOT the 'not in the retrieved data' stub", !/not in the retrieved data/.test(AT(vf.ans)));
   ok("value answer is NOT the old 'sits at listed' stub", !/sits at listed/.test(AT(vf.ans)));
@@ -83,6 +94,10 @@ if (vf) {
   const a = vf.ans;
   ok("answer is a non-empty list of rows", Array.isArray(a.answer) && a.answer.length > 0 && AT(a).length > 20);
   ok("answer ships an evidence fact list", Array.isArray(a.facts) && a.facts.length >= 1);
+  ok("every answer element is a row", a.answer.every(isRow));
+  ok("and the answer is its lead plus at least one retrieved fact, not a lead alone",
+    a.answer.length >= 2);
+  ok("every evidence line is a row", a.facts.every((f) => isRow(f.text) && isRow(f.label)));
   ok("answer ships sources (or the honest 'no entity' label)", Array.isArray(a.sources) && a.sources.length >= 1);
   ok("confidence is an integer within the 20..92 band", Number.isInteger(a.confidence) && a.confidence >= 20 && a.confidence <= 92);
 }
@@ -136,6 +151,8 @@ if (vf) {
   // change holds plain strings, and they must still render as written rather than as
   // "[object Object]" or a bare key.
   const legacy = asRowText("club:mci");
+  ok("the panel normalises a stored string answer into a row rather than reading it raw",
+  /content: Array\.isArray\(m\.content\) \? m\.content : \[asRowText/.test(readFileSync("features/ai/AiStudio.tsx", "utf8")));
   ok("a stored plain-string row is kept verbatim, not re-interpreted",
     "value" in legacy && rowLine(legacy, (k) => k) === "club:mci");
   // The screen is the other half of the contract: a row the panel prints raw is

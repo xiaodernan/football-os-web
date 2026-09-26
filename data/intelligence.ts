@@ -271,8 +271,12 @@ export function retrieve(question: string): RagContext {
   const seen = new Set<string>();
   for (const h of ranked) {
     for (const f of factsFor(h)) {
-      // Rows dedupe by identity, not by a slice of English text.
-      const key = "key" in f.text ? f.text.key + JSON.stringify(f.text.vars ?? null) : "value:" + f.text.value;
+      // Rows dedupe by identity, not by a slice of English text — and a fact whose text
+      // is not a row is kept (it is a bug the gates must see) instead of throwing here.
+      const key =
+        f.text && typeof f.text === "object" && "key" in f.text
+          ? f.text.key + JSON.stringify(f.text.vars ?? null)
+          : "raw:" + JSON.stringify(f.text);
       if (seen.has(key)) continue;
       seen.add(key);
       facts.push(f);
