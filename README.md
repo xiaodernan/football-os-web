@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M192 (a few numbers in that range
+Work ships one milestone per commit and is currently at M193 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2286,6 +2286,49 @@ against — the same reason `domain/attributes.ts` has never reached zero. Keyin
 site is not the same act as keying a model's prose, and the ceiling stays at 256 rather than
 banking a number the milestone did not earn. Measured after M192: build 0, proof-i18n
 **177/177**, dictionary **1433 keys × 3 locales**.
+
+### M193 — The Film Room, and what "covered" is allowed to mean
+
+Thirty counted literals, the largest single registration since M173, and the last open file
+under 40. Most of them are the screen's own voice — the report's three column headings, the
+insights grid, both long DEMO disclosures, the focus line that already had a key on its label
+and a raw literal on the count beside it. Two were never words: the plural suffixes either
+side of a hole in `clip${clips.length === 1 ? "" : "s"}`, which the scan reads as children
+and which now come from `film.libraryHintOne/Many` like every other count on the screen.
+
+The file joins the covered set, so the raw-UI ceiling drops **179 → 149** and three screens
+are left: Player OS 69, Simulation Lab 51, Data Room 29. The drop is exactly the file's own
+debt — nothing else in the tree was touched.
+
+What the scanner cannot see was keyed anyway, because a registered file should mean the
+screen speaks the reader's language rather than that it passes:
+
+- the six pipeline stages. `STAGES` held English and the progress line printed from the
+  array by position, a shape no literal-based check can see. It now holds codes, the words
+  live in `film.stage.*`, and the new space entry holds the dictionary against the array —
+  so a seventh stage added to the pipeline fails the suite instead of rendering
+  `film.stage.throw_ins` to whoever is waiting on an analysis;
+- the four toasts. `toast(` has been scanned since M159; `toast.success(` is not a call
+  shape `CALL_NAME` matches, so this screen's "Clip analysed (demo provider)" and three
+  more have always been English on every reader. They are keyed here, and the widening is
+  recorded as an open hole rather than taken — doing it properly means re-keying four other
+  files in the same commit, which is its own milestone;
+- the two `ErrorState` messages, whose exact words the Player OS still builds raw.
+
+One derivation was added rather than a second copy: the report panel and the training toast
+both show the focus list, so `focusLocal` computes it once. That keeps the `attr.name.${k}`
+interpolation site at one, which is what `countDrift` counts — a second one would have needed
+a second declaration row.
+
+Five mutations, all caught: an English literal put back into the registered file (covered
+set **and** reachability, two red); a zh-TW row deleted (locale parity, plus the new stage
+clause naming the key); a seventh stage added to `STAGES` (stage space red); the
+`DYN_SITES` declaration removed (undeclared site, plus six unreachable `film.stage.*`
+keys); a call site dropping its variables (placeholder clause red, naming the file, the key
+and the missing `{n}`).
+
+Measured after M193: `tsc` 0, build 0, suite **28 scripts / 1374 checks** (proof-i18n
+**178**), dictionary **1478 keys × 3 locales**.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

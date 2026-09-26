@@ -19,7 +19,11 @@ import { cn } from "@/lib/utils";
 // a deterministic file fingerprint — never impersonating a real pose model) and the
 // resulting reports are kept in a local library so you can compare across sessions.
 
-const STAGES = ["Uploading", "Extracting frames", "Detecting players", "Pose / movement", "Event detection", "AI analysis"];
+// The six pipeline stages are progress copy, but the line that shows them is derived
+// from a percentage rather than chosen, so the label is resolved through the dictionary
+// by code (`film.stage.*`) instead of being carried as English in this array. The codes
+// are data; check 17 holds the dictionary against this list.
+const STAGES = ["uploading", "extracting_frames", "detecting_players", "pose_movement", "event_detection", "ai_analysis"];
 
 const KIND_TONE: Record<FilmEventKind, string> = {
   scan: "text-info",
@@ -54,7 +58,7 @@ export function FilmRoom() {
     async (file: File) => {
       lastFileRef.current = file;
       if (!state.profile) {
-        setError(new Error("Complete onboarding so the analysis can reference your attributes."));
+        setError(new Error(t("common.err.needOnboarding")));
         return;
       }
       setBusy(true);
@@ -70,15 +74,15 @@ export function FilmRoom() {
         const clip: FilmClip = { clipId: `${Date.now()}`, addedAt: new Date().toISOString(), report };
         setClips((c) => [clip, ...c]);
         setSelected(clip.clipId);
-        toast.success("Clip analysed (demo provider)");
+        toast.success(t("film.toastAnalysed"));
       } catch (e) {
-        setError(e instanceof Error ? e : new Error("Analysis failed"));
+        setError(e instanceof Error ? e : new Error(t("common.err.analysisFailed")));
       } finally {
         setBusy(false);
         setProgress(0);
       }
     },
-    [state.profile],
+    [state.profile, t],
   );
 
   const remove = (clipId: string) => {
@@ -90,31 +94,49 @@ export function FilmRoom() {
 
   const insights = useMemo(() => buildFilmInsights(toClipInputs(clips)), [clips]);
 
+  // One derivation for the focus names the reader sees: the report panel and the
+  // training toast must not spell the same list twice (and a second interpolation
+  // site would be a second thing for check 16 to declare).
+  const focusLocal = current
+    ? current.report.recommendedFocus.map((k) => t(`attr.name.${k}`)).join(", ")
+    : "";
+
   const buildTraining = async () => {
     if (!current || planning) return;
     const keys = current.report.recommendedFocus;
     if (!keys.length) {
-      toast.error("This clip didn't flag a focus to train.");
+      toast.error(t("film.toastNoFocus"));
       return;
     }
-    const focus = keys.map(attributeLabel).join(" and ");
+    // The prompt is model input, not copy: the coach provider composes in English in
+    // every locale, so it keeps the English name table (check 21 pins this call). The
+    // toast under it is read by a person and takes the dictionary's names instead.
+    const focusEn = keys.map(attributeLabel).join(" and ");
     setPlanning(true);
     try {
       const plan = await requestPlan(
-        `Film review flagged: ${current.report.improvements[0]}. Build a session on ${focus}.`,
+        `Film review flagged: ${current.report.improvements[0]}. Build a session on ${focusEn}.`,
         30,
         keys,
       );
       toast.success(
-        `Training built from this clip — ${plan.session.targetMinutes}′ · ${plan.session.exercises.length} blocks on ${focus}.`,
+        t("film.toastBuilt", {
+          min: plan.session.targetMinutes,
+          n: plan.session.exercises.length,
+          focus: focusLocal,
+        }),
       );
       navigate("/player/training");
     } catch {
-      toast.error("Couldn't build training from this clip. Try again.");
+      toast.error(t("film.toastBuildFailed"));
     } finally {
       setPlanning(false);
     }
   };
+
+  // Which of the six pipeline stages the progress line is on, resolved through the
+  // dictionary by the STAGES code rather than printed from the English list.
+  const stageKey = STAGES[Math.min(STAGES.length - 1, Math.floor((progress / 100) * STAGES.length))];
 
   return (
     <div className="space-y-5">
@@ -128,7 +150,7 @@ export function FilmRoom() {
         </div>
         <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={(e) => e.target.files?.[0] && analyze(e.target.files[0])} />
         <Button size="sm" onClick={() => inputRef.current?.click()} disabled={busy}>
-          {busy ? t("film.analysing") : "Analyse a clip"}
+          {busy ? t("film.analysing") : t("film.analyseClip")}
         </Button>
       </div>
 
@@ -139,7 +161,7 @@ export function FilmRoom() {
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
         {/* Library */}
         <Panel className="p-3">
-          <SectionTitle title={t("film.library")} hint={`${clips.length} clip${clips.length === 1 ? "" : "s"}`} />
+          <SectionTitle title={t("film.library")} hint={t(clips.length === 1 ? "film.libraryHintOne" : "film.libraryHintMany", { n: clips.length })} />
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
@@ -150,7 +172,7 @@ export function FilmRoom() {
             className="mb-3 grid place-items-center rounded-lg border-2 border-dashed px-3 py-5 text-center text-xs text-muted-foreground"
           >
             <div className="text-2xl opacity-40">⬆</div>
-            <p className="mt-1">Drop a video here</p>
+            <p className="mt-1">{t("film.dropHere")}</p>
           </div>
           {clips.length ? (
             <div className="space-y-1">
@@ -185,12 +207,12 @@ export function FilmRoom() {
           {busy ? (
             <Panel className="p-4">
               <Progress value={progress} className="h-1.5" />
-              <div className="mt-3 text-xs text-muted-foreground">{STAGES[Math.min(STAGES.length - 1, Math.floor((progress / 100) * STAGES.length))]}…</div>
+              <div className="mt-3 text-xs text-muted-foreground">{t(`film.stage.${stageKey}`)}…</div>
               <LoadingBlock rows={4} />
             </Panel>
           ) : !current ? (
             <Panel className="p-4">
-              <EmptyState title={t("film.reportEmpty")} icon="▶" hint="Analyse a clip to see strengths, weaknesses, evidence frames and a recommended focus." />
+              <EmptyState title={t("film.reportEmpty")} icon="▶" hint={t("film.reportHint")} />
             </Panel>
           ) : (
             <>
@@ -199,37 +221,41 @@ export function FilmRoom() {
                   <div className="min-w-0">
                     <div className="truncate font-semibold">{current.report.fileName}</div>
                     <div className="text-xs text-muted-foreground">
-                      Provider {current.report.provider} · {current.report.durationSec}s · {current.report.events.length} events detected
+                      {t("film.providerLine", {
+                        provider: current.report.provider,
+                        duration: current.report.durationSec,
+                        events: current.report.events.length,
+                      })}
                     </div>
                   </div>
                   <Badge variant="outline" className="border-warning/40 text-warning">
-                    {current.report.demo ? "DEMO" : "LIVE"} · {current.report.confidence}% conf
+                    {t(current.report.demo ? "film.mode.demo" : "film.mode.live")} · {t("film.confidenceShort", { n: current.report.confidence })}
                   </Badge>
                 </div>
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-widest text-success">Strengths</div>
+                    <div className="text-xs font-semibold uppercase tracking-widest text-success">{t("film.strengths")}</div>
                     <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{current.report.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
                   </div>
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-widest text-destructive">Weaknesses</div>
+                    <div className="text-xs font-semibold uppercase tracking-widest text-destructive">{t("film.weaknesses")}</div>
                     <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{current.report.weaknesses.map((s, i) => <li key={i}>{s}</li>)}</ul>
                   </div>
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-widest text-primary">Top improvements</div>
+                    <div className="text-xs font-semibold uppercase tracking-widest text-primary">{t("film.improvements")}</div>
                     <ol className="mt-1 list-decimal pl-5 text-xs text-muted-foreground">{current.report.improvements.map((s, i) => <li key={i}>{s}</li>)}</ol>
                   </div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button size="sm" onClick={buildTraining} disabled={planning}>{planning ? "Building…" : "Build a training from this →"}</Button>
-                  <span className="self-center text-[11px] text-muted-foreground">Recommended focus: {current.report.recommendedFocus.map((k) => t(`attr.name.${k}`)).join(", ")}</span>
+                  <Button size="sm" onClick={buildTraining} disabled={planning}>{planning ? t("film.building") : t("film.buildTraining")}</Button>
+                  <span className="self-center text-[11px] text-muted-foreground">{t("film.recommendedFocus", { focus: focusLocal })}</span>
                 </div>
               </Panel>
 
               <Panel className="p-4">
-                <SectionTitle title={t("film.events")} hint="Event timeline with per-detection confidence" />
+                <SectionTitle title={t("film.events")} hint={t("film.timelineHint")} />
                 <div className="space-y-1.5">
                   {current.report.events.map((ev, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-secondary/40">
@@ -251,9 +277,7 @@ export function FilmRoom() {
                     </div>
                   ))}
                 </div>
-                <p className="mt-3 text-[11px] text-muted-foreground">
-                  No real pose model is bundled. The demo provider runs the same pipeline over a deterministic fingerprint of your upload and is labelled DEMO — it never impersonates a live model.
-                </p>
+                <p className="mt-3 text-[11px] text-muted-foreground">{t("film.demoDisclosure")}</p>
               </Panel>
             </>
           )}
@@ -263,23 +287,29 @@ export function FilmRoom() {
       {clips.length > 0 && (
         <Panel className="p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <SectionTitle title="Library insights" hint={`${insights.clips} clips · ${insights.analysedMinutes.toFixed(1)} min analysed`} />
+            <SectionTitle
+              title={t("film.insightsTitle")}
+              hint={t(insights.clips === 1 ? "film.insightsHintOne" : "film.insightsHintMany", {
+                n: insights.clips,
+                min: insights.analysedMinutes.toFixed(1),
+              })}
+            />
             <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
               <DemoBadge />
-              <span>Confidence {insights.confidence}%</span>
+              <span>{t("film.confidence", { n: insights.confidence })}</span>
             </div>
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Actions / min</div><div className="font-mono text-sm">{insights.actionsPerMinute.toFixed(2)}</div></div>
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Scans / min</div><div className="font-mono text-sm">{insights.scanPerMinute.toFixed(2)}</div></div>
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Scan trend</div><div className={cn("font-mono text-sm", insights.scanTrend == null ? "text-muted-foreground" : insights.scanTrend >= 0 ? "text-success" : "text-destructive")}>{insights.scanTrend == null ? "—" : `${insights.scanTrend >= 0 ? "+" : ""}${insights.scanTrend.toFixed(2)}`}</div></div>
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Mean detect conf.</div><div className="font-mono text-sm">{insights.avgConfidence}%</div></div>
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.actionsPerMin")}</div><div className="font-mono text-sm">{insights.actionsPerMinute.toFixed(2)}</div></div>
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.scansPerMin")}</div><div className="font-mono text-sm">{insights.scanPerMinute.toFixed(2)}</div></div>
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.scanTrend")}</div><div className={cn("font-mono text-sm", insights.scanTrend == null ? "text-muted-foreground" : insights.scanTrend >= 0 ? "text-success" : "text-destructive")}>{insights.scanTrend == null ? "—" : `${insights.scanTrend >= 0 ? "+" : ""}${insights.scanTrend.toFixed(2)}`}</div></div>
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.meanConf")}</div><div className="font-mono text-sm">{insights.avgConfidence}%</div></div>
           </div>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Detections per minute by type</div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("film.byType")}</div>
               <div className="mt-2 space-y-2">
                 {insights.byKind.filter((k) => k.count > 0).map((k) => {
                   const max = insights.byKind[0].perMinute || 1;
@@ -295,31 +325,31 @@ export function FilmRoom() {
                     </div>
                   );
                 })}
-                {!insights.byKind.some((k) => k.count > 0) && <p className="text-xs text-muted-foreground">No detections in the library yet.</p>}
+                {!insights.byKind.some((k) => k.count > 0) && <p className="text-xs text-muted-foreground">{t("film.noDetections")}</p>}
               </div>
             </div>
             <div>
-              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Recurring coaching focus</div>
+              <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("film.recurringFocus")}</div>
               {insights.topFocus.length ? (
                 <ul className="mt-2 space-y-1.5 text-xs">
                   {insights.topFocus.map((f) => (
                     <li key={f.key} className="flex items-center justify-between gap-2">
                       <span>{t(`attr.name.${f.key}`)}</span>
-                      <span className="font-mono text-muted-foreground">×{f.clips} clip{f.clips === 1 ? "" : "s"}</span>
+                      <span className="font-mono text-muted-foreground">{t(f.clips === 1 ? "film.focusClipsOne" : "film.focusClipsMany", { n: f.clips })}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="mt-2 text-xs text-muted-foreground">No recommended focus recorded yet.</p>
+                <p className="mt-2 text-xs text-muted-foreground">{t("film.noFocus")}</p>
               )}
-              <div className="mt-3 text-[11px] uppercase tracking-widest text-muted-foreground">Evidence</div>
+              <div className="mt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("common.evidence")}</div>
               <ul className="mt-1 space-y-1 text-[11px] text-muted-foreground">
                 {insights.evidence.map((e, i) => <li key={i}>› {e}</li>)}
               </ul>
-              <div className="mt-2 text-[11px] text-muted-foreground">Sources: {insights.sources.join(" · ")}</div>
+              <div className="mt-2 text-[11px] text-muted-foreground">{t("film.sources", { list: insights.sources.join(" · ") })}</div>
             </div>
           </div>
-          <p className="mt-3 text-[11px] text-muted-foreground">Aggregated only from clips stored on this device. Rates are detections per minute of analysed footage; the demo provider's detections are labelled DEMO and are not real pose-model output.</p>
+          <p className="mt-3 text-[11px] text-muted-foreground">{t("film.aggregationNote")}</p>
         </Panel>
       )}
     </div>

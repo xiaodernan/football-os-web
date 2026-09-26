@@ -507,6 +507,10 @@ const DYN_SITES = [
   { path: "features/development/DevelopmentPage.tsx", expr: "analysis.group", prefix: "group.", suffix: "" },
   { path: "features/film/FilmRoom.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
   { path: "features/film/FilmRoom.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
+  // M193: the analysis progress line used to print the English stage name out of the
+  // STAGES array. The array now holds codes, so the word comes from `film.stage.*` and
+  // check 17 holds the dictionary against the array itself.
+  { path: "features/film/FilmRoom.tsx", expr: "stageKey", prefix: "film.stage.", suffix: "" },
   { path: "features/football/Details.tsx", expr: "at.key", prefix: "attr.name.", suffix: "" },
   { path: "features/football/Details.tsx", expr: "at.key", prefix: "attr.name.", suffix: "" },
   { path: "features/football/Details.tsx", expr: "s.key", prefix: "attr.name.", suffix: "" },
@@ -718,6 +722,13 @@ const SPACES = new Map([
     // in all three locales rather than rendering `drill.new_drill` to a reader.
     name: "drill catalogue keys",
     values: spaceOf("domain/training.ts", /const DRILLS: TrainingExercise\[\] = \[[\s\S]*?\n\];/, /\{ key: "([^"]+)"/g),
+  }],
+  ["film.stage.|stageKey", {
+    // M193: the six pipeline stages, read out of the array the progress line computes
+    // from — so a seventh stage added to STAGES fails here instead of rendering
+    // `film.stage.new_stage` to whoever is waiting on the analysis.
+    name: "film pipeline stages",
+    values: spaceOf("features/film/FilmRoom.tsx", /const STAGES = \[[^\]]*\]/, /"([a-z_]+)"/g),
   }],
   ["cmd.group.|group", S_CMD_GROUP],
 ]);
@@ -1412,6 +1423,19 @@ const RAW_COVERED = [
   // Also not a screen, but the one place a route that does not exist yet speaks to a
   // visitor: the not-found/build-queue fallback. It reached 0 at M162.
   "src/App.tsx",
+  // M193. The Film Room, 30 counted literals — the largest single registration since
+  // M173, and the last file in the open set under 40. Two of the 30 were never words:
+  // the plural suffixes either side of a hole in `clip${…}s`, which the scan reads as
+  // children. The rest is the screen's own voice: the report's three column headings,
+  // the insights grid, the two long DEMO disclosures, and the focus line that had a
+  // key on the label and a raw literal on the count next to it. What the scanner
+  // cannot see was keyed anyway, because a registered file should mean the screen
+  // speaks the reader's language, not that it passes: the six pipeline stages (codes
+  // in STAGES, words in `film.stage.*`, gated by check 17), the four toasts —
+  // `toast.success(` is not a call shape the scanner matches, which is its own hole
+  // and is left open on purpose here rather than widened mid-milestone — and the two
+  // ErrorState messages, whose words the Player OS still prints raw.
+  "features/film/FilmRoom.tsx",
 ];
 // The ceiling is the debt that is not in the covered set. Lower it when a screen
 // is localised; it may only ever go down on purpose.
@@ -1502,7 +1526,11 @@ const RAW_COVERED = [
 // 179 as of M176, measured on the gate line: PlayerOS 79 → 69. The ten that left are the
 // growth tab's panel headings, and unlike M174/M175 none of them is a code or a rename —
 // every one is a word a visitor reads. The panel also stopped inventing a badge.
-const RAW_UI_CEILING = 179;
+// 149 as of M193, measured on the gate line: the Film Room is covered and its 30 left the
+// open count, which is the shape this number is supposed to have — the drop is exactly the
+// file's own debt, with nothing else in the tree touched. Three files remain, and all three
+// are the big screens: Player OS, Simulation Lab, Data Room.
+const RAW_UI_CEILING = 149;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
