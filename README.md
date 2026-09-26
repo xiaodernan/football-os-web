@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M176 (a few numbers in that range
+Work ships one milestone per commit and is currently at M177 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -1763,6 +1763,77 @@ files**; the player screen still carries **69** counted literals, so it remains 
 Open debt is **179 across 4 files** (PlayerOS 69, SimulationLab 51, FilmRoom 30,
 DataRoom 29) with the ceiling at exactly that measured number, **61** dynamic `t()` sites
 all declared and live, and the dictionary at **1243 keys × 3 locales**.
+
+### M177 — One screen, two languages for the same verdict, and the gate that only saw what someone had remembered to list
+
+The load page's banner printed its zone name out of `ZONE_LABEL` in `domain/load.ts` — five
+English words — and the legend directly beneath it printed `t("ld.zoneUnder")` and friends.
+A reader of 简体中文 got 负荷不足 in one line and "Underloaded" in the line above it, on the
+same screen, describing the same verdict. Four of the five words were already in the
+dictionary; the fifth had never been translated because it had never been a key. So the fix
+is not "translate the banner", it is *stop letting a domain module own a word*: `ZONE_LABEL`
+is now `Record<LoadZone, RowText>` and all four screens that name a zone resolve it through
+`rowLine`, which is the only thing in the app that turns a row into text.
+
+**The same rule was written twice, in two different kinds of thing.** `classifyZone` decided
+the verdict with `if (acwr < 0.8) … if (acwr <= 1.3) …` and the legend displayed the
+thresholds as four hand-typed strings. One fact, two sources, one of them a display string —
+which is how a boundary could move and leave the legend describing the old one. `ACWR_BANDS`
+is now the single table, `classifyZone` reads its verdict out of it, and `ZONE_LEGEND`
+composes the range text from the same numbers; the proof pins those composed strings to
+exactly what the screen used to type by hand, so the refactor cannot quietly change what a
+visitor reads.
+
+**Two of the zone's sentences were false, and the gate that now catches them started green
+while they were being said.** A ratio that cannot be computed (a chronic average that rounds
+to zero) classifies as caution, and caution's advice line read *"Ratio — is climbing toward
+the risk band"* — quoting a dash as a number, next to a banner that printed the same dash,
+and recommending the reader swap out their hardest session. An empty current week classifies
+as `none`, whose line read *"No completed sessions in the last 28 days"* to a reader whose
+log held sessions at day 10 and day 17; its label claimed **"No data"**. Each zone now says
+which window is actually empty, and the classifier's third argument went with the arm that
+could never fire: `weekLoad` is the 7-day slice of `chronicTotal`, so any week with load has
+nonzero chronic load under it. That is measured rather than asserted, and `classifyZone.length === 2`
+refuses the dead argument's return.
+
+**The lesson about the gate is the one worth keeping.** Check 28 has existed since M175 to
+stop a screen printing a row object instead of resolving it — and through this entire
+milestone, while a new `RowText` map was handed to four screens, it stayed green. It was
+looking at `zone.label`, `m.text`, `g.title`: a list of names somebody wrote down. A fact
+that lives in a type annotation should not need a hand-written list to keep enforcing itself,
+so check 28b derives its subjects — every `const X: Record<…, RowText>` in the codebase is a
+row producer, and every indexed read of one inside a component has to sit inside a `rowLine(`
+call. Today that is 2 maps and 5 reads. Probe M8 prints the map straight into JSX and gets
+the red; probe M9 does the same to the legend; probe M10 deletes the type annotation, and the
+gate reports `(1 derived maps, 0 reads)` — *losing the derivation is itself a failure*, which
+is the difference between a gate and a note to a future self.
+
+`scripts/proof-load.mjs` went from 34 checks to **62**. The load-bearing one is an
+equivalence sweep: `classifyZone` is run across all 401 two-decimal ratios from 0.00 to 4.00
+against a longhand replica of the pre-table rule, and the sweep is required to have crossed
+all four bands so it cannot pass vacuously; then each printed band edge (0.79/0.80, 1.30/1.31,
+1.50/1.51) is pinned on both sides. The zone rows are resolved through `rowLine` against a
+recording `t`, and the set of them is compared to the `LoadZone` union *read out of the
+module's own source*, so a sixth band without a label is red here rather than an `undefined`
+in someone's banner. Fourteen mutation probes, all red on their own clause and all restored
+byte-identical: a zone name back to a word typed in the domain, a threshold disagreeing with
+the rule it replaced, a boundary flipping from inclusive to exclusive, the dash-in-prose
+sentence restored (advice and recommendation separately), the legend's first range
+hand-typed, the dead argument restored, a sixth zone without a row, the rest-week lying
+about 28 days, its recommendation calling an empty week a missing baseline, the label back to
+"No data", and the three gate-shape probes above.
+
+Verification boundary unchanged from M175/M176: the in-app browser still does not commit a
+React tree at the machine level, and `LoadPage`/`Dashboard`/`PlayerOS` all read `useOs()`, so
+no rendered-string claim is made here — the evidence is `tsc`, the build, the two rewritten
+gates and the probe record.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is now 26 scripts /
+**1199 checks** (proof-i18n **134** after 28b landed, proof-load **62** up from 34). Covered
+set stays **36 files** and the raw-UI debt
+stays at **179 across 4 files** — this milestone moved no literals out of a component, it
+moved a *noun* out of a domain module, which the raw-UI scan cannot see and `RowText` can.
+Dictionary **1244 keys × 3 locales**.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

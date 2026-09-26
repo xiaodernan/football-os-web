@@ -3,7 +3,8 @@ import { toast } from "sonner";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
-import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
+import { buildLoad, ZONE_LABEL, ZONE_LEGEND, type LoadZone } from "@/domain/load";
+import { rowLine } from "@/domain/rowText";
 import { DEMO_MODE } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
@@ -89,7 +90,7 @@ export function LoadPage() {
           {/* zone banner */}
           <div className={cn("rounded-xl border px-4 py-3", ZONE_TONE[load.zone])}>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-semibold uppercase tracking-widest">{ZONE_LABEL[load.zone]}</span>
+              <span className="text-sm font-semibold uppercase tracking-widest">{rowLine(ZONE_LABEL[load.zone], t)}</span>
               <span className="font-mono text-sm">{t("ld.acwr")} {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
             </div>
             <p className="mt-1 text-sm">{load.advice}</p>
@@ -160,10 +161,11 @@ export function LoadPage() {
               <Panel className="p-4">
                 <SectionTitle title={t("ld.thresholdsTitle")} />
                 <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-                  <li><span className="font-mono">&lt;0.8</span> · {t("ld.zoneUnder")}</li>
-                  <li><span className="font-mono">0.8–1.3</span> · {t("ld.zoneOptimal")}</li>
-                  <li><span className="font-mono">1.3–1.5</span> · {t("ld.zoneCaution")}</li>
-                  <li><span className="font-mono">&gt;1.5</span> · {t("ld.zoneHigh")}</li>
+                  {ZONE_LEGEND.map((band) => (
+                    <li key={band.zone}>
+                      <span className="font-mono">{band.band}</span> · {rowLine(ZONE_LABEL[band.zone], t)}
+                    </li>
+                  ))}
                 </ul>
               </Panel>
             </div>

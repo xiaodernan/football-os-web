@@ -1,3 +1,4 @@
+import type { RowText } from "./rowText";
 import type { TrainingSession } from "./types";
 import { sessionIntensity } from "./training";
 
@@ -109,9 +110,9 @@ export function buildLoad(input: LoadInput): LoadSummary {
   const weekly = buildWeekly(nowMs, daily);
   const { monotony, strain } = buildMonotony(weekly);
 
-  const zone = classifyZone(acwr, weekLoad, chronicTotal);
+  const zone = classifyZone(acwr, weekLoad);
 
-  const advice = buildAdvice(zone, acwr, weekLoad);
+  const advice = buildAdvice(zone, acwr);
   const recommendation = buildRecommendation(zone, acwr, hasData, weekly.length, confidenceInput(totalSessions, weekly.length));
 
   const evidence = buildEvidence(totalSessions, durationMin, weekLoad, acute, chronic, acwr, weekly, monotony, strain);
@@ -174,20 +175,49 @@ function buildMonotony(weekly: WeeklyLoad[]): { monotony: number | null; strain:
   return { monotony, strain };
 }
 
-function classifyZone(acwr: number | null, weekLoad: number, chronicTotal: number): LoadZone {
+// The ACWR bands, in the order the classifier tests them. Every number in this app's
+// load guidance lives here once: `classifyZone` reads the verdict out of this table and
+// `ZONE_LEGEND` composes the range text out of it, so the legend under the zone banner
+// cannot drift from the rule that put you in that zone — which is exactly what it used to
+// be: four threshold strings typed into the screen next to three numbers in a switch.
+// `upTo` is inclusive for the two middle bands (ratio 1.30 is still "optimal", 1.50 still
+// "cautionary") and exclusive for the first (`0.80` is not "under").
+export const ACWR_BANDS: { zone: Exclude<LoadZone, "none">; upTo: number | null; incl: boolean }[] = [
+  { zone: "under", upTo: 0.8, incl: false },
+  { zone: "optimal", upTo: 1.3, incl: true },
+  { zone: "caution", upTo: 1.5, incl: true },
+  { zone: "high", upTo: null, incl: false },
+];
+
+// The third argument is the 28-day total, and `weekLoad` is the 7-day slice of it,
+// so a nonzero week always means a nonzero chronic total. That makes the old
+// "no ratio AND no chronic load" arm unreachable — the only way to an absent ratio is
+// a chronic total small enough to round to zero, which is a history that exists but is
+// too short to divide by. Hence: unknown ratio means "not enough baseline yet", and it
+// is said that way rather than by borrowing a band's sentence.
+export function classifyZone(acwr: number | null, weekLoad: number): LoadZone {
   if (!weekLoad) return "none";
-  if (acwr == null) return chronicTotal > 0 ? "caution" : "under";
-  if (acwr < 0.8) return "under";
-  if (acwr <= 1.3) return "optimal";
-  if (acwr <= 1.5) return "caution";
+  if (acwr == null) return "caution";
+  for (const band of ACWR_BANDS) {
+    if (band.upTo == null) return band.zone;
+    if (band.incl ? acwr <= band.upTo : acwr < band.upTo) return band.zone;
+  }
   return "high";
 }
 
-function buildAdvice(zone: LoadZone, acwr: number | null, weekLoad: number): string {
+function buildAdvice(zone: LoadZone, acwr: number | null): string {
   const ratio = acwr == null ? "—" : acwr.toFixed(2);
+  // `classifyZone` can only reach a null ratio through the caution band, and the band's
+  // sentence quotes a number that does not exist. Say what is actually missing instead.
+  if (zone === "caution" && acwr == null) {
+    return "There is load this week, but not enough of a 28-day history to divide it by, so the ratio itself is not available yet. Keep the next sessions light and regular — the bands become meaningful once a month of load exists.";
+  }
   switch (zone) {
     case "none":
-      return "No completed sessions in the last 28 days, so there is no load to manage yet. Log a session to start your baseline.";
+      // Reachable two ways: no history at all, and a month of history with an empty
+      // current week. The old line asserted the first even to readers who had three
+      // sessions behind them, so the sentence keeps to the window that is actually empty.
+      return "Nothing logged in the last 7 days, so there is no weekly load to judge and no ratio to report. Log a session when you're ready to start — or restart — the count.";
     case "under":
       return `Your acute:chronic ratio is ${ratio} — under the training you're used to. If you feel fresh, you have room to add a session; ramp up gradually rather than jumping.`;
     case "optimal":
@@ -225,8 +255,16 @@ function buildRecommendation(
       text = "Take 3–4 lighter days, then rebuild volume step by step.";
       break;
     default:
-      text = "Keep logging to establish a reliable baseline.";
+      // Only the `none` zone reaches here, and only when there is data at all: the
+      // recommendation is null for a brand-new account. So this is a rest week, not a
+      // missing baseline, and it should not read like one.
+      text = "Nothing logged in the last 7 days, so the ratio has no weekly load to compare. One session brings the number back.";
   }
+  // A null ratio with weekly load only ever classifies as caution, and that band's line
+  // tells the reader to swap out their hardest session because the ratio is climbing.
+  // Nothing is climbing; there is simply no month of load to divide by yet. (An empty
+  // week is the `none` arm above, which is the truer statement for that state.)
+  if (acwr == null && zone === "caution") text = "Not enough of a 28-day history to compute a ratio. Keep the week light and regular, then re-check once a month of load exists.";
   if (lowHistory) text += " (Early trend — the ratio firms up after ~3 weeks of data.)";
   const confidence = acwr == null ? Math.min(conf, 45) : conf;
   return { text, confidence };
@@ -260,10 +298,26 @@ function buildEvidence(
   return e;
 }
 
-export const ZONE_LABEL: Record<LoadZone, string> = {
-  none: "No data",
-  under: "Underloaded",
-  optimal: "Optimal",
-  caution: "Precautionary",
-  high: "High-risk spike",
+// A zone name is a key, not a word typed in here. The banner on /load, the ACWR legend
+// under it, the player screen's load tile and the dashboard's recovery line all print the
+// same five names, and until now the legend read the dictionary while the banner read this
+// map — so a reader of 简体中文 got 负荷不足 in one line and "Underloaded" in the one above
+// it, on the same screen. `RowText` is the convention that makes producing an English
+// noun in a domain module a type error rather than an oversight.
+export const ZONE_LABEL: Record<LoadZone, RowText> = {
+  none: { key: "ld.zoneNone" },
+  under: { key: "ld.zoneUnder" },
+  optimal: { key: "ld.zoneOptimal" },
+  caution: { key: "ld.zoneCaution" },
+  high: { key: "ld.zoneHigh" },
 };
+
+// The range text the legend prints, composed from the same numbers the classifier uses.
+export const ZONE_LEGEND: { zone: Exclude<LoadZone, "none">; band: string }[] = ACWR_BANDS.map(
+  (band, i) => {
+    const prev = i > 0 ? ACWR_BANDS[i - 1].upTo : null;
+    if (band.upTo == null) return { zone: band.zone, band: `>${prev}` };
+    if (prev == null) return { zone: band.zone, band: `<${band.upTo}` };
+    return { zone: band.zone, band: `${prev}–${band.upTo}` };
+  },
+);

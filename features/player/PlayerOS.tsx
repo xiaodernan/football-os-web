@@ -262,7 +262,7 @@ function Coach() {
             className={cn("mt-3 flex items-center justify-between rounded-lg border px-3 py-2 text-xs transition-colors hover:bg-secondary/40", LOAD_TONE[load.zone])}
           >
             <span className="flex items-center gap-1.5">
-              <span className="font-semibold uppercase tracking-widest">{ZONE_LABEL[load.zone]}</span>
+              <span className="font-semibold uppercase tracking-widest">{rowLine(ZONE_LABEL[load.zone], t)}</span>
               <span className="font-mono">ACWR {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
             </span>
             <span className="text-muted-foreground">Coach adapts to this →</span>
@@ -573,6 +573,7 @@ function Goals() {
 }
 
 function Workload() {
+  const { t } = useI18n();
   const { state } = useOs();
   const completed = state.sessions.filter((s) => s.status === "completed");
   // Single source of truth: use the canonical rolling 7-/28-DAY model the Load
@@ -585,7 +586,7 @@ function Workload() {
       <div className="grid grid-cols-2 gap-3 lg:col-span-1">
         <StatTile label="Acute load" value={load.acute} sub="7-day daily avg" />
         <StatTile label="Chronic" value={load.chronic} sub="28-day daily avg" />
-        <StatTile label="ACWR" value={acwr ?? "—"} tone={acwr && acwr > 1.5 ? "down" : acwr && acwr >= 0.8 ? "up" : "neutral"} sub={ZONE_LABEL[load.zone]} />
+        <StatTile label="ACWR" value={acwr ?? "—"} tone={acwr && acwr > 1.5 ? "down" : acwr && acwr >= 0.8 ? "up" : "neutral"} sub={rowLine(ZONE_LABEL[load.zone], t)} />
         <StatTile label="Sessions" value={completed.length} />
       </div>
       <Panel className="p-4 lg:col-span-2">

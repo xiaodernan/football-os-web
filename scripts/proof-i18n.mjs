@@ -1009,6 +1009,33 @@ ok("every read of a keyed row is resolved by rowLine (" + keyedRowReads + " read
   keyedRowReads >= 4 && unresolvedRows.length === 0);
 for (const u of unresolvedRows.slice(0, 8)) console.log("       bare read: " + u);
 
+// 28b. Check 28's list is spelled by hand, so it only ever covers what whoever wrote
+//      it happened to know about. M177 is the proof of the cost: `ZONE_LABEL` became a
+//      `Record<LoadZone, RowText>` mid-milestone — five row objects handed to four
+//      screens — and check 28 stayed green while printing one of them raw would render
+//      "[object Object]". The type annotation is the fact here, and a fact in the code
+//      should not need a hand-written list to keep it true. So this half is derived:
+//      every map declared `: Record<…, RowText>` anywhere in the app is a row producer,
+//      and every indexed read of one in a component has to sit inside a rowLine( call.
+const ROW_MAPS = [...appSrc]
+  .filter(([p]) => p.endsWith(".ts"))
+  .flatMap(([, code]) => [...code.matchAll(/\bconst\s+(\w+)\s*:\s*Record<[^;{}]*RowText\s*>/g)].map((m) => m[1]));
+const TSX = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
+const bareMapReads = [];
+let mapReads = 0;
+for (const [p, body] of TSX) {
+  for (const name of ROW_MAPS) {
+    for (const hit of body.matchAll(new RegExp("\\b" + name + "\\s*\\[", "g"))) {
+      mapReads++;
+      const before = body.slice(Math.max(0, hit.index - 24), hit.index);
+      if (!/rowLine\([^)]{0,16}$/.test(before)) bareMapReads.push(p + ": " + hit[0] + "…");
+    }
+  }
+}
+ok("every read of a RowText map is resolved by rowLine (" + ROW_MAPS.length + " derived maps, " + mapReads + " reads, " + bareMapReads.length + " bare)",
+  ROW_MAPS.length >= 2 && mapReads >= 5 && bareMapReads.length === 0);
+for (const b of bareMapReads.slice(0, 8)) console.log("       bare map read: " + b);
+
 // 22. Raw UI text, measured across the whole app rather than one screen at a
 //     time. scripts/lib/rawUiScan.mjs reads the three positions a reader of the
 //     interface actually sees — a JSX text node, a display prop or in-line

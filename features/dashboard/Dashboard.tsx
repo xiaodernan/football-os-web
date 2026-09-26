@@ -13,6 +13,7 @@ import {
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
+import { rowLine } from "@/domain/rowText";
 import { overallRating } from "@/domain/attributes";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
@@ -239,7 +240,7 @@ export function Dashboard() {
                 >
                   <span className="font-medium uppercase tracking-wide">{t("dash.recovery")}</span>
                   <span className="flex items-center gap-2">
-                    <span>{ZONE_LABEL[growth.recovery.zone]}</span>
+                    <span>{rowLine(ZONE_LABEL[growth.recovery.zone], t)}</span>
                     <span className="font-mono tabular-nums">{t("dash.acwrN", { n: growth.recovery.acwr?.toFixed(2) ?? "—" })}</span>
                     <span aria-hidden>→</span>
                   </span>
