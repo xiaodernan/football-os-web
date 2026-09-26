@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M185 (a few numbers in that range
+Work ships one milestone per commit and is currently at M186 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2179,6 +2179,34 @@ English, a news fact composed as English, the value lead's figure untethered fro
 record, the value lead interpolating the wrong field, a source row's kind swapped for its
 name, and a placeholder renamed inside one locale's answer lead. `proof-ai-grounding` is 43
 checks (was 40); `tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is **28 scripts / 1348 checks**. No rendered-page claim.
+
+### M186 — The scout report's verdict, ledger lines and provenance publish as rows
+
+`domain/scouting.ts` computed a real comparison against the positional template and then
+said it in English: the headline ("Technical runs ahead of the CM template; Mental is the
+shortfall"), four evidence lines and three provenance chips. They are rows now (15 keys ×3
+locales), the player page resolves them through `rowLine`, and the Football AI carries the
+**same headline row** as one of its evidence lines — a row re-used, not English interpolated
+into a key, which is the nesting rule M184 established. `cat`/`cat2` joined `CODE_VARS` so a
+row can name an attribute category through the charts' existing `attr.*` space (the gate's
+own `S_CAT` list, not a restated copy).
+
+Four new clauses, then four mutations, all caught: a verdict composed as English again, a
+provenance chip typed as a string, the interpreter's category branch removed, and the player
+page printing the verdict raw. The last one is the interesting gap — check 28c cannot see it,
+because `headline` is *also* a plain-string field in the player page's import graph, so the
+name is shadowed and the derived gate stands down by design; until a type-level gate exists,
+that read site is asserted against the screen's source text instead.
+
+Two numbers moved that matter: the domain-prose ceiling re-based **312 → 277 across 13
+modules** (M182's DNA move and M186's scouting move together), and `playerDna.ts` joined the
+per-file zero list. `scouting.ts` deliberately did **not**: `modelPlayerProfile` still
+composes a note and four provenance strings, so the file stays counted rather than being
+excused.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, the suite is **28 scripts / 1354 checks**
+(proof-i18n **168**, proof-ai-grounding **47**), dictionary **1394 keys × 3 locales**. No
+rendered-page claim.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
