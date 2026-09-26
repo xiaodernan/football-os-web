@@ -3,6 +3,7 @@
 // shared rather than re-tested per caller.
 // Run: node scripts/proof-m99.mjs
 import { createServer } from "vite";
+import { readFileSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { playerVector, playerDna, computeDna, archetypeLabelEn, ARCHETYPES, VECTOR_MIN_KEYS } = await server.ssrLoadModule("/domain/playerDna.ts");
@@ -94,6 +95,32 @@ ok("deterministic evolution row", JSON.stringify(again.evolution) === JSON.strin
 // same words in every locale, not the same words in one and a fallback in another.
 ok("and it reads the same in every locale on re-derivation",
   locales.every((l) => say(l)(again.evolution) === say(l)(dna.evolution)));
+
+// ---- M187: the modelled profile publishes rows, and the player page resolves them ----
+{
+  const { modelPlayerProfile } = await server.ssrLoadModule("/domain/scouting.ts");
+  const { makeSay } = await import("./lib/rows.mjs");
+  const { say, locales, DICTIONARIES } = await makeSay(server);
+  const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
+  const isRow = (x) => !!x && typeof x === "object" && ("key" in x || "value" in x);
+  const players = footballProvider.players();
+  const measured = modelPlayerProfile(players.find((p) => (p.attributes ? Object.keys(p.attributes).length : 0) >= 8));
+  const modelled = modelPlayerProfile({ ...players[0], attributes: undefined });
+  ok("both branches of the profile note are rows", isRow(measured.note) && isRow(modelled.note) && measured.note.key !== modelled.note.key);
+  ok("and each provenance list is rows, reusing the vector chip rather than minting a second one for it",
+    measured.sources.every(isRow) && modelled.sources.every(isRow) && measured.sources[0].key === "sc.out.src.vector");
+  const said = [measured.note, modelled.note, ...measured.sources, ...modelled.sources];
+  // A typed string must fail a check, not throw inside the interpreter (M180's lesson).
+  const leaks = said.flatMap((r) => (isRow(r) ? locales.filter((l) => { const t = say(l)(r); return !t.trim() || /\{\w+\}/.test(t) || /^(sc|det|attr)\.[a-z]/i.test(t); }) : ["not a row: " + JSON.stringify(r)]));
+  ok("no profile line leaks a key or an unfilled placeholder in any locale (" + leaks.length + ")", leaks.length === 0);
+  ok("the measured and modelled notes read differently in every locale",
+    isRow(measured.note) && isRow(modelled.note) && locales.every((l) => say(l)(measured.note) !== say(l)(modelled.note)));
+  // Check 28c cannot reach this: `note` and `sources` are also plain-string fields in
+  // the player page's import graph, so the derived gate stands down by design.
+  const PAGE = readFileSync("features/football/Details.tsx", "utf8");
+  ok("the player page resolves the profile note and its provenance rows",
+    PAGE.includes("{rowLine(profile.note, t)}") && /profile\.sources\.map\(\(s\) => rowLine\(s, t\)\)/.test(PAGE));
+}
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

@@ -180,7 +180,7 @@ export function PlayerDetail({ id }: { id: string }) {
             ))}
           </div>
         )}
-        <p className="mt-3 text-[11px] text-muted-foreground">{profile.note} {t("common.sources")}: {profile.sources.join(" · ")}</p>
+        <p className="mt-3 text-[11px] text-muted-foreground">{rowLine(profile.note, t)} {t("common.sources")}: {profile.sources.map((s) => rowLine(s, t)).join(" · ")}</p>
       </Panel>
 
       <Panel className="p-4">

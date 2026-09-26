@@ -1778,13 +1778,13 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // literals across 14 of 31 modules (was 339 across 17 — see the rule note above). The next
 // milestone to localise a module lowers this number and writes the new one here; it never
 // raises it.
-const DOMAIN_PROSE_CEILING = 277;
+const DOMAIN_PROSE_CEILING = 271;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
 // them at 1, 3 and 5 "literals" — an ISO date builder, three €-format arms and five
 // scoreline templates), so pinning them now is free and stops a real sentence landing there.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-file, not just in the total: 24 literals can leave load.ts and enter review.ts and

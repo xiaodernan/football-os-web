@@ -241,8 +241,9 @@ export interface ModelledProfile {
    *  position-group estimate */
   measured: boolean;
   confidence: number;
-  note: string;
-  sources: string[];
+  /** Rows, like the report above: the sentence is the app's, the numbers the record's. */
+  note: RowText;
+  sources: RowText[];
 }
 
 // When the dataset carries the attribute vector the player's overall was built
@@ -261,11 +262,9 @@ export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
     attributes,
     measured: !!real,
     confidence: real ? 92 : Math.round(Math.max(35, Math.min(70, 40 + skill * 30))),
-    note: real
-      ? "These are the attribute values this player's overall rating is derived from in the world dataset."
-      : "Modelled from overall rating + position using the demo attribute baseline — an estimate, not measured data.",
+    note: real ? { key: "sc.prof.note.measured" } : { key: "sc.prof.note.modelled" },
     sources: real
-      ? ["World dataset (per-player attribute vector)", "Attribute model (labels and ranking)"]
-      : ["World dataset (overall, position group)", "Demo attribute model (baselineAttributes)"],
+      ? [{ key: "sc.out.src.vector" }, { key: "sc.prof.src.labels" }]
+      : [{ key: "sc.prof.src.overall" }, { key: "sc.prof.src.baseline" }],
   };
 }

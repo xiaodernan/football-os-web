@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M186 (a few numbers in that range
+Work ships one milestone per commit and is currently at M187 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2207,6 +2207,26 @@ excused.
 `tsc --noEmit` exits 0, `npm run build` succeeds, the suite is **28 scripts / 1354 checks**
 (proof-i18n **168**, proof-ai-grounding **47**), dictionary **1394 keys × 3 locales**. No
 rendered-page claim.
+
+### M187 — The modelled attribute profile's note and provenance are rows too
+
+`modelPlayerProfile` is what the player page says when the dataset ships no vector for a
+player: an estimate, plainly labelled. Its note ("Modelled from overall rating and position
+using the demo attribute baseline — an estimate, not measured data.") and its four
+provenance chips were English strings. They are rows now (5 new keys ×3 locales, and the
+per-player-vector chip *reuses* `sc.out.src.vector` rather than minting a second key for the
+same sentence — the rule check 32 enforces).
+
+That empties `domain/scouting.ts`: it joins the per-file zero list and the domain ceiling
+re-bases **277 → 271** (across 12 counted modules) in the same step. `proof-m99` grew
+seven checks (row shape on both branches, provenance lists, all three locales resolving
+without a leaked key or placeholder, the two notes reading differently per locale, and the
+player page's read sites — again asserted against source text, because `note`/`sources` are
+also plain-string fields in that file's import graph so 28c stands down by design). Three
+mutations, all caught, no gate crash: the note typed as English again, a provenance chip as
+a string, and the page printing the note raw. Measured after this commit: `tsc` 0, `npm run
+build` 0, suite **28 scripts / 1360 checks** (proof-i18n **169**, proof-m99 **28**),
+dictionary **1399 keys × 3 locales**. No rendered-page claim.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
