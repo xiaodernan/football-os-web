@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M181 (a few numbers in that range
+Work ships one milestone per commit and is currently at M182 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2033,6 +2033,44 @@ number are the part that can go red again.
 
 Verification boundary unchanged: the numbers here
 come from the gate's own run; no rendered-page claim is made.
+
+### M182 — The Football DNA's names and blurbs moved into the dictionary
+
+The DNA card, the player page, the comparison screen and the scouting table all printed
+"Deep Playmaker" and "Dictates tempo from deep with composure and range." to every reader,
+because those words were fields on `domain/playerDna.ts`'s archetype table. The table now
+carries the code and the score only; the ten names and ten descriptions are `dna.arch.*` and
+`dna.blurb.*` (21 new keys ×3 locales, including `dna.evolution`), and `CODE_VARS` grew
+`arch`/`arch2` so a row can name an archetype in the reader's language.
+
+Moving them surfaced two things worth keeping:
+
+- **`key` was the wrong word in that table.** The gate that audits every `{ key: "…" }`
+  literal in a module mentioning `RowText` read the archetype entries as rows naming keys
+  called `creator`, `progressor`, `ball_winner` — and it was right to be suspicious, since
+  `key` is exactly what the row union uses for a dictionary key. The field is `id` now, so
+  the collision is gone rather than the gate being told to look away.
+- **A stored code can still reach the page.** `Player.archetype` holds an id, and M58's
+  original defect was that id rendering as a name. Check 28d now requires every read of
+  `.archetype` in a component to sit inside a `dna.arch.` lookup (6 guarded reads, 0 raw),
+  and `dna.arch.…`/`dna.blurb.…` are declared value spaces whose members are read out of
+  `ARCHETYPES` itself — plus the reverse direction, because a space read from the table only
+  proves the table is covered: an archetype deleted from the model would otherwise leave its
+  words behind as keys that look reachable.
+
+`archetypeLabel` became `archetypeLabelEn` and kept exactly one caller: the demo coach's
+rationale text, which is English by construction until its own sentences are keyed. The DNA
+proof gained three checks and lost none: the evolution row resolves to both names in every
+locale with no id leaking, it is deterministic through the interpreter and not just the
+object, and the table is asserted to carry codes only.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, the suite is **28 scripts / 1325 checks**
+(proof-i18n **163**, proof-m99 **23**) and the dictionary is **1340 keys × 3 locales**. Seven
+mutation probes, all caught, all restored byte-identical: an archetype id with no word, a
+繁體 description deleted, the evolution row printed raw, a screen showing the stored id, the
+interpreter's archetype branch removed, an English name re-added to the table, and a lookup
+invented under an undeclared prefix. No rendered-page claim: the in-app browser still
+commits no React tree.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

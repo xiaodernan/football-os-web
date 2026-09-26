@@ -1,7 +1,7 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
 import { attributeLabel, weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
-import { computeDna } from "@/domain/playerDna";
+import { computeDna, archetypeLabelEn } from "@/domain/playerDna";
 import { buildLoad, type LoadZone } from "@/domain/load";
 import { makeRng, hashString } from "@/lib/rng";
 
@@ -149,8 +149,8 @@ class DeterministicCoachProvider implements CoachProvider {
       `Warm-up activates movement before technique work.`,
       `Primary focus ${effFocus.map(attributeLabel).join(" + ")} targets your ${isTargeted ? "selected role-gap priorities" : "current biggest measurable gap"}.`,
       `A decision-making block trains scanning under time pressure.`,
-      `The game-realistic block is your ${attributeLabel(dna.primary.gameFocus)} drill — ${dna.primary.label}s express themselves there.`,
-      `DNA read: ${dna.primary.label} (${dna.evolutionPath}) — session shaped to your role.`,
+      `The game-realistic block is your ${attributeLabel(dna.primary.gameFocus)} drill — ${archetypeLabelEn(dna.primary.id)}s express themselves there.`,
+      `DNA read: ${archetypeLabelEn(dna.primary.id)} (${archetypeLabelEn(dna.secondary.id)} → ${archetypeLabelEn(dna.primary.id)}) — session shaped to your role.`,
     ];
 
     const confidence = Math.round(

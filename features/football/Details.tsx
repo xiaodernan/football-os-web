@@ -19,7 +19,7 @@ import {
 import { simulateMatch, type SimResult, type TeamInput } from "@/domain/matchEngine";
 import { modelPlayerProfile, scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
-import { archetypeLabel, playerDna } from "@/domain/playerDna";
+import { playerDna } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, PlayerRef } from "@/domain/types";
@@ -110,7 +110,7 @@ export function PlayerDetail({ id }: { id: string }) {
         <StatTile label={t("common.overall")} value={p.overall} tone="up" />
         <StatTile label={t("compare.m.potential")} value={p.potential} sub={p.potential > p.overall ? `+${p.potential - p.overall}` : t("det.peak")} />
         <StatTile label={t("compare.m.value")} value={formatValue(p.value)} />
-        <StatTile label={t("det.archetype")} value={<span className="text-base">{archetypeLabel(p.archetype)}</span>} sub={comp?.name} />
+        <StatTile label={t("det.archetype")} value={<span className="text-base">{t(`dna.arch.${p.archetype}`)}</span>} sub={comp?.name} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -149,7 +149,7 @@ export function PlayerDetail({ id }: { id: string }) {
         <DnaCard
           bare
           dna={dna}
-          fallbackLabel={archetypeLabel(p.archetype)}
+          fallbackLabel={t(`dna.arch.${p.archetype}`)}
           fallbackNote={t("det.dna.fallbackNote")}
           note={t("det.dna.note")}
         />

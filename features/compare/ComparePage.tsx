@@ -3,7 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { compare, type CompareMetric } from "@/domain/compare";
-import { archetypeLabel, playerDna } from "@/domain/playerDna";
+import { playerDna } from "@/domain/playerDna";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, DemoBadge, DnaCard } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
@@ -84,12 +84,12 @@ export function ComparePage() {
               <div className="mt-1 grid gap-3 sm:grid-cols-2">
                 <DnaCard
                   dna={dnaA}
-                  fallbackLabel={archetypeLabel(result.a.archetype)}
+                  fallbackLabel={t(`dna.arch.${result.a.archetype}`)}
                   fallbackNote={t("compare.dnaNoVector")}
                 />
                 <DnaCard
                   dna={dnaB}
-                  fallbackLabel={archetypeLabel(result.b.archetype)}
+                  fallbackLabel={t(`dna.arch.${result.b.archetype}`)}
                   fallbackNote={t("compare.dnaNoVector")}
                 />
               </div>
@@ -225,7 +225,7 @@ function PlayerPicker({ players, value, onChange, exclude, side }: {
     <Panel className="p-3">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("compare.player")} {side}</span>
-        {selected && <span className="text-xs text-muted-foreground">{archetypeLabel(selected.archetype)}</span>}
+        {selected && <span className="text-xs text-muted-foreground">{t(`dna.arch.${selected.archetype}`)}</span>}
       </div>
       {selected ? (
         <div className="flex items-center gap-2">

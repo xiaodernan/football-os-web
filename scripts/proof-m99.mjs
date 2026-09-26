@@ -5,7 +5,10 @@
 import { createServer } from "vite";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { playerVector, playerDna, computeDna, archetypeLabel, VECTOR_MIN_KEYS } = await server.ssrLoadModule("/domain/playerDna.ts");
+const { playerVector, playerDna, computeDna, archetypeLabelEn, ARCHETYPES, VECTOR_MIN_KEYS } = await server.ssrLoadModule("/domain/playerDna.ts");
+const { makeSay } = await import("./lib/rows.mjs");
+const { say, locales, DICTIONARIES } = await makeSay(server);
+const archName = (locale, id) => DICTIONARIES[locale][`dna.arch.${id}`];
 const { scoutReport, modelPlayerProfile, templateEdge } = await server.ssrLoadModule("/domain/scouting.ts");
 const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
 
@@ -36,11 +39,19 @@ const vector = { ball_control: 80, first_touch: 78, passing: 84, long_passing: 8
   confidence: 74, game_intelligence: 86, consistency: 72 };
 const dna = playerDna(vector);
 ok("vector → DNA present", !!dna);
-ok("primary and secondary differ", dna.primary.key !== dna.secondary.key);
-ok("evolution path names secondary → primary", dna.evolutionPath === `${dna.secondary.label} → ${dna.primary.label}`);
-ok("primary label resolves to a human label, not a slug", !/_/.test(dna.primary.label));
+ok("primary and secondary differ", dna.primary.id !== dna.secondary.id);
+// The evolution line is a row now, so what is asserted is that both ends reach the
+// reader as words of their own language — and that no archetype id leaks onto the page.
+ok("evolution row names secondary then primary, in the reader’s own words",
+  locales.every((l) => say(l)(dna.evolution) === `${archName(l, dna.secondary.id)} → ${archName(l, dna.primary.id)}`));
+ok("and no locale prints an archetype id where a name belongs",
+  locales.every((l) => !/[a-z]+_[a-z0-9]+/.test(say(l)(dna.evolution))));
+ok("the primary archetype’s name is a human name, not a slug", !/_/.test(archName("en", dna.primary.id)));
+ok("the model publishes codes only: no name or description rides on the table",
+  !("label" in dna.primary) && !("blurb" in dna.primary) &&
+  ARCHETYPES.every((a) => !("label" in a) && !("blurb" in a)));
 
-// 4. THE KEY CLAIM: every seeded player stores `archetype: dna.primary.key`,
+// 4. THE KEY CLAIM: every seeded player stores `archetype: dna.primary.id`,
 //    computed from the vector they also store. Re-deriving it must reproduce
 //    the stored key exactly, or the player page would contradict the dataset.
 const players = footballProvider.players();
@@ -50,7 +61,7 @@ for (const p of players) {
   const derived = playerDna(p.attributes);
   if (!derived) continue;
   withVector++;
-  if (derived.primary.key !== p.archetype) mismatched++;
+  if (derived.primary.id !== p.archetype) mismatched++;
 }
 ok("seeded players carry a vector", withVector === players.length);
 ok("re-derived primary reproduces the stored archetype for every player", mismatched === 0);
@@ -72,13 +83,17 @@ const lean = { id: "lean-1", name: "Lean", position: "CM", positionGroup: "CM", 
 const leanReport = scoutReport(lean);
 ok("ratings-only player: report says no vector", leanReport.hasVector === false);
 ok("ratings-only player: DNA withheld", playerDna(lean.attributes) === null);
-ok("ratings-only player: archetypeLabel still resolves the stored key", archetypeLabel(lean.archetype) === "Creator");
+ok("ratings-only player: the English accessor the demo provider uses still resolves the stored id", archetypeLabelEn(lean.archetype) === "Creator");
 
 // 7. Determinism: the same vector always yields the same DNA.
 const again = computeDna(vector);
-ok("deterministic primary", again.primary.key === dna.primary.key);
-ok("deterministic secondary", again.secondary.key === dna.secondary.key);
-ok("deterministic evolution path", again.evolutionPath === dna.evolutionPath);
+ok("deterministic primary", again.primary.id === dna.primary.id);
+ok("deterministic secondary", again.secondary.id === dna.secondary.id);
+ok("deterministic evolution row", JSON.stringify(again.evolution) === JSON.stringify(dna.evolution));
+// Determinism has to survive the interpreter too: the same vector resolved twice is the
+// same words in every locale, not the same words in one and a fallback in another.
+ok("and it reads the same in every locale on re-derivation",
+  locales.every((l) => say(l)(again.evolution) === say(l)(dna.evolution)));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

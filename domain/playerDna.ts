@@ -1,11 +1,17 @@
 import type { Attributes } from "./types";
+import { DICTIONARIES } from "@/i18n/dictionaries";
+import type { RowText } from "./rowText";
 
-// Football DNA: archetypes computed dynamically from the attribute profile,
-// not assigned labels. Each archetype scores against the attribute vector.
+// Football DNA: archetypes computed dynamically from the attribute profile, not
+// assigned labels. Each archetype scores against the attribute vector.
+//
+// The table holds the CODE and the score. The words that name it — the display title and
+// the one-line description — live in the dictionary (`dna.arch.*`, `dna.blurb.*`), because
+// a name shown on four screens is translation surface, not model data. ARCHETYPE_KEYS is
+// the list both the row interpreter and the i18n gate read, so an archetype cannot be added
+// without its words arriving in all three locales.
 export interface Archetype {
-  key: string;
-  label: string;
-  blurb: string;
+  id: string;
   // The attribute most expressive of this role in a game-realistic block; the
   // coach steers the session's GAME drill to this so "shaped to your role" is
   // literal, not decorative. Always one of the game-phase drill focuses.
@@ -19,51 +25,57 @@ const avg = (a: Attributes, ks: string[]) =>
 
 export const ARCHETYPES: Archetype[] = [
   {
-    key: "creator", label: "Creator", blurb: "Turns possession into chances in the final third.", gameFocus: "crossing",
+    id: "creator", gameFocus: "crossing",
     score: (a) => avg(a, ["passing", "long_passing", "crossing", "dribbling", "set_pieces"]) * 0.7 + g(a, "game_intelligence") * 0.3,
   },
   {
-    key: "progressor", label: "Progressor", blurb: "Moves the ball up the pitch through carries and line-breaking passes.", gameFocus: "game_intelligence",
+    id: "progressor", gameFocus: "game_intelligence",
     score: (a) => avg(a, ["passing", "press_resistance", "first_touch", "space_awareness"]) * 0.6 + g(a, "scanning") * 0.4,
   },
   {
-    key: "ball_winner", label: "Ball Winner", blurb: "Wins duels and breaks play up in midfield.", gameFocus: "transition_awareness",
+    id: "ball_winner", gameFocus: "transition_awareness",
     score: (a) => avg(a, ["defensive_awareness", "positioning", "strength", "concentration"]) * 0.7 + g(a, "transition_awareness") * 0.3,
   },
   {
-    key: "deep_playmaker", label: "Deep Playmaker", blurb: "Dictates tempo from deep with composure and range.", gameFocus: "game_intelligence",
+    id: "deep_playmaker", gameFocus: "game_intelligence",
     score: (a) => avg(a, ["long_passing", "composure", "decision_making", "scanning"]) * 0.8 + g(a, "positioning") * 0.2,
   },
   {
-    key: "press_resistant", label: "Press Resistant", blurb: "Escapes pressure and keeps possession under duress.", gameFocus: "game_intelligence",
+    id: "press_resistant", gameFocus: "game_intelligence",
     score: (a) => avg(a, ["press_resistance", "ball_control", "first_touch", "agility", "composure"]) * 0.85 + g(a, "balance") * 0.15,
   },
   {
-    key: "box_crasher", label: "Box Crasher", blurb: "Arrives late into the box to finish.", gameFocus: "transition_awareness",
+    id: "box_crasher", gameFocus: "transition_awareness",
     score: (a) => avg(a, ["off_ball_movement", "finishing", "positioning", "acceleration"]) * 0.75 + g(a, "game_intelligence") * 0.25,
   },
   {
-    key: "inverted_fullback", label: "Inverted Fullback", blurb: "Drinks inside to control midfield as a fullback.", gameFocus: "game_intelligence",
+    id: "inverted_fullback", gameFocus: "game_intelligence",
     score: (a) => avg(a, ["passing", "positioning", "decision_making", "stamina"]) * 0.6 + g(a, "scanning") * 0.4,
   },
   {
-    key: "transition_runner", label: "Transition Runner", blurb: "Explodes in behind on the break.", gameFocus: "sprint",
+    id: "transition_runner", gameFocus: "sprint",
     score: (a) => avg(a, ["acceleration", "sprint", "off_ball_movement", "explosiveness"]) * 0.8 + g(a, "space_awareness") * 0.2,
   },
   {
-    key: "target_man", label: "Target Man", blurb: "Hold-up focal point, wins the aerial battle.", gameFocus: "crossing",
+    id: "target_man", gameFocus: "crossing",
     score: (a) => avg(a, ["strength", "first_touch", "set_pieces", "positioning"]) * 0.6 + g(a, "composure") * 0.4,
   },
   {
-    key: "false_9", label: "False 9", blurb: "Drops deep to create, blurs the centre-forward role.", gameFocus: "game_intelligence",
+    id: "false_9", gameFocus: "game_intelligence",
     score: (a) => avg(a, ["ball_control", "passing", "dribbling", "space_awareness", "game_intelligence"]) * 0.8 + g(a, "first_touch") * 0.2,
   },
 ];
 
+/** Every archetype the model can name, in table order. */
+export const ARCHETYPE_KEYS: string[] = ARCHETYPES.map((a) => a.id);
+
 export interface Dna {
   primary: Archetype;
   secondary: Archetype;
-  evolutionPath: string;
+  /** "Ball Winner → Box Crasher", as a row: the two ends are archetype CODES, so the
+   *  arrow, the words and any language's own phrasing of "develops into" belong to the
+   *  reader's dictionary, not to this module. */
+  evolution: RowText;
 }
 
 export function computeDna(a: Attributes): Dna {
@@ -75,12 +87,12 @@ export function computeDna(a: Attributes): Dna {
   return {
     primary,
     secondary,
-    evolutionPath: `${secondary.label} → ${primary.label}`,
+    evolution: { key: "dna.evolution", vars: { arch: secondary.id, arch2: primary.id } },
   };
 }
 
 export function archetypeByKey(key: string): Archetype | undefined {
-  return ARCHETYPES.find((a) => a.key === key);
+  return ARCHETYPES.find((a) => a.id === key);
 }
 
 /** The minimum vector length we treat as "the dataset ships this player's own
@@ -103,8 +115,10 @@ export function playerDna(attributes?: Attributes): Dna | null {
   return vector ? computeDna(vector) : null;
 }
 
-/** Players store only the archetype key, so every display site resolves it
- *  here rather than printing a slug like `ball_winner` to the user. */
-export function archetypeLabel(key: string): string {
-  return archetypeByKey(key)?.label ?? key;
+/** The English display name, straight from the dictionary's English column. UI sites must
+ *  NOT use this — they interpolate `dna.arch.${key}` so the reader gets their own language.
+ *  Its only caller is the demo AI provider, which composes its answers in English; when
+ *  those sentences are keyed this function goes away with them. */
+export function archetypeLabelEn(key: string): string {
+  return archetypeByKey(key) ? DICTIONARIES.en[`dna.arch.${key}`] : key;
 }

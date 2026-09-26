@@ -469,6 +469,20 @@ const DYN_SITES = [
   { path: "features/achievements/AchievementsPage.tsx", expr: "a.id", prefix: "ach.desc.", suffix: "" },
   { path: "features/dashboard/Dashboard.tsx", expr: "growth.next.id", prefix: "ach.desc.", suffix: "" },
   { path: "features/achievements/AchievementsPage.tsx", expr: "a.tier", prefix: "ach.tier.", suffix: "" },
+  // M182: the Football DNA's words left domain/playerDna.ts for the dictionary, so every
+  // display site interpolates an archetype id. They are declared here individually (twice
+  // where a file has two) because check 16 compares the declared count to the live one —
+  // and the value list is read out of the table, not written down again here.
+  { path: "domain/rowText.ts", expr: "code", prefix: "dna.arch.", suffix: "" },
+  { path: "features/compare/ComparePage.tsx", expr: "result.a.archetype", prefix: "dna.arch.", suffix: "" },
+  { path: "features/compare/ComparePage.tsx", expr: "result.b.archetype", prefix: "dna.arch.", suffix: "" },
+  { path: "features/compare/ComparePage.tsx", expr: "selected.archetype", prefix: "dna.arch.", suffix: "" },
+  { path: "features/football/Details.tsx", expr: "p.archetype", prefix: "dna.arch.", suffix: "" },
+  { path: "features/football/Details.tsx", expr: "p.archetype", prefix: "dna.arch.", suffix: "" },
+  { path: "features/scouting/ScoutingPanel.tsx", expr: "p.archetype", prefix: "dna.arch.", suffix: "" },
+  { path: "ui/primitives.tsx", expr: "dna.primary.id", prefix: "dna.arch.", suffix: "" },
+  { path: "ui/primitives.tsx", expr: "dna.secondary.id", prefix: "dna.arch.", suffix: "" },
+  { path: "ui/primitives.tsx", expr: "dna.primary.id", prefix: "dna.blurb.", suffix: "" },
   // M180: the graph's legend is derived from TYPE_COLOR, the one table that names every
   // kind the canvas can draw, so a sixth kind cannot appear without a word for it. The
   // value space below reads that table rather than restating it.
@@ -696,6 +710,27 @@ claimByPrefix("group.", S_GROUP);
 claimByPrefix("prof.mode.", S_MODE);
 claimByPrefix("onb.goal.", S_ONB_GOAL);
 claimByPrefix("onb.age.", S_ONB_AGE);
+// M182: one space, two prefixes — the archetype ids are the same list whether the site is
+// asking for its name or its one-line description, and both are read out of the table that
+// decides which archetypes exist.
+const S_DNA = {
+  name: "football DNA archetypes",
+  values: spaceOf("domain/playerDna.ts", /export const ARCHETYPES[\s\S]*?\n\];/, /id:\s*"([a-z0-9_]+)"/g),
+};
+claimByPrefix("dna.arch.", S_DNA);
+claimByPrefix("dna.blurb.", S_DNA);
+// Both directions, because a space read from the table only proves the table is covered.
+// An archetype deleted from the model would otherwise leave its words behind as keys no
+// site can build — reachable-looking, because the prefix claim still spells them out.
+{
+  const ids = S_DNA.values;
+  const archKeys = pairsOf(0).map(([k]) => k).filter((k) => k.startsWith("dna.arch.")).map((k) => k.slice("dna.arch.".length));
+  const blurbKeys = pairsOf(0).map(([k]) => k).filter((k) => k.startsWith("dna.blurb.")).map((k) => k.slice("dna.blurb.".length));
+  ok(`dna.arch.… · the archetype ids and the dictionary's name rows are one list (${ids.join(", ")} / ${archKeys.length} keys)`,
+    ids.length >= 8 && [...ids].sort().join() === [...archKeys].sort().join());
+  ok(`dna.blurb.… · every archetype has a description and nothing else has one (${blurbKeys.length} keys)`,
+    [...ids].sort().join() === [...blurbKeys].sort().join());
+}
 
 // 16. The table and the source must agree in both directions.
 const SITE = /\bt\(\s*`([^`]*)\$\{([^}]*)\}([^`]*)`/g;
@@ -1105,6 +1140,29 @@ ok(`the derivation is reading the /review screen's prose fields (${gatedSites.fi
   gatedSites.includes("ReviewPage.tsx · reason") &&
   gatedSites.includes("LoadPage.tsx · advice"));
 
+
+// 28d. The code-leak half of the same rule, for the newest code family. A player record
+//      stores its archetype as an id (`ball_winner`), which is meaningful to the model and
+//      noise on the page — M58's original defect was exactly a slug rendering as a name.
+//      Since M182 the words live in `dna.arch.*`, so every read of `.archetype` in a
+//      component has to sit inside that lookup. Writes (`archetype: dna.primary.id`) are
+//      not reads and are skipped by requiring the dot.
+const ARCH_READ = /\.([A-Za-z_$][\w$]*\.)?archetype\b/g;
+const slugReads = [];
+let slugGuarded = 0;
+for (const [p2, body] of TSX) {
+  for (const hit of body.matchAll(ARCH_READ)) {
+    const before = body.slice(Math.max(0, hit.index - 30), hit.index);
+    // `"det.archetype"` is a dictionary key inside a string, not a read of a record.
+    if (/["'`][\w$]*$/.test(before)) continue;
+    if (/dna\.arch\.\$\{[\w$.]*$/.test(before)) { slugGuarded++; continue; }
+    slugReads.push(`${p2}: …${before.slice(-16)}${hit[0]}`);
+  }
+}
+ok(`every archetype id a component reads, it reads through dna.arch. (${slugGuarded} guarded, ${slugReads.length} raw)`,
+  slugReads.length === 0);
+for (const r of slugReads.slice(0, 6)) console.log("       raw id read: " + r);
+ok(`the id-leak scan is reading sites that exist (${slugGuarded} guarded reads)`, slugGuarded >= 6);
 
 // 22. Raw UI text, measured across the whole app rather than one screen at a
 //     time. scripts/lib/rawUiScan.mjs reads the three positions a reader of the

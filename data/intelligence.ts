@@ -5,7 +5,7 @@
 
 import { attributeLabel } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
-import { archetypeLabel } from "@/domain/playerDna";
+import { archetypeLabelEn } from "@/domain/playerDna";
 import { scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
 import {
@@ -84,7 +84,7 @@ function playerFacts(pid: string): EvidenceFact[] {
   const c = getClub(p.clubId);
   const out: EvidenceFact[] = [
     { label: p.name, text: `${p.name} — ${p.position}, ${p.age}y, ${p.nation}, at ${c?.name}. Overall ${p.overall}, potential ${p.potential}, worth ${formatValue(p.value)}, ${p.foot} foot.`, to: `/players/${p.id}` },
-    { label: "Profile", text: `Scouting archetype: ${archetypeLabel(p.archetype)}.`, to: `/players/${p.id}` },
+    { label: "Profile", text: `Scouting archetype: ${archetypeLabelEn(p.archetype)}.`, to: `/players/${p.id}` },
   ];
   const report = scoutReport(p);
   if (report.hasVector) {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DEMO_MODE } from "@/data/footballService";
 import { useI18n } from "@/i18n";
+import { rowLine } from "@/domain/rowText";
 import type { Dna } from "@/domain/playerDna";
 
 export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
@@ -103,11 +104,11 @@ export function DnaCard({ dna, note, fallbackLabel, fallbackNote, bare }: { dna?
   ) : (
     <>
       {heading}
-      <div className="mt-1 text-lg font-semibold text-primary">{dna.primary.label}</div>
-      <p className="text-xs text-muted-foreground">{dna.primary.blurb}</p>
+      <div className="mt-1 text-lg font-semibold text-primary">{t(`dna.arch.${dna.primary.id}`)}</div>
+      <p className="text-xs text-muted-foreground">{t(`dna.blurb.${dna.primary.id}`)}</p>
       <div className="mt-2 text-xs">
-        {t("dna.secondary")} <span className="font-medium">{dna.secondary.label}</span>
-        <span className="text-muted-foreground"> · {dna.evolutionPath}</span>
+        {t("dna.secondary")} <span className="font-medium">{t(`dna.arch.${dna.secondary.id}`)}</span>
+        <span className="text-muted-foreground"> · {rowLine(dna.evolution, t)}</span>
       </div>
       {note && <p className="mt-2 text-[11px] text-muted-foreground">{note}</p>}
     </>

@@ -201,7 +201,7 @@ function makeWorld() {
       clubId: club.id,
       overall,
       potential,
-      archetype: dna.primary.key,
+      archetype: dna.primary.id,
       value: marketValue(overall, age),
       foot,
       attributes: attrs,
