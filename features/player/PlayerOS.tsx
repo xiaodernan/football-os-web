@@ -284,7 +284,7 @@ function Coach() {
               <div className="mt-2 space-y-1.5">
                 {plan.session.exercises.map((e, i) => (
                   <div key={i} className="flex items-center justify-between rounded-md border bg-card/30 px-3 py-1.5 text-sm">
-                    <span><span className="mr-2 font-mono text-[10px] uppercase text-muted-foreground">{e.phase}</span>{e.label}</span>
+                    <span><span className="mr-2 font-mono text-[10px] uppercase text-muted-foreground">{e.phase}</span>{t(`drill.${e.key}`)}</span>
                     <span className="font-mono text-xs text-muted-foreground">{e.minutes}′</span>
                   </div>
                 ))}
@@ -446,7 +446,7 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
       {open && (
         <div className="mt-2 space-y-1 border-t pt-2">
           {session.exercises.map((e, i) => (
-            <div key={i} className="flex justify-between text-xs text-muted-foreground"><span>{e.label}</span><span className="font-mono">{e.minutes}′</span></div>
+            <div key={i} className="flex justify-between text-xs text-muted-foreground"><span>{t(`drill.${e.key}`)}</span><span className="font-mono">{e.minutes}′</span></div>
           ))}
         </div>
       )}

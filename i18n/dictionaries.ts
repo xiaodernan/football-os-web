@@ -1469,6 +1469,27 @@ const en: Dict = {
   "gap.ev.noData": "No saved attributes to compare.",
   "gap.src.baseline": "Football OS role archetype baseline (demo heuristic model)",
   "gap.src.profile": "Your saved attribute profile",
+  // The drill catalogue (domain/training.ts). Each drill carries a stable `key` that is
+  // persisted inside every session, so the label is resolved by key at render time and a
+  // session built before this milestone still reads correctly.
+  "drill.dynamic_warmup": "Dynamic mobility + activation",
+  "drill.rondo": "Rondo press-resistance (3v1)",
+  "drill.first_touch_wall": "Wall rebounds — oriented first touch",
+  "drill.weak_foot_receiving": "Weak-foot receiving circuits",
+  "drill.passing_lanes": "Two-touch passing lanes",
+  "drill.long_pass_targets": "Switch-of-play long passing",
+  "drill.dribble_weave": "Close-control weave + body feints",
+  "drill.finishing_pattern": "Cut-back finishing pattern",
+  "drill.shooting_box": "Box strikes under fatigue",
+  "drill.crossing_run": "Overlapping cross + finish",
+  "drill.scanning_square": "Head-check grid (scanning)",
+  "drill.possession_game": "Positional possession 4v4+3",
+  "drill.transition_sprint": "Transition sprints + recovery shape",
+  "drill.def_1v1": "Defensive 1v1 jockey + recover",
+  "drill.small_sided": "Small-sided game — free play",
+  "drill.set_piece_reps": "Set-piece repetition block",
+  "drill.sprint_intervals": "Speed endurance intervals",
+  "drill.cooldown_breathe": "Cool-down jog + breathing + reflection",
 };
 
 const zhCN: Dict = {
@@ -2895,6 +2916,24 @@ const zhCN: Dict = {
   "gap.ev.noData": "没有已保存的属性可供比较。",
   "gap.src.baseline": "Football OS 角色原型基线（演示启发式模型）",
   "gap.src.profile": "你已保存的属性档案",
+  "drill.dynamic_warmup": "动态灵活性 + 激活",
+  "drill.rondo": "抢圈抗压（3v1）",
+  "drill.first_touch_wall": "墙式回弹 —— 有方向的第一次触球",
+  "drill.weak_foot_receiving": "弱脚接球循环练习",
+  "drill.passing_lanes": "两脚出球传球线路",
+  "drill.long_pass_targets": "转移长传",
+  "drill.dribble_weave": "近距离控球绕桩 + 身体假动作",
+  "drill.finishing_pattern": "倒三角回传射门套路",
+  "drill.shooting_box": "疲劳状态下的禁区射门",
+  "drill.crossing_run": "套边传中 + 完成射门",
+  "drill.scanning_square": "回头观察方格训练（扫描）",
+  "drill.possession_game": "位置化控球 4v4+3",
+  "drill.transition_sprint": "转换冲刺 + 回防站位",
+  "drill.def_1v1": "防守 1v1 贴身跟防 + 回追",
+  "drill.small_sided": "小场对抗 —— 自由发挥",
+  "drill.set_piece_reps": "定位球重复练习组",
+  "drill.sprint_intervals": "速度耐力间歇跑",
+  "drill.cooldown_breathe": "放松慢跑 + 呼吸 + 复盘",
 };
 
 const zhTW: Dict = {
@@ -4323,6 +4362,24 @@ const zhTW: Dict = {
   "gap.ev.noData": "沒有已儲存的屬性可供比較。",
   "gap.src.baseline": "Football OS 角色原型基線（示範啟發式模型）",
   "gap.src.profile": "你已儲存的屬性檔案",
+  "drill.dynamic_warmup": "動態靈活性 + 啟動",
+  "drill.rondo": "搶圈抗壓（3v1）",
+  "drill.first_touch_wall": "牆式回彈 —— 有方向的第一次觸球",
+  "drill.weak_foot_receiving": "弱腳接球循環練習",
+  "drill.passing_lanes": "兩腳出球傳球路線",
+  "drill.long_pass_targets": "轉移長傳",
+  "drill.dribble_weave": "近距離控球繞樁 + 身體假動作",
+  "drill.finishing_pattern": "倒三角回傳射門套路",
+  "drill.shooting_box": "疲勞狀態下的禁區射門",
+  "drill.crossing_run": "套邊傳中 + 完成射門",
+  "drill.scanning_square": "回頭觀察方格訓練（掃描）",
+  "drill.possession_game": "位置化控球 4v4+3",
+  "drill.transition_sprint": "轉換衝刺 + 回防站位",
+  "drill.def_1v1": "防守 1v1 貼身跟防 + 回追",
+  "drill.small_sided": "小場對抗 —— 自由發揮",
+  "drill.set_piece_reps": "定位球重複練習組",
+  "drill.sprint_intervals": "速度耐力間歇跑",
+  "drill.cooldown_breathe": "放鬆慢跑 + 呼吸 + 複盤",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

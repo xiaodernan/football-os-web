@@ -573,6 +573,10 @@ const DYN_SITES = [
   // M191: the onboarding position picker resolves its captions through the dictionary
   // instead of printing the domain table's English `label`.
   { path: "features/onboarding/Onboarding.tsx", expr: "p.id", prefix: "group.", suffix: "" },
+  // M192: a session's exercises print the drill's own key, not the catalogue's English
+  // label — the key is what a stored session carries, so an old session reads correctly.
+  { path: "features/player/PlayerOS.tsx", expr: "e.key", prefix: "drill.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "e.key", prefix: "drill.", suffix: "" },
   // M166: the palette's section headings come out of its own group list, and its mode
   // switch rows reuse the Mode union. Both were invisible to the gate before this
   // milestone for different reasons — the heading reached the screen through a prop the
@@ -708,6 +712,12 @@ const SPACES = new Map([
   ["comm.sort.|s", {
     name: "community sorts",
     values: spaceOf("features/community/CommunityHub.tsx", /\["recent", "top"\] as const/, quoted),
+  }],
+  ["drill.|e.key", {
+    // The catalogue's own keys, so adding a drill fails the suite until it has a label
+    // in all three locales rather than rendering `drill.new_drill` to a reader.
+    name: "drill catalogue keys",
+    values: spaceOf("domain/training.ts", /const DRILLS: TrainingExercise\[\] = \[[\s\S]*?\n\];/, /\{ key: "([^"]+)"/g),
   }],
   ["cmd.group.|group", S_CMD_GROUP],
 ]);
@@ -860,6 +870,14 @@ const groupDrift = POSITION_GROUPS.filter((g) => en[`group.${g.id}`] !== g.label
 ok(`en group.* still equals the domain position-group table, all ${POSITION_GROUPS.length} of them (${groupDrift.map((g) => g.id).join(", ") || "none"})`,
   POSITION_GROUPS.length >= 8 && groupDrift.length === 0);
 
+// The drill catalogue is held the same way. Its `label` is the English reference for
+// `drill.*`, and the pair may not drift — this is what caught the catalogue's own
+// "Defential 1v1 jockey" typo, which the dictionary had already spelled correctly.
+const drillPairs = [...(appSrc.get("domain/training.ts") ?? "").matchAll(/\{ key: "([^"]+)", label: "([^"]+)"/g)];
+const drillDrift = drillPairs.filter(([, k, l]) => en[`drill.${k}`] !== l).map(([, k]) => k);
+ok(`en drill.* still equals the drill catalogue, all ${drillPairs.length} of them (${drillDrift.join(", ") || "none"})`,
+  drillPairs.length >= 18 && drillDrift.length === 0);
+
 // 19b. Those two `label` fields are the English reference the checks above hold the
 //      dictionary against — they are not copy a screen may print. The onboarding
 //      position picker did print one, so a reader on 简体中文 picked a position from a
@@ -872,19 +890,32 @@ ok(`en group.* still equals the domain position-group table, all ${POSITION_GROU
 // reported it as a fourth offender. What matters is whether a screen reads the label off
 // a row it got from one of these two tables, so the parameter of the map is what gets
 // looked for.
-const TABLE_ID = /\b(POSITION_GROUPS|ATTRIBUTE_DEFS)\b/;
-const MAP_PARAM = /\b(?:POSITION_GROUPS|ATTRIBUTE_DEFS)\.(?:map|filter|find|forEach)\(\s*\(?\s*([A-Za-z_$][\w$]*)\s*\)?\s*=>/g;
-let tableReaders = 0;
+// M192 added the drill catalogue and `exercises` to the sources: a session's rows carry
+// the same kind of English `label`, and they reach the screen through `exercises.map`.
+// `byWeek.map((w) => …)` in the same file keeps its own `label`, which is why the map
+// source is named rather than the property being banned outright.
+// The file filter is "maps one of these rows", not "mentions one of these tables": after
+// M192 a screen can render a drill without ever naming the catalogue, because the row
+// arrives inside a session. Requiring the table identifier would have silently stopped
+// covering the very site this milestone fixed.
+// The callback may take an index as well: `exercises.map((e, i) => …)` is how both drill
+// sites are written, and a pattern that only accepted a single parameter matched neither
+// of them — so the clause passed on a file it had never actually read. The trailing group
+// is optional so `(p) =>`, `p =>` and `(e, i) =>` all resolve to the row name.
+const MAP_PARAM = /\b(?:POSITION_GROUPS|ATTRIBUTE_DEFS|DRILLS|exercises)\.(?:map|filter|find|forEach)\(\s*\(?\s*([A-Za-z_$][\w$]*)\s*(?:,[^)]*)?\)?\s*=>/g;
+let rowMappers = 0;
 const labelPrinters = [];
 for (const [p, s] of appSrc) {
-  if (!/^(features|ui)\//.test(p) || !TABLE_ID.test(s)) continue;
-  tableReaders += 1;
-  for (const m of s.matchAll(MAP_PARAM)) {
+  if (!/^(features|ui)\//.test(p)) continue;
+  const params = [...s.matchAll(MAP_PARAM)];
+  if (!params.length) continue;
+  rowMappers += 1;
+  for (const m of params) {
     if (new RegExp(`\\b${m[1]}\\.label\\b`).test(s)) labelPrinters.push(`${p} (${m[1]}.label)`);
   }
 }
-ok(`no screen prints a domain name table's English label (${tableReaders} readers, ${labelPrinters.join(", ") || "none"})`,
-  tableReaders > 0 && labelPrinters.length === 0);
+ok(`no screen prints a domain name table's English label (${rowMappers} files mapping those rows, ${labelPrinters.join(", ") || "none"})`,
+  rowMappers > 0 && labelPrinters.length === 0);
 
 // 20. One namespace per concept. `compare.cat.*` was a second copy of the same
 //     four category names; a screen reading one and a radar reading the other is
@@ -1807,6 +1838,11 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // literals across 14 of 31 modules (was 339 across 17 — see the rule note above). The next
 // milestone to localise a module lowers this number and writes the new one here; it never
 // raises it. 264 → 256 at M190, which published domain/gap.ts's eight lines as rows.
+// M192 did NOT move this number, and that is worth stating: keying the drill catalogue's
+// render site leaves its eighteen `label` fields in the table, because those are the
+// English reference the drift check below holds `drill.*` against — the same reason
+// domain/attributes.ts has never reached zero. The leak was real and is fixed; the
+// ratchet measures a different thing.
 const DOMAIN_PROSE_CEILING = 256;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.

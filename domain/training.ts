@@ -21,7 +21,7 @@ const DRILLS: TrainingExercise[] = [
   { key: "scanning_square", label: "Head-check grid (scanning)", focus: "scanning", minutes: 8, intensity: 2, phase: "decision" },
   { key: "possession_game", label: "Positional possession 4v4+3", focus: "decision_making", minutes: 12, intensity: 4, phase: "decision" },
   { key: "transition_sprint", label: "Transition sprints + recovery shape", focus: "transition_awareness", minutes: 9, intensity: 4, phase: "game" },
-  { key: "def_1v1", label: "Defential 1v1 jockey + recover", focus: "defensive_awareness", minutes: 8, intensity: 3, phase: "decision" },
+  { key: "def_1v1", label: "Defensive 1v1 jockey + recover", focus: "defensive_awareness", minutes: 8, intensity: 3, phase: "decision" },
   { key: "small_sided", label: "Small-sided game — free play", focus: "game_intelligence", minutes: 14, intensity: 4, phase: "game" },
   { key: "set_piece_reps", label: "Set-piece repetition block", focus: "set_pieces", minutes: 8, intensity: 2, phase: "technique" },
   { key: "sprint_intervals", label: "Speed endurance intervals", focus: "sprint", minutes: 10, intensity: 5, phase: "game" },
