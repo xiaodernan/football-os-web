@@ -110,7 +110,7 @@ export function Onboarding() {
                   className={cn("rounded-lg border px-2 py-2 text-xs transition", positionGroup === p.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}
                 >
                   <div className="font-mono font-bold">{p.id}</div>
-                  <div className="truncate text-[10px]">{p.label}</div>
+                  <div className="truncate text-[10px]">{t(`group.${p.id}`)}</div>
                 </button>
               ))}
             </div>

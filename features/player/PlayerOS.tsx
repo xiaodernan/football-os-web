@@ -3,14 +3,12 @@ import { Link, useRouter, matchRoute } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import {
-  ATTRIBUTE_DEFS,
   ATTRIBUTE_KEYS,
   CATEGORY_ORDER,
   attributesByCategory,
   attributeLabel,
   overallRating,
   weakestAttributes,
-  strongestAttributes,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
 import { SUPPORTED_MINUTES, sessionIntensity, type GrowthDelta } from "@/domain/training";

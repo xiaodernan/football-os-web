@@ -570,6 +570,9 @@ const DYN_SITES = [
   // them rather than against a hand-typed list.
   { path: "features/community/CommunityHub.tsx", expr: "tag", prefix: "comm.tag.", suffix: "" },
   { path: "features/community/CommunityHub.tsx", expr: "s", prefix: "comm.sort.", suffix: "" },
+  // M191: the onboarding position picker resolves its captions through the dictionary
+  // instead of printing the domain table's English `label`.
+  { path: "features/onboarding/Onboarding.tsx", expr: "p.id", prefix: "group.", suffix: "" },
   // M166: the palette's section headings come out of its own group list, and its mode
   // switch rows reuse the Mode union. Both were invisible to the gate before this
   // milestone for different reasons — the heading reached the screen through a prop the
@@ -856,6 +859,32 @@ ok(`en attr.name.* still equals the domain attribute table, all ${ATTRIBUTE_DEFS
 const groupDrift = POSITION_GROUPS.filter((g) => en[`group.${g.id}`] !== g.label);
 ok(`en group.* still equals the domain position-group table, all ${POSITION_GROUPS.length} of them (${groupDrift.map((g) => g.id).join(", ") || "none"})`,
   POSITION_GROUPS.length >= 8 && groupDrift.length === 0);
+
+// 19b. Those two `label` fields are the English reference the checks above hold the
+//      dictionary against — they are not copy a screen may print. The onboarding
+//      position picker did print one, so a reader on 简体中文 picked a position from a
+//      grid captioned "Centre Back" and "Full Back / Wing Back" while everything around
+//      it was translated. No scan saw it: `{p.label}` is an interpolated hole, and a hole
+//      carries no literal to measure. Reading the field is now the failure, whatever
+//      words it happens to hold.
+// The check names the ROW, not the word: PlayerOS carries `.label` on three unrelated
+// rows (a match event, a zone, a film frame) and a file-wide search for the property
+// reported it as a fourth offender. What matters is whether a screen reads the label off
+// a row it got from one of these two tables, so the parameter of the map is what gets
+// looked for.
+const TABLE_ID = /\b(POSITION_GROUPS|ATTRIBUTE_DEFS)\b/;
+const MAP_PARAM = /\b(?:POSITION_GROUPS|ATTRIBUTE_DEFS)\.(?:map|filter|find|forEach)\(\s*\(?\s*([A-Za-z_$][\w$]*)\s*\)?\s*=>/g;
+let tableReaders = 0;
+const labelPrinters = [];
+for (const [p, s] of appSrc) {
+  if (!/^(features|ui)\//.test(p) || !TABLE_ID.test(s)) continue;
+  tableReaders += 1;
+  for (const m of s.matchAll(MAP_PARAM)) {
+    if (new RegExp(`\\b${m[1]}\\.label\\b`).test(s)) labelPrinters.push(`${p} (${m[1]}.label)`);
+  }
+}
+ok(`no screen prints a domain name table's English label (${tableReaders} readers, ${labelPrinters.join(", ") || "none"})`,
+  tableReaders > 0 && labelPrinters.length === 0);
 
 // 20. One namespace per concept. `compare.cat.*` was a second copy of the same
 //     four category names; a screen reading one and a radar reading the other is
