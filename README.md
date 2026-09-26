@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M183 (a few numbers in that range
+Work ships one milestone per commit and is currently at M184 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2108,6 +2108,56 @@ panel reading the un-normalised log, a retrieval kind removed from the interpret
 failing a clause, so the proof grew a row-shape guard and the probe was re-run — it then
 produced exactly one red and no crash. No rendered-page claim: the in-app browser still
 commits no React tree.
+
+### M184 — The Football AI composes rows, not English sentences
+
+Every sentence the `/ai` chat showed was typed into `data/intelligence.ts`: the club
+profile line, the standings line, the key-man line, the two Poisson projection
+paragraphs, the player line, the archetype line, the template-edge line, the career-arc
+line, the fixture line, the news line, the competition line, plus five answer leads and
+the no-hits refusal. They are rows now (28 keys ×3 locales), so the panel answers in the
+reader's language. Three shapes mattered more than the count:
+
+- **The answer was one string** — a lead with the first fact interpolated into it, then
+  two more facts appended with spaces. `RagAnswer.answer` is a `RowText[]` (the lead, then
+  the facts it cites) and the panel renders them in order. Nothing was dropped; what went
+  away is the glue no translator can work around.
+- **`ord()` existed only to spell an English ordinal** ("1st") into the standings line. A
+  rank is a number, and the helper died with that sentence.
+- **The value answer used to scrape a €figure out of an already-rendered sentence** with a
+  regex (M102). The record carries the figure, so the row interpolates it from the player:
+  the same honesty guarantee, none of the dependence on how a number was once worded.
+
+Two new code families resolve through tables that already exist, so the assistant cannot
+invent a fourth word for them: `arch`/`arch2` → `dna.arch.*` (M182) and `traj` →
+`det.arc.*` (the player page's own trajectory rows). The scout report's headline is still
+composed English inside `domain/scouting.ts`, so the template-edge row states the
+comparison it belongs to and two rows after it name the attributes by code; the
+per-attribute deltas stay where they are already rendered, and the headline moves here when
+scouting.ts is keyed.
+
+The file the prose ratchet has watched since M181 went **29 → 2** counted literals (both
+remaining ones are fragments of the question parser's regexes), so check 31b's cap for it
+is tightened to 2 instead of leaving 27 slots of headroom. Facts dedupe by row identity
+now, not by a 40-character slice of English.
+
+**Verification is not complete, and is recorded that way rather than implied.** M184
+landed with its mutation probes still to run; the follow-up commit added six checks
+(every answer element is a row; an answer is its lead plus at least one retrieved fact;
+every evidence line and chip is a row; the panel normalises a stored string answer; the
+three most valuable players are each answered with their own figure) and then ran five
+mutations. **Three were caught; two were not**: replacing a retrieved fact's row with a
+composed English string, and decoupling the value figure from the record. The first means
+the clause named "every evidence line is a row" does not do what its name claims — so the
+name overstates it until #170 explains why. The second survived because the proof's own
+fixture picker searches for a player whose answer contains its figure, which lets a
+hardcoded `€0.0M` satisfy some low-value player. Fixing both is the next milestone's first
+action, before any more prose in this file is moved onto keys.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is **28 scripts / 1345
+checks** (proof-i18n **166**, proof-ai-grounding **40**), dictionary **1379 keys × 3
+locales** — measured after the follow-up, correcting the 1347 written into that commit's
+message before the final run. No rendered-page claim.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
