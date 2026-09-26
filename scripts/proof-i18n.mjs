@@ -1787,6 +1787,9 @@ const DOMAIN_PROSE_CEILING = 271;
 const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
+// Per-module inventory, printed so a re-base reads from the gate instead of from memory:
+// the total alone lets literals migrate from one module into another and still pass.
+console.log("       inventory: " + debt.filter(([, h]) => h.length).map(([p, h]) => `${p.replace("domain/", "")}=${h.length}`).join(" "));
 // Per-file, not just in the total: 24 literals can leave load.ts and enter review.ts and
 // the ceiling above still passes. A module that reaches zero stays at zero.
 for (const done of PROSE_ZERO) {
