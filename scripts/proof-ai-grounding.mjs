@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { askIntelligence } = await server.ssrLoadModule("/data/intelligence.ts");
+const { scoutReport } = await server.ssrLoadModule("/domain/scouting.ts");
 const { footballProvider, formatValue, trendingPlayers } = await server.ssrLoadModule("/data/footballService.ts");
 const { SEARCH_KINDS } = await server.ssrLoadModule("/domain/types.ts");
 const { makeSay } = await import("./lib/rows.mjs");
@@ -21,6 +22,7 @@ const { say, locales, DICTIONARIES } = await makeSay(server);
 const isRow = (x) => !!x && typeof x === "object" && ("key" in x || "value" in x);
 // A module that goes back to composing English hands the panel a bare string; resolving
 // that would throw, and a crashed proof proves nothing about which rule broke.
+const getPlayerByName = (n) => footballProvider.players().find((p) => p.name === n);
 const AT = (x) => x.answer.map((r) => (isRow(r) ? say("en")(r) : "⟨NOT A ROW⟩")).join(" ");
 
 // M183: a source is a row now — `{kind, name}` — because the retrieval layer's own
@@ -120,6 +122,32 @@ ok("empty retrieval confidence sits at the honest floor", none.confidence === 20
     lines.every((t) => t !== "⟨raw⟩"));
   ok("and none of them leaks a key or an unfilled placeholder",
     !lines.some((t) => /\{\w+\}/.test(t) || /^(ai|dna|det|common)\.[a-z]/.test(t)));
+  // The scout report reaches the chat as evidence, so its verdict and provenance are
+  // under the same contract as everything else the panel prints: rows, resolved per locale,
+  // and a category named in the reader's language rather than as its code.
+  const reports = ["Rodri", "Vinícius Júnior", "Jude Bellingham"].map((n) => scoutReport(getPlayerByName(n))).filter(Boolean);
+  const withVector = reports.filter((r) => r.hasVector);
+  ok("every scout verdict the AI can quote is a row (" + withVector.length + " reports)",
+    withVector.length >= 2 && withVector.every((r) => isRow(r.headline)));
+  ok("and its provenance chips are rows too",
+    withVector.every((r) => r.sources.length >= 2 && r.sources.every(isRow)));
+  ok("a verdict names its categories in the reader's own language, never as a code",
+    locales.every((l) => withVector.every((r) => {
+      const t = say(l)(r.headline);
+      if (!t.trim() || /\{\w+\}/.test(t) || /^(sc|det|attr|ai)\.[a-z]/i.test(t)) return false;
+      const codes = "key" in r.headline ? Object.entries(r.headline.vars ?? {}).filter(([k]) => k === "cat" || k === "cat2").map(([, v]) => String(v)) : [];
+      return codes.every((c) => t.includes(DICTIONARIES[l]["attr." + c]) && !new RegExp("\\b" + c + "\\b").test(t));
+    })));
+
+  // Check 28c cannot reach this: `headline` is also a plain-string field somewhere in the
+  // player page's import graph, so the name is shadowed and the derived gate stands down.
+  // A row the page prints raw renders "[object Object]", so the read sites are asserted
+  // against the screen's own source until a type-level gate exists.
+  const PAGE = readFileSync("features/football/Details.tsx", "utf8");
+  ok("the player page resolves every row the scout report publishes",
+    /rowLine\(report\.headline,\s*t\)/.test(PAGE) &&
+    PAGE.includes("{report.evidence.map((e, i) => <li key={i}>› {rowLine(e, t)}</li>)}") &&
+    /report\.sources\.map\(\(s\) => rowLine\(s, t\)\)/.test(PAGE));
   const srcRows = answers.flatMap((a) => a.sources);
   ok("every source row resolves for all three locales without leaking a code",
     srcRows.length >= 4 && locales.every((l) => srcRows.every((r) => {
