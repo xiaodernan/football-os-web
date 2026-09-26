@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M190 (a few numbers in that range
+Work ships one milestone per commit and is currently at M192 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2253,6 +2253,39 @@ was applied per-file, `tsc` immediately caught the missing `RowText` import. Mea
 this commit: `tsc` 0, build 0, suite **28 scripts / 1364 checks** (proof-i18n **172**,
 proof-careerarc **58**), dictionary **1407 keys × 3 locales**. M189's own mutation battery is
 queued (#172) rather than claimed.
+
+M190 published `domain/gap.ts` the same way — eight lines, five of them evidence, and two
+of those composed a human label into the sentence (`groupLabel(group)`,
+`attributeLabel(key)`). Both variables are now named for rowText's code variables, so the
+row carries the id and the dictionary supplies the word. That made `groupLabel` dead and it
+was removed; its guarantee moved rather than vanished — `proof-gap` now asserts that
+`group.ST` reads "Striker" in every locale and that an unknown id prints as the id instead
+of as a missing-key string. Ceiling 264 → 256, `gap.ts` joins the zero list. Two mutations
+were run: prose back in the module, and a mistyped row key. Both caught — but only after the
+new clause was widened to read all four scenarios, because the first draft checked the
+populated one alone and reported clean while a sentence sat in the empty-data branch.
+
+M191 and M192 are the same defect twice, on two different rows: a screen printing a domain
+table's English `label`. The onboarding position picker captioned its grid "Centre Back" and
+"Full Back / Wing Back" to a reader on 简体中文 (`{p.label}`), and every session listed its
+drills as "Rondo press-resistance (3v1)" and "Box strikes under fatigue" (`{e.label}`). Both
+reach the screen through an interpolated hole, which carries no literal for the raw-UI scan
+to measure — the `RowText` blind spot one layer down, at a field read. Both now resolve
+through the dictionary by the row's own key. A new clause names the *row*: it reads the
+parameter of the map over a label-bearing table and fails on `<param>.label`. Its first
+draft searched for the property in any file mentioning the tables and reported PlayerOS as a
+false fourth offender (it carries `.label` on a match event, a zone and a film frame); its
+second accepted only single-parameter callbacks, so `exercises.map((e, i) => …)` — both real
+sites — never matched and the clause passed on a file it had not read. The mutation battery
+is what caught the second: only the count-drift clause went red. M191 also removed two dead
+imports in PlayerOS (`ATTRIBUTE_DEFS`, `strongestAttributes`).
+
+M192 deliberately does **not** move the ratchet. The drill catalogue's eighteen `label`
+fields stay, because they are the English reference the new drift check holds `drill.*`
+against — the same reason `domain/attributes.ts` has never reached zero. Keying a render
+site is not the same act as keying a model's prose, and the ceiling stays at 256 rather than
+banking a number the milestone did not earn. Measured after M192: build 0, proof-i18n
+**177/177**, dictionary **1433 keys × 3 locales**.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
