@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M184 (a few numbers in that range
+Work ships one milestone per commit and is currently at M185 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2158,6 +2158,27 @@ action, before any more prose in this file is moved onto keys.
 checks** (proof-i18n **166**, proof-ai-grounding **40**), dictionary **1379 keys × 3
 locales** — measured after the follow-up, correcting the 1347 written into that commit's
 message before the final run. No rendered-page claim.
+
+### M185 — The two probe classes M184 left open, closed by fixing the checks
+
+M184's record says two mutation classes went uncaught, and it stands. What the re-probe
+showed is that both failures were the *checks*, not the code, and in both cases a clause was
+doing less than its name claimed:
+
+- The answer-shape clauses sat inside `if (vf)`, so they only ever examined the one answer
+  the value fixture produced — a club fact composed as English was never looked at. They now
+  walk six queries that reach each retrievable kind (club, player, competition, fixture,
+  headline) across all three locales, over 33 evidence lines.
+- The value-figure check read the whole answer. The fact rows travelling *with* the lead
+  already carry the euro figure, so a lead hardcoded to `€0.0M` passed it. The check now
+  inspects the lead row itself — its key, and the variable it was handed — for the three
+  most valuable players in the dataset, which no single hardcoded string can satisfy.
+
+Six mutations re-probed, all caught, all restored byte-identical: a club fact composed as
+English, a news fact composed as English, the value lead's figure untethered from the
+record, the value lead interpolating the wrong field, a source row's kind swapped for its
+name, and a placeholder renamed inside one locale's answer lead. `proof-ai-grounding` is 43
+checks (was 40); `tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is **28 scripts / 1348 checks**. No rendered-page claim.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

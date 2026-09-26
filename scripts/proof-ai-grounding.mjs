@@ -65,9 +65,13 @@ if (vf) {
   // that player's own listed figure. A hardcoded €-string cannot match three values, and
   // the regex-scraping this replaced could quietly satisfy one player out of four hundred.
   const rich = footballProvider.players().slice().sort((x, y) => y.value - x.value).slice(0, 3);
-  const wrongFigure = rich.filter((x) => !AT(askIntelligence(`How much is ${x.name} worth?`)).includes(formatValue(x.value)));
-  ok("the three most valuable players each get their own figure back (" + wrongFigure.length + " wrong)",
-    wrongFigure.length === 0);
+  const wrongLead = rich.filter((x) => {
+    const a = askIntelligence(`How much is ${x.name} worth?`);
+    const lead = a.answer[0];
+    return !lead || !("key" in lead) || lead.key !== "ai.answer.value" || lead.vars.v !== formatValue(x.value);
+  });
+  ok("each of the three most valuable players gets a value lead carrying that player's own listed figure (" + wrongLead.length + " wrong)",
+    wrongLead.length === 0);
   // The M102 bug degraded every value answer to these stubs; assert neither returns.
   ok("value answer is NOT the 'not in the retrieved data' stub", !/not in the retrieved data/.test(AT(vf.ans)));
   ok("value answer is NOT the old 'sits at listed' stub", !/sits at listed/.test(AT(vf.ans)));
@@ -89,15 +93,46 @@ ok("empty retrieval labels the demo provider", /Demo retrieval|no live model|API
 ok("empty retrieval has no fabricated facts", none.facts.length === 0);
 ok("empty retrieval confidence sits at the honest floor", none.confidence === 20);
 
+// ---- Every answer, not just the ones a fixture happened to pick ----
+// Questions chosen to reach each retrievable kind: a club, a player, a competition, a
+// fixture and a headline. Shape claims about answers are only worth anything if they walk
+// all of them — the first version of these checks sat inside the value-answer branch and
+// missed a composed fact in the club builder.
+{
+  const KINDS = [
+    "Where do Arsenal sit in the Premier League?",
+    "How much is Mbappé worth?",
+    "Kickoff of the next fixture",
+    "Any transfer news about Haaland?",
+    "Real Madrid",
+    "Who is the key player at Real Madrid?",
+  ];
+  const all = KINDS.map((q) => askIntelligence(q));
+  const answers = all.filter((a) => a.answer.length > 0);
+  ok("every answer the panel could show is a non-empty list of rows", answers.length >= 4 && answers.every((a) => a.answer.every(isRow)));
+  ok("and no answer is a lead alone — the facts it cites travel with it",
+    answers.every((a) => a.answer.length >= 2));
+  const facts = answers.flatMap((a) => a.facts);
+  ok("every evidence line and chip in every answer is a row (" + facts.length + " lines)",
+    facts.length >= 6 && facts.every((f) => isRow(f.text) && isRow(f.label)));
+  const lines = facts.map((f) => (isRow(f.text) ? say("en")(f.text) : "⟨raw⟩"));
+  ok("no evidence line reaches the reader as the module's own English (" + lines.filter((t) => t === "⟨raw⟩").length + " raw)",
+    lines.every((t) => t !== "⟨raw⟩"));
+  ok("and none of them leaks a key or an unfilled placeholder",
+    !lines.some((t) => /\{\w+\}/.test(t) || /^(ai|dna|det|common)\.[a-z]/.test(t)));
+  const srcRows = answers.flatMap((a) => a.sources);
+  ok("every source row resolves for all three locales without leaking a code",
+    srcRows.length >= 4 && locales.every((l) => srcRows.every((r) => {
+      const t = say(l)(r);
+      return !!t.trim() && !/\{\w+\}/.test(t) && !/^(ai|dna|det|common)\.[a-z]/.test(t) && !/:\w+:/.test(t);
+    })));
+}
+
 // ---- Always-grounded contract on every answer (evidence + sources + confidence) ----
 if (vf) {
   const a = vf.ans;
   ok("answer is a non-empty list of rows", Array.isArray(a.answer) && a.answer.length > 0 && AT(a).length > 20);
   ok("answer ships an evidence fact list", Array.isArray(a.facts) && a.facts.length >= 1);
-  ok("every answer element is a row", a.answer.every(isRow));
-  ok("and the answer is its lead plus at least one retrieved fact, not a lead alone",
-    a.answer.length >= 2);
-  ok("every evidence line is a row", a.facts.every((f) => isRow(f.text) && isRow(f.label)));
   ok("answer ships sources (or the honest 'no entity' label)", Array.isArray(a.sources) && a.sources.length >= 1);
   ok("confidence is an integer within the 20..92 band", Number.isInteger(a.confidence) && a.confidence >= 20 && a.confidence <= 92);
 }
