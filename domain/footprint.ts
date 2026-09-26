@@ -5,6 +5,8 @@
 // Pure: every input is passed in, no IO, no React.
 
 import { attributeLabel } from "./attributes";
+import { formatDate } from "@/i18n/format";
+import type { Locale } from "@/i18n/dictionaries";
 
 export interface PlayerInput {
   sessionsCompleted: number;
@@ -48,6 +50,9 @@ export interface FanInput {
 }
 
 export interface FootprintInput {
+  /** Whose calendar the last-activity line is written in. The interface asks;
+   *  the browser no longer answers. */
+  locale: Locale;
   player: PlayerInput;
   manager: ManagerInput;
   film: FilmInput;
@@ -167,7 +172,7 @@ export function buildFootprint(i: FootprintInput): Footprint {
   const evidence = [
     `${touched} of ${rows.length} pillars have real records on this device`,
     `${mins(totalMinutes)} minutes of your own training and film`,
-    lastActiveAt ? `Most recent activity ${new Date(lastActiveAt).toLocaleString()}` : "No dated activity recorded yet",
+    lastActiveAt ? `Most recent activity ${formatDate(i.locale, lastActiveAt)}` : "No dated activity recorded yet",
   ];
 
   return {

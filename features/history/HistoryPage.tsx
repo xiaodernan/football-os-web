@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router";
-import { useI18n } from "@/i18n";
+import { formatDate, useI18n, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildTimeline, groupByDay, type TimelineKind } from "@/domain/history";
 import { rowLine } from "@/domain/rowText";
@@ -28,7 +28,7 @@ const KIND_META: Record<TimelineKind, { icon: string; labelKey: string; tone: st
 };
 
 export function HistoryPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { state } = useOs();
   const [filter, setFilter] = useState<TimelineKind | "all">("all");
 
@@ -105,7 +105,7 @@ export function HistoryPage() {
         <div className="space-y-5">
           {groups.map((g) => (
             <Panel key={g.day} className="p-4">
-              <SectionTitle title={dayLabel(g.day, t)} hint={`${g.items.length} ${t("hist.events")}`} />
+              <SectionTitle title={dayLabel(g.day, t, locale)} hint={`${g.items.length} ${t("hist.events")}`} />
               <ol className="relative space-y-3 border-l border-border/60 pl-5">
                 {g.items.map((e) => {
                   const meta = KIND_META[e.kind];
@@ -127,7 +127,7 @@ export function HistoryPage() {
                       <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                         <span className={cn("uppercase tracking-wide", meta.tone)}>{t(meta.labelKey)}</span>
                         {detail && <span>· {detail}</span>}
-                        <span>· {fmtTime(e.at)}</span>
+                        <span>· {fmtTime(locale, e.at)}</span>
                       </div>
                       {e.growth && e.growth.some((g) => g.delta > 0) && (
                         <div className="mt-1 flex flex-wrap gap-1">
@@ -155,7 +155,7 @@ export function HistoryPage() {
   );
 }
 
-function dayLabel(key: string, t: (k: string) => string): string {
+function dayLabel(key: string, t: (k: string) => string, locale: Locale): string {
   if (key === "invalid") return t("hist.invalid");
   const now = new Date();
   const today = keyOf(now);
@@ -163,15 +163,15 @@ function dayLabel(key: string, t: (k: string) => string): string {
   if (key === today) return t("hist.today");
   if (key === keyOf(y)) return t("hist.yesterday");
   const [yy, mm, dd] = key.split("-").map(Number);
-  return `${mm}/${dd}/${yy}`;
+  return formatDate(locale, new Date(yy, mm - 1, dd), { month: "numeric", day: "numeric", year: "numeric" });
 }
 
 function keyOf(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function fmtTime(iso: string): string {
+function fmtTime(locale: Locale, iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return formatDate(locale, d, { hour: "2-digit", minute: "2-digit" });
 }

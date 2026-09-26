@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
-import { useI18n } from "@/i18n";
+import { formatDate, useI18n, type Locale } from "@/i18n";
 import { getClub, getPlayer } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { useLearnRecords } from "@/lib/hooks";
@@ -38,7 +38,7 @@ const ACTIVITY_TIME: Intl.DateTimeFormatOptions = {
 };
 
 export function ProfilePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { state, toggleGoal } = useOs();
   const { navigate } = useRouter();
   const learn = useLearnRecords();
@@ -103,6 +103,7 @@ export function ProfilePage() {
     }
 
     return buildFootprint({
+      locale,
       player: {
         sessionsCompleted: completed.length,
         minutes: completed.reduce((s, x) => s + x.targetMinutes, 0),
@@ -125,7 +126,7 @@ export function ProfilePage() {
         lastPostAt,
       },
     });
-  }, [state, learn, completed, goalsDone, p]);
+  }, [state, learn, completed, goalsDone, p, locale]);
 
   const ranked = useMemo(() => {
     if (!p) return [];
@@ -135,8 +136,8 @@ export function ProfilePage() {
   const focus = p ? weakestAttributes(p.attributes, 4) : [];
 
   const points = useMemo(
-    () => state.progress.slice(-24).map((r) => ({ label: fmtDate(r.date), value: r.overall })),
-    [state.progress],
+    () => state.progress.slice(-24).map((r) => ({ label: fmtDate(locale, r.date), value: r.overall })),
+    [state.progress, locale],
   );
 
   if (!p) {
@@ -172,7 +173,7 @@ export function ProfilePage() {
               <span>·</span>
               <span>{p.position}</span>
               <span>·</span>
-              <span>{t("prof.created")} {fmtDate(p.createdAt)}</span>
+              <span>{t("prof.created")} {fmtDate(locale, p.createdAt)}</span>
             </div>
           </div>
         </div>
@@ -267,7 +268,7 @@ export function ProfilePage() {
                 <div key={s.id} className="flex items-center justify-between py-2 text-sm">
                   <div className="min-w-0">
                     <div className="truncate">{s.title}</div>
-                    <div className="text-[11px] text-muted-foreground">{fmtDate(s.completedAt ?? s.date)}{s.selfRating ? ` · ${s.selfRating}/5` : ""}</div>
+                    <div className="text-[11px] text-muted-foreground">{fmtDate(locale, s.completedAt ?? s.date)}{s.selfRating ? ` · ${s.selfRating}/5` : ""}</div>
                   </div>
                   <Badge variant="outline" className="shrink-0 font-mono text-success">+{s.xpAwarded ?? 0} XP</Badge>
                 </div>
@@ -317,7 +318,7 @@ export function ProfilePage() {
                 {r.lines.map((l, i) => <li key={i}>{l}</li>)}
               </ul>
               {r.lastAt && ts(r.lastAt) > 0 && (
-                <div className="mt-1.5 text-[10px] text-muted-foreground">{t("prof.lastActivity")} {new Date(r.lastAt).toLocaleString(undefined, ACTIVITY_TIME)}</div>
+                <div className="mt-1.5 text-[10px] text-muted-foreground">{t("prof.lastActivity")} {formatDate(locale, r.lastAt, ACTIVITY_TIME)}</div>
               )}
             </Link>
           ))}
@@ -361,8 +362,8 @@ function LinkCard({ to, icon, title, hint }: { to: string; icon: string; title: 
   );
 }
 
-function fmtDate(iso: string): string {
+function fmtDate(locale: Locale, iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return `${d.getMonth() + 1}/${d.getDate()}`;
+  return formatDate(locale, d, { month: "numeric", day: "numeric" });
 }

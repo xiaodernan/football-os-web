@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "@/lib/router";
-import { useI18n } from "@/i18n";
+import { formatDate, useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { videoProvider } from "@/data/video";
 import { attributeLabel } from "@/domain/attributes";
@@ -36,7 +36,7 @@ const KIND_TONE: Record<FilmEventKind, string> = {
 };
 
 export function FilmRoom() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { state, requestPlan } = useOs();
   const { navigate } = useRouter();
   const online = useOnline();
@@ -187,7 +187,7 @@ export function FilmRoom() {
                   <button className="min-w-0 flex-1 text-left" onClick={() => setSelected(c.clipId)}>
                     <div className="truncate">{c.report.fileName}</div>
                     <div className="text-[11px] text-muted-foreground">
-                      {c.report.durationSec}s · {c.report.confidence}% · {new Date(c.addedAt).toLocaleDateString()}
+                      {c.report.durationSec}s · {c.report.confidence}% · {formatDate(locale, c.addedAt)}
                     </div>
                   </button>
                   <button aria-label={t("film.deleteClip")} onClick={() => remove(c.clipId)} className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100">

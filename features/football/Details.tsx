@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
-import { useI18n } from "@/i18n";
+import { formatDate, useI18n, type Locale } from "@/i18n";
 import { rowLine } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import {
@@ -31,8 +31,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const fmtDateTime = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmtDateTime = (locale: Locale, iso: string) =>
+  formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 function EntityHeader({ title, subtitle, back, crest }: { title: string; subtitle?: ReactNode; back?: string; crest?: ReactNode }) {
   const { t } = useI18n();
@@ -455,7 +455,7 @@ function Split({ label, s }: { label: string; s: { played: number; won: number; 
 }
 
 function MiniMatches({ title, matches }: { title: string; matches: ReturnType<typeof getMatch>[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const list = matches.filter(Boolean);
   return (
     <Panel className="p-4">
@@ -470,7 +470,7 @@ function MiniMatches({ title, matches }: { title: string; matches: ReturnType<ty
               <Link key={mm.id} to={`/matches/${mm.id}`} className="flex items-center justify-between rounded-md border px-2.5 py-1.5 text-sm hover:border-primary/40">
                 <span className="truncate">{h?.short} v {a?.short}</span>
                 <span className={cn("font-mono text-xs", mm.status === "LIVE" ? "text-destructive" : "text-muted-foreground")}>
-                  {mm.status === "SCHEDULED" ? fmtDateTime(mm.kickoff).replace(",", "") : `${mm.homeGoals}–${mm.awayGoals}`}
+                  {mm.status === "SCHEDULED" ? fmtDateTime(locale, mm.kickoff).replace(",", "") : `${mm.homeGoals}–${mm.awayGoals}`}
                 </span>
               </Link>
             );
@@ -506,7 +506,7 @@ export function MatchDetail({ id }: { id: string }) {
   const [ai, setAi] = useState<AiAnswer | null>(null);
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   if (!m) return <EmptyState title={t("det.notFound.match")} />;
   const home = getClub(m.homeClubId)!;
   const away = getClub(m.awayClubId)!;
@@ -526,7 +526,7 @@ export function MatchDetail({ id }: { id: string }) {
       const facts = [
         `${home.name} vs ${away.name} (${comp?.name})`,
         sim ? `Model projection: ${sim.homeGoals}–${sim.awayGoals}, xG ${sim.stats.home.xg.toFixed(2)}–${sim.stats.away.xg.toFixed(2)}` : "No simulation run yet",
-        `${m.status === "SCHEDULED" ? "Kickoff " + fmtDateTime(m.kickoff) : `Scoreline ${m.homeGoals}–${m.awayGoals}`}`,
+        `${m.status === "SCHEDULED" ? "Kickoff " + fmtDateTime(locale, m.kickoff) : `Scoreline ${m.homeGoals}–${m.awayGoals}`}`,
         `Possession bias home ${Math.round((sim?.stats.home.possession ?? 50))}%`,
       ];
       const ans = await askFootballAI(q, { label: `${home.short} v ${away.short}`, facts });
@@ -538,7 +538,7 @@ export function MatchDetail({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <EntityHeader title={`${home.name} v ${away.name}`} back="/matches" subtitle={<span>{comp?.name} · {t("det.round")} {m.round} · {m.status === "SCHEDULED" ? fmtDateTime(m.kickoff) : t(`fw.status.${m.status.toLowerCase()}`)}</span>} />
+      <EntityHeader title={`${home.name} v ${away.name}`} back="/matches" subtitle={<span>{comp?.name} · {t("det.round")} {m.round} · {m.status === "SCHEDULED" ? fmtDateTime(locale, m.kickoff) : t(`fw.status.${m.status.toLowerCase()}`)}</span>} />
 
       <Panel className="p-5">
         <div className="grid grid-cols-3 items-center gap-2">

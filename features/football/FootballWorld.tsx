@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, matchRoute, useRouter } from "@/lib/router";
-import { useI18n } from "@/i18n";
+import { formatDate, useI18n, type Locale } from "@/i18n";
 import {
   footballProvider,
   getClub,
@@ -25,10 +25,10 @@ import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
 
-const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-const fmtDateTime = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmtDate = (locale: Locale, iso: string) =>
+  formatDate(locale, iso, { month: "short", day: "numeric" });
+const fmtDateTime = (locale: Locale, iso: string) =>
+  formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 /** Route dispatcher for the read-only Football World (spec §12–§13, §28). */
 export function FootballWorld() {
@@ -104,11 +104,11 @@ function ClubRow({ c }: { c: Club }) {
 }
 
 function MatchRow({ m }: { m: Match }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const home = getClub(m.homeClubId);
   const away = getClub(m.awayClubId);
   const comp = getCompetition(m.competitionId);
-  const score = m.status === "SCHEDULED" ? fmtDateTime(m.kickoff) : `${m.homeGoals} – ${m.awayGoals}`;
+  const score = m.status === "SCHEDULED" ? fmtDateTime(locale, m.kickoff) : `${m.homeGoals} – ${m.awayGoals}`;
   const fc = m.status === "SCHEDULED" ? fixtureForecast(m.id) : null;
   return (
     <EntityLink to={`/matches/${m.id}`}>
@@ -140,6 +140,7 @@ function MatchRow({ m }: { m: Match }) {
 }
 
 function NewsRow({ id, compact }: { id: string; compact?: boolean }) {
+  const { locale } = useI18n();
   const n = getNews(id);
   if (!n) return null;
   return (
@@ -148,7 +149,7 @@ function NewsRow({ id, compact }: { id: string; compact?: boolean }) {
         <Badge variant="outline" className={cn("border-none px-1.5 py-0 text-[10px]", kindTone(n.kind))}>{n.kind}</Badge>
         <span>{n.source}</span>
         <span>·</span>
-        <span>{fmtDate(n.publishedAt)}</span>
+        <span>{fmtDate(locale, n.publishedAt)}</span>
         <span className="ml-auto font-mono">{Math.round(n.credibility * 100)}%</span>
       </div>
       <div className="mt-1 text-sm font-medium leading-snug">{n.title}</div>
@@ -341,7 +342,7 @@ function NewsList() {
 }
 
 function NewsDetail({ id }: { id: string }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const n = getNews(id);
   const impact = useMemo(() => {
     if (!n) return null;
@@ -383,7 +384,7 @@ function NewsDetail({ id }: { id: string }) {
       <PageHeader title={n.title} back="/news" />
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="outline" className={kindTone(n.kind)}>{n.kind}</Badge>
-        <span>{n.source}</span><span>·</span><span>{fmtDateTime(n.publishedAt)}</span>
+        <span>{n.source}</span><span>·</span><span>{fmtDateTime(locale, n.publishedAt)}</span>
         <span className="ml-auto">{t("fw.news.credibility")} <span className="font-mono text-primary">{Math.round(n.credibility * 100)}%</span></span>
       </div>
       <Panel className="space-y-3 p-5 text-sm leading-relaxed">

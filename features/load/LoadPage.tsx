@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Link, useRouter } from "@/lib/router";
-import { useI18n } from "@/i18n";
+import { formatDate, useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildLoad, ZONE_LABEL, ZONE_LEGEND, type LoadZone } from "@/domain/load";
 import { rowLine } from "@/domain/rowText";
@@ -23,7 +23,7 @@ const ACWR_TONE = (z: LoadZone): "up" | "down" | "neutral" =>
   z === "high" || z === "caution" ? "down" : z === "optimal" ? "up" : "neutral";
 
 export function LoadPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { state, requestPlan } = useOs();
   const { navigate } = useRouter();
   const [building, setBuilding] = useState(false);
@@ -58,10 +58,10 @@ export function LoadPage() {
   const dailyPoints = useMemo(
     () =>
       load.daily.map((d) => ({
-        label: new Date(d.date + "T00:00:00Z").toLocaleDateString(undefined, { month: "numeric", day: "numeric" }),
+        label: formatDate(locale, d.date + "T00:00:00Z", { month: "numeric", day: "numeric" }),
         value: d.load,
       })),
-    [load.daily],
+    [load.daily, locale],
   );
 
   const maxWeek = Math.max(1, ...load.weekly.map((w) => w.load));

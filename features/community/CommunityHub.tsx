@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useOnline, useLearnRecords } from "@/lib/hooks";
-import { useI18n } from "@/i18n";
+import { useI18n, formatDate, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildStarters, allTags, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
 import { LESSONS, isCompleted, summarizeLearn } from "@/domain/learn";
@@ -27,11 +27,11 @@ interface CommunityStore {
 const EMPTY: CommunityStore = { userThreads: [], replies: {}, likes: [] };
 
 // A helper that hands back a string is the one shape the raw-UI scan cannot see: the
-// words are written here and rendered as `{timeAgo(x)}` somewhere else, so no position
+// words are written here and rendered as `{timeAgo(locale, x)}` somewhere else, so no position
 // it reads carries a literal. Typing the return as RowText is what makes it auditable —
 // check 26 reads the keys this module names and the variables each one fills, and the
 // date branch is a value out of the record rather than a sentence anyone typed.
-function timeAgo(iso: string): RowText {
+function timeAgo(locale: Locale, iso: string): RowText {
   const ms = Date.now() - new Date(iso).getTime();
   const m = Math.floor(ms / 60000);
   if (m < 1) return { key: "comm.agoNow" };
@@ -39,7 +39,7 @@ function timeAgo(iso: string): RowText {
   const h = Math.floor(m / 60);
   if (h < 24) return { key: "comm.agoHour", vars: { n: h } };
   const d = Math.floor(h / 24);
-  return d < 30 ? { key: "comm.agoDay", vars: { n: d } } : { value: new Date(iso).toLocaleDateString() };
+  return d < 30 ? { key: "comm.agoDay", vars: { n: d } } : { value: formatDate(locale, iso) };
 }
 
 // The two sort codes. Kept at module scope rather than inline in the JSX child
@@ -55,7 +55,7 @@ const authorName = (t: Translate, author: string) => (author === MY ? t("comm.yo
 const nReplies = (t: Translate, n: number) => t(n === 1 ? "comm.nRepliesOne" : "comm.nReplies", { n });
 
 export function CommunityHub() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const online = useOnline();
   const { state } = useOs();
   const learn = useLearnRecords();
@@ -230,7 +230,7 @@ export function CommunityHub() {
                 ) : (
                   <Badge className="bg-primary/15 text-primary text-[10px]">{t("comm.yours")}</Badge>
                 )}
-                <span className="text-xs text-muted-foreground">{authorName(t, th.author)} · {rowLine(timeAgo(th.at), t)}</span>
+                <span className="text-xs text-muted-foreground">{authorName(t, th.author)} · {rowLine(timeAgo(locale, th.at), t)}</span>
               </div>
               <div className="mt-1 font-medium leading-snug">{th.title}</div>
               <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{th.body}</p>
@@ -304,7 +304,7 @@ function Composer({ starters, onSubmit, onCancel }: { starters: StarterDraft[]; 
 function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onReply, onBack }: {
   thread: Thread; liked: boolean; onLike: () => void; likedComments: string[]; onLikeComment: (id: string) => void; onReply: (b: string) => void; onBack: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [text, setText] = useState("");
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -317,7 +317,7 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
           ) : (
             <Badge className="bg-primary/15 text-primary text-[10px]">{t("comm.yours")}</Badge>
           )}
-          <span className="text-xs text-muted-foreground">{authorName(t, thread.author)} · {rowLine(timeAgo(thread.at), t)}</span>
+          <span className="text-xs text-muted-foreground">{authorName(t, thread.author)} · {rowLine(timeAgo(locale, thread.at), t)}</span>
         </div>
         <h1 className="mt-2 text-xl font-bold">{thread.title}</h1>
         <p className="mt-2 whitespace-pre-line text-sm text-foreground/90">{thread.body}</p>
@@ -341,7 +341,7 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
                     <span className={cn("font-medium", c.sample ? "text-warning" : "text-foreground/80")}>{authorName(t, c.author)}</span>
                     {c.sample && <Badge variant="outline" className="border-warning/40 text-[10px] text-warning">{t("comm.sampleReply")}</Badge>}
                   </span>
-                  <span>{rowLine(timeAgo(c.at), t)}</span>
+                  <span>{rowLine(timeAgo(locale, c.at), t)}</span>
                 </div>
                 <p className="mt-1 text-sm">{c.body}</p>
                 {!c.sample && (

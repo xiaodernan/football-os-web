@@ -112,13 +112,15 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M193 (a few numbers in that range
+Work ships one milestone per commit and is currently at M194 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
 evidence for a change is now the proof suite plus, where a component renders without the
 store, a server-rendered string check in all three locales — stated per milestone rather than
-assumed. Built and verified: shell + onboarding,
+assumed. (M194 got a live tree back by building a clean tree containing only that milestone's
+files and serving it, which is what its browser confirmation ran on; the suite remains the
+standing evidence.) Built and verified: shell + onboarding,
 the Player OS training loop with a single source of truth for attribute growth, Football
 World browse and entity detail (player attribute profile, scout report, career arc; club
 season analytics), AI chat + knowledge graph, Tactical Studio, Simulation Lab with a
@@ -2329,6 +2331,101 @@ and the missing `{n}`).
 
 Measured after M193: `tsc` 0, build 0, suite **28 scripts / 1374 checks** (proof-i18n
 **178**), dictionary **1478 keys × 3 locales**.
+
+### M194 — Dates follow the reader, not the browser
+
+Nineteen milestones of i18n made sure every **word** a visitor sees is reachable through a
+key. The defect this one closes has no word and no key, which is why none of the checks
+before it could have seen it: `toLocaleString()` with nothing inside the parentheses means
+"ask the browser", and the app's own language switch has no authority over that answer. A
+zh-TW reader who had chosen 繁體中文 in the header still got `9/12/2026` in their training
+log, because their machine was configured for English. Nothing was missing from a
+dictionary; a formatter was talking to the wrong computer.
+
+The careless-looking spelling was the minority. Ten `toLocale*` lines in nine files went to
+the host in three different clothes — bare `d.toLocaleString()` in three of them, five that
+passed `undefined` where a locale belongs (and thereby read as a decision), and two that
+passed an *array*, `toLocaleTimeString([], { hour: "2-digit", … })`. All four first-argument
+shapes — empty, `undefined`, `[]`, `"default"` — mean exactly the same thing to `Intl`, so
+the census treats them as one face of one defect, and `[]` is in its refuse list instead of
+being the spelling that slips past it.
+
+The fix is a door, not ten edits: `formatDate(locale, value, opts)` in `i18n/format.ts`,
+re-exported from `@/i18n`, and the only `new Intl.DateTimeFormat(` in the app. Those ten lines
+became twelve call sites across the same nine files, because two of them feed two render spots
+each — Football World's fixture and news rows, the entity detail's kickoff line, the Film
+Room's added-on date, the History timeline's clock and its day label, the Load page's dated
+list, the Profile page's two activity rows, the Dashboard's relative times, the community
+feed's month-and-older timestamps, and the footprint line in `domain/footprint.ts`. That last
+one is why the door sits in its own module instead of in `i18n/index.tsx`: a domain function
+has to be able to format without importing React, so `FootprintInput` gained a `locale` field
+the caller must supply. The compiler now enforces the gate's rule, and no new sentence literal
+entered the domain to get it.
+
+The census also turned up the faces an argument-shape scan cannot reach:
+
+- **a memo that goes stale.** `LoadPage` built its dated rows in a `useMemo` whose body read
+  `locale` while its dependency array was `[load.daily]`. Every word on that screen
+  re-rendered on a language switch and the dates kept the previous language until something
+  unrelated changed. The gate now refuses any `useMemo` that reads the reader's language
+  without naming it in its deps, with a floor (3 such memos among 60+ scans) so the clause
+  cannot pass by finding nothing.
+- **a locale sourced from the host.** A call *can* pass a locale and still be wrong, by
+  passing `navigator.language`. No argument-shape check sees that, so the gate counts the read
+  itself: exactly once, in `detectLocale`, which consults the browser only after the reader's
+  own stored choice and whose result the header switch overwrites for good — and zero times
+  anywhere the app formats a value.
+- **hand-built labels.** `${d.getMonth() + 1}/${d.getDate()}` never calls a formatter. Two of
+  those constructions are allowed, and they are not display text: they build an ISO-shaped day
+  *key* (`domain/history.ts`, and the history page's grouping label), declared by file and
+  checked for shape, with the census pinned at exactly two so a third has to be argued.
+
+What is left open is named rather than allowed. Five sites still ask the browser — the Player
+OS's three dates, the Data Room's kickoff line, and `data/intelligence.ts:179`, where the
+Football AI's own evidence row carries a browser-formatted date; closing that one needs a
+locale threaded through the RAG entry point, which is #165's lane. Per-file caps make the debt
+immovable. Two exemptions are declared with a proof under each: `components/ui/chart.tsx`'s
+`toLocaleString()` really is a series *number* (the clause turns red if that receiver is
+`new Date(...)` or is named like an instant, so the list cannot be used to park a date), and
+`components/ui/calendar.tsx`'s two sites are permitted only while nothing imports the primitive
+— the scan counts importers, so whoever mounts the calendar pays for it.
+
+Check 33 ships 23 clauses, and the last is the reason the other 22 mean something: it loads
+`formatDate` through Vite's SSR module graph — the production function, not a copy — and
+asserts that the same instant renders differently per locale
+(`en=Sep 12 zh-CN=9月12日 zh-TW=9月12日`) and that a Chinese reader is shown CJK while an
+English reader is shown Latin. A regex can approve a shape; only this assertion knows whether
+a date reached the reader in the reader's language. Each of the three app locales is also
+checked to be an id `Intl` actually resolves, so a typo'd locale key fails instead of silently
+falling back.
+
+Fourteen mutations, all caught by the clause written to catch them, with a clean control
+run before and after: a new debtor file (footprint gets a `toLocaleDateString` back); a
+declared file's debt growing past its cap; the number exemption pointed at `item.kickoffAt`;
+the calendar primitive imported into a screen; a literal `"en"` handed to the door; the door
+imported from a module that is not the door; a second `new Intl.DateTimeFormat`; a
+hand-assembled `getMonth()/getDate()` label; `LoadPage`'s deps reverted to `[load.daily]`;
+the door ignoring its locale argument; the door answering English for a Chinese reader; a
+wired site dropped back to `String(...)` (the census floor noticed the door was no longer
+being called — 11 across 8); `[]` put back into a registered file; and a `navigator.language`
+read in the domain.
+
+Then it was confirmed in a browser, which had not been possible since M165: a clean tree
+carrying only this milestone's twelve files was built and served on this zh-CN machine, and
+with the app set to `en` the fixture dates rendered `Sep 23` with no CJK date mark anywhere on
+the page; with the app set to `zh-TW` the same page rendered `9月23日 上午02:00` with no Latin
+month name. The browser's own language decided neither — which is the milestone, demonstrated
+on the machine whose language used to decide it.
+
+Two locale-shape assumptions the door cannot reach, recorded here rather than left invisible:
+`features/football/Details.tsx:473` strips a comma out of a *formatted* value
+(`fmtDateTime(…).replace(",", "")`) to make its English spacing look right, and `Dashboard`'s
+`relTime` still builds `in 3d` / `3d ago` in English — closing that one needs dictionary keys
+in the file another run currently holds.
+
+Measured after M194: `tsc` 0, build 0, suite **28 scripts / 1397 checks** (proof-i18n **201**),
+dictionary **1478 keys × 3 locales** — no keys added, because the defect was never a missing
+translation.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

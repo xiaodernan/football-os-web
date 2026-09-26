@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useRouter } from "@/lib/router";
-import { useI18n } from "@/i18n";
+import { formatDate, useI18n, type Locale } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import {
   matchesByStatus,
@@ -28,11 +28,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-function relTime(iso: string): string {
+function relTime(locale: Locale, iso: string): string {
   const diff = new Date(iso).getTime() - Date.now();
   const d = Math.round(diff / 86400000);
   if (Math.abs(d) > 1) return `${d > 0 ? "in " : ""}${d}d${d > 0 ? "" : " ago"}`;
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return formatDate(locale, iso, { hour: "2-digit", minute: "2-digit" });
 }
 
 const RECOVERY_TONE: Record<LoadZone, string> = {
@@ -44,7 +44,7 @@ const RECOVERY_TONE: Record<LoadZone, string> = {
 };
 
 export function Dashboard() {
-  const { t } = useI18n();const { state, completeSession } = useOs();
+  const { t, locale } = useI18n();const { state, completeSession } = useOs();
   const { navigate } = useRouter();
   const learn = useLearnRecords();
   const personalNews = usePersonalNews();
@@ -224,7 +224,7 @@ export function Dashboard() {
                 {growth.last ? (
                   <div className="flex items-center justify-between text-sm">
                     <span className="min-w-0 truncate">{growth.last.title}</span>
-                    <span className="ml-2 shrink-0 text-[11px] text-muted-foreground">{relTime(growth.last.completedAt ?? growth.last.date)}</span>
+                    <span className="ml-2 shrink-0 text-[11px] text-muted-foreground">{relTime(locale, growth.last.completedAt ?? growth.last.date)}</span>
                   </div>
                 ) : (
                   <p className="text-xs text-muted-foreground">{t("dash.noActivity")}</p>
@@ -381,7 +381,7 @@ const MODULE_LINKS = [
 ];
 
 function LiveCell({ m }: { m: Match }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const h = getClub(m.homeClubId);
   const a = getClub(m.awayClubId);
   return (
@@ -405,11 +405,12 @@ function TeamLine({ name, goals }: { name?: string; goals: number | null }) {
 }
 
 function FixtureRow({ m }: { m: Match }) {
+  const { locale } = useI18n();
   const h = getClub(m.homeClubId);
   const a = getClub(m.awayClubId);
   return (
     <Link to={`/matches/${m.id}`} className="flex items-center gap-3 py-2.5 hover:bg-secondary/40">
-      <div className="w-14 shrink-0 text-xs text-muted-foreground">{relTime(m.kickoff)}</div>
+      <div className="w-14 shrink-0 text-xs text-muted-foreground">{relTime(locale, m.kickoff)}</div>
       <div className="flex flex-1 items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
           <span className="truncate text-right text-sm">{h?.name}</span>

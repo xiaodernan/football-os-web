@@ -10,6 +10,8 @@ import {
 import { DICTIONARIES, type Locale, LOCALES } from "./dictionaries";
 import { LOCALE_KEY } from "@/domain/localData";
 
+export type { Locale } from "./dictionaries";
+
 const STORAGE_KEY = LOCALE_KEY;
 
 interface I18nValue {
@@ -35,6 +37,11 @@ export function translate(locale: Locale, key: string, vars?: Record<string, str
   }
   return str;
 }
+
+/** Format an instant the reader's own language writes it — see i18n/format.ts, which
+ *  holds it so a domain module can reach it without importing React. Re-exported here so
+ *  a screen's `import { formatDate } from "@/i18n"` reads the same as its `t`. */
+export { formatDate } from "./format";
 
 function detectLocale(): Locale {
   if (typeof localStorage !== "undefined") {

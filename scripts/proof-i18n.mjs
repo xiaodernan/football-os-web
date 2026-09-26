@@ -66,6 +66,9 @@
 //  30. a word the app shows in two places being keyed twice — which is how one screen
 //      gets translated and the other keeps the old English (M172's "Demo mode", M175's
 //      chart origin), with the bare literal and the second reader both refused.
+//  33. a date formatted for the BROWSER instead of for the READER — the one defect in this
+//      layer that involves no key at all, so checks 1-32 cannot see it in any direction.
+//      See the long note at its own definition below (M194).
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { scanSource, lookupsIn } from "./lib/rawUiScan.mjs";
@@ -1962,6 +1965,194 @@ ok(`no English sentence is carried by two keys (${twiceCarried.length} of ${shar
 for (const [v, ks] of twiceCarried.slice(0, 5)) console.log(`       duplicated: ${ks.join(" | ")} — ${v.slice(0, 60)}`);
 ok(`the collapsed triples are read as one row by both screens (${[...appSrc.values()].reduce((n, c) => n + (c.match(/\bt\(\s*"common\.build/g) ?? []).length, 0)} sites)`,
   [...appSrc.values()].reduce((n, c) => n + (c.match(/\bt\(\s*"common\.build/g) ?? []).length, 0) === 6);
+
+// 33. A date formatted for the BROWSER instead of for the READER.
+//
+// `d.toLocaleDateString()` with no argument means "the browser's language", and the app's
+// own language switch has nothing to do with it: a reader who has set the interface to
+// 简体中文 still sees `9/12/2026` in their training log. The same deferral is written three
+// ways — a bare call, `toLocaleString(undefined, {…})`, and `toLocaleTimeString([], {…})`,
+// the last of which looks like a decision because it passes an argument list. Every check
+// above this line is a check about KEYS, so this defect class was structurally invisible for
+// 190 milestones — there is no key, no dictionary row and no English word in it, just a
+// formatter asking the wrong machine. M194 opened one door, `formatDate(locale, value, opts)`,
+// and wired every site that renders an instant: twelve door calls across nine files. The
+// clauses below keep the door:
+//   (a) a browser-locale `toLocale*` call needs a named entry that proves its own reason,
+//       with a per-file cap so the debt that is left cannot migrate (M188's lesson) or grow;
+//   (a') a call that DOES pass a locale can still source it from the host, and no
+//       argument-shape scan sees that — so `navigator.language` is allowed exactly once, in
+//       the picker that chooses the reader's starting locale, and nowhere else;
+//   (b) a `formatDate` call that hands over a *literal* locale is the same defect wearing
+//       the other face — it renders one language for every reader;
+//   (c) a date label assembled by hand out of `getMonth()`/`getDate()` is invisible to (a),
+//       because it never calls a formatter at all;
+//   (d) a memo that reads `locale` but leaves it out of its dependency array keeps last
+//       week's language after the switch — no static formatting check can see that;
+//   (e) the assertions run through the PRODUCTION function, so green means a Chinese reader
+//       really is shown CJK, not that a regex approved a shape.
+//
+// Scanner plumbing. The call-argument reader check 24 already uses (`callArgs`, top-level
+// arguments from the open paren, string and template contents opaque) is the one this check
+// reads through too: two scanners over the same source is two chances to disagree about what
+// a call is. Every call the census is asked about has to resolve, and the clause that prints
+// the count refuses an unresolved one rather than guessing.
+// Every call of `name` outside i18n/, with its argument strings. appSrc has already dropped
+// comment lines, so a doc comment that mentions the door is not a caller.
+const callsOf = (name) => {
+  const re = new RegExp("\\b" + name + "\\(", "g");
+  const out = [];
+  for (const [path, code] of appSrc) {
+    for (const m of code.matchAll(re)) {
+      out.push({ path, line: code.slice(0, m.index).split("\n").length, args: callArgs(code, m.index + name.length) });
+    }
+  }
+  return out;
+};
+
+// (a) The browser-locale census. A call asks the host when its first argument is absent,
+//     `undefined` or `[]`, or the literal "default" — all four read the browser, not the
+//     reader. `[]` is the one that slips a hand-written check: it is an argument list, so the
+//     call *looks* like a decision was made, and two of this milestone's twelve sites were
+//     written that way.
+const LOCALE_CALL = /((?:new Date\([^)]*\)|[\w.$]+))\.toLocale[A-Za-z]*\(\s*([^)]*)\)/g;
+const firstArgOf = (t) => t.split(",")[0].trim();
+const ASKS_THE_HOST = ["", "undefined", "[]", '"default"', "'default'"];
+const hostSites = [];
+for (const [path, code] of appSrc) {
+  for (const m of code.matchAll(LOCALE_CALL)) {
+    if (ASKS_THE_HOST.includes(firstArgOf(m[2]))) hostSites.push({ path, receiver: m[1] });
+  }
+}
+const hostCount = (p) => hostSites.filter((s) => s.path === p).length;
+// A grouped number. The reason is pinned by name: `item.value` is a chart series value, and
+// the clause refuses any receiver that is a `new Date(...)` or is named like an instant, so
+// this list cannot be used to park a date. A new receiver has to be added here, in the open.
+const HOST_OK_NUMBER = { "components/ui/chart.tsx": ["item.value"] };
+// A primitive that is not mounted anywhere. Its two sites would be real debt the day the
+// component is imported, so the exemption is only as good as the importer count under it.
+const HOST_OK_UNMOUNTED = { "components/ui/calendar.tsx": 2 };
+// Still browser-locale, one milestone each to wire. Measured at M194: Player OS's two
+// session dates and its record date; the Data Room's kickoff line; and the Football AI's
+// fixture fact, whose `when:` var is composed in data/intelligence.ts, where no locale is
+// in scope yet — closing it needs one threaded through the RAG entry point (#165's lane).
+const DATE_DEBT = {
+  "features/player/PlayerOS.tsx": 3,
+  "features/analytics/DataRoom.tsx": 1,
+  "data/intelligence.ts": 1,
+};
+const undeclaredHost = hostSites.filter((s) =>
+  !(s.path in HOST_OK_NUMBER || s.path in HOST_OK_UNMOUNTED || s.path in DATE_DEBT));
+ok(`no file formats an instant for the browser without saying why (${undeclaredHost.map((s) => s.path).join(", ") || "none undeclared"} of ${hostSites.length} sites)`,
+  undeclaredHost.length === 0);
+const grewHost = Object.entries(DATE_DEBT).filter(([p, cap]) => hostCount(p) > cap);
+ok(`the remaining date debt has not grown in any file (${grewHost.map(([p, cap]) => `${p} ${hostCount(p)}>${cap}`).join(", ") || Object.entries(DATE_DEBT).map(([p, c]) => `${p.split("/").pop()}=${hostCount(p)}/${c}`).join(" ")})`,
+  grewHost.length === 0);
+const badNumber = Object.entries(HOST_OK_NUMBER).flatMap(([p, receivers]) =>
+  [...(appSrc.get(p) ?? "").matchAll(LOCALE_CALL)]
+    .filter((m) => !receivers.includes(m[1]) || /^new Date/.test(m[1]) || /date|kickoff|iso|time|at\b/i.test(m[1]))
+    .map((m) => `${p} ${m[1]}`));
+ok(`the number exemption still only vouches for a non-instant receiver (${badNumber.join(", ") || "clean"})`,
+  badNumber.length === 0);
+const calImporters = files.map((f) => rel(f)).filter((p) =>
+  p !== "components/ui/calendar.tsx" && /\.tsx?$/.test(p) &&
+  /from\s+["'][^"']*ui\/calendar["']/.test(readFileSync(join(root, ...p.split("/")), "utf8")));
+ok(`the unmounted-primitive exemption is still unmounted (${calImporters.join(", ") || "0 importers"})`,
+  calImporters.length === 0);
+// The way back into the same defect that no argument-shape scan can see: a call that DOES
+// pass a locale, but sources it from the host. Reading the browser once is correct — the app
+// picks a starting locale from it, the reader can override that in the header, and the choice
+// persists. A second read means something is being styled by the machine again.
+const hostReads = [...appSrc].flatMap(([p, code]) =>
+  [...code.matchAll(/\bnavigator\.languages?\b/g)].map(() => p));
+const pickerReads = (readFileSync(join(root, "i18n", "index.tsx"), "utf8")
+  .match(/\bnavigator\.languages?\b/g) || []).length;
+ok(`no formatted value takes its locale from the host (${hostReads.join(", ") || "0 reads outside i18n"}; the start-locale picker reads it ${pickerReads}×)`,
+  hostReads.length === 0 && pickerReads === 1);
+ok(`the census is reading formatters that exist (${hostSites.length} browser-locale sites)`,
+  hostSites.length >= 8);
+// (b) The door is the only formatter, and it takes the reader's locale.
+const DOOR_CALLS = callsOf("formatDate");
+const unresolvedDoor = DOOR_CALLS.filter((c) => !c.args);
+const literalLocale = DOOR_CALLS.filter((c) => /^["'`]/.test((c.args?.[0] ?? "").trim()));
+const noLocaleArg = DOOR_CALLS.filter((c) => !/(^|[.\w$])locale$/.test((c.args?.[0] ?? "").trim()));
+const doorFiles = [...new Set(DOOR_CALLS.map((c) => c.path))];
+const IMPORT_DOOR = /import\s*\{[^}]*\bformatDate\b[^}]*\}\s*from\s*"@\/i18n(\/format)?"/;
+const unimportedDoor = doorFiles.filter((p) => !IMPORT_DOOR.test(appSrc.get(p) ?? ""));
+const otherDoors = [...appSrc].filter(([, code]) => /new Intl\.DateTimeFormat\(/.test(code)).map(([p]) => p);
+ok(`every formatDate call resolves and none was mis-parsed (${DOOR_CALLS.length} calls, ${unresolvedDoor.length} unresolved)`,
+  unresolvedDoor.length === 0);
+ok(`no formatDate call passes a literal locale — that renders one language for everyone (${literalLocale.map((c) => `${c.path}:${c.line}`).join(", ") || "none"})`,
+  literalLocale.length === 0);
+ok(`every formatDate call's first argument is the reader's locale (${noLocaleArg.map((c) => `${c.path}:${c.line}[${(c.args?.[0] ?? "").trim()}]`).join(", ") || "all clear"})`,
+  noLocaleArg.length === 0);
+ok(`every file that formats a date imports the door from @/i18n (${unimportedDoor.join(", ") || "none missing"})`,
+  unimportedDoor.length === 0);
+ok("formatDate is reachable through the i18n umbrella the screens import",
+  /export\s*\{\s*formatDate\s*\}\s*from\s*"\.\/format"/.test(readFileSync(join(root, "i18n", "index.tsx"), "utf8")));
+ok(`the door is the ONE door — nothing else constructs a formatter (${otherDoors.join(", ") || "none"})`,
+  otherDoors.length === 0);
+ok(`the door scan is reading real call sites (${DOOR_CALLS.length} across ${doorFiles.length} files)`,
+  DOOR_CALLS.length >= 12 && doorFiles.length >= 8);
+
+// (c) A label built out of date parts by hand never calls a formatter, so (a) cannot see
+//     it. What is allowed here is a grouping KEY — `YYYY-MM-DD`, padded, compared against
+//     another key and never shown — so each declared site has to still have that shape.
+const HAND = /`[^`]*\$\{[^}]*\.get(?:Month|Date|FullYear)\(\)[^`]*`/g;
+const DAY_KEY_FILES = { "domain/history.ts": 1, "features/history/HistoryPage.tsx": 1 };
+const ISO_KEY = /^\$\{[\w.]+\.getFullYear\(\)\}-\$\{[^}]*padStart\(2, ?"0"\)\}-\$\{[^}]*padStart\(2, ?"0"\)/;
+const handSites = [];
+for (const [path, code] of appSrc) {
+  for (const m of code.matchAll(HAND)) handSites.push({ path, text: m[0], isKey: ISO_KEY.test(m[0].replace(/^`/, "")) });
+}
+const handByFile = (p) => handSites.filter((s) => s.path === p).length;
+const badHand = handSites.filter((s) => !s.isKey || DAY_KEY_FILES[s.path] === undefined);
+const lostHand = Object.entries(DAY_KEY_FILES).filter(([p, n]) => handByFile(p) !== n);
+ok(`no hand-assembled date label reaches a screen (${badHand.map((s) => `${s.path} ${s.text.slice(0, 34)}`).join(" | ") || "none"})`,
+  badHand.length === 0);
+ok(`the declared ISO day keys are still there and still keys (${lostHand.map(([p, n]) => `${p} ${handByFile(p)}/${n}`).join(", ") || "all in place"})`,
+  lostHand.length === 0);
+ok(`the day-key scan is reading the builders it claims (${handSites.length})`, handSites.length === 2);
+
+// (d) A memo is a cache. If its body reads `locale` and its dependency array does not name
+//     it, the first render's language is kept forever — so a chart's labels can be in the
+//     wrong language on a screen every static formatting check calls clean.
+const memos = [];
+for (const [path, code] of appSrc) {
+  for (const m of code.matchAll(/\buseMemo\(/g)) {
+    const args = callArgs(code, m.index + "useMemo".length);
+    memos.push({ path, line: code.slice(0, m.index).split("\n").length, body: args?.[0] ?? null, deps: args?.[1] ?? null });
+  }
+}
+const READS_LOCALE = /(^|[^\w$])locale([^\w$]|$)/;
+const unparsedMemos = memos.filter((x) => x.body === null || x.deps === null);
+const staleMemos = memos.filter((x) => x.body !== null && READS_LOCALE.test(x.body) && !READS_LOCALE.test(x.deps ?? ""));
+const localeMemos = memos.filter((x) => x.body !== null && READS_LOCALE.test(x.body));
+ok(`every useMemo the scanner was asked about resolved (${memos.length} calls, ${unparsedMemos.length} unparsed)`,
+  unparsedMemos.length === 0);
+ok(`no cached row reads the reader's language without depending on it (${staleMemos.map((x) => `${x.path}:${x.line}`).join(", ") || "none"})`,
+  staleMemos.length === 0);
+ok(`the memo rule is watching a locale that is really read (${localeMemos.length} of ${memos.length} memos)`,
+  memos.length >= 60 && localeMemos.length >= 3);
+
+// (e) Behaviour, through the function the screens import. A gate that only matched shapes
+//     would stay green if the door ignored its own argument, or if an app locale id were a
+//     string Intl never resolves — then every reader silently gets the host's format back,
+//     which is exactly the bug this milestone fixed.
+const { formatDate: door } = await server.ssrLoadModule("/i18n/index.tsx");
+ok("the i18n umbrella really exports formatDate at runtime", typeof door === "function");
+const WHEN = "2026-09-12T08:30:00Z";
+const rendered = Object.fromEntries(L.map((l) => [l.id, door(l.id, WHEN, { month: "short", day: "numeric" })]));
+const badIntl = L.filter((l) => !new Intl.DateTimeFormat(l.id).resolvedOptions().locale.toLowerCase().startsWith(l.id.toLowerCase().split("-")[0]));
+ok(`every app locale id is one Intl actually resolves (${badIntl.map((l) => l.id).join(", ") || "all resolve"})`,
+  badIntl.length === 0);
+ok(`the same instant renders differently per locale (${L.map((l) => `${l.id}=${rendered[l.id]}`).join(" ")})`,
+  new Set(L.map((l) => rendered[l.id])).size > 1);
+const CJK = /[一-鿿]/;
+const LONG = L.filter((l) => l.id !== "en" && !CJK.test(door(l.id, WHEN, { year: "numeric", month: "long", day: "numeric" })));
+const latinPolluted = CJK.test(rendered.en);
+ok(`a Chinese reader is shown CJK and an English reader Latin (${LONG.map((l) => `${l.id}=${door(l.id, WHEN, { year: "numeric", month: "long", day: "numeric" })}`).join(" ") || "zh renders CJK"}${latinPolluted ? " | en polluted" : " | en latin"})`,
+  LONG.length === 0 && !latinPolluted);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);
