@@ -10,7 +10,7 @@
 
 import { ATTRIBUTE_KEYS, POSITION_GROUPS } from "./attributes";
 import { ARCHETYPE_KEYS } from "./playerDna";
-import { MODES } from "./types";
+import { MODES, SEARCH_KINDS } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 export type RowVars = Record<string, string | number>;
@@ -25,8 +25,8 @@ export type Translate = (key: string, vars?: RowVars) => string;
 // lookup. `group` carries a PositionGroup id, `mode` a Mode, `a` and `b` one attribute
 // key each (a row that compares two needs both), `focus` a comma-separated list of them,
 // `arch` and `arch2` one archetype key each (the DNA evolution row names both ends of it),
-// and `goal`/`ageGroup` an onboarding choice.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "goal", "ageGroup"];
+// `kind` a retrieval entity kind, and `goal`/`ageGroup` an onboarding choice.
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "goal", "ageGroup"];
 
 function codeWord(code: string, t: Translate): string {
   // `focus` is the one variable that holds a list, so a comma-separated code list is
@@ -38,6 +38,7 @@ function codeWord(code: string, t: Translate): string {
   if ((POSITION_GROUPS.map((g) => g.id) as readonly string[]).includes(code)) return t(`group.${code}`);
   if ((MODES as readonly string[]).includes(code)) return t(`prof.mode.${code}`);
   if (ARCHETYPE_KEYS.includes(code)) return t(`dna.arch.${code}`);
+  if ((SEARCH_KINDS as readonly string[]).includes(code)) return t(`ai.legend.${code}`);
   if (isGoalCode(code)) return t(`onb.goal.${code}`);
   if (isAgeGroupWord(code)) return t(`onb.age.${code}`);
   // An unknown code stays as written: printing `attr.name.foo` on screen would be a

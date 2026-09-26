@@ -529,6 +529,9 @@ const DYN_SITES = [
   { path: "domain/rowText.ts", expr: "code", prefix: "attr.name.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "group.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "prof.mode.", suffix: "" },
+  // M183: the retrieval kinds a source chip names resolve through the legend's own space,
+  // which is why one list (`SEARCH_KINDS`) has to serve both.
+  { path: "domain/rowText.ts", expr: "code", prefix: "ai.legend.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "onb.goal.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "onb.age.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
@@ -682,6 +685,14 @@ const SPACES = new Map([
     // check 18 — so the two directions are both covered by this one anchor.
     name: "knowledge-graph entity kinds",
     values: spaceOf("features/ai/AiStudio.tsx", /const TYPE_COLOR[^=]*=[\s\S]*?\};/, /([a-z]+)\s*:\s*"var\(/g),
+  }],
+  ["ai.legend.|code", {
+    // M183: a source chip resolves its kind through the SAME space the legend uses, and the
+    // two lists come from two different files — the retrieval kinds the AI can produce
+    // (`SEARCH_KINDS`) and the entity kinds the canvas can colour (`TYPE_COLOR`). Both are
+    // read out of their own source and compared below.
+    name: "retrieval entity kinds",
+    values: spaceOf("domain/types.ts", /export const SEARCH_KINDS[^=]*=[\s\S]*?\];/, /"([a-z]+)"/g),
   }],
   ["comm.sort.|s", {
     name: "community sorts",
@@ -1097,15 +1108,24 @@ for (const b of bareMapReads.slice(0, 8)) console.log("       bare map read: " +
 //      string[]` cannot be checked by name, so shadowing is computed per component rather
 //      than across the whole tree — gating on the global intersection measured 2 fields
 //      and 1 read site, i.e. a gate that guards nothing.
-const domainTs = [...appSrc].filter(([p2]) => p2.endsWith(".ts") && !p2.endsWith("rowText.ts"));
+// Every module that can declare a field — a domain interface, a data interface, or a
+// component's own props — is read for BOTH sides. A component that takes `label: string`
+// as a prop can legitimately print that label, so the name is shadowed for it: gating by
+// name alone would accuse `Legend` of printing a row raw.
+// Both sides of the name test read a field declaration anywhere it appears — its own line,
+// or one property inside an inline props type like `{ color: string; label: string }`,
+// which is exactly where a component's own plain-text `label` hides.
+const FIELD_ROW = /(?:^|[{;,]\s*)(\w+)\s*:\s*(?:readonly\s+)?RowText(?:\[\])?\s*(?=[;,}])/g;
+const FIELD_STR = /(?:^|[{;,]\s*)(\w+)\s*:\s*(?:readonly\s+)?string(?:\[\])?\s*(?=[;,}])/g;
+const domainTs = [...appSrc].filter(([p2]) => /\.(ts|tsx)$/.test(p2) && !p2.endsWith("rowText.ts"));
 const rowFields = new Map();
 const stringFields = new Map();
 for (const [dp, code] of domainTs) {
-  for (const m of code.matchAll(/^\s*(\w+)\s*:\s*(?:readonly\s+)?RowText(?:\[\])?;$/gm)) {
+  for (const m of code.matchAll(FIELD_ROW)) {
     if (!rowFields.has(m[1])) rowFields.set(m[1], []);
     if (!rowFields.get(m[1]).includes(dp)) rowFields.get(m[1]).push(dp);
   }
-  for (const m of code.matchAll(/^\s*(\w+)\s*:\s*(?:readonly\s+)?string(?:\[\])?;$/gm)) {
+  for (const m of code.matchAll(FIELD_STR)) {
     if (!stringFields.has(m[1])) stringFields.set(m[1], []);
     if (!stringFields.get(m[1]).includes(dp)) stringFields.get(m[1]).push(dp);
   }
@@ -1117,7 +1137,7 @@ for (const [p2, body] of TSX) {
   for (const [field, mods] of rowFields) {
     const rowsHere = mods.filter((m) => imports.has(m.replace(/\.ts$/, "")));
     if (!rowsHere.length) continue;
-    if ((stringFields.get(field) ?? []).some((m) => imports.has(m.replace(/\.ts$/, "")))) continue;
+    if ((stringFields.get(field) ?? []).some((m) => m === p2 || imports.has(m.replace(/\.ts$/, "")))) continue;
     for (const hit of body.matchAll(new RegExp("\\{\\s*(rowLine\\(\\s*)?([A-Za-z_$][\\w$.]*\\.)?" + field + "\\s*[,}]", "g"))) {
       const key = `${p2.split("/").pop()} · ${field}`;
       gatedReads.set(key, (gatedReads.get(key) ?? 0) + 1);
@@ -1163,6 +1183,15 @@ ok(`every archetype id a component reads, it reads through dna.arch. (${slugGuar
   slugReads.length === 0);
 for (const r of slugReads.slice(0, 6)) console.log("       raw id read: " + r);
 ok(`the id-leak scan is reading sites that exist (${slugGuarded} guarded reads)`, slugGuarded >= 6);
+
+// Two files name the same five kinds for two different purposes; if they drift, a
+// retrieval kind can arrive in a chip the legend has no colour or word for.
+{
+  const retrieval = spaceOf("domain/types.ts", /export const SEARCH_KINDS[^=]*=[\s\S]*?\];/, /"([a-z]+)"/g);
+  const canvas = spaceOf("features/ai/AiStudio.tsx", /const TYPE_COLOR[\s\S]*?\};/, /([a-z]+)\s*:\s*"var\(/g);
+  ok(`the AI's retrieval kinds and the graph's drawable kinds are one list (${retrieval.join(", ")} / ${canvas.join(", ")})`,
+    retrieval.length === 5 && [...retrieval].sort().join() === [...canvas].sort().join());
+}
 
 // 22. Raw UI text, measured across the whole app rather than one screen at a
 //     time. scripts/lib/rawUiScan.mjs reads the three positions a reader of the

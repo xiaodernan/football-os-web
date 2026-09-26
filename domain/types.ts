@@ -9,6 +9,11 @@ export type Mode = "FAN" | "PLAYER" | "MANAGER";
 // than keeping a second copy that nothing audits. proof-i18n fails if the two drift.
 export const MODES: readonly Mode[] = ["FAN", "PLAYER", "MANAGER"];
 
+// The entity kinds the Football AI can retrieve and the knowledge graph can draw. One
+// list, so a row that names a kind (`ai.src.entity`) and the legend chips cannot drift:
+// both resolve a kind through `ai.legend.…`, and the i18n gate audits that space.
+export const SEARCH_KINDS = ["club", "player", "competition", "match", "news"] as const;
+
 export type PositionGroup = "GK" | "CB" | "FB" | "DM" | "CM" | "AM" | "W" | "ST";
 
 export interface NamedValue {

@@ -24,7 +24,10 @@ import {
 } from "@/data/footballService";
 
 export interface EvidenceFact {
-  label: string;
+  /** The chip in front of the evidence line. A word the app chooses ("Standings") is a
+   *  keyed row; the entity the fact is about (a club name, a headline kind) is a value
+   *  row, because those words came out of the record. */
+  label: RowText;
   text: string;
   to?: string;
 }
@@ -32,7 +35,10 @@ export interface EvidenceFact {
 export interface RagContext {
   hits: SearchResult[];
   facts: EvidenceFact[];
-  sources: string[];
+  /** What the answer retrieved, as `Club · Manchester City` rows. The type:id pair the
+   *  retrieval layer works in (`club:mci`) is a code, and a code printed to a visitor is
+   *  the bug class M58 was about. */
+  sources: RowText[];
   confidence: number;
   entityLabel: string | null;
 }
@@ -41,7 +47,7 @@ export interface RagAnswer {
   question: string;
   answer: string;
   facts: EvidenceFact[];
-  sources: string[];
+  sources: RowText[];
   confidence: number;
   at: string;
 }
@@ -53,23 +59,23 @@ function clubFacts(clubId: string): EvidenceFact[] {
   const table = footballProvider.standings(c.competitionId);
   const pos = table.findIndex((s) => s.clubId === clubId);
   const out: EvidenceFact[] = [
-    { label: c.name, text: `${c.name} (${c.short}) play in ${getCompetition(c.competitionId)?.name}, overall ${c.overall}, at ${c.stadium}.`, to: `/clubs/${c.id}` },
+    { label: { value: c.name }, text: `${c.name} (${c.short}) play in ${getCompetition(c.competitionId)?.name}, overall ${c.overall}, at ${c.stadium}.`, to: `/clubs/${c.id}` },
   ];
   if (pos >= 0) {
     const s = table[pos];
-    out.push({ label: "Standings", text: `They sit ${pos + 1}${ord(pos + 1)} with ${s.points} pts (${s.won}W ${s.drawn}D ${s.lost}L, GD ${s.gf - s.ga}).`, to: `/competitions/${c.competitionId}` });
+    out.push({ label: { key: "ai.lab.standings" }, text: `They sit ${pos + 1}${ord(pos + 1)} with ${s.points} pts (${s.won}W ${s.drawn}D ${s.lost}L, GD ${s.gf - s.ga}).`, to: `/competitions/${c.competitionId}` });
   }
-  if (squad[0]) out.push({ label: "Key man", text: `Top-rated in the squad is ${squad[0].name} (${squad[0].position}, OVR ${squad[0].overall}, ${formatValue(squad[0].value)}).`, to: `/players/${squad[0].id}` });
+  if (squad[0]) out.push({ label: { key: "ai.lab.keyMan" }, text: `Top-rated in the squad is ${squad[0].name} (${squad[0].position}, OVR ${squad[0].overall}, ${formatValue(squad[0].value)}).`, to: `/players/${squad[0].id}` });
   const fixture = [...matchesByStatus("SCHEDULED").filter((m) => m.homeClubId === clubId || m.awayClubId === clubId)].sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
   if (fixture) {
     const opp = fixture.homeClubId === clubId ? getClub(fixture.awayClubId) : getClub(fixture.homeClubId);
-    out.push({ label: "Next fixture", text: `Next up vs ${opp?.name} in ${getCompetition(fixture.competitionId)?.name}.`, to: `/matches/${fixture.id}` });
+    out.push({ label: { key: "ai.lab.nextFixture" }, text: `Next up vs ${opp?.name} in ${getCompetition(fixture.competitionId)?.name}.`, to: `/matches/${fixture.id}` });
     const fc = fixtureForecast(fixture.id);
     if (fc) {
       const home = getClub(fixture.homeClubId);
       const away = getClub(fixture.awayClubId);
       out.push({
-        label: "Next fixture model",
+        label: { key: "ai.lab.nextFixtureModel" },
         text: `Poisson projection for ${home?.name} v ${away?.name}: ${fc.homePct}% home · ${fc.drawPct}% draw · ${fc.awayPct}% away; expected goals ${fc.lambdaHome.toFixed(2)}–${fc.lambdaAway.toFixed(2)}, most likely ${fc.mostLikelyScore}. From ${fc.sample} match${fc.sample === 1 ? "" : "es"} of form data — a model output, not a result.`,
         to: `/matches/${fixture.id}`,
       });
@@ -83,15 +89,15 @@ function playerFacts(pid: string): EvidenceFact[] {
   if (!p) return [];
   const c = getClub(p.clubId);
   const out: EvidenceFact[] = [
-    { label: p.name, text: `${p.name} — ${p.position}, ${p.age}y, ${p.nation}, at ${c?.name}. Overall ${p.overall}, potential ${p.potential}, worth ${formatValue(p.value)}, ${p.foot} foot.`, to: `/players/${p.id}` },
-    { label: "Profile", text: `Scouting archetype: ${archetypeLabelEn(p.archetype)}.`, to: `/players/${p.id}` },
+    { label: { value: p.name }, text: `${p.name} — ${p.position}, ${p.age}y, ${p.nation}, at ${c?.name}. Overall ${p.overall}, potential ${p.potential}, worth ${formatValue(p.value)}, ${p.foot} foot.`, to: `/players/${p.id}` },
+    { label: { key: "ai.lab.profile" }, text: `Scouting archetype: ${archetypeLabelEn(p.archetype)}.`, to: `/players/${p.id}` },
   ];
   const report = scoutReport(p);
   if (report.hasVector) {
     const up = report.strengths.slice(0, 3).map((s) => `${attributeLabel(s.key)} +${s.delta}`).join(", ");
     const down = report.concerns.slice(-3).reverse().map((s) => `${attributeLabel(s.key)} ${s.delta}`).join(", ");
     out.push({
-      label: "Template edge",
+      label: { key: "ai.lab.templateEdge" },
       text: `Against a ${p.positionGroup} of the same implied skill: ${report.headline}.${up ? ` Above template — ${up}.` : ""}${down ? ` Below template — ${down}.` : ""}`,
       to: `/players/${p.id}`,
     });
@@ -99,7 +105,7 @@ function playerFacts(pid: string): EvidenceFact[] {
   const arc = careerArc(p);
   if (arc.hasData) {
     out.push({
-      label: "Career arc",
+      label: { key: "ai.lab.careerArc" },
       text: `${arc.trajectory} at ${arc.age}: modelled peak ${arc.projectedPeak} around ${arc.peakAge} (${arc.yearsToPeak} year${arc.yearsToPeak === 1 ? "" : "s"} away), ${arc.remainingPrimeYears} prime year${arc.remainingPrimeYears === 1 ? "" : "s"} left. Age-curve model, not a forecast about a real person.`,
       to: `/players/${p.id}`,
     });
@@ -114,11 +120,11 @@ function matchFacts(mid: string): EvidenceFact[] {
   const a = getClub(m.awayClubId);
   const base = `${h?.name} v ${a?.name} — ${getCompetition(m.competitionId)?.name}, round ${m.round}.`;
   const status = m.status === "SCHEDULED" ? `Kickoff ${new Date(m.kickoff).toLocaleString()}.` : `Result ${m.homeGoals}–${m.awayGoals}.`;
-  const out: EvidenceFact[] = [{ label: "Fixture", text: `${base} ${status}`, to: `/matches/${m.id}` }];
+  const out: EvidenceFact[] = [{ label: { key: "ai.lab.fixture" }, text: `${base} ${status}`, to: `/matches/${m.id}` }];
   const fc = m.status === "SCHEDULED" ? fixtureForecast(m.id) : null;
   if (fc) {
     out.push({
-      label: "Model",
+      label: { key: "ai.lab.model" },
       text: `Poisson model on current form: ${h?.name} ${fc.homePct}% · draw ${fc.drawPct}% · ${a?.name} ${fc.awayPct}%; expected goals ${fc.lambdaHome.toFixed(2)}–${fc.lambdaAway.toFixed(2)}, most likely ${fc.mostLikelyScore}. Based on ${fc.sample} match${fc.sample === 1 ? "" : "es"} of form data — a projection, not a result.`,
       to: `/matches/${m.id}`,
     });
@@ -129,7 +135,7 @@ function matchFacts(mid: string): EvidenceFact[] {
 function newsFacts(nid: string): EvidenceFact[] {
   const n = getNews(nid);
   if (!n) return [];
-  return [{ label: n.kind, text: `${n.title} — ${n.summary} (Source: ${n.source})`, to: `/news/${n.id}` }];
+  return [{ label: { value: n.kind }, text: `${n.title} — ${n.summary} (Source: ${n.source})`, to: `/news/${n.id}` }];
 }
 
 function factsFor(hit: SearchResult): EvidenceFact[] {
@@ -143,7 +149,7 @@ function factsFor(hit: SearchResult): EvidenceFact[] {
       if (!comp) return [];
       const table = footballProvider.standings(hit.id);
       const leader = table[0] ? getClub(table[0].clubId) : null;
-      return [{ label: comp.name, text: `${comp.name} (${comp.nation}, Tier ${comp.tier}) has ${comp.clubIds.length} teams.${leader ? ` Current leaders: ${leader.name} (${table[0].points} pts).` : ""}`, to: `/competitions/${comp.id}` }];
+      return [{ label: { value: comp.name }, text: `${comp.name} (${comp.nation}, Tier ${comp.tier}) has ${comp.clubIds.length} teams.${leader ? ` Current leaders: ${leader.name} (${table[0].points} pts).` : ""}`, to: `/competitions/${comp.id}` }];
     }
   }
 }
@@ -194,13 +200,20 @@ export function retrieve(question: string): RagContext {
       facts.push(f);
     }
   }
-  const sources = [...new Set(ranked.map((h) => `${h.type}:${h.id}`))];
+  const seenHit = new Set<string>();
+  const sources: RowText[] = [];
+  for (const h of ranked) {
+    const id = `${h.type}:${h.id}`;
+    if (seenHit.has(id)) continue;
+    seenHit.add(id);
+    sources.push({ key: "ai.src.entity", vars: { kind: h.type, name: h.title } });
+  }
   let confidence = 20;
   if (ranked.length) confidence = Math.min(92, 45 + ranked.length * 8 + (facts.length > 2 ? 6 : 0));
   return {
     hits: ranked,
     facts: facts.slice(0, 6),
-    sources: sources.length ? sources : ["No specific entity retrieved — general reasoning only"],
+    sources: sources.length ? sources : [{ key: "ai.src.none" }],
     confidence,
     entityLabel: ranked[0]?.title ?? null,
   };

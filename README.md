@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M182 (a few numbers in that range
+Work ships one milestone per commit and is currently at M183 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2070,6 +2070,43 @@ mutation probes, all caught, all restored byte-identical: an archetype id with n
 繁體 description deleted, the evolution row printed raw, a screen showing the stored id, the
 interpreter's archetype branch removed, an English name re-added to the table, and a lookup
 invented under an undeclared prefix. No rendered-page claim: the in-app browser still
+commits no React tree.
+
+### M183 — The AI panel's own words are keyed, and its source line stopped printing codes
+
+The Football AI chat listed its sources as `club:man-city, player:erling-haaland` — the
+retrieval layer's own identifiers, shown to a visitor as if they were citations — and its
+evidence chips (`Standings`, `Key man`, `Profile`, `Template edge`, `Career arc`,
+`Fixture`, `Model`, `Next fixture`, `Next fixture model`) were English strings typed
+into `data/intelligence.ts`. Both are rows now: a source is
+`{ kind, name }` and resolves the kind through `ai.legend.*` — the very table the graph
+legend already uses, so one list names an entity kind for both screens — and a chip label
+is a key, while a label that came out of a record (a club's name, a headline's kind) stays
+a `value` row and is shown exactly as stored. 11 new keys ×3 locales.
+
+`AiStudio` persists its chat log, so stored messages from before this change hold plain
+strings. The fix is the boundary helper the app already has: the log is mapped through
+`asRowText` once on the way in, so every render site is a plain `rowLine` and an
+older-format value is never re-interpreted as a key.
+
+Three gates grew with it. `ai.legend.*` now has two declared value spaces — the canvas's
+`TYPE_COLOR` keys and the retrieval layer's `SEARCH_KINDS` — plus a clause that refuses
+when the two lists disagree, because five kinds in one file and four in another is exactly
+the drift M180's legend fix was about. Check 28c had to learn where a plain-text field
+really hides: `label: string` as an inline component prop was invisible to a
+line-anchored scan, so the gate was reading `Legend`'s own text prop as an unresolved
+row. And `proof-ai-grounding` gained 12 checks, including three that read the panel's
+source text, since a row printed raw renders as `[object Object]` and the raw-UI scan has
+nothing to see.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, the suite is **28 scripts / 1339
+checks** (proof-i18n **165**, proof-ai-grounding **35** up from 23), dictionary **1351 keys
+× 3 locales**. Seven mutation probes: a chip back to a typed string, a chip word smuggled
+through the value arm, a source row missing its kind, the panel printing a chip raw, the
+panel reading the un-normalised log, a retrieval kind removed from the interpreter, and a
+繁體 chip word deleted. The first run of the chip probe crashed the proof instead of
+failing a clause, so the proof grew a row-shape guard and the probe was re-run — it then
+produced exactly one red and no crash. No rendered-page claim: the in-app browser still
 commits no React tree.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind

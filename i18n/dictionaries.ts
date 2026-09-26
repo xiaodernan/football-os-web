@@ -1135,6 +1135,17 @@ const en: Dict = {
   "ai.kg.pts": "{n} pts",
   "ai.graphMeta": "{nodes} nodes · {edges} relations",
   "ai.graphAria": "Knowledge graph",
+  "ai.lab.standings": "Standings",
+  "ai.lab.keyMan": "Key man",
+  "ai.lab.nextFixture": "Next fixture",
+  "ai.lab.nextFixtureModel": "Next fixture model",
+  "ai.lab.profile": "Profile",
+  "ai.lab.templateEdge": "Template edge",
+  "ai.lab.careerArc": "Career arc",
+  "ai.lab.fixture": "Fixture",
+  "ai.lab.model": "Model",
+  "ai.src.entity": "{kind} · {name}",
+  "ai.src.none": "No specific entity retrieved — general reasoning only",
 
   // Demo Mode has no community server: posts live on this device in either
   // connection state, so this notice must not imply a queue that sends later.
@@ -2497,6 +2508,17 @@ const zhCN: Dict = {
   "ai.kg.pts": "{n} 分",
   "ai.graphMeta": "{nodes} 个节点 · {edges} 条关系",
   "ai.graphAria": "知识图谱",
+  "ai.lab.standings": "积分榜",
+  "ai.lab.keyMan": "关键球员",
+  "ai.lab.nextFixture": "下一场赛程",
+  "ai.lab.nextFixtureModel": "下场赛程模型",
+  "ai.lab.profile": "球员档案",
+  "ai.lab.templateEdge": "模板对比",
+  "ai.lab.careerArc": "生涯曲线",
+  "ai.lab.fixture": "赛程",
+  "ai.lab.model": "模型",
+  "ai.src.entity": "{kind} · {name}",
+  "ai.src.none": "未检索到具体对象——仅作一般性推断",
   "community.offline": "已离线——两种状态下帖子都保存在本机，重新联网时不会上传任何内容。",
 // Scouting board. OVR / POT / €M and the GK-DEF-MID-ATT bucket codes stay
 // untranslated on purpose: they are stat codes the app shows in monospace in
@@ -3766,6 +3788,17 @@ const zhTW: Dict = {
   "ai.kg.pts": "{n} 分",
   "ai.graphMeta": "{nodes} 個節點 · {edges} 條關係",
   "ai.graphAria": "知識圖譜",
+  "ai.lab.standings": "積分榜",
+  "ai.lab.keyMan": "關鍵球員",
+  "ai.lab.nextFixture": "下一場賽程",
+  "ai.lab.nextFixtureModel": "下場賽程模型",
+  "ai.lab.profile": "球員檔案",
+  "ai.lab.templateEdge": "模板對比",
+  "ai.lab.careerArc": "生涯曲線",
+  "ai.lab.fixture": "賽程",
+  "ai.lab.model": "模型",
+  "ai.src.entity": "{kind} · {name}",
+  "ai.src.none": "未檢索到具體對象——僅作一般性推斷",
   "community.offline": "已離線——兩種狀態下帖子都保存在本機，重新連線時不會上傳任何內容。",
 
   // M143: this block used to open with `...zhCN`, which is how 18 labels

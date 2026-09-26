@@ -3,7 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useLocalStorage, useOnline } from "@/lib/hooks";
 import { useI18n } from "@/i18n";
 import { askIntelligence, buildGraph, type EvidenceFact, type KgGraph, type KgNode } from "@/data/intelligence";
-import { rowLine } from "@/domain/rowText";
+import { rowLine, asRowText, type RowText } from "@/domain/rowText";
 import { AI_CHAT_KEY } from "@/domain/localData";
 import { Panel, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 type ChatMsg =
   | { role: "user"; content: string; at: string }
-  | { role: "ai"; content: string; facts?: EvidenceFact[]; sources?: string[]; confidence?: number; at: string };
+  | { role: "ai"; content: string; facts?: EvidenceFact[]; sources?: RowText[]; confidence?: number; at: string };
 
 // Sample prompts stay in English deliberately: they are queries sent to the
 // demo provider, which composes its answers in English only. Translating them
@@ -64,6 +64,22 @@ function Chat() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
+  // A log written before the chips and sources became rows stores plain strings. Normalising
+  // them here — the boundary — keeps every read below a plain `rowLine` instead of a guard
+  // at each site, and a value stored by an older visit stays exactly as it was written.
+  const entries = useMemo<ChatMsg[]>(
+    () =>
+      log.map((m) =>
+        m.role === "user"
+          ? m
+          : {
+              ...m,
+              facts: m.facts?.map((f) => ({ ...f, label: asRowText(f.label as string | RowText) })),
+              sources: m.sources?.map((s) => asRowText(s as string | RowText)),
+            },
+      ),
+    [log],
+  );
 
   const send = async (text: string) => {
     const question = text.trim();
@@ -90,7 +106,7 @@ function Chat() {
             </div>
           </div>
         )}
-        {log.map((m, i) => m.role === "user" ? (
+        {entries.map((m, i) => m.role === "user" ? (
           <div key={i} className="flex justify-end"><div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary/90 px-3.5 py-2 text-sm text-primary-foreground">{m.content}</div></div>
         ) : (
           <div key={i} className="max-w-[92%] space-y-2">
@@ -99,12 +115,12 @@ function Chat() {
               <div className="rounded-lg border bg-card/30 p-2.5 text-xs">
                 <div className="mb-1 font-semibold uppercase tracking-widest text-muted-foreground">{t("ai.evidence", { n: m.facts.length })}</div>
                 <ul className="space-y-1">
-                  {m.facts.map((f, j) => <li key={j}>{f.to ? <Link to={f.to} className="text-primary hover:underline">{f.label}</Link> : <span className="font-medium">{f.label}</span>}<span className="text-muted-foreground"> — {f.text}</span></li>)}
+                  {m.facts.map((f, j) => <li key={j}>{f.to ? <Link to={f.to} className="text-primary hover:underline">{rowLine(f.label, t)}</Link> : <span className="font-medium">{rowLine(f.label, t)}</span>}<span className="text-muted-foreground"> — {f.text}</span></li>)}
                 </ul>
                 <div className="mt-2 flex flex-wrap items-center gap-2 border-t pt-2 text-muted-foreground">
                   <span>{t("common.confidence")} <span className="font-mono text-primary">{m.confidence}%</span></span>
                   <span>·</span>
-                  <span>{t("common.sources")}: {(m.sources ?? []).join(", ")}</span>
+                  <span>{t("common.sources")}: {(m.sources ?? []).map((s) => rowLine(s, t)).join(", ")}</span>
                 </div>
               </div>
             ) : null}
