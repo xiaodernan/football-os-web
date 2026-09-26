@@ -148,6 +148,13 @@ ok("empty retrieval confidence sits at the honest floor", none.confidence === 20
     /rowLine\(report\.headline,\s*t\)/.test(PAGE) &&
     PAGE.includes("{report.evidence.map((e, i) => <li key={i}>› {rowLine(e, t)}</li>)}") &&
     /report\.sources\.map\(\(s\) => rowLine\(s, t\)\)/.test(PAGE));
+  // M189 follow-up (#173): the career-arc panel is the same blind spot — `evidence` and
+  // `sources` are shadowed names for check 28c, so a raw row print there is invisible to
+  // the derived gate and has to be asserted against the screen's own source.
+  const ARC_PAGE = readFileSync("features/football/Details.tsx", "utf8");
+  ok("the player page resolves the career-arc rows rather than printing them",
+    ARC_PAGE.includes("{arc.evidence.map((e, i) => <li key={i}>› {rowLine(e, t)}</li>)}") &&
+    ARC_PAGE.includes('sources: arc.sources.map((s) => rowLine(s, t)).join(" · ")'));
   const srcRows = answers.flatMap((a) => a.sources);
   ok("every source row resolves for all three locales without leaking a code",
     srcRows.length >= 4 && locales.every((l) => srcRows.every((r) => {
