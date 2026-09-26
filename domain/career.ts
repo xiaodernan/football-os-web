@@ -76,8 +76,13 @@ function avgOf(squad: PlayerRef[], groups: string[], fallback: number): number {
   return g.length ? g.reduce((s, p) => s + p.overall, 0) / g.length : fallback;
 }
 
-// Team strength derived from the *effective* squad so transfers genuinely change
-// how a side performs in the engine — buying a striker lifts the attack line.
+// Team strength comes from the *effective* squad, so transfers change how a side
+// performs. When a position group is empty the line falls back to the club's own
+// rating instead of averaging zero — which is NOT the same basis as the other two
+// lines, so for such a club the attack figure is a club rating, not a squad
+// measurement, and signing a real striker can lower it. proof-career.mjs pins the
+// exact population of affected clubs; the seed should stop shipping forward-less
+// squads (see README M196, queued as M197) so the fallback is unreachable.
 export function clubInput(clubId: string, moved: Record<string, string>, tac: Tactics, form: number, morale: number, fatigue: number): TeamInput {
   const c = getClub(clubId)!;
   const squad = effectiveSquad(clubId, moved);
@@ -259,8 +264,11 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
         ? { label: { key: "mgr.zoneUpperMid" }, tone: "mixed" as const }
         : { label: { key: "mgr.zoneDrop" }, tone: "bad" as const };
 
+  // Points the CAREER itself earned. `ours.points` is the live-table total, which
+  // starts from the seeded standings, so the two must never be conflated in prose.
+  const careerPts = state.results.reduce((s, r) => s + (r.ourGoals > r.oppGoals ? 3 : r.ourGoals === r.oppGoals ? 1 : 0), 0);
   const evidence = [
-    `#${position} with ${ours.points} pts from ${played} career fixtures (${totalFixtures} scheduled this season)`,
+    `#${position} with ${ours.points} pts in the live table — ${careerPts} of them earned across ${played} career fixtures (${totalFixtures} scheduled this season)`,
     `Projected to ${Math.round(ourProj * 10) / 10} pts — ${gapToProjectedLeader === 0 ? "level with or ahead of" : `${Math.round(gapToProjectedLeader * 10) / 10} pts behind`} projected leader ${getClub(projLeader.row.clubId)?.name ?? projLeader.row.clubId}`,
     `Form ${form >= 0 ? "+" : ""}${form.toFixed(2)} adjusts points/game to ${ourPpg.toFixed(2)}`,
     `Each rival extrapolated from its own points-per-game over ${remaining} rounds left; results are modelled estimates, not fixtures played`,
@@ -384,10 +392,12 @@ export interface MatchPrep {
   sources: string[];
 }
 
-// Pre-match tactic advice, computed by feeding BOTH sides through the same
-// clubInput() the Match Engine will use — so the recommendation is grounded in
-// the exact quantities the simulation keys off, not a separate heuristic. Each
-// rule is stated with the number that triggered it.
+// Pre-match tactic advice. Both sides are fed through the same clubInput() the Match
+// Engine uses, but at BALANCED tactics: the advisor measures the base matchup and then
+// recommends how to move the sliders, so its figures deliberately do not change with
+// the tactics you currently have set (projectFixture is the call that uses the
+// recommendation, playNextFixture the one that uses your own settings). Each rule is
+// stated with the number that triggered it.
 export function matchPrep(state: CareerState): MatchPrep {
   const fx = fixtureAt(state.competitionId, state.clubId, state.results.length);
   const form = careerForm(state);
@@ -400,25 +410,35 @@ export function matchPrep(state: CareerState): MatchPrep {
   const midfieldEdge = ourIn.midfield - theirIn.midfield;
 
   const rationale: string[] = [];
+  // The panel prints the ROUNDED edges, so the sentences must quote those same
+  // numbers. `toFixed(0)` and `Math.round` disagree on a negative half-step
+  // ((-4.5).toFixed(0) is "-5" while Math.round(-4.5) is -4), which would let the
+  // advice cite a figure the panel contradicts.
+  const aeR = Math.round(attackEdge);
+  const deR = Math.round(defenseEdge);
+  const meR = Math.round(midfieldEdge);
   let mentality = 0;
   if (attackEdge >= 4 && defenseEdge <= 2) {
     mentality = attackEdge >= 12 ? 2 : 1;
-    rationale.push(`Attack edge +${attackEdge.toFixed(0)} over their defense with a safe back line → ${mentality > 1 ? "all-out" : "attacking"} mentality.`);
+    rationale.push(`Attack edge +${aeR} over their defense with a safe back line → ${mentality > 1 ? "all-out" : "attacking"} mentality.`);
   } else if (defenseEdge > 4) {
     mentality = -1;
-    rationale.push(`Their attack outruns our defense by ${defenseEdge.toFixed(0)} → drop to a defensive mentality first.`);
+    rationale.push(`Their attack outruns our defense by ${deR} → drop to a defensive mentality first.`);
   } else if (attackEdge < -4) {
     mentality = -1;
-    rationale.push(`We are the weaker side on paper (attack edge ${attackEdge.toFixed(0)}) → stay compact and counter.`);
-  } else rationale.push("Even matchup on paper → keep a balanced mentality.");
+    rationale.push(`We are the weaker side on paper (attack edge ${aeR}) → stay compact and counter.`);
+  } else rationale.push("No mentality threshold is met → keep a balanced mentality.");
+  // The fallthrough is NOT "an even matchup": a +12 attack edge lands here too, because
+  // the attacking rule also demands a safe back line (defenseEdge <= 2). The sentence
+  // therefore claims only that no rule triggered, never what the matchup looks like.
 
   let press = 0.5;
   if (midfieldEdge >= 3) {
     press = 0.75;
-    rationale.push(`We win the midfield by ${midfieldEdge.toFixed(0)} → a high press converts possession into chances.`);
+    rationale.push(`We win the midfield by ${meR} → a high press converts possession into chances.`);
   } else if (midfieldEdge <= -3) {
     press = 0.3;
-    rationale.push(`They control midfield (${midfieldEdge.toFixed(0)}) → hold a deeper block and stay organized.`);
+    rationale.push(`They control midfield (${meR}) → hold a deeper block and stay organized.`);
   } else rationale.push("Midfield is balanced → a medium press keeps it neutral.");
 
   let tempo = 0.5;
@@ -427,7 +447,7 @@ export function matchPrep(state: CareerState): MatchPrep {
     rationale.push(`Fatigue is ${Math.round(state.fatigue * 100)}% → slow the tempo to preserve legs.`);
   } else if (attackEdge >= 6) {
     tempo = 0.7;
-    rationale.push(`Clear attacking edge (+${attackEdge.toFixed(0)}) → play at a higher tempo to press the advantage.`);
+    rationale.push(`Clear attacking edge (+${aeR}) → play at a higher tempo to press the advantage.`);
   } else rationale.push("No strong tempo signal → keep a medium tempo.");
 
   return {
@@ -436,13 +456,13 @@ export function matchPrep(state: CareerState): MatchPrep {
     venue: fx.weHome ? "Home" : "Away",
     us: { attack: Math.round(ourIn.attack), midfield: Math.round(ourIn.midfield), defense: Math.round(ourIn.defense) },
     them: { attack: Math.round(theirIn.attack), midfield: Math.round(theirIn.midfield), defense: Math.round(theirIn.defense) },
-    attackEdge: Math.round(attackEdge),
-    defenseEdge: Math.round(defenseEdge),
-    midfieldEdge: Math.round(midfieldEdge),
+    attackEdge: aeR,
+    defenseEdge: deR,
+    midfieldEdge: meR,
     recommended: { mentality, tempo, press },
     rationale,
     confidence: Math.min(90, Math.round(55 + Math.abs(attackEdge) + Math.abs(midfieldEdge) / 2 + Math.abs(defenseEdge))),
-    sources: ["Match Engine clubInput (your squad + tactics)", "Opponent effective squad", "Current morale, fatigue and form"],
+    sources: ["Match Engine clubInput (your effective squad, balanced tactics)", "Opponent effective squad", "Current morale, fatigue and form"],
   };
 }
 

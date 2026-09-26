@@ -91,9 +91,9 @@ npm run preview  # serve the built output
 Domain behaviour is pinned by runnable proof scripts — each loads the modules through
 Vite's SSR runtime and asserts the claims a milestone rests on. They cover the numeric
 cores (analytics, match engine, fixture probability, development projections, XP curve,
-role-gap analysis, film insights, career arc, comparisons, transfers) and the honesty
-contracts (AI grounding, local-data registry, offline wording, feed ranking, the weekly
-review's prose, and the words the knowledge graph draws). Run them all:
+role-gap analysis, film insights, career arc, comparisons, transfers, the Manager OS career
+model) and the honesty contracts (AI grounding, local-data registry, offline wording, feed
+ranking, the weekly review's prose, and the words the knowledge graph draws). Run them all:
 
 ```sh
 npm run proof                        # = npm test: every scripts/proof-*.mjs, with per-script counts
@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M195 (a few numbers in that range
+Work ships one milestone per commit and is currently at M196 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2513,6 +2513,96 @@ before this work — **1397**, with proof-i18n **201** and proof-ai-grounding **
 and +8 are the only two scripts that moved. Dictionary **1478 keys × 3 locales**, raw-UI
 debt **149 across 3 files** and domain prose **256 literals across 10 files**, both at their
 ceilings: this milestone changed no copy at all.
+
+### M196 — The Manager OS career model gets its own arithmetic proof
+
+Every milestone up to here had been editing the app's *edges*: what a screen says, how a date is
+written, which key a row reads. `domain/career.ts` is the largest ungated module in the repository —
+586 lines, 33 exports, four panels (live league table, season outlook, next-match preparation,
+season retrospective) plus the transfer board's fee ladder — and **five** consumers read the same
+numbers out of it (`features/manager/ManagerOS.tsx`, `features/profile/ProfilePage.tsx`,
+`features/football/Details.tsx`, `features/community/CommunityHub.tsx` and `data/intelligence.ts`,
+which answers a club question with the career's own table row). Nothing had ever run against it.
+`scripts/proof-career.mjs` is now that thing: 917 lines, **14 sections, 172 checks**, and its load
+bearing assertions are **reconciliations between functions that must agree** rather than isolated
+formulas — the prize a fixture credits is recomputed by `seasonSummary`, so the budget and the
+retrospective can never disagree; the points a career earned equal the live table's delta over the
+seed; the odds the advisor is claimed to be "based on" are rebuilt through `matchProbability` under
+the *recommended* tactics **and** asserted not to be the neutral-tactics numbers; every figure
+embedded in a rationale or evidence *sentence* equals the field the panel prints beside it.
+
+That last family is where the work paid for itself, and finding it needed a different kind of
+probe than the earlier gates used. Sampling `matchPrep` at a handful of hand-written states tests
+the hand, not the model, so the gate builds a **reachable grid**: every club, a whole season
+fixture by fixture, plus a `rest` and an affordable signing and two slider moves at each stop —
+**828** states, with a clause that derives the total from the seed's own fixture counts
+(`2 × (rivals per competition)`) and asserts the buy and slide multipliers separately, so the
+grid cannot quietly shrink. Fatigue is stepped again at 0.01 (**3939** states) because a real
+season moves it by 0.22 and therefore *never holds* the 0.6 the tempo rule reads. Even that only
+samples boundaries; a threshold that has *moved* stays green under sampling. So the gate locates
+crossings analytically: fatigue is the only continuous knob the advisor reads, a pairing's attack
+edge crosses `T` at exactly `(base − T)/4` and its midfield edge crosses `±3` at `(base ∓ 3)/3`,
+so each fixture of each real season is probed at ±0.005 around every crossing that lands inside the
+unit interval — **170** straddles, with a clause demanding that each of the four thresholds has one
+where the model's own recommendation flips. Both of those clauses were written after a hole, not
+before one: dropping the all-out mentality threshold from 12 to 10 produced **zero** red under the
+grid and the sweep, which is exactly what a sampling-only proof does.
+
+Five defects fell out. (1) The mentality fallthrough printed "Even matchup on paper" for three
+clubs whose attack edge was **+4, +8 and +12** — the attacking rule was merely blocked by its own
+safe-back-line condition, while the same panel's tempo line called +12 "a clear attacking edge";
+the sentence now claims only that no rule fired. (2) The outlook printed `15 pts from 10 career
+fixtures` when the live table started from seeded standings and the career had earned **8** of those
+15; it now prints both figures. (3) The rationale quoted its edges with `toFixed(0)` while the panel
+prints `Math.round`, and the two disagree on a negative half-step — reachable in **41 of the 828**
+states, witnessed by a named one: a real Chelsea season rested after its sixth fixture has midfield
+edge −5.5, which the row shows as −5 and the old sentence would have called −6. (4) `matchPrep`'s
+provenance chip said "your effective squad **+ tactics**" while the advisor deliberately measures
+both sides at balanced tactics — the reason it exists, since it is the call that *recommends* the
+sliders. The chip now says what is measured, and the old wording is refused by name; a companion
+clause proves the distinction is real by taking one club through four slider settings and asserting
+the advisor's JSON does not move *while* `clubInput`'s lines do. (5) The module's header comment
+promised that "buying a striker lifts the attack line", which is untrue for **26 of the 39** seeded
+clubs: the seed slices an eleven-slot `GROUP_PLAN` down to 7–9 slots and always cuts the forwards,
+so those clubs' attack line is the club-rating fallback, and for **20** of them that fallback is
+higher than any attacker in the dataset — signing the world's best striker *lowers* the printed
+number. The comment now says which of the three lines is a squad mean and which is a rating, the
+gate pins both populations and proves the state is reachable from `createCareer` with no transfer at
+all; the seed itself is fixed in **M197**, because re-shaping 39 squads moves player positions
+across the dataset and every affected gate has to be re-derived in its own milestone.
+
+One finding is recorded rather than patched, because the honest fix is a redesign: the `attackEdge <
+-4` arm of the mentality chain **can never fire**. The defensive rule is tested first, and an
+exhaustive sweep over every seeded pairing in every competition at 21 fatigue levels finds **no**
+state below a −4 attack edge that is also inside the +4 defensive edge the earlier rule owns
+(the weakest attack edge in the seed, −7.40 at bvb vs fcb, always arrives with a defensive edge
+above +4). The gate asserts the arm is dead — `FIRED` measures each of the six quoting sentences and
+requires exactly five to fire, each more than 50 times — instead of letting a coverage claim rest on
+a rule that has never run. Reordering or dropping it is queued behind M197.
+
+Fourteen mutations, each run against the shipped gate, all caught, with an unmutated control before
+and after (172/172 both times): the `toFixed(0)` interpolation put back (4 clauses), the advisor
+reading the manager's own tactics (4), the old provenance wording (1), the "Even matchup" sentence
+(3), the dead arm moved ahead of the defensive rule (2), mentality `>= 4` → `> 4` (2), the tempo
+boundary made inclusive (1), press `>= 3` → `>= 2.5` (4), the all-out threshold to 10 (3) and to 14
+(5), an empty attack group averaging zero instead of falling back (11), the tempo rule ignoring a
+clear edge (4), the midfield arm losing its sign (7), and a win's morale lift moved from 0.14 to
+0.15 (1). Two of those runs taught something the harness had to keep. M2 was caught by a single
+clause until the grid gained slider variants — the default tactics are numerically neutral, so a
+state built by `createCareer` cannot tell the two readings apart. And M10 did not merely fail an
+assertion: with no club left above the raised threshold, my own probe called `matchPrep(undefined)`
+and took the whole file down mid-run, which is a red that reports nothing. The probe now returns
+false on an absent subject, and the runner's "all green but the process died" case is queued as its
+own gap (a script that dies before its tally line is currently indistinguishable from a contract
+failure only if you read the exit code, not the count).
+
+Measured after M196 on a clean plane (`git archive HEAD`, this milestone's files copied in): `tsc` 0,
+build 0, suite **29 scripts / 1583 checks**, `PASS proof:career (172/172)` — against the same plane
+at HEAD alone: `tsc` 0, build 0, **28 / 1411**. So one script and +172 checks moved and nothing else
+did. Domain prose is still **256 literals across 10 files** at its ceiling and per-module caps held
+(`career.ts` at 29): the fixes were made *inside* existing sentences, which is the only way a copy
+change is allowed through that gate. No UI file is in this commit, so the raw-UI ledger (149 across 3
+files) and the dictionary (1478 keys × 3 locales) are carried unchanged from M195.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
