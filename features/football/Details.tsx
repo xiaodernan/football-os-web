@@ -263,10 +263,10 @@ export function PlayerDetail({ id }: { id: string }) {
         </div>
 
         <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground">
-          {arc.evidence.map((e, i) => <li key={i}>› {e}</li>)}
+          {arc.evidence.map((e, i) => <li key={i}>› {rowLine(e, t)}</li>)}
         </ul>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          {t("det.arc.note", { confidence: arc.confidence, sources: arc.sources.join(" · ") })}
+          {t("det.arc.note", { confidence: arc.confidence, sources: arc.sources.map((s) => rowLine(s, t)).join(" · ") })}
         </p>
       </Panel>
     </div>

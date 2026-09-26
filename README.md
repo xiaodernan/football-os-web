@@ -2228,6 +2228,32 @@ a string, and the page printing the note raw. Measured after this commit: `tsc` 
 build` 0, suite **28 scripts / 1360 checks** (proof-i18n **169**, proof-m99 **28**),
 dictionary **1399 keys × 3 locales**. No rendered-page claim.
 
+### M189 — `careerArc` publishes rows, and the per-module caps make the count trustworthy
+
+The career-arc panel's four evidence lines and two provenance chips were the last sentences
+`domain/careerArc.ts` wrote by hand ("Technical profile peaks around 28; this player is 19",
+"…→ up to 8.4 levels of headroom" / "ceiling already reached", "modelled peak … in 3 years",
+"decline accelerates from 30; 5 prime years remaining"). They are rows now (8 keys ×3
+locales): the headroom line is a two-shape pair, the modelled-peak line takes the One/Many
+arm matching its number, and the decline line phrases its second countable as a label and
+value ("prime years left: {m}") rather than multiplying the key matrix. The player page
+resolves them through `rowLine`, including the provenance list interpolated into its
+`det.arc.note` line.
+
+Domain prose debt is now **264 across 11 modules**, `careerArc.ts` joins the zero list, its
+own cap falls 7 → 0 and the global ceiling re-bases to the 264 the inventory line printed.
+`proof-careerarc` (58 checks) now asserts the *shape and the numbers* of the evidence —
+`vars.peakAge === arc.peakAge`, `vars.peak` equals the rounded modelled peak, the One/Many
+arm chosen by the actual count, sources as rows — instead of pattern-matching English it no
+longer writes.
+
+Honest caveat, twice earned this session: this change was aborted once (the keys landed
+before the code did, and check 18's reachability turned that into a red gate) and, when it
+was applied per-file, `tsc` immediately caught the missing `RowText` import. Measured after
+this commit: `tsc` 0, build 0, suite **28 scripts / 1364 checks** (proof-i18n **172**,
+proof-careerarc **58**), dictionary **1407 keys × 3 locales**. M189's own mutation battery is
+queued (#172) rather than claimed.
+
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
 database designed for millions of rows, long-form i18n of editorial content, and

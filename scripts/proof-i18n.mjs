@@ -1778,13 +1778,13 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // literals across 14 of 31 modules (was 339 across 17 — see the rule note above). The next
 // milestone to localise a module lowers this number and writes the new one here; it never
 // raises it.
-const DOMAIN_PROSE_CEILING = 271;
+const DOMAIN_PROSE_CEILING = 264;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
 // them at 1, 3 and 5 "literals" — an ISO date builder, three €-format arms and five
 // scoreline templates), so pinning them now is free and stops a real sentence landing there.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -1803,7 +1803,7 @@ const PROSE_CAPS = {
   "domain/filmInsights.ts": 12,
   "domain/gap.ts": 8,
   "domain/matchEngine.ts": 8,
-  "domain/careerArc.ts": 7,
+  "domain/careerArc.ts": 0,
   "domain/onboarding.ts": 6,
 };
 const capBreaches = Object.entries(PROSE_CAPS)
@@ -1826,7 +1826,7 @@ for (const done of PROSE_ZERO) {
 ok(`the zero list names modules that really are in the tree (${PROSE_ZERO.length})`,
   PROSE_ZERO.every((p) => domainFiles.includes(p.split("/")[1])));
 ok(`the scan is reading the modules that carry the debt (${debtFiles.length} of ${domainFiles.length} files, ${debtTotal} hits)`,
-  domainFiles.length >= 30 && debtFiles.length >= 12 && debtTotal >= 250);
+  domainFiles.length >= 30 && debtFiles.length >= 10 && debtTotal >= 250);
 
 // 31b. The exemption's one hole, closed by name. `data/` is out of scope above because it
 //      carries authored sample copy a reader expects to be prose — lesson texts, news

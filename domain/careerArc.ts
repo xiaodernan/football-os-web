@@ -1,3 +1,4 @@
+import type { RowText } from "./rowText";
 import type { PlayerRef, PositionGroup } from "./types";
 
 // Career arc: how a squad player's level is expected to move with age.
@@ -35,9 +36,9 @@ export interface CareerArc {
   remainingPrimeYears: number;
   trajectory: Trajectory;
   points: ArcPoint[]; // current age → last modelled season
-  evidence: string[];
+  evidence: RowText[];
   confidence: number; // 0..100
-  sources: string[];
+  sources: RowText[];
   hasData: boolean;
 }
 
@@ -100,11 +101,18 @@ export function careerArc(p: PlayerRef): CareerArc {
   const trajectory: Trajectory =
     yearsToPeak > 0 && peakPoint.overall > current + 0.4 ? "rising" : declineFromAge <= startAge + 1 ? "declining" : "peak";
 
-  const evidence = [
-    `${group} profile peaks around ${peakAge}; this player is ${startAge}`,
-    `${current} overall against ${p.potential} potential → ${potential > current ? `up to ${round1(potential - current)} levels of headroom` : "ceiling already reached"}`,
-    `modelled peak ${round1(projPeak)} at ${peakPoint.age} in ${yearsToPeak} year${yearsToPeak === 1 ? "" : "s"}`,
-    `decline accelerates from ${declineFromAge}; ${remainingPrimeYears} prime year${remainingPrimeYears === 1 ? "" : "s"} remaining`,
+  // Rows: two of these lines carry a countable, so those are One/Many pairs, and the
+  // decline line phrases its second figure as a label and value rather than needing a
+  // fourth arm of the key matrix.
+  const evidence: RowText[] = [
+    { key: "arc.ev.peak", vars: { group, peakAge, age: startAge } },
+    potential > current
+      ? { key: "arc.ev.headroom", vars: { current, potential: p.potential, gap: round1(potential - current) } }
+      : { key: "arc.ev.ceiling", vars: { current, potential: p.potential } },
+    yearsToPeak === 1
+      ? { key: "arc.ev.modelledOne", vars: { peak: round1(projPeak), age: peakPoint.age } }
+      : { key: "arc.ev.modelledMany", vars: { n: yearsToPeak, peak: round1(projPeak), age: peakPoint.age } },
+    { key: "arc.ev.decline", vars: { age: declineFromAge, m: remainingPrimeYears } },
   ];
 
   // Younger players with real headroom are the easiest call; very late-career
@@ -132,7 +140,7 @@ export function careerArc(p: PlayerRef): CareerArc {
     points,
     evidence,
     confidence: clamp(confidence, 20, 85),
-    sources: ["World dataset (age, overall, potential, position group)", "Demo career-arc model (this file)"],
+    sources: [{ key: "arc.src.dataset" }, { key: "arc.src.model" }],
     hasData: current > 0 && p.age > 0,
   };
 }

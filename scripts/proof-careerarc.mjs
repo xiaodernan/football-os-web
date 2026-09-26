@@ -48,7 +48,7 @@ ok("start age is clamped up to the 15 floor", careerArc(player({ age: 12 })).age
 ok("start age is clamped down to the 38 ceiling", careerArc(player({ age: 45 })).age === 38);
 const lowPotential = careerArc(player({ overall: 80, potential: 70 }));
 ok("a potential below overall is reported raw but treated as already reached",
-  lowPotential.potential === 70 && lowPotential.evidence.some((e) => /ceiling already reached/i.test(e)));
+  lowPotential.potential === 70 && lowPotential.evidence.some((e) => e.key === "arc.ev.ceiling"));
 
 // ---------------------------------------------------------------------------
 // The arc's OWN points replay exactly from annualChange (load-bearing).
@@ -105,10 +105,18 @@ ok("confidence stays inside [20, 85] across every fixture",
 // ---------------------------------------------------------------------------
 ok("evidence states the peak age, modelled peak and start age it computed",
   rising.evidence.length === 4 &&
-  rising.evidence[0].includes(`${rising.peakAge}`) &&
-  rising.evidence.some((e) => e.includes(`${r1(rising.projectedPeak)}`)));
+  rising.evidence.every((e) => !!e && typeof e === "object" && "key" in e) &&
+  rising.evidence[0].vars.peakAge === rising.peakAge &&
+  rising.evidence[0].vars.age === rising.age &&
+  rising.evidence.some((e) => e.vars?.peak === r1(rising.projectedPeak)));
+ok("and the countable lines took the arm matching their number",
+  rising.evidence.some((e) => e.key === (rising.yearsToPeak === 1 ? "arc.ev.modelledOne" : "arc.ev.modelledMany")) &&
+  rising.evidence.every((e) => !("n" in (e.vars ?? {})) || e.key.endsWith("Many")));
 ok("sources name the dataset fields AND label this a demo model",
-  rising.sources.length === 2 && rising.sources.some((s) => /age, overall, potential/i.test(s)) && rising.sources.some((s) => /demo/i.test(s)));
+  rising.sources.length === 2 &&
+  rising.sources.every((s) => !!s && typeof s === "object" && "key" in s) &&
+  rising.sources.some((s) => s.key === "arc.src.dataset") &&
+  rising.sources.some((s) => s.key === "arc.src.model"));
 ok("hasData requires a positive overall and age", rising.hasData === true);
 ok("a zero-overall player reports hasData false", careerArc(player({ overall: 0 })).hasData === false);
 ok("a zero-age player reports hasData false", careerArc(player({ age: 0 })).hasData === false);
