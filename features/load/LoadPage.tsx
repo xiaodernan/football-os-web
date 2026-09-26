@@ -93,7 +93,7 @@ export function LoadPage() {
               <span className="text-sm font-semibold uppercase tracking-widest">{rowLine(ZONE_LABEL[load.zone], t)}</span>
               <span className="font-mono text-sm">{t("ld.acwr")} {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
             </div>
-            <p className="mt-1 text-sm">{load.advice}</p>
+            <p className="mt-1 text-sm">{rowLine(load.advice, t)}</p>
           </div>
 
           {/* stats */}
@@ -137,7 +137,10 @@ export function LoadPage() {
                 <SectionTitle title={t("ld.recoTitle")} hint={t("ld.recoHint")} />
                 {load.recommendation ? (
                   <div className="mt-1">
-                    <p className="text-sm">{load.recommendation.text}</p>
+                    <p className="text-sm">{rowLine(load.recommendation.text, t)}</p>
+                    {load.recommendation.earlyTrend && (
+                      <p className="mt-1 text-xs text-muted-foreground">{rowLine(load.recommendation.earlyTrend, t)}</p>
+                    )}
                     <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                       <span>{t("ld.confidence")}</span>
                       <div className="h-1.5 flex-1 overflow-hidden rounded bg-muted">
@@ -178,14 +181,14 @@ export function LoadPage() {
               {load.evidence.map((e, i) => (
                 <li key={i} className="flex items-start gap-1.5">
                   <span className="text-primary">›</span>
-                  <span>{e}</span>
+                  <span>{rowLine(e, t)}</span>
                 </li>
               ))}
             </ul>
             <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
               <span>{t("ld.sources")}:</span>
               {load.sources.map((s, i) => (
-                <span key={i} className="rounded border px-1.5 py-0.5">{s}</span>
+                <span key={i} className="rounded border px-1.5 py-0.5">{rowLine(s, t)}</span>
               ))}
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">{t("ld.disclaimer")}</p>

@@ -1521,6 +1521,57 @@ for (const s of SHARED_WORDS) {
     bare.length === 0);
 }
 
+// 31. Prose typed into a domain module. Everything above this line reads component
+//     source, and a sentence composed in `domain/*.ts` never appears there: the module
+//     hands the finished English to a screen, which prints it through `rowLine` or a
+//     `{value}` row, and the raw-UI scan has nothing to see. M176 found this on the
+//     growth panel and M177 on the zone names; the load model's advice, recommendation,
+//     evidence and source chips were the last prose the /load screen printed that way,
+//     and M178 moved them onto keys. This is the ratchet that keeps the ground: the same
+//     sentence-shaped literal count, over the whole of domain/, may only fall.
+//     Scope is domain/ only, deliberately. data/ carries sample copy (lesson texts,
+//     news items) that screens label as demo content and a reader expects to be authored
+//     prose; a domain module's strings are the model's own voice.
+const PROSE_LIT = /(["'`])(?:\\.|(?!\1)[^\\])*\1/g;
+const NOT_PROSE = [
+  /^["'][@.]/,            // import specifiers
+  /^["']\.\.\//,
+  /^[a-z][a-z0-9]*$/,     // a single lowercase token: a key fragment or enum code
+  /^[A-Za-z0-9_ -]{1,3}$/,
+];
+function proseDebt(relPath) {
+  const lines = readFileSync(join(root, ...relPath.split("/")), "utf8").split(/\r?\n/);
+  const hits = [];
+  lines.forEach((line, i) => {
+    if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
+    for (const raw of line.match(PROSE_LIT) ?? []) {
+      const inner = raw.slice(1, -1);
+      if (NOT_PROSE.some((re) => re.test(inner))) continue;
+      if (!/[A-Za-z]/.test(inner)) continue;
+      if (!/ /.test(inner) && !/[.!?]$/.test(inner)) continue;
+      hits.push(i + 1);
+    }
+  });
+  return hits;
+}
+const domainFiles = readdirSync(join(root, "domain")).filter((f) => f.endsWith(".ts")).sort();
+const debt = domainFiles.map((f) => ["domain/" + f, proseDebt("domain/" + f)]);
+const debtTotal = debt.reduce((n, [, h]) => n + h.length, 0);
+const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
+const loadDebt = debt.find(([p]) => p === "domain/load.ts")?.[1] ?? [];
+// Measured on the gate line at M178, after load.ts reached zero: 376 literals across 18
+// of 31 modules. The next milestone to localise a module lowers this number and writes
+// the new one here — it never raises it.
+const DOMAIN_PROSE_CEILING = 376;
+ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
+  debtTotal <= DOMAIN_PROSE_CEILING);
+// Per-file, not just in the total: 24 literals can leave load.ts and enter review.ts and
+// the ceiling above still passes. A module that reaches zero stays at zero.
+ok(`domain/load.ts publishes no sentence of its own (${loadDebt.length} left on lines ${loadDebt.slice(0, 6).join(",")})`,
+  loadDebt.length === 0);
+ok(`the scan is reading the modules that carry the debt (${debtFiles.length} of ${domainFiles.length} files, ${debtTotal} hits)`,
+  domainFiles.length >= 30 && debtFiles.length >= 15 && debtTotal >= 300);
+
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);
 await server.close();

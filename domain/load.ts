@@ -43,10 +43,13 @@ export interface LoadSummary {
   weekLoad: number;
   monotony: number | null;
   strain: number | null;
-  advice: string;
-  recommendation: { text: string; confidence: number } | null;
-  evidence: string[];
-  sources: string[];
+  // Every sentence the load model hands the screen is a row, not a string: a domain
+  // module that returns `string` is English in every locale and invisible to the
+  // raw-UI scan, which reads component source only.
+  advice: RowText;
+  recommendation: { text: RowText; earlyTrend: RowText | null; confidence: number } | null;
+  evidence: RowText[];
+  sources: RowText[];
 }
 
 const DAY = 86400000;
@@ -112,15 +115,21 @@ export function buildLoad(input: LoadInput): LoadSummary {
 
   const zone = classifyZone(acwr, weekLoad);
 
+  // `weekly` is a fixed chronic window, not a history length: buildWeekly always emits
+  // CHRONIC_DAYS/7 buckets, so its length says nothing about how long someone has been
+  // training. A week counts toward depth only if it carries a session — otherwise a
+  // first-time reader would be told their ratio had settled.
+  const activeWeeks = weekly.filter((w) => w.sessions > 0).length;
+
   const advice = buildAdvice(zone, acwr);
-  const recommendation = buildRecommendation(zone, acwr, hasData, weekly.length, confidenceInput(totalSessions, weekly.length));
+  const recommendation = buildRecommendation(zone, acwr, hasData, activeWeeks, confidenceInput(totalSessions, activeWeeks));
 
-  const evidence = buildEvidence(totalSessions, durationMin, weekLoad, acute, chronic, acwr, weekly, monotony, strain);
+  const evidence = buildEvidence(totalSessions, durationMin, weekLoad, acute, chronic, acwr, activeWeeks, weekly.length, monotony, strain);
 
-  const sources = [
-    "Your on-device training log",
-    "Session-RPE load model (duration × perceived intensity)",
-    "Gabbett-style ACWR thresholds (demo)",
+  const sources: RowText[] = [
+    { key: "ld.src.log" },
+    { key: "ld.src.rpe" },
+    { key: "ld.src.bands" },
   ];
 
   return {
@@ -205,73 +214,74 @@ export function classifyZone(acwr: number | null, weekLoad: number): LoadZone {
   return "high";
 }
 
-function buildAdvice(zone: LoadZone, acwr: number | null): string {
-  const ratio = acwr == null ? "—" : acwr.toFixed(2);
-  // `classifyZone` can only reach a null ratio through the caution band, and the band's
-  // sentence quotes a number that does not exist. Say what is actually missing instead.
-  if (zone === "caution" && acwr == null) {
-    return "There is load this week, but not enough of a 28-day history to divide it by, so the ratio itself is not available yet. Keep the next sessions light and regular — the bands become meaningful once a month of load exists.";
+// The thresholds quoted in the advice, read out of the same table the classifier walks,
+// so changing a band cannot leave a stale number in a sentence the reader sees.
+const BAND_EDGE = {
+  underMax: ACWR_BANDS[0].upTo as number,
+  optimalMax: ACWR_BANDS[1].upTo as number,
+  cautionMax: ACWR_BANDS[2].upTo as number,
+};
+
+// Below this many weeks of history the ratio is an early trend, and the page says so.
+export const WEEKS_TO_SETTLE = 3;
+
+function buildAdvice(zone: LoadZone, acwr: number | null): RowText {
+  // A null ratio reaches this point only as `caution` (no 28-day window to divide by) or
+  // `none` (no weekly load at all), and both used to be answered with a sentence about a
+  // number — "Ratio — is climbing toward the risk band". Say what is missing instead.
+  if (acwr == null) {
+    return zone === "none"
+      ? { key: "ld.ad.none", vars: { days: ACUTE_DAYS } }
+      : { key: "ld.ad.noRatio", vars: { days: CHRONIC_DAYS } };
   }
+  const ratio = acwr.toFixed(2);
   switch (zone) {
-    case "none":
-      // Reachable two ways: no history at all, and a month of history with an empty
-      // current week. The old line asserted the first even to readers who had three
-      // sessions behind them, so the sentence keeps to the window that is actually empty.
-      return "Nothing logged in the last 7 days, so there is no weekly load to judge and no ratio to report. Log a session when you're ready to start — or restart — the count.";
     case "under":
-      return `Your acute:chronic ratio is ${ratio} — under the training you're used to. If you feel fresh, you have room to add a session; ramp up gradually rather than jumping.`;
+      return { key: "ld.ad.under", vars: { ratio } };
     case "optimal":
-      return `Ratio ${ratio} sits in the 0.8–1.3 "sweet spot". You're absorbing load well — maintain the current rhythm before pushing the volume up.`;
+      return { key: "ld.ad.optimal", vars: { ratio, lo: BAND_EDGE.underMax, hi: BAND_EDGE.optimalMax } };
     case "caution":
-      return `Ratio ${ratio} is climbing toward the risk band. Keep the next block technical or lighter and prioritise sleep — avoid adding a high-intensity session back-to-back.`;
+      return { key: "ld.ad.caution", vars: { ratio } };
     case "high":
-      return `Ratio ${ratio} is above the 1.5 spike threshold, where injury risk climbs. Consider a deload: cut volume sharply for a few days before building again.`;
+      return { key: "ld.ad.high", vars: { ratio, max: BAND_EDGE.cautionMax } };
     default:
-      return "";
+      // Reachable, not a catch-all: a rest week with a chronic window behind it computes
+      // a ratio of 0.00, so `none` can arrive here with a real number to report.
+      return { key: "ld.ad.none", vars: { days: ACUTE_DAYS } };
   }
 }
+
+// The one action each zone recommends — a map rather than a switch, because a `default:`
+// arm here would hide which zone the sentence actually answers.
+const REC_TEXT: Record<LoadZone, RowText> = {
+  none: { key: "ld.rec.rest", vars: { days: ACUTE_DAYS } },
+  under: { key: "ld.rec.under" },
+  optimal: { key: "ld.rec.optimal" },
+  caution: { key: "ld.rec.caution" },
+  high: { key: "ld.rec.high" },
+};
 
 function buildRecommendation(
   zone: LoadZone,
   acwr: number | null,
   hasData: boolean,
-  weeks: number,
+  activeWeeks: number,
   conf: number,
-): { text: string; confidence: number } | null {
+): { text: RowText; earlyTrend: RowText | null; confidence: number } | null {
   if (!hasData) return null;
-  const lowHistory = weeks < 3;
-  let text: string;
-  switch (zone) {
-    case "under":
-      text = "Add one moderate session this week, then re-check the ratio before adding more.";
-      break;
-    case "optimal":
-      text = "Hold your current weekly volume — progress by intensity, not by piling on sessions.";
-      break;
-    case "caution":
-      text = "Swap the hardest planned session for a technique or recovery block.";
-      break;
-    case "high":
-      text = "Take 3–4 lighter days, then rebuild volume step by step.";
-      break;
-    default:
-      // Only the `none` zone reaches here, and only when there is data at all: the
-      // recommendation is null for a brand-new account. So this is a rest week, not a
-      // missing baseline, and it should not read like one.
-      text = "Nothing logged in the last 7 days, so the ratio has no weekly load to compare. One session brings the number back.";
-  }
-  // A null ratio with weekly load only ever classifies as caution, and that band's line
+  const earlyTrend: RowText | null =
+    activeWeeks < WEEKS_TO_SETTLE ? { key: "ld.rec.early", vars: { weeks: WEEKS_TO_SETTLE } } : null;
+  let text: RowText = REC_TEXT[zone];
+  // A null ratio with weekly load only ever classifies as caution, and that zone's row
   // tells the reader to swap out their hardest session because the ratio is climbing.
-  // Nothing is climbing; there is simply no month of load to divide by yet. (An empty
-  // week is the `none` arm above, which is the truer statement for that state.)
-  if (acwr == null && zone === "caution") text = "Not enough of a 28-day history to compute a ratio. Keep the week light and regular, then re-check once a month of load exists.";
-  if (lowHistory) text += " (Early trend — the ratio firms up after ~3 weeks of data.)";
+  // Nothing is climbing; there is simply no month of load to divide by yet.
+  if (acwr == null && zone === "caution") text = { key: "ld.rec.noRatio", vars: { days: CHRONIC_DAYS } };
   const confidence = acwr == null ? Math.min(conf, 45) : conf;
-  return { text, confidence };
+  return { text, earlyTrend, confidence };
 }
 
-function confidenceInput(sessions: number, weeks: number): number {
-  return Math.max(35, Math.min(92, 40 + sessions * 4 + weeks * 4));
+function confidenceInput(sessions: number, activeWeeks: number): number {
+  return Math.max(35, Math.min(92, 40 + sessions * 4 + activeWeeks * 4));
 }
 
 function buildEvidence(
@@ -281,20 +291,26 @@ function buildEvidence(
   acute: number,
   chronic: number,
   acwr: number | null,
-  weekly: WeeklyLoad[],
+  activeWeeks: number,
+  totalWeeks: number,
   monotony: number | null,
   strain: number | null,
-): string[] {
-  const e: string[] = [];
-  e.push(`Tracked sessions: ${totalSessions} (${durationMin} min total)`);
-  e.push(`This week's load: ${weekLoad} AU · last 7 days`);
-  e.push(`Acute (7-day avg daily): ${acute} AU`);
-  e.push(`Chronic (28-day avg daily): ${chronic} AU`);
-  e.push(`ACWR (acute ÷ chronic): ${acwr == null ? "not enough chronic load" : acwr.toFixed(2)}`);
-  const active = weekly.filter((w) => w.sessions > 0).length;
-  e.push(`Weeks with training: ${active}/${weekly.length}`);
-  if (monotony != null) e.push(`Weekly monotony: ${monotony.toFixed(2)}`);
-  if (strain != null) e.push(`Weekly strain: ${strain} AU`);
+): RowText[] {
+  const e: RowText[] = [];
+  e.push({ key: "ld.ev.sessions", vars: { n: totalSessions, min: durationMin } });
+  e.push({ key: "ld.ev.week", vars: { value: weekLoad, days: ACUTE_DAYS } });
+  e.push({ key: "ld.ev.acute", vars: { days: ACUTE_DAYS, value: acute } });
+  e.push({ key: "ld.ev.chronic", vars: { days: CHRONIC_DAYS, value: chronic } });
+  // The missing value is its own row rather than a word substituted into a number's
+  // place: "ACWR: not enough chronic load" cannot be re-ordered by a translator who has
+  // to put the label after the value.
+  e.push(acwr == null ? { key: "ld.ev.acwrNone" } : { key: "ld.ev.acwr", vars: { value: acwr.toFixed(2) } });
+  // One definition of "a week that counts" for all three places that need it: the number
+  // on this line, the confidence figure and the early-trend caveat. If they disagreed, a
+  // reader could be told they have 3 weeks of history and that the ratio is still early.
+  e.push({ key: "ld.ev.weeks", vars: { active: activeWeeks, total: totalWeeks } });
+  if (monotony != null) e.push({ key: "ld.ev.monotony", vars: { value: monotony.toFixed(2) } });
+  if (strain != null) e.push({ key: "ld.ev.strain", vars: { value: strain } });
   return e;
 }
 

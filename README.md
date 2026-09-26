@@ -111,7 +111,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M177 (a few numbers in that range
+Work ships one milestone per commit and is currently at M178 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -1834,6 +1834,62 @@ set stays **36 files** and the raw-UI debt
 stays at **179 across 4 files** — this milestone moved no literals out of a component, it
 moved a *noun* out of a domain module, which the raw-UI scan cannot see and `RowText` can.
 Dictionary **1244 keys × 3 locales**.
+
+### M178 — The load model's sentences went onto keys, and one of them turned out to be unreachable
+
+M177 made a zone *name* a row. This one did it for the load model's *prose*: the advice
+line, the recommendation, the nine evidence figures and the three source chips were
+`string` fields holding English sentences composed in `domain/load.ts`, which is the worst
+possible combination — a 简体中文 reader got translated labels wrapped around untranslated
+paragraphs, and no scan in the suite could see it, because the raw-UI gate reads component
+source and these strings never passed through a component. They are `RowText` now, 25 new
+dictionary rows, and every number the sentences quote comes out of the model rather than
+out of someone's memory of it: the 0.8–1.3 and 1.5 edges read `ACWR_BANDS`, the 7- and
+28-day windows read `ACUTE_DAYS`/`CHRONIC_DAYS`, the settle threshold reads
+`WEEKS_TO_SETTLE`. The proof resolves each row through a real `t`-shaped interpolator
+against the real dictionary in all three locales, and refuses a leaked key, an unfilled
+`{placeholder}`, an empty line, and a Chinese locale that renders Latin script.
+
+**Composing a sentence from a domain module hides a second class of bug: nobody can see
+whether the branch ever runs.** `buildWeekly` emits a fixed chronic window — always
+`CHRONIC_DAYS / 7` buckets, empty ones included. The early-trend caveat gated on
+`weeks < WEEKS_TO_SETTLE` where `weeks` was that array's length, so it compared a variable
+against the constant 4: the row existed, the page had a place for it, and the sentence
+could never print. The same constant went into `confidenceInput`, so a reader with one
+logged session was credited with four weeks of history and shown confidence 60 for a
+measurement built from a single number. History depth now counts weeks that carry a
+session, the caveat is reachable (and pinned reachable, not just "its own row"), and that
+first reader sees 48. The reason the old value was 60 is written into the proof next to the
+new one, because a changed expectation with no recorded reason is how a regression gets
+blessed.
+
+**A row the screen forgets to interpret is worse than the string it replaced**, since the
+model now *looks* localised: section 18 reads `LoadPage` as source and requires each
+published field to sit inside a `rowLine(` call, the caveat to render as its own element,
+and neither list item to be dropped into JSX raw.
+
+**Check 31 is the ratchet for the rest of this line of work.** Every gate above it reads
+component source, so a sentence in `domain/*.ts` was only ever found milestone by milestone
+— and the count of them was never *measured*. It is now, per module, with a ceiling that
+only a milestone may lower: **376 sentence-shaped literals across 18 of the 31 domain
+modules**, with `domain/load.ts` pinned at zero in its own check, because a total lets 24
+literals walk from one module to another and still pass. The scope is `domain/` on purpose:
+`data/` carries authored sample copy that screens label as demo content, while a domain
+module's strings are the model speaking.
+
+`tsc --noEmit` exits 0, `npm run build` succeeds, and the suite is now 26 scripts /
+**1224 checks** (proof-i18n **137** after check 31 landed, proof-load **84** up from 62).
+Dictionary **1269 keys × 3 locales**, up from 1244. Covered set stays **36 files** and the
+raw-UI debt stays **179 across 4 files** — nothing left a component this time. Eleven
+mutation probes, all red on their own clause and all restored byte-identical: the history
+depth back on the fixed window, confidence ignoring active weeks, the caveat deleted from
+the screen, evidence rows printed raw, an advice row dropping its `{days}` var, a band edge
+quoted from memory, the band table itself moved, a source chip back to a typed string, a
+load row left in English inside the Simplified locale, that row deleted from it, and a
+sentence written back into `load.ts` (which trips both the per-file zero and the ceiling).
+Verification boundary unchanged from M175–M177: the in-app browser still does not commit a
+React tree, so no rendered-page claim is made here — the evidence is `tsc`, the build, the
+two gates and the probe record.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

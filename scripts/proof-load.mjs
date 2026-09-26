@@ -2,8 +2,21 @@ import { createServer } from "vite";
 import { readFileSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { buildLoad, ACUTE_DAYS, CHRONIC_DAYS, ZONE_LABEL, ZONE_LEGEND, ACWR_BANDS, classifyZone } = await server.ssrLoadModule("/domain/load.ts");
+const { buildLoad, ACUTE_DAYS, CHRONIC_DAYS, ZONE_LABEL, ZONE_LEGEND, ACWR_BANDS, WEEKS_TO_SETTLE, classifyZone } = await server.ssrLoadModule("/domain/load.ts");
 const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
+const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
+
+// Resolve a row the way the screen does. t() in i18n/index.tsx fills every occurrence of
+// `{name}` by global replace, and proof-i18n check 27 pins that shape, so a row which
+// leaks a placeholder here is a row which leaks one on the page.
+const localeT = (locale) => (key, vars) => {
+  let str = DICTIONARIES[locale][key];
+  if (str === undefined) return "⟨missing:" + key + "⟩";
+  for (const [name, v] of Object.entries(vars ?? {})) str = str.split("{" + name + "}").join(String(v));
+  return str;
+};
+const DICT_LOCALES = Object.keys(DICTIONARIES);
+const say = (locale) => (row) => rowLine(row, localeT(locale));
 
 // Fixed, midday "now" so day-window boundaries (7d / 28d) never straddle a
 // partial day — every session below sits unambiguously inside or outside each
@@ -36,7 +49,7 @@ ok("empty: acwr null", L.acwr === null);
 ok("empty: recommendation null", L.recommendation === null);
 ok("empty: daily empty", L.daily.length === 0);
 ok("empty: monotony null", L.monotony === null && L.strain === null);
-ok("empty: sources are 3 fixed strings", L.sources.length === 3);
+ok("empty: sources are 3 fixed rows, each keyed", L.sources.length === 3 && L.sources.every((s) => "key" in s));
 const keyed = (z) => rowLine(ZONE_LABEL[z], (k) => `⟨${k}⟩`);
 ok("empty: the zone name is a dictionary key, not a word", keyed("none") === "⟨ld.zoneNone⟩");
 
@@ -61,7 +74,10 @@ ok("single: chronic 4", L.chronic === 4);
 ok("single: acwr 4.25", L.acwr === 4.25);
 ok("single: zone high", L.zone === "high");
 ok("single: recommendation present", L.recommendation !== null);
-ok("single: recommendation confidence 60", L.recommendation.confidence === 60);
+// 40 base + 1 session × 4 + 1 week of history × 4. The history term counts weeks that
+// carry a session, so a first log reads as the thin evidence it is; it used to count the
+// fixed 4-bucket chronic window, which credited every padded empty week (60).
+ok("single: recommendation confidence 48", L.recommendation.confidence === 48);
 // weekly monotony for loads [0,0,0,120]: mean 30, sd ~51.96, ratio 0.58.
 ok("single: monotony 0.58", L.monotony === 0.58);
 ok("single: strain 17", L.strain === 17);
@@ -89,8 +105,8 @@ ok("under: zone under", L.zone === "under");
 
 // 8. Evidence is a real, non-empty trace tied to the records.
 L = buildLoad({ nowMs, sessions: [mk(0, 40, 3)] });
-ok("evidence lists the tracked session", L.evidence.some((x) => /Tracked sessions: 1/.test(x)));
-ok("evidence cites the ACWR value", L.evidence.some((x) => /4\.25/.test(x)));
+ok("evidence lists the tracked session", L.evidence.map(say("en")).some((x) => /Tracked sessions: 1/.test(x)));
+ok("evidence cites the ACWR value", L.evidence.map(say("en")).some((x) => /4\.25/.test(x)));
 
 // 9. Daily buckets are sorted ascending by date.
 L = buildLoad({ nowMs, sessions: [mk(27, 35, 4), mk(0, 35, 4), mk(18, 35, 4)] });
@@ -157,23 +173,30 @@ const FIXTURES = [
 const FIX = FIXTURES.map((s) => buildLoad({ nowMs, sessions: s }));
 const tiny = FIX[5];
 ok("a 3 AU week really is the no-ratio case", tiny.weekLoad === 3 && tiny.chronic === 0 && tiny.acwr === null && tiny.zone === "caution");
-ok("its advice quotes no dash as a number and claims no climb", !/Ratio —|is —|— —|climbing/i.test(tiny.advice));
-ok("its advice names the missing baseline instead", /28-day history/.test(tiny.advice) && /not available yet/.test(tiny.advice));
-ok("its recommendation no longer deloads a ratio that does not exist", !/hardest planned session/i.test(tiny.recommendation.text) && /Not enough of a 28-day history/.test(tiny.recommendation.text));
+const tinyAdvice = say("en")(tiny.advice);
+const tinyRec = say("en")(tiny.recommendation.text);
+ok("its advice quotes no dash as a number and claims no climb", !/Ratio —|is —|— —|climbing/i.test(tinyAdvice));
+ok("its advice names the missing baseline instead", /28-day history/.test(tinyAdvice) && /not available yet/.test(tinyAdvice));
+ok("its advice is a row, not a sentence typed into the module", "key" in tiny.advice && tiny.advice.key === "ld.ad.noRatio");
+ok("its recommendation no longer deloads a ratio that does not exist", !/hardest planned session/i.test(tinyRec) && /Not enough of a 28-day history/.test(tinyRec));
 ok("and the confidence stays capped while the ratio is missing", tiny.recommendation.confidence <= 45);
-ok("no published sentence prints the dash as a measurement", FIX.every((x) => !/Ratio —|ratio is —/.test(x.advice) && !/Ratio —|ratio is —/.test(x.recommendation?.text ?? "")));
+ok("no published sentence prints the dash as a measurement",
+  FIX.every((x) => {
+    const said = say("en")(x.advice) + " " + (x.recommendation ? say("en")(x.recommendation.text) : "");
+    return !/Ratio —|ratio is —|— AU|: —/.test(said);
+  }));
 
 // 13b. The `none` zone is reachable two ways — no history at all, and a month of
 //      history with an empty current week — and its sentence used to assert the first:
 //      "No completed sessions in the last 28 days", printed to a reader whose log held
 //      two. The label carried the same claim as "No data".
-const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 const rest = buildLoad({ nowMs, sessions: [mk(10, 40, 3), mk(17, 40, 3)] });
 ok("a month of history with an empty week really is the rest-week case",
   rest.hasData === true && rest.totalSessions === 2 && rest.weekLoad === 0 && rest.acwr === 0 && rest.zone === "none");
-ok("its advice no longer denies the sessions behind it", !/28 days/.test(rest.advice) && /last 7 days/.test(rest.advice));
+const restSaid = (row) => say("en")(row);
+ok("its advice no longer denies the sessions behind it", !/28 days/.test(restSaid(rest.advice)) && /last 7 days/.test(restSaid(rest.advice)));
 ok("its recommendation names the empty week instead of a missing baseline",
-  !/establish a reliable baseline/.test(rest.recommendation.text) && /Nothing logged in the last 7 days/.test(rest.recommendation.text));
+  !/establish a reliable baseline/.test(restSaid(rest.recommendation.text)) && /Nothing logged in the last 7 days/.test(restSaid(rest.recommendation.text)));
 ok("the empty-week name says which window is empty, not that there is no data",
   /week/i.test(DICTIONARIES.en["ld.zoneNone"]) && !/no data/i.test(DICTIONARIES.en["ld.zoneNone"]));
 ok("and the no-history reader is told there is nothing to recommend yet",
@@ -201,6 +224,111 @@ ok("every legend row names a zone the classifier can return", ZONE_LEGEND.every(
 //     gate to stroke.
 ok("buildLoad's verdict is classifyZone on its own published numbers",
   FIX.every((x) => x.zone === classifyZone(x.acwr, x.weekLoad)));
+
+// 17. The prose itself. Now that every sentence the model hands the screen is a row,
+//     three failures become possible that were not even askable about while the module
+//     typed English by hand: a key no locale carries, a placeholder the row forgets to
+//     fill, and a row quietly turning back into a string. All three are checked for every
+//     fixture in every locale — a sentence only has to be read once to be wrong.
+const ROWS = (x) => [
+  x.advice,
+  ...(x.recommendation ? [x.recommendation.text, x.recommendation.earlyTrend] : []),
+  ...x.evidence,
+  ...x.sources,
+].filter(Boolean);
+const ALL_ROWS = FIX.flatMap(ROWS);
+ok("the load model emits prose only as rows (" + ALL_ROWS.length + " rows over " + FIX.length + " fixtures)",
+  FIX.length === 7 && ALL_ROWS.length >= 60 && ALL_ROWS.every((r) => "key" in r));
+
+const leaks = [];
+for (const loc of DICT_LOCALES) for (const x of FIX) for (const r of ROWS(x)) {
+  const s = say(loc)(r);
+  if (s === "" || /⟨missing:|\{|ld\.[a-z]/.test(s)) leaks.push(loc + ": " + s.slice(0, 64));
+}
+ok("no row leaks a key, an unfilled placeholder or an empty line in any locale (" + leaks.length + " leaks)",
+  DICT_LOCALES.length === 3 && leaks.length === 0);
+for (const l of leaks.slice(0, 6)) console.log("       leak: " + l);
+
+// Written out longhand: this is the copy the module published before it had keys, so the
+// check below catches a reworded sentence, a wrong number and a broken interpolation at
+// once rather than only the last.
+const opt = FIX[3];  // even weekly volume → ratio 1.00
+const spike = FIX[2];  // one session this week → ratio 4.25
+ok("the optimal advice still reads exactly as it did off the page", say("en")(opt.advice) ===
+  'Ratio 1.00 sits in the 0.8–1.3 "sweet spot". You\'re absorbing load well — maintain the current rhythm before pushing the volume up.');
+ok("the spike advice still reads exactly as it did", say("en")(spike.advice) ===
+  "Ratio 4.25 is above the 1.5 spike threshold, where injury risk climbs. Consider a deload: cut volume sharply for a few days before building again.");
+ok("the rest-week advice still reads exactly as it did", say("en")(rest.advice) ===
+  "Nothing logged in the last 7 days, so there is no weekly load to judge and no ratio to report. Log a session when you're ready to start — or restart — the count.");
+
+// And the numbers inside that copy come from the model, not from someone remembering them.
+const quoted = (s, re) => (re.exec(s) ?? []).slice(1);
+ok("the range quoted in the advice is the classifier's own band",
+  quoted(say("en")(opt.advice), /in the ([\d.]+)–([\d.]+)/).join("-") === [ACWR_BANDS[0].upTo, ACWR_BANDS[1].upTo].join("-"));
+ok("the spike threshold quoted in the advice is the classifier's own edge",
+  Number(quoted(say("en")(spike.advice), /above the ([\d.]+) spike/)[0]) === ACWR_BANDS[2].upTo);
+ok("the evidence names the windows the model actually averages over",
+  say("en")(opt.evidence[2]).includes("(" + ACUTE_DAYS + "-day") && say("en")(opt.evidence[3]).includes("(" + CHRONIC_DAYS + "-day"));
+ok("the advice's empty week quotes the acute window, not a made-up span",
+  say("en")(rest.advice).includes("last " + ACUTE_DAYS + " days"));
+
+// The early-trend caveat used to be glued onto the end of another sentence, which is the
+// one thing a translator cannot fix after the fact: the host sentence's word order decides
+// whether the fragment even reads. It is its own row now.
+ok("the early-trend note is its own row rather than a clause appended in code",
+  tiny.recommendation.earlyTrend !== null && !/Early trend/.test(say("en")(tiny.recommendation.text)) &&
+  say("en")(tiny.recommendation.earlyTrend).includes("~" + WEEKS_TO_SETTLE + " weeks"));
+
+// Being its own row only matters if the model can reach it. buildWeekly always returns a
+// full CHRONIC_DAYS/7 bucket window, so gating the note on that array's length compared a
+// variable against a constant: the row existed, the sentence could never print, and the
+// same constant inflated the confidence figure for a brand-new log. Two logs with the
+// same three sessions at the same per-session load, clustered vs spread, must disagree.
+const clustered = buildLoad({ nowMs, sessions: [mk(0, 30, 3), mk(2, 30, 3), mk(4, 30, 3)] });
+const spread = buildLoad({ nowMs, sessions: [mk(0, 30, 3), mk(9, 30, 3), mk(18, 30, 3)] });
+const activeOf = (x) => x.weekly.filter((w) => w.sessions > 0).length;
+ok("the same three sessions, one week apart in placement, are one week and three weeks of history",
+  clustered.totalSessions === spread.totalSessions && activeOf(clustered) === 1 && activeOf(spread) === WEEKS_TO_SETTLE);
+ok("the early-trend note is reachable for the thin history and silent for the settled one",
+  clustered.recommendation.earlyTrend !== null && spread.recommendation.earlyTrend === null);
+ok("confidence credits the weeks that carry training, not the empty ones beside them",
+  spread.recommendation.confidence === clustered.recommendation.confidence + (WEEKS_TO_SETTLE - 1) * 4);
+ok("a settled history carries no early-trend note",
+  opt.recommendation.earlyTrend === null && activeOf(opt) >= WEEKS_TO_SETTLE);
+
+// The point of the milestone: a reader of 简体中文 gets this prose in 简体中文. The
+// locales are split by what they render rather than by name, so the check cannot be
+// satisfied by a dictionary that quietly keeps one locale in English.
+const CJK = /[㐀-鿿]/;
+const EN = DICT_LOCALES.find((l) => !CJK.test(say(l)(opt.advice)));
+const ZH = DICT_LOCALES.filter((l) => l !== EN);
+const adviceIn = (x) => DICT_LOCALES.map((l) => say(l)(x.advice));
+ok("each locale gets its own words for the same verdict, in all three",
+  DICT_LOCALES.length === 3 && ZH.length === 2 && FIX.every((x) => new Set(adviceIn(x)).size === 3));
+ok("every row the load model can publish is translated in both Chinese locales",
+  ZH.every((l) => FIX.every((x) => ROWS(x).every((r) => CJK.test(say(l)(r))))));
+ok("the English locale is the only one whose load prose is Latin-script",
+  DICT_LOCALES.filter((l) => !CJK.test(say(l)(opt.advice))).length === 1);
+
+// 18. The other half of the contract: a row the screen never interprets is worse than the
+//     string it replaced, because the model now *looks* localised while the reader still
+//     gets whatever the component typed. So the page is checked as a source file — which
+//     fields it hands to `rowLine`, and whether it prints the early-trend note as its own
+//     element rather than folding it back into the recommendation.
+const PAGE_SRC = readFileSync(new URL("../features/load/LoadPage.tsx", import.meta.url), "utf8");
+const interpreted = new Set([...PAGE_SRC.matchAll(/rowLine\(\s*([A-Za-z_.]+)/g)].map((m) => m[1]));
+ok("the page interprets every single-valued prose field the model publishes",
+  ["load.advice", "load.recommendation.text", "load.recommendation.earlyTrend"].every((f) => interpreted.has(f)));
+ok("the early-trend note renders as its own element, only when the model sends one",
+  /load\.recommendation\.earlyTrend &&\s*\(/.test(PAGE_SRC));
+// A list is only covered if its items — not just its container — reach the interpreter.
+const between = (from, to) => PAGE_SRC.slice(PAGE_SRC.indexOf(from), PAGE_SRC.indexOf(to, PAGE_SRC.indexOf(from)) + 1);
+const evBlock = between("load.evidence.map", "/ul>");
+const srcBlock = between("load.sources.map", "/div>");
+ok("each evidence row is interpreted, and none is dropped into JSX raw",
+  /rowLine\(e,\s*t\)/.test(evBlock) && !/\{\s*e\s*\}/.test(evBlock));
+ok("each source chip is interpreted, and none is dropped into JSX raw",
+  /rowLine\(s,\s*t\)/.test(srcBlock) && !/\{\s*s\s*\}/.test(srcBlock));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
