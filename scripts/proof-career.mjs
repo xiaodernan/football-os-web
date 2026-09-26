@@ -29,13 +29,14 @@ import { readFileSync } from "node:fs";
 //     to the career fixtures ("with 15 pts from 10 career fixtures" when the career
 //     earned 8 of those 15); FIXED — the line now prints both figures separately.
 //  3. the module's own comment claimed "buying a striker lifts the attack line" while
-//     26 of the 39 seeded clubs have NO attacking player at all (the seed slices an
+//     26 of the 39 seeded clubs had NO attacking player at all (the seed sliced a
 //     eleven-slot GROUP_PLAN to 7-9 slots, always cutting the forwards), so their
-//     attack line is the club-rating fallback and for 20 of them it is HIGHER than any
-//     real attacker: signing one LOWERS the printed attack. The comment is corrected
-//     and the population is pinned below; the seed fix is queued as M197, because
-//     re-shaping every squad moves player positions across the whole dataset and each
-//     affected gate must be re-derived in its own milestone.
+//     attack line was the club-rating fallback and for 20 of them it was HIGHER than
+//     any real attacker: signing one LOWERED the printed attack. The comment is
+//     corrected and the population is pinned below. M197 fixed the seed itself — the
+//     plan now keeps an attacker in every prefix a squad is cut to, so all 39 clubs
+//     field a measurable attack line and the fallback only appears when a manager
+//     releases everyone in a group.
 //  4. the advisor quoted its edges with `toFixed(0)` while the panel beside it prints
 //     `Math.round`, and the two disagree on a negative half-step: Math.round(-5.5) is
 //     -5 but (-5.5).toFixed(0) is "-6". 41 of the 828 reachable career states sit on
@@ -90,13 +91,13 @@ const TOTAL = (N - 1) * 2;
 const SEED = seedStandings(COMP);
 
 // --- which clubs' attack line is actually a squad measurement? -----------------
-// The seed generates each squad as the FIRST squadSize entries of an eleven-slot
-// GROUP_PLAN, and squads are 7-9 players, so the plan is cut before its attacking
-// slots: most clubs have no ST/W/AM at all and clubInput falls back to the club's
-// own rating for that one line. The gate therefore tests the squad-driven
-// arithmetic on a club that HAS attackers (US) and pins the fallback population
-// separately (NO_ATK) — a check that quietly ran on a fallback club would prove
-// nothing about transfers.
+// The seed generates each squad as the FIRST squadSize entries of GROUP_PLAN, and
+// squads are 7-9 players. Until M197 the plan parked its attackers in slots 9-12, so
+// 26 of the 39 clubs had no ST/W/AM at all and clubInput answered their attack line
+// with the club's own rating. The plan now keeps an attacker inside every prefix a
+// club can be cut to, so the squad-driven arithmetic is tested on every club
+// (SQUAD_ATK); NO_ATK is pinned at 0 below, and the fallback itself is kept honest by
+// emptying a group through transfers — the only way left to reach it.
 const ATT = ["ST", "W", "AM"];
 const MID = ["CM", "DM"];
 const DEF = ["CB", "FB", "GK"];
@@ -271,32 +272,40 @@ ok("…and a below-average attacker LOWERS it: the line is a mean of the group, 
   })());
 ok("every club with attackers has its attack line equal to that group's mean (no hidden floor or bonus)",
   SQUAD_ATK.every((id) => near(ci(id, {}, NEUTRAL).attack, handInput(id, {}, NEUTRAL).lines.attack) && near(handInput(id, {}, NEUTRAL).lines.attack, groupAvg(effectiveSquad(id, {}), ATT, getClub(id).overall))));
-// --- the seed's forward-less squads, pinned as a named debt (README M196 → M197) ---
-ok("the fallback is REACHABLE, not theoretical: some seeded clubs have no ST/W/AM and some do",
+// --- M197: the seed now deals a balanced squad, so the fallback arrives only by
+// transfer. The plan is re-read from the seed's own SOURCE: if a future reorder parks
+// the attackers behind the 7-slot cut again, this goes red instead of quietly
+// re-creating the 26-club population M196 measured.
+const SEED_SRC = readFileSync(new URL("../data/footballSeed.ts", import.meta.url), "utf8");
+const PLAN_SRC = (SEED_SRC.match(/const GROUP_PLAN: PositionGroup\[\] = \[([\s\S]*?)\];/) || [, ""])[1]
+  .split(",").map((s) => s.trim().replace(/^"|"$/g, "")).filter(Boolean);
+const DEAL_SIZES = [7, 8, 9];
+ok(`the seed's GROUP_PLAN keeps an attacker in every squad size it can be cut to (${PLAN_SRC.length} slots, dealt ${DEAL_SIZES.join("-")})`,
+  PLAN_SRC.length >= Math.max(...DEAL_SIZES) && DEAL_SIZES.every((n) => PLAN_SRC.slice(0, n).some((g) => ATT.includes(g))),
+  PLAN_SRC.join("/"));
+const RAW_ATT = ALL_IDS.map((id) => PLAYERS.filter((p) => p.clubId === id && ATT.includes(p.positionGroup)).length);
+ok(`every seeded club fields all three lines, so no career starts on a fallback attack (${ALL_IDS.length} clubs × ${PLAYERS.length} players; thinnest attacking line holds ${Math.min(...RAW_ATT)}, M196's 26-club debt is closed)`,
+  ALL_IDS.every((id) => hasLines(id)) && NO_ATK.length === 0 && SQUAD_ATK.length === ALL_IDS.length && Math.min(...RAW_ATT) > 0);
+ok("…counted straight off the seed rows, not through effectiveSquad, so this script's own partition cannot make it true",
   (() => {
-    // Counted straight off the seed rows, without effectiveSquad, so a bug in this
-    // script's own partition cannot make the claim true by construction.
     const raw = new Map();
     for (const p of PLAYERS) if (ATT.includes(p.positionGroup)) raw.set(p.clubId, (raw.get(p.clubId) ?? 0) + 1);
-    const withAtk = ALL_IDS.filter((id) => (raw.get(id) ?? 0) > 0);
-    return NO_ATK.length > 0 && withAtk.length > 0
-      && withAtk.length === SQUAD_ATK.length && withAtk.every((id) => SQUAD_ATK.includes(id))
-      && NO_ATK.every((id) => !withAtk.includes(id));
+    return ALL_IDS.every((id) => (raw.get(id) ?? 0) > 0) && raw.size === ALL_IDS.length;
   })());
-ok("…and the measured population is exactly the 26 clubs the seed's GROUP_PLAN slice leaves without an attacker",
-  NO_ATK.length === 26, `actual: ${NO_ATK.length} (${NO_ATK.join(" ")})`);
-ok("for each of them the attack line is the club rating, NOT a squad measurement",
-  NO_ATK.every((id) => ci(id, {}, NEUTRAL).attack === getClub(id).overall && attOf(id).length === 0));
-ok("their midfield and defence lines still ARE squad means — so one panel row mixes two bases",
-  NO_ATK.every((id) => { const h = handInput(id, {}, NEUTRAL); return near(h.lines.midfield, groupAvg(effectiveSquad(id, {}), MID, getClub(id).overall)) && effectiveSquad(id, {}).some((p) => MID.includes(p.positionGroup)) && effectiveSquad(id, {}).some((p) => DEF.includes(p.positionGroup)); }));
-ok("for 20 of them the fallback beats every attacking player in the seed, so signing the world's best striker lowers their stated attack",
+ok("the attack line is a squad measurement at every club now, never the club rating",
+  ALL_IDS.every((id) => ci(id, {}, NEUTRAL).attack !== getClub(id).overall && attOf(id).length > 0));
+const ATTACK_MEAN_GAP = ALL_IDS.map((id) => { const g = attOf(id); return g.reduce((s, p) => s + p.overall, 0) / g.length - getClub(id).overall; });
+ok(`and the reason the fallback mattered is measured, not asserted: every club's attacking mean sits BELOW its own rating (gap ${Math.min(...ATTACK_MEAN_GAP).toFixed(2)} to ${Math.max(...ATTACK_MEAN_GAP).toFixed(2)}, so the old rating fallback always over-reported)`,
+  Math.max(...ATTACK_MEAN_GAP) < 0);
+ok("the fallback is still REACHABLE, but only by emptying a group: releasing every attacker leaves the club rating on that line",
   (() => {
-    const bestAtt = Math.max(...PLAYERS.filter((p) => ATT.includes(p.positionGroup)).map((p) => p.overall));
-    const worse = NO_ATK.filter((id) => getClub(id).overall > bestAtt);
-    return worse.length === 20 && worse.every((id) => ci(id, { [PLAYERS.filter((p) => ATT.includes(p.positionGroup) && effClubId(p, {}) !== id).sort((a, b) => b.overall - a.overall)[0].id]: id }, NEUTRAL).attack < ci(id, {}, NEUTRAL).attack);
+    const moved = {};
+    for (const p of attOf(US)) moved[p.id] = "";
+    return attOf(US, moved).length === 0 && near(ci(US, moved, NEUTRAL).attack, getClub(US).overall)
+      && near(ci(US, moved, NEUTRAL).midfield, groupAvg(effectiveSquad(US, moved), MID, getClub(US).overall));
   })());
-ok("a brand-new career at such a club starts in that state (no transfer needed to reach the fallback)",
-  NO_ATK.every((id) => { const s = createCareer(id); return attOf(id, s.moved).length === 0 && clubInput(id, s.moved, s.tactics, 0, 0, 0).attack === getClub(id).overall; }));
+ok("…and a brand-new career never starts there: createCareer's own moved map is empty at every club",
+  ALL_IDS.every((id) => { const s = createCareer(id); return attOf(id, s.moved).length > 0 && clubInput(id, s.moved, s.tactics, 0, 0, 0).attack !== getClub(id).overall; }));
 ok("the module no longer claims unconditionally that buying a striker lifts the attack line",
   !/buying a striker lifts the attack line/.test(SRC));
 ok("an emptied attack group falls back to the club's own rating instead of averaging zero",
@@ -592,41 +601,52 @@ ok("in each of them the sentence prints Math.round(field), never the toFixed(0) 
     const qs = quotedFor(p, field);
     return qs.length === 0 || qs.every((q) => q === Math.round(raw[field]) && q !== Number(raw[field].toFixed(0)));
   })));
-ok("…with a named witness: a real Chelsea season that rests after its sixth fixture quotes midfield −5 where toFixed(0) said −6",
+ok("…with a named witness taken from the walk itself: a raw edge on a negative half-step is printed as Math.round, not the toFixed(0) value",
   (() => {
-    const hit = PREPS2.find(({ how }) => how === "che@6+rest");
-    if (!hit) return false;
-    return hit.raw.midfieldEdge === -5.5 && Math.round(hit.raw.midfieldEdge) === -5 && Number(hit.raw.midfieldEdge.toFixed(0)) === -6
-      && hit.p.midfieldEdge === -5 && quotedFor(hit.p, "midfieldEdge").every((q) => q === -5);
-  })());
+    for (const e of PREPS2) for (const [, field] of FIGURES) {
+      const raw = e.raw[field], qs = quotedFor(e.p, field);
+      if (raw < 0 && Math.abs(raw % 1) === 0.5 && qs.length > 0) {
+        const printed = Math.round(raw), old = Number(raw.toFixed(0));
+        return printed !== old && qs.every((q) => q === printed);
+      }
+    }
+    return false;
+  })(), `witness: ${(() => { for (const e of PREPS2) for (const [, field] of FIGURES) { const raw = e.raw[field]; if (raw < 0 && Math.abs(raw % 1) === 0.5 && quotedFor(e.p, field).length > 0) return `${e.how} ${field} ${raw} → ${Math.round(raw)} (toFixed ${Number(raw.toFixed(0))})`; } return "none"; })()}`);
 // Reachability per SENTENCE, not per field: a pattern that cannot fire would make
 // the clause above vacuous, so the population is measured and pinned.
 const FIRED = FIGURES.map(([re]) => ({ re: re.source, n: PREPS2.filter(({ p }) => re.test(p.rationale.join(" | "))).length }));
-ok("five of the six quoting sentences fire in real careers, each witnessed many times over",
-  FIRED.filter((f) => f.n > 0).length === 5 && FIRED.filter((f) => f.n > 0).every((f) => f.n > 50),
-  `fired ${FIRED.map((f) => `${f.n}× ${f.re.slice(0, 24)}`).join(" · ")}`);
-// The sixth arm is shadowed by rule order, not by luck: the defensive rule is tested
-// first, and in the seed every pairing weak enough to sit below a −4 attack edge is
-// also exposed enough to sit above a +4 defensive edge. Swept over every pairing in
-// every competition and every fatigue level the model can hold, on the seeded squads
-// (transferIn/Out moves the lines but only ever *toward* a club's own rating).
+ok(`all six quoting sentences fire in real careers now that every club fields attackers (${FIRED.map((f) => f.n + "×").join(" / ")})`,
+  FIRED.every((f) => f.n > 0), `fired ${FIRED.map((f) => `${f.n}× ${f.re.slice(0, 24)}`).join(" · ")}`);
+// Which advice arms the seed can actually reach, swept over every pairing in every
+// competition and every fatigue level the model holds, on the seeded squads. M196 ran
+// this and found the weaker-side arm shadowed by rule order — an artefact of the
+// fallback attack lines, which inflated a weak club's printed attack until it could not
+// sit below −4 without its defence also sitting above +4. M197 removed the inflation, so
+// the sweep is kept as a REACHABILITY census: it re-proves the weaker-side arm live and
+// names the arm the fix moved instead, the all-out mentality at a +12 attack edge.
 const SHADOW = (() => {
-  let violations = 0, weakest = { ae: Infinity };
+  let weaker = 0, allout = 0, weakest = { ae: Infinity }, strongest = { ae: -Infinity };
   for (const id of ALL_IDS) for (const rival of clubIdsByCompetition(getClub(id).competitionId).filter((x) => x !== id)) {
     for (let k = 0; k <= 20; k++) {
       const f = Math.min(1, k / 20);
       const our = clubInput(id, {}, NEUTRAL, 0, 0, f), them = clubInput(rival, {}, NEUTRAL, 0, 0, 0);
       const ae = our.attack - them.defense, de = them.attack - our.defense;
       if (ae < weakest.ae) weakest = { ae, de, at: `${id} vs ${rival} at fatigue ${f.toFixed(2)}` };
-      if (ae < -4 && de <= 4) violations++;
+      if (ae > strongest.ae) strongest = { ae, de, at: `${id} vs ${rival} at fatigue ${f.toFixed(2)}` };
+      if (ae < -4 && de <= 4) weaker++;
+      if (ae >= 12 && de <= 2) allout++;
     }
   }
-  return { violations, weakest };
+  return { weaker, allout, weakest, strongest };
 })();
-ok("the dead arm is named rather than pretended covered: nothing in the walk prints the weaker-side sentence",
-  FIRED.find((f) => /weaker side on paper/.test(f.re)).n === 0 && HALF.every(({ p }) => !/weaker side on paper/.test(p.rationale.join(" | "))));
-ok("…and the reason is structural: no seeded pairing drops below a −4 attack edge while staying inside the +4 defensive threshold the earlier rule owns",
-  SHADOW.violations === 0, `weakest attack edge ${SHADOW.weakest.ae.toFixed(2)} came with defensive edge ${SHADOW.weakest.de.toFixed(2)} (${SHADOW.weakest.at})`);
+ok(`the weaker-side arm is now LIVE: ${SHADOW.weaker} pairing × fatigue states sit below a −4 attack edge while staying inside the +4 defensive edge the earlier rule owns (weakest ${SHADOW.weakest.ae.toFixed(2)} at ${SHADOW.weakest.at}, arriving with defensive edge ${SHADOW.weakest.de.toFixed(2)})`,
+  SHADOW.weaker > 0);
+ok("…and it prints in the walk rather than only existing in the sweep",
+  FIRED.find((f) => /weaker side on paper/.test(f.re)).n > 0 && PREPS2.some(({ p }) => /weaker side on paper/.test(p.rationale.join(" | "))));
+ok(`the arm the fix moved is named instead of pretended covered: nothing reaches the all-out cut, because the whole pairing × fatigue space tops out at attack edge ${SHADOW.strongest.ae.toFixed(2)} (${SHADOW.strongest.at})`,
+  SHADOW.allout === 0 && SHADOW.strongest.ae < 12, `strongest ${SHADOW.strongest.ae.toFixed(2)}, weakest ${SHADOW.weakest.ae.toFixed(2)}`);
+ok("…so the all-out recommendation is unreachable in the shipped product, not merely rare — never printed over the reachable states",
+  PREPS2.every(({ p }) => p.recommended.mentality !== 2));
 ok("the advisor is measured at balanced tactics, so what it prints does not move with the sliders the manager has set — while the engine's lines do",
   (() => {
     const base = createCareer(US);
@@ -685,30 +705,76 @@ ok(`every crossing probe agrees with the declared rule on both sides of the thre
     const got = (p) => c.kind === "mentality" ? p.recommended.mentality : p.recommended.press;
     return got(c.pl) === want(c.rl) && got(c.ph) === want(c.rh);
   }));
-ok("…and every threshold has a straddle where the model's own recommendation flips",
-  [4, 12, 3, -3].every((T) => {
+ok("…and every threshold the seed can reach has a straddle where the model's own recommendation flips",
+  [4, 3, -3].every((T) => {
     const m = CROSSINGS.filter((c) => c.T === T);
     return m.length > 0 && m.some((c) => (c.kind === "mentality"
       ? c.pl.recommended.mentality !== c.ph.recommended.mentality
       : c.pl.recommended.press !== c.ph.recommended.press));
   }),
-  [4, 12, 3, -3].map((T) => {
-    const m = CROSSINGS.filter((c) => c.T === T);
-    return `${T}: ${m.length} straddle(s)`;
-  }).join(" · "));
+  [4, 12, 3, -3].map((T) => `${T}: ${CROSSINGS.filter((c) => c.T === T).length} straddle(s)`).join(" · "));
+// The +12 cut is still searched (above) so its absence is measured, not assumed: no
+// fatigue value in [0,1] puts a seeded pairing on that boundary, because the whole
+// space tops out below it. A clause that silently dropped 12 from the list would let a
+// future threshold move go unseen; this one reports it as unreachable instead.
+ok("…and the threshold with no crossing is reported as unreachable rather than quietly dropped from the search",
+  CROSSINGS.filter((c) => c.T === 12).length === 0 && SHADOW.strongest.ae < 12,
+  `strongest raw attack edge ${SHADOW.strongest.ae.toFixed(2)}`);
 ok("the rationale never quotes a raw float: it interpolates the rounded edge fields",
   !/rationale\.push\([^)]*\$\{(attackEdge|defenseEdge|midfieldEdge)\.toFixed/.test(SRC));
 ok("a tired squad's tempo line quotes the same rounded percentage the panel shows",
   (() => { const p = matchPrep(sFor(US, { fatigue: 0.9 })); return p.recommended.tempo === 0.35 && p.rationale[2].includes(`Fatigue is ${Math.round(0.9 * 100)}%`); })());
-ok("high fatigue overrides a clear attacking edge in the tempo rule (and the tempo line stops claiming one)",
+ok("the fatigue arm of the tempo rule fires on its own, and the tempo line stops claiming a high tempo",
   (() => {
-    const tired = ALL_IDS.map((id) => sFor(id, { fatigue: 0.9 })).find((s) => rawEdges(s).ae >= 6);
+    const tired = PREPS2.find(({ s }) => s.fatigue > 0.6);
     // An absent subject is a FAIL, not a crash: `matchPrep(undefined)` would take the
     // whole file down and hide the other clauses.
     if (!tired) return false;
-    const p = matchPrep(tired);
-    return p.recommended.tempo === 0.35 && !/higher tempo/.test(p.rationale[2]);
+    return tired.p.recommended.tempo === 0.35 && !/higher tempo/.test(tired.p.rationale[2]);
   })());
+ok("…and the attacking-edge arm fires on its own too, so the rule's ordering is tested at both arms rather than assumed at one",
+  (() => {
+    const edgey = PREPS2.find(({ s, raw }) => s.fatigue <= 0.6 && raw.attackEdge >= 6);
+    if (!edgey) return false;
+    return edgey.p.recommended.tempo === 0.7 && /Clear attacking edge/.test(edgey.p.rationale[2]);
+  })());
+// The two tempo arms are ORDERED (fatigue first), so precedence has a witness only if
+// some state has both live. PREPS2 has none — a real season steps fatigue by 0.22, so a
+// career never parks just past 0.6 while a strong edge is still ≥ 6. That is not a
+// reason to assume the band is empty: M197 measured it by sweeping every fixture a
+// managed club is scheduled to play at every 0.01 fatigue step above 0.6, and the band
+// IS reachable in the model's own input space — the check below prints how many states
+// there are and where the strongest one sits — so the ordering gets tested there
+// instead of being assumed untestable.
+const BOTH_ARMS = (() => {
+  const out = [];
+  let scanned = 0;
+  for (const id of ALL_IDS) {
+    const sched = [];
+    for (let i = 0; i < FIXTURES_OF(id); i++) sched.push(res(fixtureAt(getClub(id).competitionId, id, i).opponent, 0, 0, false));
+    for (let i = 0; i < sched.length; i++) {
+      // The dummy results are for the fixture COUNT only: clubInput reads neither
+      // form nor morale in the three lines, so the edges depend on fatigue alone.
+      const s0 = sFor(id, { results: sched.slice(0, i) });
+      for (let k = 61; k <= 100; k++) {
+        const s = { ...s0, fatigue: k / 100 };
+        scanned++;
+        const { ae } = rawEdges(s);
+        if (ae >= 6) out.push({ id, i, opp: sched[i].opponent, fatigue: k / 100, ae, s, p: matchPrep(s) });
+      }
+    }
+  }
+  out.scanned = scanned;
+  return out;
+})();
+const STRONGEST = BOTH_ARMS.reduce((a, b) => (b.ae > a.ae ? b : a), BOTH_ARMS[0]);
+ok(`the two arms DO overlap somewhere in the model's own space, so the ordering below is a live test rather than a vacuous one (${BOTH_ARMS.scanned} scheduled-fixture × fatigue states scanned from 0.61 to 1.00, ${BOTH_ARMS.length} where both are live, strongest attack edge ${STRONGEST.ae.toFixed(2)} at ${STRONGEST.id} vs ${STRONGEST.opp} fixture ${STRONGEST.i} fatigue ${STRONGEST.fatigue.toFixed(2)})`,
+  BOTH_ARMS.length > 0, `e.g. ${BOTH_ARMS.map((b) => `${b.id}@${b.i} f=${b.fatigue.toFixed(2)}`).slice(0, 4).join(" · ")}`);
+ok("wherever both are live the fatigue arm owns the recommendation — tempo 0.35 and the fatigue sentence, never the high-tempo claim",
+  BOTH_ARMS.every(({ p }) => p.recommended.tempo === 0.35
+    && /Fatigue is/.test(p.rationale[2]) && !/higher tempo/.test(p.rationale[2])));
+ok("…and the same states keep their advice inside the controls, so the overlap is not a degenerate corner of the model",
+  BOTH_ARMS.every(({ p }) => p.recommended.tempo >= 0 && p.recommended.tempo <= 1 && Number.isInteger(p.recommended.mentality)));
 ok("confidence is the declared formula over the raw edges, capped at 90",
   PREPS.every(({ s, p }) => { const { ae, de, me } = rawEdges(s); return p.confidence === Math.min(90, Math.round(55 + Math.abs(ae) + Math.abs(me) / 2 + Math.abs(de))); }));
 ok("the recommendation always fits the controls that have to hold it (mentality −2..2 integer, tempo/press 0..1)",

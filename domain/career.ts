@@ -80,9 +80,10 @@ function avgOf(squad: PlayerRef[], groups: string[], fallback: number): number {
 // performs. When a position group is empty the line falls back to the club's own
 // rating instead of averaging zero — which is NOT the same basis as the other two
 // lines, so for such a club the attack figure is a club rating, not a squad
-// measurement, and signing a real striker can lower it. proof-career.mjs pins the
-// exact population of affected clubs; the seed should stop shipping forward-less
-// squads (see README M196, queued as M197) so the fallback is unreachable.
+// measurement, and signing a real striker can lower it. Since M197 every seeded club
+// fields at least one ST/W/AM (the seed's GROUP_PLAN is read from the front, and
+// every prefix it can be cut to keeps an attacker), so the fallback is reached only
+// by emptying a group with transfers — which is what scripts/proof-career.mjs pins.
 export function clubInput(clubId: string, moved: Record<string, string>, tac: Tactics, form: number, morale: number, fatigue: number): TeamInput {
   const c = getClub(clubId)!;
   const squad = effectiveSquad(clubId, moved);

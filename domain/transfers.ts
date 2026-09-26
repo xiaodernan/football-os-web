@@ -39,7 +39,9 @@ const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v
 
 // Fit: how much the viewer's club could use this player, from that club's own
 // average rating at the relevant bucket. Thin/weak bucket → higher need.
-function fitFor(viewerAvgByBucket: Map<string, number>, bucket: string, playerHeadroom: number, playerOverall: number): number {
+// Exported for scripts/proof-transfers.mjs, which has to exercise the empty-bucket
+// and unknown-bucket states the seeded board does not produce today.
+export function fitFor(viewerAvgByBucket: Map<string, number>, bucket: string, playerHeadroom: number, playerOverall: number): number {
   const myAvg = viewerAvgByBucket.get(bucket);
   if (myAvg == null) return 0;
   return clamp(Math.round(50 + (70 - myAvg) * 3 + playerHeadroom * 1.2 + (playerOverall - 60)), 5, 99);

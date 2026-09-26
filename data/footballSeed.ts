@@ -109,8 +109,14 @@ const STARS: { name: string; club: string; group: PositionGroup; age: number; na
   { name: "Florian Wirtz", club: "B04", group: "AM", age: 22, nation: "Germany", skill: 0.89, foot: "R" },
 ];
 
+// A squad is this plan read from the FRONT, so every prefix a club can be dealt
+// (7-9 slots) must already field all three lines. The previous ordering parked the
+// AM, both Ws and the ST in slots 9-12, which no 7-9 slot squad ever reached: 26 of
+// the 39 clubs had no attacking player at all, and clubInput then answered their
+// attack line with the club's own rating instead of a squad measurement (README
+// M196/M197, pinned by scripts/proof-career.mjs).
 const GROUP_PLAN: PositionGroup[] = [
-  "GK", "CB", "CB", "FB", "FB", "DM", "CM", "CM", "AM", "W", "W", "ST",
+  "GK", "CB", "CB", "FB", "DM", "CM", "AM", "W", "ST",
 ];
 
 function slug(s: string): string {
@@ -153,7 +159,7 @@ function makeWorld() {
   const usedNames = new Set<string>();
   for (const club of clubs) {
     const def = CLUB_DEFS.find((d) => d.short === club.short)!;
-    const squadSize = rngInt(rng, 7, 9);
+    const squadSize = Math.min(rngInt(rng, 7, 9), GROUP_PLAN.length);
     // Inject curated stars for their clubs.
     const clubStars = STARS.filter((s) => s.club === club.short);
     for (const star of clubStars) {
@@ -161,7 +167,7 @@ function makeWorld() {
       pushPlayer(star.name, star.group, star.age, star.nation, club, star.skill, star.foot, def.strength);
     }
     for (let i = 0; i < squadSize; i++) {
-      const group = GROUP_PLAN[i % GROUP_PLAN.length];
+      const group = GROUP_PLAN[i];
       let name = "";
       let guard = 0;
       do {

@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const server = await createServer({ root, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { transferRumours, askingFee, availableKinds, clubOf } = await server.ssrLoadModule("/domain/transfers.ts");
+const { transferRumours, askingFee, availableKinds, clubOf, fitFor } = await server.ssrLoadModule("/domain/transfers.ts");
 const { bucketOf, headroom, valueIndex, squadProfile } = await server.ssrLoadModule("/domain/scouting.ts");
 const { newsFeed, getNews, getPlayer, getClub, footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
 
@@ -107,16 +107,33 @@ for (const { club, rows } of withViewer.slice(0, 8)) {
     })()));
 }
 // squadProfile always answers for all four buckets, so fitFor's "unknown bucket"
-// branch (which would return 0, below the clamp floor) cannot fire from this UI.
+// branch (which returns 0, below the clamp floor) cannot fire from this UI. Both
+// boundary branches are now pinned on the MODULE'S OWN function rather than on a
+// re-implementation: the seeded data cannot reach them, so a re-implementation alone
+// left a real edit un-caught (M197 probe: dropping the ceiling from 99 to 98 in
+// domain/transfers.ts passed every clause that only compared reachable rows).
 ok("squadProfile reports every bucket, so a viewer always gets a real average",
   clubs.every((c) => { const s = squadProfile(c.id); return s.length === 4 && ["GK", "DEF", "MID", "ATT"].every((b) => s.some((x) => x.bucket === b)); }));
-// An empty bucket averages 0, and the formula reads that as maximum need — so a
-// club with nobody in a bucket should score every target there at the 99 ceiling.
-const thin = withViewer.find(({ club }) => squadProfile(club.id).some((s) => s.count === 0));
-ok("a club with an empty squad bucket exists to test the ceiling (gate is not vacuous)", !!thin);
-ok("every target in that empty bucket scores the 99 ceiling",
-  !!thin && thin.rows.filter((r) => squadProfile(thin.club.id).find((s) => s.bucket === bucketOf(getPlayer(r.playerId).positionGroup)).count === 0)
-    .every((r) => r.fitScore === 99 && r.isTarget));
+// An empty bucket averages 0, and the formula reads that as maximum need — so a club
+// with nobody in a bucket scores every target there at the 99 ceiling. M196 found the
+// seed reaching that state through a defect (26 clubs had no attacker at all because
+// the squad was cut out of an eleven-slot plan); M197 fixed the seed, so the ceiling
+// is now exercised as arithmetic on the shipped function, and its unreachability from
+// the seeded board is stated as the limit it is.
+const emptyBucket = clubs.filter((c) => squadProfile(c.id).some((s) => s.count === 0));
+ok(`no seeded club has an empty squad bucket any more (${emptyBucket.length} of ${clubs.length}), so the board never scores the ceiling today`,
+  emptyBucket.length === 0);
+ok("every bucket squadProfile reports carries players, so its average is a measurement, not a zero standing in for one",
+  clubs.every((c) => squadProfile(c.id).length === 4 && squadProfile(c.id).every((s) => s.count > 0 && s.avg > 0)));
+const avgMap = (v) => new Map([["ATT", v]]);
+ok("fitFor itself caps at the 99 ceiling it claims, on the inputs an empty bucket produces",
+  fitFor(avgMap(0), "ATT", 0, 60) === 99 && fitFor(avgMap(0), "ATT", 20, 50) === 99 && fitFor(avgMap(0), "ATT", 0, 97) === 99);
+ok("…and it is the clamp doing it, not the sum: the same bucket at a strong average scores inside the band",
+  50 + (70 - 0) * 3 > 99 && fitFor(avgMap(70), "ATT", 0, 60) === 50);
+ok("…and the floor is the same clamp: a thick, weak-target query lands on 5, never below",
+  fitFor(avgMap(90), "ATT", 0, 40) === 5 && fitFor(avgMap(97), "ATT", 0, 50) === 5);
+ok("a bucket the viewer's profile does not carry returns 0, below the floor — the branch the seeded board cannot reach",
+  fitFor(new Map(), "ATT", 20, 80) === 0);
 ok("at least one viewer genuinely has a priority target, so the badge is reachable",
   withViewer.some(({ rows }) => rows.some((r) => r.isTarget)));
 ok("choosing a different club can change the ranking (fit is really viewer-scoped)",

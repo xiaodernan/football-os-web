@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M196 (a few numbers in that range
+Work ships one milestone per commit and is currently at M197 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2603,6 +2603,116 @@ did. Domain prose is still **256 literals across 10 files** at its ceiling and p
 (`career.ts` at 29): the fixes were made *inside* existing sentences, which is the only way a copy
 change is allowed through that gate. No UI file is in this commit, so the raw-UI ledger (149 across 3
 files) and the dictionary (1478 keys × 3 locales) are carried unchanged from M195.
+
+### M197 — The seed stops shipping clubs with no attackers, and the career model's reachable space is re-measured
+
+M196 ended with a product defect it deliberately did not fix: `data/footballSeed.ts` built every club's
+squad as the first 7-9 entries of a positional `GROUP_PLAN`, and that plan parked all three attacking
+slots (`AM`, `W`, `ST`) at the back — so **26 of the 39** clubs were dealt a squad with no attacker at
+all, and `clubInput` answered their attack line with the club's *own rating* instead of a squad mean.
+M196 measured what that costs: for 20 of those clubs the fallback is higher than any attacker in the
+dataset, so signing the world's best striker *lowers* the number the Manager OS prints. The plan is now
+`GK CB CB FB DM CM AM W ST`, read from the front, and `squadSize` is capped by the plan's own length
+with the `i % GROUP_PLAN.length` wrap removed — a squad can no longer silently reuse a slot, and every
+prefix the seed can be cut to (7, 8 or 9) fields all three lines. The RNG call order is untouched, so the
+world's population is the same population: a before/after dump of every player row (a plane-only probe,
+not a permanent gate) reports **318 players both ways, 0 added, 0 removed**, with the same ids, names,
+ages and nationalities. What moved is **152 position groups** — and because a generated player's
+attributes are partly read off the positional template, that re-labelling also moved **18** rows'
+`overall`, `value` and `potential`. The gate re-reads the plan **from the seed's source text**, so a
+future reorder that parks the attackers behind the cut goes red rather than re-creating the population:
+today it reports **39 clubs × 318 players** with the thinnest attacking line holding 1 attacker, counted
+a second time straight off the seed rows so the script's own partition cannot make it true. A companion
+clause measures *why* the fallback was a lie rather than asserting it: every club's attacking mean now
+sits below its own rating, by between **−16.00 and −5.33**, so the old fallback over-reported the attack
+line at every club that used it. (`clubInput`'s header comment and M196's write-up both said
+"eleven-slot"; the plan had twelve entries — the count is now a number the gate reads instead of one it
+restates.)
+
+Re-shaping 39 squads changes the model's reachable space, so everything in the career gate that reads
+squad composition had to be re-derived rather than re-run. Two findings moved in opposite directions.
+The mentality chain's `attackEdge < -4` arm, which M196 recorded as **structurally dead** (shadowed by
+the rule order), is now alive: an exhaustive sweep of every seeded pairing at 21 fatigue levels finds
+**645** states below a −4 attack edge that stay inside the +4 defensive edge the earlier rule owns, the
+weakest being **−14.00** (val vs rma at fatigue 1.00, arriving with defensive edge 9.75), and a walk of
+reachable careers confirms the sentence actually prints — all six quoting sentences now fire
+(**34× / 193× / 149× / 85× / 291× / 6×**) where M196 could only prove five. The inflation the fallback
+provided was hiding both tails. And the arm the fix *killed* is the one M196 had left open: the
+all-out mentality at `attackEdge >= 12` is now unreachable, because the whole pairing × fatigue space
+tops out at **+8.50** (rma vs ath at fatigue 0.00) and no state combines that with the `defenseEdge <= 2`
+the same rule requires. The gate names that arm as unreachable and asserts the recommendation never
+prints, instead of leaving a threshold with no crossing quietly inside the search. Re-scaling the
+mentality cuts against the distribution the seed can actually reach — or dropping the dead one — is
+queued as its own milestone, because that is a model change, not a measurement.
+
+One clause in this milestone was written *after* it was falsified, which is the part worth recording.
+The tempo rule has two arms (`fatigue > 0.6` → 0.35, `attackEdge >= 6` → 0.7) and a bound claimed they
+cannot overlap; the arithmetic behind that bound was wrong, and guessing was not going to settle it.
+So the gate measures the space directly: every fixture each of the 39 clubs is scheduled to play ×
+fatigue in 0.01 steps from 0.61 to 1.00 — **13,440** states scanned — and finds **4** where both arms are
+live, the strongest an attack edge of **6.06** at `rma` vs `ath`, fixture 2, fatigue 0.61. The gate
+prints that denominator and that witness in the passing check itself. The precedence is then tested at
+exactly those states: the fatigue arm must own the recommendation, tempo must read
+0.35, the fatigue sentence must print and the high-tempo claim must not. A mutation that swaps the two
+arms is caught by that one clause, which is what makes the ordering a tested property rather than an
+assumed one; a second clause keeps the census itself from going vacuous by failing if it collects
+nothing.
+
+The transfer board is where this milestone found a coverage debt rather than a code defect. `fitFor`
+clamps into [5, 99] and returns 0 for a bucket the viewer's profile does not carry, and at HEAD the
+ceiling *was* tested — a mutation from 99 to 98 goes red on **3 of its 72** checks, one of them named
+"every target in that empty bucket scores the 99 ceiling". That coverage existed only because **26 clubs
+shipped an empty attacking bucket**: the test of the ceiling depended on the defect M197 removes. Fixing
+the seed therefore deletes the state, and a gate that reaches a boundary through a bug loses the
+assertion with the bug. The honest repair is to exercise the module instead of its documentation:
+`fitFor` is now exported and the ceiling, the floor and the unknown-bucket branch are each pinned
+directly against it — today each of those three edits is caught, by exactly **1** check apiece — while two
+seed clauses state positively that no club ships an empty bucket and that every bucket `squadProfile`
+answers for carries players. The arithmetic is proven and the reachability is described, rather than one
+standing in for the other.
+
+A gate defect surfaced the way these usually do: by not being visible yet. A stale line survived the
+census rewrite in `proof-career.mjs`, still reading variables that census no longer builds, and the file
+stayed green — the statement it sat inside had stopped running on anything. It announced itself only when
+a mutation changed the rows that loop walks, and then not as a red check but as `?/?`: the script died
+before it printed a tally. That class is now reproduced rather than recalled: with a throwing statement
+planted inside a loop the shipped data never enters, the gate reports **exit 0, 180/180**; making the
+loop enter once reports **exit 1 with no tally printed at all** (and the restored file is green again, so
+the reproduction left nothing behind). Green therefore certifies the checks that ran, not the file's
+health — and whether `?/?` counts as a failure currently depends on reading the exit code instead of the
+line, which is the runner gap M196 named and which now has two observed signatures: a script that dies
+early, and one that prints a full green tally and still exits non-zero. The campaign scores "ran and went
+red", "ran green" and "never reported" as three different verdicts; this milestone's record below
+contains no third kind. For the same reason the numbers in this section are all printed by *passing*
+checks: a figure that only appears when a clause fails is not part of the record, so the weakest edge, the
+mean-vs-rating gap, the club × player census and the overlap denominator moved into their clause names.
+
+Fourteen mutations against the shipped gates, **14 caught / 0 missed / 0 crashed**, with an unmutated
+control before and after (career 180/180, transfers 76/76 both times) and every mutated file restored
+from an in-memory snapshot and re-hashed: the plan restored to a longer ordering with the attackers
+parked behind the 7-slot cut (12 red, and 2 on the transfer board), a plan with no
+attacking slot at all (12 + 2), squads cut to 6
+slots (11 + 2), `avgOf` averaging 0 instead of falling back (3), a career starting with a non-empty
+`moved` map (1), a career starting by releasing all of its own attackers (6), the tempo arms swapped
+(1), the all-out cut lowered to +6 (2), the attack line's fatigue coefficient halved (2), the gate's own
+`GROUP_PLAN` parse broken (1), the overlap census made unable to collect (1), and `fitFor`'s floor,
+ceiling and unknown-bucket answers changed by one each (1 apiece — the three that the transfer board's
+own data can no longer reach).
+
+Measured after M197 on a clean plane (`git archive HEAD`, only this milestone's files copied in) against
+the same plane at HEAD alone: `tsc` 0, build 0, suite **29 scripts / 1595 checks** with
+`PASS proof:career (180/180)` and `PASS proof:transfers (76/76)`, where HEAD is **29 / 1583** at
+172 and 72 respectively. So +12 checks across the two gates that read squad composition, and no other
+script moved. Two of three suite runs on that plane printed `FAIL proof:projection (42/42 checks)` — an
+**all-green tally with a non-zero exit**, caused by Vite's background dep-scan rejecting after the
+script has already closed its SSR server and printed its summary (five such `The server is being
+restarted or closed` errors sit on that script's stderr even on a passing run). It reproduces under load,
+not on its own, and it is unrelated to this milestone's files: it is the M196-queued runner gap showing
+up as a second signature — the runner reports `N/N checks` and still calls it a failure, so a flake and a
+broken contract are indistinguishable in the line. Fixing the verdict is queued.
+Domain prose is still **256 literals across 10 files** at its ceiling, all 12 per-module
+caps held, and the raw-UI ledger is still **149 across 3 files** — this commit changes no UI file and
+adds no display string; every word added is in a comment or a gate clause name.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a
