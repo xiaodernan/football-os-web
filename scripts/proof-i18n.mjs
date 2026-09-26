@@ -1777,14 +1777,14 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // Measured on the gate line at M181, with the format literals no longer counted: 312
 // literals across 14 of 31 modules (was 339 across 17 — see the rule note above). The next
 // milestone to localise a module lowers this number and writes the new one here; it never
-// raises it.
-const DOMAIN_PROSE_CEILING = 264;
+// raises it. 264 → 256 at M190, which published domain/gap.ts's eight lines as rows.
+const DOMAIN_PROSE_CEILING = 256;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
 // them at 1, 3 and 5 "literals" — an ISO date builder, three €-format arms and five
 // scoreline templates), so pinning them now is free and stops a real sentence landing there.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -1801,7 +1801,7 @@ const PROSE_CAPS = {
   "domain/newsImpact.ts": 19,
   "domain/training.ts": 19,
   "domain/filmInsights.ts": 12,
-  "domain/gap.ts": 8,
+  "domain/gap.ts": 0,
   "domain/matchEngine.ts": 8,
   "domain/careerArc.ts": 0,
   "domain/onboarding.ts": 6,

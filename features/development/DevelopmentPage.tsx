@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
+import { rowLine } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import { analyzeGap, type GapItem } from "@/domain/gap";
 import { projectGrowth } from "@/domain/projection";
@@ -264,14 +265,14 @@ export function DevelopmentPage() {
         <Panel className="p-4">
           <SectionTitle title={t("dv.evidence")} />
           <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-            {analysis.evidence.map((e, i) => <li key={i}>• {e}</li>)}
+            {analysis.evidence.map((e, i) => <li key={i}>• {rowLine(e, t)}</li>)}
           </ul>
           <div className="mt-3">
             <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{t("dv.confidence")}: {analysis.confidence}%</span>
             <Progress value={analysis.confidence} className="mt-1" />
           </div>
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-            {analysis.sources.map((s, i) => <span key={i}>↳ {s}</span>)}
+            {analysis.sources.map((s, i) => <span key={i}>↳ {rowLine(s, t)}</span>)}
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">{t("dv.disclaimer")}</p>
         </Panel>

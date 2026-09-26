@@ -1458,6 +1458,17 @@ const en: Dict = {
   "app.notReady": "This module is next in the build queue",
   "app.notReadyHint": "Core shell, dashboard and Player OS are live. Other modules are being wired up.",
   "app.backHome": "Back to Command Center",
+  // Role-gap analysis (domain/gap.ts) publishes rows. `group` is a PositionGroup id
+  // and `a` an attribute key, both resolved by rowText rather than baked into the
+  // sentence, so these lines read in whichever language the reader chose.
+  "gap.ev.calibrated": "Overall {overall} → archetype calibrated to level tier {tier}%.",
+  "gap.ev.traitsCompared": "{n} role-emphasised traits compared for {group}.",
+  "gap.ev.largestGap": "Largest role gap: {a} ({actual} vs {target} target, −{gap}).",
+  "gap.ev.strongest": "Strongest relative to role: {a} ({actual} vs {target} target).",
+  "gap.ev.readiness": "Role-relevant target coverage (readiness): {n}%.",
+  "gap.ev.noData": "No saved attributes to compare.",
+  "gap.src.baseline": "Football OS role archetype baseline (demo heuristic model)",
+  "gap.src.profile": "Your saved attribute profile",
 };
 
 const zhCN: Dict = {
@@ -2876,6 +2887,14 @@ const zhCN: Dict = {
   "app.notReady": "该模块是下一个开发对象",
   "app.notReadyHint": "核心外壳、指挥中心与 Player OS 已上线。其余模块正在接入中。",
   "app.backHome": "返回指挥中心",
+  "gap.ev.calibrated": "总评 {overall} → 原型已按 {tier}% 的等级档位校准。",
+  "gap.ev.traitsCompared": "已比较 {n} 项该角色强调的特质（{group}）。",
+  "gap.ev.largestGap": "最大的角色差距：{a}（{actual} 对比目标 {target}，差 {gap}）。",
+  "gap.ev.strongest": "相对该角色最强：{a}（{actual} 对比目标 {target}）。",
+  "gap.ev.readiness": "角色相关目标的达成度（就绪度）：{n}%。",
+  "gap.ev.noData": "没有已保存的属性可供比较。",
+  "gap.src.baseline": "Football OS 角色原型基线（演示启发式模型）",
+  "gap.src.profile": "你已保存的属性档案",
 };
 
 const zhTW: Dict = {
@@ -4296,6 +4315,14 @@ const zhTW: Dict = {
   "app.notReady": "此模組是下一個開發對象",
   "app.notReadyHint": "核心外殼、指揮中心與 Player OS 已上線。其餘模組正在接入中。",
   "app.backHome": "返回指揮中心",
+  "gap.ev.calibrated": "總評 {overall} → 原型已按 {tier}% 的等級檔位校準。",
+  "gap.ev.traitsCompared": "已比較 {n} 項該角色強調的特質（{group}）。",
+  "gap.ev.largestGap": "最大的角色差距：{a}（{actual} 對比目標 {target}，差 {gap}）。",
+  "gap.ev.strongest": "相對該角色最強：{a}（{actual} 對比目標 {target}）。",
+  "gap.ev.readiness": "角色相關目標的達成度（就緒度）：{n}%。",
+  "gap.ev.noData": "沒有已儲存的屬性可供比較。",
+  "gap.src.baseline": "Football OS 角色原型基線（示範啟發式模型）",
+  "gap.src.profile": "你已儲存的屬性檔案",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

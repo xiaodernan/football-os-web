@@ -1,11 +1,10 @@
 import type { Attributes, PositionGroup } from "./types";
 import {
   ATTRIBUTE_DEFS,
-  attributeLabel,
   baselineAttributes,
   overallRating,
-  POSITION_GROUPS,
 } from "./attributes";
+import type { RowText } from "./rowText";
 
 // Role Gap Analysis: compares a player's saved attributes against a heuristic
 // archetype for their position group at their current level, then ranks the
@@ -30,18 +29,14 @@ export interface GapAnalysis {
   items: GapItem[];
   strengths: GapItem[]; // at/above role target, largest surplus first
   priorities: GapItem[]; // below role target, largest gap first
-  evidence: string[];
+  evidence: RowText[];
   confidence: number;
-  sources: string[];
+  sources: RowText[];
   hasData: boolean;
 }
 
 function skillForOverall(overall: number): number {
   return Math.max(0, Math.min(1, (overall - ROLE_FLOOR) / 30));
-}
-
-export function groupLabel(group: PositionGroup): string {
-  return POSITION_GROUPS.find((g) => g.id === group)?.label ?? group;
 }
 
 export interface GapInput {
@@ -91,21 +86,30 @@ export function analyzeGap(input: GapInput): GapAnalysis {
     .sort((a, b) => b.actual - b.target - (a.actual - a.target))
     .slice(0, 4);
 
-  const evidence: string[] = [];
+  // Every line is a key the screen resolves, so this model's own voice arrives in the
+  // reader's language instead of the one it was typed in. `group` and `a` are named for
+  // rowText's code variables on purpose: the first holds a PositionGroup id and the
+  // second an attribute key, and both are resolved through the dictionary rather than
+  // being baked into an English sentence here.
+  const evidence: RowText[] = [];
   if (hasData) {
-    evidence.push(`Overall ${overall} → archetype calibrated to level tier ${(skill * 100).toFixed(0)}%.`);
+    evidence.push({ key: "gap.ev.calibrated", vars: { overall, tier: (skill * 100).toFixed(0) } });
     const roleTraits = items.filter((it) => it.criticality > 0).length;
-    evidence.push(`${roleTraits} role-emphasised traits compared for ${groupLabel(group)}.`);
-    if (priorities[0]) evidence.push(`Largest role gap: ${attributeLabel(priorities[0].key)} (${priorities[0].actual} vs ${priorities[0].target} target, −${Math.abs(priorities[0].delta)}).`);
-    if (strengths[0]) evidence.push(`Strongest relative to role: ${attributeLabel(strengths[0].key)} (${strengths[0].actual} vs ${strengths[0].target} target).`);
-    evidence.push(`Role-relevant target coverage (readiness): ${readiness}%.`);
+    evidence.push({ key: "gap.ev.traitsCompared", vars: { n: roleTraits, group } });
+    if (priorities[0]) {
+      evidence.push({ key: "gap.ev.largestGap", vars: { a: priorities[0].key, actual: priorities[0].actual, target: priorities[0].target, gap: Math.abs(priorities[0].delta) } });
+    }
+    if (strengths[0]) {
+      evidence.push({ key: "gap.ev.strongest", vars: { a: strengths[0].key, actual: strengths[0].actual, target: strengths[0].target } });
+    }
+    evidence.push({ key: "gap.ev.readiness", vars: { n: readiness } });
   } else {
-    evidence.push("No saved attributes to compare.");
+    evidence.push({ key: "gap.ev.noData" });
   }
 
-  const sources = [
-    "Football OS role archetype baseline (demo heuristic model)",
-    "Your saved attribute profile",
+  const sources: RowText[] = [
+    { key: "gap.src.baseline" },
+    { key: "gap.src.profile" },
   ];
 
   const confidence = hasData ? Math.max(55, Math.min(80, 60 + Math.round(present.length / 8))) : 0;
