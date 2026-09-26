@@ -1614,14 +1614,33 @@ for (const sp of DOMAIN_SPACES) {
 //     be supplied with exactly the placeholders its English value interpolates
 //     (no more, no fewer), and no row value may be a literal typed in that module.
 const ROW_FILES = [...appSrc].filter(([, src]) => /\bRowText\b/.test(src));
-// No closing-brace requirement: a row written across several lines ends `…},\n  },`,
-// and demanding the literal close here matched 8 of the 9 rows and silently skipped
-// the multi-line one — which is the row whose five variables most needed auditing.
-// M149's mutation run found that by deleting a variable nothing complained about.
-const ROW_LITERAL = /\{\s*key:\s*"([^"]+)"(?:\s*,\s*vars:\s*\{([^{}]*)\})?/g;
+// The row's key literal is found by regex; its `vars:` body is read by the SAME balanced
+// scanner check 24 uses. That split is deliberate and M195 paid for it: the old reader asked
+// for `vars:\s*\{([^{}]*)\}`, i.e. a body with no braces anywhere in it, and a row whose
+// value is a nested object literal — `when: formatDate(locale, m.kickoff, { month: "short", …
+// })` — matched none of the body. The audit then reported a five-variable row as one that
+// "supplies {}", which is M149's failure mode (a silently unreadable row printed as an
+// audited one) wearing a new face. So: match the key, then either read the body properly or
+// REFUSE it in the message. Nothing here guesses at a shape it cannot see.
+const ROW_LITERAL = /\{\s*key:\s*"([^"]+)"/g;
+// The text between the `{` at `open` and its matching `}`, with string contents opaque — the
+// brace twin of `callArgs`, which stops at a top-level comma. Returns null when the braces
+// never balance, because an audit that guesses is worse than one that stops.
+function objectBody(code, open) {
+  let depth = 0, str = null;
+  for (let i = open; i < code.length; i++) {
+    const c = code[i];
+    if (str) { if (c === str && code[i - 1] !== "\\") str = null; continue; }
+    if (c === '"' || c === "'" || c === "`") { str = c; continue; }
+    if ("([{".includes(c)) depth++;
+    else if (")]}".includes(c)) { depth--; if (depth === 0) return code.slice(open + 1, i); }
+  }
+  return null;
+}
 // Top-level property names of a `vars: { … }` body. Returns null rather than a partial
-// answer when a segment is not recognisably `name` or `name:` — an audit that guesses
-// is worse than one that stops, because a guessed list still prints "clean".
+// answer when a segment is not recognisably `name` or `name:` — checks 24 and 25 read their
+// `t()` arguments through this same function, so the union of what counts as a property is
+// one list rather than two that can disagree.
 function varNames(body) {
   if (!body.trim()) return [];
   const segs = [];
@@ -1654,12 +1673,21 @@ for (const [path, src] of ROW_FILES) {
     const phs = [...new Set((en[key].match(/\{(\w+)\}/g) ?? []).map((s) => s.slice(1, -1)))].sort();
     // The names the row supplies, read segment by segment so `vars: { mode, goal }`
     // (a shorthand property) counts exactly like `vars: { mode: m, goal: g }`. A naive
-    // comma split would cut `focus.join(",")` in half and a plain regex that consumes
-    // its own separator silently skipped every other property, so this walks the body,
-    // tracks strings and nesting, and REFUSES to guess when a segment is not a property.
-    const given0 = varNames(m[2] ?? "");
-    if (!given0) { badRows.push(`${path}: ${key} has a vars body this audit cannot read (${m[2]})`); continue; }
-    const given = [...new Set(given0)].sort();
+    // comma split would cut `focus.join(",")` in half, so this hands the body to the
+    // balanced reader and splits at top-level commas only.
+    const after = src.slice(m.index + m[0].length);
+    const lead = after.match(/^\s*,\s*vars:\s*/);
+    let given = [];
+    if (lead) {
+      const open = m.index + m[0].length + lead[0].length;
+      const unreadable = `${path}: ${key} has a vars body this audit cannot read (${after.slice(lead[0].length, lead[0].length + 28).trim()})`;
+      if (src[open] !== "{") { badRows.push(unreadable); continue; }
+      const body = objectBody(src, open);
+      if (body === null) { badRows.push(unreadable); continue; }
+      const read = varNames(body);
+      if (!read) { badRows.push(unreadable); continue; }
+      given = [...new Set(read)].sort();
+    }
     if (phs.join(",") !== given.join(",")) badRows.push(`${path}: ${key} interpolates {${phs.join(",")}} · the row supplies {${given.join(",")}}`);
   }
   for (const m of src.matchAll(/\{\s*value:\s*["'`]/g)) badRows.push(`${path}: a row value is prose typed in this module (${m[0]})`);
@@ -1976,8 +2004,10 @@ ok(`the collapsed triples are read as one row by both screens (${[...appSrc.valu
 // above this line is a check about KEYS, so this defect class was structurally invisible for
 // 190 milestones — there is no key, no dictionary row and no English word in it, just a
 // formatter asking the wrong machine. M194 opened one door, `formatDate(locale, value, opts)`,
-// and wired every site that renders an instant: twelve door calls across nine files. The
-// clauses below keep the door:
+// and wired every site a SCREEN renders. M195 reached the last instant formatted away from
+// one: the Football AI's fixture evidence, composed in a data module where no hook is in
+// scope, so the reader's language now arrives as a required argument of the RAG entry point.
+// Thirteen door calls across ten files. The clauses below keep the door:
 //   (a) a browser-locale `toLocale*` call needs a named entry that proves its own reason,
 //       with a per-file cap so the debt that is left cannot migrate (M188's lesson) or grow;
 //   (a') a call that DOES pass a locale can still source it from the host, and no
@@ -1985,12 +2015,17 @@ ok(`the collapsed triples are read as one row by both screens (${[...appSrc.valu
 //       the picker that chooses the reader's starting locale, and nowhere else;
 //   (b) a `formatDate` call that hands over a *literal* locale is the same defect wearing
 //       the other face — it renders one language for every reader;
+//   (b') the seam that carries a locale into a module with no hook is policed too: every
+//       `askIntelligence` call passes the live one and the parameter cannot go optional,
+//       because TypeScript cannot see a script or a call site that simply stops caring;
 //   (c) a date label assembled by hand out of `getMonth()`/`getDate()` is invisible to (a),
 //       because it never calls a formatter at all;
 //   (d) a memo that reads `locale` but leaves it out of its dependency array keeps last
 //       week's language after the switch — no static formatting check can see that;
 //   (e) the assertions run through the PRODUCTION function, so green means a Chinese reader
-//       really is shown CJK, not that a regex approved a shape.
+//       really is shown CJK, not that a regex approved a shape;
+//   (f) and the census proves ITSELF on planted samples rather than on a count of the real
+//       debt, because a floor on a debt count goes red exactly when the debt is paid.
 //
 // Scanner plumbing. The call-argument reader check 24 already uses (`callArgs`, top-level
 // arguments from the open paren, string and template contents opaque) is the one this check
@@ -1998,12 +2033,16 @@ ok(`the collapsed triples are read as one row by both screens (${[...appSrc.valu
 // a call is. Every call the census is asked about has to resolve, and the clause that prints
 // the count refuses an unresolved one rather than guessing.
 // Every call of `name` outside i18n/, with its argument strings. appSrc has already dropped
-// comment lines, so a doc comment that mentions the door is not a caller.
+// comment lines, so a doc comment that mentions the door is not a caller. A declaration is not
+// a caller either — and it has to be excluded here rather than assumed away: the
+// `askIntelligence` census counted its own `export function` line as a call whose "arguments"
+// were `question: string, locale: Locale`, which is a red gate for the wrong reason.
 const callsOf = (name) => {
   const re = new RegExp("\\b" + name + "\\(", "g");
   const out = [];
   for (const [path, code] of appSrc) {
     for (const m of code.matchAll(re)) {
+      if (/\b(function|const|let|var)\s+$/.test(code.slice(Math.max(0, m.index - 24), m.index))) continue;
       out.push({ path, line: code.slice(0, m.index).split("\n").length, args: callArgs(code, m.index + name.length) });
     }
   }
@@ -2032,14 +2071,14 @@ const HOST_OK_NUMBER = { "components/ui/chart.tsx": ["item.value"] };
 // A primitive that is not mounted anywhere. Its two sites would be real debt the day the
 // component is imported, so the exemption is only as good as the importer count under it.
 const HOST_OK_UNMOUNTED = { "components/ui/calendar.tsx": 2 };
-// Still browser-locale, one milestone each to wire. Measured at M194: Player OS's two
-// session dates and its record date; the Data Room's kickoff line; and the Football AI's
-// fixture fact, whose `when:` var is composed in data/intelligence.ts, where no locale is
-// in scope yet — closing it needs one threaded through the RAG entry point (#165's lane).
+// Still browser-locale, one milestone each to wire. Measured after M195: Player OS's two
+// session dates and its record date, and the Data Room's kickoff line. The Football AI's
+// fixture fact was the third entry and is gone — its `when:` used to be composed here with
+// no locale in scope, and the RAG entry point now takes the reader's language as an
+// argument (see the RAG seam below), so the file formats through the door.
 const DATE_DEBT = {
   "features/player/PlayerOS.tsx": 3,
   "features/analytics/DataRoom.tsx": 1,
-  "data/intelligence.ts": 1,
 };
 const undeclaredHost = hostSites.filter((s) =>
   !(s.path in HOST_OK_NUMBER || s.path in HOST_OK_UNMOUNTED || s.path in DATE_DEBT));
@@ -2069,8 +2108,34 @@ const pickerReads = (readFileSync(join(root, "i18n", "index.tsx"), "utf8")
   .match(/\bnavigator\.languages?\b/g) || []).length;
 ok(`no formatted value takes its locale from the host (${hostReads.join(", ") || "0 reads outside i18n"}; the start-locale picker reads it ${pickerReads}×)`,
   hostReads.length === 0 && pickerReads === 1);
-ok(`the census is reading formatters that exist (${hostSites.length} browser-locale sites)`,
-  hostSites.length >= 8);
+// Non-vacuity for the census — and the reason it is written as a SELF-TEST rather than a
+// floor on the count. The M194 version of this clause was `hostSites.length >= 8`, which sat
+// on the debt list: every milestone that WIRED a date made the count smaller, so the next
+// honest fix would have gone red for being honest (the anti-pattern this project banned at
+// M162). A census of shrinking debt cannot prove itself. What has to hold is that the
+// scanner still recognises each spelling, so the synthetic samples below assert exactly that,
+// and stay true no matter how much of the real debt gets closed. The controls are the other
+// half: a call that names the reader's locale must NOT be counted, or the census is noise.
+const HOST_SPELLINGS = [
+  ["a bare call", "const a = (x: Date) => x.toLocaleDateString();"],
+  ["undefined as the locale", "const b = (x: Date) => x.toLocaleString(undefined, { hour: \"2-digit\" });"],
+  ["an empty options list", "const c = (x: Date) => x.toLocaleTimeString([], { hour: \"2-digit\" });"],
+  ["the literal \"default\"", "const d = (x: Date) => x.toLocaleDateString(\"default\");"],
+  ["a freshly built Date", "const e = (x: string) => new Date(x).toLocaleString();"],
+];
+const HOST_CONTROLS = [
+  ["a call that names the reader's locale", "const f = (x: Date, locale: Locale) => x.toLocaleDateString(locale, { hour: \"2-digit\" });"],
+  ["the door itself", "const g = (x: Date, locale: Locale) => formatDate(locale, x);"],
+];
+const censusOf = (src) => [...src.matchAll(LOCALE_CALL)].filter((m) => ASKS_THE_HOST.includes(firstArgOf(m[2]))).length;
+const missedSpellings = HOST_SPELLINGS.filter(([, src]) => censusOf(src) !== 1);
+const falseControls = HOST_CONTROLS.filter(([, src]) => censusOf(src) !== 0);
+ok(`the census still recognises all ${HOST_SPELLINGS.length} ways of asking the host (${missedSpellings.map(([n]) => n).join(", ") || "all caught"})`,
+  missedSpellings.length === 0);
+ok(`and recognises none of the ${HOST_CONTROLS.length} calls that name a locale (${falseControls.map(([n]) => n).join(", ") || "no false positives"})`,
+  falseControls.length === 0);
+ok(`the census scanned the app rather than an empty set (${appSrc.size} source files, ${hostSites.length} browser-locale sites left and all declared)`,
+  appSrc.size >= 40);
 // (b) The door is the only formatter, and it takes the reader's locale.
 const DOOR_CALLS = callsOf("formatDate");
 const unresolvedDoor = DOOR_CALLS.filter((c) => !c.args);
@@ -2094,6 +2159,26 @@ ok(`the door is the ONE door — nothing else constructs a formatter (${otherDoo
   otherDoors.length === 0);
 ok(`the door scan is reading real call sites (${DOOR_CALLS.length} across ${doorFiles.length} files)`,
   DOOR_CALLS.length >= 12 && doorFiles.length >= 8);
+
+// (b') The RAG seam is the door's twin, and it needs its own clause because it is not a
+//      formatter: `askIntelligence` composes a fact outside any React tree, where no hook can
+//      be read, so an argument is the only way the reader's language gets in. M195 threaded
+//      that argument; without these three lines a call site could drop it, or the parameter
+//      could go optional, and TypeScript would stay green while the browser crept back into
+//      the answer the AI cites.
+const RAG_CALLS = callsOf("askIntelligence");
+const unresolvedRag = RAG_CALLS.filter((c) => !c.args || c.args.length < 2);
+const ragLiteralLocale = RAG_CALLS.filter((c) => /^["'`]/.test((c.args?.[1] ?? "").trim()));
+const ragNoLocale = RAG_CALLS.filter((c) => !/(^|[.\w$])locale$/.test((c.args?.[1] ?? "").trim()));
+const RAG_DECL = (appSrc.get("data/intelligence.ts") ?? "").match(/export function askIntelligence\(([^)]*)\)/)?.[1] ?? "not found";
+ok(`every askIntelligence call resolves and passes an answer language (${RAG_CALLS.length} calls, ${unresolvedRag.length} unresolved)`,
+  unresolvedRag.length === 0 && RAG_CALLS.length >= 1);
+ok(`no askIntelligence call hard-codes the reader (${ragLiteralLocale.map((c) => `${c.path}:${c.line}`).join(", ") || "none"})`,
+  ragLiteralLocale.length === 0);
+ok(`every askIntelligence call hands over the live locale (${ragNoLocale.map((c) => `${c.path}:${c.line}[${(c.args?.[1] ?? "").trim()}]`).join(", ") || "all clear"})`,
+  ragNoLocale.length === 0);
+ok(`the RAG entry point requires a Locale rather than defaulting it (${RAG_DECL})`,
+  /^\w+: string,\s*locale: Locale$/.test(RAG_DECL.trim()));
 
 // (c) A label built out of date parts by hand never calls a formatter, so (a) cannot see
 //     it. What is allowed here is a grouping KEY — `YYYY-MM-DD`, padded, compared against

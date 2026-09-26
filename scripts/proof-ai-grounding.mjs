@@ -35,13 +35,18 @@ const sourceIs = (ans, kind, name) => {
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
+// One reader language for the checks that quote English prose, so an expectation cannot be
+// met by a host accident. The M195 block at the end asks the same question in all three and
+// refuses an answer whose rendered kickoff does not change with the reader.
+const EN = "en";
+
 // Fixtures are self-selected from the seeded world so the proof stays
 // deterministic without hardcoding synthetic names: we take the first high-value
 // player / club whose answer actually resolves to that entity as the top hit.
 function valueFixture() {
   for (const p of trendingPlayers(40)) {
     const q = `How much is ${p.name} worth?`;
-    const ans = askIntelligence(q);
+    const ans = askIntelligence(q, EN);
     if (sourceIs(ans, "player", p.name) && AT(ans).includes(formatValue(p.value))) return { p, q, ans };
   }
   return null;
@@ -49,7 +54,7 @@ function valueFixture() {
 function clubFixture() {
   for (const c of footballProvider.clubs()) {
     const q = `Who is the key player at ${c.name}?`;
-    const ans = askIntelligence(q);
+    const ans = askIntelligence(q, EN);
     if (sourceIs(ans, "club", c.name) && /Based on the retrieved data about/.test(AT(ans))) return { c, q, ans };
   }
   return null;
@@ -68,7 +73,7 @@ if (vf) {
   // the regex-scraping this replaced could quietly satisfy one player out of four hundred.
   const rich = footballProvider.players().slice().sort((x, y) => y.value - x.value).slice(0, 3);
   const wrongLead = rich.filter((x) => {
-    const a = askIntelligence(`How much is ${x.name} worth?`);
+    const a = askIntelligence(`How much is ${x.name} worth?`, EN);
     const lead = a.answer[0];
     return !lead || !("key" in lead) || lead.key !== "ai.answer.value" || lead.vars.v !== formatValue(x.value);
   });
@@ -89,7 +94,7 @@ if (cf) {
 }
 
 // ---- No-hits refusal: never invent when retrieval comes up empty ----
-const none = askIntelligence("qqzz xxwv nonexistent fixture zzz 42711");
+const none = askIntelligence("qqzz xxwv nonexistent fixture zzz 42711", EN);
 ok("empty retrieval refuses to invent an answer", /will not invent/i.test(AT(none)));
 ok("empty retrieval labels the demo provider", /Demo retrieval|no live model|API key/i.test(AT(none)));
 ok("empty retrieval has no fabricated facts", none.facts.length === 0);
@@ -109,7 +114,7 @@ ok("empty retrieval confidence sits at the honest floor", none.confidence === 20
     "Real Madrid",
     "Who is the key player at Real Madrid?",
   ];
-  const all = KINDS.map((q) => askIntelligence(q));
+  const all = KINDS.map((q) => askIntelligence(q, EN));
   const answers = all.filter((a) => a.answer.length > 0);
   ok("every answer the panel could show is a non-empty list of rows", answers.length >= 4 && answers.every((a) => a.answer.every(isRow)));
   ok("and no answer is a lead alone — the facts it cites travel with it",
@@ -177,7 +182,7 @@ if (vf) ok("answer no longer exposes the removed `retrieved` field", !("retrieve
 
 // ---- Determinism: identical question reproduces the grounded result ----
 if (vf) {
-  const b = askIntelligence(vf.q);
+  const b = askIntelligence(vf.q, EN);
   ok("deterministic answer rows", JSON.stringify(b.answer) === JSON.stringify(vf.ans.answer));
   ok("deterministic confidence", b.confidence === vf.ans.confidence);
   ok("deterministic facts", JSON.stringify(b.facts) === JSON.stringify(vf.ans.facts));
@@ -187,7 +192,7 @@ if (vf) {
 // ---- M183: the chips and the source line are rows, in every locale ----
 {
   const answers = ["How much is Mbappé worth?", "Where do Arsenal sit in the Premier League?", "Any transfer news about Haaland?", "Real Madrid"]
-    .map((q) => askIntelligence(q));
+    .map((q) => askIntelligence(q, EN));
   const isRow = (x) => !!x && typeof x === "object" && ("key" in x || "value" in x);
   const sources = answers.flatMap((a) => a.sources);
   const labels = answers.flatMap((a) => a.facts.map((f) => f.label));
@@ -235,6 +240,88 @@ if (vf) {
     /entries\.map\(\(m, i\)/.test(PANEL) && !/\{\s*log\.map\(/.test(PANEL));
   ok("the normaliser is the boundary the legacy strings need",
     /asRowText\(f\.label/.test(PANEL) && /asRowText\(s\s+as\s+string\s*\|\s*RowText\)/.test(PANEL));
+}
+
+// ---- M195: the fixture fact renders its kickoff in the READER's language ----
+// Everything above this block asks in one pinned locale, so nothing above could notice the
+// evidence line going back to `new Date(m.kickoff).toLocaleString()`: that call is legal
+// JavaScript, resolves to a real date, and still hands a 繁體中文 reader `Sep 12` because
+// the browser — not the reader — was asked. Three things are pinned here: the kickoff
+// changes when the reader changes, nothing else about the answer does, and the instant in
+// the row is the match's own rather than the moment the question was typed.
+{
+  const CJK = /[一-鿿]/;
+  // Self-selected, like the value fixtures: walk the scheduled matches, keep the first
+  // question that actually lands a fixture fact, so a seeded-name change cannot silently
+  // turn this block into a loop over zero cases.
+  const scheduled = footballProvider.matches().filter((m) => m.status === "SCHEDULED");
+  const nameOf = (id) => footballProvider.clubs().find((c) => c.id === id)?.name ?? "";
+  const fixtureOf = (row) => row.facts.find((f) => "key" in f.text && f.text.key === "ai.fact.fixtureScheduled");
+  // Walked latest-first on purpose: the probe has to be a fixture that is NOT today, or the
+  // "answered with the wrong instant" falsifier below compares two dates that could match by
+  // accident and its green proves nothing.
+  //
+  // And the match the row is ABOUT is taken from the row's own `to:` link rather than from
+  // the fixture whose name was typed. That distinction was measured, not assumed: the first
+  // version of this block compared the date against the match it asked about and went red,
+  // because a club-named question is answered with that club's NEXT fixture (M61's citation),
+  // which is a different record. Provenance has to be checked against the record the row
+  // itself points at, or the gate is auditing the wrong row.
+  const probeFor = (m) => {
+    const [hn, an] = [nameOf(m.homeClubId), nameOf(m.awayClubId)];
+    if (!hn || !an) return null;
+    // The label retrieval itself prints for a fixture, so the question is one the layer can
+    // rank to the top rather than a fragment that happens to survive the cut to five hits.
+    const q = `Kickoff of ${hn} v ${an}`;
+    const fact = fixtureOf(askIntelligence(q, EN));
+    if (!fact) return null;
+    const cited = scheduled.find((x) => "/matches/" + x.id === fact.to);
+    return cited ? { q, cited } : null;
+  };
+  const far = (x) => Math.abs(new Date(x.kickoff).getTime() - Date.now()) > 5 * 864e5;
+  let probe = null;
+  for (const m of scheduled.slice().sort((a, b) => String(b.kickoff).localeCompare(String(a.kickoff)))) {
+    const p = probeFor(m);
+    if (!p) continue;
+    probe ??= p;
+    if (far(p.cited)) { probe = p; break; }
+  }
+  ok("a fixture question really reaches the scheduled-match evidence line (" + scheduled.length + " scheduled matches walked)",
+    !!probe);
+  ok("and the row is about a fixture at least five days away, so 'today' is a distinguishable wrong answer (" +
+    (probe ? probe.cited.kickoff : "no probe") + ")",
+    !!probe && far(probe.cited));
+  if (probe) {
+    const whenFor = (l) => fixtureOf(askIntelligence(probe.q, l)).text.vars.when;
+    const perLocale = Object.fromEntries(locales.map((l) => [l, String(whenFor(l))]));
+    const shown = locales.map((l) => `${l}=${perLocale[l]}`).join(" ");
+    ok("the same kickoff is written differently for each reader (" + shown + ")",
+      new Set(locales.map((l) => perLocale[l])).size === locales.length);
+    ok("and each reader is shown their own script — CJK for Chinese, Latin month for English",
+      !CJK.test(perLocale.en) && /[A-Za-z]{3}/.test(perLocale.en)
+        && locales.filter((l) => l !== "en").every((l) => CJK.test(perLocale[l])));
+    // The discriminating direction, stated as a falsifier rather than a shape: the answer
+    // a 简体中文 reader gets must be the one a browser-locale call could NOT produce on
+    // this host. Node's default here resolves en-US, so a regression to `toLocaleString()`
+    // would make the zh rows equal the en row — which the clause above already turns red.
+    const answers = Object.fromEntries(locales.map((l) => [l, askIntelligence(probe.q, l)]));
+    const stripped = (a) => JSON.stringify(a.answer.map((r) => ("key" in r ? { ...r, vars: { ...r.vars, when: null } } : r)));
+    ok("the reader's language changes the date's written form and nothing else",
+      new Set(locales.map((l) => stripped(answers[l]))).size === 1
+        && new Set(locales.map((l) => JSON.stringify(answers[l].facts.map((f) => ("key" in f.text && f.text.key === "ai.fact.fixtureScheduled" ? { ...f.text, vars: { ...f.text.vars, when: null } } : f.text))))).size === 1
+        && new Set(locales.map((l) => answers[l].confidence)).size === 1);
+    const unfilled = locales.filter((l) => /\{\w+\}|^ai\./.test(say(l)(fixtureOf(answers[l]).text)));
+    ok("the panel's own line interpolates the date for every reader, with no bare key (" + unfilled.length + " bad)",
+      unfilled.length === 0);
+    // Value provenance: the row carries the cited match's kickoff, not the instant the
+    // question was asked. Formatted by the gate with the record's own field as the source.
+    const expected = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(probe.cited.kickoff));
+    ok("the kickoff in the row is the record's own instant (" + expected + ")",
+      perLocale.en === expected);
+    const nowRendered = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date());
+    ok("and a fixture five days out is not answered with today's date (" + perLocale.en + " vs " + nowRendered + ")",
+      perLocale.en !== nowRendered);
+  }
 }
 
 console.log(`\n${pass}/${pass + fail} checks passed`);

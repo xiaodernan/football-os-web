@@ -112,7 +112,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M194 (a few numbers in that range
+Work ships one milestone per commit and is currently at M195 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2426,6 +2426,93 @@ in the file another run currently holds.
 Measured after M194: `tsc` 0, build 0, suite **28 scripts / 1397 checks** (proof-i18n **201**),
 dictionary **1478 keys × 3 locales** — no keys added, because the defect was never a missing
 translation.
+
+### M195 — The Football AI's own evidence line speaks the reader's language
+
+M194 closed nine screens and deliberately left one site of its own defect standing, in the
+open: `data/intelligence.ts` built the AI answer's fixture row with
+`when: new Date(m.kickoff).toLocaleString()`. It was left because it is the only one of the
+sites that is not in a component. The retrieval layer has no `t()`, no context and no notion
+of a reader — it answers a question and composes the fact rows that the panel then prints —
+so asking it for a date shape means threading a language through the entry point, which is a
+different change from renaming a call.
+
+That is the whole product edit: `retrieve` and `askIntelligence` now take a **required**
+`locale`, `matchFacts` formats the kickoff through `formatDate`, and the chat panel hands
+over the live language it already had. The door is now called in **13 sites across 10
+files**, and the declared date debt is down from five sites in three files to four in two
+(the Player OS's three dates and the Data Room's kickoff line); **7** sites still ask the
+browser and every one of them is declared and capped. `locale` is required rather than
+optional on purpose: an optional parameter is how a wired seam becomes unwired one call site
+at a time without any file a gate watches having to change.
+
+Four clauses read the seam by name instead of trusting its type: every `askIntelligence`
+call resolves and passes an answer language, none hard-codes the reader, every one hands
+over the live locale, and the entry point's own signature reads `locale: Locale` rather than
+`locale?: Locale`. The first run of that census was red for a reason no one had predicted —
+it counted the *declaration* `askIntelligence(question: string, locale: Locale)` as a call
+site and reported `data/intelligence.ts:292[locale: Locale]` as a violating argument. The
+census now skips a name preceded by `function|const|let|var`, and a mutation restores that
+skip to `if (false)` to prove the skip is load-bearing rather than decorative.
+
+A required argument still cannot prove the answer *renders* differently, so the AI proof now
+asks a real question and reads what came back. Choosing the probe took two corrections worth
+keeping. First, provenance: the date must be compared against the kickoff of the record the
+**fact row cites**, not the fixture named in the question — a club-named question is
+answered with that club's next fixture (M61's citation), and the proof went red on exactly
+that difference (`Oct 3` vs the expected `Oct 14`) before it resolved the cited match
+through the row's own `to: /matches/<id>` link. Second, falsifiability: the first probe sat
+within five days of today, so "not answered with today's date" could not have failed; the
+walk now takes scheduled fixtures latest-first and keeps one at least five days out, and
+states that distance as its own assertion. What is then asserted, per locale: the same
+kickoff is written three different ways; each reader gets their own script (CJK for Chinese,
+Latin month for English); the reader's language changes the date's written form **and
+nothing else** — every other answer row, every fact row and the confidence are
+byte-identical once `when` is nulled; the panel's line interpolates with no bare key or
+unfilled placeholder; the row carries the record's own instant, re-formatted by the gate
+from the seed data; and a fixture five days out is not answered with today's date.
+
+The milestone also replaced a check that M194 had written badly. Its non-vacuity clause read
+`hostSites.length >= 8` — a floor sitting on exactly the quantity the work is trying to
+shrink, which goes red the moment the debt is paid, and M195 paid part of it. The scanner
+now proves itself on planted samples instead: five ways of asking the host (bare call,
+`undefined`, `[]`, `"default"`, `'default'`) must all be caught, and two calls that *do*
+name a locale must not be — plus an honest separate clause that the census walked **141**
+real source files. In the same pass, check 26's row reader was widened: its `vars: { … }`
+pattern could not read a body containing braces, so it silently skipped the multi-line rows
+— the very rows whose variables most needed auditing — and reported them as supplying `{}`.
+It now reads 192 row keys across 15 files, and refuses to guess at a body it cannot parse
+rather than printing "clean" about a shorter list.
+
+Fourteen mutations, each run against the shipped gate, all caught by the clause written to
+catch them, with an unmutated control before and after (207/207 and 56/56 both times, plane
+byte-identical at the end): the browser-locale call put back (caught twice — by the static
+census *and* by the rendered answer); `locale` made optional; a call site hard-coding
+`"en"`; a call site dropping the argument; the door ignoring its own locale (again caught
+twice); `[]` removed from the census's refuse list; `"locale"` added to it (over-catching is
+a defect too); the wrong instant formatted; the brace-blind row reader restored; the
+declaration skip removed; a literal `"en"` handed to `matchFacts` *inside* the module —
+which compiles clean and passes every static clause, and is caught only by the rendering
+check; and a fresh debtor file that never had the problem.
+
+Then it was confirmed in a browser again, on the machine whose own language used to decide:
+serving a clean tree carrying only this milestone's files, with the host
+`navigator.language` at `zh-CN`, the same question asked at app locale `zh-TW` rendered `開球
+10月14日 上午07:00` and at `en` rendered `Kickoff Oct 3, 03:00 AM` / `Oct 14, 07:00 AM`. Console
+clean. The walk also caught the one limitation this change leaves, in the honest direction:
+switching the app from `zh-TW` to `en` re-rendered every **word** of the earlier answer —
+`Fixture —`, `Evidence (6)`, `Confidence 91%` — while its dates stayed `10月14日 上午07:00`,
+because a chat answer is stored after formatting and the row's `when` is a finished string.
+A stored answer keeps the date shape of the language it was written under. Fixing that means
+an instant travelling as a code-valued variable resolved at the read boundary, which is a
+mechanism of its own and is recorded rather than papered over.
+
+Measured after M195: `tsc` 0, build 0, suite **28 scripts / 1411 checks** (proof-i18n
+**207**, proof-ai-grounding **56**), against a baseline measured the same way on the commit
+before this work — **1397**, with proof-i18n **201** and proof-ai-grounding **48** — so +6
+and +8 are the only two scripts that moved. Dictionary **1478 keys × 3 locales**, raw-UI
+debt **149 across 3 files** and domain prose **256 literals across 10 files**, both at their
+ceilings: this milestone changed no copy at all.
 
 **Still outstanding** (deliberately not faked): real data / AI / video providers behind
 the existing seams, server-side multi-user persistence and shared community content, a

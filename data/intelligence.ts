@@ -5,6 +5,8 @@
 
 import { attributeLabel } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
+import { formatDate } from "@/i18n/format";
+import type { Locale } from "@/i18n/dictionaries";
 import { archetypeLabelEn } from "@/domain/playerDna";
 import { scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
@@ -165,7 +167,7 @@ function playerFacts(pid: string): EvidenceFact[] {
   return out;
 }
 
-function matchFacts(mid: string): EvidenceFact[] {
+function matchFacts(mid: string, locale: Locale): EvidenceFact[] {
   const m = getMatch(mid);
   if (!m) return [];
   const h = getClub(m.homeClubId);
@@ -176,7 +178,7 @@ function matchFacts(mid: string): EvidenceFact[] {
       label: { key: "ai.lab.fixture" },
       text:
         m.status === "SCHEDULED"
-          ? { key: "ai.fact.fixtureScheduled", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, when: new Date(m.kickoff).toLocaleString() } }
+          ? { key: "ai.fact.fixtureScheduled", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, when: formatDate(locale, m.kickoff, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) } }
           : { key: "ai.fact.fixtureResult", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, hg: String(m.homeGoals ?? "—"), ag: String(m.awayGoals ?? "—") } },
       to: `/matches/${m.id}`,
     },
@@ -207,11 +209,11 @@ function newsFacts(nid: string): EvidenceFact[] {
   ];
 }
 
-function factsFor(hit: SearchResult): EvidenceFact[] {
+function factsFor(hit: SearchResult, locale: Locale): EvidenceFact[] {
   switch (hit.type) {
     case "club": return clubFacts(hit.id);
     case "player": return playerFacts(hit.id);
-    case "match": return matchFacts(hit.id);
+    case "match": return matchFacts(hit.id, locale);
     case "news": return newsFacts(hit.id);
     case "competition": {
       const comp = getCompetition(hit.id);
@@ -250,7 +252,14 @@ function phrases(question: string): string[] {
   return [...new Set(out)];
 }
 
-export function retrieve(question: string): RagContext {
+/** Retrieve, ground and answer one question.
+ *
+ *  `locale` is a required argument because a fact is composed HERE, in a module with no
+ *  React context and no `t()` in scope: the fixture line carries a kickoff instant, and an
+ *  instant has no written form until someone's language decides one. Left to the machine it
+ *  would default to the browser's — which is the defect M194 closed on every screen, and
+ *  check 33 of proof-i18n now refuses. */
+export function retrieve(question: string, locale: Locale): RagContext {
   const hits = new Map<string, SearchResult>();
   for (const phrase of phrases(question)) {
     for (const h of globalSearch(phrase, 3)) {
@@ -270,7 +279,7 @@ export function retrieve(question: string): RagContext {
   const facts: EvidenceFact[] = [];
   const seen = new Set<string>();
   for (const h of ranked) {
-    for (const f of factsFor(h)) {
+    for (const f of factsFor(h, locale)) {
       // Rows dedupe by identity, not by a slice of English text — and a fact whose text
       // is not a row is kept (it is a bug the gates must see) instead of throwing here.
       const key =
@@ -327,8 +336,8 @@ function composeAnswer(question: string, ctx: RagContext): RowText[] {
   return [lead, ...ctx.facts.slice(0, 3).map((f) => f.text)];
 }
 
-export function askIntelligence(question: string): RagAnswer {
-  const ctx = retrieve(question);
+export function askIntelligence(question: string, locale: Locale): RagAnswer {
+  const ctx = retrieve(question, locale);
   return {
     question,
     answer: composeAnswer(question, ctx),

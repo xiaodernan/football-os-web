@@ -58,7 +58,7 @@ export function AiStudio({ initialTab = "chat" }: { initialTab?: "chat" | "graph
 }
 
 function Chat() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const online = useOnline();
   const [log, setLog] = useLocalStorage<ChatMsg[]>(AI_CHAT_KEY, []);
   const [input, setInput] = useState("");
@@ -91,7 +91,7 @@ function Chat() {
     setInput("");
     setBusy(true);
     await new Promise((r) => setTimeout(r, 420));
-    const a = askIntelligence(question);
+    const a = askIntelligence(question, locale);
     setLog((l) => [...l, { role: "ai", content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, at: a.at }]);
     setBusy(false);
     requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
