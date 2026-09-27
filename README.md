@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M207 (a few numbers in that range
+Work ships one milestone per commit and is currently at M208 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3314,6 +3314,36 @@ message reads `(2 vs 3)`). Build clean, suite **33/33 proof scripts — 1727 che
 Room, are localisation debt of 51 and 29 hits and are untouched here; and this milestone was landed
 on a worktree another session was writing to, so its `player.*` dictionary keys and call sites are
 this commit's content too — the provenance is a takeover, not a solo author.
+
+
+### M208 — the Data Room speaks the reader's language, and the last fixture date goes through the door
+
+The Data Room's 29 were the most mixed of the three big screens. Seven table headers, of which the
+scan could see exactly one: `P`/`W`/`D`/`L`/`GD` sit below its three-letter floor and only `PTS`
+cleared it, so the *whole row* became keys rather than the one column the scanner happened to
+notice — a Chinese table reading 勝/平/負/積分 above Latin `P W D` is the half-measure the codes
+already were. With it went four stat-tile sublines, the forecast block and its model disclosure,
+and the club-page link.
+
+The fixture line is the part worth recording, because it arrived half-done. The session before
+this one had already hoisted the `Intl.DateTimeFormatOptions` bag to a module const — the remedy
+the profile screen used at M170 — but had not changed the call site, which still passed an inline
+literal object to `toLocaleString(undefined, {…})`. So the file kept four raw hits *and* kept
+formatting an instant for the browser: a reader on 简体中文 saw `Sep 12, 04:30 PM` on the fixture
+row while the page's own `lang` attribute said zh-CN. It now hands the hoisted bag to
+`formatDate(locale, …)`, the one door M194 opened, and the Data Room leaves `DATE_DEBT` — remaining
+browser-locale sites 7 → 6, with only Player OS's three still declared.
+
+Coverage: the raw-UI ceiling falls **80 → 51** and the covered list reaches 39 files. One file is
+left, `features/sim/SimulationLab.tsx` at exactly 51, and it is the last of the three screens the
+comment at M176 named. Measured after this commit: build 0, proof-i18n **214/214**, dictionary
+**1587 keys × 3 locales**. Nothing was clicked in a browser — the in-app browser still will not
+commit a React tree.
+
+**Still outstanding** (deliberately not faked): Simulation Lab is the last screen and its 51 hits are
+untouched; `dev/` and the repository root carry untracked scratch from the M197–M207 mutation runs
+(probes, per-milestone mutation cases, a driver whose `./mutcases.mjs` no longer exists), which this
+commit deliberately neither committed nor deleted.
 
 
 ## Deploying
