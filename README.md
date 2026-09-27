@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M205 (a few numbers in that range
+Work ships one milestone per commit and is currently at M206 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3237,6 +3237,43 @@ any proof; the React-side three need a DOM this harness does not have, which is 
 here instead of being quietly exempted. And there is still no gate that refuses a *new* ungated
 module: the census above is a measurement in a scratch file, not a ratchet, and turning it into one
 is the obvious next step.
+
+### M206 — the coverage gap is now a ratchet, not a scratch file
+
+M205 measured which app modules no proof loads and wrote the answer in a `dev/` probe, where it
+would have gone stale the first time someone added a module. `scripts/proof-coverage.mjs`
+(**15 checks**) makes the same measurement a gate: the population is every file in `domain/`, `lib/`
+and `i18n/`; a module is **reached** if some proof `ssrLoadModule`s it, or if it is imported by
+value — not merely by type — by a reached module; anything else has to be listed in `EXEMPT`, keyed
+by its path with a reason and a line count, and the list is checked in both directions: nothing
+unreached may be missing from it, and nothing in it may have quietly become reachable.
+
+Measured on the current tree: **34 proofs** load 39 modules directly, which reaches **35 of the 39**
+app modules (`domain` 31, `lib` 5, `i18n` 3). Four remain exempt, 265 lines between them:
+`lib/router.tsx` (105), `lib/hooks.ts` (92), `lib/theme.tsx` (61) — all three need a DOM this
+harness does not have — and `lib/utils.ts` (7), a single `cn` wrapper with no logic to pin. Every
+`domain/` module is now covered, which is what M202 (film library), M204 (community) and M205
+(footprint) were building toward.
+
+The resolver is tested on synthetic graphs as well as on the repo, because a gate whose only
+evidence is "clean" has never been seen to refuse anything: a two-hop value chain reaches all three
+files; a `import type` edge must **not**; a side-effect `import "./x"` and a dynamic
+`await import("x")` both must; `@/` aliases and `../` relatives resolve while a bare package name
+(`react`) resolves to nothing; and a module nobody loads is named as undeclared the moment it is
+added to the population.
+
+Four mutations, **4 caught / 0 missed**: a type-only import counted as execution (1 red), the declared exemptions not being honoured (2), dynamic imports dropped (1), and an exemption added for a module a proof does load (5 reds, among them the 330-line ceiling biting at 452). The last had to be applied and restored by hand rather than through the campaign runner, because that run aborted when an — unrelated control — proof died mid-run on a loaded machine: the gate under test never got the mutation, so the claim was re-made in isolation rather than carried over from a crashed batch.
+
+Clean plane (`git archive HEAD`, only this milestone's file copied in): `tsc` 0 errors, build 0,
+suite **34/34 proof scripts proven — 1824/1824 checks counted — exit 0**. The next sentence is not a footnote about that number: a second run of the same plane printed 33/34 — 1775 counted — 0 contract failures — 1 unverified, and an earlier attempt in the same window saw three scripts need a retry (`feedranking×1, m65×1, projection×1`) with one of them dying twice over before printing any tally. That is a loaded machine, not a loaded repo — a concurrent session was building at the time — and it is the reason the suite is reported as runs rather than as one figure: `M scripts proven / N unverified` is the reading, and a green-looking exit needs the counted total beside it..
+
+**Still outstanding** (deliberately not faked): the four exemptions are real gaps, not solved ones —
+`lib/rng.ts` is reached transitively (every seeded consumer imports it) but has no proof of its
+**own** properties, so a determinism change there would be caught only by whichever consumer happens
+to assert one; and the three React-side libs stay unexercised because there is no DOM, which is why
+they are listed with reasons rather than exempted silently. `data/` is outside the population on
+purpose: it is data, and M197 already showed that seeding changes need re-derivation rather than a
+new gate.
 
 ## Deploying
 
