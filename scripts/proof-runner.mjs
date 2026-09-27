@@ -68,6 +68,12 @@ const T = [
   ["no exit status at all", { status: null, signal: null, error: null, out: "5/5 checks passed\n" }, VERDICT.UNVERIFIED, "no-exit-status"],
   ["never started (ENOENT)", { status: null, signal: null, error: Object.assign(new Error("spawn boom"), { code: "ENOENT" }), out: "" }, VERDICT.UNVERIFIED, "spawn-failed"],
   ["never started (no code)", { status: null, signal: null, error: new Error("spawn boom"), out: "" }, VERDICT.UNVERIFIED, "spawn-failed"],
+  // M199: a spawnSync timeout is reported as an error too, but it is a different
+  // fault — the script DID start, and on this platform it arrives with SIGTERM and
+  // whatever it had already printed. Measured, not assumed (see the end-to-end
+  // budget section below, which arms a real 1500ms timeout against a hung child).
+  ["stopped by the budget, nothing reported", { status: null, signal: "SIGTERM", error: Object.assign(new Error("spawnSync node ETIMEDOUT"), { code: "ETIMEDOUT" }), out: "booting vite...\n", timeoutMs: 600000 }, VERDICT.UNVERIFIED, "timed-out"],
+  ["stopped by the budget after its tally", { status: null, signal: "SIGTERM", error: Object.assign(new Error("spawnSync node ETIMEDOUT"), { code: "ETIMEDOUT" }), out: "9/9 checks passed\n", timeoutMs: 600000 }, VERDICT.UNVERIFIED, "timed-out-after-tally"],
 ];
 
 for (const [name, run, verdict, code] of T) {
@@ -102,6 +108,29 @@ ok(`every verdict is one of the three, and only the ${FAILS.length} rows that re
     T.filter(([, , v]) => v === VERDICT.UNVERIFIED).every(([, , , code]) => code !== "checks-failed" && code !== "red-exited-green"));
 ok("a contract failure is only called that when a check was counted and came back red — dying is never one",
   T.every(([, , v, code]) => (code === "checks-failed" || code === "red-exited-green") === (v === VERDICT.FAIL)));
+
+// The truth table and the classifier are two lists of codes, and either can drift
+// alone: a code the classifier can emit that no row asks about is unexercised, and
+// a row that asks about a code nothing emits is a description of a machine that
+// does not exist. Read the shipped inventory out of the module instead of retyping
+// it, so both directions are gated.
+{
+  const lib = readFileSync(join(here, "lib", "proofRunner.mjs"), "utf8");
+  const shipped = [...lib.matchAll(/at\(VERDICT\.\w+,\s*"([a-z-]+)"/g)].map((m) => m[1]).sort();
+  const tabled = T.map(([, , , code]) => code);
+  const unexercised = shipped.filter((c) => !tabled.includes(c));
+  const invented = [...new Set(tabled)].filter((c) => !shipped.includes(c));
+  ok(`the table exercises every code the shipped classifier can emit and invents none (${shipped.length} codes: ${shipped.join(", ")}${unexercised.length ? ` — unexercised: ${unexercised.join(", ")}` : ""}${invented.length ? ` — invented: ${invented.join(", ")}` : ""})`,
+    shipped.length >= 11 && unexercised.length === 0 && invented.length === 0);
+  // A timeout arrives as an error too, so the two families must not collapse into
+  // one code: "never started" and "started, printed, then hung" are different faults.
+  const hung = T.filter(([, run]) => run.error?.code === "ETIMEDOUT");
+  const dead = T.filter(([, run]) => run.error && run.error.code !== "ETIMEDOUT");
+  ok(`and an ETIMEDOUT error is never read as spawn-failed: ${hung.length} timeout rows and ${dead.length} never-started rows keep ${new Set([...hung, ...dead].map(([, , , c]) => c)).size} distinct codes between them`,
+    hung.length === 2 && dead.length === 2 &&
+      hung.every(([, , , c]) => c.startsWith("timed-out")) &&
+      dead.every(([, , , c]) => c === "spawn-failed"));
+}
 
 // ---------------------------------------------------------------------------
 // 2. tallyOf: which tally wins, and what counts as one.
@@ -239,7 +268,66 @@ for (const [key, [verdict, code, checks, exit]] of Object.entries(EXPECT)) {
     row?.checks === "5/5 checks");
 }
 
-// Every fixture must actually produce the shape it is named for, or the whole
+// M199: the time budget, end to end. These fixtures sleep for twenty seconds, so
+// they are only ever run under PROOF_TIMEOUT_MS — a proof that hung the suite used
+// to produce no verdict at all, and the only honest way to show the budget fires is
+// to make a script hang on purpose and time the runner giving up on it.
+{
+  const BUDGET = "1500";
+  const SLEEP = 20000;
+  const sleep = `setTimeout(() => {}, ${SLEEP});\n`;
+  const cases = {
+    "hang-green": { src: `console.log("ok one");\nconsole.log("3/3 checks passed");\n${sleep}`, code: "timed-out-after-tally", checks: "3/3 checks" },
+    "hang-silent": { src: `console.log("booting the SSR server");\n${sleep}`, code: "timed-out", checks: "no tally" },
+  };
+  for (const [key, c] of Object.entries(cases)) {
+    const dir = scratch({ [`proof-${key}.mjs`]: c.src });
+    const t0 = Date.now();
+    const res = spawnSync(process.execPath, [RUNNER, dir], {
+      encoding: "utf8",
+      env: { ...process.env, PROOF_TIMEOUT_MS: BUDGET },
+    });
+    const ms = Date.now() - t0;
+    const out = `${res.stdout ?? ""}${res.stderr ?? ""}`;
+    const row = parsed(out)[0];
+    ok(`a proof that hangs past its ${BUDGET}ms budget is stopped and reported ${row?.verdict} [${row?.code ?? "?"}] with its own line intact (${row?.checks ?? "?"} shown, fixture wanted ${c.checks})`,
+      !!row && row.verdict === VERDICT.UNVERIFIED && row.code === c.code && row.checks === c.checks);
+    ok(`and the budget is the runner's, not the fixture's: it gave up after ${ms}ms while ${key} still had ~${SLEEP - Number(BUDGET)}ms of sleep left, and the suite exited ${res.status}`,
+      ms >= Number(BUDGET) && ms < SLEEP && res.status === 1);
+    ok(`and a stopped script's log is still dumped, because "the runner gave up" is not a diagnosis (${out.includes(`===== proof-${key}.mjs output [${c.code}]`) ? "dumped" : "NOT dumped"})`,
+      out.includes(`===== proof-${key}.mjs output [${c.code}]`));
+  }
+  // The budget must not become the thing that breaks a healthy suite: the same
+  // green fixture, given a generous budget, still has to read as a pass. Without
+  // this clause, "always time out" and "never time out" both look like progress.
+  {
+    const dir = scratch({ "proof-green.mjs": FX.green });
+    const generous = spawnSync(process.execPath, [RUNNER, dir], {
+      encoding: "utf8",
+      env: { ...process.env, PROOF_TIMEOUT_MS: "60000" },
+    });
+    const row = parsed(`${generous.stdout}${generous.stderr}`)[0];
+    ok(`a script that finishes inside a 60000ms budget still passes (${row?.verdict} [${row?.code}], exit ${generous.status})`,
+      row?.verdict === VERDICT.PASS && row?.code === "green" && generous.status === 0);
+  }
+  // The default is gated by reading the shipped constant, because waiting out a
+  // real default is not a check anyone would run: `Number(undefined) || 600_000`
+  // is the only thing standing between this suite and `timeout: NaN`, which makes
+  // spawnSync refuse to start a single script.
+  {
+    const dir = scratch({ "proof-green.mjs": FX.green });
+    const noEnv = spawnSync(process.execPath, [RUNNER, dir], { encoding: "utf8" });
+    const out = `${noEnv.stdout}${noEnv.stderr}`;
+    const declared = readFileSync(RUNNER, "utf8").match(/PROOF_TIMEOUT_MS\) \|\| ([\d_]+)/);
+    const DEF = Number(declared?.[1]?.replace(/_/g, ""));
+    ok(`with nothing in the environment the runner still runs a healthy script to completion (exit ${noEnv.status}, ${parsed(out)[0]?.checks ?? "?"})`,
+      noEnv.status === 0 && parsed(out)[0]?.verdict === VERDICT.PASS);
+    ok(`and the default budget is a real number read from the shipped source (${Number.isFinite(DEF) ? `${DEF}ms` : "unreadable"}), far above the slowest proof yet short enough to fire`,
+      Number.isFinite(DEF) && DEF >= 300_000 && DEF <= 3_600_000);
+  }
+}
+
+
 // table above is a test of nothing. The declared tally below is written from
 // each fixture's source, so a fake proof that stopped printing its tally would
 // be caught here rather than silently changing the classification.

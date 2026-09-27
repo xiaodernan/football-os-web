@@ -12,6 +12,14 @@
 // to find; the other two mean "no evidence was produced", and a suite that
 // calls them the same thing cannot be trusted to distinguish "fine" from
 // "nobody looked".
+//
+// M199 added the fourth no-evidence event, which was absent above only because
+// nothing had ever hit it: `spawnSync` with no timeout waits forever, so a proof
+// that hangs — a Vite SSR server that never closes is the local candidate — stops
+// the suite before it prints a single line. The runner now arms a time budget per
+// script, and a stopped script gets its own codes rather than `spawn-failed`,
+// because "never started" and "ran, printed everything, then hung" are different
+// faults with different fixes.
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -45,18 +53,36 @@ export function findProofs(dir) {
 }
 
 // `run` is the shape spawnSync returns: status/signal/error plus the merged
-// stdout+stderr the caller collected. Returns { verdict, code, checks, reason }.
-// `code` is the stable identifier — the proof asserts on it, not on the prose.
-export function classifyProofRun({ status, signal, error, out }) {
+// stdout+stderr the caller collected, and `timeoutMs` when the caller armed one.
+// Returns { verdict, code, checks, reason }. `code` is the stable identifier —
+// the proof asserts on it, not on the prose.
+export function classifyProofRun({ status, signal, error, out, timeoutMs }) {
   const tally = tallyOf(out ?? "");
   const checks = tally ? tally.text : "no tally";
   if (error) {
+    // Measured on this platform: a spawnSync timeout arrives as
+    // { status: null, signal: "SIGTERM", error.code: "ETIMEDOUT" } and keeps the
+    // output the child had already written, so the tally below can still be read.
+    if (error.code === "ETIMEDOUT") {
+      return tally
+        ? at(VERDICT.UNVERIFIED, "timed-out-after-tally", checks,
+            `the runner stopped it after its ${timeoutMs ?? "configured"}ms budget — it printed ${tally.text} and then hung`)
+        : at(VERDICT.UNVERIFIED, "timed-out", checks,
+            `the runner stopped it after its ${timeoutMs ?? "configured"}ms budget before it reported a tally`);
+    }
     return at(VERDICT.UNVERIFIED, "spawn-failed", checks,
       `the script never started (${error.code ?? error.message ?? "unknown spawn error"})`);
   }
   if (signal) {
-    return at(VERDICT.UNVERIFIED, tally ? "killed-after-tally" : "killed-before-tally", checks,
-      `killed by ${signal}${tally ? " after printing its tally" : " without reporting a tally"}`);
+    // Every code the classifier can emit is a literal in the second argument of an
+    // at() call, on purpose: scripts/proof-runner.mjs reads this module's source to
+    // list them, so a code hidden behind a ternary or a variable is invisible to the
+    // census that proves the truth table covers them all.
+    return tally
+      ? at(VERDICT.UNVERIFIED, "killed-after-tally", checks,
+          `killed by ${signal} after printing its tally`)
+      : at(VERDICT.UNVERIFIED, "killed-before-tally", checks,
+          `killed by ${signal} without reporting a tally`);
   }
   if (status === null || status === undefined) {
     return at(VERDICT.UNVERIFIED, "no-exit-status", checks,

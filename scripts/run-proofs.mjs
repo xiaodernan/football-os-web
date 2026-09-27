@@ -8,8 +8,8 @@
 //   PASS         — printed a tally, every check in it green, exited 0
 //   FAIL         — a check it counted came back red (a contract failure)
 //   UNVERIFIED   — no evidence: never started, killed, died before its tally,
-//                  exited 0 without one, counted 0 checks, or printed all green
-//                  and then died anyway
+//                  exited 0 without one, counted 0 checks, printed all green and
+//                  then died anyway, or ran past its time budget (M199)
 // All three non-green cases keep the suite red; what changed is that the line
 // now says which one happened. Pass a directory as argv[2] to run a different
 // set of proofs — scripts/proof-runner.mjs uses that seam to point the runner
@@ -37,6 +37,16 @@ if (proofs.length === 0) {
 
 const rows = [];
 const pad = Math.max(...Object.values(VERDICT).map((v) => v.length));
+// M199: every proof gets a time budget. Without one, a script that hangs — a Vite
+// SSR server that never closes is the plausible shape here — keeps `spawnSync`
+// waiting forever, so the suite prints nothing at all and has to be killed by
+// hand. The budget is deliberately far above any real runtime: walking all 30
+// proofs one at a time on an idle machine, the slowest took 24.9s (this file's own
+// proof) and the median about 3s, so ten minutes is ~24× the slowest observed
+// script while still being a finite wait. PROOF_TIMEOUT_MS overrides it, which
+// exists so scripts/proof-runner.mjs can watch a timeout fire in seconds rather
+// than waiting in the dark for the real budget.
+const timeoutMs = Number(process.env.PROOF_TIMEOUT_MS) || 600_000;
 // The tally of a script that never reported one says so in words, so the line
 // reads "(no tally)" rather than "(no tally checks)".
 const label = (row) => (row.checks === "no tally" ? "no tally" : `${row.checks} checks`);
@@ -45,9 +55,9 @@ const label = (row) => (row.checks === "no tally" ? "no tally" : `${row.checks} 
 const totals = { pass: 0, total: 0 };
 
 for (const file of proofs) {
-  const res = spawnSync(process.execPath, [join(target, file)], { encoding: "utf8" });
+  const res = spawnSync(process.execPath, [join(target, file)], { encoding: "utf8", timeout: timeoutMs });
   const out = `${res.stdout ?? ""}${res.stderr ?? ""}`;
-  const row = classifyProofRun({ status: res.status, signal: res.signal, error: res.error, out });
+  const row = classifyProofRun({ status: res.status, signal: res.signal, error: res.error, out, timeoutMs });
   const tally = tallyOf(out);
   if (tally) {
     totals.pass += tally.pass;

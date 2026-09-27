@@ -110,13 +110,16 @@ several very different events and only one of them is a broken contract:
 | --- | --- |
 | `PASS` | printed a tally, every check in it green, exited 0 |
 | `FAIL` | a check the script counted came back red — a contract broke |
-| `UNVERIFIED` | no evidence: never started, killed, died before its tally, exited 0 without one, counted 0 checks, or printed all green and then died anyway |
+| `UNVERIFIED` | no evidence: never started, killed, hung past its time budget, died before its tally, exited 0 without one, counted 0 checks, or printed all green and then died anyway |
 
 Both non-green kinds keep the suite red; what changed is that the line now names which one
 happened, so `npm run proof` cannot quietly mean "nobody looked" while reading as "something
 broke". `scripts/proof-runner.mjs` gates the runner itself, against fake proofs in the OS temp
 directory that emit each signature on purpose — the runner accepts a directory as `argv[2]` for
-exactly that. Its own numbers, like every other milestone's, come from the tool:
+exactly that. Each script also runs under a ten-minute budget (`PROOF_TIMEOUT_MS` overrides it,
+which is how the proof watches a timeout fire in seconds): before that budget existed, one hung
+proof stopped the suite for good, printing nothing at all. Its own numbers, like every other
+milestone's, come from the tool:
 
 ```sh
 node scripts/proof-runner.mjs         # the classifier's truth table + the runner end to end
@@ -133,7 +136,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M198 (a few numbers in that range
+Work ships one milestone per commit and is currently at M199 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2828,6 +2831,71 @@ coverage until a platform (or a `spawnSync` timeout) produces one. Both are now 
 milestone rather than a footnote, and the queue's first product-side item is unchanged: no reachable
 state in the shipped seed can ask for the all-out mentality, so that arm is either re-scaled or
 deleted.
+
+### M199 — a hung proof is now a line in the report, not the end of the report
+
+M198's own record ended by naming the one no-evidence case its new codes could not reach: the
+runner spawned each proof with no timeout, so a script that hung — a Vite SSR server that never
+closes is the plausible local shape — left `spawnSync` waiting forever. The suite printed nothing,
+not even a verdict, and had to be killed by hand. That is the same blindness M198 removed, one
+level up: a gate that stops producing output is not a gate.
+
+Each script now runs under a time budget, and a stopped script gets its own two codes rather than
+falling into `spawn-failed` — "never started" and "ran, printed everything, then hung" are
+different faults with different fixes. `UNVERIFIED` therefore has ten codes and the classifier
+thirteen in total (`PASS`'s `green`, `FAIL`'s `checks-failed` and `red-exited-green`, and
+`timed-out` / `timed-out-after-tally` alongside the eight from M198). A hung script that *had*
+printed keeps its numbers: the line reads `UNVERIFIED proof:x (42/42 checks) [timed-out-after-tally]`,
+because the evidence it produced is real even though its exit is not.
+
+The default is measured, not guessed: walking all thirty proofs one at a time on an idle machine,
+the slowest took **24.9 s** (`proof-runner.mjs` itself), then 11.9 s (`i18n`) and 8.9 s (`career`),
+so ten minutes is roughly 24× the slowest real script while still being a finite wait.
+`PROOF_TIMEOUT_MS` overrides it — not a tuning knob for people, a seam so the proof can watch a
+timeout fire in 1.5 seconds instead of waiting in the dark for the real budget.
+
+`scripts/proof-runner.mjs` grew 76 → **89 checks**. Two fixtures sleep for twenty seconds and are
+only ever run under the override: the runner must give up in about 1.7 s (printed in the clause
+name) while the script still has ~18.5 s of sleep left, still dump that script's log for
+debugging, exit 1, and — the clause that keeps the fix from becoming the bug — leave a script
+which finishes inside its budget reading as `PASS [green]`. The budget's *default* is gated by
+reading the constant out of the shipped runner, since nobody would wait ten minutes to test it:
+`Number(process.env.PROOF_TIMEOUT_MS) || 600_000` is the only thing standing between this suite
+and `timeout: NaN`, which makes `spawnSync` refuse to start a single script.
+
+A clause the milestone added by accident, then kept: the truth table and the classifier are two
+lists of codes, and either can drift alone. The proof now reads the code literals out of the
+module's source and requires every shipped code to appear in the table and no table row to name a
+code nothing emits. Writing it caught a real inconsistency immediately — `killed-after-tally` and
+`killed-before-tally` were computed inside one `at(...)` call, so the census could not see them —
+which is why every code in the classifier is now a literal in the second argument of an `at()`, a
+spelling the file comments state as a requirement rather than a style choice.
+
+Twenty-two mutations, **22 caught / 0 missed / 0 crashed / 0 invalid needles / 0 restore
+failures**, controls green before and after (career 180/180, transfers 76/76). Six are new
+(`timed-out` branch removed → 6 red; a stopped script reading as PASS → 4; the runner no longer
+arming a budget → 6, caught because the fixture ran its full 20 s; `PROOF_TIMEOUT_MS` ignored → 7;
+the two killed codes collapsed into one → 2, one of them the census; a shipped code renamed → 3,
+also the census). The earlier sixteen were **re-run rather than cited**, because this milestone
+restructured the classifier's signal branch and added two codes — a record from before a change to
+the thing being measured is not evidence about after it.
+
+Measured on a clean plane (`git archive HEAD`, only this milestone's three files copied in):
+`tsc` 0, build 0, **1684/1684 checks counted**, two of three suite runs at `30/30 proof scripts
+proven · exit 0`. The third printed `UNVERIFIED proof:projection (42/42 checks) [died-after-green]
+printed all 42 checks green and still exited 3221225477` — Vite's dep-scan access violation, the
+same event M197 had to describe from a log, appearing here as a sentence that says what happened.
+Under the pre-M198 runner that run read `FAIL proof:projection (42/42)`, which is a claim that a
+contract broke. HEAD-alone control is **29 scripts / 1595 checks**, and 1595 + 89 = 1684. Domain
+prose is still **256 literals across 10 files** and the raw-UI ledger **149 across 3 files** — no
+`src/` file is touched; every word added is a comment, a clause name, or this README.
+
+**Still outstanding** (deliberately not faked): the dep-scan death itself is a Vite-side flake the
+runner can now *name* but not prevent, so a red `npm run proof` may still mean "nothing is broken,
+one script crashed" — re-run before believing it, and the line tells you which one it was. On the
+product side the first item is unchanged and now queued ahead of everything: no reachable state in
+the shipped seed can ask for the all-out mentality, so that arm is either re-scaled to a number the
+space actually crosses or deleted.
 
 ## Deploying
 
