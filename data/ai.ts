@@ -99,11 +99,19 @@ class DeterministicCoachProvider implements CoachProvider {
     const trainedRecently = input.history
       .filter((h) => effFocus.includes(h.focus))
       .reduce((s, h) => s + h.completed, 0);
+    // What the session really contains. The player may have asked for two
+    // attributes and a decision block, but a short session cannot carry all of
+    // them, and the words below may not claim a block that was never built.
+    const trained = session.focusAttributes;
+    const hasBlock = (phase: string) => session.exercises.some((e) => e.phase === phase);
 
     const diagnosisParts: string[] = [];
     if (isTargeted)
       diagnosisParts.push(
-        `You chose to work on ${effFocus.map(attributeLabel).join(" and ")} — the role-gap priorities you flagged. This block is built around exactly those.`,
+        `You chose to work on ${effFocus.map(attributeLabel).join(" and ")} — the role-gap priorities you flagged.` +
+          (trained.length === effFocus.length
+            ? ` This block is built around exactly those.`
+            : ` A ${session.targetMinutes}-minute block has room for ${trained.map(attributeLabel).join(" and ")}, so it starts there.`),
       );
     if (load && load.zone === "high")
       diagnosisParts.push(
@@ -132,7 +140,9 @@ class DeterministicCoachProvider implements CoachProvider {
     // plan it wrote (from real stored history) and either continues progressive
     // overload on an overlapping attribute or rotates to a different gap.
     const lastFocus = [...new Set((input.lastFocus ?? []).filter((k) => ATTRIBUTE_KEYS.includes(k)))];
-    const continuing = lastFocus.filter((k) => effFocus.includes(k));
+    // "Continuing that progression" is only true of an attribute this block really
+    // trains, so the overlap is taken with `trained`, not with what was asked for.
+    const continuing = lastFocus.filter((k) => trained.includes(k));
     const rotatedFrom = lastFocus.filter((k) => !effFocus.includes(k));
     if (lastFocus.length) {
       if (continuing.length)
@@ -141,16 +151,20 @@ class DeterministicCoachProvider implements CoachProvider {
         );
       else
         diagnosisParts.push(
-          `Last session we worked ${lastFocus.map(attributeLabel).join(" and ")}; today we rotate to ${effFocus.map(attributeLabel).join(" and ")} to build a different gap.`,
+          `Last session we worked ${lastFocus.map(attributeLabel).join(" and ")}; today we rotate to ${trained.map(attributeLabel).join(" and ")} to build a different gap.`,
         );
     }
 
     const rationale = [
-      `Warm-up activates movement before technique work.`,
-      `Primary focus ${effFocus.map(attributeLabel).join(" + ")} targets your ${isTargeted ? "selected role-gap priorities" : "current biggest measurable gap"}.`,
-      `A decision-making block trains scanning under time pressure.`,
-      `The game-realistic block is your ${attributeLabel(dna.primary.gameFocus)} drill — ${archetypeLabelEn(dna.primary.id)}s express themselves there.`,
-      `DNA read: ${archetypeLabelEn(dna.primary.id)} (${archetypeLabelEn(dna.secondary.id)} → ${archetypeLabelEn(dna.primary.id)}) — session shaped to your role.`,
+      ...(hasBlock("warmup") ? [`Warm-up activates movement before technique work.`] : []),
+      `Primary focus ${trained.map(attributeLabel).join(" + ")} targets your ${isTargeted ? "selected role-gap priorities" : "current biggest measurable gap"}.`,
+      ...(hasBlock("decision") ? [`A decision-making block trains scanning under time pressure.`] : []),
+      // The role line is only true of a session that really carries the block —
+      // a 5-minute session has room for the technique work alone.
+      ...(hasBlock("game")
+        ? [`The game-realistic block is your ${attributeLabel(dna.primary.gameFocus)} drill — ${archetypeLabelEn(dna.primary.id)}s express themselves there.`]
+        : []),
+      `DNA read: ${archetypeLabelEn(dna.primary.id)} (${archetypeLabelEn(dna.secondary.id)} → ${archetypeLabelEn(dna.primary.id)})${hasBlock("game") ? " — session shaped to your role" : ""}.`,
     ];
 
     const confidence = Math.round(
@@ -162,7 +176,7 @@ class DeterministicCoachProvider implements CoachProvider {
       createdAt: new Date().toISOString(),
       prompt: input.prompt,
       diagnosis: diagnosisParts.join(" "),
-      focus: effFocus,
+      focus: trained,
       session,
       rationale,
       confidence: Math.min(95, confidence),

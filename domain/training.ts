@@ -1,12 +1,11 @@
 import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, TrainingSession } from "./types";
 import { attributeLabel } from "./attributes";
-import { makeRng, pick } from "@/lib/rng";
+import { makeRng, pick, rngInt } from "@/lib/rng";
 
 // Training database: exercises keyed to the attributes they develop, organised by
 // phase, so a session is a coherent Warm-up -> Technique -> Decision -> Game ->
 // Cool-down -> Reflection structure at any supported duration.
 export const SUPPORTED_MINUTES = [5, 10, 20, 30, 45, 60, 90];
-
 const DRILLS: TrainingExercise[] = [
   { key: "dynamic_warmup", label: "Dynamic mobility + activation", focus: "stamina", minutes: 6, intensity: 1, phase: "warmup" },
   { key: "rondo", label: "Rondo press-resistance (3v1)", focus: "press_resistance", minutes: 8, intensity: 3, phase: "technique" },
@@ -33,6 +32,54 @@ function focusDrills(focus: string): TrainingExercise[] {
   return direct.length ? direct : DRILLS.filter((d) => d.phase === "technique");
 }
 
+const byPhase = (phase: TrainingExercise["phase"]): TrainingExercise[] =>
+  DRILLS.filter((d) => d.phase === phase);
+
+// ---- How a target budget is spent ----
+// buildSession used to append whole drills while one still "fit", so a 5-minute
+// session cost 12 and a 90-minute session cost 35-43: the number the player picked,
+// the XP paid for and the weekly review counted were all different quantities. Now
+// the budget is allocated, not consumed: every minute of `targetMinutes` is spent,
+// and the phase list shrinks when the money runs out.
+const BOOKEND_SHARE = 0.1; // warm-up and cool-down take a tenth of the session each…
+const BOOKEND_MAX = 6; // …so a 90-minute session still cools down for 6, not 9.
+const PHASE_MINUTES = 4; // a decision/game block shorter than this is not that drill;
+const BLOCK_MINUTES = 7; // and a block of ~7 minutes is what one drill is worth.
+const PHASE_WEIGHTS = [5, 2, 3]; // Technique / Decision / Game, over what is left.
+
+/** Split `total` whole minutes over `weights` so the parts sum exactly to `total`. */
+function splitMinutes(total: number, weights: number[]): number[] {
+  const sum = weights.reduce((s, w) => s + w, 0) || 1;
+  const raw = weights.map((w) => (total * w) / sum);
+  const parts = raw.map((v) => Math.floor(v));
+  let rest = total - parts.reduce((s, p) => s + p, 0);
+  const byRemainder = raw
+    .map((v, i) => i)
+    .sort((a, b) => raw[b] - parts[b] - (raw[a] - parts[a]) || a - b);
+  for (const i of byRemainder) {
+    if (rest <= 0) break;
+    parts[i] += 1;
+    rest -= 1;
+  }
+  return parts;
+}
+
+/** Same entries, starting at a seeded position so repeat sessions differ. */
+function rotate<T>(rng: () => number, pool: readonly T[]): T[] {
+  if (pool.length < 2) return pool.slice();
+  const start = rngInt(rng, 0, pool.length - 1);
+  return [...pool.slice(start), ...pool.slice(0, start)];
+}
+
+/** Spend exactly `budget` minutes on the front of an already-ordered drill pool. */
+function phaseBlock(pool: TrainingExercise[], budget: number): TrainingExercise[] {
+  if (budget <= 0 || pool.length === 0) return [];
+  const count = Math.max(1, Math.min(pool.length, Math.round(budget / BLOCK_MINUTES)));
+  const chosen = pool.slice(0, count);
+  const minutes = splitMinutes(budget, chosen.map((d) => d.minutes));
+  return chosen.map((d, i) => ({ ...d, minutes: minutes[i] }));
+}
+
 export interface BuildSessionInput {
   id: string;
   date: string;
@@ -43,47 +90,57 @@ export interface BuildSessionInput {
   roleGameFocus?: string; // DNA signature; steers the game-realistic block to the role
 }
 
-/** Build a coherent session that fits (as closely as possible) the target minutes. */
+/** Build a session whose exercises sum to exactly `targetMinutes` (rounded down, at
+ *  least 1), keeping the Warm-up → Technique → Decision → Game → Cool-down order. */
 export function buildSession(input: BuildSessionInput): TrainingSession {
   const rng = makeRng(input.seed ?? `${input.id}-${input.targetMinutes}`);
-  const focus = input.focusAttributes.length ? input.focusAttributes : ["first_touch"];
-  const exercises: TrainingExercise[] = [];
-  const warmup = DRILLS.find((d) => d.phase === "warmup")!;
-  exercises.push(warmup);
-  let total = warmup.minutes;
+  const wanted = [...new Set(input.focusAttributes.length ? input.focusAttributes : ["first_touch"])];
+  const target = Math.max(0, Math.floor(input.targetMinutes));
 
-  for (const f of focus) {
-    const pool = focusDrills(f);
-    const tech = pick(rng, pool);
-    if (total + tech.minutes <= input.targetMinutes - 6) {
-      exercises.push(tech);
-      total += tech.minutes;
+  // The bookends never eat the work in between: a 1-minute session gets its minute,
+  // and the cool-down is dropped before the warm-up so the list still reads in order.
+  const bookend = Math.min(BOOKEND_MAX, Math.max(1, Math.round(target * BOOKEND_SHARE)));
+  const warmupM = Math.min(bookend, Math.max(0, target - 1));
+  const cooldownM = Math.min(bookend, Math.max(0, target - warmupM - 1));
+  const phaseM = splitMinutes(target - warmupM - cooldownM, PHASE_WEIGHTS);
+  for (const i of [1, 2]) {
+    if (phaseM[i] > 0 && phaseM[i] < PHASE_MINUTES) {
+      phaseM[0] += phaseM[i];
+      phaseM[i] = 0;
     }
   }
-  const decision = DRILLS.find((d) => d.phase === "decision")!;
-  if (total + decision.minutes <= input.targetMinutes - 5) {
-    exercises.push(decision);
-    total += decision.minutes;
+
+  // Technique leads with one drill per requested focus, in the order asked, so a
+  // budget too small for all of them drops the later ones instead of training none.
+  const leads: TrainingExercise[] = [];
+  const leadFor = new Map<string, string>();
+  for (const key of wanted) {
+    const drill = pick(rng, focusDrills(key));
+    leadFor.set(key, drill.key);
+    if (!leads.some((d) => d.key === drill.key)) leads.push(drill);
   }
-  const gamePool = DRILLS.filter((d) => d.phase === "game");
-  // When the caller supplies a role signature, the game-realistic block trains
-  // that attribute (making "shaped to your role" literal); otherwise we keep the
-  // seeded random game drill.
-  const game = (input.roleGameFocus && gamePool.find((d) => d.focus === input.roleGameFocus)) || pick(rng, gamePool);
-  if (total + game.minutes <= input.targetMinutes - 4) {
-    exercises.push(game);
-    total += game.minutes;
-  }
-  const cooldown = DRILLS.find((d) => d.phase === "cooldown")!;
-  exercises.push(cooldown);
+  const filler = byPhase("technique").filter((d) => !leads.some((l) => l.key === d.key));
+  const role = input.roleGameFocus ? byPhase("game").filter((d) => d.focus === input.roleGameFocus) : [];
+  const gameRest = byPhase("game").filter((d) => !role.some((r) => r.key === d.key));
+
+  const exercises: TrainingExercise[] = [
+    ...phaseBlock(byPhase("warmup"), warmupM),
+    ...phaseBlock([...leads, ...rotate(rng, filler)], phaseM[0]),
+    ...phaseBlock(rotate(rng, byPhase("decision")), phaseM[1]),
+    ...phaseBlock([...role, ...rotate(rng, gameRest)], phaseM[2]),
+    ...phaseBlock(byPhase("cooldown"), cooldownM),
+  ];
+  // What the session actually trains, so the growth the player is credited for
+  // belongs to a block that exists.
+  const trained = wanted.filter((key) => exercises.some((e) => e.key === leadFor.get(key)));
 
   return {
     id: input.id,
     date: input.date,
-    title: `${focus.map(attributeLabel).join(" + ")} session`,
-    focusAttributes: focus,
+    title: `${trained.map(attributeLabel).join(" + ")} session`,
+    focusAttributes: trained,
     exercises,
-    targetMinutes: input.targetMinutes,
+    targetMinutes: target,
     status: "planned",
   };
 }

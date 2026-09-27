@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M210 (a few numbers in that range
+Work ships one milestone per commit and is currently at M211 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3452,6 +3452,96 @@ with no retry line in the summary. `proof:rng` reports **52/52** there. Nothing 
 **Still outstanding** (deliberately not faked): M211 owns the session-duration defect; `weightedPick([])`
 still throws where `pick([])` returns `undefined` — documented by a clause, not fixed; and the untracked
 `dev/` scratch from M197 onward is still in the tree.
+
+
+### M211 — a "5-minute" session was 12 minutes of exercises, and the coach described blocks it never built
+
+`domain/training.ts` has said since M3 that a session is a Warm-up → Technique → Decision → Game →
+Cool-down structure "at any supported duration". It was not, at either end. `buildSession` pushed the
+6-minute warm-up on the front and the 6-minute cool-down on the back **unconditionally**, then filled
+the middle only while `total + drill ≤ target − k`. Re-running HEAD's own function over 96 sessions per
+target (32 attribute keys × 3 seeds) to put numbers on it: the 5- and 10-minute bounds returned **12
+minutes of drills in 96 of 96 cases**; 20 was close (18–20, 26 short); 30 came back 24–30 (93 short);
+and 45, 60 and 90 all topped out at **35–43 minutes, 96 of 96 off-target** — the budget was never spent,
+only refused. And `focusAttributes` was the list of what was **asked for**: a 5-minute ask of
+Passing + Finishing + Shooting claimed all three while its only blocks were the warm-up (`stamina`) and
+the cool-down (`composure`) — it trained none of what was requested and credited the player for all of
+it, which matters because that list is what `store/useFootballOS.tsx` pays attribute growth off, and
+what the title, the plan and the development log are built from.
+
+The user-visible part was the disagreement, not the arithmetic. Three readers of one session were
+reading three quantities: `domain/load.ts` sums the exercises, `domain/review.ts` and the profile sum
+`targetMinutes`, and `xpForSession` is paid the `targetMinutes`. A player who chose 5 minutes had the
+weekly review tell them 5 while the acute:chronic model that caps the coach reacted to 12 — the load
+model's own clause in the new proof states that ratio, 2.4× hot on that one session.
+
+The fix allocates the budget instead of consuming it. Warm-up and cool-down each take a tenth of the
+session, capped at 6 minutes; what is left splits 5 : 2 : 3 over Technique / Decision / Game by
+largest remainder, so the parts sum exactly; a decision or game allocation under 4 minutes is not that
+drill, so it folds back into the technique work the player asked for; each phase spends ~7 minutes per
+block. Technique **leads** with one drill per requested focus in the order asked, so a budget too small
+for the whole ask drops the *later* focuses rather than training something nobody requested — and the
+focus list, the title and `plan.focus` are now derived from the blocks that exist
+(`focusAttributes` is "the attributes this session trains", which is what the growth reducer already
+assumed it meant).
+
+`scripts/proof-training.mjs` — **40 checks** — pins the contract the module claims in its own comment,
+with the allocation derived a second time inside the proof from the constants and drill table it reads
+out of the source text (so a hand-copied expectation cannot certify it): **672 sessions** (7 offered
+targets × 32 attribute keys × 3 seeds) sum to exactly the target they report, **0 off**; no block is
+ever 0 or fractional (smallest allocated **1′**); block counts grow **3,5,6,7,8,13** rather than
+topping out; the bookend row is `5=1+1 10=1+1 20=2+2 30=3+3 45=5+5 60=6+6 90=6+6`; every attribute key
+is trained at every supported target (**0 misses**); a four-focus ask is honoured
+`5:1/1 10:1/1 20:2/2 30:2/2 45:3/3 60:3/3 90:4/6`; the role drill is the first game block whenever a
+game block exists (**0 misses over 4 role focuses × 7 targets**) and the game phase is genuinely absent
+at 5 and 10; determinism byte-for-byte, and **35 distinct plans from 40 seeds** so "shaped to you" is
+not one resized template. Provenance is checked too: every block is a real catalogue drill with only
+its `minutes` scaled.
+
+The last section is the coach, and it was added mid-milestone because the mutation plan found the hole
+first. `data/ai.ts` had just been given a `hasBlock()` guard so its rationale would not promise a
+decision-making block or a role-shaped game block to a 5-minute session — but **both** existing coach
+proofs generate plans at `availableMinutes: 60`, where every block exists anyway, so the guard had no
+witness: switching it off changed nothing anywhere in the suite. The new clauses therefore compare the
+prose to the session under it, both directions: at 5′ the blocks are `warmup,technique,cooldown` and
+the plan says `[warm-up]`; at 60′ the blocks carry all four claims; the diagnosis of a three-priority
+ask that does not fit names the one it starts with and nothing else; `plan.focus` equals
+`session.focusAttributes` (asked 3 → **1** at 5′, **2** at 60′); the coach's private clamp list is
+reconciled against `SUPPORTED_MINUTES`; and across 9 budget × load-zone combinations every session the
+coach hands back spends the minutes it reports and trains every attribute it names.
+
+**15 arms, 15 caught** (0 missed, 0 crashed, 0 invalid needles, 0 restore failures), controls
+`career 183/183` and `transfers 76/76` green before and after. Two of them are the interesting shape:
+re-rolling the shipped defect (blocks keep their catalogue minutes) reddens **10** clauses here and
+**0** in `proof-m77` and **0** in `proof-rng` — the consumer proofs still pin structure, not values —
+and `tr14`, the switched-off guard, is caught only by the section written for it. Moving the documented
+share (a tenth → a fifth, still under the cap) is caught only by the pinned bookend row, because the
+model in the proof recomputes from the same constant, which is why that row is measured minutes and not
+derived ones; `tr13` writes the row wrong at 45′ on purpose to show it bites. `tr4` (focus drills sent
+behind the filler) reaches outside this module and reddens two of `proof-m74`'s coach-memory clauses,
+so the allocator and the memory are now visibly coupled.
+
+Two clause names in my own file were wrong before the first green run and say so now: one indexed the
+per-phase totals with the phase's rank in the render order (technique=1 vs the array's 0), and one
+hard-coded the weekly review's expected figure as 15 where the derivation over 5+5+10+10 minutes is 30.
+
+One ledger was watched rather than trusted. This rewrite turns a list of `if (fits) push(drill)`
+statements into pool loops, which is the exact shape that makes a regex-counted text debt go blind —
+literals can vanish into a table and the total falls without any prose being localised. `proof-i18n`
+was green on the plane with `domain/training.ts` still at its capped **19** literals, and its
+caps-sum-equals-counted-debt clause requires the sum to match the scan **exactly**, so nothing moved,
+hid or shrank: the drill bank was not touched and its labels are still the same 19 rows the ledger
+counts.
+
+Measured on the plane (`git archive HEAD` plus this milestone's three files): `tsc --noEmit` clean,
+`npm run build` exit 0, suite **36/36 proof scripts proven · 1917/1917 checks counted · exit 0**, with
+no retry line in the summary. Nothing was clicked in a browser.
+
+**Still outstanding** (deliberately not faked): the coach's composed sentences are still English-only
+prose in `data/ai.ts`, which the raw-UI scan does not read (it covers `.tsx`), so that file's text is
+outside the prose ratchet — M184+ owns it; `weightedPick([])` still throws where `pick([])` returns
+`undefined`; the plan id is still `S${Date.now()…}`, which can collide across two plans built in the
+same second; and the untracked `dev/` scratch from M197 onward is still in the tree.
 
 
 ## Deploying
