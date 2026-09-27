@@ -110,16 +110,19 @@ several very different events and only one of them is a broken contract:
 | --- | --- |
 | `PASS` | printed a tally, every check in it green, exited 0 |
 | `FAIL` | a check the script counted came back red — a contract broke |
-| `UNVERIFIED` | no evidence: never started, killed, hung past its time budget, died before its tally, exited 0 without one, counted 0 checks, or printed all green and then died anyway |
+| `UNVERIFIED` | no evidence: never started, killed, hung past its time budget, died before its tally, exited 0 without one, counted 0 checks, printed all green and then died anyway, or died that way twice in a row |
 
 Both non-green kinds keep the suite red; what changed is that the line now names which one
 happened, so `npm run proof` cannot quietly mean "nobody looked" while reading as "something
-broke". `scripts/proof-runner.mjs` gates the runner itself, against fake proofs in the OS temp
-directory that emit each signature on purpose — the runner accepts a directory as `argv[2]` for
-exactly that. Each script also runs under a ten-minute budget (`PROOF_TIMEOUT_MS` overrides it,
-which is how the proof watches a timeout fire in seconds): before that budget existed, one hung
-proof stopped the suite for good, printing nothing at all. Its own numbers, like every other
-milestone's, come from the tool:
+broke". A script that produces **no evidence** is given one more attempt (M203) — and only that
+kind: a `PASS` already has its evidence, and a counted red must never be able to flake away. When a
+retry happens the line says so (`(recovered on attempt 2)`) and the summary names the scripts that
+needed one, so flakiness is reported rather than hidden. `scripts/proof-runner.mjs` gates the runner
+itself, against fake proofs in the OS temp directory that emit each signature on purpose — the runner
+accepts a directory as `argv[2]` for exactly that. Each script also runs under a ten-minute budget
+(`PROOF_TIMEOUT_MS` overrides it, which is how the proof watches a timeout fire in seconds): before
+that budget existed, one hung proof stopped the suite for good, printing nothing at all. Its own
+numbers, like every other milestone's, come from the tool:
 
 ```sh
 node scripts/proof-runner.mjs         # the classifier's truth table + the runner end to end
@@ -136,7 +139,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M202 (a few numbers in that range
+Work ships one milestone per commit and is currently at M203 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3070,6 +3073,61 @@ prevented, and a run of the suite may need a second attempt to print 31/31 — t
 lines) is the last substantial ungated module. The rest of the queue is unchanged — #142
 populated-state walk, #160 demo-coach prose, #184+ AI composed sentences, the two
 `components/ui/calendar.tsx` sites, PlayerOS/DataRoom browser dates held by the concurrent session.
+
+### M203 — one more attempt, but only where there was no evidence
+
+M198 made a death readable and M199 made a hang finite. The remaining dishonesty in
+`npm run proof` was statistical: Vite's dependency scan kills a proof *after* it has printed a
+complete, all-green tally, and it does so at random. Measured on a clean plane by running the same
+six proofs back to back, 2 of 48 runs died that way — `proof:projection` with exit `0xC0000409`
+and `proof:matchprobability` with `0xC0000005` — which for a 31-script suite predicts roughly one
+false red per run, and is exactly what M202's three plane runs showed (30/31, 29/31, 31/31, every
+shortfall an `UNVERIFIED`, never a counted red).
+
+So the runner now re-runs a script **once**, and only when the first attempt produced no evidence.
+A `PASS` is not re-run (its evidence already exists) and a `FAIL` is never re-run — the whole point
+of M198 was that a counted red is a fact about the product, and a policy that let it flake away
+would trade an annoying red for a lie. When a retry happens the line says which case it was
+(`(recovered on attempt 2)` on the row, plus a summary line naming every script that needed one),
+so a suite that is quietly flaking reports that instead of hiding it.
+
+The crash itself was **not** fixed, and the README says so rather than implying otherwise. The
+candidate was disabling Vite's dependency discovery in the proof servers (`optimizeDeps.noDiscovery`)
+— applied to all 30 proof scripts on a plane, 72 runs, zero crashes; but the control that followed,
+the *unpatched* tree run the same way, also produced 72 clean runs, and a repeat of the original
+config before that had produced the 2. The A/B/A therefore cannot separate the patch from the
+machine's mood, and the patch was dropped rather than shipped on a result that measured nothing.
+Preventing the crash is still open; what is no longer open is whether one has to be believed.
+
+`scripts/proof-runner.mjs` grew 89 → **97 checks**, and every claim is counted rather than read off
+the console: each fixture appends a line to a marker file per process, so "was it retried?" is a
+number from disk. A script that dies on its first run and passes on its second is reported
+`PASS [green] (recovered on attempt 2)`, exits the suite 0, and contributes its 2 checks **once** to
+the aggregate — the clause that catches double-counting, which is the failure mode a naive retry
+loop has. A script that dies every time stays `UNVERIFIED [died-after-green] (2 attempts, no
+evidence either time)`, keeps the suite red, and is named by `1 script(s) needed a retry: always×1`.
+The counted red ran exactly once, the green ran exactly once, and `PROOF_ATTEMPTS=1` — the seam that
+lets those two be distinguished from a policy that never retries anything — gives no second try.
+The default is read out of the shipped runner (a clause requires 2 ≤ attempts ≤ 3), the same
+technique M199 used for the time budget.
+
+Twenty-eight mutations, **28 caught / 0 missed / 0 crashed**, controls green before and after. Six
+are new — a counted red allowed to retry (1 red: the run counter), the policy disabled (4), a `PASS`
+also re-run (2), the retry not named in the summary (1), `PROOF_ATTEMPTS` ignored (2), the per-line
+note dropped (2) — and the earlier twenty-two (M198's verdict table, M199's budget) were **re-run
+rather than cited**, because this milestone changed the loop that carries them and the runner's line
+format, which the proof's parser has to keep up with.
+
+Measured on a clean plane (`git archive HEAD`, only this milestone's files copied in): `tsc` 0,
+build 0, **31/31 proof scripts proven · 1732/1732 checks counted · exit 0**, and that run needed no
+retry at all — the honest reading of a green suite. HEAD-alone (M202's plane) counted 1724, and
+1724 + 8 = 1732. Ledgers unchanged: raw-UI **149 across 3 files**, domain prose **256 across 10
+files**, dictionary **1478 × 3** — no `src/` file and no display string in this commit.
+
+**Still outstanding** (definitively not faked): the dep-scan crash is unrepaired — the retry hides
+one occurrence per script per run, and a script that dies twice still shows as `UNVERIFIED`, which
+is the correct answer and still requires a re-run to distinguish from a real hang. `community.ts`
+(205 lines) remains the last substantial ungated domain module.
 
 ## Deploying
 

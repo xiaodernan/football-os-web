@@ -201,12 +201,12 @@ const runOne = (key) => {
   const res = spawnSync(process.execPath, [RUNNER, dir], { encoding: "utf8" });
   return { fx, res, out: `${res.stdout ?? ""}${res.stderr ?? ""}` };
 };
-const LINE = /^(PASS|FAIL|UNVERIFIED)\s+proof:(\S+)\s+\((.+?)\)(?:\s+\[([a-z-]+)\]\s+(.+))?$/;
+const LINE = /^(PASS|FAIL|UNVERIFIED)\s+proof:(\S+)\s+\((.+?)\)(?:\s+\[([a-z-]+)\]\s+(.+?))?(?:\s+\((.+?)\))?$/;
 const parsed = (out) => {
   const rows = [];
   for (const line of out.split(/\r?\n/)) {
     const m = line.match(LINE);
-    if (m) rows.push({ verdict: m[1], name: m[2], checks: m[3], code: m[4] ?? "green", reason: m[5] ?? "" });
+    if (m) rows.push({ verdict: m[1], name: m[2], checks: m[3], code: m[4] ?? "green", reason: m[5] ?? "", note: m[6] ?? "" });
   }
   return rows;
 };
@@ -328,6 +328,61 @@ for (const [key, [verdict, code, checks, exit]] of Object.entries(EXPECT)) {
 }
 
 
+// M203: the retry policy, measured by counting how many times each script actually
+// ran. A fixture appends one line to a marker file per process, so "was it retried?"
+// is read from disk rather than inferred from the console — the only way to tell
+// "retried and recovered" apart from "ran once and passed".
+{
+  const counted = (name, src, env = {}) => {
+    const dir = scratch({ [`proof-${name}.mjs`]: src });
+    const mark = join(dir, "attempts.log");
+    const res = spawnSync(process.execPath, [RUNNER, dir], { encoding: "utf8", env: { ...process.env, PROOF_MARK: mark, ...env } });
+    const out = `${res.stdout ?? ""}${res.stderr ?? ""}`;
+    const runs = readFileSync(mark, "utf8").trim().split("\n").filter(Boolean).length;
+    return { res, out, row: parsed(out)[0], runs, summary: (out.match(/^(\d+)\/(\d+) proof scripts proven \((\d+)\/(\d+) checks counted\)/m) ?? []).slice(1) };
+  };
+  const tick = `const fs = await import("node:fs");\nif (process.env.PROOF_MARK) fs.appendFileSync(process.env.PROOF_MARK, "run\\n");\n`;
+  const CASES = {
+    // Prints a complete tally, then dies — but only on its first run.
+    flaky: `${tick}console.log("2/2 checks passed");\nif ((await import("node:fs")).readFileSync(process.env.PROOF_MARK, "utf8").trim().split("\\n").length === 1) process.exit(1);\n`,
+    // Prints a complete tally and dies every time: a retry must not turn this into a pass.
+    always: `${tick}console.log("5/5 checks passed");\nprocess.exit(1);\n`,
+    // A counted red: never retried, because flaking away a real failure is worse than a flake.
+    red: `${tick}console.log("3/5 checks passed");\nprocess.exit(1);\n`,
+    green: `${tick}console.log("4/4 checks passed");\n`,
+  };
+  const fl = counted("flaky", CASES.flaky);
+  ok(`a script that dies once and finishes the second time is retried, reported PASS and says so (runs=${fl.runs}, ${fl.row?.verdict} [${fl.row?.code}], note "${fl.row?.note ?? ""}", suite exit ${fl.res.status})`,
+    fl.runs === 2 && fl.row?.verdict === VERDICT.PASS && fl.row?.code === "green" && /recovered on attempt 2/.test(fl.row?.note ?? "") && fl.res.status === 0);
+  ok(`…and the retried script's checks are counted ONCE, not once per attempt (${fl.summary.join("/")})`,
+    fl.summary.join("|") === ["1", "1", "2", "2"].join("|"));
+  const al = counted("always", CASES.always);
+  ok(`a script that dies every time stays ${al.row?.verdict} [${al.row?.code}] with its tally shown and the suite red (runs=${al.runs}, note "${al.row?.note ?? ""}", exit ${al.res.status})`,
+    al.runs === 2 && al.row?.verdict === VERDICT.UNVERIFIED && al.row?.code === "died-after-green" && al.row?.checks === "5/5 checks" &&
+      /2 attempts/.test(al.row?.note ?? "") && al.res.status === 1);
+  ok(`…and the retry is named in the summary so a flake cannot hide inside a green line (${al.out.split("\n").find((l) => /needed a retry/.test(l)) ?? "no retry line"})`,
+    /1 script\(s\) needed a retry: always×1/.test(al.out));
+  const rd = counted("red", CASES.red);
+  ok(`a counted red is NEVER retried — one run, ${rd.row?.verdict} [${rd.row?.code}], exit ${rd.res.status}`,
+    rd.runs === 1 && rd.row?.verdict === VERDICT.FAIL && rd.row?.code === "checks-failed" && rd.res.status === 1 && !/retry/.test(rd.out));
+  const gr = counted("green", CASES.green);
+  ok(`a script that passes is not re-run either (runs=${gr.runs}, ${gr.row?.verdict}, exit ${gr.res.status})`,
+    gr.runs === 1 && gr.row?.verdict === VERDICT.PASS && gr.res.status === 0 && !/retry/.test(gr.out));
+  // The knob has to be wired, not decorative: with one attempt allowed, the dying
+  // script runs exactly once and its line carries no note.
+  const one = counted("always", CASES.always, { PROOF_ATTEMPTS: "1" });
+  ok(`PROOF_ATTEMPTS=1 gives no second try (runs=${one.runs}, ${one.row?.verdict} [${one.row?.code}], note "${one.row?.note ?? ""}", exit ${one.res.status})`,
+    one.runs === 1 && one.row?.verdict === VERDICT.UNVERIFIED && one.row?.code === "died-after-green" && one.row?.note === "" && one.res.status === 1);
+  // The default is read out of the shipped runner: 1 attempt would disable the policy
+  // this section exists to test, and a large one would let a script that always dies
+  // burn the suite. Neither is checkable by behaviour alone.
+  const attemptDecl = readFileSync(RUNNER, "utf8").match(/PROOF_ATTEMPTS\) \|\| (\d+)/);
+  const declared = attemptDecl ? Number(attemptDecl[1]) : NaN;
+  ok(`and the shipped retry budget is a real number read from the runner (${declared}), at least 2 and no more than 3`,
+    Number.isFinite(declared) && declared >= 2 && declared <= 3);
+}
+
+// Every fixture must actually produce the shape it is named for, or the whole
 // table above is a test of nothing. The declared tally below is written from
 // each fixture's source, so a fake proof that stopped printing its tally would
 // be caught here rather than silently changing the classification.
