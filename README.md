@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M208 (a few numbers in that range
+Work ships one milestone per commit and is currently at M209 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3344,6 +3344,38 @@ commit a React tree.
 untouched; `dev/` and the repository root carry untracked scratch from the M197–M207 mutation runs
 (probes, per-milestone mutation cases, a driver whose `./mutcases.mjs` no longer exists), which this
 commit deliberately neither committed nor deleted.
+
+
+### M209 — the raw-UI scan was counting code as prose, and Simulation Lab was five hits smaller than reported
+
+Opening the last screen immediately turned up five of its 51 "raw literals" that are not copy at all:
+`function ProbabilityPanel(`, `interface SeasonRow`, `function simulateSeason(compId: string, nonce:
+number): SeasonRow[]` and `function SeasonTable(`. The scan was reading declarations as JSX text.
+
+The cause is `valueEnd`, the helper that finds the `}` closing a `{…}` hole. It asked `skipQuoted`
+where a quote ended and took the answer on trust — but `skipQuoted` *bails at the newline* for `'` and
+`"`, and a bail was indistinguishable from a close. The old code did `j = end - 1` either way, so a
+bailed quote jumped to the end of its line and everything after it left the brace count. On the
+timeline hole `{result.timeline.filter(…).map((e, i) => <li>…{e.minute}'</span>…)}` that apostrophe is
+JSX *text* (it renders "3'"), the jump was 212 characters, and the `}` closing the hole was inside the
+skipped span — so the hole ran on to the next `}` in the file, six lines later, past the end of the
+component, and the declarations in between came back as interface prose.
+
+The fix distinguishes the two cases: `skipQuoted` returns just past the closing quote, so
+`s[end - 1] === s[j]` identifies a real literal, and a quote failing that test is copy. **The file did
+not change; the measurement did.** Simulation Lab 51 → 46, `RAW_UI_CEILING` 51 → 46, and the other 96
+scanned files are identical in count.
+
+The fixture is what proves it, and the first attempt did not — planting copy *after* the apostrophe
+passed under both versions, because an overrun *extends* the scanned range and the copy stays inside
+it. What discriminates is planting a declaration AFTER the component, which an overrun reads as text.
+With that in place the mutation reds three clauses at once, one naming the swallowed declaration.
+
+Measured after this commit: build 0, proof-i18n **215/215**, dictionary **1587 keys × 3 locales**.
+Nothing was clicked in a browser.
+
+**Still outstanding** (deliberately not faked): Simulation Lab remains the last screen at 46 hits, and
+the untracked `dev/` scratch described under M208 is still there.
 
 
 ## Deploying
