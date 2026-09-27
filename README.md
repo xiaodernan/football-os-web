@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M204 (a few numbers in that range
+Work ships one milestone per commit and is currently at M205 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3192,6 +3192,51 @@ commit, which is why it is quoted as measured rather than as a milestone result.
 a domain module — keying them is #184+, and `community.ts` is at its prose cap, so that work has to
 move the strings rather than add to them; and a visitor's own post, once written, is stored with
 `likes` they can add to, which is fine, but the board still has no server behind it.
+
+### M205 — the profile's cross-mode record had never been read by a gate
+
+A census was run before this milestone was chosen: of the app's own modules
+(`domain/`, `lib/`, `i18n/`), **7 are loaded by no proof at all** — `domain/footprint.ts` (187 lines)
+first among them, then `lib/router.tsx` (105), `lib/hooks.ts` (92), `lib/rng.ts` (62),
+`lib/theme.tsx` (61), `i18n/format.ts` (21, exercised through the door's re-export so effectively
+covered) and `lib/utils.ts` (7). `footprint.ts` is the module the profile's "your record across the
+three modes" panel is built from, and nothing had ever executed it.
+
+Its header makes three claims, and the new proof reads them as its spec: real counts, real
+last-activity timestamps, and an honest "not started" for a pillar the visitor has never used
+**rather than quietly hiding it** — plus "Pure: every input is passed in, no IO".
+`scripts/proof-footprint.mjs` (**34 checks**) asserts all of it against recomputed expectations
+rather than captured output: all four rows always present, in a fixed order, each with a label, a
+real route and at least one line; a zeroed visitor gets a not-started sentence on every card;
+`pillarsTouched` agrees with the rows it summarises; two calls on the same input are byte-identical
+and the input object is untouched; every count word is checked **at 1 and at 2**
+(session/goal/lesson/fixture/clip/player/post/reply — 16 forms, including the irregular
+`reply`/`replies`); minutes round to one decimal on the card and the total is the same rounding of
+the sum; a career that has played no fixture says so and counts as inactive; the table row needs
+**both** position and club count to print; the detection line needs both detections and
+scans-per-minute; mean confidence appears only when there is one; a repeated coaching focus is named
+through `attributeLabel`, never as a raw key; an unparseable or empty stamp is dropped instead of
+becoming "most recent activity"; the last-activity line is written in the reader's language — the
+same input under `en` and `zh-CN` produces different text, through the door, for every app locale;
+and `sources` names only the on-device stores, with no wording that implies a network.
+
+No defect was found this time, and that is reported as plainly as the others: the module's claims
+held under five targeted mutations — un-rounding minutes (1 check), `later()` sorting ascending so
+the oldest date became "most recent activity" (3), counting a never-played career as an active
+pillar (1), replacing the four not-started sentences with an empty line list (2), and keeping an
+unparseable timestamp (1). What this milestone adds is the gate, not a fix — which is the point of
+covering a module before someone edits it rather than after.
+
+Measured on a clean plane (`git archive HEAD`, only this milestone's file copied in): `tsc` 0 errors,
+build 0, suite **33/33 proof scripts proven — 1809/1809 checks counted — exit 0, and the headline of that run is M203 earning its keep: `1 script(s) needed a retry: projection—1`. Vite's dep-scan killed `proof:projection` after its 42/42 tally, the retry ran it again, it finished, and the suite reported 33/33 rather than the false 32/33 that M202 had to describe as a caveat. Domain prose stays **256 literals across 10 files** and the raw-UI ledger
+is untouched, because no display file and no copy changed.
+
+**Still outstanding** (deliberately not faked): `lib/rng.ts` — the deterministic generator behind
+every seeded claim in the app — and `lib/hooks.ts`/`lib/router.tsx`/`lib/theme.tsx` remain outside
+any proof; the React-side three need a DOM this harness does not have, which is why they are named
+here instead of being quietly exempted. And there is still no gate that refuses a *new* ungated
+module: the census above is a measurement in a scratch file, not a ratchet, and turning it into one
+is the obvious next step.
 
 ## Deploying
 
