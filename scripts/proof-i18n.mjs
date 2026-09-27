@@ -1309,8 +1309,20 @@ const RAW_FIXTURE = [
   `      <span>{x === "LIVE" ? t("planted.c") : null}</span>`,
   "      <i>{t(`fav.${x}.active`)}</i>",
   `      <Link to="/players">{"← " + t("common.back")}</Link>`,
+  // M209. An apostrophe inside a HOLE, in nested JSX text: `{rows.map((r) => <li>{r.k}'</li>)}`.
+  // `skipQuoted` bails at the newline, and the old `valueEnd` read that bail as "a string
+  // ended here" — so the rest of the line, including the `}` that closes the hole, left the
+  // brace count and the hole ran on to the next `}` in the file. On Simulation Lab's
+  // timeline that was 212 characters and six lines later, and four `function`/`interface`
+  // declarations came back as interface prose. Planting a declaration AFTER the component is
+  // what makes it observable: an overrun reads it as text, so the assertion below goes red.
+  `      <ul>{rows.map((r) => <li>{r.k}'</li>)}</ul>`,
   `    </Panel>`,
   `  );`,
+  `}`,
+  ``,
+  `function PlantedTail() {`,
+  `  return null;`,
   `}`,
   ``,
 ].join("\n");
@@ -1318,6 +1330,8 @@ const planted = scanSource(RAW_FIXTURE).hits;
 ok(`the raw-UI scan reports exactly the copy planted in its fixture (${planted.map((h) => h.kind).join(", ") || "nothing"})`,
   planted.length === 5 && planted.filter((h) => h.kind === "call").length === 2 &&
     planted.every((h) => h.text.startsWith("Planted")));
+ok(`a hole containing a JSX-text apostrophe closes on its own line, not on the next declaration (${planted.filter((h) => /PlantedTail/.test(h.text)).length} swallowed)`,
+  !planted.some((h) => /PlantedTail/.test(h.text)));
 const plantedLookups = lookupsIn(RAW_FIXTURE);
 ok(`the fixture's t() lookups are read as lookups, not as interface copy (${plantedLookups.join(", ")})`,
   plantedLookups.length === 6 && planted.every((h) => !plantedLookups.includes(h.text)));
@@ -1556,8 +1570,9 @@ const RAW_COVERED = [
 // has left: Simulation Lab (51) and Data Room (29).
 // 51 as of M208, measured on the gate line: the Data Room is covered and its 29 left the
 // open count. One file remains — Simulation Lab — and it is the last of the three the
-// comment at M176 named.
-const RAW_UI_CEILING = 51;
+// comment at M176 named. 46 as of M209, after the scanner stopped counting five things
+// that were never copy (see `valueEnd`): the file did not change, the measurement did.
+const RAW_UI_CEILING = 46;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

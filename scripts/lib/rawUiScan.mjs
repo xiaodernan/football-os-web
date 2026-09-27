@@ -120,7 +120,19 @@ function valueEnd(s, from, to) {
     else if (s[j] === "}") {
       d--;
       if (!d) return j;
-    } else if (/["'`]/.test(s[j])) j = skipQuoted(s, j) - 1;
+    } else if (/["'`]/.test(s[j])) {
+      const end = skipQuoted(s, j);
+      // A quote that does not close on its own line is not a string. Inside a JSX hole the
+      // apostrophe in `{e.minute}'</span>` is copy, and skipQuoted bails at the newline —
+      // so treating that as "a string ended here" silently dropped the REST OF THE LINE
+      // out of the brace count, including the `}` that closes the hole. The hole then ran
+      // on to the next `}` in the file: on Simulation Lab's timeline it swallowed six
+      // lines and reported four `function`/`interface` declarations as interface prose,
+      // which is where the module's 51 hits came from. `end - 1 === s[j]` is what tells a
+      // closed literal from a bail — skipQuoted returns just past the closing quote.
+      if (end <= j + 1 || s[end - 1] !== s[j]) { j++; continue; }
+      j = end - 1;
+    }
     j++;
   }
   return to;
