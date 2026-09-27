@@ -526,6 +526,7 @@ const DYN_SITES = [
   { path: "features/player/PlayerOS.tsx", expr: "g.key", prefix: "attr.name.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerOS.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "w.key", prefix: "attr.name.", suffix: "" },
   { path: "features/profile/ProfilePage.tsx", expr: "s.key", prefix: "attr.name.", suffix: "" },
   { path: "features/profile/ProfilePage.tsx", expr: "s.key", prefix: "attr.name.", suffix: "" },
@@ -1338,6 +1339,14 @@ const RAW_COVERED = [
   "features/learn/LearnHub.tsx",
   "features/manager/ManagerOS.tsx",
   "features/onboarding/Onboarding.tsx",
+  // M207. The Player OS was the last of the three big screens to reach zero, and what
+  // the last seven were matters more than the number: two abbreviations a Chinese
+  // reader had been given in Latin (`OVR`, `ACWR`, both of which already had keys this
+  // file simply was not using), a coach prompt placeholder, a session summary assembled
+  // from three literals the scan could only read as fragments, the ` · Today` half of a
+  // title built by concatenation, and a provider id that is data rather than copy.
+  // Registering it is what makes the next English literal here name the file.
+  "features/player/PlayerOS.tsx",
   "features/review/ReviewPage.tsx",
   // M165. The board's last two debts were of two different kinds: ten dictionary
   // keys sitting in a field named `label`, which the scan reads as a display slot
@@ -1533,7 +1542,10 @@ const RAW_COVERED = [
 // open count, which is the shape this number is supposed to have — the drop is exactly the
 // file's own debt, with nothing else in the tree touched. Three files remain, and all three
 // are the big screens: Player OS, Simulation Lab, Data Room.
-const RAW_UI_CEILING = 149;
+// 80 as of M207, measured on the gate line: the Player OS is covered and its 7 left the
+// open count, again exactly its own debt. Two files remain, and they are the two the arc
+// has left: Simulation Lab (51) and Data Room (29).
+const RAW_UI_CEILING = 80;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED

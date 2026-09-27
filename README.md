@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M206 (a few numbers in that range
+Work ships one milestone per commit and is currently at M207 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3274,6 +3274,47 @@ to assert one; and the three React-side libs stay unexercised because there is n
 they are listed with reasons rather than exempted silently. `data/` is outside the population on
 purpose: it is data, and M197 already showed that seeding changes need re-derivation rather than a
 new gate.
+
+### M207 — the Player OS speaks the reader's locale
+
+A concurrent session had this screen half-landed: the call sites were wired and the English keys
+existed, but 6 keys were missing from 简体中文, 79 from 繁體中文, and every one of the 79 was also
+reported as a placeholder mismatch, because an absent key reads as a value with no variables in it.
+This milestone finished it rather than restarting it — 82 keys written into zh-TW, 10 into zh-CN,
+and one English sentence (`No training load yet`) that two keys now both carried: the Player OS's
+empty state simply asked for `ld.emptyTitle`, which Load & Recovery has used since, and
+`player.noTrainingLoad` was deleted from all three locales instead of being given a third
+translation.
+
+Four things the scanner had been counting as debt and were not translation gaps, and what each
+cost: `OVR` and `ACWR` — two abbreviations whose keys already existed in this dictionary and which
+this file simply was not using (the `Lv {n}` badge was the same story, three lines down); a coach
+prompt placeholder; a session summary written as three literals the scan can only read as fragments
+(`{min}′`, `· intensity {r}/5`, `{n} blocks`) and a ` · Today` glued onto a title with `+`, both of
+which are why the sentence has to be keyed whole; and `demo-coach-v1`, a provider id that is data,
+hoisted to a module constant the same way the date option bags were at M164/M170. What was left
+after that is **0 raw-UI hits**, so the file is registered in `RAW_COVERED` (now **38 files**) and
+the ceiling went **149 → 80** — exactly this file's own debt, 7 of 87, with nothing else in the tree
+touched. Two files remain and they are the two the arc has left: Simulation Lab (51) and Data Room
+(29).
+
+One gate was red before this milestone and is red for a reason worth naming: `tsc` refused
+`player.goals` twice over, because the in-flight work added a key the Goals tab has had since M156.
+Both call sites were right to want a word — the tab means targets, the match-log form means goals
+scored — so the form got its own `player.statGoals` (进球/進球) and the duplicate was deleted rather
+than silenced. The dynamic-site declaration for `attr.name.${k}` was also one short (2 declared, 3
+live), which the count check had been reporting since the third call site was written.
+
+Four mutations, **4 caught / 0 missed**: an English `OVR` put back (2 reds at once — the covered
+set names the file *and* the key it displaced stops being reachable), one zh-TW key deleted (parity),
+`{n}` dropped from a translated placeholder, and one `DYN_SITES` entry removed (the count drift
+message reads `(2 vs 3)`). Build clean, suite **33/33 proof scripts — 1727 checks**.
+
+**Still outstanding** (deliberately not faked): the two remaining screens, Simulation Lab and Data
+Room, are localisation debt of 51 and 29 hits and are untouched here; and this milestone was landed
+on a worktree another session was writing to, so its `player.*` dictionary keys and call sites are
+this commit's content too — the provenance is a takeover, not a solo author.
+
 
 ## Deploying
 

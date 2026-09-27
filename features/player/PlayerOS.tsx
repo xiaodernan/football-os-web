@@ -35,6 +35,12 @@ import { summarizeLearn } from "@/domain/learn";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
 import type { GoalMetric, TrainingSession } from "@/domain/types";
 
+// A provider identifier is data, not a sentence a visitor reads, but written inside a
+// render hole the raw-UI scan reads the literal as children — the same reason the date
+// option bags were hoisted at M164 and M170. Hoisting is the honest fix: the string is
+// still one place, and it stops being counted as copy nobody translated.
+const DEMO_PROVIDER = "demo-coach-v1";
+
 // `labelKey`, not `label`: every value here is already a `player.*` dictionary key and
 // the tab strip below renders it through t(). As `label` the raw-UI scan read all ten as
 // display copy, which is the point of the convention — a key field is not copy.
@@ -59,9 +65,9 @@ export function PlayerOS() {
   if (!state.profile) {
     return (
       <Panel className="p-8 text-center">
-        <h1 className="text-xl font-bold">Set up your Player profile</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Onboarding creates your attributes, XP and AI coach memory.</p>
-        <Button className="mt-4" onClick={() => navigate("/onboarding")}>Start onboarding</Button>
+        <h1 className="text-xl font-bold">{t("player.profileSetup")}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{t("player.profileSetupHint")}</p>
+        <Button className="mt-4" onClick={() => navigate("/onboarding")}>{t("player.startOnboarding")}</Button>
       </Panel>
     );
   }
@@ -80,8 +86,8 @@ export function PlayerOS() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="font-mono">OVR {overallRating(state.profile.attributes)}</Badge>
-          <Badge variant="outline" className="font-mono text-primary">Lv {state.profile.level}</Badge>
+          <Badge variant="outline" className="font-mono">{t("player.ovr")} {overallRating(state.profile.attributes)}</Badge>
+          <Badge variant="outline" className="font-mono text-primary">{t("player.levelLabel", { n: state.profile.level })}</Badge>
           <Badge variant="outline" className="font-mono">🔥 {state.streak.current}d</Badge>
         </div>
       </div>
@@ -124,13 +130,13 @@ function Overview() {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <Panel className="p-4 lg:col-span-2">
-        <SectionTitle title="Your football identity" />
+        <SectionTitle title={t("player.footballIdentity")} />
         <div className="grid gap-4 sm:grid-cols-2">
           <AttributeRadar attrs={p.attributes} />
           <div className="space-y-3">
             <DnaCard dna={dna} />
             <div className="rounded-lg border bg-card/40 p-3">
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">Biggest gaps</div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">{t("player.biggestGaps")}</div>
               <div className="mt-2 space-y-2">
                 {weak.map((w) => <AttributeBar key={w.key} label={t(`attr.name.${w.key}`)} value={w.value} />)}
               </div>
@@ -141,18 +147,18 @@ function Overview() {
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <StatTile label={t("common.level")} value={info.level} sub={`${info.intoLevel}/${info.forNext} XP`} />
-          <StatTile label="Overall" value={overallRating(p.attributes)} />
+          <StatTile label={t("common.overall")} value={overallRating(p.attributes)} />
         </div>
         <Panel className="p-4">
-          <SectionTitle title="Next action" />
+          <SectionTitle title={t("player.nextAction")} />
           {next ? (
             <div>
               <div className="text-sm font-medium">{next.title}</div>
-              <div className="text-xs text-muted-foreground">{next.targetMinutes}′ planned</div>
-              <Button size="sm" className="mt-3 w-full" onClick={() => navigate("/player/training")}>Go to training →</Button>
+              <div className="text-xs text-muted-foreground">{t("player.minPlanned", { n: next.targetMinutes })}</div>
+              <Button size="sm" className="mt-3 w-full" onClick={() => navigate("/player/training")}>{t("player.goToTraining")}</Button>
             </div>
           ) : (
-            <Button size="sm" className="w-full" onClick={() => navigate("/player/coach")}>Ask the AI Coach →</Button>
+            <Button size="sm" className="w-full" onClick={() => navigate("/player/coach")}>{t("player.askCoach")}</Button>
           )}
         </Panel>
         <Panel className="p-4">
@@ -210,16 +216,16 @@ function Coach() {
 
   const run = async () => {
     if (!prompt.trim()) {
-      toast.error("Tell the coach what to work on");
+      toast.error(t("player.tellCoach"));
       return;
     }
     setBusy(true);
     try {
       const p = await requestPlan(prompt, minutes, carryKeys.length ? carryKeys : undefined);
       setPlanId(p.id);
-      toast.success("Training plan generated");
+      toast.success(t("player.generatePlan"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not build a plan");
+      toast.error(e instanceof Error ? e.message : t("player.tellCoach"));
     } finally {
       setBusy(false);
     }
@@ -228,12 +234,12 @@ function Coach() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel className="p-4">
-        <SectionTitle title={t("player.coach")} hint="Describe your situation — the coach reads your history" />
+        <SectionTitle title={t("player.coach")} hint={t("player.coachCarryHint")} />
         <Textarea
           value={prompt}
           onChange={(e) => onPromptChange(e.target.value)}
           rows={4}
-          placeholder="e.g. I only have 45 minutes today, my right foot is weak and my first touch was poor in the last match."
+          placeholder={t("player.coachPlaceholder")}
           className="resize-none"
         />
         {carryKeys.length > 0 && (
@@ -242,7 +248,7 @@ function Coach() {
           </p>
         )}
         <div className="mt-3">
-          <Label>Available time</Label>
+          <Label>{t("player.availableTime")}</Label>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {SUPPORTED_MINUTES.map((m) => (
               <button key={m} onClick={() => setMinutes(m)} className={cn("rounded-md border px-2.5 py-1 text-xs", minutes === m ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
@@ -252,7 +258,7 @@ function Coach() {
           </div>
         </div>
         <Button className="mt-4 w-full" onClick={run} disabled={busy}>
-          {busy ? "Coach is thinking…" : "Generate training plan"}
+          {busy ? t("player.coachThinking") : t("player.generatePlan")}
         </Button>
         {load.hasData && (
           <Link
@@ -261,18 +267,18 @@ function Coach() {
           >
             <span className="flex items-center gap-1.5">
               <span className="font-semibold uppercase tracking-widest">{rowLine(ZONE_LABEL[load.zone], t)}</span>
-              <span className="font-mono">ACWR {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
+              <span className="font-mono">{t("player.acwr")} {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
             </span>
-            <span className="text-muted-foreground">Coach adapts to this →</span>
+            <span className="text-muted-foreground">{t("player.coachAdapts")}</span>
           </Link>
         )}
-        <p className="mt-2 text-[11px] text-muted-foreground">Provider: {plan?.provider ?? "demo-coach-v1"} · deterministic Demo Mode · swap to a Cloud Agent without UI changes.</p>
+        <p className="mt-2 text-[11px] text-muted-foreground">{t("player.providerNote", { provider: plan?.provider ?? DEMO_PROVIDER })}</p>
       </Panel>
 
       <Panel className="p-4">
-        <SectionTitle title="Coach plan" />
+        <SectionTitle title={t("player.coachPlan")} />
         {busy && <LoadingBlock rows={4} />}
-        {!busy && !plan && <EmptyState title="No plan yet" hint="Ask the coach to build your next session." icon="✦" />}
+        {!busy && !plan && <EmptyState title={t("player.noPlanYet")} hint={t("player.askCoachBuild")} icon="✦" />}
         {!busy && plan && (
           <div className="space-y-3">
             <div className="rounded-lg border bg-card/40 p-3 text-sm">{plan.diagnosis}</div>
@@ -280,7 +286,7 @@ function Coach() {
               {plan.focus.map((f) => <Badge key={f} variant="outline" className="text-primary">{t(`attr.name.${f}`)}</Badge>)}
             </div>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Session · {plan.session.targetMinutes}′</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("player.sessionMinutes", { n: plan.session.targetMinutes })}</div>
               <div className="mt-2 space-y-1.5">
                 {plan.session.exercises.map((e, i) => (
                   <div key={i} className="flex items-center justify-between rounded-md border bg-card/30 px-3 py-1.5 text-sm">
@@ -291,16 +297,16 @@ function Coach() {
               </div>
             </div>
             <details className="rounded-md border bg-card/30 p-3 text-sm">
-              <summary className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-muted-foreground">Rationale · Evidence · Sources</summary>
+              <summary className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("player.rationaleEvidenceSources")}</summary>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
                 {plan.rationale.map((r, i) => <li key={i}>{r}</li>)}
               </ul>
-              <div className="mt-2 text-xs">Confidence: <span className="font-mono text-primary">{plan.confidence}%</span></div>
+              <div className="mt-2 text-xs">{t("player.confidencePct", { n: plan.confidence })}</div>
               <div className="mt-1 text-xs text-muted-foreground">{t("common.sources")}: {plan.sources.join(" · ")}</div>
             </details>
             <div className="flex gap-2">
-              <Button size="sm" className="flex-1" onClick={() => navigate("/player/training")}>Schedule & train →</Button>
-              <Button size="sm" variant="outline" onClick={() => { setPrompt(""); setCarryKeys([]); setPlanId(null); }}>New</Button>
+              <Button size="sm" className="flex-1" onClick={() => navigate("/player/training")}>{t("player.scheduleTrain")}</Button>
+              <Button size="sm" variant="outline" onClick={() => { setPrompt(""); setCarryKeys([]); setPlanId(null); }}>{t("player.newPlan")}</Button>
             </div>
           </div>
         )}
@@ -316,7 +322,7 @@ function Attributes() {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <Panel className="p-4">
-        <SectionTitle title="Capability radar" />
+        <SectionTitle title={t("player.capabilityRadar")} />
         <AttributeRadar attrs={p.attributes} height={300} />
       </Panel>
       <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
@@ -377,38 +383,38 @@ function Training() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel className="p-4">
-        <SectionTitle title={t("player.training") + " · Today"} hint={`${planned.length} planned`} action={<Link to="/player/coach" className="text-xs text-primary hover:underline">+ New plan</Link>} />
+        <SectionTitle title={t("player.trainingToday")} hint={t("player.plannedCount", { n: planned.length })} action={<Link to="/player/coach" className="text-xs text-primary hover:underline">{t("player.newPlanShort")}</Link>} />
         {planned.length ? (
           <div className="space-y-3">{planned.map((s) => <SessionCard key={s.id} session={s} onComplete={completeSession} />)}</div>
         ) : (
-          <EmptyState title="No planned sessions" hint="Ask the AI coach to build one." icon="⚑" />
+          <EmptyState title={t("player.noPlannedSessions")} hint={t("player.askCoachBuildOne")} icon="⚑" />
         )}
       </Panel>
       {missed.length > 0 && (
         <Panel className="p-4">
-          <SectionTitle title="Missed" hint={`${missed.length} slipped`} />
+          <SectionTitle title={t("player.missed")} hint={t("player.slippedCount", { n: missed.length })} />
           <div className="divide-y">
             {missed.map((s) => (
               <div key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                 <div className="min-w-0">
                   <div className="truncate">{s.title}</div>
-                  <div className="text-xs text-muted-foreground">{new Date(s.date).toLocaleDateString()} · {s.targetMinutes}′ · not completed</div>
+                  <div className="text-xs text-muted-foreground">{t("player.missedDate", { date: new Date(s.date).toLocaleDateString(), min: s.targetMinutes })}</div>
                 </div>
-                <Badge variant="outline" className="shrink-0 font-mono text-muted-foreground">missed</Badge>
+                <Badge variant="outline" className="shrink-0 font-mono text-muted-foreground">{t("player.missedBadge")}</Badge>
               </div>
             ))}
           </div>
         </Panel>
       )}
       <Panel className="p-4">
-        <SectionTitle title="History" hint={`${history.length} completed`} />
+        <SectionTitle title={t("player.history")} hint={t("player.completedCount", { n: history.length })} />
         {history.length ? (
           <div className="divide-y">
             {history.map((s) => (
               <div key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                 <div className="min-w-0">
                   <div className="truncate">{s.title}</div>
-                  <div className="text-xs text-muted-foreground">{new Date(s.completedAt!).toLocaleDateString()} · rated {s.selfRating}/5</div>
+                  <div className="text-xs text-muted-foreground">{t("player.completedDate", { date: s.completedAt ? new Date(s.completedAt).toLocaleDateString() : "—", rating: s.selfRating ?? "—" })}</div>
                   {s.growth && s.growth.some((g) => g.delta > 0) && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {s.growth.filter((g) => g.delta > 0).map((g) => (
@@ -417,12 +423,12 @@ function Training() {
                     </div>
                   )}
                 </div>
-                <Badge variant="outline" className="shrink-0 font-mono text-success">+{s.xpAwarded} XP</Badge>
+                <Badge variant="outline" className="shrink-0 font-mono text-success">{t("player.xpAwarded", { n: s.xpAwarded ?? 0 })}</Badge>
               </div>
             ))}
           </div>
         ) : (
-          <EmptyState title="No completed sessions yet" icon="✓" />
+          <EmptyState title={t("player.noCompletedSessions")} icon="✓" />
         )}
       </Panel>
     </div>
@@ -439,9 +445,9 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
       <div className="flex items-center justify-between">
         <div>
           <div className="text-sm font-medium">{session.title}</div>
-          <div className="text-xs text-muted-foreground">{session.targetMinutes}′ · intensity {sessionIntensity(session)}/5 · {session.exercises.length} blocks</div>
+          <div className="text-xs text-muted-foreground">{t("player.sessionSummary", { min: session.targetMinutes, r: sessionIntensity(session), n: session.exercises.length })}</div>
         </div>
-        <button className="text-xs text-primary" onClick={() => setOpen((o) => !o)}>{open ? "hide" : "detail"}</button>
+        <button className="text-xs text-primary" onClick={() => setOpen((o) => !o)}>{open ? t("player.hide") : t("player.detail")}</button>
       </div>
       {open && (
         <div className="mt-2 space-y-1 border-t pt-2">
@@ -452,7 +458,7 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
       )}
       <div className="mt-3 flex items-end gap-3">
         <div>
-          <div className="mb-1 text-[11px] text-muted-foreground">How did it feel?</div>
+          <div className="mb-1 text-[11px] text-muted-foreground">{t("player.howDidItFeel")}</div>
           <RadioGroup value={rating} onValueChange={setRating} className="flex gap-2">
             {[1, 2, 3, 4, 5].map((n) => (
               <label key={n} className="flex items-center gap-1 text-xs">
@@ -463,13 +469,13 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
           </RadioGroup>
         </div>
         <div className="flex-1">
-          <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (optional)" className="h-8 text-xs" />
+          <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("player.notesOptional")} className="h-8 text-xs" />
         </div>
         <Button size="sm" onClick={() => {
           const deltas = onComplete(session.id, Number(rating), notes || undefined);
           const grew = deltas.filter((d) => d.delta > 0).map((d) => `${t(`attr.name.${d.key}`)} +${d.delta}`).join(" · ");
-          toast.success(grew ? `Session complete — ${grew}` : "Session complete — XP awarded");
-        }}>Complete</Button>
+          toast.success(grew ? t("player.sessionCompleteGrowth", { growth: grew }) : t("player.sessionCompleteXp"));
+        }}>{t("player.complete")}</Button>
       </div>
     </div>
   );
@@ -481,7 +487,7 @@ function ProgressView() {
   const learn = useLearnRecords();
   const p = state.profile!;
   const info = levelInfo(p.xp);
-  const pts = state.progress.map((x, i) => ({ label: i === 0 ? t("common.chartStart") : `${i}`, value: x.overall }));
+  const pts = state.progress.map((x, i) => ({ label: i === 0 ? t("common.chartStart") : t("player.levelLabel", { n: i }), value: x.overall }));
   // The badge list IS the catalogue on /achievements, ranked by the same comparator the
   // Dashboard tile uses. It used to be six hand-written rows, one of which ("1000 XP")
   // named a badge that exists nowhere in the app.
@@ -504,7 +510,7 @@ function ProgressView() {
       <div className="space-y-4">
         <Panel className="p-4">
           <SectionTitle title={t("common.level")} />
-          <div className="mb-1 flex justify-between text-xs text-muted-foreground"><span>Lv {info.level}</span><span>Lv {info.level + 1}</span></div>
+          <div className="mb-1 flex justify-between text-xs text-muted-foreground"><span>{t("player.levelLabel", { n: info.level })}</span><span>{t("player.levelNextLabel", { n: info.level + 1 })}</span></div>
           <Progress value={info.progress * 100} className="h-2" />
           <div className="mt-2 text-xs text-muted-foreground">{t("player.xpToNextTotal", { a: info.forNext - info.intoLevel, b: p.xp })}</div>
         </Panel>
@@ -582,13 +588,13 @@ function Workload() {
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <div className="grid grid-cols-2 gap-3 lg:col-span-1">
-        <StatTile label="Acute load" value={load.acute} sub="7-day daily avg" />
-        <StatTile label="Chronic" value={load.chronic} sub="28-day daily avg" />
-        <StatTile label="ACWR" value={acwr ?? "—"} tone={acwr && acwr > 1.5 ? "down" : acwr && acwr >= 0.8 ? "up" : "neutral"} sub={rowLine(ZONE_LABEL[load.zone], t)} />
-        <StatTile label="Sessions" value={completed.length} />
+        <StatTile label={t("player.acuteLoad")} value={load.acute} sub={t("player.7dayAvg")} />
+        <StatTile label={t("player.chronicLoad")} value={load.chronic} sub={t("player.28dayAvg")} />
+        <StatTile label={t("player.acwr")} value={acwr ?? "—"} tone={acwr && acwr > 1.5 ? "down" : acwr && acwr >= 0.8 ? "up" : "neutral"} sub={rowLine(ZONE_LABEL[load.zone], t)} />
+        <StatTile label={t("player.sessionsCount")} value={completed.length} />
       </div>
       <Panel className="p-4 lg:col-span-2">
-        <SectionTitle title="Training volume" hint="weekly load · intensity × duration (AU)" />
+        <SectionTitle title={t("player.trainingVolume")} hint={t("player.volumeHint")} />
         {load.hasData ? (
           <div className="flex h-48 items-end gap-2">
             {byWeek.map((w) => {
@@ -602,9 +608,9 @@ function Workload() {
             })}
           </div>
         ) : (
-          <EmptyState title="No training load yet" hint="Complete sessions to build your workload." icon="⚖" />
+          <EmptyState title={t("ld.emptyTitle")} hint={t("player.completeSessionsLoad")} icon="⚖" />
         )}
-        {load.zone === "high" && <p className="mt-3 text-xs text-warning">⚠ ACWR {acwr?.toFixed(2)} is above the 1.5 spike threshold — consider a recovery session.</p>}
+        {load.zone === "high" && <p className="mt-3 text-xs text-warning">{t("player.acwrWarning", { ratio: acwr?.toFixed(2) ?? "—" })}</p>}
       </Panel>
     </div>
   );
@@ -624,24 +630,23 @@ function Video() {
   const analyze = async (file: File) => {
     lastFileRef.current = file;
     if (!state.profile) {
-      setError(new Error("Complete onboarding so the analysis can reference your attributes."));
+      setError(new Error(t("common.err.needOnboarding")));
       return;
     }
     setBusy(true);
     setReport(null);
     setError(null);
     setProgress(0);
-    const stages = ["Uploading", "Extracting frames", "Detecting players", "Pose / movement", "Event detection", "AI analysis"];
     try {
-      for (let i = 0; i < stages.length; i++) {
+      for (let i = 0; i < 6; i++) {
         await new Promise((r) => setTimeout(r, 260));
-        setProgress(Math.round(((i + 1) / stages.length) * 100));
+        setProgress(Math.round(((i + 1) / 6) * 100));
       }
       const rep = await videoProvider.analyze({ fileId: `${file.name}-${file.size}`, fileName: file.name, sizeBytes: file.size, attrs: state.profile.attributes });
       setReport(rep);
-      toast.success("Video analysed (demo provider)");
+      toast.success(t("film.toastAnalysed"));
     } catch (e) {
-      setError(e instanceof Error ? e : new Error("Analysis failed"));
+      setError(e instanceof Error ? e : new Error(t("common.err.analysisFailed")));
     } finally {
       setBusy(false);
       setProgress(0);
@@ -651,7 +656,7 @@ function Video() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel className="p-4">
-        <SectionTitle title={t("player.video")} hint="Upload a clip — pipeline runs in Demo Mode" />
+        <SectionTitle title={t("player.video")} hint={t("player.uploadClip")} />
         <input ref={inputRef} type="file" accept="video/*" className="hidden" onChange={(e) => e.target.files?.[0] && analyze(e.target.files[0])} />
         <div
           onDragOver={(e) => e.preventDefault()}
@@ -659,21 +664,21 @@ function Video() {
           className="grid place-items-center rounded-xl border-2 border-dashed py-12 text-center"
         >
           <div className="text-3xl opacity-40">⬆</div>
-          <p className="mt-2 text-sm text-muted-foreground">Drop a video or</p>
-          <Button size="sm" variant="outline" className="mt-2" onClick={() => inputRef.current?.click()}>Choose file</Button>
+          <p className="mt-2 text-sm text-muted-foreground">{t("player.dropVideo")}</p>
+          <Button size="sm" variant="outline" className="mt-2" onClick={() => inputRef.current?.click()}>{t("player.chooseFile")}</Button>
         </div>
         {busy && (
           <div className="mt-4">
             <Progress value={progress} className="h-1.5" />
-            <p className="mt-2 text-xs text-muted-foreground">Processing… {progress}%</p>
+            <p className="mt-2 text-xs text-muted-foreground">{t("player.processing", { n: progress })}</p>
           </div>
         )}
-        <p className="mt-3 text-[11px] text-muted-foreground">No real pose model is bundled. The DemoVideoProvider runs the same pipeline over a deterministic file fingerprint and is labelled DEMO — it does not impersonate a live model.</p>
+        <p className="mt-3 text-[11px] text-muted-foreground">{t("player.demoDisclosureVideo")}</p>
       </Panel>
       <Panel className="p-4">
-        <SectionTitle title="Report" />
+        <SectionTitle title={t("player.report")} />
         {error && <ErrorState error={error} retry={() => lastFileRef.current && analyze(lastFileRef.current)} />}
-        {!error && !report && !busy && <EmptyState title="No analysis yet" icon="▶" />}
+        {!error && !report && !busy && <EmptyState title={t("player.noAnalysisYet")} icon="▶" />}
         {busy && <LoadingBlock rows={4} />}
         {report && (
           <div className="space-y-3 text-sm">
@@ -682,27 +687,27 @@ function Video() {
               <Badge variant="outline" className="border-warning/40 text-warning">DEMO · {report.confidence}% conf</Badge>
             </div>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-success">Strengths</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-success">{t("player.strengths")}</div>
               <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{report.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
             </div>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-destructive">Weaknesses</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-destructive">{t("player.weaknesses")}</div>
               <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{report.weaknesses.map((s, i) => <li key={i}>{s}</li>)}</ul>
             </div>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-primary">3 most important improvements</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-primary">{t("player.threeImprovements")}</div>
               <ol className="mt-1 list-decimal pl-5 text-xs text-muted-foreground">{report.improvements.map((s, i) => <li key={i}>{s}</li>)}</ol>
             </div>
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Evidence frames</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("player.evidenceFrames")}</div>
               <div className="mt-1.5 grid grid-cols-4 gap-2">
                 {report.frames.map((f, i) => (
                   <div key={i} className="grid aspect-video place-items-center rounded bg-gradient-to-br from-secondary to-card text-center text-[9px] text-muted-foreground">{f.label}</div>
                 ))}
               </div>
             </div>
-            <Button size="sm" className="w-full" onClick={async () => { await requestPlan(`Video analysis flagged: ${report.improvements[0]}. Build a session on ${report.recommendedFocus.map(attributeLabel).join(" and ")}.`, 30); toast.success("Training created from video"); navigate("/player/training"); }}>
-              Create training from this analysis →
+            <Button size="sm" className="w-full" onClick={async () => { await requestPlan(`Video analysis flagged: ${report.improvements[0]}. Build a session on ${report.recommendedFocus.map(attributeLabel).join(" and ")}.`, 30); toast.success(t("film.toastBuilt", { min: 30, n: report.recommendedFocus.length, focus: report.recommendedFocus.map((k) => t(`attr.name.${k}`)).join(", ") })); navigate("/player/training"); }}>
+              {t("player.createTrainingFromAnalysis")}
             </Button>
           </div>
         )}
@@ -713,6 +718,7 @@ function Video() {
 
 function Matches() {
   const { state } = useOs();
+  const { t } = useI18n();
   const [rows, setRows] = useState<{ id: string; opp: string; date: string; g: number; a: number; r: number }[]>(() => {
     try { return JSON.parse(localStorage.getItem(FIXTURES_KEY) || "[]"); } catch { return []; }
   });
@@ -728,19 +734,19 @@ function Matches() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel className="p-4">
-        <SectionTitle title="Log a match performance" hint="Local log · saved on this device and included in Settings export" />
+        <SectionTitle title={t("player.logMatch")} hint={t("player.localLogHint")} />
         <div className="space-y-3">
-          <div><Label>Opponent</Label><Input value={form.opp} onChange={(e) => setForm({ ...form, opp: e.target.value })} className="mt-1" placeholder="e.g. Rovers" /></div>
+          <div><Label>{t("player.opponent")}</Label><Input value={form.opp} onChange={(e) => setForm({ ...form, opp: e.target.value })} className="mt-1" placeholder={t("player.opponentPlaceholder")} /></div>
           <div className="grid grid-cols-3 gap-3">
-            <div><Label>Goals</Label><Input type="number" value={form.g} onChange={(e) => setForm({ ...form, g: e.target.value })} className="mt-1" /></div>
-            <div><Label>Assists</Label><Input type="number" value={form.a} onChange={(e) => setForm({ ...form, a: e.target.value })} className="mt-1" /></div>
-            <div><Label>Rating</Label><Input type="number" step="0.1" value={form.r} onChange={(e) => setForm({ ...form, r: e.target.value })} className="mt-1" /></div>
+            <div><Label>{t("player.statGoals")}</Label><Input type="number" value={form.g} onChange={(e) => setForm({ ...form, g: e.target.value })} className="mt-1" /></div>
+            <div><Label>{t("player.assists")}</Label><Input type="number" value={form.a} onChange={(e) => setForm({ ...form, a: e.target.value })} className="mt-1" /></div>
+            <div><Label>{t("player.rating")}</Label><Input type="number" step="0.1" value={form.r} onChange={(e) => setForm({ ...form, r: e.target.value })} className="mt-1" /></div>
           </div>
-          <Button onClick={add}>Add performance</Button>
+          <Button onClick={add}>{t("player.addPerformance")}</Button>
         </div>
       </Panel>
       <Panel className="p-4">
-        <SectionTitle title="Recent matches" action={club && <span className="text-xs text-muted-foreground">{club.name}</span>} />
+        <SectionTitle title={t("player.recentMatches")} action={club && <span className="text-xs text-muted-foreground">{club.name}</span>} />
         {rows.length ? (
           <div className="divide-y">
             {rows.map((r) => (
@@ -748,13 +754,13 @@ function Matches() {
                 <div><div>{r.opp}</div><div className="text-xs text-muted-foreground">{new Date(r.date).toLocaleDateString()}</div></div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 font-mono text-xs"><span>{r.g}G {r.a}A</span><Badge variant="outline">{r.r.toFixed(1)}</Badge></div>
-                  <button onClick={() => remove(r.id)} aria-label={`Delete match vs ${r.opp}`} className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus:opacity-100 group-hover:opacity-100">✕</button>
+                  <button onClick={() => remove(r.id)} aria-label={t("player.deleteMatch", { opp: r.opp })} className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus:opacity-100 group-hover:opacity-100">✕</button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <EmptyState title="No matches logged" icon="⚽" />
+          <EmptyState title={t("player.noMatchesLogged")} icon="⚽" />
         )}
       </Panel>
     </div>
