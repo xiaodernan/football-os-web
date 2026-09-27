@@ -136,7 +136,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M199 (a few numbers in that range
+Work ships one milestone per commit and is currently at M200 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2896,6 +2896,68 @@ one script crashed" — re-run before believing it, and the line tells you which
 product side the first item is unchanged and now queued ahead of everything: no reachable state in
 the shipped seed can ask for the all-out mentality, so that arm is either re-scaled to a number the
 space actually crosses or deleted.
+
+### M200 — the all-out recommendation had to be able to happen
+
+M197 left one honest loose end in the Manager OS advice panel: `matchPrep` recommends `+2`
+("All-out") only when the attack edge reaches **+12**, and its own reachability census measured the
+whole pairing × fatigue space topping out at **+8.50**. The arm was not rare, it was structurally
+dead — a sentence the product could never say, a slider position the advisor would never ask for,
+and a `FIRED`-style census that could only ever describe the other rules. Leaving it would have made
+the panel's own documentation a claim about a situation that does not occur.
+
+The cut is now **+7**, chosen from measured numbers rather than from taste: +4 is already the
+"attacking" step and +8.50 is the ceiling, so a cut at 7 keeps the two attacking steps distinct and
+leaves the all-out band genuinely reachable — **13 of the 3,528** seeded pairing × fatigue states,
+i.e. the lopsided fixtures where it should fire (`rma` vs `ath` at zero fatigue, attack edge +8.50
+with the defensive edge at −5.00). That headroom survives a transfer window: the same sweep with
+data's three strongest attackers handed to one club tops out at **+9.07**, and eleven of them at
++8.96, so +12 was unreachable even optimistically while +7 is a real but narrow band.
+
+What changed in the gate is bigger than the number. The mentality census is now **per arm**:
+`+2 ×13 / +1 ×171 / 0 ×1844 / −1 ×1500` of the 3,528 states, and every arm the chain can emit must
+have at least one reachable state, with the all-out band described by its own strongest witness so
+the clause cannot pass on a technicality. The one asymmetry the model keeps is named rather than
+glossed: the chain has two attacking steps and one defensive one, so **−2 is never a recommendation**
+(0 of 3,528 states would ask for it) even though the slider offers it — a modelling choice, recorded
+where a future reader will notice it. `matchPrep` is also asserted to print the all-out sentence for
+at least one *played* career state, not merely to define it.
+
+The threshold probes got the same treatment M196 earned, and then some. Fatigue is the only
+continuous input the advisor reads, and its effect is linear (attack edge −4 per unit, defensive
+exposure +3, midfield −3), so every threshold has an exact crossing fatigue and each one is straddled
+at ±0.005. The thresholds are now **read out of the shipped module** instead of typed a second time
+in the proof — `attacking=4, safeBackLine=2, allOut=7, exposed=4, weaker=−4, pressHigh=3,
+pressLow=−3` — which takes the search from four boundaries to six and the straddles from 170 to
+**322** over 39 real seasons, each of the six with at least one probe where the model's own
+recommendation flips. A separate clause requires those parsed numbers to match the values the gate
+models by hand, so when a threshold eventually moves, the failure says "re-derive the reachability
+census", not "bump the constant".
+
+Nine mutations, **9 caught / 0 missed / 0 crashed**, unmutated controls green before and after
+(career 183/183, transfers 76/76). Restoring the dead +12 cut is caught by **4** checks; lowering it
+to +4 so the two attacking steps collapse is **6**; nudging it to **+9**, which is the mutation worth
+naming because it looks perfectly reasonable and is one point above the reachable ceiling, is **4**;
+loosening the safe-back-line guard to +5 is **1**; making the exposed-defence arm recommend nothing
+is **5**; turning every safe attacking state all-out is **8**; pushing the weaker-side cut to −14, out
+of the band, is **8**. Two break the gate's own readers rather than the model, which is how those
+readers are shown to have teeth: a threshold regex that no longer matches (3 red, the parse and the
+census both refuse) and an arm census that files `+2` under another arm (1 red — the liveness clause
+alone, which is exactly the claim it exists to make).
+
+Measured on a clean plane (`git archive HEAD`, only this milestone's files copied in): `tsc` 0,
+build 0, suite **30/30 proof scripts proven · 1687/1687 checks counted · exit 0**, against the same
+plane at HEAD alone (M199) at **1684** — `proof-career` 180 → **183** and nothing else moved.
+`proof:projection` printed its real 42/42 this time. Domain prose is still **256 literals across 10
+files** with the career module's cap at 29 (no rationale sentence was added — the wording already
+existed, it just could never fire), and the raw-UI ledger is still **149 across 3 files**.
+
+**Still outstanding** (deliberately not faked): the one-defensive-step asymmetry above is a model
+choice, not a bug, and making it symmetric would add prose the ratchet has to carry; the dep-scan
+`died-after-green` flake on `proof:projection` is named by the runner but not prevented; and the
+older queue is unchanged — the Football AI's composed sentences (#184+), the demo coach's prose
+(#160), the populated-state browser walk (#142), the two `components/ui/calendar.tsx` sites the day
+anything mounts them, and `community.ts` / `filmLibrary.ts`, which still have no proof of their own.
 
 ## Deploying
 

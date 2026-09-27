@@ -420,7 +420,13 @@ export function matchPrep(state: CareerState): MatchPrep {
   const meR = Math.round(midfieldEdge);
   let mentality = 0;
   if (attackEdge >= 4 && defenseEdge <= 2) {
-    mentality = attackEdge >= 12 ? 2 : 1;
+    // M200: the all-out cut was 12, a number the shipped seed cannot reach — every
+    // pairing × fatigue state in the whole competition set topped out at an attack
+    // edge of +8.50 (and +9.07 even after handing one club the strongest attackers in
+    // the data), so this arm was dead code and the panel never said "all-out". The cut
+    // now sits inside that envelope: above the +4 "attacking" step, below the observed
+    // ceiling, so it fires on the genuinely lopsided fixtures rather than never.
+    mentality = attackEdge >= 7 ? 2 : 1;
     rationale.push(`Attack edge +${aeR} over their defense with a safe back line → ${mentality > 1 ? "all-out" : "attacking"} mentality.`);
   } else if (defenseEdge > 4) {
     mentality = -1;
@@ -429,7 +435,7 @@ export function matchPrep(state: CareerState): MatchPrep {
     mentality = -1;
     rationale.push(`We are the weaker side on paper (attack edge ${aeR}) → stay compact and counter.`);
   } else rationale.push("No mentality threshold is met → keep a balanced mentality.");
-  // The fallthrough is NOT "an even matchup": a +12 attack edge lands here too, because
+  // The fallthrough is NOT "an even matchup": a +9 attack edge lands here too, because
   // the attacking rule also demands a safe back line (defenseEdge <= 2). The sentence
   // therefore claims only that no rule triggered, never what the matchup looks like.
 

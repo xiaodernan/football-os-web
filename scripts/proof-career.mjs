@@ -498,7 +498,7 @@ ok("the advisor hands over both squads' rounded lines, not just its verdict",
   PREPS.every(({ s, p }) => { const { ourIn, theirIn } = rawEdges(s); return p.us.attack === Math.round(ourIn.attack) && p.us.midfield === Math.round(ourIn.midfield) && p.us.defense === Math.round(ourIn.defense) && p.them.attack === Math.round(theirIn.attack) && p.them.midfield === Math.round(theirIn.midfield) && p.them.defense === Math.round(theirIn.defense); }));
 ok("exactly one reason per rule is printed (mentality, press, tempo — three lines)",
   PREPS.every(({ p }) => p.rationale.length === 3));
-const handMentality = (ae, de) => (ae >= 4 && de <= 2) ? (ae >= 12 ? 2 : 1) : de > 4 ? -1 : ae < -4 ? -1 : 0;
+const handMentality = (ae, de) => (ae >= 4 && de <= 2) ? (ae >= 7 ? 2 : 1) : de > 4 ? -1 : ae < -4 ? -1 : 0;
 const handPress = (me) => (me >= 3 ? 0.75 : me <= -3 ? 0.3 : 0.5);
 const handTempo = (ae, fatigue) => (fatigue > 0.6 ? 0.35 : ae >= 6 ? 0.7 : 0.5);
 ok("mentality is exactly the declared rule chain over the raw edges (never a rounded boundary)",
@@ -510,7 +510,7 @@ ok("tempo is the fatigue-then-attack rule chain",
 ok("a positive mentality always implies the attacking rule's own numbers (edge ≥ 4 and a safe back line)",
   PREPS.every(({ p }) => p.recommended.mentality > 0 ? (p.attackEdge >= 4 && p.defenseEdge <= 2) : true));
 ok("only a large attacking edge earns the all-out mentality",
-  PREPS.every(({ p }) => p.recommended.mentality === 2 ? p.attackEdge >= 12 : true));
+  PREPS.every(({ p }) => p.recommended.mentality === 2 ? p.attackEdge >= 7 : true));
 ok("a defensive mentality is only ever printed when a defensive rule actually fired",
   PREPS.every(({ s, p }) => { if (p.recommended.mentality !== -1) return true; const { ae, de } = rawEdges(s); return de > 4 || ae < -4; }));
 ok("a balanced mentality is always explained as a threshold outcome, never as an even matchup",
@@ -621,32 +621,47 @@ ok(`all six quoting sentences fire in real careers now that every club fields at
 // competition and every fatigue level the model holds, on the seeded squads. M196 ran
 // this and found the weaker-side arm shadowed by rule order — an artefact of the
 // fallback attack lines, which inflated a weak club's printed attack until it could not
-// sit below −4 without its defence also sitting above +4. M197 removed the inflation, so
-// the sweep is kept as a REACHABILITY census: it re-proves the weaker-side arm live and
-// names the arm the fix moved instead, the all-out mentality at a +12 attack edge.
-const SHADOW = (() => {
-  let weaker = 0, allout = 0, weakest = { ae: Infinity }, strongest = { ae: -Infinity };
+// sit below −4 without its defence also sitting above +4. M197 removed the inflation and
+// that arm came live while the all-out cut went structurally dead (nothing reached +12);
+// M200 moved the cut to +7, so the census is now per ARM: every mentality value the
+// chain can emit must have a reachable state, because an arm with none is a sentence the
+// product can never say and a rule nobody exercises.
+const ARMS = (() => {
+  const n = { "2": 0, "1": 0, "0": 0, "-1": 0, "-2": 0 };
+  let total = 0, weakest = { ae: Infinity }, strongest = { ae: -Infinity }, witness = {}, bestAllOut = null;
   for (const id of ALL_IDS) for (const rival of clubIdsByCompetition(getClub(id).competitionId).filter((x) => x !== id)) {
     for (let k = 0; k <= 20; k++) {
       const f = Math.min(1, k / 20);
       const our = clubInput(id, {}, NEUTRAL, 0, 0, f), them = clubInput(rival, {}, NEUTRAL, 0, 0, 0);
       const ae = our.attack - them.defense, de = them.attack - our.defense;
+      total++;
       if (ae < weakest.ae) weakest = { ae, de, at: `${id} vs ${rival} at fatigue ${f.toFixed(2)}` };
       if (ae > strongest.ae) strongest = { ae, de, at: `${id} vs ${rival} at fatigue ${f.toFixed(2)}` };
-      if (ae < -4 && de <= 4) weaker++;
-      if (ae >= 12 && de <= 2) allout++;
+      const m = handMentality(ae, de);
+      n[String(m)]++;
+      if (!witness[String(m)]) witness[String(m)] = `${id} vs ${rival} at fatigue ${f.toFixed(2)} (ae ${ae.toFixed(2)}, de ${de.toFixed(2)})`;
+      if (m === 2 && (!bestAllOut || ae > bestAllOut.ae)) bestAllOut = { ae, de, at: `${id} vs ${rival} at fatigue ${f.toFixed(2)}` };
     }
   }
-  return { weaker, allout, weakest, strongest };
+  return { n, total, weakest, strongest, witness, bestAllOut };
 })();
-ok(`the weaker-side arm is now LIVE: ${SHADOW.weaker} pairing × fatigue states sit below a −4 attack edge while staying inside the +4 defensive edge the earlier rule owns (weakest ${SHADOW.weakest.ae.toFixed(2)} at ${SHADOW.weakest.at}, arriving with defensive edge ${SHADOW.weakest.de.toFixed(2)})`,
-  SHADOW.weaker > 0);
+const ARM_KEYS = ["2", "1", "0", "-1"];
+ok(`every mentality arm the chain can emit is reachable: ${ARM_KEYS.map((k) => `${k} ×${ARMS.n[k]}`).join(" / ")} of ${ARMS.total} pairing × fatigue states (weakest edge ${ARMS.weakest.ae.toFixed(2)} at ${ARMS.weakest.at}; strongest ${ARMS.strongest.ae.toFixed(2)} at ${ARMS.strongest.at})`,
+  ARM_KEYS.every((k) => ARMS.n[k] > 0));
+ok(`…and the all-out band is described by its own strongest state, so the clause above cannot pass on a technicality (${ARMS.bestAllOut ? `${ARMS.bestAllOut.at}: ae ${ARMS.bestAllOut.ae.toFixed(2)}, de ${ARMS.bestAllOut.de.toFixed(2)}` : "empty"})`,
+  !!ARMS.bestAllOut && ARMS.bestAllOut.ae >= 7 && ARMS.bestAllOut.de <= 2);
 ok("…and it prints in the walk rather than only existing in the sweep",
   FIRED.find((f) => /weaker side on paper/.test(f.re)).n > 0 && PREPS2.some(({ p }) => /weaker side on paper/.test(p.rationale.join(" | "))));
-ok(`the arm the fix moved is named instead of pretended covered: nothing reaches the all-out cut, because the whole pairing × fatigue space tops out at attack edge ${SHADOW.strongest.ae.toFixed(2)} (${SHADOW.strongest.at})`,
-  SHADOW.allout === 0 && SHADOW.strongest.ae < 12, `strongest ${SHADOW.strongest.ae.toFixed(2)}, weakest ${SHADOW.weakest.ae.toFixed(2)}`);
-ok("…so the all-out recommendation is unreachable in the shipped product, not merely rare — never printed over the reachable states",
-  PREPS2.every(({ p }) => p.recommended.mentality !== 2));
+ok(`…while the weakest-side arm still fires on its own rule (weakest ${ARMS.weakest.ae.toFixed(2)} arriving with defensive edge ${ARMS.weakest.de.toFixed(2)})`,
+  ARMS.n["-1"] > 0 && ARMS.weakest.ae < -4 && ARMS.weakest.de > 4);
+// The one asymmetry the model keeps, stated rather than left implicit: the attacking
+// side has two steps (+4 then +7) and the defensive side one, so −2 is never a
+// recommendation even though the slider offers it. That is a modelling choice, not a
+// broken arm — so it is measured on the same sweep and named here.
+ok(`…while the advisor never recommends −2, because the chain has one defensive step and two attacking ones (${ARMS.n["-2"]} of ${ARMS.total} states would ask for it)`,
+  ARMS.n["-2"] === 0);
+ok("the all-out recommendation is printed by a reachable career, not merely defined",
+  PREPS2.some(({ p }) => p.recommended.mentality === 2 && /all-out/.test(p.rationale[0])));
 ok("the advisor is measured at balanced tactics, so what it prints does not move with the sliders the manager has set — while the engine's lines do",
   (() => {
     const base = createCareer(US);
@@ -671,11 +686,39 @@ ok(`all three advice rules hold their declared thresholds across a 0.01-step fat
     && p.recommended.tempo === handTempo(raw.ae, s.fatigue)));
 // The sweep above samples boundaries; it cannot prove a threshold is where the module
 // says it is unless a state lands on BOTH sides of it. Fatigue is the only continuous
-// knob the advisor reads (clubInput uses neither form nor morale in the three lines), so
-// a pairing's attack edge crosses threshold T at fatigue exactly (baseAe − T) / 4 and its
-// midfield edge crosses ±3 at (baseMe ∓ 3) / 3. Each crossing inside [0,1] is probed
-// either side, with every other field taken from a real career state at that fixture —
-// that is what catches a threshold that MOVED rather than a rule that was never reached.
+// knob the advisor reads (clubInput uses neither form nor morale in the three lines) and
+// its effect is linear — attack edge falls 4 per unit of fatigue, defensive exposure
+// rises 3, midfield falls 3 — so every threshold has an exact crossing fatigue, and each
+// one is probed on both sides. The numbers are READ OUT of the shipped module rather than
+// typed twice here, so a threshold that moves makes the straddle follow it and the model
+// disagree with `handMentality` above; that is what catches a MOVED rule instead of an
+// unreached one. M200 moved the all-out cut from 12 to 7 through exactly this machinery.
+const CUTS = {
+  attacking: Number(SRC.match(/if \(attackEdge >= (\d+) && defenseEdge <= \d+\)/)?.[1]),
+  safeBackLine: Number(SRC.match(/if \(attackEdge >= \d+ && defenseEdge <= (\d+)\)/)?.[1]),
+  allOut: Number(SRC.match(/attackEdge >= (\d+) \? 2 : 1/)?.[1]),
+  exposed: Number(SRC.match(/else if \(defenseEdge > (\d+)\)/)?.[1]),
+  weaker: Number(SRC.match(/else if \(attackEdge < -(\d+)\)/)?.[1]),
+  pressHigh: Number(SRC.match(/midfieldEdge >= (\d+)/)?.[1]),
+  pressLow: Number(SRC.match(/midfieldEdge <= -(\d+)/)?.[1]),
+};
+ok(`every threshold the advisor declares is parsed out of the shipped module (${Object.entries(CUTS).map(([k, v]) => `${k}=${v}`).join(" ")})`,
+  Object.values(CUTS).every((v) => Number.isFinite(v)),
+  Object.entries(CUTS).filter(([, v]) => !Number.isFinite(v)).map(([k]) => k).join(", "));
+ok(`…and the numbers the gate models by hand still match the ones the module ships (attacking ${CUTS.attacking}, all-out ${CUTS.allOut}, exposed ${CUTS.exposed}, weaker −${CUTS.weaker}): if this is red, a threshold moved and the reachability census above has to be re-derived, not re-typed`,
+  CUTS.attacking === 4 && CUTS.allOut === 7 && CUTS.safeBackLine === 2 && CUTS.exposed === 4 && CUTS.weaker === 4 && CUTS.pressHigh === 3 && CUTS.pressLow === 3);
+
+const aeAt = (base, f) => base - 4 * f;
+const deAt = (base, f) => base + 3 * f;
+const meAt = (base, f) => base - 3 * f;
+const THRESHOLDS = [
+  { name: "attacking", T: CUTS.attacking, at: (e) => (e.ae - CUTS.attacking) / 4, edge: (e, f) => aeAt(e.ae, f), guard: (e, f) => deAt(e.de, f) <= CUTS.safeBackLine, kind: "mentality" },
+  { name: "all-out", T: CUTS.allOut, at: (e) => (e.ae - CUTS.allOut) / 4, edge: (e, f) => aeAt(e.ae, f), guard: (e, f) => deAt(e.de, f) <= CUTS.safeBackLine, kind: "mentality" },
+  { name: "weaker side", T: -CUTS.weaker, at: (e) => (e.ae + CUTS.weaker) / 4, edge: (e, f) => aeAt(e.ae, f), guard: (e, f) => deAt(e.de, f) <= CUTS.exposed, kind: "mentality" },
+  { name: "exposed defence", T: CUTS.exposed, at: (e) => (CUTS.exposed - e.de) / 3, edge: (e, f) => deAt(e.de, f), guard: () => true, kind: "mentality" },
+  { name: "high press", T: CUTS.pressHigh, at: (e) => (e.me - CUTS.pressHigh) / 3, edge: (e, f) => meAt(e.me, f), guard: () => true, kind: "press" },
+  { name: "deep block", T: -CUTS.pressLow, at: (e) => (e.me + CUTS.pressLow) / 3, edge: (e, f) => meAt(e.me, f), guard: () => true, kind: "press" },
+];
 const CROSSINGS = (() => {
   const out = [];
   for (const id of ALL_IDS) {
@@ -683,43 +726,32 @@ const CROSSINGS = (() => {
     const total = FIXTURES_OF(id);
     for (let i = 0; i < total; i++) {
       const e0 = rawEdges({ ...s, fatigue: 0 });
-      for (const [T, kind] of [[4, "mentality"], [12, "mentality"], [3, "press"], [-3, "press"]]) {
-        const base = kind === "mentality" ? e0.ae : e0.me;
-        const f = kind === "mentality" ? (base - T) / 4 : (base - T) / 3;
-        // The attacking arm also demands a safe back line, so a mentality straddle can
-        // only flip while de(f) stays ≤ 2; the press arm has no side condition.
-        if (f > 0.02 && f < 0.98 && (kind !== "mentality" || e0.de + 3 * f <= 2)) {
-          const lo = { ...s, fatigue: +(f - 0.005).toFixed(4) };
-          const hi = { ...s, fatigue: +(f + 0.005).toFixed(4) };
-          out.push({ id, i, T, kind, lo, hi, pl: matchPrep(lo), ph: matchPrep(hi), rl: rawEdges(lo), rh: rawEdges(hi) });
-        }
+      for (const th of THRESHOLDS) {
+        const f = th.at(e0);
+        if (!(f > 0.02 && f < 0.98) || !th.guard(e0, f)) continue;
+        const lo = { ...s, fatigue: +(f - 0.005).toFixed(4) };
+        const hi = { ...s, fatigue: +(f + 0.005).toFixed(4) };
+        out.push({ id, i, T: th.T, name: th.name, kind: th.kind, f, lo, hi, pl: matchPrep(lo), ph: matchPrep(hi), rl: rawEdges(lo), rh: rawEdges(hi) });
       }
       s = playNextFixture(s).state;
     }
   }
   return out;
 })();
+const gotOf = (c, p) => (c.kind === "mentality" ? p.recommended.mentality : p.recommended.press);
+const wantOf = (c, raw) => (c.kind === "mentality" ? handMentality(raw.ae, raw.de) : handPress(raw.me));
 ok(`every crossing probe agrees with the declared rule on both sides of the threshold (${CROSSINGS.length} straddles over ${ALL_IDS.length} real seasons)`,
-  CROSSINGS.length > 0 && CROSSINGS.every((c) => {
-    const want = (raw) => c.kind === "mentality" ? handMentality(raw.ae, raw.de) : handPress(raw.me);
-    const got = (p) => c.kind === "mentality" ? p.recommended.mentality : p.recommended.press;
-    return got(c.pl) === want(c.rl) && got(c.ph) === want(c.rh);
+  CROSSINGS.length > 0 && CROSSINGS.every((c) => gotOf(c, c.pl) === wantOf(c, c.rl) && gotOf(c, c.ph) === wantOf(c, c.rh)));
+const flipLine = () =>
+  THRESHOLDS.map((th) => {
+    const m = CROSSINGS.filter((c) => c.name === th.name);
+    return `${th.name}(${th.T}) ${m.length}/${m.filter((c) => gotOf(c, c.pl) !== gotOf(c, c.ph)).length}`;
+  }).join(" · ");
+ok(`…and each of the ${THRESHOLDS.length} thresholds the module declares has at least one straddle where the model's own recommendation flips — the figures are straddles/flipping: ${flipLine()}`,
+  THRESHOLDS.every((th) => {
+    const m = CROSSINGS.filter((c) => c.name === th.name);
+    return m.length > 0 && m.some((c) => gotOf(c, c.pl) !== gotOf(c, c.ph));
   }));
-ok("…and every threshold the seed can reach has a straddle where the model's own recommendation flips",
-  [4, 3, -3].every((T) => {
-    const m = CROSSINGS.filter((c) => c.T === T);
-    return m.length > 0 && m.some((c) => (c.kind === "mentality"
-      ? c.pl.recommended.mentality !== c.ph.recommended.mentality
-      : c.pl.recommended.press !== c.ph.recommended.press));
-  }),
-  [4, 12, 3, -3].map((T) => `${T}: ${CROSSINGS.filter((c) => c.T === T).length} straddle(s)`).join(" · "));
-// The +12 cut is still searched (above) so its absence is measured, not assumed: no
-// fatigue value in [0,1] puts a seeded pairing on that boundary, because the whole
-// space tops out below it. A clause that silently dropped 12 from the list would let a
-// future threshold move go unseen; this one reports it as unreachable instead.
-ok("…and the threshold with no crossing is reported as unreachable rather than quietly dropped from the search",
-  CROSSINGS.filter((c) => c.T === 12).length === 0 && SHADOW.strongest.ae < 12,
-  `strongest raw attack edge ${SHADOW.strongest.ae.toFixed(2)}`);
 ok("the rationale never quotes a raw float: it interpolates the rounded edge fields",
   !/rationale\.push\([^)]*\$\{(attackEdge|defenseEdge|midfieldEdge)\.toFixed/.test(SRC));
 ok("a tired squad's tempo line quotes the same rounded percentage the panel shows",
