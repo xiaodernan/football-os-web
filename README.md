@@ -92,8 +92,11 @@ Domain behaviour is pinned by runnable proof scripts — each loads the modules 
 Vite's SSR runtime and asserts the claims a milestone rests on. They cover the numeric
 cores (analytics, match engine, fixture probability, development projections, XP curve,
 role-gap analysis, film insights, career arc, comparisons, transfers, the Manager OS career
-model) and the honesty contracts (AI grounding, local-data registry, offline wording, feed
-ranking, the weekly review's prose, and the words the knowledge graph draws). Run them all:
+model), the shared local stores (the clip library the Film Room writes and four screens read;
+the export/import/reset registry) and the honesty contracts (AI grounding, offline wording, feed
+ranking, the weekly review's prose, the words the knowledge graph draws, and the community
+board's sample-content flags and data-derived discussion starters). The runner that executes them
+is itself gated, so a verdict means what it says. Run them all:
 
 ```sh
 npm run proof                        # = npm test: every scripts/proof-*.mjs, one verdict per script
@@ -139,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M203 (a few numbers in that range
+Work ships one milestone per commit and is currently at M204 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3128,6 +3131,67 @@ files**, dictionary **1478 × 3** — no `src/` file and no display string in th
 one occurrence per script per run, and a script that dies twice still shows as `UNVERIFIED`, which
 is the correct answer and still requires a re-run to distinguish from a real hang. `community.ts`
 (205 lines) remains the last substantial ungated domain module.
+
+### M204 — the community board's honesty claims, gated, and one of them was false
+
+`domain/community.ts` is the largest domain module with no proof of its own, and its header carries
+three claims: thread topics are derived deterministically from the real dataset; authors and replies
+are generated sample content, flagged as such, and "sample posts never claim likes"; and the
+discussion starters are "assembled ONLY from numbers the user's own pillars actually produced". The
+first and second held. The third did not, in one reachable case.
+
+The training starter said **"Most of my work is X (n of m sessions)"** whatever `n` was. The
+Community hub hands over the most frequent focus attribute of the visitor's completed sessions and
+how many sessions hit it — and five completed sessions with five different focus attributes gives
+`1 of 5`, which the sentence then describes as most of the work. The wording now follows the ratio:
+a strict majority says *most of my work is*, anything less says *my most-used focus is*, and the arm
+is withheld entirely when the count is missing, rather than printing "undefined of 5 sessions" —
+the same "no record, no draft" rule the other three arms already followed.
+
+`scripts/proof-community.mjs` (**43 checks**) pins the whole module, recomputing every figure from
+the source the module itself reads rather than copying its output:
+
+- **4 threads from the title races, 4 from the news feed.** Each race thread must name the real top
+  two of its competition and quote both point totals; each news thread must copy its item's title,
+  map `Rumor` to the `Rumours` tag, carry the article's own `publishedAt` (no invented timestamp),
+  open with the article's summary and quote `Source credibility is N%` computed from the item's own
+  number.
+- **8 threads, 19 comments, all flagged.** Every thread `seeded`, every comment `sample`, every
+  `likes` zero; authors drawn only from the 10-handle bank; every reply a string that is verifiably
+  in one of the two opinion banks — read out of the module's source, not retyped, so a reply invented
+  downstream is caught — with 8 questions and 11 opinions actually used so neither bank check is
+  satisfied by the other; ids unique; 1–4 replies per thread.
+- Determinism is asserted as "everything except the wall-clock stamps agrees", because `ago()` calls
+  `Date.now()` and pretending otherwise would be a false claim of its own.
+- The starters: order and `limit`, each arm's admission rule measured at the boundary and one step
+  each side of it (`1-1-0=2: held back · 1-1-1=3: offered`), the plural forms driven by the count,
+  `avgRating: null` reported as "no self-ratings yet" rather than as a rating, every number in an
+  evidence row present in the draft that cites it (11 rows across 4 drafts), and the record-feeling
+  word switching at 1.8 and 1.2 measured on both sides of both — `2.4→ahead 1.8→ahead 1.79→in
+  1.2→in 1.19→behind 0.4→behind`.
+
+Ten mutations, **10 caught / 0 missed**, controls green before and after (career 183/183, transfers
+76/76): the majority test removed (2 red — the shipped defect restored), a "majority" redefined as a
+third (1), the 3-game and 2-session admissions relaxed (1 each), sample replies claiming likes (1),
+sample replies no longer flagged (1), a news thread inventing its own timestamp (2), the academy
+plural fixed to always-plural (1), the focus arm's count requirement dropped (1) — and one against
+the gate itself, a broken bank reader, caught by **4** checks because the lists it enforces are the
+ones it parsed.
+
+Measured on a clean plane (`git archive HEAD`, only this milestone's files copied in): `tsc` 0,
+build 0, suite **32/32 proof scripts proven · 1775/1775 checks counted · exit 0** against the M203
+plane's 1732 — `proof-community`'s 43, nothing else moving, and this time no script needed the
+retry M203 added. Domain prose is still **256 literals across 10 files** with `community.ts` at its
+cap of 36: the fix reworded an existing sentence and added a guard, not copy. No file under
+`src`-side display paths is touched, so the raw-UI ledger does not move either — and note the
+ceiling there is 149 while the tree currently reports **58 across 2 files**, because the concurrent
+session's in-flight work has been paying that debt down; the number belongs to them, not to this
+commit, which is why it is quoted as measured rather than as a milestone result.
+
+**Still outstanding** (deliberately not faked): the starter drafts' prose is still English literals in
+a domain module — keying them is #184+, and `community.ts` is at its prose cap, so that work has to
+move the strings rather than add to them; and a visitor's own post, once written, is stored with
+`likes` they can add to, which is fine, but the board still has no server behind it.
 
 ## Deploying
 

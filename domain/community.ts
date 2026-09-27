@@ -163,17 +163,26 @@ export function buildStarters(input: StarterInput, limit = 3): StarterDraft[] {
     });
   }
 
-  if (input.training && input.training.sessions >= 2 && input.training.topFocusKey) {
+  // The focus arm needs the whole record: the label AND how many sessions hit it. A name
+  // without a count would print "undefined of 5 sessions", so the draft is withheld rather
+  // than guessed at — the same rule the other arms follow.
+  if (input.training && input.training.sessions >= 2 && input.training.topFocusKey && typeof input.training.topFocusSessions === "number") {
     const t = input.training;
     const focus = attributeLabel(t.topFocusKey!);
+    // M204: this said "Most of my work is X" whatever the numbers were. The caller hands over
+    // the most frequent focus and its count, and 1 of 5 sessions is reachable from the store
+    // (five completed sessions, five different focus attributes) — so the draft could claim a
+    // majority the record does not have. The word now follows the ratio.
+    const hits = t.topFocusSessions ?? 0;
+    const majority = hits * 2 > t.sessions;
     out.push({
       id: "starter-training",
       tag: "General",
-      title: `Most of my work is ${focus} (${t.topFocusSessions} of ${t.sessions} sessions) — bias or plan?`,
-      body: `I have logged ${t.sessions} sessions totalling ${t.minutes} minutes${t.avgRating != null ? `, self-rated ${t.avgRating}/5 on average` : ""}, and ${t.topFocusSessions} of them hit ${focus}. At what point does focus become neglect of everything else?`,
+      title: `${majority ? "Most of my work is" : "My most-used focus is"} ${focus} (${hits} of ${t.sessions} sessions) — bias or plan?`,
+      body: `I have logged ${t.sessions} sessions totalling ${t.minutes} minutes${t.avgRating != null ? `, self-rated ${t.avgRating}/5 on average` : ""}, and ${hits} of them hit ${focus}. At what point does focus become neglect of everything else?`,
       evidence: [
         `${t.sessions} sessions · ${t.minutes} min`,
-        `${focus} ×${t.topFocusSessions}`,
+        `${focus} ×${hits}`,
         t.avgRating != null ? `avg self-rating ${t.avgRating}/5` : "no self-ratings yet",
       ],
     });
