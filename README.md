@@ -96,15 +96,36 @@ model) and the honesty contracts (AI grounding, local-data registry, offline wor
 ranking, the weekly review's prose, and the words the knowledge graph draws). Run them all:
 
 ```sh
-npm run proof                        # = npm test: every scripts/proof-*.mjs, with per-script counts
+npm run proof                        # = npm test: every scripts/proof-*.mjs, one verdict per script
 node scripts/proof-m99.mjs           # Football DNA: vector rule, archetype derivation, determinism
 node scripts/proof-ai-grounding.mjs  # AI answers: grounded value extraction, no invented ranking, determinism
 node scripts/proof-localdata.mjs     # registry: lossless export/import, activity-only reset, i18n labels
 ```
 
 They are plain Node and exit non-zero on failure, so there is no test runner to install.
+The runner reports three verdicts per script rather than a boolean, because exit code 1 covers
+several very different events and only one of them is a broken contract:
+
+| Verdict | Meaning |
+| --- | --- |
+| `PASS` | printed a tally, every check in it green, exited 0 |
+| `FAIL` | a check the script counted came back red — a contract broke |
+| `UNVERIFIED` | no evidence: never started, killed, died before its tally, exited 0 without one, counted 0 checks, or printed all green and then died anyway |
+
+Both non-green kinds keep the suite red; what changed is that the line now names which one
+happened, so `npm run proof` cannot quietly mean "nobody looked" while reading as "something
+broke". `scripts/proof-runner.mjs` gates the runner itself, against fake proofs in the OS temp
+directory that emit each signature on purpose — the runner accepts a directory as `argv[2]` for
+exactly that. Its own numbers, like every other milestone's, come from the tool:
+
+```sh
+node scripts/proof-runner.mjs         # the classifier's truth table + the runner end to end
+node scripts/run-proofs.mjs path/to/dir    # run a directory of proofs other than scripts/
+```
+
 `npm run proof` prints the live script and check counts; the README deliberately does not,
 because a checked-in total goes stale the moment a proof is added.
+
 
 The app is a static SPA with hash routing, so deep links work without a server.
 Route-level code splitting keeps the initial chunk small; chart-heavy screens load on
@@ -112,7 +133,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M197 (a few numbers in that range
+Work ships one milestone per commit and is currently at M198 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2719,6 +2740,94 @@ the existing seams, server-side multi-user persistence and shared community cont
 database designed for millions of rows, long-form i18n of editorial content, and
 publishing (this project is intentionally local-only; `sites-hosting` has never been
 run).
+
+### M198 — the proof runner learns that "red" and "nobody looked" are different facts
+
+M196 and M197 both ended by naming the same gap: `npm run proof` decided a script's verdict from
+its exit code, and printed `?/? checks` for anything that had not printed a tally. The suite had
+therefore stopped meaning one thing. Three different events shared one line — a check counted and
+found red; a script that died, was killed or never started; and a script that printed every check
+green and then exited non-zero anyway. The last one is not hypothetical here: M197's own record
+reads `FAIL proof:projection (42/42 checks)`, all 42 of its checks green, because Vite's background
+dep-scan rejects after the SSR server has already closed. A gate that calls that a contract failure
+teaches you to ignore the gate, and one that calls `exit 0 with nothing counted` a pass is worse.
+
+The verdict logic now lives in `scripts/lib/proofRunner.mjs`, and the runner applies it instead of
+recomputing it — so the proof of the classifier cannot pass while the real runner classifies
+differently. Three verdicts, eleven stable codes:
+
+| Verdict | Codes |
+| --- | --- |
+| `PASS` | `green` — a tally was printed, `pass === total > 0`, exit 0, no signal, no error |
+| `FAIL` | `checks-failed`, `red-exited-green` — a check was counted and came back red |
+| `UNVERIFIED` | `spawn-failed`, `killed-before-tally`, `killed-after-tally`, `no-exit-status`, `no-tally-green-exit`, `no-tally-nonzero-exit`, `zero-checks`, `died-after-green` |
+
+Both non-green kinds still exit 1 — a suite that cannot prove something is not a suite that proved
+it — but the line now names which event happened, and the summary reads
+`N/M proof scripts proven (P/T checks counted)` so a milestone's suite number comes from the tool
+that ran the suite rather than from someone adding up the lines. `0/0 checks passed` is now refused
+outright: a proof that checked nothing is not evidence. The runner also takes a directory as
+`argv[2]`, which exists so that it can be pointed at fake proofs rather than only at the repo's.
+
+`scripts/proof-runner.mjs` (76 checks) gates that from both ends: a 14-row truth table over the
+shapes `spawnSync` can return, a 7-way non-vacuity clause that swaps one input of a green row at a
+time and requires PASS to stop, and an end-to-end section that spawns the **real** runner against
+temp directories — one directory per signature, so a verdict is attributable to one script. The
+fixtures include the shape this milestone was written for: print `5/5 checks passed`, then die
+(exit 139 in the wild, a self-`SIGKILL` here), which must read as UNVERIFIED `died-after-green`
+while still reporting the 5/5 it managed to print. A mixed directory pins the arithmetic —
+1 pass, 1 contract failure, 2 unverified reporting 2+3+2 of 2+5+2 checks — and two more clauses
+state which logs get dumped for debugging (every non-green one) and which do not (the passing one).
+
+Three boundaries are written as clauses rather than left as assumptions, because each one is a place
+where the gate is *not* stronger than it was:
+
+- **A self-kill is not a signal on Windows.** `process.kill(pid, "SIGKILL")` arrives as `status 1,
+  signal null`, so `killed-before-tally`/`killed-after-tally` are currently reachable only through
+  the synthesized truth-table rows. The proof measures the fixture's actual signal and says in its
+  clause name which case it is in; if the platform starts reporting signals, the clause stops
+  describing theory and starts describing the suite.
+- **The last-match rule has a real hole.** `tallyOf` reads the *last* tally because a proof is
+  allowed to echo output it captured (this file's own fixture dumps do exactly that). A script that
+  prints its tally and *then* emits another one is therefore misread — `proof-lateTally.mjs`, planted
+  in a temp dir, prints `3/3`, keeps talking, exits 0, and the runner calls it PASS. That shape is
+  refused by the second half of the design instead of by the runtime: `proofDiscipline` reads each
+  real proof's **source** and requires its last `console.log` to be a tally and its exit to be driven
+  by a counter that tally line mentions. Both halves are asserted on the same planted tree, so
+  neither rule can be "fixed" without the other noticing.
+- **The gate is keyed to the habit, not to one spelling.** All 30 proofs in `scripts/` pass the
+  source scan, and their counters are `fail / failed`; a clause requires ≥ 2 distinct counter names,
+  because the first version of that check hard-coded `fail` and went red on `proof-m65.mjs`, which
+  derives `failed` from a checks array. The same lesson as M196's: enumerate a rule's spellings, not
+  one shape.
+
+Sixteen mutations against the shipped runner and classifier, **16 caught / 0 missed / 0 crashed**,
+with an unmutated control before and after (career 180/180, transfers 76/76 both times) and every
+mutated file restored from an in-memory snapshot and re-hashed. Each is caught by at least one
+check, and the count varies with how much of the contract it breaks: PASS ignoring the exit code
+(9), exit-0-with-no-tally becoming a pass (9), the suffix that names the code being dropped (10), a
+counted red relabelled UNVERIFIED (7), the suite's exit ignoring UNVERIFIED (7), the 0-check refusal
+dropped (5), red-but-exited-0 becoming PASS (4), `tallyOf` taking the first match (4), the
+spawn-error branch disabled (3), the signal branch disabled (3), `label()` always appending
+" checks" (3), a contract failure's log no longer dumped (2), `proofDiscipline` blind to the exit
+counter (2), and the three single-check edges — `PROOF_FILE` accepting a `.txt` so discovery would
+spawn a notes file, `proofDiscipline` blind to tally position, and the aggregate silently counting
+only green rows' tallies (1 apiece).
+
+Measured on a clean plane (`git archive HEAD`, only this milestone's three files copied in):
+`tsc` 0, build 0, suite **30/30 proof scripts proven · 1671/1671 checks counted · exit 0**, with
+`PASS proof:runner (76/76 checks)` and the previously flaky `proof:projection` reporting its real
+42/42. The same plane at HEAD alone is **29 scripts / 1595 checks**, so 1595 + 76 = 1671 and no
+other script moved. Domain prose is still **256 literals across 10 files** at its ceiling and the
+raw-UI ledger is still **149 across 3 files** — this commit touches no `src/` file and adds no
+display string; every word added is in a comment, a gate clause name, or the README.
+
+**Still outstanding** (deliberately not faked): the runner spawns each proof with no timeout, so one
+hung script blocks the suite with no line printed, and the `killed-*` codes above have no real
+coverage until a platform (or a `spawnSync` timeout) produces one. Both are now the next queued
+milestone rather than a footnote, and the queue's first product-side item is unchanged: no reachable
+state in the shipped seed can ask for the all-out mentality, so that arm is either re-scaled or
+deleted.
 
 ## Deploying
 

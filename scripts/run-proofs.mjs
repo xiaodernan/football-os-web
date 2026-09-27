@@ -1,44 +1,81 @@
 // Proof runner: the repo carries many scripts/proof-*.mjs contract checks but
 // had no single gate, so a refactor could silently break one. This discovers
 // every proof, runs each in its own process (they each spin up their own Vite
-// SSR server), and exits non-zero if any fail — turning the pile into a suite.
-import { readdirSync } from "node:fs";
+// SSR server), and exits non-zero unless every one of them came back PROVEN.
+//
+// M198 gave it three verdicts instead of a boolean, because exit code 1 covers
+// several very different events and only one of them is a broken contract:
+//   PASS         — printed a tally, every check in it green, exited 0
+//   FAIL         — a check it counted came back red (a contract failure)
+//   UNVERIFIED   — no evidence: never started, killed, died before its tally,
+//                  exited 0 without one, counted 0 checks, or printed all green
+//                  and then died anyway
+// All three non-green cases keep the suite red; what changed is that the line
+// now says which one happened. Pass a directory as argv[2] to run a different
+// set of proofs — scripts/proof-runner.mjs uses that seam to point the runner
+// at fake proofs that emit each signature on purpose.
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { VERDICT, classifyProofRun, findProofs, tallyOf } from "./lib/proofRunner.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const proofs = readdirSync(here)
-  .filter((f) => f.startsWith("proof-") && f.endsWith(".mjs"))
-  .sort();
+const target = process.argv[2] ? resolve(process.argv[2]) : here;
 
-if (proofs.length === 0) {
-  console.error("No proof-*.mjs scripts found in scripts/.");
+let proofs;
+try {
+  proofs = findProofs(target);
+} catch (err) {
+  console.error(`Cannot read the proof directory ${target}: ${err.message}`);
   process.exit(1);
 }
 
-// A proof prints a final "N/M checks passed" line; surface it inline, and keep
-// the full output only for failures so a broken contract is still debuggable.
-const SUMMARY = /(\d+)\/(\d+) checks passed/;
+if (proofs.length === 0) {
+  console.error(`No proof-*.mjs scripts found in ${target}.`);
+  process.exit(1);
+}
 
-let okCount = 0;
-const failures = [];
+const rows = [];
+const pad = Math.max(...Object.values(VERDICT).map((v) => v.length));
+// The tally of a script that never reported one says so in words, so the line
+// reads "(no tally)" rather than "(no tally checks)".
+const label = (row) => (row.checks === "no tally" ? "no tally" : `${row.checks} checks`);
+// The aggregate check count is printed so a milestone's suite number comes from
+// the tool that ran the suite instead of from someone adding up the lines.
+const totals = { pass: 0, total: 0 };
 
 for (const file of proofs) {
-  const res = spawnSync(process.execPath, [join(here, file)], { encoding: "utf8" });
+  const res = spawnSync(process.execPath, [join(target, file)], { encoding: "utf8" });
   const out = `${res.stdout ?? ""}${res.stderr ?? ""}`;
-  const match = out.match(SUMMARY);
-  const checks = match ? `${match[1]}/${match[2]}` : "?/?";
-  const passed = res.status === 0;
-  if (passed) okCount += 1;
-  else failures.push({ file, out });
-  console.log(`${passed ? "PASS" : "FAIL"}  proof:${file.replace(/^proof-|\.mjs$/g, "")}  (${checks} checks)`);
+  const row = classifyProofRun({ status: res.status, signal: res.signal, error: res.error, out });
+  const tally = tallyOf(out);
+  if (tally) {
+    totals.pass += tally.pass;
+    totals.total += tally.total;
+  }
+  rows.push({ file, row, out });
+  console.log(
+    `${row.verdict.padEnd(pad)}  proof:${file.replace(/^proof-|\.mjs$/g, "")}  ` +
+      `(${label(row)})` +
+      (row.verdict === VERDICT.PASS ? "" : `  [${row.code}] ${row.reason}`)
+  );
 }
 
-console.log(`\n${okCount}/${proofs.length} proof scripts passed`);
+const green = rows.filter((r) => r.row.verdict === VERDICT.PASS).length;
+const failed = rows.filter((r) => r.row.verdict === VERDICT.FAIL);
+const unverified = rows.filter((r) => r.row.verdict === VERDICT.UNVERIFIED);
 
-for (const { file, out } of failures) {
-  console.error(`\n===== ${file} output =====\n${out.trimEnd()}`);
+console.log(`\n${green}/${rows.length} proof scripts proven (${totals.pass}/${totals.total} checks counted)`);
+if (failed.length || unverified.length) {
+  console.log(
+    `${failed.length} contract failure(s)` +
+      (unverified.length ? ` · ${unverified.length} unverified (no evidence produced)` : "")
+  );
 }
 
-process.exit(failures.length === 0 ? 0 : 1);
+for (const { file, row, out } of rows) {
+  if (row.verdict === VERDICT.PASS) continue;
+  console.error(`\n===== ${file} output [${row.code}] =====\n${out.trimEnd()}`);
+}
+
+process.exit(green === rows.length ? 0 : 1);
