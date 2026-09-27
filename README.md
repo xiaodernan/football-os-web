@@ -3228,7 +3228,7 @@ unparseable timestamp (1). What this milestone adds is the gate, not a fix — w
 covering a module before someone edits it rather than after.
 
 Measured on a clean plane (`git archive HEAD`, only this milestone's file copied in): `tsc` 0 errors,
-build 0, suite **33/33 proof scripts proven — 1809/1809 checks counted — exit 0, and the headline of that run is M203 earning its keep: `1 script(s) needed a retry: projection—1`. Vite's dep-scan killed `proof:projection` after its 42/42 tally, the retry ran it again, it finished, and the suite reported 33/33 rather than the false 32/33 that M202 had to describe as a caveat. Domain prose stays **256 literals across 10 files** and the raw-UI ledger
+build 0, suite **33/33 proof scripts proven — 1809/1809 checks counted — exit 0, and the headline of that run is M203 earning its keep: `1 script(s) needed a retry: projection×1`. Vite's dep-scan killed `proof:projection` after its 42/42 tally, the retry ran it again, it finished, and the suite reported 33/33 rather than the false 32/33 that M202 had to describe as a caveat. Domain prose stays **256 literals across 10 files** and the raw-UI ledger
 is untouched, because no display file and no copy changed.
 
 **Still outstanding** (deliberately not faked): `lib/rng.ts` — the deterministic generator behind
