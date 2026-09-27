@@ -136,7 +136,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M200 (a few numbers in that range
+Work ships one milestone per commit and is currently at M201 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -2958,6 +2958,59 @@ choice, not a bug, and making it symmetric would add prose the ratchet has to ca
 older queue is unchanged — the Football AI's composed sentences (#184+), the demo coach's prose
 (#160), the populated-state browser walk (#142), the two `components/ui/calendar.tsx` sites the day
 anything mounts them, and `community.ts` / `filmLibrary.ts`, which still have no proof of their own.
+
+### M201 — a rendered date was being edited on the way to the screen
+
+M194 put every instant behind one door that takes the reader's locale, and its gate learned to
+refuse the ways a screen can bypass that door. What it could not see was the call that obeys the
+door and then **edits what came back**: a scheduled fixture on the match list rendered
+`fmtDateTime(locale, mm.kickoff).replace(",", "")`. The call passes the reader's locale, so all of
+check 33's argument-shape scans read it as clean. It is the app deciding the reader's format a
+second time, downstream of the thing whose whole job is to decide it once.
+
+Measured through the shipped door with that row's own options, the comma is
+`en=Sep 12, 04:30 PM` against `zh-CN=9月12日 16:30` and `zh-TW=9月12日 下午04:30` — it exists in
+exactly one of the three locales, so the "cosmetic" strip is an English-shaped edit that silently
+does nothing for both Chinese readers, and it made the same instant read differently on a row and
+on the detail page beside it. The fix is one deleted call: the row now renders what the door
+returned, like every other site.
+
+The gate is the larger half, because the hole is general. A scan of the call text is not enough —
+an argument can contain parentheses (`formatDate(l, new Date(x)).toUpperCase()`) and the rewrite can
+be laundered through a local (`const when = fmtDateTime(l, x); return when.replace(",", "")`) — so
+the census walks each door call to its matching close paren and asks what comes next. The door's
+per-file aliases are **derived**, not listed: any `const fmt… = (…) => formatDate(…)` in app source
+joins the walked set, which today finds 3 aliases beside the door itself, across 13 door call sites.
+Four clauses then refuse the shape (direct chain, alias chain, laundered local, and a named check
+that the row in question is clean), and — the rule M194 earned, because a census that has never
+been seen to refuse proves nothing — a self-test plants all four spellings and three legal uses and
+requires 4 caught, 0 false positives.
+
+Four mutations, **4 caught / 0 missed**, controls green before and after (career 183/183, transfers
+76/76). Restoring the stripped comma is caught by **2** checks (the census and the named row); the
+laundered-local variant by **1**, which is the clause written for it and the reason the holder scan
+exists; emptying the method list, and deleting the alias derivation, are each caught by the
+self-test **1** apiece — the two gate-side cases are what show the census is doing the work rather
+than agreeing with the tree.
+
+Measured on a clean plane (`git archive HEAD`, only this milestone's two files copied in): `tsc` 0,
+build 0, suite **30/30 proof scripts proven · 1694/1694 checks counted · exit 0**, with
+`proof:i18n` 207 → **214** and nothing else moving; the plane's first run came back
+`29/30 · 1 UNVERIFIED [died-after-green] exited 3221225477` on `proof:matchprobability` — Vite's
+dep-scan crash again, a different script this time, named rather than mislabelled as a broken
+contract, and clean on the re-run printed above. The raw-UI ledger is still **149 across 3 files**
+and domain prose **256 across 10 files**; the dictionary is unchanged at **1478 keys × 3**, so
+nothing about this fix depends on a new string.
+
+**Still outstanding** (deliberately not faked): the census sees a method applied to the call or to
+a local that holds it; it does not follow a formatted value through a second assignment or into a
+returned object, and that limit is stated here rather than left for a future reader to discover.
+The dep-scan `died-after-green` flake is named, not prevented. Browser verification of the row's
+width in `en` was not possible (the in-app window still cannot render a tree here), so the change is
+verified at the string level through the door and at the source level by the census, not visually.
+The older queue is unchanged — #142 populated-state walk, #160 demo-coach prose, #184+ AI composed
+sentences, the two `components/ui/calendar.tsx` sites, and `community.ts` / `filmLibrary.ts`, which
+still have no proof of their own.
 
 ## Deploying
 

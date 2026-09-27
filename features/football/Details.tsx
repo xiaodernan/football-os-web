@@ -470,7 +470,7 @@ function MiniMatches({ title, matches }: { title: string; matches: ReturnType<ty
               <Link key={mm.id} to={`/matches/${mm.id}`} className="flex items-center justify-between rounded-md border px-2.5 py-1.5 text-sm hover:border-primary/40">
                 <span className="truncate">{h?.short} v {a?.short}</span>
                 <span className={cn("font-mono text-xs", mm.status === "LIVE" ? "text-destructive" : "text-muted-foreground")}>
-                  {mm.status === "SCHEDULED" ? fmtDateTime(locale, mm.kickoff).replace(",", "") : `${mm.homeGoals}–${mm.awayGoals}`}
+                  {mm.status === "SCHEDULED" ? fmtDateTime(locale, mm.kickoff) : `${mm.homeGoals}–${mm.awayGoals}`}
                 </span>
               </Link>
             );

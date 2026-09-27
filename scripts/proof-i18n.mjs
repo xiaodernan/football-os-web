@@ -2239,6 +2239,85 @@ const latinPolluted = CJK.test(rendered.en);
 ok(`a Chinese reader is shown CJK and an English reader Latin (${LONG.map((l) => `${l.id}=${door(l.id, WHEN, { year: "numeric", month: "long", day: "numeric" })}`).join(" ") || "zh renders CJK"}${latinPolluted ? " | en polluted" : " | en latin"})`,
   LONG.length === 0 && !latinPolluted);
 
+// (f) A formatted value can survive its formatter and still be rewritten on the way to the
+//     screen. `fmtDateTime(locale, mm.kickoff).replace(",", "")` sat on a fixture row since
+//     M194 wired it: nothing in (a)-(e) can see it, because the call DOES pass the reader's
+//     locale. What it does is a shape edit aimed at one locale's punctuation — measured below,
+//     only `en` puts a comma between the day and the time, so the call is a no-op for both
+//     Chinese readers and a rewrite for the English one — and it made the same instant read
+//     differently on a row and on the detail page beside it. The door's output is a rendered
+//     string: post-processing it is the app deciding the reader's format again, downstream.
+const DOOR_ALIASES = new Set(["formatDate"]);
+for (const [, code] of appSrc) {
+  for (const m of code.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=[\s\S]{0,160}?(?:=>|function)[\s\S]{0,60}?\bformatDate\s*\(/g)) DOOR_ALIASES.add(m[1]);
+}
+const SURGICAL_METHODS = ["replace", "split", "slice", "substring", "substr", "toUpperCase", "toLowerCase", "toLocaleUpperCase", "toLocaleLowerCase", "trim", "trimStart", "trimEnd", "padStart", "padEnd", "concat", "charAt", "indexOf", "includes", "match", "search", "normalize"];
+const IS_SURGICAL = new RegExp(`^(${SURGICAL_METHODS.join("|")})$`);
+// Walk to the matching close paren so a nested argument cannot hide a chain, then ask what
+// comes next. JSX text after the call is not a method, so rendering is not a rewrite.
+function postProcessed(src, names) {
+  const hits = [];
+  for (const name of names) {
+    for (const m of src.matchAll(new RegExp(`\\b${name}\\s*\\(`, "g"))) {
+      let i = m.index + m[0].length, depth = 1;
+      while (i < src.length && depth > 0) {
+        if (src[i] === "(") depth++;
+        else if (src[i] === ")") depth--;
+        i++;
+      }
+      if (depth !== 0) continue;
+      const chain = src.slice(i, i + 60).match(/^\s*\??\.\s*([A-Za-z_$][\w$]*)\s*\(/);
+      if (chain && IS_SURGICAL.test(chain[1])) hits.push({ name, method: chain[1] });
+    }
+  }
+  return hits;
+}
+// Laundered through a local: `const when = fmtDateTime(...); … when.replace(…)`. Counting the
+// holders is cheap, and refusing the shape costs nothing today because nothing uses it.
+function laundered(src, names) {
+  const holders = [];
+  for (const m of src.matchAll(new RegExp(`(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*(?:${[...names].join("|")})\\s*\\(`, "g"))) holders.push(m[1]);
+  return holders.filter((h) => new RegExp(`\\b${h}\\s*\\??\\.\\s*(?:${SURGICAL_METHODS.join("|")})\\s*\\(`).test(src));
+}
+const SURGERY = [...appSrc].flatMap(([path, code]) =>
+  postProcessed(code, DOOR_ALIASES).map((h) => `${path} ${h.name}().${h.method}`));
+const LAUNDERED = [...appSrc].flatMap(([path, code]) => laundered(code, DOOR_ALIASES).map((h) => `${path} ${h}`));
+ok(`no screen rewrites what the door rendered (${SURGERY.length === 0 ? "0 rewrites" : SURGERY.join(", ")}; door and ${DOOR_ALIASES.size - 1} per-file aliases walked)`,
+  SURGERY.length === 0);
+ok(`and no formatted value is laundered through a local and then edited (${LAUNDERED.length === 0 ? "0 holders edited" : LAUNDERED.join(", ")} of ${DOOR_CALLS.length} door call sites)`,
+  LAUNDERED.length === 0);
+// The census has to be seen refusing, not just reported clean (M194's rule). The planted
+// spellings include the two the naive regex misses — a nested argument and a rewrite several
+// methods down the chain — and the controls include the shapes that must stay legal.
+const SURGICAL_SPELLINGS = [
+  ["the door with a method on it", 'const a = (l: Locale, x: string) => formatDate(l, x).replace(",", "");'],
+  ["a per-file alias", 'const fmtDateTime = (l: Locale, x: string) => formatDate(l, x);\nconst b = (l: Locale, x: string) => fmtDateTime(l, x).split(" ")[0];'],
+  ["a nested argument before the chain", 'const c = (l: Locale, x: string) => formatDate(l, new Date(x)).toUpperCase();'],
+  ["laundered through a local", 'const d = (l: Locale, x: string) => { const when = fmtDateTime(l, x); return when.replace(",", ""); };'],
+];
+const SURGICAL_CONTROLS = [
+  ["rendered straight into JSX", 'const e = (l: Locale, x: string) => formatDate(l, x);'],
+  ["a method on something that is not a formatted value", 'const f = (label: string) => label.replace(",", "");'],
+  ["the door's own options object", 'const g = (l: Locale, x: string) => formatDate(l, x, { month: "short" });'],
+];
+const missedSurgery = SURGICAL_SPELLINGS.filter(([, src]) => (postProcessed(src, DOOR_ALIASES).length + laundered(src, DOOR_ALIASES).length) === 0);
+const falseSurgery = SURGICAL_CONTROLS.filter(([, src]) => (postProcessed(src, DOOR_ALIASES).length + laundered(src, DOOR_ALIASES).length) !== 0);
+ok(`the surgery scan catches all ${SURGICAL_SPELLINGS.length} ways of rewriting a rendered value (${missedSurgery.map(([n]) => n).join(", ") || "all caught"})`,
+  missedSurgery.length === 0);
+ok(`and refuses none of the ${SURGICAL_CONTROLS.length} ways of using one honestly (${falseSurgery.map(([n]) => n).join(", ") || "no false positives"})`,
+  falseSurgery.length === 0);
+// Why the stripped comma was not a cosmetic nothing: measured through the shipped door, the
+// comma is English-only punctuation, so the rewrite only ever applied to the English reader.
+const WHEN2 = "2026-09-12T08:30:00Z";
+const DTM = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
+const commas = L.map((l) => [l.id, door(l.id, WHEN2, DTM).includes(",")]);
+ok(`a date-time with the fixture row's own options carries a comma in exactly ${commas.filter(([, c]) => c).map(([id]) => id).join("/") || "no"} locale${commas.filter(([, c]) => c).length === 1 ? "" : "s"} (${commas.map(([id, c]) => `${id}=${door(id, WHEN2, DTM)}`).join(" ")})`,
+  commas.filter(([, c]) => c).length === 1 && commas.filter(([, c]) => c)[0][0] === "en");
+ok(`so a punctuation-strip aimed at that comma cannot reach the readers it appears to serve (${L.filter((l) => !door(l.id, WHEN2, DTM).includes(",")).map((l) => l.id).join("/")} have no comma to strip)`,
+  L.filter((l) => l.id !== "en").every((l) => !door(l.id, WHEN2, DTM).includes(",")));
+ok("and the fixture row really renders the door's string unchanged today",
+  !/fmtDateTime\([^)]*\)\s*\.|formatDate\([^)]*\)\s*\./.test(appSrc.get("features/football/Details.tsx") ?? ""));
+
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);
 await server.close();
