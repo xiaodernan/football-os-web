@@ -114,8 +114,9 @@ export function simulateMatch(input: SimInput): SimResult {
       if (isHome) hOn++;
       else aOn++;
     }
+    const names = isHome ? homeNames : awayNames;
     if (scores) {
-      const scorer = (isHome ? homeNames : awayNames)[rngInt(rng, 0, Math.min(3, homeNames.length - 1))];
+      const scorer = names[rngInt(rng, 0, Math.min(3, names.length - 1))];
       if (isHome) hg++;
       else ag++;
       events.push({
@@ -126,7 +127,7 @@ export function simulateMatch(input: SimInput): SimResult {
         detail: `xG ${xg.toFixed(2)} · ${shotType(rng, xg)}`,
       });
     } else if (rng() < 0.4) {
-      events.push({ minute: c.minute, type: rng() < 0.5 ? "SAVE" : "SHOT", side: isHome ? "home" : "away", player: (isHome ? homeNames : awayNames)[rngInt(rng, 0, homeNames.length - 1)] });
+      events.push({ minute: c.minute, type: rng() < 0.5 ? "SAVE" : "SHOT", side: isHome ? "home" : "away", player: names[rngInt(rng, 0, names.length - 1)] });
     }
   }
 

@@ -43,19 +43,3 @@ export function weightedPick<T>(rng: () => number, entries: readonly [T, number]
   }
   return entries[entries.length - 1][0];
 }
-
-export function shuffle<T>(rng: () => number, arr: readonly T[]): T[] {
-  const out = [...arr];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
-
-/** Deterministic value noise for seeded attribute generation. */
-export function seededAttribute(seed: string, center: number, spread: number): number {
-  const rng = makeRng(seed);
-  const v = center + (rng() * 2 - 1) * spread;
-  return Math.max(1, Math.min(99, Math.round(v)));
-}

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M209 (a few numbers in that range
+Work ships one milestone per commit and is currently at M210 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3376,6 +3376,82 @@ Nothing was clicked in a browser.
 
 **Still outstanding** (deliberately not faked): Simulation Lab remains the last screen at 46 hits, and
 the untracked `dev/` scratch described under M208 is still there.
+
+### M210 — the generator every seeded claim rests on had no gate, and two of its exports had no callers
+
+`lib/rng.ts` is 45 lines that every "reproducible from a seed" sentence in Demo Mode leans on, and it
+had no proof of its own: M206's coverage ratchet counted it as covered because some proof loads a
+module that *imports* it. Transitively reached is not the same thing as tested, so this milestone
+writes the test — and, while checking the consumers, finds the class of bug the test exists to catch.
+
+Two things came out of measuring first. `shuffle` and `seededAttribute` were exported with **0 call
+sites repo-wide** (each counted through `\bNAME\b` plus the generic `NAME<…>(` spelling, because a
+plain `NAME(` grep misses `weightedPick<"H" | "A">(…)` and under-counted once during this milestone's own
+measurement). They are deleted, and the new proof refuses the shape rather than the instance: every declared
+export must have at least one call site in app source, measured per name — currently
+`hashString×3, makeRng×13, rngInt×50, rngFloat×10, pick×19, weightedPick×3` across 144 files.
+
+The defect was in `domain/matchEngine.ts`, and it is still invisible in its output. Two sites pick a
+player from a side-selected list — `(isHome ? homeNames : awayNames)[rngInt(rng, 0, homeNames.length - 1)]`
+— and both asked the **home** squad how long the **away** squad was. Because `squad()` builds
+`Array.from({ length: 11 })`, the answer happens to be right, so the fix is byte-neutral: the 400-match
+battery's digest is **966604149** before and after. That is the whole point of the clause that now
+exists — an index into one array must derive its bound from that same array, and "happened to be right"
+is the defect. The scanner that says so is tested both ways on five planted spellings (2 legal, 3
+illegal) before it is allowed to scan the repo.
+
+`scripts/proof-rng.mjs` — **52 checks** — pins the primitives rather than a golden output: `hashString`
+against a from-spec FNV-1a written in BigInt over UTF-8 bytes (agrees on 11/11 ASCII seeds, and
+deliberately disagrees on `足球` — shipped 4157560531 vs byte-FNV 2859998852, because the module hashes
+UTF-16 code units), the published `""`/`"a"` vectors, 200 000 distinct hashes, mulberry32's closure
+state advancing rather than repeating, the four `>>> 0` seed collapses, and a zero-valued first draw
+found by deriving the state from the module's own increment (2463401483) rather than by hunting. The
+reproducibility claim gets a **second reader**: a child `node -e` process imports the `.ts` directly
+through Node's own type stripper and returns a 200-draw fingerprint, the export key set and
+`hashString("foobar")`, which must equal the parent's — so a value is never compared against a copy of
+itself written in this file. Boundaries are drawn through a scripted rng (`at(v)`) instead of waiting
+for a lucky stream: `rngInt`'s inclusive top, the draw-of-exactly-1 escape that the shipped generator
+cannot produce in 200 000 draws (largest 0.999994817), `pick`'s five buckets, `weightedPick`'s intervals
+derived from the weights, zero weights, and the fact that `weightedPick([])` **throws** where `pick([])`
+returns `undefined` — the two helpers refuse differently, so a call site cannot rely on either.
+
+Three clauses were wrong in my file, not in the app, and are recorded because the first run is where
+they surfaced: the weighted sweep is `xxxxyyyzz` (I typed five `x`s), the training clause read
+`exercise.name` when the field is `label`, and one clause name carried an invented "200 000 calls across
+the app's pick sites" figure that no measurement produced. All three are fixed; a `|| true` tail written
+in draft was deleted rather than left to pass.
+
+The campaign ran **11 arms and caught 11** (0 missed, 0 crashed, 0 invalid needles, 0 restore failures),
+with `career 183/183` and `transfers 76/76` green as controls both before and after. Eight arms change one
+arithmetic constant in the generator or a helper, two re-roll the `matchEngine` defect that was just fixed,
+and the eleventh breaks the gate's own regex and is caught
+by the planted-spelling clause plus the site-count floor, which is what that floor is for. The first
+attempt at this run instead **crashed three arms**: with a negative or out-of-range stream the seed data
+layer throws at import, and `proof-rng` died alongside the app it was measuring. So the consumer sections
+now load through a guarded loader and report a load failure as a red clause — the M198/M199 rule ("a
+script that never reported is not a pass") applied to a new shape: a gate must not die with its subject.
+
+Two numbers from that table are about the rest of the suite, not about this proof. `rngInt` off by one at
+the top leaves `proof:matchengine` (24) and `proof:world` (36) at **0 reds**, and `pick` rounding up
+leaves `proof:matchengine` at 0 — the consumer proofs pin structure, not values, so the only thing that
+sees a changed distribution is this file. And the two `matchEngine` re-rolls (rg9/rg10) are caught by
+**1 red each, from the scanner alone**, with the engine's own proof at 0 — byte-identical matches,
+predicted and measured.
+
+Found on the way and deliberately **not** enshrined: `buildSession` pushes the 6-minute warm-up and the
+6-minute cool-down unconditionally and only fills the middle while `total + drill ≤ target − k`, so at
+the 5-minute bound **32 of 32** attribute keys overflow their own target (drills sum to 12). The duration
+assertion that discovered it was removed from `proof-rng` — it is not an rng claim, and leaving it in
+would have written the defect into the baseline as expected behaviour. It is queued as M211. `SUPPORTED_MINUTES`
+also offers 10, which this run did not measure.
+
+Measured on the plane (`git archive HEAD` plus this milestone's three files): build 0 — `tsc --noEmit` and
+vite, `✓ built in 4.89s` — and suite **35/35 proof scripts proven · 1877/1877 checks counted · exit 0**,
+with no retry line in the summary. `proof:rng` reports **52/52** there. Nothing was clicked in a browser.
+
+**Still outstanding** (deliberately not faked): M211 owns the session-duration defect; `weightedPick([])`
+still throws where `pick([])` returns `undefined` — documented by a clause, not fixed; and the untracked
+`dev/` scratch from M197 onward is still in the tree.
 
 
 ## Deploying
