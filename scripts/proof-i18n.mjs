@@ -1329,6 +1329,15 @@ const RAW_COVERED = [
   // CommandGroup's heading prop was not a display slot the scanner knew about.
   "features/command/CommandPalette.tsx",
   "features/compare/ComparePage.tsx",
+  // M208. The Data Room was the second of the three big screens, and its 29 were the
+  // most mixed of them: seven table headers of which the scan could see exactly one
+  // (`P`/`W`/`D`/`L`/`GD` are below its three-letter floor, `PTS` is not) — so the whole
+  // row became keys, because a Chinese table reading 胜/平/负/积分 over Latin `P W D` is
+  // the same half-measure the codes were; four stat-tile sublines; the forecast block
+  // including its model disclosure; and four `Intl.DateTimeFormatOptions` literals that
+  // are format specifiers rather than words, hoisted exactly as the profile screen
+  // hoisted them at M170.
+  "features/analytics/DataRoom.tsx",
   "features/football/Details.tsx",
   "features/history/HistoryPage.tsx",
   // The landing page is the one screen a visitor can reach without onboarding, so it
@@ -1545,7 +1554,10 @@ const RAW_COVERED = [
 // 80 as of M207, measured on the gate line: the Player OS is covered and its 7 left the
 // open count, again exactly its own debt. Two files remain, and they are the two the arc
 // has left: Simulation Lab (51) and Data Room (29).
-const RAW_UI_CEILING = 80;
+// 51 as of M208, measured on the gate line: the Data Room is covered and its 29 left the
+// open count. One file remains — Simulation Lab — and it is the last of the three the
+// comment at M176 named.
+const RAW_UI_CEILING = 51;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -2090,7 +2102,6 @@ const HOST_OK_UNMOUNTED = { "components/ui/calendar.tsx": 2 };
 // argument (see the RAG seam below), so the file formats through the door.
 const DATE_DEBT = {
   "features/player/PlayerOS.tsx": 3,
-  "features/analytics/DataRoom.tsx": 1,
 };
 const undeclaredHost = hostSites.filter((s) =>
   !(s.path in HOST_OK_NUMBER || s.path in HOST_OK_UNMOUNTED || s.path in DATE_DEBT));

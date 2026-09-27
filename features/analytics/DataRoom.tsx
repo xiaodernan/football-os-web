@@ -1,11 +1,24 @@
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router";
-import { useI18n } from "@/i18n";
+import { useI18n, formatDate } from "@/i18n";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
+
+// A date-format option bag is not interface copy, but written inside a render hole the
+// raw-UI scan reads every string literal there as a child text node — four hits on the
+// fixture line. Hoisting it is the remedy the profile screen used at M170 and the Landing
+// page at M164: a format specifier is not a word a visitor reads. It is handed to the
+// date door rather than to `toLocaleString`, so the fixture time is written the way the
+// reader's own language writes it instead of the browser's.
+const KICKOFF_TIME: Intl.DateTimeFormatOptions = {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+};
 
 function FormPips({ form }: { form: FormLetter[] }) {
   if (!form.length) return <span className="text-xs text-muted-foreground">–</span>;
@@ -42,7 +55,7 @@ function RatingBar({ label, value, better }: { label: string; value: number; bet
 }
 
 export function DataRoom() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { state } = useOs();
   const competitions = useMemo(() => footballProvider.competitions(), []);
   const clubs = useMemo(() => footballProvider.clubs(), []);
@@ -108,19 +121,19 @@ export function DataRoom() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label={t("data.bestForm")} value={lead.bestForm ? getClub(lead.bestForm.clubId)?.short ?? "–" : "–"} sub={lead.bestForm ? `${formPoints(lead.bestForm)}/15 pts` : undefined} tone="up" />
-        <StatTile label={t("data.topAttack")} value={lead.strongestAttack ? getClub(lead.strongestAttack.clubId)?.short ?? "–" : "–"} sub={lead.strongestAttack ? `${lead.strongestAttack.attack.toFixed(2)}× avg` : undefined} />
-        <StatTile label={t("data.topDefence")} value={lead.bestDefence ? getClub(lead.bestDefence.clubId)?.short ?? "–" : "–"} sub={lead.bestDefence ? `${lead.bestDefence.defence.toFixed(2)}× avg` : undefined} />
-        <StatTile label={t("data.topScoring")} value={lead.highestScoring ? `${lead.highestScoring.gfAvg.toFixed(2)}` : "–"} sub={lead.highestScoring ? `${getClub(lead.highestScoring.clubId)?.short} goals/game` : undefined} />
+        <StatTile label={t("data.bestForm")} value={lead.bestForm ? getClub(lead.bestForm.clubId)?.short ?? "–" : "–"} sub={lead.bestForm ? t("data.sub.formPts", { n: formPoints(lead.bestForm) }) : undefined} tone="up" />
+        <StatTile label={t("data.topAttack")} value={lead.strongestAttack ? getClub(lead.strongestAttack.clubId)?.short ?? "–" : "–"} sub={lead.strongestAttack ? t("data.sub.ratingAvg", { n: lead.strongestAttack.attack.toFixed(2) }) : undefined} />
+        <StatTile label={t("data.topDefence")} value={lead.bestDefence ? getClub(lead.bestDefence.clubId)?.short ?? "–" : "–"} sub={lead.bestDefence ? t("data.sub.ratingAvg", { n: lead.bestDefence.defence.toFixed(2) }) : undefined} />
+        <StatTile label={t("data.topScoring")} value={lead.highestScoring ? `${lead.highestScoring.gfAvg.toFixed(2)}` : "–"} sub={lead.highestScoring ? t("data.sub.goalsPerGame", { club: getClub(lead.highestScoring.clubId)?.short ?? "" }) : undefined} />
       </div>
 
       {!metrics.length ? (
-        <Panel className="p-4"><EmptyState title={t("data.empty")} icon="▤" hint="No finished matches in this competition yet." /></Panel>
+        <Panel className="p-4"><EmptyState title={t("data.empty")} icon="▤" hint={t("data.emptyHint")} /></Panel>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
           <Panel className="p-0">
             <div className="flex items-center justify-between px-4 pt-4">
-              <SectionTitle title={comp?.name ?? ""} hint={`${metrics.reduce((s, m) => s + m.played, 0) / 2 | 0} matches played`} />
+              <SectionTitle title={comp?.name ?? ""} hint={t("data.matchesPlayed", { n: metrics.reduce((s, m) => s + m.played, 0) / 2 | 0 })} />
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -128,12 +141,12 @@ export function DataRoom() {
                   <tr className="border-b text-left text-[11px] uppercase tracking-wider text-muted-foreground">
                     <th className="px-2 py-2 text-center">#</th>
                     <th className="px-2 py-2">{t("common.club")}</th>
-                    <th className="px-2 py-2 text-center">P</th>
-                    <th className="px-2 py-2 text-center">W</th>
-                    <th className="px-2 py-2 text-center">D</th>
-                    <th className="px-2 py-2 text-center">L</th>
-                    <th className="px-2 py-2 text-center">GD</th>
-                    <th className="px-2 py-2 text-center">PTS</th>
+                    <th className="px-2 py-2 text-center">{t("data.th.p")}</th>
+                    <th className="px-2 py-2 text-center">{t("data.th.w")}</th>
+                    <th className="px-2 py-2 text-center">{t("data.th.d")}</th>
+                    <th className="px-2 py-2 text-center">{t("data.th.l")}</th>
+                    <th className="px-2 py-2 text-center">{t("data.th.gd")}</th>
+                    <th className="px-2 py-2 text-center">{t("data.th.pts")}</th>
                     <th className="px-2 py-2">{t("data.form")}</th>
                   </tr>
                 </thead>
@@ -175,7 +188,7 @@ export function DataRoom() {
                   <Crest colors={getClub(pickedTeam.clubId)?.colors} short={getClub(pickedTeam.clubId)?.short} size={36} />
                   <div className="min-w-0">
                     <div className="truncate font-semibold">{getClub(pickedTeam.clubId)?.name}</div>
-                    <Link to={`/clubs/${pickedTeam.clubId}`} className="text-xs text-primary hover:underline">Club page →</Link>
+                    <Link to={`/clubs/${pickedTeam.clubId}`} className="text-xs text-primary hover:underline">{t("data.clubPage")}</Link>
                   </div>
                 </div>
                 <div className="mt-4 space-y-2">
@@ -187,26 +200,26 @@ export function DataRoom() {
                   <SplitCard title={t("data.away")} s={pickedTeam.away} />
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                  <Mini label="Goals" value={pickedTeam.gf} />
-                  <Mini label="Conceded" value={pickedTeam.ga} />
-                  <Mini label="Clean sheets" value={pickedTeam.cleanSheets} />
+                  <Mini label={t("data.goals")} value={pickedTeam.gf} />
+                  <Mini label={t("data.conceded")} value={pickedTeam.ga} />
+                  <Mini label={t("data.cleanSheets")} value={pickedTeam.cleanSheets} />
                 </div>
               </Panel>
             ) : (
               <Panel className="p-4">
-                <EmptyState title={t("data.selectTeam")} icon="⌖" hint="Pick a club to see attack/defence ratings and home/away splits." />
+                <EmptyState title={t("data.selectTeam")} icon="⌖" hint={t("data.pickHint")} />
               </Panel>
             )}
 
             {clash && (
               <Panel className="p-4">
-                <SectionTitle title={t("data.modelClash")} hint="Modelled from attack/defence ratings" />
+                <SectionTitle title={t("data.modelClash")} hint={t("data.modelClashHint")} />
                 <div className="flex items-center justify-between gap-2 text-sm">
                   <span className="flex items-center gap-2"><Crest colors={getClub(clash.top.clubId)?.colors} short={getClub(clash.top.clubId)?.short} size={24} /><span className="truncate">{getClub(clash.top.clubId)?.short}</span></span>
                   <span className="font-mono text-base font-semibold tabular-nums">{clash.xg.home} – {clash.xg.away}</span>
                   <span className="flex items-center gap-2"><span className="truncate text-right">{getClub(clash.second.clubId)?.short}</span><Crest colors={getClub(clash.second.clubId)?.colors} short={getClub(clash.second.clubId)?.short} size={24} /></span>
                 </div>
-                <p className="mt-2 text-[11px] text-muted-foreground">{getClub(clash.top.clubId)?.name} (home) vs {getClub(clash.second.clubId)?.name}. Expected-goals estimate, not a result.</p>
+                <p className="mt-2 text-[11px] text-muted-foreground">{t("data.clashLine", { home: getClub(clash.top.clubId)?.name ?? "", away: getClub(clash.second.clubId)?.name ?? "" })}</p>
               </Panel>
             )}
           </div>
@@ -215,7 +228,13 @@ export function DataRoom() {
 
       {forecast.length > 0 && (
         <Panel className="p-4">
-          <SectionTitle title="Matchday forecast" hint={`${forecast.length} scheduled fixtures · Poisson · league avg ${metrics[0]?.leagueAvg.toFixed(2)} goals/team`} />
+          <SectionTitle
+            title={t("data.forecastTitle")}
+            hint={t("data.forecastHint", {
+              n: forecast.length,
+              avg: metrics[0]?.leagueAvg.toFixed(2) ?? "–",
+            })}
+          />
           <div className="mt-3 space-y-3">
             {forecast.map(({ match, odds, pct, sample }) => {
               const h = getClub(match.homeClubId);
@@ -231,7 +250,7 @@ export function DataRoom() {
                       <Crest colors={a?.colors} short={a?.short} size={20} />
                     </Link>
                     <span className="font-mono text-xs text-muted-foreground">
-                      {new Date(match.kickoff).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      {formatDate(locale, match.kickoff, KICKOFF_TIME)}
                     </span>
                   </div>
                   <div className="mt-2 flex h-2 w-full overflow-hidden rounded">
@@ -241,20 +260,18 @@ export function DataRoom() {
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                     <span><span className="font-mono text-foreground">{pct.home}%</span> {h?.short}</span>
-                    <span><span className="font-mono text-foreground">{pct.draw}%</span> draw</span>
+                    <span><span className="font-mono text-foreground">{pct.draw}%</span> {t("data.draw")}</span>
                     <span><span className="font-mono text-foreground">{pct.away}%</span> {a?.short}</span>
                     <span>xG {odds.lambdaHome.toFixed(2)}–{odds.lambdaAway.toFixed(2)}</span>
                     <span>{t("data.totalGoals", { n: odds.expectedTotalGoals.toFixed(2) })}</span>
-                    <span>most likely {odds.mostLikelyScore} ({Math.round(odds.mostLikelyPct * 100)}%)</span>
-                    <span>{sample} match{sample === 1 ? "" : "es"} of form data</span>
+                    <span>{t("data.mostLikely", { score: odds.mostLikelyScore, pct: Math.round(odds.mostLikelyPct * 100) })}</span>
+                    <span>{t(sample === 1 ? "data.sampleOne" : "data.sampleMany", { n: sample })}</span>
                   </div>
                 </div>
               );
             })}
           </div>
-          <p className="mt-3 text-[11px] text-muted-foreground">
-            Closed-form Poisson estimate built from each side's attack and defence ratings relative to the league average, with small samples regressed back toward that average so seven odd games cannot dominate a line. A model output, not a prediction of what will happen — the Simulation Lab runs the full match engine instead, and the two need not agree.
-          </p>
+          <p className="mt-3 text-[11px] text-muted-foreground">{t("data.forecastNote")}</p>
         </Panel>
       )}
 
@@ -264,11 +281,12 @@ export function DataRoom() {
 }
 
 function SplitCard({ title, s }: { title: string; s: TeamMetrics["home"] }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-lg border bg-card/50 p-2.5">
       <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
       <div className="mt-1 font-mono text-xs tabular-nums">{s.won}-{s.drawn}-{s.lost}</div>
-      <div className="text-[11px] text-muted-foreground">{s.gf} scored · {s.ga} conceded · {s.played} played</div>
+      <div className="text-[11px] text-muted-foreground">{t("data.splitLine", { gf: s.gf, ga: s.ga, p: s.played })}</div>
     </div>
   );
 }
