@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Link, useRouter, matchRoute } from "@/lib/router";
+import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/lib/theme";
 import { useOs } from "@/store/useFootballOS";
@@ -88,7 +88,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const search: NavItem[] = [{ to: "/search", label: t("nav.search"), icon: I.search, match: ["/search"] }];
 
   const isActive = (n: NavItem) =>
-    n.to === "/" ? path === "/" : n.match?.some((m) => path === m || (matchRoute(`${m}/*`, path) as unknown) || path.startsWith(m + "/") || path === m);
+    n.to === "/" ? path === "/" : n.match?.some((m) => path === m || path.startsWith(m + "/"));
 
   const renderLink = (n: NavItem, compact = false) => (
     <Link
@@ -135,8 +135,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto scrollbar-thin">
         <Group>{primary.map((n) => renderLink(n))}</Group>
-        {modes.length > 0 && <Group label="Your OS">{modes.map((n) => renderLink(n))}</Group>}
-        <Group label="Studios">{studio.map((n) => renderLink(n))}</Group>
+        {modes.length > 0 && <Group label={t("nav.group.os")}>{modes.map((n) => renderLink(n))}</Group>}
+        <Group label={t("nav.group.studios")}>{studio.map((n) => renderLink(n))}</Group>
         <Group label="">{search.map((n) => renderLink(n))}</Group>
       </nav>
 
@@ -158,12 +158,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-20 flex items-center gap-2 border-b bg-background/80 px-4 py-2.5 backdrop-blur">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="lg:hidden" aria-label="Open navigation">
+              <Button variant="ghost" size="sm" className="lg:hidden" aria-label={t("nav.open")}>
                 ☰
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
-              <SheetTitle className="sr-only">Navigation</SheetTitle>
+              <SheetTitle className="sr-only">{t("nav.drawerTitle")}</SheetTitle>
               <div className="h-full">{sidebar}</div>
             </SheetContent>
           </Sheet>
@@ -175,7 +175,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             onClick={() => navigate("/search")}
           >
             <span>{I.search}</span>
-            <span className="text-xs">Search or ask…</span>
+            <span className="text-xs">{t("nav.searchCta")}</span>
             <kbd className="ml-auto hidden rounded border px-1.5 py-0.5 font-mono text-[10px] sm:inline">⌘K</kbd>
           </Button>
           <div className="hidden sm:block">
@@ -228,7 +228,7 @@ function ModeSwitch() {
 }
 
 function Controls() {
-  const { locale, setLocale } = useI18n();
+  const { locale, setLocale, t } = useI18n();
   const { theme, toggle } = useTheme();
   return (
     <div className="flex items-center gap-1">
@@ -236,7 +236,7 @@ function Controls() {
         value={locale}
         onChange={(e) => setLocale(e.target.value as Locale)}
         className="h-8 rounded-md border bg-card px-1.5 text-xs text-foreground outline-none"
-        aria-label="Language"
+        aria-label={t("nav.language")}
       >
         {LOCALES.map((l) => (
           <option key={l.id} value={l.id}>
@@ -244,7 +244,7 @@ function Controls() {
           </option>
         ))}
       </select>
-      <Button variant="ghost" size="sm" onClick={toggle} aria-label="Toggle theme">
+      <Button variant="ghost" size="sm" onClick={toggle} aria-label={t("nav.themeToggle")}>
         {theme === "dark" ? "☾" : "☀"}
       </Button>
     </div>

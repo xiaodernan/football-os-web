@@ -67,6 +67,18 @@ function stripComments(s) {
   let out = "";
   let i = 0;
   while (i < s.length) {
+    // A literal is copied whole, because its contents are not comments: `accept="video/*"`
+    // was opening a phantom block comment here, and everything between it and the next real
+    // `*/` left the scan — AppShell's whole nav chrome (7 English strings) read as clean.
+    // Only a quote in VALUE position counts as an opener, so an apostrophe inside copy
+    // (`{e.minute}'`, `Don't`) never claims a range.
+    const ch = s[i];
+    if ((ch === '"' || ch === "'" || ch === "`") && opensLiteral(s, i)) {
+      const end = skipQuoted(s, i);
+      out += s.slice(i, end);
+      i = end;
+      continue;
+    }
     if (s[i] === "/" && s[i + 1] === "/") {
       const n = s.indexOf("\n", i);
       i = n < 0 ? s.length : n;
@@ -83,6 +95,16 @@ function stripComments(s) {
     i++;
   }
   return out;
+}
+
+// `= "x"`, `("x"`, `: "x"`, `["x"`, `? "x"` — the positions where a quote can only be a
+// literal. A quote preceded by a letter, digit, `}`, `)` or `>` is either an apostrophe in
+// copy or a JSX text quote, and claiming it would hide more than it reveals.
+const VALUE_BEFORE = /[=({[\,:;?]$/;
+function opensLiteral(s, i) {
+  let k = i - 1;
+  while (k >= 0 && (s[k] === " " || s[k] === "\t")) k--;
+  return k >= 0 && VALUE_BEFORE.test(s[k]);
 }
 
 // s[i] is a quote; index just past the closing quote. Tracks ${} so a brace in an

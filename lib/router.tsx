@@ -60,6 +60,17 @@ export function useRouter(): RouterValue {
   return ctx;
 }
 
+/** A hash is typed by a visitor, so any segment may be a malformed escape (`#/players/%`).
+ *  `decodeURIComponent` throws on those; keeping the raw text lets the detail page render its
+ *  own not-found state instead of blanking the tree, which has no error boundary. */
+function decodeSegment(seg: string): string {
+  try {
+    return decodeURIComponent(seg);
+  } catch {
+    return seg;
+  }
+}
+
 /** Match "/players/:id" style patterns; returns params or null. */
 export function matchRoute(
   pattern: string,
@@ -72,7 +83,7 @@ export function matchRoute(
   const params: Record<string, string> = {};
   for (let i = 0; i < cp.length; i++) {
     const seg = pp[i];
-    if (seg.startsWith(":")) params[seg.slice(1).replace(/\?$/, "")] = decodeURIComponent(cp[i]);
+    if (seg.startsWith(":")) params[seg.slice(1).replace(/\?$/, "")] = decodeSegment(cp[i]);
     else if (seg !== cp[i]) return null;
   }
   return params;

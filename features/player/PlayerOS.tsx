@@ -684,7 +684,7 @@ function Video() {
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
               <span className="truncate font-medium">{report.fileName}</span>
-              <Badge variant="outline" className="border-warning/40 text-warning">DEMO · {report.confidence}% conf</Badge>
+              <Badge variant="outline" className="border-warning/40 text-warning">{t("player.demoConfidence", { n: report.confidence })}</Badge>
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-widest text-success">{t("player.strengths")}</div>

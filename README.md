@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M211 (a few numbers in that range
+Work ships one milestone per commit and is currently at M212 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3542,6 +3542,189 @@ prose in `data/ai.ts`, which the raw-UI scan does not read (it covers `.tsx`), s
 outside the prose ratchet — M184+ owns it; `weightedPick([])` still throws where `pick([])` returns
 `undefined`; the plan id is still `S${Date.now()…}`, which can collide across two plans built in the
 same second; and the untracked `dev/` scratch from M197 onward is still in the tree.
+
+
+### M212 — the router was exempted for a reason that was not true, and a typed `%` blanked the page
+
+`proof-coverage.mjs` (M206) carries a list of app modules no proof can reach, each with a written
+reason. `lib/router.tsx` was on it with *"needs a DOM the SSR harness does not provide"*. That claim
+is checkable, and it is false: a stub `window` (a `location.hash` getter/setter, `replace`,
+`addEventListener`, `scrollTo`) plus `renderToStaticMarkup` is enough to mount the provider, read
+back the context it publishes, drive `navigate` and print the anchor `Link` produces. The exemption
+is deleted and `scripts/proof-router.mjs` takes its place — and the sweep it enabled found two
+defects sitting in the 104 lines that had been declared untestable.
+
+The first is a crash a visitor can type. `matchRoute` ran `decodeURIComponent` over whatever segment
+matched a `:param`, so `#/players/%` — a trailing percent sign, or `%zz`, or `a%b` — threw
+`URIError` out of the render. The proof measures how alone that is: **0 error-boundary
+implementations across 134 app files**, so nothing downstream can absorb it and the whole tree
+disappears instead of the player. `readLocation` deliberately does *not* decode the hash, which is
+why the query `#/search?q=%zz` was always safe (`URLSearchParams` tolerates it) while the path was
+not. The fix keeps the visitor's own characters when decoding fails, so `/players/%` resolves to
+`{id: "%"}` and `Details.tsx` renders its real not-found state, while a legitimately escaped id
+still arrives decoded (`%E4%B8%AD` → `中`). One clause states the shape of the whole surface:
+percent-decoding of a visitor-supplied string happens in **1 file**, and it is guarded.
+
+The second was invisible to reading. AppShell decided which nav row lights up with
+`path === m || matchRoute(`${m}/*`, path) || path.startsWith(m + "/") || path === m`. There is no
+wildcard in this matcher — `*` is a literal segment — so that arm is compared against a path
+containing `*`, which the probe measures matching **0** times over **24 nav prefixes × 15 reachable
+paths** (the arm it pretended to be covers 6 of those paths, equality 2); and `path === m` was
+written twice. Both are gone, the import went with them, and the
+predicate is now **2 arms, 0 duplicates**, with each arm's reach printed: `path === m` fires on 24
+paths, `startsWith(m + "/")` on 25 of 61 reachable paths — so the surviving prefix arm is
+load-bearing, not decorative (an earlier nav with a shorter name would otherwise swallow rows).
+
+**28 checks.** The matcher is compared to a model compiled from the module's own doc comment
+("Match `/players/:id` style patterns"), not from its loop: **12 shipped patterns × 26 hand-picked
+paths = 312 rows, 0 divergences, 0 throws**, including `//`, `/players//p1`, a `/players/` that must
+not invent a segment, and an optional `:tab?` that must drop out of the key rather than arrive as
+`tab?`. Then the parts only a render can show: the provider mounts; a hash parses into
+path/segments/query exactly; `useRouter` refuses to answer outside the tree **by name**
+(`"useRouter must be used within RouterProvider"`); `Link` prints `<a href="#/players/p1">`, so
+middle-click asks for a route this app owns; `navigate` writes exactly one hash on both spellings,
+reaches `location.replace` only for a replace, and scrolls. Dispatcher-level: **11 patterns in
+`FootballWorld.tsx`'s 554-line switch, 0 shadowed**; **7 prefixes, 0 unparented routes**; **24 nav
+destinations, 0 that would land on the not-ready page**. Structural: 4 exports, every one with an
+app caller (`RouterProvider` 3× in 1 file, `useRouter` 46× in 19, `matchRoute` 14× in 2, `Link` 192×
+in 23), and **0 files redefining the matcher**.
+
+Two things this file does *not* cover, and says so in its own clause name: `renderToStaticMarkup`
+never runs `useEffect`, so the `hashchange` subscription, the `#/` bootstrap and `Link`'s
+modifier-click guard stay unproven here (measured: 0 listeners registered and 0 `replace` calls
+during render — the number, not an assumption).
+
+**27 arms, 27 caught** (0 missed, 0 crashed, 0 invalid needles, 0 restore failures), controls
+`career 183/183` and `transfers 76/76` green before and after. Two of them changed the gate rather
+than the code. `rt08` deletes the `|| "/"` in `readLocation` — and against the first 27 checks it was
+**0 red of 27**, because `readLocation` guards the empty path *twice* (once for the whole hash, once
+for the pathname), so removing either copy leaves behaviour byte-identical. That is an equivalent
+mutant, not a hole, so the honest record is a clause that measures both halves: the guard count is
+pinned at **2** and all four empty-ish hashes are printed landing on the root either way
+(`""→"/"`, `"#"→"/"`, `"#/"→"/"`, `"#?q=1"→"/?q=1"`). With it the arm is caught by **1 red of 28** —
+by the structural half, and the clause says so rather than pretending a behaviour changed.
+
+**The plane run is what found the third defect**, and it is the one that matters most. Deleting the
+vacuous `` `${m}/*` `` arm changed how AppShell reads to the i18n scanner, and `proof:i18n` reddened
+with **7 hits in a file this gate registers as rendering no raw UI text at all**. The scanner,
+not the screen, was wrong: `stripComments` was not string-aware, so a `/` followed by `*` **inside a
+literal** opened a block comment that ran to the next real `*/` and blanked everything between them.
+In AppShell that was line 91's `` `${m}/*` ``, which ran to the first genuine comment closer in the
+file — line 153's `{/* desktop rail */}` — and took the drawer's copy with it. Film Room's confidence
+badge was hidden the same way by its own upload input: `accept="video/*"` at line 660 ran to the `*/`
+of a `catch { /* ignore */ }` at line 726, swallowing `DEMO · {n}% conf` on line 687. Both are shapes
+a reader looks straight past, because the file *compiles* and the page *renders* — only the gate goes
+blind, and it reports the file clean.
+
+Measured against HEAD (the file as it was when the gate believed it), on the shipped scanner with its
+literal branch disabled versus the repaired one: **0 hits** and **7 hits, lines 138, 139, 161, 166,
+178, 239, 247** — `label="Your OS"`, `label="Studios"`, `aria-label="Open navigation"`, the text
+`Navigation`, the text `Search or ask…`, `aria-label="Language"`, `aria-label="Toggle theme"`. Only
+the first two lie inside the blanked span, so the span's deletion is not the whole story, and one
+further control says what the rest is: changing that single character (`${m}/*` → `${m}/x`) and
+leaving the buggy stripper in place returns **the same 7 hits at the same lines**. The blanked text
+carries 11 `<div` against 9 `</div>`, so deleting it left two elements permanently open, and every
+node after line 153 was accounted to a region that never closes. One defect, two symptoms: copy
+inside the span is deleted, and copy after it is orphaned.
+
+The fix treats a quote as opening a literal only where a value can begin (the character before it,
+after whitespace, is one of `=({[,:;?`). That table is deliberately narrow: it never claims an
+apostrophe standing after a letter, so `{e.minute}'` and `Don't` in JSX text stay copy rather than
+becoming delimiters — the position rule is the whole reason the fix is safe. Both directions are
+gated by a planted fixture: a mime wildcard must not hide the copy that follows it, **and** a real
+`{/* … */}` must still be ignored with the copy after it still reported, because a stripper that
+simply stopped honouring comments would pass the first clause alone. A third clause asserts the
+census that same block prints — the shape is still live in **2 app files**, so the number cannot
+drift to zero while its clause stays green. A measurement written into a clause name is only
+evidence if something checks it.
+
+What the repaired scanner then saw was the copy itself: **9 raw strings** (7 in the nav chrome, 2 in
+that badge) now sit behind **8 keys** — `nav.group.os`, `nav.group.studios`, `nav.open`,
+`nav.drawerTitle`, `nav.searchCta`, `nav.language`, `nav.themeToggle`, `player.demoConfidence` — in
+all three locales, and the i18n gate reads **220/220** with the covered-file list (39, 0 raw hits)
+and the raw-UI ceiling (46) unchanged.
+
+The gate then went red on a green app, and this time the defect was in its population rather than
+its parser. `proof-i18n` walks the repository from the root, skipping only `node_modules`, `dist`,
+`.git` and one tool directory, so the scratch copies this milestone had written into `dev/` to
+measure HEAD were counted as shipped interface: **60 raw hits across 3 files** and **2 undeclared
+dynamic `t()` sites**, where the app carries **46 across 1** and **77 sites, 0 undeclared** — the
+difference is exactly the two AppShell copies at 7 each. That is the same failure class as the
+scanner, from the other side: a gate whose number depends on which scratch files happen to be in
+the working tree is not measuring the product. `dev` joined the skips, and because a skip list is a
+hiding place the moment app code lives behind it, the fix came with an audit rather than a comment:
+every import specifier in the census is read (measured **792 across 140 files**) and the clause
+refuses any that runs *through* a skipped directory — `dev/function-local.ts` is the tracked
+resident there and it imports outward, from `functions/`, which is the direction that stays legal.
+The clause's own floor is derived from the population it audits, two specifiers per file, so
+"0 reached a skipped directory" cannot be earned by reading nothing.
+
+Nine of the arms belong to that half, and one of them had to be re-planned. `sc01` re-rolls the
+shipped defect (a literal-opening test that never fires) and is caught by **2 red of 220** — both
+fixture directions, which is what "the pair is what makes the witness mean *string-aware*" buys.
+`sc03` deletes `=` from the position table, the exact shape `accept="video/*"` arrives in: **3 red**.
+`sc04` stops blanking real comments: **1 red**, and the red it names is worth reading — the scan of
+the *app* starts reporting `features/dashboard/Dashboard.tsx (1: s matches */)`, which is the inside
+of that page's `{/* today's matches */}` route comment arriving as interface text. Commented copy is
+not on screen, so a scanner that forgets comments reports debt that no visitor can see. `sc05` blinds the new census, which then
+prints "0 app files" and is refused. `sc06`/`sc07` put the badge and one nav string back as raw text:
+**2 red each**, the covered-file clause and the key-reachability clause together. But `sc02` —
+"treat *every* quote as a literal" — came back **MISSED**, and the reason is that the literal branch
+echoes the span instead of deleting it, so widening the table loses no copy and moves no count. That
+is an equivalent mutant, and the honest answer was not to drop the claim but to gate the claim that
+is actually load-bearing: a new clause reads the position table out of the scanner's own source and
+refuses a letter, a digit, `)` or `]` in it. With that clause in place the same widening is caught
+by **1 red of 220**. The population fix got the same treatment: `sc08` deletes `dev` from the skips
+and the debt census sees **60 across 3 files** and refuses it, which is what proves the skip is
+load-bearing rather than cosmetic, and `sc09` blinds the specifier regex so the audit reads nothing
+and its derived floor — not a hopeful `=== 0` — is what reddens it.
+
+The gate had two bugs of mine before it was trustworthy. Its first version asserted the root rows by
+substring, and a correct measurement reddened it (`"#?q=1"→"/?q=1"` contains neither string it was
+looking for) — the fix was to keep the rows structured and assert `path === "/"`, so the printed
+evidence is the thing being judged. And wrapping the load in `tryLoad` hid the call from
+`proof-coverage.mjs`, which finds loaded modules by a literal regex: the ratchet reddened **13/15**
+with `undeclared: lib/router.tsx`. `tryLoad` now takes a thunk so
+`server.ssrLoadModule("/lib/router.tsx")` appears verbatim — a helper that wraps the loader must not
+swallow the loader's literal.
+
+The ratchet's own numbers moved with it: **37 proofs now load 41 modules directly, reaching 36 of
+the 39** app modules in `domain/` + `lib/` + `i18n/`; **3 unreachable, 3 declared**; the exempt
+surface is **160 lines**, so its ceiling came down from 330 to **165**. `lib/hooks.ts` (92) and
+`lib/theme.tsx` (61) are the two largest remaining, and all three survivors are React-side — `domain`
+has 31 files and none is exempt. `rt18` re-adds the deleted exemption and the staleness clause
+refuses it (5 red of 15).
+
+Measured on the plane (`git archive HEAD` plus this milestone's files): `tsc --noEmit` clean,
+`npm run build` exit 0, suite **37/37 proof scripts proven · 1950/1950 checks counted · exit 0**,
+final run clean of retries. An earlier plane run of the same milestone did carry one — 
+`matchprobability×1` — which is M203's predicted statistical event arriving on schedule: Vite's
+dependency scan killed that proof's first attempt after it had printed a complete tally, the runner
+re-ran it once, the second attempt produced its evidence, and the line named the case instead of
+hiding it. That is the first time the policy has been exercised by a real crash rather than a
+constructed fixture, and the retry was neither reported as a red nor smoothed away. Nothing was
+clicked in a browser, so the crash fix is proven at the matcher (which is where the throw happened)
+and not at the page.
+
+**Still outstanding** (deliberately not faked): the `useEffect` half of the router (subscription,
+`#/` bootstrap, click guard) needs a real DOM or a browser pass — it is named as uncovered inside
+the proof; `lib/hooks.ts`, `lib/theme.tsx` and `lib/utils.ts` stay exempt, and `hooks.ts`'s
+`useLearnRecords`/`useFilmClips`/`usePersonalNews` are the same React-shaped problem one file over;
+the coach's composed sentences are still English-only in `data/ai.ts` (M184+), and measured while
+fixing the scan that exposed them, that prose is English *by construction*: it interpolates
+`attributeLabel()` (which returns `ATTRIBUTE_DEFS`' Latin `label` field) and `archetypeLabelEn()`
+(which reads `DICTIONARIES.en` by name), and no text ledger reads a `.ts` data file, so none of it is
+in the raw-UI debt count either; `weightedPick([])`
+still throws where `pick([])` returns `undefined` — its **2** app call sites are both in
+`domain/matchEngine.ts`'s `shotType` and pass literal non-empty lists, so that is a documented
+difference between two helpers, not a reachable crash, and
+it stays a clause rather than becoming an invented fix; the plan id is still `S${Date.now()…}`; and the
+untracked `dev/` scratch from M197 onward is still in the tree. One hole this milestone *measured*
+rather than closed: `rawUiScan`'s walker has no notion of having lost the thread — the control above
+shows it dropping **5 of 7** hits purely because the text it was handed left two `<div>`s open, and
+nothing today refuses to call such a file clean. The repair removes the input that did it here; a
+depth-at-EOF check on the normalized file is what would remove the class, and it is queued ahead of
+the prose work rather than written as a clause that only restates this incident.
 
 
 ## Deploying

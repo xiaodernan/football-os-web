@@ -125,9 +125,15 @@ ok("placeholders agree across locales", varMismatch.length === 0);
 if (varMismatch.length) console.log("       mismatch: " + varMismatch.slice(0, 12).join(", "));
 
 // 4. Every static t("key") literal in the app names a key that exists.
+// `dev` joins the build/VCS skips because the census below is a *debt ceiling over the file
+// set*, and an untracked scratch copy of a real screen is not the screen: leaving it in made
+// the gate report 60 hits across 3 files when the app carried 46 across 2. That is a safe
+// exclusion only while nothing shipped imports out of the skipped directory, and the clause
+// after the raw-UI census measures that rather than assuming it.
+const SKIP_DIRS = ["node_modules", "dist", ".git", ".workbuddy-ai", "dev"];
 const walk = (dir, acc = []) => {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (["node_modules", "dist", ".git", ".workbuddy-ai"].includes(e.name)) continue;
+    if (SKIP_DIRS.includes(e.name)) continue;
     const p = join(dir, e.name);
     if (e.isDirectory()) walk(p, acc);
     else if (/\.tsx?$/.test(e.name)) acc.push(p);
@@ -1336,6 +1342,48 @@ const plantedLookups = lookupsIn(RAW_FIXTURE);
 ok(`the fixture's t() lookups are read as lookups, not as interface copy (${plantedLookups.join(", ")})`,
   plantedLookups.length === 6 && planted.every((h) => !plantedLookups.includes(h.text)));
 
+// M212. The comment stripper walked characters, so the `/*` inside `accept="video/*"` opened a
+// block comment that ran to the next REAL `*/` — and everything between never reached the scan.
+// AppShell was registered here as fully localised while seven English strings sat in that span
+// (`label="Your OS"`, `aria-label="Toggle theme"`, the drawer title, the search button). Two
+// directions, because a stripper that stops honouring comments at all would pass the first one.
+const PHANTOM_FIXTURE = [
+  `export function Phantom() {`,
+  `  return (`,
+  `    <div>`,
+  `      <input type="file" accept="video/*" className="hidden" />`,
+  `      <Group label="Planted after a mime wildcard">x</Group>`,
+  `      {/* Planted inside a real comment */}`,
+  `      <div>Planted after a real comment</div>`,
+  `    </div>`,
+  `  );`,
+  `}`,
+].join("\n");
+const phantom = scanSource(PHANTOM_FIXTURE).hits;
+ok(`a mime wildcard inside an attribute is not a comment opener — copy after it is still scanned (${phantom.map((h) => h.text).join(", ") || "nothing"})`,
+  phantom.some((h) => h.text === "Planted after a mime wildcard"));
+ok(`…and a real {/* … */} is still a comment: the copy inside it stays out of the scan (${phantom.filter((h) => /real comment/.test(h.text)).map((h) => h.text).join(" | ")})`,
+  phantom.filter((h) => /inside a real comment/.test(h.text)).length === 0 &&
+    phantom.filter((h) => h.text === "Planted after a real comment").length === 1);
+const phantomSites = [...PHANTOM_FIXTURE.matchAll(/accept="video\/\*"/g)].length;
+// The census is printed inside a clause name, which is how this suite records a measurement —
+// but a number nobody asserts can silently fall to 0 while its clause stays green, so the claim
+// "this shape is still live in the app" is checked, not just narrated.
+const livePhantomSites = [...appSrc].filter(([, code]) => /["'`][^"'`\n]*\/\*/.test(code)).length;
+ok(`the fixture plants the shape that hid AppShell (${phantomSites} site), and that shape is still live in ${livePhantomSites} app files, so the scanner's own copy is the one being measured`,
+  phantomSites === 1 && livePhantomSites >= 1);
+// Narrowness is the other half of the fix, and it needed its own clause because the mutation that
+// removes it is behaviourally silent: treating every quote as a literal still echoes the span, so
+// no copy is lost and no count moves — the first campaign measured that arm as MISSED. The claim
+// worth protecting is therefore the structural one: a quote counts as a literal only after a
+// character that can begin a value. An apostrophe after a word character is copy (`{e.minute}'` of
+// play, `Don't`), and the table read out of the scanner's own source must not claim one.
+const scanSrc = readFileSync(join(root, "scripts", "lib", "rawUiScan.mjs"), "utf8");
+const valueBody = (scanSrc.match(/const VALUE_BEFORE = \/\[([^\]]*)\]\$/) ?? [])[1] ?? "";
+const valueChars = valueBody.replace(/\\/g, "");
+ok(`the value-position table is ${JSON.stringify(valueBody)} (${valueChars.split("").join(" ")}) — it holds \`=\`, which is the shape that hid AppShell, and no letter, digit, \`)\` or \`]\`, so an apostrophe inside copy is never read as a delimiter`,
+  valueChars.includes("=") && !/[A-Za-z0-9)\]]/.test(valueChars) && valueChars.length > 0);
+
 const RAW_COVERED = [
   // M166. The palette was the one overlay reachable from every screen, and it was also
   // the reason the scan learned to read `heading`: its four section names reached a
@@ -1590,6 +1638,30 @@ const openTotal = openRows.reduce((s, [, h]) => s + h.length, 0);
 ok(`the raw-UI debt outside the covered set has not grown (${openTotal} across ${openRows.length} files, ceiling ${RAW_UI_CEILING})`,
   openTotal <= RAW_UI_CEILING);
 for (const [p, h] of openRows.sort((a, b) => b[1].length - a[1].length).slice(0, 6)) console.log(`       debt: ${String(h.length).padStart(4)} ${p}`);
+// The skip list above is the one thing in this gate that can make a file invisible, so it is
+// policed instead of trusted: if any measured file imports a path that runs through a skipped
+// directory, that directory is app source and the exclusion is void. `dev/function-local.ts` is
+// the tracked resident and it imports *from* `functions/`, never the other way round — which is
+// exactly the direction this clause has to see to stay green.
+const SPECIFIER = /(?:\bfrom|\brequire|\bimport)\s*\(?\s*["'`]([^"'`\n]+)["'`]/g;
+let specSeen = 0;
+const escapesTo = (code) => {
+  let bad = null;
+  for (const m of code.matchAll(SPECIFIER)) {
+    specSeen++;
+    if (!bad && m[1].split("/").some((seg, i) => i > 0 && SKIP_DIRS.includes(seg))) bad = m[1];
+  }
+  return bad;
+};
+const reaching = [...appSrc].map(([p, code]) => [p, escapesTo(code)]).filter(([, s]) => s);
+// The bound is derived from the census it audits, not pinned: two specifiers per measured file.
+// At M212 the scan reads 792 across 140 files, so this is a floor on a number that only grows,
+// and its purpose is the 0 — a broken SPECIFIER would otherwise audit nothing and agree.
+const audit = reaching.length
+  ? reaching.map(([p, s]) => p + " -> " + s).join(", ")
+  : "none reaches " + SKIP_DIRS.join(", ");
+ok(`the skip-list audit read ${specSeen} import specifiers over ${appSrc.size} files and ${reaching.length} of them reaches a skipped directory (${audit})`,
+  reaching.length === 0 && appSrc.size > 100 && specSeen > appSrc.size * 2);
 // Non-vacuity, and deliberately *not* a floor on the total. The previous clause read
 // `openTotal >= 300`, which is a bound on the exact quantity every milestone is trying
 // to shrink: localise three more screens and the check goes red while the scan is
