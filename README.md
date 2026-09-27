@@ -136,7 +136,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M201 (a few numbers in that range
+Work ships one milestone per commit and is currently at M202 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -3011,6 +3011,65 @@ verified at the string level through the door and at the source level by the cen
 The older queue is unchanged — #142 populated-state walk, #160 demo-coach prose, #184+ AI composed
 sentences, the two `components/ui/calendar.tsx` sites, and `community.ts` / `filmLibrary.ts`, which
 still have no proof of their own.
+
+### M202 — the clip library's "never crashes a page" promise, tested for the first time
+
+`domain/filmLibrary.ts` is read by four screens (Film Room, Dashboard, Achievements, Learn hub) and
+narrowed into the cross-clip analysis, and it had never had a proof of its own. Its doc comment
+makes a promise — "a corrupt or legacy entry is skipped, never crashes a page" — and the promise was
+false in the first paragraph of the code.
+
+The parse validated the clip, its two strings, and that `report.events` **is an array**. It never
+looked inside the array. So an entry like `{"clipId":"c","addedAt":"…","report":{"events":[null]}}`
+— exactly the kind of thing a half-written localStorage slot, an older build, or a hand-edited
+export/import can contain — passed the "defensive" parse, and the very next thing every reader does
+is `toClipInputs`, which reads `e.kind`: **`Cannot read properties of null (reading 'kind')`**, thrown
+from inside the page render. The guard that existed to stop a crash was the thing letting it through.
+It now checks every element (`!!e && typeof e === "object" && typeof e.kind === "string"`) and skips
+the entry with the rest, so a corrupt clip costs the reader one clip and not a screen.
+
+The second defect was quieter. `toClipInputs` handed `recommendedFocus` over **by reference**, so a
+caller that pushed a suggestion into its own row edited the stored clip too — the library summary and
+the clip panel read the same array, and the mutation would be persisted on the next save. The rows
+are copies now, which the proof verifies by editing a derived row and re-reading the source.
+
+`scripts/proof-filmlibrary.mjs` (**30 checks**) pins the module from both ends, in the shape the
+project's other model proofs use: a **25-shape acceptance table** (4 shapes kept, 21 refused, each
+named, including the 8 malformed-event shapes that used to survive); a property clause that runs
+`toClipInputs(parseFilmClips(x))` over every one of those 25 raw inputs and requires no exception —
+the doc comment as an executable claim; the narrowing's fields, fallbacks (`0`, `[]`), order and
+purity; `newestClipAt` over empty, absent and mixed-format stamps; a `localStorage` round-trip
+through a stub, including corrupt JSON, an object where an array belongs, an absent key, a partial
+list that must lose only its bad entries, and a store whose `getItem`/`setItem` throw; and
+provenance — the provider's own `analyze()` report (11 events) must survive the parse untouched, and
+the key the module reads has to be the one the local-data registry declares (11 keys, `activity`,
+`set.key.film`).
+
+Five mutations, **5 caught / 0 missed**, controls green before and after (career 183/183, transfers
+76/76): the element check removed (the shipped defect, 3 red), the check kept but no longer requiring
+a `kind` (1 red), `every` relaxed to `some` (2 red — which also catches that a clip with an **empty**
+events array is legitimate and must stay accepted), the focus array aliased again (1 red), and the
+case worth naming: a validator made to refuse **everything** is caught by **5** checks, because a
+table that only ever shows "corrupt input is skipped" proves nothing unless the same table can see a
+good input being kept.
+
+Measured on a clean plane (`git archive HEAD`, only this milestone's two files copied in): `tsc` 0,
+build 0, **1724/1724 checks counted** across 31 proof scripts — and this is the first milestone whose
+suite numbers are not one line: three consecutive runs on that plane came back **30/31, 29/31 and
+31/31 proven**, every shortfall being `UNVERIFIED … [died-after-green] exited 3221225477` on
+different scripts (never a counted red, `0 contract failure(s)` each time). That is Vite's background
+dep-scan crashing after the proof has already printed its full tally; the runner now says so instead
+of calling it a broken contract, but the crash itself is the next thing worth attacking, and it is
+queued as its own milestone. Raw-UI ledger unchanged at **149 across 3 files**; domain prose still
+**256 literals across 10 files** (the film module's comments grew, its strings did not); dictionary
+**1478 × 3**.
+
+**Still outstanding** (deliberately not faked): the dep-scan crash is named and survived but not
+prevented, and a run of the suite may need a second attempt to print 31/31 — the honest reading is
+`checks counted` plus the `unverified` line, not the exit code alone. `domain/community.ts` (205
+lines) is the last substantial ungated module. The rest of the queue is unchanged — #142
+populated-state walk, #160 demo-coach prose, #184+ AI composed sentences, the two
+`components/ui/calendar.tsx` sites, PlayerOS/DataRoom browser dates held by the concurrent session.
 
 ## Deploying
 
