@@ -268,14 +268,89 @@ for (const [key, [verdict, code, checks, exit]] of Object.entries(EXPECT)) {
     row?.checks === "5/5 checks");
 }
 
-// M199: the time budget, end to end. These fixtures sleep for twenty seconds, so
-// they are only ever run under PROOF_TIMEOUT_MS — a proof that hung the suite used
-// to produce no verdict at all, and the only honest way to show the budget fires is
-// to make a script hang on purpose and time the runner giving up on it.
+// M199: the time budget, end to end. These fixtures sleep, so they are only ever run under
+// PROOF_TIMEOUT_MS — a proof that hung the suite used to produce no verdict at all, and the only
+// honest way to show the budget fires is to make a script hang on purpose and time the runner
+// giving up on it.
+//
+// M229: the budget is derived, because the claim "this proof printed its tally before it hung"
+// depends on the proof having STARTED before the budget ran out, and starting is not a constant.
+// Measured here (dev/m229-rate.mjs, this machine): a proof that only prints and exits takes
+// 199/256/791 ms (min/p50/max) on an idle machine and 462/917/2592 ms with eight busy waiters
+// competing, so the fixed 1500 ms M199 picked sat INSIDE the distribution of the thing it assumed.
+// A loaded full-suite leg paid for that on 2026-09-28: hang-green was killed before its tally
+// line existed, so it read `timed-out` with "no tally" instead of `timed-out-after-tally`, and
+// because the dump header carries the code, one unlucky boot turned TWO checks red.
+//
+// The same reasoning applies to the WAIT, not just the budget: a hanging script is a no-evidence
+// case, so M203's retry policy runs it again, which means the seconds measured below are a retry
+// LOOP. The sleep is priced from the loop, and the only honest bounds on a wall clock are the one
+// the loop cannot finish under (attempts x budget) and the one the fixture's own sleep sets.
 {
-  const BUDGET = "1500";
-  const SLEEP = 20000;
+  const SAMPLES = 5;
+  const bootDir = scratch({ "proof-boot.mjs": FX.green });
+  const boots = [];
+  for (let i = 0; i < SAMPLES; i += 1) {
+    const t0 = Date.now();
+    const boot = spawnSync(process.execPath, [join(bootDir, "proof-boot.mjs")], { encoding: "utf8" });
+    boots.push(Date.now() - t0);
+    if (boot.status !== 0) ok(`the boot probe itself booted (sample ${i + 1} exited ${boot.status})`, false, boot.stderr);
+  }
+  const FLOOR = Math.max(...boots);
+  const MARGIN = 3;
+  // The cap has to sit ABOVE what a busy box can price, because the margin clause below asserts the
+  // derived budget is at least twice the measured floor. During this milestone's own mutation-arm
+  // run the boot floor reached ~9200ms (nine arms each spawning Vite SSR servers) and a 12000 cap
+  // clamped the budget so hard that `BUDGET_MS >= FLOOR * 2` went red — the gate turning red on its
+  // own harness load, which is exactly the timing accident this block exists to remove.
+  const CAP = 30000;
+  const BUDGET_MS = Math.min(CAP, Math.max(1500, FLOOR * MARGIN));
+  // A hanging fixture is NO-EVIDENCE, so the shipped retry policy re-runs it: the seconds this
+  // block measures are a whole retry loop, not one budget. The attempt count is read from the
+  // runner for the same reason the floor is — a hand-typed 2 would silently re-define what the
+  // measured number means the day the policy changes.
+  const attemptsDecl = readFileSync(RUNNER, "utf8").match(/PROOF_ATTEMPTS\) \|\| (\d+)/);
+  const ATTEMPTS = Number(attemptsDecl?.[1]);
+  // Two budgets per attempt (one for the budget itself, one for this box's boot + kill latency)
+  // plus a budget of headroom, so "the runner gave up while the fixture was still asleep" stays
+  // true on a box slower than the one that priced MARGIN.
+  const SLEEP = Math.max(20000, BUDGET_MS * ((Number.isFinite(ATTEMPTS) ? ATTEMPTS : 1) * 2 + 1));
+  const BUDGET = String(BUDGET_MS);
   const sleep = `setTimeout(() => {}, ${SLEEP});\n`;
+  // The claim "this budget is derived, not picked" cannot be witnessed by recomputing the same
+  // expression — `x === f(consts)` where `x = f(consts)` is true by construction, and a hardcoded
+  // `const BUDGET_MS = 1500` would still satisfy it on any box whose floor is under 500ms (which
+  // is most of them). So the derivation is read off the shipped text, the way the runner's own
+  // constants are, and the samples are printed as the evidence that a real measurement ran.
+  const budgetDecl = /const BUDGET_MS = ([^\n]+?);/.exec(readFileSync(fileURLToPath(import.meta.url), "utf8"))?.[1]?.trim() ?? "not found";
+  ok(`the budget is COMPUTED in the shipped source rather than typed into it: this file defines it as \`${budgetDecl}\`, which names the measured floor and the margin, so a box whose proofs boot slower gets a wider budget — this run's ${SAMPLES} samples came back ${boots.join(", ")}ms, the slowest is ${FLOOR}ms, and the value in force is ${BUDGET}ms`,
+    /FLOOR/.test(budgetDecl) && /MARGIN/.test(budgetDecl) && boots.length === SAMPLES && FLOOR > 0 && BUDGET_MS === Math.min(CAP, Math.max(1500, FLOOR * MARGIN)));
+  ok(`and the derivation still leaves room for the machine to be slower than its own worst sample (${BUDGET}ms is ${(BUDGET_MS / FLOOR).toFixed(1)}x the measured floor${BUDGET_MS >= CAP ? ", AT the cap — a slower box than this fixture can price" : ", short of the cap"}), so "the proof never printed" cannot mean "the box was busy"`,
+    BUDGET_MS >= FLOOR * 2);
+  ok(`and the attempt count the loop is bounded by is read from the shipped runner rather than typed here (${attemptsDecl?.[1] ?? "unreadable"} from ${RUNNER}), because the seconds measured below are a retry loop and a wrong 2 would silently redefine that number`,
+    Number.isFinite(ATTEMPTS) && ATTEMPTS >= 1 && ATTEMPTS <= 5);
+  // The two quantities the design actually assumes, measured at this instant instead of inferred
+  // from a composite: how late a spawned script can get its FIRST LINE out, and how late
+  // spawnSync hands back a child it killed at a deadline. One spawn, one attempt, no runner boot
+  // mixed into either number. M229 got this wrong on the first draft by putting an UPPER bound on
+  // the loop's wall clock ("less than one budget of overhead per attempt"): a load spike measured
+  // at 5.6s of overhead against a 2.7s budget reddened the clause with every classification still
+  // correct. A composite wall clock is only boundable from below.
+  {
+    const dir = scratch({ "proof-stamp.mjs": `console.log("start " + (Date.now() - Number(process.env.PROOF_T0)) + "ms");\n${sleep}` });
+    const t0 = Date.now();
+    const probe = spawnSync(process.execPath, [join(dir, "proof-stamp.mjs")], {
+      encoding: "utf8",
+      timeout: BUDGET_MS,
+      env: { ...process.env, PROOF_T0: String(t0) },
+    });
+    const START = Number(/start (\d+)ms/.exec(probe.stdout ?? "")?.[1]);
+    const KILL = Date.now() - t0 - BUDGET_MS;
+    ok(`the thing the budget has to beat is measured here rather than assumed: a script spawned under this run's load got its first line out ${Number.isFinite(START) ? `${START}ms` : "never — no stdout came back"} after spawn, inside the ${BUDGET}ms window${Number.isFinite(START) && START > 0 ? ` with ${(BUDGET_MS / START).toFixed(1)}x room` : ""} — that gap is why a printed tally can exist to be seen`,
+      Number.isFinite(START) && START > 0 && START < BUDGET_MS);
+    ok(`and the kill is not the loose end either: spawnSync handed that child back ${KILL}ms after its ${BUDGET}ms deadline, so the budget is enforced${KILL >= 0 && KILL < BUDGET_MS ? " well inside one budget" : " — MORE THAN one budget late, which makes every timing claim below meaningless"}`,
+      KILL >= 0 && KILL < BUDGET_MS);
+  }
   const cases = {
     "hang-green": { src: `console.log("ok one");\nconsole.log("3/3 checks passed");\n${sleep}`, code: "timed-out-after-tally", checks: "3/3 checks" },
     "hang-silent": { src: `console.log("booting the SSR server");\n${sleep}`, code: "timed-out", checks: "no tally" },
@@ -292,10 +367,52 @@ for (const [key, [verdict, code, checks, exit]] of Object.entries(EXPECT)) {
     const row = parsed(out)[0];
     ok(`a proof that hangs past its ${BUDGET}ms budget is stopped and reported ${row?.verdict} [${row?.code ?? "?"}] with its own line intact (${row?.checks ?? "?"} shown, fixture wanted ${c.checks})`,
       !!row && row.verdict === VERDICT.UNVERIFIED && row.code === c.code && row.checks === c.checks);
-    ok(`and the budget is the runner's, not the fixture's: it gave up after ${ms}ms while ${key} still had ~${SLEEP - Number(BUDGET)}ms of sleep left, and the suite exited ${res.status}`,
-      ms >= Number(BUDGET) && ms < SLEEP && res.status === 1);
+    // The lower bound is the substantive claim — every attempt was actually held for its budget —
+    // and the upper bound is the structural one (the runner gave up while the fixture still had
+    // most of its sleep to go). The overshoot is printed, not asserted, because the box's boot and
+    // kill cost is a distribution this suite cannot price twice in the same minute.
+    const per = Math.round(ms / (ATTEMPTS || 1));
+    ok(`and the budget is the runner's, not the fixture's: the shipped policy made ${ATTEMPTS} attempts of ${BUDGET}ms so the loop cannot have finished under ${BUDGET_MS * ATTEMPTS}ms, and it took ${ms}ms (${per}ms per attempt, ${per - BUDGET_MS}ms of that this box's boot plus kill cost on top of the deadline), with ${key} still ~${SLEEP - per}ms of sleep unwinding when the suite exited ${res.status}`,
+      ms >= BUDGET_MS * ATTEMPTS && ms < SLEEP && res.status === 1);
     ok(`and a stopped script's log is still dumped, because "the runner gave up" is not a diagnosis (${out.includes(`===== proof-${key}.mjs output [${c.code}]`) ? "dumped" : "NOT dumped"})`,
       out.includes(`===== proof-${key}.mjs output [${c.code}]`));
+  }
+  // The control that says the two clauses above are earned and not free: hand the SAME
+  // print-then-hang fixture a budget no process can start inside. Its first draft asserted the
+  // tally line must be MISSING — a bet on the OS handing the child back before it could boot.
+  // The plane run dev/m229-plane-leg2.log collected that bet: 102/103, and the one red read
+  // "reports UNVERIFIED [timed-out-after-tally] (3/3 checks)" at a measured floor of 940ms. The
+  // 40ms deadline was enforced so late that the child booted and printed anyway. What the
+  // control can actually claim is (a) a budget this small is never survived and (b) whatever the
+  // runner says about the tally follows from the bytes the child really emitted, never from the
+  // size of the budget. Both are load-independent; the deleted third was not.
+  {
+    const dir = scratch({ "proof-hang-green.mjs": cases["hang-green"].src });
+    // Asked directly: how late does a 40ms-timeout spawn actually come back, and had its first
+    // line arrived by then? This is the number the deleted "no process starts that fast" wording
+    // needed and never had. One spawn, no runner in it.
+    const stampDir = scratch({ "proof-stamp40.mjs": `console.log("start " + (Date.now() - Number(process.env.PROOF_T0)) + "ms");\n${sleep}` });
+    const s0 = Date.now();
+    const stamp40 = spawnSync(process.execPath, [join(stampDir, "proof-stamp40.mjs")], {
+      encoding: "utf8",
+      timeout: 40,
+      env: { ...process.env, PROOF_T0: String(s0) },
+    });
+    const sLate = Date.now() - s0 - 40;
+    const sFirst = /start (\d+)ms/.exec(stamp40.stdout ?? "");
+    const sStamp = sFirst ? `at ${sFirst[1]}ms` : "did not arrive";
+    const tooSmall = spawnSync(process.execPath, [RUNNER, dir], {
+      encoding: "utf8",
+      env: { ...process.env, PROOF_TIMEOUT_MS: "40" },
+    });
+    const out = `${tooSmall.stdout ?? ""}${tooSmall.stderr ?? ""}`;
+    const row = parsed(out)[0];
+    const printed = out.includes("3/3 checks passed");
+    ok(`a 40ms budget is not survivable: the same print-then-hang fixture reports ${row?.verdict} [${row?.code ?? "?"}] and the suite exits ${tooSmall.status} — the deadline is what stops a hung proof, whatever the box's boot time is`,
+      row?.verdict === VERDICT.UNVERIFIED && String(row?.code ?? "").startsWith("timed-out") && tooSmall.status === 1);
+    ok(`and the tally verdict follows the bytes, not the budget: the child's ${printed ? "printed" : "unprinted"} ${printed ? "3/3 line" : "tally"} and the runner said [${row?.code ?? "?"}] (${row?.checks ?? "?"}) — on this box a 40ms-timeout spawn came back ${sLate}ms after its deadline with its first line ${sStamp} (boot floor ${FLOOR}ms), which is why the deleted wording demanded a MISSING tally and went red in the plane`,
+      printed ? row?.code === "timed-out-after-tally" && row?.checks === "3/3 checks"
+        : row?.code === "timed-out" && row?.checks === "no tally");
   }
   // The budget must not become the thing that breaks a healthy suite: the same
   // green fixture, given a generous budget, still has to read as a pass. Without

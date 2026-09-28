@@ -5070,6 +5070,232 @@ takes M228 because the storage census it replaces was named M227 in its own file
 still asserted at commit time from `git log --oneline -1`, and if another run claims it first this
 commit is named by what that reads, not by what this paragraph guessed.)*
 
+### M229 — a hang fixture that puts the OS's process-boot time inside the budget it is testing
+
+`scripts/proof-runner.mjs` proves the runner's time budget by making two fake proofs hang on purpose
+and watching the runner give up on them. Until this commit the budget those fixtures were handed was a
+number M199 picked:
+
+```js
+// scripts/proof-runner.mjs, verbatim from e13f358 (M199)
+const BUDGET = "1500";
+```
+
+1500 ms was chosen because it was far above anything a proof needed to *run*. It was never tested
+against what a proof needs to **start**, and starting is not a constant. Two scratch probes priced it on
+this machine through the same `spawnSync(execPath, [file])` path the runner uses.
+`dev/m229-floor.mjs` samples a print-and-exit script:
+
+```
+BOOT FLOOR, quiet:            min 165 med 199 max 295  (165,295,195,255,171,199,234,183,240)
+BOOT FLOOR, 8 busy waiters:   min 663 med 744 max 834  (744,740,714,757,834,663)
+```
+
+and `dev/m229-rate.mjs`, which hangs a script and asks what the runner reports, measures the same boot
+over a wider window — `quiet: min 199 p50 256 max 791`, `LOADED (8 busy waiters): min 462 p50 917 max
+2592`. **The fixed 1500 sat inside the distribution of the thing it assumed.**
+
+That is not a hypothetical. The M228 full-suite leg hit it, verbatim from `dev/m228-suite-leg2.log`:
+
+```
+FAIL        proof:runner  (95/97 checks)  [checks-failed] 2 of 97 checks failed
+FAIL a proof that hangs past its 1500ms budget is stopped and reported UNVERIFIED [timed-out] with its
+     own line intact (no tally shown, fixture wanted 3/3 checks)
+FAIL and a stopped script's log is still dumped, because "the runner gave up" is not a diagnosis
+     (NOT dumped)
+```
+
+A `hang-green` fixture whose tally line simply did not exist yet was reported as `timed-out`/no tally,
+and because the dump header repeats the code, one unlucky boot turned **TWO** checks red on a suite
+whose contracts were all intact — a timing accident dressed up as a contract failure.
+
+**The budget is now derived from a floor measured in the same run.** Five samples of a print-and-exit
+proof through the real spawn path set the price (`MARGIN 3`, `CAP 30000`, floor of the window 1500), and
+every timing claim in the block is stated against that measured number rather than against a picked one.
+The clause prints all three of its inputs — the five samples, the slowest of them, and the value in
+force — so whether the 1500 floor or `FLOOR * MARGIN` set this run's budget is visible in the line
+instead of being a hidden assumption.
+
+**The cap is part of the derivation, and it was too small.** `CAP` exists so a pathological sample
+cannot hand a proof ten minutes, and it first shipped at 12000 ms. That made the clamp a second,
+hidden fixed number — the exact thing this milestone removes — because the clause
+`the derivation still leaves room…` asserts `BUDGET_MS >= FLOOR * 2`, and a clamp at 12000 breaks that
+inequality as soon as a box measures a floor above 6000 ms. The gate met its own load: while the nine
+mutation arms were running, each one spawning Vite SSR servers, a leg measured floors around 9200 ms and
+the clamped budget (12000 = 1.3x) reddened the margin clause. `CAP 30000` puts the clamp above any floor
+this harness can produce, and the assertion stays strict on purpose: a box slower than a ~15-second boot
+floor gets a loud, named red ("AT the cap — a slower box than this fixture can price") rather than a
+silently-too-tight budget.
+
+**A derived value still has to be shown to be derived.** The first draft asserted
+
+```js
+BUDGET_MS === Math.min(CAP, Math.max(1500, FLOOR * MARGIN))
+```
+
+which is true by construction — `BUDGET_MS` is that expression — and would have stayed green if
+someone replaced the line with `const BUDGET_MS = 1500;` on any box whose floor is under 500 ms,
+which is most of them. The claim is therefore read off the shipped text, the same way the runner's own
+`600_000` default and its retry budget are, and the samples are printed as the evidence that a
+measurement actually ran:
+
+```
+ok   the budget is COMPUTED in the shipped source rather than typed into it: this file defines it as
+     `Math.min(CAP, Math.max(1500, FLOOR * MARGIN))`, which names the measured floor and the margin,
+     …this run's 5 samples came back …, the slowest is …, and the value in force is …
+```
+
+**The two quantities the design actually assumes are now measured, not inferred.** A separate probe
+spawns one hanging script directly — one spawn, one attempt, no runner boot mixed into either number —
+and reports how late a first line can arrive after spawn, and how late `spawnSync` hands back a child
+it killed at a deadline. Both are compared against the budget in force.
+
+**And the control that checked the control went red in the clean plane.** Its first form handed the same
+print-then-hang fixture a 40 ms budget and demanded that the tally line be *missing* — "no process
+starts that fast". The plane's full-suite leg read **102/103, exit 1**, and the one red was that clause
+(`dev/m229-plane-leg2.log`), printing the proof of its own mistake: the run came back
+`UNVERIFIED [timed-out-after-tally] (3/3 checks)` against a boot floor that same run had measured at
+940 ms. The deadline is armed by `spawnSync`, and on a loaded box the hand-back can be hundreds of
+milliseconds late — late enough for the child to boot and print before it is killed. So the control
+claimed two things, both load-independent, and gave up the timing bet entirely:
+
+```
+ok   a 40ms budget is not survivable: the same print-then-hang fixture reports UNVERIFIED [timed-out…]
+     and the suite exits 1 — the deadline is what stops a hung proof, whatever the box's boot time is
+ok   and the tally verdict follows the bytes, not the budget: the child's printed/unprinted 3/3 line and
+     the runner said [timed-out-after-tally] (3/3 checks) — on this box a 40ms-timeout spawn came back
+     586ms after its deadline with its first line did not arrive (boot floor 1147ms), which is why the
+     deleted wording demanded a MISSING tally and went red in the plane
+```
+
+The second clause is the one that keeps the control honest: whatever the child really emitted decides
+the code, and if the two ever disagree the classifier is wrong. The claim "a small budget and a large
+budget differ in whether the tally is seen" was never the runner's contract — the two hang fixtures
+already distinguish "printed then hung" from "never got there" at the real budget.
+
+**The retry loop is what the seconds measure.** A hanging script produces no evidence, so M203's
+policy runs it again — the wall clock this block times is a loop of `ATTEMPTS` budgets, and the
+attempt count is read from the runner rather than typed. The fixture's sleep is priced from the loop
+so that "the runner gave up while the script was still hanging" cannot become false the day the policy
+changes.
+
+**Nine arms, adjudicated from the evidence each run prints.** `dev/m229-arms.mjs` patches one mechanism at
+a time in a clean-plane copy (HEAD + this file, no `.git`), runs `proof:runner` aimed at it, restores the
+file and verifies the restore by hash. Removing `timeout: timeoutMs` from the shipped runner → **8** reds
+(each hang case loses its classification, its timing bound and its dump, and both control clauses notice
+that a never-killed fixture is simply green); shrinking the fixture's sleep to `min(20000, BUDGET×2)` →
+**2**, the timing clauses only, which is the arm that separates "the budget fired" from "the script was
+still running"; making the runner dump only contract failures → **3**; pinning the measured floor to `0` →
+**1**, the structural clause, because a probe whose numbers decide nothing is not a derivation; setting
+the retry budget to 1 → **5**, which is M203's block collapsing, not M229's — every M229 clause stayed
+green because its bound is *derived* from that same read, which is exactly the property a hand-typed `2`
+would not have. The final set read **9/9 arms behaved exactly as predicted · 0 holes**
+(`dev/m229d-arms.log`), with `proof:career` 183 checks and `proof:transfers` 76 checks green at both ends
+of it and the plane's files restored byte-for-byte.
+
+**Some clauses are only red on a box that earned it, and the harness now asks the box.** Two clauses are
+load-dependent by nature: `the derivation still leaves room…` requires `BUDGET_MS >= FLOOR * 2`, and
+`the tally verdict follows the bytes…` can only disagree with a blind classifier when the killed child
+really did print. For most of this milestone those were hand-typed into the arm's expected list, and both
+hand-typings were wrong — rt01 was predicted at 1, measured 2 at floors 833 ms and 789 ms, then measured
+**1** again on a quieter box (floor 210 ms), because the pinned `1500` clears twice a 210 ms floor and does
+not clear a 833 ms one. So those clauses left the fixed expectation and became `loadGated` entries carrying
+a predicate over quantities **this run's own output prints**: the boot floor (the structural clause prints
+"the slowest is NNNms") and whether the dump contains the fixture's `3/3 checks passed` line. The verdict is
+derived and shown: `gated from printed evidence: floor 438ms, child never printed → none required`. A gated
+clause whose floor the run did not print is reported as `CANNOT ADJUDICATE`, never skipped.
+
+**A derivation that cannot be wrong is not a gate.** That rule was tested the same way the shipped clauses
+are: the same harness with rt01's predicate widened to "always required" reports
+`rt01 CAUGHT BUT NOT THE PREDICTED CLAUSES (1/2 red of 104)` and `0/1 arms … 1 holes`, exit 1
+(`dev/m229d-gatewitness.log`) — the required-but-absent clause is caught, so the real run's "none required"
+is a measurement and not a licence.
+
+One arm had to be replaced, and its replacement is the part of this milestone I would re-read before
+trusting the control. rt02 used to mutate the control's own env line — hand the 40 ms fixture the case's
+budget and the clause demanding a MISSING tally goes red. That arm only existed because the clause was a
+timing bet; once the plane reddened the bet and I rewrote the control to assert only what is
+load-independent, the same mutation had nothing left to break. So **rt06** applies that old mutation now
+and predicts **0** reds — measured 0, twice — and **rt02** was rebuilt to aim at the shipped mechanism
+instead: `scripts/lib/proofRunner.mjs`'s `return tally` becomes `return false`, so a killed proof is always
+reported as having died before its tally → **3** reds (the truth-table row that names the after-tally code,
+the hang-green classification and that case's dump header), plus the control's bytes-vs-verdict clause
+whenever the run's own dump shows the child printed. An arm that aims at my proof's own line instead of at
+production is a check on my wording, not on the runner; that is what rt06 measures.
+
+**rt03** (the attempts regex made unable to match) is the other lesson about predictions: the first draft
+predicted 3, I then "re-derived" it to 7 from memory of the line — `SLEEP` is built from `ATTEMPTS`, so a
+NaN should stop the fixtures hanging and every timeout clause should fall — and the measurement returned
+**3** (`dev/m229c-arms.log`, `dev/m229d-arms.log`), after exactly one run that returned 4 while `CAP` was
+still 12000: that fourth red was the clamp binding under the arms harness's own load, not the broken regex,
+and raising the cap is what made the arm agree with the draft again. The line reads
+`Number.isFinite(ATTEMPTS) ? ATTEMPTS : 1`, so an unreadable attempt count degrades to a 20-second sleep and
+the fixtures hang exactly as shipped. A re-derivation that does not re-read the expression is not evidence,
+and the expectation stayed at the measured 3 rather than at my argument.
+
+One number in that set is worth reading twice: during the arms the same proof derived budgets of
+**1926 ms, 2784 ms and 4896 ms** from its own measured floor (its timing clauses name them), because an
+arms runner hammering the box with Vite SSR servers is roughly three times the load an idle box is. The
+constant this commit removes could not have cleared that floor at any of those three moments; every
+classification clause stayed right while the derived budget absorbed it.
+
+**Measured on the file this commit ships, in a clean plane.** The plane is `git archive` of the ref plus
+this milestone's `scripts/proof-runner.mjs`, every synced file verified by `git hash-object` against that
+ref before anything ran. On the `311024b` plane `tsc --noEmit` and `scripts/build.mjs` both exited 0
+(`dev/m229c-build.log`), `proof:runner` went from 97 checks to **104** and read **104/104, exit 0** on two
+consecutive legs (`dev/m229c-runner-1.log`, `dev/m229c-runner-2.log`), and the full suite read
+**38/39 scripts · 2048/2049 checks** (`dev/m229c-suite-leg.log`). HEAD then moved twice while this was in
+verification, so the plane was re-based on `f213254` — the ref this commit actually lands on — nine files
+synced and hash-verified, and the same two measurements re-taken there: `proof:runner` **104/104, exit 0**
+on two legs again (`dev/m229e-runner-1.log`, `dev/m229e-runner-2.log`) and the suite at
+**38/39 scripts · 2054/2055 checks**, exit 1 (`dev/m229e-suite.log`). The check count moved with M231's
+new proof lines; the red did not.
+
+**The one red in that leg is not this commit's, and the attribution is mechanical.** It is
+`proof:m74 — memory source cites a human label not a raw key`, and `dev/m229-m74probe.mjs` (run with the
+clean plane as its working directory, so `vite` loads that plane's `/data/ai.ts`) prints what the reader
+is being shown:
+
+```
+MEMORY ROW: "Coach memory — last session focused on passing"
+```
+
+`this commit` cannot have caused it: the diff is one file, `scripts/proof-runner.mjs`, and `proof-m74.mjs`
+imports only `vite`, `/data/ai.ts` and `/i18n/dictionaries.ts` — it never reads the runner. It arrived with
+M230's coach-row rewrite, which is what made the provider hand the row an attribute **code** (`data/ai.ts`
+passes `vars: { focus: lastFocus.join(",") }`) and left the proof resolving rows with its own hand-rolled
+substituter: `proof-m74.mjs`'s `resolve()` pastes `row.vars` into the template and never calls the shipped
+interpreter, so no row whose variable is a code can come back with a label from it. The two clauses differ
+only in casing — the diagnosis clause is `/Passing/i`, which matches the raw `passing` and stayed green,
+while the source clause is `/Passing/` and additionally forbids a leftover `passing\b`, so it went red.
+That is why the same 15-check dump shows one green and one red for the same rewrite. What the reader
+actually sees is a claim about `rowLine(s, t)` — `features/ai/AiStudio.tsx:131` renders sources through it,
+and `domain/rowText.ts` lists `focus` among the variables allowed to hold a code — and this section does
+not settle it, because settling it means re-running that clause through the shipped interpreter instead of
+through my substitute. That is the next unit's work, and this commit records the red rather than editing
+files another milestone owns.
+
+**What this commit did NOT get right first.** The first draft put an UPPER bound on the loop's wall
+clock — "no more than one budget of boot-plus-kill overhead per attempt". On a loaded box it went red
+with every classification still correct: measured floor 916 ms, budget 2748 ms, per-attempt wall
+5564 ms. `dev/m229-latency.mjs` then decomposed the same shape (budget 2500): one direct
+`spawnSync` returns 30–188 ms after its deadline, one runner attempt costs 3293–7033 ms, and the
+second attempt costs about 2029 ms more — a distribution with a long tail, not a constant. A composite
+wall clock can be bounded from **below** (the loop cannot have finished faster than `attempts ×
+budget`) and against the fixture's own sleep, and those are the only two bounds shipped. The overshoot
+is printed, not asserted.
+
+Two other hypotheses were measured and are NOT claimed. Whether a killed child's already-printed
+stdout can be lost on the pipe: in `dev/m229-latency.mjs` one of five `attempts=2` samples came back
+with no first line at all (`wall 7111 firstPrint NaN`), which is ~1 in 15 and looks exactly like the
+M228 failure. `dev/m229-loss.mjs` then hung a script that stamps its own start time and asked, 10 times
+at each of budgets 1500/3000/6000: **30/30 handed the printed line back and 30/30 were classified
+`timed-out-after-tally`** (`dev/m229-loss.log`), 30 spawns at three budgets and zero reproductions, so
+the production runner's capture is unchanged and
+the NaN sample stays an unexplained observation rather than a fix. And whether the change needed a
+repeat-sampling loop: repeating a timing fixture multiplies its exposure to exactly the load tail being
+measured, so the block runs each hang case once.
+
 ### M230 — the coach's rows are the reader's own, down to the words the provider used to compose itself
 
 M222 and M223 put the coach's sentences onto keys, and the plan panel has printed rows ever since.
