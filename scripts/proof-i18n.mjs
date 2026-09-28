@@ -2001,7 +2001,13 @@ const relCensus = allSrc.map(([p, code]) => {
 });
 const relFiles = relCensus.filter(([, cs]) => cs.length > 0).map(([p]) => p);
 const relOf = (kind) => relCensus.flatMap(([p, cs]) => cs.filter((c) => c.kind === kind).map((c) => `${p} ${c.name ?? "UNATTRIBUTED"}${c.via === "Date.now()" ? "" : ` via ${c.via}`}`));
-const relCharged = [...relOf("sentence"), ...relOf("unattributed")];
+// Which buckets are charged is a rule of its own, and the plants state their expectation
+// independently of it. If the verdict derived "charged" from the same list the census uses, an arm
+// that stopped charging the sentence bucket would change both sides of the comparison and survive —
+// the two-sides-written-by-the-gate failure this repo keeps meeting.
+const REL_CHARGED_KINDS = ["sentence", "unattributed"];
+const REL_PLANT_CHARGED = { sentence: true, unattributed: true, row: false, selection: false };
+const relCharged = relCensus.flatMap(([p, cs]) => cs.filter((c) => REL_CHARGED_KINDS.includes(c.kind)).map((c) => `${p} ${c.name ?? "UNATTRIBUTED"}`));
 const relSelection = relOf("selection");
 const relRows = relOf("row");
 // Plants, one per way the classification can be wrong, each declaring the bucket its own text
@@ -2020,10 +2026,15 @@ const plantVerdicts = REL_PLANTS.map(([name, src, want]) => {
   const cs = relCandidates(src);
   if (cs.length !== 1) return [name, `${cs.length} candidates found, wanted exactly 1`];
   const got = classifyRel(src, cs[0].at, cs[0].len);
-  return [name, got.kind === want ? null : `${name} classified ${got.kind} (${got.name ?? "UNATTRIBUTED"}), wanted ${want}`];
-}).filter(([, bad]) => bad);
-ok(`the planted relative-time shapes are bucketed exactly as declared (${REL_PLANTS.length} plants, ${plantVerdicts.length ? plantVerdicts.map(([, b]) => b).join(" | ") : "all as predicted"})`,
-  plantVerdicts.length === 0);
+  if (got.kind !== want) return [name, `classified ${got.kind} (${got.name ?? "UNATTRIBUTED"}), wanted ${want}`];
+  const charged = REL_CHARGED_KINDS.includes(got.kind);
+  if (charged !== REL_PLANT_CHARGED[want]) return [name, `${want} charged=${charged}, the plant table says ${REL_PLANT_CHARGED[want]}`];
+  return null;
+}).filter(Boolean);
+const plantKinds = [...new Set(REL_PLANTS.map(([, , want]) => want))];
+const kindHoles = Object.keys(REL_PLANT_CHARGED).filter((k) => !plantKinds.includes(k));
+ok(`the planted relative-time shapes are bucketed exactly as declared and each bucket says whether it is charged (${REL_PLANTS.length} plants over ${plantKinds.length} buckets, ${plantVerdicts.length ? plantVerdicts.map((b) => b).join(" | ") : "all as predicted"}; untested buckets: ${kindHoles.join(", ") || "none"})`,
+  plantVerdicts.length === 0 && kindHoles.length === 0 && plantKinds.length === 4);
 ok(`every relative measurement either hands back a row or is provably not shown to anyone (${relCensus.reduce((s, [, cs]) => s + cs.length, 0)} candidates in ${relFiles.length} files — row-typed ${relRows.length} [${relRows.join(", ") || "NONE"}], selection-only ${relSelection.length} [${relSelection.join(", ") || "none"}], charged ${relCharged.join(", ") || "none"}; the door is inside the population: ${relFiles.some((p) => p.startsWith("i18n/")) ? "yes" : "NO"})`,
   relCharged.length === 0 && relRows.length >= 2 && allSrc.length > appSrc.size && relFiles.some((p) => p.startsWith("i18n/")));
 

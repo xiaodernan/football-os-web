@@ -4262,6 +4262,39 @@ sentences (#150/#165); the 46 raw-UI debt lines in `features/sim/SimulationLab.t
 of `time.inDays`/`time.agoDay` beside `Tomorrow`; the `S${Date.now()…}` plan-id collision; the
 populated-state browser walk (#142); and the untracked `dev/` scratch.
 
+### M219 — the charging rule and the plant table must not be the same list
+
+M218 closed its own record with a gap it could not witness: the census classifies a relative-time
+site into four buckets and charges two of them, but the plants graded *classification* only. So an arm
+that dropped `sentence` from the charged list would have left the harness fully green — the census
+would print zero offenders, which would then be true, and no plant would notice that the bucket which
+exists to catch `Dashboard`'s old `relTime` had quietly stopped being reported. That is the same
+failure this repo keeps meeting from the other side: a gate whose two sides are written by the gate.
+
+**The two sides are now separate declarations.** The census charges what `REL_CHARGED_KINDS` names;
+each plant's bucket carries an independent expectation in `REL_PLANT_CHARGED`, and the verdict compares
+the classifier's behaviour against it (`sentence charged=true, the plant table says false` is how the
+drift reads). Because a plant that never exercises a bucket would hide the whole rule, the clause also
+reports coverage: today it reads `7 plants over 4 buckets, all as predicted; untested buckets: none`,
+and it requires all four buckets to be present in the plant table, so a bucket cannot lose its witness
+by being dropped from one side only.
+
+**Mutation witness.** Two arms, each targeting one of the two new declarations: `m219a` removes
+`sentence` from the charged list — the census still finds nothing to charge, so only the plant
+comparison can see it; `m219b` deletes `selection` from the plant table, which the coverage floor
+reports as an untested bucket rather than an empty success. The full harness of **66 arms** reports `66/66 cases caught (66/66 ran) · 0 missed · 0 crashed · 0 invalid needles · 0 restore failures`, with the unmutated control green before and after (`career 183/183, transfers 76/76`).. `proof-i18n` stays at **233**
+checks; the plant clause got stricter without becoming a second count.
+
+Measured on the working copy: `npm run build` (which runs `tsc --noEmit` first) exit 0, suite **37/37 proof scripts proven · 1963/1963 checks counted · exit 0**, no `UNVERIFIED` and no retry line. On the clean plane (`git archive HEAD` plus `scripts/proof-i18n.mjs`):
+the leg ran `tsc --noEmit` (no output, exit 0) and the suite, and reported **37/37 · 1963/1963 checks counted · exit 0** with no `UNVERIFIED` and no retry either.
+
+**What is still not claimed**: the classifier answers "is this value produced for display?" from the
+shape of one expression, so a duration computed in one function and printed in another stays outside
+the population, and a *dynamically* built comparison (`.filter(buildWindow(iso))`) would classify by
+whatever text follows the subtraction. Both are recorded rather than papered over. Next: #150/#165 —
+`data/ai.ts`'s 30 composed sentences, whose English label interpolations are now at least a *declared*
+door since M215.
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a
