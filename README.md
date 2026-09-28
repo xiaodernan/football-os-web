@@ -3833,6 +3833,124 @@ The plan id is still `S${Date.now()…}`, `useEffect`-half router coverage still
 `lib/hooks.ts`/`theme.tsx`/`utils.ts` stay exempt, and the untracked `dev/` scratch is still in the
 tree.
 
+### M214 — a helper that returns a sentence is invisible to a scan that reads positions
+
+A reader-facing complaint about dates on the dashboard turned into two defects in one function once
+the shipped code was sliced out of its file and called
+(`dev/m214-measure2.mjs` → `dev/m214-measure.txt`). `features/dashboard/Dashboard.tsx` had a local
+`relTime(locale, iso): string`, and its day arithmetic was wrong in two directions at once:
+
+| offset from now | `en` | `zh-CN` | `zh-TW` |
+| --- | --- | --- | --- |
+| `+3d` | `in 3d` | `in 3d` | `in 3d` |
+| `+1.4d` | `10:43 PM` | `22:43` | `下午10:43` |
+| `-2d` | `-2d ago` | `-2d ago` | `-2d ago` |
+| `-6d` | `-6d ago` | `-6d ago` | `-6d ago` |
+| `-30d` | `-30d ago` | `-30d ago` | `-30d ago` |
+
+**A past instant kept its minus sign.** `Math.round((kickoff − now) / 86400000)` is negative for
+anything already gone and the template only chose the words around it, so the growth card's last
+completed session and every finished fixture in the ±2-day "today" panel (`Dashboard.tsx:51` selects
+those, and a finished match's kickoff is in the past) read `-2d ago`, `-6d ago`, `-30d ago`. A
+negative duration is not a measurement of anything. **And both day branches spoke English in either
+Chinese locale** — `in ` and ` ago` are literal characters in that template — while the clock branch
+on the next line followed the locale correctly, so one row showed a `zh-CN` reader `22:43` and
+`-2d ago` in the same breath.
+
+Neither defect was reportable by any gate in this repo, and that is the part worth recording. The
+raw-UI census reads *positions inside JSX*; this helper's words were typed in a function body and
+printed from `{relTime(…)}`, so no position it walks carries a literal. The keyed-row audit reads
+*modules that mention `RowText`*; this module never mentions it. The proof of the claim is mutation
+arm `m214g`: restoring that shape — a `string`-returning helper doing
+`new Date(iso).getTime() - Date.now()` inside a screen file — reddens **1 check out of 227**, the new
+census, and moves the raw-UI debt count by nothing. A class of defect with no reader is a class that
+recurs.
+
+**The fix is a door, not a patch.** `i18n/format.ts` now exports `relativeDay(locale, iso): RowText`
+beside `formatDate`, in the same module kept out of `index.tsx` so a domain module can build an
+instant into a row without importing React. The day count is always a positive whole number and the
+*direction* lives in the key it rides — `time.inDays` ahead, `time.agoDay` behind — and within a day
+of now there is no honest day count, so the instant's own clock time, formatted the reader's way,
+answers. It leaves through the i18n umbrella and both call sites (`Dashboard`'s growth line at
+`:220` and fixture line at `:406`, `CommunityHub`'s feed helper) print it through `rowLine`.
+`comm.agoDay`, the community feed's private copy of the past-day word, is deleted: two surfaces now
+say one row, and the existing key-reachability gate is what enforces the sharing.
+
+**Three new claims in `proof-i18n`, and two repairs.**
+
+- *26b — the census.* The population is derived from the arithmetic, not from a name list someone
+  has to keep current: any walked file subtracting a parsed instant from `Date.now()`, in either
+  order. Today that is **2 sites**, `features/community/CommunityHub.tsx` and `i18n/format.ts`, and
+  each must sit inside a declaration whose return type says `RowText`. The scan runs over every
+  walked file **including `i18n/`**, which the app-wide `appSrc` population deliberately drops — a
+  census that skipped its own subject would report clean for the wrong reason. A declaration the
+  walk cannot place counts as an offender rather than being skipped, so a resolution failure goes
+  loud.
+- *26b — the plants.* Three shapes through the same filter, one per way the clause can be wrong: a
+  `string` return (must refuse), a `RowText` return (must accept), arithmetic outside any
+  declaration (must refuse as `UNATTRIBUTED`). All **3** land as declared.
+- *26c — the print.* The door is loaded through the umbrella in the suite's own vite server and run
+  over **7 planted offsets × 3 locales**: the key per direction, `n` a whole positive number equal to
+  `Math.round(Math.abs(offset))`, a value only where no day is countable, no `-\d` in any locale, and
+  no `\b(in|ago)\b` in either Chinese locale. The contrast arm in the same clause asserts the
+  sentence the dashboard shipped until this milestone, `-2d ago` / `in 3d` — "no minus sign" is only
+  evidence if the predicate refuses the sentence that had one.
+- *repaired — the reader census.* `every dictionary key is reachable` read only `appSrc`, so this
+  milestone's first run failed it for `time.inDays`: a key named by the door in `i18n/` had, by that
+  clause's own definition, no reader. The population is now `appSrc` plus the `i18n/` modules other
+  than `dictionaries.ts` — a key's own declaration is not the code that reads it — and reads
+  **142 reader files**.
+- *repaired — the umbrella.* The clause that pinned `export { formatDate } from "./format"` matched
+  one remembered name, so widening the door list would have broken it by accident rather than
+  reported anything. It parses the brace list now and requires both doors by name.
+
+The run prints `1596 keys · 3 locales`; each locale gained the two `time.*` rows and lost
+`comm.agoDay`, and the three locales' key sets and orders still agree (that parity is a gate, and
+`m214f` below shows it firing).
+
+**Behaviour deliberately preserved, and measured:** the `|d| > 1` boundary came from the shipped
+code, so an instant 1.4 days away still prints only a clock time — tomorrow reads as an hour and a
+minute. That is a real defect in the same helper; it is queued (with the within-a-day branch it
+needs) rather than fixed quietly inside a milestone whose claim is the sign and the language.
+
+**Mutation witness.** Eleven arms for this milestone: `m214a` starts the day branch a day early,
+`m214b` truncates the day count instead of rounding it, `m214c` hands the past instant the future
+word, `m214d` drops `RowText` from the door's own signature, `m214e` writes the simplified past-day
+row in English, `m214f` brings `comm.agoDay` back while nothing reads it, `m214g` restores the
+sentence-shaped helper on a screen file, `m214h` makes the census read the population that excludes
+`i18n/`, `m214i` gives the population one subtraction order only, `m214j` treats every enclosing
+declaration as row-typed, `m214k` re-paths the umbrella's export so it still loads at runtime and
+only the clause reading the list can notice. All eleven are caught on the milestone's own small plane
+(`11/11 caught · 0 missed · 0 crashed · 0 invalid needles · 0 restore failures`), and the full suite
+of **45 arms** reports `45/45 caught (45/45 ran) · 0 missed · 0 crashed · 0 invalid needles ·
+0 restore failures` with the unmutated control green before and after
+(`career 183/183, transfers 76/76`). `m214f` is the one caught by more than a single clause: 4 reds,
+of which the harness names `zh-CN: no keys missing` and `zh-TW: no keys missing`. `proof-i18n` itself
+is now **227** checks (was 224).
+
+Measured on the working copy: `npm run build` (which runs `tsc --noEmit` first) exit 0, suite
+**37/37 proof scripts proven · 1957/1957 checks counted · exit 0**. On the clean plane (`git archive
+HEAD` plus this milestone's six source files, `node_modules` joined, `--max-old-space-size=4096` for
+the whole leg as on the M213 plane): `tsc --noEmit` with no output and exit 0, `npm run build` exit 0,
+suite **37/37 proof scripts proven · 1957/1957 checks counted · exit 0**, and no `UNVERIFIED` line in
+the log. `README.md` itself is in neither plane leg because no proof script reads it — the only
+mention of the filename in `scripts/` is a comment in `proof-careerarc.mjs` — so the six files are
+what the numbers above were taken from.
+
+**Still outstanding** (deliberately not faked): the within-a-day branch above; the census's own hole,
+measured this milestone — `RELATIVE_MATH` needs the literal `Date.now()`, so a helper that hoists
+`const now = Date.now()` and subtracts the alias would escape it, and today's tree has exactly **1**
+such alias site (`Dashboard.tsx:51`, a selection filter that prints nothing) and **0** printing
+helpers, so nothing ships broken but the class can dodge the clause by naming a variable (queued);
+`data/ai.ts` is still outside every prose ledger (**30** sentence-shaped literals, **32**
+interpolation holes, **12** of them interpolating `attributeLabel()` / `archetypeLabelEn()`, which
+return Latin and `DICTIONARIES.en` values whatever the reader's locale is); the 46 raw-UI debt lines
+in `features/sim/SimulationLab.tsx`; the single `DICTIONARIES.en` reader outside `i18n/`
+(`domain/playerDna.ts:123`) and the dead `attributeLabel`/`archetypeLabelEn` imports in
+`data/intelligence.ts`; the plan id still `S${Date.now()…}`; `lib/hooks.ts`/`theme.tsx`/`utils.ts`
+exempt; the browser walk of the i18n surfaces in a populated state; and the untracked `dev/` scratch
+is still in the tree.
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a

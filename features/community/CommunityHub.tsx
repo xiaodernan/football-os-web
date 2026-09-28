@@ -39,7 +39,7 @@ function timeAgo(locale: Locale, iso: string): RowText {
   const h = Math.floor(m / 60);
   if (h < 24) return { key: "comm.agoHour", vars: { n: h } };
   const d = Math.floor(h / 24);
-  return d < 30 ? { key: "comm.agoDay", vars: { n: d } } : { value: formatDate(locale, iso) };
+  return d < 30 ? { key: "time.agoDay", vars: { n: d } } : { value: formatDate(locale, iso) };
 }
 
 // The two sort codes. Kept at module scope rather than inline in the JSX child

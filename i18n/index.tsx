@@ -38,10 +38,11 @@ export function translate(locale: Locale, key: string, vars?: Record<string, str
   return str;
 }
 
-/** Format an instant the reader's own language writes it — see i18n/format.ts, which
- *  holds it so a domain module can reach it without importing React. Re-exported here so
- *  a screen's `import { formatDate } from "@/i18n"` reads the same as its `t`. */
-export { formatDate } from "./format";
+/** Format an instant the reader's own language writes it, and measure one against now —
+ *  see i18n/format.ts, which holds them so a domain module can reach them without
+ *  importing React. Re-exported here so a screen's `import { formatDate } from "@/i18n"`
+ *  reads the same as its `t`. */
+export { formatDate, relativeDay } from "./format";
 
 function detectLocale(): Locale {
   if (typeof localStorage !== "undefined") {

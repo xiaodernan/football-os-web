@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useRouter } from "@/lib/router";
-import { formatDate, useI18n, type Locale } from "@/i18n";
+import { relativeDay, useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import {
   matchesByStatus,
@@ -27,13 +27,6 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-
-function relTime(locale: Locale, iso: string): string {
-  const diff = new Date(iso).getTime() - Date.now();
-  const d = Math.round(diff / 86400000);
-  if (Math.abs(d) > 1) return `${d > 0 ? "in " : ""}${d}d${d > 0 ? "" : " ago"}`;
-  return formatDate(locale, iso, { hour: "2-digit", minute: "2-digit" });
-}
 
 const RECOVERY_TONE: Record<LoadZone, string> = {
   none: "border-border text-muted-foreground",
@@ -224,7 +217,7 @@ export function Dashboard() {
                 {growth.last ? (
                   <div className="flex items-center justify-between text-sm">
                     <span className="min-w-0 truncate">{growth.last.title}</span>
-                    <span className="ml-2 shrink-0 text-[11px] text-muted-foreground">{relTime(locale, growth.last.completedAt ?? growth.last.date)}</span>
+                    <span className="ml-2 shrink-0 text-[11px] text-muted-foreground">{rowLine(relativeDay(locale, growth.last.completedAt ?? growth.last.date), t)}</span>
                   </div>
                 ) : (
                   <p className="text-xs text-muted-foreground">{t("dash.noActivity")}</p>
@@ -405,12 +398,12 @@ function TeamLine({ name, goals }: { name?: string; goals: number | null }) {
 }
 
 function FixtureRow({ m }: { m: Match }) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const h = getClub(m.homeClubId);
   const a = getClub(m.awayClubId);
   return (
     <Link to={`/matches/${m.id}`} className="flex items-center gap-3 py-2.5 hover:bg-secondary/40">
-      <div className="w-14 shrink-0 text-xs text-muted-foreground">{relTime(locale, m.kickoff)}</div>
+      <div className="w-14 shrink-0 text-xs text-muted-foreground">{rowLine(relativeDay(locale, m.kickoff), t)}</div>
       <div className="flex flex-1 items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
           <span className="truncate text-right text-sm">{h?.name}</span>

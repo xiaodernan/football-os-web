@@ -865,14 +865,26 @@ const claimed = new Set();
 // the group has to end at the same delimiter it started at — those sites are
 // claimed through DYN_SITES instead, which is the point of check 16.
 const KEY_LIKE = /(?:"([A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+)"|'([A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+)'|`([A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+)`)/g;
-for (const [, src] of appSrc) {
+// The census reads any shipped file that can NAME a key, which includes `i18n/`'s door
+// files: `relativeDay` composes `time.inDays` inside i18n/format.ts, and excluding the
+// whole directory — which `appSrc` above does because the dictionary itself declares every
+// key there — made a key reachable only if a component spelled it out. Check 26b closes the
+// same hole from the other side. `i18n/dictionaries.ts` stays out: a key's own declaration
+// is not the code that reads it.
+const KEY_READERS = [
+  ...appSrc,
+  ...files
+    .filter((f) => rel(f).startsWith("i18n/") && !rel(f).endsWith("dictionaries.ts"))
+    .map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]),
+];
+for (const [, src] of KEY_READERS) {
   for (const m of src.matchAll(STATIC)) claimed.add(m[1]);
   for (const m of src.matchAll(KEY_LIKE)) claimed.add(m[1] ?? m[2] ?? m[3]);
 }
 const dynKeys = new Set(DYN_SITES.flatMap((s) => (SPACES.get(`${s.prefix}|${s.expr}`)?.values ?? []).map((v) => s.prefix + v + s.suffix)));
 for (const sp of DOMAIN_SPACES) for (const v of sp.values) dynKeys.add(sp.prefix + v);
 const unreachable = enKeys.filter((k) => !claimed.has(k) && !dynKeys.has(k));
-ok(`every dictionary key is reachable — static, quoted, or a value a dynamic site can build (${unreachable.join(", ") || "none"})`,
+ok(`every dictionary key is reachable — static, quoted, or a value a dynamic site can build (${KEY_READERS.length} reader files, ${unreachable.join(", ") || "none"})`,
   unreachable.length === 0);
 // Anti-vacuity: the scan has to be reading real claims, not passing because a
 // regex stopped matching anything.
@@ -1896,6 +1908,92 @@ ok(`the row-text scan is reading modules that actually carry the union (${ROW_FI
   // went unnoticed — so the floor is the measured count, never a round number.
   ROW_FILES.length >= 5 && rowKeys >= 15);
 
+// 26b. A helper that measures an instant against now must hand back a row, not a sentence
+//      it typed itself. Both audits above have a hole this class falls straight through: the
+//      row audit reads only a module that mentions `RowText`, and the raw-UI scan reads only
+//      positions inside JSX. So `function relTime(locale, iso): string`, printed from two
+//      places on the dashboard, was invisible to every gate in this file — and it carried two
+//      defects no gate could have reported. Both were measured at M214 by slicing the shipped
+//      function out of its file and calling it (dev/m214-rel.mjs): a past instant kept its
+//      minus sign, so the growth card and every finished fixture read `-2d ago` / `-30d ago`,
+//      and both day branches spoke English to a reader in either Chinese locale while the
+//      clock branch on the very next line followed the locale (`22:24` vs `下午10:24`).
+//      The population is derived from the arithmetic, not from a name list someone has to
+//      keep current: any site that subtracts `Date.now()` from a parsed instant. It is read
+//      over every walked file INCLUDING `i18n/`, which `appSrc` above deliberately drops —
+//      the door this clause exists to police lives there, and a population that skipped its
+//      own subject would report a clean census for the wrong reason.
+const RELATIVE_MATH = /Date\.now\(\)\s*-\s*new Date\([^)]*\)\.getTime\(\)|new Date\([^)]*\)\.getTime\(\)\s*-\s*Date\.now\(\)/;
+// The enclosing declaration is found by walking back to the nearest top-level `function`.
+// A multi-line signature is not resolved here: it comes back unattributed and is counted as
+// an offender, which is the loud direction, so this cannot silently approve a site it failed
+// to place.
+function rowTypedAt(src, at) {
+  const lines = src.slice(0, at).split("\n");
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const m = /^(?:export )?function (\w+)\(/.exec(lines[i]);
+    if (!m) continue;
+    return { name: m[1], row: /:\s*RowText\s*\{?\s*$/.test(lines[i]) };
+  }
+  return { name: null, row: false };
+}
+const allSrc = files.map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]);
+const relSites = allSrc.filter(([, code]) => RELATIVE_MATH.test(code));
+const relOffenders = relSites
+  .map(([p, code]) => [p, rowTypedAt(code, code.search(RELATIVE_MATH))])
+  .filter(([, v]) => !v.row)
+  .map(([p, v]) => `${p} ${v.name ?? "UNATTRIBUTED"}`);
+// Three plants through the same filter, one per way the clause can be wrong: a `string`
+// return that must be refused, a `RowText` return that must be accepted, and arithmetic
+// outside any declaration, which must be refused as unattributed rather than skipped.
+const REL_PLANTS = [
+  ["planted string-returning relative helper", "function plantedRel(iso: string): string {\n  const ms = Date.now() - new Date(iso).getTime();\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", true],
+  ["planted row-returning relative helper", "function plantedRow(iso: string): RowText {\n  const ms = Date.now() - new Date(iso).getTime();\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", false],
+  ["planted relative math outside any declaration", "const __ms = Date.now() - new Date(\"2026-01-01\").getTime();\nexport const __n = Math.round(__ms / 86400000);\n", true],
+];
+const plantVerdicts = REL_PLANTS.map(([name, src, wantRefused]) => {
+  const v = rowTypedAt(src, src.search(RELATIVE_MATH));
+  return [name, !!v.row === !wantRefused ? null : `${name} ${v.name ?? "UNATTRIBUTED"} row=${v.row} want=${wantRefused ? "refused" : "accepted"}`];
+}).filter(([, bad]) => bad);
+ok(`the three planted relative-time shapes are refused or accepted exactly as declared (${REL_PLANTS.length} plants, ${plantVerdicts.length ? plantVerdicts.map(([, b]) => b).join(" | ") : "all as predicted"})`,
+  plantVerdicts.length === 0);
+ok(`every helper that measures an instant against now hands back a row (${relSites.length} sites: ${relSites.map(([p]) => p).join(", ") || "NONE — the population read nothing"}), and the door this clause exists to police is inside it (${relSites.some(([p]) => p.startsWith("i18n/")) ? "yes" : "no"})`,
+  relOffenders.length === 0 && relSites.length >= 2 && allSrc.length > appSrc.size && relSites.some(([p]) => p.startsWith("i18n/")));
+
+// 26c. The same claim from the other end: what the door actually prints. Loaded through the
+//      suite's own vite server so this reads the shipped module, not a transcription, and run
+//      through the app's real `translate` so the variables are filled by the interpolator
+//      every screen uses. The contrast arm is the expression the dashboard shipped until
+//      M214, kept here because "no minus sign" is only evidence if the predicate refuses the
+//      sentence that had one.
+const { relativeDay, translate } = await server.ssrLoadModule("/i18n/index.tsx");
+const DAY_MS = 86400000;
+const REL_CASES = [
+  [3, "time.inDays"], [2, "time.inDays"], [1.4, null], [-20 / 24, null],
+  [-2, "time.agoDay"], [-5.6, "time.agoDay"], [-40, "time.agoDay"],
+];
+const oldRelTime = (d) => `${d > 0 ? "in " : ""}${d}d${d > 0 ? "" : " ago"}`;
+const relBad = [];
+for (const [off, wantKey] of REL_CASES) {
+  const iso = new Date(Date.now() + off * DAY_MS).toISOString();
+  const row = relativeDay("en", iso);
+  const key = "key" in row ? row.key : null;
+  const n = "vars" in row && row.vars ? row.vars.n : null;
+  if (key !== wantKey) relBad.push(`${off}d -> ${key ?? "value"} (wanted ${wantKey ?? "value"})`);
+  if (key && (!Number.isInteger(n) || n <= 0 || n !== Math.round(Math.abs(off))))
+    relBad.push(`${off}d -> n=${n} is not the whole positive day count`);
+  if (!key && !("value" in row)) relBad.push(`${off}d -> neither a key nor a value`);
+  for (const locale of ["en", "zh-CN", "zh-TW"]) {
+    const line = key ? translate(locale, key, { n }) : relativeDay(locale, iso).value;
+    if (/-\d/.test(line)) relBad.push(`${locale} ${off}d prints "${line}"`);
+    if (locale !== "en" && /\b(in|ago)\b/.test(line)) relBad.push(`${locale} ${off}d speaks English: "${line}"`);
+  }
+}
+ok(`the door prints a positive day count in the reader's own words over ${REL_CASES.length} planted offsets × 3 locales (${relBad.slice(0, 4).join(" | ") || "clean"}), and the same predicate refuses the sentence the dashboard shipped until M214 (${oldRelTime(-2)} / ${oldRelTime(3)})`,
+  relBad.length === 0 && /-2d ago/.test(oldRelTime(-2)) && /in 3d/.test(oldRelTime(3)) &&
+  !/-\d/.test(translate("en", "time.agoDay", { n: 2 })) &&
+  !/\b(in|ago)\b/.test(translate("zh-CN", "time.inDays", { n: 3 })));
+
 // 27. A second interpolator. t(key, vars) fills every occurrence of a placeholder;
 //     `String.prototype.replace` with a string needle fills only the FIRST, so a key
 //     that repeats a token renders half-filled — and every new key would have to know
@@ -2347,8 +2445,14 @@ ok(`every formatDate call's first argument is the reader's locale (${noLocaleArg
   noLocaleArg.length === 0);
 ok(`every file that formats a date imports the door from @/i18n (${unimportedDoor.join(", ") || "none missing"})`,
   unimportedDoor.length === 0);
-ok("formatDate is reachable through the i18n umbrella the screens import",
-  /export\s*\{\s*formatDate\s*\}\s*from\s*"\.\/format"/.test(readFileSync(join(root, "i18n", "index.tsx"), "utf8")));
+// The umbrella's export list is read, not matched against one remembered name: check 26c
+// imports `relativeDay` through it, so a rewrite that dropped it back to `{ formatDate }`
+// would break that clause by accident rather than report the door being unreachable.
+const umbrellaSrc = readFileSync(join(root, "i18n", "index.tsx"), "utf8");
+const umbrellaNames = ((umbrellaSrc.match(/export\s*\{([^}]*)\}\s*from\s*"\.\/format"/) ?? [])[1] ?? "")
+  .split(",").map((s) => s.trim()).filter(Boolean);
+ok(`the i18n umbrella re-exports every word-shaping door the screens import (${umbrellaNames.join(", ")})`,
+  umbrellaNames.length === 2 && ["formatDate", "relativeDay"].every((n) => umbrellaNames.includes(n)));
 ok(`the door is the ONE door — nothing else constructs a formatter (${otherDoors.join(", ") || "none"})`,
   otherDoors.length === 0);
 ok(`the door scan is reading real call sites (${DOOR_CALLS.length} across ${doorFiles.length} files)`,
