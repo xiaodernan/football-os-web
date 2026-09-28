@@ -1402,6 +1402,8 @@ const en: Dict = {
   "ai.evidence.fact": "{fact}",
   "ai.src.matchLabel": "Match {label}",
   "ai.src.matchEngine": "Football OS Match Engine (demo)",
+  "ai.videoAnalysisPrompt": "Video analysis flagged: {improvement}. Build a session on {focus}.",
+  "ai.filmAnalysisPrompt": "Film review flagged: {improvement}. Build a session on {focus}.",
 
   // Demo Mode has no community server: posts live on this device in either
   // connection state, so this notice must not imply a queue that sends later.
@@ -3098,6 +3100,8 @@ const zhCN: Dict = {
   "ai.evidence.fact": "{fact}",
   "ai.src.matchLabel": "比赛 {label}",
   "ai.src.matchEngine": "Football OS 比赛引擎（演示）",
+  "ai.videoAnalysisPrompt": "视频分析标记：{improvement}。针对 {focus} 构建一个训练环节。",
+  "ai.filmAnalysisPrompt": "录像复盘标记：{improvement}。针对 {focus} 构建一个训练环节。",
 
   // Demo Mode has no community server: posts live on this device in either
   "community.offline": "已离线——两种状态下帖子都保存在本机，重新联网时不会上传任何内容。",
@@ -4612,6 +4616,8 @@ const zhTW: Dict = {
   "ai.evidence.fact": "{fact}",
   "ai.src.matchLabel": "比賽 {label}",
   "ai.src.matchEngine": "Football OS 比賽引擎（演示）",
+  "ai.videoAnalysisPrompt": "影片分析標記：{improvement}。針對 {focus} 建構一個訓練單元。",
+  "ai.filmAnalysisPrompt": "錄像複盤標記：{improvement}。針對 {focus} 建構一個訓練單元。",
 
   // M143: this block used to open with `...zhCN`, which is how 18 labels
 

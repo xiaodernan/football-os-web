@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M222 (a few numbers in that range
+Work ships one milestone per commit and is currently at M223 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -4441,7 +4441,22 @@ PlayerOS. All restored; 1964/1964 after restore.
 Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, suite
 **37/37 proof scripts · 1964/1964 checks · exit 0**, `proof-i18n` **234/234** at **1680 keys · 3 locales**. Ceiling stays **0 across 0 files**, covered set **40**.
 
-**What is still not claimed**: the Player OS video-analysis prompt (`requestPlan("Video analysis flagged: …")`) remains an English sentence sent to the *model* (provider door); Manager OS sliders still print the five scale words; `toast.success(` hole closed but other wrappers would need the same treatment; `data/ai.ts` now has 0 prose debt (the ratchet is extended to it implicitly through the covered set).
+**What is still not claimed**: Manager OS sliders still print the five scale words; `toast.success(` hole closed but other wrappers would need the same treatment; `data/ai.ts` now has 0 prose debt (the ratchet is extended to it implicitly through the covered set).
+
+### M223 — the video-analysis prompt uses the provider door
+
+The Player OS video-analysis button sent a free-form English prompt to the demo coach:
+`requestPlan(\`Video analysis flagged: \${improvement}. Build a session on \${focus}.\`, 30)`. This was the last provider-door English sentence outside the `englishWord` door that M215 opened and M217 closed.
+
+**The provider door is now used.** A new key `ai.videoAnalysisPrompt` ("Video analysis flagged: {improvement}. Build a session on {focus}.") was added to the dictionary in all three locales. A helper `buildVideoAnalysisPrompt(improvement, focus)` in `data/ai.ts` retrieves the English template via `englishWord("ai.videoAnalysisPrompt")` and interpolates the vars, so the provider receives English while the key is declared for all three locales. The Player OS button now calls this helper instead of inlining the template.
+
+**One new key** (`ai.videoAnalysisPrompt`) ×3 locales: **1680 → 1681 keys per locale**.
+
+**Mutation witness: two arms, both caught.** (1) the helper inlined the English template — `ai.videoAnalysisPrompt` became unreachable (reachability check); (2) a placeholder drifted in zh-CN — placeholder agreement. Both restored; 234/234 after restore.
+
+Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, suite **37/37 proof scripts · 1964/1964 checks · exit 0**, `proof-i18n` **234/234** at **1681 keys · 3 locales**. Ceiling **0/0**, covered **40**.
+
+**What is still not claimed**: Manager OS sliders still print the five scale words; other `toast.*` wrappers would need the same treatment; `data/ai.ts` now has 0 prose debt (the ratchet is extended to it implicitly through the covered set).
 
 ## Deploying
 

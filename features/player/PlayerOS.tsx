@@ -6,7 +6,6 @@ import {
   ATTRIBUTE_KEYS,
   CATEGORY_ORDER,
   attributesByCategory,
-  attributeLabel,
   overallRating,
   weakestAttributes,
 } from "@/domain/attributes";
@@ -221,7 +220,7 @@ function Coach() {
     }
     setBusy(true);
     try {
-      const p = await requestPlan(prompt, minutes, carryKeys.length ? carryKeys : undefined);
+      const p = await requestPlan({ value: prompt }, minutes, carryKeys.length ? carryKeys : undefined);
       setPlanId(p.id);
       toast.success(t("player.generatePlan"));
     } catch (e) {
@@ -706,7 +705,7 @@ function Video() {
                 ))}
               </div>
             </div>
-            <Button size="sm" className="w-full" onClick={async () => { await requestPlan(`Video analysis flagged: ${report.improvements[0]}. Build a session on ${report.recommendedFocus.map(attributeLabel).join(" and ")}.`, 30); toast.success(t("film.toastBuilt", { min: 30, n: report.recommendedFocus.length, focus: report.recommendedFocus.map((k) => t(`attr.name.${k}`)).join(", ") })); navigate("/player/training"); }}>
+            <Button size="sm" className="w-full" onClick={async () => { await requestPlan({ key: "ai.videoAnalysisPrompt", vars: { improvement: report.improvements[0], focus: report.recommendedFocus.join(",") } }, 30); toast.success(t("film.toastBuilt", { min: 30, n: report.recommendedFocus.length, focus: report.recommendedFocus.map((k) => t(`attr.name.${k}`)).join(", ") })); navigate("/player/training"); }}>
               {t("player.createTrainingFromAnalysis")}
             </Button>
           </div>

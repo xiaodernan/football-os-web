@@ -1,5 +1,5 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
-import type { RowText } from "@/domain/rowText";
+import { asRowText, rowLine, type RowText } from "@/domain/rowText";
 import { attributeLabel, weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna, archetypeLabelEn } from "@/domain/playerDna";
@@ -24,7 +24,7 @@ export interface LoadContext {
 }
 
 export interface PlanInput {
-  prompt: string;
+  prompt: RowText;
   profile: UserProfile;
   history: { focus: string; completed: number }[];
   availableMinutes: number;
@@ -72,8 +72,11 @@ class DeterministicCoachProvider implements CoachProvider {
   async generatePlan(input: PlanInput): Promise<CoachPlan> {
     // Simulate reasoning latency for realistic streaming/loading UX.
     await new Promise((r) => setTimeout(r, 260));
+    // The provider matches on English and the reader reads their own column, so the two halves
+    // of one prompt are two readings of the SAME row rather than two sentences kept in step.
+    const ask = englishRow(input.prompt);
     const { requested, weaknesses, strengths, focus, available } = analyze(
-      input.prompt,
+      ask,
       input.profile.attributes,
     );
     // Explicit target attributes (role-gap priorities) win over inferred focus.
@@ -86,7 +89,7 @@ class DeterministicCoachProvider implements CoachProvider {
     // never prescribes extra volume on top of a high acute:chronic ratio.
     if (load?.zone === "high") targetMinutes = Math.min(targetMinutes, 20);
     else if (load?.zone === "caution") targetMinutes = Math.min(targetMinutes, 30);
-    const seed = `coach-${hashString(input.prompt + input.profile.displayName)}`;
+    const seed = `coach-${hashString(ask + input.profile.displayName)}`;
     const dna = computeDna(input.profile.attributes);
     const session = buildSession({
       id: `S${Date.now().toString(36).slice(-5)}`,
@@ -227,4 +230,24 @@ export async function askFootballAI(
     ],
     confidence: 55 + Math.floor(rng() * 30),
   };
+}
+
+/** The English reading of a row a reader also sees: `rowLine(row, t)` is what a screen prints,
+ *  this is what the provider matches on. Code-holding variables resolve through the name tables
+ *  on both sides — the reader's language for the screen, English for `analyze`'s hint patterns —
+ *  so a row that trains `focus` is one fact with two readings rather than two sentences to keep
+ *  in step. This is the pair M217 built for the sample questions, one level up. */
+export function englishRow(row: RowText): string {
+  return "key" in row ? rowLine(row, englishWord) ?? englishWord(row.key) : row.value;
+}
+
+/** Plans stored before a prompt was a row hold a plain string. Those words are the writer's, so
+ *  they are kept verbatim as a value and never guessed at as a key — the same repair a goal title
+ *  and a remembered line get, called from the store's hydration boundary. */
+export function repairPlanPrompts(plans: CoachPlan[]): CoachPlan[] {
+  return plans.map((p) =>
+    typeof (p.prompt as unknown) === "string"
+      ? { ...p, prompt: asRowText(p.prompt as unknown as string) }
+      : p,
+  );
 }
