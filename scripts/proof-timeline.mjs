@@ -126,7 +126,7 @@ ok("a whitespace-only note yields no note", one({ sessions: [session({ notes: " 
 const p = one({ plans: [plan()] })[0];
 ok("a plan row shows the user's own prompt and the provider that answered it",
   p.title.value === "Plan prompt B" && p.detail.value === "demo-coach-v1");
-// M224: the prompt is stored as a ROW, so the timeline resolves it at read time instead of
+// M223: the prompt is stored as a ROW, so the timeline resolves it at read time instead of
 // replaying a sentence that was frozen in whatever language the button was clicked in.
 const pKeyed = one({ plans: [plan({ id: "p4", prompt: { key: "ai.videoAnalysisPrompt", vars: { improvement: "Heavy first touch", focus: "passing" } } })] })[0];
 ok("a plan's prompt is forwarded as the row the caller stored, not re-worded here",

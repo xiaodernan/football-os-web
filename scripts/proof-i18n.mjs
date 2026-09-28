@@ -38,7 +38,7 @@
 //  20. a second category namespace coming back — compare.cat.* duplicated attr.*,
 //  21. the domain name tables being referenced from UI text again instead of
 //      staying in the prose layer. Two coach-prompt builders used to justify the
-//      two UI references; M224 makes a prompt a row whose English reading is
+//      two UI references; M223 makes a prompt a row whose English reading is
 //      derived in data/ai.ts, so the declared table is empty and a new UI
 //      reference has to be added here on purpose rather than declared away,
 //  22. an attribute's English name handed to a UI slot as a literal prop or text
@@ -982,7 +982,7 @@ ok(`compare.cat.* stays deleted from every locale and every caller (${[...new Se
 //     a call-shaped regex (M147's mutation test found that: a gate that is green because
 //     it cannot see anything). Imports are stripped first, because `import {
 //     attributeLabel }` is a reference the interface never renders.
-//     M224 emptied the declared table instead of lengthening it. Both sites built a coach
+//     M223 emptied the declared table instead of lengthening it. Both sites built a coach
 //     prompt in English — `requestPlan(`Video analysis flagged: …`)` — and because that
 //     prompt is ALSO the row a reader sees on the activity timeline, "model input, so
 //     English is right" was only half true: the other half was an English sentence shown
@@ -992,7 +992,7 @@ ok(`compare.cat.* stays deleted from every locale and every caller (${[...new Se
 //     Two-sided on purpose, because "0 in the UI" is also what a scan that stopped reading
 //     the tree reports: a planted screen has to land in the UI list, and the identifier has
 //     to be found in the prose modules the UI scope excludes.
-const NAME_PROMPT_SITES = new Map(); // M224: empty, and a new entry has to be a decision to make
+const NAME_PROMPT_SITES = new Map(); // M223: empty, and a new entry has to be a decision to make
 const withoutImports = (code) => {
   let inImport = false;
   return code
@@ -2256,7 +2256,7 @@ const probeFound = [...`"Who is the key player at Real Madrid?"`.matchAll(QUESTI
 ok(`the ${SUGGESTED_ASKS.length} suggested questions send exactly the English row of the key the reader sees (${askBad.slice(0, 3).join(" | ") || "all equal"}), the AI screen carries ${screenQuestions.length} question literal(s), and the same scan finds the planted one (${probeFound})`,
   SUGGESTED_ASKS.length >= 4 && askBad.length === 0 && screenQuestions.length === 0 && probeFound === 1);
 
-// 26f. A prompt handed to the coach is a row with two readings (M224). Six screens call
+// 26f. A prompt handed to the coach is a row with two readings (M223). Six screens call
 //      `requestPlan`; three read the dictionary, which froze the language they were clicked in
 //      onto the activity timeline, and two typed an English sentence — so the provider matched
 //      English AND a reader in either Chinese locale was shown it, because a plan's prompt is
