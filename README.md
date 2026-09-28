@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M228 (a few numbers in that range
+Work ships one milestone per commit and is currently at M230 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -5069,6 +5069,135 @@ the check that says this section introduced nothing else.
 takes M228 because the storage census it replaces was named M227 in its own file header; the number is
 still asserted at commit time from `git log --oneline -1`, and if another run claims it first this
 commit is named by what that reads, not by what this paragraph guessed.)*
+
+### M230 — the coach's rows are the reader's own, down to the words the provider used to compose itself
+
+M222 and M223 put the coach's sentences onto keys, and the plan panel has printed rows ever since.
+What neither looked at is the *values* those rows were handed — and those were not keys at all.
+They were words the provider had already made:
+
+```ts
+focus:  trained.map(attributeLabel).join(" + ")                 // "Ball Control + Weak Foot"
+target: isTargeted ? "selected role-gap priorities" : "current biggest measurable gap"
+arch:   archetypeLabelEn(dna.primary.id)                        // "Target Man"
+acwr:   load.acwr?.toFixed(2) ?? "elevated"                     // a ratio nobody has
+game:   hasBlock("game") ? " — session shaped to your role" : ""
+```
+
+A row can only put a value into the reader's language when the value is a **key** — that is the
+whole of `RowText`. `attributeLabel` and `archetypeLabelEn` are the opposite door: they answer in
+English, so a 简体中文 reader of the plan read
+
+```
+核心重点 Ball Control + Weak Foot 瞄准你的 current biggest measurable gap。
+DNA 解读：Target Man（Deep Playmaker → Target Man) — session shaped to your role。
+实战模块是你的 Crossing 训练 —— Target Man 型球员在那里表现自己。
+```
+
+— three quarters of a Chinese sentence around words only the English reader could be given, and no
+gate could see it: each row *was* a key, each locale *was* complete, every literal was inside its
+ceiling. The defect was in the contract between the provider and the row, so the fix is there.
+
+**One contract, two kinds of variable.** `domain/rowText.ts` already had `CODE_VARS`, the variables
+whose values are codes the dictionary resolves (`focus`, `arch`, `cat`, `shot`, …). It grows the
+five the coach was spelling out by hand — `drill`, `attrs`, `trained`, `last`, `new` — because the
+English words were, underneath, an attribute key or a comma-separated list of them: the provider now
+passes `trained.join(",")` and `codeWord` does the joining, so the list a Chinese reader sees is
+`控球 + 冲刺` and the list the English reader sees is unchanged. And a second list is declared,
+`KEY_VARS = ["lead", "target", "game", "zone"]`, for the variables whose value is the *name of a
+row*: `fillRowVars` resolves those through the reader's column, and an empty value stays empty
+(`game` is only carried when a game block ran). `target` is now
+`isTargeted ? "coach.rat.targetRoleGap" : "coach.rat.targetGap"` — the aim phrase is a row of its
+own, in all three locales, chosen by shape. A load zone is named by the same door the /load banner
+reads: `domain/load.ts` exports `zoneKey(zone)`, which unwraps `ZONE_LABEL[zone].key`, so the plan's
+source line and the banner cannot drift into two words for one band. The `"elevated"`/`"high"`/
+`"low"` fallbacks became an em dash, and the one branch that was describing a number the reader does
+not have — `classifyZone` answers `caution` when a week carries load but the chronic window rounds
+to zero — got a sentence of its own, `coach.diag.loadCautionNoRatio`, instead of the English word
+"elevated" sitting inside every translation.
+
+**The leak the new census found first.** `ai.lead.general` read "Here is the read from Football OS
+intelligence for `{label}`." and `{label}` reached the screen as braces — for every reader, English
+included — because a key-holding variable is resolved with *no* variables: the outer row's bag
+belongs to the outer sentence, and the `label` that row wanted was filled into a different row (the
+answer's sources, which the same panel prints underneath it). A key reached that way may interpolate
+nothing, so the row is var-free now and the match is still named, once, under the answer.
+
+**And six brackets that opened in one script and closed in another.** `（综合 {rating})` — a
+full-width pair closed half-width, on the plan's source line and on every level line, in both
+Chinese locales. `t()` fills placeholders and nothing else, so nothing downstream could repair it.
+Six rows read that way at `f14034f`; zero read that way now.
+
+**The gates.** Three clauses carry the claim in `scripts/proof-i18n.mjs`, all read out of the tree
+rather than listed by hand. 26g finds the keys a key-holding variable can carry where it is handed
+one (`target: isTargeted ? "a" : "b"` yields both ends; `lead` is followed to the three `leadKey`
+assignments; a zone's name is read out of `ZONE_LABEL`), refuses a `KEY_VARS` name it cannot find
+keys for, and requires every one of those keys to have a row in every locale that interpolates
+nothing. 26h renders six real plans (a fresh one, a first week whose caution band has no ratio at
+all, a spike, a continuing block, a rotated one, the role-gap panel's) and three Match Intelligence
+answers through the shipped dictionary in all three locales and refuses two things: a placeholder
+that survived to the screen, and — in the two Chinese columns — a Latin word that is not one of the
+three the game's own name keeps (`Football OS`, `ACWR`, `DNA`). 26i is the bracket shape, per locale,
+over the whole dictionary. Each of the three carries a planted eye test in the two directions it can
+fail, because "0 leaks" is also what a blind detector prints.
+
+**The gate was reading rows with an interpolator of its own.** `scripts/proof-training.mjs` checked
+that the coach claims only the blocks its session carries, and it did that by looking up the English
+row and filling `{…}` itself — `Object.entries(row.vars).reduce(… replaceAll(…)`. That filler reads
+every code-holding variable as the key it was handed, so the moment the coach started handing over
+codes the gate went red on three clauses, on rows that now read correctly:
+`says "passing" for a plan that trains Passing`, and `60′ omits role-shaped though the block exists`
+(the `game` tail is a row now, and the filler printed `coach.rat.gameShaped`). A correct change
+failed a gate that had re-implemented the contract it was checking — the same defect this milestone
+is about, one layer down. `resolve` now calls `rowLine(row, englishWord)`, the door a screen uses, so
+the three clauses are green and stronger: they exercise the real resolution path instead of a
+lookalike. Four new plan-facing rows came with this (`coach.diag.loadCautionNoRatio`,
+`coach.rat.targetRoleGap`, `coach.rat.targetGap`, `coach.rat.gameShaped`), which is why the suite
+prints 1684 keys where it printed 1680.
+
+**Measured, not inferred.** On the plane this commit ships (`git archive f14034f` + these six files,
+node_modules junctioned, no `.git`): `npx tsc --noEmit` exit 0, `node scripts/build.mjs` exit 0
+(`✓ built in 31.12s`), `proof-i18n` **247/247** (seven of those checks are new), `proof-career`
+**183/183** and `proof-training` **40/40** green before and after the mutation run below — the latter
+only after the gate's own interpolator was replaced, which is the paragraph above. The clauses as the
+gate prints them: `the variables that resolve as keys are exactly the 4 this clause can find keys for
+(lead, target, game, zone; unknown: none; found nothing for: none)`; `no key a key-holding variable
+can carry asks for variables of its own (11 keys × 3 locales, all var-free)`; `the English-leak rule
+calls the pre-M230 sentence a leak and its replacement clean (3 plants, all as declared)`; `every row
+of 6 real plans and 3 answers reaches a reader in the reader's own column (213 readings, clean)`;
+`the bracket rule catches a pair opened in one script and closed in the other (4 plants, all as
+declared)`; `every dictionary row closes its own brackets in its own script (5052 rows read, clean)`.
+
+**The gate has to be seen to see.** `dev/m230-arms.mjs` puts one habit back at a time and asks the
+gate to notice, restoring from a start-of-run backup verified by hash. It runs wherever `M230_ROOT`
+points, so the whole run was done inside the plane and never touched the shared working copy:
+**9/9 arms caught · 0 missed or crashed · 0 invalid needles · 0 restore failures**, with `proof-career`
+183/183 and `proof-training` 40/40 green before *and* after. Each arm's first red is the clause that
+names it: dropping `attrs` from `CODE_VARS` prints a raw attribute key in a Chinese column; dropping
+`lead` from `KEY_VARS` prints `ai.lead.player` and reddens the clause that says the list is exactly the
+four it can find keys for; adding a fifth name reddens the same clause from the other side; restoring
+the placeholder `ai.lead.general` asked for is caught twice (statically, and on the answer's own row in
+all three locales); growing a placeholder on a row a key-var carries is caught before anything renders;
+printing a load zone as its code, inlining an English aim phrase, and handing the DNA read an English
+archetype name are each caught by the whole-row census rather than by a string match — and the aim
+phrase arm reddens four clauses at once, because two keys lose their only reader when the provider goes
+back to prose; and the bracket arm reddens the shape rule that exists for it.
+
+**What is still not claimed**: the census reads the rows the provider produces *today* through six
+plan shapes, so a seventh shape reachable only from a screen (a plan built with a `focusKeys` list
+that names an attribute the dictionary has no row for) is covered by the static clause rather than by
+the rendered one; `join(",")` lists resolve through `attr.name.*`, so an attribute key that is not in
+the table still prints as itself, exactly as an unknown code var did before; the two Chinese columns
+are checked for stray Latin, which means an English word spelled entirely in CJK homoglyphs is not
+something this can see; the bracket rule counts styles rather than nesting, so a row that opens two
+full-width brackets and closes two is fine even if they cross; and `data/`'s sample copy — news
+items, lesson texts — is still authored prose by design, which is why only the plan and answer rows
+are in scope.
+
+*(Landing note: the `CODE_VARS`/`KEY_VARS`/`zoneKey` edits, the four new plan-facing keys and the
+`ai.lead.general` repair above were left uncommitted in this shared working copy by an earlier run of
+this session; the three census clauses, the bracket rule, their eye tests, the mutation arms, the
+`proof-training` door fix and this section are the part added here.)*
 
 ## Deploying
 

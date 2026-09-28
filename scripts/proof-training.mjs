@@ -68,12 +68,18 @@ function expectPlan(target) {
 }
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
+const { englishWord } = await server.ssrLoadModule("/i18n/format.ts");
+const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
+// Rows are read the way the app reads them, through the door a screen uses. This file used to
+// fill `{…}` itself against the English column, and that hand-rolled filler read every
+// code-holding variable as the key it was handed: M230 moved the coach's attribute lists onto
+// codes, and the filler would have shown "passing" where the English reader is shown "Passing",
+// and `coach.rat.gameShaped` where the reader is shown the sentence. That is the exact defect
+// the row contract exists to prevent — it had been living in the gate that checks it.
 function resolve(row) {
-  if (Array.isArray(row)) return row.map(r => resolve(r)).join(" ");
-  const tpl = DICTIONARIES.en[row.key];
-  if (!tpl) return row.key;
-  return Object.entries(row.vars ?? {}).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), tpl);
+  if (Array.isArray(row)) return row.map((r) => resolve(r)).join(" ");
+  if ("key" in row) return rowLine(row, englishWord) ?? englishWord(row.key);
+  return row.value;
 }
 async function tryLoad(p) {
   try { return { mod: await server.ssrLoadModule(p), err: "" }; }

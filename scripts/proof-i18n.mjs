@@ -2353,6 +2353,152 @@ ok(`the ${PROMPT_ROWS.length} coach prompts the screens hand over are the reader
   PROMPT_ROWS.length === 2 && promptRowBad.length === 0 && promptCallSites >= 5 &&
   typedPrompts.length === 0 && screenFiles.length >= 30 && PROMPT_CALL.test(promptPlant));
 
+// 26g. A row variable that holds a KEY cannot be handed the row's variables. `rowLine` resolves
+//      `lead`, `target`, `game` and `zone` through the reader's column because the value is the
+//      NAME of a row rather than the words to print — M230 made that a declared list, `KEY_VARS`
+//      in `domain/rowText.ts`, instead of a convention every provider re-decides — and it
+//      resolves them with no variables at all, because the outer row's bag belongs to the outer
+//      sentence. So a key reached that way may interpolate nothing. `ai.lead.general` read
+//      "…Football OS intelligence for {label}." and every reader, the English one included, was
+//      shown the braces: the `label` it asked for had been filled into a different row (the
+//      answer's sources, which the same panel prints underneath). Three things are pinned, all
+//      of them read out of the tree rather than listed here: the `KEY_VARS` list is exactly the
+//      names this clause knows how to find keys for, so a fifth name cannot be added without
+//      teaching the scan; every key those four variables can carry has a row in every locale;
+//      and none of those rows interpolates anything.
+const rowTextSrc = readFileSync(join(root, "domain", "rowText.ts"), "utf8");
+const KEY_VARS = (((rowTextSrc.match(/const KEY_VARS[^=]*=\s*\[([^\]]*)\]/) ?? [])[1] ?? "").match(/"[^"]*"/g) ?? [])
+  .map((s) => s.slice(1, -1));
+const aiProviderSrc = readFileSync(join(root, "data", "ai.ts"), "utf8");
+const leadKeys = [...aiProviderSrc.matchAll(/leadKey\s*=\s*"([\w.]+)"/g)].map((m) => m[1]);
+// Where a variable is handed a key is its own row's `vars` object, and an expression there can
+// name more than one (`target: isTargeted ? "a" : "b"` yields both ends).
+const keysHeldIn = (name) => {
+  const keys = new Set();
+  for (const m of aiProviderSrc.matchAll(new RegExp(`\\b${name}\\s*:\\s*([^,}\\n]+)`, "g"))) {
+    for (const q of m[1].matchAll(/"([\w.]+)"/g)) if (q[1].includes(".")) keys.add(q[1]);
+  }
+  return [...keys];
+};
+const loadSrc = readFileSync(join(root, "domain", "load.ts"), "utf8");
+const zoneBlock = (loadSrc.match(/export const ZONE_LABEL[\s\S]*?\n\};/) ?? [""])[0];
+const zoneKeys = [...zoneBlock.matchAll(/key:\s*"([\w.]+)"/g)].map((m) => m[1]);
+const KEY_VAR_KEYS = { lead: leadKeys, target: keysHeldIn("target"), game: keysHeldIn("game"), zone: zoneKeys };
+const unknownKeyVar = KEY_VARS.filter((n) => KEY_VAR_KEYS[n] === undefined);
+const emptyKeyVar = Object.entries(KEY_VAR_KEYS).filter(([, keys]) => keys.length === 0).map(([n]) => n);
+ok(`the variables that resolve as keys are exactly the ${KEY_VARS.length} this clause can find keys for (${KEY_VARS.join(", ")}; unknown: ${unknownKeyVar.join(", ") || "none"}; found nothing for: ${emptyKeyVar.join(", ") || "none"})`,
+  KEY_VARS.length >= 4 && unknownKeyVar.length === 0 && emptyKeyVar.length === 0);
+const keyVarHolders = Object.entries(KEY_VAR_KEYS).flatMap(([name, keys]) => keys.map((k) => [name, k]));
+const keyVarBad = [];
+for (const [name, key] of keyVarHolders) {
+  for (const { id } of L) {
+    const value = D[id][key];
+    if (typeof value !== "string" || !value.trim()) keyVarBad.push(`${name}: ${key} has no ${id} row`);
+    else if (/[{}]/.test(value)) keyVarBad.push(`${name}: ${id} ${key} interpolates ${(value.match(/\{\w+\}/g) ?? []).join(" ")}`);
+  }
+}
+ok(`no key a key-holding variable can carry asks for variables of its own (${keyVarHolders.length} keys × ${L.length} locales, ${keyVarBad.slice(0, 4).join(" | ") || "all var-free"})`,
+  keyVarHolders.length >= 11 && keyVarBad.length === 0);
+
+// 26h. The same claim measured on the sentences a reader meets, because a scan over declared
+//      keys cannot see a provider that composed the words itself. Before M230 the coach called
+//      `attributeLabel`/`archetypeLabelEn` before handing a row its variables, so a 简体中文
+//      reader of the plan's rationale read "核心重点 Ball Control + Weak Foot 瞄准你的 current
+//      biggest measurable gap" — the contract had nothing to translate, the value was already a
+//      word. Every row of six real plans (a fresh one, a first week whose caution band has no
+//      ratio at all, a spike, a continuing block, a rotated one, and the role-gap panel's) and
+//      the lead of three Match Intelligence answers is rendered through the shipped dictionary
+//      in all three locales and refused for two things: a placeholder that survived to the
+//      screen, and — in the two Chinese columns — a Latin word that is not one of the three the
+//      game's own name keeps. The leak rule carries its own two-sided test below, over the very
+//      sentence M230 fixed, because "0 leaks" is also what a blind detector prints.
+const { coachProvider, askFootballAI } = await server.ssrLoadModule("/data/ai.ts");
+const PLAN_ATTRS = { passing: 61, first_touch: 58, dribbling: 66, shooting: 54, pace: 71, stamina: 63, strength: 60, vision: 64, positioning: 57, tackling: 44, defensive_awareness: 46, decision_making: 59, work_rate: 68, agility: 70, balance: 62, jumping: 55, heading: 52, crossing: 60, long_passing: 58, finishing: 53, composure: 60, leadership: 50, teamwork: 66, discipline: 64, aggression: 55, anticipation: 58, concentration: 61, communication: 52, coordination: 65, reaction: 69, acceleration: 72, strength_endurance: 60, weak_foot: 48, set_pieces: 51 };
+const PLAN_ASK = { prompt: { key: "coach.ask.default" }, profile: { displayName: "Sam", positionGroup: "MID", attributes: PLAN_ATTRS }, history: [], availableMinutes: 30 };
+const PLAN_SHAPES = [
+  ["a fresh plan", {}],
+  ["a first week with no ratio", { load: { zone: "caution", acwr: null, weekLoad: 40 } }],
+  ["a load spike", { load: { zone: "high", acwr: 1.92, weekLoad: 412 } }],
+  ["a continuing block", { history: [{ focus: "first_touch", completed: 3 }], lastFocus: ["first_touch"] }],
+  ["a rotated block", { history: [{ focus: "passing", completed: 1 }], lastFocus: ["set_pieces"] }],
+  ["the role-gap panel", { focusKeys: ["passing", "dribbling"] }],
+];
+const KEPT_LATIN = ["Football OS", "ACWR", "DNA"];
+const englishLeft = (s) => KEPT_LATIN.reduce((rest, kept) => rest.split(kept).join(" "), s).match(/[A-Za-z][A-Za-z\u2019']*/g) ?? [];
+const planRowBad = [];
+let planReadings = 0;
+for (const [name, extra] of PLAN_SHAPES) {
+  const plan = await coachProvider.generatePlan({ ...PLAN_ASK, ...extra });
+  for (const row of [...plan.diagnosis, ...plan.rationale, ...plan.sources]) {
+    for (const { id } of L) {
+      planReadings++;
+      const shown = say(id)(row);
+      if (/[{}]/.test(shown)) planRowBad.push(`${name} [${id}] a placeholder survived: ${shown}`);
+      if (id !== "en") {
+        const leaked = englishLeft(shown);
+        if (leaked.length) planRowBad.push(`${name} [${id}] English in a Chinese column (${leaked.join(" ")}): ${shown}`);
+      }
+    }
+  }
+}
+const ANSWER_SHAPES = [["who is the best player at ARS?", "the ranking question"], ["why did they win?", "the pattern question"], ["tell me about the match", "the general question"]];
+for (const [question, name] of ANSWER_SHAPES) {
+  const answer = await askFootballAI(question, { label: "ARS v CHE", facts: ["Arsenal 2-1 Chelsea (Premier League)"] });
+  for (const { id } of L) {
+    planReadings++;
+    const shown = say(id)(answer.text);
+    if (/[{}]/.test(shown)) planRowBad.push(`${name} [${id}] a placeholder survived: ${shown}`);
+  }
+}
+const LEAK_PLANTS = [
+  ["the sentence M230 fixed", "核心重点 Ball Control + Weak Foot 瞄准你的 current biggest measurable gap", true],
+  ["the same sentence after it", "核心重点 控球 + 冲刺 瞄准你的 当前最大的可量化差距", false],
+  ["a row whose only Latin is the game's own name", "Football OS 训练方法论（演示知识库）", false],
+];
+const leakMissed = LEAK_PLANTS.filter(([, s, want]) => (englishLeft(s).length > 0) !== want);
+ok(`the English-leak rule calls the pre-M230 sentence a leak and its replacement clean (${LEAK_PLANTS.length} plants, ${leakMissed.map(([n]) => n).join(", ") || "all as declared"})`,
+  leakMissed.length === 0);
+ok(`every row of ${PLAN_SHAPES.length} real plans and ${ANSWER_SHAPES.length} answers reaches a reader in the reader's own column (${planReadings} readings, ${planRowBad.slice(0, 3).join(" | ") || "clean"})`,
+  planReadings >= 100 && planRowBad.length === 0);
+ok(`the provider composes no English label into a row any more (${/attributeLabel|archetypeLabelEn/.test(aiProviderSrc) ? "a label composer is back" : "data/ai.ts names keys only"})`,
+  !/attributeLabel|archetypeLabelEn/.test(aiProviderSrc));
+
+// 26i. A bracket that opens in one script and closes in another. `t()` fills placeholders and
+//      nothing else, so `（综合 {rating})` reaches the reader with the wrong half-width closer —
+//      six rows read that way at f14034f, on the plan's source line and on every level line, in
+//      both Chinese locales. The rule is a shape over the whole dictionary rather than a rule
+//      about plans, because the defect is a typing habit rather than a code path, and it is
+//      checked per locale because the row that is wrong is the row the reader reads. The plants
+//      open the pair in both directions, so a census that counted one style twice would be seen
+//      not counting the other.
+const bracketsOf = (s) => [
+  (s.match(/（/g) ?? []).length - (s.match(/）/g) ?? []).length,
+  (s.match(/\(/g) ?? []).length - (s.match(/\)/g) ?? []).length,
+];
+const BRACKET_PLANTS = [
+  ["a full-width pair closed half-width", "你的已存属性（综合 38)", true],
+  ["the same row with its own closer", "你的已存属性（综合 38）", false],
+  ["a half-width pair closed full-width", "Context (demo）", true],
+  ["a row carrying both styles, closed", "Context (demo)（说明）", false],
+];
+const bracketMissed = BRACKET_PLANTS.filter(([, s, want]) => {
+  const [full, half] = bracketsOf(s);
+  return ((full !== 0 || half !== 0) !== want);
+});
+ok(`the bracket rule catches a pair opened in one script and closed in the other (${BRACKET_PLANTS.length} plants, ${bracketMissed.map(([n]) => n).join(", ") || "all as declared"})`,
+  bracketMissed.length === 0);
+const bracketBad = [];
+for (const { id } of L) {
+  for (const key of enKeys) {
+    const value = D[id][key];
+    if (typeof value !== "string") continue;
+    const [full, half] = bracketsOf(value);
+    if (full !== 0 || half !== 0) bracketBad.push(`${id} ${key} (${full} full, ${half} half)`);
+  }
+}
+ok(`every dictionary row closes its own brackets in its own script (${enKeys.length * L.length} rows read, ${bracketBad.slice(0, 4).join(" | ") || "clean"})`,
+  enKeys.length * L.length >= 5000 && bracketBad.length === 0);
+
 // 27. A second interpolator. t(key, vars) fills every occurrence of a placeholder;
 //     `String.prototype.replace` with a string needle fills only the FIRST, so a key
 //     that repeats a token renders half-filled — and every new key would have to know

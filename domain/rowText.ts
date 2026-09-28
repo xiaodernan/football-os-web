@@ -28,8 +28,12 @@ export type Translate = (key: string, vars?: RowVars) => string;
 // `arch` and `arch2` one archetype key each (the DNA evolution row names both ends of it),
 // `kind` a retrieval entity kind, `traj` a career-arc trajectory, `cat`/`cat2` an attribute
 // category (the scout headline names two), `goal`/`ageGroup` an onboarding choice, and `shot`
-// the shot type the match engine scored a goal with.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "traj", "cat", "cat2", "goal", "ageGroup", "shot"];
+// the shot type the match engine scored a goal with. `drill` is one attribute key the
+// game-realistic block trains, and `attrs`, `trained` and `last`/`new` are the comma-separated
+// lists the coach's diagnosis and its continuity line name: before M230 the coach handed those
+// rows the English *label* of each key, so a 简体中文 reader read "Ball Control, Weak Foot" inside a
+// Chinese sentence, and the row contract could not put it back — the value was already a word.
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new"];
 
 function codeWord(code: string, t: Translate): string {
   // `focus` is the one variable that holds a list, so a comma-separated code list is
@@ -63,12 +67,29 @@ export function isCodeVar(name: string): boolean {
   return CODE_VARS.includes(name);
 }
 
+// The variable names that hold a KEY of the dictionary rather than a word: an answer's lead
+// (`ai.lead.*`, chosen by the question), the coach's aim phrase, its "session shaped to your role"
+// tail, and a load zone's name — built by `ZONE_LABEL`, the same door the /load banner reads. A var
+// that holds a key is not a var that holds text, and printing it as written is how every Match
+// Intelligence answer opened with `ai.lead.player` on screen. Resolution goes through the reader's
+// column, or the English one for a provider reading; a value that is not a row at all stays exactly
+// as written, the same rule an unknown code gets.
+const KEY_VARS: readonly string[] = ["lead", "target", "game", "zone"];
+
+export function isKeyVar(name: string): boolean {
+  return KEY_VARS.includes(name);
+}
+
 /** Resolve the code-holding variables in a row before the sentence is filled. */
 export function fillRowVars(vars: RowVars | undefined, t: Translate): RowVars | undefined {
   if (!vars) return undefined;
   const out: RowVars = {};
   for (const [name, raw] of Object.entries(vars)) {
-    out[name] = typeof raw === "string" && isCodeVar(name) ? codeWord(raw, t) : raw;
+    out[name] =
+      typeof raw !== "string" ? raw
+        : isCodeVar(name) ? codeWord(raw, t)
+          : isKeyVar(name) ? (raw === "" ? "" : t(raw))
+            : raw;
   }
   return out;
 }

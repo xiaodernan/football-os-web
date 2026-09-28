@@ -328,6 +328,15 @@ export const ZONE_LABEL: Record<LoadZone, RowText> = {
   high: { key: "ld.zoneHigh" },
 };
 
+/** The dictionary key behind a zone's name. The plan's source line names a zone and the /load
+ *  banner names it, and they must be one word: a row-var that holds a KEY is not a var that holds
+ *  text, so the provider asks this door for the key rather than for the word (M230), and the
+ *  banner keeps printing the row it always printed. */
+export function zoneKey(zone: LoadZone): string {
+  const row = ZONE_LABEL[zone];
+  return "key" in row ? row.key : "ld.zoneNone";
+}
+
 // The range text the legend prints, composed from the same numbers the classifier uses.
 export const ZONE_LEGEND: { zone: Exclude<LoadZone, "none">; band: string }[] = ACWR_BANDS.map(
   (band, i) => {

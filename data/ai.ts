@@ -1,10 +1,10 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
 import { asRowText, rowLine, type RowText } from "@/domain/rowText";
-import { attributeLabel, weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating } from "@/domain/attributes";
+import { weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
-import { computeDna, archetypeLabelEn } from "@/domain/playerDna";
+import { computeDna } from "@/domain/playerDna";
 import { englishWord } from "@/i18n/format";
-import { buildLoad, type LoadZone } from "@/domain/load";
+import { buildLoad, zoneKey, type LoadZone } from "@/domain/load";
 import { makeRng, hashString } from "@/lib/rng";
 import { newId } from "@/lib/ids";
 
@@ -122,37 +122,45 @@ class DeterministicCoachProvider implements CoachProvider {
     if (isTargeted)
       diagnosisParts.push(
         trained.length === effFocus.length
-          ? { key: "coach.diag.targetedExact", vars: { focus: effFocus.map(attributeLabel).join(" and ") } }
-          : { key: "coach.diag.targetedPartial", vars: { focus: effFocus.map(attributeLabel).join(" and "), trained: trained.map(attributeLabel).join(" and "), minutes: session.targetMinutes } },
+          ? { key: "coach.diag.targetedExact", vars: { focus: effFocus.join(",") } }
+          : { key: "coach.diag.targetedPartial", vars: { focus: effFocus.join(","), trained: trained.join(","), minutes: session.targetMinutes } },
       );
     if (load && load.zone === "high")
-      diagnosisParts.push({ key: "coach.diag.loadHigh", vars: { acwr: load.acwr?.toFixed(2) ?? "high" } });
+      diagnosisParts.push({ key: "coach.diag.loadHigh", vars: { acwr: load.acwr?.toFixed(2) ?? "—" } });
     else if (load && load.zone === "caution")
-      diagnosisParts.push({ key: "coach.diag.loadCaution", vars: { acwr: load.acwr?.toFixed(2) ?? "elevated" } });
+      // The caution band is reachable with no ratio at all: `classifyZone` answers "caution" when a
+      // week carries load but the chronic window rounds to zero, so a sentence about a ratio
+      // "climbing toward the risk band" would describe a number nobody has. A first-week reader met
+      // an English word there — the fallback was `"elevated"`, printed inside every translation.
+      diagnosisParts.push(
+        load.acwr == null
+          ? { key: "coach.diag.loadCautionNoRatio" }
+          : { key: "coach.diag.loadCaution", vars: { acwr: load.acwr.toFixed(2) } },
+      );
     else if (load && load.zone === "under" && load.weekLoad > 0)
-      diagnosisParts.push({ key: "coach.diag.loadUnder", vars: { acwr: load.acwr?.toFixed(2) ?? "low" } });
+      diagnosisParts.push({ key: "coach.diag.loadUnder", vars: { acwr: load.acwr?.toFixed(2) ?? "—" } });
     if (requested.length)
-      diagnosisParts.push({ key: "coach.diag.requestedFlagged", vars: { attrs: requested.map(attributeLabel).join(" and ") } });
-    diagnosisParts.push({ key: "coach.diag.lowestRated", vars: { attrs: weaknesses.map(attributeLabel).join(", ") } });
-    diagnosisParts.push({ key: "coach.diag.strengths", vars: { attrs: strengths.map(attributeLabel).join(", ") } });
+      diagnosisParts.push({ key: "coach.diag.requestedFlagged", vars: { attrs: requested.join(",") } });
+    diagnosisParts.push({ key: "coach.diag.lowestRated", vars: { attrs: weaknesses.join(",") } });
+    diagnosisParts.push({ key: "coach.diag.strengths", vars: { attrs: strengths.join(",") } });
     if (trainedRecently > 0)
-      diagnosisParts.push({ key: "coach.diag.trainedRecently", vars: { n: trainedRecently, focus: effFocus.map(attributeLabel).join("/") } });
+      diagnosisParts.push({ key: "coach.diag.trainedRecently", vars: { n: trainedRecently, focus: effFocus.join(",") } });
 
     if (lastFocus.length) {
       if (continuing.length)
-        diagnosisParts.push({ key: "coach.diag.continuing", vars: { attrs: continuing.map(attributeLabel).join(" and ") } });
+        diagnosisParts.push({ key: "coach.diag.continuing", vars: { attrs: continuing.join(",") } });
       else
-        diagnosisParts.push({ key: "coach.diag.rotated", vars: { last: lastFocus.map(attributeLabel).join(" and "), new: trained.map(attributeLabel).join(" and ") } });
+        diagnosisParts.push({ key: "coach.diag.rotated", vars: { last: lastFocus.join(","), new: trained.join(",") } });
     }
 
     const rationale: RowText[] = [
       ...(hasBlock("warmup") ? [{ key: "coach.rat.warmup" }] : []),
-      { key: "coach.rat.primaryFocus", vars: { focus: trained.map(attributeLabel).join(" + "), target: isTargeted ? "selected role-gap priorities" : "current biggest measurable gap" } },
+      { key: "coach.rat.primaryFocus", vars: { focus: trained.join(","), target: isTargeted ? "coach.rat.targetRoleGap" : "coach.rat.targetGap" } },
       ...(hasBlock("decision") ? [{ key: "coach.rat.decisionBlock" }] : []),
       ...(hasBlock("game")
-        ? [{ key: "coach.rat.gameBlock", vars: { drill: attributeLabel(dna.primary.gameFocus), archetype: archetypeLabelEn(dna.primary.id) } }]
+        ? [{ key: "coach.rat.gameBlock", vars: { drill: dna.primary.gameFocus, arch: dna.primary.id } }]
         : []),
-      { key: "coach.rat.dnaRead", vars: { primary: archetypeLabelEn(dna.primary.id), secondary: archetypeLabelEn(dna.secondary.id), game: hasBlock("game") ? " — session shaped to your role" : "" } },
+      { key: "coach.rat.dnaRead", vars: { arch: dna.primary.id, arch2: dna.secondary.id, game: hasBlock("game") ? "coach.rat.gameShaped" : "" } },
     ];
 
     const confidence = Math.round(
@@ -163,8 +171,8 @@ class DeterministicCoachProvider implements CoachProvider {
       { key: "coach.src.methodology" },
       { key: "coach.src.savedAttrs", vars: { rating: overallRating(input.profile.attributes) } },
       { key: "coach.src.positionBaseline" },
-      ...(load ? [{ key: "coach.src.loadLog", vars: { acwr: load.acwr?.toFixed(2) ?? "n/a", zone: load.zone } }] : []),
-      ...(lastFocus.length ? [{ key: "coach.src.coachMemory", vars: { focus: lastFocus.map(attributeLabel).join(" + ") } }] : []),
+      ...(load ? [{ key: "coach.src.loadLog", vars: { acwr: load.acwr?.toFixed(2) ?? "—", zone: zoneKey(load.zone) } }] : []),
+      ...(lastFocus.length ? [{ key: "coach.src.coachMemory", vars: { focus: lastFocus.join(",") } }] : []),
     ];
 
     return {
