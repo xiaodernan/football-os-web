@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M230 (a few numbers in that range
+Work ships one milestone per commit and is currently at M231 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -5198,6 +5198,99 @@ are in scope.
 `ai.lead.general` repair above were left uncommitted in this shared working copy by an earlier run of
 this session; the three census clauses, the bracket rule, their eye tests, the mutation arms, the
 `proof-training` door fix and this section are the part added here.)*
+
+### M231 — the film report's sentences are rows, and the clip library learns to read what it already stored
+
+The Film Room's report was the last screen whose body text was composed in a module. `data/video.ts`
+handed the panel English it had made itself, in five places at once:
+
+```ts
+note:  "Head check before ball arrives"                          // one of 21 captions, picked by rng
+label: `${e.kind.toUpperCase()} @ ${e.t}s`                        // "SCAN @ 12s"
+strengths:  ["Keeps the head up before receiving in open play", …]
+weaknesses: [`Body orientation delays the next action on the ${attributeLabel(weak[0]).toLowerCase()} sequence`, …]
+improvements: [`Open the body to play forward on the ${attributeLabel(weak[0])} reps`, …]
+```
+
+Every one of those reaches a screen, and two of them reach a *row*: `improvements[0]` was handed to
+the coach prompt as a variable, so a 简体中文 reader's activity timeline read
+
+```
+录像复盘标记：Open the body to play forward on the passing reps。针对 控球 + 观察 构建一个训练环节。
+```
+
+— the M230 defect again, one module over, and invisible to every gate for the same reason: the row
+was a key, the locale was complete, the words were already words. After the fix the same timeline
+row reads `录像复盘标记：受压接球时打开身体，便于向前出球。针对 控球 + 观察 构建一个训练环节。`, and
+the panel above it reads `球到之前先观察` for the caption, `观察 @ 第 12 秒` for the evidence frame
+and `身体朝向拖慢了 控球 环节的下一步动作` for the weakness — the attribute named in 简体中文 inside
+the sentence about the reader's own clip.
+
+**What moved.** `VideoEvent.note`, `frames[].label`, `strengths`, `weaknesses` and `improvements`
+are `RowText` now, and the provider hands rows. Two names joined `KEY_VARS` — `event` (a detection
+kind, carried by the frame caption) and `improvement` (the row the film prompt names) — and `attr`
+joined `CODE_VARS`, which is how the weakness names an attribute by key instead of by label. The ids
+are declared where the pipeline lives: `VIDEO_KINDS` (seven), `VIDEO_KIND_KEY` (one row per kind, so
+the badge stops printing the code), `VIDEO_NOTE_IDS` (three captions per kind, 21 literals) and
+`VIDEO_IMPROVEMENT_IDS`. The seeded draw picks **which** caption, never the words — one `rng()` call
+per detection, exactly the call the hand-written captions used — so a clip that was analysed before
+this commit keeps the caption it drew and simply reads it in the reader's language. 36 rows arrived
+in three locales; the suite prints 1720 keys where it printed 1684.
+
+**The type is the gate.** A grep for the report's fields found the Film Room, and a truncated one
+found only the Film Room — the Player OS carries a second copy of the same panel, and the plane's
+`tsc` named it: `Type 'RowText' is not assignable to type 'ReactNode'` at four lines and
+`string | number` at a fifth. Both screens now resolve every row through `rowLine`, and both build
+their prompt with the improvement's key. The one field that is *not* a row is the note a reader
+wrote about their own session, which is a value and stays one.
+
+**What an old library holds.** Clips are stored in `localStorage`, so a report written before this
+milestone holds plain strings where a row is expected — and `rowLine` throws on a string
+(`"key" in row`). The hydration boundary repairs them: `parseFilmClips` maps each of the five fields
+through `asRowText`, keeping the writer's words verbatim as values rather than guessing at them as
+keys, which is the repair a plan's prompt (M223) and a goal's title already get. Without it the
+Film Room would have crashed on the library it had filled itself, which is why the clause that pins
+it reads a stored clip with a string in every row position and asks what it says.
+
+**Measured, not inferred.** On the plane this commit ships (`git archive 311024b` + these files,
+node_modules junctioned, no `.git`): `npx tsc --noEmit` exit 0, `node scripts/build.mjs` exit 0
+(`✓ built in 58.97s`), `proof-film` **52/52** (six checks new), `proof-filmlibrary` 30/30,
+`proof-i18n` **247/247** and `proof-localdata` 32/32. The clauses as the gate prints them:
+`each of the 7 detections carries captions of its own, every one a row in all 3 locales (21 ids,
+clean)`; `and a detection is named by a row rather than by its code on a 简体中文 screen (scan=观察
+touch=触球 pass=传球 dribble=带球 shot=射门 turn=转身 press=逼抢)`; `every sentence of a real report
+is a key that reads in all 3 locales (21 rows over 10 detections, clean)`; `the film prompt carries
+the improvement as a key, so the timeline row is the reader's own words while the coach still gets
+English`; `a clip stored before the report was rows is repaired at the hydration boundary and still
+reads (Keeps the head up | Head check | SCAN @ 3s)`; and M230's census now reads `the variables that
+resolve as keys are exactly the 6 this clause can find keys for (lead, target, game, zone, event,
+improvement; …)` with `21 keys × 3 locales, all var-free` — which is also why every improvement row
+is written without a placeholder: a sentence another row names cannot ask for variables of its own.
+
+**The gate has to be seen to see.** `dev/m231-arms.mjs` puts one habit back at a time, restoring from
+a start-of-run backup verified by hash, aimed at the plane through `M231_ROOT`:
+**7/7 arms caught · 0 missed or crashed · 0 invalid needles · 0 restore failures**, with
+`proof-filmlibrary` 30/30 and `proof-localdata` 32/32 green before *and* after. Each arm's first red
+is the clause that names it: a strength handed over as the writer's words and a frame caption
+composed in the provider again are both caught as `a value row reached the screen`; dropping `attr`
+from `CODE_VARS` leaves the raw key inside the Chinese sentence; one caption left in English in a
+Chinese column is caught twice (the caption census and the report census); a kind shipped with two
+captions instead of three is caught by the id count; dropping the hydration repair is caught by the
+stored-clip clause rather than by a crash; and an improvement row that grows a `{attr}` is caught by
+the report census and by the prompt clause together.
+
+**What is still not claimed**: the census renders the report the demo provider really produces, so a
+caption id no seed can draw is checked for being a row rather than for being reachable — the draw
+index is exercised by the pipeline, not enumerated here; `data/`'s sample copy (news items, lesson
+texts) is still authored prose by design, and the film report was in scope because a screen labels
+it as an analysis of the reader's own clip rather than as demo content; the two screens' panels are
+still two copies of one layout, and M231 only made them read one set of rows; and the repair keeps a
+stored sentence verbatim in whatever language it was written in, so a library filled before this
+milestone still shows its English captions — translated words need a re-analysis, not a migration.
+
+*(Landing note: the `KEY_VARS`/`CODE_VARS` additions, the provider's rows and the dictionary row
+block were written in this working copy during the session that landed M230; the two screens, the
+hydration repair, the six film clauses, the mutation arms and this section are the part added here.)*
 
 ## Deploying
 

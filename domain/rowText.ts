@@ -33,7 +33,7 @@ export type Translate = (key: string, vars?: RowVars) => string;
 // lists the coach's diagnosis and its continuity line name: before M230 the coach handed those
 // rows the English *label* of each key, so a 简体中文 reader read "Ball Control, Weak Foot" inside a
 // Chinese sentence, and the row contract could not put it back — the value was already a word.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new"];
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr"];
 
 function codeWord(code: string, t: Translate): string {
   // `focus` is the one variable that holds a list, so a comma-separated code list is
@@ -74,7 +74,9 @@ export function isCodeVar(name: string): boolean {
 // Intelligence answer opened with `ai.lead.player` on screen. Resolution goes through the reader's
 // column, or the English one for a provider reading; a value that is not a row at all stays exactly
 // as written, the same rule an unknown code gets.
-const KEY_VARS: readonly string[] = ["lead", "target", "game", "zone"];
+// `event` is one video-detection kind and `improvement` one of the Film Room's improvement rows:
+// the film prompt names both, and a prompt is also a row a reader reads (M231).
+const KEY_VARS: readonly string[] = ["lead", "target", "game", "zone", "event", "improvement"];
 
 export function isKeyVar(name: string): boolean {
   return KEY_VARS.includes(name);

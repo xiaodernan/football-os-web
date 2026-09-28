@@ -1,6 +1,7 @@
 import type { VideoReport } from "@/data/video";
 import { FILM_KEY } from "./localData";
 import type { FilmClipInput } from "./filmInsights";
+import { asRowText } from "./rowText";
 
 // The clip library is written by the Film Room but read by several pillars
 // (review, profile, footprint). One reader keeps them honest about the same
@@ -10,6 +11,22 @@ export interface FilmClip {
   clipId: string;
   addedAt: string;
   report: VideoReport;
+}
+
+/** M231: a report's sentences are rows now (strengths, weaknesses, improvements, a detection's
+ *  caption, an evidence frame's label), so a clip stored before that holds plain strings where a
+ *  row is expected — and `rowLine` would be handed a string, where `"key" in row` throws. The
+ *  stored words are the writer's, so each is kept verbatim as a value rather than guessed at as a
+ *  key: the same repair a plan's prompt (M223) and a goal's title get, at the same kind of seam. */
+function repairReport(report: VideoReport): VideoReport {
+  return {
+    ...report,
+    strengths: (report.strengths ?? []).map(asRowText),
+    weaknesses: (report.weaknesses ?? []).map(asRowText),
+    improvements: (report.improvements ?? []).map(asRowText),
+    events: (report.events ?? []).map((e) => ({ ...e, note: asRowText(e.note ?? "") })),
+    frames: (report.frames ?? []).map((f) => ({ ...f, label: asRowText(f.label ?? "") })),
+  };
 }
 
 /** Defensive parse: a corrupt or legacy entry is skipped, never crashes a page.
@@ -28,7 +45,7 @@ export function parseFilmClips(raw: unknown): FilmClip[] {
     if (typeof c.clipId !== "string" || typeof c.addedAt !== "string") continue;
     if (!r || typeof r !== "object" || !Array.isArray(r.events)) continue;
     if (!r.events.every((e) => !!e && typeof e === "object" && typeof e.kind === "string")) continue;
-    out.push(c as FilmClip);
+    out.push({ ...(c as FilmClip), report: repairReport(r) });
   }
   return out;
 }

@@ -691,25 +691,25 @@ function Video() {
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-widest text-success">{t("player.strengths")}</div>
-              <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{report.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
+              <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{report.strengths.map((s, i) => <li key={i}>{rowLine(s, t)}</li>)}</ul>
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-widest text-destructive">{t("player.weaknesses")}</div>
-              <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{report.weaknesses.map((s, i) => <li key={i}>{s}</li>)}</ul>
+              <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{report.weaknesses.map((s, i) => <li key={i}>{rowLine(s, t)}</li>)}</ul>
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-widest text-primary">{t("player.threeImprovements")}</div>
-              <ol className="mt-1 list-decimal pl-5 text-xs text-muted-foreground">{report.improvements.map((s, i) => <li key={i}>{s}</li>)}</ol>
+              <ol className="mt-1 list-decimal pl-5 text-xs text-muted-foreground">{report.improvements.map((s, i) => <li key={i}>{rowLine(s, t)}</li>)}</ol>
             </div>
             <div>
               <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("player.evidenceFrames")}</div>
               <div className="mt-1.5 grid grid-cols-4 gap-2">
                 {report.frames.map((f, i) => (
-                  <div key={i} className="grid aspect-video place-items-center rounded bg-gradient-to-br from-secondary to-card text-center text-[9px] text-muted-foreground">{f.label}</div>
+                  <div key={i} className="grid aspect-video place-items-center rounded bg-gradient-to-br from-secondary to-card text-center text-[9px] text-muted-foreground">{rowLine(f.label, t)}</div>
                 ))}
               </div>
             </div>
-            <Button size="sm" className="w-full" onClick={async () => { await requestPlan({ key: "ai.videoAnalysisPrompt", vars: { improvement: report.improvements[0], focus: report.recommendedFocus.join(",") } }, 30); toast.success(t("film.toastBuilt", { min: 30, n: report.recommendedFocus.length, focus: report.recommendedFocus.map((k) => t(`attr.name.${k}`)).join(", ") })); navigate("/player/training"); }}>
+            <Button size="sm" className="w-full" onClick={async () => { await requestPlan({ key: "ai.videoAnalysisPrompt", vars: { improvement: report.improvements[0] && "key" in report.improvements[0] ? report.improvements[0].key : "", focus: report.recommendedFocus.join(",") } }, 30); toast.success(t("film.toastBuilt", { min: 30, n: report.recommendedFocus.length, focus: report.recommendedFocus.map((k) => t(`attr.name.${k}`)).join(", ") })); navigate("/player/training"); }}>
               {t("player.createTrainingFromAnalysis")}
             </Button>
           </div>

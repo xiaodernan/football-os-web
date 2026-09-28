@@ -160,6 +160,100 @@ ok("buildFilmInsights is deterministic (same input → identical output)",
 ok("input order does not change the aggregate (halves sort by analysis time)",
   JSON.stringify(buildFilmInsights(A)) === JSON.stringify(buildFilmInsights([...A].reverse())));
 
+// ---------------------------------------------------------------------------
+// M231 — the report's sentences are rows, in the reader's own language.
+// The demo pipeline handed the Film Room English it had composed itself: a detection's
+// caption, the evidence-frame label ("SCAN @ 12s"), the strengths, and a weakness that named an
+// attribute by its English label. Every one of those reaches a screen, so every one is a row now
+// — and the film prompt carries the improvement as a KEY, which is what makes the activity
+// timeline show the sentence in the language it was built in rather than inside an English one.
+const { videoProvider, VIDEO_KINDS, VIDEO_NOTE_IDS, VIDEO_IMPROVEMENT_IDS, VIDEO_KIND_KEY } = await server.ssrLoadModule("/data/video.ts");
+const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
+const { englishRow } = await server.ssrLoadModule("/data/ai.ts");
+const { englishWord } = await server.ssrLoadModule("/i18n/format.ts");
+const { translate } = await server.ssrLoadModule("/i18n/index.tsx");
+const { parseFilmClips: parseClips } = await server.ssrLoadModule("/domain/filmLibrary.ts");
+const LOCALES = ["en", "zh-CN", "zh-TW"];
+const say = (loc) => (row) => rowLine(row, (k, v) => translate(loc, k, v));
+const KEPT_LATIN = ["Football OS", "ACWR", "DNA"];
+const englishLeft = (s) => KEPT_LATIN.reduce((rest, kept) => rest.split(kept).join(" "), s).match(/[A-Za-z][A-Za-z\u2019']*/g) ?? [];
+// The leak rule's own eye test, over the very caption M231 fixed: "0 leaks" is also what a
+// detector that stopped matching would print.
+const LEAK_PLANTS = [
+  ["the frame caption M231 fixed", "SCAN @ 12s", true],
+  ["the same caption after it", "观察 @ 第 12 秒", false],
+  ["a caption whose only Latin is the game's own name", "Football OS 证据帧", false],
+];
+const leakMissed = LEAK_PLANTS.filter(([, s, want]) => (englishLeft(s).length > 0) !== want);
+ok(`the English-leak rule calls the pre-M231 caption a leak and its replacement clean (${LEAK_PLANTS.length} plants, ${leakMissed.map(([n]) => n).join(", ") || "all as declared"})`,
+  leakMissed.length === 0);
+
+// Every detection kind is enumerated here AND read out of the provider, so a kind shipped with
+// no captions, or a caption row no kind can reach, is a red rather than a gap.
+const noteIds = VIDEO_KINDS.flatMap((k) => (VIDEO_NOTE_IDS[k] ?? []).map((id) => [k, id]));
+const noteBad = [];
+for (const [kind, id] of noteIds) {
+  if (!id.startsWith(`vid.note.${kind}.`)) noteBad.push(`${id} does not name its own kind ${kind}`);
+  for (const loc of LOCALES) {
+    const words = translate(loc, id);
+    if (words === id || !words.trim()) noteBad.push(`${id} has no ${loc} row`);
+    else if (loc !== "en" && englishLeft(words).length) noteBad.push(`${loc} ${id} → ${words}`);
+  }
+}
+ok(`each of the ${VIDEO_KINDS.length} detections carries captions of its own, every one a row in all ${LOCALES.length} locales (${noteIds.length} ids, ${noteBad.slice(0, 3).join(" | ") || "clean"})`,
+  noteIds.length === VIDEO_KINDS.length * 3 && noteBad.length === 0);
+const codeKinds = VIDEO_KINDS.filter((k) => translate("zh-CN", VIDEO_KIND_KEY[k]) === VIDEO_KIND_KEY[k]);
+ok(`and a detection is named by a row rather than by its code on a 简体中文 screen (${VIDEO_KINDS.map((k) => `${k}=${translate("zh-CN", VIDEO_KIND_KEY[k])}`).join(" ")})`,
+  codeKinds.length === 0 && new Set(VIDEO_KINDS.map((k) => VIDEO_KIND_KEY[k])).size === VIDEO_KINDS.length);
+
+const ATTRS = { passing: 61, first_touch: 58, dribbling: 66, shooting: 54, pace: 71, stamina: 63, strength: 60, vision: 64, positioning: 57, tackling: 44, defensive_awareness: 46, decision_making: 59, work_rate: 68, agility: 70, balance: 62, jumping: 55, heading: 52, crossing: 60, long_passing: 58, finishing: 53, composure: 60, leadership: 50, teamwork: 66, discipline: 64, aggression: 55, anticipation: 58, concentration: 61, communication: 52, coordination: 65, reaction: 69, acceleration: 72, strength_endurance: 60, weak_foot: 48, set_pieces: 51 };
+const report = await videoProvider.analyze({ fileId: "m231", fileName: "clip.mp4", sizeBytes: 4096, attrs: ATTRS });
+const reportRows = [...report.strengths, ...report.weaknesses, ...report.improvements, ...report.events.map((e) => e.note), ...report.frames.map((f) => f.label)];
+const reportBad = [];
+for (const row of reportRows) {
+  if (!row || !("key" in row)) { reportBad.push(`a value row reached the screen: ${JSON.stringify(row)}`); continue; }
+  for (const loc of LOCALES) {
+    const shown = say(loc)(row);
+    if (/[{}]/.test(shown)) reportBad.push(`${loc} ${row.key} left a placeholder: ${shown}`);
+    if (loc !== "en" && englishLeft(shown).length) reportBad.push(`${loc} ${row.key} → ${shown}`);
+  }
+}
+ok(`every sentence of a real report is a key that reads in all ${LOCALES.length} locales (${reportRows.length} rows over ${report.events.length} detections, ${reportBad.slice(0, 3).join(" | ") || "clean"})`,
+  reportRows.length >= 8 && reportBad.length === 0 &&
+  VIDEO_IMPROVEMENT_IDS.every((id) => report.improvements.some((r) => "key" in r && r.key === id)));
+
+// The film prompt is one row with two readings (M223) and the improvement it names is the row
+// the panel above prints (M231): the coach is sent English, the reader's timeline is not.
+const promptBad = [];
+const impIds = report.improvements.map((r) => ("key" in r ? r.key : ""));
+for (const id of impIds) {
+  if (translate("zh-CN", id) === id) promptBad.push(`${id} has no 简体中文 row`);
+  for (const loc of LOCALES) if (/[{}]/.test(translate(loc, id))) promptBad.push(`${loc} ${id} asks for variables no key var can pass: ${translate(loc, id)}`);
+}
+const prompt = { key: "ai.filmAnalysisPrompt", vars: { improvement: impIds[0], focus: report.recommendedFocus.join(",") } };
+if (englishRow(prompt) !== say("en")(prompt)) promptBad.push(`the coach is sent “${englishRow(prompt)}” but the English row reads “${say("en")(prompt)}”`);
+for (const loc of ["zh-CN", "zh-TW"]) if (englishLeft(say(loc)(prompt)).length) promptBad.push(`${loc} prompt → ${say(loc)(prompt)}`);
+ok(`the film prompt carries the improvement as a key, so the timeline row is the reader's own words while the coach still gets English (${promptBad.slice(0, 3).join(" | ") || say("zh-CN")(prompt)})`,
+  promptBad.length === 0 && englishRow(prompt).includes(translate("en", impIds[0])) && say("zh-CN")(prompt).includes(translate("zh-CN", impIds[0])));
+
+// A clip stored before this milestone holds plain strings where a row is expected, and
+// `rowLine` throws on a string. The hydration boundary repairs them as values — the words are
+// the writer's — so an old library still reads instead of crashing the panel that filled it.
+const legacy = [{ clipId: "c1", addedAt: "2020-01-01T00:00:00Z", report: { fileId: "c1", fileName: "old.mp4", durationSec: 60, provider: "demo-video-v1", demo: true, strengths: ["Keeps the head up"], weaknesses: ["Body orientation lags"], improvements: ["Scan more"], events: [{ t: 3, kind: "scan", note: "Head check", confidence: 0.7 }], frames: [{ t: 3, label: "SCAN @ 3s" }], confidence: 70, recommendedFocus: ["scanning"] } }];
+let legacyBad = "";
+let repaired = [];
+let legacyReads = "";
+try {
+  repaired = parseClips(legacy);
+  legacyReads = repaired.length === 1
+    ? [rowLine(repaired[0].report.strengths[0], englishWord), rowLine(repaired[0].report.events[0].note, englishWord), rowLine(repaired[0].report.frames[0].label, englishWord)].join(" | ")
+    : "";
+} catch (e) {
+  legacyBad = String(e.message);
+}
+ok(`a clip stored before the report was rows is repaired at the hydration boundary and still reads (${legacyBad || legacyReads})`,
+  repaired.length === 1 && legacyReads === "Keeps the head up | Head check | SCAN @ 3s");
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

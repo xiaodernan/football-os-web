@@ -4,7 +4,9 @@ import { newId } from "@/lib/ids";
 import { formatDate, useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { videoProvider } from "@/data/video";
+import { VIDEO_KIND_KEY } from "@/data/video";
 import { buildFilmInsights, type FilmEventKind } from "@/domain/filmInsights";
+import { rowLine } from "@/domain/rowText";
 import { loadFilmClips, saveFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { useOnline } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, LoadingBlock, ErrorState, DemoBadge } from "@/ui/primitives";
@@ -114,8 +116,14 @@ export function FilmRoom() {
     // toast under it is read by a person and takes the dictionary's names directly.
     setPlanning(true);
     try {
+      // The improvement travels as the KEY of the row the panel above prints, not as the
+      // words: M231 made `improvement` a key-holding variable, so the timeline row and the
+      // report list are one fact with two readings instead of an English sentence inside a
+      // Chinese one. A clip stored before the report was rows holds a value row and no key,
+      // and then the prompt simply does not claim an improvement.
+      const flagged = current.report.improvements[0];
       const plan = await requestPlan(
-        { key: "ai.filmAnalysisPrompt", vars: { improvement: current.report.improvements[0], focus: keys.join(",") } },
+        { key: "ai.filmAnalysisPrompt", vars: { improvement: flagged && "key" in flagged ? flagged.key : "", focus: keys.join(",") } },
         30,
         keys,
       );
@@ -236,15 +244,15 @@ export function FilmRoom() {
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-widest text-success">{t("film.strengths")}</div>
-                    <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{current.report.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
+                    <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{current.report.strengths.map((s, i) => <li key={i}>{rowLine(s, t)}</li>)}</ul>
                   </div>
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-widest text-destructive">{t("film.weaknesses")}</div>
-                    <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{current.report.weaknesses.map((s, i) => <li key={i}>{s}</li>)}</ul>
+                    <ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{current.report.weaknesses.map((s, i) => <li key={i}>{rowLine(s, t)}</li>)}</ul>
                   </div>
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-widest text-primary">{t("film.improvements")}</div>
-                    <ol className="mt-1 list-decimal pl-5 text-xs text-muted-foreground">{current.report.improvements.map((s, i) => <li key={i}>{s}</li>)}</ol>
+                    <ol className="mt-1 list-decimal pl-5 text-xs text-muted-foreground">{current.report.improvements.map((s, i) => <li key={i}>{rowLine(s, t)}</li>)}</ol>
                   </div>
                 </div>
 
@@ -260,8 +268,8 @@ export function FilmRoom() {
                   {current.report.events.map((ev, i) => (
                     <div key={i} className="flex items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-secondary/40">
                       <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{ev.t}s</span>
-                      <span className={cn("w-16 shrink-0 text-xs font-semibold uppercase", KIND_TONE[ev.kind])}>{ev.kind}</span>
-                      <span className="min-w-0 flex-1 truncate">{ev.note}</span>
+                      <span className={cn("w-16 shrink-0 text-xs font-semibold uppercase", KIND_TONE[ev.kind])}>{t(VIDEO_KIND_KEY[ev.kind])}</span>
+                      <span className="min-w-0 flex-1 truncate">{rowLine(ev.note, t)}</span>
                       <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{Math.round(ev.confidence * 100)}%</span>
                     </div>
                   ))}
@@ -273,7 +281,7 @@ export function FilmRoom() {
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {current.report.frames.map((f, i) => (
                     <div key={i} className="grid aspect-video place-items-center rounded bg-gradient-to-br from-secondary to-card p-2 text-center text-[10px] text-muted-foreground">
-                      {f.label}
+                      {rowLine(f.label, t)}
                     </div>
                   ))}
                 </div>

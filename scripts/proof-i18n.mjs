@@ -2383,7 +2383,17 @@ const keysHeldIn = (name) => {
 const loadSrc = readFileSync(join(root, "domain", "load.ts"), "utf8");
 const zoneBlock = (loadSrc.match(/export const ZONE_LABEL[\s\S]*?\n\};/) ?? [""])[0];
 const zoneKeys = [...zoneBlock.matchAll(/key:\s*"([\w.]+)"/g)].map((m) => m[1]);
-const KEY_VAR_KEYS = { lead: leadKeys, target: keysHeldIn("target"), game: keysHeldIn("game"), zone: zoneKeys };
+// M231 added two names whose keys are not chosen by the coach: a detection kind and one of the
+// Film Room's improvements. Their ids are declared in the module that owns them (literals, so the
+// reachability census can see them), and the count is asserted below, which is what makes a stray
+// literal in a comment visible rather than harmless.
+const videoSrc = readFileSync(join(root, "data", "video.ts"), "utf8");
+const idsUnder = (prefix) => [...videoSrc.matchAll(new RegExp(`"(${prefix}[\\w.]+)"`, "g"))].map((m) => m[1]);
+const eventKeys = idsUnder("vid\\.kind\\.");
+const improvementKeys = idsUnder("vid\\.imp\\.");
+const EVENT_KEY_FLOOR = 7;      // the seven detections the video pipeline can report
+const IMPROVEMENT_KEY_FLOOR = 3; // the three improvement rows the Film Room lists
+const KEY_VAR_KEYS = { lead: leadKeys, target: keysHeldIn("target"), game: keysHeldIn("game"), zone: zoneKeys, event: eventKeys, improvement: improvementKeys };
 const unknownKeyVar = KEY_VARS.filter((n) => KEY_VAR_KEYS[n] === undefined);
 const emptyKeyVar = Object.entries(KEY_VAR_KEYS).filter(([, keys]) => keys.length === 0).map(([n]) => n);
 ok(`the variables that resolve as keys are exactly the ${KEY_VARS.length} this clause can find keys for (${KEY_VARS.join(", ")}; unknown: ${unknownKeyVar.join(", ") || "none"}; found nothing for: ${emptyKeyVar.join(", ") || "none"})`,
@@ -2398,7 +2408,8 @@ for (const [name, key] of keyVarHolders) {
   }
 }
 ok(`no key a key-holding variable can carry asks for variables of its own (${keyVarHolders.length} keys × ${L.length} locales, ${keyVarBad.slice(0, 4).join(" | ") || "all var-free"})`,
-  keyVarHolders.length >= 11 && keyVarBad.length === 0);
+  EVENT_KEY_FLOOR <= eventKeys.length && IMPROVEMENT_KEY_FLOOR <= improvementKeys.length &&
+  keyVarHolders.length >= 11 + EVENT_KEY_FLOOR + IMPROVEMENT_KEY_FLOOR && keyVarBad.length === 0);
 
 // 26h. The same claim measured on the sentences a reader meets, because a scan over declared
 //      keys cannot see a provider that composed the words itself. Before M230 the coach called
