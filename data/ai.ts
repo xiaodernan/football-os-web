@@ -2,6 +2,7 @@ import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
 import { attributeLabel, weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna, archetypeLabelEn } from "@/domain/playerDna";
+import { englishWord } from "@/i18n/format";
 import { buildLoad, type LoadZone } from "@/domain/load";
 import { makeRng, hashString } from "@/lib/rng";
 
@@ -199,6 +200,17 @@ function clampMinutes(m: number): number {
 
 // The active provider. Swap to a Cloud-Agent-backed provider when configured.
 export const coachProvider: CoachProvider = new DeterministicCoachProvider();
+
+/** The questions the Football AI screen offers as chips. Each one is two things at once — copy a
+ *  reader reads, and a query the demo provider matches on Latin tokens (`data/intelligence.ts:246`
+ *  strips everything outside `a-z0-9' -`) — so both halves live here rather than in the view: `id`
+ *  names the reader's row and `ask` is the English row of the same key, taken through the door that
+ *  owns model-input vocabulary. Proof-i18n's 26e refuses an `ask` that has drifted from
+ *  `DICTIONARIES.en`, which is what keeps the displayed question and the sent question one fact. */
+export const SUGGESTED_ASKS = ["keyPlayer", "league", "value", "transfer"].map((id) => ({
+  id,
+  ask: englishWord(`ai.sug.${id}`),
+}));
 
 // Match-chat / analyst answer (evidence-first) used by Match Intelligence.
 export interface AiAnswer {

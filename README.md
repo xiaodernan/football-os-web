@@ -4124,6 +4124,74 @@ policy per locale rather than editing rows; the four displayed English sample pr
 raw-UI debt lines in `features/sim/SimulationLab.tsx`; the plan-id collision; the populated-state
 browser walk; and the untracked `dev/` scratch.
 
+### M217 — one question, two readings: what the reader sees and what the provider matches
+
+`AiStudio` offered four clickable questions. They were four English literals in a module-scope array,
+and each was doing two jobs at once: it was the text under the heading, and it was the query handed to
+the demo provider. M215 found this while correcting the comment above the array and recorded it rather
+than fixing it in passing — a reader in either Chinese locale was shown four English questions, and no
+position in the raw-UI census could see them, because a literal in an array reaches a JSX child through
+a variable (`{SUGGESTIONS.map((s) => <button …>{s}</button>)}`), which is the same blind spot
+`relativeDay` was found in at M214.
+
+**The two halves now come from one key.** The English text is not wrong — `data/intelligence.ts:246`
+tokenises a question with `/[^a-z0-9' -]/g`, so a translated ask would retrieve nothing; a translated
+*chip* is simply a different reader's need. So the four questions became dictionary rows
+(`ai.sug.keyPlayer`, `ai.sug.league`, `ai.sug.value`, `ai.sug.transfer` — the English rows are the
+original strings verbatim, which is what makes the retrieval behaviour byte-identical, and the run
+prints `1602 keys · 3 locales`), and the pair lives in the module that owns provider input:
+`data/ai.ts` exports `SUGGESTED_ASKS = ["keyPlayer", …].map((id) => ({ id, ask: englishWord(`ai.sug.${id}`) }))`.
+The view renders `t(`ai.sug.${a.id}`)` and sends `a.ask`. Placing the pair in `data/ai.ts` rather than
+in the screen is M215's own rule biting: 26d refuses `englishWord` from any `.tsx`, because provider
+vocabulary in a render position is exactly the mistake that gate was written to prevent — so the gate
+shaped the design instead of merely reporting on it.
+
+**Two existing gates refused the new shape before it was registered, and that is the interesting
+part.** The first run of this change was `230/232`: `every dynamic t() site is declared` reported
+`78 sites / 1 undeclared / 0 stale` and `every dictionary key is reachable` named all four `ai.sug.*`
+rows. Nothing was broken in the product — a dynamic site is invisible to those claims until it is
+declared with the code that builds its values, which is precisely check 16's purpose. The declaration
+now reads `features/ai/AiStudio.tsx | ai.sug. | a.id | ""`, and the value space is read out of
+`data/ai.ts`'s own array literal (`claimByPrefix("ai.sug.", …)` → `spaceOf(...)`), so a fifth chip
+without a fifth row in three locales cannot arrive quietly: `ai.sug.… · the AI screen's suggested
+questions: all 4 values keyed in every locale`.
+
+**The new claim is 26e, and its teeth are the part to read.** For each suggestion it compares the sent
+text with the table's own English row (`a.ask !== translate("en", key)` is a drift), requires that each
+locale actually has a row (a missing row resolves to its own key, which `translate` hands back), and
+requires the AI screen to carry no question literal. That last half would be an empty count on its own,
+so the same regex is run against a planted question in the clause and must find exactly one —
+`m217b` blinds the scan and the suite reports the plant, which is the only way to tell a clean screen
+from a blind scanner.
+
+**Mutation witness.** Five arms: `m217a` appends one character to the sent question (drift), `m217b`
+blinds the literal scan, `m217c` deletes the simplified-Chinese row for one question, `m217d` renames
+the declared expression while the site keeps `a.id` — the verbatim match reports `1 undeclared /
+1 stale`, and `m217e` points the value-space anchor at an array that does not exist, which reddens
+three clauses including the anchor-locatable guard. All five were caught on their own
+(`5/5 · 0 invalid needles · 0 restore failures`), and the full harness of **61 arms** reports
+`61/61 cases caught (61/61 ran) · 0 missed · 0 crashed · 0 invalid needles · 0 restore failures` with
+the unmutated control green before and after (`career 183/183, transfers 76/76`).
+`proof-i18n` is now **233** checks (was 231).
+
+Measured on the working copy: `npm run build` (which runs `tsc --noEmit` first) exit 0, suite
+**37/37 proof scripts proven · 1963/1963 checks counted · exit 0**, no `UNVERIFIED` and no retry line.
+On the clean plane (`git archive HEAD` plus this milestone's four source files, `node_modules` joined,
+`--max-old-space-size=4096`): `tsc --noEmit` with no output and exit 0, `npm run build` exit 0, suite
+**37/37 · 1963/1963 checks counted · exit 0**. The 1961 → 1963 delta is exactly this milestone's two
+new clauses, and it was the same on both trees — the plane leg is what would have shown a
+working-copy-only artefact.
+
+**Still outstanding**: the generic version of this hole — a module-scope array whose elements reach a
+JSX child is still invisible to the position scan, and 26e covers *this* site by construction rather
+than teaching the scanner the shape (the alias/wrapper case in the relative-time census, #192, is the
+same class of "derive the rule, don't enumerate the sites"); `time.inDays`/`time.agoDay` still read as
+compact abbreviations beside the new word-shaped `Tomorrow`; `data/ai.ts`'s 30 composed sentences are
+still English (its `attributeLabel()`/`archetypeLabelEn()` interpolations now go through a *declared*
+door, but a person still reads them in English); the 46 raw-UI debt lines in
+`features/sim/SimulationLab.tsx`; the plan-id collision; the populated-state browser walk; and the
+untracked `dev/` scratch — which now also holds `m217.patch`, the superseded pre-declaration draft.
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a

@@ -1574,6 +1574,10 @@ const en: Dict = {
   // while the feed's own helper names the past one. A word two surfaces say is one row.
   // `time.tomorrow` / `time.yesterday` answer ±1 calendar day and carry no variable on purpose:
   // the day a reader calls "yesterday" is a word, not a measurement they want counted.
+  "ai.sug.keyPlayer": "Who is the key player at Real Madrid?",
+  "ai.sug.league": "Where do Arsenal sit in the Premier League?",
+  "ai.sug.value": "How much is Mbappé worth?",
+  "ai.sug.transfer": "Any transfer news about Haaland?",
   "time.tomorrow": "Tomorrow",
   "time.yesterday": "Yesterday",
   "time.agoDay": "{n}d ago",
@@ -3183,6 +3187,10 @@ const zhCN: Dict = {
   "comm.agoNow": "刚刚",
   "comm.agoMin": "{n} 分钟前",
   "comm.agoHour": "{n} 小时前",
+  "ai.sug.keyPlayer": "皇马的关键球员是谁？",
+  "ai.sug.league": "阿森纳在英超排第几？",
+  "ai.sug.value": "姆巴佩值多少钱？",
+  "ai.sug.transfer": "有哈兰德的转会新闻吗？",
   "time.tomorrow": "明天",
   "time.yesterday": "昨天",
   "time.agoDay": "{n} 天前",
@@ -4721,6 +4729,10 @@ const zhTW: Dict = {
   "comm.agoNow": "剛剛",
   "comm.agoMin": "{n} 分鐘前",
   "comm.agoHour": "{n} 小時前",
+  "ai.sug.keyPlayer": "皇馬的關鍵球員是誰？",
+  "ai.sug.league": "阿森納在英超排第幾？",
+  "ai.sug.value": "姆巴佩值多少錢？",
+  "ai.sug.transfer": "有哈蘭德的轉會新聞嗎？",
   "time.tomorrow": "明天",
   "time.yesterday": "昨天",
   "time.agoDay": "{n} 天前",

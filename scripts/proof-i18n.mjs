@@ -496,6 +496,9 @@ const DYN_SITES = [
   // kind the canvas can draw, so a sixth kind cannot appear without a word for it. The
   // value space below reads that table rather than restating it.
   { path: "features/ai/AiStudio.tsx", expr: "kind", prefix: "ai.legend.", suffix: "" },
+  // M217: the chip label is keyed off the same id the provider-side pair carries, so the screen
+  // reads the reader's row and `data/ai.ts` sends the English row of that key.
+  { path: "features/ai/AiStudio.tsx", expr: "a.id", prefix: "ai.sug.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
   { path: "ui/charts.tsx", expr: "c.category", prefix: "attr.", suffix: "" },
@@ -763,6 +766,15 @@ claimByPrefix("group.", S_GROUP);
 claimByPrefix("prof.mode.", S_MODE);
 claimByPrefix("onb.goal.", S_ONB_GOAL);
 claimByPrefix("onb.age.", S_ONB_AGE);
+// M217: the AI screen's suggested questions are keyed, and the id list is read out of the module
+// that owns them (`data/ai.ts` builds the pairs), so adding a fifth chip without a fifth row in
+// three locales cannot pass by nobody noticing. The same list is what 26e compares the sent text
+// against — one source, two claims.
+const S_SUG = {
+  name: "the AI screen's suggested questions",
+  values: spaceOf("data/ai.ts", /export const SUGGESTED_ASKS = \[[^\]]*\]/, /"([^"]+)"/g),
+};
+claimByPrefix("ai.sug.", S_SUG);
 // M182: one space, two prefixes — the archetype ids are the same list whether the site is
 // asking for its name or its one-line description, and both are read out of the table that
 // decides which archetypes exist.
@@ -2092,6 +2104,34 @@ if (wordDoor("dna.arch.not_a_real_archetype") !== "dna.arch.not_a_real_archetype
 }
 ok(`the vocabulary door answers from the English column and echoes a key it does not know (${wordBad.join(" | ") || "clean"})`,
   wordBad.length === 0);
+
+// 26e. A suggested question is copy and a query at once, so the two halves must be one fact.
+//      `data/ai.ts` names the row the reader sees; the chip renders it through `t` and sends the
+//      English row of the SAME key, because the retrieval tokenizer (`data/intelligence.ts:246`)
+//      keeps only Latin tokens. Before M217 the four questions were one English array doing both
+//      jobs, and no position scan could see them — a literal in a module-scope array reaches a JSX
+//      child through a variable. So the claim here is that the sent text equals the table's own
+//      English row (nobody may keep a second copy), that every locale has a row of its own, and
+//      that the AI screen carries no question literal left in it. The planted string under the same
+//      regex is what makes the last half evidence rather than an empty count: a scanner blinded to
+//      questions and a screen with none both read zero, and only the plant tells them apart.
+const { SUGGESTED_ASKS } = await server.ssrLoadModule("/data/ai.ts");
+const QUESTION_LITERAL = /["'`]([^"'`\n]{6,}\?)["'`]/g;
+const askBad = [];
+for (const a of SUGGESTED_ASKS) {
+  const key = `ai.sug.${a.id}`;
+  const en = translate("en", key);
+  if (en === key) askBad.push(`${key} has no English row at all`);
+  for (const locale of ["zh-CN", "zh-TW"]) {
+    if (translate(locale, key) === key) askBad.push(`${locale}: ${key} resolves to its own key (no row)`);
+  }
+  if (a.ask !== en) askBad.push(`${key}: sends “${a.ask}” but the English row is “${en}”`);
+}
+const aiStudioSrc = codeOf(readFileSync(join(root, "features", "ai", "AiStudio.tsx"), "utf8"));
+const screenQuestions = [...aiStudioSrc.matchAll(QUESTION_LITERAL)].map((m) => m[1]);
+const probeFound = [...`"Who is the key player at Real Madrid?"`.matchAll(QUESTION_LITERAL)].length;
+ok(`the ${SUGGESTED_ASKS.length} suggested questions send exactly the English row of the key the reader sees (${askBad.slice(0, 3).join(" | ") || "all equal"}), the AI screen carries ${screenQuestions.length} question literal(s), and the same scan finds the planted one (${probeFound})`,
+  SUGGESTED_ASKS.length >= 4 && askBad.length === 0 && screenQuestions.length === 0 && probeFound === 1);
 
 // 27. A second interpolator. t(key, vars) fills every occurrence of a placeholder;
 //     `String.prototype.replace` with a string needle fills only the FIRST, so a key

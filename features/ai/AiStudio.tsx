@@ -3,6 +3,7 @@ import { Link, useRouter } from "@/lib/router";
 import { useLocalStorage, useOnline } from "@/lib/hooks";
 import { useI18n } from "@/i18n";
 import { askIntelligence, buildGraph, type EvidenceFact, type KgGraph, type KgNode } from "@/data/intelligence";
+import { SUGGESTED_ASKS } from "@/data/ai";
 import { rowLine, asRowText, type RowText } from "@/domain/rowText";
 import { AI_CHAT_KEY } from "@/domain/localData";
 import { Panel, EmptyState, DemoBadge } from "@/ui/primitives";
@@ -15,21 +16,15 @@ type ChatMsg =
   | { role: "user"; content: string; at: string }
   | { role: "ai"; content: RowText[]; facts?: EvidenceFact[]; sources?: RowText[]; confidence?: number; at: string };
 
-// These four strings do two jobs, and only one of them excuses English. They are queries, and
-// the demo provider matches on Latin tokens — `data/intelligence.ts:246` strips everything
-// outside `a-z0-9' -` from the question — so a translated ask would retrieve nothing. But the
-// same array is rendered as the chips under this heading, so a reader in either Chinese locale
-// is shown English words here. The display half is the defect, not the query half: the chips
-// need keys and the provider keeps the English text. Recorded rather than fixed here, because
-// the raw-UI census reads JSX positions and cannot see this — a literal in a module-scope array
-// reaches a child through a variable, which is the same blind spot `relativeDay` was found in at
-// M214 (README M215, measured as 4 literals × 3 locales).
-const SUGGESTIONS = [
-  "Who is the key player at Real Madrid?",
-  "Where do Arsenal sit in the Premier League?",
-  "How much is Mbappé worth?",
-  "Any transfer news about Haaland?",
-];
+// A suggested question is two things at once, and only one half ever justified English here: it is
+// a query the demo provider matches on Latin tokens (`data/intelligence.ts:246` strips everything
+// outside `a-z0-9' -`), and it is copy the reader reads under this heading. M215 recorded that as a
+// defect rather than fixing it quietly; M217 fixes the shape. The pairs live in `data/ai.ts`, which
+// names the dictionary row the reader sees and the English row of the same key that the provider
+// receives, so nothing in the view has to know two languages. The raw-UI census still cannot see
+// this shape — a module-scope value reaching a JSX child through a variable, the same blind spot
+// `relativeDay` was found in at M214 — which is why the claim is a key-and-ask gate (26e), not a
+// position scan.
 
 // The two tab codes. At module scope rather than inline in a JSX child position,
 // where the raw-UI scan reads them as display copy: they are keys into `ai.tab.*`,
@@ -111,7 +106,7 @@ function Chat() {
           <div className="space-y-3">
             <EmptyState title={t("ai.empty")} hint={t("ai.emptyHint")} icon="✦" />
             <div className="flex flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((s) => <button key={s} onClick={() => send(s)} className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/50 hover:text-foreground">{s}</button>)}
+              {SUGGESTED_ASKS.map((a) => <button key={a.id} onClick={() => send(a.ask)} className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/50 hover:text-foreground">{t(`ai.sug.${a.id}`)}</button>)}
             </div>
           </div>
         )}
