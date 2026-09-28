@@ -4731,6 +4731,160 @@ runs in this shared workspace. This milestone takes M227 so the three do not cla
 number is still asserted at commit time from `git log --oneline -1`, and if either of those lands first
 the name of this commit is what it reads, not what this paragraph guessed.)*
 
+### M228 — the storage census asked how far a read was from the word `catch`, not whether a `catch` could reach it
+
+M227 shipped a census that files every browser-storage read the app cannot account for. Its verdict
+was a character window, verbatim from `e3fb19e`:
+
+```js
+const LOOK_BACK = 240, LOOK_FWD = 240;
+…
+const before = s.slice(Math.max(0, m.index - LOOK_BACK), m.index);
+const after = s.slice(m.index + m[0].length, Math.min(s.length, m.index + m[0].length + LOOK_FWD));
+…
+guarded: /try\s*\{/.test(before) && /\bcatch\b/.test(after.slice(0, LOOK_FWD)),
+```
+
+That measures proximity to two words, and code does not care about proximity. Read on `e3fb19e` with
+no `.git` in the tree, the gate reported eight sites it could not account for and put four files in
+the ledger —
+
+```
+ok   the app touches browser storage in 28 site(s) across 11 file(s): 2 through the door, 18 in a
+     try/catch, 8 declared unguarded (features/community/CommunityHub.tsx:94 getItem, …)
+```
+
+Six of those eight are reads sitting inside a `try` whose `catch` is simply further away than 240
+characters (`CommunityHub.tsx:94`, `LearnHub.tsx:43/47`, `ProfilePage.tsx:57/95` **and
+`SettingsPage.tsx:30`**), and two are the defect class itself: an inventory computed **inside a
+`useMemo`** at `features/settings/SettingsPage.tsx:23`, which throws during render and therefore blanks
+the page, and `clearActivity(localStorage)` at `:72`, inside the reset's event handler — an uncaught
+throw there breaks the button rather than the page, but it is still a read that was never made safe,
+only left unwrapped. So the ledger was not "eight reads nobody has explained"; it was two real ones
+plus six lines of noise, and the noise is why the two did not look like an emergency.
+
+**Containment replaces the window.** The gate now parses each file with the repo's own TypeScript
+(`ts.createSourceFile`, `setParentNodes: true`) and asks the question a `catch` actually answers: is
+this reference inside a `TryStatement`'s own `tryBlock`, and does that statement have a
+`catchClause`? `try + finally` with no `catch` does **not** excuse a read — a `finally` runs on the
+way out of a throw, it does not stop the throw. Read that way on the same ref, 24 of the 28 sites are
+inside a `try` with a `catch`, and the 4 the parser puts outside it are `SettingsPage.tsx:23`,
+`SettingsPage.tsx:72` and the two providers' calls *to* the door — whose own `try` is the reason they
+are safe. After this commit's two fixes the census reads 6 through the door and **0 unguarded**:
+
+```
+ok   …and read by containment the app's exposure is smaller than the window claimed: 0 read(s) the
+     distance test called safe sit outside any catch (the dangerous direction) while 5 the distance
+     test called debt are inside one (features/community/CommunityHub.tsx:94 try+catch, …)
+ok   the app touches browser storage in 28 site(s) across 11 file(s): 6 through the door, 22 inside a
+     catch, 0 unguarded (none)
+ok   …and nothing is declared any more: the ledger holds 0 row(s) against a ceiling of 0, so an
+     unguarded read is a failure and not an exemption
+```
+
+The four-file ledger is deleted and `DEBT_CEILING` is 0, which is what turns "add a row and move on"
+into a red.
+
+**The window stayed, as a second reader.** Containment and proximity disagree in *both* directions,
+and averaging them would hide that. The shipped gate prints both halves of the split: 5 rows the window
+calls debt that containment excuses (6 on the ref, before `SettingsPage.tsx:30` moved behind the door),
+and 0 rows the window calls safe that sit outside a catch. The zero is the clause, and it is aimed at
+the direction that matters — a read that sits between somebody else's already-closed `try` and a
+`catch` 300 characters later is safe-looking to a distance test and is a blank page. That row does not
+exist in the app yet,
+so the clause cannot prove itself from app code alone; it is proven by planting it (`shadow`,
+predicted `window=SAFE` + `outside-try`), next to a `longTry` plant in the opposite direction
+(`window=debt` + `try+catch`), fourteen shapes in total.
+
+**Two readers for the population, not one.** A census that quietly enumerates nothing reports a clean
+app, so the same 28 sites are counted twice by methods that share no code — the parser's identifier
+references and the comment-stripped text's occurrences — and must agree site-for-site, line by line,
+with a floor of 20. Blinding either reader goes red rather than reporting a clean app: making the text
+reader match nothing (`sv06`) breaks the agreement, and making the census stop recognising the door
+(`sv05`) turns the door's own read into a site the text reader never saw — both fail on site-for-site
+reconciliation, not on a count anyone could have eyeballed.
+
+**The moment column learned one hop of the call graph.** Lexical position alone called
+`getInitialTheme`'s read `later`, which is a category error: `useState<Theme>(getInitialTheme)` runs
+that function *during render*, and so does `useState<number>(() => loadElapsed())`. A new `via-render`
+/ `via-effect` label follows the hook's own arguments one hop, and the providers clause now requires
+it — a `later` label is no longer accepted for a read the app runs before it has painted:
+
+```
+ok   the census also knows when a read runs — lexically in a hook (7 render, 7 effect), one hop away
+     through the function a hook is handed (4 via-render, 0 via-effect), or at module scope — so the
+     18 site(s) that run before the visitor acts are named separately, and the 15 of those that touch
+     the accessor itself are all inside a catch (…)
+ok   each root provider reads the store through the door, touches the accessor only to persist, and is
+     named as a render-phase reader rather than excused as a later one (lib/theme.tsx: 1 door read / 1
+     raw setItem [door@via-render,setItem@effect] · i18n/index.tsx: 1 door read / 1 raw setItem
+     [door@via-render,setItem@effect])
+```
+
+One hop is all it follows, and that limit is stated inside the gate rather than left as an
+assumption: the `twoHop` plant predicts `@later` for a read two functions deep. What covers it is the
+containment ceiling, which judges every read whatever moment it runs in — `sv07` (hop removed) goes
+red twice precisely because the label is load-bearing.
+
+**The two real reads went through the door, and `browserStore()` can answer `null`.** Routing a page
+through the door means four domain functions now receive `StorageLike | null`, so their null behaviour
+became shipped behaviour and had to be pinned, not assumed: `inventory(null)` returns every registered
+key with nothing present, `buildExport(null)` carries the app tag and zero sections (which is what the
+page's existing "nothing to export" refusal fires on), `applyImport(null, …)` **refuses** with
+`storage-write-failed` instead of reporting keys it never wrote, and `clearActivity(null)` returns 0
+instead of a count of keys it never removed.
+
+**Measured on the plane this commit ships** (`git archive e3fb19e` + these four files, no `.git`, so
+the concurrent run's 15 uncommitted tracked files cannot leak into the reading): `npx tsc --noEmit`
+exit 0, `node scripts/build.mjs` exit 0 (`✓ built in 10.87s`), `proof-storage` **34/34**,
+`proof-localdata` **32/32**, and the full suite **38/38 proof scripts proven (2009/2009 checks
+counted)** with rc 0 on **two consecutive legs**, no `FAIL`, no `UNVERIFIED`, no retry. On the same
+plane without this commit's files the two gates read **30/30** and **27/27**, so the suite's +9 checks
+is exactly this change's +4 and +5 and nothing else moved.
+
+**Twelve mutation arms, each with its red count predicted in advance** (`sv01` re-plants
+`SettingsPage.tsx:23` on the bare accessor → 3 reds: the ceiling, the ledger and the moment clause;
+`sv02` re-plants the reset → 2 reds, and the moment clause correctly stays green because an event
+handler cannot blank the page; `sv03` puts the window back as the verdict → 2; `sv04` widens the
+ceiling to 8 → 1; `sv05` blinds the census to the door; `sv06` blinds the second reader; `sv07`
+removes the call-graph hop → 2; `sv08` lets a bare `finally` guard a read → 1, caught only by the
+plant, which is what proves the plants are load-bearing; `ld01`–`ld04` make each null-store function
+lie about what it did). `career` (183) and `transfers` (76) ran green before and after, every arm's
+needle matched exactly once, and the tree came back byte-identical by hash. **First pass: 11/12
+caught as predicted.** `sv05` was a hole in *my prediction*, not in the gate: I expected a fourth red
+on the debt clause and got three, because the door's own read sits inside the door's own
+`try + catch`, so blinding the census to the door makes it a *guarded* app site rather than an
+unguarded one — what it breaks is the population, which is exactly the thing the two-reader clause
+exists to notice. The expectation was corrected with that reason written into the arm, and the re-run
+reads 12/12.
+
+**What is still not claimed.** The live browser pass M227 owes is still owed: the effect side
+(`<html class>`, `document.documentElement.lang`, the `setItem` persist) is stated unproven inside the
+suite, and no browser with site data actually blocked has been run, so `SecurityError` remains proven
+as a code path and not as a browser. `lib/hooks.ts` still keeps its own try-wrapped raw reads — read
+by containment all three are inside a catch, so they are safe, but they are not through the door, and
+that file's coverage exemption still reads "needs a DOM", which is the same excuse M212 and M227
+measured to be false. And this commit's own two-leg suite was interrupted once, on the leg that ran
+while the machine was loaded: `proof-runner` went red on two checks about its 1500 ms hang budget,
+with `hang-green`'s tally line missing rather than present. Reproduced alone under load, 97/97 in the
+same tree when the machine is quiet, and the kill landing at ~4.4 s of wall clock — that fixture
+assumes a child node process boots and prints inside the budget, which is a property of the machine,
+not of the claim. It is not caused by this commit (no file this commit touches is loaded by that
+check) and it is filed as the next milestone rather than papered over by raising a number here.
+
+**How this file landed in README.** The working copy's `README.md` also holds the concurrent run's
+uncommitted sections, which are not mine to commit, so `README.md` went in as an index-only landing:
+the committed blob is `git show HEAD:README.md` with this section spliced before the single
+`## Deploying` anchor (`git hash-object -w` + `git update-index --cacheinfo`), and the working copy
+keeps both. The committed text therefore still says `currently at M224` at the top of the roadmap, as
+M227's did: that line is one edit away from a stale claim either way, and a diff of pure additions is
+the check that says this section introduced nothing else.
+
+*(Numbering note: M225 and M226 are landed by concurrent runs in this shared workspace. This milestone
+takes M228 because the storage census it replaces was named M227 in its own file header; the number is
+still asserted at commit time from `git log --oneline -1`, and if another run claims it first this
+commit is named by what that reads, not by what this paragraph guessed.)*
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a

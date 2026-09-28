@@ -97,6 +97,20 @@ ok("countRecords ignores plain object fields", countRecords({ overall: 5, level:
 ok("countRecords treats a bare preference as one thing", countRecords("dark") === 1);
 ok("countRecords of empty is zero", countRecords(null) === 0 && countRecords(undefined) === 0);
 
+// ---- A document that is not allowed a store at all ----
+// SettingsPage hands every one of these functions `browserStore()`, which answers null when the
+// document may not have one (site data blocked). These four functions grew that parameter type in
+// the same change, so the null path is the shipped path, not a hypothetical one: the page has to
+// reach a refusal through it, and none of them may report work it did not do.
+const noStoreInv = inventory(null);
+ok("no store: the inventory still lists every registered key, so the page has rows to show", noStoreInv.entries.length === LOCAL_KEYS.length);
+ok("no store: nothing is counted as present, and the counts are all zero rather than undefined", noStoreInv.present === 0 && noStoreInv.bytes === 0 && noStoreInv.records === 0 && noStoreInv.entries.every((e) => !e.present && e.bytes === 0 && e.records === 0));
+const noStoreBundle = buildExport(null);
+ok("no store: the export keeps its identity but carries no sections — the shape SettingsPage refuses on", noStoreBundle.app === EXPORT_APP && Object.keys(noStoreBundle.sections).length === 0);
+const noStoreImport = applyImport(null, { app: EXPORT_APP, version: 1, exportedAt: "", sections: { [OS_STATE_KEY]: '[{"ok":1}]' } });
+ok("no store: an import refuses instead of reporting keys it never wrote", noStoreImport.ok === false && noStoreImport.keys === 0 && noStoreImport.error === "storage-write-failed");
+ok("no store: a reset reports zero keys cleared, not a fabricated count", clearActivity(null) === 0);
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

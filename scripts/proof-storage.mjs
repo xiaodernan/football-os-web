@@ -1,4 +1,4 @@
-// M225 — the two providers that decide what the reader sees read browser storage through a guard
+// M227 — the two providers that decide what the reader sees read browser storage through a guard
 // that does not guard.
 //
 // `typeof localStorage !== "undefined"` asks whether a name is declared. `localStorage` is declared
@@ -16,7 +16,20 @@
 // The rest of the app is not silently allowed: the same census files every storage touch it cannot
 // account for as declared, shrinking debt (M206's shape). Comments are stripped with the repo's own
 // string-aware scanner, because three of the sites this run first reported were prose.
+//
+// M228 — that census judged a read by how many characters separated it from the words `try {` and
+// `catch`, which is a proximity test wearing a safety name. Read through the repo's own TypeScript
+// parser instead — is this reference inside a try block that has a catch? — 8 of the 28 sites turn
+// out to be 2, not 8: six reads the window called debt sit inside a catch it had simply drifted away
+// from, and the two that really were unguarded are the exact defect class M227 closed (an inventory
+// computed inside a useMemo, a reset clear inside a handler), now routed through the door. The window
+// is kept as a second reader rather than deleted: containment and proximity disagree in both
+// directions, and a row where the window says safe while containment says debt is the one that can
+// blank the page, so the clause names the disagreement instead of averaging it away. The same parser
+// also sees the call graph one hop: `useState(getInitialTheme)` runs that function during render, so
+// a read inside it is a render-phase read, not a `later` one.
 import { createServer } from "vite";
+import ts from "typescript";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -231,68 +244,236 @@ if (DICT) {
 }
 
 // ---------------------------------------------------------------------------
-// 3 · the census: every storage touch is guarded, through the door, or declared debt
+// 3 · the census: every storage read is contained, through the door, or declared debt
 // ---------------------------------------------------------------------------
+/** Two readers of the same question, both kept on purpose.
+ *
+ *  WINDOW is the test this file shipped at M227: a `try {` within LOOK_BACK characters before the
+ *  name and a `catch` within LOOK_FWD after it. That measures character distances, not control flow.
+ *  It approves a read sitting between somebody else's closed try and somebody else's later catch,
+ *  and it refuses a read that is genuinely inside a long try whose `try` has drifted out of reach.
+ *  PARSER asks what the code says: does an enclosing TryStatement hold this reference in ITS block,
+ *  and does THAT statement have a catch clause? A `try { … } finally { … }` catches nothing.
+ *
+ *  The population is enumerated twice for the same reason: a census that reads nothing also reports
+ *  no debt, and the two readers disagree the moment a storage touch arrives in a form only one of
+ *  them recognises. Both skip the door's own function, which has a clause to itself below. */
 const LOOK_BACK = 240, LOOK_FWD = 240;
 const lineAt = (src, i) => src.slice(0, i).split(/\n/).length;
-function doorSpan(src) {
-  const s = normalize(src);
-  const at = s.indexOf("export function browserStore");
-  if (at < 0) return null;
-  const end = s.indexOf("\n}", at);
-  return end < 0 ? null : [at, end + 2];
-}
-function classify(src) {
-  const s = normalize(src);
-  const span = doorSpan(src);
-  const out = [];
-  for (const m of s.matchAll(/localStorage/g)) {
-    if (span && m.index >= span[0] && m.index < span[1]) continue;
-    const before = s.slice(Math.max(0, m.index - LOOK_BACK), m.index);
-    const after = s.slice(m.index + m[0].length, Math.min(s.length, m.index + m[0].length + LOOK_FWD));
-    out.push({
-      at: lineAt(s, m.index),
-      viaDoor: /browserStore\s*\(\s*\)/.test(before.slice(-120)),
-      guarded: /try\s*\{/.test(before) && /\bcatch\b/.test(after.slice(0, LOOK_FWD)),
-      verb: (after.match(/^\s*\.(getItem|setItem|removeItem)/) || [])[1] || "bare",
-    });
+const RENDER_HOOKS = new Set(["useMemo", "useState"]);
+const EFFECT_HOOKS = new Set(["useEffect", "useLayoutEffect"]);
+
+const parseFile = (f, src) =>
+  ts.createSourceFile(f, src.replace(/\r\n/g, "\n"), ts.ScriptTarget.ESLatest, true,
+    f.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+
+/** The innermost function a reference sits in, mapped to the moment its code runs. `render` and
+ *  `effect` both happen without the visitor asking, and with the 0 error boundaries measured below
+ *  either one blanks the page; `module` happens before the first render; `later` needs an action. */
+function momentOf(fn) {
+  const p = fn.parent;
+  if (p && ts.isCallExpression(p) && p.arguments.some((a) => a === fn)) {
+    const callee = p.expression.getText();
+    if (RENDER_HOOKS.has(callee)) return "render";
+    if (EFFECT_HOOKS.has(callee)) return "effect";
+    return "later";
   }
-  for (const m of s.matchAll(/browserStore\s*\(\s*\)(?!:)/g)) {
-    out.push({ at: lineAt(s, m.index), viaDoor: true, guarded: false, verb: "door" });
-  }
-  return out;
+  const name = fn.name ? fn.name.getText() : p && ts.isVariableDeclaration(p) ? p.name.getText() : "";
+  if (/^[A-Z]/.test(name)) return "render";
+  return "later";
 }
-const sites = APP_FILES.flatMap((f) => classify(read(f)).map((x) => ({ file: f, ...x })));
+function moment(node) {
+  for (let cur = node.parent; cur && !ts.isSourceFile(cur); cur = cur.parent) {
+    if (ts.isFunctionLike(cur)) return momentOf(cur);
+  }
+  return "module";
+}
+
+/** One hop of the call graph, measured from what a hook is handed. `useState(getInitialTheme)` runs
+ *  getInitialTheme during render and `useState(() => loadElapsed())` runs loadElapsed there too, so
+ *  a read inside those functions is a render-phase read even though the function's own name and
+ *  position say otherwise — momentOf alone would call it `later`. One hop only: a function reached
+ *  *through* one of these is still labelled `later`, and the `twoHop` plant below pins that as this
+ *  file's stated limit rather than a claim of completeness. The limit is on naming, not on coverage,
+ *  because the ceiling-of-zero clause judges every read by containment whatever moment it runs in. */
+function reachFromHooks(sf) {
+  const reach = new Map();
+  const add = (name, phase) => {
+    const s = reach.get(name) || new Set();
+    s.add(phase);
+    reach.set(name, s);
+  };
+  const scan = (n) => {
+    if (ts.isCallExpression(n)) {
+      const callee = ts.isIdentifier(n.expression) ? n.expression.text : "";
+      const phase = RENDER_HOOKS.has(callee) ? "render" : EFFECT_HOOKS.has(callee) ? "effect" : null;
+      if (phase) {
+        const see = (m) => {
+          if (ts.isIdentifier(m)) add(m.text, phase);
+          if (ts.isCallExpression(m) && ts.isIdentifier(m.expression)) add(m.expression.text, phase);
+          ts.forEachChild(m, see);
+        };
+        for (const arg of n.arguments) see(arg);
+      }
+    }
+    ts.forEachChild(n, scan);
+  };
+  scan(sf);
+  return reach;
+}
+
+/** Innermost try that holds the reference in its own block — not one that merely precedes it. */
+function containment(node) {
+  for (let cur = node.parent; cur && !ts.isSourceFile(cur); cur = cur.parent) {
+    if (!ts.isTryStatement(cur)) continue;
+    const blk = cur.tryBlock || cur.block;
+    if (!blk || node.getStart() < blk.getStart() || node.getStart() >= blk.getEnd()) continue;
+    return { contained: !!cur.catchClause, shape: cur.catchClause ? "try+catch" : cur.finallyBlock ? "try+finally-no-catch" : "try-only" };
+  }
+  return { contained: false, shape: "outside-try" };
+}
+
+/** The window's own verdict, recomputed here so a row can be judged by both readers side by side. */
+function windowVerdict(s, at) {
+  const before = s.slice(Math.max(0, at - LOOK_BACK), at);
+  const after = s.slice(at + 12, Math.min(s.length, at + 12 + LOOK_FWD));
+  return /try\s*\{/.test(before) && /\bcatch\b/.test(after);
+}
+
+function classify(f, src) {
+  const norm = src.replace(/\r\n/g, "\n");
+  const blanked = normalize(src);
+  const sf = parseFile(f, src);
+  let doorFn = null;
+  {
+    const hunt = (n) => { if (ts.isFunctionDeclaration(n) && n.name && n.name.text === "browserStore") doorFn = n; ts.forEachChild(n, hunt); };
+    hunt(sf);
+  }
+  const inDoor = (n) => !!doorFn && n.getStart() >= doorFn.getStart() && n.getStart() < doorFn.getEnd();
+
+  const reach = reachFromHooks(sf);
+  const enclosingName = (node) => {
+    for (let cur = node.parent; cur && !ts.isSourceFile(cur); cur = cur.parent) {
+      if (!ts.isFunctionLike(cur)) continue;
+      if (cur.name) return cur.name.getText();
+      return cur.parent && ts.isVariableDeclaration(cur.parent) ? cur.parent.name.getText() : "";
+    }
+    return "";
+  };
+  /** `later` is only `later` until the call graph says otherwise. */
+  const labeled = (node) => {
+    const base = moment(node);
+    if (base !== "later") return base;
+    const ph = reach.get(enclosingName(node));
+    if (ph && ph.has("render")) return "via-render";
+    if (ph && ph.has("effect")) return "via-effect";
+    return base;
+  };
+
+  const sites = [], doorRefs = [], doorCalls = [];
+  const visit = (n) => {
+    if (ts.isIdentifier(n) && n.text === "localStorage") {
+      const p = n.parent;
+      const typeMember = p && (ts.isPropertySignature(p) || ts.isPropertyAssignment(p)) && p.name === n;
+      // `window.localStorage`, `(globalThis as { localStorage?: T }).localStorage` and a bare
+      // `localStorage` are all the same read; only a declaration's own name is not one.
+      if (!typeMember) {
+        const after = norm.slice(n.getStart() + 12, n.getStart() + 40);
+        const c = containment(n);
+        const row = { at: lineAt(norm, n.getStart()), verb: (after.match(/^\s*\.(getItem|setItem|removeItem)/) || [])[1] || "bare", contained: c.contained, shape: c.shape, moment: inDoor(n) ? "door-body" : labeled(n), window: false };
+        (inDoor(n) ? doorRefs : sites).push(row);
+      }
+    }
+    if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === "browserStore" && !inDoor(n)) {
+      const c = containment(n);
+      doorCalls.push({ at: lineAt(norm, n.getStart()), verb: "door", contained: c.contained, shape: c.shape, moment: labeled(n), window: false });
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+
+  /** The same population, counted without a parser: every localStorage name the comment stripper
+   *  leaves outside the door's own function, in source order. Paired with the parser's rows below,
+   *  which is what makes an enumeration that quietly reads nothing go red. */
+  const doorSpan = (() => {
+    const a = blanked.indexOf("export function browserStore");
+    if (a < 0) return null;
+    const b = blanked.indexOf("\n}", a);
+    return b < 0 ? null : [a, b + 2];
+  })();
+  const textSites = [];
+  for (const m of blanked.matchAll(/localStorage/g)) {
+    if (doorSpan && m.index >= doorSpan[0] && m.index < doorSpan[1]) continue;
+    textSites.push({ at: lineAt(blanked, m.index), window: windowVerdict(blanked, m.index) });
+  }
+  const ordered = [...sites, ...doorCalls].sort((a, b) => a.at - b.at);
+  for (let i = 0, k = 0; i < ordered.length; i++) {
+    if (ordered[i].verb === "door") continue;
+    ordered[i].window = k < textSites.length ? textSites[k].window : null;
+    k++;
+  }
+  return { sites: ordered, textSites, doorRefs, doorFn: !!doorFn };
+}
+
+const census = APP_FILES.map((f) => ({ f, ...classify(f, read(f)) }));
+const sites = census.flatMap((c) => c.sites.map((x) => ({ file: c.f, ...x })));
 const doorSites = sites.filter((x) => x.verb === "door");
 const rawSites = sites.filter((x) => x.verb !== "door");
-const debt = rawSites.filter((x) => !x.guarded);
+const debt = rawSites.filter((x) => !x.contained);
 
-/** Every remaining unguarded touch is declared here, keyed by file — never by line, which moves —
- *  with a reason. The ceiling is the number this milestone measured; it can only shrink. */
-const DEBT = {
-  "features/community/CommunityHub.tsx": "reads a stored career row in a memo and a handler",
-  "features/learn/LearnHub.tsx": "migrates and clears a legacy academy key",
-  "features/profile/ProfilePage.tsx": "reads career and community rows while the page renders",
-  "features/settings/SettingsPage.tsx": "hands the raw accessor to the export/inventory/apply helpers",
-};
-const DEBT_CEILING = 8;
+const parsedRows = census.map((c) => ({ f: c.f, refs: c.sites.filter((x) => x.verb !== "door"), text: c.textSites }));
+const drift = parsedRows
+  .filter((r) => r.refs.length !== r.text.length || r.refs.some((x, k) => x.at !== r.text[k].at))
+  .map((r) => `${r.f}: parser ${r.refs.map((x) => x.at).join(",") || "nothing"} vs stripped text ${r.text.map((x) => x.at).join(",") || "nothing"}`);
+ok(`the census's population is counted by two readers that do not share a method — the parser's references and the comment-stripped text's occurrences — and they agree site-for-site across all ${census.length} files (${sites.length} site(s) in ${new Set(sites.map((x) => x.file)).size} file(s), ${drift.length} drifting)`,
+  drift.length === 0 && sites.length >= 20, drift.join(" · "));
+
+const lenient = rawSites.filter((x) => x.window === true && !x.contained);
+const strict = rawSites.filter((x) => x.window === false && x.contained);
+ok(`…and read by containment the app's exposure is smaller than the window claimed: ${lenient.length} read(s) the distance test called safe sit outside any catch (the dangerous direction) while ${strict.length} the distance test called debt are inside one (${strict.map((x) => `${x.file}:${x.at} ${x.shape}`).join(", ") || "none"})`,
+  lenient.length === 0,
+  `lenient ${lenient.map((x) => `${x.file}:${x.at}`).join(", ") || "none"} · strict ${strict.length} · debt ${debt.length}`);
+
+/** Debt is what the parser cannot account for. M227's ledger named four files; read by containment,
+ *  ${debt.length} of its rows were reads inside a catch that the window had simply drifted away
+ *  from, and the two that really were unguarded — an inventory read during render and a clear
+ *  inside the reset handler — now go through the door. The ceiling is that measurement: an empty
+ *  ledger, so any unguarded read in any file is a red rather than a new row someone can add. */
+const DEBT = {};
+const DEBT_CEILING = 0;
 const byFile = {};
 for (const x of debt) byFile[x.file] = (byFile[x.file] || 0) + 1;
 const undeclared = Object.entries(byFile).filter(([f]) => !(f in DEBT));
 const staleRows = Object.keys(DEBT).filter((f) => !byFile[f]);
-ok(`the app touches browser storage in ${sites.length} site(s) across ${new Set(sites.map((x) => x.file)).size} file(s): ${doorSites.length} through the door, ${rawSites.length - debt.length} in a try/catch, ${debt.length} declared unguarded (${debt.map((x) => `${x.file}:${x.at} ${x.verb}`).join(", ") || "none"})`,
+ok(`the app touches browser storage in ${sites.length} site(s) across ${new Set(sites.map((x) => x.file)).size} file(s): ${doorSites.length} through the door, ${rawSites.length - debt.length} inside a catch, ${debt.length} unguarded (${debt.map((x) => `${x.file}:${x.at} ${x.verb} ${x.shape} in ${x.moment}`).join(", ") || "none"})`,
   sites.length >= 20 && doorSites.length >= 2 && undeclared.length === 0 && staleRows.length === 0 && debt.length <= DEBT_CEILING,
   `undeclared ${undeclared.map(([f, n]) => `${f}×${n}`).join(", ") || "none"} · stale rows ${staleRows.join(", ") || "none"} · debt ${debt.length}/${DEBT_CEILING}`);
-ok(`…and the ledger's rows are all read: ${Object.keys(DEBT).length} file(s) with a reason, every one of them ${Object.values(DEBT).every((w) => w.length > 20) ? "explained" : "MISSING AN EXPLANATION"}`,
-  Object.values(DEBT).every((w) => typeof w === "string" && w.length > 20) && staleRows.length === 0);
+ok(`…and nothing is declared any more: the ledger holds ${Object.keys(DEBT).length} row(s) against a ceiling of ${DEBT_CEILING}, so an unguarded read is a failure and not an exemption`,
+  Object.keys(DEBT).length === 0 && DEBT_CEILING === 0 && debt.length === 0, `${Object.keys(DEBT).length} rows · ceiling ${DEBT_CEILING} · debt ${debt.length}`);
+
+const doorCensus = census.find((c) => c.f === "domain/localData.ts");
+ok(`the door's own function is the one place the accessor is read without a caller's guard, and that read is inside the catch that makes it safe (${doorCensus ? `${doorCensus.doorRefs.length} read(s) in ${doorCensus.doorFn ? "browserStore" : "NO browserStore"}: ${doorCensus.doorRefs.map((x) => `line ${x.at} ${x.shape} ${x.contained ? "contained" : "NOT CONTAINED"} (${x.moment})`).join(", ") || "none"}` : "domain/localData.ts missing from the census"})`,
+  !!doorCensus && doorCensus.doorFn === true && doorCensus.doorRefs.length === 1 &&
+  doorCensus.doorRefs[0].contained === true && doorCensus.doorRefs[0].moment === "door-body",
+  doorCensus && JSON.stringify(doorCensus.doorRefs));
+
+const byMoment = {};
+for (const x of sites) byMoment[x.moment] = (byMoment[x.moment] || 0) + 1;
+const BEFORE_ACTION = new Set(["render", "effect", "module", "via-render", "via-effect"]);
+const fatal = sites.filter((x) => BEFORE_ACTION.has(x.moment));
+const fatalRaw = fatal.filter((x) => x.verb !== "door");
+ok(`the census also knows when a read runs — lexically in a hook (${byMoment.render || 0} render, ${byMoment.effect || 0} effect), one hop away through the function a hook is handed (${byMoment["via-render"] || 0} via-render, ${byMoment["via-effect"] || 0} via-effect), or at module scope — so the ${fatal.length} site(s) that run before the visitor acts are named separately, and the ${fatalRaw.length} of those that touch the accessor itself are all inside a catch (${fatalRaw.map((x) => `${x.file}:${x.at} ${x.moment} ${x.shape}`).join(", ") || "none"})`,
+  fatal.length >= 10 && fatalRaw.length >= 5 && fatalRaw.every((x) => x.contained),
+  `unguarded before any action: ${fatalRaw.filter((x) => !x.contained).map((x) => `${x.file}:${x.at} ${x.moment}`).join(", ") || "none"}`);
 
 const providers = ["lib/theme.tsx", "i18n/index.tsx"].map((f) => {
-  const x = classify(read(f));
+  const x = classify(f, read(f)).sites;
   const raw = x.filter((y) => y.verb !== "door");
-  return { f, door: x.filter((y) => y.verb === "door").length, raw: raw.length, rawUnguarded: raw.filter((y) => !y.guarded).length, rawVerbs: raw.map((y) => y.verb).join("+") };
+  return { f, door: x.filter((y) => y.verb === "door").length, raw: raw.length, rawUnguarded: raw.filter((y) => !y.contained).length, rawVerbs: raw.map((y) => y.verb).join("+"), moments: x.map((y) => `${y.verb}@${y.moment}`).join(",") };
 });
-ok(`each root provider reads the store through the door and touches the accessor only to persist (${providers.map((p) => `${p.f}: ${p.door} door read / ${p.raw} raw ${p.rawVerbs}${p.rawUnguarded ? ` ${p.rawUnguarded} UNGUARDED` : ""}`).join(" · ")})`,
-  providers.every((p) => p.door === 1 && p.raw === 1 && p.rawUnguarded === 0 && p.rawVerbs === "setItem"), JSON.stringify(providers));
+ok(`each root provider reads the store through the door, touches the accessor only to persist, and is named as a render-phase reader rather than excused as a later one (${providers.map((p) => `${p.f}: ${p.door} door read / ${p.raw} raw ${p.rawVerbs}${p.rawUnguarded ? ` ${p.rawUnguarded} UNGUARDED` : ""} [${p.moments}]`).join(" · ")})`,
+  providers.every((p) => p.door === 1 && p.raw === 1 && p.rawUnguarded === 0 && p.rawVerbs === "setItem" &&
+    p.moments.split(",").includes("door@via-render")), JSON.stringify(providers));
 
 const typeofSites = APP_FILES.flatMap((f) => {
   const s = normalize(read(f));
@@ -302,12 +483,52 @@ ok(`the existence check is not the safety check, and no code path uses it any mo
   typeofSites.length === 0, typeofSites.map((x) => `${x.f}:${x.at}`).join(", "));
 
 {
-  const planted = 'function readIt() {\n  const raw = localStorage.getItem("x");\n  return raw;\n}\n';
-  const withTry = 'function readIt() {\n  try {\n    return localStorage.getItem("x");\n  } catch { return null; }\n}\n';
-  const inComment = '// the callers pass something localStorage-shaped\nconst x = 1;\n';
-  const cPlant = classify(planted), cTry = classify(withTry), cComment = classify(inComment);
-  ok(`planted three ways, the SAME classifier reports the unguarded site, excuses the wrapped one, and does not count prose (planted ${JSON.stringify(cPlant)} · wrapped ${JSON.stringify(cTry)} · comment ${JSON.stringify(cComment)})`,
-    cPlant.length === 1 && !cPlant[0].guarded && cTry.length === 1 && cTry[0].guarded && cComment.length === 0);
+  /** The classifier is tested against the shapes a distance test gets wrong, not against prose
+   *  about them: each plant below states its predicted verdict, and a plant whose prediction is
+   *  wrong is a hole in this file rather than a passing check. */
+  const PLANTS = {
+    bare: 'function readIt() {\n  const raw = localStorage.getItem("x");\n  return raw;\n}\n',
+    caught: 'function readIt() {\n  try {\n    return localStorage.getItem("x");\n  } catch { return null; }\n}\n',
+    finaled: 'function readIt() {\n  try {\n    return localStorage.getItem("x");\n  } finally { cleanup(); }\n}\n',
+    prose: '// the callers pass something localStorage-shaped\nconst x = 1;\n',
+    shadow: 'function earlier() {\n  try { return 1; } catch { return 2; }\n}\nfunction unsafe(k) {\n  const v = localStorage.getItem(k);\n  return v;\n}\nfunction later() {\n  try { return 3; } catch { return 4; }\n}\n',
+    longTry: 'function readIt() {\n  try {\n' + "    const filler = 1;\n".repeat(30) + '    return localStorage.getItem("x");\n  } catch { return null; }\n}\n',
+    typed: 'declare const bag: { localStorage: never };\nconst y = 1;\n',
+    windowForm: 'function readIt() {\n  try {\n    return window.localStorage.getItem("x");\n  } catch { return null; }\n}\n',
+    renderPhase: 'function Page() {\n  const v = useMemo(() => localStorage.getItem("x"), []);\n  return v;\n}\n',
+    effectPhase: 'function Page() {\n  useEffect(() => { localStorage.setItem("x", "1"); }, []);\n}\n',
+    doorShaped: 'export function browserStore(): unknown {\n  try {\n    return (globalThis as { localStorage?: never }).localStorage ?? null;\n  } catch {\n    return null;\n  }\n}\nfunction elsewhere() {\n  return 1;\n}\n',
+    // The providers' real shape: the read is not lexically inside a hook, the hook is handed a
+    // named function that contains it. `useState<Theme>(getInitialTheme)` in lib/theme.tsx.
+    viaRender: 'function Page() {\n  const t = useState(getInitialTheme);\n  return t;\n}\nfunction getInitialTheme() {\n  return localStorage.getItem("x");\n}\n',
+    viaEffect: 'function Page() {\n  useEffect(flushIt);\n}\nfunction flushIt() {\n  localStorage.setItem("x", "1");\n}\n',
+    // And the limit, planted so it is measured instead of assumed: one hop is all this sees.
+    twoHop: 'function Page() {\n  const t = useState(getInitialTheme);\n  return t;\n}\nfunction getInitialTheme() {\n  return readStore();\n}\nfunction readStore() {\n  return localStorage.getItem("x");\n}\n',
+  };
+  const p = Object.fromEntries(Object.entries(PLANTS).map(([k, src]) => [k, classify(`plant-${k}.tsx`, src)]));
+  const one = (k) => p[k].sites[0] || null;
+  const shape = (k) => { const s = one(k); return s ? `${s.shape}${s.window ? " window=SAFE" : " window=debt"} @${s.moment}` : "no site"; };
+  const printed = Object.keys(PLANTS).map((k) => `${k}: ${p[k].sites.length} ${shape(k)}`).join(" · ");
+  ok(`planted fourteen ways through the SAME classifier and every prediction held: an unwrapped read is debt; a catch excuses it; a bare finally does NOT (${JSON.stringify(one("finaled") && one("finaled").shape)}); prose is not a site; a read in the shadow of somebody else's closed try is the row the window calls SAFE and containment calls debt; a read deep inside a long try is the row the window calls debt and containment excuses; a type position is a site for the text reader and not for the parser (${p.typed.textSites.length} vs ${p.typed.sites.length}); window.localStorage is a read; the moment column names the render and effect phases, reaches through the function a hook is handed (@${one("viaRender") && one("viaRender").moment}, @${one("viaEffect") && one("viaEffect").moment}) and stops at that one hop, so a read two functions deep is still called later (@${one("twoHop") && one("twoHop").moment} — the containment ceiling is what covers it) (${printed})`,
+    one("bare") && !one("bare").contained && one("bare").shape === "outside-try" && one("bare").window === false
+    && one("caught").contained && one("caught").shape === "try+catch"
+    && one("finaled").shape === "try+finally-no-catch" && !one("finaled").contained
+    && p.prose.sites.length === 0 && p.prose.textSites.length === 0
+    && one("shadow").window === true && one("shadow").contained === false && one("shadow").shape === "outside-try"
+    && one("longTry").window === false && one("longTry").contained === true
+    && p.typed.sites.length === 0 && p.typed.textSites.length === 1
+    && one("windowForm").contained === true && one("windowForm").verb === "getItem"
+    && one("renderPhase").moment === "render" && one("effectPhase").moment === "effect"
+    && one("renderPhase").shape === "outside-try" && one("effectPhase").shape === "outside-try"
+    && p.doorShaped.doorRefs.length === 1 && p.doorShaped.doorRefs[0].contained === true &&
+      p.doorShaped.doorRefs[0].moment === "door-body" && p.doorShaped.sites.length === 0 &&
+      p.doorShaped.textSites.length === 0
+    && one("viaRender").moment === "via-render" && one("viaRender").shape === "outside-try" &&
+      one("viaRender").window === false
+    && one("viaEffect").moment === "via-effect" && one("viaEffect").verb === "setItem" &&
+      !one("viaEffect").contained
+    && one("twoHop").moment === "later" && one("twoHop").contained === false,
+    printed);
 }
 
 // ---------------------------------------------------------------------------
@@ -331,9 +552,9 @@ ok(`NOT COVERED HERE, measured rather than assumed: renderToStaticMarkup never r
   docWrites === 0);
 
 const setItemSites = rawSites.filter((x) => x.verb === "setItem").length;
-ok(`…which is why the write side is read structurally instead: ${setItemSites} raw setItem site(s) and every one inside a try — the app accepts a session that cannot persist`,
-  setItemSites >= 2 && rawSites.every((x) => x.verb !== "setItem" || x.guarded),
-  `${setItemSites} setItem, unguarded setItem: ${rawSites.filter((x) => x.verb === "setItem" && !x.guarded).length}`);
+ok(`…which is why the write side is read structurally instead: ${setItemSites} raw setItem site(s) and every one inside a block a catch can reach — the app accepts a session that cannot persist`,
+  setItemSites >= 2 && rawSites.every((x) => x.verb !== "setItem" || x.contained),
+  `${setItemSites} setItem, unguarded setItem: ${rawSites.filter((x) => x.verb === "setItem" && !x.contained).length}`);
 
 // ---------------------------------------------------------------------------
 // 5 · the exemption this file replaces

@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { LOCALES, type Locale } from "@/i18n/dictionaries";
 import { useTheme } from "@/lib/theme";
 import { useOs, STORAGE_KEY } from "@/store/useFootballOS";
-import { applyImport, buildExport, clearActivity, inventory, readImport } from "@/domain/localData";
+import { applyImport, browserStore, buildExport, clearActivity, inventory, readImport } from "@/domain/localData";
 import { DEMO_MODE, footballProvider } from "@/data/footballService";
 import type { Mode } from "@/domain/types";
 import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
@@ -20,14 +20,14 @@ export function SettingsPage() {
   const [confirming, setConfirming] = useState(false);
   const [imported, setImported] = useState<{ keys: number } | null>(null);
 
-  const inv = useMemo(() => inventory(localStorage), [state]);
+  const inv = useMemo(() => inventory(browserStore()), [state]);
 
   const activityEntries = inv.entries.filter((e) => e.kind === "activity");
   const prefEntries = inv.entries.filter((e) => e.kind === "preference");
 
   function exportData() {
     try {
-      const bundle = buildExport(localStorage);
+      const bundle = buildExport(browserStore());
       if (!Object.keys(bundle.sections).length) {
         toast(t("set.nothingToExport"));
         return;
@@ -55,7 +55,7 @@ export function SettingsPage() {
         toast(t("set.importNotBundle"));
         return;
       }
-      const result = applyImport(localStorage, parsed.bundle);
+      const result = applyImport(browserStore(), parsed.bundle);
       if (!result.ok) {
         toast(t("set.importFailed"));
         return;
@@ -69,7 +69,7 @@ export function SettingsPage() {
 
   function doReset() {
     reset();
-    const cleared = clearActivity(localStorage);
+    const cleared = clearActivity(browserStore());
     setConfirming(false);
     setImported(null);
     toast(t("set.resetDone", { n: cleared }));

@@ -89,14 +89,16 @@ export function countRecords(parsed: unknown): number {
   return 1; // a bare stored preference still counts as one thing kept
 }
 
-export function inventory(storage: StorageLike): { entries: KeyInventory[]; bytes: number; records: number; present: number } {
+/** A null store — the document is not allowed one — inventories as nothing present: that is all
+ *  the app can account for, and the Settings page's "nothing to export" refusal follows from it. */
+export function inventory(storage: StorageLike | null): { entries: KeyInventory[]; bytes: number; records: number; present: number } {
   let bytes = 0;
   let records = 0;
   let present = 0;
   const entries = LOCAL_KEYS.map((spec) => {
     let raw: string | null = null;
     try {
-      raw = storage.getItem(spec.key);
+      raw = storage?.getItem(spec.key) ?? null;
     } catch {
       raw = null;
     }
@@ -154,11 +156,11 @@ function decodeSection(value: SectionValue): string | null {
 
 /** One JSON document covering every registered key, so an export is a complete
  *  backup rather than just the main store. */
-export function buildExport(storage: StorageLike): ExportBundle {
+export function buildExport(storage: StorageLike | null): ExportBundle {
   const sections: Record<string, SectionValue> = {};
   for (const spec of LOCAL_KEYS) {
     try {
-      const raw = storage.getItem(spec.key);
+      const raw = storage?.getItem(spec.key) ?? null;
       if (raw != null) sections[spec.key] = encodeSection(raw);
     } catch {
       /* skip an unreadable key rather than fail the whole export */
@@ -191,7 +193,9 @@ export function readImport(text: string): { bundle: ExportBundle } | { error: st
   return { bundle: b as ExportBundle };
 }
 
-export function applyImport(storage: StorageLike, bundle: ExportBundle): ImportResult {
+export function applyImport(storage: StorageLike | null, bundle: ExportBundle): ImportResult {
+  // No store means nothing can be written, so an import must not report the keys it did not keep.
+  if (!storage) return { ok: false, keys: 0, error: "storage-write-failed" };
   const allowed = new Set(LOCAL_KEYS.map((k) => k.key));
   let keys = 0;
   for (const [key, value] of Object.entries(bundle.sections ?? {})) {
@@ -211,7 +215,8 @@ export function applyImport(storage: StorageLike, bundle: ExportBundle): ImportR
 
 /** Clear every activity key. Preferences (language, theme) survive a reset —
  *  wiping how the app looks alongside what the user did is not the same request. */
-export function clearActivity(storage: StorageLike): number {
+export function clearActivity(storage: StorageLike | null): number {
+  if (!storage) return 0;
   let removed = 0;
   for (const spec of LOCAL_KEYS) {
     if (spec.kind !== "activity") continue;
