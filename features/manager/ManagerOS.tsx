@@ -80,7 +80,7 @@ export function ManagerOS() {
     const out = playNextFixture(career);
     setCareer(out.state);
     setLast(out);
-    if (out.ourGoals > out.oppGoals) toast.success(`Won ${out.ourGoals}–${out.oppGoals} vs ${out.opponentName}`);
+    if (out.ourGoals > out.oppGoals) toast.success(t("mgr.won", { us: out.ourGoals, them: out.oppGoals, opp: out.opponentName }));
     else if (out.ourGoals === out.oppGoals) toast(t("mgr.drew", { us: out.ourGoals, them: out.oppGoals, opp: out.opponentName }));
     else toast(t("mgr.lost", { us: out.ourGoals, them: out.oppGoals, opp: out.opponentName }));
   };

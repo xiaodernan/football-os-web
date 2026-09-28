@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M220 (a few numbers in that range
+Work ships one milestone per commit and is currently at M221 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -4352,8 +4352,52 @@ as domain prose (`proof-i18n`'s prose ceiling reads **256 literals across 10 fil
 so a reader in zh-CN sees a translated screen with English sentences under "Match summary" — that
 is prose debt behind the RowText door, not raw-UI debt, and the 0 above does not cover it; the
 Manager OS's own sliders still print the same five scale words this milestone keyed; the season
-table's `#` stays a symbol; and `toast.success(` is still outside the call-name scan. Next: #150/
-#165 — `data/ai.ts`'s 30 composed sentences.
+table's `#` stays a symbol; and `toast.success(` is still outside the call-name scan (a milestone
+of its own — done as M221). Next: #150/#165 — `data/ai.ts`'s 30 composed sentences.
+
+### M221 — the call rule reads the receiver the caller actually uses
+
+M220's own "still not claimed" list named the hole: `toast.success(` was not a shape the raw-UI
+rule matched, so the 22 method-style call sites in the repo were invisible to a gate whose whole
+job is copy handed to a reader through a call. The rule read `/\b(?:toast|alert)\(/g` — the bare
+call — which meant the Manager OS's post-match win toast, a template literal interpolating the
+score, was neither counted as debt nor covered by the file's registration: the screen it lives in
+had reported 0 for years while printing `Won 2–1 vs Arsenal` to a 简体中文 reader.
+
+**The receiver is now part of the shape.** `/\b(?:toast|alert)(?:\.\w+)?\(/g` matches the method
+too, and the `(?:\.\w+)?` sits before the paren, so `\b` still refuses `mytoast(` and the pattern
+still refuses `toaster(`. The open paren is still the match's last character, so `callEnd` and the
+argument-list walk are untouched. **One English literal existed in the whole population** and it is
+keyed now: `mgr.won` joins the two siblings M159 keyed in the very milestone that taught this rule
+to read call arguments at all (`mgr.drew` and `mgr.lost` arrived there because they are bare
+`toast(` calls; the winner is a `toast.success(` one, so it was the one the milestone could not
+see) — written in all three locales, **1636 → 1639 keys per locale**.
+
+**Two claims, both measured against the scanner's own source rather than its output.** The fixture
+gains a sixth planted hit — `toast.success("Planted method toast")`, a literal argument sitting
+after a keyed one — and the assertion moves from `5 hits / 2 call` to `6 / 3`, so reverting the
+receiver rule turns the gate red on its own evidence. The second clause reads `CALL_NAME` out of
+`rawUiScan.mjs` the way the value-position table is read, then *executes* it over seven probes:
+bare `toast(`, `toast.success(`, `toast.error(t(…))`, `alert(`, `window.alert(` must match, and
+`mytoast(` / `toaster(` must not. Asserting on behaviour rather than on the regex's text is what
+keeps a widening that swallowed neighbouring identifiers from passing as coverage.
+
+**Mutation witness: two arms, each caught twice, both restored.** (1) `CALL_NAME` reverted to the
+bare call — the fixture reports five hits again (`row:label, call, call, attr:title, text`) *and*
+the probe clause reports `toast.success("Won 2–1 vs Arsenal") | toast.error(t(…))` unmatched;
+(2) the win toast backfilled as the English template — `mgr.won` becomes unreachable *and* the
+covered set reports `features/manager/ManagerOS.tsx (1: Won … vs )`. The second of those four
+reds did not exist before this milestone: it is the hole closing.
+
+Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, suite
+**37/37 proof scripts · 1964/1964 checks · exit 0**, `proof-i18n` **234/234** (the new clause is
+the +1) at **1639 keys · 3 locales**. Ceiling stays **0 across 0 files**, covered set **40**.
+
+**What is still not claimed**: only `toast` and `alert` are treated as reader-facing calls —
+`console.*` is not copy, and a wrapper invented tomorrow would have to be added here; the Player
+OS's video-analysis prompt is still an English sentence handed to the *model* rather than to a
+reader (M217's provider door, not this one); and `data/ai.ts`'s 30 composed sentences remain the
+next prose item. Next: #150/#165.
 
 ## Deploying
 

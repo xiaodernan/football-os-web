@@ -47,7 +47,15 @@ const DISPLAY_PROPS = new Set([
 // paren: `toast(cond ? "Signed" : "Sold")` puts copy in the call's arguments and was
 // invisible to M159's `toast("` shape. Every literal inside the call is a candidate,
 // and the exemptions below (a t() argument, a compared value) still apply.
-const CALL_NAME = /\b(?:toast|alert)\(/g;
+//
+// M221: the receiver may also carry a method. `toast.success("Sold")` was the same copy
+// through a different door, and the shape matched only `toast(` — so 22 call sites in
+// the repo, of which exactly one still spoke English, were invisible to this rule. The
+// optional `(?:\.\w+)?` is placed *before* the paren, which is what keeps `\b` doing its
+// job: `mytoast(` still has no boundary before `toast`, and `toaster(` still fails the
+// paren. The open paren is still the last character of the match, so `callEnd` below
+// needs no change.
+const CALL_NAME = /\b(?:toast|alert)(?:\.\w+)?\(/g;
 // Index of the `)` closing the `(` at `open`, quote- and nesting-aware.
 function callEnd(s, open) {
   let d = 0;

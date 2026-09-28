@@ -1335,6 +1335,11 @@ const RAW_FIXTURE = [
   `  const rows = [{ label: "Planted row label", k: "ms.possession" }];`,
   `  toast(x > 1 ? "Planted toast taken" : "Planted toast missed");`,
   `  toast(t("planted.toasted"));`,
+  // M221. The same copy through a method receiver: `toast.success("…")` was outside the
+  // shape the rule matched, and planting it here is what makes that hole a red check
+  // rather than a note. It has to be a *literal* argument, and it sits after a keyed one
+  // so the exemption's own case is still exercised beside it.
+  `  toast.success("Planted method toast");`,
   `  return (`,
   `    <Panel title="Planted title" hint={t("planted.key")}>`,
   `      <div>Planted text node</div>`,
@@ -1361,7 +1366,7 @@ const RAW_FIXTURE = [
 ].join("\n");
 const planted = scanSource(RAW_FIXTURE).hits;
 ok(`the raw-UI scan reports exactly the copy planted in its fixture (${planted.map((h) => h.kind).join(", ") || "nothing"})`,
-  planted.length === 5 && planted.filter((h) => h.kind === "call").length === 2 &&
+  planted.length === 6 && planted.filter((h) => h.kind === "call").length === 3 &&
     planted.every((h) => h.text.startsWith("Planted")));
 ok(`a hole containing a JSX-text apostrophe closes on its own line, not on the next declaration (${planted.filter((h) => /PlantedTail/.test(h.text)).length} swallowed)`,
   !planted.some((h) => /PlantedTail/.test(h.text)));
@@ -1410,6 +1415,27 @@ const valueBody = (scanSrc.match(/const VALUE_BEFORE = \/\[([^\]]*)\]\$/) ?? [])
 const valueChars = valueBody.replace(/\\/g, "");
 ok(`the value-position table is ${JSON.stringify(valueBody)} (${valueChars.split("").join(" ")}) — it holds \`=\`, which is the shape that hid AppShell, and no letter, digit, \`)\` or \`]\`, so an apostrophe inside copy is never read as a delimiter`,
   valueChars.includes("=") && !/[A-Za-z0-9)\]]/.test(valueChars) && valueChars.length > 0);
+// M221 — the call rule's receiver shape, read out of the scanner's source the way the table
+// above is, and then *executed* against probes. What is worth protecting is behaviour, not
+// text: a method receiver counts, a bare call counts, and an identifier that merely ends in
+// "toast" must not — otherwise widening to `.\w+` swallows `mytoast(` silently and the only
+// sign would be a count that went up for no reason.
+const callBody = (scanSrc.match(/const CALL_NAME = \/([^\/\n]+)\/g/) ?? [])[1] ?? "";
+const callProbes = [
+  ['toast("Signed")', true],
+  ['toast.success("Won 2–1 vs Arsenal")', true],
+  ['toast.error(t("common.buildError"))', true],
+  ['alert("Blocked")', true],
+  ['window.alert("Blocked")', true],
+  ['mytoast("not a toast call")', false],
+  ['toaster("not a toast call")', false],
+];
+const CALL_PROBE = callBody ? new RegExp(callBody) : null;
+const callBad = CALL_PROBE
+  ? callProbes.filter(([src, want]) => CALL_PROBE.test(src) !== want).map(([src]) => src)
+  : ["CALL_NAME not read"];
+ok(`the call rule reads a method receiver as well as a bare call, and nothing that merely ends in "toast" (${callBody} · ${callBad.join(" | ") || `${callProbes.length} probes as predicted`})`,
+  Boolean(CALL_PROBE) && callBad.length === 0);
 
 const RAW_COVERED = [
   // M166. The palette was the one overlay reachable from every screen, and it was also
@@ -1547,10 +1573,10 @@ const RAW_COVERED = [
   // key on the label and a raw literal on the count next to it. What the scanner
   // cannot see was keyed anyway, because a registered file should mean the screen
   // speaks the reader's language, not that it passes: the six pipeline stages (codes
-  // in STAGES, words in `film.stage.*`, gated by check 17), the four toasts —
-  // `toast.success(` is not a call shape the scanner matches, which is its own hole
-  // and is left open on purpose here rather than widened mid-milestone — and the two
-  // ErrorState messages, whose words the Player OS still prints raw.
+  // in STAGES, words in `film.stage.*`, gated by check 17), the four toasts — whose
+  // `toast.success(` receiver the rule could not match until M221 widened it, and
+  // the fixture now plants — and the two ErrorState messages, whose words the Player
+  // OS still prints raw.
   "features/film/FilmRoom.tsx",
 ];
 // The ceiling is the debt that is not in the covered set. Lower it when a screen
