@@ -47,6 +47,20 @@ export interface StorageLike {
   removeItem(key: string): void;
 }
 
+/** The document's own store, or null when this document is not allowed one.
+ *
+ *  `typeof localStorage !== "undefined"` is not this test. `localStorage` is a declared accessor
+ *  on every browser window, and reading the accessor throws `SecurityError` when site data is
+ *  blocked — which an embedded frame hits during the first render, before anything is on screen.
+ *  `typeof` only suppresses an error for an *undeclared* name, so it lets that throw through. */
+export function browserStore(): StorageLike | null {
+  try {
+    return (globalThis as { localStorage?: StorageLike }).localStorage ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export interface KeyInventory extends KeySpec {
   present: boolean;
   records: number;

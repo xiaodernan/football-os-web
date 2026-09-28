@@ -9,7 +9,7 @@ import {
 } from "react";
 import { DICTIONARIES, type Locale, LOCALES } from "./dictionaries";
 import { interpolate } from "./format";
-import { LOCALE_KEY } from "@/domain/localData";
+import { LOCALE_KEY, browserStore } from "@/domain/localData";
 
 export type { Locale } from "./dictionaries";
 
@@ -41,10 +41,8 @@ export function translate(locale: Locale, key: string, vars?: Record<string, str
 export { formatDate, relativeDay } from "./format";
 
 function detectLocale(): Locale {
-  if (typeof localStorage !== "undefined") {
-    const s = localStorage.getItem(STORAGE_KEY) as Locale | null;
-    if (s && LOCALES.some((l) => l.id === s)) return s;
-  }
+  const stored = browserStore()?.getItem(STORAGE_KEY) as Locale | null;
+  if (stored && LOCALES.some((l) => l.id === stored)) return stored;
   if (typeof navigator !== "undefined") {
     const n = navigator.language.toLowerCase();
     if (n.includes("tw") || n.includes("hk") || n.includes("hant")) return "zh-TW";

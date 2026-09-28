@@ -83,7 +83,6 @@ function reach(roots, source, exists = realExists) {
 // ---------------------------------------------------------------------------
 const EXEMPT = {
   "lib/hooks.ts": "React hooks (media query, local storage): needs a DOM",
-  "lib/theme.tsx": "theme provider: needs a DOM",
   "lib/utils.ts": "one `cn` wrapper over clsx/tailwind-merge; no app logic to pin",
 };
 // ---------------------------------------------------------------------------
@@ -141,7 +140,7 @@ ok(`…and no exemption has gone stale (a module that became reachable must be d
   stale.length === 0, `stale: ${stale.join(", ") || "none"}`);
 const exemptLines = Object.keys(EXEMPT).reduce((n, p) => n + lines(p), 0);
 ok(`the exempt surface is ${exemptLines} lines of app code, and every entry states why (${Object.entries(EXEMPT).map(([p, why]) => `${p}:${why.length > 12 ? "why given" : "TOO SHORT"}`).join(" ")})`,
-  Object.values(EXEMPT).every((why) => typeof why === "string" && why.length > 12) && exemptLines <= 165);
+  Object.values(EXEMPT).every((why) => typeof why === "string" && why.length > 12) && exemptLines <= 99);
 
 // A ratchet has to be seen to refuse: a new module that nothing loads must land in the
 // undeclared set, and one that a proof loads must not be exposable by declaring it.
@@ -157,7 +156,7 @@ ok(`…and a module a proof actually loads can never be quieted by an exemption 
 const libModules = readdirSync(resolve(root, "lib")).filter((f) => /\.(ts|tsx)$/.test(f)).map((f) => `lib/${f}`);
 const dom = readdirSync(resolve(root, "domain")).filter((f) => f.endsWith(".ts"));
 ok(`the React-side libs are the whole remaining exemption list (${libModules.filter((p) => p in EXEMPT).length} of ${libModules.length} lib modules are exempt; domain has ${dom.length} files and none is exempt)`,
-  libModules.filter((p) => p in EXEMPT).length === 3 && dom.every((f) => !(`domain/${f}` in EXEMPT)));
+  libModules.filter((p) => p in EXEMPT).length === 2 && dom.every((f) => !(`domain/${f}` in EXEMPT)));
 const biggest = Object.keys(EXEMPT).map((p) => [p, lines(p)]).sort((a, b) => b[1] - a[1]);
 ok(`largest exemptions: ${biggest.slice(0, 2).map(([p, n]) => `${p} ${n} lines`).join(", ")}`,
   biggest[0][1] >= 60 && biggest.every(([p]) => p in EXEMPT));

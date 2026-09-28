@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { THEME_KEY } from "@/domain/localData";
+import { THEME_KEY, browserStore } from "@/domain/localData";
 
 type Theme = "dark" | "light";
 const STORAGE_KEY = THEME_KEY;
@@ -21,10 +21,8 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function getInitialTheme(): Theme {
-  if (typeof localStorage !== "undefined") {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "light" || stored === "dark") return stored;
-  }
+  const stored = browserStore()?.getItem(STORAGE_KEY) ?? null;
+  if (stored === "light" || stored === "dark") return stored;
   // Football OS is a dark-first command center.
   return "dark";
 }
