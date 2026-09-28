@@ -1,20 +1,20 @@
 import { createServer } from "vite";
+import { makeSay } from "./lib/rows.mjs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { coachProvider } = await server.ssrLoadModule("/data/ai.ts");
 const { buildSession } = await server.ssrLoadModule("/domain/training.ts");
 const { computeDna, ARCHETYPES } = await server.ssrLoadModule("/domain/playerDna.ts");
-const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
+const { say } = await makeSay(server);
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
-function resolve(row) {
-  if (Array.isArray(row)) return row.map(r => resolve(r)).join(" ");
-  const tpl = DICTIONARIES.en[row.key];
-  if (!tpl) return row.key;
-  return Object.entries(row.vars ?? {}).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), tpl);
-}
+// Through the app's interpreter, not a copy of it: this proof read `row.vars` into the English
+// template by hand, so the codes M230 left in those variables (the drill's attribute, the DNA
+// archetype) reached its clauses unlabelled — a claim about the words here would have been a claim
+// about this function.
+const resolve = (row) => (Array.isArray(row) ? row.map((r) => say("en")(r)).join(" ") : row ? say("en")(row) : "");
 
 const gameDrill = (session) => session.exercises.find((e) => e.phase === "game");
 

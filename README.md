@@ -5518,6 +5518,89 @@ milestone still shows its English captions — translated words need a re-analys
 block were written in this working copy during the session that landed M230; the two screens, the
 hydration repair, the six film clauses, the mutation arms and this section are the part added here.)*
 
+### M232 — a proof that reads a row must ask the app what the row says
+
+For three milestones the suite carried exactly one red, and every run that measured it wrote it
+down as a production defect. It was not one. `proof:m74 — memory source cites a human label not a
+raw key` was red from `311024b` (M230) through `e4a4b5a` (M229), and the README-adjacent note that
+travelled with it claimed the coach's remembered attribute reached the reader as `passing` and that
+"the fix is in that row's vars, not in the dictionary". Both halves are false, and measuring them
+is the whole of this milestone.
+
+**What the reader actually saw.** M230 moved the coach's prose onto rows: `data/ai.ts` hands the
+memory source as `{key: "coach.src.coachMemory", vars: {focus: "passing"}}`, `focus` is one of
+`domain/rowText.ts`'s `CODE_VARS`, and `rowLine`'s `fillRowVars` turns a code list into the
+reader's own label — `Passing` in English, `传球` in 简体中文. The screen that prints sources,
+`features/ai/AiStudio.tsx:131`, does that through `rowLine(s, t)`. So the sentence was right on the
+page the whole time.
+
+**What read `passing` was the gate.** `scripts/proof-m74.mjs` and `scripts/proof-m77.mjs` each
+carried a private resolver: load `DICTIONARIES`, look the key up, and `replaceAll("{focus}",
+row.vars.focus)`. That is a brace filler, which is all a dictionary template used to be, so it kept
+working after M230 changed what a row *means*. Measured on the coach's own rows
+(`dev/m232-resolve.mjs`, re-run against this milestone's plane bytes): **18 rows compared, the hand
+resolver and `rowLine` disagree on 12** — every comma list printed as `scanning,passing,shooting`
+instead of `Scanning + Passing + Shooting`, and the memory line as `last session focused on passing`
+where the page says `Passing`. proof:m74's own assertion was `/Passing/i` — a case-insensitive test
+of a lowercase code, i.e. a regex written to be satisfied by the thing it was trying to forbid. The
+failure was invisible because the gate and the page were two interpreters, and only one of them was
+being read.
+
+**The fix is to stop having a second one.** Both proofs now resolve through
+`scripts/lib/rows.mjs`'s `makeSay(server)`, which loads `translate`, `rowLine` and `DICTIONARIES`
+the same way a screen does, and proof:m74 gained two clauses that the old file could not have had:
+a census over both framings × {diagnosis, rationale, sources} × all three locales that no row
+reaches any reader as a raw attribute code, a snake_case id or a bare dictionary key (**28 rows per
+framing, 3 locales, 0 leaks**), and a locale clause that the memory row speaks the dictionary's own
+word rather than English.
+
+**The structural door, so the next proof does not repeat it.** `scripts/proof-i18n.mjs` section 34
+refuses any `scripts/proof-*.mjs` (and `scripts/lib/*.mjs`) that reads a dictionary **and** indexes
+that read with a row's `key` **and** substitutes `{brace}` placeholders by hand **and** never
+acquires the interpreter. Three conditions and an absence, all read out of the comment-stripped
+source (`codeOf`, the same line-based stripper the rest of the file uses — not
+`rawUiScan.normalize()`, whose comment stripper eats the regex literal `/\{(\w+)\}/g` and would have
+made the census blind on sight), because prose must be able neither to accuse nor to excuse. The
+excuse is an *acquisition* — `import … "./lib/rows.mjs"` or a load of `/domain/rowText.ts` — not the
+word `rowLine` appearing in a comment. The classifier is tested on shapes rather than on a count, the
+way M194 requires: **3 refused** fixtures, with the resolver proof:m74 shipped until now included
+verbatim, and **6 accepted** fixtures — the seam, `rowLine` loaded straight, a gate counting a
+template's placeholders, a plain keyed label lookup, a JSX attribute brace scan, and a file that
+holds the interpreter *and* does all three suspect things at once. Measured census line:
+`42 scripts, 18 read a dictionary, 4 of them by a row's key, 17 hold the seam, 0 hand-rolled`.
+
+**Arms, and the two things they bought.** Six arms, predictions fixed in
+`dev/m232-arms-table.md` before the first one ran, each patch restored and hash-verified in a clean
+plane (`git archive e4a4b5a`, this milestone's four files copied in and compared per-file):
+
+| arm | mechanism destroyed | result |
+| --- | --- | --- |
+| a0 | nothing — unmutated control | 17/17 · 11/11 · 253/253, exit 0 |
+| a1 | `makeSay` removed from proof:m74, the hand resolver put back | 5 m74 reds (overlap label, rotate label, memory label, row census, zh row) + 1 i18n census red naming `proof-m74.mjs`; m77 clean |
+| a2 | the classifier's first brace-substitution spelling blinded | 2 i18n reds: the refuse-fixture clause and the derived both-ends clause |
+| a3 | `/domain/rowText.ts` dropped from the accepted seam | 1 i18n red, at the accept-fixture clause |
+| a4 | `focus` removed from `CODE_VARS` in the shipped interpreter | 5 m74 reds + 2 reds in proof-i18n's own pre-existing production clauses |
+| a5 | the census population matches no proof script | 3 i18n reds at the floors, while the census clause itself stayed green |
+
+a1's first run reddened only 4 of the 5 clauses I predicted, and the miss was the finding: the
+rotate clause was `/Passing/i`, so a hand resolver that prints `passing` satisfied it. It is now
+`/Passing/ && /Shooting/ && !/\b(?:passing|shooting)\b/`, and the arm bites. a3's first run reddened
+nothing at all, which was also a finding: seven live scripts take the `rowText.ts` route but none of
+them is a suspect on the other three conditions, so the alternative was a spelling with no carrier —
+the 6th accepted fixture is what makes removing it observable now. a4 over-predicted greenness
+because my model of which vars a diagnosis row carries was stale (`coach.diag.targetedExact` carries
+`focus`). a2 and a5 each produced one red more than predicted, both at the same derived clause that
+re-reads the quantities the aimed-at clause reads — a prediction table that names only the clause
+aimed at is one layer short when several clauses read the same number.
+
+**Baseline after this milestone**, all on the plane above with the bytes this commit carries: `tsc
+--noEmit` exit 0 with 0 error lines, `node scripts/build.mjs` exit 0, `proof:m74` 17/17,
+`proof:m77` 11/11, `proof:i18n` **253/253** (was 247), and the full suite **39/39 proof scripts,
+2063/2063 checks counted, 0 red, exit 0**. Against the HEAD baseline of 2055 checks the delta is
+exactly this milestone's own additions: proof-i18n 247 → 253 and proof-m74 15 → 17, with
+proof-m77 unchanged at 11 — and the red that travelled since M230 is gone, because the thing that
+was broken was the gate's idea of the sentence, not the sentence.
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a

@@ -71,6 +71,8 @@
 //  33. a date formatted for the BROWSER instead of for the READER — the one defect in this
 //      layer that involves no key at all, so checks 1-32 cannot see it in any direction.
 //      See the long note at its own definition below (M194).
+//  34. a PROOF that reads a row resolving it with its own interpreter — the reader's sentence
+//      and the gate's idea of it drifting apart while both stay green (M232).
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
@@ -3161,7 +3163,113 @@ ok(`so a punctuation-strip aimed at that comma cannot reach the readers it appea
 ok("and the fixture row really renders the door's string unchanged today",
   !/fmtDateTime\([^)]*\)\s*\.|formatDate\([^)]*\)\s*\./.test(appSrc.get("features/football/Details.tsx") ?? ""));
 
+// 34. A PROOF that reads a RowText asks the shipped interpreter what the row says.
+//
+// M230 and M231 put the app's sentences on rows: a provider hands the interface `{key, vars}`
+// and `domain/rowText.ts`'s `rowLine` is the only thing that knows what a row means — it
+// rejoins a comma list of stat codes for the reader (CODE_VARS), resolves a var whose VALUE is
+// itself a dictionary key (KEY_VARS), and takes the locale from the reader rather than from
+// the file's own preference. Two proofs carried a private resolver anyway. The verbatim text
+// `scripts/proof-m74.mjs` shipped with is kept below as the classifier's refuse fixture:
+//
+//   const tpl = dict[row.key];
+//   return Object.entries(row.vars ?? {}).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), tpl);
+//
+// That is a brace filler, and a dictionary template is all the row used to be, so it reads
+// green while the reader is being shown something else. Measured on the coach's own rows in
+// `dev/m232-resolve.mjs`, the substitute and `rowLine` disagreed on 12 of the 18 rows the
+// proof resolved, and the row that mattered most reached the assertion as `passing` where the
+// screen renders `Passing` — proof:m74's own claim was `/Passing/i`, a regex written to be
+// satisfied by the thing it was trying to forbid. The gate has to be structural, because the
+// failure was invisible: a second interpreter is not wrong on the day it is written, it drifts
+// the day the first one learns a new word.
+//
+// Three things make a file a violator, all read out of the comment-stripped source so prose
+// can neither accuse nor excuse: it reads a dictionary, it indexes that dictionary with a
+// ROW's `key`, and it substitutes `{brace}` placeholders by hand — and it never obtains the
+// interpreter. The third condition is what keeps this gate from flagging a gate: counting the
+// placeholders a template declares (checks 1-3 of this very file) and looking a plain label up
+// by key are not resolving a row, and both are accepted shapes below. The excuse is an
+// import of `./lib/rows.mjs` or a load of `/domain/rowText.ts` — a real acquisition of the
+// interpreter, not the word `rowLine` appearing in a comment.
+const PROOF_ROW_DICT = /\bDICTIONARIES\b|i18n\/dictionaries/;
+const PROOF_ROW_BY_KEY = /[\w$)\]]\s*\??\.\s*[\w$]*\s*\[\s*[\w$]+\.key\s*\]|[\w$)\]]\s*\[\s*[\w$]+\.key\s*\]/;
+const PROOF_ROW_FILL = [
+  ["a replaceAll on a brace template", /\.replace(?:All)?\(\s*[`'"][^`'"\n]*\{/],
+  ["a replace on a regex mentioning a brace", /\.replace(?:All)?\(\s*\/[^/\n]*\\\{[^/\n]*\//],
+  ["a split-and-rejoin on a brace", /\.split\(\s*["'`]\{/],
+];
+const PROOF_ROW_SEAM = /\.\/lib\/rows\.mjs|\/domain\/rowText\.ts/;
+const proofRowFiller = (src) => {
+  const code = codeOf(src);
+  const fills = PROOF_ROW_FILL.filter(([, re]) => re.test(code)).map(([n]) => n);
+  return {
+    dict: PROOF_ROW_DICT.test(code),
+    byKey: PROOF_ROW_BY_KEY.test(code),
+    fills,
+    seam: PROOF_ROW_SEAM.test(code),
+    bypass: PROOF_ROW_DICT.test(code) && PROOF_ROW_BY_KEY.test(code) && fills.length > 0 && !PROOF_ROW_SEAM.test(code),
+  };
+};
+const proofScripts = [
+  ...readdirSync(join(root, "scripts")).filter((f) => /^proof-.*\.mjs$/.test(f)).map((f) => `scripts/${f}`),
+  ...readdirSync(join(root, "scripts", "lib")).filter((f) => f.endsWith(".mjs")).map((f) => `scripts/lib/${f}`),
+].sort();
+const proofRowsOf = proofScripts.map((p) => [p, proofRowFiller(readFileSync(join(root, ...p.split("/")), "utf8"))]);
+const proofBypassers = proofRowsOf.filter(([, c]) => c.bypass).map(([p, c]) => `${p} (${c.fills.join(", ")})`);
+const proofDictReaders = proofRowsOf.filter(([, c]) => c.dict).map(([p]) => p);
+const proofKeyReaders = proofRowsOf.filter(([, c]) => c.byKey).map(([p]) => p);
+const proofSeamUsers = proofRowsOf.filter(([, c]) => c.seam).map(([p]) => p);
+ok(`no proof resolves a RowText with its own interpreter (${proofRowsOf.length} scripts, ${proofDictReaders.length} read a dictionary, ${proofKeyReaders.length} of them by a row's key (${proofKeyReaders.map((p) => p.split("/").pop()).join(", ")}), ${proofSeamUsers.length} hold the seam, ${proofBypassers.length} hand-rolled${proofBypassers.length ? ": " + proofBypassers.join(" ") : ""})`,
+  proofBypassers.length === 0);
+ok(`the census read the suite's own scripts rather than an empty set (${proofRowsOf.length} files, ${proofDictReaders.length} dictionary readers, ${proofSeamUsers.length} seam users)`,
+  proofRowsOf.length >= 30 && proofDictReaders.length >= 5 && proofSeamUsers.length >= 5);
+ok(`and the two files this milestone converted are inside the population it cleared (proof-m74.mjs, proof-m77.mjs)`,
+  ["scripts/proof-m74.mjs", "scripts/proof-m77.mjs"].every((p) => proofRowsOf.some(([x]) => x === p)));
+// The classifier is tested on shapes, not on a count, for the reason M194 learned: a census of
+// a debt that is being paid cannot prove itself by finding the debt. Refuse side, the removed
+// resolver included verbatim; accept side, the five shapes a legitimate dictionary reader
+// writes. The same function adjudicates both and the live population, so a classifier that
+// went blind on a spelling would show here rather than turn the census green.
+const PROOF_ROW_VERBATIM = [
+  'const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");',
+  'function resolve(row, dict = DICTIONARIES.en) {',
+  '  if (Array.isArray(row)) return row.map(r => resolve(r, dict)).join(" ");',
+  '  const tpl = dict[row.key];',
+  '  if (!tpl) return row.key;',
+  '  return Object.entries(row.vars ?? {}).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), tpl);',
+  '}',
+].join("\n");
+const PROOF_ROW_REFUSE = [
+  ["the resolver proof:m74 shipped until M232", PROOF_ROW_VERBATIM],
+  ["a regex-filled variant", 'const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");\nconst s = (row) => DICTIONARIES.en[row.key].replace(/\\{(\\w+)\\}/g, (_, k) => row.vars[k]);'],
+  ["a split-and-rejoin variant", 'import { DICTIONARIES } from "@/i18n/dictionaries";\nconst s = (row) => DICTIONARIES.en[row.key].split("{").map((x) => x.includes("}") ? row.vars[x.split("}")[0]] : x).join("");'],
+];
+const PROOF_ROW_ACCEPT = [
+  ["the shared seam", 'import { makeSay } from "./lib/rows.mjs";\nconst { say } = await makeSay(server);\nconst line = say("en")(row);'],
+  ["rowLine loaded straight", 'const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");\nconst line = rowLine(row, t);'],
+  ["a gate counting a template's placeholders", 'const left = (DICTS[id][k].match(/\\{\\w+\\}/g) ?? []).join();'],
+  ["a plain keyed label lookup with no vars", 'const v = DICTIONARIES[loc.id]?.[spec.labelKey];'],
+  ["a JSX attribute brace scan", 'const gates = featureSource.match(/disabled=\\{[^}]*!online[^}]*\\}/g) ?? [];'],
+  // The other half of the seam. Mutation arm a3 of this milestone removed
+  // `/domain/rowText.ts` from PROOF_ROW_SEAM and the census did not blink, because no script in
+  // the suite takes that route — an accepted shape nothing tests is a spelling, not a witness.
+  // This fixture is a file that DOES hold the interpreter that way and also reads a dictionary,
+  // indexes by a row's key and fills a brace, so it is excused by the seam alone and the seam
+  // alone is what the arm can break.
+  ["the interpreter loaded straight, alongside a real dictionary read", 'const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");\nconst { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");\nconst line = rowLine(row, t);\nconst note = DICTIONARIES.en[row.key].replaceAll("{focus}", row.vars.focus);'],
+];
+const missedFillers = PROOF_ROW_REFUSE.filter(([, src]) => !proofRowFiller(src).bypass).map(([n]) => n);
+const accusedHonest = PROOF_ROW_ACCEPT.filter(([, src]) => proofRowFiller(src).bypass).map(([n]) => n);
+ok(`the classifier catches all ${PROOF_ROW_REFUSE.length} ways of hand-resolving a row, the removed one included (${missedFillers.join(", ") || "all caught"})`,
+  missedFillers.length === 0);
+ok(`and none of the ${PROOF_ROW_ACCEPT.length} shapes that read a dictionary without resolving a row (${accusedHonest.join(", ") || "no false accusations"})`,
+  accusedHonest.length === 0);
+ok(`so the census is a shape test with both ends demonstrated (${PROOF_ROW_REFUSE.length} refused + ${PROOF_ROW_ACCEPT.length} accepted shapes, through the same classifier that just cleared ${proofRowsOf.length} scripts)`,
+  proofRowFiller(PROOF_ROW_VERBATIM).fills.length > 0 && proofDictReaders.includes("scripts/proof-i18n.mjs"));
+
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
+
 console.log(`${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);
