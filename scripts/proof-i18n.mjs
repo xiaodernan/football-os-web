@@ -1994,6 +1994,65 @@ ok(`the door prints a positive day count in the reader's own words over ${REL_CA
   !/-\d/.test(translate("en", "time.agoDay", { n: 2 })) &&
   !/\b(in|ago)\b/.test(translate("zh-CN", "time.inDays", { n: 3 })));
 
+// 26d. Provider vocabulary: the one English row a non-screen may ask for.
+//      `t()` answers in the reader's language, which is right for a person and wrong for a
+//      query the demo provider matches on Latin tokens (`data/intelligence.ts:246` strips
+//      everything outside `a-z0-9' -`). Those two needs shared no door until M215, so the one
+//      module outside `i18n/` that wanted an English word reached into the dictionary table
+//      itself (`domain/playerDna.ts` read `DICTIONARIES.en[...]`), and a reader of that table
+//      from a screen would have been indistinguishable from it. Now `englishWord` is the only
+//      legal way out, it lives in the door module so it costs no React import, and three claims
+//      hold it: nothing outside `i18n/` mentions the table, the door is called only from modules,
+//      and the census is awake — the two legitimate readers inside `i18n/` must show up in the
+//      same scan, or "0 offenders" would also be printed by a scan that saw nothing.
+const DICT_IDENT = /\bDICTIONARIES\b/;
+const EN_WORD_CALL = /\benglishWord\s*\(/;
+// One pair of predicates, used by the census AND by the plants below, so a plant cannot be
+// graded by a rule the shipped code is not subject to.
+const readsTable = ([p, code]) => DICT_IDENT.test(code) && !p.startsWith("i18n/");
+const callsDoor = ([p, code]) => p !== "i18n/format.ts" && EN_WORD_CALL.test(code);
+const dictReaders = allSrc.filter(([, code]) => DICT_IDENT.test(code));
+const dictOffenders = allSrc.filter(readsTable).map(([p]) => p);
+const enWordCallers = allSrc.filter(callsDoor).map(([p]) => p);
+const enWordScreens = enWordCallers.filter((p) => p.endsWith(".tsx"));
+// Four plants, one per way this clause can be wrong: the plain member read and an aliased
+// namespace read must both count as touching the table (a predicate that only greps
+// `DICTIONARIES.en` misses `D.DICTIONARIES["en"]`), the door call must count as a caller of the
+// door and not a reader of the table, and the same call from a `.tsx` must land in the screen
+// list. Each expectation is a property of the planted text, stated here as data.
+const EN_PLANTS = [
+  ["domain/plantedTable.ts", "import { DICTIONARIES } from \"@/i18n/dictionaries\";\nexport const w = DICTIONARIES.en[\"dna.arch.box_box\"];\n", { table: true, door: false, screen: false }],
+  ["data/plantedAlias.ts", "import * as D from \"@/i18n/dictionaries\";\nexport const w = D.DICTIONARIES[\"en\"][\"dna.arch.box_box\"];\n", { table: true, door: false, screen: false }],
+  ["domain/plantedDoor.ts", "import { englishWord } from \"@/i18n/format\";\nexport const w = englishWord(\"dna.arch.box_box\");\n", { table: false, door: true, screen: false }],
+  ["features/plantedScreen.tsx", "import { englishWord } from \"@/i18n/format\";\nexport const C = () => <p>{englishWord(\"dna.arch.box_box\")}</p>;\n", { table: false, door: true, screen: true }],
+];
+const enPlantVerdicts = EN_PLANTS.map(([p, src, want]) => {
+  const got = {
+    table: readsTable([p, src]),
+    door: callsDoor([p, src]),
+    screen: callsDoor([p, src]) && p.endsWith(".tsx"),
+  };
+  return [p, ["table", "door", "screen"].filter((k) => got[k] !== want[k]).map((k) => `${k}=${got[k]} want=${want[k]}`).join(" ") || null];
+}).filter(([, bad]) => bad);
+ok(`the four planted ways of reaching an English word are classified exactly as declared (${EN_PLANTS.length} plants, ${enPlantVerdicts.length ? enPlantVerdicts.map(([, b]) => b).join(" | ") : "all as predicted"})`,
+  enPlantVerdicts.length === 0);
+ok(`only i18n/ touches the dictionary table (${allSrc.length} files read, ${dictReaders.length} readers inside i18n/: ${dictReaders.map(([p]) => p).join(", ") || "NONE — the scan was blind"}, offenders outside: ${dictOffenders.join(", ") || "none"})`,
+  dictOffenders.length === 0 && dictReaders.length >= 2 && allSrc.length >= 140);
+ok(`provider vocabulary is asked for only by modules, never rendered from a screen (${enWordCallers.length} caller(s): ${enWordCallers.join(", ") || "NONE — nobody uses the door"}, screens: ${enWordScreens.join(", ") || "none"})`,
+  enWordCallers.length >= 1 && enWordScreens.length === 0);
+// The door is loaded from its own module, not the umbrella: 26d exists to keep provider input
+// out of the reader's path, so the suite must not reach for it the way a screen does. Both
+// halves are asserted because `Dict = Record<string, string>` promises a string the table
+// cannot always deliver — an unknown key that returns `undefined` still type-checks.
+const { englishWord: wordDoor } = await server.ssrLoadModule("/i18n/format.ts");
+const wordBad = [];
+if (wordDoor("comm.title") !== "Community") wordBad.push(`a known row → ${JSON.stringify(wordDoor("comm.title"))}`);
+if (wordDoor("dna.arch.not_a_real_archetype") !== "dna.arch.not_a_real_archetype") {
+  wordBad.push(`an unknown row → ${JSON.stringify(wordDoor("dna.arch.not_a_real_archetype"))}`);
+}
+ok(`the vocabulary door answers from the English column and echoes a key it does not know (${wordBad.join(" | ") || "clean"})`,
+  wordBad.length === 0);
+
 // 27. A second interpolator. t(key, vars) fills every occurrence of a placeholder;
 //     `String.prototype.replace` with a string needle fills only the FIRST, so a key
 //     that repeats a token renders half-filled — and every new key would have to know
@@ -2447,12 +2506,27 @@ ok(`every file that formats a date imports the door from @/i18n (${unimportedDoo
   unimportedDoor.length === 0);
 // The umbrella's export list is read, not matched against one remembered name: check 26c
 // imports `relativeDay` through it, so a rewrite that dropped it back to `{ formatDate }`
-// would break that clause by accident rather than report the door being unreachable.
+// would break that clause by accident rather than report the door being unreachable. Neither
+// side of the claim is a hand-typed list now — the doors come from `format.ts`'s own
+// declarations and the asks come from what non-i18n files import from "@/i18n", which is also
+// what lets M215's third door stay a module-only door instead of being padded into the list.
 const umbrellaSrc = readFileSync(join(root, "i18n", "index.tsx"), "utf8");
 const umbrellaNames = ((umbrellaSrc.match(/export\s*\{([^}]*)\}\s*from\s*"\.\/format"/) ?? [])[1] ?? "")
   .split(",").map((s) => s.trim()).filter(Boolean);
-ok(`the i18n umbrella re-exports every word-shaping door the screens import (${umbrellaNames.join(", ")})`,
-  umbrellaNames.length === 2 && ["formatDate", "relativeDay"].every((n) => umbrellaNames.includes(n)));
+const doorDecls = [...readFileSync(join(root, "i18n", "format.ts"), "utf8").matchAll(/^export function (\w+)/gm)].map((m) => m[1]);
+const importedNames = new Set();
+for (const [p, code] of allSrc) {
+  if (p.startsWith("i18n/")) continue;
+  for (const m of code.matchAll(/import\s*\{([^}]*)\}\s*from\s*"@\/i18n"/g)) {
+    for (const n of m[1].split(",").map((s) => s.trim().split(/\s+as\s+/)[0].replace(/^type\s+/, "")).filter(Boolean)) importedNames.add(n);
+  }
+}
+const doorsAsked = doorDecls.filter((n) => importedNames.has(n));
+const phantomDoors = umbrellaNames.filter((n) => !doorDecls.includes(n));
+const unreachableDoors = doorsAsked.filter((n) => !umbrellaNames.includes(n));
+ok(`the umbrella re-exports exactly the doors outside i18n/ ask for (${doorDecls.length} doors declared in format.ts, ${importedNames.size} names imported from @/i18n, ${doorsAsked.length} of them doors: ${doorsAsked.join(", ")}) — phantom ${phantomDoors.join(", ") || "none"}, unreachable ${unreachableDoors.join(", ") || "none"}`,
+  doorDecls.length >= 3 && importedNames.size >= 3 && doorsAsked.length >= 2 &&
+  unreachableDoors.length === 0 && phantomDoors.length === 0);
 ok(`the door is the ONE door — nothing else constructs a formatter (${otherDoors.join(", ") || "none"})`,
   otherDoors.length === 0);
 ok(`the door scan is reading real call sites (${DOOR_CALLS.length} across ${doorFiles.length} files)`,

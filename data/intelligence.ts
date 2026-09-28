@@ -3,11 +3,9 @@
 // entities, pull concrete facts, then hand a grounded context to the coach
 // provider. Answers always carry evidence, sources and confidence.
 
-import { attributeLabel } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
 import { formatDate } from "@/i18n/format";
 import type { Locale } from "@/i18n/dictionaries";
-import { archetypeLabelEn } from "@/domain/playerDna";
 import { scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
 import {

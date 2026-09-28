@@ -1,9 +1,9 @@
-import type { Locale } from "./dictionaries";
+import { DICTIONARIES, type Locale } from "./dictionaries";
 import type { RowText } from "@/domain/rowText";
 
-// One door for instants. Kept out of index.tsx on purpose: a domain module may build a
-// date into a row it hands a screen (footprint's last-activity line), and it must be able
-// to do that without importing React.
+// One module for the words a non-screen may need. Kept out of index.tsx on purpose: a domain
+// module builds a date into a row it hands a screen (footprint's last-activity line) and names an
+// archetype to the demo provider, and it must be able to do both without importing React.
 
 /** Format an instant the way the reader's own language writes it.
  *
@@ -36,4 +36,19 @@ export function relativeDay(locale: Locale, iso: string): RowText {
   if (d > 1) return { key: "time.inDays", vars: { n: d } };
   if (d < -1) return { key: "time.agoDay", vars: { n: -d } };
   return { value: formatDate(locale, iso, { hour: "2-digit", minute: "2-digit" }) };
+}
+
+/** One English row of the dictionary, for text that is model input rather than copy.
+ *
+ *  The demo provider matches on Latin tokens (`data/intelligence.ts` strips everything outside
+ *  `a-z0-9' -` from the question) and composes in English, so the archetype name handed to it
+ *  through `archetypeLabelEn` and the sample prompts on `AiStudio` stay English while the
+ *  sentence beside them follows the reader. This is the only place outside `i18n/` allowed to
+ *  name a dictionary row directly: `t()` would give such a caller the reader's language, which
+ *  is wrong for provider input and right for everything a person reads, so the two needs must
+ *  not share one call. Proof-i18n's 26d reads the callers of this function and refuses a `.tsx`
+ *  file that reaches for it, and refuses any module outside `i18n/` that reads `DICTIONARIES`
+ *  itself. */
+export function englishWord(key: string): string {
+  return DICTIONARIES.en[key] ?? key;
 }

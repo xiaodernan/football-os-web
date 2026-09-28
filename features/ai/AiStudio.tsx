@@ -15,9 +15,15 @@ type ChatMsg =
   | { role: "user"; content: string; at: string }
   | { role: "ai"; content: RowText[]; facts?: EvidenceFact[]; sources?: RowText[]; confidence?: number; at: string };
 
-// Sample prompts stay in English deliberately: they are queries sent to the
-// demo provider, which composes its answers in English only. Translating them
-// would have the app ask in one language and answer in another.
+// These four strings do two jobs, and only one of them excuses English. They are queries, and
+// the demo provider matches on Latin tokens — `data/intelligence.ts:246` strips everything
+// outside `a-z0-9' -` from the question — so a translated ask would retrieve nothing. But the
+// same array is rendered as the chips under this heading, so a reader in either Chinese locale
+// is shown English words here. The display half is the defect, not the query half: the chips
+// need keys and the provider keeps the English text. Recorded rather than fixed here, because
+// the raw-UI census reads JSX positions and cannot see this — a literal in a module-scope array
+// reaches a child through a variable, which is the same blind spot `relativeDay` was found in at
+// M214 (README M215, measured as 4 literals × 3 locales).
 const SUGGESTIONS = [
   "Who is the key player at Real Madrid?",
   "Where do Arsenal sit in the Premier League?",

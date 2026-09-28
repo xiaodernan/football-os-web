@@ -1,5 +1,5 @@
 import type { Attributes } from "./types";
-import { DICTIONARIES } from "@/i18n/dictionaries";
+import { englishWord } from "@/i18n/format";
 import type { RowText } from "./rowText";
 
 // Football DNA: archetypes computed dynamically from the attribute profile, not
@@ -115,10 +115,11 @@ export function playerDna(attributes?: Attributes): Dna | null {
   return vector ? computeDna(vector) : null;
 }
 
-/** The English display name, straight from the dictionary's English column. UI sites must
- *  NOT use this — they interpolate `dna.arch.${key}` so the reader gets their own language.
- *  Its only caller is the demo AI provider, which composes its answers in English; when
- *  those sentences are keyed this function goes away with them. */
+/** The English display name, through the door that owns model-input vocabulary
+ *  (`englishWord`, i18n/format.ts). UI sites must NOT use this — they interpolate
+ *  `dna.arch.${key}` through `t` so the reader gets their own language. Its only caller is the
+ *  demo AI provider, which composes in English; when those sentences are keyed this function
+ *  goes away with them. */
 export function archetypeLabelEn(key: string): string {
-  return archetypeByKey(key) ? DICTIONARIES.en[`dna.arch.${key}`] : key;
+  return archetypeByKey(key) ? englishWord(`dna.arch.${key}`) : key;
 }

@@ -3951,6 +3951,99 @@ in `features/sim/SimulationLab.tsx`; the single `DICTIONARIES.en` reader outside
 exempt; the browser walk of the i18n surfaces in a populated state; and the untracked `dev/` scratch
 is still in the tree.
 
+### M215 — the words a model reads and the words a person read need different doors
+
+`domain/playerDna.ts` read `DICTIONARIES.en[...]` directly. It is the only module outside `i18n/`
+that did, and the reason is legitimate: `archetypeLabelEn` names an archetype to the demo provider,
+which matches on Latin tokens — `data/intelligence.ts:246` strips everything outside `a-z0-9' -`
+from the question — so its vocabulary must stay English in every locale. The problem is what that
+made legal: the one place that had a good reason to bypass the reader's table was reaching into the
+table itself, so a screen doing the same thing would have been indistinguishable from it, and the
+file that owns the English column was the only thing standing between the two uses.
+
+**Now there are two doors.** `t(key, vars)` answers in the reader's language and is what every
+rendered word must come from. `englishWord(key)` in `i18n/format.ts` answers in English and is what
+provider input comes from; it lives in the door module rather than a new file so a domain module can
+reach it without importing React (the same reason `formatDate` and `relativeDay` live there), and it
+echoes an unknown key instead of returning `undefined` under a `string` type. `archetypeLabelEn`
+calls it. Three claims hold the split, and each prints its own population so a blind scan cannot
+also print an agreeable zero:
+
+- no module outside `i18n/` mentions the dictionary table — measured over **143 files**: 3 readers
+  inside `i18n/` (`dictionaries.ts`, `format.ts`, `index.tsx`) and **0** offenders outside.
+- four plants graded by the *same predicates the census uses*, one per way the rule can be wrong:
+  a member read (`DICTIONARIES.en[…]`) and a namespace-aliased read (`D.DICTIONARIES["en"][…]`) both
+  count as touching the table; a `englishWord(…)` call from a module counts as a caller, not a
+  reader; the same call from a `.tsx` lands in the screen list. **All 4** classify as declared.
+- provider vocabulary is asked for by modules only: **1 caller**, `domain/playerDna.ts`, **0**
+  screens.
+
+**The umbrella clause had to be rewritten for this, and the rewrite is the better result.** Until
+now it asserted `umbrellaNames.length === 2` against the two doors M214 put through it, which is
+exactly the hand-maintained name list M212 warned about: a third door in `format.ts` would have
+reddened a *correct* tree. It now derives both sides — the declarations read out of `i18n/format.ts`
+(`3` today: `formatDate`, `relativeDay`, `englishWord`) intersected with the names non-`i18n/` files
+actually import from `@/i18n` (`5` names, of which `2` are doors) — and checks the umbrella against
+that, in both directions: nothing the screens ask for is missing, and nothing in the list is a
+phantom the module does not declare. `englishWord` therefore stays a module-only door by
+derivation, not by someone remembering to leave it out.
+
+**Also removed:** two value imports in `data/intelligence.ts` (`attributeLabel`,
+`archetypeLabelEn`) with **0** call sites each, measured by counting `attributeLabel(` and
+`archetypeLabelEn(` in the file. A dead value import is not a cosmetic thing here: `proof-coverage`
+counts value edges to decide which modules are reached, so an import nobody uses draws a reachability
+edge the code does not have. Nothing in the suite refuses such an import today (`tsc` runs with
+`strict` but without `noUnusedLocals`, so an unused import is not even a type error), which is why
+they survived and why the removal is quoted as a measurement rather than as a gate. Deleting them
+moved no coverage number: the suite still reports 37/37 with both modules reached through their other
+readers.
+
+**One comment was a half-truth, and correcting it turned up the next defect.** `features/ai/AiStudio.tsx`
+explained its four sample prompts as "queries sent to the demo provider", which is true and is why
+they are English — but the same array is rendered as the chips under the heading
+(`SUGGESTIONS.map(… <button>{s}</button>)` at `:108`), so a reader in either Chinese locale is shown
+four English questions. The display half is the defect, the query half is not. The comment now says
+both, and the fix (keys for the display, English for the send — the pattern `CommunityHub` already
+uses for dataset tags) is queued with the general hole it sits in: four literals in a module-scope
+array reach a JSX child through a variable, so the raw-UI position scan cannot see them, which is the
+same blind spot `relativeDay` was found in at M214.
+
+**Mutation witness.** Six arms: `m215a` stops the table-read rule firing, `m215b` narrows the `i18n/`
+exemption to one file so the two legitimate readers inside it become offenders, `m215c` blinds the
+caller census (a door nobody calls and a door a screen renders then look identical), `m215d` removes
+the unknown-key echo so `undefined` rides a `string` type, `m215e` reads the door declarations empty,
+`m215f` reads the umbrella's export list empty — `m215e`/`m215f` are the reason both halves of the new
+umbrella claim are direction-sensitive: an empty list cannot fail a subset check, so the floors come
+from the populations the clause prints. Each is caught, and the harness names the clause: `m215a`
+`table=false want=true` in the plant verdict, `m215b` the table census with its readers still listed,
+`m215c` two reds (plants plus `0 caller(s): NONE — nobody uses the door`), `m215d`
+`an unknown row → undefined`, `m215e` `0 doors declared in format.ts`, `m215f` the phantom/unreachable
+pair. The full suite of **51 arms** reports `51/51 caught (51/51 ran) · 0 missed · 0 crashed ·
+0 invalid needles · 0 restore failures` with the unmutated control green before and after
+(`career 183/183, transfers 76/76`). `proof-i18n` is now **231** checks (was 227).
+
+Measured on the working copy: `npm run build` (which runs `tsc --noEmit` first) exit 0, suite
+**37/37 proof scripts proven · 1961/1961 checks counted · exit 0**, no `UNVERIFIED` line and no retry
+in that run. On the clean plane (`git archive HEAD` plus this milestone's five source files,
+`node_modules` joined, `--max-old-space-size=4096`): `tsc --noEmit` with no output and exit 0,
+`npm run build` exit 0, suite **37/37 proof scripts proven · 1961/1961 checks counted · exit 0**, no
+`UNVERIFIED` line. One line of that log is worth keeping rather than re-running until it disappears:
+`PASS proof:learn (72/72 checks) (recovered on attempt 2)` — the plane leg shared the machine with the
+working-copy leg, M203's one-retry-for-no-evidence policy turned a first-attempt death into a second
+attempt that printed its own tally, and the suite therefore says plainly which script needed it — the
+same shape M212 recorded for `matchprobability`, and the reason the retry is quoted instead of hidden
+by running until the line goes away.
+
+**Still outstanding**: the four displayed English sample prompts (queued, with the module-scope-array
+blind spot); the relative-time census's alias hole, now re-scoped — tolerating aliases naively would
+charge `Dashboard.tsx:51`, a selection filter whose value is never displayed, so the rule needs a
+shape-based "reaches a displayed string" discriminator rather than a wider pattern and an allowlist;
+`data/ai.ts`'s 30 prose literals and the two English-label helpers inside them (12 interpolate
+`attributeLabel()` / `archetypeLabelEn()`, which is now a *declared* model-input door but still an
+English word inside a sentence a person reads); the 46 raw-UI debt lines in `features/sim/SimulationLab.tsx`;
+the `S${Date.now()…}` plan-id collision; `lib/hooks.ts`/`theme.tsx`/`utils.ts` exemptions; the
+populated-state browser walk; and the untracked `dev/` scratch.
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a
