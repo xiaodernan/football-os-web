@@ -182,12 +182,12 @@ export interface CoachPlan {
   id: string;
   createdAt: string;
   prompt: string;
-  diagnosis: string;
+  diagnosis: RowText[];
   focus: string[];
   session: TrainingSession;
-  rationale: string[];
+  rationale: RowText[];
   confidence: number;
-  sources: string[];
+  sources: RowText[];
   provider: string;
 }
 

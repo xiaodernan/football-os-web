@@ -4,9 +4,17 @@ const server = await createServer({ server: { middlewareMode: true }, appType: "
 const { coachProvider } = await server.ssrLoadModule("/data/ai.ts");
 const { buildSession } = await server.ssrLoadModule("/domain/training.ts");
 const { computeDna, ARCHETYPES } = await server.ssrLoadModule("/domain/playerDna.ts");
+const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
+
+function resolve(row) {
+  if (Array.isArray(row)) return row.map(r => resolve(r)).join(" ");
+  const tpl = DICTIONARIES.en[row.key];
+  if (!tpl) return row.key;
+  return Object.entries(row.vars ?? {}).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), tpl);
+}
 
 const gameDrill = (session) => session.exercises.find((e) => e.phase === "game");
 
@@ -33,7 +41,7 @@ for (const attrs of vectors) {
   const dna = computeDna(attrs);
   const game = gameDrill(plan.session);
   ok(`game block matches DNA ${dna.primary.label} focus (${dna.primary.gameFocus})`, !!game && game.focus === dna.primary.gameFocus);
-  ok(`rationale names the role game drill`, plan.rationale.some((r) => /game-realistic block is your/i.test(r)));
+  ok(`rationale names the role game drill`, plan.rationale.some((r) => /game-realistic block is your/i.test(resolve(r))));
 }
 
 // 2. Determinism: same profile → same game drill.

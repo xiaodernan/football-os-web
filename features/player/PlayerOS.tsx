@@ -281,7 +281,7 @@ function Coach() {
         {!busy && !plan && <EmptyState title={t("player.noPlanYet")} hint={t("player.askCoachBuild")} icon="✦" />}
         {!busy && plan && (
           <div className="space-y-3">
-            <div className="rounded-lg border bg-card/40 p-3 text-sm">{plan.diagnosis}</div>
+            <div className="rounded-lg border bg-card/40 p-3 text-sm">{plan.diagnosis.map((d) => rowLine(d, t)).join(" ")}</div>
             <div className="flex flex-wrap gap-1.5">
               {plan.focus.map((f) => <Badge key={f} variant="outline" className="text-primary">{t(`attr.name.${f}`)}</Badge>)}
             </div>
@@ -299,10 +299,10 @@ function Coach() {
             <details className="rounded-md border bg-card/30 p-3 text-sm">
               <summary className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("player.rationaleEvidenceSources")}</summary>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-                {plan.rationale.map((r, i) => <li key={i}>{r}</li>)}
+                {plan.rationale.map((r, i) => <li key={i}>{rowLine(r, t)}</li>)}
               </ul>
               <div className="mt-2 text-xs">{t("player.confidencePct", { n: plan.confidence })}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{t("common.sources")}: {plan.sources.join(" · ")}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{t("common.sources")}: {plan.sources.map((s) => rowLine(s, t)).join(" · ")}</div>
             </details>
             <div className="flex gap-2">
               <Button size="sm" className="flex-1" onClick={() => navigate("/player/training")}>{t("player.scheduleTrain")}</Button>

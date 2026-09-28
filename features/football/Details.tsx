@@ -586,11 +586,11 @@ export function MatchDetail({ id }: { id: string }) {
         </div>
         {ai && (
           <div className="mt-3 space-y-2 rounded-lg border bg-card/40 p-3 text-sm">
-            <p>{ai.text}</p>
-            <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("common.evidence")}</div><ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{ai.evidence.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+            <p>{rowLine(ai.text, t)}</p>
+            <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("common.evidence")}</div><ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{ai.evidence.map((x, i) => <li key={i}>{rowLine(x, t)}</li>)}</ul></div>
             <div className="flex items-center gap-3 text-xs">
               <span>{t("common.confidence")} <span className="font-mono text-primary">{ai.confidence}%</span></span>
-              <span className="text-muted-foreground">{t("common.sources")}: {ai.sources.join(" · ")}</span>
+              <span className="text-muted-foreground">{t("common.sources")}: {ai.sources.map((s) => rowLine(s, t)).join(" · ")}</span>
             </div>
           </div>
         )}

@@ -1373,6 +1373,36 @@ const en: Dict = {
   "ai.src.entity": "{kind} · {name}",
   "ai.src.none": "No specific entity retrieved — general reasoning only",
 
+  // Coach plan prose (M222). These are rendered through RowText + rowLine.
+  "coach.diag.targetedExact": "You chose to work on {focus} — the role-gap priorities you flagged. This block is built around exactly those.",
+  "coach.diag.targetedPartial": "You chose to work on {focus} — the role-gap priorities you flagged. A {minutes}-minute block has room for {trained}, so it starts there.",
+  "coach.diag.loadHigh": "Your acute:chronic load ratio is {acwr} — a spike. I've kept this session short and lighter to protect you from piling volume on a spiking load.",
+  "coach.diag.loadCaution": "Your load ratio is {acwr}, climbing toward the risk band — this session is capped and stays technical.",
+  "coach.diag.loadUnder": "Your load ratio is {acwr} — under your recent average, so you have headroom to progress today.",
+  "coach.diag.requestedFlagged": "You flagged {attrs}.",
+  "coach.diag.lowestRated": "Your lowest-rated attributes are {attrs}.",
+  "coach.diag.strengths": "Your profile's strengths are {attrs}.",
+  "coach.diag.trainedRecently": "You have logged {n} recent block(s) on {focus} — we continue progressive overload.",
+  "coach.diag.continuing": "We picked up where we left off — last session we worked {attrs}, so this block continues that progression.",
+  "coach.diag.rotated": "Last session we worked {last}; today we rotate to {new} to build a different gap.",
+  "coach.rat.warmup": "Warm-up activates movement before technique work.",
+  "coach.rat.primaryFocus": "Primary focus {focus} targets your {target}.",
+  "coach.rat.decisionBlock": "A decision-making block trains scanning under time pressure.",
+  "coach.rat.gameBlock": "The game-realistic block is your {drill} drill — {archetype}s express themselves there.",
+  "coach.rat.dnaRead": "DNA read: {primary} ({secondary} → {primary}){game}.",
+  "coach.src.methodology": "Football OS Training Methodology (demo knowledge base)",
+  "coach.src.savedAttrs": "Your saved attributes (overall {rating})",
+  "coach.src.positionBaseline": "Position baseline model",
+  "coach.src.loadLog": "Your training-load log (ACWR {acwr} · {zone})",
+  "coach.src.coachMemory": "Coach memory — last session focused on {focus}",
+  "ai.lead.player": "Demo Mode has no player-influence ranking, so I won't invent a decisive individual — here is what the seeded match record actually supports:",
+  "ai.lead.why": "The short answer: the pattern in the underlying events explains it.",
+  "ai.lead.general": "Here is the read from Football OS intelligence for {label}.",
+  "ai.answer.text": "{lead} {fact} (confidence reflects evidence from {count} linked data points — this is a DEMO provider, not a live model).",
+  "ai.evidence.fact": "{fact}",
+  "ai.src.matchLabel": "Match {label}",
+  "ai.src.matchEngine": "Football OS Match Engine (demo)",
+
   // Demo Mode has no community server: posts live on this device in either
   // connection state, so this notice must not imply a queue that sends later.
   "community.offline": "Offline — posts are saved on this device in either state, and nothing is uploaded when you reconnect.",
@@ -3038,10 +3068,42 @@ const zhCN: Dict = {
   "ai.lab.model": "模型",
   "ai.src.entity": "{kind} · {name}",
   "ai.src.none": "未检索到具体对象——仅作一般性推断",
+
+  // Coach plan prose (M222). These are rendered through RowText + rowLine.
+  "coach.diag.targetedExact": "你选择针对 {focus} —— 你标记的角色缺口优先项。这个模块完全围绕这些构建。",
+  "coach.diag.targetedPartial": "你选择针对 {focus} —— 你标记的角色缺口优先项。{minutes} 分钟的模块只能容纳 {trained}，所以从这里开始。",
+  "coach.diag.loadHigh": "你的急慢性负荷比为 {acwr} —— 出现尖峰。我让这个环节更短更轻，避免在负荷尖峰上叠加量。",
+  "coach.diag.loadCaution": "你的负荷比为 {acwr}，正逼近风险区间 —— 这个环节限制强度，保持技术性质。",
+  "coach.diag.loadUnder": "你的负荷比为 {acwr} —— 低于近期平均，所以今天有进步空间。",
+  "coach.diag.requestedFlagged": "你标记了 {attrs}。",
+  "coach.diag.lowestRated": "你评分最低的属性是 {attrs}。",
+  "coach.diag.strengths": "你的优势属性是 {attrs}。",
+  "coach.diag.trainedRecently": "你近期在 {focus} 上完成了 {n} 个模块 —— 我们继续渐进式超负荷。",
+  "coach.diag.continuing": "我们接着上次继续 —— 上个环节我们练了 {attrs}，所以这次继续那条进步线。",
+  "coach.diag.rotated": "上个环节我们练了 {last}；今天我们轮换到 {new} 来填补不同缺口。",
+  "coach.rat.warmup": "热身在技术练习前激活运动机能。",
+  "coach.rat.primaryFocus": "核心重点 {focus} 瞄准你的 {target}。",
+  "coach.rat.decisionBlock": "决策模块在时间压力下训练观察能力。",
+  "coach.rat.gameBlock": "实战模块是你的 {drill} 训练 —— {archetype} 型球员在那里表现自己。",
+  "coach.rat.dnaRead": "DNA 解读：{primary}（{secondary} → {primary}){game}。",
+  "coach.src.methodology": "Football OS 训练方法论（演示知识库）",
+  "coach.src.savedAttrs": "你的已存属性（综合 {rating})",
+  "coach.src.positionBaseline": "位置基准模型",
+  "coach.src.loadLog": "你的训练负荷日志（ACWR {acwr} · {zone})",
+  "coach.src.coachMemory": "教练记忆 —— 上个环节聚焦于 {focus}",
+  "ai.lead.player": "演示模式没有球员影响力排名，所以我不编造决定性个人 —— 这是种子赛程记录实际支持的内容：",
+  "ai.lead.why": "简短回答：底层事件的模式解释了这一点。",
+  "ai.lead.general": "这是针对 {label} 的 Football OS 智能解读：",
+  "ai.answer.text": "{lead} {fact}（置信度反映来自 {count} 个关联数据点的证据 —— 这是演示提供者，非实时模型）。",
+  "ai.evidence.fact": "{fact}",
+  "ai.src.matchLabel": "比赛 {label}",
+  "ai.src.matchEngine": "Football OS 比赛引擎（演示）",
+
+  // Demo Mode has no community server: posts live on this device in either
   "community.offline": "已离线——两种状态下帖子都保存在本机，重新联网时不会上传任何内容。",
-// Scouting board. OVR / POT / €M and the GK-DEF-MID-ATT bucket codes stay
-// untranslated on purpose: they are stat codes the app shows in monospace in
-// every locale, not English words.
+  // Scouting board. OVR / POT / €M and the GK-DEF-MID-ATT bucket codes stay
+  // untranslated on purpose: they are stat codes the app shows in monospace in
+  // every locale, not English words.
   "scout.subtitle": "可解释的短名单来自世界数据集——只用价值、潜力与年龄，绝不编造属性。",
   "scout.needs": "你的俱乐部需求",
   "scout.squadOf": "{club} 的阵容画像，按位置分组。",
@@ -4520,7 +4582,38 @@ const zhTW: Dict = {
   "ai.lab.model": "模型",
   "ai.src.entity": "{kind} · {name}",
   "ai.src.none": "未檢索到具體對象——僅作一般性推斷",
-  "community.offline": "已離線——兩種狀態下帖子都保存在本機，重新連線時不會上傳任何內容。",
+
+  // Coach plan prose (M222). These are rendered through RowText + rowLine.
+  "coach.diag.targetedExact": "你選擇針對 {focus} —— 你標記的角色缺口優先項。這個模組完全圍繞這些構建。",
+  "coach.diag.targetedPartial": "你選擇針對 {focus} —— 你標記的角色缺口優先項。{minutes} 分鐘的模組只能容納 {trained}，所以從這裡開始。",
+  "coach.diag.loadHigh": "你的急慢性負荷比為 {acwr} —— 出現尖峰。我讓這個環節更短更輕，避免在負荷尖峰上疊加量。",
+  "coach.diag.loadCaution": "你的負荷比為 {acwr}，正逼近風險區間 —— 這個環節限制強度，保持技術性質。",
+  "coach.diag.loadUnder": "你的負荷比為 {acwr} —— 低於近期平均，所以今天有進步空間。",
+  "coach.diag.requestedFlagged": "你標記了 {attrs}。",
+  "coach.diag.lowestRated": "你評分最低的屬性是 {attrs}。",
+  "coach.diag.strengths": "你的優勢屬性是 {attrs}。",
+  "coach.diag.trainedRecently": "你近期在 {focus} 上完成了 {n} 個模組 —— 我們繼續漸進式超負荷。",
+  "coach.diag.continuing": "我們接著上次繼續 —— 上個環節我們練了 {attrs}，所以這次繼續那條進步線。",
+  "coach.diag.rotated": "上個環節我們練了 {last}；今天我們輪換到 {new} 來填補不同缺口。",
+  "coach.rat.warmup": "熱身在技術練習前激活運動機能。",
+  "coach.rat.primaryFocus": "核心重點 {focus} 瞄準你的 {target}。",
+  "coach.rat.decisionBlock": "決策模組在時間壓力下訓練觀察能力。",
+  "coach.rat.gameBlock": "實戰模組是你的 {drill} 訓練 —— {archetype} 型球員在那裡表現自己。",
+  "coach.rat.dnaRead": "DNA 解讀：{primary}（{secondary} → {primary}){game}。",
+  "coach.src.methodology": "Football OS 訓練方法論（演示知識庫）",
+  "coach.src.savedAttrs": "你的已存屬性（綜合 {rating})",
+  "coach.src.positionBaseline": "位置基準模型",
+  "coach.src.loadLog": "你的訓練負荷日誌（ACWR {acwr} · {zone})",
+  "coach.src.coachMemory": "教練記憶 —— 上個環節聚焦於 {focus}",
+  "ai.lead.player": "演示模式沒有球員影響力排名，所以我不編造決定性個人 —— 這是種子賽程記錄實際支持的內容：",
+  "ai.lead.why": "簡短回答：底層事件的模式解釋了這一點。",
+  "ai.lead.general": "這是針對 {label} 的 Football OS 智能解讀：",
+  "ai.answer.text": "{lead} {fact}（置信度反映來自 {count} 個關聯數據點的證據 —— 這是演示提供者，非即時模型）。",
+  "ai.evidence.fact": "{fact}",
+  "ai.src.matchLabel": "比賽 {label}",
+  "ai.src.matchEngine": "Football OS 比賽引擎（演示）",
+
+  // M143: this block used to open with `...zhCN`, which is how 18 labels
 
   // M143: this block used to open with `...zhCN`, which is how 18 labels
   // reached a Traditional-Chinese reader as Simplified. Every key is written out
@@ -4615,10 +4708,14 @@ const zhTW: Dict = {
   "group.AM": "前腰",
   "group.W": "邊鋒",
   "group.ST": "中鋒",
-  "common.age": "年齡",
-// Scouting board. OVR / POT / €M and the GK-DEF-MID-ATT bucket codes stay
-// untranslated on purpose: they are stat codes the app shows in monospace in
-// every locale, not English words.
+"common.age": "年齡",
+
+  // Demo Mode has no community server: posts live on this device in either
+  "community.offline": "已離線——兩種狀態下帖子都保存在本機，重新連線時不會上傳任何內容。",
+
+  // Scouting board. OVR / POT / €M and the GK-DEF-MID-ATT bucket codes stay
+  // untranslated on purpose: they are stat codes the app shows in monospace in
+  // every locale, not English words.
   "scout.subtitle": "可解釋的短名單來自世界資料集——僅用價值、潛力與年齡，絕不編造屬性。",
   "scout.needs": "你的俱樂部需求",
   "scout.squadOf": "{club} 的陣容畫像，按位置分組。",

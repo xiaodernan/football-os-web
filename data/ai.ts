@@ -1,4 +1,5 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
+import type { RowText } from "@/domain/rowText";
 import { attributeLabel, weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna, archetypeLabelEn } from "@/domain/playerDna";
@@ -105,89 +106,71 @@ class DeterministicCoachProvider implements CoachProvider {
     // them, and the words below may not claim a block that was never built.
     const trained = session.focusAttributes;
     const hasBlock = (phase: string) => session.exercises.some((e) => e.phase === phase);
-
-    const diagnosisParts: string[] = [];
-    if (isTargeted)
-      diagnosisParts.push(
-        `You chose to work on ${effFocus.map(attributeLabel).join(" and ")} — the role-gap priorities you flagged.` +
-          (trained.length === effFocus.length
-            ? ` This block is built around exactly those.`
-            : ` A ${session.targetMinutes}-minute block has room for ${trained.map(attributeLabel).join(" and ")}, so it starts there.`),
-      );
-    if (load && load.zone === "high")
-      diagnosisParts.push(
-        `Your acute:chronic load ratio is ${load.acwr?.toFixed(2) ?? "high"} — a spike. I've kept this session short and lighter to protect you from piling volume on a spiking load.`,
-      );
-    else if (load && load.zone === "caution")
-      diagnosisParts.push(
-        `Your load ratio is ${load.acwr?.toFixed(2) ?? "elevated"}, climbing toward the risk band — this session is capped and stays technical.`,
-      );
-    else if (load && load.zone === "under" && load.weekLoad > 0)
-      diagnosisParts.push(
-        `Your load ratio is ${load.acwr?.toFixed(2) ?? "low"} — under your recent average, so you have headroom to progress today.`,
-      );
-    if (requested.length)
-      diagnosisParts.push(`You flagged ${requested.map(attributeLabel).join(" and ")}.`);
-    diagnosisParts.push(
-      `Your lowest-rated attributes are ${weaknesses.map(attributeLabel).join(", ")}.`,
-    );
-    diagnosisParts.push(`Your profile's strengths are ${strengths.map(attributeLabel).join(", ")}.`);
-    if (trainedRecently > 0)
-      diagnosisParts.push(
-        `You have logged ${trainedRecently} recent block(s) on ${effFocus.map(attributeLabel).join("/")} — we continue progressive overload.`,
-      );
-
     // Session-to-session continuity: the coach remembers the focus of the last
     // plan it wrote (from real stored history) and either continues progressive
     // overload on an overlapping attribute or rotates to a different gap.
     const lastFocus = [...new Set((input.lastFocus ?? []).filter((k) => ATTRIBUTE_KEYS.includes(k)))];
-    // "Continuing that progression" is only true of an attribute this block really
-    // trains, so the overlap is taken with `trained`, not with what was asked for.
     const continuing = lastFocus.filter((k) => trained.includes(k));
-    const rotatedFrom = lastFocus.filter((k) => !effFocus.includes(k));
+
+    const diagnosisParts: RowText[] = [];
+    if (isTargeted)
+      diagnosisParts.push(
+        trained.length === effFocus.length
+          ? { key: "coach.diag.targetedExact", vars: { focus: effFocus.map(attributeLabel).join(" and ") } }
+          : { key: "coach.diag.targetedPartial", vars: { focus: effFocus.map(attributeLabel).join(" and "), trained: trained.map(attributeLabel).join(" and "), minutes: session.targetMinutes } },
+      );
+    if (load && load.zone === "high")
+      diagnosisParts.push({ key: "coach.diag.loadHigh", vars: { acwr: load.acwr?.toFixed(2) ?? "high" } });
+    else if (load && load.zone === "caution")
+      diagnosisParts.push({ key: "coach.diag.loadCaution", vars: { acwr: load.acwr?.toFixed(2) ?? "elevated" } });
+    else if (load && load.zone === "under" && load.weekLoad > 0)
+      diagnosisParts.push({ key: "coach.diag.loadUnder", vars: { acwr: load.acwr?.toFixed(2) ?? "low" } });
+    if (requested.length)
+      diagnosisParts.push({ key: "coach.diag.requestedFlagged", vars: { attrs: requested.map(attributeLabel).join(" and ") } });
+    diagnosisParts.push({ key: "coach.diag.lowestRated", vars: { attrs: weaknesses.map(attributeLabel).join(", ") } });
+    diagnosisParts.push({ key: "coach.diag.strengths", vars: { attrs: strengths.map(attributeLabel).join(", ") } });
+    if (trainedRecently > 0)
+      diagnosisParts.push({ key: "coach.diag.trainedRecently", vars: { n: trainedRecently, focus: effFocus.map(attributeLabel).join("/") } });
+
     if (lastFocus.length) {
       if (continuing.length)
-        diagnosisParts.push(
-          `We picked up where we left off — last session we worked ${continuing.map(attributeLabel).join(" and ")}, so this block continues that progression.`,
-        );
+        diagnosisParts.push({ key: "coach.diag.continuing", vars: { attrs: continuing.map(attributeLabel).join(" and ") } });
       else
-        diagnosisParts.push(
-          `Last session we worked ${lastFocus.map(attributeLabel).join(" and ")}; today we rotate to ${trained.map(attributeLabel).join(" and ")} to build a different gap.`,
-        );
+        diagnosisParts.push({ key: "coach.diag.rotated", vars: { last: lastFocus.map(attributeLabel).join(" and "), new: trained.map(attributeLabel).join(" and ") } });
     }
 
-    const rationale = [
-      ...(hasBlock("warmup") ? [`Warm-up activates movement before technique work.`] : []),
-      `Primary focus ${trained.map(attributeLabel).join(" + ")} targets your ${isTargeted ? "selected role-gap priorities" : "current biggest measurable gap"}.`,
-      ...(hasBlock("decision") ? [`A decision-making block trains scanning under time pressure.`] : []),
-      // The role line is only true of a session that really carries the block —
-      // a 5-minute session has room for the technique work alone.
+    const rationale: RowText[] = [
+      ...(hasBlock("warmup") ? [{ key: "coach.rat.warmup" }] : []),
+      { key: "coach.rat.primaryFocus", vars: { focus: trained.map(attributeLabel).join(" + "), target: isTargeted ? "selected role-gap priorities" : "current biggest measurable gap" } },
+      ...(hasBlock("decision") ? [{ key: "coach.rat.decisionBlock" }] : []),
       ...(hasBlock("game")
-        ? [`The game-realistic block is your ${attributeLabel(dna.primary.gameFocus)} drill — ${archetypeLabelEn(dna.primary.id)}s express themselves there.`]
+        ? [{ key: "coach.rat.gameBlock", vars: { drill: attributeLabel(dna.primary.gameFocus), archetype: archetypeLabelEn(dna.primary.id) } }]
         : []),
-      `DNA read: ${archetypeLabelEn(dna.primary.id)} (${archetypeLabelEn(dna.secondary.id)} → ${archetypeLabelEn(dna.primary.id)})${hasBlock("game") ? " — session shaped to your role" : ""}.`,
+      { key: "coach.rat.dnaRead", vars: { primary: archetypeLabelEn(dna.primary.id), secondary: archetypeLabelEn(dna.secondary.id), game: hasBlock("game") ? " — session shaped to your role" : "" } },
     ];
 
     const confidence = Math.round(
       (0.55 + (requested.length || isTargeted ? 0.2 : 0) + (input.history.length ? 0.15 : 0)) * 100,
     );
 
+    const sources: RowText[] = [
+      { key: "coach.src.methodology" },
+      { key: "coach.src.savedAttrs", vars: { rating: overallRating(input.profile.attributes) } },
+      { key: "coach.src.positionBaseline" },
+      ...(load ? [{ key: "coach.src.loadLog", vars: { acwr: load.acwr?.toFixed(2) ?? "n/a", zone: load.zone } }] : []),
+      ...(lastFocus.length ? [{ key: "coach.src.coachMemory", vars: { focus: lastFocus.map(attributeLabel).join(" + ") } }] : []),
+    ];
+
     return {
       id: `P${makeRng(seed)().toString(36).slice(2, 7)}`,
       createdAt: new Date().toISOString(),
       prompt: input.prompt,
-      diagnosis: diagnosisParts.join(" "),
+      diagnosis: diagnosisParts,
       focus: trained,
       session,
       rationale,
       confidence: Math.min(95, confidence),
-      sources: [
-        "Football OS Training Methodology (demo knowledge base)",
-        `Your saved attributes (overall ${overallRating(input.profile.attributes)})`,
-        "Position baseline model",
-        ...(load ? [`Your training-load log (ACWR ${load.acwr?.toFixed(2) ?? "n/a"} · ${load.zone})`] : []),
-        ...(lastFocus.length ? [`Coach memory — last session focused on ${lastFocus.map(attributeLabel).join(" + ")}`] : []),
-      ],
+      sources,
       provider: this.id,
     };
   }
@@ -214,9 +197,9 @@ export const SUGGESTED_ASKS = ["keyPlayer", "league", "value", "transfer"].map((
 
 // Match-chat / analyst answer (evidence-first) used by Match Intelligence.
 export interface AiAnswer {
-  text: string;
-  evidence: string[];
-  sources: string[];
+  text: RowText;
+  evidence: RowText[];
+  sources: RowText[];
   confidence: number;
 }
 
@@ -228,16 +211,20 @@ export async function askFootballAI(
   const rng = makeRng(`${question}-${context.label}`);
   const fact = context.facts[Math.floor(rng() * context.facts.length)] ?? "No direct data.";
   const lower = question.toLowerCase();
-  let lead: string;
+  let leadKey: string;
   if (/who|player|rating|star|最重要/.test(lower))
-    lead = "Demo Mode has no player-influence ranking, so I won't invent a decisive individual — here is what the seeded match record actually supports:";
+    leadKey = "ai.lead.player";
   else if (/why|how|怎么|为什么/.test(lower))
-    lead = `The short answer: the pattern in the underlying events explains it.`;
-  else lead = `Here is the read from Football OS intelligence for ${context.label}.`;
+    leadKey = "ai.lead.why";
+  else
+    leadKey = "ai.lead.general";
   return {
-    text: `${lead} ${fact} (confidence reflects evidence from ${context.facts.length} linked data points — this is a DEMO provider, not a live model).`,
-    evidence: context.facts.slice(0, 4),
-    sources: [`Match ${context.label}`, "Football OS Match Engine (demo)"],
+    text: { key: "ai.answer.text", vars: { lead: leadKey, fact, count: context.facts.length } },
+    evidence: context.facts.slice(0, 4).map((f) => ({ key: "ai.evidence.fact", vars: { fact: f } })),
+    sources: [
+      { key: "ai.src.matchLabel", vars: { label: context.label } },
+      { key: "ai.src.matchEngine" },
+    ],
     confidence: 55 + Math.floor(rng() * 30),
   };
 }

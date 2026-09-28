@@ -68,6 +68,13 @@ function expectPlan(target) {
 }
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
+const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
+function resolve(row) {
+  if (Array.isArray(row)) return row.map(r => resolve(r)).join(" ");
+  const tpl = DICTIONARIES.en[row.key];
+  if (!tpl) return row.key;
+  return Object.entries(row.vars ?? {}).reduce((s, [k, v]) => s.replaceAll(`{${k}}`, String(v)), tpl);
+}
 async function tryLoad(p) {
   try { return { mod: await server.ssrLoadModule(p), err: "" }; }
   catch (e) { return { mod: null, err: `${p}: ${String(e && e.message).split("\n")[0].slice(0, 140)}` }; }
@@ -349,7 +356,7 @@ else {
     ["game", /game-realistic block is your/i],
     ["role-shaped", /session shaped to your role/i],
   ];
-  const said = (p) => CLAIMS.filter(([, re]) => p.rationale.some((r) => re.test(r))).map(([n]) => n);
+  const said = (p) => CLAIMS.filter(([, re]) => p.rationale.some((r) => re.test(resolve(r)))).map(([n]) => n);
   const phases = (p) => p.session.exercises.map((e) => e.phase);
   const short = await plan(5);
   const long = await plan(60);
@@ -370,17 +377,17 @@ else {
     diff.length === 0);
   ok(`the short plan's silence is a real budget fact, not a blanket suppression (no decision/game block at 5′: ${["decision", "game"].filter((p) => !phases(short).includes(p)).length === 2}, while 60′ carries all ${owes(long).length} claims)`,
     !phases(short).includes("decision") && !phases(short).includes("game") && owes(long).length === CLAIMS.length && said(long).length === CLAIMS.length);
-  const shortSentence = (short.diagnosis.match(/has room for ([^,]+), so it starts there/) || [])[1];
+  const shortSentence = (resolve(short.diagnosis).match(/has room for ([^,]+), so it starts there/) || [])[1];
   const named = shortSentence ? shortSentence.split(" and ").map((s) => s.trim()) : [];
   const trainedLabels = short.focus.map(AT.attributeLabel);
   ok(`when the flagged priorities do not fit, the diagnosis names the one it starts with and nothing else (says "${named.join(" and ")}" for a plan that trains ${trainedLabels.join(" and ")})`,
     named.length > 0 && named.length === trainedLabels.length && named.every((l, i) => l === trainedLabels[i]));
-  ok(`a plan's focus is exactly the attributes its own session trains (asked ${asks.length} → ${short.focus.length} at 5′, ${long.focus.length} at 60′, and ${long.diagnosis.includes("built around exactly those") ? "60′ claims the whole ask" : "60′ declines the whole ask"})`,
+  ok(`a plan's focus is exactly the attributes its own session trains (asked ${asks.length} → ${short.focus.length} at 5′, ${long.focus.length} at 60′, and ${resolve(long.diagnosis).includes("built around exactly those") ? "60′ claims the whole ask" : "60′ declines the whole ask"})`,
     JSON.stringify(short.focus) === JSON.stringify(short.session.focusAttributes) &&
     JSON.stringify(long.focus) === JSON.stringify(long.session.focusAttributes) &&
     long.focus.length === long.session.focusAttributes.length &&
     short.focus.length < asks.length && long.focus.length === asks.length - 1 &&
-    long.diagnosis.includes("built around exactly those"));
+    resolve(long.diagnosis).includes("built around exactly those"));
   // The coach re-keys the offered lengths into its own table; if the two lists drift,
   // a picker value silently becomes a different session than the builder was asked for.
   const clampTable = ((AISRC.match(/const opts = \[([0-9, ]+)\]/) || [, ""])[1]).split(",").map(Number);

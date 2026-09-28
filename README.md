@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M221 (a few numbers in that range
+Work ships one milestone per commit and is currently at M222 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -4396,8 +4396,52 @@ the +1) at **1639 keys · 3 locales**. Ceiling stays **0 across 0 files**, cover
 **What is still not claimed**: only `toast` and `alert` are treated as reader-facing calls —
 `console.*` is not copy, and a wrapper invented tomorrow would have to be added here; the Player
 OS's video-analysis prompt is still an English sentence handed to the *model* rather than to a
-reader (M217's provider door, not this one); and `data/ai.ts`'s 30 composed sentences remain the
-next prose item. Next: #150/#165.
+reader (M217's provider door, not this one). Next: #150/#165.
+
+### M222 — the coach's composed sentences read the reader's language
+
+M215 opened the door (`englishWord`) for provider-side vocabulary and M217 closed the loop for
+the reader side (`t` in AiStudio). The remaining gap was the coach's own prose: `data/ai.ts`
+built 30-odd English sentences for `diagnosis`, `rationale` and `sources` in the generated
+`CoachPlan`, plus the `AiAnswer` text for match intelligence — all of it handed to the reader
+through `rowLine` in PlayerOS, Details and AiStudio, but still authored in English. This
+milestone converts every sentence to `RowText` (`{ key, vars }`) so the screens render via
+`rowLine(t, …)` and the provider still receives English through the same keys.
+
+**Type & data changes.** `CoachPlan.diagnosis/rationale/sources` and `AiAnswer.text/evidence/sources`
+became `RowText[]` / `RowText` in `domain/types.ts` and `data/ai.ts`. The coach now builds
+`RowText` objects directly (`{ key: "coach.diag.targetedExact", vars: { … } }`, etc.) and
+`askFootballAI` returns `RowText` for text, evidence and sources. `AiAnswer` now carries
+`RowText` arrays. **41 new keys** across the `coach.*` and `ai.*` namespaces were written in
+all three locales: **1639 → 1680 keys per locale**.
+
+**The coach's conditional prose is now whole keys.** The old `diagnosis` concatenated
+conditional fragments (`targetedExact` vs `targetedPartial`, `loadHigh/Caution/Under`,
+`continuing` vs `rotated`) with string interpolation; each variant is now a separate key
+with its own `vars`, which is what a sentence that changes shape per locale must be. The
+`rationale` and `sources` arrays follow the same pattern.
+
+**Reader screens updated.** PlayerOS, Details and AiStudio now render through `rowLine`:
+`plan.diagnosis.map(d => rowLine(d, t)).join(" ")`, `plan.rationale.map(r => rowLine(r, t))`,
+`ai.text` → `rowLine(ai.text, t)`, etc. The provider side (`coachProvider.generatePlan` and
+`askFootballAI`) is unchanged for consumers — it still returns the same shape, just with
+`RowText` instead of strings.
+
+**Proofs updated.** `proof-m74` (coach plan branches), `proof-m77` (rationale), `proof-ai-grounding`
+(Match Intelligence answers), `proof-training` (block-claim accounting) now resolve `RowText`
+to English via `DICTIONARIES.en` instead of regexing raw strings. The coach plan's conditional
+branches are now exercised through key resolution, not regex on concatenated English.
+
+**Mutation witness: four arms, all caught.** (1) `coach.diag.targetedExact` backfilled as an
+English literal — reachability + covered set; (2) `coach.rat.gameBlock` zh-CN row deleted —
+parity; (3) `coach.src.coachMemory` placeholder dropped — placeholder agreement; (4) one
+`RowText` key deleted from `DICTIONARIES.en` — the covered-set clause reports the leak in
+PlayerOS. All restored; 1964/1964 after restore.
+
+Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, suite
+**37/37 proof scripts · 1964/1964 checks · exit 0**, `proof-i18n` **234/234** at **1680 keys · 3 locales**. Ceiling stays **0 across 0 files**, covered set **40**.
+
+**What is still not claimed**: the Player OS video-analysis prompt (`requestPlan("Video analysis flagged: …")`) remains an English sentence sent to the *model* (provider door); Manager OS sliders still print the five scale words; `toast.success(` hole closed but other wrappers would need the same treatment; `data/ai.ts` now has 0 prose debt (the ratchet is extended to it implicitly through the covered set).
 
 ## Deploying
 
