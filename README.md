@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M223 (a few numbers in that range
+Work ships one milestone per commit and is currently at M224 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -4521,6 +4521,79 @@ the older sections quote the numbers their own runs printed.
 wrappers would need the same treatment; a clip's own `improvements[0]` sentence is the demo video
 provider's data and passes through as a value (English in every locale, like a session title);
 `data/ai.ts` has 0 prose debt (the ratchet is extended to it implicitly through the covered set).
+
+### M224 — the scan read an attribute's name, not what the attribute prints
+
+Four milestones in a row ended with the same sentence: *"Manager OS sliders still print the five
+scale words."* M220, M221, M222 and M223 each recorded it and moved on, which is what a queue is for —
+but the debt was recorded by hand while the gate whose whole job is to find it reported the file
+at **0**. The reason is the third position's rule, not the file: an attribute's literals were
+classified by the attribute's **name**, and a name the scan did not recognise was dropped into an
+`unknown` set that nothing ever read. `<Slider … format={(v) => (v < 0.35 ? "Low" : …)} />` is a
+prop whose value is a *function*; the component calls it and prints what it returns, so the copy
+reached the reader from inside the one shape the scan never looked at, filed under `format`.
+
+**Measured, not inferred.** A function-valued prop renders in this harness, so the claim is a
+render: the Manager OS's tactics panel at `HEAD`, in 简体中文, reads `心态 Balanced 节奏 Medium 逼抢
+Medium`, and the same screen after this milestone reads `心态 平衡 节奏 中 逼抢 中`. (The panel sits
+behind a tab click and the harness cannot click, so the render uses a copy of the screen whose
+default tab is `tactics`; only that one line differs, and the copy is deleted at the end of the
+run.) The English words were there for a reader in either Chinese locale while `proof-i18n` called
+the file clean.
+
+**The rule is the shape, and its exception is named.** A function-valued attribute is a display
+position now — the string it returns is what the reader reads — and the one shape that is *not* is
+`on…`, which is how JSX spells "called for something the reader did" rather than "printed for the
+reader to read". So `onClick={() => navigate("/players")}` stays code while `render={(x) => "…"}`
+is reported on the day it is typed instead of joining the set nobody reads. The exemption is
+measured rather than trusted: `scanSource` returns the `fnProps` it walked, and the gate asserts
+both that no non-handler function prop carries prose and that the walk read a real population
+(**75 function-valued props, 5 of them not handlers**) — a rule that only ever met its own fixture
+could otherwise agree with itself.
+
+**The screen stopped having a second name for one value.** The match-prep panel's press word was
+`"Deep block" / "Medium press" / "High press"` while the slider above it said `"Deep block" /
+"Medium" / "High press"` — two spellings of the same engine value on one screen, neither of them
+in the dictionary. Both now read the keys the Simulation Lab already prints (`sim.pressDeep`,
+`sim.medium`, `sim.highPress`, `sim.low`, `sim.high`), and the mentality slider reads the
+`tac.mentality.${i}` table the Tactical Studio and the lab share, with the site declared as
+`{ path: "features/manager/ManagerOS.tsx", expr: "i", prefix: "tac.mentality.", suffix: "" }` so the
+same index-to-word rule is checked for this screen too. **No new keys**: the debt closed with zero
+new translations, because every word it needed was already declared — the same shape M165's
+Scouting registration had.
+
+**An English reader sees three different words, and that is the point.** `tac.mentality.0` is
+"Very defensive", not "Park the bus", and `sim.pressDeep` is "Deep", not "Deep block", so the two
+extremes of the mentality slider and the low band of the press slider changed wording for the `en`
+locale as well. That is not a regression to be excused: the screen was printing a second name for a
+value the studio and the lab already name, which is exactly the defect — and the English reader
+meeting the same value on two screens was already reading two words for it. Where the three tables
+agreed ("Defensive", "Balanced", "Attacking", "High press", "Low", "Medium", "High") nothing moved.
+
+**Mutation witness: four arms, all caught, all restored.** (1) the `fn:` rule switched off — the
+fixture clause reports `nothing`; (2) the Manager OS slider backfilled as its own English list —
+the live walk reports the five words *and* the covered-set clause names the file; (3) the
+event-handler exemption widened until it exempts nothing — five clauses go red and the walk
+reports **23** handler literals (routes, `ai.videoAnalysisPrompt`, a bare `"button"`), which is
+what makes the narrowing a claim rather than a comment; (4) the `tac.mentality.` site undeclared —
+`80 sites / 1 undeclared`. A control run after each restore sat at **238/238**.
+
+Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, `proof-i18n`
+**238/238** at **1667 keys · 3 locales** (the three new clauses are the +3; no key was added),
+ceiling **0 across 0 files**, covered set **40**. The affected set green on its own: `proof-career`
+183/183, `proof-learn` 72/72, `proof-coverage` 15/15, `proof-timeline` 91/91, `proof-training`
+40/40, `proof-m74` 15/15, `proof-m77` 11/11, `proof-m75` 6/6. The full suite was **not** re-run:
+this project's standing instruction is not to spend the time on a full regression for every
+change, so the evidence here is that targeted set plus `tsc` and `build`, named as what it is.
+
+**What is still not claimed**: the rule reads the shape of the *value*, so a prop handed a
+function by name — `format={formatters.press}` — is still outside the population, exactly as the
+relative-time census is blind to a duration computed in one function and printed in another;
+`toast.*` wrappers beyond `toast`/`alert` would need the same treatment; a clip's own
+`improvements[0]` sentence is the demo video provider's data and passes through as a value; and
+the two `Slider` definitions (Manager OS, Simulation Lab) are still two copies of one control.
+Next: the queued items M218/M219 recorded — the cross-function display flow, and the `sentence`
+bucket's charging arm.
 
 ## Deploying
 

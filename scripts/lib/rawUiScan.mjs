@@ -56,6 +56,21 @@ const DISPLAY_PROPS = new Set([
 // paren. The open paren is still the last character of the match, so `callEnd` below
 // needs no change.
 const CALL_NAME = /\b(?:toast|alert)(?:\.\w+)?\(/g;
+// M224. The scan classified an attribute's literals by the attribute's NAME, which is right
+// for `title="…"`, and wrong for a prop whose value is a *function*: the component calls it,
+// and the string it returns is what the reader sees. The Manager OS's three sliders and its
+// match-prep facts printed their scale words from inside `format={(v) => …}` — copy sitting
+// in the one shape the scan never looked at, filed under a name it did not recognise, and
+// dropped into the `unknown` set that nothing reads. A function-valued attribute is a
+// display position now, and the shape that is *not* one is named: `on…` is how JSX spells an
+// event handler, which the component calls for something the reader did rather than to
+// produce a string, so `onClick={() => navigate("/players")}` is code and stays out.
+// Both Slider definitions (Manager OS, Simulation Lab) render `{format(value)}`, which is
+// the evidence that the prop is display copy rather than a callback. The rule is the shape
+// rather than the name, so a prop the scan has never met — `render={(x) => "…"}` — is
+// reported on the day it is typed instead of joining the set nobody reads.
+const EVENT_PROP = /^on[A-Z]/;
+const FUNCTION_VALUE = /^\s*(?:async\s+)?(?:function\b|[A-Za-z_$][\w$]*\s*=>|\([^()]*\)\s*(?::[^=>]*)?=>)/;
 // Index of the `)` closing the `(` at `open`, quote- and nesting-aware.
 function callEnd(s, open) {
   let d = 0;
@@ -434,6 +449,7 @@ export function scanSource(src) {
   const all = [...tags, ...kids];
   const hits = [];
   const unknown = new Set();
+  const fnProps = new Set();
 
   // 2a. display props
   for (const tag of tags) {
@@ -446,9 +462,12 @@ export function scanSource(src) {
       const vs = i + m.index + m[0].length;
       if (s[vs] === `{`) {
         const end = valueEnd(s, vs, b);
+        const fnValue = FUNCTION_VALUE.test(s.slice(vs + 1, end));
+        if (fnValue) fnProps.add(name);
         for (const L of literals(s, vs, end)) {
           if (ownedElsewhere(L.start, tag, all) || skipLiteral(s, L)) continue;
           if (DISPLAY_PROPS.has(name)) hits.push({ pos: L.start, kind: "attr:" + name, text: L.text });
+          else if (fnValue && !EVENT_PROP.test(name)) hits.push({ pos: L.start, kind: "fn:" + name, text: L.text });
           else unknown.add(name);
         }
         i = end + 1;
@@ -520,7 +539,7 @@ export function scanSource(src) {
       seen.add(h.pos);
       return true;
     });
-  return { hits: uniq, unknown: [...unknown].sort() };
+  return { hits: uniq, unknown: [...unknown].sort(), fnProps: [...fnProps].sort() };
 }
 
 export function scanFile(file, read) {

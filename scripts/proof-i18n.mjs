@@ -579,6 +579,9 @@ const DYN_SITES = [
   // M220: the Simulation Lab carries the studio's 0..4 mentality index across as the same
   // word the studio prints, so the screen has one table for it rather than a second list.
   { path: "features/sim/SimulationLab.tsx", expr: "i", prefix: "tac.mentality.", suffix: "" },
+  // M224: the Manager OS's slider is that same index shifted by -2, so it reads the same word
+  // the studio and the lab print rather than its own English list ("Park the bus" … "All-out").
+  { path: "features/manager/ManagerOS.tsx", expr: "i", prefix: "tac.mentality.", suffix: "" },
   { path: "features/tactical/TacticalStudio.tsx", expr: "i", prefix: "tac.mentality.", suffix: "" },
   { path: "features/watchlist/WatchlistBoard.tsx", expr: "s", prefix: "watch.sort.", suffix: "" },
   // M148: the favourite control derives its own copy from the kind it favours, and
@@ -1384,6 +1387,48 @@ ok(`a hole containing a JSX-text apostrophe closes on its own line, not on the n
 const plantedLookups = lookupsIn(RAW_FIXTURE);
 ok(`the fixture's t() lookups are read as lookups, not as interface copy (${plantedLookups.join(", ")})`,
   plantedLookups.length === 6 && planted.every((h) => !plantedLookups.includes(h.text)));
+
+// M224. The scan classified an attribute's literals by the attribute's NAME, which is right for
+// `title="…"` and wrong for a prop whose value is a function: the component calls it, and the
+// string it returns is what the reader sees. `format` was not on the display list, so the Manager
+// OS's three sliders and its match-prep facts printed "Low" / "Deep block" / "Park the bus" to a
+// 简体中文 reader while this suite reported the file clean — the copy was found, filed under a
+// name the scan did not recognise, and dropped into a set nothing read. The fixture below is the
+// rule in both directions: a formatter's words are copy, the keyed formatter beside it is a
+// lookup, and the two event handlers — one carrying a route, one carrying a sentence — stay out,
+// because `on…` is how JSX spells "called for what the reader did" rather than "printed for the
+// reader to read".
+const FN_FIXTURE = [
+  `export function Fn() {`,
+  `  const { t } = useI18n();`,
+  `  return (`,
+  `    <div>`,
+  `      <Slider format={(v) => (v < 0.35 ? "Planted deep block" : "Planted high press")} />`,
+  `      <Slider format={(v) => (v < 0.35 ? t("sim.low") : t("sim.highPress"))} />`,
+  `      <button onClick={() => open("/planted/route")}>x</button>`,
+  `      <input onChange={(e) => setNote(e.target.value + " Planted handler text")} />`,
+  `    </div>`,
+  `  );`,
+  `}`,
+].join("\n");
+const fnPlanted = scanSource(FN_FIXTURE).hits;
+ok(`a function-valued prop is a display position: the words it returns are copy (${fnPlanted.map((h) => h.kind).join(", ") || "nothing"})`,
+  fnPlanted.length === 2 && fnPlanted.every((h) => h.kind === "fn:format" && h.text.startsWith("Planted")));
+ok(`…and the shapes that are not copy stay out of it: the keyed formatter and the two event handlers (${fnPlanted.filter((h) => /route|handler|sim\./.test(h.text)).length} reported)`,
+  !fnPlanted.some((h) => /route|handler|sim\./.test(h.text)));
+// The live half, read off the app rather than the fixture: how many function-valued props the
+// scan walks, how many of those are not handlers, and how many carry copy. A rule that only ever
+// met its own fixture could agree with itself, so the first number is the floor that keeps the
+// last one meaningful — `0 of 0` is the "nobody looked" this file keeps refusing.
+const fnWalk = [...appSrc].map(([p, code]) => {
+  const r = scanSource(code);
+  return [p, r.fnProps ?? [], r.hits.filter((h) => h.kind.startsWith("fn:"))];
+});
+const fnTotal = fnWalk.reduce((n, [, props]) => n + props.length, 0);
+const fnOffHandler = fnWalk.reduce((n, [, props]) => n + props.filter((name) => !/^on[A-Z]/.test(name)).length, 0);
+const fnDebt = fnWalk.flatMap(([p, , hits]) => hits.map((h) => `${p} (${h.kind}: ${h.text.slice(0, 24)})`));
+ok(`no function-valued prop outside the event-handler shape carries prose (${fnDebt.length ? fnDebt.join(", ") : "none"}) — the walk read ${fnTotal} function-valued props, ${fnOffHandler} of them not handlers`,
+  fnDebt.length === 0 && fnTotal >= 50 && fnOffHandler > 0);
 
 // M212. The comment stripper walked characters, so the `/*` inside `accept="video/*"` opened a
 // block comment that ran to the next REAL `*/` — and everything between never reached the scan.

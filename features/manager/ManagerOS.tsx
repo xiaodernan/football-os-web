@@ -57,6 +57,15 @@ const BUCKETS: { code: PosBucket; labelKey: string }[] = [
   { code: "ATT", labelKey: "mgr.bucketAtt" },
 ];
 
+// M224. The engine's own scale, read from the keys the Tactical Studio and the Simulation Lab
+// already print for these values: this slider is the studio's 0..4 index shifted by -2, and the
+// tempo/press bands are the lab's bands, so one value has one name instead of this screen's
+// second English list. The helper takes the translator by name, which is how check 16 reads a
+// site.
+const mentalityWord = (t: (key: string) => string, i: number) => t(`tac.mentality.${i}`);
+const tempoWord = (t: (key: string) => string, v: number) => (v < 0.35 ? t("sim.low") : v < 0.7 ? t("sim.medium") : t("sim.high"));
+const pressWord = (t: (key: string) => string, v: number) => (v < 0.35 ? t("sim.pressDeep") : v < 0.7 ? t("sim.medium") : t("sim.highPress"));
+
 export function ManagerOS() {
   const { t } = useI18n();
   const [career, setCareer] = useLocalStorage<CareerState | null>(KEY, null);
@@ -304,9 +313,9 @@ function TacticsPanel({ career, onChange, onRest }: { career: CareerState; onCha
       <Panel className="p-4">
         <SectionTitle title={t("mgr.instructions")} />
         <div className="mt-3 space-y-4">
-          <Slider label={t("tac.mentality")} min={-2} max={2} step={1} value={tactics.mentality} onChange={(v) => onChange({ ...tactics, mentality: v })} format={(v) => ["Park the bus", "Defensive", "Balanced", "Attacking", "All-out"][v + 2]} />
-          <Slider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={tactics.tempo} onChange={(v) => onChange({ ...tactics, tempo: v })} format={(v) => (v < 0.35 ? "Low" : v < 0.7 ? "Medium" : "High")} />
-          <Slider label={t("mgr.press")} min={0} max={1} step={0.05} value={tactics.press} onChange={(v) => onChange({ ...tactics, press: v })} format={(v) => (v < 0.35 ? "Deep block" : v < 0.7 ? "Medium" : "High press")} />
+          <Slider label={t("tac.mentality")} min={-2} max={2} step={1} value={tactics.mentality} onChange={(v) => onChange({ ...tactics, mentality: v })} format={(v) => mentalityWord(t, v + 2)} />
+          <Slider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={tactics.tempo} onChange={(v) => onChange({ ...tactics, tempo: v })} format={(v) => tempoWord(t, v)} />
+          <Slider label={t("mgr.press")} min={0} max={1} step={0.05} value={tactics.press} onChange={(v) => onChange({ ...tactics, press: v })} format={(v) => pressWord(t, v)} />
         </div>
         <p className="mt-3 text-xs text-muted-foreground">{t("mgr.instrHint")}</p>
       </Panel>
@@ -443,9 +452,6 @@ function Outlook({ career }: { career: CareerState }) {
 function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t: Tactics) => void }) {
   const { t } = useI18n();
   const p = matchPrep(career);
-  const ment = ["Park the bus", "Defensive", "Balanced", "Attacking", "All-out"];
-  const pressLabel = (v: number) => (v < 0.35 ? "Deep block" : v < 0.7 ? "Medium press" : "High press");
-  const tempoLabel = (v: number) => (v < 0.35 ? "Low" : v < 0.7 ? "Medium" : "High");
   const isCurrent = career.tactics.mentality === p.recommended.mentality && Math.abs(career.tactics.press - p.recommended.press) < 0.01 && Math.abs(career.tactics.tempo - p.recommended.tempo) < 0.01;
   const [odds, setOdds] = useState<MatchProbability | null>(null);
   const [oddsBusy, setOddsBusy] = useState(false);
@@ -480,9 +486,9 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
         <Panel className="p-4">
           <SectionTitle title={t("mgr.recommendedShape")} />
           <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
-            <Fact label={t("tac.mentality")} value={ment[p.recommended.mentality + 2]} />
-            <Fact label={t("mgr.press")} value={pressLabel(p.recommended.press)} />
-            <Fact label={t("mgr.tempo")} value={tempoLabel(p.recommended.tempo)} />
+            <Fact label={t("tac.mentality")} value={mentalityWord(t, p.recommended.mentality + 2)} />
+            <Fact label={t("mgr.press")} value={pressWord(t, p.recommended.press)} />
+            <Fact label={t("mgr.tempo")} value={tempoWord(t, p.recommended.tempo)} />
           </div>
           <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
             {p.rationale.map((r, i) => (
