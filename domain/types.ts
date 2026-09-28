@@ -96,12 +96,23 @@ export type MatchEventType =
   | "SAVE"
   | "VAR";
 
+// The shot a goal was scored with. The engine's two weight tables name a code from this list
+// and the row builder resolves it through `sim.shot.…`, so a new shot is a key decision rather
+// than a word typed into the engine — and `tsc` refuses a code the union does not carry. The
+// list is runtime data as well as a type because the i18n gate reads the value space off it,
+// which is what makes a seventh table entry fail until all three locales have its words.
+export type ShotType = "tap_in" | "close_range" | "header" | "left_foot" | "right_foot" | "volley" | "penalty";
+export const SHOT_TYPES: readonly ShotType[] = ["tap_in", "close_range", "header", "left_foot", "right_foot", "volley", "penalty"];
+
 export interface MatchEvent {
   minute: number;
   type: MatchEventType;
   side: "home" | "away";
   player: string;
-  detail?: string;
+  // M225. The goal line read `xG 0.31 · Right-foot curl` in every locale: a sentence the engine
+  // wrote, printed raw by the match page. It is a row now, like every other sentence the model
+  // hands the interface.
+  detail?: RowText;
 }
 
 export interface NewsArticle {

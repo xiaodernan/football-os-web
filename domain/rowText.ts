@@ -11,7 +11,7 @@
 import { ATTRIBUTE_KEYS, CATEGORIES, POSITION_GROUPS } from "./attributes";
 import { ARCHETYPE_KEYS } from "./playerDna";
 import { TRAJECTORIES } from "./careerArc";
-import { MODES, SEARCH_KINDS } from "./types";
+import { MODES, SEARCH_KINDS, SHOT_TYPES } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 export type RowVars = Record<string, string | number>;
@@ -27,8 +27,9 @@ export type Translate = (key: string, vars?: RowVars) => string;
 // key each (a row that compares two needs both), `focus` a comma-separated list of them,
 // `arch` and `arch2` one archetype key each (the DNA evolution row names both ends of it),
 // `kind` a retrieval entity kind, `traj` a career-arc trajectory, `cat`/`cat2` an attribute
-// category (the scout headline names two), and `goal`/`ageGroup` an onboarding choice.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "traj", "cat", "cat2", "goal", "ageGroup"];
+// category (the scout headline names two), `goal`/`ageGroup` an onboarding choice, and `shot`
+// the shot type the match engine scored a goal with.
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "traj", "cat", "cat2", "goal", "ageGroup", "shot"];
 
 function codeWord(code: string, t: Translate): string {
   // `focus` is the one variable that holds a list, so a comma-separated code list is
@@ -43,6 +44,7 @@ function codeWord(code: string, t: Translate): string {
   if ((SEARCH_KINDS as readonly string[]).includes(code)) return t(`ai.legend.${code}`);
   if ((TRAJECTORIES as readonly string[]).includes(code)) return t(`det.arc.${code}`);
   if ((CATEGORIES as readonly string[]).includes(code)) return t(`attr.${code}`);
+  if ((SHOT_TYPES as readonly string[]).includes(code)) return t(`sim.shot.${code}`);
   if (isGoalCode(code)) return t(`onb.goal.${code}`);
   if (isAgeGroupWord(code)) return t(`onb.age.${code}`);
   // An unknown code stays as written: printing `attr.name.foo` on screen would be a

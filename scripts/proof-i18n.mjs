@@ -558,6 +558,9 @@ const DYN_SITES = [
   { path: "domain/rowText.ts", expr: "code", prefix: "det.arc.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "onb.goal.", suffix: "" },
   { path: "domain/rowText.ts", expr: "code", prefix: "onb.age.", suffix: "" },
+  // M225: the shot a goal was scored with, resolved by the row builder rather than printed as
+  // the code the engine picked. The value space below is the union's own runtime list.
+  { path: "domain/rowText.ts", expr: "code", prefix: "sim.shot.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
@@ -750,6 +753,15 @@ const SPACES = new Map([
     // `film.stage.new_stage` to whoever is waiting on the analysis.
     name: "film pipeline stages",
     values: spaceOf("features/film/FilmRoom.tsx", /const STAGES = \[[^\]]*\]/, /"([a-z_]+)"/g),
+  }],
+  ["sim.shot.|code", {
+    // M225. The engine scores a goal with one of seven shot types, and the row builder resolves
+    // the code it picks through `sim.shot.…`. The value space is read off the union's runtime
+    // list in domain/types.ts — the same list the engine's two weight tables are typed against —
+    // so an eighth shot cannot ship with words missing in a locale, and a shot deleted from the
+    // model cannot leave its rows behind as keys no site can build.
+    name: "the match engine's shot types",
+    values: spaceOf("domain/types.ts", /export const SHOT_TYPES[^=]*=[\s\S]*?\];/, /"([a-z_]+)"/g),
   }],
   ["cmd.group.|group", S_CMD_GROUP],
 ]);
@@ -2542,13 +2554,18 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // English reference the drift check below holds `drill.*` against — the same reason
 // domain/attributes.ts has never reached zero. The leak was real and is fixed; the
 // ratchet measures a different thing.
-const DOMAIN_PROSE_CEILING = 256;
+// M225 published domain/matchEngine.ts's eight lines as rows — the three summary lines, the goal
+// line and the four shots it names — so the ceiling and that module's own cap both fall by eight.
+const DOMAIN_PROSE_CEILING = 248;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
 // them at 1, 3 and 5 "literals" — an ISO date builder, three €-format arms and five
 // scoreline templates), so pinning them now is free and stops a real sentence landing there.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts"];
+// M225 adds domain/matchEngine.ts: unlike the three format-only modules above it held real
+// sentences ("The midfield was finely balanced."), and they are rows now, so the module is
+// pinned at zero like the rest.
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -2566,7 +2583,7 @@ const PROSE_CAPS = {
   "domain/training.ts": 19,
   "domain/filmInsights.ts": 12,
   "domain/gap.ts": 0,
-  "domain/matchEngine.ts": 8,
+  "domain/matchEngine.ts": 0,
   "domain/careerArc.ts": 0,
   "domain/onboarding.ts": 6,
 };
@@ -2589,8 +2606,17 @@ for (const done of PROSE_ZERO) {
 }
 ok(`the zero list names modules that really are in the tree (${PROSE_ZERO.length})`,
   PROSE_ZERO.every((p) => domainFiles.includes(p.split("/")[1])));
-ok(`the scan is reading the modules that carry the debt (${debtFiles.length} of ${domainFiles.length} files, ${debtTotal} hits)`,
-  domainFiles.length >= 30 && debtFiles.length >= 10 && debtTotal >= 250);
+// M225 removed the two debt floors this clause used to carry (`debtFiles.length >= 10 &&
+// debtTotal >= 250`). Publishing the Match Engine's eight lines as rows took the file count to
+// 9 and the total to 248, and a floor on the quantity every milestone is trying to shrink goes
+// red while the scanner is working perfectly — the contradiction M173 and M220 had already
+// retired in the raw-UI census. What the two conjuncts stood for is measured where debt cannot
+// satisfy it: the classifier by PROSE_SAMPLES (five sentences and five formats, each asserted in
+// the direction it must land) and the total by the caps clause directly above, which pins the
+// count exactly instead of bounding it. The population floor stays, because it is a fact about
+// the tree rather than about the debt.
+ok(`the scan walks the whole domain population (${debtFiles.length} of ${domainFiles.length} files carry debt, ${debtTotal} hits)`,
+  domainFiles.length >= 30);
 
 // 31b. The exemption's one hole, closed by name. `data/` is out of scope above because it
 //      carries authored sample copy a reader expects to be prose — lesson texts, news

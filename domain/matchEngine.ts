@@ -1,5 +1,6 @@
 import { makeRng, rngInt, rngFloat, weightedPick, hashString } from "@/lib/rng";
-import type { MatchEvent, MatchEventType } from "./types";
+import type { MatchEvent, MatchEventType, ShotType } from "./types";
+import type { RowText } from "./rowText";
 
 // Deterministic match simulation: identical inputs + identical seed => identical
 // result (spec §21). It models team strength, tactics, home edge, fatigue, form,
@@ -48,7 +49,9 @@ export interface SimResult {
   awayGoals: number;
   timeline: MatchEvent[];
   stats: { home: SimTeamStats; away: SimTeamStats };
-  summary: string[];
+  // M225. Rows, not sentences: this array was the last place a domain module handed the
+  // interface English prose it had composed itself, and a screen cannot translate a string.
+  summary: RowText[];
 }
 
 function effStrength(t: TeamInput): number {
@@ -124,7 +127,7 @@ export function simulateMatch(input: SimInput): SimResult {
         type: "GOAL",
         side: isHome ? "home" : "away",
         player: scorer,
-        detail: `xG ${xg.toFixed(2)} · ${shotType(rng, xg)}`,
+        detail: { key: "sim.ev.goal", vars: { xg: xg.toFixed(2), shot: shotType(rng, xg) } },
       });
     } else if (rng() < 0.4) {
       events.push({ minute: c.minute, type: rng() < 0.5 ? "SAVE" : "SHOT", side: isHome ? "home" : "away", player: names[rngInt(rng, 0, names.length - 1)] });
@@ -173,18 +176,32 @@ export function simulateMatch(input: SimInput): SimResult {
     ratings: buildRatings(awayNames, ag, axg, rng, false),
   };
 
-  const summary = [
-    `${home.name} ${hg} – ${ag} ${away.name}`,
-    `xG ${hxg.toFixed(2)} – ${axg.toFixed(2)} · possession ${Math.round(possH)}% – ${100 - Math.round(possH)}%`,
-    mid > 1 ? `${home.name} controlled the middle of the pitch.` : mid < -1 ? `${away.name} won the midfield battle.` : `The midfield was finely balanced.`,
+  // The reader's three lines. The scoreline is a key rather than a `value` row because a locale
+  // may write a score differently — the clubs ride as variables, so nothing here freezes a
+  // language; `sim.sum.xg` carries "possession", which is the word this screen had in English;
+  // and the midfield line is one of three keys rather than a ternary of three sentences.
+  const summary: RowText[] = [
+    { key: "sim.sum.score", vars: { home: home.name, hg, ag, away: away.name } },
+    { key: "sim.sum.xg", vars: { hxg: hxg.toFixed(2), axg: axg.toFixed(2), hp: Math.round(possH), ap: 100 - Math.round(possH) } },
+    mid > 1
+      ? { key: "sim.sum.midHome", vars: { team: home.name } }
+      : mid < -1
+        ? { key: "sim.sum.midAway", vars: { team: away.name } }
+        : { key: "sim.sum.midEven" },
   ];
 
   return { seed: input.seed, homeGoals: hg, awayGoals: ag, timeline: events, stats: { home: statsHome, away: statsAway }, summary };
 }
 
-function shotType(rng: () => number, xg: number): string {
-  if (xg > 0.24) return weightedPick(rng, [["Tap-in", 3], ["Close range", 4], ["Header", 2]] as [string, number][]);
-  return weightedPick(rng, [["Left-foot drive", 4], ["Right-foot curl", 4], ["Volleys", 2], ["Penalty", 1]] as [string, number][]);
+// The two tables the engine draws a shot from. The weights are the model; the codes are copy,
+// and the words live in `sim.shot.…` in all three locales, so a shot with no word fails the i18n
+// gate instead of printing a code to a reader. The `ShotType` annotation is what makes a typo
+// here a compile error rather than a fallback to the raw code.
+const SHOT_HIGH_XG: readonly [ShotType, number][] = [["tap_in", 3], ["close_range", 4], ["header", 2]];
+const SHOT_LOW_XG: readonly [ShotType, number][] = [["left_foot", 4], ["right_foot", 4], ["volley", 2], ["penalty", 1]];
+
+function shotType(rng: () => number, xg: number): ShotType {
+  return weightedPick(rng, xg > 0.24 ? SHOT_HIGH_XG : SHOT_LOW_XG);
 }
 
 function addCards(events: MatchEvent[], rng: () => number, side: "home" | "away", fouls: number, names: string[]) {

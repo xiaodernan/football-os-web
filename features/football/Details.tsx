@@ -600,12 +600,13 @@ export function MatchDetail({ id }: { id: string }) {
 }
 
 function EventRow({ e, home, away }: { e: MatchEvent; home: string; away: string }) {
+  const { t } = useI18n();
   const glyph: Record<string, string> = { GOAL: "⚽", YELLOW: "🟨", RED: "🟥", SHOT: "🎯", SAVE: "🧤", VAR: "📺" };
   return (
     <li className="flex items-center gap-2 text-sm">
       <span className="w-9 text-right font-mono text-xs text-muted-foreground">{e.minute}'</span>
       <span>{glyph[e.type] ?? "•"}</span>
-      <span className="flex-1 truncate">{e.player}{e.detail ? <span className="text-muted-foreground"> — {e.detail}</span> : null}</span>
+      <span className="flex-1 truncate">{e.player}{e.detail ? <span className="text-muted-foreground"> — {rowLine(e.detail, t)}</span> : null}</span>
       <span className="text-[11px] text-muted-foreground">{e.side === "home" ? home : away}</span>
     </li>
   );

@@ -397,8 +397,17 @@ async function tryLoad(p) {
   }
   ok(`${events} events over a 400-match battery carry a real player name (${emptyPlayer} empty or undefined, ${scorers.size} distinct scorers${threw ? `, the engine threw: ${threw}` : ""}) — the away-indexed-by-home-length sites produced no visible damage only because both squads are 11`,
     emptyPlayer === 0 && events > 1000 && scorers.size > 100 && !threw);
-  ok(`that battery reproduces digest ${digest}: the fix was output-neutral, so any future change here is a change to the engine's draw ORDER (re-derive rather than bump)`,
-    digest === 966604149, String(digest));
+  // The digest folds JSON.stringify(SimResult), so it moves both when the engine draws
+  // differently AND when the shape it returns changes. M225 changed the shape on purpose:
+  // `summary` became rows and the goal `detail` a row, because the three lines were English
+  // composed in a domain module. Before re-deriving, that was checked to be shape-only, not
+  // draw order: rendering every result back to the old English through the EN column (whose
+  // sim.sum.*/sim.ev.goal rows are byte-identical to the old sentences) still folds to
+  // 966604149 — see dev/m225/rng-digest.mjs, which prints both numbers side by side. So this
+  // constant is the same battery over the new payload, and the instruction stands: a future
+  // move here is a change to the draw ORDER unless the same reconstruction says otherwise.
+  ok(`that battery reproduces digest ${digest}: the M225 re-derivation, taken only after re-rendering every result to the old English still folded to the pinned 966604149 (shape changed, draws did not)`,
+    digest === -691102317, String(digest));
 }
 
 await server.close();

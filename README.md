@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M224 (a few numbers in that range
+Work ships one milestone per commit and is currently at M225 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -4594,6 +4594,99 @@ relative-time census is blind to a duration computed in one function and printed
 the two `Slider` definitions (Manager OS, Simulation Lab) are still two copies of one control.
 Next: the queued items M218/M219 recorded — the cross-function display flow, and the `sentence`
 bucket's charging arm.
+
+### M225 — the match engine's own words are rows
+
+The Simulation Lab printed its result under a translated heading — `sim.matchSummary`, "Match
+summary" / 比赛摘要 — and the three lines beneath it were English in every locale, because the engine
+had typed them: `Arsenal 2 – 1 Chelsea`, `xG 1.84 – 0.97 · possession 58% – 42%`, `Arsenal controlled
+the middle of the pitch.` The goal line on the match page came from the same module
+(`features/football/Details.tsx:609`, `— xG 0.31 · Right-foot curl`). `domain/matchEngine.ts` held
+**8 prose literals** — its entire `PROSE_CAPS` allowance — and no gate could see what they became,
+because both audits look the other way: the raw-UI scan reads component *source* (a domain module is
+not JSX), and the row audits read *keys* (`{key}`, `{value}`). A module whose exported function returns
+`string` is invisible from both ends, which is why the fix is a type and not a sentence.
+
+**One row, two readings.** `SimResult.summary` is a `RowText[]` and `MatchEvent.detail` a `RowText`,
+so the producer has to say which of the two things each line is. The scoreline is a **key**, not a
+`{value}` row: a locale may write a score its own way, and the clubs ride as variables, so nothing in
+the engine freezes a language. The midfield line is one of three keys rather than a ternary of three
+sentences. The shot is a **code in the row and a word in each locale** — `sim.ev.goal` reads
+`xG {xg} · {shot}`, and the shot resolves through the row builder's `codeWord`, which is how `group`,
+`mode` and the archetypes already work. The code space is declared twice on purpose: as a `ShotType`
+union that types the engine's two weight tables (so a typo in a table is a compile error rather than
+English printed raw) and as the runtime `SHOT_TYPES` list the i18n gate reads its value space off — so
+an eighth shot cannot ship with words missing from a locale, and a shot deleted from the model cannot
+leave its rows behind as keys no site can build.
+
+**Thirteen keys × three locales, and the `en` column is byte-identical to what it replaced.**
+`sim.sum.score`, `sim.sum.xg`, `sim.sum.midHome`, `.midAway`, `.midEven`, `sim.ev.goal` and the seven
+`sim.shot.*` rows take the dictionary 1667 → **1680**. Unlike M224 — which changed three English words
+because one screen held a second name for a value the studio already named — this milestone is
+invisible to an English reader by construction: every `en` row is the exact string the engine used to
+compose. That is what makes the digest question below decidable rather than a matter of opinion.
+
+**Mutation witnesses: three arms, all caught, all restored.** (1) zh-CN loses `sim.shot.tap_in` —
+`zh-CN: no keys missing (1)` and `sim.shot.… · the match engine's shot types: all 7 values keyed in
+every locale (sim.shot.tap_in)`. (2) the engine goes back to composing English, in the *legal* row
+shape `{ value: "The midfield was finely balanced." }` — refused by four clauses at once
+(`every row text a domain module hands the screen is a real key with exactly its placeholders`,
+`domain prose still on keys has not grown (249 literals across 10 files, ceiling 248)`,
+`no module's own prose debt has grown (domain/matchEngine.ts 1>0)`, and the reachability clause naming
+`sim.sum.midEven`). (3) the `sim.shot.` dynamic site is undeclared — `81 sites / 1 undeclared /
+0 stale`, and the reachability clause lists all seven keys.
+
+**The second arm found a real hole in this milestone's own clause, which is the whole reason to run
+one.** Its first run *escaped* `proof-matchengine` entirely. The clause asserted that neither Chinese
+summary carries an English word of the engine's own, but it read **one** match — and the midfield is
+not drawn: `mid` is the two squads' difference (`domain/matchEngine.ts:72`), so a fixed pairing always
+takes the same one of the three sentences, and that fixture's seed was taking `midHome`. A witness that
+only proves which branch the fixture happened to land on is worth nothing, so the clause now sweeps
+**300 squads across the midfield spread** and reports `3 of 3 branches seen: sim.sum.midAway,
+sim.sum.midEven, sim.sum.midHome; 0 bad`. Re-run against the arm it reports `2 of 3 branches seen … 60
+bad`. (The first draft of the witness passed while the arm was live; it was the arm that said so.)
+
+**The digest was re-derived, not bumped.** `proof-rng` folds `JSON.stringify(SimResult)` for a
+400-match battery into one pinned constant, precisely so a future change to the engine's draw order
+cannot pass unnoticed. Rows are a different payload from sentences, so the constant legitimately moved
+— and "legitimately" is a claim, so it was tested instead of asserted: rendering every result back to
+the old English through the `en` column (whose new rows are byte-identical to the old sentences, see
+above) and re-folding *that* still gives the old pinned **966604149**, while the shipped payload folds
+to **-691102317** (`dev/m225/rng-digest.mjs` prints both side by side). The engine draws the same
+numbers in the same order — the shot is drawn exactly where it always was, immediately after the xG
+string it is printed beside — and only the representation changed. The clause's instruction stands
+unchanged: a future move here is a change to the draw ORDER unless the same reconstruction says
+otherwise.
+
+**A floor that fails when the work succeeds is not a floor.** Publishing those eight literals as rows
+took the domain debt to 248 across 9 files, which turned `proof-i18n`'s last clause red:
+`domainFiles.length >= 30 && debtFiles.length >= 10 && debtTotal >= 250`. The count was pinned to the
+very quantity the arc exists to shrink, so the clause would have gone red on success and stayed green
+through a regression. It is now a population floor only (`domainFiles.length >= 30`), with the
+classifier held by `PROSE_SAMPLES` and the total held by the exact-caps clause above it. This is the
+same contradiction M173 and M220 retired in the raw-UI census; the domain ledger simply had not been
+read that way yet.
+
+Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, `proof-i18n`
+**240/240** at **1680 keys · 3 locales**, `domain/matchEngine.ts` capped at **0** with the domain
+ceiling at **248 across 9 files** (`248 capped vs 248 counted`), reachability `143 reader files, none`
+over `1472 static/quoted + 236 dynamic`. `proof-matchengine` **30/30** (five clauses of this milestone
+among them), `proof-career` 183/183, `proof-matchprobability` 33/33, `proof-timeline` 91/91,
+`proof-coverage` 15/15. `proof-rng` sits at **51/52**: this milestone's battery clause is green, and the
+one red clause — `no app source draws unseeded randomness` — names an uncommitted `lib/ids.ts` that
+another workstream is editing in the same tree, not anything this change touched. The full suite was
+**not** re-run: the project's standing instruction is not to spend the time on a full regression for
+every change, so the evidence here is that targeted set plus `tsc` and `build`, named as what it is.
+
+**What is still not claimed**: `data/intelligence.ts`'s evidence facts and answers are still English
+behind a 2-literal cap (#165, `1 literals, ceiling 2`); `data/video.ts:62`'s analysis sentence is still
+printed raw through `report.summary` on the Features page and AI Studio; a `{value}` row can still hold
+prose in principle — inside `domain/` what stops it is the counted cap on the file, not the union, and
+outside `domain/` nothing counts at all; and `features/manager/ManagerOS.tsx:167` still reads
+`label="xG (us)"` beside `:168`'s `mgr.xgThem`, which the scan cannot see because `hasProse` wants
+three consecutive Latin letters and `xG` is two — a two-letter blind spot left unfixed here because the
+key it needs is a translation and the letter bar is a scan change, each of them its own milestone. Next:
+the `#150/#165` prose line — `data/ai.ts`'s composed sentences and `data/intelligence.ts`.
 
 ### M227 — `typeof localStorage` is not a safety check, and both root providers were reading it
 
