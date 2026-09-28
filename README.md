@@ -4044,6 +4044,86 @@ English word inside a sentence a person reads); the 46 raw-UI debt lines in `fea
 the `S${Date.now()…}` plan-id collision; `lib/hooks.ts`/`theme.tsx`/`utils.ts` exemptions; the
 populated-state browser walk; and the untracked `dev/` scratch.
 
+### M216 — tomorrow is a day, not an hour count
+
+`relativeDay` was M214's door and it inherited one number from the code it replaced: `Math.round`
+over elapsed 24-hour blocks, gated at `|d| > 1`. A reader does not count hours since the last
+midnight, they count the days the wall calendar shows, so the door printed a bare clock time for
+anything the rounding had not finished a day of. Measured against the shipped rule at the anchors the
+new case table uses: an instant **tomorrow at 00:30** is `0` elapsed days whenever this runs, so the
+old boundary answered with a clock time — tomorrow read as today — while a fixture 48 hours off was
+only just `in 2d`. The dashboard's next-fixture line and its ±2-day "today" panel (`Dashboard.tsx:51`
+selects those) both go through this door, so both were showing a day that was not today as if it were.
+
+**Now the arithmetic runs between local midnights.** `localMidnight(value)` in `i18n/format.ts`
+snaps an instant to the day it fell on and the difference is rounded, because a DST day is 23 or 25
+hours and the raw quotient would otherwise come back `0.958` or `1.042`. The answers are: more than a
+day ahead → `time.inDays` with the whole count; exactly one day ahead → **`time.tomorrow`**; the
+reader's own day → the instant's clock time, formatted their way; one day back →
+**`time.yesterday`**; further back → `time.agoDay`. Two new rows per locale (`1598 keys · 3 locales`
+in the run above), and the direction words carry no variable on purpose — the day someone calls
+yesterday is a word, not a measurement they want counted.
+
+**The case table had to be rebuilt to test this honestly.** M214's cases were elapsed offsets
+(`1.4 * DAY_MS`, `-20 / 24`), and with a calendar boundary an offset's answer depends on the time the
+suite happens to start — the same assertion would pass at 10:00 and fail at 23:30. The 11 cases are
+now *date anchors*: local midnight plus a day shift plus an hour, so `dayAt(1, 0)` is tomorrow at
+00:30 whenever it executes. Two of them are discriminators that the offset table could not express:
+`[1, 0]` (calendar +1, elapsed 0) and `[2, 0]` (calendar +2, elapsed 1 or 2 depending on the clock),
+and the clause prints what the elapsed rule says for the straddle anchor in its own name — this run:
+`the elapsed-24-hour rule it replaced still calls tomorrow at 00:30 "0 days" (0d ago)` — so the
+milestone's cause stays measured rather than remembered.
+
+**One claim is structural rather than textual, on purpose.** The direction words must differ in every
+locale and must not contain a digit. The alternative — pinning `Tomorrow` / `明天` / `昨天` into the
+proof — would give the suite a second copy of the dictionary to drift, which is the failure mode
+M215's derived umbrella clause was written to avoid. `m216d` shows the structural form bites: making
+`time.tomorrow` read `Yesterday` reddens the suite on `en: one word for both directions`, with no
+word list anywhere in the gate.
+
+**The census widened because the door moved.** M214's `RELATIVE_MATH` required `Date.now()` and a
+parsed `getTime()` to be adjacent, which the door satisfied until it started calling both operands
+through `localMidnight(…)` — the wrapped form dropped the door out of its own population, and a
+census that silently excludes its subject reports a clean number for the wrong reason. The pattern now
+tolerates call wrappers within one statement (`[^;\n]*?` between the operands and the `-`), which
+leaves the population measured rather than assumed: **2 sites**, `features/community/CommunityHub.tsx`
+and `i18n/format.ts`, both row-typed, and the alias case (`const now = Date.now()` subtracted from a
+parsed instant, as at `Dashboard.tsx:51`) is still out of it — recorded rather than quietly widened,
+because tolerating aliases would charge a selection filter whose value is never displayed, and the
+rule needs a shape-based "reaches a displayed string" discriminator first (queued).
+
+**Mutation witness.** Five new arms: `m216a` moves the tomorrow arm one day late, `m216b` puts the
+elapsed-24-hour boundary back, `m216c` lets the clock-time arm swallow yesterday, `m216d` collapses
+the two direction words, `m216e` blinds the census pattern. Five existing arms re-tipped because the
+door's lines changed: `m214a` (the day branch starting one day early), `m214b` (the day unit doubled
+— truncation stopped being observable once the operands are whole midnights, which is itself a
+finding: a rounding mutation cannot fire on day-granular arithmetic), `m214c` (past handed the future
+word), `m214d` (`RowText` dropped from the signature), `m214i` (one subtraction order only). The ten
+ran together first: `10/10 caught · 0 missed · 0 crashed · 0 invalid needles · 0 restore failures`,
+each naming the clause and the case it broke (`m216b`: `day 1 @00:30 -> value (wanted time.tomorrow)`).
+The standing harness of **56 arms** reports `56/56 cases caught (56/56 ran) · 0 missed · 0 crashed ·
+0 invalid needles · 0 restore failures`, controls green before and after. `proof-i18n` is
+**231** checks with the plant count now **5** and the door's case table **11 anchors × 3 locales**.
+
+Measured on the working copy: `npm run build` (which runs `tsc --noEmit` first) exit 0 with no error
+lines, suite **37/37 proof scripts proven · 1961/1961 checks counted · exit 0**, no `UNVERIFIED` line
+and no retry. The total is unchanged from M215 because this milestone rewrote 26c's case table rather
+than adding checks to it — the same 231 i18n clauses now cover more behaviour, which is the point of a
+case table. On the clean plane (`git archive HEAD` plus this milestone's
+three source files, `node_modules` joined, `--max-old-space-size=4096`): `tsc --noEmit` with no output
+and exit 0, `npm run build` exit 0, suite **37/37 proof scripts proven · 1961/1961 checks counted ·
+exit 0**, no `UNVERIFIED` line — and, unlike M215's plane leg, no retry line either, which is the
+only way to tell a quiet tree from a lucky one.
+
+**Still outstanding**: the alias hole above; `time.inDays`/`time.agoDay` still print compact English
+abbreviations (`in 3d`, `3d ago`) that the community feed shares — the dashboard now reads them
+beside `Tomorrow`, which is consistent but not pretty, and unifying them means choosing a compactness
+policy per locale rather than editing rows; the four displayed English sample prompts (M217); the
+`data/ai.ts` prose ledger and the `attributeLabel()` calls inside it (`archetypeLabelEn` is now a
+*declared* model-input door, but 12 sentences a person reads still interpolate English words); the 46
+raw-UI debt lines in `features/sim/SimulationLab.tsx`; the plan-id collision; the populated-state
+browser walk; and the untracked `dev/` scratch.
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a

@@ -20,7 +20,16 @@ export function formatDate(
   return new Intl.DateTimeFormat(locale, opts).format(new Date(value));
 }
 
-/** Measure one instant against now, and hand the screen a ROW rather than a sentence.
+// The local midnight an instant fell on — the day the reader's wall calendar shows. A DST day is
+// 23 or 25 hours, so whoever differences these rounds.
+const localMidnight = (value: string | number | Date): number => {
+  const d = new Date(value);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+};
+
+/** Measure one instant against the reader's own today, and hand the screen a ROW rather than a
+ *  sentence.
  *
  *  A helper that returns `string` is the one shape the raw-UI scan cannot see: the words
  *  are typed here and printed from somewhere else, so no position it reads carries a
@@ -29,13 +38,21 @@ export function formatDate(
  *  (`-2d ago`), and both branches' words were English for a reader in either Chinese
  *  locale while the clock branch beside them followed the locale. So the day count is
  *  always a positive whole number here and the direction lives in the key it rides.
- *  Within a day of now there is no honest day count, and the instant's own clock time,
- *  formatted the reader's way, is what answers. */
+ *
+ *  M216 changed *which* day count that is. The shipped boundary was elapsed 24-hour blocks, so
+ *  a fixture tomorrow at 00:30 was "0 days away" and printed only a clock time: tomorrow read
+ *  as today. A reader does not count hours since the last midnight, they count the days the
+ *  wall calendar shows, so the arithmetic now runs between the two local midnights (rounded,
+ *  because a DST day is 23 or 25 hours) and ±1 day has its own word. Within the reader's own
+ *  day there is still no honest day count, and the instant's clock time — formatted their way —
+ *  answers. */
 export function relativeDay(locale: Locale, iso: string): RowText {
-  const d = Math.round((new Date(iso).getTime() - Date.now()) / 86_400_000);
+  const d = Math.round((localMidnight(new Date(iso)) - localMidnight(Date.now())) / 86_400_000);
   if (d > 1) return { key: "time.inDays", vars: { n: d } };
-  if (d < -1) return { key: "time.agoDay", vars: { n: -d } };
-  return { value: formatDate(locale, iso, { hour: "2-digit", minute: "2-digit" }) };
+  if (d === 1) return { key: "time.tomorrow" };
+  if (d === 0) return { value: formatDate(locale, iso, { hour: "2-digit", minute: "2-digit" }) };
+  if (d === -1) return { key: "time.yesterday" };
+  return { key: "time.agoDay", vars: { n: -d } };
 }
 
 /** One English row of the dictionary, for text that is model input rather than copy.

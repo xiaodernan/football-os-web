@@ -1572,6 +1572,10 @@ const en: Dict = {
   // The two day words are shared, not the community's: `relativeDay` in i18n/format.ts
   // names both of them and the dashboard's fixture/growth line prints what it hands back,
   // while the feed's own helper names the past one. A word two surfaces say is one row.
+  // `time.tomorrow` / `time.yesterday` answer ±1 calendar day and carry no variable on purpose:
+  // the day a reader calls "yesterday" is a word, not a measurement they want counted.
+  "time.tomorrow": "Tomorrow",
+  "time.yesterday": "Yesterday",
   "time.agoDay": "{n}d ago",
   "time.inDays": "in {n}d",
   "comm.title": "Community",
@@ -3179,6 +3183,8 @@ const zhCN: Dict = {
   "comm.agoNow": "刚刚",
   "comm.agoMin": "{n} 分钟前",
   "comm.agoHour": "{n} 小时前",
+  "time.tomorrow": "明天",
+  "time.yesterday": "昨天",
   "time.agoDay": "{n} 天前",
   "time.inDays": "{n} 天后",
   "comm.title": "社区",
@@ -4715,6 +4721,8 @@ const zhTW: Dict = {
   "comm.agoNow": "剛剛",
   "comm.agoMin": "{n} 分鐘前",
   "comm.agoHour": "{n} 小時前",
+  "time.tomorrow": "明天",
+  "time.yesterday": "昨天",
   "time.agoDay": "{n} 天前",
   "time.inDays": "{n} 天後",
   "comm.title": "社群",

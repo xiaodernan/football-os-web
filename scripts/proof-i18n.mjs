@@ -1923,7 +1923,7 @@ ok(`the row-text scan is reading modules that actually carry the union (${ROW_FI
 //      over every walked file INCLUDING `i18n/`, which `appSrc` above deliberately drops —
 //      the door this clause exists to police lives there, and a population that skipped its
 //      own subject would report a clean census for the wrong reason.
-const RELATIVE_MATH = /Date\.now\(\)\s*-\s*new Date\([^)]*\)\.getTime\(\)|new Date\([^)]*\)\.getTime\(\)\s*-\s*Date\.now\(\)/;
+const RELATIVE_MATH = /Date\.now\(\)[^;\n]*?-\s*[^;\n]*?new Date\([^)]*\)|new Date\([^)]*\)[^;\n]*?-\s*[^;\n]*?Date\.now\(\)/;
 // The enclosing declaration is found by walking back to the nearest top-level `function`.
 // A multi-line signature is not resolved here: it comes back unattributed and is counted as
 // an offender, which is the loud direction, so this cannot silently approve a site it failed
@@ -1950,12 +1950,17 @@ const REL_PLANTS = [
   ["planted string-returning relative helper", "function plantedRel(iso: string): string {\n  const ms = Date.now() - new Date(iso).getTime();\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", true],
   ["planted row-returning relative helper", "function plantedRow(iso: string): RowText {\n  const ms = Date.now() - new Date(iso).getTime();\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", false],
   ["planted relative math outside any declaration", "const __ms = Date.now() - new Date(\"2026-01-01\").getTime();\nexport const __n = Math.round(__ms / 86400000);\n", true],
+  // M216 added the last two: the door now differences two local midnights, so the arithmetic
+  // reaches `Date.now()` through a call wrapper. A pattern that stops at `)` would lose its own
+  // subject, and the only way to know that is a plant whose wrapper is real.
+  ["planted wrapped arithmetic in a string-returning helper", "function plantedWrapped(iso: string): string {\n  const ms = __mid(new Date(iso)) - __mid(Date.now());\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", true],
+  ["planted wrapped arithmetic in a row-returning helper", "function plantedWrappedRow(iso: string): RowText {\n  const ms = __mid(new Date(iso)) - __mid(Date.now());\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", false],
 ];
 const plantVerdicts = REL_PLANTS.map(([name, src, wantRefused]) => {
   const v = rowTypedAt(src, src.search(RELATIVE_MATH));
   return [name, !!v.row === !wantRefused ? null : `${name} ${v.name ?? "UNATTRIBUTED"} row=${v.row} want=${wantRefused ? "refused" : "accepted"}`];
 }).filter(([, bad]) => bad);
-ok(`the three planted relative-time shapes are refused or accepted exactly as declared (${REL_PLANTS.length} plants, ${plantVerdicts.length ? plantVerdicts.map(([, b]) => b).join(" | ") : "all as predicted"})`,
+ok(`the planted relative-time shapes are refused or accepted exactly as declared (${REL_PLANTS.length} plants, ${plantVerdicts.length ? plantVerdicts.map(([, b]) => b).join(" | ") : "all as predicted"})`,
   plantVerdicts.length === 0);
 ok(`every helper that measures an instant against now hands back a row (${relSites.length} sites: ${relSites.map(([p]) => p).join(", ") || "NONE — the population read nothing"}), and the door this clause exists to police is inside it (${relSites.some(([p]) => p.startsWith("i18n/")) ? "yes" : "no"})`,
   relOffenders.length === 0 && relSites.length >= 2 && allSrc.length > appSrc.size && relSites.some(([p]) => p.startsWith("i18n/")));
@@ -1968,29 +1973,64 @@ ok(`every helper that measures an instant against now hands back a row (${relSit
 //      sentence that had one.
 const { relativeDay, translate } = await server.ssrLoadModule("/i18n/index.tsx");
 const DAY_MS = 86400000;
+// Anchored to the reader's wall clock, not to elapsed 24-hour blocks. The door counts calendar
+// days since M216, and an offset like `1.4 * DAY_MS` answers differently at 23:30 than at 10:00,
+// so a case table built from offsets would let the start time of the run decide the result.
+// `dayAt(1, 0)` is tomorrow at 00:30 whenever this executes — the case that separates the two
+// rules, because the elapsed one has not finished a day yet.
+const dayAt = (shift, hour) => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + shift);
+  d.setHours(hour, 30, 0, 0);
+  return d.toISOString();
+};
 const REL_CASES = [
-  [3, "time.inDays"], [2, "time.inDays"], [1.4, null], [-20 / 24, null],
-  [-2, "time.agoDay"], [-5.6, "time.agoDay"], [-40, "time.agoDay"],
+  [0, 9, null], [0, 23, null],
+  [1, 0, "time.tomorrow"], [1, 12, "time.tomorrow"], [1, 23, "time.tomorrow"],
+  [-1, 0, "time.yesterday"], [-1, 23, "time.yesterday"],
+  [2, 0, "time.inDays"], [5, 12, "time.inDays"],
+  [-2, 0, "time.agoDay"], [-40, 9, "time.agoDay"],
 ];
 const oldRelTime = (d) => `${d > 0 ? "in " : ""}${d}d${d > 0 ? "" : " ago"}`;
+const elapsedRule = (iso) => Math.round((new Date(iso).getTime() - Date.now()) / DAY_MS);
 const relBad = [];
-for (const [off, wantKey] of REL_CASES) {
-  const iso = new Date(Date.now() + off * DAY_MS).toISOString();
+for (const [shift, hour, wantKey] of REL_CASES) {
+  const iso = dayAt(shift, hour);
   const row = relativeDay("en", iso);
   const key = "key" in row ? row.key : null;
   const n = "vars" in row && row.vars ? row.vars.n : null;
-  if (key !== wantKey) relBad.push(`${off}d -> ${key ?? "value"} (wanted ${wantKey ?? "value"})`);
-  if (key && (!Number.isInteger(n) || n <= 0 || n !== Math.round(Math.abs(off))))
-    relBad.push(`${off}d -> n=${n} is not the whole positive day count`);
-  if (!key && !("value" in row)) relBad.push(`${off}d -> neither a key nor a value`);
+  const where = `day ${shift} @${String(hour).padStart(2, "0")}:30`;
+  if (key !== wantKey) relBad.push(`${where} -> ${key ?? "value"} (wanted ${wantKey ?? "value"})`);
+  if (wantKey === "time.tomorrow" || wantKey === "time.yesterday") {
+    if (n !== null) relBad.push(`${where} -> a direction word carrying n=${n}`);
+  } else if (key && (!Number.isInteger(n) || n <= 0 || n !== Math.abs(shift))) {
+    relBad.push(`${where} -> n=${n} is not the whole positive day count`);
+  }
+  if (!key && !("value" in row)) relBad.push(`${where} -> neither a key nor a value`);
   for (const locale of ["en", "zh-CN", "zh-TW"]) {
-    const line = key ? translate(locale, key, { n }) : relativeDay(locale, iso).value;
-    if (/-\d/.test(line)) relBad.push(`${locale} ${off}d prints "${line}"`);
-    if (locale !== "en" && /\b(in|ago)\b/.test(line)) relBad.push(`${locale} ${off}d speaks English: "${line}"`);
+    const line = key ? translate(locale, key, row.vars) : relativeDay(locale, iso).value;
+    if (/-\d/.test(line)) relBad.push(`${locale} ${where} prints "${line}"`);
+    if (/\{[a-z]/i.test(line)) relBad.push(`${locale} ${where} left a hole: "${line}"`);
+    if (locale !== "en" && /\b(in|ago)\b/.test(line)) relBad.push(`${locale} ${where} speaks English: "${line}"`);
   }
 }
-ok(`the door prints a positive day count in the reader's own words over ${REL_CASES.length} planted offsets × 3 locales (${relBad.slice(0, 4).join(" | ") || "clean"}), and the same predicate refuses the sentence the dashboard shipped until M214 (${oldRelTime(-2)} / ${oldRelTime(3)})`,
-  relBad.length === 0 && /-2d ago/.test(oldRelTime(-2)) && /in 3d/.test(oldRelTime(3)) &&
+// The two direction words are read out of the table rather than typed into this file, so the
+// claim is structural — tomorrow and yesterday must not collapse into one word, and neither may
+// smuggle a number into what is supposed to be a word. Copying the dictionary's text here would
+// give the suite a second place for the same words to drift.
+const straddle = dayAt(1, 0);
+const shapeBad = [];
+for (const locale of ["en", "zh-CN", "zh-TW"]) {
+  const up = translate(locale, "time.tomorrow");
+  const down = translate(locale, "time.yesterday");
+  if (up === down) shapeBad.push(`${locale}: one word for both directions`);
+  if (/\d/.test(up) || /\d/.test(down)) shapeBad.push(`${locale}: a direction word with a number in it`);
+}
+ok(`the door counts the reader's calendar days over ${REL_CASES.length} planted date anchors × 3 locales (${relBad.slice(0, 3).join(" | ") || "clean"}; ${shapeBad.join(" | ") || "the two direction words differ"}), while the elapsed-24-hour rule it replaced still calls tomorrow at 00:30 “${elapsedRule(straddle)} days” (${oldRelTime(elapsedRule(straddle))})`,
+  relBad.length === 0 && shapeBad.length === 0 && !(elapsedRule(straddle) > 1) &&
+  "key" in relativeDay("en", straddle) && relativeDay("en", straddle).key === "time.tomorrow" &&
+  /-2d ago/.test(oldRelTime(-2)) && /in 3d/.test(oldRelTime(3)) &&
   !/-\d/.test(translate("en", "time.agoDay", { n: 2 })) &&
   !/\b(in|ago)\b/.test(translate("zh-CN", "time.inDays", { n: 3 })));
 
