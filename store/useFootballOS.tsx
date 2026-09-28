@@ -31,6 +31,7 @@ import type { RowText } from "@/domain/rowText";
 import { buildLoad } from "@/domain/load";
 import { coachProvider, repairPlanPrompts, type PlanInput } from "@/data/ai";
 import { OS_STATE_KEY } from "@/domain/localData";
+import { newId } from "@/lib/ids";
 
 export const STORAGE_KEY = OS_STATE_KEY;
 
@@ -125,7 +126,7 @@ function reducer(state: OsState, action: Action): OsState {
         progress: [{ date: new Date().toISOString(), overall, xp: action.profile.xp }],
         memory: [
           {
-            id: `mem-${Date.now()}`,
+            id: newId("mem-"),
             kind: "profile",
             text: profileMemory(action.mode, action.profile.positionGroup, action.profile.goal),
             at: new Date().toISOString(),
@@ -142,7 +143,7 @@ function reducer(state: OsState, action: Action): OsState {
         sessions: [action.plan.session, ...state.sessions.filter((s) => s.id !== action.plan.session.id)],
         memory: [
           {
-            id: `mem-${Date.now()}`,
+            id: newId("mem-"),
             kind: "coach" as const,
             text: coachMemory(action.plan.focus, action.plan.session.targetMinutes),
             at: new Date().toISOString(),
@@ -196,7 +197,7 @@ function reducer(state: OsState, action: Action): OsState {
         ).map((g) => ({ ...g, done: g.done || g.current >= g.target })),
         memory: [
           {
-            id: `mem-${Date.now()}`,
+            id: newId("mem-"),
             kind: "training" as const,
             text: trainingMemory(session.title, awarded, rating, newLevel),
             at: new Date().toISOString(),
@@ -305,9 +306,12 @@ export function OsProvider({ children }: { children: ReactNode }) {
           level: 1,
           createdAt: new Date().toISOString(),
         };
+        // Both starter goals are minted the same tick, which is exactly the case the
+        // clock could not tell apart: the second id used to be `Date.now() + 1` to keep
+        // the pair distinct. The sequence in @/lib/ids does that now.
         const goals: Goal[] = [
-          { id: `g-${Date.now()}`, title: countGoalTitle("xp", 500), metric: "xp", target: 500, current: 0, createdAt: new Date().toISOString(), done: false },
-          { id: `g-${Date.now() + 1}`, title: countGoalTitle("sessions", 5), metric: "sessions", target: 5, current: 0, createdAt: new Date().toISOString(), done: false },
+          { id: newId("g-"), title: countGoalTitle("xp", 500), metric: "xp", target: 500, current: 0, createdAt: new Date().toISOString(), done: false },
+          { id: newId("g-"), title: countGoalTitle("sessions", 5), metric: "sessions", target: 5, current: 0, createdAt: new Date().toISOString(), done: false },
         ];
         dispatch({ type: "ONBOARD", mode: input.mode, profile, goals });
       },
@@ -342,7 +346,7 @@ export function OsProvider({ children }: { children: ReactNode }) {
       },
       setFavorite: (key, id) => dispatch({ type: "FAVORITE", key, id }),
       toggleWatch: (playerId) => dispatch({ type: "WATCH", playerId }),
-      addGoal: (g) => dispatch({ type: "GOAL_ADD", goal: { ...g, id: `g-${Date.now()}`, createdAt: new Date().toISOString(), done: false } }),
+      addGoal: (g) => dispatch({ type: "GOAL_ADD", goal: { ...g, id: newId("g-"), createdAt: new Date().toISOString(), done: false } }),
       toggleGoal: (id) => dispatch({ type: "GOAL_TOGGLE", id }),
       removeGoal: (id) => dispatch({ type: "GOAL_REMOVE", id }),
       reset: () => {

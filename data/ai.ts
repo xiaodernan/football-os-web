@@ -6,6 +6,7 @@ import { computeDna, archetypeLabelEn } from "@/domain/playerDna";
 import { englishWord } from "@/i18n/format";
 import { buildLoad, type LoadZone } from "@/domain/load";
 import { makeRng, hashString } from "@/lib/rng";
+import { newId } from "@/lib/ids";
 
 // ---- Provider abstraction (spec §6, §50, §57) ----
 // The system is never hard-wired to one model. Today we ship a deterministic
@@ -92,7 +93,9 @@ class DeterministicCoachProvider implements CoachProvider {
     const seed = `coach-${hashString(ask + input.profile.displayName)}`;
     const dna = computeDna(input.profile.attributes);
     const session = buildSession({
-      id: `S${Date.now().toString(36).slice(-5)}`,
+      // A fresh handle per plan: two plans are two events even when the clock wraps or
+      // the ask repeats, so neither can take the other's id (see @/lib/ids).
+      id: newId("S"),
       date: new Date().toISOString(),
       targetMinutes,
       focusAttributes: effFocus.length ? effFocus : ["first_touch"],
@@ -165,7 +168,7 @@ class DeterministicCoachProvider implements CoachProvider {
     ];
 
     return {
-      id: `P${makeRng(seed)().toString(36).slice(2, 7)}`,
+      id: newId("P"),
       createdAt: new Date().toISOString(),
       prompt: input.prompt,
       diagnosis: diagnosisParts,

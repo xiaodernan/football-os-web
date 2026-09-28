@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "@/lib/router";
+import { newId } from "@/lib/ids";
 import { formatDate, useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { videoProvider } from "@/data/video";
@@ -70,7 +71,7 @@ export function FilmRoom() {
         }
         const fileId = `${file.name}-${file.size}`;
         const report = await videoProvider.analyze({ fileId, fileName: file.name, sizeBytes: file.size, attrs: state.profile.attributes });
-        const clip: FilmClip = { clipId: `${Date.now()}`, addedAt: new Date().toISOString(), report };
+        const clip: FilmClip = { clipId: newId("clip-"), addedAt: new Date().toISOString(), report };
         setClips((c) => [clip, ...c]);
         setSelected(clip.clipId);
         toast.success(t("film.toastAnalysed"));

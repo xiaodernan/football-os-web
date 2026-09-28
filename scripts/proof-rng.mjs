@@ -6,6 +6,7 @@
 // from-spec FNV-1a implementation, the generator's state and seed-collapse behaviour, the exact
 // index math of every helper at the boundary draws, the weight intervals, and the two claims the
 // app as a whole rests on (no unseeded draw anywhere, and no export nobody calls).
+// (M226 restated the first half: see 6b — the one unseeded draw in the tree mints an id.)
 //
 // Where an expectation is a NUMBER it is measured here and printed in the clause name, because
 // the runner only shows detail on failure. Where behaviour is unreachable through the shipped
@@ -16,6 +17,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, relative } from "node:path";
 import { execFileSync } from "node:child_process";
+import { normalize } from "./lib/rawUiScan.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -290,11 +292,76 @@ ok(`lib/rng.ts declares ${DECLARED.length} exports and the loaded module offers 
   ok(`the two functions this milestone removed are gone, not hidden: shuffle=${String(R.shuffle)} · seededAttribute=${String(R.seededAttribute)} (measured 0 call sites repo-wide before removal)`,
     R.shuffle === undefined && R.seededAttribute === undefined);
 }
+
+// ---------------------------------------------------------------------------
+// 6b · unseeded randomness: content is refused, the one identity draw is declared
+// ---------------------------------------------------------------------------
+// Until M226 this clause read "no app source draws unseeded randomness", and it was true for the
+// reason it was written: in a Demo Mode app every draw is supposed to reproduce from a seed, so a
+// stray `Math.random()` would be a simulation nobody can re-run. M226 put one unseeded draw in the
+// tree on purpose — `lib/ids.ts` salts an id with a number drawn once per module instance, so two
+// instances (two tabs, or a reload that restored rows minted before it) reaching the same sequence
+// in the same millisecond cannot mint the same handle. That number is deliberately NOT reproducible
+// and nothing computes with it: it is an id's uniqueness, the opposite of a content draw. Deleting
+// the draw would delete the guarantee; hiding it behind another spelling (`crypto.getRandomValues`
+// walked past the old regex untouched) would delete the guarantee *and* the gate. So the census
+// classifies instead of matching: a site is CONTENT unless it is the declared identity site, content
+// sites are refused in every file, the identity site is pinned to one file with an exact count of
+// one (a declared row that no longer matches a site is red, so the exception cannot go stale), and
+// the deterministic core — domain/ and data/ — may carry neither, whatever any ledger says.
+const IDENTITY_SOURCES = {
+  "lib/ids.ts": "one per-instance salt, read only by newId(): an id's uniqueness, never a number anything computes with",
+};
+// The sources, spelled out. A census that only knows the word `Math.random(` approves three other
+// ways of drawing one: the bracket form and inner whitespace are legal JS, and the two WebCrypto
+// doors are exactly what a "just rename it" fix would reach for. What this cannot see is an aliased
+// receiver (`const c = globalThis.crypto`) — said here rather than implied by a green line.
+const UNSEEDED_SOURCES = [
+  /(?:^|[^\w$.])Math\s*(?:\.\s*random|\[\s*["'`]random["'`]\s*\])\s*\(/g,
+  /(?:^|[^\w$.])crypto\s*\.\s*(?:getRandomValues|randomUUID)\s*\(/g,
+];
+const drawSites = (src) => UNSEEDED_SOURCES.flatMap((re) => [...src.matchAll(re)].map((m) => m[0].trim()));
 {
-  const random = [];
-  for (const f of FILES) if (/Math\.random\s*\(/.test(readFileSync(join(root, f), "utf8"))) random.push(f);
-  ok(`no app source draws unseeded randomness (${random.length ? random.join(",") : `0 of ${FILES.length} .ts/.tsx files mention Math.random`} — "reproducible from a seed" is a property of the whole tree, not of this module)`,
-    random.length === 0);
+  const CENSUS_FILES = [...FILES, "lib/rng.ts"];
+  // Comments are stripped through the same scanner the raw-UI census uses, so a sentence about
+  // `Math.random()` in prose can neither trip this gate nor hide behind it; the spelling inside a
+  // *string* is still counted, which is the fail-safe direction for a ban.
+  const scanned = CENSUS_FILES.map((f) => ({ f, sites: drawSites(normalize(readFileSync(join(root, f), "utf8"))) }));
+  const hits = scanned.filter((x) => x.sites.length);
+  const sites = hits.reduce((n, x) => n + x.sites.length, 0);
+  const content = hits.filter((x) => !(x.f in IDENTITY_SOURCES));
+  const contentSites = content.reduce((n, x) => n + x.sites.length, 0);
+  const stale = Object.keys(IDENTITY_SOURCES).filter((f) => !hits.some((h) => h.f === f));
+  const core = hits.filter((x) => /^(domain|data)\//.test(x.f));
+  const ledger = Object.entries(IDENTITY_SOURCES)
+    .map(([f, why]) => `${f}: ${hits.find((h) => h.f === f)?.sites.length ?? 0} site(s), ${why.length} chars of reason`)
+    .join("; ");
+  ok(`the app draws unseeded randomness in ${sites} site(s) across ${hits.length} file(s) of ${scanned.length}: ${contentSites} feeding content, ${sites - contentSites} declared as identity (${hits.map((x) => `${x.f}×${x.sites.length}`).join(", ") || "none"})`,
+    content.length === 0 && stale.length === 0 && sites <= Object.keys(IDENTITY_SOURCES).length,
+    `content: ${content.map((x) => x.f).join(", ") || "none"}; stale rows: ${stale.join(", ") || "none"}`);
+  ok(`…and the declared identity draw is exactly one site, in a file that exists, with a reason a reader can weigh (${ledger})`,
+    Object.entries(IDENTITY_SOURCES).every(([f, why]) => existsSync(join(root, f)) && why.length > 40 && hits.find((h) => h.f === f)?.sites.length === 1));
+  ok(`…and the deterministic core draws none: domain/ and data/ carry ${core.length} unseeded site(s), because there a draw is a simulation input and no ledger row can excuse it`,
+    core.length === 0);
+  // Proved able to see, both ways: the same scanner, on planted spellings. Five that draw and must
+  // be named, four that do not and must stay quiet.
+  const PLANTED = [
+    "const a = Math.random();",
+    'const b = Math["random"]();',
+    "const c = Math . random ();",
+    "const d = crypto.getRandomValues(new Uint32Array(1));",
+    "const e = crypto.randomUUID();",
+  ];
+  const QUIET = [
+    "const f = Math.max(1, 2);",
+    "// Math.random() in a comment",
+    "/* a paragraph about Math.random() */",
+    "const randomSeed = Math.abs(-1);",
+  ];
+  const seen = PLANTED.filter((src) => drawSites(normalize(src)).length === 1).length;
+  const quiet = QUIET.filter((src) => drawSites(normalize(src)).length === 0).length;
+  ok(`the census is the thing that sees it, not the file it names: ${seen}/${PLANTED.length} planted draws detected, ${quiet}/${QUIET.length} planted non-draws left alone`,
+    seen === PLANTED.length && quiet === QUIET.length);
 }
 
 // ---------------------------------------------------------------------------

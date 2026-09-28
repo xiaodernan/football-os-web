@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M225 (a few numbers in that range
+Work ships one milestone per commit and is currently at M228 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -4688,6 +4688,98 @@ three consecutive Latin letters and `xG` is two — a two-letter blind spot left
 key it needs is a translation and the letter bar is a scan change, each of them its own milestone. Next:
 the `#150/#165` prose line — `data/ai.ts`'s composed sentences and `data/intelligence.ts`.
 
+### M226 — an id is minted where the event happens, and the census learns to tell a draw from a name
+
+Every record this app writes to a device carries a handle, and the shapes that minted them were
+*derived* rather than minted — from a truncated clock, from the content, or from a millisecond two
+mints happened to share:
+
+```ts
+id: `S${Date.now().toString(36).slice(-5)}`                    // a plan's session
+id: `P${makeRng(seed)().toString(36).slice(2, 7)}`             // a plan, seed = coach + ask + name
+{ id: `g-${Date.now()}` }, { id: `g-${Date.now() + 1}` }        // the two onboarding goals
+```
+
+The first keeps five base-36 digits, so the handle comes back every 36^5 ms ≈ 16.8 hours; the store
+reads a matching session id as the same session (`sessions.filter((s) => s.id !== …)`), so a plan
+minted a day later deleted the earlier one — including a *completed* session, whose XP stayed on the
+profile while its row left the training list, the load model and the activity timeline. The second is
+one handle per ask+name, so one player asking one question twice held two plans under one id and
+`domain/history` built two timeline rows under one key. The third is the same defect one tick smaller:
+`Date.now() + 1` is the source asking the clock to be two clocks. `features/film/FilmRoom.tsx` and the
+community board carried the truncated-clock shape too, and the Film Room's `clipId` is a key the clip
+library reads back.
+
+**The door.** `lib/ids.ts` exports `newId(prefix)` and nothing else. Its value is opaque — nothing
+parses it, nothing resolves it through the dictionary, no screen prints one — and its three parts
+answer the three ways two mints can meet: the **whole clock** rather than a slice of it, a
+**per-process sequence** for two mints inside one millisecond, and a **salt drawn once per module
+instance** for two instances (two tabs, or a reload that restored rows minted before it) reaching the
+same sequence in the same millisecond. Twelve call sites across five files go through it
+(`data/ai.ts` ×2, `store/useFootballOS.tsx` ×6, `features/community/CommunityHub.tsx` ×2,
+`features/film/FilmRoom.tsx`, `features/player/PlayerOS.tsx`). What stays deterministic is the
+*content*: `proof-ids` asserts that one ask+name twice yields two plans whose exercises, diagnosis and
+sources are byte-identical and whose handles are not, because identity is not content.
+
+**The seam.** The salt is the one unseeded draw in the tree, and the RNG census banned exactly that:
+`proof-rng` read **51/52** in this working copy, its single red clause being `no app source draws
+unseeded randomness (lib/ids.ts …)`. Both halves of that contradiction were right about different
+things — a *content* draw must reproduce from a seed, an *identity* draw must not, or two instances
+mint one handle — and the old clause conflated them because until now every draw in the tree was
+content. It could have been satisfied by hiding the draw behind another spelling: `crypto.getRandomValues`
+walks past `Math\.random\s*\(` untouched and behaves identically. So clause 6b classifies instead of
+matching. A site is **content** unless it is the declared identity site; content sites are refused in
+every file; the declared site is pinned to **one file with an exact count of one**, and a declared row
+that no longer matches a site turns red, so the exception cannot go stale; and the deterministic core —
+`domain/` and `data/` — may carry neither, whatever any ledger says, because there a draw is a
+simulation input. The sources are spelled out (bracket form, inner whitespace, `crypto.getRandomValues`,
+`crypto.randomUUID`), comments are stripped through the same scanner the raw-UI census uses so prose
+about `Math.random()` can neither trip the gate nor hide behind it, and the clause says what it still
+cannot see: an aliased receiver, `const c = globalThis.crypto`.
+
+**Measured, not inferred.** On the plane this commit ships (`git archive 261ae3d` + these eight files,
+node_modules junctioned, no `.git`): `npx tsc --noEmit` exit 0, `node scripts/build.mjs` exit 0
+(`✓ built in 17.86s`), `proof-rng` **55/55**, `proof-ids` **15/15**, `proof-coverage` **15/15**,
+`proof-localdata` 32/32. The clauses that carry the claim, as the gate prints them:
+`the app draws unseeded randomness in 1 site(s) across 1 file(s) of 149: 0 feeding content, 1 declared
+as identity (lib/ids.ts×1)`; `…and the declared identity draw is exactly one site, in a file that
+exists, with a reason a reader can weigh (lib/ids.ts: 1 site(s), 102 chars of reason)`;
+`…and the deterministic core draws none: domain/ and data/ carry 0 unseeded site(s)`;
+`5000 handles minted inside one frozen millisecond are 5000 distinct handles` and its second-instance
+twin (`10000 distinct` across two instances); `no id in the walked tree (144 files) is built from the
+clock` / `…from the content`; `the door is the way in: 12 newId() call sites across 5 files besides
+lib/ids.ts`. `proof-coverage` needed no new exemption for the module — `proof-ids` loads it, so the
+ratchet stayed at **2 of 6** exempt `lib/` modules and **99 lines** of exempt surface.
+
+**The gate has to be seen to see.** Clause 6b carries its own eye test — five planted spellings that
+draw and must each be named, four planted non-draws (`Math.max`, a line comment, a block comment, an
+identifier containing "random") that must stay quiet: `5/5 planted draws detected, 4/4 planted
+non-draws left alone`. `dev/m226-census-arms.mjs` puts one habit back at a time and asks the gate to
+notice, restoring from a start-of-run backup verified by hash: **7/7 arms caught · 0 missed or crashed
+· 0 invalid needles · 0 restore failures**, with `proof-ids` 15/15 and `proof-localdata` 32/32 green
+before *and* after. Each arm's first red is the clause that names it — a content draw planted in
+`domain/careerArc.ts` is caught twice (`1 feeding content` and `domain/ and data/ carry 1 unseeded
+site(s)`); a second draw inside the declared file trips the exact-count clause; removing the identity
+draw turns the declaration stale; a `crypto.getRandomValues` plant in `features/player/PlayerOS.tsx`
+and a `Math["random"]()` plant in `data/ai.ts` are named, which is the spelling set doing work a
+`Math.random` regex would have missed; gutting the ledger row's reason reddens the reason bar; and
+blinding the census to one spelling reddens its own eye test (`3/5 planted draws detected`) rather than
+passing quietly.
+
+**What is still not claimed**: the cross-instance guarantee is a 36^8 salt — overwhelmingly likely,
+not certain, and stated that way in the module; the census matches *shapes*, so an id hoisted into a
+variable (`const raw = Date.now().toString(36); … id: raw`) or a WebCrypto alias still escapes it,
+exactly as the relative-time census cannot see a duration computed in one function and printed in
+another; the second instance is Vite's module registry rather than two real browser tabs; and the
+`SecurityError`-style hostile environments this app now tolerates for storage (M227) are not what the
+ids were tested under. The four call sites that mint ids in `store/useFootballOS.tsx` still write
+`createdAt` from the clock, which is a *timestamp* and stays one.
+
+*(Landing note: the `lib/ids.ts`, `scripts/proof-ids.mjs` and call-site edits above were left
+uncommitted in this shared working copy by an earlier run, and `proof-rng`'s red clause was theirs to
+leave behind; the census in 6b, its arms and this section are the part added here, and M225 landed
+first so `proof-rng`'s digest re-derivation has a commit of its own.)*
+
 ### M227 — `typeof localStorage` is not a safety check, and both root providers were reading it
 
 The app asks the browser for two things before it can print a word: the reader's theme and the
@@ -4816,7 +4908,7 @@ untouched by this commit.
 `### M225` section, which is not mine to commit, so `README.md` went in as an index-only landing: the
 committed blob is `git show HEAD:README.md` with this section spliced before the single `## Deploying`
 anchor (`git hash-object -w` + `git update-index --cacheinfo`), and the working copy keeps both
-sections. That is why the roadmap line in the committed text still reads M224.
+sections. That is why the roadmap line in the committed text still reads M224 — left for the run that would land M225 and M226, and reading M228 from M226 on.
 
 *(Numbering note: M225 — the match engine's rows — and M226 — id minting, whose `lib/ids.ts` and
 `scripts/proof-ids.mjs` are untracked in this same working copy — are both being landed by concurrent
@@ -4969,8 +5061,8 @@ check) and it is filed as the next milestone rather than papered over by raising
 uncommitted sections, which are not mine to commit, so `README.md` went in as an index-only landing:
 the committed blob is `git show HEAD:README.md` with this section spliced before the single
 `## Deploying` anchor (`git hash-object -w` + `git update-index --cacheinfo`), and the working copy
-keeps both. The committed text therefore still says `currently at M224` at the top of the roadmap, as
-M227's did: that line is one edit away from a stale claim either way, and a diff of pure additions is
+keeps both. The committed text therefore still said `currently at M224` at the top of the roadmap, as
+M227's did, until the run that landed M225 and M226 set it to `M228`: that line is one edit away from a stale claim either way, and a diff of pure additions is
 the check that says this section introduced nothing else.
 
 *(Numbering note: M225 and M226 are landed by concurrent runs in this shared workspace. This milestone

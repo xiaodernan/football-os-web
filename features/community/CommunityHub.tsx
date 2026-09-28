@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useOnline, useLearnRecords } from "@/lib/hooks";
+import { newId } from "@/lib/ids";
 import { useI18n, formatDate, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildStarters, allTags, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
@@ -154,13 +155,13 @@ export function CommunityHub() {
   const toggleLike = (id: string) => save({ ...store, likes: store.likes.includes(id) ? store.likes.filter((x) => x !== id) : [...store.likes, id] });
 
   const addReply = (threadId: string, body: string) => {
-    const c: Comment = { id: `u-${Date.now()}`, author: MY, body, at: new Date().toISOString(), likes: 0, sample: false };
+    const c: Comment = { id: newId("u-"), author: MY, body, at: new Date().toISOString(), likes: 0, sample: false };
     save({ ...store, replies: { ...store.replies, [threadId]: [c, ...(store.replies[threadId] ?? [])] } });
     toast(t("comm.toastComment"));
   };
 
   const addThread = (title: string, body: string, threadTag: string) => {
-    const th: Thread = { id: `u-t-${Date.now()}`, title, body, tag: threadTag, author: MY, at: new Date().toISOString(), seeded: false, comments: [] };
+    const th: Thread = { id: newId("u-t-"), title, body, tag: threadTag, author: MY, at: new Date().toISOString(), seeded: false, comments: [] };
     save({ ...store, userThreads: [th, ...store.userThreads] });
     setComposing(false);
     setOpenId(th.id);

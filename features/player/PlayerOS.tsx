@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { Link, useRouter, matchRoute } from "@/lib/router";
+import { newId } from "@/lib/ids";
 import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import {
@@ -728,7 +729,7 @@ function Matches() {
   const save = (next: typeof rows) => { setRows(next); try { localStorage.setItem(FIXTURES_KEY, JSON.stringify(next)); } catch { /* ignore */ } };
   const add = () => {
     if (!form.opp.trim()) return;
-    save([{ id: `m${Date.now()}`, opp: form.opp, date: new Date().toISOString(), g: Number(form.g), a: Number(form.a), r: Number(form.r) }, ...rows]);
+    save([{ id: newId("m-"), opp: form.opp, date: new Date().toISOString(), g: Number(form.g), a: Number(form.a), r: Number(form.r) }, ...rows]);
     setForm({ opp: "", g: "0", a: "0", r: "7" });
   };
   const remove = (id: string) => save(rows.filter((r) => r.id !== id));
