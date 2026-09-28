@@ -9,7 +9,7 @@
 // which the goal rows use the same way.
 
 import type { AttributeDelta } from "./types";
-import type { RowText } from "./rowText";
+import { asRowText, type RowText } from "./rowText";
 
 export type TimelineKind = "session" | "plan" | "memory" | "learn" | "film";
 
@@ -47,7 +47,7 @@ interface SessionSeed {
 interface PlanSeed {
   id: string;
   createdAt: string;
-  prompt: string;
+  prompt: RowText;
   provider: string;
 }
 interface MemorySeed {
@@ -111,7 +111,10 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       id: `plan-${p.id}`,
       kind: "plan",
       at: p.createdAt,
-      title: { value: p.prompt },
+      // The prompt is already a row: the caller stored a key (or the writer's own words) when
+      // the plan was built, so the timeline resolves it here rather than re-wording a sentence
+      // that was frozen in whatever language the button happened to be clicked in.
+      title: asRowText(p.prompt),
       detail: { value: p.provider },
     });
   }

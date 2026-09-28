@@ -181,7 +181,7 @@ export interface AiMemoryEntry {
 export interface CoachPlan {
   id: string;
   createdAt: string;
-  prompt: string;
+  prompt: RowText;
   diagnosis: RowText[];
   focus: string[];
   session: TrainingSession;

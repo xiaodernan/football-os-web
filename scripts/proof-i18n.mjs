@@ -37,8 +37,10 @@
 //      print the old name in a generated sentence and the new one on screen,
 //  20. a second category namespace coming back — compare.cat.* duplicated attr.*,
 //  21. the domain name tables being referenced from UI text again instead of
-//      staying in the prose layer (the coach-prompt builders that legitimately
-//      reference them are declared and count-checked),
+//      staying in the prose layer. Two coach-prompt builders used to justify the
+//      two UI references; M224 makes a prompt a row whose English reading is
+//      derived in data/ai.ts, so the declared table is empty and a new UI
+//      reference has to be added here on purpose rather than declared away,
 //  22. an attribute's English name handed to a UI slot as a literal prop or text
 //      node, which no key-level check can see,
 //  23. the specific row interpolations M147 converted coming back,
@@ -974,21 +976,23 @@ ok(`compare.cat.* stays deleted from every locale and every caller (${[...new Se
   dupCatKeys.length === 0 && dupCatSites.length === 0);
 
 // 21. The English name tables belong to the prose layer. A UI file that mentions
-//     `attributeLabel` is composing a display string in English — the exact
-//     shape no key-level check can see. Two callers are declared, and they are
-//     not display: both build the prompt text sent to the coach provider, which
-//     is model input and stays English in every locale. The counts are pinned in
-//     both directions, so widening the surface means changing this table on purpose.
-//     The match is on the identifier, not on `name(`: both surviving sites pass it
-//     to `.map(...)` as a function reference, and a call-shaped regex read zero
-//     uses while the two prompt builders were still there (M147's mutation test
-//     found that — a gate that is green because it cannot see anything).
-//     Imports are stripped first, because `import { attributeLabel }` is a
-//     reference the interface never renders.
-const NAME_PROMPT_SITES = new Map([
-  ["features/player/PlayerOS.tsx", 1], // requestPlan(`Video analysis flagged: … build a session on …`)
-  ["features/film/FilmRoom.tsx", 1], // buildTraining's prompt for the same provider
-]);
+//     `attributeLabel` is composing a display string in English — the exact shape no
+//     key-level check can see, and the match is on the identifier rather than on `name(`,
+//     because a caller that hands it to `.map(...)` as a function reference reads zero to
+//     a call-shaped regex (M147's mutation test found that: a gate that is green because
+//     it cannot see anything). Imports are stripped first, because `import {
+//     attributeLabel }` is a reference the interface never renders.
+//     M224 emptied the declared table instead of lengthening it. Both sites built a coach
+//     prompt in English — `requestPlan(`Video analysis flagged: …`)` — and because that
+//     prompt is ALSO the row a reader sees on the activity timeline, "model input, so
+//     English is right" was only half true: the other half was an English sentence shown
+//     to a Chinese reader, frozen in whatever language the button was clicked in. The
+//     prompt is a row now, its English reading is derived where model input belongs
+//     (`englishRow` in data/ai.ts), and no UI file needs a name table at all.
+//     Two-sided on purpose, because "0 in the UI" is also what a scan that stopped reading
+//     the tree reports: a planted screen has to land in the UI list, and the identifier has
+//     to be found in the prose modules the UI scope excludes.
+const NAME_PROMPT_SITES = new Map(); // M224: empty, and a new entry has to be a decision to make
 const withoutImports = (code) => {
   let inImport = false;
   return code
@@ -1012,11 +1016,18 @@ for (const [path, code] of appSrc) {
   const n = [...withoutImports(code).matchAll(/\b(?:attributeLabel|groupLabel)\b/g)].length;
   if (n) nameCalls.set(path, n);
 }
-const undeclaredNameCalls = [...nameCalls].filter(([p, n]) => NAME_PROMPT_SITES.get(p) !== n);
-const staleNameSites = [...NAME_PROMPT_SITES].filter(([p, n]) => (nameCalls.get(p) ?? 0) !== n);
-const declaredCalls = [...nameCalls.values()].reduce((s, n) => s + n, 0);
-ok(`the English name tables are referenced only from the ${NAME_PROMPT_SITES.size} declared coach-prompt builders and from no UI display path (${undeclaredNameCalls.join(", ") || "none"} / ${staleNameSites.map(([p]) => p).join(", ") || "none"})`,
-  declaredCalls > 0 && undeclaredNameCalls.length === 0 && staleNameSites.length === 0);
+const uiNameFiles = [...appSrc.keys()].filter((p) => /^(features|ui)\//.test(p)).length;
+const proseNameCallers = [...appSrc]
+  .filter(([p]) => !/^(features|ui)\//.test(p))
+  .filter(([, code]) => /\b(?:attributeLabel|groupLabel)\b/.test(withoutImports(code)))
+  .map(([p]) => p);
+// The plant: the same two predicates that read the tree, run over a screen that names the
+// table on its own line. A scope that cannot see this one would report "0" for any tree.
+const NAME_PLANT = ["features/plantedNames.tsx", `import { attributeLabel } from "@/domain/attributes";
+export const C = () => <span>{attributeLabel("passing")}</span>;`];
+const plantInScope = /^(features|ui)\//.test(NAME_PLANT[0]) && /\b(?:attributeLabel|groupLabel)\b/.test(withoutImports(NAME_PLANT[1]));
+ok(`no UI file composes an English attribute name any more (${nameCalls.size} of ${uiNameFiles} UI files, declared table ${NAME_PROMPT_SITES.size}), while the ${proseNameCallers.length} prose module(s) outside that scope still reach the tables (${proseNameCallers.join(", ")}), and the planted screen is caught (${plantInScope})`,
+  nameCalls.size === 0 && NAME_PROMPT_SITES.size === 0 && uiNameFiles >= 25 && proseNameCallers.length >= 1 && plantInScope);
 
 // 22. An attribute's English name typed into a UI slot is invisible to every
 //     key-level check: there is no key to look up, and the screen looks perfect
@@ -2244,6 +2255,46 @@ const screenQuestions = [...aiStudioSrc.matchAll(QUESTION_LITERAL)].map((m) => m
 const probeFound = [...`"Who is the key player at Real Madrid?"`.matchAll(QUESTION_LITERAL)].length;
 ok(`the ${SUGGESTED_ASKS.length} suggested questions send exactly the English row of the key the reader sees (${askBad.slice(0, 3).join(" | ") || "all equal"}), the AI screen carries ${screenQuestions.length} question literal(s), and the same scan finds the planted one (${probeFound})`,
   SUGGESTED_ASKS.length >= 4 && askBad.length === 0 && screenQuestions.length === 0 && probeFound === 1);
+
+// 26f. A prompt handed to the coach is a row with two readings (M224). Six screens call
+//      `requestPlan`; three read the dictionary, which froze the language they were clicked in
+//      onto the activity timeline, and two typed an English sentence — so the provider matched
+//      English AND a reader in either Chinese locale was shown it, because a plan's prompt is
+//      also the row that timeline shows. The row is the single fact now: the reader's reading
+//      comes from `rowLine(row, t)` and the provider's from `englishRow(row)`, which resolves
+//      the same code-holding variables through the English column. So the claim is 26e's,
+//      generalised — what the coach is sent must equal the English reading of the very row the
+//      reader sees, attribute names included, because `analyze` matches on those words. The
+//      screen half is a shape rule with a plant under it: "no screen types a sentence into
+//      requestPlan" is exactly the empty count a blind scanner also prints.
+const { englishRow } = await server.ssrLoadModule("/data/ai.ts");
+const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
+const say = (locale) => (row) => rowLine(row, (key, vars) => translate(locale, key, vars));
+const PROMPT_ROWS = [
+  { where: "the video-analysis prompt", focus: ["passing", "dribbling"], row: { key: "ai.videoAnalysisPrompt", vars: { improvement: "Heavy first touch", focus: "passing,dribbling" } } },
+  { where: "the film-review prompt", focus: ["scanning"], row: { key: "ai.filmAnalysisPrompt", vars: { improvement: "Slow scanning", focus: "scanning" } } },
+];
+const promptRowBad = [];
+for (const { where, focus, row } of PROMPT_ROWS) {
+  const sent = englishRow(row);
+  if (sent !== say("en")(row)) promptRowBad.push(`${where}: the coach is sent “${sent}” but the English row reads “${say("en")(row)}”`);
+  for (const { id } of L) if (translate(id, row.key) === row.key) promptRowBad.push(`${id}: ${row.key} has no row at all`);
+  for (const k of focus) {
+    const word = translate("en", `attr.name.${k}`);
+    if (!sent.includes(word)) promptRowBad.push(`${where}: the query lost “${word}” (${sent})`);
+    const local = translate("zh-CN", `attr.name.${k}`);
+    if (!say("zh-CN")(row).includes(local)) promptRowBad.push(`${where}: a 简体中文 reader is not shown “${local}”`);
+  }
+  if (say("zh-CN")(row) === sent) promptRowBad.push(`${where}: the reader and the provider are handed the same sentence`);
+}
+const PROMPT_CALL = /requestPlan\(\s*(["'`])/;
+const screenFiles = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
+const promptCallSites = screenFiles.reduce((n, [, code]) => n + (code.match(/requestPlan\(/g) ?? []).length, 0);
+const typedPrompts = screenFiles.filter(([, code]) => PROMPT_CALL.test(code)).map(([p]) => p);
+const promptPlant = 'requestPlan("Video analysis flagged: x", 30);';
+ok(`the ${PROMPT_ROWS.length} coach prompts the screens hand over are the reader's own rows, read here in both languages (${promptRowBad.slice(0, 3).join(" | ") || "clean"}), and the ${promptCallSites} call site(s) across ${screenFiles.length} screens type no sentence into requestPlan (${typedPrompts.join(", ") || "none"}), while the plant under the same regex is reported (${PROMPT_CALL.test(promptPlant)})`,
+  PROMPT_ROWS.length === 2 && promptRowBad.length === 0 && promptCallSites >= 5 &&
+  typedPrompts.length === 0 && screenFiles.length >= 30 && PROMPT_CALL.test(promptPlant));
 
 // 27. A second interpolator. t(key, vars) fills every occurrence of a placeholder;
 //     `String.prototype.replace` with a string needle fills only the FIRST, so a key

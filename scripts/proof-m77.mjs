@@ -27,7 +27,7 @@ const mkProfile = (attributes) => ({
   goal: "Improve", favoriteClubId: null, favoritePlayerId: null, favoriteCompetitionId: null,
   attributes, xp: 100, level: 2, createdAt: new Date(0).toISOString(),
 });
-const input = (profile) => ({ prompt: "improve my game", profile, history: [], availableMinutes: 60 });
+const input = (profile) => ({ prompt: { value: "improve my game" }, profile, history: [], availableMinutes: 60 });
 
 // 1. The generated session's GAME drill genuinely equals the player's DNA signature
 //    (this is what makes "session shaped to your role" true rather than decorative).

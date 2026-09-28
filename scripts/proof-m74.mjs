@@ -24,7 +24,8 @@ const profile = {
   xp: 100, level: 2, createdAt: new Date(0).toISOString(),
 };
 const input = (over = {}) => ({
-  prompt: "help me pass better",
+  // The prompt is the row the reader will see; the provider derives its own English reading.
+  prompt: { value: "help me pass better" },
   profile,
   history: [],
   availableMinutes: 30,

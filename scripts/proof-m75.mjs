@@ -34,7 +34,7 @@ ok("note trimmed not truncated", ev.note === "keep head down");
 // 5. Notes attach only to session rows — plans/memory never gain a note field.
 const withNote = buildTimeline({
   sessions: [completed({ notes: "hello" })],
-  plans: [{ id: "P1", createdAt: "2026-01-06T00:00:00.000Z", prompt: "plan", provider: "demo" }],
+  plans: [{ id: "P1", createdAt: "2026-01-06T00:00:00.000Z", prompt: { value: "plan" }, provider: "demo" }],
   memory: [{ id: "M1", kind: "coach", text: "mem", at: "2026-01-07T00:00:00.000Z" }],
 });
 ok("only the session event has a note", withNote.filter((e) => e.note).length === 1 && withNote.find((e) => e.note).kind === "session");

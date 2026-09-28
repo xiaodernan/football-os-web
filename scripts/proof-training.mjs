@@ -349,7 +349,7 @@ else {
   const attrs = { passing: 40, finishing: 42, shooting: 44, first_touch: 70, composure: 72, strength: 60 };
   const asks = ["passing", "finishing", "shooting"];
   const plan = (availableMinutes, load) =>
-    AI.coachProvider.generatePlan({ prompt: "improve my game", profile: mkProfile(attrs), history: [], availableMinutes, focusKeys: asks, load });
+    AI.coachProvider.generatePlan({ prompt: { value: "improve my game" }, profile: mkProfile(attrs), history: [], availableMinutes, focusKeys: asks, load });
   const CLAIMS = [
     ["warm-up", /Warm-up activates movement/i],
     ["decision", /decision-making block/i],

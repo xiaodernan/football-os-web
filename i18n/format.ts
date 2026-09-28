@@ -1,5 +1,5 @@
 import { DICTIONARIES, type Locale } from "./dictionaries";
-import type { RowText } from "@/domain/rowText";
+import type { RowText, RowVars } from "@/domain/rowText";
 
 // One module for the words a non-screen may need. Kept out of index.tsx on purpose: a domain
 // module builds a date into a row it hands a screen (footprint's last-activity line) and names an
@@ -66,6 +66,24 @@ export function relativeDay(locale: Locale, iso: string): RowText {
  *  not share one call. Proof-i18n's 26d reads the callers of this function and refuses a `.tsx`
  *  file that reaches for it, and refuses any module outside `i18n/` that reads `DICTIONARIES`
  *  itself. */
-export function englishWord(key: string): string {
-  return DICTIONARIES.en[key] ?? key;
+export function englishWord(key: string, vars?: RowVars): string {
+  return interpolate(DICTIONARIES.en[key] ?? key, vars);
+}
+
+/** The app's ONE interpolator: fill every `{name}` of a template with the row's own values.
+ *
+ *  It lives here rather than beside `translate` (i18n/index.tsx) for the reason `formatDate`
+ *  and `englishWord` do — the provider door reads a template the same way a screen does and
+ *  cannot import React to do it. `translate` calls it for the reader's column and `englishWord`
+ *  for the English one, so a screen and a provider cannot drift into two readings of one
+ *  `{focus}`. Exported as a plain function so a proof can resolve a row through the shipped
+ *  code path instead of a hand-copy of it. */
+export function interpolate(template: string, vars?: RowVars): string {
+  let str = template;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      str = str.split("{" + k + "}").join(String(v));
+    }
+  }
+  return str;
 }

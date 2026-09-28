@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { DICTIONARIES, type Locale, LOCALES } from "./dictionaries";
+import { interpolate } from "./format";
 import { LOCALE_KEY } from "@/domain/localData";
 
 export type { Locale } from "./dictionaries";
@@ -23,19 +24,14 @@ interface I18nValue {
 
 const I18nContext = createContext<I18nValue | null>(null);
 
-/** The app's ONE interpolator: read the reader's own row and fill every occurrence of
- *  `{name}`. Exported as a plain function so the proof scripts resolve rows through this
- *  same code path instead of a hand-copy of it — a copy can drift from what the screen
+/** Read the reader's own row and fill every occurrence of `{name}`. The interpolation itself
+ *  lives in i18n/format.ts, because the provider door reads a template the same way and cannot
+ *  import React to do it. Exported as a plain function so the proof scripts resolve rows through
+ *  this same code path instead of a hand-copy of it — a copy can drift from what the screen
  *  prints, and then the gate measures the copy. */
 export function translate(locale: Locale, key: string, vars?: Record<string, string | number>): string {
   const table = DICTIONARIES[locale] ?? DICTIONARIES.en;
-  let str = table[key] ?? DICTIONARIES.en[key] ?? key;
-  if (vars) {
-    for (const [k, v] of Object.entries(vars)) {
-      str = str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
-    }
-  }
-  return str;
+  return interpolate(table[key] ?? DICTIONARIES.en[key] ?? key, vars);
 }
 
 /** Format an instant the reader's own language writes it, and measure one against now —

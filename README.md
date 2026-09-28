@@ -4443,20 +4443,84 @@ Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0,
 
 **What is still not claimed**: Manager OS sliders still print the five scale words; `toast.success(` hole closed but other wrappers would need the same treatment; `data/ai.ts` now has 0 prose debt (the ratchet is extended to it implicitly through the covered set).
 
-### M223 — the video-analysis prompt uses the provider door
+### M223 — a plan's prompt is one row with two readings: the reader's words and the provider's query
 
-The Player OS video-analysis button sent a free-form English prompt to the demo coach:
-`requestPlan(\`Video analysis flagged: \${improvement}. Build a session on \${focus}.\`, 30)`. This was the last provider-door English sentence outside the `englishWord` door that M215 opened and M217 closed.
+**A note on the record.** This milestone landed in two commits. `93ac5a1` was made by a parallel
+session that committed part of this working copy (`data/ai.ts`, `features/player/PlayerOS.tsx`,
+`i18n/dictionaries.ts`) while its message and its section here described a `buildVideoAnalysisPrompt`
+helper that the same commit does not contain — the files it shipped hold the design below. The message
+is left as written rather than rewritten; the code and the numbers here are the measurement.
 
-**The provider door is now used.** A new key `ai.videoAnalysisPrompt` ("Video analysis flagged: {improvement}. Build a session on {focus}.") was added to the dictionary in all three locales. A helper `buildVideoAnalysisPrompt(improvement, focus)` in `data/ai.ts` retrieves the English template via `englishWord("ai.videoAnalysisPrompt")` and interpolates the vars, so the provider receives English while the key is declared for all three locales. The Player OS button now calls this helper instead of inlining the template.
+The Player OS video-analysis button typed an English sentence straight into `requestPlan` —
+`requestPlan(`Video analysis flagged: ${improvement}. Build a session on ${focusEn}.`, 30)` — and the
+Film Room's "build training" button did the same with `Film review flagged: …`. Both were justified as
+"model input, so English is right", and that was half true: **a plan's prompt is also the row the
+Activity History prints as its event title** (`domain/history.ts` published it as
+`title: { value: p.prompt }`). So a reader in either Chinese locale was shown an English sentence on
+their timeline. The other three callers — the review, load and development pages — passed
+`t("rv.recoPrompt")` and the like, which froze the language the button was clicked in: switch to
+简体中文 and the timeline keeps the old words. `domain/types.ts` already states the rule for goals ("a
+row stores the code, never the word … so a goal created in one locale does not freeze its own wording
+for every later reader"); the plan's prompt was the last stored word that ignored it.
 
-**One new key** (`ai.videoAnalysisPrompt`) ×3 locales: **1680 → 1681 keys per locale**.
+**One row, two readings.** `CoachPlan.prompt` and `PlanInput.prompt` are `RowText` now and
+`requestPlan(prompt: RowText, …)` takes the row instead of a sentence, so each of the six call sites
+hands over what the reader should read: `{ key: "rv.recoPrompt" }`, `{ key: "dv.blockPrompt" }`,
+`{ key: "ld.trainPrompt" }`, the user's own typed words as `{ value: brief }`, and two new templates —
+`ai.videoAnalysisPrompt` and `ai.filmAnalysisPrompt`, whose `focus` variable carries *attribute codes*
+rather than English names so that both readings can resolve it. `history.ts` forwards the row unchanged
+(`title: asRowText(p.prompt)`), which is what turns a sentence frozen at click time into a line that
+follows the reader.
 
-**Mutation witness: two arms, both caught.** (1) the helper inlined the English template — `ai.videoAnalysisPrompt` became unreachable (reachability check); (2) a placeholder drifted in zh-CN — placeholder agreement. Both restored; 234/234 after restore.
+**The English reading is derived, not kept in step.** `data/ai.ts` now exports
+`englishRow(row) = rowLine(row, englishWord)`: `rowLine(row, t)` is what a screen prints, `englishRow`
+is what the provider matches on, and both resolve the same code-holding variables through
+`fillRowVars`/`codeWord` — so `{ focus: "passing,dribbling" }` reads "传球 + 盘带" to a 简体中文 reader
+and "Passing + Dribbling" to `analyze`'s hint patterns. The interpolation itself moved into
+`i18n/format.ts` as `interpolate`, because the provider door has to fill a template without importing
+React: `translate(locale, …)` wraps it and `englishWord(key, vars)` uses it, so there is still exactly
+one interpolator (check 27). `buildVideoAnalysisPrompt` is gone — a second copy of the sentence is
+exactly what M217 refused to keep. Plans stored while prompts were sentences repair at the hydration
+boundary (`repairPlanPrompts`, beside `repairGoalTitles`/`repairMemoryTexts`).
 
-Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, suite **37/37 proof scripts · 1964/1964 checks · exit 0**, `proof-i18n` **234/234** at **1681 keys · 3 locales**. Ceiling **0/0**, covered **40**.
+**Two gates shaped the change instead of reporting on it.** (1) Check 21 had declared both screens as
+the only UI files allowed to reach the English name tables "because the prompt is model input" — the
+premise was the defect, so the declared table is now empty and the clause is two-sided: no UI file
+composes an English attribute name (0 of 30 UI files), a planted screen under the same predicates is
+still caught, and the identifier must still be found in the prose modules the scope excludes (8, with
+`data/ai.ts` among them). (2) Check 28c refused the first draft with `bare row read:
+features/player/PlayerOS.tsx: {prompt…}` and `store/useFootballOS.tsx: {prompt…}` — `prompt` is a row
+field now, and the Player OS's `useState` string of the same name plus the store's `{ prompt, … }`
+shorthand sat one keystroke from a row object rendered raw. The two locals are `brief` and `promptRow`;
+the gate found a name collision, not a formatting complaint.
 
-**What is still not claimed**: Manager OS sliders still print the five scale words; other `toast.*` wrappers would need the same treatment; `data/ai.ts` now has 0 prose debt (the ratchet is extended to it implicitly through the covered set).
+**New claim, 26f.** The reader's reading and the provider's must be one fact: for both new rows,
+`englishRow(row)` is compared with the English reading of the same row through `rowLine`, the attribute
+names are required in each column (the provider's hint patterns match on them), and the six
+`requestPlan` call sites are scanned by a shape rule — no screen may type a sentence into that call —
+with a plant under the same regex, so a blind scan cannot print an agreeable zero. `proof-timeline` adds
+both stored shapes: a keyed prompt is forwarded to the timeline as the row it is, and a plan stored
+while prompts were strings keeps those words verbatim as a value.
+
+**Measured on the working copy**: `npx tsc --noEmit` exit 0, `npm run build` exit 0; `proof-i18n`
+**235/235** at **1667 keys · 3 locales**, and the affected set green on its own — `proof-timeline`
+91/91, `proof-training` 40/40, `proof-ai-grounding` 56/56, `proof-m74` 15/15, `proof-m77` 11/11,
+`proof-m75` 6/6, `proof-coverage` 15/15. The full suite was **not** re-run: this project's standing
+instruction is not to spend the time on a full regression for every change, so the evidence here is
+that targeted set plus `tsc` and `build`, named as what it is.
+
+**Two numbers in this file do not match the tree, and the tree wins.** The section above prints
+**1680 → 1681 keys per locale**; the gate's own line prints **1667 keys · 3 locales** for this tree.
+Measured on the dictionary modules themselves (the object the gate counts): M221's commit held **1637**
+keys (its section prints 1639), M222's held **1665** (its section prints 1680, and its "41 new keys"
+were 28), and this commit holds **1667**. The two keys this milestone adds are real — `1665 → 1667` —
+but the base the previous section quotes never was. Recorded rather than corrected in place, because
+the older sections quote the numbers their own runs printed.
+
+**What is still not claimed**: Manager OS sliders still print the five scale words; other `toast.*`
+wrappers would need the same treatment; a clip's own `improvements[0]` sentence is the demo video
+provider's data and passes through as a value (English in every locale, like a session title);
+`data/ai.ts` has 0 prose debt (the ratchet is extended to it implicitly through the covered set).
 
 ## Deploying
 

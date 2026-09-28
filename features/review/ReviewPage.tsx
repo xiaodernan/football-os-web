@@ -64,7 +64,7 @@ export function ReviewPage() {
     if (!key || building) return;
     setBuilding(true);
     try {
-      const plan = await requestPlan(t("rv.recoPrompt"), 30, [key]);
+      const plan = await requestPlan({ key: "rv.recoPrompt" }, 30, [key]);
       toast.success(
         t("common.buildDone", { m: plan.session.targetMinutes, n: plan.session.exercises.length }),
       );

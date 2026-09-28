@@ -3,7 +3,6 @@ import { useRouter } from "@/lib/router";
 import { formatDate, useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { videoProvider } from "@/data/video";
-import { attributeLabel } from "@/domain/attributes";
 import { buildFilmInsights, type FilmEventKind } from "@/domain/filmInsights";
 import { loadFilmClips, saveFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { useOnline } from "@/lib/hooks";
@@ -108,14 +107,14 @@ export function FilmRoom() {
       toast.error(t("film.toastNoFocus"));
       return;
     }
-    // The prompt is model input, not copy: the coach provider composes in English in
-    // every locale, so it keeps the English name table (check 21 pins this call). The
-    // toast under it is read by a person and takes the dictionary's names instead.
-    const focusEn = keys.map(attributeLabel).join(" and ");
+    // One row, two readings: the provider gets its English column (so `analyze` matches the
+    // words it knows) and the reader gets their own — including on the activity timeline, which
+    // used to show this sentence frozen in whatever language the button was clicked in. The
+    // toast under it is read by a person and takes the dictionary's names directly.
     setPlanning(true);
     try {
       const plan = await requestPlan(
-        `Film review flagged: ${current.report.improvements[0]}. Build a session on ${focusEn}.`,
+        { key: "ai.filmAnalysisPrompt", vars: { improvement: current.report.improvements[0], focus: keys.join(",") } },
         30,
         keys,
       );

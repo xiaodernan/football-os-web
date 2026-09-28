@@ -41,7 +41,7 @@ const session = (over = {}) => ({
   selfRating: 4, xpAwarded: 30, growth: [{ key: "passing", delta: 2 }], notes: "  keep head down  ",
   ...over,
 });
-const plan = (over = {}) => ({ id: "p1", createdAt: "2026-03-02T10:00:00.000Z", prompt: "Plan prompt B", provider: "demo-coach-v1", ...over });
+const plan = (over = {}) => ({ id: "p1", createdAt: "2026-03-02T10:00:00.000Z", prompt: { value: "Plan prompt B" }, provider: "demo-coach-v1", ...over });
 const memory = (over = {}) => ({ id: "m1", kind: "coach", text: { value: "Memory text C" }, at: "2026-03-03T11:00:00.000Z", ...over });
 const learn = (over = {}) => ({ id: "l1", title: "Lesson title D", completedAt: "2026-03-04T12:00:00.000Z", quizCorrect: true, attempts: 0, ...over });
 const clip = (over = {}) => ({
@@ -54,7 +54,7 @@ const one = (over = {}) => buildTimeline({ ...empty, ...over });
 // ---- 1. Provenance: every string a row shows came out of a record.
 const rich = buildTimeline({
   sessions: [session(), session({ id: "s2", title: "Session title E", completedAt: "2026-03-06T08:00:00.000Z" })],
-  plans: [plan(), plan({ id: "p2", prompt: "Plan prompt F" })],
+  plans: [plan(), plan({ id: "p2", prompt: "Plan prompt F" }), plan({ id: "p3", prompt: { key: "rv.recoPrompt" } })],
   memory: [memory(), memory({ id: "m2", kind: "training", text: { value: "Memory text G" } })],
   learn: [learn(), learn({ id: "l2", title: "Lesson title H", quizCorrect: false, attempts: 2 })],
   film: [clip(), clip({ id: "f2", fileName: "clip-02.mp4", at: "2026-03-07T14:00:00.000Z" })],
@@ -76,12 +76,17 @@ for (const e of rich) {
       if (typeof cell.value !== "string" || cell.value.length === 0) shapeProblems.push(`${e.id}: an empty row value`);
       else rowStrings.push(cell.value);
     }
-    if ("key" in cell && !/^hist\.[a-z.]+$/.test(cell.key)) shapeProblems.push(`${e.id}: ${cell.key} is outside the namespace this module may use`);
+    // This module's OWN words live in `hist.*`. A plan's prompt is the one cell it forwards
+    // from the caller rather than wording: it is the row the coach provider was handed
+    // (`rv.recoPrompt`, `ai.videoAnalysisPrompt`, …), so it keeps the namespace it was written
+    // in and this clause must not demand this file's own.
+    const forwarded = e.kind === "plan" && cell === e.title;
+    if ("key" in cell && !forwarded && !/^hist\.[a-z.]+$/.test(cell.key)) shapeProblems.push(`${e.id}: ${cell.key} is outside the namespace this module may use`);
   }
   if (e.note) rowStrings.push(e.note);
 }
 ok(`the ${rich.length} rows are well-formed key-or-value cells (${[...new Set(shapeProblems)].join(" | ") || "clean"})`,
-  rich.length === 10 && shapeProblems.length === 0);
+  rich.length === 11 && shapeProblems.length === 0);
 ok(`every string those rows show is a stored value, not prose this module wrote (${[...new Set(rowStrings)].join(" / ")})`,
   rowStrings.length > 0 && rowStrings.every((s2) => RECORD_STRINGS.has(s2)));
 ok("the clip's file name reaches the reader as a variable of a key row, never appended to a sentence here",
@@ -121,6 +126,14 @@ ok("a whitespace-only note yields no note", one({ sessions: [session({ notes: " 
 const p = one({ plans: [plan()] })[0];
 ok("a plan row shows the user's own prompt and the provider that answered it",
   p.title.value === "Plan prompt B" && p.detail.value === "demo-coach-v1");
+// M224: the prompt is stored as a ROW, so the timeline resolves it at read time instead of
+// replaying a sentence that was frozen in whatever language the button was clicked in.
+const pKeyed = one({ plans: [plan({ id: "p4", prompt: { key: "ai.videoAnalysisPrompt", vars: { improvement: "Heavy first touch", focus: "passing" } } })] })[0];
+ok("a plan's prompt is forwarded as the row the caller stored, not re-worded here",
+  pKeyed.title.key === "ai.videoAnalysisPrompt" && pKeyed.title.vars.focus === "passing");
+const pLegacy = one({ plans: [plan({ id: "p5", prompt: "Plan prompt F" })] })[0];
+ok("a plan stored before the prompt was a row keeps the writer's words verbatim, as a value rather than a guessed key",
+  "value" in pLegacy.title && pLegacy.title.value === "Plan prompt F");
 const memSeed = memory();
 const m = one({ memory: [memSeed] })[0];
 ok("a memory row is forwarded as the row it stores, not re-worded here", m.title === memSeed.text);

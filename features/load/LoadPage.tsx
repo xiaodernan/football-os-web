@@ -43,7 +43,7 @@ export function LoadPage() {
     if (!canPlan || building) return;
     setBuilding(true);
     try {
-      const plan = await requestPlan(t("ld.trainPrompt"), planMinutes);
+      const plan = await requestPlan({ key: "ld.trainPrompt" }, planMinutes);
       toast.success(
         t("common.buildDone", { m: plan.session.targetMinutes, n: plan.session.exercises.length }),
       );

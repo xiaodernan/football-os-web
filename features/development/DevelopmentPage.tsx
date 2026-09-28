@@ -84,7 +84,7 @@ export function DevelopmentPage() {
     if (!keys.length) return;
     setBlocking(true);
     try {
-      const plan = await requestPlan(t("dv.blockPrompt"), 30, keys);
+      const plan = await requestPlan({ key: "dv.blockPrompt" }, 30, keys);
       toast.success(t("dv.blockDone", { n: plan.session.exercises.length, m: plan.session.targetMinutes }));
       navigate("/player/training");
     } catch {

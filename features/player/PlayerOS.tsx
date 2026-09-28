@@ -192,7 +192,10 @@ function Coach() {
     return [...new Set(raw.split(",").map((k) => k.trim()).filter((k) => ATTRIBUTE_KEYS.includes(k)))].slice(0, 2);
   }, [query]);
   const [carryKeys, setCarryKeys] = useState<string[]>(carriedFocus);
-  const [prompt, setPrompt] = useState(() =>
+  // `brief` rather than `prompt`: the plan's prompt is a ROW now, and a local string under
+  // the same name sits one keystroke from proof-i18n's row contract (which reads `{prompt}`
+  // as a row printed raw). The user's own words never were a row — they become `{ value }`.
+  const [brief, setBrief] = useState(() =>
     carriedFocus.length ? t("player.coachCarry", { labels: carriedFocus.map((k) => t(`attr.name.${k}`)).join(", ") }) : "",
   );
   const [minutes, setMinutes] = useState(45);
@@ -208,19 +211,19 @@ function Coach() {
     high: "border-destructive/40 bg-destructive/10 text-destructive",
   };
 
-  const onPromptChange = (v: string) => {
-    setPrompt(v);
+  const onBriefChange = (v: string) => {
+    setBrief(v);
     if (carryKeys.length) setCarryKeys([]);
   };
 
   const run = async () => {
-    if (!prompt.trim()) {
+    if (!brief.trim()) {
       toast.error(t("player.tellCoach"));
       return;
     }
     setBusy(true);
     try {
-      const p = await requestPlan({ value: prompt }, minutes, carryKeys.length ? carryKeys : undefined);
+      const p = await requestPlan({ value: brief }, minutes, carryKeys.length ? carryKeys : undefined);
       setPlanId(p.id);
       toast.success(t("player.generatePlan"));
     } catch (e) {
@@ -235,8 +238,8 @@ function Coach() {
       <Panel className="p-4">
         <SectionTitle title={t("player.coach")} hint={t("player.coachCarryHint")} />
         <Textarea
-          value={prompt}
-          onChange={(e) => onPromptChange(e.target.value)}
+          value={brief}
+          onChange={(e) => onBriefChange(e.target.value)}
           rows={4}
           placeholder={t("player.coachPlaceholder")}
           className="resize-none"
@@ -305,7 +308,7 @@ function Coach() {
             </details>
             <div className="flex gap-2">
               <Button size="sm" className="flex-1" onClick={() => navigate("/player/training")}>{t("player.scheduleTrain")}</Button>
-              <Button size="sm" variant="outline" onClick={() => { setPrompt(""); setCarryKeys([]); setPlanId(null); }}>{t("player.newPlan")}</Button>
+              <Button size="sm" variant="outline" onClick={() => { setBrief(""); setCarryKeys([]); setPlanId(null); }}>{t("player.newPlan")}</Button>
             </div>
           </div>
         )}

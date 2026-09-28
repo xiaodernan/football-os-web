@@ -27,8 +27,9 @@ import { applyFocusGrowth, sweepOverdueSessions, type GrowthDelta } from "@/doma
 import { countGoalTitle, repairGoalTitles } from "@/domain/goals";
 import { coachMemory, profileMemory, repairMemoryTexts, trainingMemory } from "@/domain/memory";
 import { normalizeGoalChoice } from "@/domain/onboarding";
+import type { RowText } from "@/domain/rowText";
 import { buildLoad } from "@/domain/load";
-import { coachProvider, type PlanInput } from "@/data/ai";
+import { coachProvider, repairPlanPrompts, type PlanInput } from "@/data/ai";
 import { OS_STATE_KEY } from "@/domain/localData";
 
 export const STORAGE_KEY = OS_STATE_KEY;
@@ -95,7 +96,9 @@ function normalizeHydrated(s: OsState): OsState {
     // flip them here so the review's missed count and slipped-session insight
     // reflect reality instead of staying permanently at zero.
     sessions: sweepOverdueSessions(repaired),
-    plans: s.plans ?? [],
+    // Rows written before a plan's prompt was a row hold a plain string: the words the
+    // caller composed at the time. Kept verbatim as a value, never re-read as a key.
+    plans: repairPlanPrompts(s.plans ?? []),
     // Rows written before a goal title was a keyed row hold a plain string; that
     // string is the visitor's own words, so it is kept verbatim as a value.
     goals: repairGoalTitles(s.goals ?? []),
@@ -234,7 +237,9 @@ interface OsContext {
   ready: boolean;
   onboarding: (input: { mode: Mode; displayName: string; positionGroup: PositionGroup; ageGroup: string; goal: string; skill: number; favoriteClubId?: string; favoritePlayerId?: string; favoriteCompetitionId?: string }) => void;
   setMode: (m: Mode) => void;
-  requestPlan: (prompt: string, availableMinutes: number, focusKeys?: string[]) => Promise<CoachPlan>;
+  // The prompt is the row the reader will see on the activity timeline; the provider derives
+  // its own English reading from the same row, so a caller never composes a sentence by hand.
+  requestPlan: (prompt: RowText, availableMinutes: number, focusKeys?: string[]) => Promise<CoachPlan>;
   completeSession: (sessionId: string, selfRating: number, notes?: string) => GrowthDelta[];
   setFavorite: (key: "club" | "player" | "competition", id: string | null) => void;
   toggleWatch: (playerId: string) => void;
@@ -307,13 +312,15 @@ export function OsProvider({ children }: { children: ReactNode }) {
         dispatch({ type: "ONBOARD", mode: input.mode, profile, goals });
       },
       setMode: (m) => dispatch({ type: "SET_MODE", mode: m }),
-      requestPlan: async (prompt, availableMinutes, focusKeys) => {
+      requestPlan: async (promptRow, availableMinutes, focusKeys) => {
         if (!state.profile) throw new Error("Complete onboarding before asking the coach.");
         if (!coachProvider.available) throw new Error("The coach provider is unavailable right now — try again shortly.");
         const history = aggregateFocus(state.sessions);
         const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
+        // Spelled out rather than spread: `prompt` is a row now, and the shorthand `{ prompt }`
+        // reads to proof-i18n's row contract exactly like a JSX hole holding a row object.
         const planInput: PlanInput = {
-          prompt,
+          prompt: promptRow,
           profile: state.profile,
           history,
           availableMinutes,
