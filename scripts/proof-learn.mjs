@@ -57,7 +57,11 @@ ok("no try-it label names the screen it links from (nothing points at /learn)", 
 const studioSrc = readFileSync(new URL("../features/tactical/TacticalStudio.tsx", import.meta.url), "utf8");
 const labSrc = readFileSync(new URL("../features/sim/SimulationLab.tsx", import.meta.url), "utf8");
 ok("Tactical Studio really has no press control", !/press/i.test(studioSrc));
-ok("the Simulation Lab really renders a press slider", /label="Press"/.test(labSrc));
+// M220 keyed the four slider labels, so the dial is now named by the key its label reads
+// instead of by the English word in the attribute. The control is the same one; what has
+// to stay true is that the lab is the screen carrying it, which the key's own provenance
+// (mgr.press is the Manager OS press word) and the dictionary gate both hold.
+ok("the Simulation Lab really renders a press slider", /label=\{t\("mgr\.press"\)\}/.test(labSrc));
 ok("the press lesson points at the screen that has the dial", lesson("press").tryIt.to === "/simulation");
 ok("the formations lesson keeps pointing at the shape board", lesson("formations").tryIt.to === "/tactical-studio" && /applyFormation/.test(studioSrc));
 ok("the load lesson points at the load page the app dispatches", lesson("load").tryIt.to === "/load" && dispatched.has("/load"));

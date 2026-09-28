@@ -574,6 +574,9 @@ const DYN_SITES = [
   { path: "features/profile/ProfilePage.tsx", expr: "p.mode", prefix: "prof.mode.", suffix: "" },
   { path: "features/profile/ProfilePage.tsx", expr: "r.id", prefix: "prof.mode.", suffix: "" },
   { path: "features/settings/SettingsPage.tsx", expr: "m", prefix: "set.mode.", suffix: "" },
+  // M220: the Simulation Lab carries the studio's 0..4 mentality index across as the same
+  // word the studio prints, so the screen has one table for it rather than a second list.
+  { path: "features/sim/SimulationLab.tsx", expr: "i", prefix: "tac.mentality.", suffix: "" },
   { path: "features/tactical/TacticalStudio.tsx", expr: "i", prefix: "tac.mentality.", suffix: "" },
   { path: "features/watchlist/WatchlistBoard.tsx", expr: "s", prefix: "watch.sort.", suffix: "" },
   // M148: the favourite control derives its own copy from the kind it favours, and
@@ -1450,6 +1453,12 @@ const RAW_COVERED = [
   // the same mistake — treating a word the dictionary translates as if it were not
   // copy — and both are gone, so an English literal added here now names the file.
   "features/scouting/ScoutingPanel.tsx",
+  // M220. The last of the three screens M176 named: 46 counted hits, and every one of
+  // them now reads the dictionary — including the four slider labels, the scale words a
+  // slider prints, and the season table's headers (which join the Data Room's rather
+  // than gaining a second set of abbreviations). Registration is what turns "this screen
+  // is localised" into a held property: an English literal added here names the file.
+  "features/sim/SimulationLab.tsx",
   "features/settings/SettingsPage.tsx",
   "features/shell/AppShell.tsx",
   // Reached 0 at M161 but only registered here, at M163, because the locale walk made
@@ -1644,7 +1653,13 @@ const RAW_COVERED = [
 // open count. One file remains — Simulation Lab — and it is the last of the three the
 // comment at M176 named. 46 as of M209, after the scanner stopped counting five things
 // that were never copy (see `valueEnd`): the file did not change, the measurement did.
-const RAW_UI_CEILING = 46;
+// 0 as of M220: the Simulation Lab's 46 left the open count when it was registered in
+// RAW_COVERED above, so the number this gate guards is no longer an allowance with a
+// trend behind it — it is the absence of debt. The scan is still policed: the planted
+// fixture above has to report its five hits in five positions, the caption planted in
+// every .tsx file still has to come back, and the skip list below audits itself. A literal
+// added to any file named above now fails the covered-set clause instead of moving this.
+const RAW_UI_CEILING = 0;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
@@ -1784,9 +1799,19 @@ ok(`a caption planted at the midpoint of every one of the ${tsxFiles.length} .ts
 // the paragraph above it: a floor on how many files still owe work is a floor on the
 // quantity every milestone is trying to shrink, so it went red while the scanner was
 // working perfectly. The two properties the comment names are the two that remain.
+// M220 retires this check under the rule the paragraph above states: registering the
+// Simulation Lab took `openRows` and `openKinds` to 0, and both conjuncts are floors on
+// the very quantity the arc removes — `tsxSrc.length >= 60` is still true and holds no
+// claim about debt, `openKinds.size >= 6` can only be made true again by reintroducing
+// debt. What each conjunct was actually standing for is now measured where it cannot be
+// satisfied by debt: the tree walk by the planted-caption clause above (a caption in the
+// midpoint of every .tsx file has to come back in full), and the classification by the
+// raw-UI fixture (five planted hits, five positions, two of them call arguments). The
+// gate that used to say "this scan still sees something" now says "this scan still sees
+// the fixture", and the covered set says the real tree is clean.
 const openKinds = new Set(openRows.flatMap(([, h]) => h.map((x) => x.kind)));
-ok(`the debt scan still walks a real tree and still tells copy positions apart in it (${tsxSrc.length} files, ${openRows.length} in debt, ${openKinds.size} distinct positions: ${[...openKinds].sort().join(", ")})`,
-  tsxSrc.length >= 60 && openKinds.size >= 6);
+ok(`the debt scan still walks the whole tree and reports what it finds in it (${tsxSrc.length} .tsx files, ${openRows.length} in debt, ${openKinds.size} distinct positions: ${[...openKinds].sort().join(", ") || "none"})`,
+  tsxSrc.length >= 60);
 
 // The exemption's own audit: a literal the scan chose not to report because it
 // looks like a t() lookup has to be one. This is the check that would have caught

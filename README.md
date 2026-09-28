@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M212 (a few numbers in that range
+Work ships one milestone per commit and is currently at M220 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -4294,6 +4294,66 @@ the population, and a *dynamically* built comparison (`.filter(buildWindow(iso))
 whatever text follows the subtraction. Both are recorded rather than papered over. Next: #150/#165 —
 `data/ai.ts`'s 30 composed sentences, whose English label interpolations are now at least a *declared*
 door since M215.
+
+### M220 — the Simulation Lab is the last screen the debt scan counts
+
+M176 named three screens that owed the arc their copy: the Player OS, the Data Room and the
+Simulation Lab. M207 and M208 registered the first two, leaving one file in the raw-UI debt
+list. This is that file's milestone, and its 46 counted hits are all gone: the open total now
+reads **0 across 0 files**, `RAW_UI_CEILING` drops **46 → 0**, and `RAW_COVERED` goes **39 → 40**.
+That last number matters more than it looks — every `.tsx` under `features/` is now inside the
+covered set, so an English literal added to any screen in the product names its file on the
+very next run instead of moving an aggregate.
+
+**Thirteen of the slots already had a key.** The Home/Away badges take `data.home`/`data.away`,
+the four slider labels take `tac.mentality`, `mgr.tempo`, `mgr.press`, `mgr.fatigue`, the stat
+rows take `ms.possession`/`ms.shots`/`ms.onTarget`/`ms.corners`, the headings take
+`mgr.keyMoments`, `mgr.draw` and `common.club`, and the season table's headers join the Data
+Room's `data.th.*` rather than growing a second set of abbreviations for the same six columns.
+**34 new keys** (`sim.*`, one namespace the dictionary did not have) were written in all three
+locales: **1602 → 1636 keys per locale**.
+
+**The second English list on the screen is gone too.** `MENTALITY_LABELS` sat beside a table the
+dictionary has carried since M156 — the Tactical Studio persisted a 0..4 index and printed the
+dictionary's word for it, while the lab that received that index printed its own. The helper now
+reads `tac.mentality.${i}`, declared as a dynamic site whose value space is still read off the
+studio's slider range rather than restated, and the five words the *slider itself* prints
+(`Low`, `Medium`, `High`, `Deep`, `High press`) were keyed as well, because a screen that
+translates its labels and then prints English in the control under them has not localised
+anything. The `<b>` around the carried mentality came off: the sentence is now two whole keys
+(one with the shape, one without) rather than an English shell with a hole in it, which is what
+a sentence that changes shape per locale has to be.
+
+**The open-debt floor retired itself, under its own rule.** `proof-i18n`'s non-vacuity clause
+required `openKinds.size >= 6` — a floor on how many positions still owe work — and the paragraph
+above it already said what to do when that stops holding: *"the honest fix is to delete this
+check — the debt has reached the kind of zero it was never meant to guard."* M173 had removed the
+sibling floor for the same reason. The clause is now gone, and what it was standing for is
+measured where debt cannot satisfy it: the tree walk by the caption planted in the midpoint of
+every `.tsx` file, the classification by the raw-UI fixture (five planted hits, five positions,
+two of them call arguments), and the real tree by the covered set. `RAW_UI_CEILING = 0` is the
+claim that has to hold from here.
+
+**Mutation witness: five arms, all caught, all restored.** (1) the title backfilled as an English
+literal — caught twice, by reachability (`sim.title`) and by the covered-set clause; (2) the zh-TW
+row deleted — `zh-TW: no keys missing (1)`; (3) a placeholder dropped from the zh-CN seed line —
+`placeholders agree across locales`; (4) the `DYN_SITES` entry removed — `79 sites / 1 undeclared`;
+(5) one literal added to an *open* component — `1 across 1 files, ceiling 0`. A control run after
+each restore sat at **233/233**.
+
+Measured on the working copy: `npm run build` (which runs `tsc --noEmit` first) exit 0, suite
+**37/37 proof scripts · 1963/1963 checks · exit 0**, `proof-i18n` **233/233** at **1636 keys ·
+3 locales**. Besides `proof-i18n`, one other proof changed: `proof-learn`'s press-dial assertion
+read `label="Press"` from the source, and now reads the key that label carries — same dial, and
+the dictionary gate holds the word.
+
+**What is still not claimed**: the simulation's *summary* lines come out of `domain/matchEngine.ts`
+as domain prose (`proof-i18n`'s prose ceiling reads **256 literals across 10 files, ceiling 256**),
+so a reader in zh-CN sees a translated screen with English sentences under "Match summary" — that
+is prose debt behind the RowText door, not raw-UI debt, and the 0 above does not cover it; the
+Manager OS's own sliders still print the same five scale words this milestone keyed; the season
+table's `#` stays a symbol; and `toast.success(` is still outside the call-name scan. Next: #150/
+#165 — `data/ai.ts`'s 30 composed sentences.
 
 ## Deploying
 

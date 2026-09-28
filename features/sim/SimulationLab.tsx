@@ -7,6 +7,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 interface Tactics {
   mentality: number; // -2 park the bus .. +2 all-out attack
@@ -16,7 +17,11 @@ interface Tactics {
 }
 
 const DEFAULT_TACTICS: Tactics = { mentality: 0, tempo: 0.5, press: 0.5, fatigue: 0 };
-const MENTALITY_LABELS = ["Very defensive", "Defensive", "Balanced", "Attacking", "Very attacking"];
+// The studio persists a 0..4 mentality index and the dictionary has carried its word since
+// M156, so the lab reads the word the studio shows rather than a second English list of its
+// own. The helper takes the translator by name because that is how check 16 reads a site.
+const mentalityWord = (t: (key: string) => string, i: number) => t(`tac.mentality.${i}`);
+const PROB_RUNS = 250;
 
 function baseInput(clubId: string, tac: Tactics): TeamInput {
   const c = getClub(clubId)!;
@@ -47,6 +52,7 @@ function baseInput(clubId: string, tac: Tactics): TeamInput {
 
 export function SimulationLab() {
   const { query } = useRouter();
+  const { t } = useI18n();
   const clubs = useMemo(() => [...footballProvider.clubs()].sort((a, b) => b.overall - a.overall), []);
   const [homeId, setHomeId] = useState(clubs.find((c) => c.name.includes("City"))?.id ?? clubs[0].id);
   const [awayId, setAwayId] = useState(clubs.find((c) => c.name.includes("Madrid"))?.id ?? clubs[1].id);
@@ -87,7 +93,7 @@ export function SimulationLab() {
           seedBase: `prob:${homeId}|${awayId}|${homeTac.mentality},${homeTac.tempo},${homeTac.press},${homeTac.fatigue}|${awayTac.mentality},${awayTac.tempo},${awayTac.press},${awayTac.fatigue}`,
           home: baseInput(homeId, homeTac),
           away: baseInput(awayId, awayTac),
-          runs: 250,
+          runs: PROB_RUNS,
         }),
       );
       setProbBusy(false);
@@ -101,43 +107,45 @@ export function SimulationLab() {
       <div className="flex items-center gap-2">
         <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">▷</div>
         <div>
-          <div className="flex items-center gap-2"><h1 className="text-xl font-bold">Simulation Lab</h1>{<DemoBadge />}</div>
-          <p className="text-xs text-muted-foreground">Tune tactics and run the deterministic Match Engine — the same model behind live projections.</p>
+          <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("sim.title")}</h1>{<DemoBadge />}</div>
+          <p className="text-xs text-muted-foreground">{t("sim.subtitle")}</p>
         </div>
       </div>
 
       {studioMentality !== null && (
         <Panel className="p-3">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Badge variant="outline" className="border-primary/40 text-primary">From Tactical Studio</Badge>
-            <span>Home side starts in your <b>{MENTALITY_LABELS[studioMentality]}</b> mentality{carriedShape ? <span className="text-muted-foreground"> · shape {carriedShape}</span> : null}.</span>
-            <span className="text-xs text-muted-foreground">Tempo / press / fatigue still start at engine defaults — adjust below.</span>
+            <Badge variant="outline" className="border-primary/40 text-primary">{t("sim.fromStudio")}</Badge>
+            <span>{carriedShape
+              ? t("sim.studioCarryShape", { mentality: mentalityWord(t, studioMentality), shape: carriedShape })
+              : t("sim.studioCarry", { mentality: mentalityWord(t, studioMentality) })}</span>
+            <span className="text-xs text-muted-foreground">{t("sim.engineDefaults")}</span>
           </div>
         </Panel>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <TeamPanel title="Home" club={home.id} colors={home.colors} short={home.short} value={homeTac} onChange={setHomeTac} clubs={clubs} selected={homeId} onSelect={setHomeId} />
-        <TeamPanel title="Away" club={away.id} colors={away.colors} short={away.short} value={awayTac} onChange={setAwayTac} clubs={clubs} selected={awayId} onSelect={setAwayId} />
+        <TeamPanel title={t("data.home")} club={home.id} colors={home.colors} short={home.short} value={homeTac} onChange={setHomeTac} clubs={clubs} selected={homeId} onSelect={setHomeId} />
+        <TeamPanel title={t("data.away")} club={away.id} colors={away.colors} short={away.short} value={awayTac} onChange={setAwayTac} clubs={clubs} selected={awayId} onSelect={setAwayId} />
       </div>
 
       <Panel className="p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={runMatch} disabled={homeId === awayId}>{result ? "Re-run fixture" : "▶ Run match"}</Button>
-          <Button variant="outline" onClick={reroll} disabled={!result}>New variation (same tactics)</Button>
-          <Button variant="secondary" onClick={runProb} disabled={homeId === awayId || probBusy}>{probBusy ? "Running 250 sims…" : "Run probability model (250)"}</Button>
-          <span className="text-xs text-muted-foreground">Seed {homeId}·{awayId}·v{nonce}</span>
-          {homeId === awayId && <Badge variant="outline" className="text-warning">Pick two different clubs</Badge>}
+          <Button onClick={runMatch} disabled={homeId === awayId}>{result ? t("sim.rerun") : t("sim.runMatch")}</Button>
+          <Button variant="outline" onClick={reroll} disabled={!result}>{t("sim.newVariation")}</Button>
+          <Button variant="secondary" onClick={runProb} disabled={homeId === awayId || probBusy}>{probBusy ? t("sim.runningSims", { n: PROB_RUNS }) : t("sim.runProbability", { n: PROB_RUNS })}</Button>
+          <span className="text-xs text-muted-foreground">{t("sim.seed", { home: homeId, away: awayId, nonce })}</span>
+          {homeId === awayId && <Badge variant="outline" className="text-warning">{t("sim.pickDifferent")}</Badge>}
         </div>
         {result ? <ResultView result={result} home={home.name} away={away.name} /> : (
-          <div className="mt-3"><EmptyState title="No simulation yet" hint="Set the tactics and run a fixture." icon="▷" /></div>
+          <div className="mt-3"><EmptyState title={t("sim.emptyTitle")} hint={t("sim.emptyHint")} icon="▷" /></div>
         )}
       </Panel>
 
       {prob && <ProbabilityPanel prob={prob} />}
 
       <Panel className="p-4">
-        <SectionTitle title="Season simulation" hint="Full round-robin through the engine" />
+        <SectionTitle title={t("sim.seasonTitle")} hint={t("sim.seasonHint")} />
         <div className="mt-2 flex flex-wrap gap-2">
           {footballProvider.competitions().slice(0, 8).map((c) => (
             <Button key={c.id} size="sm" variant={season?.compId === c.id ? "default" : "outline"} onClick={() => runSeason(c.id)}>{c.name}</Button>
@@ -153,6 +161,7 @@ function TeamPanel({ title, club, colors, short, value, onChange, clubs, selecte
   title: string; club: string; colors: [string, string]; short: string; value: Tactics; onChange: (t: Tactics) => void;
   clubs: ReturnType<typeof footballProvider.clubs>; selected: string; onSelect: (id: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <Panel className="p-4">
       <div className="flex items-center gap-3">
@@ -163,10 +172,10 @@ function TeamPanel({ title, club, colors, short, value, onChange, clubs, selecte
         <Badge variant="outline" className="font-mono">{title}</Badge>
       </div>
       <div className="mt-3 space-y-3">
-        <Slider label="Mentality" min={-2} max={2} step={1} value={value.mentality} onChange={(v) => onChange({ ...value, mentality: v })} format={(v) => ["Park the bus", "Defensive", "Balanced", "Attacking", "All-out attack"][v + 2]} />
-        <Slider label="Tempo" min={0} max={1} step={0.05} value={value.tempo} onChange={(v) => onChange({ ...value, tempo: v })} format={(v) => (v < 0.35 ? "Low" : v < 0.7 ? "Medium" : "High")} />
-        <Slider label="Press" min={0} max={1} step={0.05} value={value.press} onChange={(v) => onChange({ ...value, press: v })} format={(v) => (v < 0.35 ? "Deep" : v < 0.7 ? "Medium" : "High press")} />
-        <Slider label="Fatigue" min={0} max={1} step={0.1} value={value.fatigue} onChange={(v) => onChange({ ...value, fatigue: v })} format={(v) => `${Math.round(v * 100)}%`} />
+        <Slider label={t("tac.mentality")} min={-2} max={2} step={1} value={value.mentality} onChange={(v) => onChange({ ...value, mentality: v })} format={(v) => mentalityWord(t, v + 2)} />
+        <Slider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={value.tempo} onChange={(v) => onChange({ ...value, tempo: v })} format={(v) => (v < 0.35 ? t("sim.low") : v < 0.7 ? t("sim.medium") : t("sim.high"))} />
+        <Slider label={t("mgr.press")} min={0} max={1} step={0.05} value={value.press} onChange={(v) => onChange({ ...value, press: v })} format={(v) => (v < 0.35 ? t("sim.pressDeep") : v < 0.7 ? t("sim.medium") : t("sim.highPress"))} />
+        <Slider label={t("mgr.fatigue")} min={0} max={1} step={0.1} value={value.fatigue} onChange={(v) => onChange({ ...value, fatigue: v })} format={(v) => `${Math.round(v * 100)}%`} />
       </div>
     </Panel>
   );
@@ -182,14 +191,15 @@ function Slider({ label, min, max, step, value, onChange, format }: { label: str
 }
 
 function ResultView({ result, home, away }: { result: SimResult; home: string; away: string }) {
+  const { t } = useI18n();
   const s = result.stats;
   const rows = [
-    { label: "Possession", h: Math.round(s.home.possession), a: Math.round(s.away.possession), unit: "%" },
-    { label: "Shots", h: s.home.shots, a: s.away.shots, unit: "" },
-    { label: "On target", h: s.home.onTarget, a: s.away.onTarget, unit: "" },
+    { label: t("ms.possession"), h: Math.round(s.home.possession), a: Math.round(s.away.possession), unit: "%" },
+    { label: t("ms.shots"), h: s.home.shots, a: s.away.shots, unit: "" },
+    { label: t("ms.onTarget"), h: s.home.onTarget, a: s.away.onTarget, unit: "" },
     { label: "xG", h: +s.home.xg.toFixed(2), a: +s.away.xg.toFixed(2), unit: "" },
-    { label: "Corners", h: s.home.corners, a: s.away.corners, unit: "" },
-    { label: "Cards", h: s.home.yellows + s.home.reds * 2, a: s.away.yellows + s.away.reds * 2, unit: "" },
+    { label: t("ms.corners"), h: s.home.corners, a: s.away.corners, unit: "" },
+    { label: t("sim.cards"), h: s.home.yellows + s.home.reds * 2, a: s.away.yellows + s.away.reds * 2, unit: "" },
   ];
   return (
     <div className="mt-4 space-y-4">
@@ -210,20 +220,21 @@ function ResultView({ result, home, away }: { result: SimResult; home: string; a
         })}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">Key moments</div><ul className="max-h-40 space-y-1 overflow-y-auto text-xs">{result.timeline.filter((e) => e.type === "GOAL" || e.type === "RED" || e.type === "VAR").slice(0, 10).map((e, i) => <li key={i} className="flex gap-2"><span className="w-8 font-mono text-muted-foreground">{e.minute}'</span><span className="truncate">{e.type === "GOAL" ? "⚽" : e.type === "RED" ? "🟥" : "📺"} {e.player} <span className="text-muted-foreground">({e.side === "home" ? home : away})</span></span></li>)}</ul></div>
-        <div><div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">Match summary</div><ul className="space-y-1 text-xs text-muted-foreground">{result.summary.map((x, i) => <li key={i}>• {x}</li>)}</ul></div>
+        <div><div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">{t("mgr.keyMoments")}</div><ul className="max-h-40 space-y-1 overflow-y-auto text-xs">{result.timeline.filter((e) => e.type === "GOAL" || e.type === "RED" || e.type === "VAR").slice(0, 10).map((e, i) => <li key={i} className="flex gap-2"><span className="w-8 font-mono text-muted-foreground">{e.minute}'</span><span className="truncate">{e.type === "GOAL" ? "⚽" : e.type === "RED" ? "🟥" : "📺"} {e.player} <span className="text-muted-foreground">({e.side === "home" ? home : away})</span></span></li>)}</ul></div>
+        <div><div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">{t("sim.matchSummary")}</div><ul className="space-y-1 text-xs text-muted-foreground">{result.summary.map((x, i) => <li key={i}>• {x}</li>)}</ul></div>
       </div>
     </div>
   );
 }
 
 function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
+  const { t } = useI18n();
   const pct = (v: number) => `${Math.round(v * 100)}%`;
   const seg = (v: number) => `${v * 100}%`;
   return (
     <Panel className="p-4">
       <div className="flex items-center justify-between">
-        <SectionTitle title="Outcome probability" hint={`${prob.runs} deterministic engine runs`} />
+        <SectionTitle title={t("sim.outcomeTitle")} hint={t("sim.engineRuns", { n: prob.runs })} />
         <DemoBadge />
       </div>
       <div className="mt-3">
@@ -233,26 +244,26 @@ function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
           <div className="bg-info" style={{ width: seg(prob.awayWinPct) }} />
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
-          <div><div className="truncate text-xs text-muted-foreground">{prob.homeName} win</div><div className="font-mono font-semibold text-primary">{pct(prob.homeWinPct)}</div></div>
-          <div><div className="text-xs text-muted-foreground">Draw</div><div className="font-mono font-semibold">{pct(prob.drawPct)}</div></div>
-          <div><div className="truncate text-xs text-muted-foreground">{prob.awayName} win</div><div className="font-mono font-semibold text-info">{pct(prob.awayWinPct)}</div></div>
+          <div><div className="truncate text-xs text-muted-foreground">{t("sim.teamWin", { team: prob.homeName })}</div><div className="font-mono font-semibold text-primary">{pct(prob.homeWinPct)}</div></div>
+          <div><div className="text-xs text-muted-foreground">{t("mgr.draw")}</div><div className="font-mono font-semibold">{pct(prob.drawPct)}</div></div>
+          <div><div className="truncate text-xs text-muted-foreground">{t("sim.teamWin", { team: prob.awayName })}</div><div className="font-mono font-semibold text-info">{pct(prob.awayWinPct)}</div></div>
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Avg goals</div><div className="font-mono text-sm">{prob.avgHomeGoals.toFixed(2)}–{prob.avgAwayGoals.toFixed(2)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Avg xG</div><div className="font-mono text-sm">{prob.avgHomeXg.toFixed(2)}–{prob.avgAwayXg.toFixed(2)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Both score</div><div className="font-mono text-sm">{pct(prob.bttsPct)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">Over 2.5</div><div className="font-mono text-sm">{pct(prob.over25Pct)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgGoals")}</div><div className="font-mono text-sm">{prob.avgHomeGoals.toFixed(2)}–{prob.avgAwayGoals.toFixed(2)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgXg")}</div><div className="font-mono text-sm">{prob.avgHomeXg.toFixed(2)}–{prob.avgAwayXg.toFixed(2)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.bothScore")}</div><div className="font-mono text-sm">{pct(prob.bttsPct)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.over25")}</div><div className="font-mono text-sm">{pct(prob.over25Pct)}</div></div>
       </div>
       <div className="mt-4">
-        <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Most likely scorelines</div>
+        <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("sim.mostLikelyScores")}</div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {prob.mostLikely.map((s) => (
             <span key={s.score} className="rounded-md border bg-card/40 px-2 py-1 text-sm"><span className="font-mono font-semibold">{s.score}</span> <span className="text-xs text-muted-foreground">{pct(s.pct)}</span></span>
           ))}
         </div>
       </div>
-      <p className="mt-3 text-[11px] text-muted-foreground">Modelled from the Match Engine over {prob.runs} seeded runs — a projection, not a played result. Fully reproducible for this setup.</p>
+      <p className="mt-3 text-[11px] text-muted-foreground">{t("sim.projectionNote", { n: prob.runs })}</p>
     </Panel>
   );
 }
@@ -283,11 +294,12 @@ function simulateSeason(compId: string, nonce: number): SeasonRow[] {
 }
 
 function SeasonTable({ rows, name }: { rows: SeasonRow[]; name: string }) {
+  const { t } = useI18n();
   return (
     <div className="mt-3 overflow-x-auto">
       <table className="w-full text-sm">
-        <caption className="pb-2 text-left text-xs uppercase tracking-widest text-muted-foreground">{name} · simulated</caption>
-        <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">#</th><th className="px-2 py-1">Club</th><th className="px-2 py-1 text-right">P</th><th className="px-2 py-1 text-right">W</th><th className="px-2 py-1 text-right">D</th><th className="px-2 py-1 text-right">L</th><th className="px-2 py-1 text-right">GD</th><th className="px-2 py-1 text-right">Pts</th></tr></thead>
+        <caption className="pb-2 text-left text-xs uppercase tracking-widest text-muted-foreground">{t("sim.tableCaption", { name })}</caption>
+        <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">#</th><th className="px-2 py-1">{t("common.club")}</th><th className="px-2 py-1 text-right">{t("data.th.p")}</th><th className="px-2 py-1 text-right">{t("data.th.w")}</th><th className="px-2 py-1 text-right">{t("data.th.d")}</th><th className="px-2 py-1 text-right">{t("data.th.l")}</th><th className="px-2 py-1 text-right">{t("data.th.gd")}</th><th className="px-2 py-1 text-right">{t("data.th.pts")}</th></tr></thead>
         <tbody>
           {rows.map((r, i) => { const c = getClub(r.clubId); return (
             <tr key={r.clubId} className={cn("border-t", i === 0 && "bg-primary/10")}>
