@@ -71,7 +71,7 @@
 //      See the long note at its own definition below (M194).
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
-import { scanSource, lookupsIn } from "./lib/rawUiScan.mjs";
+import { scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -1662,6 +1662,90 @@ const audit = reaching.length
   : "none reaches " + SKIP_DIRS.join(", ");
 ok(`the skip-list audit read ${specSeen} import specifiers over ${appSrc.size} files and ${reaching.length} of them reaches a skipped directory (${audit})`,
   reaching.length === 0 && appSrc.size > 100 && specSeen > appSrc.size * 2);
+// Every clause above counts literals inside *regions* the shared walker built, so it inherits
+// the walker's thread: an attribute list that never reaches its `>`, or a brace still open when
+// the text runs out, means each region after that point describes a file the source does not
+// contain. This is not hypothetical — `components/ui/chart.tsx` read as clean at M212 because
+// one mis-advanced escape made its `<style …>` template run away, and the walker finished that
+// file six braces deep with an unclosed tag, so the JSX body below line 96 had been parsed as
+// attributes for as long as the census has existed. `sourceBalance` is the walker's own account
+// of where it stood at EOF, which makes it the only honest way to audit the census's own sight.
+// The fields are read off the walker, not hand-written: a report that silently drops one would
+// otherwise shrink this gate forever, and the clause below cannot notice a field it was never
+// told to look at.
+const BAL_FIELDS = Object.keys(sourceBalance(""));
+ok(`the balance the census reads reports one field per thread the walker can lose (${BAL_FIELDS.join(", ")})`,
+  BAL_FIELDS.join(",") === "elem,depth,inTag");
+// Three planted refusals, each breaking exactly one thread and no other, are measured in the
+// *same* filter as the population. Without them a weakened filter — one left checking only
+// `elem`, say — would report a clean census forever, because the population is clean. With
+// them, the filter has to flag exactly three offenders to be green, and every real file that
+// loses its thread pushes the count above that.
+const BAL_REFUSALS = [
+  ["planted unclosed element", ["export const X = () => (", "  <div>", '    {"kept"}', ");", ""].join("\n"), "elem"],
+  ["planted bracket open at EOF", ["export const X = () => {", "  const y = [", "    <div>{'kept'}</div>", "  ;", "};", ""].join("\n"), "depth"],
+  ["planted unclosed attribute", ['export const Card = () => (', '  <div title="unterminated', ");", ""].join("\n"), "inTag"],
+].map(([name, src, field]) => [name, field, sourceBalance(src)]);
+const offenders = [...[...appSrc].map(([p, src]) => [p, sourceBalance(src)]), ...BAL_REFUSALS.map(([name, , b]) => [name, b])]
+  .filter(([, b]) => BAL_FIELDS.some((k) => b[k]));
+ok(`the walker kept its thread to the end of all ${appSrc.size} measured files, and its filter flags exactly the ${BAL_REFUSALS.length} planted refusals and nothing else (${offenders.length}: ${offenders.map(([p, b]) => `${p} ${BAL_FIELDS.filter((k) => b[k]).join("+")}`).join(", ") || "none"})`,
+  offenders.length === BAL_REFUSALS.length &&
+  BAL_REFUSALS.every(([name, field, b]) => BAL_FIELDS.filter((k) => b[k]).join(",") === field) &&
+  appSrc.size > 100);
+// The other direction: a whole file must read zero on every field *and* still show its copy from
+// two syntactic positions, so an instrument that reports zeros because it builds no regions at
+// all cannot pass the clause above either.
+const BAL_WHOLE = [
+  "export const Card = () => (",
+  '  <div title="attr">',
+  "    <span>",
+  '      {"in a hole"}',
+  "    </span>",
+  "  </div>",
+  ");",
+  "",
+].join("\n");
+const balWhole = sourceBalance(BAL_WHOLE);
+const wholeSeen = scanSource(BAL_WHOLE).hits.map((h) => h.kind).join(",");
+ok(`and a whole fixture reads zero on every field while still showing its copy (${JSON.stringify(balWhole)} / ${wholeSeen})`,
+  BAL_FIELDS.every((k) => !balWhole[k]) && wholeSeen.includes("attr") && wholeSeen.includes("child"));
+// The clause above reads the walker's own report, so it answers "where did it stand?". This one
+// asks the symptom question a reader actually cares about: if a future commit dropped one
+// untranslated caption into the middle of this file, would the census see it? One probe per .tsx,
+// at that file's own midpoint, and both of its halves must come back. Measured against the two
+// reverted defects separately, the two clauses agree on the file where damage is visible
+// (`chart.tsx`) and the balance report additionally sees a non-JSX file's drift that this probe
+// cannot reach — so they cover each other rather than duplicate. The control is a file that
+// really is blind, built here rather than hoped for: without it, a probe test that stopped
+// flagging anything would be indistinguishable from a healthy tree. Choosing it was a
+// measurement: an unterminated *attribute* is not blind, because a string stops at its newline
+// and the walker re-reads the next `<` as a tag, so only the runaway template literal — the one
+// thread with no character to hand that closes it — stays blind to the end.
+// The two choices this probe makes (plant in the interior, demand both halves) are load-bearing
+// as a pair, and that was measured by restoring the escape defect and re-running the four
+// combinations: interior reports chart.tsx with either demand, an end-of-file plant reports it
+// under "both halves" only, and the laziest reading of all — plant at the end, accept a single
+// half — reports nothing blind in a tree that is not. On the healthy tree the two are
+// indistinguishable, which is why neither is a mutation arm on its own.
+const MID_PROBE = '<div title="Probe untranslated caption">Probe untranslated body</div>';
+const midBlind = (lines) => {
+  const at = Math.floor(lines.length / 2);
+  const code = [...lines.slice(0, at), "  " + MID_PROBE, ...lines.slice(at)].join("\n");
+  return scanSource(code).hits.filter((h) => /Probe untranslated/.test(String(h.text))).length !== 2;
+};
+const MID_CONTROL = [
+  "export const Broken = () => {",
+  "  const s = `unterminated template literal",
+  "  return <div>{s}</div>;",
+  "};",
+];
+const tsxFiles = files.filter((f) => rel(f).endsWith(".tsx") && !rel(f).startsWith("i18n/"));
+const blind = tsxFiles
+  .map((f) => [rel(f), midBlind(readFileSync(f, "utf8").replace(/\r\n/g, "\n").split("\n"))])
+  .filter(([, b]) => b)
+  .map(([p]) => p);
+ok(`a caption planted at the midpoint of every one of the ${tsxFiles.length} .tsx files comes back in full (blind: ${blind.join(", ") || "none"}), while the file planted blind here is reported blind (${midBlind(MID_CONTROL)})`,
+  blind.length === 0 && midBlind(MID_CONTROL) && tsxFiles.length > 50);
 // Non-vacuity, and deliberately *not* a floor on the total. The previous clause read
 // `openTotal >= 300`, which is a bound on the exact quantity every milestone is trying
 // to shrink: localise three more screens and the check goes red while the scan is

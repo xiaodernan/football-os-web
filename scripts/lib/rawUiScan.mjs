@@ -79,6 +79,10 @@ function stripComments(s) {
       i = end;
       continue;
     }
+    if (s[i] === "/" && opensRegex(s, i)) {
+      const e = skipRegex(s, i);
+      if (e > 0) { out += s.slice(i, e).replace(/[^\n]/g, " "); i = e; continue; }
+    }
     if (s[i] === "/" && s[i + 1] === "/") {
       const n = s.indexOf("\n", i);
       i = n < 0 ? s.length : n;
@@ -107,6 +111,42 @@ function opensLiteral(s, i) {
   return k >= 0 && VALUE_BEFORE.test(s[k]);
 }
 
+// A `/` in value position opens a regular-expression literal: its body is code, and an
+// apostrophe inside a character class (`/[^a-z0-9' -]/g`) is not a string delimiter.
+// Without this the walker reads `/`-to-`/` as a quoted range, and `data/intelligence.ts`
+// ends the file with two braces still open — a lost thread that makes its own copy
+// unreadable to every position-based rule. The keyword arm is for `return /x/g`, where the
+// character before the slash is a letter.
+const REGEX_BEFORE = /[=(,[!&|?:;]$/;
+const REGEX_KEYWORD = /(?:return|typeof|instanceof|case|in|of|new|delete|void|do|else)[\s(]*$/;
+function opensRegex(s, i) {
+  if (s[i + 1] === "/" || s[i + 1] === "*") return false;
+  let k = i - 1;
+  while (k >= 0 && (s[k] === " " || s[k] === "\t")) k--;
+  if (k < 0) return false;
+  if (REGEX_BEFORE.test(s[k])) return true;
+  return /[A-Za-z0-9_$]/.test(s[k]) && REGEX_KEYWORD.test(s.slice(0, k + 1));
+}
+// index just past the closing `/` and its flags; -1 when no slash closes on this line,
+// which is a division that only looked like a regex opener.
+function skipRegex(s, i) {
+  let inClass = false;
+  let j = i + 1;
+  while (j < s.length) {
+    const c = s[j];
+    if (c === "\n") return -1;
+    if (c === "\\") { j += 2; continue; }
+    if (c === "[") inClass = true;
+    else if (c === "]") inClass = false;
+    else if (c === "/" && !inClass) {
+      while (j < s.length && /[a-z]/.test(s[j + 1])) j++;
+      return j + 1;
+    }
+    j++;
+  }
+  return -1;
+}
+
 // s[i] is a quote; index just past the closing quote. Tracks ${} so a brace in an
 // interpolation does not end the template, and stops at a newline inside a
 // non-template literal.
@@ -115,7 +155,12 @@ function skipQuoted(s, i) {
   let j = i + 1;
   while (j < s.length) {
     const c = s[j];
-    if (c === "\\") j += 2;
+    // An escape consumes exactly the character it escapes. `j += 2` on its own then fell
+    // through to the loop's own `j++` and swallowed a third character, so a literal closed
+    // one character past where it really ended: chart.tsx's `{\n` ate the `$` of `${rule}`,
+    // its template ran on to line 158, the `<style …>` attribute list never reached a `>`
+    // at brace zero, and every JSX child after line 96 was read as attributes.
+    if (c === "\\") { j += 2; continue; }
     else if (c === q) return j + 1;
     else if (q === "`" && c === "$" && s[j + 1] === "{") {
       let d = 1;
@@ -263,6 +308,7 @@ function walk(s, from, to, tags, kids) {
   }
   if (inTag) tags.push([tagStart, to]);
   endChild(to);
+  return { elem, depth, inTag };
 }
 
 const holeless = (t) => t.replace(/\$\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, "");
@@ -357,12 +403,21 @@ function splitExprs(s, a, b) {
 function regions(s) {
   const tags = [];
   const kids = [];
-  walk(s, 0, s.length, tags, kids);
-  return { tags, kids };
+  const balance = walk(s, 0, s.length, tags, kids);
+  return { tags, kids, balance };
 }
 
 export function normalize(src) {
   return stripComments(src.replace(/\r\n/g, "\n"));
+}
+
+// Where the walker stands when the normalized text runs out. `elem` is the number of
+// elements left open, `depth` the brackets still unclosed, `inTag` an attribute list
+// that never reached its `>`. A file whose scan can see its own copy has all three at
+// zero; anything else means the walker lost the thread somewhere and the regions it
+// built after that point are not the regions the source describes.
+export function sourceBalance(src) {
+  return regions(normalize(src)).balance;
 }
 
 export function scanSource(src) {

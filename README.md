@@ -3720,12 +3720,118 @@ still throws where `pick([])` returns `undefined` — its **2** app call sites a
 difference between two helpers, not a reachable crash, and
 it stays a clause rather than becoming an invented fix; the plan id is still `S${Date.now()…}`; and the
 untracked `dev/` scratch from M197 onward is still in the tree. One hole this milestone *measured*
-rather than closed: `rawUiScan`'s walker has no notion of having lost the thread — the control above
+rather than closed: `rawUiScan`'s walker had no notion of having lost the thread — the control above
 shows it dropping **5 of 7** hits purely because the text it was handed left two `<div>`s open, and
-nothing today refuses to call such a file clean. The repair removes the input that did it here; a
-depth-at-EOF check on the normalized file is what would remove the class, and it is queued ahead of
-the prose work rather than written as a clause that only restates this incident.
+nothing then refused to call such a file clean. The repair removed the input that did it here; a
+depth-at-EOF check on the normalized file is what removes the class, and it was queued ahead of the
+prose work rather than written as a clause that only restates this incident. **M213 landed that
+check**, found the two mis-advances that had been putting the walker off-thread all along, and
+measured the sentence above's **5 of 7** as a *slice* effect: on the shipped files the same defect
+swallows every hit after line 96 of `chart.tsx`, so the count understated it.
 
+
+### M213 — a ledger that counts copy has to prove it can see
+
+M212 fixed the router and taught this repo's shared text scanner (`scripts/lib/rawUiScan.mjs`)
+that a string is not code. Reading the file again for this milestone turned up two more places
+where it mis-advanced, both inherited from the same mistake: **treating a scanner's position as
+if one rule could not consume two characters**.
+
+The first is in `skipQuoted`. Its escape branch did `if (c === "\\") j += 2;` and then fell
+through to the loop's own `j++`, so an escape consumed *three* characters and every literal
+closed one past where it really ended. In `components/ui/chart.tsx` the theme CSS builder holds
+`"@media " + … + " {\n"` — the `\n` ate the `$` of the following `${rule}`, so the template
+literal started early, ran to line 158, and the `<style …>` attribute list it swallowed never
+reached a `>` at brace zero. Everything the walker believed about that file after line 96 was
+wrong: each subsequent JSX child was read as an attribute of a tag still being opened. The fix is
+that an escape consumes exactly the character it escapes — `{ j += 2; continue; }`.
+
+The second is that a regular-expression literal is code, and the comment stripper had no notion
+of it. `data/intelligence.ts:246` tokenises the question with `/[^a-z0-9' -]/g`, and that
+apostrophe inside the character class opened a phantom string that ran to a later quote and took
+two braces with it. `stripComments` now recognises a `/` in value position (`REGEX_BEFORE`, plus
+`REGEX_KEYWORD` for the `return /x/` shape where the preceding character is a word character) and
+blanks the literal's body, class-aware and refusing to span a newline so a mis-read division
+cannot eat the rest of the file.
+
+**Both were measured, not assumed.** Reverting each defect onto the fixed scanner separately, over
+the 140 files the raw-UI census walks (143 `.ts`/`.tsx` minus `i18n/`), gives a one-to-one
+attribution: the escape defect leaves `chart.tsx` ending the walk `{elem: 0, depth: 6, inTag: true}`;
+the regex defect leaves `intelligence.ts` at `{elem: 0, depth: 2, inTag: false}`; with both fixed,
+**0 of 140** files end off-thread. `intelligence.ts:246` on its own, quoted into a four-line
+fixture, reproduces the `depth 2 → 0` — so the stated cause is the measured cause.
+
+**What the fixes did not do is the interesting part.** The counted copy is unchanged: raw-UI debt
+still **46**, covered-file leaks still **0**, `lookupsIn` still **1243**, and `chart.tsx` /
+`intelligence.ts` each go `0 hits → 0 hits`. On today's tree the two defects were hiding no English
+the census should have charged for. What they cost is *region correctness* — the walker's map of
+which literal sits inside which element, which every clause above line 1600 of this project's i18n
+proof reads — and a defect in it is invisible from inside a clean population. That is what this
+milestone actually closes.
+
+To see how invisible, plant a caption and vary its position. In `chart.tsx` with the escape defect
+restored, a raw `<div title="…">…</div>` inserted at lines 100, 120, 158, 180 and 220 yields **0**
+hits from the scanner; with the fix, **2** every time. Appended at end of file, the broken walker
+still reports 1 of the 2 — it sees the attribute and loses the element's text. That half-hit is why
+the first visibility probe written for this milestone was wrong: it asked only *whether any hit
+mentioned the probe*, and on that question all 57 debt files looked sighted under both scanners
+(`plantUnseen 0/57`, twice). Demanding both halves, in the file's own interior, is what makes the
+test answer the question it is asked.
+
+So `proof-i18n` gained three clauses, all reading the walker rather than a re-implementation of it:
+
+- `sourceBalance` returns the walker's own EOF state, `{elem, depth, inTag}`, and the field list the
+  gate checks is derived from it (`Object.keys(sourceBalance(""))`) — a report that quietly dropped
+  a thread would have to drop it past a clause that enumerates them.
+- The population clause runs **three planted refusals** (one unclosed element, one bracket open at
+  EOF, one unterminated attribute) through *the same filter* as the 140 real files and requires the
+  offender list to be exactly those three, each tripping its own one field. On a clean tree a filter
+  that only checked `elem` would report a perfect census forever; here it reports 1 offender and
+  goes red.
+- The probe clause plants a caption at the midpoint of each of the **96** `.tsx` files and requires
+  both halves back (**0 blind**), with a control planted here that genuinely is blind. Choosing the
+  control was a measurement too: an unterminated *attribute* is not blind — a string stops at its
+  newline and the next `<` re-opens a tag, so that fixture reads `2 halves` and self-heals — while a
+  runaway template literal, the one thread nothing closes for you, stays blind at either position.
+
+The two remaining choices (interior rather than end-of-file; both halves rather than any half) are
+load-bearing **as a pair**, and the honest consequence is that a single-file mutation cannot witness
+them. Restoring the escape defect and re-running the four combinations: interior + either demand
+reports `chart.tsx(0 hits)`; end-of-file + both-halves reports `chart.tsx(1)`; end-of-file + any-half
+reports **nothing blind in a tree that is not**. Written as arms, the two relaxations survive on the
+healthy tree (measured: `MISSED m213h`, `MISSED m213i`), so they were dropped from the harness and
+recorded here instead of being quietly claimed.
+
+**Mutation witness.** Seven arms for this milestone, in the standing harness: `m213a` restores the
+three-character escape advance, `m213b` makes a regex literal stop being code, `m213c` has the walker
+claim `{elem: 0, depth: 0, inTag: false}` no matter where it ended, `m213d` deletes a field from its
+report, `m213e` leaves the filter checking `elem` only, `m213f` stops the probe reporting anything as
+blind, `m213g` empties the probe's file population. Each is caught; the full suite of **34 arms**
+reports `34/34 caught · 0 missed · 0 crashed · 0 invalid needles · 0 restore failures`, with the
+unmutated control green before and after. `proof-i18n` itself is now **224** checks (was 223).
+
+Measured on the working copy: `tsc --noEmit` clean, `npm run build` exit 0, suite
+**37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, no retries in the final run. On
+the clean plane (`git archive HEAD` plus this milestone's two files, `node_modules` joined): `tsc --noEmit` exit 0, `npm run build` exit 0, suite **37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, and no `UNVERIFIED` line in the log. The first plane attempt of the same tree is worth recording because it says something about reading numbers off a loaded machine rather than about this code: `tsc` died with `FATAL ERROR: Zone Allocation failed - process out of memory` at exit 134, and `proof:load` died the same way twice, which M203's policy reported as `UNVERIFIED … no tally` rather than as a red. Re-running the plane with `--max-old-space-size=4096` gave the four green readings above; the heap ceiling is the host's, and the honest part is only that the runner named the dead script instead of smoothing it over.
+
+**Still outstanding** (deliberately not faked): the fixes changed no counted copy, so the 46 debt
+lines in `features/sim/SimulationLab.tsx` are untouched and are still the next raw-UI work; the
+probe's midpoint is a *line* boundary, so a file whose middle falls inside a multi-line expression
+could in principle report blind for a reason that is the probe's, not the file's — measured 0 times
+today over 96 files, and a future red there must be classified before the position is moved; the two
+relaxations above stay un-witnessed by the harness and are claimed only as a joint property;
+`sourceBalance` says nothing about whether the *regions* are right in the middle of a file, only
+where the walk ended — an interior wrongness that self-heals by EOF is invisible to both clauses,
+which is what the probe covers and why the pair is kept; the coach's composed prose in `data/ai.ts`
+is now measured rather than assumed — **30** sentence-shaped literals there, **32** interpolation
+holes, and **12** of the literals interpolate `attributeLabel()` or `archetypeLabelEn()`, which
+return `ATTRIBUTE_DEFS`' Latin `label` and `DICTIONARIES.en[…]` respectively even though all three
+locales carry `attr.name.*` and `dna.arch.*` keys. Two distinct debts, then: the sentences are not
+on keys, and the values they interpolate ignore the reader's locale. Neither is visible to the
+raw-UI ledger, which reads `.tsx` regions, or the domain prose ratchet, which scopes to `domain/`.
+The plan id is still `S${Date.now()…}`, `useEffect`-half router coverage still needs a browser pass,
+`lib/hooks.ts`/`theme.tsx`/`utils.ts` stay exempt, and the untracked `dev/` scratch is still in the
+tree.
 
 ## Deploying
 
