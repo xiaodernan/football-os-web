@@ -1935,7 +1935,6 @@ ok(`the row-text scan is reading modules that actually carry the union (${ROW_FI
 //      over every walked file INCLUDING `i18n/`, which `appSrc` above deliberately drops —
 //      the door this clause exists to police lives there, and a population that skipped its
 //      own subject would report a clean census for the wrong reason.
-const RELATIVE_MATH = /Date\.now\(\)[^;\n]*?-\s*[^;\n]*?new Date\([^)]*\)|new Date\([^)]*\)[^;\n]*?-\s*[^;\n]*?Date\.now\(\)/;
 // The enclosing declaration is found by walking back to the nearest top-level `function`.
 // A multi-line signature is not resolved here: it comes back unattributed and is counted as
 // an offender, which is the loud direction, so this cannot silently approve a site it failed
@@ -1950,32 +1949,83 @@ function rowTypedAt(src, at) {
   return { name: null, row: false };
 }
 const allSrc = files.map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]);
-const relSites = allSrc.filter(([, code]) => RELATIVE_MATH.test(code));
-const relOffenders = relSites
-  .map(([p, code]) => [p, rowTypedAt(code, code.search(RELATIVE_MATH))])
-  .filter(([, v]) => !v.row)
-  .map(([p, v]) => `${p} ${v.name ?? "UNATTRIBUTED"}`);
-// Three plants through the same filter, one per way the clause can be wrong: a `string`
-// return that must be refused, a `RowText` return that must be accepted, and arithmetic
-// outside any declaration, which must be refused as unattributed rather than skipped.
+// M218: the population is no longer one literal pattern, because two shapes dodge it — the
+// arithmetic reaches `Date.now()` through a call wrapper (M216's door, which the widened pattern
+// caught) or it reaches a *hoisted* `now` (`const now = Date.now()` in the same file, subtracted
+// from a parsed instant, which nothing caught). Candidates are therefore built from what each file
+// declares: every name bound to `Date.now()` becomes a receiver beside the literal itself. Building
+// a RegExp out of a string is where escapes go missing, so the receivers are reported in the plant
+// verdicts and every plant demands exactly one candidate — a pattern that matches nothing cannot
+// hide behind an agreeable empty census.
+const REL_INSTANT = "new Date\\([^)]*\\)";
+const aliasNames = (code) => [...code.matchAll(/(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*Date\.now\(\)/g)].map((m) => m[1]);
+function relCandidates(code) {
+  const receivers = ["Date\\.now\\(\\)", ...aliasNames(code).map((a) => a.replace(/\$/g, "\\$"))];
+  const out = [];
+  for (const r of receivers) {
+    for (const pat of [`${REL_INSTANT}[^;\\n]*?\\s*-\\s*[^;\\n]*?${r}`, `${r}[^;\\n]*?\\s*-\\s*[^;\\n]*?${REL_INSTANT}`]) {
+      const re = new RegExp(pat, "g");
+      let m;
+      while ((m = re.exec(code))) {
+        out.push({ at: m.index, len: m[0].length, via: m[0].includes("Date.now()") ? "Date.now()" : r });
+        if (m.index === re.lastIndex) re.lastIndex++;
+      }
+    }
+  }
+  // The same subtraction is found by more than one (receiver, order) pair — `Date.now() - new
+  // Date(x).getTime()` matches in both directions — so overlapping hits are one site, not two,
+  // and the census counts sites a reader could be shown rather than patterns that fired.
+  const kept = [];
+  for (const c of out.sort((a, b) => a.at - b.at || b.len - a.len)) {
+    const last = kept[kept.length - 1];
+    if (last && c.at < last.at + last.len) continue;
+    kept.push(c);
+  }
+  return kept;
+}
+// A candidate is charged only if its value is *produced for display*. The mechanical form of that
+// question is what follows the subtraction: `) < 2 * 86400000` is a selection — a predicate about a
+// window, a number nobody reads — while `;` followed by a returned template is a sentence. Anything
+// the classifier cannot place is charged (loud), never skipped: an unresolved site is a hole, and a
+// gate that treats its own blindness as compliance is the failure this file keeps re-finding.
+const REL_SELECTION = /^\s*\)?\s*(?:===|!==|<=|>=|<|>)/;
+function classifyRel(code, at, len) {
+  const decl = rowTypedAt(code, at);
+  const kind = REL_SELECTION.test(code.slice(at + len, at + len + 24)) ? "selection"
+    : decl.row ? "row" : decl.name ? "sentence" : "unattributed";
+  return { kind, name: decl.name };
+}
+const relCensus = allSrc.map(([p, code]) => {
+  const cs = relCandidates(code);
+  return [p, cs.map((c) => ({ ...classifyRel(code, c.at, c.len), via: c.via }))];
+});
+const relFiles = relCensus.filter(([, cs]) => cs.length > 0).map(([p]) => p);
+const relOf = (kind) => relCensus.flatMap(([p, cs]) => cs.filter((c) => c.kind === kind).map((c) => `${p} ${c.name ?? "UNATTRIBUTED"}${c.via === "Date.now()" ? "" : ` via ${c.via}`}`));
+const relCharged = [...relOf("sentence"), ...relOf("unattributed")];
+const relSelection = relOf("selection");
+const relRows = relOf("row");
+// Plants, one per way the classification can be wrong, each declaring the bucket its own text
+// should land in. The last two are M218's point: an aliased `now` in a string-returning helper must
+// be charged, and the same aliased arithmetic inside a `.filter()` comparison must not be.
 const REL_PLANTS = [
-  ["planted string-returning relative helper", "function plantedRel(iso: string): string {\n  const ms = Date.now() - new Date(iso).getTime();\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", true],
-  ["planted row-returning relative helper", "function plantedRow(iso: string): RowText {\n  const ms = Date.now() - new Date(iso).getTime();\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", false],
-  ["planted relative math outside any declaration", "const __ms = Date.now() - new Date(\"2026-01-01\").getTime();\nexport const __n = Math.round(__ms / 86400000);\n", true],
-  // M216 added the last two: the door now differences two local midnights, so the arithmetic
-  // reaches `Date.now()` through a call wrapper. A pattern that stops at `)` would lose its own
-  // subject, and the only way to know that is a plant whose wrapper is real.
-  ["planted wrapped arithmetic in a string-returning helper", "function plantedWrapped(iso: string): string {\n  const ms = __mid(new Date(iso)) - __mid(Date.now());\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", true],
-  ["planted wrapped arithmetic in a row-returning helper", "function plantedWrappedRow(iso: string): RowText {\n  const ms = __mid(new Date(iso)) - __mid(Date.now());\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", false],
+  ["planted string-returning relative helper", "function plantedRel(iso: string): string {\n  const ms = Date.now() - new Date(iso).getTime();\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", "sentence"],
+  ["planted row-returning relative helper", "function plantedRow(iso: string): RowText {\n  const ms = Date.now() - new Date(iso).getTime();\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", "row"],
+  ["planted relative math outside any declaration", "const __ms = Date.now() - new Date(\"2026-01-01\").getTime();\nexport const __n = Math.round(__ms / 86400000);\n", "unattributed"],
+  ["planted wrapped arithmetic in a string-returning helper", "function plantedWrapped(iso: string): string {\n  const ms = __mid(new Date(iso)) - __mid(Date.now());\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", "sentence"],
+  ["planted wrapped arithmetic in a row-returning helper", "function plantedWrappedRow(iso: string): RowText {\n  const ms = __mid(new Date(iso)) - __mid(Date.now());\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", "row"],
+  ["planted aliased now in a string-returning helper", "function plantedAlias(iso: string): string {\n  const __now = Date.now();\n  const ms = __now - new Date(iso).getTime();\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", "sentence"],
+  ["planted aliased now feeding only a comparison", "function plantedFilter(isos: string[]) {\n  const __now = Date.now();\n  return isos.filter((s) => Math.abs(new Date(s).getTime() - __now) < 2 * 86400000);\n}\n", "selection"],
 ];
-const plantVerdicts = REL_PLANTS.map(([name, src, wantRefused]) => {
-  const v = rowTypedAt(src, src.search(RELATIVE_MATH));
-  return [name, !!v.row === !wantRefused ? null : `${name} ${v.name ?? "UNATTRIBUTED"} row=${v.row} want=${wantRefused ? "refused" : "accepted"}`];
+const plantVerdicts = REL_PLANTS.map(([name, src, want]) => {
+  const cs = relCandidates(src);
+  if (cs.length !== 1) return [name, `${cs.length} candidates found, wanted exactly 1`];
+  const got = classifyRel(src, cs[0].at, cs[0].len);
+  return [name, got.kind === want ? null : `${name} classified ${got.kind} (${got.name ?? "UNATTRIBUTED"}), wanted ${want}`];
 }).filter(([, bad]) => bad);
-ok(`the planted relative-time shapes are refused or accepted exactly as declared (${REL_PLANTS.length} plants, ${plantVerdicts.length ? plantVerdicts.map(([, b]) => b).join(" | ") : "all as predicted"})`,
+ok(`the planted relative-time shapes are bucketed exactly as declared (${REL_PLANTS.length} plants, ${plantVerdicts.length ? plantVerdicts.map(([, b]) => b).join(" | ") : "all as predicted"})`,
   plantVerdicts.length === 0);
-ok(`every helper that measures an instant against now hands back a row (${relSites.length} sites: ${relSites.map(([p]) => p).join(", ") || "NONE — the population read nothing"}), and the door this clause exists to police is inside it (${relSites.some(([p]) => p.startsWith("i18n/")) ? "yes" : "no"})`,
-  relOffenders.length === 0 && relSites.length >= 2 && allSrc.length > appSrc.size && relSites.some(([p]) => p.startsWith("i18n/")));
+ok(`every relative measurement either hands back a row or is provably not shown to anyone (${relCensus.reduce((s, [, cs]) => s + cs.length, 0)} candidates in ${relFiles.length} files — row-typed ${relRows.length} [${relRows.join(", ") || "NONE"}], selection-only ${relSelection.length} [${relSelection.join(", ") || "none"}], charged ${relCharged.join(", ") || "none"}; the door is inside the population: ${relFiles.some((p) => p.startsWith("i18n/")) ? "yes" : "NO"})`,
+  relCharged.length === 0 && relRows.length >= 2 && allSrc.length > appSrc.size && relFiles.some((p) => p.startsWith("i18n/")));
 
 // 26c. The same claim from the other end: what the door actually prints. Loaded through the
 //      suite's own vite server so this reads the shipped module, not a transcription, and run

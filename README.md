@@ -4192,6 +4192,76 @@ door, but a person still reads them in English); the 46 raw-UI debt lines in
 `features/sim/SimulationLab.tsx`; the plan-id collision; the populated-state browser walk; and the
 untracked `dev/` scratch — which now also holds `m217.patch`, the superseded pre-declaration draft.
 
+### M218 — a census that cannot see a shape must not also approve it
+
+M214's relative-time census derived its population from the arithmetic itself, which was the right
+instinct and the wrong pattern: it required the literal `Date.now()` to sit beside a parsed instant.
+Two shapes dodge that, and this milestone found both. The first was already required — M216 wrapped both
+operands in `localMidnight(…)`, so the pattern had to tolerate call wrappers or the door would have
+left its own population. The second was a hole M214 had measured and queued rather than papered over:
+a helper that hoists `const now = Date.now()` and subtracts the *alias* was invisible, and today's
+tree already has one such binding (`features/dashboard/Dashboard.tsx:49`).
+
+**Candidates are now built from what each file declares.** Every name bound to `Date.now()` in the
+file becomes a receiver beside the literal, and each receiver is searched in both subtraction orders,
+tolerant of wrappers, within one statement. Building a RegExp out of a string is where escapes quietly
+go missing (a `\\d` written as `\d` becomes a backspace), so the receivers are named in the candidate
+records and every plant demands exactly one candidate: a pattern that matches nothing cannot report an
+agreeable empty census.
+
+**What the widening immediately exposed is the part that mattered: a population is not a verdict.**
+Aliased receivers do not only find more helpers, they also find `Dashboard.tsx:51`,
+`Math.abs(new Date(m.kickoff).getTime() - now) < 2 * 86400000` — a *selection*, a window predicate
+whose number is never shown to anybody. Charging it as an unlocalised sentence would have been a false
+defect, and exempting it by path or line number would have been the hiding place this repo has already
+been burnt by (M212's skip list, M213's exemption table). So the census classifies instead of merely
+matching, and the rule is a shape:
+
+- the text following the subtraction is a comparison → **selection** — measured, not shown;
+- the enclosing declaration is annotated `: RowText` → **row** — the two doors;
+- the enclosing declaration resolves to something else → **sentence** — charged;
+- nothing resolves → **unattributed** — charged, because an unresolved site is a hole and a gate that
+  reads its own blindness as compliance is the failure this file keeps re-finding.
+
+Today that reads: `3 candidates in 3 files — row-typed 2 [CommunityHub.tsx timeAgo, format.ts
+relativeDay], selection-only 1 [Dashboard.tsx Dashboard via now], charged none`.
+
+**One deduplication rule had to be discovered rather than assumed.** The first version reported `4
+candidates in 3 files`, because the same subtraction is found by more than one (receiver, order) pair —
+`Date.now() - new Date(x).getTime()` matches in both directions — and `CommunityHub` was counted twice.
+Three plants then failed with `2 candidates found, wanted exactly 1`, which is the honest way to learn
+that a census is counting patterns rather than sites: overlapping hits are one site. With that, all
+**7 plants** land in the buckets their text declares, including the two M218 added — an aliased `now`
+feeding a string-returning helper must be charged, and the same aliased arithmetic feeding a
+`.filter()` comparison must not be.
+
+**Mutation witness.** Five arms touch this clause: `m214i` (re-tipped from the old one-subtraction-order
+arm) drops aliased receivers, which both empties the selection bucket and makes the two alias plants
+report zero candidates; `m216e` (re-tipped from the `RELATIVE_MATH`-blinding arm) points the instant
+side of every built pattern at a name that never appears; `m218a` makes every candidate a selection, so
+the two doors stop being counted as row-typed and the floor fires; `m218b` disables the deduplication;
+`m218c` stops resolving declarations at all, which charges both doors — the case where a census that
+cannot see its subject must not also approve it. The full harness of **64 arms** reports `64/64 cases caught (64/64 ran) . 0 missed . 0 crashed . 0 invalid needles . 0 restore failures`, with the unmutated control green before and after (`career 183/183, transfers 76/76`)..
+
+**What this milestone does NOT claim.** The classifier answers "is this number produced for display?"
+by the *shape of the expression*, so a helper that computes a duration in one place and prints it in
+another is still outside the population — that is the same cross-function flow `relativeDay` was
+created to remove, not a problem this census solves. And the charge path itself (`sentence` → charged)
+is witnessed by `m214d`, which re-types the door's own signature; an arm that merely stopped charging
+the `sentence` bucket while leaving the plants' bucket declarations intact would survive, because the
+plants grade classification, not charging. Recorded as a known gap in the harness rather than quietly
+left out of the record.
+
+Measured on the working copy: `npm run build` (which runs `tsc --noEmit` first) exit 0, suite **37/37 proof scripts proven . 1963/1963 checks counted . exit 0**, no `UNVERIFIED` and no retry. On the clean plane (`git archive HEAD` plus `scripts/proof-i18n.mjs`):
+tsc no output / exit 0, build exit 0, suite **37/37 proof scripts proven . 1963/1963 checks counted . exit 0**, and no retry line either this time. `proof-i18n` stays at **233** checks — 26b was rewritten, not extended, which is the same
+trade M216 made: the clause now covers more shapes with the same number of claims.
+
+**Still outstanding**: the cross-function flow above; the `sentence`-bucket charging arm (`m218d` needs
+the plants to declare their charged outcome, not just their bucket); `data/ai.ts`'s 30 composed
+sentences (#150/#165); the 46 raw-UI debt lines in `features/sim/SimulationLab.tsx`; the compactness
+of `time.inDays`/`time.agoDay` beside `Tomorrow`; the `S${Date.now()…}` plan-id collision; the
+populated-state browser walk (#142); and the untracked `dev/` scratch.
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a
