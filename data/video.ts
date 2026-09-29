@@ -2,31 +2,26 @@ import { makeRng, hashString, rngInt, pick } from "@/lib/rng";
 import type { Attributes } from "@/domain/types";
 import type { RowText } from "@/domain/rowText";
 import { weakestAttributes } from "@/domain/attributes";
+import { FILM_KINDS, FILM_KIND_KEY, type FilmEventKind } from "@/domain/filmInsights";
 
 // Video pipeline (spec §19). Real stages, provider abstraction. When no genuine
 // video model is configured, the DemoVideoProvider runs the SAME pipeline over a
 // deterministic fingerprint of the uploaded file and is explicitly labelled DEMO.
 // It never pretends to be a real pose model.
 
-export type VideoKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
+export type VideoKind = FilmEventKind;
 
-/** The seven detections the demo pipeline can report. Exported because the dictionary's kind
- *  rows, the badge the Film Room prints and the evidence-frame caption are three reads of one
- *  list, and a gate can only count a space it can read. */
-export const VIDEO_KINDS: readonly VideoKind[] = ["scan", "touch", "pass", "dribble", "shot", "turn", "press"];
+/** The seven detections the demo pipeline can report. Re-exported from the film library's own
+ *  list since M235: the dictionary's kind rows, the badge the Film Room prints, the Weekly
+ *  Review's bars, the evidence-frame caption and the insights evidence line are five reads of
+ *  one list, and a gate can only count a space it can read. */
+export const VIDEO_KINDS: readonly VideoKind[] = FILM_KINDS;
 
-/** The dictionary key for a detection kind — the badge and the frame caption both name it, and
- *  after M231 neither of them prints the code. Literals rather than a composed string, so the
- *  reachability census can see the keys these sites can ask for. */
-export const VIDEO_KIND_KEY: Record<VideoKind, string> = {
-  scan: "vid.kind.scan",
-  touch: "vid.kind.touch",
-  pass: "vid.kind.pass",
-  dribble: "vid.kind.dribble",
-  shot: "vid.kind.shot",
-  turn: "vid.kind.turn",
-  press: "vid.kind.press",
-};
+/** The dictionary key for a detection kind — the badge, the frame caption and the evidence line
+ *  all name it, so none of them prints the code. It lives in domain/filmInsights.ts because
+ *  that is the module that composes the evidence row, and a domain module may not reach up
+ *  into `data/`; this alias keeps the name the Film Room and the review already import. */
+export const VIDEO_KIND_KEY: Record<VideoKind, string> = FILM_KIND_KEY;
 
 /** Three captions per detection kind. The seeded draw picks WHICH caption, never the words: each
  *  id is a row in all three locales, and this table is the enumeration a gate reads, so a new

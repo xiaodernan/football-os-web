@@ -1,7 +1,7 @@
 import type { Attributes, Goal, TrainingSession } from "./types";
 import type { RowText } from "./rowText";
 import { weakestAttributes } from "./attributes";
-import { buildFilmInsights, type FilmClipInput } from "./filmInsights";
+import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 
 // A period digest compiled purely from the user's local training log, goals,
 // progress history, academy records and analysed film. Nothing here is invented —
@@ -73,7 +73,7 @@ export interface WeeklyReview {
   filmScanTrend: number | null;
   filmDetections: number;
   filmConfidence: number;
-  filmKinds: { kind: string; count: number; perMinute: number }[];
+  filmKinds: KindRate[];
   filmFocus: { key: string; clips: number }[];
   goalsTotal: number;
   goalsDone: number;

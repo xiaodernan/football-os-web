@@ -1,4 +1,5 @@
 import { createServer } from "vite";
+import { readFileSync } from "node:fs";
 
 // Pins domain/filmInsights.ts — buildFilmInsights, the cross-clip library
 // aggregation behind the Film Room's "what keeps happening across your clips"
@@ -15,6 +16,16 @@ import { createServer } from "vite";
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { buildFilmInsights } = await server.ssrLoadModule("/domain/filmInsights.ts");
 const { attributeLabel } = await server.ssrLoadModule("/domain/attributes.ts");
+// M235 — `evidence` and `sources` are `RowText`, so no assertion below may compare them to
+// English: every reading goes through the app's own `rowLine` + `translate`, the same two a
+// screen uses. A hand resolver here would be the second interpreter M232 removed.
+const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
+const { translate } = await server.ssrLoadModule("/i18n/index.tsx");
+const LOCALES = ["en", "zh-CN", "zh-TW"];
+const say = (loc) => (row) => rowLine(row, (k, v) => translate(loc, k, v));
+const sayEn = say("en");
+const evidenceEn = (f) => f.evidence.map(sayEn);
+const sourcesEn = (f) => f.sources.map(sayEn);
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -94,10 +105,10 @@ ok("A: avgConfidence is the rounded mean over valid clips", a.avgConfidence === 
 ok("A: confidence follows min(85, 20 + 16·clips)", a.confidence === Math.min(85, 20 + 4 * 16));
 ok("A: a clip library with detections flips hasData true", a.hasData === true);
 ok("A: sources state this is the device's own library + mean confidence",
-  a.sources.length === 3 && a.sources.some((s) => /local film library/i.test(s)) && a.sources.some((s) => s.includes(`${a.avgConfidence}%`)));
+  a.sources.length === 3 && sourcesEn(a).some((s) => /local film library/i.test(s)) && sourcesEn(a).some((s) => s.includes(`${a.avgConfidence}%`)));
 ok("A: evidence is exactly the four documented lines", a.evidence.length === 4);
 ok("A: with >=2 clips the third evidence line is the older→newer trend",
-  /→/.test(a.evidence[2]) && a.evidence[2].includes(a.scanTrend >= 0 ? `+${a.scanTrend}` : `${a.scanTrend}`));
+  /→/.test(sayEn(a.evidence[2])) && sayEn(a.evidence[2]).includes(a.scanTrend >= 0 ? `+${a.scanTrend}` : `${a.scanTrend}`));
 
 // ---------------------------------------------------------------------------
 // Fixture B — ODD length: the middle clip is excluded from BOTH halves.
@@ -129,7 +140,7 @@ ok("C: with one valid clip the halves and trend stay null",
   c.olderScanRate === null && c.newerScanRate === null && c.scanTrend === null);
 ok("C: recommended focus is reported even with no events", c.topFocus.length === 1 && c.topFocus[0].key === "scanning");
 ok("C: the below-two-clip third evidence line asks for a second clip, never the dead 'unavailable' text",
-  /second clip/i.test(c.evidence[2]) && !/unavailable/i.test(c.evidence.join(" ")));
+  /second clip/i.test(sayEn(c.evidence[2])) && !/unavailable/i.test(evidenceEn(c).join(" ")));
 ok("C: avgConfidence over the single valid clip", c.avgConfidence === 100 && c.confidence === Math.min(85, 20 + 1 * 16));
 
 // ---------------------------------------------------------------------------
@@ -141,7 +152,7 @@ ok("empty: byKind still lists all kinds at zero (a legend never loses a row)",
 ok("empty: rates and trend are 0 / null, not NaN",
   e.actionsPerMinute === 0 && e.scanPerMinute === 0 && e.scanTrend === null);
 ok("empty: hasData false and the busiest-detection line says none recorded",
-  e.hasData === false && e.evidence.some((s) => /No detections/i.test(s)));
+  e.hasData === false && evidenceEn(e).some((s) => /No detections/i.test(s)));
 ok("empty: topFocus is empty rather than fabricated", e.topFocus.length === 0);
 
 // -- confidence ladder across 1..5 valid clips (cap at 5 clips = 85) --------
@@ -168,13 +179,9 @@ ok("input order does not change the aggregate (halves sort by analysis time)",
 // — and the film prompt carries the improvement as a KEY, which is what makes the activity
 // timeline show the sentence in the language it was built in rather than inside an English one.
 const { videoProvider, VIDEO_KINDS, VIDEO_NOTE_IDS, VIDEO_IMPROVEMENT_IDS, VIDEO_KIND_KEY } = await server.ssrLoadModule("/data/video.ts");
-const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
 const { englishRow } = await server.ssrLoadModule("/data/ai.ts");
 const { englishWord } = await server.ssrLoadModule("/i18n/format.ts");
-const { translate } = await server.ssrLoadModule("/i18n/index.tsx");
 const { parseFilmClips: parseClips } = await server.ssrLoadModule("/domain/filmLibrary.ts");
-const LOCALES = ["en", "zh-CN", "zh-TW"];
-const say = (loc) => (row) => rowLine(row, (k, v) => translate(loc, k, v));
 const KEPT_LATIN = ["Football OS", "ACWR", "DNA"];
 const englishLeft = (s) => KEPT_LATIN.reduce((rest, kept) => rest.split(kept).join(" "), s).match(/[A-Za-z][A-Za-z\u2019']*/g) ?? [];
 // The leak rule's own eye test, over the very caption M231 fixed: "0 leaks" is also what a
@@ -235,6 +242,72 @@ if (englishRow(prompt) !== say("en")(prompt)) promptBad.push(`the coach is sent 
 for (const loc of ["zh-CN", "zh-TW"]) if (englishLeft(say(loc)(prompt)).length) promptBad.push(`${loc} prompt → ${say(loc)(prompt)}`);
 ok(`the film prompt carries the improvement as a key, so the timeline row is the reader's own words while the coach still gets English (${promptBad.slice(0, 3).join(" | ") || say("zh-CN")(prompt)})`,
   promptBad.length === 0 && englishRow(prompt).includes(translate("en", impIds[0])) && say("zh-CN")(prompt).includes(translate("zh-CN", impIds[0])));
+
+// M235 — the aggregation panel's own four evidence lines and three provenance sources are rows
+// too. `FilmRoom.tsx` printed them as `{insights.evidence.map((e) => …{e})}`: an expression, so
+// the raw-UI scan saw no literal at all while the prose audit counted twelve English literals
+// here and capped them. Both gates were measuring the debt instead of stopping it, and the
+// reader got English in every locale.
+const fmRows = [a, c, e].flatMap((f) => [...f.evidence, ...f.sources]);
+const fmBad = [];
+for (const row of fmRows) {
+  if (!row || !("key" in row)) { fmBad.push(`a value row reached the panel: ${JSON.stringify(row)}`); continue; }
+  for (const loc of LOCALES) {
+    const shown = say(loc)(row);
+    if (/[{}]/.test(shown)) fmBad.push(`${loc} ${row.key} left a placeholder: ${shown}`);
+    if (loc !== "en" && englishLeft(shown).length) fmBad.push(`${loc} ${row.key} → ${shown}`);
+  }
+}
+ok(`the film panel's evidence and provenance are keys that read in all ${LOCALES.length} locales (${fmRows.length} rows, ${fmBad.slice(0, 3).join(" | ") || "clean"})`,
+  fmBad.length === 0 && fmRows.every((r) => r && "key" in r) &&
+  a.evidence.length === 4 && a.sources.length === 3);
+
+// …and the busiest-detection line names the kind by `vid.kind.*`, the same seven-key table the
+// Film Room's event list and the evidence-frame captions read — before this it interpolated the
+// stored code, which no dictionary could translate.
+const kindBad = VIDEO_KINDS.filter((k) => LOCALES.some((loc) => translate(loc, VIDEO_KIND_KEY[k]) === VIDEO_KIND_KEY[k]));
+ok(`the busiest-evidence line names its detection by row rather than by the code the record stored (${say("zh-CN")(a.evidence[1])})`,
+  kindBad.length === 0 && "key" in a.evidence[1] && a.evidence[1].key === "fi.ev.busiest" &&
+  say("en")(a.evidence[1]).includes(translate("en", VIDEO_KIND_KEY.scan)) &&
+  !say("en")(a.evidence[1]).includes("Most frequent detection: scan"));
+
+// …and the seam only counts if the screen takes it. A first draft of M235 rendered `‹ {e}` — an
+// expression, so both source-level gates in proof-i18n saw no literal at all and nothing went red
+// while the reader was shown the key id in all three locales. Nothing loads a .tsx here, so this
+// reads the render sites directly: the evidence list, the provenance line and the detection-kind
+// badge in both panels have to hand their row to `rowLine`/`VIDEO_KIND_KEY`, not to `String`.
+const srcAt = (rel) => readFileSync(new URL(`../${rel}`, import.meta.url), "utf8");
+const mapBody = (src, anchor) => {
+  const at = src.indexOf(anchor);
+  if (at < 0) return null;
+  const open = src.indexOf("(", at);
+  if (open < 0) return null;
+  let depth = 0;
+  for (let i = open; i < src.length; i++) {
+    const c = src[i];
+    if (c === "(" || c === "[" || c === "{") depth++;
+    else if (c === ")" || c === "]" || c === "}") { if (--depth === 0) return src.slice(open, i); }
+  }
+  return null;
+};
+const seamBad = [];
+for (const [rel, anchors] of [
+  ["features/film/FilmRoom.tsx", ["insights.evidence.map", "insights.sources.map"]],
+  ["features/review/ReviewPage.tsx", ["review.evidence.map", "review.sources.map"]],
+]) {
+  const src = srcAt(rel);
+  for (const anchor of anchors) {
+    const body = mapBody(src, anchor);
+    if (body === null) seamBad.push(`${rel} no longer renders ${anchor}`);
+    else if (!body.includes("rowLine(")) seamBad.push(`${rel} ${anchor} no longer reads through rowLine`);
+  }
+  const badgeLines = src.split("\n").filter((l) => l.includes("VIDEO_KIND_KEY["));
+  if (badgeLines.length === 0) seamBad.push(`${rel} no longer names a detection through VIDEO_KIND_KEY`);
+  else if (badgeLines.some((l) => !/\bt\(\s*VIDEO_KIND_KEY\[/.test(l))) seamBad.push(`${rel} badge not translated: ${badgeLines.find((l) => !/\bt\(\s*VIDEO_KIND_KEY\[/.test(l)).trim()}`);
+}
+ok(`the film and weekly panels read every one of those rows through the seam instead of printing the id (${seamBad.slice(0, 3).join(" | ") || "4 render sites + 2 badges"})`,
+  seamBad.length === 0);
+
 
 // A clip stored before this milestone holds plain strings where a row is expected, and
 // `rowLine` throws on a string. The hydration boundary repairs them as values — the words are

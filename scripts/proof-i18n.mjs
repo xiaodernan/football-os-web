@@ -2406,9 +2406,14 @@ const zoneKeys = [...zoneBlock.matchAll(/key:\s*"([\w.]+)"/g)].map((m) => m[1]);
 // reachability census can see them), and the count is asserted below, which is what makes a stray
 // literal in a comment visible rather than harmless.
 const videoSrc = readFileSync(join(root, "data", "video.ts"), "utf8");
-const idsUnder = (prefix) => [...videoSrc.matchAll(new RegExp(`"(${prefix}[\\w.]+)"`, "g"))].map((m) => m[1]);
-const eventKeys = idsUnder("vid\\.kind\\.");
-const improvementKeys = idsUnder("vid\\.imp\\.");
+// M235 moved the seven detection-kind ids to domain/filmInsights.ts, the module that composes
+// the evidence row naming them (a domain module may not reach up into `data/`), and data/video
+// re-exports the table. The id literals are read from wherever they live, so moving them again
+// without this following is a red rather than a silent `event` with nothing to hold.
+const kindSrc = videoSrc + readFileSync(join(root, "domain", "filmInsights.ts"), "utf8");
+const idsUnder = (src, prefix) => [...src.matchAll(new RegExp(`"(${prefix}[\\w.]+)"`, "g"))].map((m) => m[1]);
+const eventKeys = [...new Set(idsUnder(kindSrc, "vid\\.kind\\."))];
+const improvementKeys = [...new Set(idsUnder(videoSrc, "vid\\.imp\\."))];
 const EVENT_KEY_FLOOR = 7;      // the seven detections the video pipeline can report
 const IMPROVEMENT_KEY_FLOOR = 3; // the three improvement rows the Film Room lists
 const KEY_VAR_KEYS = { lead: leadKeys, target: keysHeldIn("target"), game: keysHeldIn("game"), zone: zoneKeys, event: eventKeys, improvement: improvementKeys };
@@ -2752,7 +2757,12 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // lines, the three evidence lines and the two provenance sources — as `fp.*` rows the profile
 // reads through rowLine, so the module leaves the inventory entirely: ceiling and cap both
 // fall by twenty-five.
-const DOMAIN_PROSE_CEILING = 204;
+// M235 does the same for domain/filmInsights.ts's twelve — the four evidence lines of the Film
+// Room's aggregation panel and its three provenance sources, which `FilmRoom.tsx` printed as
+// `{insights.evidence.map((e) => …{e})}`: an expression, so the raw-UI scan saw no literal while
+// the reader saw English. The focus line also stopped naming attributes through `attributeLabel`
+// and rides as the `foci` code var instead, and the busiest detection rides as `event`.
+const DOMAIN_PROSE_CEILING = 192;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
@@ -2761,7 +2771,7 @@ const DOMAIN_PROSE_CEILING = 204;
 // M225 adds domain/matchEngine.ts: unlike the three format-only modules above it held real
 // sentences ("The midfield was finely balanced."), and they are rows now, so the module is
 // pinned at zero like the rest.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -2777,7 +2787,7 @@ const PROSE_CAPS = {
   "domain/attributes.ts": 19,
   "domain/newsImpact.ts": 0,
   "domain/training.ts": 19,
-  "domain/filmInsights.ts": 12,
+  "domain/filmInsights.ts": 0,
   "domain/gap.ts": 0,
   "domain/matchEngine.ts": 0,
   "domain/careerArc.ts": 0,

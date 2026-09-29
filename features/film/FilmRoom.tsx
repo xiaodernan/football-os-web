@@ -324,7 +324,7 @@ export function FilmRoom() {
                   return (
                     <div key={k.kind}>
                       <div className="flex justify-between text-xs">
-                        <span className={KIND_TONE[k.kind]}>{k.kind}</span>
+                        <span className={KIND_TONE[k.kind]}>{t(VIDEO_KIND_KEY[k.kind])}</span>
                         <span className="font-mono text-muted-foreground">{k.perMinute.toFixed(2)} · ×{k.count}</span>
                       </div>
                       <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
@@ -352,9 +352,9 @@ export function FilmRoom() {
               )}
               <div className="mt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("common.evidence")}</div>
               <ul className="mt-1 space-y-1 text-[11px] text-muted-foreground">
-                {insights.evidence.map((e, i) => <li key={i}>› {e}</li>)}
+                {insights.evidence.map((e, i) => <li key={i}>› {rowLine(e, t)}</li>)}
               </ul>
-              <div className="mt-2 text-[11px] text-muted-foreground">{t("film.sources", { list: insights.sources.join(" · ") })}</div>
+              <div className="mt-2 text-[11px] text-muted-foreground">{t("film.sources", { list: insights.sources.map((s) => rowLine(s, t)).join(" · ") })}</div>
             </div>
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">{t("film.aggregationNote")}</p>

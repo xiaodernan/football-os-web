@@ -5,6 +5,7 @@ import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import { buildReview, type WeeklyReview } from "@/domain/review";
 import { rowLine } from "@/domain/rowText";
+import { VIDEO_KIND_KEY } from "@/data/video";
 import { attributeGoalTitle } from "@/domain/goals";
 import { useLearnRecords, useFilmClips } from "@/lib/hooks";
 import { DEMO_MODE } from "@/data/footballService";
@@ -280,7 +281,7 @@ export function ReviewPage() {
                       return (
                         <div key={k.kind}>
                           <div className="flex justify-between text-xs">
-                            <span className="capitalize">{k.kind}</span>
+                            <span className="capitalize">{t(VIDEO_KIND_KEY[k.kind])}</span>
                             <span className="font-mono text-muted-foreground">
                               {k.perMinute.toFixed(2)} {t("rv.filmPerMin")} · ×{k.count}
                             </span>

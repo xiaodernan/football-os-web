@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M234 (a few numbers in that range
+Work ships one milestone per commit and is currently at M235 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -5703,6 +5703,73 @@ locales**. Ceiling **204 across 7 files**, raw-UI ceiling **0 across 0 files**, 
 OS's five slider scale words; `domain/matchEngine.ts` and `domain/newsImpact.ts` are already at 0 and
 pinned, so the remaining prose is concentrated in `learn/community/career/attributes/training/
 filmInsights/onboarding`.
+
+### M235 — the film panel's evidence and provenance are rows, and the screen that prints them is checked too
+
+`domain/filmInsights.ts` held the last counted prose whose every line reaches a reader: the four
+evidence lines and three provenance sources of the Film Room's "what keeps happening across your
+clips" panel — the same object the Weekly Review cites. It composed all seven in English, so a
+簡體中文 reader got `4 clips · 5 min analysed · 8 detections` inside a Chinese page. And the panel
+printed them through an *expression*, `› {e}`, so the raw-UI scan (which reads literals in reader
+files) saw no literal at that site while the prose audit counted twelve English literals here and
+capped them at twelve: both gates were measuring the debt instead of stopping it.
+
+**The record holds rows now.** `FilmInsights.evidence` and `FilmInsights.sources` are `RowText[]` —
+`fi.ev.clips` / `fi.ev.clipsOne`, `fi.ev.busiest`, `fi.ev.trend`, `fi.ev.focus`, `fi.ev.none`,
+`fi.ev.needSecond`, `fi.ev.noTrend`, `fi.ev.noFocus`, plus `fi.src.library` / `fi.src.provider` /
+`fi.src.model`. **12 new `fi.*` keys ×3 locales: 1780 → 1792 per locale.** `FilmRoom.tsx` reads them
+through `rowLine`; the first line's singular arm is its own key, the rule `domain/history.ts` and
+M234 already follow.
+
+**Two English-labelled reads became words.** The focus line called `attributeLabel(f.key)` — M230's
+import, back — and now rides as `foci` (`key:count`), the `CODE_VARS` entry M234 added, so
+`codeWord` names each part through `attr.name.*`. The busiest detection interpolated the stored
+code (`busiest.kind`), which no dictionary could translate; it rides as `event`, a KEY var, and the
+word is `vid.kind.*`.
+
+**The kind table moved down a layer.** `FILM_KINDS` and `FILM_KIND_KEY` now live in
+`domain/filmInsights.ts` — the module that composes the row naming them, since a domain module may
+not reach up into `data/` — and `data/video.ts` re-exports both under the names the Film Room and
+the review already import, so `VIDEO_KIND_KEY` stays one name with one home. `domain/review.ts`'s
+`filmKinds` stopped widening `kind` to `string`, which is what lets those panels index it.
+
+**Both panels stopped printing the code.** `FilmRoom.tsx` and `ReviewPage.tsx` printed `{k.kind}`
+for the by-kind bars — `scan`, `dribble`, `press` as stored — and now print
+`t(VIDEO_KIND_KEY[k.kind])`.
+
+**The ratchet moved down.** `DOMAIN_PROSE_CEILING` **204 → 192**, `PROSE_CAPS["domain/filmInsights.ts"]`
+**12 → 0**, and `domain/filmInsights.ts` joins `PROSE_ZERO` (**13 modules now**). The inventory line
+reads `attributes career community learn onboarding training`.
+
+**`proof-film` reads the panel's own rows, and now the screen too.** Two new clauses render the
+four evidence lines and three sources from three fixture libraries (a busy one, one valid clip, an
+empty one) in all three locales, refusing a placeholder that survives to the line or a Latin word
+in a Chinese column; a third names the busiest detection by row and checks it against
+`VIDEO_KIND_KEY`. A fourth pins the four render sites and both badges: the evidence list, the
+provenance line and the `VIDEO_KIND_KEY` badge in FilmRoom and ReviewPage have to hand the row to
+`rowLine`/`t(...)`, because a screen printing `String(e.key)` breaks the seam without breaking any
+source-level literal scan. Moving the kind ids out of `data/video.ts` also required `proof-i18n`'s
+KEY_VAR census to read `domain/filmInsights.ts` for `vid.kind.*` — left where it was, `event` finds
+nothing and that clause goes red rather than silently shrinking.
+
+**Mutation witness: five arms, all caught.** (1) the three sources put back as `{ value: "…English…" }` —
+seven clauses across both proofs (reachability, row-is-a-key, ceiling, module cap, cap sum, zero
+list, proof-film's value-row refusal); (2) FilmRoom's evidence map printing the id instead of
+`rowLine` — the new render-site clause, which caught what every other gate missed; (3) the zh-CN
+`fi.ev.trend` row deleted — parity, placeholder agreement, and proof-film's leak rule; (4) `foci`
+dropped from `CODE_VARS` — proof-film reports `scanning:2,first_touch:1,passing:1` reaching a
+Chinese line; (5) the busiest line's `event` var renamed `kind` — the row/placeholders clause,
+proof-film's placeholder refusal, and the kind-name clause. All restored.
+
+Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, suite
+**40/40 proof scripts · 2088/2088 checks · exit 0**, `proof-i18n` **258/258** at **1792 keys · 3
+locales**, `proof-film` **55/55**. Ceiling **192 across 6 files**, raw-UI ceiling **0 across 0
+files**, covered set **40**.
+
+**Still outstanding**: `learn.ts`'s lesson prose and the same three `label`-holding modules.
+`domain/gap.ts`, `domain/matchEngine.ts`, `domain/newsImpact.ts`, `domain/footprint.ts` and now
+`domain/filmInsights.ts` are at 0 and pinned, so the remaining prose is concentrated in
+`learn/community/career/attributes/training/onboarding`.
 
 ## Deploying
 

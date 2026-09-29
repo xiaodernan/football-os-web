@@ -4,9 +4,26 @@
 // you have analysed". Input is the user's own locally-stored clip library, so
 // every rate is a real count over real detections — nothing is invented.
 
-import { attributeLabel } from "./attributes";
+import type { RowText } from "./rowText";
 
 export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
+
+/** The seven detections, and the row each one is named by. The dictionary's kind rows,
+ *  the badge the Film Room prints, the Weekly Review's bar labels and the evidence line
+ *  below are four reads of this one list, so a detection cannot ship without a word and
+ *  a word cannot ship no kind can reach. This is the single home of that map: `data/video`
+ *  re-exports it, because a domain module may not reach up into `data/`. */
+export const FILM_KINDS: readonly FilmEventKind[] = ["scan", "touch", "pass", "dribble", "shot", "turn", "press"];
+
+export const FILM_KIND_KEY: Record<FilmEventKind, string> = {
+  scan: "vid.kind.scan",
+  touch: "vid.kind.touch",
+  pass: "vid.kind.pass",
+  dribble: "vid.kind.dribble",
+  shot: "vid.kind.shot",
+  turn: "vid.kind.turn",
+  press: "vid.kind.press",
+};
 
 export interface FilmClipInput {
   at: string; // ISO when the clip was analysed
@@ -39,13 +56,11 @@ export interface FilmInsights {
   newerScanRate: number | null;
   topFocus: FocusStat[];
   avgConfidence: number;
-  evidence: string[];
+  evidence: RowText[];
   confidence: number;
-  sources: string[];
+  sources: RowText[];
   hasData: boolean;
 }
-
-const KINDS: FilmEventKind[] = ["scan", "touch", "pass", "dribble", "shot", "turn", "press"];
 
 export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   const valid = clips.filter((c) => c && c.durationSec > 0);
@@ -56,7 +71,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   for (const c of valid) for (const e of c.events) counts.set(e.kind, (counts.get(e.kind) ?? 0) + 1);
 
   const perMin = (n: number) => (analysedMinutes > 0 ? n / analysedMinutes : 0);
-  const byKind: KindRate[] = KINDS.map((kind) => ({
+  const byKind: KindRate[] = FILM_KINDS.map((kind) => ({
     kind,
     count: counts.get(kind) ?? 0,
     perMinute: Math.round(perMin(counts.get(kind) ?? 0) * 100) / 100,
@@ -94,16 +109,40 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   const avgConfidence = valid.length ? Math.round(valid.reduce((s, c) => s + c.confidence, 0) / valid.length) : 0;
 
   const busiest = byKind[0]?.count ? byKind[0] : null;
-  const evidence = [
-    `${valid.length} clip${valid.length === 1 ? "" : "s"} · ${Math.round(analysedMinutes * 10) / 10} min analysed · ${totalEvents} detections`,
-    busiest ? `Most frequent detection: ${busiest.kind} (${busiest.count}, ${busiest.perMinute.toFixed(2)}/min)` : "No detections recorded yet",
+  // Four evidence lines and three provenance sources, all rows. The first three used to be
+  // English composed here — invisible to the raw-UI scan (this file is not JSX) and frozen
+  // in one language at the reader. The focus line is the reason the join format changed with
+  // them: it named attributes through `attributeLabel`, whose English word no locale could
+  // put back, so the list now rides as `foci` (`key:count`) and `codeWord` names each part.
+  // The busiest detection rides as `event`, a KEY var: the word is `vid.kind.*`, the same row
+  // the Film Room's event list already prints.
+  const evidence: RowText[] = [
+    {
+      key: valid.length === 1 ? "fi.ev.clipsOne" : "fi.ev.clips",
+      vars: { n: valid.length, min: Math.round(analysedMinutes * 10) / 10, d: totalEvents },
+    },
+    busiest
+      ? {
+          key: "fi.ev.busiest",
+          vars: { event: FILM_KIND_KEY[busiest.kind], count: busiest.count, rate: busiest.perMinute.toFixed(2) },
+        }
+      : { key: "fi.ev.none" },
     scanTrend != null
-      ? `Scanning ${olderScanRate!.toFixed(2)} → ${newerScanRate!.toFixed(2)} per min between older and newer clips (${scanTrend >= 0 ? "+" : ""}${scanTrend})`
+      ? {
+          key: "fi.ev.trend",
+          vars: {
+            older: olderScanRate!.toFixed(2),
+            newer: newerScanRate!.toFixed(2),
+            delta: `${scanTrend >= 0 ? "+" : ""}${scanTrend}`,
+          },
+        }
       : valid.length < 2
-        ? "Add a second clip to unlock the older-vs-newer trend"
-        : "Trend unavailable — clips have no usable duration",
-    topFocus.length ? `Recurring coaching focus: ${topFocus.map((f) => `${attributeLabel(f.key)} ×${f.clips}`).join(", ")}` : "No recommended focus yet",
-  ].filter(Boolean);
+        ? { key: "fi.ev.needSecond" }
+        : { key: "fi.ev.noTrend" },
+    topFocus.length
+      ? { key: "fi.ev.focus", vars: { foci: topFocus.map((f) => `${f.key}:${f.clips}`).join(",") } }
+      : { key: "fi.ev.noFocus" },
+  ];
 
   const confidence = valid.length === 0 ? 0 : Math.min(85, 20 + valid.length * 16);
 
@@ -121,7 +160,11 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
     avgConfidence,
     evidence,
     confidence,
-    sources: ["Your local film library (this device)", `Demo video provider detections (${avgConfidence}% mean confidence)`, "Attribute model (focus labels)"],
+    sources: [
+      { key: "fi.src.library" },
+      { key: "fi.src.provider", vars: { conf: avgConfidence } },
+      { key: "fi.src.model" },
+    ],
     hasData: valid.length > 0 && totalEvents > 0,
   };
 }
