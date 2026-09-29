@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M231 (a few numbers in that range
+Work ships one milestone per commit and is currently at M233 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -5600,6 +5600,56 @@ aimed at is one layer short when several clauses read the same number.
 exactly this milestone's own additions: proof-i18n 247 → 253 and proof-m74 15 → 17, with
 proof-m77 unchanged at 11 — and the red that travelled since M230 is gone, because the thing that
 was broken was the gate's idea of the sentence, not the sentence.
+
+### M233 — the news impact read publishes rows, and the ratchet stops charging it for Tailwind classes
+
+`domain/newsImpact.ts` was the last model module still composing its own English: sixteen sentences
+across the panel's three lists — the standing line, the club line, the certainty paragraph, the
+topics line, the unresolved warning, and four evidence lines. They are rows now (`ni.*`, keyed in all
+three locales) and `features/football/FootballWorld.tsx` resolves them through `rowLine`, which is
+where `context`/`watch`/`evidence` used to be printed as strings.
+
+Three defects fell out of doing it:
+
+- **A rank is a number, not `3rd`.** The module composed the ordinal suffix itself, so the row
+  carried `3rd` and no language could put it back — Chinese writes 第 3 名. `ordinal()` is gone and
+  the row carries `s.position`. `data/intelligence.ts` had already dropped the same suffix for the
+  same reason, so this is the second place the tree agrees on it.
+- **`{impact.certainty}` printed `high` at the reader.** The band chip rendered the raw code beside
+  the percentage, and no scan sees an interpolated hole — the M191/M192 shape, a third time.
+- **The article's own type needed a family of its own.** `kind` was already a rowText code variable,
+  but for *retrieval* kinds (`club`, `player` → `ai.legend.…`); a story's kind says what it *claims*,
+  shares no values with those, and would have been resolved as the wrong family. `NEWS_KINDS` now
+  sits beside `SEARCH_KINDS` in `domain/types.ts`, a `stance` code variable gets its own branch, and
+  `NewsArticle.kind` is typed by the union instead of spelling it out.
+
+**The rule change, and why it is not a convenience.** Three of the module's nineteen counted literals
+were `CERTAINTY_TONE`'s Tailwind class lists: `border-success/40 bg-success/10 text-success` holds
+spaces and letters like a sentence, so section 31 charged it as prose. That is M181's format-literal
+error again, so the rule now exempts a literal whose EVERY whitespace-separated token carries a `-`,
+`/` or `:`. Every token, not "at least one" — `state-of-the-art passing` is prose, and a one-hyphen
+rule would have exempted it. Both directions are fixtures. Ceiling 248 → 229, the module's cap 19 → 0,
+and it joins `PROSE_ZERO`.
+
+**A proof, because moving prose to keys without one is exactly how M232's blind spot happened.**
+`buildImpact`'s rows had no coverage at all: `proof-feedranking` imports the module for
+`rankNewsForClub` and never reads the panel. `scripts/proof-impact.mjs` (15 checks) resolves every row
+through `scripts/lib/rows.mjs`'s `makeSay` — it asks the app what the row says rather than
+pattern-matching the sentence — and asserts the three properties a keyed row can fail silently: no row
+reaches any locale as a raw key, an empty string or a snake_case code; the words really change with
+the reader's language; and no standing line carries an English ordinal in any locale. It also pins the
+three zone arms, both club-line arms, all five stances as distinct, and the two conditional lines.
+
+Three mutations, all caught: dropping `stance` from `CODE_VARS` (proof-impact), composing the ordinal
+back into the rank (two proof-impact clauses), and putting one sentence back as a string
+(proof-impact plus three proof-i18n clauses — reachability, the ceiling, and the module cap). Measured
+after: `tsc` clean, build 0, proof-i18n **256/256** over **1744 keys × 3 locales**, proof-impact
+15/15. Nothing was clicked in a browser.
+
+**Still outstanding** (deliberately not faked): the domain modules whose English `label` fields are the
+reference the drift checks hold their dictionaries against — `attributes.ts` (19), `training.ts` (19),
+`onboarding.ts` (6) — can never reach zero by keying a render site, and `learn.ts` (83) is long-form
+lesson prose that has not been touched.
 
 ## Deploying
 
