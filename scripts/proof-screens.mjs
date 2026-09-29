@@ -76,7 +76,9 @@ define("IntersectionObserver", class { observe() {} unobserve() {} disconnect() 
 const { renderToStaticMarkup } = await import("react-dom/server");
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const read = (p) => readFileSync(join(root, p), "utf8");
-/** Kept as a literal `ssrLoadModule("/…")` call so proof-coverage can see every root this file loads. */
+/** The two LOOPS below build their path from a variable, so proof-coverage's root scan cannot see
+ *  them; the calls that pass a literal path are visible to it. Section 2 measures which is which
+ *  instead of pretending otherwise. */
 async function tryLoad(what) {
   try { return { mod: await what(), err: null }; }
   catch (e) { return { mod: null, err: e }; }
@@ -201,6 +203,17 @@ const FEATURE_MODULES = APP_MODULES.filter((p) => p.startsWith("features/"));
 ok(`the ratchet cannot reach these screens by construction: proof-coverage counts ${COV_DIRS.join(", ")} and every screen lives in ${SCREEN_DIRS.join(", ")} (${FEATURE_MODULES.length} of the ${APP_MODULES.length} app modules outside scripts/ are under features/)`,
   COV_DIRS.length >= 3 && SCREEN_DIRS.length === 1 && !COV_DIRS.includes(SCREEN_DIRS[0]) && FEATURE_MODULES.length >= 20,
   `DIRS=${COV_DIRS.join(",")} screenDirs=${SCREEN_DIRS.join(",")}`);
+
+// And the half of the boundary that is about THIS file: proof-coverage attributes a root only where
+// the path is a literal inside the call, so the two loops below are invisible to it. This clause
+// exists because the alternative was a comment claiming the opposite.
+const OWN_SRC = read("scripts/proof-screens.mjs");
+const OWN_ROOT_RE = /ssrLoadModule\(\s*["'`]\/([\w./-]+?)["'`]/g;
+const ownLiteral = [...OWN_SRC.matchAll(OWN_ROOT_RE)].map((m) => m[1]);
+const ownVariable = (OWN_SRC.match(/ssrLoadModule\("\/" \+/g) || []).length;
+ok(`this file's own loads are split by how visible they are to that ratchet: ${ownLiteral.length} literal-path loads (${ownLiteral.join(", ")}) it can attribute, ${ownVariable} computed-path loads (the ${screens.length} screens + the ${PROVIDERS.length} providers) it cannot`,
+  ownLiteral.length >= 1 && ownVariable >= 1 && ownLiteral.filter((p) => p.startsWith("features/")).length === 0,
+  `literal=${ownLiteral.length} variable=${ownVariable}`);
 
 // ---------------------------------------------------------------------------
 // 3 · the render matrix
