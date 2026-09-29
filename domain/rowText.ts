@@ -30,18 +30,31 @@ export type Translate = (key: string, vars?: RowVars) => string;
 // category (the scout headline names two), `goal`/`ageGroup` an onboarding choice, and `shot`
 // the shot type the match engine scored a goal with. `drill` is one attribute key the
 // game-realistic block trains, `stance` the article type a news story claims (a different
-// family from `kind`, which names what a retrieval entity *is*), and `attrs`, `trained` and
-// `last`/`new` are the comma-separated
+// family from `kind`, which names what a retrieval entity *is*), `foci` the film report's
+// `key:count` list of recurring attributes, and `attrs`, `trained` and `last`/`new` are the
+// comma-separated
 // lists the coach's diagnosis and its continuity line name: before M230 the coach handed those
 // rows the English *label* of each key, so a 简体中文 reader read "Ball Control, Weak Foot" inside a
 // Chinese sentence, and the row contract could not put it back — the value was already a word.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "stance", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr"];
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "foci", "arch", "arch2", "kind", "stance", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr"];
 
 function codeWord(code: string, t: Translate): string {
-  // `focus` is the one variable that holds a list, so a comma-separated code list is
-  // resolved part by part and rejoined the way the coach line always read.
-  if (code.includes(",")) {
-    return code.split(",").map((part) => codeWord(part.trim(), t)).join(" + ");
+  // Two variables hold a LIST, and the shape of an item tells them apart. `focus` is a plain
+  // comma-separated code list the coach line reads as "A + B". `foci` carries how many times
+  // each attribute recurs — `passing:3,dribbling:1` — and reads as "Passing ×3, Dribbling ×1".
+  // Both resolve part by part through this same function, so neither can put an English label
+  // on a Chinese line, which is what `attributeLabel` did in the film report before M234.
+  const parts = code.split(",").map((p) => p.trim());
+  if (parts.length > 1 || /:\d+$/.test(code)) {
+    if (parts.every((p) => /:\d+$/.test(p))) {
+      return parts
+        .map((p) => {
+          const cut = p.lastIndexOf(":");
+          return `${codeWord(p.slice(0, cut), t)} ×${p.slice(cut + 1)}`;
+        })
+        .join(", ");
+    }
+    return parts.map((p) => codeWord(p, t)).join(" + ");
   }
   if ((ATTRIBUTE_KEYS as readonly string[]).includes(code)) return t(`attr.name.${code}`);
   if ((POSITION_GROUPS.map((g) => g.id) as readonly string[]).includes(code)) return t(`group.${code}`);

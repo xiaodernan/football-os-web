@@ -315,7 +315,7 @@ export function ProfilePage() {
                 </span>
               </div>
               <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground">
-                {r.lines.map((l, i) => <li key={i}>{l}</li>)}
+                {r.lines.map((l, i) => <li key={i}>{rowLine(l, t)}</li>)}
               </ul>
               {r.lastAt && ts(r.lastAt) > 0 && (
                 <div className="mt-1.5 text-[10px] text-muted-foreground">{t("prof.lastActivity")} {formatDate(locale, r.lastAt, ACTIVITY_TIME)}</div>
@@ -324,9 +324,9 @@ export function ProfilePage() {
           ))}
         </div>
         <ul className="mt-3 space-y-0.5 text-[11px] text-muted-foreground">
-          {footprint.evidence.map((e, i) => <li key={i}>› {e}</li>)}
+          {footprint.evidence.map((e, i) => <li key={i}>› {rowLine(e, t)}</li>)}
         </ul>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">{t("common.sources")}: {footprint.sources.join(" · ")}</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">{t("common.sources")}: {footprint.sources.map((s) => rowLine(s, t)).join(" · ")}</p>
       </Panel>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

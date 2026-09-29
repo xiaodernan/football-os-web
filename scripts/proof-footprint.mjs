@@ -8,13 +8,21 @@
 // Every expectation below is recomputed here from the input object rather than read back
 // out of the output, and the plural/threshold words are probed at the boundary (1 vs 2) the
 // way this project's other model proofs are.
+//
+// M234 — the rows are rows. `lines`, `evidence` and `sources` are `RowText`, so nothing in
+// here reads them as strings: every reading goes through scripts/lib/rows.mjs's `makeSay`,
+// which is the same `rowLine` + `translate` ProfilePage renders with. A proof that resolved
+// the row itself would be the second interpreter M232 removed.
 import { createServer } from "vite";
+import { makeSay } from "./lib/rows.mjs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { buildFootprint } = await server.ssrLoadModule("/domain/footprint.ts");
 const { attributeLabel } = await server.ssrLoadModule("/domain/attributes.ts");
 const { formatDate } = await server.ssrLoadModule("/i18n/format.ts");
 const { LOCALES: L } = await server.ssrLoadModule("/i18n/dictionaries.ts");
+const { say, keysOf, translate } = await makeSay(server);
+const sayEn = say("en");
 
 let pass = 0, fail = 0;
 const ok = (name, cond, detail) => {
@@ -36,7 +44,11 @@ const withIn = (over = {}) => {
   return deep;
 };
 const row = (fp, id) => fp.rows.find((r) => r.id === id);
-const text = (r) => r.lines.join(" | ");
+// A row is never read as a string here: `sayEn` is the app's own rowLine, so what this
+// proof matches is what ProfilePage prints.
+const line = (r, i) => sayEn(r.lines[i]);
+const text = (r) => r.lines.map(sayEn).join(" | ");
+const lines = (list) => list.map(sayEn).join(" / ");
 
 // ---------------------------------------------------------------------------
 // 1 · the shape the profile renders, including the pillars with nothing in them
@@ -44,8 +56,8 @@ const text = (r) => r.lines.join(" | ");
 const F0 = buildFootprint(EMPTY);
 ok(`all four pillars are always returned, in the declared order (${F0.rows.map((r) => r.id).join(" → ")})`,
   F0.rows.map((r) => r.id).join(",") === "player,manager,film,fan");
-ok("…each with a label, a route and at least one line, so the panel never renders an empty card",
-  F0.rows.every((r) => r.label && r.to?.startsWith("/") && r.lines.length >= 1));
+ok("…each with a title the profile reads off `prof.mode.*`, a route and at least one line, so the panel never renders an empty card",
+  F0.rows.every((r) => !!translate("en", `prof.mode.${r.id}`) && r.to?.startsWith("/") && r.lines.length >= 1));
 ok(`…and the routes are the real screens (${F0.rows.map((r) => `${r.id}→${r.to}`).join(" ")})`,
   F0.rows.map((r) => r.to).join(",") === "/player,/manager,/film,/watchlist");
 const notStarted = F0.rows.filter((r) => !r.active);
@@ -72,14 +84,14 @@ ok("…and a row's lastAt is one of the stamps the caller handed for that pillar
 // 3 · counts are quoted, rounded the same way everywhere
 // ---------------------------------------------------------------------------
 const p = row(R1, "player");
-ok(`the player card quotes sessions and minutes as given (${p.lines[0]})`,
-  p.lines[0] === "4 sessions · 90 min trained");
-ok(`…level, XP and goals together (${p.lines[1]})`, p.lines[1] === "Level 5 · 800 XP · 3 goals met");
-ok(`…and academy lessons with their passed checks (${p.lines[2]})`, p.lines[2] === "1 academy lesson · 1 passed check");
+ok(`the player card quotes sessions and minutes as given (${line(p, 0)})`,
+  line(p, 0) === "4 sessions · 90 min trained");
+ok(`…level, XP and goals together (${line(p, 1)})`, line(p, 1) === "Level 5 · 800 XP · 3 goals met");
+ok(`…and academy lessons with their passed checks (${line(p, 2)})`, line(p, 2) === "1 academy lesson · 1 passed check");
 const MINUTED = buildFootprint(withIn({ player: { sessionsCompleted: 1, minutes: 12.34 }, film: { clips: 1, minutes: 0.05 } }));
-ok(`minutes are shown to one decimal on the card (${MINUTED.rows[0].lines[0]}) and the total is that rounding of the sum (${MINUTED.totalMinutes} for 12.34 + 0.05)`,
-  MINUTED.rows[0].lines[0].includes("12.3 min trained") && MINUTED.totalMinutes === 12.4 &&
-  MINUTED.evidence[1] === "12.4 minutes of your own training and film");
+ok(`minutes are shown to one decimal on the card (${line(MINUTED.rows[0], 0)}) and the total is that rounding of the sum (${MINUTED.totalMinutes} for 12.34 + 0.05)`,
+  line(MINUTED.rows[0], 0).includes("12.3 min trained") && MINUTED.totalMinutes === 12.4 &&
+  sayEn(MINUTED.evidence[1]) === "12.4 minutes of your own training and film");
 ok(`…which is player minutes plus film minutes and nothing else (${buildFootprint(withIn({ player: { minutes: 7 }, film: { minutes: 3 }, manager: { active: true, matches: 2 } })).totalMinutes} for 7+3 with a career in play)`,
   buildFootprint(withIn({ player: { minutes: 7 }, film: { minutes: 3 }, manager: { active: true, matches: 2 } })).totalMinutes === 10);
 
@@ -108,15 +120,20 @@ ok(`every count word agrees with its number at 1 and 2 (${PLURALS.length * 2} fo
 // 4 · each pillar's own absence rules
 // ---------------------------------------------------------------------------
 const mgrStarted = row(buildFootprint(withIn({ manager: { active: true, matches: 0 } })), "manager");
-ok(`a career with no fixture played yet says exactly that (${mgrStarted.lines[0]})`,
-  mgrStarted.lines[0] === "Career started but no fixture played yet." && mgrStarted.active === false);
+ok(`a career with no fixture played yet says exactly that (${line(mgrStarted, 0)})`,
+  line(mgrStarted, 0) === "Career started but no fixture played yet." && mgrStarted.active === false);
 const mgrPartial = buildFootprint(withIn({ manager: { active: true, matches: 4, pointsPerGame: 1.5, position: 3 } }));
 ok(`the table row needs BOTH position and club count, and says so when one is missing (${text(row(mgrPartial, "manager"))})`,
   !text(row(mgrPartial, "manager")).includes("#3") &&
   text(row(buildFootprint(withIn({ manager: { active: true, matches: 4, pointsPerGame: 1.5, position: 3, clubCount: 18 } })), "manager")).includes("#3 of 18"));
-const mgrPts = text(row(buildFootprint(withIn({ manager: { active: true, matches: 4, pointsPerGame: 2 } })), "manager"));
-ok(`points per game are printed with two decimals and no club name falls back to "Your club" (${mgrPts})`,
-  mgrPts.includes("2.00 pts/game") && mgrPts.includes("Your club"));
+const mgrNoClub = text(row(buildFootprint(withIn({ manager: { active: true, matches: 4, pointsPerGame: 2 } })), "manager"));
+const mgrWithClub = text(row(buildFootprint(withIn({ manager: { active: true, matches: 4, pointsPerGame: 2, clubName: "Riverside" } })), "manager"));
+// M234: the old code wrote `m.clubName ?? "Your club"` into the row, so a career with no
+// name printed an English placeholder no locale could translate. The absent case is its own
+// pair of keys now, so nothing invents a name.
+ok(`points per game are printed with two decimals, and a career with no club name invents none (${mgrNoClub})`,
+  mgrNoClub.includes("2.00 pts/game") && !/Your club/i.test(mgrNoClub) &&
+  mgrWithClub.includes("Riverside · 4 fixtures managed"));
 const filmMid = (over) => text(row(buildFootprint(withIn({ film: { clips: 3, minutes: 20, ...over } })), "film"));
 ok(`the detection line needs both detections and scans-per-minute (${filmMid({ detections: 40, scanPerMinute: 2.5 })})`,
   filmMid({ detections: 40, scanPerMinute: 2.5 }).includes("40 detections · 2.50 scans/min") &&
@@ -131,7 +148,7 @@ ok("…and the line is absent for an empty focus list rather than printed as not
   !/Repeated/.test(filmMid({ recurringFocus: [] })));
 const fanQuiet = row(buildFootprint(withIn({ fan: { watchlist: 2, posts: 0, replies: 0 } })), "fan");
 ok(`a watcher who has never posted is told "Nothing posted yet" rather than "0 posts" (${text(fanQuiet)})`,
-  fanQuiet.lines[1] === "Nothing posted yet");
+  line(fanQuiet, 1) === "Nothing posted yet");
 ok(`…and a favourite club only appears when one is set (${text(row(buildFootprint(withIn({ fan: { watchlist: 1, favouriteClubName: "Riverside" } })), "fan"))})`,
   text(row(buildFootprint(withIn({ fan: { watchlist: 1 } })), "fan")).indexOf("Supports") === -1 &&
   text(row(buildFootprint(withIn({ fan: { watchlist: 1, favouriteClubName: "Riverside" } })), "fan")).includes("Supports Riverside"));
@@ -149,27 +166,46 @@ const junk = buildFootprint(junkIn);
 ok(`an unparseable or empty stamp is dropped rather than becoming the most recent activity (${junk.lastActiveAt}, player row lastAt ${junk.rows[0].lastAt ?? "none"})`,
   junk.lastActiveAt === "2026-06-06T00:00:00.000Z" && junk.rows[0].lastAt === undefined);
 ok("a record with no dates at all says so instead of printing an empty date",
-  buildFootprint(EMPTY).lastActiveAt === null && /No dated activity/.test(buildFootprint(EMPTY).evidence[2]));
+  buildFootprint(EMPTY).lastActiveAt === null && /No dated activity/.test(sayEn(buildFootprint(EMPTY).evidence[2])));
 const EN = buildFootprint(withIn({ locale: "en", player: { lastSessionAt: "2026-09-12T08:30:00Z" } }));
 const ZH = buildFootprint(withIn({ locale: "zh-CN", player: { lastSessionAt: "2026-09-12T08:30:00Z" } }));
-ok(`the last-activity line is written in the reader's language, not the machine's (${EN.evidence[2]} vs ${ZH.evidence[2]})`,
-  EN.evidence[2] === `Most recent activity ${formatDate("en", "2026-09-12T08:30:00Z")}` &&
-  ZH.evidence[2] === `Most recent activity ${formatDate("zh-CN", "2026-09-12T08:30:00Z")}` &&
-  EN.evidence[2] !== ZH.evidence[2]);
+const enStamp = say("en")(EN.evidence[2]);
+const zhStamp = say("zh-CN")(ZH.evidence[2]);
+ok(`the last-activity line is written in the reader's language, not the machine's (${enStamp} vs ${zhStamp})`,
+  enStamp === `Most recent activity ${formatDate("en", "2026-09-12T08:30:00Z")}` &&
+  zhStamp.includes(formatDate("zh-CN", "2026-09-12T08:30:00Z")) &&
+  enStamp !== zhStamp);
 ok(`every app locale reaches the door (${L.map((l) => l.id).join("/")})`,
-  L.every((l) => buildFootprint(withIn({ locale: l.id, player: { lastSessionAt: "2026-09-12T08:30:00Z" } })).evidence[2].includes(formatDate(l.id, "2026-09-12T08:30:00Z"))));
+  L.every((l) => say(l)(buildFootprint(withIn({ locale: l.id, player: { lastSessionAt: "2026-09-12T08:30:00Z" } })).evidence[2]).includes(formatDate(l.id, "2026-09-12T08:30:00Z"))));
+
+// M234's own claim: every row the four cards and the evidence block publish reads in the
+// reader's language, checked per locale rather than only for the English arm the rest of
+// this file probes.
+const cardRows = (loc) => {
+  const fp = buildFootprint(withIn({ locale: loc }));
+  return [...fp.rows.flatMap((r) => r.lines), ...fp.evidence, ...fp.sources];
+};
+const differing = L.filter((l) => l.id !== "en").map((l) => {
+  const mine = cardRows(l.id).map(say(l.id)).join(" ");
+  const en = cardRows("en").map(sayEn).join(" ");
+  return [l.id, mine !== en && /[\u4e00-\u9fff]/.test(mine)];
+});
+ok(`the four cards' rows and the evidence block read in ${differing.map(([l, ok]) => `${l}=${ok}`).join(" ")}, never as English`,
+  differing.every(([, ok]) => ok));
+ok(`every row key they publish exists in the dictionary (${cardRows("en").length} rows per locale)`,
+  cardRows("en").every((r) => typeof r.key === "string" && keysOf("en").includes(r.key) && L.every((l) => keysOf(l.id).includes(r.key))));
 
 // ---------------------------------------------------------------------------
 // 6 · evidence and provenance
 // ---------------------------------------------------------------------------
 const EV = buildFootprint(withIn({ player: { sessionsCompleted: 2, minutes: 30 }, film: { clips: 1, minutes: 5 } }));
-ok(`evidence is exactly three lines, all derived: touched count, own minutes, newest date (${EV.evidence.length}: ${EV.evidence.join(" / ")})`,
-  EV.evidence.length === 3 && EV.evidence[0] === "2 of 4 pillars have real records on this device" && EV.evidence[1] === "35 minutes of your own training and film");
+ok(`evidence is exactly three lines, all derived: touched count, own minutes, newest date (${EV.evidence.length}: ${lines(EV.evidence)})`,
+  EV.evidence.length === 3 && sayEn(EV.evidence[0]) === "2 of 4 pillars have real records on this device" && sayEn(EV.evidence[1]) === "35 minutes of your own training and film");
 ok("…and the touched figure agrees with the rows above it",
-  EV.evidence[0].startsWith(`${EV.pillarsTouched} of ${EV.rows.length}`));
-ok(`sources name only the two stores this module actually reads (${EV.sources.join(" + ")})`,
-  EV.sources.length === 2 && EV.sources.every((s) => typeof s === "string" && s.length > 8) &&
-    EV.sources.join(" ").match(/network|server|sync|cloud/i) === null);
+  sayEn(EV.evidence[0]).startsWith(`${EV.pillarsTouched} of ${EV.rows.length}`));
+ok(`sources name only the two stores this module actually reads (${lines(EV.sources)})`,
+  EV.sources.length === 2 && EV.sources.every((s) => sayEn(s).length > 8) &&
+    EV.sources.map(sayEn).join(" ").match(/network|server|sync|cloud/i) === null);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M233 (a few numbers in that range
+Work ships one milestone per commit and is currently at M234 (a few numbers in that range
 were skipped). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -5650,6 +5650,59 @@ after: `tsc` clean, build 0, proof-i18n **256/256** over **1744 keys × 3 locale
 reference the drift checks hold their dictionaries against — `attributes.ts` (19), `training.ts` (19),
 `onboarding.ts` (6) — can never reach zero by keying a render site, and `learn.ts` (83) is long-form
 lesson prose that has not been touched.
+
+### M234 — the profile's four cards are rows, and no career invents a club name
+
+`domain/footprint.ts` was the largest counted prose holder left (25 of 229) and the only one whose
+every sentence reached a reader: the four pillar cards' count lines and their "nothing yet" arms, the
+three evidence lines and the two provenance sources. It composed all of them in English, so a
+簡體中文 profile printed `4 sessions · 90 min trained` inside a Chinese page — the same shape M230
+fixed for the coach, this time in the one screen where the three modes meet.
+
+**The record holds rows now.** `FootprintRow.lines`, `Footprint.evidence` and `Footprint.sources` are
+`RowText[]`, built as `{ key: "fp.player.sessionsOne", vars: { n, min } }` and read by
+`features/profile/ProfilePage.tsx` through `rowLine`. **36 new `fp.*` keys ×3 locales: 1744 → 1780
+per locale.** The singular/plural arms are separate keys (`…One` / `…`) because no `{n}` can pick an
+arm — the rule `domain/history.ts` already follows.
+
+**Two fields went away, and both were English-only.** `FootprintRow.label` held `"Player"` /
+`"Manager"` / `"Film"` / `"Fan"`; the profile prints `t(\`prof.mode.${r.id}\`)` instead, so the field
+had no reader once the title came from the dictionary. And the manager card wrote
+`m.clubName ?? "Your club"` — a placeholder name no locale could translate. The absent case is its
+own pair of keys now (`fp.manager.fixturesNoClub*`), so a career without a name prints no name
+rather than an English one.
+
+**`foci` joins `CODE_VARS`** for the film card's repeated-focus line, which carries a
+`key:count` list (`passing:3,dribbling:1`) rather than the plain code list `focus` has always
+carried. `codeWord` resolves each part and writes `Passing ×3, Dribbling ×1`, so the attribute
+reaches the reader through `attr.name.*` — before this it went through `attributeLabel`, an English
+label glued into a Chinese line.
+
+**The ratchet moved down.** `DOMAIN_PROSE_CEILING` **229 → 204**, `PROSE_CAPS["domain/footprint.ts"]`
+**25 → 0**, and `domain/footprint.ts` joins `PROSE_ZERO` (12 modules now). The inventory line reads
+`attributes career community filmInsights learn onboarding training` — footprint has left it.
+
+**`proof-footprint` reads rows the way the page does.** The proof used to compare `r.lines[i]` to
+English strings; it resolves through `scripts/lib/rows.mjs`'s `makeSay` (M232's interpreter), so what
+it matches is what ProfilePage prints. Two clauses are new: the four cards' rows plus the evidence
+block must read differently in each non-English locale *and* contain that locale's script, and every
+row key they publish must exist in all three dictionaries. One clause was **inverted**: it asserted
+that a nameless career falls back to `"Your club"`, which is now forbidden.
+
+**Mutation witness: four arms, all caught.** (1) the film card's absent-case put back as a plain
+English string — five proof-i18n clauses (reachability, ceiling, module cap, cap sum, zero list);
+(2) the zh-CN `fp.fan.none` row deleted — parity; (3) `{foci}` drifted to `{foci2}` in zh-TW —
+placeholder agreement; (4) `foci` dropped from `CODE_VARS` — proof-footprint's focus clause reports
+`passing:3,dribbling:1` reaching the reader. All restored.
+
+Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, suite
+**40/40 proof scripts · 2084/2084 checks · exit 0**, `proof-i18n` **257/257** at **1780 keys · 3
+locales**. Ceiling **204 across 7 files**, raw-UI ceiling **0 across 0 files**, covered set **40**.
+
+**Still outstanding**: the same three `label`-holding modules and `learn.ts`'s lesson prose; Manager
+OS's five slider scale words; `domain/matchEngine.ts` and `domain/newsImpact.ts` are already at 0 and
+pinned, so the remaining prose is concentrated in `learn/community/career/attributes/training/
+filmInsights/onboarding`.
 
 ## Deploying
 

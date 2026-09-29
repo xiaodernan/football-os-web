@@ -2748,7 +2748,11 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // the stance paragraph, the topics line, the unresolved warning and the four evidence lines —
 // and narrowed the prose rule so the module's three Tailwind class lists stop being counted as
 // sentences, which is the other three. Ceiling and cap both fall by nineteen.
-const DOMAIN_PROSE_CEILING = 229;
+// M234 published domain/footprint.ts's twenty-five — the four pillar cards, their absent-case
+// lines, the three evidence lines and the two provenance sources — as `fp.*` rows the profile
+// reads through rowLine, so the module leaves the inventory entirely: ceiling and cap both
+// fall by twenty-five.
+const DOMAIN_PROSE_CEILING = 204;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
@@ -2757,7 +2761,7 @@ const DOMAIN_PROSE_CEILING = 229;
 // M225 adds domain/matchEngine.ts: unlike the three format-only modules above it held real
 // sentences ("The midfield was finely balanced."), and they are rows now, so the module is
 // pinned at zero like the rest.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -2769,7 +2773,7 @@ const PROSE_CAPS = {
   "domain/learn.ts": 83,
   "domain/community.ts": 36,
   "domain/career.ts": 29,
-  "domain/footprint.ts": 25,
+  "domain/footprint.ts": 0,
   "domain/attributes.ts": 19,
   "domain/newsImpact.ts": 0,
   "domain/training.ts": 19,

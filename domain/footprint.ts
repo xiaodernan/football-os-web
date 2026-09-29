@@ -4,9 +4,9 @@
 // pillars a visitor has never used rather than quietly hiding them.
 // Pure: every input is passed in, no IO, no React.
 
-import { attributeLabel } from "./attributes";
 import { formatDate } from "@/i18n/format";
 import type { Locale } from "@/i18n/dictionaries";
+import type { RowText } from "./rowText";
 
 export interface PlayerInput {
   sessionsCompleted: number;
@@ -61,10 +61,9 @@ export interface FootprintInput {
 
 export interface FootprintRow {
   id: "player" | "manager" | "film" | "fan";
-  label: string;
   to: string;
   active: boolean;
-  lines: string[];
+  lines: RowText[];
   lastAt?: string;
 }
 
@@ -73,8 +72,8 @@ export interface Footprint {
   pillarsTouched: number;
   totalMinutes: number;
   lastActiveAt: string | null;
-  evidence: string[];
-  sources: string[];
+  evidence: RowText[];
+  sources: RowText[];
 }
 
 const ts = (iso?: string) => {
@@ -88,63 +87,78 @@ const later = (...isos: (string | undefined)[]): string | undefined =>
 
 const mins = (v: number) => `${Math.round(v * 10) / 10}`;
 
+/** Drop the arms a pillar's record did not supply. The parameter is typed rather than
+ *  inferred on purpose: an array of object literals with different `vars` shapes does not
+ *  satisfy the row union on its own, and TypeScript then rejects the narrowing predicate
+ *  instead of the arm that is actually wrong. Typing the argument makes each arm check
+ *  against `RowText`, which is where a mistake belongs. */
+const present = (arms: (RowText | null)[]): RowText[] => arms.filter((r): r is RowText => r !== null);
+
 export function buildFootprint(i: FootprintInput): Footprint {
   const rows: FootprintRow[] = [];
 
+  // A count word is a key, not an English "-s" glued on in here: the singular and the plural
+  // are separate rows (`…One` / `…`) because no `{n}` can pick an arm, which is the rule
+  // domain/history.ts already follows. `label` is gone: the profile prints `prof.mode.${id}`
+  // for the card's title, so the English word this field held had no reader at all.
   const p = i.player;
   const playerActive = p.sessionsCompleted > 0 || p.lessonsCompleted > 0 || p.plans > 0;
   rows.push({
     id: "player",
-    label: "Player",
     to: "/player",
     active: playerActive,
     lines: playerActive
-      ? [
-          `${p.sessionsCompleted} session${p.sessionsCompleted === 1 ? "" : "s"} · ${mins(p.minutes)} min trained`,
-          `Level ${p.level} · ${p.xp} XP · ${p.goalsDone} goal${p.goalsDone === 1 ? "" : "s"} met`,
-          `${p.lessonsCompleted} academy lesson${p.lessonsCompleted === 1 ? "" : "s"} · ${p.lessonsMastered} passed check`,
-        ]
-      : ["No training log yet — onboarding a profile starts this pillar."],
+      ? present([
+          { key: p.sessionsCompleted === 1 ? "fp.player.sessionsOne" : "fp.player.sessions", vars: { n: p.sessionsCompleted, min: mins(p.minutes) } },
+          { key: p.goalsDone === 1 ? "fp.player.levelOne" : "fp.player.level", vars: { level: p.level, xp: p.xp, n: p.goalsDone } },
+          { key: p.lessonsCompleted === 1 ? "fp.player.lessonsOne" : "fp.player.lessons", vars: { n: p.lessonsCompleted, passed: p.lessonsMastered } },
+        ])
+      : [{ key: "fp.player.none" }],
     lastAt: later(p.lastSessionAt, p.lastLessonAt),
   });
 
   const m = i.manager;
   rows.push({
     id: "manager",
-    label: "Manager",
     to: "/manager",
     active: m.active && m.matches > 0,
     lines:
       m.active && m.matches > 0
-        ? [
-            `${m.clubName ?? "Your club"} · ${m.matches} fixture${m.matches === 1 ? "" : "s"} managed`,
-            m.pointsPerGame != null ? `${m.pointsPerGame.toFixed(2)} pts/game` : "",
-            m.position != null && m.clubCount ? `#${m.position} of ${m.clubCount}` : "",
-          ].filter(Boolean)
+        ? present([
+            // The club name is the record's own; when the career has none the line has to lose
+            // the whole "name · " prefix rather than print a separator with nothing before it,
+            // so the absent case is its own pair of keys rather than a substituted word.
+            m.clubName
+              ? { key: m.matches === 1 ? "fp.manager.fixturesOne" : "fp.manager.fixtures", vars: { club: m.clubName, n: m.matches } }
+              : { key: m.matches === 1 ? "fp.manager.fixturesNoClubOne" : "fp.manager.fixturesNoClub", vars: { n: m.matches } },
+            m.pointsPerGame != null ? { key: "fp.manager.ppg", vars: { n: m.pointsPerGame.toFixed(2) } } : null,
+            m.position != null && m.clubCount ? { key: "fp.manager.table", vars: { pos: m.position, total: m.clubCount } } : null,
+          ])
         : m.active
-          ? ["Career started but no fixture played yet."]
-          : ["No career started."],
+          ? [{ key: "fp.manager.noFixture" }]
+          : [{ key: "fp.manager.none" }],
     lastAt: m.lastMatchAt,
   });
 
   const f = i.film;
   rows.push({
     id: "film",
-    label: "Film",
     to: "/film",
     active: f.clips > 0,
     lines:
       f.clips > 0
-        ? [
-            `${f.clips} clip${f.clips === 1 ? "" : "s"} analysed · ${mins(f.minutes)} min of footage`,
+        ? present([
+            { key: f.clips === 1 ? "fp.film.clipsOne" : "fp.film.clips", vars: { n: f.clips, min: mins(f.minutes) } },
             f.detections != null && f.scanPerMinute != null
-              ? `${f.detections} detections · ${f.scanPerMinute.toFixed(2)} scans/min${f.avgConfidence ? ` · ${f.avgConfidence}% mean confidence` : ""}`
-              : "",
+              ? f.avgConfidence
+                ? { key: "fp.film.detectionsConf", vars: { n: f.detections, rate: f.scanPerMinute.toFixed(2), conf: f.avgConfidence } }
+                : { key: "fp.film.detections", vars: { n: f.detections, rate: f.scanPerMinute.toFixed(2) } }
+              : null,
             f.recurringFocus && f.recurringFocus.length
-              ? `Repeated coaching focus: ${f.recurringFocus.map((x) => `${attributeLabel(x.key)} ×${x.clips}`).join(", ")}`
-              : "",
-          ].filter(Boolean)
-        : ["No clips analysed on this device."],
+              ? { key: "fp.film.focus", vars: { foci: f.recurringFocus.map((x) => `${x.key}:${x.clips}`).join(",") } }
+              : null,
+          ])
+        : [{ key: "fp.film.none" }],
     lastAt: f.lastClipAt,
   });
 
@@ -152,16 +166,22 @@ export function buildFootprint(i: FootprintInput): Footprint {
   const fanActive = fa.watchlist > 0 || fa.posts > 0 || fa.replies > 0;
   rows.push({
     id: "fan",
-    label: "Fan",
     to: "/watchlist",
     active: fanActive,
     lines: fanActive
-      ? [
-          `${fa.watchlist} player${fa.watchlist === 1 ? "" : "s"} watched`,
-          fa.posts + fa.replies > 0 ? `${fa.posts} post${fa.posts === 1 ? "" : "s"} · ${fa.replies} repl${fa.replies === 1 ? "y" : "ies"}` : "Nothing posted yet",
-          fa.favouriteClubName ? `Supports ${fa.favouriteClubName}` : "",
-        ].filter(Boolean)
-      : ["No watchlist, favourites or posts yet."],
+      ? present([
+          { key: fa.watchlist === 1 ? "fp.fan.watchedOne" : "fp.fan.watched", vars: { n: fa.watchlist } },
+          fa.posts + fa.replies > 0
+            ? {
+                key: fa.posts === 1
+                  ? fa.replies === 1 ? "fp.fan.postsOneOne" : "fp.fan.postsOneMany"
+                  : fa.replies === 1 ? "fp.fan.postsManyOne" : "fp.fan.postsManyMany",
+                vars: { posts: fa.posts, replies: fa.replies },
+              }
+            : { key: "fp.fan.nothingPosted" },
+          fa.favouriteClubName ? { key: "fp.fan.supports", vars: { club: fa.favouriteClubName } } : null,
+        ])
+      : [{ key: "fp.fan.none" }],
     lastAt: fa.lastPostAt,
   });
 
@@ -169,10 +189,12 @@ export function buildFootprint(i: FootprintInput): Footprint {
   const lastActiveAt = later(...rows.map((r) => r.lastAt)) ?? null;
   const touched = rows.filter((r) => r.active).length;
 
-  const evidence = [
-    `${touched} of ${rows.length} pillars have real records on this device`,
-    `${mins(totalMinutes)} minutes of your own training and film`,
-    lastActiveAt ? `Most recent activity ${formatDate(i.locale, lastActiveAt)}` : "No dated activity recorded yet",
+  const evidence: RowText[] = [
+    { key: "fp.ev.pillars", vars: { n: touched, total: rows.length } },
+    { key: "fp.ev.minutes", vars: { min: mins(totalMinutes) } },
+    lastActiveAt
+      ? { key: "fp.ev.recent", vars: { date: formatDate(i.locale, lastActiveAt) } }
+      : { key: "fp.ev.noActivity" },
   ];
 
   return {
@@ -181,6 +203,6 @@ export function buildFootprint(i: FootprintInput): Footprint {
     totalMinutes: Math.round(totalMinutes * 10) / 10,
     lastActiveAt,
     evidence,
-    sources: ["Your on-device Football OS state", "Academy, career, film and community local records"],
+    sources: [{ key: "fp.src.state" }, { key: "fp.src.local" }],
   };
 }
