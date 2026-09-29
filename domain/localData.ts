@@ -61,6 +61,57 @@ export function browserStore(): StorageLike | null {
   }
 }
 
+export interface ReadResult<T> {
+  value: T;
+  /** False for a document that cannot be read, a key nobody wrote and an unreadable row alike:
+   *  in all of those the app has nothing to show, so the caller starts from `initial`. */
+  present: boolean;
+}
+
+/** A read that cannot crash the render it happens in. A row that does not parse is not a value:
+ *  `present` stays false so the caller cannot count a corrupt row as one of the user's records. */
+export function readJson<T>(storage: StorageLike | null, key: string, initial: T): ReadResult<T> {
+  let raw: string | null;
+  try {
+    raw = storage?.getItem(key) ?? null;
+  } catch {
+    return { value: initial, present: false };
+  }
+  if (raw == null) return { value: initial, present: false };
+  try {
+    return { value: JSON.parse(raw) as T, present: true };
+  } catch {
+    return { value: initial, present: false };
+  }
+}
+
+export type WriteVerdict =
+  | { landed: true; bytes: number }
+  | { landed: false; reason: "no-store" | "refused" | "unserializable" };
+
+/** One writer's answer for the whole app: did the device keep this value, yes or no, and why not.
+ *
+ *  `applyImport` already refuses to report keys it did not keep; a caller that persists a single
+ *  store had no way to ask the same question, so `useLocalStorage` swallowed the throw and every
+ *  screen kept saying "saved to this device". A browser can really drop a write while still
+ *  allowing reads — quota exhausted, or a private session that rejects storage on write — and this
+ *  app has no server to fall back on, so a refused write is the only way data can be lost. */
+export function writeJson(storage: StorageLike | null, key: string, value: unknown): WriteVerdict {
+  if (!storage) return { landed: false, reason: "no-store" };
+  let text: string;
+  try {
+    text = JSON.stringify(value);
+  } catch {
+    return { landed: false, reason: "unserializable" };
+  }
+  try {
+    storage.setItem(key, text);
+  } catch {
+    return { landed: false, reason: "refused" };
+  }
+  return { landed: true, bytes: new Blob([text]).size };
+}
+
 export interface KeyInventory extends KeySpec {
   present: boolean;
   records: number;

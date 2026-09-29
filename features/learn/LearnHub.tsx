@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { useLocalStorage } from "@/lib/hooks";
+import { type WriteVerdict } from "@/domain/localData";
 import { useOs } from "@/store/useFootballOS";
 import { weakestAttributes } from "@/domain/attributes";
 import { loadFilmClips } from "@/domain/filmLibrary";
@@ -146,7 +147,7 @@ export function LearnHub() {
           </ul>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
             <span>{t("learn.sources")} {summary.sources.join(" · ")}</span>
-            {records.length > 0 && <Button variant="ghost" size="sm" onClick={() => { setRecords([]); toast(t("learn.cleared")); }}>{t("learn.reset")}</Button>}
+            {records.length > 0 && <Button variant="ghost" size="sm" onClick={() => { const v = setRecords([]); toast(v.landed ? t("learn.cleared") : t("common.notStored")); }}>{t("learn.reset")}</Button>}
           </div>
         </Panel>
 
@@ -206,7 +207,7 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
   lesson: Lesson;
   record: LearnRecord | null;
   onAttempt: (id: string) => void;
-  onLearned: (id: string, correct: boolean) => void;
+  onLearned: (id: string, correct: boolean) => WriteVerdict;
   onUndo: (id: string) => void;
   onBack: () => void;
 }) {
@@ -268,7 +269,7 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
               {done && record?.quizCorrect ? (
                 <Button size="sm" variant="outline" disabled>{t("learn.donePassed")}</Button>
               ) : done && correct ? (
-                <Button size="sm" onClick={() => { onLearned(lesson.id, true); toast(t("learn.passRecorded")); }}>{t("learn.recordPassed")}</Button>
+                <Button size="sm" onClick={() => { const v = onLearned(lesson.id, true); toast(v.landed ? t("learn.passRecorded") : t("common.notStored")); }}>{t("learn.recordPassed")}</Button>
               ) : (
                 <Button size="sm" variant={done ? "outline" : "default"} disabled={done} onClick={() => { onLearned(lesson.id, correct); toast(correct ? t("learn.doneToast") : t("learn.missedToast")); }}>
                   {done ? t("learn.completed") : correct ? t("learn.markLearned") : t("learn.markReviewed")}

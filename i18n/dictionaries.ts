@@ -1537,6 +1537,7 @@ const en: Dict = {
   "common.buildBusy": "Building your session…",
   "common.buildDone": "Session ready — {m}′ · {n} blocks. Opened Player ▸ Training.",
   "common.buildError": "Couldn't build your session. Try again in a moment.",
+  "common.notStored": "This device refused to store the change, so it will not survive a reload. Your training data stays on this device — there is no server to fall back to.",
   // M193: two error messages a reader actually sees, on the Film Room (the Player OS
   // carries the same words as raw literals until its own milestone, and one English
   // sentence may only ever be held by a single key).
@@ -3366,6 +3367,7 @@ const zhCN: Dict = {
   "common.buildBusy": "正在生成你的训练……",
   "common.buildDone": "训练已就绪——{m} 分钟 · {n} 个环节。已打开 球员 ▸ 训练。",
   "common.buildError": "无法生成训练，请稍后重试。",
+  "common.notStored": "此设备拒绝保存这次改动，重新加载后不会保留。你的训练数据只存在本设备上，没有服务器可以兜底。",
   "common.err.needOnboarding": "请先完成新手引导，分析才能引用你的属性。",
   "common.err.analysisFailed": "分析失败",
   "det.watch.active": "已关注",
@@ -5105,6 +5107,7 @@ const zhTW: Dict = {
   "common.buildBusy": "正在生成你的訓練……",
   "common.buildDone": "訓練已就緒——{m} 分鐘 · {n} 個環節。已打開 球員 ▸ 訓練。",
   "common.buildError": "無法生成訓練，請稍後重試。",
+  "common.notStored": "此裝置拒絕儲存這次變更，重新載入後不會保留。你的訓練資料只存在本裝置上，沒有伺服器可以兜底。",
   "common.err.needOnboarding": "請先完成新手引導，分析才能引用你的屬性。",
   "common.err.analysisFailed": "分析失敗",
   "det.watch.active": "已關注",

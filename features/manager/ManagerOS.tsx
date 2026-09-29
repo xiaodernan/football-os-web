@@ -72,7 +72,7 @@ export function ManagerOS() {
   const [tab, setTab] = useState<Tab>("overview");
   const [last, setLast] = useState<MatchOutcome | null>(null);
 
-  if (!career) return <ClubPicker onStart={(id) => { setCareer(createCareer(id)); toast(t("mgr.careerStarted")); }} />;
+  if (!career) return <ClubPicker onStart={(id) => { const v = setCareer(createCareer(id)); toast(v.landed ? t("mgr.careerStarted") : t("common.notStored")); }} />;
 
   const club = getClub(career.clubId);
   if (!club)

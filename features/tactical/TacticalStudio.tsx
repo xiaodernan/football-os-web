@@ -74,8 +74,9 @@ export function TacticalStudio() {
 
   const save = () => {
     const entry: Saved = { name: `${formation} · ${mentalityLabel(t, mentality)}`, mentality, tokens };
-    setSaved((s) => [entry, ...s].slice(0, 12));
-    toast.success(t("tac.toastSaved"));
+    const verdict = setSaved((s) => [entry, ...s].slice(0, 12));
+    if (verdict.landed) toast.success(t("tac.toastSaved"));
+    else toast.warning(t("common.notStored"));
   };
   const load = (s: Saved) => { setTokens(s.tokens); setMentality(s.mentality); toast(t("tac.toastLoaded")); };
 

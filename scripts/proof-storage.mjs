@@ -62,7 +62,7 @@ if (!LD || !TH || !IB) {
   await server.close();
   process.exit(1);
 }
-const { browserStore, THEME_KEY, LOCALE_KEY } = LD;
+const { browserStore, THEME_KEY, LOCALE_KEY, TACTICS_KEY } = LD;
 const { ThemeProvider, useTheme } = TH;
 const { I18nProvider, useI18n } = IB;
 const read = (p) => readFileSync(join(root, p), "utf8");
@@ -562,6 +562,152 @@ ok(`…which is why the write side is read structurally instead: ${setItemSites}
 const exemptNow = (read("scripts/proof-coverage.mjs").match(/"lib\/theme\.tsx"/g) || []).length;
 ok(`the exemption this file replaces is gone from the coverage ratchet (occurrences of "lib/theme.tsx" in proof-coverage.mjs: ${exemptNow})`,
   exemptNow === 0);
+
+// ---------------------------------------------------------------------------
+// 6 · M233 — a write the device refused is a refusal, not a save
+// ---------------------------------------------------------------------------
+// `applyImport` has refused to report keys it never wrote since this file's first draft. The single
+// store writers had no such answer: `useLocalStorage` kept its value in React state, wrote to the
+// device from a `useEffect` whose catch said `/* ignore */`, and three screens toasted the reader
+// that their data was on this device one render later, with no way to know. A browser can really
+// drop a write while still allowing reads — quota exhausted, or a private session that rejects
+// storage on write — and this app has no server, so a refused write is the only way it loses data.
+// Each probe call is wrapped in try/catch HERE so that removing the door's own catch shows up as a
+// named red clause instead of killing the run (M210).
+const { readJson, writeJson } = LD;
+function probe(label, fn) {
+  try { return { v: fn(), err: null }; }
+  catch (e) { return { v: null, err: `${label}: ${e.constructor.name}: ${e.message}` }; }
+}
+
+{
+  const rows = new Map([[THEME_KEY, "dark"]]);
+  const writable = { getItem: (k) => (rows.has(k) ? rows.get(k) : null), setItem: (k, v) => void rows.set(k, v), removeItem: (k) => void rows.delete(k), _rows: rows };
+  const refusing = { ...fakeStore({ [TACTICS_KEY]: '[{"name":"old"}]' }), setItem() { const e = new Error("QuotaExceededError"); e.name = "QuotaExceededError"; throw e; } };
+
+  const w_refused = probe("refused", () => writeJson(refusing, TACTICS_KEY, [{ name: "new" }]));
+  ok(`a store that rejects the write answers {landed:false, reason:"refused"} — the case the swallowed catch erased (${JSON.stringify(w_refused.v)}${w_refused.err ? `, THREW ${w_refused.err}` : ""})`,
+    !w_refused.err && w_refused.v && w_refused.v.landed === false && w_refused.v.reason === "refused", w_refused.err);
+
+  const kept = refusing._rows instanceof Map ? [...refusing._rows.entries()] : Object.entries(refusing._rows);
+  const unchanged = kept.length === 1 && kept[0][0] === TACTICS_KEY && kept[0][1] === '[{"name":"old"}]';
+  ok(`…and a refused write leaves the row the reader already had: the store still holds ${JSON.stringify(kept.map(([k, v]) => `${k}=${v}`))}, not a half-applied change`,
+    unchanged, JSON.stringify(kept));
+
+  const w_nostore = probe("no-store", () => writeJson(null, TACTICS_KEY, [{ name: "new" }]));
+  ok(`a document with no store at all answers {landed:false, reason:"no-store"} instead of reaching for an accessor that throws (${JSON.stringify(w_nostore.v)}${w_nostore.err ? `, THREW ${w_nostore.err}` : ""})`,
+    !w_nostore.err && w_nostore.v && w_nostore.v.landed === false && w_nostore.v.reason === "no-store", w_nostore.err);
+
+  const circular = { name: "loop" };
+  circular.self = circular;
+  const w_bad = probe("unserializable", () => writeJson(writable, TACTICS_KEY, circular));
+  ok(`a value JSON cannot encode is refused before anything is written, so a failed write can never blank a stored row (${JSON.stringify(w_bad.v)}${w_bad.err ? `, THREW ${w_bad.err}` : ""}; ${TACTICS_KEY} still ${JSON.stringify(writable.getItem(TACTICS_KEY))})`,
+    !w_bad.err && w_bad.v && w_bad.v.landed === false && w_bad.v.reason === "unserializable" && writable.getItem(TACTICS_KEY) === null, w_bad.err);
+
+  const w_ok = probe("landed", () => writeJson(writable, TACTICS_KEY, [{ name: "shape" }]));
+  const roundTrip = writable.getItem(TACTICS_KEY);
+  ok(`and when the device does keep it, the answer is the byte count and the row is really there to read back (${JSON.stringify(w_ok.v)} → getItem ${JSON.stringify(roundTrip)}${w_ok.err ? `, THREW ${w_ok.err}` : ""})`,
+    !w_ok.err && w_ok.v && w_ok.v.landed === true && w_ok.v.bytes === new Blob([roundTrip]).size && roundTrip === '[{"name":"shape"}]', w_ok.err);
+
+  const r_absent = probe("absent", () => readJson(writable, "football-os.never.written.v1", []));
+  const r_corrupt = probe("corrupt", () => { writable.setItem("bad", "{not json"); return readJson(writable, "bad", "fallback"); });
+  const r_nullrow = probe("null row", () => { writable.setItem("career", "null"); return readJson(writable, "career", "fallback"); });
+  const throwingGet = { getItem() { throw new Error("SecurityError"); }, setItem() {}, removeItem() {} };
+  const r_blocked = probe("blocked", () => readJson(throwingGet, "any", "fallback"));
+  ok(`the read side says the same thing in four documents: an unwritten key, an unreadable row and a blocked accessor all answer present:false with the caller's initial, while a stored "null" is a row that IS present and parses to null — the distinction /manager and /learn already depend on (${JSON.stringify({ absent: r_absent.v, corrupt: r_corrupt.v, nullRow: r_nullrow.v, blocked: r_blocked.v })})`,
+    !r_absent.err && !r_corrupt.err && !r_nullrow.err && !r_blocked.err &&
+    r_absent.v.present === false && r_absent.v.value.length === 0 &&
+    r_corrupt.v.present === false && r_corrupt.v.value === "fallback" &&
+    r_nullrow.v.present === true && r_nullrow.v.value === null &&
+    r_blocked.v.present === false && r_blocked.v.value === "fallback",
+    [r_absent, r_corrupt, r_nullrow, r_blocked].map((r) => r.err || "").join(" "));
+}
+
+const hooks = classify("lib/hooks.ts", read("lib/hooks.ts"));
+const hooksRaw = hooks.sites.filter((x) => x.verb !== "door");
+const hooksDoor = hooks.sites.filter((x) => x.verb === "door");
+ok(`lib/hooks.ts is a door caller now, not a fourth hand-rolled guard: ${hooksRaw.length} raw accessor site(s) (was 3: getItem, setItem, getItem) and ${hooksDoor.length} call(s) of browserStore (${hooks.sites.map((x) => `${x.verb}@${x.moment}`).join(", ") || "none"})`,
+  hooksRaw.length === 0 && hooksDoor.length >= 2, JSON.stringify(hooks.sites));
+
+const hookSrc = read("lib/hooks.ts");
+ok(`…and the writer moved out of the effect: useLocalStorage persists inside the setter and hands the caller the verdict, so a screen can branch on it in the same tick (setter returns WriteVerdict: ${/WriteVerdict/.test(hookSrc)}, writeJson in the setter body: ${/const verdict = writeJson/.test(hookSrc)}, no setItem left in the file: ${!/setItem/.test(hookSrc)})`,
+  /WriteVerdict/.test(hookSrc) && /const verdict = writeJson/.test(hookSrc) && !/setItem/.test(hookSrc));
+
+{
+  /** The claim rule, keyed on what the page SAYS rather than on which function the author happened
+   *  to write: a toast whose English row promises the device kept or cleared something is a
+   *  persistence claim, and must be reachable only through an answer from the write. Vocabulary
+   *  rows and the population both come from the shipped dictionary and the shipped parser below. */
+  const CLAIM_RE = /saved|stored|cleared|recorded|kept|on this device|in (this|your) browser|to (this|your) browser/i;
+  const toastSites = (f, src) => {
+    const sf = parseFile(f, src);
+    const found = [];
+    const keyOf = (node) => {
+      const see = (n) => {
+        if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === "t" &&
+          n.arguments.length && ts.isStringLiteral(n.arguments[0])) return n.arguments[0];
+        let r = null;
+        ts.forEachChild(n, (c) => { const x = see(c); if (x && !r) r = x; });
+        return r;
+      };
+      return see(node);
+    };
+    /** Reached only through a write verdict means: the literal sits in the true side of an
+     *  `if (v.landed)`/`v.landed ? …`, OR in its else side. Both halves belong to the rule — a
+     *  refusal line toasted unconditionally would tell the reader the device dropped something it
+     *  actually kept, which is the same lie in the other direction. */
+    const guarded = (lit) => {
+      const holds = (a, b) => !!a && a.getStart() <= b.getStart() && a.getEnd() > b.getStart();
+      for (let cur = lit.parent; cur && !ts.isSourceFile(cur); cur = cur.parent) {
+        if (ts.isIfStatement(cur) && /\.landed\b/.test(cur.expression.getText())) {
+          if (holds(cur.thenStatement, lit)) return `if ${cur.expression.getText().trim()}`;
+          if (holds(cur.elseStatement, lit)) return `else of if ${cur.expression.getText().trim()}`;
+        }
+        if (ts.isConditionalExpression(cur) && /\.landed\b/.test(cur.condition.getText())) {
+          if (holds(cur.whenTrue, lit)) return `ternary ${cur.condition.getText().trim()}`;
+          if (holds(cur.whenFalse, lit)) return `else of ternary ${cur.condition.getText().trim()}`;
+        }
+      }
+      return null;
+    };
+    const visit = (n) => {
+      const callee = !ts.isCallExpression(n) ? "" :
+        ts.isPropertyAccessExpression(n.expression) ? `toast.${n.expression.name.text}` :
+        ts.isIdentifier(n.expression) ? n.expression.text : "";
+      if (ts.isCallExpression(n) && /^toast(\.\w+)?$/.test(callee) && n.arguments.length) {
+        const lit = keyOf(n.arguments[0]);
+        const key = lit ? lit.text : null;
+        const row = DICT ? DICT.DICTIONARIES.en[key] : undefined;
+        if (key && typeof row === "string" && CLAIM_RE.test(row)) {
+          found.push({ at: lineAt(src.replace(/\r\n/g, "\n"), n.getStart()), key, row, guard: guarded(lit) });
+        }
+      }
+      ts.forEachChild(n, visit);
+    };
+    visit(sf);
+    return found;
+  };
+  const claimFiles = ["features/tactical/TacticalStudio.tsx", "features/learn/LearnHub.tsx", "features/manager/ManagerOS.tsx", "features/player/PlayerOS.tsx", "features/community/CommunityHub.tsx", "features/film/FilmRoom.tsx"];
+  const claims = claimFiles.flatMap((f) => toastSites(f, read(f)).map((x) => ({ file: f, ...x })));
+  const unguarded = claims.filter((x) => !x.guard);
+  ok(`every on-screen persistence promise is read out of the dictionary and each one is reached only through a write verdict: ${claims.length} claim site(s) across ${claimFiles.length} walked file(s) — ${claims.map((x) => `${x.file}:${x.at} "${x.key}" via ${x.guard || "NO GUARD"}`).join(", ")} (${unguarded.length} unguarded)`,
+    claims.length >= 3 && unguarded.length === 0, unguarded.map((x) => `${x.file}:${x.at}`).join(", "));
+  const refusalUses = APP_FILES.filter((f) => !f.startsWith("i18n/") && /common\.notStored/.test(read(f)));
+  const refusalLocales = DICT ? Object.keys(DICT.DICTIONARIES).filter((l) => typeof DICT.DICTIONARIES[l]["common.notStored"] === "string") : [];
+  ok(`…and the refusal has words the reader can get: "common.notStored" ships in ${refusalLocales.length} of ${DICT ? Object.keys(DICT.DICTIONARIES).length : 0} locales (${refusalLocales.join(", ")}) and is used by ${refusalUses.length} screen file(s): ${refusalUses.join(", ")}`,
+    !!DICT && refusalLocales.length === Object.keys(DICT.DICTIONARIES).length && refusalUses.length >= 3,
+    refusalUses.join(", "));
+
+  const PLANT_REFUSE = 'function Board() {\n  const [saved, setSaved] = useLocalStorage("k", []);\n  const save = () => { setSaved([{ name: "a" }]); toast.success(t("tac.toastSaved")); };\n  return null;\n}\n';
+  const PLANT_ACCEPT = 'function Board() {\n  const [saved, setSaved] = useLocalStorage("k", []);\n  const save = () => { const v = setSaved([{ name: "a" }]); if (v.landed) toast.success(t("tac.toastSaved")); else toast.warning(t("common.notStored")); };\n  return null;\n}\n';
+  const plantRed = toastSites("plant-refuse.tsx", PLANT_REFUSE);
+  const plantGreen = toastSites("plant-accept.tsx", PLANT_ACCEPT);
+  ok(`the same classifier both catches the version this app used to ship and does not invent it: the unguarded plant is named with no guard (${plantRed.map((x) => `${x.key}@${x.at}${x.guard ? " GUARDED" : ""}`).join(", ") || "MISSED"}), the guarded one passes (${plantGreen.map((x) => `${x.key}@${x.at} via ${x.guard}`).join(", ") || "nothing"})`,
+    plantRed.length === 1 && plantRed[0].guard === null && plantRed[0].key === "tac.toastSaved" &&
+    plantGreen.length === 2 && plantGreen.every((x) => !!x.guard) &&
+    plantGreen.some((x) => /^if /.test(x.guard)) && plantGreen.some((x) => /^else of if /.test(x.guard)),
+    `refuse ${JSON.stringify(plantRed)} · accept ${JSON.stringify(plantGreen)}`);
+}
 
 if (savedStore) Object.defineProperty(globalThis, "localStorage", savedStore);
 else Reflect.deleteProperty(globalThis, "localStorage");

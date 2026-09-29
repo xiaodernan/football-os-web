@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LEARN_STORE_KEY, parseLearnRecords, type LearnRecord } from "@/domain/learn";
 import { loadFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { type FilmClipInput } from "@/domain/filmInsights";
 import { rankNewsForClub } from "@/domain/newsImpact";
+import { browserStore, readJson, writeJson, type WriteVerdict } from "@/domain/localData";
 import { getClub, newsFeed, playersByClub } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 
@@ -15,36 +16,32 @@ export function useDebounced<T>(value: T, ms = 250): T {
   return v;
 }
 
+/** A store the device keeps, plus the answer the caller needs before it says anything worked.
+ *
+ *  The setter persists synchronously and returns `writeJson`'s verdict instead of swallowing the
+ *  failure the way an effect-writing hook did: on this site a dropped write is real data loss, and
+ *  a success toast issued one render later could not have known either way. */
 export function useLocalStorage<T>(key: string, initial: T) {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? (JSON.parse(raw) as T) : initial;
-    } catch {
-      return initial;
-    }
-  });
-  useEffect(() => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      /* ignore */
-    }
-  }, [key, value]);
+  const [value, setRaw] = useState<T>(() => readJson(browserStore(), key, initial).value);
+  const latest = useRef<T>(value);
+  const setValue = useCallback(
+    (next: T | ((prev: T) => T)): WriteVerdict => {
+      const computed = typeof next === "function" ? (next as (prev: T) => T)(latest.current) : next;
+      latest.current = computed;
+      const verdict = writeJson(browserStore(), key, computed);
+      setRaw(computed);
+      return verdict;
+    },
+    [key],
+  );
   return [value, setValue] as const;
 }
 
 /** Read-only view of the locally-stored academy records, shared by every pillar
  *  that needs lesson progress (achievements, history, dashboard). Pass a changing
- *  `rev` to force a genuine re-read of localStorage (e.g. a "recompile" action). */
+ *  `rev` to force a genuine re-read of the store (e.g. a "recompile" action). */
 export function useLearnRecords(rev = 0): LearnRecord[] {
-  return useMemo(() => {
-    try {
-      return parseLearnRecords(JSON.parse(localStorage.getItem(LEARN_STORE_KEY) ?? "null"));
-    } catch {
-      return [];
-    }
-  }, [rev]);
+  return useMemo(() => parseLearnRecords(readJson(browserStore(), LEARN_STORE_KEY, null).value), [rev]);
 }
 
 /** Read-only view of the locally-stored film library as analysis input, so every
