@@ -82,9 +82,12 @@ function reach(roots, source, exists = realExists) {
 // to say why it is unreachable, which is the part that stops being true someday.
 // ---------------------------------------------------------------------------
 const EXEMPT = {
-  "lib/hooks.ts": "React hooks (media query, local storage): needs a DOM",
   "lib/utils.ts": "one `cn` wrapper over clsx/tailwind-merge; no app logic to pin",
 };
+/** The ratchet's own number, not the list's taste: M238 retired `lib/hooks.ts` ("needs a DOM")
+ *  once proof-storage started loading and rendering it, so the surface below is what is left.
+ *  Adding an exemption has to be paid for here as well as in the list above. */
+const EXEMPT_CEILING = 7;
 // ---------------------------------------------------------------------------
 // 1 · the resolver, on synthetic graphs (both directions)
 // ---------------------------------------------------------------------------
@@ -125,7 +128,7 @@ const byDir = {};
 for (const p of population) byDir[p.split("/")[0]] = (byDir[p.split("/")[0]] ?? 0) + 1;
 
 ok(`${proofs.length} proofs load ${roots.length} modules directly, reaching ${population.length - unreachable.length} of the ${population.length} app modules in ${DIRS.join("/")}`,
-  proofs.length >= 30 && roots.length >= 25 && population.length >= 30 && unreachable.length <= Object.keys(EXEMPT).length);
+  proofs.length >= 30 && roots.length >= 25 && population.length >= 30);
 ok(`…by directory: ${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}`,
   Object.keys(byDir).length === DIRS.length && byDir.domain >= 25);
 ok(`…and this file counts itself: proof-coverage.mjs is one of the ${proofs.length} proofs`,
@@ -139,8 +142,8 @@ ok(`every unreachable module is declared, with a reason (${unreachable.length} u
 ok(`…and no exemption has gone stale (a module that became reachable must be deleted from this list)`,
   stale.length === 0, `stale: ${stale.join(", ") || "none"}`);
 const exemptLines = Object.keys(EXEMPT).reduce((n, p) => n + lines(p), 0);
-ok(`the exempt surface is ${exemptLines} lines of app code, and every entry states why (${Object.entries(EXEMPT).map(([p, why]) => `${p}:${why.length > 12 ? "why given" : "TOO SHORT"}`).join(" ")})`,
-  Object.values(EXEMPT).every((why) => typeof why === "string" && why.length > 12) && exemptLines <= 99);
+ok(`the exempt surface is ${exemptLines} lines of app code against a ceiling of ${EXEMPT_CEILING}, and every entry states why (${Object.entries(EXEMPT).map(([p, why]) => `${p}:${why.length > 12 ? "why given" : "TOO SHORT"}`).join(" ")})`,
+  Object.values(EXEMPT).every((why) => typeof why === "string" && why.length > 12) && exemptLines <= EXEMPT_CEILING && EXEMPT_CEILING === exemptLines);
 
 // A ratchet has to be seen to refuse: a new module that nothing loads must land in the
 // undeclared set, and one that a proof loads must not be exposable by declaring it.
@@ -155,11 +158,11 @@ ok(`…and a module a proof actually loads can never be quieted by an exemption 
 // ---------------------------------------------------------------------------
 const libModules = readdirSync(resolve(root, "lib")).filter((f) => /\.(ts|tsx)$/.test(f)).map((f) => `lib/${f}`);
 const dom = readdirSync(resolve(root, "domain")).filter((f) => f.endsWith(".ts"));
-ok(`the React-side libs are the whole remaining exemption list (${libModules.filter((p) => p in EXEMPT).length} of ${libModules.length} lib modules are exempt; domain has ${dom.length} files and none is exempt)`,
-  libModules.filter((p) => p in EXEMPT).length === 2 && dom.every((f) => !(`domain/${f}` in EXEMPT)));
+ok(`the React-side libs are the whole remaining exemption list (all ${Object.keys(EXEMPT).length} exemption(s) live in lib/, ${libModules.filter((p) => p in EXEMPT).length} of ${libModules.length} lib modules is exempt; domain has ${dom.length} files and none is exempt)`,
+  libModules.filter((p) => p in EXEMPT).length === Object.keys(EXEMPT).length && dom.every((f) => !(`domain/${f}` in EXEMPT)));
 const biggest = Object.keys(EXEMPT).map((p) => [p, lines(p)]).sort((a, b) => b[1] - a[1]);
-ok(`largest exemptions: ${biggest.slice(0, 2).map(([p, n]) => `${p} ${n} lines`).join(", ")}`,
-  biggest[0][1] >= 60 && biggest.every(([p]) => p in EXEMPT));
+ok(`every exemption is a real file the scanner read: ${biggest.map(([p, n]) => `${p} ${n} lines`).join(", ") || "none left"}`,
+  biggest.length === Object.keys(EXEMPT).length && biggest.every(([p, n]) => n === lines(p) && n > 0) && biggest.every(([p]) => p in EXEMPT));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);

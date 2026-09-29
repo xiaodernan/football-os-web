@@ -709,6 +709,96 @@ ok(`…and the writer moved out of the effect: useLocalStorage persists inside t
     `refuse ${JSON.stringify(plantRed)} · accept ${JSON.stringify(plantGreen)}`);
 }
 
+// ---------------------------------------------------------------------------
+// 7 · M238 — lib/hooks.ts loads and runs on THIS harness, which is the whole argument against the
+// coverage ratchet's "React hooks (media query, local storage): needs a DOM". The exemption was
+// written when the hook read the accessor itself inside a try/catch of its own; the hook now calls
+// the door, and a door caller needs no DOM any more than ThemeProvider did (M227 measured that
+// excuse for the theme and found it false). Loading it here also makes proof-coverage's own clause
+// "a module a proof actually loads can never be quieted by an exemption" fire if the entry returns.
+// ---------------------------------------------------------------------------
+{
+  // Section 5 installs a `document` fixture to count ThemeProvider's <html> writes, so the only
+  // honest way to test the exemption's claim ("needs a DOM") is to stand that fixture down first:
+  // every clause below is produced by a process that has no document and no window at all.
+  delete globalThis.document;
+  const { mod: HK, err: hkErr } = await tryLoad(() => server.ssrLoadModule("/lib/hooks.ts"));
+  const { mod: LRN, err: lrnErr } = await tryLoad(() => server.ssrLoadModule("/domain/learn.ts"));
+  const hkDeclared = [...read("lib/hooks.ts").matchAll(/^export function (\w+)/gm)].map((m) => m[1]);
+  const hkKeys = HK ? Object.keys(HK) : [];
+  const hkMissing = hkDeclared.filter((n) => !hkKeys.includes(n));
+  const hkForeign = hkKeys.filter((k) => !hkDeclared.includes(k));
+  ok(`the module this proof loads is lib/hooks.ts itself, not merely a module that loaded (${hkDeclared.length} functions the file declares, ${hkMissing.length} missing from the namespace, ${hkForeign.length} foreign keys on it; ${hkErr ? `THREW ${hkErr.message}` : `namespace holds ${hkKeys.length} keys`})`,
+    !hkErr && !!HK && hkDeclared.length >= 2 && hkMissing.length === 0 && hkForeign.length === 0,
+    `declared: ${hkDeclared.join(", ")} · namespace: ${hkKeys.join(", ")} · err: ${hkErr && hkErr.message}`);
+  ok(`…and it arrived after this file deleted its own document fixture, so lib/hooks.ts's "needs a DOM" exemption was a claim about the file, not a fact about it (document=${typeof globalThis.document}, window=${typeof globalThis.window})`,
+    !hkErr && typeof globalThis.document === "undefined" && typeof globalThis.window === "undefined",
+    `document=${typeof globalThis.document} · window=${typeof globalThis.window} · err=${hkErr && hkErr.message}`);
+  ok(`…and so does the learn module that owns the academy store key the second hook reads (${lrnErr ? `THREW ${lrnErr.message}` : "loaded"})`,
+    !!LRN && !lrnErr, lrnErr && lrnErr.message);
+  if (HK && LRN) {
+    const LEARN_KEY = LRN.LEARN_STORE_KEY;
+    const { useLocalStorage, useLearnRecords } = HK;
+    let cap = null;
+    function HookGrab() { cap = useLocalStorage(TACTICS_KEY, []); return null; }
+    function LearnGrab() { learnCap = useLearnRecords(); return null; }
+    let learnCap = null;
+    const renderHook = (Grab) => {
+      try { return { html: renderToStaticMarkup(React.createElement(Grab)), err: null }; }
+      catch (e) { return { html: null, err: e }; }
+    };
+
+    setStore(fakeStore({ [TACTICS_KEY]: '[{"name":"stored"}]' }));
+    const h_stored = renderHook(HookGrab);
+    ok(`the mount read still honours a row the device kept — the door changed the guard, not the answer (${JSON.stringify(cap && cap[0])}${h_stored.err ? `, THREW ${h_stored.err.name}` : ""})`,
+      !h_stored.err && JSON.stringify(cap[0]) === '[{"name":"stored"}]', h_stored.err && h_stored.err.message);
+
+    setStore(fakeStore({ [TACTICS_KEY]: "{not json" }));
+    const h_corrupt = renderHook(HookGrab);
+    ok(`a row that does not parse reads as the caller's initial instead of as an empty list it then trusts (${JSON.stringify(cap && cap[0])}${h_corrupt.err ? `, THREW ${h_corrupt.err.name}` : ""})`,
+      !h_corrupt.err && Array.isArray(cap[0]) && cap[0].length === 0, h_corrupt.err && h_corrupt.err.message);
+
+    setThrowingStore();
+    const h_blocked = renderHook(HookGrab);
+    ok(`THE EXEMPTION'S OWN CASE: with site data blocked the hook renders instead of blanking the page (${JSON.stringify(h_blocked.err ? "no render" : cap[0])}${h_blocked.err ? `, THREW ${h_blocked.err.name}` : ""})`,
+      !h_blocked.err && cap[0].length === 0, h_blocked.err && `${h_blocked.err.name}: ${h_blocked.err.message}`);
+
+    const sink = fakeStore();
+    setStore(sink);
+    const h_write = renderHook(HookGrab);
+    const landedV = h_write.err ? null : cap[1]([{ name: "shape" }]);
+    ok(`and the setter answers in the same tick, because the write is no longer parked in an effect the harness never runs (verdict ${JSON.stringify(landedV)}; the store now holds ${JSON.stringify(sink.getItem(TACTICS_KEY))})`,
+      !h_write.err && !!landedV && landedV.landed === true && landedV.bytes === new Blob(['[{"name":"shape"}]']).size && sink.getItem(TACTICS_KEY) === '[{"name":"shape"}]',
+      h_write.err && h_write.err.message);
+
+    const full = fakeStore({ [TACTICS_KEY]: '[{"name":"old"}]' });
+    setStore({ ...full, setItem() { const e = new Error("QuotaExceededError"); e.name = "QuotaExceededError"; throw e; } });
+    const h_refuse = renderHook(HookGrab);
+    const refusedV = h_refuse.err ? null : cap[1]([{ name: "new" }]);
+    ok(`a device that rejects the write says so to the caller, which is what lets the screen refuse to say "Saved" (verdict ${JSON.stringify(refusedV)}; stored row still ${JSON.stringify(full.getItem(TACTICS_KEY))})`,
+      !h_refuse.err && !!refusedV && refusedV.landed === false && refusedV.reason === "refused" && full.getItem(TACTICS_KEY) === '[{"name":"old"}]',
+      h_refuse.err && h_refuse.err.message);
+
+    setStore(undefined);
+    const h_none = renderHook(HookGrab);
+    const noneV = h_none.err ? null : cap[1]([{ name: "nope" }]);
+    ok(`…and a document with no store at all gets its own reason instead of a thrown accessor (verdict ${JSON.stringify(noneV)}${h_none.err ? `, THREW ${h_none.err.name}` : ""})`,
+      !h_none.err && !!noneV && noneV.landed === false && noneV.reason === "no-store", h_none.err && h_none.err.message);
+
+    const oneLesson = JSON.stringify([{ id: LRN.LESSON_IDS[0], completedAt: "2026-01-01", quizCorrect: true, attempts: 2 }]);
+    setStore(fakeStore({ [LEARN_KEY]: oneLesson }));
+    const l_ok = renderHook(LearnGrab);
+    ok(`useLearnRecords reads through the same door and hands back the record the device kept, not an empty list it then trusts (${JSON.stringify(learnCap)}${l_ok.err ? `, THREW ${l_ok.err.name}` : ""})`,
+      !l_ok.err && Array.isArray(learnCap) && learnCap.length === 1 && learnCap[0].id === LRN.LESSON_IDS[0], l_ok.err && l_ok.err.message);
+
+    setThrowingStore();
+    const l_blocked = renderHook(LearnGrab);
+    ok(`…including in the blocked document, where the memo used to run its own catch and now runs the door's (${JSON.stringify(learnCap)}${l_blocked.err ? `, THREW ${l_blocked.err.name}` : ""})`,
+      !l_blocked.err && Array.isArray(learnCap) && learnCap.length === 0, l_blocked.err && l_blocked.err.message);
+    setStore(store);
+  }
+}
+
 if (savedStore) Object.defineProperty(globalThis, "localStorage", savedStore);
 else Reflect.deleteProperty(globalThis, "localStorage");
 
