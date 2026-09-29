@@ -14,6 +14,16 @@ export const MODES: readonly Mode[] = ["FAN", "PLAYER", "MANAGER"];
 // both resolve a kind through `ai.legend.…`, and the i18n gate audits that space.
 export const SEARCH_KINDS = ["club", "player", "competition", "match", "news"] as const;
 
+// The article types a news story can carry. The impact panel prints this value twice in
+// two different shapes — as the certainty paragraph (`ni.stance.…`) and as the noun in its
+// evidence line (`ni.kind.…`) — so one list keeps the two from drifting, the same reason
+// SEARCH_KINDS exists. It is deliberately NOT `SEARCH_KINDS`: a retrieval kind names what
+// an entity *is* (`club`, `player`) and resolves through `ai.legend.…`, while this names
+// what a story *claims*, and rowText keeps them in separate branches so a stored value can
+// never be read as the wrong family.
+export type NewsKind = "Confirmed" | "Reported" | "Rumor" | "Opinion" | "Analysis";
+export const NEWS_KINDS: readonly NewsKind[] = ["Confirmed", "Reported", "Rumor", "Opinion", "Analysis"];
+
 export type PositionGroup = "GK" | "CB" | "FB" | "DM" | "CM" | "AM" | "W" | "ST";
 
 export interface NamedValue {
@@ -126,7 +136,7 @@ export interface NewsArticle {
   url?: string;
   publishedAt: string;
   credibility: number; // 0..1
-  kind: "Confirmed" | "Reported" | "Rumor" | "Opinion" | "Analysis";
+  kind: NewsKind;
   entityIds: string[];
   topics: string[];
 }

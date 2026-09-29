@@ -563,6 +563,11 @@ const DYN_SITES = [
   // M225: the shot a goal was scored with, resolved by the row builder rather than printed as
   // the code the engine picked. The value space below is the union's own runtime list.
   { path: "domain/rowText.ts", expr: "code", prefix: "sim.shot.", suffix: "" },
+  // M233: the article type a news story claims. Deliberately a second branch beside
+  // `ai.legend.` — a retrieval kind says what an entity *is*, this says what a story
+  // *claims*, and the two share no values.
+  { path: "domain/rowText.ts", expr: "code.toLowerCase()", prefix: "ni.kind.", suffix: "" },
+  { path: "features/football/FootballWorld.tsx", expr: "impact.certainty", prefix: "ni.certainty.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
@@ -766,6 +771,17 @@ const SPACES = new Map([
     values: spaceOf("domain/types.ts", /export const SHOT_TYPES[^=]*=[\s\S]*?\];/, /"([a-z_]+)"/g),
   }],
   ["cmd.group.|group", S_CMD_GROUP],
+  ["ni.kind.|code.toLowerCase()", {
+    // The union the module's own `NewsKind` type is written against, lower-cased by the site,
+    // so a sixth article type cannot ship with its word missing in a locale.
+    name: "the article types a news story claims",
+    values: lower(spaceOf("domain/types.ts", /export const NEWS_KINDS[^=]*=[\s\S]*?\];/, /"([A-Za-z]+)"/g)),
+  }],
+  ["ni.certainty.|impact.certainty", {
+    // The band function's own return type: three arms, one per threshold in `bandCertainty`.
+    name: "certainty bands",
+    values: spaceOf("domain/newsImpact.ts", /export type Certainty = [^;]+;/, quoted),
+  }],
 ]);
 // Every `attr.name.…` site interpolates an attribute key out of some domain row,
 // so they all take the same space, and listing it 20 times would only invite the
@@ -2646,6 +2662,14 @@ const NOT_PROSE = [
   /^["']\.\.\//,
   /^[a-z][a-z0-9]*$/,     // a single lowercase token: a key fragment or enum code
   /^[A-Za-z0-9_ -]{1,3}$/,
+  // A utility-class list. `CERTAINTY_TONE` maps a certainty band to Tailwind classes, and
+  // "border-success/40 bg-success/10 text-success" was charged as prose because it holds
+  // spaces and letters like a sentence does. Every token carrying a `-`, `/` or `:` is what
+  // tells a class list from a sentence — which is also why the bar is EVERY token and not
+  // "at least one": `state-of-the-art passing` is prose, and a rule asking for one hyphen
+  // would have exempted it. Matched against the quote-stripped inner text, like the rest of
+  // this list, so there is no `["']` anchor here. M181 narrowed the same rule for formats.
+  /^(?:\S*[-/:]\S*)(?:\s+\S*[-/:]\S*)*$/,
 ];
 // True when the literal still names something in English with its interpolated values cut
 // out. `€${…}M` and `${home.name} ${hg} – ${ag} ${away.name}` do not; "Window: last {n}
@@ -2676,6 +2700,11 @@ const PROSE_SAMPLES = [
   [true, '"No saved attributes to compare."'],
   [true, '"decline accelerates from 24; 3 prime years remaining"'],
   [true, '"Your on-device training log"'],
+  // The class-list rule, both directions. The first is `CERTAINTY_TONE`'s own value and is
+  // not prose; the second is a sentence that happens to contain a hyphenated word, and the
+  // rule has to keep calling it prose — "at least one token with a hyphen" would not.
+  [false, '"border-success/40 bg-success/10 text-success"'],
+  [true, '"state-of-the-art passing"'],
   // Every word in this one is three letters or fewer. It is the sample that stops the rule
   // from being quietly over-tightened to "a long word": a mutation demanding four or more
   // letters fails here even though the format samples all still classify correctly.
@@ -2715,7 +2744,11 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // ratchet measures a different thing.
 // M225 published domain/matchEngine.ts's eight lines as rows — the three summary lines, the goal
 // line and the four shots it names — so the ceiling and that module's own cap both fall by eight.
-const DOMAIN_PROSE_CEILING = 248;
+// M233 published domain/newsImpact.ts's sixteen — the three standing lines, the two club lines,
+// the stance paragraph, the topics line, the unresolved warning and the four evidence lines —
+// and narrowed the prose rule so the module's three Tailwind class lists stop being counted as
+// sentences, which is the other three. Ceiling and cap both fall by nineteen.
+const DOMAIN_PROSE_CEILING = 229;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
@@ -2724,7 +2757,7 @@ const DOMAIN_PROSE_CEILING = 248;
 // M225 adds domain/matchEngine.ts: unlike the three format-only modules above it held real
 // sentences ("The midfield was finely balanced."), and they are rows now, so the module is
 // pinned at zero like the rest.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -2738,7 +2771,7 @@ const PROSE_CAPS = {
   "domain/career.ts": 29,
   "domain/footprint.ts": 25,
   "domain/attributes.ts": 19,
-  "domain/newsImpact.ts": 19,
+  "domain/newsImpact.ts": 0,
   "domain/training.ts": 19,
   "domain/filmInsights.ts": 12,
   "domain/gap.ts": 0,

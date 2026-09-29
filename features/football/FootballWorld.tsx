@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
+import { rowLine } from "@/domain/rowText";
 
 const fmtDate = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric" });
@@ -398,21 +399,21 @@ function NewsDetail({ id }: { id: string }) {
           <div className="flex items-center justify-between gap-2">
             <SectionTitle title={t("fw.news.impact")} hint={t("fw.news.impactHint")} />
             <span className={cn("shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-medium uppercase tracking-widest", CERTAINTY_TONE[impact.certainty])}>
-              {impact.certainty} · {impact.confidence}%
+              {t(`ni.certainty.${impact.certainty}`)} · {impact.confidence}%
             </span>
           </div>
           {impact.context.length > 0 && (
             <ul className="mt-2 space-y-1 text-sm">
-              {impact.context.map((c, i) => <li key={i} className="flex gap-1.5"><span className="text-primary">›</span><span>{c}</span></li>)}
+              {impact.context.map((c, i) => <li key={i} className="flex gap-1.5"><span className="text-primary">›</span><span>{rowLine(c, t)}</span></li>)}
             </ul>
           )}
           <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-            {impact.watch.map((w, i) => <li key={i} className="flex gap-1.5"><span>•</span><span>{w}</span></li>)}
+            {impact.watch.map((w, i) => <li key={i} className="flex gap-1.5"><span>•</span><span>{rowLine(w, t)}</span></li>)}
           </ul>
           <details className="mt-2 rounded-md border bg-card/30 p-2 text-xs">
             <summary className="cursor-pointer uppercase tracking-widest text-muted-foreground">{t("fw.news.evidence")}</summary>
             <ul className="mt-1.5 list-disc pl-5 text-muted-foreground">
-              {impact.evidence.map((ev, i) => <li key={i}>{ev}</li>)}
+              {impact.evidence.map((ev, i) => <li key={i}>{rowLine(ev, t)}</li>)}
             </ul>
             <p className="mt-1.5">{t("fw.news.evidenceNote")}</p>
           </details>

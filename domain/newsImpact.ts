@@ -1,4 +1,5 @@
-import type { NewsArticle } from "./types";
+import type { NewsArticle, NewsKind } from "./types";
+import type { RowText } from "./rowText";
 
 // A grounded "what does this mean" read for a news article. It never invents
 // facts: every line is built from the article's own metadata (kind,
@@ -36,17 +37,21 @@ export type Certainty = "high" | "moderate" | "low";
 export interface NewsImpact {
   confidence: number;
   certainty: Certainty;
-  context: string[];
-  watch: string[];
-  evidence: string[];
+  context: RowText[];
+  watch: RowText[];
+  evidence: RowText[];
 }
 
-const KIND_STANCE: Record<NewsArticle["kind"], string> = {
-  Confirmed: "Reported as confirmed — safe to treat as fact for planning.",
-  Reported: "Reported by a named source but not yet officially confirmed.",
-  Rumor: "Unverified rumour — weight it lightly until a club or player confirms.",
-  Opinion: "Commentary rather than a factual claim — reflects the writer's view.",
-  Analysis: "Analytical read — grounded in data but interpretive.",
+// The article type picks the certainty paragraph. A static record of keys rather than a
+// composed `ni.stance.${…}`, because the value is a closed union the module already knows:
+// spelling each key out here means the i18n reachability check sees them as quoted literals
+// and no dynamic-site declaration is needed for a family that never varies at runtime.
+const STANCE_KEY: Record<NewsKind, string> = {
+  Confirmed: "ni.stance.confirmed",
+  Reported: "ni.stance.reported",
+  Rumor: "ni.stance.rumor",
+  Opinion: "ni.stance.opinion",
+  Analysis: "ni.stance.analysis",
 };
 
 function bandCertainty(confidence: number): Certainty {
@@ -67,27 +72,37 @@ export function buildImpact(input: ImpactInput): NewsImpact {
   const confidence = Math.max(5, Math.min(96, Math.round(base + resolutionBonus - kindPenalty)));
   const certainty = bandCertainty(confidence);
 
-  const context: string[] = [];
+  // A rank is a number, not an English ordinal: `1st`/`3rd` is a suffix only English has,
+  // and the row's own language has to be free to write 第 3 名. `data/intelligence.ts`
+  // dropped its suffix for the same reason, so this is the second place the tree agrees on it.
+  const context: RowText[] = [];
   for (const s of standings) {
-    const zone =
-      s.position <= 4 ? "in the top four" : s.position > s.total - 3 ? "near the bottom" : "mid-table";
-    context.push(`${s.clubLabel} sit ${ordinal(s.position)} of ${s.total} in ${s.competitionName} on ${s.points} points — ${zone}.`);
+    context.push({
+      key: s.position <= 4 ? "ni.ctx.standingTop" : s.position > s.total - 3 ? "ni.ctx.standingBottom" : "ni.ctx.standingMid",
+      vars: { club: s.clubLabel, rank: s.position, total: s.total, competition: s.competitionName, points: s.points },
+    });
   }
   for (const e of entities) {
     if (e.role === "player" && e.clubName) {
-      context.push(`${e.label} is currently at ${e.clubName}${e.competitionName ? ` (${e.competitionName})` : ""}.`);
+      context.push(e.competitionName
+        ? { key: "ni.ctx.atClubComp", vars: { player: e.label, club: e.clubName, competition: e.competitionName } }
+        : { key: "ni.ctx.atClub", vars: { player: e.label, club: e.clubName } });
     }
   }
 
-  const watch: string[] = [KIND_STANCE[article.kind]];
-  if (article.topics.length) watch.push(`Topics in play: ${article.topics.map((tp) => `#${tp}`).join(" ")}.`);
-  if (resolved === 0) watch.push("No entity in this article maps to the world dataset, so treat the specifics with extra caution.");
+  const watch: RowText[] = [{ key: STANCE_KEY[article.kind] }];
+  if (article.topics.length) {
+    watch.push({ key: "ni.watch.topics", vars: { topics: article.topics.map((tp) => `#${tp}`).join(" ") } });
+  }
+  if (resolved === 0) watch.push({ key: "ni.watch.unresolved" });
 
-  const evidence: string[] = [
-    `Source credibility: ${Math.round(article.credibility * 100)}%`,
-    `Story type: ${article.kind}`,
-    `Entities resolved to the world dataset: ${resolved}`,
-    ...standings.map((s) => `${s.clubLabel}: ${ordinal(s.position)}/${s.total}, ${s.points} pts`),
+  const evidence: RowText[] = [
+    { key: "ni.ev.credibility", vars: { n: Math.round(article.credibility * 100) } },
+    // `stance` is a rowText code variable, so the article's own type is resolved to the
+    // reader's word rather than printed as the dataset's `Confirmed`/`Rumor`.
+    { key: "ni.ev.kind", vars: { stance: article.kind } },
+    { key: "ni.ev.resolved", vars: { n: resolved } },
+    ...standings.map((s) => ({ key: "ni.ev.standing", vars: { club: s.clubLabel, rank: s.position, total: s.total, points: s.points } })),
   ];
 
   return { confidence, certainty, context, watch, evidence };
@@ -114,12 +129,6 @@ export function rankNewsForClub<T extends Pick<NewsArticle, "entityIds">>(
   const rest: T[] = [];
   for (const a of articles) (a.entityIds.some((id) => related.has(id)) ? about : rest).push(a);
   return { items: [...about, ...rest], matched: about.length };
-}
-
-function ordinal(n: number): string {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 export const CERTAINTY_TONE: Record<Certainty, string> = {

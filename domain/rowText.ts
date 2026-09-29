@@ -11,7 +11,7 @@
 import { ATTRIBUTE_KEYS, CATEGORIES, POSITION_GROUPS } from "./attributes";
 import { ARCHETYPE_KEYS } from "./playerDna";
 import { TRAJECTORIES } from "./careerArc";
-import { MODES, SEARCH_KINDS, SHOT_TYPES } from "./types";
+import { MODES, NEWS_KINDS, SEARCH_KINDS, SHOT_TYPES } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 export type RowVars = Record<string, string | number>;
@@ -29,11 +29,13 @@ export type Translate = (key: string, vars?: RowVars) => string;
 // `kind` a retrieval entity kind, `traj` a career-arc trajectory, `cat`/`cat2` an attribute
 // category (the scout headline names two), `goal`/`ageGroup` an onboarding choice, and `shot`
 // the shot type the match engine scored a goal with. `drill` is one attribute key the
-// game-realistic block trains, and `attrs`, `trained` and `last`/`new` are the comma-separated
+// game-realistic block trains, `stance` the article type a news story claims (a different
+// family from `kind`, which names what a retrieval entity *is*), and `attrs`, `trained` and
+// `last`/`new` are the comma-separated
 // lists the coach's diagnosis and its continuity line name: before M230 the coach handed those
 // rows the English *label* of each key, so a 简体中文 reader read "Ball Control, Weak Foot" inside a
 // Chinese sentence, and the row contract could not put it back — the value was already a word.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr"];
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "arch", "arch2", "kind", "stance", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr"];
 
 function codeWord(code: string, t: Translate): string {
   // `focus` is the one variable that holds a list, so a comma-separated code list is
@@ -46,6 +48,7 @@ function codeWord(code: string, t: Translate): string {
   if ((MODES as readonly string[]).includes(code)) return t(`prof.mode.${code}`);
   if (ARCHETYPE_KEYS.includes(code)) return t(`dna.arch.${code}`);
   if ((SEARCH_KINDS as readonly string[]).includes(code)) return t(`ai.legend.${code}`);
+  if ((NEWS_KINDS as readonly string[]).includes(code)) return t(`ni.kind.${code.toLowerCase()}`);
   if ((TRAJECTORIES as readonly string[]).includes(code)) return t(`det.arc.${code}`);
   if ((CATEGORIES as readonly string[]).includes(code)) return t(`attr.${code}`);
   if ((SHOT_TYPES as readonly string[]).includes(code)) return t(`sim.shot.${code}`);
