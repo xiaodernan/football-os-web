@@ -13,24 +13,6 @@
 
 import type { AgeGroupWord, OnboardingGoalCode } from "./types";
 
-// The age bands on offer. U15/U17/U19 need no translation; the four that are English words
-// resolve through `onb.age.*`, so their codes stay exactly as stored.
-export const AGE_GROUPS = ["U15", "U17", "U19", "Amateur", "Semi-pro", "Pro", "Veteran"] as const;
-export type AgeGroup = (typeof AGE_GROUPS)[number];
-
-// Mirrors the `AgeGroupWord` union in ./types; the gate fails if the two drift, because
-// every one of these has to be keyed in all three locales or the header prints `onb.age.Pro`.
-export const TRANSLATED_AGE_GROUPS: readonly AgeGroupWord[] = ["Amateur", "Semi-pro", "Pro", "Veteran"];
-
-export const GOAL_CODES: readonly OnboardingGoalCode[] = [
-  "firstTouch",
-  "getFaster",
-  "finishBetter",
-  "playSmarter",
-  "holdUpPlay",
-  "twoFooted",
-];
-
 // What a profile stored before the field held a code. Left here rather than in a repair
 // helper so the mapping is one list, and unknown text is never guessed at.
 const LEGACY_GOAL_TEXT: Record<string, OnboardingGoalCode> = {
@@ -41,6 +23,20 @@ const LEGACY_GOAL_TEXT: Record<string, OnboardingGoalCode> = {
   "Hold up play": "holdUpPlay",
   "Become a two-footed player": "twoFooted",
 };
+
+export const AGE_GROUPS = ["U15", "U17", "U19", "Amateur", "Semi-pro", "Pro", "Veteran"] as const;
+export type AgeGroup = (typeof AGE_GROUPS)[number];
+
+export const TRANSLATED_AGE_GROUPS: readonly AgeGroupWord[] = ["Amateur", "Semi-pro", "Pro", "Veteran"];
+
+export const GOAL_CODES: readonly OnboardingGoalCode[] = [
+  "firstTouch",
+  "getFaster",
+  "finishBetter",
+  "playSmarter",
+  "holdUpPlay",
+  "twoFooted",
+];
 
 export function isGoalCode(value: string): value is OnboardingGoalCode {
   return (GOAL_CODES as readonly string[]).includes(value);

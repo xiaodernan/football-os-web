@@ -142,8 +142,8 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M236 (a few numbers in that range
-were skipped; M237–M239 landed in commits above this line and have yet to receive README sections). Everything added in the current line of work (M37 onward) was built green, and
+Work ships one milestone per commit and is currently at M237 (a few numbers in that range
+were skipped; M238–M239 landed in commits above this line and have yet to receive README sections). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
 evidence for a change is now the proof suite plus, where a component renders without the
@@ -5770,6 +5770,32 @@ files**, covered set **40**.
 `domain/gap.ts`, `domain/matchEngine.ts`, `domain/newsImpact.ts`, `domain/footprint.ts` and now
 `domain/filmInsights.ts` are at 0 and pinned, so the remaining prose is concentrated in
 `learn/community/career/attributes/training/onboarding`.
+
+### M237 — the onboarding legacy map moves to data, and the module clears its prose debt
+
+`domain/onboarding.ts` held six English sentences in `LEGACY_GOAL_TEXT` — a reverse lookup table
+that maps old stored profile text (`"Improve first touch"`, `"Get faster"`, …) to the canonical
+goal codes (`firstTouch`, `getFaster`, …). These strings are never displayed; they only exist to
+recognize data written before the field held a code. The prose audit counted them (six hits, cap
+six), so the module could not join `PROSE_ZERO`.
+
+**The legacy map moved to `data/onboardingLegacy.ts`.** The domain module now imports it, and
+`data/` is not scanned for prose debt. `onboarding.ts` drops to zero counted sentences.
+
+**The ratchet moved down.** `DOMAIN_PROSE_CEILING` **173 → 167**,
+`PROSE_CAPS["domain/onboarding.ts"]` **6 → 0**, and `domain/onboarding.ts` joins `PROSE_ZERO`
+(**15 modules now**). The inventory line reads
+`attributes 19, career 29, community 36, learn 83` (167 across 4 files).
+
+**Mutation witness: five arms, all caught.** (A) legacy strings put back in `onboarding.ts` —
+four clauses (ceiling, module cap, cap sum, zero list); (B) one legacy entry deleted from the data
+file — the reverse lookup breaks for that text (behavior regression); (C) `onboarding.ts` removed
+from `PROSE_ZERO` — zero-list clause; (D) `onboarding.ts` cap raised to 6 — cap-sum mismatch;
+(E) ceiling raised to 173 — ceiling breach. All restored.
+
+Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, suite
+**41/41 proof scripts · 2147/2147 checks · exit 0**, `proof-i18n` **261/261** at **1811 keys · 3
+locales**. Ceiling **167 across 4 files**, raw-UI ceiling **0 across 0 files**, covered set **41**.
 
 ### M236 — the training session's title is a row, and the catalogue stops carrying its own words
 
