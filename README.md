@@ -142,8 +142,9 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M240 (a few numbers in that range
-were skipped; M238–M239 landed in commits above this line and have yet to receive README sections). Everything added in the current line of work (M37 onward) was built green, and
+Work ships one milestone per commit and is currently at M241 (a few numbers in that range
+were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
+three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
 evidence for a change is now the proof suite plus, where a component renders without the
@@ -5886,6 +5887,86 @@ files**, covered set **41**.
 
 **Still outstanding**: `learn.ts` (83), `community.ts` (36), `career.ts` (29), `attributes.ts` (19),
 `onboarding.ts` (6) — 173 across 5 files.
+
+### M238 — the "needs a DOM" exemption was about a file, not a fact
+
+`proof-coverage` keeps one exemption per app module no proof reaches, and `lib/hooks.ts` sat there
+with the reason "React hooks (media query, local storage): needs a DOM". M237 moved the hook onto the
+storage door, which takes the store as an argument, so the reason stopped being about the DOM at all.
+This unit stopped trusting the reason and measured it: `proof-storage` gained a section (45 → 56
+checks at that commit) that loads `lib/hooks.ts` and `domain/learn.ts` under the same SSR harness and
+renders both hooks against a row the device kept, a row that does not parse, a store that rejects the
+write, an accessor that throws on read and a document with no accessor at all. Two clauses keep the
+section honest about its own claim: the loaded namespace is compared with the export list derived from
+the file's own text (so a proof that loaded *something else* cannot pass by having loaded), and
+section 5's document fixture is deleted before the load, because with it standing the old "no DOM"
+wording was measuring my own harness. The exemption is gone; what remains is the SPA entry.
+
+### M239 — the first proof that renders a screen, and what it charges the reader
+
+Every gate in this repo read source. `proof-coverage` counted reachability inside its own directory
+list, which stopped short of the screen layer, so the components `App.tsx` can put on screen were
+loaded by no proof at all — measured, not asserted: 28 of the app's modules live under `features/`.
+`scripts/proof-screens.mjs` loads every route-table screen through the app's own four providers and
+renders it in every locale the dictionary itself ships, then makes three charges only a render can
+make, all currently 0: an unresolved key reaching the page, a real key printed instead of its row, and
+`undefined`/`NaN`/`[object Object]` in a figure slot. Locale is measured rather than assumed (no call
+site's text vector equals its English one, and the honesty badge arrives as "DEMO DATA" / "演示数据"
+with neither row on the other's page). Its limits are demonstrated too: `<App/>` renders the same
+659-character hydration skeleton at three routes with 0 text nodes, which is why the populated states
+still owed the live browser pass. The follow-up commit removed this file's own comment claiming the
+ratchet could see every root it loads: it only sees literal-path calls, so a clause now measures that
+boundary instead.
+
+### M241 — charge the 6,497 lines of UI the coverage ratchet never looked at
+
+`proof-coverage` asked one question — *does a proof load this module?* — and answered it over three
+directories read flat, one level deep. That made the census blind on the layer a reader stands on:
+`components/ui/alert.tsx` was not a module the gate knew existed, because the walk stopped at the first
+`/`. Its population was 41; the app ships 145.
+
+**The second question is the sharper one.** Entry-reachability from `src/main.tsx` — the module the
+bundle really starts at, rather than the set of proofs — finds 51 of those 145 unreachable by anything
+the app mounts: 47 `components/ui/*` primitives, `hooks/use-mobile.ts`, the two Edge Function files and
+one ambient declaration, 6,497 lines. They are now `DEAD`, reason written per path, with a ceiling
+pinned to the measured total: the number only goes down, and the way to move it is to delete the file.
+Nothing was deleted here — the debt was invisible, not new.
+
+The JS half of that claim was checked outside the gate before it was written down, and the check
+corrected the first draft. A `data-slot` literal from four declared-dead primitives (`combobox-chip`,
+`tooltip-content`, `sidebar-wrapper`, `chart-container`) appears in 0 of the 35 `dist/assets/*.js`
+chunks of a fresh plane build, while the same search finds `cmdk-input-wrapper` — from a primitive the
+app does mount — inside a chunk. But two of those four modules' class names *do* reach
+`dist/assets/index.css`, because Tailwind scans source files rather than the module graph. So the
+honest statement is "no reader can render them", not "they ship nothing".
+
+`EXEMPT` shrank to the single module a proof genuinely cannot load (`src/main.tsx`, 9 lines, since
+`createRoot` needs a DOM node), and M239's boundary clause in `proof-screens` — which compared the
+screens against the ratchet's old flat `DIRS` line — now derives the walk's own skip set and reports
+the eleven directories it really counts. Same clause, same 22 checks.
+
+Two holes opened while the witness arms were being *designed*, and both are fixed in the shipped gate.
+A stale `DEAD` entry only had to be unreachable, so an arm that narrowed the walk left 47 names pointing
+at nothing and the stale checks still passed — the predicate now also requires each declared path to be
+in the population. And a name invented into the list made `lines()` `readFileSync` it, killing the gate
+with ENOENT before any tally printed; the first draft guarded the line-sum only, and the same arm found
+the second crash site in the biggest-three clause, so every read of a declared name goes through
+`safeLines`.
+
+Witness: 8 arms on a `git archive` plane, predictions and clause names written into
+`dev/m241-arms-table.md` first — flat walk 6/6, wiring a dead primitive into `src/App.tsx` 3/3,
+undeclaring `kbd` 3/3, inventing a path 2/2 (the tally prints instead of crashing), `EXEMPT_CEILING = 0`
+1/1, the entry moved from EXEMPT into DEAD 6/6. One arm — retargeting `APP_ENTRY` to `src/App.tsx` —
+predicted 2 reds and measured 3: the third is the seed-directory clause, whose `APP_ENTRY in EXEMPT`
+conjunct also binds the entry's identity. The gate was stricter than the derivation, so the row keeps 2
+as what was predicted rather than being retuned.
+
+Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proof scripts ·
+2158/2158 checks · exit 0**, `proof-coverage` **24/24**, `proof-screens` **22/22**. Dead ceiling
+**6497 across 51 modules**. The next unit's shape is measured rather than guessed: 6 of the 51 are
+named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
+are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
+5,019 lines** are deletable without breaking `tsc`.
 
 ## Deploying
 
