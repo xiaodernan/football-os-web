@@ -37,7 +37,15 @@ const DYNAMIC = /\bimport\(\s*["']([^"']+)["']\s*\)/g;
 // A bare `import "./x";` runs the module too, so it is a value edge as well.
 const BARE = /(?:^|\n)\s*import\s+["']([^"']+)["']/g;
 
-const realExists = (rel) => existsSync(resolve(root, rel));
+// The oracle means "a module lives here", not "the path exists". `existsSync` answers yes for
+// `i18n/` as readily as for `i18n/index.tsx`, and `resolveSpec` tries `base` first — so
+// `import { useI18n } from "@/i18n"` resolved to the FOLDER, and M239's first screen proof
+// (which reads src/App.tsx) made the census call `readFileSync` on it: EISDIR, mid-run, on a
+// proof that used to be green. The difference is a stat, and this is the only place it lives.
+const realExists = (rel) => {
+  const p = resolve(root, rel);
+  return existsSync(p) && statSync(p).isFile();
+};
 const fakeExists = (rel) => Object.prototype.hasOwnProperty.call(FAKE, rel);
 
 function resolveSpec(spec, fromPath, exists = realExists) {
@@ -81,13 +89,13 @@ function reach(roots, source, exists = realExists) {
 // The declared exemptions. Keyed by module path — never by line number — and each one has
 // to say why it is unreachable, which is the part that stops being true someday.
 // ---------------------------------------------------------------------------
-const EXEMPT = {
-  "lib/utils.ts": "one `cn` wrapper over clsx/tailwind-merge; no app logic to pin",
-};
-/** The ratchet's own number, not the list's taste: M238 retired `lib/hooks.ts` ("needs a DOM")
- *  once proof-storage started loading and rendering it, so the surface below is what is left.
- *  Adding an exemption has to be paid for here as well as in the list above. */
-const EXEMPT_CEILING = 7;
+const EXEMPT = {};
+/** The ratchet's own number, not the list's taste. M238 retired `lib/hooks.ts` once
+ *  proof-storage started loading and rendering it, and M239's first screen proof put
+ *  src/App.tsx among the roots — which reaches `lib/utils.ts` through the feature files
+ *  that import `cn`. With the list empty the surface is empty too, so the ceiling is 0 and
+ *  adding an exemption has to be paid for here as well as in the list above. */
+const EXEMPT_CEILING = 0;
 // ---------------------------------------------------------------------------
 // 1 · the resolver, on synthetic graphs (both directions)
 // ---------------------------------------------------------------------------
@@ -114,6 +122,16 @@ ok(`alias and relative specifiers both resolve (of ${Object.keys(FAKE).length} f
   resolveSpec("@/domain/b", "domain/a.ts", fakeExists) === "domain/b.ts" &&
   resolveSpec("../lib/c", "domain/b.ts", fakeExists) === "lib/c.ts" &&
   resolveSpec("react", "domain/b.ts", fakeExists) === null);
+
+// …and the same two directions on the oracle itself, in the repo: `i18n/` really is a folder
+// and `i18n/index.tsx` really is the module it holds, so a predicate answering plain
+// `existsSync` accepts the folder, resolves `@/i18n` to it, and the census dies reading it.
+// Both halves are asserted, because "no crash" alone would also be printed by a resolver that
+// had stopped following the import at all.
+ok(`the oracle means a file, not a folder (i18n: folder ${realExists("i18n")}, module ${realExists("i18n/index.tsx")})`,
+  realExists("i18n") === false && realExists("i18n/index.tsx") === true);
+ok(`…so @/i18n resolves to the index that holds it, not to the directory (${resolveSpec("@/i18n", "src/App.tsx")})`,
+  resolveSpec("@/i18n", "src/App.tsx") === "i18n/index.tsx");
 
 // ---------------------------------------------------------------------------
 // 2 · the real repo

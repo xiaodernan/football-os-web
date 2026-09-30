@@ -9,6 +9,7 @@
 // session whose exercises sum to exactly the target the player picked.
 import { createServer } from "vite";
 import { readFileSync } from "node:fs";
+import { makeSay } from "./lib/rows.mjs";
 
 let pass = 0, fail = 0;
 const ok = (name, cond, detail) => {
@@ -31,9 +32,9 @@ const WEIGHTS = ((SRC.match(/const PHASE_WEIGHTS = \[([^\]]+)\]/) || [,""])[1]).
 // totals below are derived from each drill's catalogue minutes, so a hand-copied
 // table cannot certify this file.
 const BANK = [...SRC.matchAll(
-  /\{ key: "([^"]+)", label: "([^"]+)", focus: "([^"]+)", minutes: (\d+), intensity: (\d+), phase: "([^"]+)" \}/g,
-)].map(([, key, label, focus, minutes, intensity, phase]) => ({
-  key, label, focus, minutes: Number(minutes), intensity: Number(intensity), phase,
+  /\{ key: "([^"]+)", focus: "([^"]+)", minutes: (\d+), intensity: (\d+), phase: "([^"]+)" \}/g,
+)].map(([, key, focus, minutes, intensity, phase]) => ({
+  key, focus, minutes: Number(minutes), intensity: Number(intensity), phase,
 }));
 const BY_KEY = new Map(BANK.map((d) => [d.key, d]));
 const PHASE_RANK = { warmup: 0, technique: 1, decision: 2, game: 3, cooldown: 4 };
@@ -70,6 +71,10 @@ function expectPlan(target) {
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { englishWord } = await server.ssrLoadModule("/i18n/format.ts");
 const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
+// A title is read here the way a screen reads it — by asking the app, not by filling the
+// braces here. `say(locale)` is the reader's own column, so a row that fails to resolve
+// shows up as a failure instead of as the gate's private idea of what it says.
+const { say, locales, DICTIONARIES } = await makeSay(server);
 // Rows are read the way the app reads them, through the door a screen uses. This file used to
 // fill `{…}` itself against the English column, and that hand-rolled filler read every
 // code-holding variable as the key it was handed: M230 moved the coach's attribute lists onto
@@ -222,13 +227,48 @@ if (!TR || !AT) {
   }
   ok(`every attribute key offered by the picker is trained by a single-focus session at every supported target (${ATTRIBUTE_KEYS.length} keys × ${SUPPORTED_MINUTES.length} targets, ${focusMiss.length} misses)`,
     focusMiss.length === 0);
+  // ---- 5b. the title is a ROW, not a sentence (M236) ----
+  // It used to be composed right here in the module — `${labels.join(" + ")} session` — which
+  // put English attribute names inside a Chinese session title, and left the raw-UI scan
+  // nothing to see because the sentence was never a key. The row names the codes it actually
+  // trained and lets the reader word them.
   const titleMiss = SUPPORTED_MINUTES.flatMap((m) => ["a", "b"].map((seed) => {
     const s = build(m, ["passing", "finishing", "shooting"], seed);
-    const want = `${s.focusAttributes.map((k) => AT.attributeLabel(k)).join(" + ")} session`;
-    return s.title === want ? null : `${m}/${seed}: "${s.title}" ≠ "${want}"`;
+    const want = s.focusAttributes.join(",");
+    return s.title.key === "trn.title.focus" && s.title.vars.attrs === want
+      ? null : `${m}/${seed}: ${JSON.stringify(s.title)} ≠ attrs "${want}"`;
   })).filter(Boolean);
-  ok(`a session's title is built from the attributes it actually trains, not from everything that was asked for (${titleMiss.length} mismatches; a 5-minute three-focus pick is titled "${build(5, ["passing", "finishing", "shooting"], "a").title}")`,
+  ok(`a session's title names the attributes it actually trains, not everything that was asked for (${titleMiss.length} mismatches over ${SUPPORTED_MINUTES.length} targets × 2 seeds; a 5-minute three-focus pick is titled ${JSON.stringify(build(5, ["passing", "finishing", "shooting"], "a").title)})`,
     titleMiss.length === 0);
+
+  // Every locale words that row itself, and no non-English reading may keep an English
+  // attribute name — `attrs` is a code list, so each entry resolves through `attr.name.*`.
+  const titleLeak = [];
+  for (const m of SUPPORTED_MINUTES) {
+    const s = build(m, ["passing", "shooting"], `loc-${m}`);
+    for (const loc of locales) {
+      const line = say(loc)(s.title);
+      if (typeof line !== "string" || line.length === 0) titleLeak.push(`${loc}@${m}: empty`);
+      else if (loc !== "en" && /passing|shooting|session/i.test(line)) titleLeak.push(`${loc}@${m}: "${line}"`);
+    }
+  }
+  ok(`every locale words the title from the codes, and no translated reading keeps an English word (${locales.length} locales × ${SUPPORTED_MINUTES.length} targets, ${titleLeak.length} leaks)`,
+    titleLeak.length === 0 && locales.length === 3);
+
+  // A session with no room to train anything is a real case: `targetMinutes: 0` leaves every
+  // phase at zero minutes, so nothing is trained. The old builder rendered that as
+  // `${"".join} session` — a leading space, which is not a title in any language.
+  const none = build(0, ["passing"], "e0");
+  const noneReadings = locales.map((loc) => [loc, say(loc)(none.title)]);
+  ok(`a session with no room to train anything carries its own "nothing trained" key rather than the leading space the old builder printed (${none.focusAttributes.length} focused, ${JSON.stringify(none.title)}, ${noneReadings.map(([l, r]) => `${l}:"${r}"`).join(" ")})`,
+    none.focusAttributes.length === 0 &&
+    none.title.key === "trn.title.none" &&
+    noneReadings.every(([loc, line]) => line === DICTIONARIES[loc]["trn.title.none"] && line.trim() === line && line.length > 0));
+
+  // Two screens reading the same session cannot word it differently: the row is the only
+  // thing either of them holds, and reading it does not consume it.
+  ok("reading a session title twice gives the same words, and the row is not consumed by it",
+    (() => { const s = build(30, ["passing"], "stable"); return say("zh-CN")(s.title) === say("zh-CN")(s.title) && s.title.key === "trn.title.focus"; })());
 
   const trimmed = SUPPORTED_MINUTES.map((m) => {
     const s = build(m, ["passing", "finishing", "shooting", "dribbling"], `trim-${m}`);
@@ -253,13 +293,27 @@ if (!TR || !AT) {
       for (const e of s.exercises) {
         const bankRow = BY_KEY.get(e.key);
         if (!bankRow) { forged.push(`${minutes}/${seed}: unknown drill ${e.key}`); continue; }
-        if (e.label !== bankRow.label || e.focus !== bankRow.focus || e.intensity !== bankRow.intensity || e.phase !== bankRow.phase)
+        if (e.focus !== bankRow.focus || e.intensity !== bankRow.intensity || e.phase !== bankRow.phase)
           forged.push(`${minutes}/${seed}: ${e.key} off-catalogue`);
       }
     }
   }
   ok(`every block is a real catalogue drill with only its minutes scaled to the budget (${forged.length} divergences over ${SUPPORTED_MINUTES.length * 2} multi-focus sessions; ${BANK.length} catalogue rows read)`,
     forged.length === 0);
+
+  // The catalogue carries no words of its own now (M236), so the dictionary is the only
+  // thing that can name a drill — and the read site builds `drill.${e.key}` as a template,
+  // which no static scan can see. This is the enumeration that stops a new drill shipping
+  // wordless: every key in the bank is asked for in all three columns, and no column keeps
+  // a row for a drill the bank has dropped.
+  const drillRows = locales.map((loc) => ({
+    loc,
+    keys: Object.keys(DICTIONARIES[loc]).filter((k) => k.startsWith("drill.")).map((k) => k.slice("drill.".length)),
+  }));
+  const wordless = BANK.filter((d) => drillRows.some((r) => !r.keys.includes(d.key))).map((d) => d.key);
+  const orphaned = drillRows.flatMap((r) => r.keys.filter((k) => !BANK.some((d) => d.key === k)).map((k) => `${r.loc}:${k}`));
+  ok(`every catalogue drill is named in all ${locales.length} columns, and no column names a drill the catalogue dropped (${wordless.length} wordless, ${orphaned.length} orphaned; ${BANK.length} drills)`,
+    wordless.length === 0 && orphaned.length === 0 && drillRows.every((r) => r.keys.length === BANK.length));
 
   // ---- 7. role shaping survives the new allocation ----
   const GAME_FOCUSES = ["crossing", "transition_awareness", "game_intelligence", "sprint"];

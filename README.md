@@ -142,8 +142,8 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M235 (a few numbers in that range
-were skipped). Everything added in the current line of work (M37 onward) was built green, and
+Work ships one milestone per commit and is currently at M236 (a few numbers in that range
+were skipped; M237–M239 landed in commits above this line and have yet to receive README sections). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
 evidence for a change is now the proof suite plus, where a component renders without the
@@ -5770,6 +5770,48 @@ files**, covered set **40**.
 `domain/gap.ts`, `domain/matchEngine.ts`, `domain/newsImpact.ts`, `domain/footprint.ts` and now
 `domain/filmInsights.ts` are at 0 and pinned, so the remaining prose is concentrated in
 `learn/community/career/attributes/training/onboarding`.
+
+### M236 — the training session's title is a row, and the catalogue stops carrying its own words
+
+`domain/training.ts` was the last domain module whose session title was a plain English string
+(`\`${trained.join(", ")} session\``). It now produces a `RowText`:
+`{ key: "trn.title.focus", vars: { attrs: trained.join(",") } }` or `{ key: "trn.title.none" }`.
+`TrainingSession.title` in `domain/types.ts` narrowed to `RowText`. Three screens that printed the
+title — Dashboard, PlayerOS, ProfilePage — switched to `rowLine(session.title, t)`.
+
+**The catalogue shed its English labels.** The 18 `DRILLS` entries (`rondo`, `passing_triangles`,
+… `shooting_under_fatigue`) each had a `label: "…"`. No screen read it; the label was dead weight
+that the prose audit counted and the raw-UI scan would have flagged if re-added. All 18 labels
+deleted. The dictionary gained `drill.*` keys (already present for catalogue coverage) and the two
+title rows `trn.title.focus` / `trn.title.none` ×3 locales. `proof-i18n` gained a clause that
+extracts drill keys by regex and asserts `drillKeys.length >= 18 && !drillLabelField`.
+
+**The ratchet moved down.** `DOMAIN_PROSE_CEILING` **191 → 173**,
+`PROSE_CAPS["domain/training.ts"]` **18 → 0**, and `domain/training.ts` joins `PROSE_ZERO`
+(**14 modules now**). The inventory line reads
+`attributes 19, career 29, community 36, learn 83, onboarding 6` (173 across 5 files).
+
+**`proof-coverage` fixed a stale oracle.** The import-resolution helper treated `@/i18n` as a file
+and crashed on `readFileSync` (`EISDIR`). The oracle now uses `existsSync(p) &&
+statSync(p).isFile()`. The exempt list was stale (`lib/utils.ts` reached via `src/App.tsx`);
+`EXEMPT = {}`, `EXEMPT_CEILING = 0`. Coverage suite: **17/17**.
+
+**Mutation witness: six arms, all caught.** (A) title reverted to a template literal —
+`proof-i18n` ceiling / module cap / cap-sum / zero-list / reachability / row-is-key + `proof-training`
+title clause (9 red); (B) zh-CN `trn.title.focus` deleted — parity, placeholders, title leak (3 red);
+(C) `attrs` dropped from `CODE_VARS` — `proof-i18n` plan leaks, `proof-training` title leak,
+`proof-timeline` memory line (3 red); (D) one drill regains `label` — catalogue clause + 4 prose
+gates (5 red); (E) one `drill.*` key removed from zh-CN — parity, catalogue clause, wordless clause
+(3 red); (F) Dashboard prints `String(session.title)` — `proof-i18n` "every read of a keyed row is
+resolved by rowLine" (1 bare read, 1 red). All restored.
+
+Measured on the working copy: `npx tsc --noEmit` exit 0, `npm run build` exit 0, suite
+**41/41 proof scripts · 2147/2147 checks · exit 0**, `proof-i18n` **260/260** at **1811 keys · 3
+locales**, `proof-training` **44/44**. Ceiling **173 across 5 files**, raw-UI ceiling **0 across 0
+files**, covered set **41**.
+
+**Still outstanding**: `learn.ts` (83), `community.ts` (36), `career.ts` (29), `attributes.ts` (19),
+`onboarding.ts` (6) — 173 across 5 files.
 
 ## Deploying
 

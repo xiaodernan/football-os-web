@@ -21,7 +21,7 @@ const startOfToday = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTim
 const DAY = 86400000;
 
 const sess = (over) => ({
-  id: over.id, date: over.date, title: "Session", focusAttributes: ["first_touch"],
+  id: over.id, date: over.date, title: { key: "trn.title.none" }, focusAttributes: ["first_touch"],
   exercises: [], targetMinutes: 20, status: over.status ?? "planned", ...over,
 });
 
@@ -47,7 +47,7 @@ ok("future planned stays planned", byId("c").status === "planned");
 ok("completed never touched", byId("d").status === "completed");
 ok("already-missed stays missed", byId("e").status === "missed");
 ok("invalid date stays planned", byId("f").status === "planned");
-ok("sweep preserves other fields", byId("a").targetMinutes === 20 && byId("a").title === "Session");
+ok("sweep preserves other fields", byId("a").targetMinutes === 20 && byId("a").title.key === "trn.title.none");
 ok("sweep is pure (input unchanged)", JSON.stringify(input) === frozenSnapshot);
 ok("sweep returns a new array", out !== input);
 // Idempotent: sweeping the swept result changes nothing further.

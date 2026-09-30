@@ -133,7 +133,7 @@ export function Dashboard() {
               <SectionTitle title={t("dash.training")} />
               {nextSession ? (
                 <div>
-                  <div className="text-sm font-medium">{nextSession.title}</div>
+                  <div className="text-sm font-medium">{rowLine(nextSession.title, t)}</div>
                   <div className="mt-0.5 text-xs text-muted-foreground">{nextSession.targetMinutes}′ · {t("dash.blocks", { n: nextSession.exercises.length })}</div>
                   <CompleteQuick sessionId={nextSession.id} onDone={(r) => completeSession(nextSession.id, r)} />
                 </div>
@@ -216,7 +216,7 @@ export function Dashboard() {
                 </div>
                 {growth.last ? (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="min-w-0 truncate">{growth.last.title}</span>
+                    <span className="min-w-0 truncate">{rowLine(growth.last.title, t)}</span>
                     <span className="ml-2 shrink-0 text-[11px] text-muted-foreground">{rowLine(relativeDay(locale, growth.last.completedAt ?? growth.last.date), t)}</span>
                   </div>
                 ) : (

@@ -264,13 +264,13 @@ export function ProfilePage() {
           <SectionTitle title={t("prof.recent")} hint={t("prof.recentHint")} />
           {completed.length ? (
             <div className="mt-2 divide-y">
-              {completed.slice(0, 6).map((s) => (
-                <div key={s.id} className="flex items-center justify-between py-2 text-sm">
+              {completed.slice(0, 6).map((sess) => (
+                <div key={sess.id} className="flex items-center justify-between py-2 text-sm">
                   <div className="min-w-0">
-                    <div className="truncate">{s.title}</div>
-                    <div className="text-[11px] text-muted-foreground">{fmtDate(locale, s.completedAt ?? s.date)}{s.selfRating ? ` · ${s.selfRating}/5` : ""}</div>
+                    <div className="truncate">{rowLine(sess.title, t)}</div>
+                    <div className="text-[11px] text-muted-foreground">{fmtDate(locale, sess.completedAt ?? sess.date)}{sess.selfRating ? ` · ${sess.selfRating}/5` : ""}</div>
                   </div>
-                  <Badge variant="outline" className="shrink-0 font-mono text-success">+{s.xpAwarded ?? 0} XP</Badge>
+                  <Badge variant="outline" className="shrink-0 font-mono text-success">+{sess.xpAwarded ?? 0} XP</Badge>
                 </div>
               ))}
             </div>

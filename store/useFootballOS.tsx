@@ -23,7 +23,7 @@ import {
   POSITION_BY_GROUP,
 } from "@/domain/attributes";
 import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
-import { applyFocusGrowth, sweepOverdueSessions, type GrowthDelta } from "@/domain/training";
+import { applyFocusGrowth, repairSessionTitles, sweepOverdueSessions, type GrowthDelta } from "@/domain/training";
 import { countGoalTitle, repairGoalTitles } from "@/domain/goals";
 import { coachMemory, profileMemory, repairMemoryTexts, trainingMemory } from "@/domain/memory";
 import { normalizeGoalChoice } from "@/domain/onboarding";
@@ -96,7 +96,7 @@ function normalizeHydrated(s: OsState): OsState {
     // Planned sessions whose scheduled day has passed are genuinely missed —
     // flip them here so the review's missed count and slipped-session insight
     // reflect reality instead of staying permanently at zero.
-    sessions: sweepOverdueSessions(repaired),
+    sessions: sweepOverdueSessions(repairSessionTitles(repaired)),
     // Rows written before a plan's prompt was a row hold a plain string: the words the
     // caller composed at the time. Kept verbatim as a value, never re-read as a key.
     plans: repairPlanPrompts(s.plans ?? []),

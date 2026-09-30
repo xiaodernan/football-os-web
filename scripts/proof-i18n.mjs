@@ -749,8 +749,9 @@ const SPACES = new Map([
     values: spaceOf("features/community/CommunityHub.tsx", /\["recent", "top"\] as const/, quoted),
   }],
   ["drill.|e.key", {
-    // The catalogue's own keys, so adding a drill fails the suite until it has a label
-    // in all three locales rather than rendering `drill.new_drill` to a reader.
+    // The catalogue's own keys, so adding a drill fails the suite until it is named
+    // in all three locales rather than rendering `drill.new_drill` to a reader. The
+    // catalogue itself carries no words since M236, so these keys are all it publishes.
     name: "drill catalogue keys",
     values: spaceOf("domain/training.ts", /const DRILLS: TrainingExercise\[\] = \[[\s\S]*?\n\];/, /\{ key: "([^"]+)"/g),
   }],
@@ -953,13 +954,18 @@ const groupDrift = POSITION_GROUPS.filter((g) => en[`group.${g.id}`] !== g.label
 ok(`en group.* still equals the domain position-group table, all ${POSITION_GROUPS.length} of them (${groupDrift.map((g) => g.id).join(", ") || "none"})`,
   POSITION_GROUPS.length >= 8 && groupDrift.length === 0);
 
-// The drill catalogue is held the same way. Its `label` is the English reference for
-// `drill.*`, and the pair may not drift — this is what caught the catalogue's own
-// "Defential 1v1 jockey" typo, which the dictionary had already spelled correctly.
-const drillPairs = [...(appSrc.get("domain/training.ts") ?? "").matchAll(/\{ key: "([^"]+)", label: "([^"]+)"/g)];
-const drillDrift = drillPairs.filter(([, k, l]) => en[`drill.${k}`] !== l).map(([, k]) => k);
-ok(`en drill.* still equals the drill catalogue, all ${drillPairs.length} of them (${drillDrift.join(", ") || "none"})`,
-  drillPairs.length >= 18 && drillDrift.length === 0);
+// The drill catalogue no longer has an English reference to hold `drill.*` against. It used
+// to carry its own `label` and this clause compared the two, which is two copies of one noun
+// kept in step by hand: a new drill could update the copy no screen printed, and the pair
+// said nothing about the locales that actually read it. M236 deleted the field, so the
+// dictionary is the only table that names a drill (proof-training pins that every key in the
+// catalogue is named in all three columns). What is pinned here is that the second source
+// stays deleted, with a count so a catalogue that shrank to nothing reads as a broken scan.
+const drillSrc = appSrc.get("domain/training.ts") ?? "";
+const drillKeys = [...drillSrc.matchAll(/\{ key: "([^"]+)", focus:/g)].map((m) => m[1]);
+const drillLabelField = /,\s*label:/.test(drillSrc);
+ok(`the drill catalogue names ${drillKeys.length} drills and carries no word of its own (${drillLabelField ? "a label field is back" : "no label field"})`,
+  drillKeys.length >= 18 && !drillLabelField);
 
 // 19b. Those two `label` fields are the English reference the checks above hold the
 //      dictionary against — they are not copy a screen may print. The onboarding
@@ -1217,9 +1223,25 @@ for (const d of dynBad.slice(0, 8)) console.log("       dyn: " + d);
 //     fine in English -- so a probe that swapped rowLine(x.label, t) for String(x.label)
 //     walked through every gate green. Every read of a known keyed-row property now has to
 //     sit inside a rowLine( call.
-const KEYED_ROW_READS = [/\bzone\.label\b/, /\bhonour\.label\b/, /\bm\.text\b/, /\bg\.title\b/, /\brow\.title\b/];
+// M236: a session's title became a row, which put six more reads in reach of the same hole.
+// The receivers are named rather than the property, because `.title` alone is not evidence:
+// `th.title` is a thread's own words and `l.title` a lesson's, and neither is a row. So the
+// session bindings were renamed to `sess` at the three sites that print one, and the
+// distinguishable receivers are listed here. A new bare `.title` read on one of these names
+// is a failure; a new receiver name means adding it here on purpose, which is the same price
+// check 28 has always charged.
+const KEYED_ROW_READS = [/\bzone\.label\b/, /\bhonour\.label\b/, /\bm\.text\b/, /\bg\.title\b/, /\brow\.title\b/,
+  /\bsess\.title\b/, /\bsession\.title\b/, /\bnextSession\.title\b/, /\bnext\.title\b/, /\bgrowth\.last\.title\b/];
 const unresolvedRows = [];
 let keyedRowReads = 0;
+// A row may legitimately be spent in exactly two ways: resolved to words by `rowLine`, or
+// FORWARDED into another row. The coach's remembered line nests the session's own title
+// (M236), so `trainingMemory(session.title, …)` stores the row rather than wording it — and
+// wording it there is precisely the defect: the memory is persisted, so resolving at write
+// time would freeze the line in the language the session was completed in. The forwarding
+// doors are named here rather than the check being loosened, and proof-timeline reads the
+// nesting back through `rowLine` to prove it resolves.
+const ROW_READ = /(?:rowLine|trainingMemory)\([^)]{0,16}$/;
 for (const [p, body] of appSrc) {
   if (!p.endsWith(".tsx")) continue;
   for (const re of KEYED_ROW_READS) {
@@ -1228,7 +1250,7 @@ for (const [p, body] of appSrc) {
       const before = body.slice(Math.max(0, hit.index - 24), hit.index);
       // rowLine(s.honour.label, t) -- the receiver sits between the call and the
       // property, so the test is "rowLine( opened within the last few characters".
-      if (!/rowLine\([^)]{0,12}$/.test(before)) unresolvedRows.push(p + ": " + hit[0]);
+      if (!ROW_READ.test(before)) unresolvedRows.push(p + ": " + hit[0]);
     }
   }
 }
@@ -1978,7 +2000,17 @@ const ROW_FILES = [...appSrc].filter(([, src]) => /\bRowText\b/.test(src));
 // "supplies {}", which is M149's failure mode (a silently unreadable row printed as an
 // audited one) wearing a new face. So: match the key, then either read the body properly or
 // REFUSE it in the message. Nothing here guesses at a shape it cannot see.
-const ROW_LITERAL = /\{\s*key:\s*"([^"]+)"/g;
+// A row's key names a sentence in the dictionary, and EVERY key in this dictionary is
+// namespaced — measured, not assumed: the assertion below fails the moment a dotless key is
+// added, because then this discriminator would start hiding real rows. The dot is what
+// separates a row literal from the record tables a module also holds. M236 put
+// `domain/training.ts` into ROW_FILES for the first time (its session title became a row),
+// and that file also carries the drill catalogue — eighteen `{ key: "rondo", focus: … }`
+// entries (they lost their `label` in this same milestone) and the attribute tables next
+// door. Without the dot, all of them read as rows whose keys are missing from the
+// dictionary. Checked both ways before it was relied on (dev/.m236-probe.mjs): 1794 en keys,
+// 0 dotless; 342 row-shaped literals app-wide, 66 with undotted keys, 0 of them a dictionary key.
+const ROW_LITERAL = /\{\s*key:\s*"([^"]*\.[^"]*)"/g;
 // The text between the `{` at `open` and its matching `}`, with string contents opaque — the
 // brace twin of `callArgs`, which stops at a top-level comma. Returns null when the braces
 // never balance, because an audit that guesses is worse than one that stops.
@@ -2050,6 +2082,12 @@ for (const [path, src] of ROW_FILES) {
 }
 ok(`every row text a domain module hands the screen is a real key with exactly its placeholders (${rowKeys} keys, ${badRows.slice(0, 6).join(" | ") || "clean"})`,
   badRows.length === 0);
+// The dot rule above is a discriminator, so it has to be pinned rather than trusted: if the
+// dictionary ever gains a dotless key, `ROW_LITERAL` would stop seeing rows that use it and
+// this file would go quiet for the wrong reason.
+const dotlessKeys = Object.keys(en).filter((k) => !k.includes("."));
+ok(`every dictionary key is namespaced, which is what lets a row literal be told from a record table (${dotlessKeys.length} dotless of ${Object.keys(en).length}${dotlessKeys.length ? ": " + dotlessKeys.slice(0, 4).join(", ") : ""})`,
+  dotlessKeys.length === 0);
 ok(`the row-text scan is reading modules that actually carry the union (${ROW_FILES.length} files, ${rowKeys} keys)`,
   // 5 files / 15 keys as of M152: history.ts's 9 timeline rows, goals.ts's 3 title
   // rows, rowText.ts and types.ts as the two modules that name the union. A row built
@@ -2742,11 +2780,12 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // literals across 14 of 31 modules (was 339 across 17 — see the rule note above). The next
 // milestone to localise a module lowers this number and writes the new one here; it never
 // raises it. 264 → 256 at M190, which published domain/gap.ts's eight lines as rows.
-// M192 did NOT move this number, and that is worth stating: keying the drill catalogue's
-// render site leaves its eighteen `label` fields in the table, because those are the
-// English reference the drift check below holds `drill.*` against — the same reason
-// domain/attributes.ts has never reached zero. The leak was real and is fixed; the
-// ratchet measures a different thing.
+// M192 did NOT move this number, and that was worth stating: keying the drill catalogue's
+// render site left its eighteen `label` fields in the table, because those were the English
+// reference the drift check held `drill.*` against — the same reason domain/attributes.ts
+// has never reached zero. The leak was real and was fixed; the ratchet measured a different
+// thing. M236 deleted the field instead of holding two copies of one noun against each
+// other, so this is the milestone where the catalogue's eighteen finally leave.
 // M225 published domain/matchEngine.ts's eight lines as rows — the three summary lines, the goal
 // line and the four shots it names — so the ceiling and that module's own cap both fall by eight.
 // M233 published domain/newsImpact.ts's sixteen — the three standing lines, the two club lines,
@@ -2762,7 +2801,12 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // `{insights.evidence.map((e) => …{e})}`: an expression, so the raw-UI scan saw no literal while
 // the reader saw English. The focus line also stopped naming attributes through `attributeLabel`
 // and rides as the `foci` code var instead, and the busiest detection rides as `event`.
-const DOMAIN_PROSE_CEILING = 192;
+// M236 empties domain/training.ts: its session title was composed in the module — the trained
+// attribute labels joined with a plus and a " session" after them — and printed as a plain
+// string in six places. It is trn.title.focus with the attrs code var now, and the eighteen
+// catalogue labels M192 had to leave behind are deleted rather than keyed, because no screen
+// ever read them.
+const DOMAIN_PROSE_CEILING = 173;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
@@ -2771,7 +2815,7 @@ const DOMAIN_PROSE_CEILING = 192;
 // M225 adds domain/matchEngine.ts: unlike the three format-only modules above it held real
 // sentences ("The midfield was finely balanced."), and they are rows now, so the module is
 // pinned at zero like the rest.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts", "domain/training.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -2786,7 +2830,7 @@ const PROSE_CAPS = {
   "domain/footprint.ts": 0,
   "domain/attributes.ts": 19,
   "domain/newsImpact.ts": 0,
-  "domain/training.ts": 19,
+  "domain/training.ts": 0,
   "domain/filmInsights.ts": 0,
   "domain/gap.ts": 0,
   "domain/matchEngine.ts": 0,

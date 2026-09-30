@@ -4,9 +4,9 @@
 // time, so a remembered line kept the language it was written in no matter who later
 // read it, and nothing in a component was ever the place the sentence was made.
 //
-// A memory row therefore stores codes and numbers through these builders and says its
-// words at read time via rowLine. `repairMemoryTexts` handles rows stored before that
-// was true: their English stays, verbatim, because it is what the app actually wrote.
+// A memory row therefore stores codes, numbers and whole rows through these builders and
+// says its words at read time via rowLine. `repairMemoryTexts` handles rows stored before
+// that was true: their English stays, verbatim, because it is what the app actually wrote.
 
 import type { AiMemoryEntry } from "./types";
 import type { RowText } from "./rowText";
@@ -22,7 +22,12 @@ export function coachMemory(focus: readonly string[], minutes: number): RowText 
   return { key: "mem.line.coach", vars: { focus: focus.join(","), minutes } };
 }
 
-export function trainingMemory(title: string, xp: number, rating: number, level: number): RowText {
+// The title is the session's own row, forwarded whole rather than flattened to words: the
+// app composed it from attribute codes, so it must stay a key. Rendering it here would
+// freeze the remembered line in the language the session happened to be completed in, which
+// is exactly the defect this module exists to prevent — `fillRowVars` resolves the nested
+// row at read time instead.
+export function trainingMemory(title: RowText, xp: number, rating: number, level: number): RowText {
   return { key: "mem.line.training", vars: { title, xp, rating, level } };
 }
 

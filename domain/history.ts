@@ -35,7 +35,10 @@ const MEMORY_DETAIL: Record<string, RowText> = {
 
 interface SessionSeed {
   id: string;
-  title: string;
+  // The session's own row, forwarded (see ./training): the app built the title from the
+  // attributes the session trains, so re-wrapping it as `{ value }` here would print the
+  // English sentence in every locale — the same hole the plan prompt had before M231.
+  title: RowText;
   status: string;
   completedAt?: string;
   date: string;
@@ -98,7 +101,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       id: `session-${s.id}`,
       kind: "session",
       at: s.completedAt ?? s.date,
-      title: { value: s.title },
+      title: asRowText(s.title),
       score: s.selfRating,
       xp: s.xpAwarded,
       growth: s.growth,

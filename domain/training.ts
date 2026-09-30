@@ -1,5 +1,5 @@
 import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, TrainingSession } from "./types";
-import { attributeLabel } from "./attributes";
+import { asRowText, type RowText } from "./rowText";
 import { makeRng, pick, rngInt } from "@/lib/rng";
 
 // Training database: exercises keyed to the attributes they develop, organised by
@@ -7,24 +7,24 @@ import { makeRng, pick, rngInt } from "@/lib/rng";
 // Cool-down -> Reflection structure at any supported duration.
 export const SUPPORTED_MINUTES = [5, 10, 20, 30, 45, 60, 90];
 const DRILLS: TrainingExercise[] = [
-  { key: "dynamic_warmup", label: "Dynamic mobility + activation", focus: "stamina", minutes: 6, intensity: 1, phase: "warmup" },
-  { key: "rondo", label: "Rondo press-resistance (3v1)", focus: "press_resistance", minutes: 8, intensity: 3, phase: "technique" },
-  { key: "first_touch_wall", label: "Wall rebounds — oriented first touch", focus: "first_touch", minutes: 8, intensity: 2, phase: "technique" },
-  { key: "weak_foot_receiving", label: "Weak-foot receiving circuits", focus: "weak_foot", minutes: 9, intensity: 2, phase: "technique" },
-  { key: "passing_lanes", label: "Two-touch passing lanes", focus: "passing", minutes: 8, intensity: 2, phase: "technique" },
-  { key: "long_pass_targets", label: "Switch-of-play long passing", focus: "long_passing", minutes: 7, intensity: 2, phase: "technique" },
-  { key: "dribble_weave", label: "Close-control weave + body feints", focus: "dribbling", minutes: 7, intensity: 3, phase: "technique" },
-  { key: "finishing_pattern", label: "Cut-back finishing pattern", focus: "finishing", minutes: 9, intensity: 3, phase: "technique" },
-  { key: "shooting_box", label: "Box strikes under fatigue", focus: "shooting", minutes: 8, intensity: 3, phase: "technique" },
-  { key: "crossing_run", label: "Overlapping cross + finish", focus: "crossing", minutes: 9, intensity: 3, phase: "game" },
-  { key: "scanning_square", label: "Head-check grid (scanning)", focus: "scanning", minutes: 8, intensity: 2, phase: "decision" },
-  { key: "possession_game", label: "Positional possession 4v4+3", focus: "decision_making", minutes: 12, intensity: 4, phase: "decision" },
-  { key: "transition_sprint", label: "Transition sprints + recovery shape", focus: "transition_awareness", minutes: 9, intensity: 4, phase: "game" },
-  { key: "def_1v1", label: "Defensive 1v1 jockey + recover", focus: "defensive_awareness", minutes: 8, intensity: 3, phase: "decision" },
-  { key: "small_sided", label: "Small-sided game — free play", focus: "game_intelligence", minutes: 14, intensity: 4, phase: "game" },
-  { key: "set_piece_reps", label: "Set-piece repetition block", focus: "set_pieces", minutes: 8, intensity: 2, phase: "technique" },
-  { key: "sprint_intervals", label: "Speed endurance intervals", focus: "sprint", minutes: 10, intensity: 5, phase: "game" },
-  { key: "cooldown_breathe", label: "Cool-down jog + breathing + reflection", focus: "composure", minutes: 6, intensity: 1, phase: "cooldown" },
+  { key: "dynamic_warmup", focus: "stamina", minutes: 6, intensity: 1, phase: "warmup" },
+  { key: "rondo", focus: "press_resistance", minutes: 8, intensity: 3, phase: "technique" },
+  { key: "first_touch_wall", focus: "first_touch", minutes: 8, intensity: 2, phase: "technique" },
+  { key: "weak_foot_receiving", focus: "weak_foot", minutes: 9, intensity: 2, phase: "technique" },
+  { key: "passing_lanes", focus: "passing", minutes: 8, intensity: 2, phase: "technique" },
+  { key: "long_pass_targets", focus: "long_passing", minutes: 7, intensity: 2, phase: "technique" },
+  { key: "dribble_weave", focus: "dribbling", minutes: 7, intensity: 3, phase: "technique" },
+  { key: "finishing_pattern", focus: "finishing", minutes: 9, intensity: 3, phase: "technique" },
+  { key: "shooting_box", focus: "shooting", minutes: 8, intensity: 3, phase: "technique" },
+  { key: "crossing_run", focus: "crossing", minutes: 9, intensity: 3, phase: "game" },
+  { key: "scanning_square", focus: "scanning", minutes: 8, intensity: 2, phase: "decision" },
+  { key: "possession_game", focus: "decision_making", minutes: 12, intensity: 4, phase: "decision" },
+  { key: "transition_sprint", focus: "transition_awareness", minutes: 9, intensity: 4, phase: "game" },
+  { key: "def_1v1", focus: "defensive_awareness", minutes: 8, intensity: 3, phase: "decision" },
+  { key: "small_sided", focus: "game_intelligence", minutes: 14, intensity: 4, phase: "game" },
+  { key: "set_piece_reps", focus: "set_pieces", minutes: 8, intensity: 2, phase: "technique" },
+  { key: "sprint_intervals", focus: "sprint", minutes: 10, intensity: 5, phase: "game" },
+  { key: "cooldown_breathe", focus: "composure", minutes: 6, intensity: 1, phase: "cooldown" },
 ];
 
 function focusDrills(focus: string): TrainingExercise[] {
@@ -134,10 +134,14 @@ export function buildSession(input: BuildSessionInput): TrainingSession {
   // belongs to a block that exists.
   const trained = wanted.filter((key) => exercises.some((e) => e.key === leadFor.get(key)));
 
+  const title: RowText = trained.length
+    ? { key: "trn.title.focus", vars: { attrs: trained.join(",") } }
+    : { key: "trn.title.none" };
+
   return {
     id: input.id,
     date: input.date,
-    title: `${trained.map(attributeLabel).join(" + ")} session`,
+    title,
     focusAttributes: trained,
     exercises,
     targetMinutes: target,
@@ -158,6 +162,20 @@ export function sweepOverdueSessions(sessions: TrainingSession[], nowMs: number 
     if (Number.isNaN(t) || t >= startOfToday) return s;
     return { ...s, status: "missed" };
   });
+}
+
+/** Sessions stored before a title was a row hold the English sentence the builder composed
+ *  at the time ("Passing + Dribbling session"). Those words are what the app actually wrote,
+ *  so they are kept verbatim as a value and never re-read as a key — the same repair a goal
+ *  title, a coach prompt and a remembered line get, called from the store's hydration
+ *  boundary. A session already carrying a row is returned as the same object, because
+ *  hydration runs on every load and rebuilding unchanged sessions would make every one of
+ *  them look edited. */
+export function repairSessionTitles(sessions: TrainingSession[]): TrainingSession[] {
+  if (!sessions.some((s) => typeof (s.title as unknown) === "string")) return sessions;
+  return sessions.map((s) =>
+    typeof (s.title as unknown) === "string" ? { ...s, title: asRowText(s.title as unknown as string) } : s,
+  );
 }
 
 export function sessionIntensity(session: TrainingSession): number {

@@ -428,7 +428,10 @@ async function tryLoad(p) {
       try {
         s = buildSession({ id: `k-${key}-${minutes}`, date: "2026-09-12", targetMinutes: minutes, focusAttributes: [key], group: "CM" });
       } catch (e) { bad.push(`${key}@${minutes} threw ${e.message.slice(0, 40)}`); continue; }
-      if (!s.exercises.length || s.exercises.some((e) => !e || !e.label || !(e.minutes > 0))) bad.push(`${key}@${minutes} produced ${JSON.stringify(s.exercises.map((e) => e && e.label))}`);
+      // The witness is `key`, not `label`: M236 deleted the catalogue's English label (no
+      // screen read it), so a session proving itself by printing its labels shows `undefined`
+      // for every drill that is in fact there. The key is what identifies a catalogue row.
+      if (!s.exercises.length || s.exercises.some((e) => !e || !e.key || !(e.minutes > 0))) bad.push(`${key}@${minutes} produced ${JSON.stringify(s.exercises.map((e) => e && e.key))}`);
     }
   }
   ok(`buildSession's pick/fallback chain yields a real session for every attribute key at both minute extremes — no undefined drill survives (${ATTRIBUTE_KEYS.length} keys × 2 bounds = ${ATTRIBUTE_KEYS.length * 2} sessions, ${bad.length} malformed; this checks shape only, not duration fit)`,

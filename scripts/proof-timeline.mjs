@@ -13,6 +13,7 @@ import { createServer } from "vite";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { makeSay } from "./lib/rows.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const server = await createServer({ root, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
@@ -20,6 +21,9 @@ const { buildTimeline, groupByDay } = await server.ssrLoadModule("/domain/histor
 const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
 const { GOAL_METRICS, goalUnitKey, countGoalTitle, attributeGoalTitle, repairGoalTitles, isValidGoalTarget, goalProgressPct } =
   await server.ssrLoadModule("/domain/goals.ts");
+// The nested-row clause below reads through the app's own door rather than a private
+// filler, so a row that fails to resolve is reported instead of quietly echoed.
+const { say, locales } = await makeSay(server);
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 
 let pass = 0, fail = 0;
@@ -36,7 +40,7 @@ const t = (key, vars) => {
 };
 
 const session = (over = {}) => ({
-  id: "s1", title: "Session title A", status: "completed",
+  id: "s1", title: { value: "Session title A" }, status: "completed",
   completedAt: "2026-03-01T09:30:00.000Z", date: "2026-03-01",
   selfRating: 4, xpAwarded: 30, growth: [{ key: "passing", delta: 2 }], notes: "  keep head down  ",
   ...over,
@@ -53,7 +57,13 @@ const one = (over = {}) => buildTimeline({ ...empty, ...over });
 
 // ---- 1. Provenance: every string a row shows came out of a record.
 const rich = buildTimeline({
-  sessions: [session(), session({ id: "s2", title: "Session title E", completedAt: "2026-03-06T08:00:00.000Z" })],
+  sessions: [
+    session(),
+    session({ id: "s2", title: { value: "Session title E" }, completedAt: "2026-03-06T08:00:00.000Z" }),
+    // The shape the app actually writes since M236: the title is the session's own keyed
+    // row, so the timeline must forward it exactly as it does a plan's prompt.
+    session({ id: "s3", title: { key: "trn.title.focus", vars: { attrs: "passing" } }, completedAt: "2026-03-08T08:00:00.000Z" }),
+  ],
   plans: [plan(), plan({ id: "p2", prompt: "Plan prompt F" }), plan({ id: "p3", prompt: { key: "rv.recoPrompt" } })],
   memory: [memory(), memory({ id: "m2", kind: "training", text: { value: "Memory text G" } })],
   learn: [learn(), learn({ id: "l2", title: "Lesson title H", quizCorrect: false, attempts: 2 })],
@@ -76,17 +86,17 @@ for (const e of rich) {
       if (typeof cell.value !== "string" || cell.value.length === 0) shapeProblems.push(`${e.id}: an empty row value`);
       else rowStrings.push(cell.value);
     }
-    // This module's OWN words live in `hist.*`. A plan's prompt is the one cell it forwards
-    // from the caller rather than wording: it is the row the coach provider was handed
-    // (`rv.recoPrompt`, `ai.videoAnalysisPrompt`, …), so it keeps the namespace it was written
-    // in and this clause must not demand this file's own.
-    const forwarded = e.kind === "plan" && cell === e.title;
+    // This module's OWN words live in `hist.*`. A plan's prompt and a session's title are the
+    // cells it forwards from the caller rather than words: they are the rows the producer was
+    // handed (`rv.recoPrompt`, `ai.videoAnalysisPrompt`, `trn.title.*`, …), so they keep the
+    // namespace they were written in and this clause must not demand this file's own.
+    const forwarded = (e.kind === "plan" || e.kind === "session") && cell === e.title;
     if ("key" in cell && !forwarded && !/^hist\.[a-z.]+$/.test(cell.key)) shapeProblems.push(`${e.id}: ${cell.key} is outside the namespace this module may use`);
   }
   if (e.note) rowStrings.push(e.note);
 }
 ok(`the ${rich.length} rows are well-formed key-or-value cells (${[...new Set(shapeProblems)].join(" | ") || "clean"})`,
-  rich.length === 11 && shapeProblems.length === 0);
+  rich.length === 12 && shapeProblems.length === 0);
 ok(`every string those rows show is a stored value, not prose this module wrote (${[...new Set(rowStrings)].join(" / ")})`,
   rowStrings.length > 0 && rowStrings.every((s2) => RECORD_STRINGS.has(s2)));
 ok("the clip's file name reaches the reader as a variable of a key row, never appended to a sentence here",
@@ -118,7 +128,12 @@ ok("a session with only a scheduled date still lands on the timeline",
 
 // ---- 4. Row shape per kind.
 const s = one({ sessions: [session()] })[0];
-ok("a session title is a stored value, not a dictionary key", "value" in s.title && s.title.value === "Session title A");
+// The session's own row is forwarded, never re-wrapped here: a session stored before a title
+// was a row keeps its words, and one the app built keeps its key so the timeline words it in
+// the reader's locale rather than freezing whichever language it was completed in.
+ok("a session's own title row is forwarded, not re-worded here",
+  s.title.value === "Session title A" &&
+  one({ sessions: [session({ title: { key: "trn.title.focus", vars: { attrs: "passing" } } })] })[0].title.key === "trn.title.focus");
 ok("a session carries its rating, XP and growth through unchanged",
   s.score === 4 && s.xp === 30 && eq(s.growth, [{ key: "passing", delta: 2 }]));
 ok("the stored note is trimmed, not truncated or blanked", s.note === "keep head down");
@@ -352,12 +367,53 @@ ok("each code in the list is looked up on its own and rejoined for the reader",
   eq(seen.map((s) => s[0]), ["attr.name.passing", "attr.name.ball_control", "mem.line.coach"]));
 
 // Name-based resolution is what keeps a person's own words safe: a session really
-// titled "CM" must never be re-read as a position-group lookup.
+// titled "CM" must never be re-read as a position-group lookup. Since M236 the title
+// arrives as a ROW — a value when a person wrote it, a key when the builder made it — and
+// either way it is forwarded whole so the reader words it in their own column.
 seen = [];
-const cmTitle = rowLine(trainingMemory("CM", 50, 4, 3), t);
+const cmTitle = rowLine(trainingMemory({ value: "CM" }, 50, 4, 3), t);
 ok("a stored value that happens to read like a code is still shown as the writer's text",
   cmTitle === "{mem.line.training|level=3,rating=4,title=CM,xp=50}" &&
   eq(seen.map((s) => s[0]), ["mem.line.training"]));
+
+// A session the app built carries a key, not a sentence. Nesting that row in the memory line
+// is what keeps a persisted memory readable in whatever locale opens it — the alternative
+// froze the line in the language the session happened to be completed in, which is the whole
+// reason ./memory exists.
+seen = [];
+const builtTitle = { key: "trn.title.focus", vars: { attrs: "passing,ball_control" } };
+const nestedLine = rowLine(trainingMemory(builtTitle, 50, 4, 3), t);
+ok("a memory line nests the session's own title row and resolves it for the reader",
+  nestedLine === "{mem.line.training|level=3,rating=4,title={trn.title.focus|attrs={attr.name.passing} + {attr.name.ball_control}},xp=50}" &&
+  eq(seen.map((s) => s[0]), ["attr.name.passing", "attr.name.ball_control", "trn.title.focus", "mem.line.training"]));
+
+// The nested row is resolved at read time, so two readers of the same stored object disagree
+// in the way they should: same row, their own language — and neither of them is handed a
+// stringified object, which is what printing a row instead of reading it looks like.
+const nestedRow = trainingMemory(builtTitle, 50, 4, 3);
+const nestedReadings = locales.map((loc) => [loc, say(loc)(nestedRow)]);
+ok(`the same stored memory row words its nested title differently per reader (${nestedReadings.map(([l, r]) => `${l}:"${r}"`).join(" ").slice(0, 150)})`,
+  new Set(nestedReadings.map(([, r]) => r)).size === locales.length &&
+  nestedReadings.every(([, r]) => typeof r === "string" && !/object Object|\[object/.test(r)));
+
+// A session stored before its title was a row keeps the sentence the app wrote then; a session
+// already carrying a row is returned as the same object, because hydration runs on every load
+// and rebuilding untouched sessions would make every one of them look edited.
+const { repairSessionTitles } = await server.ssrLoadModule("/domain/training.ts");
+const legacySessions = [
+  { ...session(), title: "Passing + Dribbling session" },
+  session({ id: "s4" }),
+];
+const rsRepaired = repairSessionTitles(legacySessions);
+ok("a session stored while its title was a sentence keeps those words as a value",
+  eq(rsRepaired[0].title, { value: "Passing + Dribbling session" }) && rsRepaired[0].id === "s1");
+ok("a session already carrying a row is left alone, identity included", rsRepaired[1] === legacySessions[1]);
+ok("session repair is safe on an empty list", repairSessionTitles([]).length === 0);
+const cleanSessions = [session({ id: "s5" })];
+ok("a list of sessions with nothing to repair comes back as the same array, not a rebuild",
+  repairSessionTitles(cleanSessions) === cleanSessions && repairSessionTitles(cleanSessions)[0] === cleanSessions[0]);
+ok("the hydration boundary repairs a legacy session title on the way in",
+  /sessions:\s*sweepOverdueSessions\(repairSessionTitles\(/.test(read("store/useFootballOS.tsx")));
 
 const memRow = (text, extra) => ({ id: "M1", kind: "coach", text, at: "2026-01-02T00:00:00.000Z", ...extra });
 const keyedMem = memRow(coachMemory(["passing"], 25));

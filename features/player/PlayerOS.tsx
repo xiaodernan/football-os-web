@@ -153,7 +153,7 @@ function Overview() {
           <SectionTitle title={t("player.nextAction")} />
           {next ? (
             <div>
-              <div className="text-sm font-medium">{next.title}</div>
+              <div className="text-sm font-medium">{rowLine(next.title, t)}</div>
               <div className="text-xs text-muted-foreground">{t("player.minPlanned", { n: next.targetMinutes })}</div>
               <Button size="sm" className="mt-3 w-full" onClick={() => navigate("/player/training")}>{t("player.goToTraining")}</Button>
             </div>
@@ -397,11 +397,11 @@ function Training() {
         <Panel className="p-4">
           <SectionTitle title={t("player.missed")} hint={t("player.slippedCount", { n: missed.length })} />
           <div className="divide-y">
-            {missed.map((s) => (
-              <div key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+            {missed.map((sess) => (
+              <div key={sess.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                 <div className="min-w-0">
-                  <div className="truncate">{s.title}</div>
-                  <div className="text-xs text-muted-foreground">{t("player.missedDate", { date: new Date(s.date).toLocaleDateString(), min: s.targetMinutes })}</div>
+                  <div className="truncate">{rowLine(sess.title, t)}</div>
+                  <div className="text-xs text-muted-foreground">{t("player.missedDate", { date: new Date(sess.date).toLocaleDateString(), min: sess.targetMinutes })}</div>
                 </div>
                 <Badge variant="outline" className="shrink-0 font-mono text-muted-foreground">{t("player.missedBadge")}</Badge>
               </div>
@@ -413,20 +413,20 @@ function Training() {
         <SectionTitle title={t("player.history")} hint={t("player.completedCount", { n: history.length })} />
         {history.length ? (
           <div className="divide-y">
-            {history.map((s) => (
-              <div key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+            {history.map((sess) => (
+              <div key={sess.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                 <div className="min-w-0">
-                  <div className="truncate">{s.title}</div>
-                  <div className="text-xs text-muted-foreground">{t("player.completedDate", { date: s.completedAt ? new Date(s.completedAt).toLocaleDateString() : "—", rating: s.selfRating ?? "—" })}</div>
-                  {s.growth && s.growth.some((g) => g.delta > 0) && (
+                  <div className="truncate">{rowLine(sess.title, t)}</div>
+                  <div className="text-xs text-muted-foreground">{t("player.completedDate", { date: sess.completedAt ? new Date(sess.completedAt).toLocaleDateString() : "—", rating: sess.selfRating ?? "—" })}</div>
+                  {sess.growth && sess.growth.some((g) => g.delta > 0) && (
                     <div className="mt-1 flex flex-wrap gap-1">
-                      {s.growth.filter((g) => g.delta > 0).map((g) => (
+                      {sess.growth.filter((g) => g.delta > 0).map((g) => (
                         <span key={g.key} className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">{t(`attr.name.${g.key}`)} +{g.delta}</span>
                       ))}
                     </div>
                   )}
                 </div>
-                <Badge variant="outline" className="shrink-0 font-mono text-success">{t("player.xpAwarded", { n: s.xpAwarded ?? 0 })}</Badge>
+                <Badge variant="outline" className="shrink-0 font-mono text-success">{t("player.xpAwarded", { n: sess.xpAwarded ?? 0 })}</Badge>
               </div>
             ))}
           </div>
@@ -447,7 +447,7 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
     <div className="rounded-lg border bg-card/40 p-3">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-sm font-medium">{session.title}</div>
+          <div className="text-sm font-medium">{rowLine(session.title, t)}</div>
           <div className="text-xs text-muted-foreground">{t("player.sessionSummary", { min: session.targetMinutes, r: sessionIntensity(session), n: session.exercises.length })}</div>
         </div>
         <button className="text-xs text-primary" onClick={() => setOpen((o) => !o)}>{open ? t("player.hide") : t("player.detail")}</button>

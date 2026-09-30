@@ -1810,6 +1810,13 @@ const en: Dict = {
   "player.coachPlaceholder": "e.g. I only have 45 minutes today, my right foot is weak and my first touch was poor in the last match.",
   "player.trainingToday": "Training · today",
   "player.sessionSummary": "{min}′ · intensity {r}/5 · {n} blocks",
+  // A session's title is a row the training module publishes (domain/training.ts), not a
+  // sentence it composes: `{attrs}` is a comma-separated list of attribute codes that
+  // rowText's `attrs` branch resolves name by name. The second key is the case the builder
+  // used to render as a leading space — an empty focus list can still leave a session with
+  // nothing trained, and " session" was never a title.
+  "trn.title.focus": "{attrs} session",
+  "trn.title.none": "Session",
   // The news impact read (domain/newsImpact.ts) publishes rows. `stance` is a NewsKind the
   // rowText code-variable branch resolves, so the article's own type reaches the reader as a
   // word; club, competition and player names are dataset values and pass through untouched.
@@ -3625,6 +3632,8 @@ const zhCN: Dict = {
   "player.coachPlaceholder": "例如：今天只有 45 分钟，我的右脚偏弱，上一场的第一脚触球很糟。",
   "player.trainingToday": "训练 · 今天",
   "player.sessionSummary": "{min}′ · 强度 {r}/5 · {n} 个模块",
+  "trn.title.focus": "{attrs} 训练",
+  "trn.title.none": "训练课",
   "ni.certainty.high": "高",
   "ni.certainty.moderate": "中",
   "ni.certainty.low": "低",
@@ -5438,6 +5447,8 @@ const zhTW: Dict = {
   "player.coachPlaceholder": "例如：今天只有 45 分鐘，我的右腳偏弱，上一場的第一腳觸球很糟。",
   "player.trainingToday": "訓練 · 今天",
   "player.sessionSummary": "{min}′ · 強度 {r}/5 · {n} 個模組",
+  "trn.title.focus": "{attrs} 訓練",
+  "trn.title.none": "訓練課",
   "ni.certainty.high": "高",
   "ni.certainty.moderate": "中",
   "ni.certainty.low": "低",

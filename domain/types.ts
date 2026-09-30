@@ -161,7 +161,11 @@ export interface UserProfile {
 
 export interface TrainingExercise {
   key: string;
-  label: string;
+  // No `label`. The drill's words live in the dictionary under `drill.<key>`, which every
+  // locale has and the session screen reads (`t(`drill.${e.key}`)`), so an English copy in
+  // this table was a second source nobody displayed — and one a new drill could update
+  // without touching the words the reader sees. proof-training pins that every key here is
+  // named in all three columns.
   focus: string; // attribute key
   minutes: number;
   intensity: number; // 1..5
@@ -178,7 +182,7 @@ export interface AttributeDelta {
 export interface TrainingSession {
   id: string;
   date: string; // ISO date
-  title: string;
+  title: RowText;
   focusAttributes: string[];
   exercises: TrainingExercise[];
   targetMinutes: number;

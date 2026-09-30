@@ -14,11 +14,21 @@ import { TRAJECTORIES } from "./careerArc";
 import { MODES, NEWS_KINDS, SEARCH_KINDS, SHOT_TYPES } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
-export type RowVars = Record<string, string | number>;
+// A variable normally holds a word or a number, but one row may also carry another whole
+// row: the coach's remembered line names the session it completed, and that session's
+// title is itself a keyed row (M236). Holding the title's *row* rather than its rendered
+// words is what keeps a persisted memory line readable in whatever locale opens it later —
+// storing the words would freeze the language at completion time, which is the defect
+// ./memory exists to prevent.
+export type RowVars = Record<string, string | number | RowText>;
 
 export type RowText = { key: string; vars?: RowVars } | { value: string };
 
-export type Translate = (key: string, vars?: RowVars) => string;
+// The translate door keeps taking words only. `t` interpolates by converting to string, so
+// a caller handing it a row object would print "[object Object]" — resolving a nested row is
+// `fillRowVars`' job, never the dictionary's, and this signature is what makes that a type
+// error rather than a rendering surprise.
+export type Translate = (key: string, vars?: Record<string, string | number>) => string;
 
 // The variable names the builders in this app are allowed to hold a CODE in. Matched
 // by name rather than by value on purpose: a visitor's own goal text or session title
@@ -98,16 +108,19 @@ export function isKeyVar(name: string): boolean {
   return KEY_VARS.includes(name);
 }
 
-/** Resolve the code-holding variables in a row before the sentence is filled. */
-export function fillRowVars(vars: RowVars | undefined, t: Translate): RowVars | undefined {
+/** Resolve the code-holding variables in a row before the sentence is filled. A variable
+ *  that carries a whole row is resolved through `rowLine` here, at the reader's column and
+ *  only here, so a nested title is worded once by the screen that shows it. */
+export function fillRowVars(vars: RowVars | undefined, t: Translate): Record<string, string | number> | undefined {
   if (!vars) return undefined;
-  const out: RowVars = {};
+  const out: Record<string, string | number> = {};
   for (const [name, raw] of Object.entries(vars)) {
     out[name] =
-      typeof raw !== "string" ? raw
-        : isCodeVar(name) ? codeWord(raw, t)
-          : isKeyVar(name) ? (raw === "" ? "" : t(raw))
-            : raw;
+      typeof raw === "object" ? (rowLine(raw, t) ?? "")
+        : typeof raw !== "string" ? raw
+          : isCodeVar(name) ? codeWord(raw, t)
+            : isKeyVar(name) ? (raw === "" ? "" : t(raw))
+              : raw;
   }
   return out;
 }
