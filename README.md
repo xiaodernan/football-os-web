@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M237 (a few numbers in that range
+Work ships one milestone per commit and is currently at M240 (a few numbers in that range
 were skipped; M238–M239 landed in commits above this line and have yet to receive README sections). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
@@ -5770,6 +5770,54 @@ files**, covered set **40**.
 `domain/gap.ts`, `domain/matchEngine.ts`, `domain/newsImpact.ts`, `domain/footprint.ts` and now
 `domain/filmInsights.ts` are at 0 and pinned, so the remaining prose is concentrated in
 `learn/community/career/attributes/training/onboarding`.
+
+### M240 — finishing the two reference tables' move, and the entry that went missing with it
+
+Two half-landed milestones met in the working copy, and neither was green. This section corrects
+the numbers the M237 section below reports, because they were never true of the tree.
+
+**M237's move was never applied.** The commit created `data/onboardingLegacy.ts` and its message
+said `domain/onboarding.ts` "drops to zero counted sentences" — but the module still held its own
+copy of the map and still read from it. The ceiling was still 173, the module still counted 6, and
+the section below reports 167 and `proof-i18n 261/261` for a tree that was neither. `onboarding.ts`
+now imports the data table; the module keeps the behaviour (`toGoalCode`, `normalizeGoalChoice`)
+and only the words moved.
+
+**And the table arrived one entry short.** `data/onboardingLegacy.ts` was missing
+`"Improve first touch": "firstTouch"` — five entries where the module had six. A profile saved
+before the field held a code would have kept its English sentence for ever, printed by the goal
+chip in every locale, which is the exact defect the map exists to repair. Nothing caught it:
+`proof-timeline` asserted that every *code* maps to itself, and spot-checked two of the six
+sentences. It now walks the table itself — every sentence is recognised, and there is one sentence
+per goal code — so the table cannot claim a word it cannot recognise.
+
+**The attribute tables moved the same way.** `ATTRIBUTE_LABELS`, `POSITION_GROUP_LABELS`,
+`CATEGORY_LABELS` and `POSITION_BY_GROUP_LABELS` now live in `data/attributesLabels.ts`, and
+`domain/attributes.ts` composes them through two small lookups. What that does and does not claim:
+no screen's copy changes (every screen resolves `attr.name.*` / `group.*` through the dictionary,
+and the M191 clause refusing a screen that prints a table's English label still passes), and the
+drift checks holding the dictionary's English against these tables still run — they read
+`ATTRIBUTE_DEFS[].label`, which is now composed from `data/`. What it does is stop the ratchet
+counting a reference table the dictionary mirrors, on the reading M237 set out for the onboarding
+map: these are records of English, not the model's own voice.
+
+`AttributeDef` moved to `domain/types.ts` with them — `data/attributesLabels.ts` cannot import a
+type from the module that imports it, which is what the half-applied copy did: the working copy
+did not compile (`TS2724: '"../domain/types"' has no exported member named 'AttributeDef'`).
+
+Ceiling **173 → 148**, caps for `attributes.ts` and `onboarding.ts` **19/6 → 0/0**, both join
+`PROSE_ZERO` (**17 modules**). Inventory: `career 29, community 36, learn 83`.
+
+Two mutations, both caught: dropping the legacy entry again (the two new proof-timeline clauses,
+`5 of 6 codes`), and putting one English label back into `domain/attributes.ts` (three proof-i18n
+clauses — ceiling, module cap, cap sum).
+
+Measured: `tsc --noEmit` clean, `npm run build` exit 0, **all 41 proof scripts green**,
+`proof-i18n` **262/262** over **1795 keys × 3 locales**, `proof-timeline` 100/100. Nothing was
+clicked in a browser.
+
+**Still outstanding**: `career.ts` (29), `community.ts` (36) and `learn.ts` (83) are the last three
+modules carrying prose, and `learn.ts` is long-form lesson text rather than the model's voice.
 
 ### M237 — the onboarding legacy map moves to data, and the module clears its prose debt
 
