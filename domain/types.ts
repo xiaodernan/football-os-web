@@ -34,6 +34,15 @@ export interface NamedValue {
 
 export type Attributes = Record<string, number>;
 
+// One row of the capability model. The interface lives here rather than in
+// domain/attributes.ts because the English label table it is paired with now sits in
+// `data/attributesLabels.ts`, and that file cannot import from the module that imports it.
+export interface AttributeDef {
+  key: string;
+  label: string;
+  category: "technical" | "physical" | "tactical" | "mental";
+}
+
 export interface PlayerRef {
   id: string;
   name: string;

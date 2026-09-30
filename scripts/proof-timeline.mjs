@@ -446,8 +446,20 @@ ok("and the memory panel resolves the row rather than printing it",
 // 14. Onboarding choices: the field stores a code, and a profile saved while it held
 // the English sentence is repaired into that code on the way in.
 const { toGoalCode, normalizeGoalChoice, GOAL_CODES } = await server.ssrLoadModule("/domain/onboarding.ts");
+const { LEGACY_GOAL_TEXT } = await server.ssrLoadModule("/data/onboardingLegacy.ts");
 ok("every legacy goal sentence maps to the code its picker now stores",
   GOAL_CODES.every((c) => toGoalCode(c) === c));
+// M240. The table moved to `data/` and arrived one entry short: `"Improve first touch"` was
+// dropped, so a profile saved before the field held a code kept its English sentence for ever
+// and the goal chip printed it in every locale. Nothing caught it — the clause above only
+// checks that codes map to themselves, and the spot-checks below named two of the six
+// sentences. This walks the table itself, so the table cannot claim a sentence it cannot
+// recognise, and it holds one entry per goal code rather than a number typed in here.
+ok(`every sentence in the legacy table is actually recognised (${Object.keys(LEGACY_GOAL_TEXT).length} of ${GOAL_CODES.length} codes)`,
+  Object.keys(LEGACY_GOAL_TEXT).length === GOAL_CODES.length &&
+  Object.entries(LEGACY_GOAL_TEXT).every(([text, code]) => toGoalCode(text) === code));
+ok("…and the table covers every code the picker can store, one sentence each",
+  GOAL_CODES.every((c) => Object.values(LEGACY_GOAL_TEXT).filter((v) => v === c).length === 1));
 ok("a stored sentence becomes its code, and anything unrecognised is left as written",
   toGoalCode("Play smarter (scanning/decisions)") === "playSmarter" &&
   normalizeGoalChoice("Become a two-footed player") === "twoFooted" &&

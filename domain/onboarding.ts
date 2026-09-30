@@ -12,17 +12,12 @@
 // check holds that template, the code tables here and the unions in ./types together.
 
 import type { AgeGroupWord, OnboardingGoalCode } from "./types";
-
-// What a profile stored before the field held a code. Left here rather than in a repair
-// helper so the mapping is one list, and unknown text is never guessed at.
-const LEGACY_GOAL_TEXT: Record<string, OnboardingGoalCode> = {
-  "Improve first touch": "firstTouch",
-  "Get faster": "getFaster",
-  "Finish better": "finishBetter",
-  "Play smarter (scanning/decisions)": "playSmarter",
-  "Hold up play": "holdUpPlay",
-  "Become a two-footed player": "twoFooted",
-};
+// The reverse lookup lives in `data/`, not here: its keys are old stored profile text that is
+// never displayed, so it is a table of records rather than the model's own voice — and the
+// prose audit counts sentences in `domain/`, which is what kept this module out of
+// `PROSE_ZERO`. The module still owns the behaviour (`toGoalCode`, `normalizeGoalChoice`);
+// only the words moved.
+import { LEGACY_GOAL_TEXT } from "@/data/onboardingLegacy";
 
 export const AGE_GROUPS = ["U15", "U17", "U19", "Amateur", "Semi-pro", "Pro", "Veteran"] as const;
 export type AgeGroup = (typeof AGE_GROUPS)[number];

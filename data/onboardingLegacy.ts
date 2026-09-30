@@ -5,7 +5,7 @@
 import type { OnboardingGoalCode } from "../domain/types";
 
 export const LEGACY_GOAL_TEXT: Record<string, OnboardingGoalCode> = {
-
+  "Improve first touch": "firstTouch",
   "Get faster": "getFaster",
   "Finish better": "finishBetter",
   "Play smarter (scanning/decisions)": "playSmarter",

@@ -2806,7 +2806,7 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // string in six places. It is trn.title.focus with the attrs code var now, and the eighteen
 // catalogue labels M192 had to leave behind are deleted rather than keyed, because no screen
 // ever read them.
-const DOMAIN_PROSE_CEILING = 173;
+const DOMAIN_PROSE_CEILING = 148;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
@@ -2815,7 +2815,7 @@ const DOMAIN_PROSE_CEILING = 173;
 // M225 adds domain/matchEngine.ts: unlike the three format-only modules above it held real
 // sentences ("The midfield was finely balanced."), and they are rows now, so the module is
 // pinned at zero like the rest.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts", "domain/training.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts", "domain/training.ts", "domain/onboarding.ts", "domain/attributes.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -2828,14 +2828,14 @@ const PROSE_CAPS = {
   "domain/community.ts": 36,
   "domain/career.ts": 29,
   "domain/footprint.ts": 0,
-  "domain/attributes.ts": 19,
+  "domain/attributes.ts": 0,
   "domain/newsImpact.ts": 0,
   "domain/training.ts": 0,
   "domain/filmInsights.ts": 0,
   "domain/gap.ts": 0,
   "domain/matchEngine.ts": 0,
   "domain/careerArc.ts": 0,
-  "domain/onboarding.ts": 6,
+  "domain/onboarding.ts": 0,
 };
 const capBreaches = Object.entries(PROSE_CAPS)
   .map(([f, cap]) => [f, proseDebt(f).length, cap])

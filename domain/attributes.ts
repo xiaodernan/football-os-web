@@ -1,49 +1,47 @@
-import type { Attributes, PositionGroup } from "./types";
+import type { AttributeDef, Attributes, PositionGroup } from "./types";
+import { ATTRIBUTE_LABELS, POSITION_GROUP_LABELS, CATEGORY_LABELS, POSITION_BY_GROUP_LABELS } from "../data/attributesLabels";
 
-export interface AttributeDef {
-  key: string;
-  label: string;
-  category: "technical" | "physical" | "tactical" | "mental";
-}
+const L = (key: string) => ATTRIBUTE_LABELS[key] ?? key;
+const PG = (id: PositionGroup) => POSITION_GROUP_LABELS[id];
 
 // The multi-layer capability model (not a copy of any game's numbers).
 export const ATTRIBUTE_DEFS: AttributeDef[] = [
   // Technical
-  { key: "ball_control", label: "Ball Control", category: "technical" },
-  { key: "first_touch", label: "First Touch", category: "technical" },
-  { key: "passing", label: "Passing", category: "technical" },
-  { key: "long_passing", label: "Long Passing", category: "technical" },
-  { key: "shooting", label: "Shooting", category: "technical" },
-  { key: "finishing", label: "Finishing", category: "technical" },
-  { key: "crossing", label: "Crossing", category: "technical" },
-  { key: "dribbling", label: "Dribbling", category: "technical" },
-  { key: "weak_foot", label: "Weak Foot", category: "technical" },
-  { key: "set_pieces", label: "Set Pieces", category: "technical" },
+  { key: "ball_control", label: L("ball_control"), category: "technical" },
+  { key: "first_touch", label: L("first_touch"), category: "technical" },
+  { key: "passing", label: L("passing"), category: "technical" },
+  { key: "long_passing", label: L("long_passing"), category: "technical" },
+  { key: "shooting", label: L("shooting"), category: "technical" },
+  { key: "finishing", label: L("finishing"), category: "technical" },
+  { key: "crossing", label: L("crossing"), category: "technical" },
+  { key: "dribbling", label: L("dribbling"), category: "technical" },
+  { key: "weak_foot", label: L("weak_foot"), category: "technical" },
+  { key: "set_pieces", label: L("set_pieces"), category: "technical" },
   // Physical
-  { key: "acceleration", label: "Acceleration", category: "physical" },
-  { key: "sprint", label: "Sprint", category: "physical" },
-  { key: "agility", label: "Agility", category: "physical" },
-  { key: "balance", label: "Balance", category: "physical" },
-  { key: "strength", label: "Strength", category: "physical" },
-  { key: "stamina", label: "Stamina", category: "physical" },
-  { key: "explosiveness", label: "Explosiveness", category: "physical" },
-  { key: "mobility", label: "Mobility", category: "physical" },
+  { key: "acceleration", label: L("acceleration"), category: "physical" },
+  { key: "sprint", label: L("sprint"), category: "physical" },
+  { key: "agility", label: L("agility"), category: "physical" },
+  { key: "balance", label: L("balance"), category: "physical" },
+  { key: "strength", label: L("strength"), category: "physical" },
+  { key: "stamina", label: L("stamina"), category: "physical" },
+  { key: "explosiveness", label: L("explosiveness"), category: "physical" },
+  { key: "mobility", label: L("mobility"), category: "physical" },
   // Tactical
-  { key: "scanning", label: "Scanning", category: "tactical" },
-  { key: "positioning", label: "Positioning", category: "tactical" },
-  { key: "decision_making", label: "Decision Making", category: "tactical" },
-  { key: "space_awareness", label: "Space Awareness", category: "tactical" },
-  { key: "press_resistance", label: "Press Resistance", category: "tactical" },
-  { key: "off_ball_movement", label: "Off-ball Movement", category: "tactical" },
-  { key: "defensive_awareness", label: "Defensive Awareness", category: "tactical" },
-  { key: "transition_awareness", label: "Transition Awareness", category: "tactical" },
+  { key: "scanning", label: L("scanning"), category: "tactical" },
+  { key: "positioning", label: L("positioning"), category: "tactical" },
+  { key: "decision_making", label: L("decision_making"), category: "tactical" },
+  { key: "space_awareness", label: L("space_awareness"), category: "tactical" },
+  { key: "press_resistance", label: L("press_resistance"), category: "tactical" },
+  { key: "off_ball_movement", label: L("off_ball_movement"), category: "tactical" },
+  { key: "defensive_awareness", label: L("defensive_awareness"), category: "tactical" },
+  { key: "transition_awareness", label: L("transition_awareness"), category: "tactical" },
   // Mental
-  { key: "composure", label: "Composure", category: "mental" },
-  { key: "concentration", label: "Concentration", category: "mental" },
-  { key: "discipline", label: "Discipline", category: "mental" },
-  { key: "confidence", label: "Confidence", category: "mental" },
-  { key: "game_intelligence", label: "Game Intelligence", category: "mental" },
-  { key: "consistency", label: "Consistency", category: "mental" },
+  { key: "composure", label: L("composure"), category: "mental" },
+  { key: "concentration", label: L("concentration"), category: "mental" },
+  { key: "discipline", label: L("discipline"), category: "mental" },
+  { key: "confidence", label: L("confidence"), category: "mental" },
+  { key: "game_intelligence", label: L("game_intelligence"), category: "mental" },
+  { key: "consistency", label: L("consistency"), category: "mental" },
 ];
 
 export const ATTRIBUTE_KEYS = ATTRIBUTE_DEFS.map((d) => d.key);
@@ -65,12 +63,7 @@ export const CATEGORIES: readonly AttributeDef["category"][] = [
   ...new Set(ATTRIBUTE_DEFS.map((d) => d.category)),
 ];
 
-export const CATEGORY_LABEL: Record<AttributeDef["category"], string> = {
-  technical: "Technical",
-  physical: "Physical",
-  tactical: "Tactical",
-  mental: "Mental",
-};
+export const CATEGORY_LABEL: Record<AttributeDef["category"], string> = CATEGORY_LABELS;
 
 export interface CategoryAverage {
   category: AttributeDef["category"];
@@ -106,26 +99,17 @@ const GROUP_BASELINE: Record<PositionGroup, Baseline> = {
 };
 
 export const POSITION_GROUPS: { id: PositionGroup; label: string }[] = [
-  { id: "GK", label: "Goalkeeper" },
-  { id: "CB", label: "Centre Back" },
-  { id: "FB", label: "Full Back / Wing Back" },
-  { id: "DM", label: "Defensive Mid" },
-  { id: "CM", label: "Central Mid" },
-  { id: "AM", label: "Attacking Mid" },
-  { id: "W", label: "Winger" },
-  { id: "ST", label: "Striker" },
+  { id: "GK", label: PG("GK") },
+  { id: "CB", label: PG("CB") },
+  { id: "FB", label: PG("FB") },
+  { id: "DM", label: PG("DM") },
+  { id: "CM", label: PG("CM") },
+  { id: "AM", label: PG("AM") },
+  { id: "W", label: PG("W") },
+  { id: "ST", label: PG("ST") },
 ];
 
-export const POSITION_BY_GROUP: Record<PositionGroup, string> = {
-  GK: "GK",
-  CB: "CB",
-  FB: "LB / RB",
-  DM: "DM",
-  CM: "CM",
-  AM: "AMC",
-  W: "LW / RW",
-  ST: "ST",
-};
+export const POSITION_BY_GROUP: Record<PositionGroup, string> = POSITION_BY_GROUP_LABELS;
 
 export function baselineAttributes(group: PositionGroup, skill: number): Attributes {
   const b = GROUP_BASELINE[group];
