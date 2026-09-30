@@ -187,11 +187,17 @@ for (const s of POP) {
 ok(`every name the route table reaches for is a component that file declares and the harness can load (${screens.length} of ${POP.length} screens; ${screens.filter((s) => Object.keys(s.props).length).length} rendered with the props App passes them)`,
   unresolved.length === 0 && screens.length === POP.length, unresolved.join(" / "));
 
-// The boundary this file exists to cross, MEASURED rather than described. proof-coverage counts
-// reachability inside a directory list of its own; a screen outside that list stays uncounted no
-// matter how many proofs load it. If the ratchet ever extends to the screen layer, this clause goes
-// red and the premise of the whole file needs re-reading — that is the useful failure.
-const COV_DIRS = ((read("scripts/proof-coverage.mjs").match(/const DIRS = \[([^\]]*)\]/) || [, ""])[1].match(/"([^"]+)"/g) || []).map((s) => s.slice(1, -1));
+// The boundary this file exists to cross, MEASURED rather than described.
+// M241 moved it. This clause used to read proof-coverage's `const DIRS = [...]` and claim the
+// screens lived outside the ratchet's population — which stopped being true the moment that
+// census became a recursive walk, and a green clause asserting a dead premise is worse than no
+// clause. It now derives the walk's own skip list from the shipped file and claims the opposite:
+// every screen this file renders IS inside the ratchet's population, so if coverage ever narrows
+// back to a flat directory list, or a screen stops being found on disk, this goes red.
+const COV_SKIP = ((read("scripts/proof-coverage.mjs").match(/const POP_SKIP = new Set\(\[([^\]]*)\]/) || [, ""])[1].match(/"([^"]+)"/g) || []).map((s) => s.slice(1, -1));
+const POP_DIRS = readdirSync(root, { withFileTypes: true })
+  .filter((e) => e.isDirectory() && !COV_SKIP.includes(e.name) && !e.name.startsWith("."))
+  .map((e) => e.name);
 const walk = (d) => readdirSync(join(root, d), { withFileTypes: true }).flatMap((e) => {
   const p = d ? `${d}/${e.name}` : e.name;
   if (e.isDirectory()) return e.name === "node_modules" ? [] : walk(p);
@@ -200,9 +206,10 @@ const walk = (d) => readdirSync(join(root, d), { withFileTypes: true }).flatMap(
 const APP_MODULES = walk("").filter((p) => !p.startsWith("scripts/"));
 const SCREEN_DIRS = [...new Set(screens.map((s) => s.file.split("/")[0]))];
 const FEATURE_MODULES = APP_MODULES.filter((p) => p.startsWith("features/"));
-ok(`the ratchet cannot reach these screens by construction: proof-coverage counts ${COV_DIRS.join(", ")} and every screen lives in ${SCREEN_DIRS.join(", ")} (${FEATURE_MODULES.length} of the ${APP_MODULES.length} app modules outside scripts/ are under features/)`,
-  COV_DIRS.length >= 3 && SCREEN_DIRS.length === 1 && !COV_DIRS.includes(SCREEN_DIRS[0]) && FEATURE_MODULES.length >= 20,
-  `DIRS=${COV_DIRS.join(",")} screenDirs=${SCREEN_DIRS.join(",")}`);
+ok(`the ratchet counts the screen layer it used to miss: proof-coverage walks ${POP_DIRS.length} directories (${POP_DIRS.join(", ")}) recursively, ${SCREEN_DIRS.join(", ")} is among them, and all ${screens.filter((s) => APP_MODULES.includes(s.file)).length}/${screens.length} screens rendered here are modules that walk found (${FEATURE_MODULES.length} feature modules in total)`,
+  POP_DIRS.length >= 8 && POP_DIRS.includes(SCREEN_DIRS[0]) && SCREEN_DIRS.length === 1
+    && screens.every((s) => APP_MODULES.includes(s.file)) && FEATURE_MODULES.length >= 20,
+  `popDirs=${POP_DIRS.join(",")} missing=${screens.filter((s) => !APP_MODULES.includes(s.file)).map((s) => s.file).join(",")}`);
 
 // And the half of the boundary that is about THIS file: proof-coverage attributes a root only where
 // the path is a literal inside the call, so the two loops below are invisible to it. This clause

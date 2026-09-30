@@ -2,11 +2,25 @@
 // proof, or declared here with a reason.
 //
 // M205 found by hand that seven modules were loaded by nothing, and wrote that census into a
-// scratch file where it will rot. This turns the same measurement into a gate: the population is
-// `domain/`, `lib/` and `i18n/`; a module is REACHED if a proof loads it directly, or if it is
-// imported (by value, not merely by type) by a reached module. Anything else has to appear in
-// EXEMPT below, with the reason and its line count — and that list can only shrink, because a
-// ceiling on its total lines is asserted every run.
+// scratch file where it will rot. This turns the same measurement into a gate, and M241 gave it
+// a second question to ask. The population is every `.ts`/`.tsx` under the app's own directories,
+// walked RECURSIVELY — the original scan read three top-level directories flat, which meant the
+// entire `components/` tree was invisible to it and 51 modules (6,497 lines) of shipped-but-
+// unreachable code could join or leave without the gate noticing. Two claims run over it:
+//   proof-reach — a module is fine if a proof loads it directly, or a reached module imports it
+//     by value (a type-only edge does not count, because it executes nothing). The remainder is
+//     EXEMPT, with a reason, and its line total is pinned.
+//   entry-reach — a module the app's own `src/main.tsx` cannot reach contributes no JavaScript to
+//     `dist/`, so no reader can render it however many proofs load it. That pile is DEAD below,
+//     reason by path, with a ceiling on its total lines. Measured out-of-band at 72f10fb, on a
+//     plane build: a `data-slot` literal from each of four declared-dead primitives (`combobox-chip`
+//     / `tooltip-content` / `sidebar-wrapper` / `chart-container`) hits 0 of 35 `dist/assets/*.js`,
+//     while the same search finds `cmdk-input-wrapper` (a reachable primitive) in a chunk — so the
+//     JS claim is real. It is only the JS claim: Tailwind reads the source tree, not the module
+//     graph, and two of those four dead modules' class names DO reach `dist/assets/index.css`.
+//     Deleting the pile shrinks the stylesheet too; leaving it there does not make it renderable.
+// Both lists can only shrink: a ceiling asserted equal to the measured surface means deleting the
+// code has to be written down too, and a stale entry (one that became reachable) is refused.
 //
 // The resolver is exercised on synthetic graphs as well as on the repo, because a gate that only
 // ever reports "clean" has never been seen to refuse anything: reachability through two hops, a
@@ -89,13 +103,56 @@ function reach(roots, source, exists = realExists) {
 // The declared exemptions. Keyed by module path — never by line number — and each one has
 // to say why it is unreachable, which is the part that stops being true someday.
 // ---------------------------------------------------------------------------
-const EXEMPT = {};
-/** The ratchet's own number, not the list's taste. M238 retired `lib/hooks.ts` once
- *  proof-storage started loading and rendering it, and M239's first screen proof put
- *  src/App.tsx among the roots — which reaches `lib/utils.ts` through the feature files
- *  that import `cn`. With the list empty the surface is empty too, so the ceiling is 0 and
- *  adding an exemption has to be paid for here as well as in the list above. */
-const EXEMPT_CEILING = 0;
+// `src/main.tsx` is the one module the ratchet cannot ever reach: it calls createRoot on a
+// DOM node that an SSR render does not have, so loading it from a proof throws before it
+// returns. Its tree is what proof-screens proves, by loading the App it mounts. M238 retired
+// the last library exemption (`lib/hooks.ts`, once proof-storage started rendering it) and
+// M239's screen proof put src/App.tsx among the roots, which reaches `lib/utils.ts` through
+// the feature files that import `cn`.
+const EXEMPT = {
+  "src/main.tsx": "the SPA entry: createRoot needs a DOM node, so no proof can load it; proof-screens loads the App it mounts",
+};
+/** The ratchet's own number, not the list's taste: M241 measured this entry at 9 lines by
+ *  this file's own `lines()`, and the ceiling is what makes the figure move when the entry
+ *  changes shape instead of the list quietly agreeing with itself. */
+const EXEMPT_CEILING = 9;
+
+// ---------------------------------------------------------------------------
+// The pile the OLD population could not see. The census used to walk three directories
+// non-recursively, so `components/ui/alert.tsx` was not a module it knew existed: 47 UI
+// primitives, `hooks/use-mobile.ts`, the two Edge Function files and one ambient declaration
+// — 6,497 lines counted at 72f10fb — could be added to or deleted and the gate would not
+// blink. Each one is unreachable from `src/main.tsx` as well, which is the sharper fact:
+// it is not merely unproven, no `dist/assets/*.js` chunk contains it (the marker test in the
+// header), so no reader can render it. Its Tailwind utilities still reach the shipped
+// stylesheet, because the CSS scans source files rather than the module graph.
+// Declaring them here turns the debt into a number that can only go down; the fix is to
+// delete the file, and the ceiling refuses to move unless the lines do.
+// ---------------------------------------------------------------------------
+const DEAD_UI = [
+  "accordion", "alert-dialog", "alert", "aspect-ratio", "attachment", "avatar", "breadcrumb",
+  "bubble", "button-group", "calendar", "carousel", "chart", "checkbox", "collapsible",
+  "combobox", "context-menu", "direction", "drawer", "dropdown-menu", "empty", "field", "form",
+  "hover-card", "input-group", "input-otp", "item", "kbd", "marker", "menubar",
+  "message-scroller", "message", "native-select", "navigation-menu", "pagination", "popover",
+  "resizable", "scroll-area", "select", "separator", "sidebar", "spinner", "switch", "table",
+  "tabs", "toggle-group", "toggle", "tooltip",
+].map((n) => `components/ui/${n}.tsx`);
+const DEAD_REASON_UI = "shipped dead code: imported by nothing that src/main.tsx reaches, so no JS chunk in dist contains it — delete candidate";
+const DEAD = {
+  ...Object.fromEntries(DEAD_UI.map((p) => [p, DEAD_REASON_UI])),
+  "hooks/use-mobile.ts": DEAD_REASON_UI,
+  "functions/index.ts": "the Sites Edge Function entry, loaded by the hosting platform and never by the SPA bundle; this build is local-only",
+  "functions/handler.ts": "the Edge Function handler behind functions/index.ts — same reason, same bundle that never ships here",
+  "src/vite-env.d.ts": "ambient type declarations: no runtime module exists to import, so reachability is not a property it has",
+};
+const DEAD_CEILING = 6497;
+// A name on this list is a claim about a file, and the gate has to survive the claim being
+// false. Existence is reported by the clause that says so; every later read of a declared name
+// goes through this, so inventing a path can never kill the run with an ENOENT before the
+// tally prints (the first draft guarded only the line-sum, and a witness arm still found the
+// second `lines()` call in the biggest-three clause).
+const safeLines = (p) => (realExists(p) ? lines(p) : 0);
 // ---------------------------------------------------------------------------
 // 1 · the resolver, on synthetic graphs (both directions)
 // ---------------------------------------------------------------------------
@@ -136,51 +193,119 @@ ok(`…so @/i18n resolves to the index that holds it, not to the directory (${re
 // ---------------------------------------------------------------------------
 // 2 · the real repo
 // ---------------------------------------------------------------------------
-const population = DIRS.flatMap((d) =>
-  readdirSync(resolve(root, d)).filter((f) => /\.(ts|tsx)$/.test(f)).map((f) => `${d}/${f}`));
+// The population is the whole app graph, walked RECURSIVELY. The old three-directory,
+// non-recursive scan is what let 47 UI primitives hide in plain sight: `components/` was not
+// even one of the directories it read, so a file could be added under components/ui/ and the
+// census would report the same clean numbers it printed before.
+// A skip list is a hiding place too, so POP_SKIP is charged twice: the floors below pin that
+// the walked population still contains the directories the app is made of, and the entry
+// census below re-reads every module it finds.
+const POP_SKIP = new Set(["node_modules", "dist", "scripts", "dev", "vendor", "public", "coverage"]);
+const walk = (d) => readdirSync(resolve(root, d), { withFileTypes: true }).flatMap((e) => {
+  const rel = `${d}/${e.name}`;
+  if (e.isDirectory()) return POP_SKIP.has(e.name) ? [] : walk(rel);
+  return /\.(ts|tsx)$/.test(e.name) ? [rel] : [];
+});
+const popDirs = readdirSync(root, { withFileTypes: true })
+  .filter((e) => e.isDirectory() && !POP_SKIP.has(e.name) && !e.name.startsWith("."))
+  .map((e) => e.name);
+const APP_ENTRY = "src/main.tsx";
+
+const population = popDirs.flatMap(walk);
 const proofs = readdirSync(join(root, "scripts")).filter((f) => /^proof-.*\.mjs$/.test(f));
 const proofSrc = proofs.map((p) => read(`scripts/${p}`)).join("\n");
 const roots = [...new Set([...proofSrc.matchAll(/ssrLoadModule\(\s*["'`]\/([\w./-]+?)["'`]/g)].map((m) => m[1]))].filter((p) => existsSync(resolve(root, p)));
-const unreachable = population.filter((p) => !reach(roots, read).has(p));
+const reached = reach(roots, read);
+const unreachable = population.filter((p) => !reached.has(p));
+// …and the second question, which is the one that decides whether a reader can ever see it:
+// does the app's own entry reach it through value-imports? If not, it is not in dist/ at all.
+const entryReached = reach([APP_ENTRY], read);
+const dead = population.filter((p) => !entryReached.has(p));
 const byDir = {};
 for (const p of population) byDir[p.split("/")[0]] = (byDir[p.split("/")[0]] ?? 0) + 1;
 
-ok(`${proofs.length} proofs load ${roots.length} modules directly, reaching ${population.length - unreachable.length} of the ${population.length} app modules in ${DIRS.join("/")}`,
-  proofs.length >= 30 && roots.length >= 25 && population.length >= 30);
+ok(`${proofs.length} proofs load ${roots.length} modules directly, reaching ${population.length - unreachable.length} of the ${population.length} app modules in ${popDirs.length} directories walked recursively`,
+  proofs.length >= 30 && roots.length >= 25 && population.length >= 140);
 ok(`…by directory: ${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}`,
-  Object.keys(byDir).length === DIRS.length && byDir.domain >= 25);
+  Object.keys(byDir).length === popDirs.length
+    && byDir.components >= 60 && byDir.features >= 25 && byDir.domain >= 25
+    && byDir.lib >= 5 && byDir.i18n >= 3 && byDir.src >= 3);
+ok(`…and the walk really is recursive (of ${population.length} modules, ${population.filter((p) => p.split("/").length > 2).length} sit two or more levels down, which the old scan could not produce)`,
+  population.filter((p) => p.split("/").length > 2).length >= 50);
 ok(`…and this file counts itself: proof-coverage.mjs is one of the ${proofs.length} proofs`,
   proofs.includes("proof-coverage.mjs") && proofSrc.includes("ssrLoadModule"));
 
 const stale = Object.keys(EXEMPT).filter((p) => !unreachable.includes(p));
-const undeclared = unreachable.filter((p) => !(p in EXEMPT));
-ok(`every unreachable module is declared, with a reason (${unreachable.length} unreachable, ${Object.keys(EXEMPT).length} declared)`,
-  undeclared.length === 0 && unreachable.length === Object.keys(EXEMPT).length,
+const undeclared = unreachable.filter((p) => !(p in EXEMPT) && !(p in DEAD));
+ok(`every unreachable module is declared, with a reason (${unreachable.length} unreachable, ${Object.keys(EXEMPT).length} entry-exempt + ${Object.keys(DEAD).length} dead)`,
+  undeclared.length === 0,
   `undeclared: ${undeclared.join(", ") || "none"}`);
 ok(`…and no exemption has gone stale (a module that became reachable must be deleted from this list)`,
   stale.length === 0, `stale: ${stale.join(", ") || "none"}`);
 const exemptLines = Object.keys(EXEMPT).reduce((n, p) => n + lines(p), 0);
 ok(`the exempt surface is ${exemptLines} lines of app code against a ceiling of ${EXEMPT_CEILING}, and every entry states why (${Object.entries(EXEMPT).map(([p, why]) => `${p}:${why.length > 12 ? "why given" : "TOO SHORT"}`).join(" ")})`,
-  Object.values(EXEMPT).every((why) => typeof why === "string" && why.length > 12) && exemptLines <= EXEMPT_CEILING && EXEMPT_CEILING === exemptLines);
+  Object.values(EXEMPT).every((why) => typeof why === "string" && why.length > 12) && exemptLines === EXEMPT_CEILING);
+
+// ---------------------------------------------------------------------------
+// 2b · the entry census: shipped code no reader can reach
+// ---------------------------------------------------------------------------
+const deadUndeclared = dead.filter((p) => !(p in DEAD));
+// A dead entry that has left the population is the same hiding place as one that became
+// reachable: an arm that narrows the walk would keep the list intact and print a comfortable
+// zero, so both directions are refused here, and the declared paths are checked against the
+// walk that is supposed to have found them.
+const deadStale = Object.keys(DEAD).filter((p) => entryReached.has(p) || !population.includes(p));
+ok(`${dead.length} of the ${population.length} modules are unreachable from ${APP_ENTRY} and every one is declared as dead (${deadUndeclared.length} undeclared, ${deadStale.length} stale)`,
+  deadUndeclared.length === 0 && deadStale.length === 0,
+  `undeclared: ${deadUndeclared.join(", ") || "none"}; stale: ${deadStale.join(", ") || "none"}`);
+ok(`…and nothing the app mounts is on the dead list (dead ${dead.length} ⊆ unreachable ${unreachable.length}; the entry itself is exempt, not dead)`,
+  dead.every((p) => unreachable.includes(p)) && !(APP_ENTRY in DEAD));
+// The names are checked before their sizes: a path invented into this list should be reported
+// by the clause that says so, not raise ENOENT from a `readFileSync` two lines later and leave
+// the whole gate without a tally.
+ok(`…and every dead entry is a real module the scanner read, with a reason worth reading (${Object.keys(DEAD).length} named, ${Object.keys(DEAD).filter((p) => realExists(p)).length} present, all >12 chars)`,
+  Object.keys(DEAD).every((p) => realExists(p) && lines(p) > 0 && typeof DEAD[p] === "string" && DEAD[p].length > 12),
+  `not on disk: ${Object.keys(DEAD).filter((p) => !realExists(p)).join(", ") || "none"}`);
+const deadLines = dead.reduce((n, p) => n + lines(p), 0);
+const declaredDeadLines = Object.keys(DEAD).reduce((n, p) => n + safeLines(p), 0);
+ok(`the dead surface is ${deadLines} lines against a ceiling of ${DEAD_CEILING}, measured by reading every declared file (${declaredDeadLines} by name) — the number only goes down, and deleting a file has to pay for it here too`,
+  deadLines === DEAD_CEILING && declaredDeadLines === deadLines);
 
 // A ratchet has to be seen to refuse: a new module that nothing loads must land in the
 // undeclared set, and one that a proof loads must not be exposable by declaring it.
-const stillMissing = [...population, "domain/brand_new.ts"].filter((p) => !reach(roots, read).has(p) && !(p in EXEMPT));
-ok(`planting an ungated module makes the gate speak up (${stillMissing.length} undeclared instead of ${undeclared.length}, and the plant is ${stillMissing.includes("domain/brand_new.ts") ? "named" : "MISSED"})`,
-  stillMissing.includes("domain/brand_new.ts") && stillMissing.length === undeclared.length + 1);
+// The deep plant is the point of M241 — a module two levels down is exactly what the old
+// non-recursive walk never looked at.
+const SHALLOW_PLANT = "domain/brand_new.ts";
+const DEEP_PLANT = "components/ui/m241_planted.tsx";
+const stillMissing = [...population, SHALLOW_PLANT, DEEP_PLANT]
+  .filter((p) => !reached.has(p) && !(p in EXEMPT) && !(p in DEAD));
+ok(`planting two ungated modules makes the gate speak up (${stillMissing.length} undeclared instead of ${undeclared.length}, plants ${stillMissing.includes(SHALLOW_PLANT) ? "shallow named" : "SHALLOW MISSED"}/${stillMissing.includes(DEEP_PLANT) ? "deep named" : "DEEP MISSED"})`,
+  stillMissing.includes(SHALLOW_PLANT) && stillMissing.includes(DEEP_PLANT)
+    && stillMissing.length === undeclared.length + 2);
+const deadMissing = [...population, DEEP_PLANT].filter((p) => !entryReached.has(p) && !(p in DEAD));
+ok(`…and a module two directories deep is charged as shipped-dead, not waved through (${deadMissing.length} undeclared-dead instead of ${deadUndeclared.length}, plant ${deadMissing.includes(DEEP_PLANT) ? "named" : "MISSED"})`,
+  deadMissing.includes(DEEP_PLANT) && deadMissing.length === deadUndeclared.length + 1);
 ok(`…and a module a proof actually loads can never be quieted by an exemption (the list is checked against reachability, not against taste)`,
-  !Object.keys(EXEMPT).some((p) => reach(roots, read).has(p)));
+  !Object.keys(EXEMPT).some((p) => reached.has(p)) && !Object.keys(DEAD).some((p) => entryReached.has(p)));
+
+// The dead list is only honest if the entry graph is real: an entry that reached everything
+// would make this section print a comfortable zero, so the census pins that the walk found
+// the entry at all, and that the modules it does reach are the ones the reader sees.
+ok(`the entry census is anchored on a module that exists and imports the app (${APP_ENTRY} is in the population, and it reaches ${[...entryReached].filter((p) => population.includes(p)).length} shipped modules including every ${byDir.features} under features/)`,
+  population.includes(APP_ENTRY) && realExists(APP_ENTRY)
+    && byDir.features > 0 && [...entryReached].filter((p) => p.startsWith("features/")).length === byDir.features);
 
 // ---------------------------------------------------------------------------
-// 3 · the modules named in the header, so the claim is measured not remembered
+// 3 · the directories the ratchet started with, so the claim is measured not remembered
 // ---------------------------------------------------------------------------
-const libModules = readdirSync(resolve(root, "lib")).filter((f) => /\.(ts|tsx)$/.test(f)).map((f) => `lib/${f}`);
-const dom = readdirSync(resolve(root, "domain")).filter((f) => f.endsWith(".ts"));
-ok(`the React-side libs are the whole remaining exemption list (all ${Object.keys(EXEMPT).length} exemption(s) live in lib/, ${libModules.filter((p) => p in EXEMPT).length} of ${libModules.length} lib modules is exempt; domain has ${dom.length} files and none is exempt)`,
-  libModules.filter((p) => p in EXEMPT).length === Object.keys(EXEMPT).length && dom.every((f) => !(`domain/${f}` in EXEMPT)));
-const biggest = Object.keys(EXEMPT).map((p) => [p, lines(p)]).sort((a, b) => b[1] - a[1]);
-ok(`every exemption is a real file the scanner read: ${biggest.map(([p, n]) => `${p} ${n} lines`).join(", ") || "none left"}`,
-  biggest.length === Object.keys(EXEMPT).length && biggest.every(([p, n]) => n === lines(p) && n > 0) && biggest.every(([p]) => p in EXEMPT));
+const seed = DIRS.flatMap((d) =>
+  readdirSync(resolve(root, d)).filter((f) => /\.(ts|tsx)$/.test(f)).map((f) => `${d}/${f}`));
+ok(`the ${seed.length} modules in ${DIRS.join("/")}, the directories this gate was built around, carry not one exemption between them (M238 retired the last one: lib/hooks.ts is loaded and rendered by proof-storage, and every exemption now is the SPA entry)`,
+  seed.every((p) => !(p in EXEMPT)) && Object.keys(EXEMPT).length === 1 && APP_ENTRY in EXEMPT
+    && seed.every((p) => reached.has(p) || p in DEAD));
+const biggest = Object.keys(DEAD).map((p) => [p, safeLines(p)]).sort((a, b) => b[1] - a[1]).slice(0, 3);
+ok(`the dead list is measured by reading the files, not by trusting the names: ${biggest.map(([p, n]) => `${p} ${n} lines`).join(", ")} are the three biggest of ${Object.keys(DEAD).length}`,
+  biggest.every(([p, n]) => n === safeLines(p) && n > 0) && biggest.every(([p]) => p in DEAD) && biggest[1][1] >= biggest[2][1]);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);
