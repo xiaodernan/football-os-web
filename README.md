@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M247 (a few numbers in that range
+Work ships one milestone per commit and is currently at M248 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -5917,6 +5917,84 @@ with neither row on the other's page). Its limits are demonstrated too: `<App/>`
 still owed the live browser pass. The follow-up commit removed this file's own comment claiming the
 ratchet could see every root it loads: it only sees literal-path calls, so a clause now measures that
 boundary instead.
+
+### M248 — the last eleven dead modules leave the disk, their orphan keys go with them, and every census in the three gates becomes a number that can be wrong
+
+M247 measured 45 unreachable modules and deleted the 31 budget primitives two file-count floors were
+holding. This milestone deletes the rest of the pile a visitor can never reach — **eleven files,
+2,066 physical lines** (2,077 as the coverage gate counts them, which reads a file's last line even
+when it has no terminator): the six proof fixtures (`breadcrumb`, `carousel`, `message-scroller`,
+`pagination`, `sidebar`, `spinner`), the two live-browser exemptions (`chart`, `calendar`) and the
+three files that existed only because the sidebar imported them (`separator`, `tooltip`,
+`use-mobile`). The declared-dead ceiling moves **2,099 → 22** with exact equality, and what is left
+declared is three modules that are dead on principle rather than by accident: the two Sites Edge
+Function files, which this local-only build never bundles, and `src/vite-env.d.ts`, an ambient type
+file with no runtime module to import. The pile's history across three milestones is **4,944 → 2,099
+→ 22 lines**.
+
+The copy left with the files. Fifteen `ui.*` dictionary keys had no reader except the modules above,
+so they went in all three locales — **45 lines, 1,970 → 1,955 keys per locale** — and `ui.close` is
+now the only surviving `ui.*` key, read by the two chrome files that still render. Getting there
+cost two failed drafts and both are why the third one is written the way it is: a non-global regex
+plus one `String.replace` per key deleted each key from `en` only and left 28 copies behind, and
+`^\s+` at the front of that regex matched the *previous* line's terminator, so a whole-line delete
+collapsed a comment and three unrelated keys onto one physical line, while `git diff
+--ignore-all-space` on that draft reported a tidy "-24". The repair starts from `git show HEAD:` bytes, deletes
+only lines anchored `[ \t]*"key":`, refuses any line that carries a second key, counts the removal
+per locale (15/15/15) and per block (a locale's block ends at the next top-level declaration, not at
+EOF — the trailing `DICTIONARIES` map otherwise reads as two more zh-TW keys), and the result is
+verified as **-45/+0 blob-vs-blob, plain and with `--ignore-all-space`**. Parity across the three
+locales is a key *multiset*: HEAD already orders them differently (first divergence at index 967
+against zh-CN and 751 against zh-TW, with a set-difference of zero), so a sequence comparison would
+have been a claim about formatting, not about vocabulary.
+
+The three gates' censuses are now literals. M247 had landed `const TSX_PIN = tsxSrc.length; …
+tsxSrc.length === TSX_PIN`, which is `X === X` — it cannot go red, cannot notice a scan that lost
+files, and reads as a pin while being nothing. `proof-i18n` now pins **95** app modules, **49** `.tsx`
+files and **98** files including `i18n/`; `proof-storage` pins **93** app files; `proof-coverage`
+pins the population at **97**, its recursion depth at **42**, and — new here — the census *by
+directory* (`components 14, data 7, domain 31, features 28, functions 2, i18n 3, lib 6, src 3,
+store 1, ui 2`), because a total can be held while a whole subtree goes missing. Two clauses were
+deleted rather than pinned: the number-exemption and unmounted-primitive witnesses, whose carriers
+were the deleted files, and each was an `.every`/`.flatMap` over a table that is now empty — green
+forever, and a story about a guard that no longer exists. The chrome section (9b) stayed: it trimmed
+from 18 wiring rows to the two files that survive, and its "English these files would fall back to"
+list is now derived from what the dictionary holds for their keys instead of a hand-typed list that
+rots the day the copy changes.
+
+Measured on a frozen plane (`git archive` of HEAD plus exactly this change set): pristine build
+green, tranche build green, dist carrier delta dist shrank by 1,348 of 1,493,804 JS bytes across the same 35 chunks and 26,908 of 100,699 CSS bytes (Tailwind stops scanning the deleted sources), while ./index.html stayed byte-identical at 947, coverage gate 24/24, and the suite
+the suite green at 41/41 scripts · 2,180/2,180 checks. On the working tree: `tsc` clean, `proof-i18n` **271/271** (was 273; the two clauses whose
+carriers left are gone and the chrome section's three are re-derived over the survivors),
+`proof-storage` **56/56**, `proof-coverage` **24/24**. Twenty-four witness arms across the two
+harnesses, each MATCHED against a prediction written before the run: the coverage gate's ten (its
+control, then a by-directory pin missing one entry, one typed off by a single module, the deep-count
+pin off by one, the dead ceiling off by one, the population pin off by one, an invented file declared
+dead, a dead reason shortened below the legibility floor, and the pair that differs by exactly one
+predicate — a directory skipped under the new clause and under the old `<=` one), plus the fourteen
+here. Those fourteen are two unmutated controls (green at 271/271 and 56/56), three pins typed one
+off each naming exactly its own clauses, one selector losing its guard, the chrome section's three
+arms each naming their own, and the two pairs that carry the argument: **the same fault run twice**,
+`appSrc` missing one module with the pin literal (9 clauses name it) and with the pin derived from
+the population it audits (6 do) — `APP_SRC_PIN: literal pin names 9 clause(s), derived pin names 6 →
+the derived form is blind to [skipAudit, walkerThread, censusApp]` — and the storage copy of the same
+idea, `APP_FILES: literal 1, derived 0 → blind to [stripper]`, whose derived arm (S2b) is green *by
+design*, because `every` over a smaller population prints the same sentence about 93 files).
+Dropping a file from a census also reddens three clauses that address it *by path* (a dynamic value
+space that can no longer locate its source, the keyed-row floor that then sees 0 values, and a
+dictionary key whose only dynamic reader it was); those sit on both sides of the pair and cancel out
+of the delta, which is why the measurement is a difference of clause sets and not a count of reds.
+One arm took a third form worth keeping: the first draft aimed the skip-a-directory pair at `ui` and
+predicted two reds each way, and got three — POP_SKIP is matched by *basename at every depth*, so
+`"ui"` skipped `ui/` and `components/ui/` together (16 modules, 14 of them three levels down), which
+is what also reddened the deep-count pin. `store` is the only top-level name of its kind.
+
+**Still outstanding** on this axis: nothing a visitor can reach is dead on the disk any more, so
+what is left in the census are the two floors that still say `>=` (`proofs.length >= 30`,
+`roots.length >= 25`), which will let the proof layer thin quietly until the day it doesn't, and two
+constants still *named* `*_CEILING` whose clauses already demand exact equality — a name that
+understates the gate it belongs to. Then the standing queue's prose units (M160's demo-coach locale,
+M220's news-kind label, M184+'s composed sentences).
 
 ### M247 — the dead UI pile leaves the disk: the two population floors become pins, and the 31 budget primitives are deleted
 
