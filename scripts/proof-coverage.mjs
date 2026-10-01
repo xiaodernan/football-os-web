@@ -141,23 +141,13 @@ const DEAD_UI = [
 const DEAD_REASON_PROOF = "scripts/proof-i18n.mjs section 9b loads and renders it, so it is a proof's own fixture even though no reader can reach it — delete it together with that section";
 const DEAD_REASON_HOST = "scripts/proof-i18n.mjs carries a live browser-locale exemption keyed by this path (HOST_OK_NUMBER for chart, HOST_OK_UNMOUNTED for calendar), so file and exemption retire in one commit";
 const DEAD_REASON_SIDEBAR = "imported by components/ui/sidebar.tsx, which section 9b loads: no reader reaches it, but it cannot go while the sidebar is a proof's fixture";
-// The other half of M242's measurement: 31 more unreachable primitives the census writes down
-// instead of deleting. The budget is not this gate's taste — two population floors in
-// scripts/proof-i18n.mjs (`tsxSrc.length >= 60` at :1948 and `allSrc.length >= 140` at :2328)
-// count .tsx files in the tree, and deleting all 37 walked the second one down to 109 while
-// proof-coverage itself was green. Both floors are anti-vacuity devices for a scan that has
-// since grown a plant-based witness (M220 retired the same shape of floor for the same reason,
-// in the paragraph at that same line), and proof-i18n is another run's file to change. So this
-// unit deletes the 6 largest (1,547 lines) and declares the remaining 31 here, by name, with a
-// reason that names the artifact that has to move first.
-const DEAD_BUDGET = [
-  "accordion", "alert-dialog", "alert", "aspect-ratio", "avatar", "bubble", "button-group", "checkbox", "collapsible", "direction", "drawer", "empty", "form", "hover-card", "input-group", "input-otp", "item", "kbd", "marker", "message", "native-select", "navigation-menu", "popover", "resizable", "scroll-area", "select", "switch", "table", "tabs", "toggle-group", "toggle",
-].map((n) => `components/ui/${n}.tsx`);
-const DEAD_REASON_BUDGET = "unreachable from src/main.tsx and loaded by no proof, so it ships no JavaScript; kept on disk only because scripts/proof-i18n.mjs floors its scan's file count and that gate goes red first — delete it with the other 30 when those floors retire";
-
+// M247: the two population floors are now pins (TSX_PIN, SRC_PIN in proof-i18n),
+// so the 31 budget UI primitives are deleted. The remaining dead surface is the
+// six proof fixtures (DEAD_UI), the two host exemptions (chart/calendar), and the
+// three sidebar dependents (separator/tooltip/use-mobile), plus the two Edge
+// functions and the ambient types file.
 const DEAD = {
   ...Object.fromEntries(DEAD_UI.map((p) => [p, DEAD_REASON_PROOF])),
-  ...Object.fromEntries(DEAD_BUDGET.map((p) => [p, DEAD_REASON_BUDGET])),
   "components/ui/chart.tsx": DEAD_REASON_HOST,
   "components/ui/calendar.tsx": DEAD_REASON_HOST,
   "components/ui/separator.tsx": DEAD_REASON_SIDEBAR,
@@ -167,12 +157,10 @@ const DEAD = {
   "functions/handler.ts": "the Edge Function handler behind functions/index.ts — same reason, same bundle that never ships here",
   "src/vite-env.d.ts": "ambient type declarations: no runtime module exists to import, so reachability is not a property it has",
 };
-const DEAD_CEILING = 4944;
-// M242 replaced the population's `>= 140` floor with a pin, for the same reason the dead surface
-// has one: a floor can be walked under by a narrowing scan, and after 37 deletions any round
-// number I typed would have been a taste. This is the measured count of app modules in the walked
-// population at this shape, so adding a module needs a proof and deleting one needs a write-down.
-const POP_PIN = 139;
+const DEAD_CEILING = 2099;
+// M247: the two population floors in proof-i18n are now pins (TSX_PIN, SRC_PIN),
+// so the 31 budget files are gone and the ceiling drops with them.
+const POP_PIN = 108;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

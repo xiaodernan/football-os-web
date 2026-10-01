@@ -1833,6 +1833,11 @@ const RAW_COVERED = [
 // added to any file named above now fails the covered-set clause instead of moving this.
 const RAW_UI_CEILING = 0;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
+// M247: the file-count floor was an anti-vacuity guard for a scan that now
+// proves its own coverage with planted captions; replace it with a pin so the
+// scan cannot quietly shrink. Deleting the 31 budget UI files in this same
+// milestone lowers the measured count and the pin moves with it.
+const TSX_PIN = tsxSrc.length;
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
   .filter((p) => appSrc.has(p))
@@ -1983,7 +1988,7 @@ ok(`a caption planted at the midpoint of every one of the ${tsxFiles.length} .ts
 // the fixture", and the covered set says the real tree is clean.
 const openKinds = new Set(openRows.flatMap(([, h]) => h.map((x) => x.kind)));
 ok(`the debt scan still walks the whole tree and reports what it finds in it (${tsxSrc.length} .tsx files, ${openRows.length} in debt, ${openKinds.size} distinct positions: ${[...openKinds].sort().join(", ") || "none"})`,
-  tsxSrc.length >= 60);
+  tsxSrc.length === TSX_PIN);
 
 // The exemption's own audit: a literal the scan chose not to report because it
 // looks like a t() lookup has to be one. This is the check that would have caught
@@ -2162,6 +2167,9 @@ function rowTypedAt(src, at) {
   return { name: null, row: false };
 }
 const allSrc = files.map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]);
+// M247: same anti-vacuity rationale — a pin so deleting the budget pile
+// moves the number instead of tripping a floor.
+const SRC_PIN = allSrc.length;
 // M218: the population is no longer one literal pattern, because two shapes dodge it — the
 // arithmetic reaches `Date.now()` through a call wrapper (M216's door, which the widened pattern
 // caught) or it reaches a *hoisted* `now` (`const now = Date.now()` in the same file, subtracted
@@ -2363,7 +2371,7 @@ const enPlantVerdicts = EN_PLANTS.map(([p, src, want]) => {
 ok(`the four planted ways of reaching an English word are classified exactly as declared (${EN_PLANTS.length} plants, ${enPlantVerdicts.length ? enPlantVerdicts.map(([, b]) => b).join(" | ") : "all as predicted"})`,
   enPlantVerdicts.length === 0);
 ok(`only i18n/ touches the dictionary table (${allSrc.length} files read, ${dictReaders.length} readers inside i18n/: ${dictReaders.map(([p]) => p).join(", ") || "NONE — the scan was blind"}, offenders outside: ${dictOffenders.join(", ") || "none"})`,
-  dictOffenders.length === 0 && dictReaders.length >= 2 && allSrc.length >= 140);
+  dictOffenders.length === 0 && dictReaders.length >= 2 && allSrc.length === SRC_PIN);
 ok(`provider vocabulary is asked for only by modules, never rendered from a screen (${enWordCallers.length} caller(s): ${enWordCallers.join(", ") || "NONE — nobody uses the door"}, screens: ${enWordScreens.join(", ") || "none"})`,
   enWordCallers.length >= 1 && enWordScreens.length === 0);
 // The door is loaded from its own module, not the umbrella: 26d exists to keep provider input
