@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M243 (a few numbers in that range
+Work ships one milestone per commit and is currently at M244 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -5917,6 +5917,43 @@ with neither row on the other's page). Its limits are demonstrated too: `<App/>`
 still owed the live browser pass. The follow-up commit removed this file's own comment claiming the
 ratchet could see every root it loads: it only sees literal-path calls, so a clause now measures that
 boundary instead.
+
+### M244 — the discussion starters publish rows, and community.ts leaves the prose ratchet entirely
+
+The last 21 of `domain/community.ts`'s counted sentences were the four `buildStarters` drafts — the
+career, training, academy and watchlist cards the composer offers a visitor. They are rows now,
+resolved by `CommunityHub` through `rowLine` at the four places it read a string.
+
+**One new code family, because three copies of a long sentence is the alternative.** `buildStarters`
+worded a record against its points with `"ahead of"` / `"in line with"` / `"behind"`, computed from
+points-per-game at 1.8 and 1.2. That is one word of a two-sentence draft, so it is a code now:
+`RECORD_FEELS` in `domain/types.ts`, a `feels` code variable, and a `comm.feels.*` branch in `rowText`
+beside the others. The proof reads the union out of `domain/types.ts` rather than retyping the arms.
+
+**The focus attribute stopped being labelled in the module.** The training draft named its top focus
+through `attributeLabel` — the same defect M234 fixed in the film report, where a Chinese draft read
+"passing" inside a Chinese sentence. It travels as the `a` code variable now, so the draft says 传球,
+and `attributeLabel` is no longer imported here at all.
+
+**Two shapes the audit refused, and both were right to.** The drafts' `vars` were written as
+`{ ...vars, minutes: … }`, and proof-i18n's placeholder audit reads a `vars:` body through a
+balanced-brace scanner and refuses a shape it cannot read — so the bodies are written out in full.
+And the `comm.feels.` space was first declared with a `\];` terminator, which does not match
+`[...] as const;`: the non-greedy scan ran on to the next array in `domain/types.ts` and the clause
+reported seven values, four of them attribute categories. Both are the gate doing its job, and both
+are recorded rather than quietly fixed.
+
+Ceiling **133 → 112**, `community.ts` cap **21 → 0** and it joins `PROSE_ZERO` (**18 modules**).
+Inventory: `career 29, learn 83` — the last two. `proof-community` moved its starter clauses onto
+the seam (52/52, was 49) and gained three: every draft reads in the reader's language title and body,
+the attribute is resolved rather than printed as a key, and the record-feeling arm is a code. Two
+mutations, both caught.
+
+Measured: `tsc` clean, build 0, **41/41 proof scripts green**, `proof-i18n` **264/264** over
+**1838 keys × 3 locales**, `proof-community` **52/52**. Nothing was clicked in a browser.
+
+**Still outstanding**: `career.ts` (29) and `learn.ts` (83) are the last two modules carrying prose,
+and `learn.ts` is long-form lesson text rather than the model's own voice.
 
 ### M243 — the community board's seeded content speaks the reader's language
 
