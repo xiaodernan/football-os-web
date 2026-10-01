@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M241 (a few numbers in that range
+Work ships one milestone per commit and is currently at M243 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -5917,6 +5917,68 @@ with neither row on the other's page). Its limits are demonstrated too: `<App/>`
 still owed the live browser pass. The follow-up commit removed this file's own comment claiming the
 ratchet could see every root it loads: it only sees literal-path calls, so a clause now measures that
 boundary instead.
+
+### M243 — the community board's seeded content speaks the reader's language
+
+`domain/community.ts` was the largest module still composing its own English: eight sample opinions,
+four sample questions, the title and body of every seeded thread, and the thread and reply a visitor
+writes themselves. All of it is rows now (`comm.*`, keyed in three locales), and
+`features/community/CommunityHub.tsx` resolves each one through `rowLine` at the five places it
+printed a bare string.
+
+**The reply bank became two arrays of keys.** `OPINIONS` and `QUESTIONS` held sentences and a seeded
+index chose between them, which no dictionary can be asked about — so a reader on 简体中文 saw English
+sample replies under a Chinese thread. They are `OPINION_KEYS` / `QUESTION_KEYS` now, and the same
+seeded index picks between keys. `proof-community` reads the key arrays out of the module rather than
+retyping them, exactly as it read the sentence banks before, and asserts every key names a sentence
+the dictionary holds in every locale.
+
+**The visitor's own words are values, not keys.** A thread or reply written on the device is stored
+as `{ value: text }`, never translated, and `repairCommunityTexts` wraps what earlier builds stored as
+plain strings at the community board's hydration boundary — the same repair a session title, a goal
+title and a coach prompt get. The proof pins the case that matters: a stored sentence that *looks*
+like a key (`"comm.opinion.1"`) stays the writer's words and is not translated.
+
+**Two consequences worth recording.** The list filter searched `(th.title + th.body)`, which would
+have searched `"[object Object] [object Object]"` — it resolves both rows first, so it searches what
+the reader can see. And a news thread's headline stays a `{ value }`: it is the article's own word,
+and the module never had the right to reword it.
+
+Three mutations, all caught: a reply key that is not a dictionary key (the bank clause), the repair
+returning the store untouched (the repair clause), and a seeded sentence put back as a literal —
+caught by the bank clause, the bank-coverage clause, and M232's own "a row value is prose typed in
+this module" clause, which names the module and the literal.
+
+Ceiling **148 → 133**, `community.ts` cap **36 → 21**; the remaining 21 are `buildStarters`, which is
+the next unit. Measured: `tsc` clean, build 0, **41/41 proof scripts green**, `proof-i18n` **262/262**,
+`proof-community` **49/49** (was 45). Nothing was clicked in a browser.
+
+### M242 — delete the six largest UI primitives no reader can reach, and write down the other thirty-one
+
+The coverage ratchet carried 37 `components/ui/*.tsx` files as "shipped dead code" without ever
+measuring what that costs the bundle. Measured on a build plane: the 37 files, 4,398 lines, contribute
+exactly **0 bytes** to `dist/assets/*.js` (35 chunks, 1,451,828 bytes, the same total before and after)
+while still contributing **80,635 bytes** to the one stylesheet Tailwind builds by scanning sources —
+dead weight a reader downloads and can never render.
+
+It deletes the six largest (1,547 lines): `attachment`, `combobox`, `context-menu`, `dropdown-menu`,
+`field`, `menubar`. The other 31 are declared by name in a new `DEAD_BUDGET`, and the reason is not
+this gate's taste: two anti-vacuity floors in `scripts/proof-i18n.mjs` (`tsxSrc.length >= 60`,
+`allSrc.length >= 140`) count `.tsx` files in the tree, and deleting all 37 walked the second down to
+109 while proof-coverage itself stayed green. Both floors are the shape M220 retired elsewhere for the
+same reason — a scan that has grown a plant-based witness does not need a population floor — but
+proof-i18n is another run's file to change, so this unit deletes what it can and names what it cannot,
+each with the artifact that has to move first.
+
+`DEAD_REASON_BUDGET`, `DEAD_REASON_PROOF` and `DEAD_REASON_HOST` replace the single blanket reason, so
+the three exemptions that are not deletion candidates say why: `chart` and `calendar` carry live
+browser-locale exemptions keyed by their path in proof-i18n, and `sidebar` is loaded by that gate's own
+section 9b as a fixture.
+
+Verified on the plane the work was measured on: `tsc` rc=0, build rc=0, **41/41 proof scripts,
+2158/2158 checks, suite green**, chunk manifest identical in total size. Committed in a later session
+than the one that measured it — the working copy carried it finished but uncommitted, and
+`dev/m242-verify2.log` is the measuring session's record.
 
 ### M241 — charge the 6,497 lines of UI the coverage ratchet never looked at
 
