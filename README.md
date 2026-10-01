@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M246 (a few numbers in that range
+Work ships one milestone per commit and is currently at M247 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -5917,6 +5917,32 @@ with neither row on the other's page). Its limits are demonstrated too: `<App/>`
 still owed the live browser pass. The follow-up commit removed this file's own comment claiming the
 ratchet could see every root it loads: it only sees literal-path calls, so a clause now measures that
 boundary instead.
+
+### M247 — the dead UI pile leaves the disk: the two population floors become pins, and the 31 budget primitives are deleted
+
+The coverage ratchet measured a pile of 45 unreachable modules (4,944 lines) that no reader can ever reach:
+six UI primitives kept as proof fixtures, two live-browser exemptions, three sidebar dependents, two Edge
+functions, one ambient types file, and **31 budget primitives held only by two file-count floors in
+`proof-i18n`** (`tsxSrc.length >= 60`, `allSrc.length >= 140`). Those floors were anti-vacuity guards for a
+scan that now proves its own coverage with planted captions and a dictionary-touch witness; per the rule
+"a floor can be walked under by a narrowing scan", both are replaced by exact pins (`TSX_PIN`, `SRC_PIN`)
+measured at this shape, so the 31 files can be deleted and the pins move with them.
+
+The six proof fixtures (breadcrumb, carousel, message-scroller, pagination, sidebar, spinner), the two
+host exemptions (chart, calendar), the three sidebar dependents (separator, tooltip, use-mobile), the two
+Edge functions and the ambient types file remain declared dead; their lines total **2,099** (was 4,944).
+The population pin drops from 139 to 108.
+
+Six arms, all caught: re-adding a deleted budget file (stale declaration), removing a declared dead file
+without lowering the ceiling (stale ceiling), adding an unreachable module without a proof (population pin),
+toggling a floor back to `>=` (the pin assertion), dropping a fixture from `DEAD_UI` (undeclared dead),
+and deleting a file the pin protects (the pin clause).
+
+Measured: `tsc` clean, build 0, **41/41 proof scripts green (2182 checks)**, `proof-i18n` **273/273** over
+**1970 keys × 3 locales**, `proof-coverage` **24/24**. Nothing was clicked in a browser.
+
+**Still outstanding** on this axis: the six proof fixtures and the two host exemptions are the next
+dead-weight to retire — they block deletion of the three sidebar dependents and the fixtures themselves.
 
 ### M246 — the Knowledge Academy publishes rows, and learn.ts leaves the prose ratchet entirely
 
