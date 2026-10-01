@@ -247,54 +247,40 @@ const STRUCK = ["● DEMO DATA", "Something went wrong", "Unexpected error while
 const backslid = STRUCK.filter((s) => prim.includes(s));
 ok(`no primitive still hardcodes the English M144 replaced (${backslid.join(" | ") || "none"})`, backslid.length === 0);
 
-// 9b. M173. The same defect one layer down: `components/ui/*` is the generic chrome
-//     every screen is built out of, and its 21 literals were all accessibility copy —
-//     landmark names, icon-button labels, sr-only "Close" — which a screen reader reads
-//     out in the visitor's language only if the file asks the dictionary. The table is
-//     the wiring half of the proof, and it pins *positions*, not just names: the third
-//     number on each row is how many of the file's counted literals that key replaced,
-//     so the totals come back to 21 and pointing one call site at a neighbouring key
-//     stays red. (The first version of this check asked only whether a key appeared
-//     *somewhere* in the file; probe 3 turned up that swapping one of sidebar's three
-//     "Toggle Sidebar" sites for `ui.sidebar` passed it, because the other two were
-//     still there. `cta.loading` in the table is deliberate — "Loading" was already in
-//     the dictionary, so the spinner reads that row instead of minting a second key for
-//     the same word, and the last clause below keeps that decision from being reversed.)
+// 9b. M173. The same defect one layer down: `components/ui/*` is the generic chrome every screen
+//     is built out of, and its 21 literals were all accessibility copy — landmark names,
+//     icon-button labels, sr-only "Close" — which a screen reader reads out in the visitor's
+//     language only if the file asks the dictionary. M248 deleted six of the eight files this
+//     table named (pagination, sidebar, breadcrumb, carousel, message-scroller, spinner) and
+//     `cta.loading` left with the spinner that read it, so the table is down to its two
+//     survivors and one key. It stays because those two are live chrome: a dialog and a sheet
+//     open on routes a visitor reaches without touching any screen this gate otherwise walks,
+//     and their close label is the copy someone who cannot see the button depends on. The
+//     position count is the file's own claim about itself — a row that wants 2 call sites and
+//     finds 1 is the label silently dropping back to a hard-coded string.
 const CHROME_WIRING = [
-  ["components/ui/pagination.tsx", "ui.pagination", 1],
-  ["components/ui/pagination.tsx", "ui.prevPage", 1],
-  ["components/ui/pagination.tsx", "ui.previous", 1],
-  ["components/ui/pagination.tsx", "ui.nextPage", 1],
-  ["components/ui/pagination.tsx", "ui.next", 1],
-  ["components/ui/pagination.tsx", "ui.morePages", 1],
-  ["components/ui/sidebar.tsx", "ui.sidebar", 1],
-  ["components/ui/sidebar.tsx", "ui.sidebarMobile", 1],
-  ["components/ui/sidebar.tsx", "ui.toggleSidebar", 3],
-  ["components/ui/breadcrumb.tsx", "ui.breadcrumb", 1],
-  ["components/ui/breadcrumb.tsx", "ui.more", 1],
-  ["components/ui/carousel.tsx", "ui.prevSlide", 1],
-  ["components/ui/carousel.tsx", "ui.nextSlide", 1],
   ["components/ui/dialog.tsx", "ui.close", 2],
   ["components/ui/sheet.tsx", "ui.close", 1],
-  ["components/ui/message-scroller.tsx", "ui.scrollToEnd", 1],
-  ["components/ui/message-scroller.tsx", "ui.scrollToStart", 1],
-  ["components/ui/spinner.tsx", "cta.loading", 1],
 ];
+const CHROME_FILES_PIN = 2;
+const CHROME_POSITIONS_PIN = 3;
 const chromeFiles = [...new Set(CHROME_WIRING.map(([p]) => p))];
 const chromeSrc = new Map(chromeFiles.map((p) => [p, readFileSync(join(root, ...p.split("/")), "utf8")]));
 const chromeBad = CHROME_WIRING.filter(([p, k, n]) => chromeSrc.get(p).split(`t("${k}")`).length - 1 !== n)
   .map(([p, k, n]) => `${p}:${k} wants ${n} call site(s), found ${chromeSrc.get(p).split(`t("${k}")`).length - 1}`);
-ok(`the ${chromeFiles.length} chrome files read their own labels from the dictionary at all ${CHROME_WIRING.reduce((s, [, , n]) => s + n, 0)} positions (${chromeBad.join(" | ") || "none"})`,
-  chromeBad.length === 0);
-const CHROME_ENGLISH = ['aria-label="pagination"', 'aria-label="breadcrumb"', 'aria-label="Loading"',
-  'aria-label="Toggle Sidebar"', 'title="Toggle Sidebar"', '"Go to previous page"', '"Go to next page"',
-  ">Previous<", ">Next<", "More pages", "Scroll to end", "Scroll to start", "Previous slide", "Next slide",
-  "Displays the mobile sidebar.", ">Close<", ">Sidebar<"];
-const chromeBackslid = CHROME_ENGLISH.filter((s) => [...chromeSrc.values()].some((src) => src.includes(s)));
-ok(`no chrome file still hardcodes the English M173 replaced (${chromeBackslid.join(" | ") || "none"})`, chromeBackslid.length === 0);
+ok(`the ${chromeFiles.length} chrome files that outlived M248 (pin ${CHROME_FILES_PIN}) read their own labels from the dictionary at all ${CHROME_WIRING.reduce((s, [, , n]) => s + n, 0)} positions (pin ${CHROME_POSITIONS_PIN}) (${chromeBad.join(" | ") || "none"})`,
+  chromeBad.length === 0 && chromeFiles.length === CHROME_FILES_PIN &&
+  CHROME_WIRING.reduce((s, [, , n]) => s + n, 0) === CHROME_POSITIONS_PIN);
+// What these files would fall back to is not a list anyone maintains: it is the word the
+// dictionary holds for the key they read, so the refusal follows the copy instead of shadowing
+// it with a hand-typed string that goes stale the day the copy changes.
+const chromeEnglish = [...new Set(CHROME_WIRING.map(([, k]) => `>${en[k]}<`))];
+const chromeBackslid = chromeEnglish.filter((s) => [...chromeSrc.values()].some((src) => src.includes(s)));
+ok(`and neither one hardcodes the word the dictionary holds for its key (${chromeEnglish.length} forbidden spelling(s): ${chromeEnglish.join(", ") || "NONE — the list is empty"}; ${chromeBackslid.join(" | ") || "none found"})`,
+  chromeEnglish.length >= 1 && chromeBackslid.length === 0);
 const uiKeys = Object.keys(en).filter((k) => k.startsWith("ui."));
-ok(`the chrome namespace holds exactly its 16 labels, and mints no second key for the word cta.loading already carries (${uiKeys.length})`,
-  uiKeys.length === 16 && !uiKeys.some((k) => en[k] === en["cta.loading"]));
+ok(`the chrome namespace holds exactly its ${uiKeys.length} surviving label, pin 1 (${uiKeys.join(", ") || "none"}), and mints no second key for the word cta.loading already carries`,
+  uiKeys.length === 1 && uiKeys[0] === "ui.close" && !uiKeys.some((k) => en[k] === en["cta.loading"]));
 
 // 10. M145 localised the Scouting board. Two of its label arrays keep the key in
 //     a variable, the same shape check 8 had to reach, so both arrays and both
@@ -451,6 +437,17 @@ const rel = (f) => f.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");
 // Comment lines cannot claim a key: prose that quotes a key is not a caller.
 const codeOf = (src) => src.split(/\r?\n/).filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
 const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]));
+// Three population pins, each a number measured from this gate's own report at M248 — 95 app
+// modules, 49 of them .tsx, 98 files including i18n/. They are written as literals on purpose.
+// M247 landed the same three guards as `const TSX_PIN = tsxSrc.length; … tsxSrc.length === TSX_PIN`,
+// which is `X === X`: it cannot go red, cannot notice a scan that lost files, and reads as a pin
+// while being nothing. A floor (`appSrc.size > 100`) is the other failure mode — it passes a
+// narrowing walk right up to the day it doesn't, and then the honest repair is to lower the floor,
+// which is exactly the move this file bans elsewhere. A literal makes the next deletion pay here,
+// in the same commit, and prints measured-vs-pin when it does.
+const APP_SRC_PIN = 95;
+const TSX_PIN = 49;
+const SRC_PIN = 98;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -1676,20 +1673,15 @@ const RAW_COVERED = [
   // by the page that passes the other four `det.dna.*` rows in as props.
   "ui/primitives.tsx",
   // M173. The chrome layer at once: every file under components/ui/* that still spoke
-  // English out loud. They are registered as a group because they are one audience —
-  // a screen reader, on every route, whatever the page itself does. Sidebar's three
-  // "Toggle Sidebar" hits are one label rendered as text, aria-label and title on two
-  // different controls, and dialog's two are the same word in an sr-only span and a
-  // visible footer button, so the 21 counted literals were 17 distinct words — 16 new
-  // keys, since "Loading" was already in the dictionary and the spinner reads that row.
-  "components/ui/pagination.tsx",
-  "components/ui/sidebar.tsx",
-  "components/ui/breadcrumb.tsx",
-  "components/ui/carousel.tsx",
+  // English out loud. They were registered as a group because they are one audience — a
+  // screen reader, on every route, whatever the page itself does. 21 counted literals, 17
+  // distinct words, 16 new keys ("Loading" was already in the dictionary). M248 deletes six
+  // of those eight files: nothing a visitor can reach imports pagination, sidebar,
+  // breadcrumb, carousel, message-scroller or spinner, so their copy left with them. What is
+  // named here is the chrome that still renders — dialog and sheet, the last two readers of
+  // `ui.close`, which is now the only `ui.*` key in the dictionaries.
   "components/ui/dialog.tsx",
   "components/ui/sheet.tsx",
-  "components/ui/message-scroller.tsx",
-  "components/ui/spinner.tsx",
   // M174. The three shortest screens, and the reason the `*Key` rule below exists.
   // 13 counted literals between them, and not one of them was words a reader saw: 12
   // were codes sitting where the scan could only read them as children — AiStudio's
@@ -1835,9 +1827,8 @@ const RAW_UI_CEILING = 0;
 const tsxSrc = [...appSrc].filter(([p]) => p.endsWith(".tsx"));
 // M247: the file-count floor was an anti-vacuity guard for a scan that now
 // proves its own coverage with planted captions; replace it with a pin so the
-// scan cannot quietly shrink. Deleting the 31 budget UI files in this same
-// milestone lowers the measured count and the pin moves with it.
-const TSX_PIN = tsxSrc.length;
+// scan cannot quietly shrink. TSX_PIN itself is now a literal (see the population
+// pins beside `appSrc`) — as `tsxSrc.length` it was the tautology this file bans.
 const missing = RAW_COVERED.filter((p) => !appSrc.has(p));
 const leaks = RAW_COVERED
   .filter((p) => appSrc.has(p))
@@ -1876,8 +1867,8 @@ const reaching = [...appSrc].map(([p, code]) => [p, escapesTo(code)]).filter(([,
 const audit = reaching.length
   ? reaching.map(([p, s]) => p + " -> " + s).join(", ")
   : "none reaches " + SKIP_DIRS.join(", ");
-ok(`the skip-list audit read ${specSeen} import specifiers over ${appSrc.size} files and ${reaching.length} of them reaches a skipped directory (${audit})`,
-  reaching.length === 0 && appSrc.size > 100 && specSeen > appSrc.size * 2);
+ok(`the skip-list audit read ${specSeen} import specifiers over ${appSrc.size} files (population pin ${APP_SRC_PIN}) and ${reaching.length} of them reaches a skipped directory (${audit})`,
+  reaching.length === 0 && appSrc.size === APP_SRC_PIN && specSeen > appSrc.size * 2);
 // Every clause above counts literals inside *regions* the shared walker built, so it inherits
 // the walker's thread: an attribute list that never reaches its `>`, or a brace still open when
 // the text runs out, means each region after that point describes a file the source does not
@@ -1904,10 +1895,10 @@ const BAL_REFUSALS = [
 ].map(([name, src, field]) => [name, field, sourceBalance(src)]);
 const offenders = [...[...appSrc].map(([p, src]) => [p, sourceBalance(src)]), ...BAL_REFUSALS.map(([name, , b]) => [name, b])]
   .filter(([, b]) => BAL_FIELDS.some((k) => b[k]));
-ok(`the walker kept its thread to the end of all ${appSrc.size} measured files, and its filter flags exactly the ${BAL_REFUSALS.length} planted refusals and nothing else (${offenders.length}: ${offenders.map(([p, b]) => `${p} ${BAL_FIELDS.filter((k) => b[k]).join("+")}`).join(", ") || "none"})`,
+ok(`the walker kept its thread to the end of all ${appSrc.size} measured files (population pin ${APP_SRC_PIN}), and its filter flags exactly the ${BAL_REFUSALS.length} planted refusals and nothing else (${offenders.length}: ${offenders.map(([p, b]) => `${p} ${BAL_FIELDS.filter((k) => b[k]).join("+")}`).join(", ") || "none"})`,
   offenders.length === BAL_REFUSALS.length &&
   BAL_REFUSALS.every(([name, field, b]) => BAL_FIELDS.filter((k) => b[k]).join(",") === field) &&
-  appSrc.size > 100);
+  appSrc.size === APP_SRC_PIN);
 // The other direction: a whole file must read zero on every field *and* still show its copy from
 // two syntactic positions, so an instrument that reports zeros because it builds no regions at
 // all cannot pass the clause above either.
@@ -1956,12 +1947,17 @@ const MID_CONTROL = [
   "};",
 ];
 const tsxFiles = files.filter((f) => rel(f).endsWith(".tsx") && !rel(f).startsWith("i18n/"));
+// Two selectors over the same walk — `appSrc` minus the non-.tsx, versus `files` filtered on
+// .tsx-and-not-i18n — have to name the same 49 paths. That equality is not a tautology: each
+// side is derived by a different predicate, so a selector that starts skipping a directory
+// shows up here before it shows up anywhere the debt counts are read.
+const tsxSelectorsAgree = tsxFiles.map(rel).sort().join(",") === tsxSrc.map(([p]) => p).sort().join(",");
 const blind = tsxFiles
   .map((f) => [rel(f), midBlind(readFileSync(f, "utf8").replace(/\r\n/g, "\n").split("\n"))])
   .filter(([, b]) => b)
   .map(([p]) => p);
-ok(`a caption planted at the midpoint of every one of the ${tsxFiles.length} .tsx files comes back in full (blind: ${blind.join(", ") || "none"}), while the file planted blind here is reported blind (${midBlind(MID_CONTROL)})`,
-  blind.length === 0 && midBlind(MID_CONTROL) && tsxFiles.length > 50);
+ok(`a caption planted at the midpoint of every one of the ${tsxFiles.length} .tsx files (pin ${TSX_PIN}, and the two selectors agree: ${tsxSelectorsAgree}) comes back in full (blind: ${blind.join(", ") || "none"}), while the file planted blind here is reported blind (${midBlind(MID_CONTROL)})`,
+  blind.length === 0 && midBlind(MID_CONTROL) && tsxFiles.length === TSX_PIN && tsxSelectorsAgree);
 // Non-vacuity, and deliberately *not* a floor on the total. The previous clause read
 // `openTotal >= 300`, which is a bound on the exact quantity every milestone is trying
 // to shrink: localise three more screens and the check goes red while the scan is
@@ -1987,7 +1983,7 @@ ok(`a caption planted at the midpoint of every one of the ${tsxFiles.length} .ts
 // gate that used to say "this scan still sees something" now says "this scan still sees
 // the fixture", and the covered set says the real tree is clean.
 const openKinds = new Set(openRows.flatMap(([, h]) => h.map((x) => x.kind)));
-ok(`the debt scan still walks the whole tree and reports what it finds in it (${tsxSrc.length} .tsx files, ${openRows.length} in debt, ${openKinds.size} distinct positions: ${[...openKinds].sort().join(", ") || "none"})`,
+ok(`the debt scan still walks the whole tree and reports what it finds in it (${tsxSrc.length} .tsx files against pin ${TSX_PIN}, ${openRows.length} in debt, ${openKinds.size} distinct positions: ${[...openKinds].sort().join(", ") || "none"})`,
   tsxSrc.length === TSX_PIN);
 
 // The exemption's own audit: a literal the scan chose not to report because it
@@ -2168,8 +2164,8 @@ function rowTypedAt(src, at) {
 }
 const allSrc = files.map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]);
 // M247: same anti-vacuity rationale — a pin so deleting the budget pile
-// moves the number instead of tripping a floor.
-const SRC_PIN = allSrc.length;
+// moves the number instead of tripping a floor. SRC_PIN is a literal now (see the
+// population pins beside `appSrc`): as written here it was `X === X`.
 // M218: the population is no longer one literal pattern, because two shapes dodge it — the
 // arithmetic reaches `Date.now()` through a call wrapper (M216's door, which the widened pattern
 // caught) or it reaches a *hoisted* `now` (`const now = Date.now()` in the same file, subtracted
@@ -2370,7 +2366,7 @@ const enPlantVerdicts = EN_PLANTS.map(([p, src, want]) => {
 }).filter(([, bad]) => bad);
 ok(`the four planted ways of reaching an English word are classified exactly as declared (${EN_PLANTS.length} plants, ${enPlantVerdicts.length ? enPlantVerdicts.map(([, b]) => b).join(" | ") : "all as predicted"})`,
   enPlantVerdicts.length === 0);
-ok(`only i18n/ touches the dictionary table (${allSrc.length} files read, ${dictReaders.length} readers inside i18n/: ${dictReaders.map(([p]) => p).join(", ") || "NONE — the scan was blind"}, offenders outside: ${dictOffenders.join(", ") || "none"})`,
+ok(`only i18n/ touches the dictionary table (${allSrc.length} files read against pin ${SRC_PIN}, ${dictReaders.length} readers inside i18n/: ${dictReaders.map(([p]) => p).join(", ") || "NONE — the scan was blind"}, offenders outside: ${dictOffenders.join(", ") || "none"})`,
   dictOffenders.length === 0 && dictReaders.length >= 2 && allSrc.length === SRC_PIN);
 ok(`provider vocabulary is asked for only by modules, never rendered from a screen (${enWordCallers.length} caller(s): ${enWordCallers.join(", ") || "NONE — nobody uses the door"}, screens: ${enWordScreens.join(", ") || "none"})`,
   enWordCallers.length >= 1 && enWordScreens.length === 0);
@@ -3032,39 +3028,25 @@ for (const [path, code] of appSrc) {
   }
 }
 const hostCount = (p) => hostSites.filter((s) => s.path === p).length;
-// A grouped number. The reason is pinned by name: `item.value` is a chart series value, and
-// the clause refuses any receiver that is a `new Date(...)` or is named like an instant, so
-// this list cannot be used to park a date. A new receiver has to be added here, in the open.
-const HOST_OK_NUMBER = { "components/ui/chart.tsx": ["item.value"] };
-// A primitive that is not mounted anywhere. Its two sites would be real debt the day the
-// component is imported, so the exemption is only as good as the importer count under it.
-const HOST_OK_UNMOUNTED = { "components/ui/calendar.tsx": 2 };
-// Still browser-locale, one milestone each to wire. Measured after M195: Player OS's two
-// session dates and its record date, and the Data Room's kickoff line. The Football AI's
-// fixture fact was the third entry and is gone — its `when:` used to be composed here with
-// no locale in scope, and the RAG entry point now takes the reader's language as an
-// argument (see the RAG seam below), so the file formats through the door.
+// M248 retired the two exemption tables this census used to carry. `HOST_OK_NUMBER` vouched for
+// number-formatting calls in chart.tsx and `HOST_OK_UNMOUNTED` for calendar.tsx; both files are
+// deleted, so both tables were `{}`, and the clauses that audited them (`badNumber`,
+// `calImporters`) were scraping an empty list — green forever, and reporting "clean" about a set
+// with no members. A belt that cannot be the reason anything fails is not protection, so the
+// clauses went with their carriers rather than staying as a story about files that no longer exist.
+// Still browser-locale, one milestone each to wire: Player OS's two session dates and its record
+// date. The Data Room's kickoff line and the Football AI's fixture fact were both here and both
+// are wired now — the RAG entry point takes the reader's language as an argument (see the RAG
+// seam below), so those files format through the door.
 const DATE_DEBT = {
   "features/player/PlayerOS.tsx": 3,
 };
-const undeclaredHost = hostSites.filter((s) =>
-  !(s.path in HOST_OK_NUMBER || s.path in HOST_OK_UNMOUNTED || s.path in DATE_DEBT));
+const undeclaredHost = hostSites.filter((s) => !(s.path in DATE_DEBT));
 ok(`no file formats an instant for the browser without saying why (${undeclaredHost.map((s) => s.path).join(", ") || "none undeclared"} of ${hostSites.length} sites)`,
   undeclaredHost.length === 0);
 const grewHost = Object.entries(DATE_DEBT).filter(([p, cap]) => hostCount(p) > cap);
 ok(`the remaining date debt has not grown in any file (${grewHost.map(([p, cap]) => `${p} ${hostCount(p)}>${cap}`).join(", ") || Object.entries(DATE_DEBT).map(([p, c]) => `${p.split("/").pop()}=${hostCount(p)}/${c}`).join(" ")})`,
   grewHost.length === 0);
-const badNumber = Object.entries(HOST_OK_NUMBER).flatMap(([p, receivers]) =>
-  [...(appSrc.get(p) ?? "").matchAll(LOCALE_CALL)]
-    .filter((m) => !receivers.includes(m[1]) || /^new Date/.test(m[1]) || /date|kickoff|iso|time|at\b/i.test(m[1]))
-    .map((m) => `${p} ${m[1]}`));
-ok(`the number exemption still only vouches for a non-instant receiver (${badNumber.join(", ") || "clean"})`,
-  badNumber.length === 0);
-const calImporters = files.map((f) => rel(f)).filter((p) =>
-  p !== "components/ui/calendar.tsx" && /\.tsx?$/.test(p) &&
-  /from\s+["'][^"']*ui\/calendar["']/.test(readFileSync(join(root, ...p.split("/")), "utf8")));
-ok(`the unmounted-primitive exemption is still unmounted (${calImporters.join(", ") || "0 importers"})`,
-  calImporters.length === 0);
 // The way back into the same defect that no argument-shape scan can see: a call that DOES
 // pass a locale, but sources it from the host. Reading the browser once is correct — the app
 // picks a starting locale from it, the reader can override that in the header, and the choice
@@ -3101,8 +3083,8 @@ ok(`the census still recognises all ${HOST_SPELLINGS.length} ways of asking the 
   missedSpellings.length === 0);
 ok(`and recognises none of the ${HOST_CONTROLS.length} calls that name a locale (${falseControls.map(([n]) => n).join(", ") || "no false positives"})`,
   falseControls.length === 0);
-ok(`the census scanned the app rather than an empty set (${appSrc.size} source files, ${hostSites.length} browser-locale sites left and all declared)`,
-  appSrc.size >= 40);
+ok(`the census scanned the app rather than an empty set (${appSrc.size} source files against pin ${APP_SRC_PIN}, ${hostSites.length} browser-locale sites left and all declared)`,
+  appSrc.size === APP_SRC_PIN);
 // (b) The door is the only formatter, and it takes the reader's locale.
 const DOOR_CALLS = callsOf("formatDate");
 const unresolvedDoor = DOOR_CALLS.filter((c) => !c.args);

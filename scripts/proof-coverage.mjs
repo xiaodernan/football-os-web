@@ -122,45 +122,36 @@ const EXEMPT_CEILING = 9;
 // non-recursively, so `components/ui/alert.tsx` was not a module it knew existed: 47 UI
 // primitives, `hooks/use-mobile.ts`, the two Edge Function files and one ambient declaration
 // — 6,497 lines counted at 72f10fb — could be added to or deleted and the gate would not
-// blink. Each one is unreachable from `src/main.tsx` as well, which is the sharper fact:
-// it is not merely unproven, no `dist/assets/*.js` chunk contains it (the marker test in the
-// header), so no reader can render it. Its Tailwind utilities still reach the shipped
-// stylesheet, because the CSS scans source files rather than the module graph.
-// M242 measured the whole pile on a build plane before deleting any of it: 37 of these files,
+// blink. Each one was unreachable from `src/main.tsx` as well, which is the sharper fact:
+// no `dist/assets/*.js` chunk contains it, so no reader could render it. Its Tailwind
+// utilities did reach the shipped stylesheet, because the CSS scans source files, not the graph.
+// M242 measured the whole pile on a build plane before deleting any of it: 37 of those files,
 // 4,398 lines, contribute exactly 0 bytes to `dist/assets/*.js` (35 chunks, 1,451,828 bytes, the
 // same total before and after) and 80,635 bytes to the one stylesheet Tailwind builds by scanning
-// sources. It deletes the 6 largest here (1,547 lines) because two file-count floors in
-// scripts/proof-i18n.mjs are charged on the same tree; the other 31 are declared below by name.
-// That is the only reason the ceiling is a number that moves: a deletion has to be written down
-// here, in the same commit, or the gate reports the difference as a stale declaration. What stays,
-// stays for a reason that names the artifact which has to move first — see the reason constants.
+// sources. M242 deleted the 6 largest, M247 the 31 that two file-count floors had been charging,
+// and M248 the 11 the last blockers protected — section 9b's proof fixtures, the two host-format
+// exemptions and the sidebar's dependents, which retired in the same commit as their files.
+// What is left of the dead surface is the two Edge Function files (loaded by a hosting platform
+// this local-only build never calls) and one ambient declaration, 22 lines, each named below.
 // ---------------------------------------------------------------------------
-const DEAD_UI = [
-  "breadcrumb", "carousel", "message-scroller", "pagination", "sidebar", "spinner",
-].map((n) => `components/ui/${n}.tsx`);
-const DEAD_REASON_PROOF = "scripts/proof-i18n.mjs section 9b loads and renders it, so it is a proof's own fixture even though no reader can reach it — delete it together with that section";
-const DEAD_REASON_HOST = "scripts/proof-i18n.mjs carries a live browser-locale exemption keyed by this path (HOST_OK_NUMBER for chart, HOST_OK_UNMOUNTED for calendar), so file and exemption retire in one commit";
-const DEAD_REASON_SIDEBAR = "imported by components/ui/sidebar.tsx, which section 9b loads: no reader reaches it, but it cannot go while the sidebar is a proof's fixture";
-// M247: the two population floors are now pins (TSX_PIN, SRC_PIN in proof-i18n),
-// so the 31 budget UI primitives are deleted. The remaining dead surface is the
-// six proof fixtures (DEAD_UI), the two host exemptions (chart/calendar), and the
-// three sidebar dependents (separator/tooltip/use-mobile), plus the two Edge
-// functions and the ambient types file.
 const DEAD = {
-  ...Object.fromEntries(DEAD_UI.map((p) => [p, DEAD_REASON_PROOF])),
-  "components/ui/chart.tsx": DEAD_REASON_HOST,
-  "components/ui/calendar.tsx": DEAD_REASON_HOST,
-  "components/ui/separator.tsx": DEAD_REASON_SIDEBAR,
-  "components/ui/tooltip.tsx": DEAD_REASON_SIDEBAR,
-  "hooks/use-mobile.ts": DEAD_REASON_SIDEBAR,
   "functions/index.ts": "the Sites Edge Function entry, loaded by the hosting platform and never by the SPA bundle; this build is local-only",
   "functions/handler.ts": "the Edge Function handler behind functions/index.ts — same reason, same bundle that never ships here",
   "src/vite-env.d.ts": "ambient type declarations: no runtime module exists to import, so reachability is not a property it has",
 };
-const DEAD_CEILING = 2099;
-// M247: the two population floors in proof-i18n are now pins (TSX_PIN, SRC_PIN),
-// so the 31 budget files are gone and the ceiling drops with them.
-const POP_PIN = 108;
+const DEAD_CEILING = 22;
+// M248: section 9b and the HOST_OK exemptions retired with their files, POP_PIN drops by 11.
+const POP_PIN = 97;
+// M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
+// 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
+// gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
+// file briefly carried, because a `<=` lets any directory stop contributing and calls that a pass.
+// A pin names each directory and its module count, so a module joining or leaving one has to be
+// written down here, and a directory going quiet is reported by name in the clause's own text.
+// Same reason the recursion floor becomes a pin: after 48 deletions a `>= 42` is a taste, and only
+// the measured number says what this tree actually looks like.
+const BY_DIR_PIN = { components: 14, data: 7, domain: 31, features: 28, functions: 2, i18n: 3, lib: 6, src: 3, store: 1, ui: 2 };
+const DEEP_PIN = 42;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the
@@ -237,15 +228,20 @@ const entryReached = reach([APP_ENTRY], read);
 const dead = population.filter((p) => !entryReached.has(p));
 const byDir = {};
 for (const p of population) byDir[p.split("/")[0]] = (byDir[p.split("/")[0]] ?? 0) + 1;
+// Reported by name rather than folded into a count: a directory that stops contributing modules is
+// the exact event the old `=== popDirs.length` equality was only able to hint at.
+const silentDirs = popDirs.filter((d) => !(d in byDir));
+const dirDelta = [...new Set([...Object.keys(BY_DIR_PIN), ...Object.keys(byDir)])]
+  .filter((d) => (byDir[d] ?? 0) !== (BY_DIR_PIN[d] ?? 0))
+  .map((d) => `${d} ${byDir[d] ?? 0} vs pin ${BY_DIR_PIN[d] ?? 0}`);
 
 ok(`${proofs.length} proofs load ${roots.length} modules directly, reaching ${population.length - unreachable.length} of the ${population.length} app modules in ${popDirs.length} directories walked recursively`,
   proofs.length >= 30 && roots.length >= 25 && population.length === POP_PIN);
-ok(`…by directory: ${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}`,
-  Object.keys(byDir).length === popDirs.length
-    && Object.values(byDir).reduce((n, k) => n + k, 0) === population.length
-    && byDir.features >= 25 && byDir.domain >= 25 && byDir.components >= Object.keys(DEAD).length);
+ok(`…by directory: ${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}${silentDirs.length ? ` (${silentDirs.join(", ")} contributes none)` : ""}`,
+  dirDelta.length === 0 && Object.keys(byDir).length === Object.keys(BY_DIR_PIN).length
+    && Object.values(byDir).reduce((n, k) => n + k, 0) === population.length);
 ok(`…and the walk really is recursive (of ${population.length} modules, ${population.filter((p) => p.split("/").length > 2).length} sit two or more levels down, which the old scan could not produce)`,
-  population.filter((p) => p.split("/").length > 2).length >= 50);
+  population.filter((p) => p.split("/").length > 2).length === DEEP_PIN);
 ok(`…and this file counts itself: proof-coverage.mjs is one of the ${proofs.length} proofs`,
   proofs.includes("proof-coverage.mjs") && proofSrc.includes("ssrLoadModule"));
 

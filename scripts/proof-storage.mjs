@@ -79,6 +79,14 @@ function walkDir(dir, out = []) {
   return out;
 }
 const APP_FILES = ["features", "src", "components", "store", "data", "domain", "lib", "i18n"].flatMap((d) => walkDir(d));
+// Measured at M248 — 93 modules across the eight directories above, the count this gate's own
+// report prints. It is a literal on purpose: M247 landed this guard as
+// `const APP_FILES_PIN = APP_FILES.length; … APP_FILES.length === APP_FILES_PIN`, which is
+// `X === X` and can never go red. That matters more here than elsewhere, because the clause below
+// is `APP_FILES.every(...)` — on an empty population `every` answers true, so a walk that lost a
+// directory would have produced a green "newline counts survive on all 0 app files". The pin is
+// what makes that sentence mean something.
+const APP_FILES_PIN = 93;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */
@@ -86,8 +94,8 @@ const blankedKeepNewlines = APP_FILES.every((f) => {
   const s = read(f);
   return normalize(s).split(/\n/).length === s.replace(/\r\n/g, "\n").split(/\n/).length;
 });
-ok(`the census reads code, not prose, through the repo's own string-aware stripper (newline counts survive on all ${APP_FILES.length} app files: ${blankedKeepNewlines})`,
-  blankedKeepNewlines && APP_FILES.length > 100);
+ok(`the census reads code, not prose, through the repo's own string-aware stripper (newline counts survive on all ${APP_FILES.length} app files, pin ${APP_FILES_PIN}: ${blankedKeepNewlines})`,
+  blankedKeepNewlines && APP_FILES.length === APP_FILES_PIN);
 
 // ---------------------------------------------------------------------------
 // 1 · browserStore: three documents, one answer each
