@@ -263,8 +263,10 @@ function Composer({ starters, onSubmit, onCancel }: { starters: StarterDraft[]; 
     onSubmit(title.trim(), body.trim(), tag);
   };
   const apply = (s: StarterDraft) => {
-    setTitle(s.title);
-    setBody(s.body);
+    // The draft is a row, so the composer is pre-filled with what the reader would have seen
+    // on the button — and what they then edit is their own text, stored as a value.
+    setTitle(rowLine(s.title, t) ?? "");
+    setBody(rowLine(s.body, t) ?? "");
     setTag(allTags().includes(s.tag) ? s.tag : "General");
     setErr(null);
     setUsedStarter(s);
@@ -279,13 +281,13 @@ function Composer({ starters, onSubmit, onCancel }: { starters: StarterDraft[]; 
           <div className="mt-2 flex flex-wrap gap-1.5">
             {starters.map((s) => (
               <button key={s.id} onClick={() => apply(s)} className={cn("rounded-md border px-2.5 py-1 text-xs", usedStarter?.id === s.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
-                {tagLabel(t, s.tag)} · {s.evidence[0]}
+                {tagLabel(t, s.tag)} · {rowLine(s.evidence[0], t)}
               </button>
             ))}
           </div>
           {usedStarter && (
             <div className="mt-2 text-[11px] text-muted-foreground">
-              {t("comm.builtFrom", { evidence: usedStarter.evidence.join(" · ") })}
+              {t("comm.builtFrom", { evidence: usedStarter.evidence.map((e) => rowLine(e, t)).join(" · ") })}
             </div>
           )}
         </div>

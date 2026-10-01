@@ -24,6 +24,12 @@ export const SEARCH_KINDS = ["club", "player", "competition", "match", "news"] a
 export type NewsKind = "Confirmed" | "Reported" | "Rumor" | "Opinion" | "Analysis";
 export const NEWS_KINDS: readonly NewsKind[] = ["Confirmed", "Reported", "Rumor", "Opinion", "Analysis"];
 
+// How a record's underlying performances sit against its points, as the community board's
+// career draft words it. Three codes rather than three copies of the sentence: the draft is
+// long, the arm is one word of it, and rowText resolves the word the way it resolves every
+// other code a domain module holds.
+export const RECORD_FEELS = ["ahead", "inline", "behind"] as const;
+
 export type PositionGroup = "GK" | "CB" | "FB" | "DM" | "CM" | "AM" | "W" | "ST";
 
 export interface NamedValue {

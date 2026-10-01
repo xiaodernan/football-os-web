@@ -1,5 +1,4 @@
 import { makeRng, rngInt, pick } from "@/lib/rng";
-import { attributeLabel } from "./attributes";
 import { asRowText, type RowText } from "./rowText";
 import { footballProvider, getClub, getCompetition, newsFeed } from "@/data/footballService";
 
@@ -166,10 +165,10 @@ export interface StarterInput {
 
 export interface StarterDraft {
   id: string;
-  title: string;
-  body: string;
+  title: RowText;
+  body: RowText;
   tag: string;
-  evidence: string[];
+  evidence: RowText[];
 }
 
 // Drafts assembled ONLY from numbers the user's own pillars actually produced.
@@ -180,17 +179,26 @@ export function buildStarters(input: StarterInput, limit = 3): StarterDraft[] {
 
   if (input.career && input.career.won + input.career.drawn + input.career.lost >= 3) {
     const c = input.career;
-    const feels = c.pointsPerGame >= 1.8 ? "ahead of" : c.pointsPerGame >= 1.2 ? "in line with" : "behind";
+    // A code, not a phrase: `feels` is a rowText code variable, so the word that says how the
+    // performances sit against the points is the reader's own — three copies of this long
+    // sentence would have been the alternative.
+    const feels = c.pointsPerGame >= 1.8 ? "ahead" : c.pointsPerGame >= 1.2 ? "inline" : "behind";
     out.push({
       id: "starter-career",
       tag: "Tactics",
-      title: `${c.clubName}: ${c.won}-${c.drawn}-${c.lost} at ${c.pointsPerGame.toFixed(2)} pts/game — playing to the record or against it?`,
-      body: `Running ${c.clubName} with ${c.gamesRemaining} fixtures left, currently #${c.position} of ${c.clubCount}. The underlying performances feel ${feels} the points, so what would you change about the approach?`,
+      title: {
+        key: "comm.starter.careerTitle",
+        vars: { club: c.clubName, won: c.won, drawn: c.drawn, lost: c.lost, ppg: c.pointsPerGame.toFixed(2) },
+      },
+      body: {
+        key: "comm.starter.careerBody",
+        vars: { club: c.clubName, remaining: c.gamesRemaining, position: c.position, count: c.clubCount, feels },
+      },
       evidence: [
-        `${c.won}-${c.drawn}-${c.lost}`,
-        `${c.pointsPerGame.toFixed(2)} pts/game`,
-        `#${c.position} of ${c.clubCount}`,
-        `${c.gamesRemaining} fixtures left`,
+        { key: "comm.starter.evRecord", vars: { won: c.won, drawn: c.drawn, lost: c.lost } },
+        { key: "comm.starter.evPpg", vars: { n: c.pointsPerGame.toFixed(2) } },
+        { key: "comm.starter.evTable", vars: { position: c.position, count: c.clubCount } },
+        { key: "comm.starter.evRemaining", vars: { n: c.gamesRemaining } },
       ],
     });
   }
@@ -200,34 +208,48 @@ export function buildStarters(input: StarterInput, limit = 3): StarterDraft[] {
   // than guessed at — the same rule the other arms follow.
   if (input.training && input.training.sessions >= 2 && input.training.topFocusKey && typeof input.training.topFocusSessions === "number") {
     const t = input.training;
-    const focus = attributeLabel(t.topFocusKey!);
     // M204: this said "Most of my work is X" whatever the numbers were. The caller hands over
     // the most frequent focus and its count, and 1 of 5 sessions is reachable from the store
     // (five completed sessions, five different focus attributes) — so the draft could claim a
     // majority the record does not have. The word now follows the ratio.
     const hits = t.topFocusSessions ?? 0;
     const majority = hits * 2 > t.sessions;
+    // The guard above established the focus key; `!` here is the same reading the old
+    // `attributeLabel(t.topFocusKey!)` took, and the draft is withheld without it.
+    const vars = { a: t.topFocusKey!, hits, sessions: t.sessions };
     out.push({
       id: "starter-training",
       tag: "General",
-      title: `${majority ? "Most of my work is" : "My most-used focus is"} ${focus} (${hits} of ${t.sessions} sessions) — bias or plan?`,
-      body: `I have logged ${t.sessions} sessions totalling ${t.minutes} minutes${t.avgRating != null ? `, self-rated ${t.avgRating}/5 on average` : ""}, and ${hits} of them hit ${focus}. At what point does focus become neglect of everything else?`,
+      title: { key: majority ? "comm.starter.trainingTitleMost" : "comm.starter.trainingTitleFocus", vars },
+      // Written out rather than spread: the placeholder audit reads a `vars:` body through a
+      // balanced-brace scanner and refuses a shape it cannot read, which `{ ...vars }` is.
+      body: t.avgRating != null
+        ? { key: "comm.starter.trainingBodyRated", vars: { a: t.topFocusKey!, hits, sessions: t.sessions, minutes: t.minutes, rating: t.avgRating } }
+        : { key: "comm.starter.trainingBody", vars: { a: t.topFocusKey!, hits, sessions: t.sessions, minutes: t.minutes } },
       evidence: [
-        `${t.sessions} sessions · ${t.minutes} min`,
-        `${focus} ×${hits}`,
-        t.avgRating != null ? `avg self-rating ${t.avgRating}/5` : "no self-ratings yet",
+        { key: "comm.starter.evSessions", vars: { n: t.sessions, min: t.minutes } },
+        { key: "comm.starter.evFocus", vars: { a: t.topFocusKey!, hits } },
+        t.avgRating != null ? { key: "comm.starter.evRating", vars: { n: t.avgRating } } : { key: "comm.starter.evNoRating" },
       ],
     });
   }
 
   if (input.academy && input.academy.completed > 0 && input.academy.lastLesson) {
     const a = input.academy;
+    // The lesson title is the catalogue's own word, so it travels as a variable and is never
+    // re-read as a key.
+    const lesson = a.lastLesson!;
+    const vars = { n: a.completed, mastered: a.mastered, lesson };
     out.push({
       id: "starter-academy",
       tag: "Debates",
-      title: `The academy says ${a.lastLesson} — does that kind of theory show up under pressure?`,
-      body: `Academy so far: ${a.completed} lesson${a.completed === 1 ? "" : "s"} completed, ${a.mastered} with a passed check, most recently ${a.lastLesson}. Has anyone seen a measurable difference in their own games from this kind of study, or is it mostly coaching language?`,
-      evidence: [`${a.completed} completed`, `${a.mastered} passed check${a.mastered === 1 ? "" : "s"}`, `latest lesson: ${a.lastLesson}`],
+      title: { key: "comm.starter.academyTitle", vars: { lesson } },
+      body: { key: a.completed === 1 ? "comm.starter.academyBodyOne" : "comm.starter.academyBody", vars },
+      evidence: [
+        { key: "comm.starter.evCompleted", vars: { n: a.completed } },
+        { key: a.mastered === 1 ? "comm.starter.evChecksOne" : "comm.starter.evChecks", vars: { n: a.mastered } },
+        { key: "comm.starter.evLatest", vars: { lesson } },
+      ],
     });
   }
 
@@ -236,9 +258,9 @@ export function buildStarters(input: StarterInput, limit = 3): StarterDraft[] {
     out.push({
       id: "starter-watchlist",
       tag: "Transfers",
-      title: `Watching ${w} player${w === 1 ? "" : "s"} — what would actually make you sign one?`,
-      body: `I have ${w} on my watchlist. Rather than arguing about names: what is your decision rule — age and resale, immediate contribution, or squad fit?`,
-      evidence: [`${w} watched`],
+      title: { key: w === 1 ? "comm.starter.watchTitleOne" : "comm.starter.watchTitle", vars: { n: w } },
+      body: { key: "comm.starter.watchBody", vars: { n: w } },
+      evidence: [{ key: "comm.starter.evWatched", vars: { n: w } }],
     });
   }
 

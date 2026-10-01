@@ -567,6 +567,8 @@ const DYN_SITES = [
   // `ai.legend.` — a retrieval kind says what an entity *is*, this says what a story
   // *claims*, and the two share no values.
   { path: "domain/rowText.ts", expr: "code.toLowerCase()", prefix: "ni.kind.", suffix: "" },
+  // M244: how a record sits against its points, as the community board's career draft words it.
+  { path: "domain/rowText.ts", expr: "code", prefix: "comm.feels.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "impact.certainty", prefix: "ni.certainty.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
@@ -777,6 +779,14 @@ const SPACES = new Map([
     // so a sixth article type cannot ship with its word missing in a locale.
     name: "the article types a news story claims",
     values: lower(spaceOf("domain/types.ts", /export const NEWS_KINDS[^=]*=[\s\S]*?\];/, /"([A-Za-z]+)"/g)),
+  }],
+  ["comm.feels.|code", {
+    // The RECORD_FEELS union in domain/types.ts, so a fourth arm cannot ship without its word.
+    // The terminator is `]` and not `];`: this list is `[...] as const`, and asking for the
+    // semicolon made the non-greedy match run on to the next array in the file — which is how
+    // this clause first reported seven values, four of them attribute categories.
+    name: "how a record sits against its points",
+    values: spaceOf("domain/types.ts", /export const RECORD_FEELS[^=]*=[^\]]*\]/, /"([a-z]+)"/g),
   }],
   ["ni.certainty.|impact.certainty", {
     // The band function's own return type: three arms, one per threshold in `bandCertainty`.
@@ -2806,7 +2816,7 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // string in six places. It is trn.title.focus with the attrs code var now, and the eighteen
 // catalogue labels M192 had to leave behind are deleted rather than keyed, because no screen
 // ever read them.
-const DOMAIN_PROSE_CEILING = 133;
+const DOMAIN_PROSE_CEILING = 112;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
@@ -2815,7 +2825,7 @@ const DOMAIN_PROSE_CEILING = 133;
 // M225 adds domain/matchEngine.ts: unlike the three format-only modules above it held real
 // sentences ("The midfield was finely balanced."), and they are rows now, so the module is
 // pinned at zero like the rest.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts", "domain/training.ts", "domain/onboarding.ts", "domain/attributes.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts", "domain/training.ts", "domain/onboarding.ts", "domain/attributes.ts", "domain/community.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -2825,7 +2835,7 @@ ok(`domain prose still on keys has not grown (${debtTotal} literals across ${deb
 // keys a module, and may never raise one.
 const PROSE_CAPS = {
   "domain/learn.ts": 83,
-  "domain/community.ts": 21,
+  "domain/community.ts": 0,
   "domain/career.ts": 29,
   "domain/footprint.ts": 0,
   "domain/attributes.ts": 0,

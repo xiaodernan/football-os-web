@@ -186,7 +186,7 @@ ok("a training draft needs 2 sessions, a known top focus AND its count — an in
   trainingHeld({ sessions: 1 }) && trainingHeld({ topFocusKey: undefined }) && trainingHeld({ topFocusSessions: undefined }) &&
     buildStarters({ training }, 5).some((d) => d.id === "starter-training"));
 ok(`…and nothing is ever printed as "undefined" (${buildStarters({ training: { sessions: 4, minutes: 100, topFocusKey: "passing", avgRating: null } }, 5).length} drafts from a focus with no count)`,
-  buildStarters({ training: { sessions: 4, minutes: 100, topFocusKey: "passing", avgRating: null } }, 5).every((d) => !/undefined|NaN/.test(`${d.title} ${d.body} ${d.evidence.join(" ")}`)));
+  buildStarters({ training: { sessions: 4, minutes: 100, topFocusKey: "passing", avgRating: null } }, 5).every((d) => !/undefined|NaN/.test(`${S(d.title)} ${S(d.body)} ${d.evidence.map(S).join(" ")}`)));
 ok("an academy draft needs a completed lesson AND its title",
   buildStarters({ academy: { completed: 0, mastered: 0, lastLesson: "x" } }, 5).every((d) => d.id !== "starter-academy") &&
   buildStarters({ academy: { completed: 2, mastered: 0 } }, 5).every((d) => d.id !== "starter-academy") &&
@@ -195,30 +195,34 @@ ok("a watchlist draft needs at least one watched player",
   buildStarters({ watchlist: 0 }, 5).every((d) => d.id !== "starter-watchlist") && buildStarters({ watchlist: 1 }, 5).some((d) => d.id === "starter-watchlist"));
 
 // The numbers in a draft must be the numbers it was given — recomputed here.
+// M244 moved the drafts onto rows, so every clause below reads what the reader would see
+// rather than a string off the object. `en` is the same seam the thread clauses use.
+const S = (row) => en(row) ?? "";
 const one = (d, dft) => buildStarters(d, 5)[0];
 const cd = one(FULL);
-ok(`the career draft's title and body quote the record it was handed (${cd.title})`,
-  cd.title.includes("5-2-1") && cd.title.includes("1.89 pts/game") && cd.body.includes("#3 of 20") && cd.body.includes("7 fixtures left"));
+ok(`the career draft's title and body quote the record it was handed (${S(cd.title)})`,
+  S(cd.title).includes("5-2-1") && S(cd.title).includes("1.89 pts/game") && S(cd.body).includes("#3 of 20") && S(cd.body).includes("7 fixtures left"));
 const td = buildStarters({ training }, 5)[0];
-ok(`the training draft quotes sessions, minutes, focus count and self-rating (${td.evidence.join(" / ")})`,
-  td.body.includes("6 sessions totalling 270 minutes") && td.body.includes("4 of them hit") && td.body.includes("self-rated 3.5/5"));
+ok(`the training draft quotes sessions, minutes, focus count and self-rating (${td.evidence.map(S).join(" / ")})`,
+  S(td.body).includes("6 sessions totalling 270 minutes") && S(td.body).includes("4 of them hit") && S(td.body).includes("self-rated 3.5/5"));
 const ad = buildStarters({ academy }, 5)[0];
-ok("the academy draft pluralises from the count it was given", ad.body.includes("3 lessons completed") && ad.body.includes("2 with a passed check"));
+ok("the academy draft pluralises from the count it was given", S(ad.body).includes("3 lessons completed") && S(ad.body).includes("2 with a passed check"));
 ok("…and keeps the singular when the count is 1",
-  buildStarters({ academy: { completed: 1, mastered: 1, lastLesson: "X" } }, 5)[0].body.includes("1 lesson completed, 1 with a passed check"));
+  S(buildStarters({ academy: { completed: 1, mastered: 1, lastLesson: "X" } }, 5)[0].body).includes("1 lesson completed, 1 with a passed check"));
 const wd = buildStarters({ watchlist: 1 }, 5)[0];
-ok("…same for the watchlist wording", wd.title.includes("1 player —") && buildStarters({ watchlist: 3 }, 5)[0].title.includes("3 players —"));
+ok("…same for the watchlist wording", S(wd.title).includes("1 player —") && S(buildStarters({ watchlist: 3 }, 5)[0].title).includes("3 players —"));
 const noRating = buildStarters({ training: { ...training, avgRating: null } }, 5)[0];
-ok(`a visitor with no self-ratings is not given one (${noRating.evidence[2]})`,
-  noRating.evidence[2] === "no self-ratings yet" && !noRating.body.includes("self-rated"));
+ok(`a visitor with no self-ratings is not given one (${S(noRating.evidence[2])})`,
+  S(noRating.evidence[2]) === "no self-ratings yet" && !S(noRating.body).includes("self-rated"));
 
 // Every figure in an evidence row has to appear in the draft that cites it. The rows
 // restate the numbers in their own compact form ("6 sessions · 270 min"), so the claim
 // being checked is that no figure is quoted in one place and invented in the other —
 // not that the row is a substring of the prose.
-const orphans = all.flatMap((d) => d.evidence.flatMap((e) => {
+const orphans = all.flatMap((d) => d.evidence.flatMap((row) => {
+  const e = S(row);
   const nums = e.match(/\d+(\.\d+)?/g) ?? [];
-  const text = `${d.title} ${d.body}`;
+  const text = `${S(d.title)} ${S(d.body)}`;
   return nums.filter((n) => !text.includes(n)).map((n) => `${d.id}: ${n} missing from the draft that cites "${e}"`);
 }));
 ok(`every number in an evidence row is quoted by its own draft (${all.reduce((n, d) => n + d.evidence.length, 0)} rows across ${all.length} drafts${orphans.length ? `; ${orphans.join(" | ")}` : ", all present"})`,
@@ -227,7 +231,17 @@ ok("…and each draft carries at least one evidence row, so the check above is n
   all.every((d) => d.evidence.length >= 1));
 
 // "feel" of the record: the word is chosen by points/game, at 1.8 and 1.2.
-const feels = (ppg) => buildStarters({ career: { ...career, pointsPerGame: ppg } }, 5)[0].body.match(/feel (\w+)/)?.[1] ?? buildStarters({ career: { ...career, pointsPerGame: ppg } }, 5)[0].body.match(/performances (are )?([\w ]+? the points)/)?.[2] ?? "?";
+const feels = (ppg) => S(buildStarters({ career: { ...career, pointsPerGame: ppg } }, 5)[0].body).match(/feel ([\w ]+?) the points/)?.[1]?.trim() ?? "?";
+// M244. Two properties the drafts had no way to fail before, now that they are rows.
+const zhDraft = buildStarters(FULL, 5);
+const passingDraft = () => buildStarters({ training: { ...training, topFocusKey: "passing" } }, 5)[0];
+ok("every draft reads in the reader's own language, title and body",
+  zhDraft.every((d) => say("zh-CN")(d.title) !== S(d.title) && say("zh-CN")(d.body) !== S(d.body)));
+ok("…and the attribute a draft names is resolved through the interpreter rather than printed as its key",
+  say("zh-CN")(passingDraft().title).includes("传球") && !/passing/.test(say("zh-CN")(passingDraft().title)));
+ok("…and the arm that words a record against its points is a code the interpreter resolves, not a phrase in the module",
+  ["ahead", "inline", "behind"].includes(cd.body.vars.feels) &&
+  say("zh-CN")(buildStarters({ career: { ...career, pointsPerGame: 0.4 } }, 5)[0].body).includes("落后于"));
 const FEEL_CASES = [
   [2.4, "ahead"], [1.8, "ahead"], [1.79, "in"], [1.2, "in"], [1.19, "behind"], [0.4, "behind"],
 ];
@@ -235,15 +249,15 @@ const feelBad = FEEL_CASES.filter(([ppg, want]) => !feels(ppg).startsWith(want))
 ok(`the record-feeling word switches at 1.8 and 1.2, measured on both sides of each (${FEEL_CASES.map(([p, w]) => `${p}→${feels(p)}`).join(" ")})`,
   feelBad.length === 0);
 ok("…and the sentence never claims a number that is not the one it was given",
-  FEEL_CASES.every(([ppg]) => buildStarters({ career: { ...career, pointsPerGame: ppg } }, 5)[0].title.includes(`${ppg.toFixed(2)} pts/game`)));
+  FEEL_CASES.every(([ppg]) => S(buildStarters({ career: { ...career, pointsPerGame: ppg } }, 5)[0].title).includes(`${ppg.toFixed(2)} pts/game`)));
 
 // The claim the wording must not overreach: a plurality is not "most of my work".
 const plurality = buildStarters({ training: { sessions: 5, minutes: 200, topFocusKey: "dribbling", topFocusSessions: 1, avgRating: null } }, 5)[0];
-ok(`a 1-of-5 top focus is described as a plurality, never as most of the work (${plurality.title})`,
-  !/^Most of my work/.test(plurality.title));
+ok(`a 1-of-5 top focus is described as a plurality, never as most of the work (${S(plurality.title)})`,
+  !/^Most of my work/.test(S(plurality.title)));
 ok("…while a genuine majority still says most (4 of 5 sessions)",
-  /^Most of my work/.test(buildStarters({ training: { sessions: 5, minutes: 200, topFocusKey: "dribbling", topFocusSessions: 4, avgRating: null } }, 5)[0].title));
-const mixed = [1, 2, 3, 4, 5].map((k) => buildStarters({ training: { sessions: 5, minutes: 50, topFocusKey: "passing", topFocusSessions: k, avgRating: 4 } }, 5)[0].title);
+  /^Most of my work/.test(S(buildStarters({ training: { sessions: 5, minutes: 200, topFocusKey: "dribbling", topFocusSessions: 4, avgRating: null } }, 5)[0].title)));
+const mixed = [1, 2, 3, 4, 5].map((k) => S(buildStarters({ training: { sessions: 5, minutes: 50, topFocusKey: "passing", topFocusSessions: k, avgRating: 4 } }, 5)[0].title));
 ok(`…and the switch happens between 2 of 5 and 3 of 5 — a strict majority, not a bare plurality (${mixed[1].split(" (")[0]} vs ${mixed[2].split(" (")[0]})`,
   mixed.slice(0, 2).every((t) => !/^Most of my work/.test(t)) && mixed.slice(2).every((t) => /^Most of my work/.test(t)));
 

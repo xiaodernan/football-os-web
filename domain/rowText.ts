@@ -11,7 +11,7 @@
 import { ATTRIBUTE_KEYS, CATEGORIES, POSITION_GROUPS } from "./attributes";
 import { ARCHETYPE_KEYS } from "./playerDna";
 import { TRAJECTORIES } from "./careerArc";
-import { MODES, NEWS_KINDS, SEARCH_KINDS, SHOT_TYPES } from "./types";
+import { MODES, NEWS_KINDS, RECORD_FEELS, SEARCH_KINDS, SHOT_TYPES } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 // A variable normally holds a word or a number, but one row may also carry another whole
@@ -46,7 +46,7 @@ export type Translate = (key: string, vars?: Record<string, string | number>) =>
 // lists the coach's diagnosis and its continuity line name: before M230 the coach handed those
 // rows the English *label* of each key, so a 简体中文 reader read "Ball Control, Weak Foot" inside a
 // Chinese sentence, and the row contract could not put it back — the value was already a word.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "foci", "arch", "arch2", "kind", "stance", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr"];
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "foci", "arch", "arch2", "kind", "stance", "feels", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr"];
 
 function codeWord(code: string, t: Translate): string {
   // Two variables hold a LIST, and the shape of an item tells them apart. `focus` is a plain
@@ -72,6 +72,7 @@ function codeWord(code: string, t: Translate): string {
   if (ARCHETYPE_KEYS.includes(code)) return t(`dna.arch.${code}`);
   if ((SEARCH_KINDS as readonly string[]).includes(code)) return t(`ai.legend.${code}`);
   if ((NEWS_KINDS as readonly string[]).includes(code)) return t(`ni.kind.${code.toLowerCase()}`);
+  if ((RECORD_FEELS as readonly string[]).includes(code)) return t(`comm.feels.${code}`);
   if ((TRAJECTORIES as readonly string[]).includes(code)) return t(`det.arc.${code}`);
   if ((CATEGORIES as readonly string[]).includes(code)) return t(`attr.${code}`);
   if ((SHOT_TYPES as readonly string[]).includes(code)) return t(`sim.shot.${code}`);
