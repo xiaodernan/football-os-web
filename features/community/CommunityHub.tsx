@@ -3,7 +3,7 @@ import { useOnline, useLearnRecords } from "@/lib/hooks";
 import { newId } from "@/lib/ids";
 import { useI18n, formatDate, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
-import { buildStarters, allTags, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
+import { buildStarters, allTags, repairCommunityTexts, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
 import { LESSONS, isCompleted, summarizeLearn } from "@/domain/learn";
 import { seasonSummary, type CareerState } from "@/domain/career";
 import { CAREER_KEY, COMMUNITY_KEY } from "@/domain/localData";
@@ -143,7 +143,12 @@ export function CommunityHub() {
     let list = merged;
     if (mine) list = list.filter((th) => th.author === MY);
     if (tag !== "All") list = list.filter((th) => th.tag === tag);
-    if (q.trim()) { const n = q.toLowerCase(); list = list.filter((th) => (th.title + th.body).toLowerCase().includes(n)); }
+    if (q.trim()) {
+      // The filter reads what the reader sees, so it resolves both rows first. Comparing the
+      // rows themselves would have searched the string "[object Object]".
+      const n = q.toLowerCase();
+      list = list.filter((th) => (rowLine(th.title, t) + " " + rowLine(th.body, t)).toLowerCase().includes(n));
+    }
     const score = (th: Thread) => (th.seeded ? th.comments.length : th.comments.length + 2) + likeCount(th.id, 0) * 2;
     return [...list].sort((a, b) => sort === "top"
       ? score(b) - score(a)
@@ -155,13 +160,14 @@ export function CommunityHub() {
   const toggleLike = (id: string) => save({ ...store, likes: store.likes.includes(id) ? store.likes.filter((x) => x !== id) : [...store.likes, id] });
 
   const addReply = (threadId: string, body: string) => {
-    const c: Comment = { id: newId("u-"), author: MY, body, at: new Date().toISOString(), likes: 0, sample: false };
+    const c: Comment = { id: newId("u-"), author: MY, body: { value: body }, at: new Date().toISOString(), likes: 0, sample: false };
     save({ ...store, replies: { ...store.replies, [threadId]: [c, ...(store.replies[threadId] ?? [])] } });
     toast(t("comm.toastComment"));
   };
 
   const addThread = (title: string, body: string, threadTag: string) => {
-    const th: Thread = { id: newId("u-t-"), title, body, tag: threadTag, author: MY, at: new Date().toISOString(), seeded: false, comments: [] };
+    // The visitor's own words, stored as a value: never a key, and never translated.
+    const th: Thread = { id: newId("u-t-"), title: { value: title }, body: { value: body }, tag: threadTag, author: MY, at: new Date().toISOString(), seeded: false, comments: [] };
     save({ ...store, userThreads: [th, ...store.userThreads] });
     setComposing(false);
     setOpenId(th.id);
@@ -233,8 +239,8 @@ export function CommunityHub() {
                 )}
                 <span className="text-xs text-muted-foreground">{authorName(t, th.author)} · {rowLine(timeAgo(locale, th.at), t)}</span>
               </div>
-              <div className="mt-1 font-medium leading-snug">{th.title}</div>
-              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{th.body}</p>
+              <div className="mt-1 font-medium leading-snug">{rowLine(th.title, t)}</div>
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{rowLine(th.body, t)}</p>
               <div className="mt-2 text-xs text-muted-foreground">💬 {nReplies(t, th.comments.length)}</div>
             </div>
           </button>
@@ -320,8 +326,8 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
           )}
           <span className="text-xs text-muted-foreground">{authorName(t, thread.author)} · {rowLine(timeAgo(locale, thread.at), t)}</span>
         </div>
-        <h1 className="mt-2 text-xl font-bold">{thread.title}</h1>
-        <p className="mt-2 whitespace-pre-line text-sm text-foreground/90">{thread.body}</p>
+        <h1 className="mt-2 text-xl font-bold">{rowLine(thread.title, t)}</h1>
+        <p className="mt-2 whitespace-pre-line text-sm text-foreground/90">{rowLine(thread.body, t)}</p>
         <div className="mt-3"><Button size="sm" variant={liked ? "secondary" : "outline"} onClick={onLike}>{liked ? t("comm.liked") : t("comm.like")}</Button></div>
         {thread.seeded && <p className="mt-2 text-[11px] text-muted-foreground">{t("comm.seededNote")}</p>}
       </Panel>
@@ -344,7 +350,7 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
                   </span>
                   <span>{rowLine(timeAgo(locale, c.at), t)}</span>
                 </div>
-                <p className="mt-1 text-sm">{c.body}</p>
+                <p className="mt-1 text-sm">{rowLine(c.body, t)}</p>
                 {!c.sample && (
                   <button onClick={() => onLikeComment(c.id)} className={cn("mt-2 text-xs", cLiked ? "text-primary" : "text-muted-foreground hover:text-primary")}>{cLiked ? "♥" : "♡"} {c.likes + (cLiked ? 1 : 0)}</button>
                 )}
@@ -360,7 +366,11 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
 function load(): CommunityStore {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? { ...EMPTY, ...JSON.parse(raw) } : EMPTY;
+    if (!raw) return EMPTY;
+    // The hydration boundary, like the store's: threads and replies written while `title`,
+    // `body` and a reply's `body` were plain strings are repaired into rows here, so no read
+    // site has to defend itself against a stored string.
+    return repairCommunityTexts({ ...EMPTY, ...JSON.parse(raw) });
   } catch {
     return EMPTY;
   }

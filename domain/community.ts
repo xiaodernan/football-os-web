@@ -1,5 +1,6 @@
 import { makeRng, rngInt, pick } from "@/lib/rng";
 import { attributeLabel } from "./attributes";
+import { asRowText, type RowText } from "./rowText";
 import { footballProvider, getClub, getCompetition, newsFeed } from "@/data/footballService";
 
 // Community in Demo Mode is a local discussion surface, not a networked one.
@@ -13,7 +14,7 @@ import { footballProvider, getClub, getCompetition, newsFeed } from "@/data/foot
 export interface Comment {
   id: string;
   author: string;
-  body: string;
+  body: RowText;
   at: string;
   likes: number;
   sample: boolean; // generated demonstration content, not a real person
@@ -21,34 +22,54 @@ export interface Comment {
 
 export interface Thread {
   id: string;
-  title: string;
+  title: RowText;
   tag: string;
   author: string;
-  body: string;
+  body: RowText;
   at: string;
   seeded: boolean;
   comments: Comment[];
 }
 
+/** Threads and replies stored before these fields were rows hold the text the app wrote at the
+ *  time — the visitor's own words, or a seeded sentence from an older build. Both are kept
+ *  verbatim as a value and never re-read as a key, which is the same repair a session title, a
+ *  goal title and a coach prompt get. Called from the store's hydration boundary. */
+export function repairCommunityTexts<T extends { userThreads: Thread[]; replies: Record<string, Comment[]> }>(store: T): T {
+  const legacy = (v: unknown) => typeof v === "string";
+  const anyLegacy =
+    store.userThreads.some((th) => legacy(th.title as unknown) || legacy(th.body as unknown)) ||
+    Object.values(store.replies ?? {}).some((list) => (list ?? []).some((c) => legacy(c.body as unknown)));
+  if (!anyLegacy) return store;
+  const fixThread = (th: Thread): Thread => ({ ...th, title: asRowText(th.title as unknown as string), body: asRowText(th.body as unknown as string) });
+  const fixComment = (c: Comment): Comment => ({ ...c, body: asRowText(c.body as unknown as string) });
+  return {
+    ...store,
+    userThreads: store.userThreads.map((th) => (legacy(th.title as unknown) || legacy(th.body as unknown) ? fixThread(th) : th)),
+    replies: Object.fromEntries(
+      Object.entries(store.replies ?? {}).map(([k, list]) => [k, (list ?? []).map((c) => (legacy(c.body as unknown) ? fixComment(c) : c))]),
+    ),
+  };
+}
+
 const HANDLES = ["tiki_taka_tom", "lowblock_lena", "xg_or_nothing", "boxtobox_bea", "false9_felix", "pressing_pro", "setpiece_sam", "counter_kai", "libero_luca", "winger_wren"];
 
-const OPINIONS = [
-  "The underlying numbers back that up — the chances were there for most of the game.",
-  "I'd caution against reading too much into one result; the sample is tiny.",
-  "That's exactly the trade-off the new shape is trying to manage.",
-  "People sleep on how much that costs physically by the final twenty minutes.",
-  "Genuinely the most underrated role on the pitch right now.",
-  "Fair point, but I think you're overweighting the goals and underweighting the chance creation.",
-  "The tactical discipline to hold that line is not easy to coach.",
-  "This is where squad depth quietly decides a season.",
+// The reply bank. Keys rather than sentences: these are the model's own voice pretending to be
+// other people, so a reader on 简体中文 has to see Chinese sample replies, and the bank is
+// picked by a seeded index the dictionary cannot be asked about. The two banks stay separate
+// arrays because `seededComments` picks between them, not because the wording differs.
+const OPINION_KEYS = [
+  "comm.opinion.1",
+  "comm.opinion.2",
+  "comm.opinion.3",
+  "comm.opinion.4",
+  "comm.opinion.5",
+  "comm.opinion.6",
+  "comm.opinion.7",
+  "comm.opinion.8",
 ];
 
-const QUESTIONS = [
-  "Would you change the approach if you were a game ahead rather than a game level?",
-  "Is that a system issue or a personnel issue, honestly?",
-  "How much of this comes down to the opponent's block height?",
-  "What would you tweak at half-time if it stayed goalless?",
-];
+const QUESTION_KEYS = ["comm.question.1", "comm.question.2", "comm.question.3", "comm.question.4"];
 
 function ago(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();
@@ -59,11 +80,11 @@ function seededComments(threadSeed: string): Comment[] {
   const n = rngInt(rng, 1, 4);
   return Array.from({ length: n }, (_, i) => {
     const useQ = rng() < 0.35;
-    const bank = useQ ? QUESTIONS : OPINIONS;
+    const bank = useQ ? QUESTION_KEYS : OPINION_KEYS;
     return {
       id: `${threadSeed}-c${i}`,
       author: pick(rng, HANDLES),
-      body: bank[(rngInt(rng, 0, bank.length - 1)) % bank.length],
+      body: { key: bank[(rngInt(rng, 0, bank.length - 1)) % bank.length] },
       at: ago(rngInt(rng, 0, 6)),
       likes: 0, // generated replies never claim popularity they don't have
       sample: true,
@@ -84,10 +105,16 @@ export function seedThreads(): Thread[] {
     const id = `t-race-${comp.id}`;
     threads.push({
       id,
-      title: `${getCompetition(comp.id)?.name ?? comp.name} title race: ${a.name} vs ${b.name}?`,
+      title: {
+        key: "comm.thread.raceTitle",
+        vars: { competition: getCompetition(comp.id)?.name ?? comp.name, a: a.name, b: b.name },
+      },
       tag: "Debates",
       author: pick(makeRng(id), HANDLES),
-      body: `${a.name} lead on ${table[0].points} points with ${b.name} on ${table[1].points}. Who has the better squad to go all the way?`,
+      body: {
+        key: "comm.thread.raceBody",
+        vars: { a: a.name, pa: table[0].points, b: b.name, pb: table[1].points },
+      },
       at: ago(rngInt(makeRng(id), 1, 4)),
       seeded: true,
       comments: seededComments(id),
@@ -99,10 +126,15 @@ export function seedThreads(): Thread[] {
     const id = `t-news-${n.id}`;
     threads.push({
       id,
-      title: n.title,
+      // The article's own headline, so it is the record's word and not the model's: a value,
+      // shown exactly as the feed wrote it, never re-read as a key.
+      title: { value: n.title },
       tag: n.kind === "Rumor" ? "Rumours" : "News",
       author: pick(makeRng(id), HANDLES),
-      body: `${n.summary}\n\nSource credibility is ${(n.credibility * 100).toFixed(0)}%. Take it accordingly.`,
+      body: {
+        key: "comm.thread.newsBody",
+        vars: { summary: n.summary, cred: (n.credibility * 100).toFixed(0) },
+      },
       at: n.publishedAt,
       seeded: true,
       comments: seededComments(id),

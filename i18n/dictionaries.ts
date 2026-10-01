@@ -1884,6 +1884,24 @@ const en: Dict = {
   "fp.ev.noActivity": "No dated activity recorded yet",
   "fp.src.state": "Your on-device Football OS state",
   "fp.src.local": "Academy, career, film and community local records",
+  // The community board's generated sample content (domain/community.ts). The reply bank is
+  // picked by a seeded index, so the sentences are keys in two arrays and the index chooses
+  // between them; a reader on any locale sees sample replies in their own language.
+  "comm.opinion.1": "The underlying numbers back that up — the chances were there for most of the game.",
+  "comm.opinion.2": "I'd caution against reading too much into one result; the sample is tiny.",
+  "comm.opinion.3": "That's exactly the trade-off the new shape is trying to manage.",
+  "comm.opinion.4": "People sleep on how much that costs physically by the final twenty minutes.",
+  "comm.opinion.5": "Genuinely the most underrated role on the pitch right now.",
+  "comm.opinion.6": "Fair point, but I think you're overweighting the goals and underweighting the chance creation.",
+  "comm.opinion.7": "The tactical discipline to hold that line is not easy to coach.",
+  "comm.opinion.8": "This is where squad depth quietly decides a season.",
+  "comm.question.1": "Would you change the approach if you were a game ahead rather than a game level?",
+  "comm.question.2": "Is that a system issue or a personnel issue, honestly?",
+  "comm.question.3": "How much of this comes down to the opponent's block height?",
+  "comm.question.4": "What would you tweak at half-time if it stayed goalless?",
+  "comm.thread.raceTitle": "{competition} title race: {a} vs {b}?",
+  "comm.thread.raceBody": "{a} lead on {pa} points with {b} on {pb}. Who has the better squad to go all the way?",
+  "comm.thread.newsBody": "{summary}\n\nSource credibility is {cred}%. Take it accordingly.",
 };
 
 const zhCN: Dict = {
@@ -3694,6 +3712,21 @@ const zhCN: Dict = {
   "fp.ev.noActivity": "还没有带日期的活动记录",
   "fp.src.state": "你本机的 Football OS 状态",
   "fp.src.local": "学院、生涯、视频与社区的本机记录",
+  "comm.opinion.1": "底层数据支持这个说法——大部分时间里机会都在。",
+  "comm.opinion.2": "我建议别从一场比赛里读太多东西；样本太小了。",
+  "comm.opinion.3": "这正是新体系想处理的取舍。",
+  "comm.opinion.4": "大家都低估了最后二十分钟这一下有多耗体能。",
+  "comm.opinion.5": "说实话，这是目前场上最被低估的位置。",
+  "comm.opinion.6": "有道理，但我觉得你高估了进球、低估了机会创造。",
+  "comm.opinion.7": "守住那条线的战术纪律，不是好练的。",
+  "comm.opinion.8": "阵容深度往往就是这样悄悄决定一个赛季的。",
+  "comm.question.1": "如果你领先一球而不是战平，你会改打法吗？",
+  "comm.question.2": "说真的，这是体系问题还是人员问题？",
+  "comm.question.3": "这里面有多少取决于对手的防线高度？",
+  "comm.question.4": "如果半场还是 0-0，你会调整什么？",
+  "comm.thread.raceTitle": "{competition}争冠：{a} 对 {b}？",
+  "comm.thread.raceBody": "{a} 以 {pa} 分领跑，{b} 为 {pb} 分。谁的阵容更有希望走到最后？",
+  "comm.thread.newsBody": "{summary}\n\n来源可信度 {cred}%，请自行判断。",
 };
 
 const zhTW: Dict = {
@@ -5509,6 +5542,21 @@ const zhTW: Dict = {
   "fp.ev.noActivity": "還沒有帶日期的活動記錄",
   "fp.src.state": "你本機的 Football OS 狀態",
   "fp.src.local": "學院、生涯、影片與社群的本機紀錄",
+  "comm.opinion.1": "底層數據支持這個說法——大部分時間裡機會都在。",
+  "comm.opinion.2": "我建議別從一場比賽裡讀太多東西；樣本太小了。",
+  "comm.opinion.3": "這正是新體系想處理的取捨。",
+  "comm.opinion.4": "大家都低估了最後二十分鐘這一下有多耗體能。",
+  "comm.opinion.5": "說實話，這是目前場上最被低估的位置。",
+  "comm.opinion.6": "有道理，但我覺得你高估了進球、低估了機會創造。",
+  "comm.opinion.7": "守住那條線的戰術紀律，不是好練的。",
+  "comm.opinion.8": "陣容深度往往就是這樣悄悄決定一個賽季的。",
+  "comm.question.1": "如果你領先一球而不是戰平，你會改打法嗎？",
+  "comm.question.2": "說真的，這是體系問題還是人員問題？",
+  "comm.question.3": "這裡面有多少取決於對手的防線高度？",
+  "comm.question.4": "如果半場還是 0-0，你會調整什麼？",
+  "comm.thread.raceTitle": "{competition}爭冠：{a} 對 {b}？",
+  "comm.thread.raceBody": "{a} 以 {pa} 分領跑，{b} 為 {pb} 分。誰的陣容更有希望走到最後？",
+  "comm.thread.newsBody": "{summary}\n\n來源可信度 {cred}%，請自行判斷。",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

@@ -2806,7 +2806,7 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // string in six places. It is trn.title.focus with the attrs code var now, and the eighteen
 // catalogue labels M192 had to leave behind are deleted rather than keyed, because no screen
 // ever read them.
-const DOMAIN_PROSE_CEILING = 148;
+const DOMAIN_PROSE_CEILING = 133;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
@@ -2825,7 +2825,7 @@ ok(`domain prose still on keys has not grown (${debtTotal} literals across ${deb
 // keys a module, and may never raise one.
 const PROSE_CAPS = {
   "domain/learn.ts": 83,
-  "domain/community.ts": 36,
+  "domain/community.ts": 21,
   "domain/career.ts": 29,
   "domain/footprint.ts": 0,
   "domain/attributes.ts": 0,

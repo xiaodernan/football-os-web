@@ -13,11 +13,16 @@ import { createServer } from "vite";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { makeSay } from "./lib/rows.mjs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const COMM = await server.ssrLoadModule("/domain/community.ts");
 const { seedThreads, allTags, buildStarters } = COMM;
 const { footballProvider, getClub, getCompetition, newsFeed } = await server.ssrLoadModule("/data/footballService.ts");
+// M241 moved a seeded thread's title, body and every sample reply onto rows, so this proof no
+// longer reads those words out of the module — it asks the app what the row says, in each
+// locale, through the same seam every other row-reading proof uses.
+const { say, locales } = await makeSay(server);
 
 let pass = 0, fail = 0;
 const ok = (name, cond, detail) => {
@@ -27,18 +32,20 @@ const ok = (name, cond, detail) => {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SRC = readFileSync(join(here, "..", "domain", "community.ts"), "utf8");
-// The banks and handles are read out of the module rather than retyped, so a new
-// opinion added there is automatically legal here and — more importantly — a thread
-// quoting text that is NOT in the shipped bank is caught.
+// The handle bank is still a list of words, so it is read out of the module rather than
+// retyped: a thread authored by someone outside it has to be caught. The two reply banks are
+// lists of KEYS now, so they are read the same way and compared against the keys the rows carry.
 const bank = (name) => {
   const m = SRC.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));
   return m ? [...m[1].matchAll(/"([^"]*)"/g)].map((x) => x[1]) : [];
 };
 const HANDLES = bank("HANDLES");
-const OPINIONS = bank("OPINIONS");
-const QUESTIONS = bank("QUESTIONS");
-ok(`the three name/content banks were parsed out of the module (${HANDLES.length} handles, ${OPINIONS.length} opinions, ${QUESTIONS.length} questions)`,
-  HANDLES.length >= 5 && OPINIONS.length >= 5 && QUESTIONS.length >= 3);
+const OPINION_KEYS = bank("OPINION_KEYS");
+const QUESTION_KEYS = bank("QUESTION_KEYS");
+ok(`the three name/content banks were parsed out of the module (${HANDLES.length} handles, ${OPINION_KEYS.length} opinions, ${QUESTION_KEYS.length} questions)`,
+  HANDLES.length >= 5 && OPINION_KEYS.length >= 5 && QUESTION_KEYS.length >= 3);
+ok("every reply key names a sentence the dictionary actually holds, in every locale",
+  [...OPINION_KEYS, ...QUESTION_KEYS].every((k) => locales.every((l) => say(l)({ key: k }) !== k)));
 
 // ---------------------------------------------------------------------------
 // 1 · seedThreads: shape, determinism, and grounding in the real table.
@@ -56,24 +63,29 @@ ok(`every stamp is a parseable ISO instant (${T.flatMap((t) => [t.at, ...t.comme
   T.flatMap((t) => [t.at, ...t.comments.map((c) => c.at)]).every((s) => !Number.isNaN(Date.parse(s))));
 
 // Race threads: the title names the top two of the REAL table and the body quotes their points.
+// Both are rows now, so the words are read through the reader rather than off the object.
+const en = say("en");
 const races = T.filter((t) => t.id.startsWith("t-race-"));
 const badRace = races.filter((t) => {
   const comp = t.id.replace("t-race-", "");
   const table = footballProvider.standings(comp).slice(0, 2);
   const a = getClub(table[0].clubId), b = getClub(table[1].clubId);
-  return !t.title.includes(a.name) || !t.title.includes(b.name) ||
-    !t.body.includes(String(table[0].points)) || !t.body.includes(String(table[1].points)) ||
-    t.title.startsWith("t-race");
+  const title = en(t.title), body = en(t.body);
+  return !title.includes(a.name) || !title.includes(b.name) ||
+    !body.includes(String(table[0].points)) || !body.includes(String(table[1].points)) ||
+    title.startsWith("t-race");
 });
 ok(`every title-race thread names the real top two and quotes their actual points (${races.length} threads, comps ${races.map((t) => t.id.replace("t-race-", "")).join("/")})`,
   races.length > 0 && badRace.length === 0, badRace.map((t) => t.id).join(", "));
-ok(`the competition name in a race title is the dataset's own (${races.map((t) => t.title.split(" title race")[0]).join(" | ")})`,
+ok(`the competition name in a race title is the dataset's own (${races.map((t) => en(t.title).split(" title race")[0]).join(" | ")})`,
   races.every((t) => {
     const comp = t.id.replace("t-race-", "");
     const name = getCompetition(comp)?.name ?? comp;
-    return t.title.startsWith(`${name} title race:`);
+    return en(t.title).startsWith(`${name} title race:`);
   }));
 ok("a race thread is tagged as a debate, never as news", races.every((t) => t.tag === "Debates"));
+ok("…and a race thread is written in the reader's own language, not the module's",
+  races.every((t) => en(t.title) !== say("zh-CN")(t.title) && /争冠/.test(say("zh-CN")(t.title))));
 
 // News threads: title, tag, timestamp and credibility all come from the item, verbatim.
 const news = T.filter((t) => t.id.startsWith("t-news-"));
@@ -82,8 +94,10 @@ const badNews = news.filter((t) => {
   if (!item) return true;
   const wantTag = item.kind === "Rumor" ? "Rumours" : "News";
   const pct = (item.credibility * 100).toFixed(0);
-  return t.title !== item.title || t.tag !== wantTag || t.at !== item.publishedAt ||
-    !t.body.startsWith(item.summary) || !t.body.includes(`${pct}%`);
+  // The headline is the article's own word and stays a value; the summary and the credibility
+  // figure are variables of a keyed sentence.
+  return !("value" in t.title) || t.title.value !== item.title || t.tag !== wantTag || t.at !== item.publishedAt ||
+    !en(t.body).startsWith(item.summary) || !en(t.body).includes(`${pct}%`);
 });
 ok(`every news thread copies its item's title, tag, published time and credibility (${news.length} items, kinds ${news.map((t) => t.tag).join("/")})`,
   news.length > 0 && badNews.length === 0, badNews.map((t) => `${t.id}:${t.tag}`).join(", "));
@@ -92,7 +106,7 @@ ok("…so no thread invents a timestamp: a news thread's `at` IS the article's p
 ok("…and the credibility figure quoted in the body equals the item's own, as a percentage",
   news.every((t) => {
     const item = newsFeed.find((n) => `t-news-${n.id}` === t.id);
-    return t.body.includes(`Source credibility is ${(item.credibility * 100).toFixed(0)}%`);
+    return en(t.body).includes(`${(item.credibility * 100).toFixed(0)}%`);
   }));
 
 // ---------------------------------------------------------------------------
@@ -107,10 +121,10 @@ ok("authors come only from the declared handle bank — no invented person",
   T.every((t) => HANDLES.includes(t.author)) && C.every((c) => HANDLES.includes(c.author)),
   [...new Set([...T.map((t) => t.author), ...C.map((c) => c.author)].filter((a) => !HANDLES.includes(a)))].join(", "));
 ok("reply text comes only from the two opinion banks, never generated on the fly",
-  C.every((c) => OPINIONS.includes(c.body) || QUESTIONS.includes(c.body)),
-  C.filter((c) => !OPINIONS.includes(c.body) && !QUESTIONS.includes(c.body)).map((c) => c.body.slice(0, 30)).join(" | "));
-const fromQ = C.filter((c) => QUESTIONS.includes(c.body)).length;
-const fromO = C.filter((c) => OPINIONS.includes(c.body)).length;
+  C.every((c) => OPINION_KEYS.includes(c.body.key) || QUESTION_KEYS.includes(c.body.key)),
+  C.filter((c) => !OPINION_KEYS.includes(c.body.key) && !QUESTION_KEYS.includes(c.body.key)).map((c) => String(c.body.key).slice(0, 30)).join(" | "));
+const fromQ = C.filter((c) => QUESTION_KEYS.includes(c.body.key)).length;
+const fromO = C.filter((c) => OPINION_KEYS.includes(c.body.key)).length;
 ok(`both banks are actually used over the seeded corpus (${fromQ} questions / ${fromO} opinions), so the two-line check above is not satisfied by one bank`,
   fromQ > 0 && fromO > 0);
 ok("comment ids are unique across threads",
@@ -119,7 +133,30 @@ ok(`each thread carries between 1 and 4 replies (${Math.min(...T.map((t) => t.co
   T.every((t) => t.comments.length >= 1 && t.comments.length <= 4));
 
 // ---------------------------------------------------------------------------
-// 3 · tags
+// 3 · the hydration repair: stored strings become values, never keys
+// ---------------------------------------------------------------------------
+// Everything written before M241 holds plain strings. The repair has to wrap them as values,
+// because a stored sentence is the writer's own words — re-reading one as a key is how a
+// visitor's post would turn into a dictionary lookup.
+const { repairCommunityTexts } = COMM;
+const legacyStore = {
+  userThreads: [{ id: "u-t-1", title: "My own headline", body: "comm.opinion.1", tag: "General", author: "You", at: "2026-01-01T00:00:00.000Z", seeded: false, comments: [] }],
+  replies: { "t-race-x": [{ id: "u-c-1", author: "You", body: "comm.question.2", at: "2026-01-01T00:00:00.000Z", likes: 0, sample: false }] },
+  likes: ["t-race-x"],
+};
+const fixed = repairCommunityTexts(legacyStore);
+ok("a stored thread and reply written as strings are repaired into values, not re-read as keys",
+  fixed.userThreads[0].title.value === "My own headline" && fixed.replies["t-race-x"][0].body.value === "comm.question.2");
+ok("…and the repair does not translate them: a stored sentence that LOOKS like a key stays the writer's words",
+  say("zh-CN")(fixed.userThreads[0].body) === "comm.opinion.1");
+ok("…and every other field of the store survives the repair",
+  fixed.likes.join() === "t-race-x" && fixed.userThreads[0].tag === "General" && fixed.replies["t-race-x"][0].likes === 0);
+const modern = { userThreads: [{ ...legacyStore.userThreads[0], title: { value: "x" }, body: { value: "y" } }], replies: {}, likes: [] };
+ok("a store that already carries rows comes back as the same object, so hydration on every load is not an edit",
+  repairCommunityTexts(modern) === modern);
+
+// ---------------------------------------------------------------------------
+// 4 · tags
 // ---------------------------------------------------------------------------
 ok(`allTags is the fixed filter list, "All" first (${allTags().join(", ")})`,
   allTags()[0] === "All" && allTags().length === 7 && new Set(allTags()).size === allTags().length);
