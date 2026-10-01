@@ -55,6 +55,14 @@ const tagLabel = (t: Translate, tag: string) => t(`comm.tag.${tag}`);
 const authorName = (t: Translate, author: string) => (author === MY ? t("comm.you") : author);
 const nReplies = (t: Translate, n: number) => t(n === 1 ? "comm.nRepliesOne" : "comm.nReplies", { n });
 
+/** The lesson's title in the reader's language. It becomes a VARIABLE of the starter row, not a
+ *  key of it: the row says "The academy says {lesson}", and the lesson's own name is a value the
+ *  catalogue named — so it is resolved here, where the reader is known. */
+function latestLessonTitle(t: Translate, id: string): string | undefined {
+  const l = LESSONS.find((x) => x.id === id);
+  return l ? t(l.titleKey) : undefined;
+}
+
 export function CommunityHub() {
   const { t, locale } = useI18n();
   const online = useOnline();
@@ -131,7 +139,7 @@ export function CommunityHub() {
           }
         : undefined,
       academy: lessons.completed
-        ? { completed: lessons.completed, mastered: lessons.mastered, lastLesson: latest ? LESSONS.find((l) => l.id === latest.id)?.title : undefined }
+        ? { completed: lessons.completed, mastered: lessons.mastered, lastLesson: latest ? latestLessonTitle(t, latest.id) : undefined }
         : undefined,
       watchlist: state.watchlist.length,
     });

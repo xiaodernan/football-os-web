@@ -19,6 +19,7 @@ import {
   type Level,
 } from "@/domain/learn";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
+import { rowLine } from "@/domain/rowText";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -138,15 +139,15 @@ export function LearnHub() {
           <div className="mt-3 flex flex-wrap gap-1.5">
             {summary.byCategory.map((c) => (
               <Badge key={c.category} variant="outline" className={cn("text-[11px]", c.completed === c.total && "border-success/40 text-success")}>
-                {c.category} {c.completed}/{c.total}
+                {t(`learn.cat.${c.category}`)} {c.completed}/{c.total}
               </Badge>
             ))}
           </div>
           <ul className="mt-3 space-y-1 text-[11px] text-muted-foreground">
-            {summary.evidence.map((e, i) => <li key={i}>› {e}</li>)}
+            {summary.evidence.map((e, i) => <li key={i}>› {rowLine(e, t)}</li>)}
           </ul>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-            <span>{t("learn.sources")} {summary.sources.join(" · ")}</span>
+            <span>{t("learn.sources")} {summary.sources.map((s) => rowLine(s, t)).join(" · ")}</span>
             {records.length > 0 && <Button variant="ghost" size="sm" onClick={() => { const v = setRecords([]); toast(v.landed ? t("learn.cleared") : t("common.notStored")); }}>{t("learn.reset")}</Button>}
           </div>
         </Panel>
@@ -158,10 +159,10 @@ export function LearnHub() {
               {picks.map((p) => (
                 <button key={p.lesson.id} onClick={() => setOpenId(p.lesson.id)} className="block w-full rounded-lg border bg-card/40 p-3 text-left hover:border-primary/50">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium">{p.lesson.title}</span>
+                    <span className="text-sm font-medium">{t(p.lesson.titleKey)}</span>
                     <span className="shrink-0 text-[11px] text-muted-foreground">{p.lesson.minutes} {t("ld.minutesUnit")}</span>
                   </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">{p.reason}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">{rowLine(p.reason, t)}</p>
                 </button>
               ))}
             </div>
@@ -174,7 +175,7 @@ export function LearnHub() {
 
       <div className="flex flex-wrap gap-1.5">
         {categories.map((c) => (
-          <button key={c} onClick={() => setCategory(c)} className={cn("rounded-md border px-2.5 py-1 text-xs", category === c ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{c}</button>
+          <button key={c} onClick={() => setCategory(c)} className={cn("rounded-md border px-2.5 py-1 text-xs", category === c ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{c === "All" ? t("learn.filterAll") : t(`learn.cat.${c}`)}</button>
         ))}
       </div>
 
@@ -185,16 +186,16 @@ export function LearnHub() {
           return (
             <button key={l.id} onClick={() => setOpenId(l.id)} className="group flex flex-col rounded-xl border bg-card/50 p-4 text-left hover:border-primary/50">
               <div className="flex items-center justify-between">
-                <Badge variant="outline" className="text-[10px]">{l.category}</Badge>
+                <Badge variant="outline" className="text-[10px]">{t(`learn.cat.${l.category}`)}</Badge>
                 {done ? (
                   <span className={cn("text-xs", rec?.quizCorrect ? "text-success" : "text-muted-foreground")}>{rec?.quizCorrect ? t("learn.tickPassed") : t("learn.tickLearned")}</span>
                 ) : rec?.attempts ? (
                   <span className="text-xs text-warning">{t("learn.attempted")}</span>
                 ) : null}
               </div>
-              <div className="mt-2 font-semibold group-hover:text-primary">{l.title}</div>
-              <p className="mt-1 flex-1 text-xs text-muted-foreground">{l.summary}</p>
-              <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground"><span className={LEVEL_COLOR[l.level]}>{l.level}</span>·<span>{l.minutes} {t("ld.minutesUnit")}</span></div>
+              <div className="mt-2 font-semibold group-hover:text-primary">{t(l.titleKey)}</div>
+              <p className="mt-1 flex-1 text-xs text-muted-foreground">{t(l.summaryKey)}</p>
+              <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground"><span className={LEVEL_COLOR[l.level]}>{t(`learn.level.${l.level.toLowerCase()}`)}</span>·<span>{l.minutes} {t("ld.minutesUnit")}</span></div>
             </button>
           );
         })}
@@ -227,34 +228,34 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
       <Button variant="ghost" size="sm" onClick={onBack}>{t("learn.back")}</Button>
       <div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <Badge variant="outline">{lesson.category}</Badge>
-          <span className={LEVEL_COLOR[lesson.level]}>{lesson.level}</span>
+          <Badge variant="outline">{t(`learn.cat.${lesson.category}`)}</Badge>
+          <span className={LEVEL_COLOR[lesson.level]}>{t(`learn.level.${lesson.level.toLowerCase()}`)}</span>
           <span>· {lesson.minutes} {t("ld.minutesUnit")}</span>
           {record?.attempts ? <span>· {record.attempts === 1 ? t("learn.attemptOne", { n: record.attempts }) : t("learn.attemptMany", { n: record.attempts })}</span> : null}
         </div>
-        <h1 className="mt-2 text-2xl font-bold">{lesson.title}</h1>
+        <h1 className="mt-2 text-2xl font-bold">{t(lesson.titleKey)}</h1>
       </div>
       <Panel className="p-5">
         <div className="space-y-3 text-sm leading-relaxed text-foreground/90">
-          {lesson.body.map((p, i) => <p key={i}>{p}</p>)}
+          {lesson.bodyKeys.map((k, i) => <p key={i}>{t(k)}</p>)}
         </div>
         {lesson.tryIt && (
           <Link to={lesson.tryIt.to} className="mt-4 inline-flex">
-            <Button size="sm" variant="secondary">{t("learn.tryIt")} {lesson.tryIt.label} →</Button>
+            <Button size="sm" variant="secondary">{t("learn.tryIt")} {t(lesson.tryIt.labelKey)} →</Button>
           </Link>
         )}
       </Panel>
       <Panel className="p-5">
         <SectionTitle title={t("learn.checkTitle")} hint={t("learn.attemptNote")} />
-        <p className="text-sm">{lesson.quiz.q}</p>
+        <p className="text-sm">{t(lesson.quiz.qKey)}</p>
         <div className="mt-3 space-y-2">
-          {lesson.quiz.options.map((o, i) => {
+          {lesson.quiz.optionKeys.map((ok, i) => {
             const picked = choice === i;
             const isAnswer = i === lesson.quiz.answer;
             return (
               <button key={i} disabled={choice !== null} onClick={() => answer(i)} className={cn("w-full rounded-md border px-3 py-2 text-left text-sm disabled:cursor-default",
                 choice === null ? "hover:border-primary/50" : isAnswer ? "border-success bg-success/10" : picked ? "border-destructive bg-destructive/10" : "opacity-60")}>
-                <span className="font-mono text-xs text-muted-foreground mr-2">{String.fromCharCode(65 + i)}</span>{o}
+                <span className="font-mono text-xs text-muted-foreground mr-2">{String.fromCharCode(65 + i)}</span>{t(ok)}
                 {choice !== null && isAnswer && <span className="float-right text-success">✓</span>}
               </button>
             );

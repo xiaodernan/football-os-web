@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildTimeline, groupByDay, type TimelineKind } from "@/domain/history";
-import { rowLine } from "@/domain/rowText";
+import { rowLine, type RowText } from "@/domain/rowText";
 import { LESSONS } from "@/domain/learn";
 import { useLearnRecords, useFilmRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
@@ -35,6 +35,14 @@ export function HistoryPage() {
   const learn = useLearnRecords();
   const film = useFilmRecords();
 
+  // A completed lesson's title is the catalogue's own word, so the timeline carries the KEY and
+  // the reader resolves it. An id that matches no lesson is not a sentence anyone wrote — it is
+  // the record's own value, shown as written.
+  const lessonTitleRow = (id: string): RowText => {
+    const l = LESSONS.find((x) => x.id === id);
+    return l ? { key: l.titleKey } : { value: id };
+  };
+
   const all = useMemo(
     () =>
       buildTimeline({
@@ -43,7 +51,7 @@ export function HistoryPage() {
         memory: state.memory,
         learn: learn.map((r) => ({
           id: r.id,
-          title: LESSONS.find((l) => l.id === r.id)?.title ?? r.id,
+          title: lessonTitleRow(r.id),
           completedAt: r.completedAt,
           quizCorrect: r.quizCorrect,
           attempts: r.attempts,

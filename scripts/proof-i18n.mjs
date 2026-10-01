@@ -622,6 +622,15 @@ const DYN_SITES = [
   // scan did not read, the mode name through a key nobody had declared.
   { path: "features/command/CommandPalette.tsx", expr: "group", prefix: "cmd.group.", suffix: "" },
   { path: "features/command/CommandPalette.tsx", expr: "m", prefix: "prof.mode.", suffix: "" },
+  // M246: the Academy's categories and levels are codes — the lesson list, the detail
+  // header, the per-category badges and the filter strip each build `learn.cat.`/`learn.level.`
+  // at the screen, and the value spaces below are read out of learn.ts's own tables.
+  { path: "features/learn/LearnHub.tsx", expr: "l.category", prefix: "learn.cat.", suffix: "" },
+  { path: "features/learn/LearnHub.tsx", expr: "lesson.category", prefix: "learn.cat.", suffix: "" },
+  { path: "features/learn/LearnHub.tsx", expr: "c.category", prefix: "learn.cat.", suffix: "" },
+  { path: "features/learn/LearnHub.tsx", expr: "c", prefix: "learn.cat.", suffix: "" },
+  { path: "features/learn/LearnHub.tsx", expr: "l.level.toLowerCase()", prefix: "learn.level.", suffix: "" },
+  { path: "features/learn/LearnHub.tsx", expr: "lesson.level.toLowerCase()", prefix: "learn.level.", suffix: "" },
 ];
 // One space per (prefix, expression) pair: the two `prof.mode.` sites take the
 // same prefix from different code, which is why the space is not keyed on the
@@ -845,6 +854,18 @@ const S_TRAJ = {
   values: spaceOf("domain/careerArc.ts", /export const TRAJECTORIES[^=]*=[\s\S]*?\];/, /"([a-z]+)"/g),
 };
 claimByPrefix("det.arc.", S_TRAJ);
+// M246: one space per Academy family, read out of learn.ts itself — the four category
+// codes and the three level words (lower-cased by the sites that build the key from them).
+const S_LEARN_CAT = {
+  name: "Knowledge Academy categories",
+  values: spaceOf("domain/learn.ts", /export const CATEGORY_CODES[^;]+;/, quoted),
+};
+claimByPrefix("learn.cat.", S_LEARN_CAT);
+const S_LEARN_LEVEL = {
+  name: "Knowledge Academy levels, lower-cased by the site",
+  values: lower(spaceOf("domain/learn.ts", /export type Level = [^;]+;/, quoted)),
+};
+claimByPrefix("learn.level.", S_LEARN_LEVEL);
 // Both directions, because a space read from the table only proves the table is covered.
 // An archetype deleted from the model would otherwise leave its words behind as keys no
 // site can build — reachable-looking, because the prefix claim still spells them out.
@@ -2624,6 +2645,12 @@ const KEY_FIELD = /\b([A-Za-z_$][\w$]*Key)\s*:\s*(["'])((?:[^"'\\]|\\.)*)\2/g;
 // without a row here fails check 29, so this table cannot fall behind the code.
 const KEY_ROW_CONSUMERS = [
   { path: "domain/localData.ts", prop: "labelKey", consumer: "features/settings/SettingsPage.tsx" },
+  // M246: learn.ts holds the words as keys on its lesson rows; the Academy screen is the
+  // only renderer of every one of them (title/summary on the cards, try-it and quiz in the detail).
+  { path: "domain/learn.ts", prop: "titleKey", consumer: "features/learn/LearnHub.tsx" },
+  { path: "domain/learn.ts", prop: "summaryKey", consumer: "features/learn/LearnHub.tsx" },
+  { path: "domain/learn.ts", prop: "labelKey", consumer: "features/learn/LearnHub.tsx" },
+  { path: "domain/learn.ts", prop: "qKey", consumer: "features/learn/LearnHub.tsx" },
 ];
 const badKeys = [], unresolved = [];
 let keySites = 0;
@@ -2823,7 +2850,7 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // string in six places. It is trn.title.focus with the attrs code var now, and the eighteen
 // catalogue labels M192 had to leave behind are deleted rather than keyed, because no screen
 // ever read them.
-const DOMAIN_PROSE_CEILING = 83;
+const DOMAIN_PROSE_CEILING = 0;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
@@ -2832,7 +2859,7 @@ const DOMAIN_PROSE_CEILING = 83;
 // M225 adds domain/matchEngine.ts: unlike the three format-only modules above it held real
 // sentences ("The midfield was finely balanced."), and they are rows now, so the module is
 // pinned at zero like the rest.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts", "domain/training.ts", "domain/onboarding.ts", "domain/attributes.ts", "domain/community.ts", "domain/career.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts", "domain/training.ts", "domain/onboarding.ts", "domain/attributes.ts", "domain/community.ts", "domain/career.ts", "domain/learn.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -2841,7 +2868,7 @@ ok(`domain prose still on keys has not grown (${debtTotal} literals across ${deb
 // printed at M188 (sum 271 = the global ceiling); a milestone lowers its own number when it
 // keys a module, and may never raise one.
 const PROSE_CAPS = {
-  "domain/learn.ts": 83,
+  "domain/learn.ts": 0,
   "domain/community.ts": 0,
   "domain/career.ts": 0,
   "domain/footprint.ts": 0,

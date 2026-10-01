@@ -63,7 +63,11 @@ interface MemorySeed {
 }
 interface LearnSeed {
   id: string;
-  title: string;
+  /** The lesson's title. The catalogue holds keys now (M246), so a seed that named a
+   *  known lesson passes `{ key: … }` and the timeline shows the reader's own word; a
+   *  bare id from the record is the record's own value and is shown as written
+   *  (`asRowText` below performs that conversion). */
+  title: RowText | string;
   completedAt: string;
   quizCorrect: boolean;
   attempts: number;
@@ -144,7 +148,11 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
       id: `learn-${l.id}`,
       kind: "learn",
       at: l.completedAt,
-      title: { value: l.title },
+      // `asRowText` because a seed may carry the record's own bare id (the shape the
+      // store keeps, and what a repair path writes); a known lesson arrives as a keyed
+      // row and passes through unchanged. Without the wrap a bare string reaches the
+      // row-shape checks below as a primitive, which is a crash rather than a render.
+      title: asRowText(l.title),
       // The kind chip already prints "Academy", so these say only what the record
       // proves. Singular and plural are separate keys because no `{n}` can pick an
       // English "-s"; the branch reads the record's own count, never a label.

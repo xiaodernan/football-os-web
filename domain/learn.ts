@@ -1,4 +1,4 @@
-import { attributeLabel } from "./attributes";
+import type { RowText } from "./rowText";
 
 // Knowledge Academy domain (spec §8). The lesson text is editorial content
 // authored for this product; everything in this module is *accounting* — it turns
@@ -9,122 +9,129 @@ import { attributeLabel } from "./attributes";
 
 export type Level = "Beginner" | "Intermediate" | "Advanced";
 
-export interface Quiz {
-  q: string;
-  options: string[];
-  answer: number;
-}
+/** The subject a lesson belongs to. A code, not a word: the Academy badge prints it, so it
+ *  resolves through `learn.cat.*` like every other code the interface shows. */
+export type CategoryCode = "analytics" | "tactics" | "scouting" | "development";
+export const CATEGORY_CODES: readonly CategoryCode[] = ["analytics", "tactics", "scouting", "development"];
 
 export interface Lesson {
   id: string;
-  title: string;
-  category: string;
+  titleKey: string;
+  category: CategoryCode;
   level: Level;
   minutes: number;
-  summary: string;
-  body: string[];
-  tryIt?: { label: string; to: string };
-  quiz: Quiz;
+  summaryKey: string;
+  bodyKeys: string[];
+  tryIt?: { labelKey: string; to: string };
+  quiz: { qKey: string; optionKeys: string[]; answer: number };
   tags: string[]; // which pillars this lesson explains
 }
 
 // Editorial football-education content. Concepts are real football-analytics
 // ideas; nothing here is presented as scraped data.
+//
+// M246 moved the words out and left the structure. A lesson is now an id, a category, a
+// length, a route, an answer index and the KEYS of the sentences it shows — no prose at all.
+// That is the honest reading of this module's own scope note, which put lesson texts beside
+// news items as `data/` content: unlike the reference tables M240 moved, this text IS shown to
+// a reader, so relocating it would have silenced the counter while the Academy went on teaching
+// in English. The keys are written out rather than composed from the id, so the reachability
+// check sees every one of them and a lesson cannot ship with a paragraph missing.
 export const LESSONS: Lesson[] = [
   {
     id: "xg",
-    title: "Expected Goals (xG)",
-    category: "Analytics",
+    titleKey: "learn.l.xg.title",
+    category: "analytics",
     level: "Beginner",
     minutes: 5,
-    summary: "What xG measures and why a 0.1 chance scoring ten times is luck.",
-    body: [
-      "Expected Goals turns a shot into a probability: a chance that, in isolation, results in a goal. A penalty sits around 0.76 xG; a tight-angle header maybe 0.05.",
-      "Sum a team's shot xG and you get how many goals they 'should' have scored. When real goals exceed xG over many games, that is usually finishing quality or good fortune; when they fall short, it points to poor conversion or bad luck — not necessarily bad chances.",
-      "xG is a rate, not a result. One match has enormous variance: a low-xG team can win on a deflection. Trust xG over a large sample to judge how well a side actually creates.",
-    ],
-    tryIt: { label: "See xG vs goals in the Simulation Lab", to: "/simulation" },
-    quiz: { q: "A team's goals are well above its cumulative xG over 30 games. The most likely reading is:", options: ["They are unlucky", "Sustained overperformance from finishing or fortune", "Their xG model is broken", "They defend poorly"], answer: 1 },
+    summaryKey: "learn.l.xg.summary",
+    bodyKeys: ["learn.l.xg.p1", "learn.l.xg.p2", "learn.l.xg.p3"],
+    tryIt: { labelKey: "learn.l.xg.tryIt", to: "/simulation" },
+    quiz: {
+      qKey: "learn.l.xg.q",
+      optionKeys: ["learn.l.xg.o1", "learn.l.xg.o2", "learn.l.xg.o3", "learn.l.xg.o4"],
+      answer: 1,
+    },
     tags: ["analytics", "simulation", "matches"],
   },
   {
     id: "press",
-    title: "Pressing & the defensive block",
-    category: "Tactics",
+    titleKey: "learn.l.press.title",
+    category: "tactics",
     level: "Intermediate",
     minutes: 6,
-    summary: "High press vs a low block: where you win it back and the risk trade-off.",
-    body: [
-      "Pressing is organised attempts to win the ball high up the pitch. A high press squeezes the space behind the opponent's midfield, forcing errors close to their goal — but it leaves space behind your own defensive line if it is bypassed.",
-      "A low block does the opposite: it protects space behind the defence, invites pressure and hits on the counter, but concedes territory and lets opponents build from deep.",
-      "The 'height' of your press and your defensive line are two of the most consequential dials a manager sets; the Football OS engine models both as a press intensity and a mentality that shifts your line up or down.",
-    ],
-    tryIt: { label: "Set a press and watch the match change", to: "/simulation" },
-    quiz: { q: "The main risk of a sustained high press is:", options: ["Too few chances", "Space behind your defensive line when the press is beaten", "Lower possession", "More substitutions"], answer: 1 },
+    summaryKey: "learn.l.press.summary",
+    bodyKeys: ["learn.l.press.p1", "learn.l.press.p2", "learn.l.press.p3"],
+    tryIt: { labelKey: "learn.l.press.tryIt", to: "/simulation" },
+    quiz: {
+      qKey: "learn.l.press.q",
+      optionKeys: ["learn.l.press.o1", "learn.l.press.o2", "learn.l.press.o3", "learn.l.press.o4"],
+      answer: 1,
+    },
     tags: ["tactics", "manager", "studio"],
   },
   {
     id: "formations",
-    title: "Formations vs roles",
-    category: "Tactics",
+    titleKey: "learn.l.formations.title",
+    category: "tactics",
     level: "Beginner",
     minutes: 5,
-    summary: "Why 4-3-3 in name can be a 2-3-5 in attack.",
-    body: [
-      "A formation is a starting snapshot of positions. What matters is the structure in possession: full-backs tucking in turn a 4-3-3 into a 2-3-5; a single pivot sits as a 3-2-5 build.",
-      "Roles describe behaviour — an inside forward drifts centrally, a box-to-box mid covers both boxes, an inverted full-back moves infield. Two teams can share a number and look completely different.",
-      "When you build a shape, think in phases: how you defend, how you build from the back, and how you attack. Dragging tokens in the Tactical Studio is exactly this exercise.",
-    ],
-    tryIt: { label: "Build a shape", to: "/tactical-studio" },
-    quiz: { q: "The best way to describe how a team really plays is:", options: ["Its formation number only", "Its roles and behaviour across phases of play", "Its average player height", "Its possession percentage"], answer: 1 },
+    summaryKey: "learn.l.formations.summary",
+    bodyKeys: ["learn.l.formations.p1", "learn.l.formations.p2", "learn.l.formations.p3"],
+    tryIt: { labelKey: "learn.l.formations.tryIt", to: "/tactical-studio" },
+    quiz: {
+      qKey: "learn.l.formations.q",
+      optionKeys: ["learn.l.formations.o1", "learn.l.formations.o2", "learn.l.formations.o3", "learn.l.formations.o4"],
+      answer: 1,
+    },
     tags: ["tactics", "studio"],
   },
   {
     id: "value",
-    title: "Market value vs ability",
-    category: "Scouting",
+    titleKey: "learn.l.value.title",
+    category: "scouting",
     level: "Advanced",
     minutes: 7,
-    summary: "Age, potential and contract length move price as much as current quality.",
-    body: [
-      "Market value is not a pure function of ability. A 22-year-old with high potential can out-price a better 31-year-old, because resale value and years of prime remain.",
-      "Contract length is a lever too: a player entering the final year can be cheap to buy and expensive to keep, since the selling club loses leverage.",
-      "Good scouting separates present contribution from future trajectory. In Football OS the player cards show overall, potential, age and value together precisely so you can reason about the gap between them.",
-    ],
-    tryIt: { label: "Weigh asking fee against headroom on the Transfer Board", to: "/transfers" },
-    quiz: { q: "All else equal, which raises a player's market value the most?", options: ["Older age", "Shorter remaining contract", "High potential and young age", "Playing in a lower league"], answer: 2 },
+    summaryKey: "learn.l.value.summary",
+    bodyKeys: ["learn.l.value.p1", "learn.l.value.p2", "learn.l.value.p3"],
+    tryIt: { labelKey: "learn.l.value.tryIt", to: "/transfers" },
+    quiz: {
+      qKey: "learn.l.value.q",
+      optionKeys: ["learn.l.value.o1", "learn.l.value.o2", "learn.l.value.o3", "learn.l.value.o4"],
+      answer: 2,
+    },
     tags: ["scouting", "transfers", "manager"],
   },
   {
     id: "sample",
-    title: "Sample size & variance",
-    category: "Analytics",
+    titleKey: "learn.l.sample.title",
+    category: "analytics",
     level: "Intermediate",
     minutes: 5,
-    summary: "Why you cannot judge a striker in six games.",
-    body: [
-      "Football is a low-scoring, high-variance sport. Small samples are dominated by luck: streaky finishing, deflections, refereeing decisions.",
-      "Underlying indicators that aggregate many events — shot volume, xG, chances conceded — stabilise far sooner than goals or points do. Use them to form an early view, then let results confirm or deny it.",
-      "This is why a season simulation, not one match, is the honest way to judge whether a squad or tactic works.",
-    ],
-    tryIt: { label: "Run a full season", to: "/simulation" },
-    quiz: { q: "Which metric stabilises fastest as a signal of true quality?", options: ["Goals scored in the last 3 games", "League position after a week", "Shot xG per match over many games", "A single hat-trick"], answer: 2 },
+    summaryKey: "learn.l.sample.summary",
+    bodyKeys: ["learn.l.sample.p1", "learn.l.sample.p2", "learn.l.sample.p3"],
+    tryIt: { labelKey: "learn.l.sample.tryIt", to: "/simulation" },
+    quiz: {
+      qKey: "learn.l.sample.q",
+      optionKeys: ["learn.l.sample.o1", "learn.l.sample.o2", "learn.l.sample.o3", "learn.l.sample.o4"],
+      answer: 2,
+    },
     tags: ["analytics", "simulation", "development"],
   },
   {
     id: "load",
-    title: "Training load & recovery",
-    category: "Development",
+    titleKey: "learn.l.load.title",
+    category: "development",
     level: "Beginner",
     minutes: 4,
-    summary: "Progress needs the right dose of stress and rest, not maximal effort.",
-    body: [
-      "Adaptation follows the stress-recovery cycle: enough intensity to challenge the body, then enough rest to supercompensate. Chronic high load without recovery drives performance down and injury risk up.",
-      "Consistency beats heroic one-off sessions. Small, repeatable loads accumulate; skipped or overstuffed weeks erase progress.",
-      "That is why the Player OS tracks streaks, session quality and self-ratings, and why fatigue in the manager model suppresses a team's engine ratings after a run of matches.",
-    ],
-    tryIt: { label: "Read your own load and recovery curve", to: "/load" },
-    quiz: { q: "The most reliable driver of long-term improvement is:", options: ["One maximal session a week", "Consistent, appropriately-dosed load with recovery", "Ignoring rest", "Always training at maximum heart rate"], answer: 1 },
+    summaryKey: "learn.l.load.summary",
+    bodyKeys: ["learn.l.load.p1", "learn.l.load.p2", "learn.l.load.p3"],
+    tryIt: { labelKey: "learn.l.load.tryIt", to: "/load" },
+    quiz: {
+      qKey: "learn.l.load.q",
+      optionKeys: ["learn.l.load.o1", "learn.l.load.o2", "learn.l.load.o3", "learn.l.load.o4"],
+      answer: 1,
+    },
     tags: ["development", "player", "load"],
   },
 ];
@@ -177,8 +184,8 @@ export interface LearnSummary {
   masteredPct: number;
   byCategory: CategoryProgress[];
   weakestCategory: { category: string; completed: number; total: number } | null;
-  evidence: string[];
-  sources: string[];
+  evidence: RowText[];
+  sources: RowText[];
   hasData: boolean;
 }
 
@@ -204,12 +211,28 @@ export function summarizeLearn(records: LearnRecord[]): LearnSummary {
     ? { category: untouched[0].category, completed: 0, total: untouched[0].total }
     : null;
 
-  const evidence = [
-    `${completed} of ${LESSONS.length} lessons completed · ${mastered} with a passed check quiz`,
-    attempts ? `${attempts} quiz attempt${attempts === 1 ? "" : "s"} recorded on this device` : "No quiz attempts recorded yet",
-    attemptedOnly ? `${attemptedOnly} lesson${attemptedOnly === 1 ? "" : "s"} attempted but not marked learned` : "",
-    weakestCategory ? `No lesson completed in ${weakestCategory.category} (${weakestCategory.total} available)` : "Every category has at least one completed lesson",
-  ].filter(Boolean);
+  const evidence: RowText[] = [
+    { key: "learn.ev.done", vars: { done: completed, total: LESSONS.length, mastered } },
+    attempts
+      ? attempts === 1
+        ? { key: "learn.ev.attemptsOne", vars: { n: attempts } }
+        : { key: "learn.ev.attemptsMany", vars: { n: attempts } }
+      : { key: "learn.ev.attemptsNone" },
+  ];
+  if (attemptedOnly) {
+    evidence.push(
+      attemptedOnly === 1
+        ? { key: "learn.ev.attemptedOne", vars: { n: attemptedOnly } }
+        : { key: "learn.ev.attemptedMany", vars: { n: attemptedOnly } },
+    );
+  }
+  evidence.push(
+    weakestCategory
+      // The category is a code; the reader words it through `learn.cat.*` at the column,
+      // so a reader whose language has no "Development" never sees the code either.
+      ? { key: "learn.ev.noCat", vars: { cat: { key: `learn.cat.${weakestCategory.category}` }, n: weakestCategory.total } }
+      : { key: "learn.ev.allCats" },
+  );
 
   return {
     totalLessons: LESSONS.length,
@@ -222,7 +245,7 @@ export function summarizeLearn(records: LearnRecord[]): LearnSummary {
     byCategory,
     weakestCategory,
     evidence,
-    sources: ["Your local academy records (this device)", "Lesson catalogue (editorial, authored for Football OS)"],
+    sources: [{ key: "learn.src.device" }, { key: "learn.src.catalogue" }],
     hasData: records.length > 0,
   };
 }
@@ -238,7 +261,7 @@ export interface LearnSignals {
 export interface LessonRecommendation {
   lesson: Lesson;
   score: number;
-  reason: string;
+  reason: RowText;
 }
 
 // Rank the lessons the learner has NOT completed by how much their own data makes
@@ -250,41 +273,52 @@ export function recommendLessons(records: LearnRecord[], signals: LearnSignals, 
   for (const l of LESSONS) {
     if (done.has(l.id)) continue;
     let score = 1;
-    let reason = "Next unfinished lesson in the catalogue.";
+    let reason: RowText = { key: "learn.rec.default" };
     const has = (t: string) => l.tags.includes(t);
 
     if (has("development") && signals.completedSessions > 0 && signals.completedSessions < 12) {
       score += 4;
-      reason = `You have completed ${signals.completedSessions} training session${signals.completedSessions === 1 ? "" : "s"} — the dose-vs-effort idea applies to your log right now.`;
+      reason = signals.completedSessions === 1
+        ? { key: "learn.rec.doseOne", vars: { n: signals.completedSessions } }
+        : { key: "learn.rec.doseMany", vars: { n: signals.completedSessions } };
     } else if (has("load") && signals.weakestAttributes.length) {
       score += 3;
-      reason = `Your lowest attributes (${signals.weakestAttributes.slice(0, 2).map(attributeLabel).join(", ")}) improve through consistent load, not one hard session.`;
+      // The codes, not their labels: the reader's column words them (`attrs` is a code
+      // var), so this module holds no attribute word in any language.
+      reason = { key: "learn.rec.load", vars: { attrs: signals.weakestAttributes.slice(0, 2).join(",") } };
     }
     if (has("manager") && signals.hasCareer) {
       score += 3;
       reason = signals.completedSessions > 0
-        ? `You manage a career and train as a player — this links the two models you are already using.`
-        : `Your Manager career uses exactly these press and mentality dials each fixture.`;
+        ? { key: "learn.rec.careerLink" }
+        : { key: "learn.rec.careerDials" };
     }
     if (has("simulation") && signals.hasCareer) {
       score += 2;
-      reason = "Your career results are single-match samples; this explains how to read them without over-reacting.";
+      reason = { key: "learn.rec.samples" };
     }
     if (has("scouting") && signals.watchlist > 0) {
       score += 3;
-      reason = `You are watching ${signals.watchlist} player${signals.watchlist === 1 ? "" : "s"} — value vs ability decides whether you should act on them.`;
+      reason = signals.watchlist === 1
+        ? { key: "learn.rec.watchOne", vars: { n: signals.watchlist } }
+        : { key: "learn.rec.watchMany", vars: { n: signals.watchlist } };
     }
     if (has("tactics") && signals.filmClips > 0) {
       score += 2;
-      reason = `${signals.filmClips} analysed clip${signals.filmClips === 1 ? "" : "s"} in your film library — this is the language those events are written in.`;
+      reason = signals.filmClips === 1
+        ? { key: "learn.rec.filmOne", vars: { n: signals.filmClips } }
+        : { key: "learn.rec.filmMany", vars: { n: signals.filmClips } };
     }
     if (has("analytics") && signals.completedSessions >= 12) {
       score += 2;
-      reason = `With ${signals.completedSessions} sessions logged, rates and samples matter more than single results.`;
+      reason = { key: "learn.rec.rates", vars: { n: signals.completedSessions } };
     }
     out.push({ lesson: l, score, reason });
   }
   return out
-    .sort((a, b) => b.score - a.score || a.lesson.minutes - b.lesson.minutes || a.lesson.title.localeCompare(b.lesson.title))
+    // The tie-break is the lesson's KEY, not its title: the module no longer holds the words
+    // (M246 moved them to the dictionary), and ordering by a key is stable and deterministic —
+    // which is what this line needs — where ordering by a title would need a language.
+    .sort((a, b) => b.score - a.score || a.lesson.minutes - b.lesson.minutes || a.lesson.titleKey.localeCompare(b.lesson.titleKey))
     .slice(0, limit);
 }
