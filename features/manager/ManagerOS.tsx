@@ -436,12 +436,12 @@ function Outlook({ career }: { career: CareerState }) {
           <SectionTitle title={t("mgr.evidenceTitle")} />
           <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
             {o.evidence.map((e, i) => (
-              <li key={i} className="flex items-start gap-1.5"><span className="text-primary">›</span><span>{e}</span></li>
+              <li key={i} className="flex items-start gap-1.5"><span className="text-primary">›</span><span>{rowLine(e, t)}</span></li>
             ))}
           </ul>
           <div className="mt-3 border-t pt-2 text-[11px] text-muted-foreground">
             <div className="uppercase tracking-wide">{t("mgr.sourcesTitle")}</div>
-            <ul className="mt-1 space-y-0.5">{o.sources.map((s, i) => <li key={i}>· {s}</li>)}</ul>
+            <ul className="mt-1 space-y-0.5">{o.sources.map((s, i) => <li key={i}>· {rowLine(s, t)}</li>)}</ul>
           </div>
         </Panel>
       </div>
@@ -473,7 +473,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
       <div className="space-y-4 lg:col-span-2">
         <Panel className="p-4">
           <div className="flex items-center justify-between">
-            <SectionTitle title={`vs ${p.opponentName} (${p.venue})`} hint={t("mgr.engineCompare")} />
+            <SectionTitle title={`${t("mgr.vs")} ${p.opponentName} (${t(`mgr.venue.${p.venue.toLowerCase()}`)})`} hint={t("mgr.engineCompare")} />
             <DemoBadge />
           </div>
           <p className="mt-1 text-xs text-muted-foreground">{t("mgr.engineCompareHint")}</p>
@@ -492,7 +492,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
           </div>
           <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
             {p.rationale.map((r, i) => (
-              <li key={i} className="flex items-start gap-1.5"><span className="text-primary">›</span><span>{r}</span></li>
+              <li key={i} className="flex items-start gap-1.5"><span className="text-primary">›</span><span>{rowLine(r, t)}</span></li>
             ))}
           </ul>
           <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -533,7 +533,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
         </Panel>
         <Panel className="p-4">
           <SectionTitle title={t("mgr.sourcesTitle")} />
-          <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">{p.sources.map((s, i) => <li key={i}>· {s}</li>)}</ul>
+          <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">{p.sources.map((s, i) => <li key={i}>· {rowLine(s, t)}</li>)}</ul>
         </Panel>
       </div>
     </div>

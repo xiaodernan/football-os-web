@@ -195,9 +195,9 @@ export interface SeasonOutlook {
   expectedFinish: number; // modelled expected league position
   zone: { label: RowText; tone: "good" | "mixed" | "bad" };
   rivalRows: OutlookRow[]; // the clubs closest to us in the projected table
-  evidence: string[];
+  evidence: RowText[];
   confidence: number; // 0..100
-  sources: string[];
+  sources: RowText[];
 }
 
 const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
@@ -268,11 +268,18 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
   // Points the CAREER itself earned. `ours.points` is the live-table total, which
   // starts from the seeded standings, so the two must never be conflated in prose.
   const careerPts = state.results.reduce((s, r) => s + (r.ourGoals > r.oppGoals ? 3 : r.ourGoals === r.oppGoals ? 1 : 0), 0);
-  const evidence = [
-    `#${position} with ${ours.points} pts in the live table — ${careerPts} of them earned across ${played} career fixtures (${totalFixtures} scheduled this season)`,
-    `Projected to ${Math.round(ourProj * 10) / 10} pts — ${gapToProjectedLeader === 0 ? "level with or ahead of" : `${Math.round(gapToProjectedLeader * 10) / 10} pts behind`} projected leader ${getClub(projLeader.row.clubId)?.name ?? projLeader.row.clubId}`,
-    `Form ${form >= 0 ? "+" : ""}${form.toFixed(2)} adjusts points/game to ${ourPpg.toFixed(2)}`,
-    `Each rival extrapolated from its own points-per-game over ${remaining} rounds left; results are modelled estimates, not fixtures played`,
+  // The projected leader's name is the dataset's own word, so it travels as a variable; the
+  // two arms of the projection sentence differ in a whole clause ("level with or ahead of" vs
+  // "{n} pts behind"), which no `{n}` can choose between.
+  const leader = getClub(projLeader.row.clubId)?.name ?? projLeader.row.clubId;
+  const projPts = Math.round(ourProj * 10) / 10;
+  const evidence: RowText[] = [
+    { key: "mgr.outlook.liveTable", vars: { position, points: ours.points, careerPts, played, scheduled: totalFixtures } },
+    gapToProjectedLeader === 0
+      ? { key: "mgr.outlook.projectedLevel", vars: { points: projPts, leader } }
+      : { key: "mgr.outlook.projectedBehind", vars: { points: projPts, gap: Math.round(gapToProjectedLeader * 10) / 10, leader } },
+    { key: "mgr.outlook.form", vars: { form: `${form >= 0 ? "+" : ""}${form.toFixed(2)}`, ppg: ourPpg.toFixed(2) } },
+    { key: "mgr.outlook.method", vars: { remaining } },
   ];
   const confidence = Math.min(85, 12 + played * 9);
 
@@ -286,14 +293,14 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
     projectedPoints: Math.round(ourProj * 10) / 10,
     projectedPosition,
     gapToProjectedLeader: Math.round(gapToProjectedLeader * 10) / 10,
-    leaderName: getClub(projLeader.row.clubId)?.name ?? projLeader.row.clubId,
+    leaderName: leader,
     titleChance,
     expectedFinish: Math.round(expectedFinish * 10) / 10,
     zone,
     rivalRows: rivalRows.slice(0, 4),
     evidence,
     confidence,
-    sources: ["Live league table (seeded standings + your career results)", "Career form (last 5 fixtures)", "Deterministic projection model (demo)"],
+    sources: [{ key: "mgr.outlook.srcTable" }, { key: "mgr.outlook.srcForm" }, { key: "mgr.outlook.srcModel" }],
   };
 }
 
@@ -388,9 +395,9 @@ export interface MatchPrep {
   defenseEdge: number; // their attack - our defense (positive = we're exposed)
   midfieldEdge: number; // our midfield - their midfield
   recommended: Tactics;
-  rationale: string[];
+  rationale: RowText[];
   confidence: number; // 0..100
-  sources: string[];
+  sources: RowText[];
 }
 
 // Pre-match tactic advice. Both sides are fed through the same clubInput() the Match
@@ -410,7 +417,7 @@ export function matchPrep(state: CareerState): MatchPrep {
   const defenseEdge = theirIn.attack - ourIn.defense; // + means their attack beats our D
   const midfieldEdge = ourIn.midfield - theirIn.midfield;
 
-  const rationale: string[] = [];
+  const rationale: RowText[] = [];
   // The panel prints the ROUNDED edges, so the sentences must quote those same
   // numbers. `toFixed(0)` and `Math.round` disagree on a negative half-step
   // ((-4.5).toFixed(0) is "-5" while Math.round(-4.5) is -4), which would let the
@@ -427,14 +434,19 @@ export function matchPrep(state: CareerState): MatchPrep {
     // now sits inside that envelope: above the +4 "attacking" step, below the observed
     // ceiling, so it fires on the genuinely lopsided fixtures rather than never.
     mentality = attackEdge >= 7 ? 2 : 1;
-    rationale.push(`Attack edge +${aeR} over their defense with a safe back line → ${mentality > 1 ? "all-out" : "attacking"} mentality.`);
+    // Two arms rather than one word substituted into a sentence: "all-out" and "attacking" sit
+    // in the same place but a language may not want them to, and the audit cannot read a
+    // sentence whose middle is chosen at the call site.
+    rationale.push(mentality > 1
+      ? { key: "mgr.prep.mentalityAllOut", vars: { edge: aeR } }
+      : { key: "mgr.prep.mentalityAttacking", vars: { edge: aeR } });
   } else if (defenseEdge > 4) {
     mentality = -1;
-    rationale.push(`Their attack outruns our defense by ${deR} → drop to a defensive mentality first.`);
+    rationale.push({ key: "mgr.prep.mentalityDefensive", vars: { edge: deR } });
   } else if (attackEdge < -4) {
     mentality = -1;
-    rationale.push(`We are the weaker side on paper (attack edge ${aeR}) → stay compact and counter.`);
-  } else rationale.push("No mentality threshold is met → keep a balanced mentality.");
+    rationale.push({ key: "mgr.prep.mentalityCompact", vars: { edge: aeR } });
+  } else rationale.push({ key: "mgr.prep.mentalityBalanced" });
   // The fallthrough is NOT "an even matchup": a +9 attack edge lands here too, because
   // the attacking rule also demands a safe back line (defenseEdge <= 2). The sentence
   // therefore claims only that no rule triggered, never what the matchup looks like.
@@ -442,20 +454,20 @@ export function matchPrep(state: CareerState): MatchPrep {
   let press = 0.5;
   if (midfieldEdge >= 3) {
     press = 0.75;
-    rationale.push(`We win the midfield by ${meR} → a high press converts possession into chances.`);
+    rationale.push({ key: "mgr.prep.pressHigh", vars: { edge: meR } });
   } else if (midfieldEdge <= -3) {
     press = 0.3;
-    rationale.push(`They control midfield (${meR}) → hold a deeper block and stay organized.`);
-  } else rationale.push("Midfield is balanced → a medium press keeps it neutral.");
+    rationale.push({ key: "mgr.prep.pressDeep", vars: { edge: meR } });
+  } else rationale.push({ key: "mgr.prep.pressMedium" });
 
   let tempo = 0.5;
   if (state.fatigue > 0.6) {
     tempo = 0.35;
-    rationale.push(`Fatigue is ${Math.round(state.fatigue * 100)}% → slow the tempo to preserve legs.`);
+    rationale.push({ key: "mgr.prep.tempoSlow", vars: { n: Math.round(state.fatigue * 100) } });
   } else if (attackEdge >= 6) {
     tempo = 0.7;
-    rationale.push(`Clear attacking edge (+${aeR}) → play at a higher tempo to press the advantage.`);
-  } else rationale.push("No strong tempo signal → keep a medium tempo.");
+    rationale.push({ key: "mgr.prep.tempoHigh", vars: { edge: aeR } });
+  } else rationale.push({ key: "mgr.prep.tempoMedium" });
 
   return {
     opponentName: getClub(fx.opponent)?.name ?? fx.opponent,
@@ -469,7 +481,7 @@ export function matchPrep(state: CareerState): MatchPrep {
     recommended: { mentality, tempo, press },
     rationale,
     confidence: Math.min(90, Math.round(55 + Math.abs(attackEdge) + Math.abs(midfieldEdge) / 2 + Math.abs(defenseEdge))),
-    sources: ["Match Engine clubInput (your effective squad, balanced tactics)", "Opponent effective squad", "Current morale, fatigue and form"],
+    sources: [{ key: "mgr.prep.srcSquad" }, { key: "mgr.prep.srcOpponent" }, { key: "mgr.prep.srcState" }],
   };
 }
 
@@ -510,7 +522,7 @@ export interface SeasonSummary {
   clubCount: number;
   complete: boolean;
   honour: { label: RowText; tone: "good" | "mixed" | "bad" } | null;
-  evidence: string[];
+  evidence: RowText[];
 }
 
 // Retrospective digest of the career played SO FAR — every figure is summed
@@ -557,14 +569,27 @@ export function seasonSummary(state: CareerState): SeasonSummary {
             ? { label: { key: "mgr.honourMidtable" }, tone: "mixed" }
             : { label: { key: "mgr.honourRelegation" }, tone: "bad" };
 
-  const evidence = [
-    played ? `${won}-${drawn}-${lost} from ${played} fixtures · ${gf} scored, ${ga} conceded (GD ${gd >= 0 ? "+" : ""}${gd})` : "No fixtures played yet.",
-    played ? `${points} pts · ${(points / played).toFixed(2)} pts/game · ${cleanSheets} clean sheet${cleanSheets === 1 ? "" : "s"}` : "",
-    played ? `Prize money earned ${formatMoney(prizeTotal)} across ${played} matches` : "",
-    best && best.diff > 0 ? `Biggest win ${best.score} vs ${best.opponent}` : "",
-    worst && worst.diff < 0 ? `Heaviest defeat ${worst.score} vs ${worst.opponent}` : "",
-    complete ? "Season complete." : `${Math.max(0, totalFixtures - played)} fixtures remaining.`,
-  ].filter(Boolean);
+  // Every count word is an arm rather than an "-s" glued on here: the record line, the clean
+  // sheet, the match count and the remaining-fixture line all read a number a reader can set to
+  // one, and `1 fixtures` was the shape this produced. The optional lines are absent rather
+  // than empty, which is what the `.filter(Boolean)` used to do.
+  const recordVars = { won, drawn, lost, played, gf, ga, gd: `${gd >= 0 ? "+" : ""}${gd}` };
+  const evidence: RowText[] = [
+    ...(played
+      ? [
+          { key: played === 1 ? "mgr.summary.recordOne" : "mgr.summary.record", vars: recordVars },
+          { key: cleanSheets === 1 ? "mgr.summary.statsOne" : "mgr.summary.stats", vars: { points, ppg: (points / played).toFixed(2), clean: cleanSheets } },
+          { key: played === 1 ? "mgr.summary.prizeOne" : "mgr.summary.prize", vars: { money: formatMoney(prizeTotal), played } },
+        ]
+      : [{ key: "mgr.summary.noFixtures" }]),
+    ...(best && best.diff > 0 ? [{ key: "mgr.summary.bestWin", vars: { score: best.score, opponent: best.opponent } }] : []),
+    ...(worst && worst.diff < 0 ? [{ key: "mgr.summary.worstLoss", vars: { score: worst.score, opponent: worst.opponent } }] : []),
+    complete
+      ? { key: "mgr.summary.complete" }
+      : // `mgr.fixturesLeft` already carries this sentence — the profile screen says it too, and one
+      // sentence may not live under two keys.
+      { key: Math.max(0, totalFixtures - played) === 1 ? "mgr.summary.remainingOne" : "mgr.fixturesLeft", vars: { n: Math.max(0, totalFixtures - played) } },
+  ];
 
   return {
     played, won, drawn, lost, gf, ga, gd: gf - ga, points,

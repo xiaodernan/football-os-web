@@ -1,5 +1,6 @@
 import { createServer } from "vite";
 import { readFileSync } from "node:fs";
+import { makeSay } from "./lib/rows.mjs";
 
 // Pins domain/career.ts — the Manager OS career model, the largest module in the
 // repository and the arithmetic behind four panels (live league table, season
@@ -65,6 +66,13 @@ const { footballProvider, getClub, clubIdsByCompetition } = SVC;
 const { simulateMatch } = await server.ssrLoadModule("/domain/matchEngine.ts");
 const { matchProbability } = await server.ssrLoadModule("/domain/matchProbability.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
+// M245 moved this module's rationale, evidence and sources onto rows, so every clause below
+// that used to read a sentence off the object asks the app what the row says — the seam every
+// other row-reading proof uses, rather than a second interpreter built here.
+const { say: sayIn } = await makeSay(server);
+const en = sayIn("en");
+const say = (row) => en(row) ?? "";
+const sayAll = (rows) => rows.map(say).join(" | ");
 
 let pass = 0, fail = 0;
 const ok = (name, cond, detail) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name + (detail ? ` — ${detail}` : "")); } };
@@ -491,7 +499,7 @@ const rawEdges = (s) => {
   return { fx, ae: ourIn.attack - theirIn.defense, de: theirIn.attack - ourIn.defense, me: ourIn.midfield - theirIn.midfield, ourIn, theirIn };
 };
 const PREPS = ALL_IDS.map((id) => ({ id, s: sFor(id), p: matchPrep(sFor(id)) }));
-const CONTRADICTED = PREPS.filter(({ p }) => /[Ee]ven matchup/.test(p.rationale[0]) && p.attackEdge >= 4).map(({ id }) => id);
+const CONTRADICTED = PREPS.filter(({ p }) => /[Ee]ven matchup/.test(say(p.rationale[0])) && p.attackEdge >= 4).map(({ id }) => id);
 ok("the advisor's three edges are the difference of the SAME clubInput lines the engine will get",
   PREPS.every(({ s, p }) => { const { ae, de, me } = rawEdges(s); return p.attackEdge === Math.round(ae) && p.defenseEdge === Math.round(de) && p.midfieldEdge === Math.round(me); }));
 ok("the advisor hands over both squads' rounded lines, not just its verdict",
@@ -514,7 +522,7 @@ ok("only a large attacking edge earns the all-out mentality",
 ok("a defensive mentality is only ever printed when a defensive rule actually fired",
   PREPS.every(({ s, p }) => { if (p.recommended.mentality !== -1) return true; const { ae, de } = rawEdges(s); return de > 4 || ae < -4; }));
 ok("a balanced mentality is always explained as a threshold outcome, never as an even matchup",
-  PREPS.filter(({ p }) => p.recommended.mentality === 0).every(({ p }) => /threshold/i.test(p.rationale[0]) && !/even/i.test(p.rationale[0])));
+  PREPS.filter(({ p }) => p.recommended.mentality === 0).every(({ p }) => /threshold/i.test(say(p.rationale[0])) && !/even/i.test(say(p.rationale[0]))));
 ok("no club still gets advice that calls an edge of +4 or more an even matchup",
   CONTRADICTED.length === 0);
 ok("the sentence that used to lie is gone from the model itself",
@@ -531,7 +539,7 @@ const FIGURES = [
   [/Clear attacking edge \(\+(-?\d+)\)/, "attackEdge"],
 ];
 const quotedFor = (p, field) => {
-  const txt = p.rationale.join(" | ");
+  const txt = sayAll(p.rationale);
   const out = [];
   for (const [re, f] of FIGURES) if (f === field) for (const m of txt.matchAll(new RegExp(re.source, "g"))) out.push(Number(m[1]));
   return out;
@@ -614,7 +622,7 @@ ok("…with a named witness taken from the walk itself: a raw edge on a negative
   })(), `witness: ${(() => { for (const e of PREPS2) for (const [, field] of FIGURES) { const raw = e.raw[field]; if (raw < 0 && Math.abs(raw % 1) === 0.5 && quotedFor(e.p, field).length > 0) return `${e.how} ${field} ${raw} → ${Math.round(raw)} (toFixed ${Number(raw.toFixed(0))})`; } return "none"; })()}`);
 // Reachability per SENTENCE, not per field: a pattern that cannot fire would make
 // the clause above vacuous, so the population is measured and pinned.
-const FIRED = FIGURES.map(([re]) => ({ re: re.source, n: PREPS2.filter(({ p }) => re.test(p.rationale.join(" | "))).length }));
+const FIRED = FIGURES.map(([re]) => ({ re: re.source, n: PREPS2.filter(({ p }) => re.test(sayAll(p.rationale))).length }));
 ok(`all six quoting sentences fire in real careers now that every club fields attackers (${FIRED.map((f) => f.n + "×").join(" / ")})`,
   FIRED.every((f) => f.n > 0), `fired ${FIRED.map((f) => `${f.n}× ${f.re.slice(0, 24)}`).join(" · ")}`);
 // Which advice arms the seed can actually reach, swept over every pairing in every
@@ -651,7 +659,7 @@ ok(`every mentality arm the chain can emit is reachable: ${ARM_KEYS.map((k) => `
 ok(`…and the all-out band is described by its own strongest state, so the clause above cannot pass on a technicality (${ARMS.bestAllOut ? `${ARMS.bestAllOut.at}: ae ${ARMS.bestAllOut.ae.toFixed(2)}, de ${ARMS.bestAllOut.de.toFixed(2)}` : "empty"})`,
   !!ARMS.bestAllOut && ARMS.bestAllOut.ae >= 7 && ARMS.bestAllOut.de <= 2);
 ok("…and it prints in the walk rather than only existing in the sweep",
-  FIRED.find((f) => /weaker side on paper/.test(f.re)).n > 0 && PREPS2.some(({ p }) => /weaker side on paper/.test(p.rationale.join(" | "))));
+  FIRED.find((f) => /weaker side on paper/.test(f.re)).n > 0 && PREPS2.some(({ p }) => /weaker side on paper/.test(sayAll(p.rationale))));
 ok(`…while the weakest-side arm still fires on its own rule (weakest ${ARMS.weakest.ae.toFixed(2)} arriving with defensive edge ${ARMS.weakest.de.toFixed(2)})`,
   ARMS.n["-1"] > 0 && ARMS.weakest.ae < -4 && ARMS.weakest.de > 4);
 // The one asymmetry the model keeps, stated rather than left implicit: the attacking
@@ -661,7 +669,7 @@ ok(`…while the weakest-side arm still fires on its own rule (weakest ${ARMS.we
 ok(`…while the advisor never recommends −2, because the chain has one defensive step and two attacking ones (${ARMS.n["-2"]} of ${ARMS.total} states would ask for it)`,
   ARMS.n["-2"] === 0);
 ok("the all-out recommendation is printed by a reachable career, not merely defined",
-  PREPS2.some(({ p }) => p.recommended.mentality === 2 && /all-out/.test(p.rationale[0])));
+  PREPS2.some(({ p }) => p.recommended.mentality === 2 && /all-out/.test(say(p.rationale[0]))));
 ok("the advisor is measured at balanced tactics, so what it prints does not move with the sliders the manager has set — while the engine's lines do",
   (() => {
     const base = createCareer(US);
@@ -672,7 +680,7 @@ ok("the advisor is measured at balanced tactics, so what it prints does not move
     return shots.every((x) => x === shots[0]) && new Set(lines.map((l) => `${l.attack}|${l.midfield}|${l.defense}`)).size > 1;
   })());
 ok("the provenance chip says balanced tactics, and the wording that claimed it read your sliders is refused",
-  /balanced tactics/.test(matchPrep(createCareer(US)).sources[0]) && !/squad \+ tactics/.test(SRC));
+  /balanced tactics/.test(say(matchPrep(createCareer(US)).sources[0])) && !/squad \+ tactics/.test(SRC));
 // Threshold LOCATION, not just threshold behaviour. A real season steps fatigue by
 // 0.22 (so 0.6 is never held), which leaves the `> 0.6` tempo boundary unexercised by
 // the walk above. A fine synthetic fatigue sweep closes that gap and reconciles all
@@ -755,20 +763,20 @@ ok(`…and each of the ${THRESHOLDS.length} thresholds the module declares has a
 ok("the rationale never quotes a raw float: it interpolates the rounded edge fields",
   !/rationale\.push\([^)]*\$\{(attackEdge|defenseEdge|midfieldEdge)\.toFixed/.test(SRC));
 ok("a tired squad's tempo line quotes the same rounded percentage the panel shows",
-  (() => { const p = matchPrep(sFor(US, { fatigue: 0.9 })); return p.recommended.tempo === 0.35 && p.rationale[2].includes(`Fatigue is ${Math.round(0.9 * 100)}%`); })());
+  (() => { const p = matchPrep(sFor(US, { fatigue: 0.9 })); return p.recommended.tempo === 0.35 && say(p.rationale[2]).includes(`Fatigue is ${Math.round(0.9 * 100)}%`); })());
 ok("the fatigue arm of the tempo rule fires on its own, and the tempo line stops claiming a high tempo",
   (() => {
     const tired = PREPS2.find(({ s }) => s.fatigue > 0.6);
     // An absent subject is a FAIL, not a crash: `matchPrep(undefined)` would take the
     // whole file down and hide the other clauses.
     if (!tired) return false;
-    return tired.p.recommended.tempo === 0.35 && !/higher tempo/.test(tired.p.rationale[2]);
+    return tired.p.recommended.tempo === 0.35 && !/higher tempo/.test(say(tired.p.rationale[2]));
   })());
 ok("…and the attacking-edge arm fires on its own too, so the rule's ordering is tested at both arms rather than assumed at one",
   (() => {
     const edgey = PREPS2.find(({ s, raw }) => s.fatigue <= 0.6 && raw.attackEdge >= 6);
     if (!edgey) return false;
-    return edgey.p.recommended.tempo === 0.7 && /Clear attacking edge/.test(edgey.p.rationale[2]);
+    return edgey.p.recommended.tempo === 0.7 && /Clear attacking edge/.test(say(edgey.p.rationale[2]));
   })());
 // The two tempo arms are ORDERED (fatigue first), so precedence has a witness only if
 // some state has both live. PREPS2 has none — a real season steps fatigue by 0.22, so a
@@ -804,7 +812,7 @@ ok(`the two arms DO overlap somewhere in the model's own space, so the ordering 
   BOTH_ARMS.length > 0, `e.g. ${BOTH_ARMS.map((b) => `${b.id}@${b.i} f=${b.fatigue.toFixed(2)}`).slice(0, 4).join(" · ")}`);
 ok("wherever both are live the fatigue arm owns the recommendation — tempo 0.35 and the fatigue sentence, never the high-tempo claim",
   BOTH_ARMS.every(({ p }) => p.recommended.tempo === 0.35
-    && /Fatigue is/.test(p.rationale[2]) && !/higher tempo/.test(p.rationale[2])));
+    && /Fatigue is/.test(say(p.rationale[2])) && !/higher tempo/.test(say(p.rationale[2]))));
 ok("…and the same states keep their advice inside the controls, so the overlap is not a degenerate corner of the model",
   BOTH_ARMS.every(({ p }) => p.recommended.tempo >= 0 && p.recommended.tempo <= 1 && Number.isInteger(p.recommended.mentality)));
 ok("confidence is the declared formula over the raw edges, capped at 90",
@@ -910,18 +918,29 @@ ok("the zone and honour keys resolve to real text in every locale the app ships"
 ok("confidence is the declared ladder, monotone in fixtures played, and caps at 85",
   (() => { const seen = []; for (let i = 0; i <= TOTAL; i++) seen.push(seasonOutlook(playSeason(i)).confidence); return seen.every((c, i) => c === Math.min(85, 12 + i * 9)) && seen.every((c, i) => i === 0 || c >= seen[i - 1]); })());
 ok("the outlook states that its projection is a model, not a fixture played",
-  /modelled estimates, not fixtures played/i.test(OL.played.evidence.join(" ")));
+  /modelled estimates, not fixtures played/i.test(sayAll(OL.played.evidence)));
 ok("the outlook's first line carries BOTH the live-table total and the points the career earned",
-  (() => { const s = played6, o = seasonOutlook(s); return o.evidence[0].includes(String(o.points)) && o.evidence[0].includes(String(handPts(s.results))); })());
+  (() => { const s = played6, o = seasonOutlook(s); return say(o.evidence[0]).includes(String(o.points)) && say(o.evidence[0]).includes(String(handPts(s.results))); })());
 ok("the outlook never attributes the whole live-table total to the career fixtures",
-  OL_ALL.every(({ s, o }) => !new RegExp(`with ${o.points} pts from ${o.played} career fixtures`).test(o.evidence[0])));
+  OL_ALL.every(({ s, o }) => !new RegExp(`with ${o.points} pts from ${o.played} career fixtures`).test(say(o.evidence[0]))));
 ok("the points a career earned equal the live table's delta over the seed, for every club",
   ALL_IDS.every((id) => { const s = sFor(id); return liveStandings(s).find((r) => r.clubId === id).points - seedStandings(s.competitionId)[id].points === handPts(s.results); }));
 ok("every figure the projection computes also appears in its evidence lines",
-  (() => { const o = OL.played, j = o.evidence.join(" "); return j.includes(`#${o.position}`) && j.includes(`${o.points} pts`) && j.includes(`${o.played} career fixtures`) && j.includes(String(o.projectedPoints)) && j.includes(o.leaderName) && j.includes(`${o.remaining} rounds left`); })());
+  (() => { const o = OL.played, j = sayAll(o.evidence); return j.includes(`#${o.position}`) && j.includes(`${o.points} pts`) && j.includes(`${o.played} career fixtures`) && j.includes(String(o.projectedPoints)) && j.includes(o.leaderName) && j.includes(`${o.remaining} rounds left`); })());
 ok("the outlook always prints exactly four evidence lines", OL_ALL.every(({ o }) => o.evidence.length === 4));
 ok("the sources name local data and the model, never a server, API or sync",
-  OL.played.sources.length > 0 && OL_ALL.every(({ o }) => o.sources.every((x) => typeof x === "string" && !/backend|server|https?|api|cloud|database|sync/i.test(x))));
+  OL.played.sources.length > 0 && OL_ALL.every(({ o }) => o.sources.every((x) => say(x).length > 0 && !/backend|server|https?|api|cloud|database|sync/i.test(say(x)))));
+// M245. The rationale, the evidence and the sources are rows now, so two properties they had no
+// way to fail before are worth pinning: they speak the reader's language, and none of them
+// reaches a reader as its own key.
+const zh = sayIn("zh-CN");
+ok("a rationale, an evidence line and a source all read in the reader's own language",
+  say(matchPrep(createCareer(US)).rationale[0]) !== zh(matchPrep(createCareer(US)).rationale[0]) &&
+  say(OL.played.evidence[0]) !== zh(OL.played.evidence[0]) &&
+  say(OL.played.sources[0]) !== zh(OL.played.sources[0]));
+ok("…and no rationale or evidence row in a real career resolves to a key or an empty line",
+  PREPS2.every(({ p }) => p.rationale.every((r) => { const line = say(r); return line.length > 0 && !/^mgr\./.test(line); })) &&
+  OL_ALL.every(({ o }) => o.evidence.every((r) => { const line = say(r); return line.length > 0 && !/^mgr\./.test(line); })));
 ok("seasonOutlook is pure and deterministic",
   (() => { const s = played6; const snap = JSON.stringify(s); const a = JSON.stringify(seasonOutlook(s)); return JSON.stringify(s) === snap && a === JSON.stringify(seasonOutlook(s)); })());
 ok("a career with no fixtures still gets a full projection without crashing",
@@ -952,15 +971,15 @@ ok("every aggregate is re-derived from the stored results by an independent pass
 ok("the retrospective's prize total is the same ladder the matches credited (budget reconciliation)",
   played6.budget - 200_000_000 === SUM.prizeTotal && SUM.prizeTotal === played6.results.reduce((s, r) => s + handPrize(r.ourGoals, r.oppGoals), 0));
 ok("the money printed in the evidence line parses back to that total",
-  (() => { const line = SUM.evidence.find((l) => /Prize money earned/.test(l)); const m = /€([\d.]+)(M|k)/.exec(line); if (!m) return false; const v = Number(m[1]) * (m[2] === "M" ? 1e6 : 1e3); return Math.abs(v - SUM.prizeTotal) <= (m[2] === "M" ? 50_000 : 500); })());
+  (() => { const line = SUM.evidence.find((l) => /Prize money earned/.test(say(l))); const m = /€([\d.]+)(M|k)/.exec(say(line)); if (!m) return false; const v = Number(m[1]) * (m[2] === "M" ? 1e6 : 1e3); return Math.abs(v - SUM.prizeTotal) <= (m[2] === "M" ? 50_000 : 500); })());
 ok("the summary prints the career's own points, never the live table's total",
   SUM.points === handPts(played6.results) && liveStandings(played6).find((r) => r.clubId === US).points !== SUM.points);
 ok("ppg is round2(points/played) and exactly 0 before the first fixture",
   SUM.ppg === r2(SUM.points / SUM.played) && seasonSummary(st()).ppg === 0);
 ok("the record line prints the W-D-L, the goals and the signed goal difference the fields carry",
-  (() => { const l = SUM.evidence[0]; return l.startsWith(`${SUM.won}-${SUM.drawn}-${SUM.lost} from ${SUM.played} fixtures`) && l.includes(`${SUM.gf} scored, ${SUM.ga} conceded`) && l.includes(`GD ${SUM.gd >= 0 ? "+" : ""}${SUM.gd}`); })());
+  (() => { const l = say(SUM.evidence[0]); return l.startsWith(`${SUM.won}-${SUM.drawn}-${SUM.lost} from ${SUM.played} fixtures`) && l.includes(`${SUM.gf} scored, ${SUM.ga} conceded`) && l.includes(`GD ${SUM.gd >= 0 ? "+" : ""}${SUM.gd}`); })());
 ok("the clean-sheet count pluralises on its own value",
-  SUM.evidence[1].includes(`${SUM.cleanSheets} clean sheet${SUM.cleanSheets === 1 ? "" : "s"}`));
+  say(SUM.evidence[1]).includes(`${SUM.cleanSheets} clean sheet${SUM.cleanSheets === 1 ? "" : "s"}`));
 const DRAWS = st({ results: [res(RIV[0], 1, 1), res(RIV[1], 2, 2)] });
 ok("a career of draws has no biggest win and no heaviest defeat (null, not a fabricated 0-0)",
   (() => { const s = seasonSummary(DRAWS); return s.bestWin === null && s.worstLoss === null && s.won === 0 && s.lost === 0 && s.drawn === 2; })());
@@ -988,9 +1007,17 @@ const LEAD_NOT_DONE = st({ results: Array.from({ length: TOTAL - 1 }, (_, i) => 
 ok("leading an unfinished season prints the top-place honour, not the champions one",
   (() => { const s = seasonSummary(LEAD_NOT_DONE); return s.complete === false && s.position === 1 && s.honour.label.key === "mgr.honourTop"; })());
 ok("with no fixtures the evidence is exactly the two honest lines",
-  (() => { const e = seasonSummary(st()).evidence; return e.length === 2 && e[0] === "No fixtures played yet." && e[1] === `${TOTAL} fixtures remaining.`; })());
+  (() => { const e = seasonSummary(st()).evidence.map(say); return e.length === 2 && e[0] === "No fixtures played yet." && e[1] === `${TOTAL} fixtures remaining.`; })());
+// M245. The count words, at the boundary rather than in the abstract. A one-fixture career is
+// reachable — a manager plays a single match and opens the retrospective — and `1 fixtures`,
+// `1 matches` and `1 clean sheets` were the shapes the module produced before the arms existed.
+const onePlayed = seasonSummary(st({ results: [res(RIV[0], 1, 0)] })).evidence.map(say);
+ok(`a one-fixture season says "1 fixture", "1 match" and "1 clean sheet" rather than their plurals (${onePlayed.join(" | ")})`,
+  onePlayed.some((l) => /1 fixture\b/.test(l)) && onePlayed.some((l) => /1 clean sheet\b/.test(l)) &&
+  onePlayed.some((l) => /1 match\b/.test(l)) &&
+  !onePlayed.some((l) => /1 (fixtures|matches|clean sheets)\b/.test(l)));
 ok("with fixtures every line carries content and the tail counts what is left",
-  (() => { const e = seasonSummary(played6).evidence; return e.every((l) => l.length > 0) && e[e.length - 1] === `${Math.max(0, TOTAL - SUM.played)} fixtures remaining.`; })());
+  (() => { const e = seasonSummary(played6).evidence.map(say); return e.every((l) => l.length > 0) && e[e.length - 1] === `${Math.max(0, TOTAL - SUM.played)} fixtures remaining.`; })());
 ok("the summary's position and club count are the live table's own",
   ALL_IDS.every((id) => { const s = sFor(id), o = seasonSummary(s); return o.position === positionOf(s) && o.clubCount === clubIdsByCompetition(s.competitionId).length; }));
 ok("seasonSummary is pure and deterministic",

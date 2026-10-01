@@ -569,6 +569,8 @@ const DYN_SITES = [
   { path: "domain/rowText.ts", expr: "code.toLowerCase()", prefix: "ni.kind.", suffix: "" },
   // M244: how a record sits against its points, as the community board's career draft words it.
   { path: "domain/rowText.ts", expr: "code", prefix: "comm.feels.", suffix: "" },
+  // M245: the venue a fixture is played at, printed on the manager's pre-match panel.
+  { path: "features/manager/ManagerOS.tsx", expr: "p.venue.toLowerCase()", prefix: "mgr.venue.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "impact.certainty", prefix: "ni.certainty.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
@@ -779,6 +781,11 @@ const SPACES = new Map([
     // so a sixth article type cannot ship with its word missing in a locale.
     name: "the article types a news story claims",
     values: lower(spaceOf("domain/types.ts", /export const NEWS_KINDS[^=]*=[\s\S]*?\];/, /"([A-Za-z]+)"/g)),
+  }],
+  ["mgr.venue.|p.venue.toLowerCase()", {
+    // The `MatchPrep.venue` union, lower-cased by the site.
+    name: "the venue a fixture is played at",
+    values: lower(spaceOf("domain/career.ts", /venue: [^;]+;/, quoted)),
   }],
   ["comm.feels.|code", {
     // The RECORD_FEELS union in domain/types.ts, so a fourth arm cannot ship without its word.
@@ -2816,7 +2823,7 @@ const debtFiles = debt.filter(([, h]) => h.length).map(([p]) => p);
 // string in six places. It is trn.title.focus with the attrs code var now, and the eighteen
 // catalogue labels M192 had to leave behind are deleted rather than keyed, because no screen
 // ever read them.
-const DOMAIN_PROSE_CEILING = 112;
+const DOMAIN_PROSE_CEILING = 83;
 // Modules whose prose is fully keyed. A milestone adds its module to this list in the
 // same commit that empties it; nothing removes an entry without putting the words back.
 // The three at the end hold no sentence at all once formats stop counting (M181 measured
@@ -2825,7 +2832,7 @@ const DOMAIN_PROSE_CEILING = 112;
 // M225 adds domain/matchEngine.ts: unlike the three format-only modules above it held real
 // sentences ("The midfield was finely balanced."), and they are rows now, so the module is
 // pinned at zero like the rest.
-const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts", "domain/training.ts", "domain/onboarding.ts", "domain/attributes.ts", "domain/community.ts"];
+const PROSE_ZERO = ["domain/load.ts", "domain/review.ts", "domain/history.ts", "domain/compare.ts", "domain/worldEngine.ts", "domain/playerDna.ts", "domain/scouting.ts", "domain/careerArc.ts", "domain/gap.ts", "domain/matchEngine.ts", "domain/newsImpact.ts", "domain/footprint.ts", "domain/filmInsights.ts", "domain/training.ts", "domain/onboarding.ts", "domain/attributes.ts", "domain/community.ts", "domain/career.ts"];
 ok(`domain prose still on keys has not grown (${debtTotal} literals across ${debtFiles.length} files, ceiling ${DOMAIN_PROSE_CEILING})`,
   debtTotal <= DOMAIN_PROSE_CEILING);
 // Per-module ceilings, so the debt cannot migrate: one global total lets a sentence move
@@ -2836,7 +2843,7 @@ ok(`domain prose still on keys has not grown (${debtTotal} literals across ${deb
 const PROSE_CAPS = {
   "domain/learn.ts": 83,
   "domain/community.ts": 0,
-  "domain/career.ts": 29,
+  "domain/career.ts": 0,
   "domain/footprint.ts": 0,
   "domain/attributes.ts": 0,
   "domain/newsImpact.ts": 0,
