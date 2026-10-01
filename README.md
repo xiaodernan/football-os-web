@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M244 (a few numbers in that range
+Work ships one milestone per commit and is currently at M245 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -5917,6 +5917,48 @@ with neither row on the other's page). Its limits are demonstrated too: `<App/>`
 still owed the live browser pass. The follow-up commit removed this file's own comment claiming the
 ratchet could see every root it loads: it only sees literal-path calls, so a clause now measures that
 boundary instead.
+
+### M245 — the manager's career model publishes rows, and the venue stops printing "Home" at the reader
+
+The last 29 counted sentences of `domain/career.ts` — the three panels' prose. `seasonOutlook`'s four
+evidence lines and three sources, `matchPrep`'s ten rationale lines and three sources, and
+`seasonSummary`'s record/stats/prize/best/worst/remaining lines are rows now (`mgr.*`, keyed in three
+locales), resolved by `ManagerOS` through `rowLine` at the five places it printed a string.
+
+**Every count word became an arm.** The retrospective read `1 fixtures`, `1 matches` and `1 clean
+sheets` — three reachable one-fixture shapes the module glued an "-s" onto. Each is a pair of keys now
+(`…One` / `…`), and the proof tests the boundary rather than the abstract: a one-fixture career is
+built and asserted (`1-0-0 from 1 fixture · 1 scored, 0 conceded (GD +1) | 3 pts · 3.00 pts/game ·
+1 clean sheet | Prize money earned €2M across 1 match | …`). The optional lines are absent rather than
+empty strings, which is what the old `.filter(Boolean)` did by accident.
+
+**`{p.venue}` printed `Home`/`Away` at whoever was reading.** The pre-match panel's title chip rendered
+the record's own enum, and no scan sees an interpolated hole — the M191/M192 shape once more. It
+resolves through `mgr.venue.*`, with the `MatchPrep.venue` union as its space.
+
+**One sentence may not live under two keys.** The remaining-fixture line was first added as
+`mgr.summary.remaining`, and the gate refused it: `mgr.fixturesLeft` already carries that exact
+sentence for the profile screen. The row reuses `mgr.fixturesLeft` and the duplicate key is gone,
+which is the check working as intended rather than a rename.
+
+Ceiling **112 → 83**, `career.ts` cap **29 → 0** and it joins `PROSE_ZERO` (**19 modules**).
+Inventory: **`learn.ts 83` — the last one.**
+
+`proof-career` (the repository's largest, 183 clauses) moved onto `scripts/lib/rows.mjs`'s `makeSay`
+rather than keeping its own interpreter — it already loaded `DICTIONARIES`, so a hand-rolled resolver
+here would have been the exact shape M232's section-34 door refuses. It gained three clauses for
+**186/186**, was 183.
+
+Three mutations, all caught: the plural arm always winning (the boundary clause, printing
+`1 fixtures`), an English rationale put back as a literal (three proof-i18n clauses), and the venue
+chip printing the record again (the stale-declaration clause).
+
+Measured: `tsc` clean, build 0, **41/41 proof scripts green**, `proof-i18n` **266/266** over
+**1874 keys × 3 locales**, `proof-career` **186/186**. Nothing was clicked in a browser.
+
+**Still outstanding**: `learn.ts` (83) is the last module carrying prose, and it is long-form lesson
+text rather than the model's own voice — deciding whether it belongs in `domain/` at all is the first
+step, not keying it.
 
 ### M244 — the discussion starters publish rows, and community.ts leaves the prose ratchet entirely
 
