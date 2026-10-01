@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M245 (a few numbers in that range
+Work ships one milestone per commit and is currently at M246 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -5917,6 +5917,71 @@ with neither row on the other's page). Its limits are demonstrated too: `<App/>`
 still owed the live browser pass. The follow-up commit removed this file's own comment claiming the
 ratchet could see every root it loads: it only sees literal-path calls, so a clause now measures that
 boundary instead.
+
+### M246 — the Knowledge Academy publishes rows, and learn.ts leaves the prose ratchet entirely
+
+The last 83 counted sentences of `domain/learn.ts` — so the ceiling is **0** and the inventory is empty.
+The module's own scope note had already decided where the words go: lesson text is editorial content
+written for this product, not the model's voice, and this milestone took it at its word while keeping
+the words where the reader meets them. A lesson is an id, a category, a length, a route, an answer index
+and the KEYS of the sentences it shows (`titleKey`/`summaryKey`/`bodyKeys`/`tryIt.labelKey`/`quiz.qKey`/
+`optionKeys`, written out rather than composed from the id, so the reachability scan sees every one and
+a lesson cannot ship with a paragraph missing). The accounting layer's own voice went the same way:
+`summarizeLearn`'s four evidence lines and two sources, and `recommendLessons`' twelve reasons, are rows
+now (`learn.ev.*` / `learn.src.*` / `learn.rec.*`, keyed in three locales), resolved by `LearnHub`
+through `rowLine` at the three places it printed a string.
+
+**Every count word became an arm.** `attempts`/`attemptedOnly`/`dose`/`watchlist`/`filmClips` each glue
+an English "-s" onto a number the module does not own. Each is a `…One`/`…Many` key pair chosen by the
+boundary the record actually holds, and `proof-learn` builds the boundary rather than describing it
+(attempts 1 → `attemptsOne`, 2+3 → `attemptsMany` with `vars.n === 5`).
+
+**The category is a code, and six sites resolve it.** The lesson cards, the detail header, the
+per-category badges and the filter strip all build `learn.cat.`/`learn.level.` at the screen (the level
+lower-cased by the site itself); the value spaces are read out of `CATEGORY_CODES` and the `Level`
+union, and `claimByPrefix` covers every expression under those prefixes the moment each is declared.
+
+**A row inside a row.** The evidence line that names the untouched category hands the reader a nested
+keyed variable — `vars: { cat: { key: \`learn.cat.${code}\` }, n }` — which `fillRowVars` resolves at the
+column, so the sentence and its subject are worded once, in one language, and the composed key never
+needs a spot in the row literal at all (the screen's declared dynamic sites claim its reachability).
+
+**The module stopped labeling attributes.** `recommendLessons`' load reason called `attributeLabel` —
+M234's defect in the film report, alive here: a 简体中文 reader saw `Sprint, Passing` inside a Chinese
+sentence. It hands `attrs` codes now (`attrs` is a code variable), and the proof renders all three
+locales and asserts each line shows its own dictionary's words, no line shows the code, and no
+placeholder survives.
+
+**Three screens follow the key.** The Activity History's lesson row (`lessonTitleRow`) and the community
+composer's academy card (`latestLessonTitle`) read `l.titleKey` — the first because a timeline event fed
+`title: { value: <the old English> }` would have put the words back one screen away from the module that
+no longer holds them.
+
+**The row audit had a blind spot, and the code moved instead of the regex.** A row whose key was chosen
+by a ternary *inside* the literal (`{ key: cond ? "a" : "b", vars }`) never matches `ROW_LITERAL`, so its
+placeholders were unaudited — the vars-drift arm proved it by going green in `proof-i18n`. The rows are
+split into one literal per branch now, each carrying its own quoted key: 335 row keys are audited and
+the pattern is unchanged.
+
+Ceiling **83 → 0**, `learn.ts` cap **83 → 0**, and it joins `PROSE_ZERO` (**20 modules**).
+Inventory: **none — every module in `domain/` is at zero.**
+
+`proof-learn` moved onto rows wherever it read one: the English sentences it asserted are the keys and
+vars those rows must carry now, plus one clause no gate covered — every key a lesson *carries* exists in
+all three locales (`bodyKeys`/`optionKeys` are arrays, which the `*Key` field scan skips by design).
+**73/73**, was 72.
+
+Six mutations, all caught: prose put back as a `{ value }` (six `proof-i18n` clauses), a zh-CN key
+deleted (locale parity), the badge's dynamic site dropped (stale declaration), a vars name drifted (row
+placeholder parity — after the restructure; before it, `proof-learn` caught it alone), the quiz's only
+`t(qKey)` removed (the consumer clause), and a typo'd key (row audit + reachability).
+
+Measured: `tsc` clean, build 0, **41/41 proof scripts green (2182 checks)**, `proof-i18n` **273/273**
+over **1970 keys × 3 locales** (90 dynamic sites, 335 row keys), `proof-learn` **73/73**. Nothing was
+clicked in a browser.
+
+**Still outstanding** on this axis: nothing — `DOMAIN_PROSE_CEILING` is 0, the per-module caps sum to 0,
+and the zero list holds all 20 modules, so a new sentence in `domain/` fails the gate that measures it.
 
 ### M245 — the manager's career model publishes rows, and the venue stops printing "Home" at the reader
 
