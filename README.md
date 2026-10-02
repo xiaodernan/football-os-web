@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M248 (a few numbers in that range
+Work ships one milestone per commit and is currently at M249 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,59 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M249 — a badge stops printing the model's own code, and the enum-that-reaches-the-DOM class gets a census
+
+`{n.kind}` is invisible to every check this file had. It is not a `t("…")` literal (check 4), not
+a declared dynamic site (16/17), and not a raw string sitting in a display slot (the UI scan reads
+literals, and there is no literal here) — the word arrives out of a record field. So an English
+reader read `Rumor` where the dictionary holds `Rumour`, a 简体中文 reader read `Rumor` where it
+holds `传闻`, a 繁體中文 reader read `Rumor` where it holds `傳聞`, and all three kept the gate
+green. The door was already built: `domain/rowText.ts` has resolved `ni.kind.*` since M233 for the
+impact panel's sentence, and the five badge positions beside it never went through it.
+
+All five now do, through `newsKindLabel(kind, t)` — the third `codeWord` door beside the two the
+onboarding picker and the profile headers already use, so the app still has exactly one module that
+spells a `ni.kind.` key. The code stays where it is an identity rather than a label: `key={k}` and
+`active.has(k)` in the Transfer Centre's filter, `kindTone(n.kind)` on both news boards,
+`n.kind === "Rumor"` for the dashboard's warning colour. One string changes for the English reader:
+the Rumor badge reads **Rumour**, which is what the dictionary already held and what the other five
+English values in the file spell (`transfers.subtitleFor`, `.statLinks`, `.empty`, `comm.tag.Rumours`,
+`ni.stance.rumor`); no second key was minted for a word the table carries.
+
+Section 35 charges the class at both ends. The render sites are a wiring table with literal pins
+(3 files / 5 positions, each importing from `domain/rowText`); the fall-back shapes are derived from
+the union rather than typed (`>Confirmed<` and `label="Confirmed"` for each of its five codes, into a
+JSX child ending in `.kind}`); and both refusals run against a planted screen and a planted filter
+loop, because "none of 95" is only evidence when something proves the walker was looking. Two of the
+eight clauses needed a round of fixing before they meant anything: the chip clause first asked
+whether the block contained `{k}` at all and went red on React's own `key={k}`, so it now reads the
+CHILD slot and separately asserts that the key survives as the code it is; and "never the code" was
+an unfalsifiable refusal, since four of the five codes are English words in their own right — the
+clause now pins that **11 of the 15** locale readings are a word the code does not already spell, and
+names the unknown-code fallback (`"Planted"` comes back as written) as the thing that equality is
+measured against. The bare-kind refusal carries the file's own population pin instead of a floor:
+`appSrc.size >= 60` stayed green in the arm that drops one screen.
+
+Witness: 10 arms on a `git archive` plane (`dev/m249-arms.mjs`, clause names and predictions in its
+header before the first run), **10/10 MATCHED**, every arm re-based to a pristine hash. Reverting one
+badge 2/2; deleting the composer's `NEWS_KINDS` branch 4/4 (stale declared site, no composer, wrong
+words, wrong spelling); a screen inlining the key 3/3 — and the bare-child clause stays green there,
+which is the pair that shows the two refusals read different shapes; a sixth article type 2/2; the
+chip back to `{k}` 2/2; the composer stopped lower-casing 3/3; a typed `label="Reported"` 2/2, where
+the older literal scan agrees and so the two refusals are a redundant pair rather than a hope; and
+blinding the gate's own `BARE_KIND_CHILD` regex 1/1, the anti-vacuity arm, since the tree still
+reports "none". Round 1 predicted nine reds for the walk-narrowing arm and measured ten: the extra
+one is check 18's reachability census, and chasing it produced a fact rather than a retuned number —
+its FAIL line names 24 unreachable keys, which is all 24 of the `transfers.*` namespace, so the one
+screen the arm removed is the sole reader of every word that namespace holds. The row keeps 10 as
+what the arm measures and the prediction as what was drafted.
+
+Measured on the plane at this commit: `npm run build` exit 0 both before and after, JS **+54 bytes
+across the same 35 chunks** (1,492,456 → 1,492,510) and CSS unchanged, suite **41/41 proof scripts ·
+2188/2188 checks · exit 0** against **2180/2180** measured on the same plane with HEAD's five files,
+`proof-i18n` **279/279** against its own **271/271**. The dictionary is unchanged at 1,955 keys,
+which is the point: the reader's word was already there.
 
 ## Deploying
 
