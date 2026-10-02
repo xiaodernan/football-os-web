@@ -3030,26 +3030,20 @@ for (const [path, code] of appSrc) {
     if (ASKS_THE_HOST.includes(firstArgOf(m[2]))) hostSites.push({ path, receiver: m[1] });
   }
 }
-const hostCount = (p) => hostSites.filter((s) => s.path === p).length;
-// M248 retired the two exemption tables this census used to carry. `HOST_OK_NUMBER` vouched for
-// number-formatting calls in chart.tsx and `HOST_OK_UNMOUNTED` for calendar.tsx; both files are
-// deleted, so both tables were `{}`, and the clauses that audited them (`badNumber`,
-// `calImporters`) were scraping an empty list — green forever, and reporting "clean" about a set
-// with no members. A belt that cannot be the reason anything fails is not protection, so the
-// clauses went with their carriers rather than staying as a story about files that no longer exist.
-// Still browser-locale, one milestone each to wire: Player OS's two session dates and its record
-// date. The Data Room's kickoff line and the Football AI's fixture fact were both here and both
-// are wired now — the RAG entry point takes the reader's language as an argument (see the RAG
-// seam below), so those files format through the door.
-const DATE_DEBT = {
-  "features/player/PlayerOS.tsx": 3,
-};
-const undeclaredHost = hostSites.filter((s) => !(s.path in DATE_DEBT));
-ok(`no file formats an instant for the browser without saying why (${undeclaredHost.map((s) => s.path).join(", ") || "none undeclared"} of ${hostSites.length} sites)`,
-  undeclaredHost.length === 0);
-const grewHost = Object.entries(DATE_DEBT).filter(([p, cap]) => hostCount(p) > cap);
-ok(`the remaining date debt has not grown in any file (${grewHost.map(([p, cap]) => `${p} ${hostCount(p)}>${cap}`).join(", ") || Object.entries(DATE_DEBT).map(([p, c]) => `${p.split("/").pop()}=${hostCount(p)}/${c}`).join(" ")})`,
-  grewHost.length === 0);
+// M248 retired the two exemption tables this census used to carry (`HOST_OK_NUMBER` for
+// chart.tsx's number formatting, `HOST_OK_UNMOUNTED` for calendar.tsx): both files were
+// deleted with their belt, because an .every over an empty table is green forever — a belt
+// that cannot be the reason anything fails is not protection. M250 closes the last row of
+// debt the census itself still named — Player OS's missed line, completed line and
+// match-table date, all three now formatted through `formatDate(locale, ...)` — so the
+// DATE_DEBT table goes with them, and the two clauses it fed (declare-or-grow, on a table
+// that then held exactly one row) become one clause carrying the census's whole claim:
+// zero sites ask the browser, ever. Its non-vacuity does not rest on the count. The
+// planted-spelling self-test below proves the scanner still recognises every way of
+// asking and none of the ways of telling, and the population pin proves the walk read
+// the whole tree — so `0` here is a measured zero, not an empty set reporting clean.
+ok(`no file formats an instant for the browser (${hostSites.map((s) => `${s.path}:${s.receiver}`).join(", ") || "0 sites anywhere in the app"}; one bare toLocale* call reddens this)`,
+  hostSites.length === 0);
 // The way back into the same defect that no argument-shape scan can see: a call that DOES
 // pass a locale, but sources it from the host. Reading the browser once is correct — the app
 // picks a starting locale from it, the reader can override that in the header, and the choice
@@ -3086,7 +3080,7 @@ ok(`the census still recognises all ${HOST_SPELLINGS.length} ways of asking the 
   missedSpellings.length === 0);
 ok(`and recognises none of the ${HOST_CONTROLS.length} calls that name a locale (${falseControls.map(([n]) => n).join(", ") || "no false positives"})`,
   falseControls.length === 0);
-ok(`the census scanned the app rather than an empty set (${appSrc.size} source files against pin ${APP_SRC_PIN}, ${hostSites.length} browser-locale sites left and all declared)`,
+ok(`the census scanned the app rather than an empty set (${appSrc.size} source files against pin ${APP_SRC_PIN}, ${hostSites.length} browser-locale sites left)`,
   appSrc.size === APP_SRC_PIN);
 // (b) The door is the only formatter, and it takes the reader's locale.
 const DOOR_CALLS = callsOf("formatDate");

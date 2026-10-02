@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Link, useRouter, matchRoute } from "@/lib/router";
 import { newId } from "@/lib/ids";
-import { useI18n } from "@/i18n";
+import { useI18n, formatDate } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import {
   ATTRIBUTE_KEYS,
@@ -379,7 +379,7 @@ function Skills() {
 
 function Training() {
   const { state, completeSession } = useOs();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const planned = state.sessions.filter((s) => s.status === "planned");
   const missed = state.sessions.filter((s) => s.status === "missed").slice(0, 8);
   const history = state.sessions.filter((s) => s.status === "completed").slice(0, 20);
@@ -401,7 +401,7 @@ function Training() {
               <div key={sess.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                 <div className="min-w-0">
                   <div className="truncate">{rowLine(sess.title, t)}</div>
-                  <div className="text-xs text-muted-foreground">{t("player.missedDate", { date: new Date(sess.date).toLocaleDateString(), min: sess.targetMinutes })}</div>
+                  <div className="text-xs text-muted-foreground">{t("player.missedDate", { date: formatDate(locale, sess.date), min: sess.targetMinutes })}</div>
                 </div>
                 <Badge variant="outline" className="shrink-0 font-mono text-muted-foreground">{t("player.missedBadge")}</Badge>
               </div>
@@ -417,7 +417,7 @@ function Training() {
               <div key={sess.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                 <div className="min-w-0">
                   <div className="truncate">{rowLine(sess.title, t)}</div>
-                  <div className="text-xs text-muted-foreground">{t("player.completedDate", { date: sess.completedAt ? new Date(sess.completedAt).toLocaleDateString() : "—", rating: sess.selfRating ?? "—" })}</div>
+                  <div className="text-xs text-muted-foreground">{t("player.completedDate", { date: sess.completedAt ? formatDate(locale, sess.completedAt) : "—", rating: sess.selfRating ?? "—" })}</div>
                   {sess.growth && sess.growth.some((g) => g.delta > 0) && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {sess.growth.filter((g) => g.delta > 0).map((g) => (
@@ -721,7 +721,7 @@ function Video() {
 
 function Matches() {
   const { state } = useOs();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [rows, setRows] = useState<{ id: string; opp: string; date: string; g: number; a: number; r: number }[]>(() => {
     try { return JSON.parse(localStorage.getItem(FIXTURES_KEY) || "[]"); } catch { return []; }
   });
@@ -754,7 +754,7 @@ function Matches() {
           <div className="divide-y">
             {rows.map((r) => (
               <div key={r.id} className="group flex items-center justify-between py-2 text-sm">
-                <div><div>{r.opp}</div><div className="text-xs text-muted-foreground">{new Date(r.date).toLocaleDateString()}</div></div>
+                <div><div>{r.opp}</div><div className="text-xs text-muted-foreground">{formatDate(locale, r.date)}</div></div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 font-mono text-xs"><span>{r.g}G {r.a}A</span><Badge variant="outline">{r.r.toFixed(1)}</Badge></div>
                   <button onClick={() => remove(r.id)} aria-label={t("player.deleteMatch", { opp: r.opp })} className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus:opacity-100 group-hover:opacity-100">✕</button>
