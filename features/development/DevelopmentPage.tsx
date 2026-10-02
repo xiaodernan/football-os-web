@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
+import { positionGroupLabel } from "@/domain/rowText";
 import { rowLine } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import { analyzeGap, type GapItem } from "@/domain/gap";
@@ -139,7 +140,7 @@ export function DevelopmentPage() {
                 active ? "border-primary bg-primary/15 text-primary" : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
               )}
             >
-              {g.id}
+              {positionGroupLabel(g.id, t)}
               {isOwn && <span className="ml-1 opacity-70">·</span>}
             </button>
           );
@@ -148,7 +149,7 @@ export function DevelopmentPage() {
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatTile label={t("dv.readiness")} value={`${analysis.readiness}%`} tone={readinessTone} sub={t(`group.${analysis.group}`)} />
+          <StatTile label={t("dv.readiness")} value={`${analysis.readiness}%`} tone={readinessTone} sub={positionGroupLabel(analysis.group, t)} />
           <StatTile label={t("dv.overall")} value={analysis.overall} sub={t("dv.tier", { n: Math.round(analysis.skill * 100) })} />
           <StatTile label={t("dv.priorities")} value={analysis.priorities.length} sub={t("dv.toWork")} />
           <StatTile label={t("dv.strengths")} value={analysis.strengths.length} tone="up" sub={t("dv.atTarget")} />

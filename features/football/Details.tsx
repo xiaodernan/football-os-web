@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
-import { rowLine } from "@/domain/rowText";
+import { positionGroupLabel, rowLine } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import {
   footballProvider,
@@ -118,7 +118,7 @@ export function PlayerDetail({ id }: { id: string }) {
         <Panel className="p-4">
           <SectionTitle title={t("fw.prof.title")} hint={t("fw.prof.hint")} />
           <dl className="mt-2 grid grid-cols-2 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">{t("fw.pgroup")}</dt><dd className="text-right font-mono">{p.positionGroup}</dd>
+            <dt className="text-muted-foreground">{t("fw.pgroup")}</dt><dd className="text-right font-mono">{positionGroupLabel(p.positionGroup, t)}</dd>
             <dt className="text-muted-foreground">{t("common.age")}</dt><dd className="text-right font-mono">{p.age}</dd>
             <dt className="text-muted-foreground">{t("common.nation")}</dt><dd className="text-right">{p.nation}</dd>
             <dt className="text-muted-foreground">{t("fw.foot")}</dt><dd className="text-right font-mono">{p.foot}</dd>
@@ -185,7 +185,7 @@ export function PlayerDetail({ id }: { id: string }) {
 
       <Panel className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <SectionTitle title={t("det.scout.title")} hint={t("det.scout.hint", { group: p.positionGroup })} />
+          <SectionTitle title={t("det.scout.title")} hint={t("det.scout.hint", { group: positionGroupLabel(p.positionGroup, t) })} />
           <Badge variant="outline" className="text-[11px]">{report.hasVector ? t("det.scout.badgeDelta", { n: report.confidence }) : t("det.scout.badgeNone")}</Badge>
         </div>
         <p className="mt-1 text-sm">{rowLine(report.headline, t)}</p>

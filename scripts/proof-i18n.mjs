@@ -520,7 +520,6 @@ const DYN_SITES = [
   { path: "features/development/DevelopmentPage.tsx", expr: "item.key", prefix: "attr.name.", suffix: "" },
   { path: "features/development/DevelopmentPage.tsx", expr: "it.key", prefix: "attr.name.", suffix: "" },
   { path: "features/development/DevelopmentPage.tsx", expr: "it.key", prefix: "attr.name.", suffix: "" },
-  { path: "features/development/DevelopmentPage.tsx", expr: "analysis.group", prefix: "group.", suffix: "" },
   { path: "features/film/FilmRoom.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
   { path: "features/film/FilmRoom.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
   // M193: the analysis progress line used to print the English stage name out of the
@@ -611,7 +610,6 @@ const DYN_SITES = [
   { path: "features/community/CommunityHub.tsx", expr: "s", prefix: "comm.sort.", suffix: "" },
   // M191: the onboarding position picker resolves its captions through the dictionary
   // instead of printing the domain table's English `label`.
-  { path: "features/onboarding/Onboarding.tsx", expr: "p.id", prefix: "group.", suffix: "" },
   // M192: a session's exercises print the drill's own key, not the catalogue's English
   // label — the key is what a stored session carries, so an old session reads correctly.
   { path: "features/player/PlayerOS.tsx", expr: "e.key", prefix: "drill.", suffix: "" },
@@ -667,7 +665,6 @@ const SPACES = new Map([
   ["attr.|c.category", S_CAT],
   ["attr.|edge.bestCategory", S_CAT],
   ["attr.|edge.worstCategory", S_CAT],
-  ["group.|analysis.group", S_GROUP],
   ["compare.m.|m.key", {
     name: "comparison metrics",
     values: spaceOf("domain/compare.ts", /\{ key: "overall",[\s\S]*?\n  \];/, /\{ key: "([^"]+)",/g),
@@ -3754,7 +3751,7 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1263 && shapeCounts.template === 104 && shapeCounts.expression === 28
+  shapeCounts.literal === 1263 && shapeCounts.template === 102 && shapeCounts.expression === 28
     && shapeCounts.computed === 22 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -3808,6 +3805,117 @@ for (const loc of L) for (const k of enKeys) if (malformedIn(D[loc.id][k] ?? "")
 const plantMalformed = malformedIn("done {n") && malformedIn("done n}") && !malformedIn("done {n} done");
 ok(`every template's braces close in all three locales (${malformed.length} of ${enKeys.length * L.length} values${malformed.length ? `, e.g. ${malformed.slice(0, 3).join(" | ")}` : ""}; planted arrangements: ${plantMalformed})`,
   malformed.length === 0 && plantMalformed);
+
+// ─── 38 · the second family of the class M249 closed (M255) ────────────────────
+// M249 charged the enum-that-reaches-the-DOM, but only for the field it was standing in: its
+// patterns read `.kind`, so a DIFFERENT stored code reaching a DIFFERENT slot stayed invisible to
+// every one of the 37 checks above. This section runs the same shape over `PositionGroup` — 8
+// codes in `domain/types.ts`, words for all 8 in all 3 locales under `group.*` since M147 — and
+// found five positions in three screens: a labelled row printing the stored `positionGroup`, the
+// same code fed to `det.scout.hint` as its `{group}` variable inside an otherwise-translated
+// sentence, a role chip rendering the loop's `{g.id}`, a stat sub-line and the onboarding picker,
+// the last two composing `group.${…}` inline. So the app had THREE spellings of one lowercase rule
+// and a reader-visible code, and clause 4 below now refuses the inline spelling class-wide.
+// Predictions written before the first run: 5 positions / 3 files, 1 composer module, and 24/24
+// readings differing from the code — none of GK/CB/FB/DM/CM/AM/W/ST is any locale's word, which
+// is the contrast with M249's 11/15 and what makes the equality below unfakeable rather than
+// tautological here.
+const GRP_WIRING = [
+  ["features/football/Details.tsx", "positionGroupLabel(p.positionGroup, t)", 2],
+  ["features/development/DevelopmentPage.tsx", "positionGroupLabel(g.id, t)", 1],
+  ["features/development/DevelopmentPage.tsx", "positionGroupLabel(analysis.group, t)", 1],
+  ["features/onboarding/Onboarding.tsx", "positionGroupLabel(p.id, t)", 1],
+];
+const GRP_FILES_PIN = 3;
+const GRP_POSITIONS_PIN = 5;
+const GRP_IMPORT = /^import \{[^}]*\bpositionGroupLabel\b[^}]*\} from "@\/domain\/rowText"/m;
+const grpFiles = [...new Set(GRP_WIRING.map(([p]) => p))];
+const grpSrc = new Map(grpFiles.map((p) => [p, appSrc.get(p) ?? ""]));
+const grpCallsIn = (p, needle) => grpSrc.get(p).split(needle).length - 1;
+const grpBad = GRP_WIRING.filter(([p, expr, n]) => grpCallsIn(p, expr) !== n)
+  .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${grpCallsIn(p, expr)}`);
+const grpPositions = GRP_WIRING.reduce((s, [, , n]) => s + n, 0);
+ok(`the ${grpFiles.length} screens that show which positional group a player is in read it through the shared composer at all ${grpPositions} position(s) (pins ${GRP_FILES_PIN} files/${GRP_POSITIONS_PIN} positions), and each imports it from domain/rowText (${grpBad.join(" | ") || "none"})`,
+  grpBad.length === 0 && grpFiles.length === GRP_FILES_PIN && grpPositions === GRP_POSITIONS_PIN &&
+  grpFiles.every((p) => GRP_IMPORT.test(grpSrc.get(p))));
+// The value space comes out of the union itself, and the table that ships the same ids is
+// cross-checked against it — two producers of one space must not be allowed to drift, and a
+// clause over an empty list proves nothing, so both ends are floored.
+const GRP_CODES = spaceOf("domain/types.ts", /export type PositionGroup = [^;]+;/, /"([A-Z]{1,3})"/g);
+const GRP_TABLE = spaceOf("domain/attributes.ts", /export const POSITION_GROUPS[^=]*=[\s\S]*?\n\];/, /\bid:\s*"([A-Z]{1,3})"/g);
+const grpWords = GRP_CODES.filter((c) => c.length > 1).map((c) => `>${c}<`);
+const bareGrpSites = [...appSrc]
+  .filter(([, code]) => /\x3e\s*\{[^{}]*\.positionGroup\}\s*</.test(code) || grpWords.some((w) => code.includes(w)))
+  .map(([p]) => p);
+const GRP_PLANT = 'export const Row = ({ p }: any) => (\n  <>\n    <dd>{p.positionGroup}</dd>\n    <span>CM</span>\n  </>\n);';
+const plantGrp = /\x3e\s*\{[^{}]*\.positionGroup\}\s*</.test(codeOf(GRP_PLANT)) && grpWords.some((w) => codeOf(GRP_PLANT).includes(w));
+ok(`no module prints a stored positional group straight into a display slot and no screen types one of the union's ${GRP_CODES.length} codes as a text node (multi-letter only — the union's single-letter W is a wins column heading in features/manager/ManagerOS.tsx, measured on this run; ${bareGrpSites.join(", ") || "none"} of ${appSrc.size}), the picker table and the union carry the same ${GRP_TABLE.length} ids, while the planted row is caught by both halves (${plantGrp})`,
+  bareGrpSites.length === 0 && GRP_CODES.length === 8 && GRP_TABLE.length === 8 &&
+  [...GRP_CODES].sort().join() === [...GRP_TABLE].sort().join() && plantGrp && appSrc.size === APP_SRC_PIN);
+// A sentence variable is a display slot wearing an argument, but only when nothing resolves it:
+// a keyed row's `group` var goes through the shipped code-var door (CODE_VARS lists it, so
+// fillRowVars calls codeWord at render), while a screen that calls t() itself gets its vars
+// interpolated exactly as handed. So the charge is aimed at direct calls, and the door the other
+// path depends on is asserted in the same breath — drop `group` from CODE_VARS and the second
+// clause reddens even though no screen changed.
+const GRP_T_CALL = /\bt\(\s*"[^"]+",\s*\{([^}]*)\}/g;
+const grpVarSites = [...appSrc].flatMap(([p2, code]) => [...code.matchAll(GRP_T_CALL)]
+  .map((m) => [p2, (m[1].match(/group:\s*([^,]*)/) ?? [])[1]?.trim()])
+  .filter(([, v]) => v !== undefined));
+const grpVarBad = grpVarSites.filter(([, v]) => !v.startsWith("positionGroupLabel(")).map(([p2, v]) => `${p2} :: group: ${v}`);
+const GRP_VAR_PIN = 1;
+const GRP_VAR_PLANT = 't("det.scout.hint", { group: p.positionGroup })';
+const grpVarOf = (code) => (code.match(new RegExp(GRP_T_CALL.source)) ?? [, ""])[1];
+const grpRowReads = [];
+for (const { id } of L) {
+  const line = rowTextModule.rowLine({ key: "det.scout.hint", vars: { group: "CM" } }, tReader(id));
+  if (line !== D[id]["det.scout.hint"].replace("{group}", D[id]["group.CM"])) grpRowReads.push(`${id}: ${line}`);
+}
+ok(`the ${grpVarSites.length} direct t() call(s) that name a positional group hand it over already resolved (pin ${GRP_VAR_PIN}; ${grpVarBad.join(" | ") || "none unresolved"}), the plant in the same shape is caught (${grpVarOf(GRP_VAR_PLANT).includes("p.positionGroup")}), and the keyed-row door those other vars ride — CODE_VARS listing group — renders ${GRP_CODES.length >= 8 ? "the word" : "nothing"} in all ${L.length} locales (${grpRowReads.join(" | ") || "no bad row reading"})`,
+  grpVarBad.length === 0 && grpVarSites.length === GRP_VAR_PIN &&
+  grpVarOf(GRP_VAR_PLANT).includes("p.positionGroup") && grpRowReads.length === 0 &&
+  rowTextModule.isCodeVar("group"));
+// The chip is the loop-variable case again, and the charge is read out of the loop the file
+// declares — same reason M249 could not name-match it: `{g.id}` is legitimate wherever `id` is
+// already a word. The extractor keeps `key={g.id}` as the code it is.
+const GRP_CHIP_LOOP = /POSITION_GROUPS\.map\(\(g\) =>[\s\S]*?<\/button>/;
+const grpChip = grpSrc.get("features/development/DevelopmentPage.tsx").match(GRP_CHIP_LOOP)?.[0] ?? "";
+const GRP_CHIP_PLANT = "POSITION_GROUPS.map((g) => (\n  <button key={g.id}>{g.id}</button>\n))";
+const grpChipOf = (code) => code.match(GRP_CHIP_LOOP)?.[0] ?? "";
+const bareChip = (block) => />\s*\{g\.id\}/.test(block);
+ok(`the Development page's own group loop hands its chip to the composer, not to the code (${grpChip.length} chars read, bare ${bareChip(grpChip)}), keeping React's key={g.id} as the identity it is (${/key=\{g\.id\}/.test(grpChip)}), and the same extractor reports the planted loop (${grpChipOf(GRP_CHIP_PLANT).length} chars, bare ${bareChip(grpChipOf(GRP_CHIP_PLANT))})`,
+  grpChip.length > 0 && !bareChip(grpChip) && grpChip.includes("positionGroupLabel(g.id, t)") &&
+  /key=\{g\.id\}/.test(grpChip) && grpChipOf(GRP_CHIP_PLANT).length > 0 && bareChip(grpChipOf(GRP_CHIP_PLANT)));
+// One spelling of the lowercase rule, counted rather than trusted. This is the clause that turns
+// the two inline composers this milestone found into a class-wide refusal.
+const GRP_COMPOSED = /`group\.\$\{/g;
+const composedIn = (code) => [...code.matchAll(GRP_COMPOSED)].length;
+const grpComposers = [...appSrc].filter(([, c]) => composedIn(c) > 0).map(([p, c]) => `${p} x${composedIn(c)}`);
+const GRP_COMPOSER_FILE_PIN = 1;
+const GRP_PLANT_INLINE = 'const w = (g: string) => t(`group.${g}`);';
+ok(`exactly ${GRP_COMPOSER_FILE_PIN} module composes a group. key and it is the composer, not a screen (${grpComposers.join(", ") || "none"}), while a screen that builds the key inline is caught (${composedIn(GRP_PLANT_INLINE)}), and the loaded composer is the module that declares positionGroupLabel (${rtDeclared.join(", ")})`,
+  grpComposers.length === GRP_COMPOSER_FILE_PIN && grpComposers[0] === "domain/rowText.ts x1" &&
+  composedIn(appSrc.get("domain/rowText.ts")) === 1 && composedIn(GRP_PLANT_INLINE) === 1 &&
+  rtDeclared.includes("positionGroupLabel") && typeof rowTextModule.positionGroupLabel === "function");
+// The behavioural half, through the shipped door, in every locale, against the dictionary's own
+// words — and pinned by how many readings are NOT the code, so a composer that fell through to
+// its unknown-code branch everywhere could not pass.
+const grpReadBad = [];
+let grpDiffer = 0;
+const GRP_DIFFER_PIN = 24;
+for (const { id } of L) {
+  for (const code of GRP_CODES) {
+    const shown = rowTextModule.positionGroupLabel(code, tReader(id));
+    const want = D[id][`group.${code}`];
+    if (shown.startsWith("group.")) grpReadBad.push(`${id}: ${code} prints the key`);
+    else if (shown !== want) grpReadBad.push(`${id}: ${code} prints “${shown}” while the dictionary says “${want}”`);
+    else if (shown !== code) grpDiffer++;
+  }
+}
+ok(`the shipped positionGroupLabel answers all ${GRP_CODES.length} positional groups in all ${L.length} locales with the dictionary's own word and never a key (${grpReadBad.join(" | ") || "no bad reading"}), and ${grpDiffer}/${GRP_CODES.length * L.length} of those readings are not the code already spelled (pin ${GRP_DIFFER_PIN} — every one differs here, unlike M249's 11/15)`,
+  grpReadBad.length === 0 && grpDiffer === GRP_DIFFER_PIN);
+ok(`and the same fallback M249 measured is still the last resort for a code outside the union (${rowTextModule.positionGroupLabel("Planted", tReader("en"))})`,
+  rowTextModule.positionGroupLabel("Planted", tReader("en")) === "Planted");
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 

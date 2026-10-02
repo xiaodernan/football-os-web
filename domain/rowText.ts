@@ -98,6 +98,15 @@ export const ageGroupLabel = (ageGroup: string, t: Translate): string => codeWor
  *  glass, and keeps this file the only place that composes `ni.kind.*`. */
 export const newsKindLabel = (kind: string, t: Translate): string => codeWord(kind, t);
 
+/** The word for a positional group — `CM` on the model, 「中场中路」 to a reader in 简体中文.
+ *  The code has to stay the code everywhere it is an IDENTITY: the picker compares it, the two
+ *  squad filters match it, and React keys it. What must not stay the code is the glass. Before
+ *  M255 one screen printed the stored `positionGroup` into a labelled row and fed the same code
+ *  as a sentence variable while two other screens composed `group.${…}` inline — three spellings
+ *  of one lowercase rule and a reader-visible code, which is the news-kind defect (M249) on a
+ *  second family. This is the only module that composes `group.*`. */
+export const positionGroupLabel = (group: string, t: Translate): string => codeWord(group, t);
+
 export function isCodeVar(name: string): boolean {
   return CODE_VARS.includes(name);
 }

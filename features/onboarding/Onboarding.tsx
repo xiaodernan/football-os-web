@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
+import { positionGroupLabel } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import { WORLD } from "@/data/footballSeed";
 import { POSITION_GROUPS } from "@/domain/attributes";
@@ -110,7 +111,7 @@ export function Onboarding() {
                   className={cn("rounded-lg border px-2 py-2 text-xs transition", positionGroup === p.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}
                 >
                   <div className="font-mono font-bold">{p.id}</div>
-                  <div className="truncate text-[10px]">{t(`group.${p.id}`)}</div>
+                  <div className="truncate text-[10px]">{positionGroupLabel(p.id, t)}</div>
                 </button>
               ))}
             </div>
