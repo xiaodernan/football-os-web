@@ -6278,6 +6278,84 @@ named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `too
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
 
+### M255 — the positional group stops speaking its own code to the reader, and the class M249 charged gets a second family
+
+M249 closed the enum-that-reaches-the-DOM for the field it happened to be standing in: every one of
+its patterns read `.kind`, so a **different** stored code reaching a **different** slot stayed
+invisible to all 37 checks above it. This unit runs the same shape over `PositionGroup` — 8 codes in
+`domain/types.ts`, with words for all 8 in all 3 locales under `group.*` since M147 — and finds five
+positions in three screens. A 简体中文 reader on a player's detail page read, at HEAD:
+
+- `features/football/Details.tsx:121` — the 「位置组」 row's own value was `CM`, straight out of the record;
+- `:188` — the same code fed to `det.scout.hint` as its `{group}` variable, so a translated sentence
+  opened with an English abbreviation inside it;
+- `features/development/DevelopmentPage.tsx:142` — the role chip rendered the loop's `{g.id}`;
+- `:151` — the readiness tile's sub-line composed `t(\`group.${analysis.group}\`)` itself;
+- `features/onboarding/Onboarding.tsx:113` — the picker's word line composed `t(\`group.${p.id}\`)` itself.
+
+So the app had **three** modules spelling one lowercase key rule (`domain/rowText.ts:70` being the
+other), and a reader-visible code in a slot that already had a dictionary word for it. The fix is one
+export, `positionGroupLabel(group, t)`, in `domain/rowText.ts`, and all five positions call it. The
+code stays a code where it *is* an identity: `key={g.id}`, `g.id === profile.positionGroup`, the two
+squad filters, and the mono abbreviation `CM` in the onboarding tile — which is deliberate, and the
+gate keeps `key={g.id}` alive in the chip clause so nobody "cleans" it away.
+
+Unlike M249, where 11 of 15 readings differed from the code and 4 codes were also English words,
+**24/24** readings differ here: none of GK/CB/FB/DM/CM/AM/W/ST is any locale's word, so the equality
+clause cannot be satisfied by a composer that fell through to its unknown-code branch.
+
+Section 38 of `proof-i18n` adds **7** clause sites: the wiring table (3 files / 5 positions, each
+file importing from `domain/rowText`), the display-slot census (no `>{…positionGroup}<` and no typed
+code as a text node, over all **95** app modules), the direct-`t()` variable clause, the Development
+page's chip read out of its own loop, the composer census (exactly **1** module composes `group.`),
+the behavioural readings through the shipped door in all three locales, and the fallback for a code
+outside the union. Two producers of the same space are cross-checked — the union and
+`POSITION_GROUPS` both pin **8** and must be the same 8 sorted.
+
+Four reds and one crash came from the gate itself while this was being written, and each was a real
+correction rather than a retune:
+
+1. the two converted template sites left their `DYN_SITES` declarations stale — which is exactly what
+   check 16 reddens, so a declaration with no live site is deleted, not left to rot;
+2. the app-wide t()-shape census moved **104 → 102** template sites and refused to stay pinned at the
+   old number;
+3. the literal-code half first charged `features/manager/ManagerOS.tsx` for `>W<` — a **wins** column
+   heading, not a group. The clause now reads multi-letter codes only and prints that collision;
+4. the variable clause began at "any `group:` argument" and found **80** sites: property declarations,
+   command-palette group keys, achievement groups, and legitimate keyed rows. `CODE_VARS` already lists
+   `group`, so those rows are resolved at render by `fillRowVars`; the charge is aimed at the **1**
+   direct `t()` call that hands a code to a sentence, and the door the other path rides is asserted in
+   the same breath (drop `group` from `CODE_VARS` and that clause reddens even though no screen moved).
+
+Nine witness arms, all run on the frozen plane, **9/9 MATCHED** — control 294/294 with no red, then
+A1/A2 (a wiring count and its pin) → `wiring`; A3 (row back to `{p.positionGroup}`) → `bareGroup` +
+`wiring`; A4 (Onboarding composing the key inline) → `composer` + `dynSites` + `shape` + `wiring`;
+A5 (`group` out of `CODE_VARS`) → `varClause`; A6/A7 → `readings`; A8 (unresolved code returning `X`)
+→ `fallback`. A7 predicts `readings` **only** on purpose: the fallback clause asks for an *unresolved*
+code, and a pass-through composer answers it correctly, so that mutation must not be credited with
+reddening it. Two attribution records, because both were true findings: the first arms run **crashed**
+rather than reporting a red — my clause table keyed the wiring probe on `"at all 5 position"`, i.e. on
+the very number arm A1 mutates, so a legitimate `wiring` red matched no probe and `undefined` reached a
+destructure. Probes are now number-free and the script refuses up front unless each one matches
+exactly one clause line in the gate. And A4's *prediction* missed the shape census on run 1: it was
+added to the table after being attributed, not after the number moved.
+
+Measured on the frozen plane (`git archive` of `9d97a40` plus exactly these five files, node_modules
+junction, nothing tracked edited): `npm run build` exit 0 both legs, **37** output files (35 js / 1 css
+/ 1 other), JS **1,492,460 → 1,492,495** bytes (**+35**), CSS and other unchanged (delta 0).
+`proof-i18n` **289/289 → 294/294** — the +5 is fully attributed: 7 clause sites added, and the two
+removed `DYN_SITES` declarations take their two per-site space-coverage checks with them. Whole suite
+**41/41 scripts · 2,198 → 2,203 checks**, 0 `FAIL` lines on either leg. `rowText.ts` declares **8 → 9**
+exports and the import-specifier audit reads **630 → 632** over the same 95-module population.
+
+**Still outstanding** — the same class has more families, and each is now measured rather than
+guessed: `MatchStatus` (3 codes, words for all 3 in all 3 locales) has one raw display slot at
+`features/football/FootballWorld.tsx:118` while four other sites in two files compose `fw.status.*`
+inline; `Player.foot` is `"L" | "R"` and reaches the glass three times including `{p.foot}F`, with no
+value keys anywhere; `PosBucket` (`ALL/GK/DEF/MID/ATT`) prints `{r.bucket}` as a heading with no keys
+at all; the drill phases print `{e.phase}`. `{band.band}` on the load page is *not* in the class — it
+is a numeric range the model publishes, which is why the census is per family and not per field name.
+
 ### M254 — the last two counted literals in data/intelligence.ts were a regex, not prose
 
 `data/intelligence.ts` carried a named cap of 2 since M184 — the one hole in the `data/` exemption,
