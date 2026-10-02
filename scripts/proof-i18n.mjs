@@ -3507,6 +3507,75 @@ ok(`and the fallback the readings are measured against is real: a code outside t
 ok(`and the English badge changes spelling, not meaning: Rumor now reads the word the dictionary holds (${en["ni.kind.rumor"]})`,
   rowTextModule.newsKindLabel("Rumor", tReader("en")) === en["ni.kind.rumor"] && en["ni.kind.rumor"] !== "Rumor");
 
+// ─── 36 · the two Chinese locales audit each other (M251) ──────────────────────
+// M143's failure was inheritance (`...zhCN` at the head of the zh-TW block), and the
+// gate's standing answer has been proof-graph's five-key sample: correct per key,
+// blind to the shape of the failure — a zh-TW that copies zh-CN value-by-value while
+// keeping every key its own passes it, because the five keys it still writes itself
+// happen to be in the sample. What follows is corpus-wide, and it learns its own
+// definition of "a glyph the traditional script does not write" from the corpus
+// instead of from a hand-typed list — two hand-typed attempts were measured first and
+// thrown away: index-aligned pair diffing harvested offset noise (球/分/名 appeared as
+// "simplified" because a length-equal pair shifted by one), and a hand-written
+// simplified set carried the shared glyph 慢, so both produced hundreds of false leaks
+// on a dictionary that has none. The rule that survived measurement is a rate
+// differential: a character written by >= 8 zh-CN values but by at most a tenth of
+// that many zh-TW values is, by construction, one this traditional corpus all but
+// never writes. The tenth (not zero) is what keeps a single leaked glyph inside the
+// learned set instead of teaching the learner to ignore it. Check 7 above calls its
+// sixteen characters a closed list and not a converter, and names "check 6 plus review"
+// as the general defence; this section is that defence, written down.
+const zhKeys = Object.keys(D["zh-CN"]);
+const rateIn = (dict, ch) => zhKeys.filter((k) => String(dict[k]).includes(ch)).length;
+const corpusChars = new Set();
+for (const k of zhKeys) for (const ch of String(D["zh-CN"][k]) + String(D["zh-TW"][k])) if (/[㐀-鿿]/.test(ch)) corpusChars.add(ch);
+const learnedGlyphs = [...corpusChars].filter((ch) => {
+  const rc = rateIn(D["zh-CN"], ch);
+  return rc >= 8 && rateIn(D["zh-TW"], ch) * 10 <= rc;
+});
+// Non-vacuity for the learner, and the reason it is a size and not a per-glyph claim:
+// a zh-TW that became a value-by-value copy of zh-CN lifts every simplified glyph's
+// zh-TW rate toward its zh-CN rate, and glyphs leave this set until it is empty — the
+// M143 failure again, red here rather than as a quiet "0 leaks" from a scanner with
+// nothing left to compare. The planted word below is the second half of the same belt.
+ok(`the corpus learns which glyphs only the simplified script writes (${learnedGlyphs.length} glyphs, e.g. ${learnedGlyphs.slice(0, 8).join("")})`,
+  learnedGlyphs.length >= 100);
+const plantedWord = "训练";
+const plantedCaught = [...plantedWord].every((ch) => learnedGlyphs.includes(ch));
+ok(`and the learned set is a working detector, not a number: a planted simplified word (${plantedWord}) is inside it (${plantedCaught})`,
+  plantedCaught);
+const leakSet = new Set(learnedGlyphs);
+const leakIn = (v) => [...String(v)].some((ch) => leakSet.has(ch));
+const twLeaks = zhKeys.filter((k) => leakIn(D["zh-TW"][k]));
+// The belt on this half runs through the same `leakIn` the assertion uses: a scan
+// blinded to its own input still has to answer for the word planted inside it.
+ok(`no zh-TW value carries a glyph the traditional corpus never writes (${twLeaks.slice(0, 5).map((k) => `${k}=${D["zh-TW"][k]}`).join(" | ") || `${twLeaks.length} of ${zhKeys.length} values`}; planted word caught: ${leakIn(plantedWord)})`,
+  twLeaks.length === 0 && leakIn(plantedWord));
+// The second contract, and the one a key-level parity check cannot state: three locales
+// may hold different words for the same sentence but must hold the same VARIABLES, or
+// one locale's reader gets a literal `{shown}` where another gets a number. Counts are
+// compared too — `{n} … {n}` twice is a different sentence from `{n} …` once.
+const phOf = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(",");
+const phDrift = zhKeys.filter((k) => phOf(en[k]) !== phOf(D["zh-CN"][k]) || phOf(en[k]) !== phOf(D["zh-TW"][k]));
+const plantedDrift = phOf("you finished {n} of {n}") !== phOf("you finished {n}");
+ok(`every value carries the same set of template variables in all three locales, counts included (${phDrift.length} drifting${plantedDrift ? "" : "; PLANTED DRIFT CAUGHT NOTHING"})`,
+  phDrift.length === 0 && zhKeys.length >= 1000 && plantedDrift);
+// The third: a zh-CN value that never left English. One key is allowed to stay — the
+// brand, which is the same in all three scripts — and it is named rather than counted,
+// so a second untranslated value cannot arrive without a line in this table saying why.
+// The predicate is a function so the planted witness walks the SAME two tests (the
+// equality and the Latin scan) that the corpus filter walks, in all three arrangements:
+// equal-and-English, equal-and-not-English, and not-equal — an inversion of either
+// half must redden this clause, not just a change to its filter line.
+const ENGLISH_OK = new Set(["brand.name"]);
+const stillEnglishBy = (enVal, cnVal) => cnVal === enVal && /[A-Za-z]{3,}/.test(String(enVal).replace(/\{\w+\}/g, ""));
+const stillEnglish = zhKeys.filter((k) => stillEnglishBy(en[k], D["zh-CN"][k]));
+const plantedEn = stillEnglishBy("Click here {n}", "Click here {n}")
+  && !stillEnglishBy("完成 {n}", "完成 {n}")
+  && !stillEnglishBy("Click here", "完成");
+ok(`a 简体中文 value that is still English is named, not waved through (${stillEnglish.join(", ") || "none"}; planted arrangements: ${plantedEn})`,
+  stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 1 && plantedEn);
+
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 
 console.log(`${pass}/${pass + fail} checks passed`);
