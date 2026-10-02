@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
-import { rowLine } from "@/domain/rowText";
+import { newsKindLabel, rowLine } from "@/domain/rowText";
 
 const fmtDate = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric" });
@@ -141,13 +141,13 @@ function MatchRow({ m }: { m: Match }) {
 }
 
 function NewsRow({ id, compact }: { id: string; compact?: boolean }) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const n = getNews(id);
   if (!n) return null;
   return (
     <EntityLink to={`/news/${n.id}`}>
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-        <Badge variant="outline" className={cn("border-none px-1.5 py-0 text-[10px]", kindTone(n.kind))}>{n.kind}</Badge>
+        <Badge variant="outline" className={cn("border-none px-1.5 py-0 text-[10px]", kindTone(n.kind))}>{newsKindLabel(n.kind, t)}</Badge>
         <span>{n.source}</span>
         <span>·</span>
         <span>{fmtDate(locale, n.publishedAt)}</span>
@@ -384,7 +384,7 @@ function NewsDetail({ id }: { id: string }) {
     <div className="mx-auto max-w-2xl space-y-5">
       <PageHeader title={n.title} back="/news" />
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <Badge variant="outline" className={kindTone(n.kind)}>{n.kind}</Badge>
+        <Badge variant="outline" className={kindTone(n.kind)}>{newsKindLabel(n.kind, t)}</Badge>
         <span>{n.source}</span><span>·</span><span>{fmtDateTime(locale, n.publishedAt)}</span>
         <span className="ml-auto">{t("fw.news.credibility")} <span className="font-mono text-primary">{Math.round(n.credibility * 100)}%</span></span>
       </div>

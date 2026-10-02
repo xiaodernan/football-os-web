@@ -90,6 +90,14 @@ function codeWord(code: string, t: Translate): string {
 export const goalLabel = (goal: string, t: Translate): string => codeWord(goal, t);
 export const ageGroupLabel = (ageGroup: string, t: Translate): string => codeWord(ageGroup, t);
 
+/** The word for the article type a news story claims, on a badge or a filter chip rather
+ *  than inside a sentence. The three screens that show one hold the CODE (`NewsKind`) and
+ *  must keep it: the chip filter compares it against a stored set, and two tone tables read
+ *  it to pick the badge colour. Only its *display* goes through codeWord, which is what keeps
+ *  `Rumor` on the model side and the reader's own word — English "Rumour", 简体「传闻」— on the
+ *  glass, and keeps this file the only place that composes `ni.kind.*`. */
+export const newsKindLabel = (kind: string, t: Translate): string => codeWord(kind, t);
+
 export function isCodeVar(name: string): boolean {
   return CODE_VARS.includes(name);
 }

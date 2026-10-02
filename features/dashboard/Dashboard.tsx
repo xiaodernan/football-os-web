@@ -13,7 +13,7 @@ import {
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
-import { rowLine } from "@/domain/rowText";
+import { newsKindLabel, rowLine } from "@/domain/rowText";
 import { overallRating } from "@/domain/attributes";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
@@ -171,7 +171,7 @@ export function Dashboard() {
             <div className="divide-y">
               {breaking.map((n) => (
                 <Link key={n.id} to={`/news/${n.id}`} className="flex items-start gap-3 py-2.5 hover:bg-secondary/40">
-                  <Badge variant="outline" className={cn("mt-0.5 shrink-0 text-[10px]", n.kind === "Rumor" && "border-warning/50 text-warning")}>{n.kind}</Badge>
+                  <Badge variant="outline" className={cn("mt-0.5 shrink-0 text-[10px]", n.kind === "Rumor" && "border-warning/50 text-warning")}>{newsKindLabel(n.kind, t)}</Badge>
                   <div className="min-w-0">
                     <div className="truncate text-sm">{n.title}</div>
                     <div className="text-xs text-muted-foreground">{n.source} · {t("dash.confidence", { n: Math.round(n.credibility * 100) })}</div>

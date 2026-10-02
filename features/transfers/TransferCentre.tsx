@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n";
 import { getClub, formatValue } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { transferRumours, clubOf, availableKinds, type RumourLink } from "@/domain/transfers";
+import { newsKindLabel } from "@/domain/rowText";
 import type { NewsArticle } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +84,7 @@ export function TransferCentre() {
               active.has(k) ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 text-muted-foreground hover:border-primary/30",
             )}
           >
-            {k}
+            {newsKindLabel(k, t)}
           </button>
         ))}
       </div>
@@ -121,7 +122,7 @@ function RumourCard({ r, showFit }: { r: RumourLink; showFit: boolean }) {
             </div>
           </div>
         </div>
-        <Badge variant="outline" className={cn("shrink-0 text-[10px]", KIND_TONE[r.kind])}>{r.kind}</Badge>
+        <Badge variant="outline" className={cn("shrink-0 text-[10px]", KIND_TONE[r.kind])}>{newsKindLabel(r.kind, t)}</Badge>
       </div>
 
       <p className="mt-3 line-clamp-2 text-sm">{r.title}</p>

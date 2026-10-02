@@ -73,6 +73,9 @@
 //      See the long note at its own definition below (M194).
 //  34. a PROOF that reads a row resolving it with its own interpreter — the reader's sentence
 //      and the gate's idea of it drifting apart while both stay green (M232).
+//  35. an ENUM VALUE reaching the glass as a label — no key literal, no dynamic site and no
+//      raw string, so checks 4/16/18 and the UI scan are all silent while a Chinese reader
+//      sees the model's own code (M249).
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
@@ -3392,6 +3395,123 @@ ok(`and none of the ${PROOF_ROW_ACCEPT.length} shapes that read a dictionary wit
   accusedHonest.length === 0);
 ok(`so the census is a shape test with both ends demonstrated (${PROOF_ROW_REFUSE.length} refused + ${PROOF_ROW_ACCEPT.length} accepted shapes, through the same classifier that just cleared ${proofRowsOf.length} scripts)`,
   proofRowFiller(PROOF_ROW_VERBATIM).fills.length > 0 && proofDictReaders.includes("scripts/proof-i18n.mjs"));
+
+// 35. An enum value that reaches the glass as a label. Every check above needs a key to look
+//     at: 4 reads a `t("…")` literal, 16/17 audit a declared dynamic site, the raw-UI census
+//     counts a literal sitting in a display slot. A badge written `{n.kind}` has none of the
+//     three — the word arrives out of a record field, so an English reader sees a finished
+//     label while a 简体中文 reader sees the model's own code, and the gate stays green for
+//     both. M249 moved the five news-kind strips onto `newsKindLabel`, the composer
+//     `domain/rowText.ts` already used for the impact panel's sentence; this section charges
+//     the class at both ends. The render sites are a wiring table with literal pins, the shapes
+//     they must not fall back to are derived from the union itself and tested against a plant,
+//     and the words come out of the shipped function rather than out of a string this gate typed.
+const KIND_WIRING = [
+  ["features/dashboard/Dashboard.tsx", "newsKindLabel(n.kind, t)", 1],
+  ["features/football/FootballWorld.tsx", "newsKindLabel(n.kind, t)", 2],
+  ["features/transfers/TransferCentre.tsx", "newsKindLabel(k, t)", 1],
+  ["features/transfers/TransferCentre.tsx", "newsKindLabel(r.kind, t)", 1],
+];
+const KIND_FILES_PIN = 3;
+const KIND_POSITIONS_PIN = 5;
+const KIND_IMPORT = /^import \{[^}]*\bnewsKindLabel\b[^}]*\} from "@\/domain\/rowText"/m;
+const kindFiles = [...new Set(KIND_WIRING.map(([p]) => p))];
+const badgeSrc = new Map(kindFiles.map((p) => [p, appSrc.get(p) ?? ""]));
+const kindCallsIn = (p, needle) => badgeSrc.get(p).split(needle).length - 1;
+const kindBad = KIND_WIRING.filter(([p, expr, n]) => kindCallsIn(p, expr) !== n)
+  .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${kindCallsIn(p, expr)}`);
+const kindPositions = KIND_WIRING.reduce((s, [, , n]) => s + n, 0);
+ok(`the ${kindFiles.length} screens that show what a news story claims read it through the shared composer at all ${kindPositions} position(s) (pins ${KIND_FILES_PIN} files/${KIND_POSITIONS_PIN} positions), and each imports it from domain/rowText (${kindBad.join(" | ") || "none"})`,
+  kindBad.length === 0 && kindFiles.length === KIND_FILES_PIN && kindPositions === KIND_POSITIONS_PIN &&
+  kindFiles.every((p) => KIND_IMPORT.test(badgeSrc.get(p))));
+// What the class falls BACK to is derived, not typed: the union's own codes and the display
+// slots they would appear in. The plant runs through the same two predicates, because "0 found"
+// is only evidence once something proves the walker was looking. The set it walked is the file's
+// own population pin rather than a floor: `appSrc.size >= 60` stayed green in the witness arm
+// that drops two of the 95 screens, so the clause could report "none of 93" and call that a
+// clean tree (M249 arm W5).
+const BARE_KIND_CHILD = />\s*\{[^{}]*\.kind\}\s*</g;
+const bareHits = (code) => [...code.matchAll(BARE_KIND_CHILD)].length;
+const KIND_CODES = spaceOf("domain/types.ts", /export const NEWS_KINDS[^=]*=[\s\S]*?\];/, /"([A-Za-z]+)"/g);
+const KIND_WORD_SLOTS = KIND_CODES.flatMap((k) => [`>${k}<`, `label="${k}"`]);
+const bareKindSites = [...appSrc].filter(([, code]) => bareHits(code) > 0).map(([p, code]) => `${p} x${bareHits(code)}`);
+const typedKindWords = [...appSrc]
+  .filter(([p]) => /^(features|ui)\//.test(p))
+  .filter(([, code]) => KIND_WORD_SLOTS.some((s) => code.includes(s)))
+  .map(([p]) => p);
+const KIND_PLANT = 'export const C = ({ n }: any) => (\n  <>\n    <Badge>{n.kind}</Badge>\n    <span>Confirmed</span>\n  </>\n);';
+const plantWord = KIND_WORD_SLOTS.some((s) => codeOf(KIND_PLANT).includes(s));
+ok(`no module prints a stored kind straight into a label slot (${bareKindSites.join(", ") || "none"} of ${appSrc.size}) and no screen types one of the union's ${KIND_CODES.length} words into a text node or a label prop (${typedKindWords.join(", ") || "none"}), while the planted screen is caught by both halves (bare ${bareHits(codeOf(KIND_PLANT))}, word ${plantWord})`,
+  bareKindSites.length === 0 && typedKindWords.length === 0 && appSrc.size === APP_SRC_PIN &&
+  bareHits(codeOf(KIND_PLANT)) === 1 && plantWord);
+// The filter chip is the one site whose label was a bare LOOP VARIABLE, and a name-based ban
+// cannot reach it: `>{k}<` is legitimate in features/settings/SettingsPage.tsx:234, whose `k` is
+// a prop already holding resolved words. So the chip is read from the loop the file itself
+// declares, and the plant is that loop's previous shape. The refusal is aimed at the CHILD slot
+// only: the same loop keeps `key={k}`, which must stay the code — the first draft of this clause
+// asked whether the block contained `{k}` at all, and went red on React's key.
+const CHIP_LOOP = /kinds\.map\(\(k\) =>[\s\S]*?<\/button>/;
+const chipBlock = badgeSrc.get("features/transfers/TransferCentre.tsx").match(CHIP_LOOP)?.[0] ?? "";
+const CHIP_PLANT = 'kinds.map((k) => (\n  <button key={k}>{k}</button>\n))';
+const chipBlockOf = (code) => code.match(CHIP_LOOP)?.[0] ?? "";
+const bareChipVar = (block) => />\s*\{k\}\s*</.test(block);
+ok(`the Transfer Centre's own kind loop hands its chip to the composer, not to the code (${chipBlock.length} chars read, bare child ${bareChipVar(chipBlock)}), keeping React's key={k} as the code it is (${/key=\{k\}/.test(chipBlock)}), and the same extractor reports the planted loop (${chipBlockOf(CHIP_PLANT).length} chars, bare ${bareChipVar(chipBlockOf(CHIP_PLANT))})`,
+  chipBlock.length > 0 && !bareChipVar(chipBlock) && chipBlock.includes("newsKindLabel(k, t)") &&
+  /key=\{k\}/.test(chipBlock) && chipBlockOf(CHIP_PLANT).length > 0 && bareChipVar(chipBlockOf(CHIP_PLANT)));
+// One composer, checked by count rather than by trust: a screen that builds `ni.kind.…` inline
+// would render correctly in English, keep check 17 green (the key still resolves) and start a
+// second spelling of the union's lowercase rule — which is exactly how Rumor/Rumour drifts.
+const COMPOSED_KIND = /`ni\.kind\.\$\{/g;
+const composedHits = (code) => [...code.matchAll(COMPOSED_KIND)].length;
+const composers = [...appSrc].filter(([, c]) => composedHits(c) > 0).map(([p, c]) => `${p} x${composedHits(c)}`);
+const COMPOSER_FILE_PIN = 1;
+const COMPOSER_SITE_PIN = 1;
+const COMPOSE_PLANT = 'const w = (k: string) => t(`ni.kind.${k.toLowerCase()}`);';
+ok(`exactly ${COMPOSER_FILE_PIN} module composes a ni.kind. key and it is the composer, not a screen (${composers.join(", ") || "none"}, pins ${COMPOSER_FILE_PIN}/${COMPOSER_SITE_PIN}), while a screen that builds the key inline is caught (${composedHits(codeOf(COMPOSE_PLANT))})`,
+  composers.length === COMPOSER_FILE_PIN && composers[0] === "domain/rowText.ts x1" &&
+  composedHits(appSrc.get("domain/rowText.ts")) === COMPOSER_SITE_PIN &&
+  composedHits(codeOf(COMPOSE_PLANT)) === 1);
+// The behavioural half, through the shipped door. The loaded module is bound to the file this
+// gate just read by that file's own declaration list, because "the module loaded" is otherwise
+// green no matter WHICH module loaded (M238).
+const rtDeclared = [...(appSrc.get("domain/rowText.ts") ?? "").matchAll(/^export (?:const|function) (\w+)/gm)].map((m) => m[1]).sort();
+const rowTextModule = await server.ssrLoadModule("/domain/rowText.ts");
+const rtLoaded = Object.keys(rowTextModule).filter((k) => typeof rowTextModule[k] === "function").sort();
+ok(`the module loaded as the composer is the file this gate read (${rtDeclared.length} declared export(s): ${rtDeclared.join(", ")})`,
+  rtDeclared.length >= 3 && rtDeclared.includes("newsKindLabel") && rtLoaded.join() === rtDeclared.join());
+const { NEWS_KINDS: RUNTIME_KINDS } = await server.ssrLoadModule("/domain/types.ts");
+const tReader = (id) => (key, vars) => translate(id, key, vars);
+const kindReadBad = [];
+// How many of the readings are a word the CODE does not already spell. Four of the five article
+// types are English words in their own right ("Confirmed", "Reported", "Opinion", "Analysis"), so
+// for those an en reading cannot tell resolution apart from `codeWord`'s unknown-code fallback —
+// which is why the equality claim below is qualified by this count instead of by "never the code".
+let kindReadDiffer = 0;
+if ([...RUNTIME_KINDS].sort().join() !== KIND_CODES.slice().sort().join()) {
+  kindReadBad.push(`the source parse and the runtime union disagree (${KIND_CODES.join(", ")} / ${RUNTIME_KINDS.join(", ")})`);
+}
+for (const { id } of L) {
+  for (const code of KIND_CODES) {
+    const shown = rowTextModule.newsKindLabel(code, tReader(id));
+    const want = D[id][`ni.kind.${code.toLowerCase()}`];
+    if (shown.startsWith("ni.kind.")) kindReadBad.push(`${id}: ${code} prints the key`);
+    else if (shown !== want) kindReadBad.push(`${id}: ${code} prints “${shown}” while the dictionary says “${want}”`);
+    else if (shown !== code) kindReadDiffer++;
+  }
+}
+ok(`the shipped newsKindLabel answers all ${KIND_CODES.length} article types in all ${L.length} locales with the dictionary's own word and never a key (${kindReadBad.join(" | ") || "no bad reading"}), and ${kindReadDiffer}/${KIND_CODES.length * L.length} of those words are not the code already spelled — the pin that keeps the equality load-bearing rather than tautological`,
+  KIND_CODES.length === 5 && kindReadBad.length === 0 && kindReadDiffer === 11);
+// The mechanism that makes the count above mean something: an unknown code falls through and is
+// printed exactly as written. Without that fallback surviving, "equals the dictionary word" would
+// be true of any string the composer returned.
+ok(`and the fallback the readings are measured against is real: a code outside the union comes back as written (${rowTextModule.newsKindLabel("Planted", tReader("en"))})`,
+  rowTextModule.newsKindLabel("Planted", tReader("en")) === "Planted");
+// The one visible change this milestone makes to an English reader, stated rather than hidden:
+// the badge took the dictionary's spelling, which is the spelling every other English string in
+// the app already uses (transfers.statLinks "Linked rumours", ni.stance.rumor "Unverified
+// rumour"). One vocabulary, and no second key for a word the dictionary already carries.
+ok(`and the English badge changes spelling, not meaning: Rumor now reads the word the dictionary holds (${en["ni.kind.rumor"]})`,
+  rowTextModule.newsKindLabel("Rumor", tReader("en")) === en["ni.kind.rumor"] && en["ni.kind.rumor"] !== "Rumor");
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 
