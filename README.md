@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M250 (a few numbers in that range
+Work ships one milestone per commit and is currently at M251 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,62 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M251 — the two Chinese locales audit each other, and the closed list learns to read
+
+Two defences have stood between a 繁體中文 reader and a 简体字 since M143, and both have admitted
+their limits in writing. Check 7 screens zh-TW values against sixteen hand-corrected characters, and
+its own comment calls them "a closed list, NOT a converter: a simplified character this file had
+never used would slip through, so the general defence is check 6 plus review." Check 6 is a
+source-level refusal to inherit (`...zhCN`), which a value-by-value copy does not need — and
+proof-graph's five-key sample states the shape plainly: if all five copied keys were copied the
+locales would be byte-for-byte equal, so a copy that spares those five passes. The M143 failure
+could come back wearing any of the other 1,950 keys.
+
+So this milestone builds the defence check 7 named, and it learns its own definitions from the
+corpus rather than from a typed list. Two hand-typed attempts were measured first and thrown away:
+index-aligned pair diffing harvested offset noise — length-equal pairs shifted by one made 球, 分
+and 名 look "simplified" — and a hand-written simplified set carried the shared glyph 慢, so each
+produced hundreds of false leaks against a dictionary that has none. The rule that survived
+measurement is a rate differential: a character written by **at least 8 zh-CN values but by at most
+a tenth of that many zh-TW values** is, by construction, one this traditional corpus all but never
+writes. Today that learns **174 glyphs**. The tenth — rather than zero — is what keeps a single
+leaked glyph inside the learned set (1 × 10 ≤ 37 for 乐 after a leak) instead of teaching the
+learner to ignore the very thing it exists to catch.
+
+Five clauses carry it, and each pair of halves belts the other. The learner must produce at least
+100 glyphs, because a zh-TW that turned into a copy lifts every simplified glyph's zh-TW rate and
+empties the set — the M143 failure must read red here, not as a quiet "0 of 1955" from a scanner
+with nothing left to compare; the planted word 训练 rides the same check. No zh-TW value may carry
+a learned glyph, with the planted word pushed through the same `leakIn` the assertion uses, so a
+blinded scan still answers for it. All three locales must hold the same template variables in each
+value, counts included (`{n} … {n}` twice is a different sentence from `{n} …` once), with a
+planted two-versus-one witness on the same extractor. And a 简体中文 value that is still English is
+named rather than counted — `brand.name` sits in a one-line whitelist, so a second cannot arrive
+without editing this table, and the planted witness walks the predicate in all three arrangements
+(equal-and-English, equal-and-not, not-equal) so inverting either half reddens the clause. Measured
+now: **0 leaks, 0 drifting keys, 1 named English value** — the debt was invisible, not new, and the
+number can only go down. Check 7 is untouched; its sixteen characters and its honest comment stand
+exactly as written, with the general defence their comment asked for written down beside them.
+
+Witness: 5 arms plus a control on a `git archive` plane (`dev/m251-arms.mjs`, predictions in its
+header before the first run), **5/5 MATCHED on round 1**, every arm re-based to a pristine hash.
+`fw.stat.clubs` 俱樂部 → 俱乐部 → twLeaks alone (乐 is learned at 37/0 rates and stays learned
+after the leak; 俱/部 are never learned because their rates track each other; 乐 is not among check
+7's sixteen — the exact gap, caught by the new half and blind to the old, in one arm). The learner
+blinded (`rc >= 8` → `rc >= 9999999`) → **three reds — corpus, plantedWord and twLeaks**, the third
+being the belt: a silenced learner still has to answer for the planted word inside `leakIn`, rather
+than hiding behind a tidy "0 of 1955 values". `phOf` blinded to a constant → phParity alone (every
+drift count becomes 0 — the first half of the clause *satisfied by the blindness* — and only the
+planted witness notices). A zh-CN value reverted to English (`data.clubPage` → `Club page →`) →
+stillEnglish alone: no other clause in the gate reads that value, the key set is untouched, and one
+glyph leaving the learner cannot dent 174 down through 100.
+
+Measured on the plane at this commit: `tsc` rc=0, `npm run build` rc=0, suite **41/41 proof scripts ·
+2,192/2,192 checks · exit 0** (five more than M250's 2,187: this section's five clauses). On the
+working tree: same suite, `proof-i18n` **283/283** against its own previous 278. The dictionary is
+unchanged at 1,955 keys × 3 locales — nothing was repaired here, because nothing was broken; what
+was missing was the alarm.
 
 ### M250 — the last three dates stop asking the browser, and the census admits no host
 
