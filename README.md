@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M252 (a few numbers in that range
+Work ships one milestone per commit and is currently at M253 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,28 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M253 — a literal wearing backticks is still a literal
+
+Section 37 counted 107 template-first calls while check 24b's dynamic-site scan read 104, and the
+3 left over were not dynamic at all: Dashboard writes three perfectly static keys as
+`t(`attr.name.first_touch`)`, `t(`attr.name.passing`)` and `t(`attr.name.decision_making`)`. The old
+`t("` shape never saw them and the section-37 classifier filed them under template, so a placeholder
+added to any of the three would have bypassed every supply contract in the gate — check 24, section
+37's, all of them — while the census kept printing a tidy 107.
+
+This milestone reclassifies a backtick that interpolates nothing as what it is: a literal wearing the
+wrong quotes. Check 24's `STATIC_T` now takes either quote style for a static key (a template that
+actually interpolates still fails the closing-quote test and stays dynamic), and the classifier
+extracts the key and marks the site ticked. The census pins move with the reclassification —
+**1,263 literal, 104 template** — the template count now rhyming exactly with check 24b's 104 dynamic
+sites, and one new clause names the three keys rather than counting them, so a fourth
+backtick-written literal cannot arrive without a line here saying why. The plant walks the same two
+predicates the gate just used: classify the ticked call, then ask what it fails to supply.
+
+Measured: the three keys are varless in all three locales, so no behaviour changes — check 24 still
+reads 134 filled and 134 var-carrying, supply still 134 + 8, and the dictionary is untouched. What
+changed is the shape of the alarm: `proof-i18n` **289/289** (one new clause), suite **41/41**.
 
 ### M252 — every t() call confesses its shape, and two shapes had no contract at all
 

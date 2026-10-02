@@ -1158,10 +1158,12 @@ ok(`none of the ${STRUCK_ROWS.reduce((s, [, e]) => s + e.length, 0)} converted r
 //     variables, its non-vacuity floor went red at 0, which is how it came out that the
 //     real interpolation path had never been checked at all. It now reads the call's
 //     argument list, and it reports what it cannot read instead of passing it.
-//     variables, its non-vacuity floor went red at 0, which is how it came out that the
-//     real interpolation path had never been checked at all. It now reads the call's
-//     argument list, and it reports what it cannot read instead of passing it.
-const STATIC_T = /\bt\(\s*"([A-Za-z0-9_.$-]+)"/g;
+// M253: a literal wearing backticks is still a literal. Dashboard writes three static
+// keys as t(`attr.name.…`) — the old `t("` shape never saw them, and section 37 counted
+// them as templates, so a placeholder added to one would bypass every supply contract.
+// Both readers now take either quote style for a STATIC key; a template that actually
+// interpolates still fails the closing-quote test and stays dynamic.
+const STATIC_T = /\bt\(\s*(?:"([A-Za-z0-9_.$-]+)"|`([A-Za-z0-9_.$-]+)`)/g;
 const unsubstituted = [];
 let substituted = 0;
 const unreadable = [];
@@ -1193,7 +1195,7 @@ function callArgs(code, open) {
 for (const [path, code] of appSrc) {
   if (!/^(features|ui|store|domain|lib)\//.test(path)) continue;
   for (const m of code.matchAll(STATIC_T)) {
-    const key = m[1];
+    const key = m[1] ?? m[2];
     if (!(key in en)) continue;
     const phs = [...new Set((en[key].match(/\{(\w+)\}/g) ?? []).map((s) => s.slice(1, -1)))];
     if (!phs.length) continue;
@@ -2101,7 +2103,7 @@ let rowKeys = 0;
 for (const [path, src] of ROW_FILES) {
   for (const m of src.matchAll(ROW_LITERAL)) {
     rowKeys++;
-    const key = m[1];
+    const key = m[1] ?? m[2];
     if (!(key in en)) { badRows.push(`${path}: ${key} is not a dictionary key`); continue; }
     const phs = [...new Set((en[key].match(/\{(\w+)\}/g) ?? []).map((s) => s.slice(1, -1)))].sort();
     // The names the row supplies, read segment by segment so `vars: { mode, goal }`
