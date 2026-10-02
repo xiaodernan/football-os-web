@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M253 (a few numbers in that range
+Work ships one milestone per commit and is currently at M254 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,40 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M254 — the last two counted literals in data/intelligence.ts were a regex, not prose
+
+`data/intelligence.ts` carried a named cap of 2 since M184 — the one hole in the `data/` exemption,
+because its strings are the Football AI composing an answer out of retrieved records, which is model
+voice by any definition. Both were said at the time to be "fragments of the question parser's regexes
+rather than prose a reader sees". This unit measures that claim instead of repeating it, and it is
+true.
+
+**The last literal was a scanning defect.** Line 244 reads
+`question.toLowerCase().replace(/[^a-z0-9' -]/g, " ").split(/\s+/)`. That regex holds an apostrophe,
+so the literal scanner opened a string there and read on to the next one — `' -]/g, " ").split(…` —
+which has spaces and letters and looks exactly like a sentence. `proseOnLine` now strips regex
+literals before scanning: a `/` opens a regex only where a value can start, and a `/` inside `[...]`
+does not close it, which is the pair of facts needed to strip `/\s+/` and `/[^a-z0-9' -]/g` alike.
+The file is at **0**.
+
+**A cap of 0 is the shape that passes on a file the scan never read**, so the vacuity device that used
+to require a hit had to go, or it would have forced the debt back. It is replaced by a plant that runs
+the same predicate two ways: a real sentence must still be reported, and the regex that was being
+charged must still be ignored. Neither a blind zero nor an over-eager strip can hide there.
+
+Two mutations, both caught: disabling the strip charges the regex again, and planting a real sentence
+in the file charges the sentence.
+
+Measured: `tsc` clean, build 0, **41/41 proof scripts green**, `proof-i18n` **289/289** over
+**1955 keys × 3 locales**. The domain prose inventory is empty, and this was the last named cap
+anywhere in the gate.
+
+**Still outstanding**: nothing on the debt axes — the domain prose inventory is empty, the raw-UI
+debt is 0 across 0 files, the dead-module surface is at its honest floor of 3 (two Edge Function
+entries and an ambient-types file, none of which the SPA can delete). What remains is the standing
+environment limit — the in-app browser has not committed a React tree since M166 — and the ~250
+scratch files under `dev/`.
 
 ### M253 — a literal wearing backticks is still a literal
 
