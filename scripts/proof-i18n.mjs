@@ -1158,6 +1158,9 @@ ok(`none of the ${STRUCK_ROWS.reduce((s, [, e]) => s + e.length, 0)} converted r
 //     variables, its non-vacuity floor went red at 0, which is how it came out that the
 //     real interpolation path had never been checked at all. It now reads the call's
 //     argument list, and it reports what it cannot read instead of passing it.
+//     variables, its non-vacuity floor went red at 0, which is how it came out that the
+//     real interpolation path had never been checked at all. It now reads the call's
+//     argument list, and it reports what it cannot read instead of passing it.
 const STATIC_T = /\bt\(\s*"([A-Za-z0-9_.$-]+)"/g;
 const unsubstituted = [];
 let substituted = 0;
@@ -3575,6 +3578,175 @@ const plantedEn = stillEnglishBy("Click here {n}", "Click here {n}")
   && !stillEnglishBy("Click here", "完成");
 ok(`a 简体中文 value that is still English is named, not waved through (${stillEnglish.join(", ") || "none"}; planted arrangements: ${plantedEn})`,
   stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 1 && plantedEn);
+
+// 37. The shapes a t() call takes that the checks above were never looking at. Check 4 reads
+//     `t("literal")` and check 16/24 audit declared dynamic sites, so between them every key a
+//     call NAMES is accounted for — but the way the key ARRIVES is a second axis. Four shapes
+//     already have a contract: a literal is check 24's forward/reverse fill (walked over five
+//     directories, note — components/ui and src/App.tsx sit outside that walk and hold six
+//     sites, varless as of M252, which is a hole this section closes by covering all 95 app
+//     modules itself); a template is the dynamic-site machinery. Two shapes have none, and
+//     one more has a contract nobody could see it needed:
+//       · a COMPUTED first argument names its keys inside a ternary — `t(n === 1 ?
+//         "comm.nRepliesOne" : "comm.nReplies", { n })` — where check 24's `t("` regex never
+//         looks, so nothing required the call to hand over the variables those keys print;
+//       · an EXPRESSION first argument (`t(m.labelKey)`, `t(VIDEO_KIND_KEY[k.kind])`) does not
+//         know which key it holds at all, so it must pass no object — and the keys it might
+//         hold are the bare pools (a *Key field, a *Keys array, the kind table) whose values
+//         reach the glass with no call site to check, so a placeholder inside one would print
+//         as literal braces on every screen that reads it;
+//       · a malformed template — a stray brace no scan counts — is the last: en would carry
+//         `{n}` and zh-TW a bare `}` with every other check green, because parity compares
+//         the variables each locale's template READS, and an unclosed one reads none.
+//     The census below pins every shape, and each invisible contract carries a planted
+//     witness run through the same predicate the assertion just walked.
+//     (Section 36's `phOf` compares locales as a joined string; these contracts need the set
+//     itself, so this section reads placeholders through `phList`.)
+const phList = (s) => [...new Set([...String(s ?? "").matchAll(/\{(\w+)\}/g)].map((m) => m[1]))];
+const callArgsOf = (code, open) => {
+  let depth = 1, str = null, cur = "";
+  const parts = [];
+  for (let i = open + 1; i < code.length; i++) {
+    const c = code[i];
+    if (str) { cur += c; if (c === str && code[i - 1] !== "\\") str = null; continue; }
+    if (c === '"' || c === "'" || c === "`") { str = c; cur += c; continue; }
+    if ("([{".includes(c)) depth++;
+    if (")]}".includes(c)) { depth--; if (depth === 0) { parts.push(cur); return parts; } }
+    if (c === "," && depth === 1) { parts.push(cur); cur = ""; continue; }
+    cur += c;
+  }
+  return null;
+};
+const EXPR_FIRST = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\[[^\[\]]+\])*$/;
+const classifyCall = (code, open) => {
+  const ws = code.slice(open + 1).match(/^\s*/)[0];
+  const rest = code.slice(open + 1 + ws.length);
+  const firstCh = rest[0];
+  if (firstCh === '"') return { shape: "literal", key: (rest.match(/^"([A-Za-z0-9_.$-]+)"/) ?? [])[1] ?? null, args: callArgsOf(code, open) };
+  // M253: a backtick that interpolates nothing is a literal wearing the wrong quotes, not a
+  // dynamic site — it names one key, so the supply contract below must read it as one.
+  if (firstCh === "`") {
+    const tickArgs = callArgsOf(code, open);
+    const tickKey = ((tickArgs?.[0] ?? "").trim().match(/^`([A-Za-z0-9_.$-]+)`$/) ?? [])[1] ?? null;
+    if (tickKey) return { shape: "literal", key: tickKey, tick: true, args: tickArgs };
+    return { shape: "template", args: tickArgs };
+  }
+  const args = callArgsOf(code, open);
+  if (!args) return { shape: "unknown", why: "unparseable", args: null };
+  const first = (args[0] ?? "").trim();
+  if (EXPR_FIRST.test(first)) return { shape: "expression", first, args };
+  const lits = [...first.matchAll(/"([A-Za-z0-9_.$-]+)"/g)].map((x) => x[1]).filter((k) => k in D.en);
+  if (!lits.length) return { shape: "unknown", first, args };
+  return { shape: "computed", lits, args };
+};
+// The variables a call actually hands over: keys of its second argument, shorthand `{ n }`
+// included — an object written without a colon is still a variable name, and a parser that
+// reads only `name:` would drop it and let a short supply pass.
+const givenOf = (args) => {
+  const obj = (args?.[1] ?? "").trim();
+  if (!obj.startsWith("{")) return [];
+  const body = obj.replace(/^\{/, "").replace(/\}$/, "");
+  return [...new Set(body.split(",").map((s) => s.trim()).filter(Boolean)
+    .map((seg) => (seg.includes(":") ? seg.split(":")[0].trim() : seg))
+    .filter((s) => /^[A-Za-z_$][\w$]*$/.test(s)))];
+};
+// One contract for both literal-bearing shapes: every placeholder inside every key the call
+// names must be in the object, and nothing the object carries may go unused. The unused half
+// runs against the UNION of the call's keys — a ternary may pick between a key that needs {n}
+// and one that does not, and the supply serves the call, not each branch.
+const supplyOf = (lits, args) => {
+  const given = givenOf(args);
+  const need = new Set(lits.flatMap((k) => phList(D.en[k] ?? "")));
+  const missing = lits.flatMap((k) => phList(D.en[k] ?? "").filter((p) => !given.includes(p)));
+  return { missing: [...new Set(missing)], unused: given.filter((g) => !need.has(g)) };
+};
+const shapeCounts = { literal: 0, template: 0, expression: 0, computed: 0, unknown: 0 };
+const unknownSites = [], shortSupply = [], droppedSupply = [], exprWithObj = [], tickKeys = [];
+let litVarSites = 0, computedVarSites = 0;
+for (const [path, code] of appSrc) {
+  for (const m of code.matchAll(/\bt\(/g)) {
+    const open = code.indexOf("(", m.index);
+    const c = classifyCall(code, open);
+    shapeCounts[c.shape]++;
+    if (c.tick) tickKeys.push(c.key);
+    if (c.shape === "unknown") unknownSites.push(`${path}: ${(c.first ?? c.why ?? "").slice(0, 60).replace(/\s+/g, " ")}`);
+    if (c.shape === "expression") {
+      if ((c.args[1] ?? "").trim().startsWith("{")) exprWithObj.push(`${path}: t(${c.first}, …)`);
+      continue;
+    }
+    if (c.shape !== "literal" && c.shape !== "computed") continue;
+    const lits = c.shape === "literal" ? [c.key].filter(Boolean) : c.lits;
+    const hasVar = lits.some((k) => phList(D.en[k] ?? "").length > 0);
+    if (c.shape === "literal" && hasVar) litVarSites++;
+    if (c.shape === "computed" && hasVar) computedVarSites++;
+    const s = supplyOf(lits, c.args);
+    const who = `${path}: ${lits.map((k) => `"${k}"`).join(" / ")}`;
+    if (s.missing.length) shortSupply.push(`${who} needs ${s.missing.join(",")}`);
+    if (s.unused.length) droppedSupply.push(`${who} hands over ${s.unused.join(",")} for nothing`);
+  }
+}
+// The census is pinned by shape, not floored: a new call form arrives as `unknown` and a
+// deleted one prints measured-vs-pin here rather than sliding the totals down a floor could
+// hide. The plants run the same classifier and the same supply contract just walked.
+const plantUnknown = classifyCall("t(getKey())", "t(getKey())".indexOf("(")).shape === "unknown";
+const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nRepliesOne" : "comm.nReplies")', 1)).missing.length > 0;
+const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
+const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
+ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
+  shapeCounts.literal === 1263 && shapeCounts.template === 104 && shapeCounts.expression === 28
+    && shapeCounts.computed === 22 && shapeCounts.unknown === 0 && plantUnknown);
+// M253: the three backtick-written literals are not a fifth shape — they are literal sites,
+// and this clause names them rather than counting them, so a fourth cannot arrive without
+// a line here saying why. The plant walks the same two predicates the census and the
+// supply contract just used: classify the ticked call, then ask what it fails to supply.
+const tickPlant = classifyCall("t(`comm.nRepliesOne`)", "t(`comm.nRepliesOne`)".indexOf("("));
+const plantTick = tickPlant.shape === "literal" && tickPlant.tick === true
+  && supplyOf([tickPlant.key], callArgsOf("t(`comm.nRepliesOne`)", 1)).missing.includes("n");
+ok(`a literal wearing backticks is still a literal — check 24 and this census read it as one (${[...new Set(tickKeys)].sort().join(", ") || "none"}; planted ticked literal classifies and reports its missing variable: ${plantTick})`,
+  [...new Set(tickKeys)].sort().join(",") === "attr.name.decision_making,attr.name.first_touch,attr.name.passing" && plantTick);
+ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
+  litVarSites === 134 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+    && plantShort && plantDropped);
+ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
+  exprWithObj.length === 0 && shapeCounts.expression === 28 && exprObjPlant.args[1].trim().startsWith("{"));
+// The pools: a key that a bare field or table hands to t() at runtime, where there is no call
+// site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
+// land here and prove its values var-free in the same commit — and the check runs on all three
+// locales directly rather than leaning on section 36's parity, because a value that reaches
+// the glass is wrong in any one script on its own. Existence of a scalar *Key's row is check
+// 29's; this clause only asks what the value PRINTS.
+const poolFields = new Set(), poolArrFields = new Set();
+const poolKeys = new Set();
+for (const [, code] of appSrc) {
+  for (const m of code.matchAll(/\b([A-Za-z_$][\w$]*Key)\s*:\s*(["'])((?:[^"'\\]|\\.)*)\2/g)) { poolFields.add(m[1]); if (m[3] in D.en) poolKeys.add(m[3]); }
+  for (const m of code.matchAll(/\b([A-Za-z_$][\w$]*Keys)\s*:\s*\[([^\]]*)\]/g)) {
+    poolArrFields.add(m[1]);
+    for (const k of m[2].matchAll(/"([A-Za-z0-9_.$-]+)"/g)) if (k[1] in D.en) poolKeys.add(k[1]);
+  }
+}
+// The kind table behind `t(VIDEO_KIND_KEY[k.kind])`: read out of its source the way the
+// dynamic-site table reads its prefixes, because the site's key is built at runtime and
+// the pool behind it is the only thing a placeholder could hide in.
+const filmKindSrc = appSrc.get("domain/filmInsights.ts") ?? "";
+const filmKindBlock = (/const FILM_KIND_KEY[^=]*=\s*\{([^}]*)\}/.exec(filmKindSrc) ?? [])[1] ?? "";
+const filmKindKeys = [...filmKindBlock.matchAll(/"([A-Za-z0-9_.$-]+)"/g)].map((x) => x[1]);
+const POOL_FIELDS_PIN = ["bodyKeys", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
+const poolFieldsGot = [...poolFields, ...poolArrFields].sort();
+const poolVars = [...poolKeys, ...filmKindKeys].filter((k) => L.some((loc) => phList(D[loc.id][k] ?? "").length > 0));
+const plantPool = L.some((loc) => phList((loc.id === "en" ? D.en["learn.l.xg.title"] + " {n}" : D[loc.id]["learn.l.xg.title"]) ?? "").length > 0);
+ok(`the values behind every bare key pool carry no placeholder, in any locale (${poolFields.size} *Key fields + ${poolArrFields.size} *Keys arrays + FILM_KIND_KEY's ${filmKindKeys.length} entries, ${poolKeys.size + filmKindKeys.length} keys; fields pinned: ${poolFieldsGot.join(",")}; planted value held: ${plantPool})`,
+  poolVars.length === 0 && poolFieldsGot.join(",") === POOL_FIELDS_PIN.join(",") && plantPool);
+// Malformed braces, across every value in every locale: strip the well-formed templates and
+// anything that leaves a brace behind is an unclosed variable. The plant walks three
+// arrangements through the same predicate — open, closed-short, and a whole well-formed one
+// that must stay clean — so a predicate inverted to catch nothing reddens here, not only in
+// production copy nobody writes on purpose.
+const malformedIn = (v) => /[{}]/.test(String(v).replace(/\{\w+\}/g, ""));
+const malformed = [];
+for (const loc of L) for (const k of enKeys) if (malformedIn(D[loc.id][k] ?? "")) malformed.push(`${loc.id}:${k}`);
+const plantMalformed = malformedIn("done {n") && malformedIn("done n}") && !malformedIn("done {n} done");
+ok(`every template's braces close in all three locales (${malformed.length} of ${enKeys.length * L.length} values${malformed.length ? `, e.g. ${malformed.slice(0, 3).join(" | ")}` : ""}; planted arrangements: ${plantMalformed})`,
+  malformed.length === 0 && plantMalformed);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 

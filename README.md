@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M251 (a few numbers in that range
+Work ships one milestone per commit and is currently at M252 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,56 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M252 — every t() call confesses its shape, and two shapes had no contract at all
+
+Check 4 reads `t("literal")` and checks 16/24 audit declared dynamic sites, so every key a call
+NAMES is accounted for — but the way the key ARRIVES is a second axis, and on that axis two real
+shapes had no contract anywhere in the gate. A COMPUTED first argument names its keys inside a
+ternary (`t(n === 1 ? "comm.nRepliesOne" : "comm.nReplies", { n })`), exactly where check 24's
+`Static_T` never looks, so nothing required the call to hand over the variables those keys print.
+An EXPRESSION first argument (`t(m.labelKey)`, `t(VIDEO_KIND_KEY[k.kind])`) cannot know its key at
+all — so it must pass no object, and the keys it may hold are the bare pools (a *Key field, a
+*Keys array, the kind table) whose values reach the glass with no call site for any clause to
+read. A third hole sat in the values themselves: an unclosed `{n` reads zero placeholders, so the
+parity check that compares what each locale READS sees two empty sets and calls them equal. And
+check 24's walk covers five directories while `components/ui` and `src/App.tsx` — six sites,
+varless today — sit outside it; this section closes that by walking all 95 app modules itself.
+
+Five clauses, each with a planted witness through the same predicate it asserts with. The census
+classifies every call in `codeOf`'d app source — prose lines already stripped, since comment text
+cannot claim a key — and pins each shape: **1,260 literal, 107 template, 28 expression, 22
+computed-with-literals, 0 unknown**, with a planted `t(getKey())` that must land in the unknown
+bucket. The supply contract runs on both literal-bearing shapes, missing and dropped halves
+together, parsing shorthand `{ n }` as the variable name it is: **134 literal sites with
+placeholders, 8 of the 22 computed sites, 0 short, 0 dropped**, planted short and planted dropped
+walked through the same `supplyOf`. Expression sites pass no variables they cannot know (28, none
+with an object; the plant hands `t(m.labelKey, { n: 1 })` to the classifier that must report it).
+The pools' values are checked in all three locales directly — **4 *Key fields + 2 *Keys arrays +
+FILM_KIND_KEY's 7 entries, 165 keys, 0 placeholders**, the field set itself pinned so a new bare
+key field must prove its values var-free in the same commit, rather than leaning on section 36's
+parity to catch one locale at a time. And every value in every locale is stripped of its
+well-formed `{word}` templates: **0 of 5,865 leave a brace behind**, with three planted
+arrangements — open, closed-short, and a whole well-formed template that must stay clean — so a
+predicate inverted to catch nothing reddens here rather than only in copy nobody writes on
+purpose.
+
+Witness: 5 arms plus a control on a `git archive` plane (`dev/m252-arms.mjs`, predictions in its
+header before the first run), **5/5 MATCHED on round 1**, every arm re-based to a pristine hash.
+The computed call dropping its `, { n }` → supply alone: check 24 cannot see the site (its regex
+wants `t("` and finds `n === 1`), the census keeps classifying the shape, and the keys stay
+reachable as quoted strings. `learn.l.xg.title` gaining ` {n}` in all three locales → pools alone:
+parity drifts together and stays green, no literal site reads the key, and the value is the only
+place the contract can live. Dashboard's `t(m.labelKey)` learning to pass `{ n: 1 }` → expression
+alone: check 29's read-back still sees `.labelKey,` and the census still counts 28. A stray `}`
+appended to one English summary → wellFormed alone: `phList` never matches a lone brace, so pools,
+supply, parity and check 24's fill census all keep reading empty sets.
+
+Measured on the plane at this commit: `tsc` rc=0, `npm run build` rc=0, suite **41/41 proof
+scripts · 2,197/2,197 checks · exit 0** (five more than M251's 2,192: this section's five
+clauses). On the working tree: same suite, `proof-i18n` **288/288** against its own previous 283.
+The dictionary and the app code are both unchanged — nothing was repaired here, because nothing
+was broken; what was missing was the contract the gate now states in both directions.
 
 ### M251 — the two Chinese locales audit each other, and the closed list learns to read
 
