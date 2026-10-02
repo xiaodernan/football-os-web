@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
-import { positionGroupLabel, rowLine } from "@/domain/rowText";
+import { matchStatusLabel, positionGroupLabel, rowLine } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import {
   footballProvider,
@@ -538,7 +538,7 @@ export function MatchDetail({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <EntityHeader title={`${home.name} v ${away.name}`} back="/matches" subtitle={<span>{comp?.name} · {t("det.round")} {m.round} · {m.status === "SCHEDULED" ? fmtDateTime(locale, m.kickoff) : t(`fw.status.${m.status.toLowerCase()}`)}</span>} />
+      <EntityHeader title={`${home.name} v ${away.name}`} back="/matches" subtitle={<span>{comp?.name} · {t("det.round")} {m.round} · {m.status === "SCHEDULED" ? fmtDateTime(locale, m.kickoff) : matchStatusLabel(m.status, t)}</span>} />
 
       <Panel className="p-5">
         <div className="grid grid-cols-3 items-center gap-2">

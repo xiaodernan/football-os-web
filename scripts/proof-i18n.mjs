@@ -573,13 +573,12 @@ const DYN_SITES = [
   { path: "features/football/FootballWorld.tsx", expr: "impact.certainty", prefix: "ni.certainty.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "review.recommendation.attributeKey", prefix: "attr.name.", suffix: "" },
   { path: "features/compare/ComparePage.tsx", expr: "m.key", prefix: "compare.m.", suffix: "" },
-  { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
-  { path: "features/football/FootballWorld.tsx", expr: "tab.toLowerCase()", prefix: "fw.status.", suffix: "" },
-  // M169: the filter buttons themselves. Until this line they printed the raw code, so a
-  // 简体中文 visitor saw LIVE / SCHEDULED / FINISHED as the only English on the screen —
-  // and the gate could not see it, because the words came from an array inlined in a
-  // render hole, which reads as children copy rather than as a label slot.
-  { path: "features/football/FootballWorld.tsx", expr: "s.toLowerCase()", prefix: "fw.status.", suffix: "" },
+  // M256: the three statuses a fixture can carry used to be composed at four screen sites
+  // (`tab.toLowerCase()` twice, the filter chip's `s.toLowerCase()`, and a stored
+  // `m.status.toLowerCase()`), and the fixture row beside them printed the raw code, which no
+  // declaration could have shown. All five now ask one composer, so the site is the composer's
+  // own branch and the value space is read out of the union's runtime list.
+  { path: "domain/rowText.ts", expr: "code.toLowerCase()", prefix: "fw.status.", suffix: "" },
   { path: "features/football/FootballWorld.tsx", expr: "type", prefix: "fw.type.", suffix: "" },
   { path: "features/landing/Landing.tsx", expr: "k", prefix: "landing.pillars.", suffix: "" },
   { path: "features/landing/Landing.tsx", expr: "k", prefix: "landing.pillarDesc.", suffix: "" },
@@ -602,7 +601,6 @@ const DYN_SITES = [
   { path: "features/football/Details.tsx", expr: "kind", prefix: "fav.", suffix: ".active" },
   { path: "features/football/Details.tsx", expr: "kind", prefix: "fav.", suffix: ".idle" },
   { path: "features/football/Details.tsx", expr: "arc.trajectory", prefix: "det.arc.", suffix: "" },
-  { path: "features/football/Details.tsx", expr: "m.status.toLowerCase()", prefix: "fw.status.", suffix: "" },
   // M161: the board's six tags and two sorts are data strings read out of the
   // domain/Tab strip, so their sites are declared against the arrays that produce
   // them rather than against a hand-typed list.
@@ -679,21 +677,13 @@ const SPACES = new Map([
     name: "favourite kinds",
     values: spaceOf("store/useFootballOS.tsx", /setFavorite: \(key: "[a-z]+"(?: \| "[a-z]+")+/, quoted),
   }],
-  ["fw.status.|tab.toLowerCase()", {
-    name: "match statuses",
-    values: lower(spaceOf("features/football/FootballWorld.tsx", /\["LIVE"[\s\S]*?\] as const/, quoted)),
-  }],
-  ["fw.status.|s.toLowerCase()", {
-    // The filter tab loop: the same three codes, reached from the hoisted list rather
-    // than from the route query, so it is a separate site and gets its own declaration.
-    name: "match status filter buttons",
-    values: lower(spaceOf("features/football/FootballWorld.tsx", /\["LIVE"[\s\S]*?\] as const/, quoted)),
-  }],
-  ["fw.status.|m.status.toLowerCase()", {
-    // A fixture's own status field, not the filter tabs: the union the type says
-    // a match can carry is the space this site can be handed.
-    name: "match status field, lower-cased by the site",
-    values: lower(spaceOf("domain/types.ts", /export type MatchStatus = [^;]+;/, quoted)),
+  ["fw.status.|code.toLowerCase()", {
+    // M256. The three statuses a fixture carries, read off the union's own runtime list in
+    // domain/types.ts. Before this milestone the same prefix had THREE spaces declared against
+    // three screen expressions (two of them the filter tab's, one the stored field's), which is
+    // what let the fourth reading — the raw `{m.status}` in a fixture row — exist unmentioned.
+    name: "the statuses a match can be in",
+    values: lower(spaceOf("domain/types.ts", /export const MATCH_STATUSES[^=]*=[^\]]*\]/, quoted)),
   }],
   ["fw.type.|type", {
     name: "search result types",
@@ -3751,7 +3741,7 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1263 && shapeCounts.template === 102 && shapeCounts.expression === 28
+  shapeCounts.literal === 1263 && shapeCounts.template === 99 && shapeCounts.expression === 28
     && shapeCounts.computed === 22 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -3916,6 +3906,147 @@ ok(`the shipped positionGroupLabel answers all ${GRP_CODES.length} positional gr
   grpReadBad.length === 0 && grpDiffer === GRP_DIFFER_PIN);
 ok(`and the same fallback M249 measured is still the last resort for a code outside the union (${rowTextModule.positionGroupLabel("Planted", tReader("en"))})`,
   rowTextModule.positionGroupLabel("Planted", tReader("en")) === "Planted");
+
+// ─── 39 · the third family of the class M249 closed (M256) ─────────────────────
+// Section 38 charged one family; this charges the next one off the same list, and the reason it
+// needed to exist is that this family's defect was WORSE than the positional group's while the
+// gate was blind to it in exactly the same way. `MatchStatus` is 3 codes in domain/types.ts with
+// words in all 3 locales under `fw.status.*` since M169, and five positions showed them to the
+// reader: a fixture row's own status span printed the stored code — so a 简体中文 visitor's match
+// list opened with a column of English SCHEDULED — while two sentence variables and two chips
+// spelled the lowercase rule themselves by building `fw.status.${…}` inline. The sentence sites
+// at least sat in the declaration table (DYN_SITES listed `tab.toLowerCase()` twice, the chip's
+// `s.toLowerCase()` and `m.status.toLowerCase()`, each with its own value space); the raw span
+// was in no table, because no table reads `{m.status}` as a key site. That asymmetry — three
+// declared spellings of one rule and one undeclared leak, in the same two files — is what the
+// clauses below close: 1 composer, 2 files / 5 positions, and one value space read off the
+// union's own runtime list instead of three copies of it.
+// Predictions written before the first run: 5 positions / 2 files, 1 composer module, 2 direct
+// calls that name a status in a sentence, and 9/9 readings differing from the code — all three
+// codes are upper-case and all three locales write the status in their own words (English lower-
+// cases even the loanword), so unlike M249's 11/15 every reading differs here.
+// What the first run added: section 37's app-wide t()-shape census fell 102 → 99, not the −4 a
+// site count suggests. Four template calls left the two screens and exactly one arrived in the
+// composer, whose `t(` plus backtick is itself a template site — the door is where the lowercase
+// rule now lives, once, which is the whole point of the milestone and is why the pin moved by
+// three. Established by re-running this census's own three helpers (codeOf → callArgsOf →
+// classifyCall) over each touched file at HEAD and in the working copy, per file rather than
+// inferred from the tally.
+const ST_WIRING = [
+  ["features/football/FootballWorld.tsx", "matchStatusLabel(m.status, t)", 1],
+  ["features/football/FootballWorld.tsx", "matchStatusLabel(tab, t)", 2],
+  ["features/football/FootballWorld.tsx", "matchStatusLabel(s, t)", 1],
+  ["features/football/Details.tsx", "matchStatusLabel(m.status, t)", 1],
+];
+const ST_FILES_PIN = 2;
+const ST_POSITIONS_PIN = 5;
+const ST_IMPORT = /^import \{[^}]*\bmatchStatusLabel\b[^}]*\} from "@\/domain\/rowText"/m;
+const stFiles = [...new Set(ST_WIRING.map(([p]) => p))];
+const stSrc = new Map(stFiles.map((p) => [p, appSrc.get(p) ?? ""]));
+const stCallsIn = (p, needle) => stSrc.get(p).split(needle).length - 1;
+const stBad = ST_WIRING.filter(([p, expr, n]) => stCallsIn(p, expr) !== n)
+  .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${stCallsIn(p, expr)}`);
+const stPositions = ST_WIRING.reduce((s, [, , n]) => s + n, 0);
+ok(`the ${stFiles.length} screens that show what state a fixture is in read it through the shared composer at all ${stPositions} position(s) (pins ${ST_FILES_PIN} files/${ST_POSITIONS_PIN} positions), and each imports it from domain/rowText (${stBad.join(" | ") || "none"})`,
+  stBad.length === 0 && stFiles.length === ST_FILES_PIN && stPositions === ST_POSITIONS_PIN &&
+  stFiles.every((p) => ST_IMPORT.test(stSrc.get(p))));
+// Three producers of one three-value space, now compared to each other: the union's runtime list
+// (what the composer looks up), the same file's type-level union (what every record field is
+// typed against), and the filter strip's hoisted array (which decides only the button ORDER but
+// must carry the same set or a status ships with no way to reach its list). An empty list would
+// satisfy a sorted-equality, so each is floored at its own pinned length.
+const ST_CODES = spaceOf("domain/types.ts", /export type MatchStatus = [^;]+;/, quoted);
+const ST_LIST = spaceOf("domain/types.ts", /export const MATCH_STATUSES[^=]*=[^\]]*\]/, quoted);
+const ST_STRIP = spaceOf("features/football/FootballWorld.tsx", /\["LIVE"[\s\S]*?\] as const/, quoted);
+const stWords = ST_CODES.map((c) => `>${c}<`);
+const bareStSites = [...appSrc]
+  .filter(([, code]) => /\x3e\s*\{[^{}]*\.status\}\s*</.test(code) || stWords.some((w) => code.includes(w)))
+  .map(([p]) => p);
+const ST_PLANT = 'export const Row = ({ m }: any) => (\n  <>\n    <span>{m.status}</span>\n    <b>FINISHED</b>\n  </>\n);';
+const plantSt = /\x3e\s*\{[^{}]*\.status\}\s*</.test(codeOf(ST_PLANT)) && stWords.some((w) => codeOf(ST_PLANT).includes(w));
+ok(`no module prints a stored fixture status straight into a display slot and no screen types one of the union's ${ST_CODES.length} codes as a text node (${bareStSites.join(", ") || "none"} of ${appSrc.size}), the list the composer reads, the type it shadows and the filter strip's own array carry the same ${ST_LIST.length}/${ST_CODES.length}/${ST_STRIP.length} codes, while the planted row is caught by both halves (${plantSt})`,
+  bareStSites.length === 0 && ST_CODES.length === 3 && ST_LIST.length === 3 && ST_STRIP.length === 3 &&
+  [...ST_CODES].sort().join() === [...ST_LIST].sort().join() &&
+  [...ST_CODES].sort().join() === [...ST_STRIP].sort().join() && plantSt && appSrc.size === APP_SRC_PIN);
+// A sentence variable is a display slot wearing an argument, and a direct t() call interpolates
+// what it is handed — so the two calls that name a status must resolve it themselves. The keyed-
+// row path is the other half: it only speaks if CODE_VARS lists the name, and no shipped row hands
+// a status to that door yet (the one that will is data/footballService.ts's search subtitle,
+// counted below). The implication is what keeps the two halves from drifting apart: a row that
+// names a status while the door stays shut is a new leak, and the clause says which it found.
+const ST_T_CALL = /\bt\(\s*"[^"]+",\s*\{([^}]*)\}/g;
+const stVarSites = [...appSrc].flatMap(([p2, code]) => [...code.matchAll(ST_T_CALL)]
+  .map((m) => [p2, (m[1].match(/status:\s*([^,}]*)/) ?? [])[1]?.trim()])
+  .filter(([, v]) => v !== undefined));
+const stVarBad = stVarSites.filter(([, v]) => !v.startsWith("matchStatusLabel(")).map(([p2, v]) => `${p2} :: status: ${v}`);
+const ST_VAR_PIN = 2;
+const ST_ROW_SITES = [...appSrc].filter(([, c]) => /vars:\s*\{[^}]*\bstatus:/.test(c)).map(([p]) => p);
+const ST_PLANT_VAR = 't("fw.matches.hint", { n: rows.length, status: tab })';
+const stVarOf = (code) => (code.match(new RegExp(ST_T_CALL.source)) ?? [, ""])[1];
+const stPlantVar = (stVarOf(ST_PLANT_VAR).match(/status:\s*([^,}]*)/) ?? [])[1]?.trim();
+ok(`the ${stVarSites.length} direct t() call(s) that name a fixture status hand it over already resolved (pin ${ST_VAR_PIN}; ${stVarBad.join(" | ") || "none unresolved"}), the plant in the same shape is caught (${stPlantVar}), and the ${ST_ROW_SITES.length} keyed row(s) that would carry a status ${ST_ROW_SITES.length === 0 ? "do not exist yet" : "go through the CODE_VARS door"} (door open: ${rowTextModule.isCodeVar("status")})`,
+  stVarBad.length === 0 && stVarSites.length === ST_VAR_PIN &&
+  stPlantVar === "tab" && (ST_ROW_SITES.length === 0 || rowTextModule.isCodeVar("status")));
+// The chip is the loop-variable case for the third time: `{s}` is legitimate wherever `s` is
+// already a word, so the charge is read out of the loop the file declares and keeps React's key,
+// the selection test and the route query as the identities they are.
+const ST_CHIP_LOOP = /MATCH_STATUSES\.map\(\(s\) =>[\s\S]*?<\/button>/;
+const stChip = stSrc.get("features/football/FootballWorld.tsx").match(ST_CHIP_LOOP)?.[0] ?? "";
+const ST_CHIP_PLANT = "MATCH_STATUSES.map((s) => (\n  <button key={s}>{s}</button>\n))";
+const stChipOf = (code) => code.match(ST_CHIP_LOOP)?.[0] ?? "";
+const bareStChip = (block) => />\s*\{s\}/.test(block);
+ok(`the matches screen's own status loop hands its chip to the composer, not to the code (${stChip.length} chars read, bare ${bareStChip(stChip)}), keeping key={s}, tab === s and setTab(s) as the identities they are (${["key={s}", "tab === s", "setTab(s)"].every((k) => stChip.includes(k))}), and the same extractor reports the planted loop (${stChipOf(ST_CHIP_PLANT).length} chars, bare ${bareStChip(stChipOf(ST_CHIP_PLANT))})`,
+  stChip.length > 0 && !bareStChip(stChip) && stChip.includes("matchStatusLabel(s, t)") &&
+  ["key={s}", "tab === s", "setTab(s)"].every((k) => stChip.includes(k)) &&
+  stChipOf(ST_CHIP_PLANT).length > 0 && bareStChip(stChipOf(ST_CHIP_PLANT)));
+// One spelling of the lowercase rule, counted rather than trusted — the clause that turns this
+// milestone's four inline composers into a class-wide refusal, exactly as section 38's did for
+// `group.`.
+const ST_COMPOSED = /`fw\.status\.\$\{/g;
+const stComposedIn = (code) => [...code.matchAll(ST_COMPOSED)].length;
+const stComposers = [...appSrc].filter(([, c]) => stComposedIn(c) > 0).map(([p, c]) => `${p} x${stComposedIn(c)}`);
+const ST_COMPOSER_FILE_PIN = 1;
+const ST_PLANT_INLINE = 'const w = (s: string) => t(`fw.status.${s}`);';
+ok(`exactly ${ST_COMPOSER_FILE_PIN} module composes a fw.status. key and it is the composer, not a screen (${stComposers.join(", ") || "none"}), while a screen that builds the key inline is caught (${stComposedIn(ST_PLANT_INLINE)}), and the loaded composer is the module that declares matchStatusLabel (${rtDeclared.join(", ")})`,
+  stComposers.length === ST_COMPOSER_FILE_PIN && stComposers[0] === "domain/rowText.ts x1" &&
+  stComposedIn(appSrc.get("domain/rowText.ts")) === 1 && stComposedIn(ST_PLANT_INLINE) === 1 &&
+  rtDeclared.includes("matchStatusLabel") && typeof rowTextModule.matchStatusLabel === "function");
+// The behavioural half, through the shipped door, in every locale, against the dictionary's own
+// words — pinned by how many readings are NOT the code, so a composer that fell through to its
+// unknown-code branch everywhere could not pass.
+const stReadBad = [];
+let stDiffer = 0;
+const ST_DIFFER_PIN = 9;
+for (const { id } of L) {
+  for (const code of ST_LIST) {
+    const shown = rowTextModule.matchStatusLabel(code, tReader(id));
+    const want = D[id][`fw.status.${code.toLowerCase()}`];
+    if (shown.startsWith("fw.status.")) stReadBad.push(`${id}: ${code} prints the key`);
+    else if (shown !== want) stReadBad.push(`${id}: ${code} prints “${shown}” while the dictionary says “${want}”`);
+    else if (shown !== code) stDiffer++;
+  }
+}
+ok(`the shipped matchStatusLabel answers all ${ST_LIST.length} fixture statuses in all ${L.length} locales with the dictionary's own word and never a key (${stReadBad.join(" | ") || "no bad reading"}), and ${stDiffer}/${ST_LIST.length * L.length} of those readings are not the code already spelled (pin ${ST_DIFFER_PIN})`,
+  stReadBad.length === 0 && stDiffer === ST_DIFFER_PIN);
+ok(`and the same fallback is still the last resort for a status outside the union (${rowTextModule.matchStatusLabel("Planted", tReader("en"))})`,
+  rowTextModule.matchStatusLabel("Planted", tReader("en")) === "Planted");
+// The one position this milestone measured and did NOT convert, charged by name rather than left
+// out of the census: the global search row's subtitle is a display string composed in the data
+// layer, and the match row puts the bare code in it, so the command palette and the world search
+// list both print SCHEDULED to a Chinese reader. The clause below holds it at exactly one
+// producer and two readers, so a second code-carrying subtitle reddens here and the hole cannot
+// quietly grow while its fix waits for the row-contract change it needs (a status can only leave
+// that field as a row the glass resolves, which is what CODE_VARS and rowLine are for).
+const ST_HOLE = /subtitle:\s*[\w.]+\.status\b/g;
+const stHoleIn = (code) => [...code.matchAll(ST_HOLE)].length;
+const stHoleSites = [...appSrc].filter(([, c]) => stHoleIn(c) > 0).map(([p, c]) => `${p} x${stHoleIn(c)}`);
+const stHoleReaders = [...appSrc].filter(([, c]) => /\x3e\s*\{r\.subtitle\}\s*</.test(c)).map(([p]) => p);
+const ST_HOLE_PIN = 1;
+const ST_READER_PIN = 2;
+const ST_HOLE_PLANT = 'out.push({ type: "match", id: m.id, subtitle: other.status, to: x });';
+ok(`the family's ${stHoleSites.length} remaining position is the declared one, data/footballService.ts's search subtitle (pin ${ST_HOLE_PIN}: ${stHoleSites.join(", ") || "none"}), and it really is what a reader sees — ${stHoleReaders.length} module(s) render r.subtitle into a display slot (pin ${ST_READER_PIN}: ${stHoleReaders.join(", ") || "none"}) — while a second record code written the same way is caught (${stHoleIn(ST_HOLE_PLANT)})`,
+  stHoleSites.length === ST_HOLE_PIN && stHoleSites[0] === "data/footballService.ts x1" &&
+  stHoleReaders.length === ST_READER_PIN && stHoleIn(ST_HOLE_PLANT) === 1);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 

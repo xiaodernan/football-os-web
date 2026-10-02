@@ -11,7 +11,7 @@
 import { ATTRIBUTE_KEYS, CATEGORIES, POSITION_GROUPS } from "./attributes";
 import { ARCHETYPE_KEYS } from "./playerDna";
 import { TRAJECTORIES } from "./careerArc";
-import { MODES, NEWS_KINDS, RECORD_FEELS, SEARCH_KINDS, SHOT_TYPES } from "./types";
+import { MATCH_STATUSES, MODES, NEWS_KINDS, RECORD_FEELS, SEARCH_KINDS, SHOT_TYPES } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 // A variable normally holds a word or a number, but one row may also carry another whole
@@ -72,6 +72,7 @@ function codeWord(code: string, t: Translate): string {
   if (ARCHETYPE_KEYS.includes(code)) return t(`dna.arch.${code}`);
   if ((SEARCH_KINDS as readonly string[]).includes(code)) return t(`ai.legend.${code}`);
   if ((NEWS_KINDS as readonly string[]).includes(code)) return t(`ni.kind.${code.toLowerCase()}`);
+  if ((MATCH_STATUSES as readonly string[]).includes(code)) return t(`fw.status.${code.toLowerCase()}`);
   if ((RECORD_FEELS as readonly string[]).includes(code)) return t(`comm.feels.${code}`);
   if ((TRAJECTORIES as readonly string[]).includes(code)) return t(`det.arc.${code}`);
   if ((CATEGORIES as readonly string[]).includes(code)) return t(`attr.${code}`);
@@ -106,6 +107,16 @@ export const newsKindLabel = (kind: string, t: Translate): string => codeWord(ki
  *  of one lowercase rule and a reader-visible code, which is the news-kind defect (M249) on a
  *  second family. This is the only module that composes `group.*`. */
 export const positionGroupLabel = (group: string, t: Translate): string => codeWord(group, t);
+
+/** The word for what a fixture's status field says — `LIVE` on the model, 「进行中」 to a reader
+ *  in 简体中文. This is the third family of the class M249 charged and M255 named per-family: the
+ *  codes reached the glass one fixture row at a time (`{m.status}` in the matches list, so a
+ *  Chinese visitor's fixture rows opened with English `SCHEDULED`), while four other positions in
+ *  two screens spelled the lowercase rule themselves by building `fw.status.${…}` inline. A row
+ *  that names a status in a sentence and a chip that IS the status are the same lookup, and from
+ *  here both ask this module. The three codes come out of `MATCH_STATUSES`, the union's own
+ *  runtime list, so a fourth status is a missing key rather than a code on screen. */
+export const matchStatusLabel = (status: string, t: Translate): string => codeWord(status, t);
 
 export function isCodeVar(name: string): boolean {
   return CODE_VARS.includes(name);

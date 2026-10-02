@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
-import { newsKindLabel, rowLine } from "@/domain/rowText";
+import { matchStatusLabel, newsKindLabel, rowLine } from "@/domain/rowText";
 
 const fmtDate = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric" });
@@ -115,7 +115,7 @@ function MatchRow({ m }: { m: Match }) {
     <EntityLink to={`/matches/${m.id}`}>
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{comp?.name}</span>
-        <span className={cn(m.status === "LIVE" && "text-destructive")}>{m.status}</span>
+        <span className={cn(m.status === "LIVE" && "text-destructive")}>{matchStatusLabel(m.status, t)}</span>
       </div>
       <div className="mt-1.5 flex items-center gap-2">
         <span className="flex-1 truncate text-right text-sm">{home?.name}</span>
@@ -315,14 +315,14 @@ function MatchesList() {
   const rows = matchesByStatus(tab).slice(0, 60);
   return (
     <div className="space-y-5">
-      <PageHeader title={t("fw.matches.title")} hint={t("fw.matches.hint", { n: rows.length, status: t(`fw.status.${tab.toLowerCase()}`) })} back="/football" />
+      <PageHeader title={t("fw.matches.title")} hint={t("fw.matches.hint", { n: rows.length, status: matchStatusLabel(tab, t) })} back="/football" />
       <div className="flex gap-1.5">
         {MATCH_STATUSES.map((s) => (
-          <button key={s} onClick={() => setTab(s)} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === s ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(`fw.status.${s.toLowerCase()}`)}</button>
+          <button key={s} onClick={() => setTab(s)} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === s ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{matchStatusLabel(s, t)}</button>
         ))}
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
-        {rows.length ? rows.map((m) => <MatchRow key={m.id} m={m} />) : <div className="sm:col-span-2"><EmptyState title={t("fw.matches.empty", { status: t(`fw.status.${tab.toLowerCase()}`) })} /></div>}
+        {rows.length ? rows.map((m) => <MatchRow key={m.id} m={m} />) : <div className="sm:col-span-2"><EmptyState title={t("fw.matches.empty", { status: matchStatusLabel(tab, t) })} /></div>}
       </div>
     </div>
   );

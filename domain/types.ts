@@ -98,6 +98,11 @@ export interface Standing {
 }
 
 export type MatchStatus = "SCHEDULED" | "LIVE" | "FINISHED";
+// The same three codes as a runtime list, because the door that words them (domain/rowText.ts)
+// is a lookup, not a type. The matches filter strip keeps its own hoisted array for its button
+// ORDER, and proof-i18n cross-checks the two so a fourth status cannot exist in one and not the
+// other.
+export const MATCH_STATUSES: readonly MatchStatus[] = ["SCHEDULED", "LIVE", "FINISHED"];
 
 export interface Match {
   id: string;
