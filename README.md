@@ -6278,6 +6278,142 @@ named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `too
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
 
+### M256 — the fixture status stops speaking its own code, and the class gets a census that names the one hole it leaves
+
+M255 left a sentence in this file that this unit has to live with: *the same class has more
+families, and each is now measured rather than guessed*. `MatchStatus` was next on that measured
+list, and its defect was **worse** than the positional group's, in the same blind way. Three codes
+in `domain/types.ts`, with words for all three in all three locales under `fw.status.*` since M169,
+and five positions showed them to the reader. A 简体中文 visitor on `/matches` at HEAD read:
+
+- `features/football/FootballWorld.tsx:118` — the fixture row's own status span was `{m.status}`, so
+  the match list opened with a **column of English `SCHEDULED`**. No table in the gate could see
+  this one, because no table reads `{m.status}` as a key site: it is not a `t()` call at all;
+- `:318` and `:325` — the page hint and the empty state each composed ``t(`fw.status.${tab.toLowerCase()}`)``
+  themselves and fed the result to a translated sentence, so 「3 场scheduled」 was the shape;
+- `:321` — the filter chip composed ``t(`fw.status.${s.toLowerCase()}`)`` out of its own loop variable;
+- `features/football/Details.tsx:541` — the fixture header's right-hand slot did it a fourth time
+  with `m.status.toLowerCase()`.
+
+So the app spelled one lowercase rule in **three modules** (the four screen sites plus
+`domain/rowText.ts`'s own), and `DYN_SITES` — the table that audits dynamic key sites — listed
+**four** of those spellings as separate declarations, each carrying its own separately-declared
+value space, while the fifth position was in no table at all. That asymmetry is what section 39
+closes.
+
+The fix is one export: `matchStatusLabel(status, t)` in `domain/rowText.ts`, now the only module
+that composes a `fw.status.*` key, with all five positions calling it. `domain/types.ts` gained
+`MATCH_STATUSES` — the union's three codes as a **runtime list**, because the door that words them
+is a lookup, not a type. The code stays the code where it *is* an identity: React's `key={s}`, the
+selection test `tab === s`, the route write `setTab(s)`, the `m.status === "SCHEDULED"` comparison
+in the detail header, and the filter strip's hoisted array, which decides only the button **order**.
+
+**9/9 readings differ from the code**, in every locale, for every code — the same claim M255 made
+for 24/24 and M249 could only make for 11/15. All three statuses are upper-case and all three
+locales write them in their own words (English lower-cases even the loanword), so the equality
+clause cannot be satisfied by a composer that fell through to its unknown-code branch.
+
+Section 39 of `proof-i18n` adds **8** clause sites: the wiring table (2 files / 5 positions, each
+file importing the composer from `domain/rowText`), the display-slot census (no `>{….status}<` and
+no typed code as a text node, over all **95** app modules), the direct-`t()` variable clause (pin
+**2**, with the keyed-row half asserted as an implication because no shipped row carries a status
+yet), the chip read out of its own `MATCH_STATUSES.map` loop with `key={s}` / `tab === s` /
+`setTab(s)` kept alive, the composer census (exactly **1** module, and the loaded module is the one
+whose own declaration list names `matchStatusLabel`), the behavioural readings through the shipped
+door, the unknown-code fallback, and — new for this family — **a ceiling clause**.
+
+The three-producers clause is the other structural change: M255 compared two spellings of a space
+(the union and `POSITION_GROUPS`); this family has **three**, and the gate now compares them
+pairwise — `export type MatchStatus` (3), `export const MATCH_STATUSES` (3), and the screen's
+hoisted `["LIVE", "SCHEDULED", "FINISHED"] as const` (3). Each is floored at its own pinned length,
+because a sorted-equality over three empty lists would pass.
+
+The ceiling clause is the honest half of the unit. `data/footballService.ts`'s search row puts the
+bare `m.status` into `SearchResult.subtitle`, and two modules render `r.subtitle` —
+`features/command/CommandPalette.tsx:139` and `features/football/FootballWorld.tsx:545` — so a
+Chinese reader searching for a fixture reads `SCHEDULED` in the palette **and still does after this
+commit**. This unit did not convert it, because a value that leaves the data layer has to leave as a
+*row*, not as a word: that field is `string`, and the row contract (`RowText` + `CODE_VARS` +
+`rowLine`) is the change that makes it translatable. So the clause holds the hole at exactly **1**
+producer with identity `data/footballService.ts x1` and exactly **2** readers, and it plants a
+second record code written the same way to prove it counts. M257 closes it; arm A12 below proves the
+ceiling reddens if the fix lands without its own lowering.
+
+Six things moved that were not in the plan, and each is a correction rather than a retune:
+
+1. **The variable clause first measured 134 sites, not 2.** Its capture was written
+   `/(?:^|[,{]\s*status:\s*)([^,}]*)/`, and the `^` alternative matches at position 0 of any string,
+   so every `t()` object in the app handed the clause its *first* variable — a Chinese reader kept
+   seeing the right word and the gate's own reader was the broken part. It is now the same simple
+   `/status:\s*([^,}]*)/` section 38 uses, and it reads **2**.
+2. **The app-wide t()-shape census moved 102 → 99**, not the −4 a site count suggests. Four template
+   calls left the two screens and exactly **one arrived in the composer**, whose ``t(`fw.status.…`)``
+   is itself a template site — the lowercase rule now lives in one place, which is the point of the
+   milestone. Established by re-running that census's own three helpers (`codeOf` → `callArgsOf` →
+   `classifyCall`) over each touched file at HEAD and in the working copy, per file, rather than
+   inferred from the tally.
+3. **`294 → 300` is +6, and the number was read off a diff rather than a sum.** The gate ran on both
+   planes and the two outputs' check names went in as normalized multisets (digits collapsed, so a
+   count change shows up as a `+N`/`-N` on an otherwise identical claim). The reading: **+8** section-39
+   clauses, **+1** consolidated value-space row and **−3** retired ones — and **two clauses whose names
+   merely moved**, because their messages print the composer's declared export list verbatim, which
+   grew from 9 names to 10. That last pair is the trap in reading a suite number by name: a
+   name-diff reports 11 added and 5 removed claims where the count only changed by 6, and the two
+   "extra" of each kind are the same two checks wearing a longer list.
+4. **The first full-suite run reported `40/41 · 27 reds` in `proof:i18n`, and all 27 named
+   `.m256-plane/…`.** The witness plane had been extracted *inside* the scanned root, so `walk()` —
+   which skips `node_modules / dist / .git / .workbuddy-ai / dev` and nothing else — read a second
+   full copy of the app: **193** source files against pin 95, 99 `.tsx` against pin 49, and
+   `.m256-plane/i18n/dictionaries.ts` charged as a dictionary reader outside `i18n/`. Moving the
+   plane to a sibling of the repo made the identical working copy read 300/300. Nothing in the app
+   or the gate changed in between: the census counts files, not intentions, and a frozen copy under
+   the root is indistinguishable from the root. **A plane is a sibling directory now, always.**
+5. The arms script's own preflight refused **before any arm ran**: its `wiring` probe was
+   `"read it through the shared composer at all"`, a sentence M249's, M255's and M256's wiring
+   clauses all print — 3 gate lines, so an arm that reddened any of the three would have been
+   reported as a hit on the one I aimed at. The probe now names the family (`what state a fixture
+   is in`).
+6. **The suite needed a re-run, not a re-pin.** With the plane outside the root, the same working
+   copy read **41/41 proof scripts proven · 2,209/2,209 checks counted · exit 0**, no `FAIL` line, no
+   `UNVERIFIED` line and no retry, against M255's 2,203. The 27 reds were never the code's.
+
+**14 witness arms (a control plus 13), 14/14 MATCHED** on the frozen plane, every red a clause name
+predicted beforehand, no `UNNAMED` red and no crash: control 300/300; A1/A2 (a wiring needle and the
+position pin) and A3 (Details stops importing the composer) and A4 (its wiring row repointed at
+FootballWorld) → `wiring`, one conjunct each; A5 (row back to `{m.status}`) → `bareStatus` +
+`wiring`; A6 (Details composing the key inline) → `composer` + `dynSites` + `shape` + `wiring`;
+A7 (chip prints `{s}`) → `chip` + `wiring`; A8 (hint passes the raw `tab`) → `varClause` + `wiring`;
+A9 (the filter strip loses `FINISHED`) → `bareStatus` **only**; A10 (composer returns the code) →
+`readings` **only**; A11 (unresolved code returns `X`) → `fallback` **only**; A12 (the hole closed
+while its pin stays) and A13 (one reader stops reading `r.subtitle`) → `hole`, its two conjuncts
+separately. A9/A10/A11 are narrow on purpose: three producers of one space must be catchable one at
+a time, and the fallback clause asks for a code *outside* the union, which a pass-through composer
+answers correctly — crediting A10 with reddening it would have meant that clause tests nothing.
+After the last arm the plane was re-hashed against the snapshot taken before the first: 7/7 files
+identical.
+
+Measured on the frozen plane (`git archive` of `3527e83` plus exactly these five files, byte-verified
+against the working copy, `node_modules` joined, nothing tracked edited): `npm run build` exit 0 on
+**both** legs — HEAD and change set — **37** output files (35 js / 1 css / 1 other) on each, JS
+**1,492,495 → 1,492,522** bytes (**+27**), CSS and other byte-identical (delta 0). `proof-i18n`
+**294/294 → 300/300**. `rowText.ts` declares **9 → 10** exports, the dictionary is untouched at
+**1,955** keys (the words have existed since M169 — this milestone only starts reading them), and
+the import-specifier audit still reads **632** over the same 95-module population: routing five
+positions through one door added no module edge.
+
+**Still outstanding** — the ceiling names its own fix. `SearchResult.subtitle` has exactly **5**
+producers (all in `data/footballService.ts`) and exactly **2** readers, and **four** of the five rows
+put something other than the reader's language in that slot: `m.status` (`:187`), `${p.position}`
+(`:174`), `${n.kind}` (`:182`) and the literal English word inside `` `${c.nation} · Competition` ``
+(`:178`) — a phrase composed in the data layer, which no component-side scan can see and which
+`domain/rowText.ts`'s own header warns about in exactly those terms. M257 types the slot as a row so
+a producer has to say which half is a key, and lowers `ST_HOLE_PIN` with it. Three more families are
+measured and worse-off than this one, because they have **no value keys at all**: `Player.foot`
+(`"L" | "R"`, reaching the glass at `Details.tsx:101` as `{p.foot}F`, `:124` and
+`ScoutingPanel.tsx:226`), `PosBucket` (`ALL/GK/DEF/MID/ATT`, `ScoutingPanel.tsx:86`) and the drill
+phase `{e.phase}` at `PlayerOS.tsx:296`. Each is a dictionary job before it is a composer job, so
+each is its own milestone. `{band.band}` on the load page stays out of the class: it is a numeric
+range the model publishes, which is the reason the census is per family and never per field name.
 ### M255 — the positional group stops speaking its own code to the reader, and the class M249 charged gets a second family
 
 M249 closed the enum-that-reaches-the-DOM for the field it happened to be standing in: every one of
