@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M249 (a few numbers in that range
+Work ships one milestone per commit and is currently at M250 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,58 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M250 — the last three dates stop asking the browser, and the census admits no host
+
+The browser-locale census had one row of debt left: Player OS's missed-session line, its
+completed-session line, and the recent-matches table each called `new Date(...).toLocaleDateString()`
+with no argument, which is a question to the machine rather than a formatting of the reader's date.
+The Data Room's kickoff line and the Football AI's fixture fact had already been wired through
+`formatDate(locale, ...)` — the door M194 built and the gate has policed since — so Player OS was
+the whole of what `DATE_DEBT` still named: `"features/player/PlayerOS.tsx": 3`.
+
+All three now go through the same door (`formatDate` from `@/i18n`, the reader's `locale` from
+`useI18n()`), in the two components that render them: the Training panel's two session lines and
+the Matches table's date column. No dictionary key changed — `player.missedDate` and
+`player.completedDate` were always rows whose `{date}` var is formatted before it reaches the
+template; only who formats it moved, from the host to the reader. The table column was the one
+raw print, and it was data rather than prose, so the raw-UI scan never saw it; the census did.
+
+With the debt at zero the gate's shape follows the census: the `DATE_DEBT` table is deleted, and
+the two clauses it fed become one. The undeclared half had teeth — any new bare `toLocale*`
+call anywhere reddened it — but the growth half watched a single row, and at zero rows it would
+have been green forever, an audit of nothing (the M248 lesson, applied before it was learned
+twice). The surviving clause states the whole point of the census: **zero sites ask the browser,
+ever**, and its non-vacuity does not rest on the count — it rests on the planted-spelling
+self-test five clauses below (five spellings of asking the host, each of which the scanner must
+still catch, plus two controls it must not) and the population pin that proves the walk itself
+read the whole tree.
+
+Witness: 4 arms plus a control on a `git archive` plane (`dev/m250-arms.mjs`, predictions in its
+header before the first run), **5/5 MATCHED on the re-registered set**, every arm re-based to a
+pristine hash. Player OS's missed line reverted 1/1 (dateCensus alone); the Data Room's kickoff
+line reverted 1/1 (the census walks the whole app, not the file that owed the debt); the gate's
+own `LOCALE_CALL` regex blinded 1/1 (spellings ALONE — and this is the anti-vacuity arm: the
+blinded scanner finds zero sites, so the zero assertion is *satisfied by the blindness*,
+controls and every other clause stay green, and only the planted spellings can notice); the
+walk dropped `features/player/` wholesale → 14 clauses, with dateCensus expected green because
+a narrowed scan sees the same zero the full scan does — and it stayed green, which is the
+half of the prediction that makes the arm informative rather than a shattering.
+
+Round 1 was 4/5, and the one MISMATCH is the paragraph this deserves: A4's predicted eight
+reds all landed, and six more arrived un-named — every one a consequence of the same
+narrowing, chased rather than absorbed: the reachability totals move, the row-conversion
+strike list reports PlayerOS gone, its derived RowText maps and two coach prompts vanish,
+`common.chartStart`'s call count moves, and `bareKind` reddens. That last one should have
+been in the prediction — M249 replaced that clause's `appSrc.size >= 60` floor with
+`APP_SRC_PIN` precisely so a dropped screen would redden it, and the prediction read that
+note without applying it. Six probes joined the map, no other arm was re-tipped, and round 2
+ran clean.
+
+Measured on the plane: `tsc` rc=0, `npm run build` rc=0, suite **41/41 proof scripts ·
+2,187/2,187 checks · exit 0** on the plane itself (one fewer than M249's 2,188: the deleted
+growth clause). On the working tree after the splice: `tsc` rc=0, `npm run build` rc=0,
+suite **41/41 · 2,187/2,187**, proof-i18n **278/278**.
 
 ### M249 — a badge stops printing the model's own code, and the enum-that-reaches-the-DOM class gets a census
 
