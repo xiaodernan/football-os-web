@@ -2774,19 +2774,68 @@ const NOT_PROSE = [
 // out. `€${…}M` and `${home.name} ${hg} – ${ag} ${away.name}` do not; "Window: last {n}
 // days" does.
 const hasOwnWord = (inner) => /[A-Za-z]{2}/.test(inner.replace(/\$\{[^}]*\}/g, " "));
+
+/** A quote can open a "string" that is really the inside of a REGEX literal. M254 found
+ *  `data/intelligence.ts:244` charged as prose: `/[^a-z0-9' -]/g` holds an apostrophe, so the
+ *  literal scanner opened there and read on to the next one — `' -]/g, " ").split(/\s+/).map(…`
+ *  — which has spaces and letters, so it looked exactly like a sentence. Regexes are removed
+ *  before the literal scan, because a character class can never be prose. A `/` only opens a
+ *  regex where a value can start, and a `/` inside `[...]` does not close it, which is the
+ *  same two facts the pattern has to respect to strip `/\s+/` and `/[^a-z0-9' -]/g` alike. */
+function stripRegexLiterals(line) {
+  let out = "";
+  let i = 0;
+  while (i < line.length) {
+    const c = line[i];
+    if (c === "/" && i + 1 < line.length) {
+      const prev = out.trimEnd().slice(-1);
+      const canOpen = out.length === 0 || "(=,:[!&|?{};+-*%~^".includes(prev);
+      if (canOpen) {
+        let j = i + 1;
+        let inClass = false;
+        while (j < line.length) {
+          const d = line[j];
+          if (d === "\\") { j += 2; continue; }
+          if (inClass) { if (d === "]") inClass = false; }
+          else if (d === "[") inClass = true;
+          else if (d === "/") break;
+          j++;
+        }
+        if (j < line.length && line[j] === "/") {
+          i = j + 1;
+          while (i < line.length && /[a-z]/.test(line[i])) i++; // flags
+          continue;
+        }
+      }
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
+/** The prose literals on one line of source. Exposed so a clause can plant a sentence and ask
+ *  the same predicate the file scan uses, which is what keeps a zero from passing on a file
+ *  the scan never actually read. */
+function proseOnLine(line) {
+  if (/^\s*(\/\/|\*|\/\*)/.test(line)) return [];
+  const out = [];
+  for (const raw of stripRegexLiterals(line).match(PROSE_LIT) ?? []) {
+    const inner = raw.slice(1, -1);
+    if (NOT_PROSE.some((re) => re.test(inner))) continue;
+    if (!/[A-Za-z]/.test(inner)) continue;
+    if (!/ /.test(inner) && !/[.!?]$/.test(inner)) continue;
+    if (!hasOwnWord(inner)) continue;
+    out.push(raw);
+  }
+  return out;
+}
+
 function proseDebt(relPath) {
   const lines = readFileSync(join(root, ...relPath.split("/")), "utf8").split(/\r?\n/);
   const hits = [];
   lines.forEach((line, i) => {
-    if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
-    for (const raw of line.match(PROSE_LIT) ?? []) {
-      const inner = raw.slice(1, -1);
-      if (NOT_PROSE.some((re) => re.test(inner))) continue;
-      if (!/[A-Za-z]/.test(inner)) continue;
-      if (!/ /.test(inner) && !/[.!?]$/.test(inner)) continue;
-      if (!hasOwnWord(inner)) continue;
-      hits.push(i + 1);
-    }
+    for (const _ of proseOnLine(line)) hits.push(i + 1);
   });
   return hits;
 }
@@ -2934,13 +2983,23 @@ ok(`the scan walks the whole domain population (${debtFiles.length} of ${domainF
 // Measured at M184, after the AI's own sentences moved onto keys: 2 counted literals left,
 // and both are fragments of the question parser's regexes rather than prose a reader sees.
 // The cap is the measurement, so it may not drift back up.
-const EXTRA_PROSE = [{ path: "data/intelligence.ts", cap: 2 }];
+// M254 measured the last two: both were the question parser's regexes, whose apostrophes the
+// literal scanner read as opening a string. `proseOnLine` strips regex literals first, so the
+// file is at 0 — and a cap of 0 can only stay there.
+const EXTRA_PROSE = [{ path: "data/intelligence.ts", cap: 0 }];
 for (const { path, cap } of EXTRA_PROSE) {
   const hits = proseDebt(path);
   ok(`${path} prose has not grown (${hits.length} literals, ceiling ${cap})`, hits.length <= cap);
 }
-ok(`the extra scope is reading a module that really carries debt (${EXTRA_PROSE.reduce((n, e) => n + proseDebt(e.path).length, 0)} hits)`,
-  EXTRA_PROSE.every((e) => proseDebt(e.path).length > 0));
+// A cap of 0 is the shape that passes on a file the scan never read, so the vacuity device that
+// used to require a hit is replaced by a plant: the same predicate the file scan uses must still
+// report a real sentence AND still ignore the regex that was being charged. One clause each way,
+// so neither a blind zero nor an over-eager strip can hide here.
+const plantedProse = proseOnLine('const x = "The reader would see this sentence.";');
+const plantedRegex = proseOnLine('const words = q.toLowerCase().replace(/[^a-z0-9\' -]/g, " ").split(/\\s+/);');
+ok(`the prose rule still reports a sentence and still ignores a regex, so the zero above is measured and not a blind spot (${plantedProse.length} of 1 prose, ${plantedRegex.length} of 0 regex)`,
+  plantedProse.length === 1 && plantedRegex.length === 0 &&
+  EXTRA_PROSE.every((e) => proseDebt(e.path).length === 0));
 
 // 32. One English sentence, one key. Check 30 pins a handful of declared shared words;
 // this is the same drift class measured across the whole dictionary instead of a list
