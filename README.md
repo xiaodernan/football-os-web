@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M254 (a few numbers in that range
+Work ships one milestone per commit and is currently at M262 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,232 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M262 — check 24 walks the whole tree, and the five-directory filter leaves the gate
+
+Section 37 never touched check 24's five-directory walk — it covered all 95 modules with its
+own supply contract instead, and said so in its header comment. That was defense in depth
+with an asterisk: the older, load-bearing fill scan still skipped `components/ui` and
+`src/App.tsx`, whose six literal sites no fill contract ever read. This milestone removes
+the filter at the source. The numbers do not move — 134 filled, 134 var-carrying, 0
+unreadable, exactly as before — because a varless site is skipped before its arguments are
+parsed, which is also why the hole survived every census unnoticed. What moves is the
+population the scan promises: one new clause pins 95 modules walked, names the three
+outside files, and counts their six sites seen by the regex, so a reintroduced filter
+reddens here rather than silently narrowing the scan. Section 37's full-population supply
+stays beside it — different parsers, same contract, each blind to the other's bugs by
+construction — and its header comment now tells the story in the past tense.
+
+Measured at the landing, on a frozen `git archive` plane rather than a working tree:
+`tsc` rc=0, `npm run build` rc=0, suite **41/41 proof scripts · 2,232/2,232 checks · exit 0**,
+`proof-i18n` **323/323**. The working-tree run recorded 2,231 and 322, one clause short —
+see the correction in M260's section. No app or dictionary change: the only edit besides the
+gate is the comment tense.
+
+**The landing (0486209) is where the plane and the arms finally ran — six milestones late,
+but on bytes that can be re-derived.** Two sibling planes of `git archive adaf111`, one with
+the ten stacked files and one without, give the honest attribution: HEAD's `proof-i18n`
+counts **300** checks and the stack's counts **323**, and the clause-name multiset (digits
+collapsed, so a renamed clause cannot pass as a new one) shows **28 added forms against 5
+removed** — the +23 is new clauses, not re-labelling. `tsc` rc=0; `npm run build` rc=0 with
+37 dist files and 1,495,053 B of JS against M256's 1,492,522 (**+2,531** for three composers,
+a row contract and seventeen keys); dictionary **1,955 → 1,972**.
+
+Witness: **23 arms** on the frozen plane, predictions written into
+`dev/stack-arms.mjs` before its first run — **23/23 MATCHED, zero UNNAMED reds, plane
+re-hashed clean afterwards**. Every clause the stack added is broken by at least one arm:
+each family's wiring table, bare-display census, value space, single-composer census,
+behavioural readings and fallback; both row doors shut; the kind alias rewired; check 24's
+filter put back. Three arms score exactly one clause each (the foot door, the alias, the fill
+population), which is what makes them clauses rather than decoration. Five of them are
+M257's own arms re-run on the final bytes, and that re-run was not ceremony: the arm table
+inherited from M257 carried a `CODE_VARS` needle that M259 had already overwritten, so its
+A3 had been measuring nothing for three milestones — a stale needle is a no-op mutation, and
+the script now counts every needle against the plane's current bytes before the first gate
+invocation. Its first launch died on the same preflight for a different reason: the probe
+"hands its chip to the composer" turns out to be shared by four loop clauses, so an
+arm-table probe must be unique in the control's own output, not merely distinctive.
+
+A three-locale browser walk (one reload per locale, because the provider reads the locale
+only at mount) reaches the search rows, the foot sites and the bucket sites with the
+dictionary's own words and no raw key, brace pair or `[object Object]` anywhere. The session
+screen's phase tag stayed unreachable in the browser through two input methods, so M261's
+evidence is this gate plus a headless render — it is not claimed as live coverage. And the
+qualification that applies to every section above: only the totals in this paragraph are
+re-derivable from a commit, because the per-milestone figures M257–M261 record were measured
+on working trees that no snapshot preserves.
+
+### M261 — the drill phase stops shouting its code, and the sixth family gets its census
+
+M256 measured three families worse-off than the subtitle hole for having no value keys at
+all and named this one last: a drill's session phase (`warmup/technique/decision/game/
+cooldown`) tagged each exercise in the session screen, upper-cased by CSS so every locale
+shouted English. The only display position in the tree; filters and comparisons elsewhere
+stay codes, and the career arc's trajectory phases are a different family that never
+reaches a display slot. The fix is one composer, `phaseLabel` — a switch of static
+literals like the bucket composer, because no row will ever carry a phase — with
+`DrillPhase` + runtime `DRILL_PHASES` in the domain types. The `uppercase` class goes with
+the code: it only made sense while the tag was an identifier.
+
+Section 42 adds six clauses: the wiring table (1 file / 1 position), the bare-display
+census (any receiver, but resolved sites excluded — a site inside `phaseLabel(` is the
+wiring clause's business, this one catches the shape going back to raw — plus no
+`>warmup<`-style text node and the planted pair), the union's type against the switch's
+five cases, the single-composer clause (exactly one module quotes a `training.phase.*`
+key, five times), the behavioural readings (**15/15** differ from the code), and the
+unknown-code fallback. The keys live under `training.phase.*`, not `drill.*`: proof-training
+owns that prefix for the drill catalogue (every `drill.*` key must name a catalogue drill),
+and five phase keys would read as fifteen orphaned drills. That collision is what the
+first full-suite run caught — `proof:training` 43/44 — and the namespace is the fix.
+
+Measured on the working tree: `tsc` rc=0, `npm run build` rc=0, suite **41/41 proof scripts
+· 2,231/2,231 checks · exit 0** (six more than M260's corrected 2,225: this section's six
+clauses), `proof-i18n` **322/322** against its previous 316. The dictionary grows 1,967 →
+**1,972** keys. Both totals were one check low as written, and the reason is M260's
+miscounted section rather than this one's own clauses. The plane and the arms ran at the
+landing; the record is in M262's section.
+
+### M260 — the filter buckets stop shouting their codes, and the fifth family gets its census
+
+M256 measured three families worse-off than the subtitle hole for having no value keys at
+all and named this one second: `PosBucket` (`ALL/GK/DEF/MID/ATT`) reached the glass in the
+scout filter chips, printed raw — and, as the correction at the end of this section
+records, in two more label slots in the same file that the chip loop's own variable read
+never reached. Every other use of a bucket is order, identity or comparison. The fix is one
+composer, `bucketLabel`, and it is a
+switch of static literals rather than a `codeWord` branch on purpose: no row will ever
+carry a bucket, so there is no door to open, and every key the composer can name stays a
+literal the t()-shape census reads as one. The chip keeps `key={b}`, `bucket === b` and
+`setBucket(b)` exactly as they are — code stays the code where it is an identity.
+
+Section 41 adds seven clauses: the wiring table (1 file / 3 positions, importing the
+composer), the chip loop read out of the `BUCKETS.map` the file declares (composer in,
+`{b}` out, identities kept, plus no `>ALL<`-style text node anywhere and the planted loop
+reported bare), the collected-value bare-display census for the two slots that loop cannot
+see (`{r.bucket}` and `{p.b}` read by name, the planted pair caught at 2 and both resolved
+shapes clean at 0), the union's type against the switch's five cases (compared, not trusted,
+with a planted two-case switch proving the extractor counts), the single-composer clause
+(exactly one module quotes a `scout.bucket.*` key, five times), the behavioural readings
+(**15/15** differ from the code — `ALL` vs `All` differs by case alone, which is why the
+pin counts), and the unknown-code fallback. Five new sentence keys (`scout.bucket.*`),
+all three locales, singular role nouns to match `group.*`.
+
+Measured on the working tree: `tsc` rc=0, `npm run build` rc=0, suite **41/41 proof scripts
+· 2,225/2,225 checks · exit 0** (seven more than M259's 2,218: this section's seven clauses),
+`proof-i18n` **316/316** against its previous 309. The dictionary grows 1,962 → **1,967**
+keys. Seven clauses green on the first run, census pin moved once and by the predicted
+amount (literal 1263 → 1268: the switch's five static keys).
+
+**Two corrections this landing carries, both of them about this section.** (1) The section has
+seven clauses, not six: the collected-value bare-display census was written and passing but
+never counted, and a miscount here propagates — 2,224 was really 2,225, so M261's 2,230 was
+2,231 and M262's 2,231 was 2,232, and `proof-i18n` 315/321/322 were 316/322/323. The chain is
+now consistent with M259's 2,218 and with the plane measurement recorded in M262's section.
+(2) "The only display position in the tree" was the chip loop's own reading, and it was wrong
+by two: the squad-profile heading (`ScoutingPanel.tsx:87`) and the best-value pick badge
+(`:100`) print a bucket code into a label slot under variables the loop never binds. The
+family converts **3 positions in 1 file**, the wiring pin says so, and the gate's own section
+header tells the story in those terms — which is the third time this class has had to charge
+a display position a sibling milestone's prose had declared nonexistent.
+
+### M259 — the preferred foot stops speaking its code, and the fourth family gets its census
+
+M256 measured three families worse-off than the subtitle hole because they have no value keys
+at all, and named this one first: `Player.foot` (`"L" | "R"`) reached the glass at
+`Details.tsx:101` as `{p.foot}F`, at `:124` as a bare letter, and at `ScoutingPanel.tsx:226`
+as a `L / R` string handed to a translated sentence — plus a fourth through the back door
+that only the census found: `ai.fact.player` already writes `{foot} foot` / `{foot} 脚`
+around the var, so the word here is the bare side ("Left", not "Left foot") and the sentence
+supplies the noun.
+
+The fix follows the family pattern M255/M256 set: `Foot` + runtime `FOOTS` in
+`domain/types.ts` (the record field is typed against the union now), a `codeWord` branch and
+`footLabel` composer in `domain/rowText.ts`, `foot` opened in `CODE_VARS`, and all three
+screen positions reading through the composer. Opening the door converts the intelligence
+fact in every locale with no producer edit — the row already carried the code, and now the
+door words it. Section 40 adds seven clauses: the wiring table (2 files / 4 positions, each
+importing the composer), the bare-display census, the type/runtime pair (2 and 2, compared,
+not trusted), the single-composer clause (exactly one module quotes a `foot.*` key, twice),
+the behavioural readings (**6/6** differ from the code — single letters, all locales), the
+unknown-code fallback, and the row-door clause (the one shipped foot-carrying row renders
+the dictionary's own word in all three locales).
+
+Two corrections the first red run forced, both in the new census rather than the app. The
+app-wide shape census did not move 104 → 99 on this unit: that pin already read 99 at HEAD,
+moved by the M254–M256 composers, and the only half this milestone owns is computed 22 →
+23 (the `codeWord` ternary, which names its keys where `STATIC_T` never looks — section 37's
+hole, now carrying one more site). And the bare-read extractor was wrong twice: the
+receiver sits between the composer and the property (`footLabel(p.foot, …)`), and
+`t("fw.foot")` is a dictionary key being named, not a code being printed — quoted strings
+are masked before matching, backticks deliberately not, so an interpolation can never hide
+a bare read inside a string.
+
+Measured on the working tree: `tsc` rc=0, `npm run build` rc=0, suite **41/41 proof scripts
+· 2,218/2,218 checks · exit 0** (seven more than M258's 2,211: this section's seven clauses),
+`proof-i18n` **309/309** against its previous 302. The dictionary grows 1,960 → **1,962**
+keys. The plane and the arms ran at the landing rather than before it: six of this section's
+seven clauses are broken one at a time by arms B1–B7 in `dev/stack-arms.mjs`, and the numbers
+above stand (this section's clause count was right). Attribution and the full witness table
+are in M262's section.
+
+### M258 — the gate reads the table the app imports
+
+Section 37's pools clause audits `FILM_KIND_KEY` out of `domain/filmInsights.ts`, but the three
+badge sites import `VIDEO_KIND_KEY` from `data/video.ts` — today a bare re-export of that
+table, and only today by convention. If the alias were rewired to a second table (or the table
+grew an eighth, var-carrying row), the gate would keep clearing `FILM_KIND_KEY` while the
+screens printed the other table's braces, and proof-film would stay green too: it asserts every
+kind translates, not that the table behind the import is the table the gate read. One clause
+pins both ends of the wire — the named import, the bare re-export, and the exact seven rows —
+with a plant that breaks the re-export into an object literal and a plant that adds an eighth
+row, both walked through the same two predicates.
+
+Measured: pure gate change, no app or dictionary edits — `proof-i18n` **302/302**, suite
+**41/41 · 2,211/2,211**. This clause was drafted, verified green and then reverted during M257
+to keep that milestone's promised scope pure; it lands here unchanged, under its own number.
+
+### M257 — the search subtitle becomes a row, and the ceiling it hung from comes down
+
+M256's ceiling clause named its own fix, so this unit is that fix. `SearchResult.subtitle`
+is typed `RowText` now, and all five producers in `data/footballService.ts` hand keyed
+`sr.*` rows: proper nouns ride as plain vars (`nation`, `competition`, `source`, `club`),
+codes ride as `CODE_VARS` — `kind` was already listed, `status` opens its door here, so the
+match row resolves through `matchStatusLabel`'s lookup. The player row names the group
+M255 words (`vars: { group: p.positionGroup }`) rather than the specific English label:
+"LB / RB" has no dictionary home, and inventing one for eight strings no reader asked for
+would be a dictionary job wearing this milestone's clothes. Five new sentence keys
+(`sr.clubLine/playerLine/competitionLine/newsLine/matchLine`), all three locales, with
+"OVR" kept in English and written as 综合/綜合 beside it — the `world.ageOvr` precedent —
+so the still-English clause keeps reading empty placeholder sets on the identical ones.
+Both readers resolve through `rowLine`, and `Details.tsx`'s `EntityHeader` prop moves
+`subtitle` → `sub`: it renders already-built JSX under the same name in a file that imports
+the search module, which is exactly the ambiguity check 28c refuses to guess at.
+
+The gate holds both ends. A new producers clause names all five keys and reads each one
+back through the shipped `rowLine` in every locale with representative vars — a group id,
+a kind code, a status code, proper nouns, a number — failing on braces left standing or a
+record code still legible, with the old bare-string shape and a varless render as plants.
+The hole clause lowers its producer pin to 0 and converts its reader half: no `{r.subtitle}`
+prints raw anywhere, both readers sit inside `rowLine(r.subtitle, t)` by name, and the old
+`subtitle: m.status` shape is still caught. Section 39's variable clause flips on its own
+implication — one keyed row carries a status now, and the door is open. The generic row
+scan needed no changes: it derives its file list from `RowText` mentions, so the data module
+joined it the moment the type landed, and its key-exists/placeholder-match contract covers
+all five rows unasked.
+
+Measured on the working tree: `tsc` rc=0, `npm run build` rc=0, suite **41/41 proof scripts
+· 2,210/2,210 checks · exit 0** (one more than M256's 2,209: the producers clause),
+`proof-i18n` **301/301** against its previous 300. Witness: control plus 5 arms on a `git
+archive` plane (`dev/m257-arms.mjs`, predictions in its header before the first run),
+**6/6 MATCHED on round 2** — round 1 was 4/6, and both misses were legitimate collateral the
+gate was right to report: reverting the match producer orphans `sr.matchLine` (reachability
+fires beside hole + subtitles), and a translator's drift trips both parity generations
+(check 3's set-compare beside section 36's counts-included one). No UNNAMED reds survived
+either round. The dictionary grows 1,955 → **1,960**
+keys — the first growth since the M248 deletions, every new key quoted in app code so the
+reachability rule claims it. One collateral the census caught honestly: the rename above,
+because a second `subtitle` meaning in one import closure is a failure the name census
+exists to report.
 
 ### M256 — the fixture status stops speaking its own code, and the class gets a census that names the one hole it leaves
 
