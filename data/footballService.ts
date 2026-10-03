@@ -1,6 +1,7 @@
 import { WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, Standing } from "@/domain/types";
+import type { RowText } from "@/domain/rowText";
 
 // Data Provider Layer (spec §11): the UI never talks to the seed directly, so a
 // real provider (football-data.org, commercial) can replace DemoMode without
@@ -137,11 +138,16 @@ export const newsFeed: NewsArticle[] = WORLD.news;
 export const getNews = (id: string) => WORLD.news.find((n) => n.id === id);
 
 // --- Global search (spec §36) ---
+// The subtitle is a row, not a string: four of the five producers below used to hand the
+// glass a record code or an English word (m.status, p.position, n.kind, "Competition"),
+// composed in a module no component-side scan reads. A producer now has to say which half
+// is a key — proper nouns ride as plain vars, codes ride as CODE_VARS — and the two
+// readers resolve it through rowLine.
 export interface SearchResult {
   type: "club" | "player" | "competition" | "match" | "news";
   id: string;
   title: string;
-  subtitle: string;
+  subtitle: RowText;
   to: string;
 }
 
@@ -167,24 +173,24 @@ export function globalSearch(query: string, limit = 24): SearchResult[] {
   const out: (SearchResult & { s: number })[] = [];
   for (const c of WORLD.clubs) {
     const s = Math.max(score(c.name, q), score(c.short, q));
-    if (s > 0) out.push({ type: "club", id: c.id, title: c.name, subtitle: `${c.nation} · ${getCompetition(c.competitionId)?.name ?? ""}`, to: `/clubs/${c.id}`, s });
+    if (s > 0) out.push({ type: "club", id: c.id, title: c.name, subtitle: { key: "sr.clubLine", vars: { nation: c.nation, competition: getCompetition(c.competitionId)?.name ?? "" } }, to: `/clubs/${c.id}`, s });
   }
   for (const p of WORLD.players) {
     const s = Math.max(score(p.name, q), score(p.nation, q), score(p.position, q) * 0.6);
-    if (s > 0) out.push({ type: "player", id: p.id, title: p.name, subtitle: `${p.position} · ${getClub(p.clubId)?.name ?? ""} · OVR ${p.overall}`, to: `/players/${p.id}`, s });
+    if (s > 0) out.push({ type: "player", id: p.id, title: p.name, subtitle: { key: "sr.playerLine", vars: { group: p.positionGroup, club: getClub(p.clubId)?.name ?? "", overall: p.overall } }, to: `/players/${p.id}`, s });
   }
   for (const c of WORLD.competitions) {
     const s = score(c.name, q);
-    if (s > 0) out.push({ type: "competition", id: c.id, title: c.name, subtitle: `${c.nation} · Competition`, to: `/competitions/${c.id}`, s });
+    if (s > 0) out.push({ type: "competition", id: c.id, title: c.name, subtitle: { key: "sr.competitionLine", vars: { nation: c.nation } }, to: `/competitions/${c.id}`, s });
   }
   for (const n of WORLD.news) {
     const s = score(n.title, q);
-    if (s > 0) out.push({ type: "news", id: n.id, title: n.title, subtitle: `${n.source} · ${n.kind}`, to: `/news/${n.id}`, s });
+    if (s > 0) out.push({ type: "news", id: n.id, title: n.title, subtitle: { key: "sr.newsLine", vars: { source: n.source, kind: n.kind } }, to: `/news/${n.id}`, s });
   }
   for (const m of WORLD.matches) {
     const label = `${getClub(m.homeClubId)?.name} v ${getClub(m.awayClubId)?.name}`;
     const s = score(label, q);
-    if (s > 0) out.push({ type: "match", id: m.id, title: label, subtitle: m.status, to: `/matches/${m.id}`, s });
+    if (s > 0) out.push({ type: "match", id: m.id, title: label, subtitle: { key: "sr.matchLine", vars: { status: m.status } }, to: `/matches/${m.id}`, s });
   }
   return out.sort((a, b) => b.s - a.s).slice(0, limit).map(({ s: _s, ...r }) => r);
 }

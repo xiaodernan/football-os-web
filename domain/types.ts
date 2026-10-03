@@ -32,6 +32,12 @@ export const RECORD_FEELS = ["ahead", "inline", "behind"] as const;
 
 export type PositionGroup = "GK" | "CB" | "FB" | "DM" | "CM" | "AM" | "W" | "ST";
 
+// A player's preferred foot. Two codes, and the composer that words them reads the runtime
+// list below — the same arrangement MatchStatus got in M256 — so a third foot is a missing
+// key rather than a letter on screen.
+export type Foot = "L" | "R";
+export const FOOTS: readonly Foot[] = ["L", "R"];
+
 export interface NamedValue {
   key: string;
   label: string;
@@ -61,7 +67,7 @@ export interface PlayerRef {
   potential: number;
   archetype: string;
   value: number; // market value in EUR
-  foot: "L" | "R";
+  foot: Foot;
   /** The attribute vector this player's overall was computed from. Optional
    *  because providers may ship ratings without a full vector. */
   attributes?: Attributes;
@@ -189,8 +195,14 @@ export interface TrainingExercise {
   focus: string; // attribute key
   minutes: number;
   intensity: number; // 1..5
-  phase: "warmup" | "technique" | "decision" | "game" | "cooldown";
+  phase: DrillPhase;
 }
+
+// A drill's session phase. Five codes, and the composer that words them reads the runtime
+// list below — the same arrangement foot and bucket got in M259/M260 — so a sixth phase
+// is a missing key rather than a word on screen.
+export type DrillPhase = "warmup" | "technique" | "decision" | "game" | "cooldown";
+export const DRILL_PHASES: readonly DrillPhase[] = ["warmup", "technique", "decision", "game", "cooldown"];
 
 export interface AttributeDelta {
   key: string;

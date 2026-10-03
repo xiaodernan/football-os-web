@@ -1179,9 +1179,15 @@ function callArgs(code, open) {
   return null;
 }
 
+// M262's population pin lives here, next to the loop it measures (the clause itself sits
+// with the other check-24 verdicts below): every module walked, and the outside sites seen.
+const FILL_OUTSIDE = ["components/ui/dialog.tsx", "components/ui/sheet.tsx", "src/App.tsx"];
+const fillFiles = new Set();
+let fillOutsideSites = 0;
 for (const [path, code] of appSrc) {
-  if (!/^(features|ui|store|domain|lib)\//.test(path)) continue;
+  fillFiles.add(path);
   for (const m of code.matchAll(STATIC_T)) {
+    if (FILL_OUTSIDE.includes(path)) fillOutsideSites++;
     const key = m[1] ?? m[2];
     if (!(key in en)) continue;
     const phs = [...new Set((en[key].match(/\{(\w+)\}/g) ?? []).map((s) => s.slice(1, -1)))];
@@ -1208,6 +1214,18 @@ ok(`the placeholder scan reads t()'s own variable filling, and everything it loo
 ok(`no literal-key call throws a variable away — every name it supplies is interpolated by the value (${varSites} var-carrying sites, ${droppedVars.length} dropped)`,
   varSites >= 60 && droppedVars.length === 0);
 for (const d of droppedVars.slice(0, 8)) console.log("       dropped: " + d);
+// M262: the five-directory walk is over. Check 24's fill scan used to skip everything
+// outside features|ui|store|domain|lib — components/ui and src/App.tsx held six literal
+// sites no fill contract ever read (varless as measured since M252, which is why the
+// numbers below do not move: a varless site is skipped before its arguments are parsed).
+// Section 37 covered the whole tree with its own supply contract instead of touching this
+// loop; this milestone removes the filter at the source and pins the population — every
+// app module walked, the three outside files named, their six sites seen by the regex —
+// so a reintroduced filter reddens here rather than silently narrowing the scan. The two
+// supply implementations stay: different parsers, same contract, each blind to the
+// other's bugs by construction.
+ok(`check 24's fill scan walks the whole tree, not five directories (${fillFiles.size} modules walked; outside the old walk: ${FILL_OUTSIDE.filter((f) => fillFiles.has(f)).join(", ") || "none"}; outside sites seen: ${fillOutsideSites})`,
+  fillFiles.size === APP_SRC_PIN && FILL_OUTSIDE.every((f) => fillFiles.has(f)) && fillOutsideSites === 6);
 
 // 24b. The same contract at a *template* site, which the loop above cannot see because its
 //      first argument is not a literal. Nothing in the repo passes variables at a dynamic
@@ -3630,10 +3648,11 @@ ok(`a 简体中文 value that is still English is named, not waved through (${st
 // 37. The shapes a t() call takes that the checks above were never looking at. Check 4 reads
 //     `t("literal")` and check 16/24 audit declared dynamic sites, so between them every key a
 //     call NAMES is accounted for — but the way the key ARRIVES is a second axis. Four shapes
-//     already have a contract: a literal is check 24's forward/reverse fill (walked over five
-//     directories, note — components/ui and src/App.tsx sit outside that walk and hold six
-//     sites, varless as of M252, which is a hole this section closes by covering all 95 app
-//     modules itself); a template is the dynamic-site machinery. Two shapes have none, and
+//     already have a contract: a literal is check 24's forward/reverse fill (which walked
+//     over five directories until M262 — components/ui and src/App.tsx sat outside that
+//     walk holding six varless sites, the hole this section closed by covering all 95 app
+//     modules itself, and which M262 closed at the source; the two supply implementations
+//     stay as deliberate defense in depth); a template is the dynamic-site machinery. Two shapes have none, and
 //     one more has a contract nobody could see it needed:
 //       · a COMPUTED first argument names its keys inside a ternary — `t(n === 1 ?
 //         "comm.nRepliesOne" : "comm.nReplies", { n })` — where check 24's `t("` regex never
@@ -3741,8 +3760,8 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1263 && shapeCounts.template === 99 && shapeCounts.expression === 28
-    && shapeCounts.computed === 22 && shapeCounts.unknown === 0 && plantUnknown);
+  shapeCounts.literal === 1273 && shapeCounts.template === 99 && shapeCounts.expression === 28
+    && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
 // a line here saying why. The plant walks the same two predicates the census and the
@@ -3784,6 +3803,23 @@ const poolVars = [...poolKeys, ...filmKindKeys].filter((k) => L.some((loc) => ph
 const plantPool = L.some((loc) => phList((loc.id === "en" ? D.en["learn.l.xg.title"] + " {n}" : D[loc.id]["learn.l.xg.title"]) ?? "").length > 0);
 ok(`the values behind every bare key pool carry no placeholder, in any locale (${poolFields.size} *Key fields + ${poolArrFields.size} *Keys arrays + FILM_KIND_KEY's ${filmKindKeys.length} entries, ${poolKeys.size + filmKindKeys.length} keys; fields pinned: ${poolFieldsGot.join(",")}; planted value held: ${plantPool})`,
   poolVars.length === 0 && poolFieldsGot.join(",") === POOL_FIELDS_PIN.join(",") && plantPool);
+// M258: the gate reads the table the app imports. The pools clause above audits FILM_KIND_KEY
+// out of domain/filmInsights.ts, but the three badge sites import VIDEO_KIND_KEY from
+// data/video.ts — today a bare re-export of that table, and only today by convention. If the
+// alias were rewired to a second table (or the table grew an eighth, var-carrying row), the
+// gate would keep clearing FILM_KIND_KEY while the screens printed the other table's braces,
+// and proof-film would stay green too: it asserts every kind translates, not that the table
+// behind the import is the table the gate read. So this clause pins both ends of the wire —
+// the import, the bare re-export, and the exact seven rows — through the same predicates the
+// plant then breaks.
+const kindVideoSrc = appSrc.get("data/video.ts") ?? "";
+const aliasWired = /import\s*\{[^}]*\bFILM_KIND_KEY\b[^}]*\}\s*from\s*"@\/domain\/filmInsights"/.test(kindVideoSrc)
+  && /export\s+const\s+VIDEO_KIND_KEY[^=]*=\s*FILM_KIND_KEY\s*;/.test(kindVideoSrc);
+const kindPin = [...filmKindKeys].sort().join(",");
+const plantAlias = !/export\s+const\s+VIDEO_KIND_KEY[^=]*=\s*FILM_KIND_KEY\s*;/.test('export const VIDEO_KIND_KEY = { scan: "vid.kind.scan" };')
+  && [...filmKindKeys, "vid.kind.extra"].sort().join(",") !== "vid.kind.dribble,vid.kind.pass,vid.kind.press,vid.kind.scan,vid.kind.shot,vid.kind.touch,vid.kind.turn";
+ok(`the kind badges read the same table this gate audited: VIDEO_KIND_KEY is a bare re-export of FILM_KIND_KEY and the table holds exactly these seven rows (${kindPin}; wired: ${aliasWired}; planted rewire and planted eighth row caught: ${plantAlias})`,
+  aliasWired && kindPin === "vid.kind.dribble,vid.kind.pass,vid.kind.press,vid.kind.scan,vid.kind.shot,vid.kind.touch,vid.kind.turn" && plantAlias);
 // Malformed braces, across every value in every locale: strip the well-formed templates and
 // anything that leaves a brace behind is an unclosed variable. The plant walks three
 // arrangements through the same predicate — open, closed-short, and a whole well-formed one
@@ -4030,23 +4066,346 @@ ok(`the shipped matchStatusLabel answers all ${ST_LIST.length} fixture statuses 
   stReadBad.length === 0 && stDiffer === ST_DIFFER_PIN);
 ok(`and the same fallback is still the last resort for a status outside the union (${rowTextModule.matchStatusLabel("Planted", tReader("en"))})`,
   rowTextModule.matchStatusLabel("Planted", tReader("en")) === "Planted");
-// The one position this milestone measured and did NOT convert, charged by name rather than left
-// out of the census: the global search row's subtitle is a display string composed in the data
-// layer, and the match row puts the bare code in it, so the command palette and the world search
-// list both print SCHEDULED to a Chinese reader. The clause below holds it at exactly one
-// producer and two readers, so a second code-carrying subtitle reddens here and the hole cannot
-// quietly grow while its fix waits for the row-contract change it needs (a status can only leave
-// that field as a row the glass resolves, which is what CODE_VARS and rowLine are for).
+// M257: the ceiling, closed. The subtitle slot is a row now, so every producer has to hand
+// a keyed sr. row — the shape below names all five, and the render check reads each one
+// back through the shipped rowLine in every locale with representative vars (a group id,
+// a kind code, a status code, proper nouns, a number). Braces left standing mean a var the
+// door never resolved; the codes still legible mean the CODE_VARS half failed open. The
+// plants walk the same two predicates: the old bare-string shape yields no key (so it would
+// fail the pin), and a render with no vars keeps its braces.
+const SUB_SRC = appSrc.get("data/footballService.ts") ?? "";
+const subKeysOf = (src) => [...src.matchAll(/subtitle:\s*\{\s*key:\s*"([^"]+)"[^}]*\}/g)].map((m) => m[1]);
+const subKeys = subKeysOf(SUB_SRC);
+const SUB_PIN = "sr.clubLine,sr.competitionLine,sr.matchLine,sr.newsLine,sr.playerLine";
+const SUB_SAMPLES = {
+  "sr.clubLine": { nation: "England", competition: "Premier League" },
+  "sr.playerLine": { group: "CM", club: "Arsenal", overall: 87 },
+  "sr.competitionLine": { nation: "England" },
+  "sr.newsLine": { source: "BBC", kind: "Rumor" },
+  "sr.matchLine": { status: "SCHEDULED" },
+};
+const subBad = [];
+for (const [key, vars] of Object.entries(SUB_SAMPLES)) {
+  for (const { id } of L) {
+    const shown = rowTextModule.rowLine({ key, vars }, tReader(id));
+    if (shown === undefined || shown === key) subBad.push(`${id} ${key} prints its own key`);
+    else if (/[{}]/.test(shown)) subBad.push(`${id} ${key} leaves braces: ${shown}`);
+  }
+}
+const subCodesLeft = [
+  ["zh-CN", "sr.matchLine", "SCHEDULED"], ["zh-TW", "sr.matchLine", "SCHEDULED"],
+  ["zh-CN", "sr.newsLine", "Rumor"], ["zh-TW", "sr.newsLine", "Rumor"],
+  ["zh-CN", "sr.playerLine", "CM"], ["zh-TW", "sr.playerLine", "CM"],
+].filter(([id, key, code]) => String(rowTextModule.rowLine({ key, vars: SUB_SAMPLES[key] }, tReader(id)) ?? "").includes(code));
+const plantSubShape = subKeysOf("subtitle: m.status,").length === 0;
+const plantSubRender = /[{}]/.test(String(rowTextModule.rowLine({ key: "sr.matchLine", vars: {} }, tReader("en")) ?? ""));
+ok(`every search subtitle leaves the data layer as a keyed sr. row, and each of the five renders with no braces and no record code left in any locale (${[...subKeys].sort().join(", ") || "none"}; bad readings: ${subBad.join(" | ") || "none"}; codes left: ${subCodesLeft.map(([, k, c]) => `${k}:${c}`).join(" ") || "none"}; planted bare-string shape yields no key: ${plantSubShape}; planted varless render keeps its braces: ${plantSubRender})`,
+  [...subKeys].sort().join(",") === SUB_PIN && subBad.length === 0 && subCodesLeft.length === 0
+    && plantSubShape && plantSubRender);
+// The hole it closed: no subtitle carries a bare record code anymore, no reader prints one
+// raw, both readers resolve the row through rowLine — and the old shape is still caught by
+// the same detector, so a producer that goes back to `subtitle: m.status` reddens here.
 const ST_HOLE = /subtitle:\s*[\w.]+\.status\b/g;
 const stHoleIn = (code) => [...code.matchAll(ST_HOLE)].length;
 const stHoleSites = [...appSrc].filter(([, c]) => stHoleIn(c) > 0).map(([p, c]) => `${p} x${stHoleIn(c)}`);
 const stHoleReaders = [...appSrc].filter(([, c]) => /\x3e\s*\{r\.subtitle\}\s*</.test(c)).map(([p]) => p);
-const ST_HOLE_PIN = 1;
+const ST_HOLE_PIN = 0;
 const ST_READER_PIN = 2;
 const ST_HOLE_PLANT = 'out.push({ type: "match", id: m.id, subtitle: other.status, to: x });';
-ok(`the family's ${stHoleSites.length} remaining position is the declared one, data/footballService.ts's search subtitle (pin ${ST_HOLE_PIN}: ${stHoleSites.join(", ") || "none"}), and it really is what a reader sees — ${stHoleReaders.length} module(s) render r.subtitle into a display slot (pin ${ST_READER_PIN}: ${stHoleReaders.join(", ") || "none"}) — while a second record code written the same way is caught (${stHoleIn(ST_HOLE_PLANT)})`,
-  stHoleSites.length === ST_HOLE_PIN && stHoleSites[0] === "data/footballService.ts x1" &&
-  stHoleReaders.length === ST_READER_PIN && stHoleIn(ST_HOLE_PLANT) === 1);
+const subRowReads = [...appSrc].filter(([, c]) => /rowLine\(\s*r\.subtitle\s*,\s*t\s*\)/.test(c)).map(([p]) => p);
+ok(`no search subtitle carries a bare record code (pin ${ST_HOLE_PIN}: ${stHoleSites.join(", ") || "none"}), no reader prints one raw (${stHoleReaders.join(", ") || "none bare"}), both readers resolve the row through rowLine (pin ${ST_READER_PIN}: ${[...subRowReads].sort().join(", ") || "none"}) — while the old shape is still caught (${stHoleIn(ST_HOLE_PLANT)})`,
+  stHoleSites.length === ST_HOLE_PIN && stHoleReaders.length === 0
+    && [...subRowReads].sort().join(",") === "features/command/CommandPalette.tsx,features/football/FootballWorld.tsx"
+    && stHoleIn(ST_HOLE_PLANT) === 1);
+
+// ─── 40 · the fourth family of the class M249 closed (M259) ─────────────────────
+// A preferred foot is two codes, "L" and "R", and they reached the glass three ways at
+// once: the byline printed `{p.foot}F` (an English initial with an English noun after it),
+// the profile table printed the bare letter, and the scout sentence interpolated `L / R`
+// into a translated sentence as a variable — plus a fourth through the back door,
+// `ai.fact.player` writing `{foot} foot` / `{foot} 脚` around the var, which is why the
+// word here is the bare side and the sentence supplies the noun. Predictions written
+// before the first run: 2 files / 4 positions through one composer, every .foot read in
+// a component inside footLabel(, the type and the runtime list carrying the same 2 codes,
+// exactly 1 module naming a foot.* key, 6/6 readings differing from the code, the
+// unknown-code fallback, and the intelligence row through the CODE_VARS door.
+const FT_WIRING = [
+  ["features/football/Details.tsx", "footLabel(p.foot, t)", 2],
+  ["features/scouting/ScoutingPanel.tsx", "footLabel(a.foot, t)", 1],
+  ["features/scouting/ScoutingPanel.tsx", "footLabel(b.foot, t)", 1],
+];
+const FT_FILES_PIN = 2;
+const FT_POSITIONS_PIN = 4;
+const FT_IMPORT = /^import \{[^}]*\bfootLabel\b[^}]*\} from "@\/domain\/rowText"/m;
+const ftFiles = [...new Set(FT_WIRING.map(([p]) => p))];
+const ftSrc = new Map(ftFiles.map((p) => [p, appSrc.get(p) ?? ""]));
+const ftCallsIn = (p, needle) => ftSrc.get(p).split(needle).length - 1;
+const ftBad = FT_WIRING.filter(([p, expr, n]) => ftCallsIn(p, expr) !== n)
+  .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${ftCallsIn(p, expr)}`);
+const ftPositions = FT_WIRING.reduce((s, [, , n]) => s + n, 0);
+ok(`the ${ftFiles.length} screens that show a preferred foot read it through the shared composer at all ${ftPositions} position(s) (pins ${FT_FILES_PIN} files/${FT_POSITIONS_PIN} positions), and each imports it from domain/rowText (${ftBad.join(" | ") || "none"})`,
+  ftBad.length === 0 && ftFiles.length === FT_FILES_PIN && ftPositions === FT_POSITIONS_PIN &&
+  ftFiles.every((p) => FT_IMPORT.test(ftSrc.get(p))));
+// The two producers of one two-value space, compared to each other: the union's runtime
+// list (what the composer looks up) against the same file's type-level union (what the
+// record field is typed against). There is no third producer — no screen keeps its own
+// array — so the pair is the whole space, and each side is pinned at 2 because a
+// sorted-equality over two empty lists would pass.
+const FT_CODES = spaceOf("domain/types.ts", /export type Foot = [^;]+;/, quoted);
+const FT_LIST = spaceOf("domain/types.ts", /export const FOOTS[^=]*=[^\]]*\]/, quoted);
+ok(`the foot union's runtime list and its type carry the same codes (${FT_LIST.join(",")} vs ${FT_CODES.join(",")})`,
+  FT_CODES.length === 2 && FT_LIST.length === 2 && [...FT_CODES].sort().join() === [...FT_LIST].sort().join());
+// Every .foot read in a component goes through the composer — the seed's write is a .ts
+// file and the intelligence row rides the vars door below, so a component is the only
+// place a bare code can reach the glass. Two things the extractor has to get right, both
+// learned from its first red run: the receiver sits between the composer and the property
+// (`footLabel(p.foot, …)` — looking for `footLabel(` immediately before the dot misses
+// every real site), and a dictionary key is not a read (`t("fw.foot")` names the label,
+// so quoted strings are masked before matching; backticks stay readable so an
+// interpolation can never hide a bare read inside a string). The plant walks the same
+// extractor both ways: a bare display read is caught, and the resolved shape is clean.
+const maskQuoted = (code) => code.replace(/"([^"\\]|\\.)*"|'([^'\\]|\\.)*'/g, (m) => " ".repeat(m.length));
+const ftBareIn = (code) => {
+  const masked = maskQuoted(code);
+  return [...masked.matchAll(/\.foot\b/g)]
+    .filter((m) => !/footLabel\(\s*[A-Za-z_$][\w$]*$/.test(masked.slice(Math.max(0, m.index - 32), m.index))).length;
+};
+const ftBare = [...appSrc].filter(([p]) => p.endsWith(".tsx")).map(([p, c]) => [p, ftBareIn(c)]).filter(([, n]) => n > 0);
+const FT_PLANT_BARE = "<span>{p.foot}</span>";
+const plantFtBare = ftBareIn(FT_PLANT_BARE) === 1 && ftBareIn("{footLabel(p.foot, t)}") === 0;
+ok(`no component prints a stored foot straight into a display slot (${ftBare.map(([p, n]) => `${p} x${n}`).join(", ") || "none"} of ${appSrc.size}), while the planted bare read is caught and the resolved shape is clean (${plantFtBare})`,
+  ftBare.length === 0 && plantFtBare);
+// One spelling of the word, counted rather than trusted: exactly one module names a
+// foot.* key and it is the composer, not a screen — the dictionary's bare sides live in
+// exactly two literals, so a screen that starts quoting them is a second spelling.
+const ftQuotedIn = (code) => [...code.matchAll(/["']foot\.(left|right)["']/g)].length;
+const ftComposers = [...appSrc].filter(([, c]) => ftQuotedIn(c) > 0).map(([p, c]) => `${p} x${ftQuotedIn(c)}`);
+const FT_PLANT_QUOTE = 'const w = (f: string) => t("foot.left");';
+ok(`exactly 1 module names a foot.* key and it is the composer, not a screen (${ftComposers.join(", ") || "none"}), while a screen that starts quoting one is caught (${ftQuotedIn(FT_PLANT_QUOTE)}), and the loaded composer is the module that declares footLabel (${rtDeclared.includes("footLabel")})`,
+  ftComposers.length === 1 && ftComposers[0] === "domain/rowText.ts x2" &&
+  ftQuotedIn(FT_PLANT_QUOTE) === 1 && rtDeclared.includes("footLabel") && typeof rowTextModule.footLabel === "function");
+// The behavioural half, through the shipped door, in both codes and all locales — pinned
+// by how many readings are NOT the code, so a composer that fell through to its
+// unknown-code branch everywhere could not pass. Both codes are single letters and every
+// locale writes them in its own word, so unlike M249's 11/15 every reading differs here.
+const ftReadBad = [];
+let ftDiffer = 0;
+const FT_DIFFER_PIN = 6;
+for (const { id } of L) {
+  for (const code of FT_LIST) {
+    const shown = rowTextModule.footLabel(code, tReader(id));
+    const want = D[id][code === "L" ? "foot.left" : "foot.right"];
+    if (shown.startsWith("foot.")) ftReadBad.push(`${id}: ${code} prints the key`);
+    else if (shown !== want) ftReadBad.push(`${id}: ${code} prints “${shown}” while the dictionary says “${want}”`);
+    else if (shown !== code) ftDiffer++;
+  }
+}
+ok(`the shipped footLabel answers both preferred feet in all ${L.length} locales with the dictionary's own word and never a key (${ftReadBad.join(" | ") || "no bad reading"}), and ${ftDiffer}/${FT_LIST.length * L.length} of those readings are not the code already spelled (pin ${FT_DIFFER_PIN})`,
+  ftReadBad.length === 0 && ftDiffer === FT_DIFFER_PIN);
+ok(`and the same fallback is still the last resort for a foot outside the union (${rowTextModule.footLabel("Planted", tReader("en"))})`,
+  rowTextModule.footLabel("Planted", tReader("en")) === "Planted");
+// The back door, now a front door: the intelligence fact has always carried the foot as a
+// row var, and its sentence already nouns it — so opening the CODE_VARS door for `foot`
+// converts that var in every locale with no producer edit. The clause pins the one shipped
+// row, renders the fact with a left foot in all three locales against the dictionary's own
+// word, and tells a foot-carrying vars body from a clean one through the same detector.
+const FT_ROW_SITES = [...appSrc].filter(([, c]) => /vars:\s*\{[^}]*\bfoot:/.test(c)).map(([p]) => p);
+const FT_FACT_VARS = { name: "X", position: "CM", age: 24, nation: "England", club: "Arsenal", overall: 87, potential: 90, value: "€50M", foot: "L" };
+const ftFactBad = [];
+for (const { id } of L) {
+  const shown = rowTextModule.rowLine({ key: "ai.fact.player", vars: FT_FACT_VARS }, tReader(id));
+  if (shown === undefined || /[{}]/.test(shown)) ftFactBad.push(`${id} leaves braces: ${shown}`);
+  else if (!shown.includes(D[id]["foot.left"])) ftFactBad.push(`${id} never words the foot: ${shown}`);
+}
+const FT_ROW_PLANT = 'add({ key: "ai.fact.player", vars: { name: n, foot: f } });';
+const plantFtRow = /vars:\s*\{[^}]*\bfoot:/.test(FT_ROW_PLANT) && !/vars:\s*\{[^}]*\bfoot:/.test('add({ key: "ai.fact.player", vars: { name: n } });');
+ok(`the ${FT_ROW_SITES.length} shipped row(s) carrying a preferred foot go through the CODE_VARS door (door open: ${rowTextModule.isCodeVar("foot")}; ${FT_ROW_SITES.join(", ") || "none"}), the intelligence fact renders the word in all ${L.length} locales (${ftFactBad.join(" | ") || "clean"}), and the detector tells a foot-carrying vars body from a clean one (${plantFtRow})`,
+  FT_ROW_SITES.length === 1 && FT_ROW_SITES[0] === "data/intelligence.ts" && rowTextModule.isCodeVar("foot")
+    && ftFactBad.length === 0 && plantFtRow);
+
+// ─── 41 · the fifth family of the class M249 closed (M260) ─────────────────────
+// A scout filter bucket is five codes, ALL/GK/DEF/MID/ATT, and the filter chips printed
+// them raw. M260 called the chip "the only display position in the tree; every other use
+// is order, identity or comparison and stays a code" — that was the chip loop's own
+// reading, and it was wrong by two: the squad-profile heading and the best-value pick
+// badge (both in the same file) also print a bucket code into a label slot, named by a
+// different variable than the loop clause read. This section now charges all three, so a
+// fourth display position cannot pass under the one the loop sees. Predictions written
+// before the first run: 1 file / 3 positions through one composer, the type and the
+// switch carrying the same 5 codes, exactly 1 module naming a scout.bucket.* key, 15/15
+// readings differing from the code, and the unknown-code fallback. The composer is a
+// switch of static literals rather than a codeWord branch on purpose — no row will ever
+// carry a bucket, so there is no door to open, and every key it can name stays a literal
+// the t()-shape census reads as one (literal pin moves 1263 → 1268 here, nothing else).
+const BK_WIRING = [
+  ["features/scouting/ScoutingPanel.tsx", "bucketLabel(b, t)", 1],
+  ["features/scouting/ScoutingPanel.tsx", "bucketLabel(r.bucket, t)", 1],
+  ["features/scouting/ScoutingPanel.tsx", "bucketLabel(p.b, t)", 1],
+];
+const BK_FILES_PIN = 1;
+const BK_POSITIONS_PIN = 3;
+const BK_IMPORT = /^import \{[^}]*\bbucketLabel\b[^}]*\} from "@\/domain\/rowText"/m;
+const bkFiles = [...new Set(BK_WIRING.map(([p]) => p))];
+const bkSrc = new Map(bkFiles.map((p) => [p, appSrc.get(p) ?? ""]));
+const bkCallsIn = (p, needle) => bkSrc.get(p).split(needle).length - 1;
+const bkBad = BK_WIRING.filter(([p, expr, n]) => bkCallsIn(p, expr) !== n)
+  .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${bkCallsIn(p, expr)}`);
+const bkPositions = BK_WIRING.reduce((s, [, , n]) => s + n, 0);
+ok(`the ${bkFiles.length} screen that shows a bucket word reads it through the shared composer at all ${bkPositions} position(s) (pins ${BK_FILES_PIN} files/${BK_POSITIONS_PIN} positions), and each imports it from domain/rowText (${bkBad.join(" | ") || "none"})`,
+  bkBad.length === 0 && bkFiles.length === BK_FILES_PIN && bkPositions === BK_POSITIONS_PIN &&
+  bkFiles.every((p) => BK_IMPORT.test(bkSrc.get(p))));
+// The chip is the loop-variable case for the fourth time: `{b}` is legitimate wherever `b`
+// is already a word, so the charge is read out of the loop the file declares — which keeps
+// React's key, the selection test and the setter call as the identities they are — and no
+// screen anywhere types one of the five codes as a text node.
+const BK_CHIP_LOOP = /BUCKETS\.map\(\(b\) =>[\s\S]*?<\/button>/;
+const bkChipOf = (code) => code.match(BK_CHIP_LOOP)?.[0] ?? "";
+const bkChip = bkChipOf(appSrc.get("features/scouting/ScoutingPanel.tsx") ?? "");
+const BK_CHIP_PLANT = 'BUCKETS.map((b) => (\n  <button key={b}>{b}</button>\n))';
+const bkWords = ["ALL", "GK", "DEF", "MID", "ATT"].map((c) => `>${c}<`);
+const bkTyped = [...appSrc].filter(([, code]) => bkWords.some((w) => code.includes(w))).map(([p]) => p);
+ok(`the scout filter loop hands its chip to the composer, not to the code (${bkChip.length} chars read, bare ${/>\s*\{b\}/.test(bkChip)}), keeping key={b}, bucket === b and setBucket(b) as the identities they are (${["key={b}", "bucket === b", "setBucket(b)"].every((k) => bkChip.includes(k))}), no module types one of the five codes as a text node (${bkTyped.join(", ") || "none"}), and the same extractor reports the planted loop (${bkChipOf(BK_CHIP_PLANT).length} chars, bare ${/>\s*\{b\}/.test(bkChipOf(BK_CHIP_PLANT))})`,
+  bkChip.length > 0 && !/>\s*\{b\}/.test(bkChip) && ["key={b}", "bucket === b", "setBucket(b)"].every((k) => bkChip.includes(k)) &&
+  bkTyped.length === 0 && bkChipOf(BK_CHIP_PLANT).length > 0 && />\s*\{b\}/.test(bkChipOf(BK_CHIP_PLANT)));
+// The two collected-value positions the chip loop's own variable read never reached: the
+// squad-profile heading and the best-value pick badge print a bucket code into a label
+// slot, but the value arrives under a different name (`r.bucket`, `p.b`) than the loop's
+// own `b` the clause above reads. The chip is read out of its loop, so these are read by
+// name — a bare `.bucket` member or a bare `{p.b}` in a display slot reddens here even
+// though the wiring table pins the resolved shapes. The plant carries both old shapes, and
+// a site already inside bucketLabel( is not a code on the glass.
+const bkBareIn = (code) => {
+  let n = 0;
+  for (const m of code.matchAll(/\x3e\s*\{([^{}]*\.bucket[^{}]*)\}\s*\x3c/g)) {
+    if (!/\bbucketLabel\s*\(/.test(m[1])) n++;
+  }
+  n += (code.match(/\x3e\s*\{p\.b\}\s*\x3c/g) ?? []).length;
+  return n;
+};
+const bkBare = [...appSrc].map(([p, c]) => [p, bkBareIn(c)]).filter(([, n]) => n > 0);
+const BK_PLANT_BARE = '<span className="font-medium">{r.bucket}</span><Badge variant="outline">{p.b}</Badge>';
+ok(`no module prints a stored bucket straight into a display slot beyond the chip the loop clause reads and no screen types one of the five codes as a text node (${bkBare.map(([p, n]) => `${p} x${n}`).join(", ") || "none"} of ${appSrc.size}), while the planted pair is caught (${bkBareIn(BK_PLANT_BARE)}) and the resolved shapes are clean (${bkBareIn("<span>{bucketLabel(r.bucket, t)}</span>")} + ${bkBareIn("<Badge>{bucketLabel(p.b, t)}</Badge>")})`,
+  bkBare.length === 0 && bkBareIn(BK_PLANT_BARE) === 2 && bkBareIn("<span>{bucketLabel(r.bucket, t)}</span>") === 0 && bkBareIn("<Badge>{bucketLabel(p.b, t)}</Badge>") === 0);
+ 
+// The two producers of one five-value space, compared to each other: the union's type in
+// the scouting module against the composer's switch cases. Each side is pinned at 5, and
+// the plant feeds the extractor a two-case switch, so a dropped case reddens the pin
+// rather than sliding a floor.
+const BK_CODES = spaceOf("domain/scouting.ts", /export type PosBucket = [^;]+;/, quoted);
+const bkCasesOf = (src) => [...src.matchAll(/case "(ALL|GK|DEF|MID|ATT)":/g)].map((m) => m[1]);
+const bkCases = bkCasesOf(appSrc.get("domain/rowText.ts") ?? "");
+const BK_PLANT_CASES = 'switch (x) {\n    case "ALL": return t("a");\n    case "GK": return t("b");\n}';
+ok(`the bucket union's type and the composer's switch carry the same codes (${BK_CODES.join(",")} vs ${[...bkCases].sort().join(",")}; planted two-case switch reads ${bkCasesOf(BK_PLANT_CASES).length})`,
+  BK_CODES.length === 5 && bkCases.length === 5 && [...BK_CODES].sort().join() === [...bkCases].sort().join()
+    && bkCasesOf(BK_PLANT_CASES).length === 2);
+// One spelling of the word, counted rather than trusted: exactly one module names a
+// scout.bucket.* key and it is the composer, not a screen.
+const bkQuotedIn = (code) => [...code.matchAll(/["']scout\.bucket\.(all|gk|def|mid|att)["']/g)].length;
+const bkComposers = [...appSrc].filter(([, c]) => bkQuotedIn(c) > 0).map(([p, c]) => `${p} x${bkQuotedIn(c)}`);
+const BK_PLANT_QUOTE = 'const w = (b: string) => t("scout.bucket.gk");';
+ok(`exactly 1 module names a scout.bucket.* key and it is the composer, not a screen (${bkComposers.join(", ") || "none"}), while a screen that starts quoting one is caught (${bkQuotedIn(BK_PLANT_QUOTE)}), and the loaded composer is the module that declares bucketLabel (${rtDeclared.includes("bucketLabel")})`,
+  bkComposers.length === 1 && bkComposers[0] === "domain/rowText.ts x5" &&
+  bkQuotedIn(BK_PLANT_QUOTE) === 1 && rtDeclared.includes("bucketLabel") && typeof rowTextModule.bucketLabel === "function");
+// The behavioural half, through the shipped door, in all five codes and all locales —
+// pinned by how many readings are NOT the code, so a composer that fell through to its
+// unknown-code branch everywhere could not pass. ALL-vs-All differs by case alone, which
+// is exactly why the pin counts rather than eyeballs.
+const bkReadBad = [];
+let bkDiffer = 0;
+const BK_DIFFER_PIN = 15;
+for (const { id } of L) {
+  for (const code of BK_CODES) {
+    const shown = rowTextModule.bucketLabel(code, tReader(id));
+    const want = D[id][`scout.bucket.${code.toLowerCase()}`];
+    if (shown.startsWith("scout.bucket.")) bkReadBad.push(`${id}: ${code} prints the key`);
+    else if (shown !== want) bkReadBad.push(`${id}: ${code} prints “${shown}” while the dictionary says “${want}”`);
+    else if (shown !== code) bkDiffer++;
+  }
+}
+ok(`the shipped bucketLabel answers all ${BK_CODES.length} filter buckets in all ${L.length} locales with the dictionary's own word and never a key (${bkReadBad.join(" | ") || "no bad reading"}), and ${bkDiffer}/${BK_CODES.length * L.length} of those readings are not the code already spelled (pin ${BK_DIFFER_PIN})`,
+  bkReadBad.length === 0 && bkDiffer === BK_DIFFER_PIN);
+ok(`and the same fallback is still the last resort for a bucket outside the union (${rowTextModule.bucketLabel("Planted", tReader("en"))})`,
+  rowTextModule.bucketLabel("Planted", tReader("en")) === "Planted");
+
+// ─── 42 · the sixth family of the class M249 closed (M261) ─────────────────────
+// A drill's session phase is five codes — warmup/technique/decision/game/cooldown — and
+// the session screen tagged each exercise with its code, upper-cased by CSS so every
+// locale shouted English. The only display position in the tree; filters and comparisons
+// elsewhere stay codes (the career arc's trajectory phases are a different family that
+// never reaches a display slot, and a display that ever does will red the census below
+// and force the choice consciously). Predictions written before the first run: 1 file /
+// 1 position through one composer, the type and the switch carrying the same 5 codes,
+// exactly 1 module naming a training.phase.* key, 15/15 readings differing from the code,
+// and the unknown-code fallback. Like the bucket composer it is a switch of static
+// literals — no row will ever carry a phase — so the literal pin moves 1268 → 1273
+// here, nothing else.
+const PH_WIRING = [["features/player/PlayerOS.tsx", "phaseLabel(e.phase, t)", 1]];
+const PH_FILES_PIN = 1;
+const PH_POSITIONS_PIN = 1;
+const PH_IMPORT = /^import \{[^}]*\bphaseLabel\b[^}]*\} from "@\/domain\/rowText"/m;
+const phFiles = [...new Set(PH_WIRING.map(([p]) => p))];
+const phSrc = new Map(phFiles.map((p) => [p, appSrc.get(p) ?? ""]));
+const phCallsIn = (p, needle) => phSrc.get(p).split(needle).length - 1;
+const phBad = PH_WIRING.filter(([p, expr, n]) => phCallsIn(p, expr) !== n)
+  .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${phCallsIn(p, expr)}`);
+const phPositions = PH_WIRING.reduce((s, [, , n]) => s + n, 0);
+ok(`the ${phFiles.length} screen that tags a drill with its phase reads it through the shared composer at all ${phPositions} position(s) (pins ${PH_FILES_PIN} files/${PH_POSITIONS_PIN} positions), and each imports it from domain/rowText (${phBad.join(" | ") || "none"})`,
+  phBad.length === 0 && phFiles.length === PH_FILES_PIN && phPositions === PH_POSITIONS_PIN &&
+  phFiles.every((p) => PH_IMPORT.test(phSrc.get(p))));
+// No stored phase in a display slot, and no screen types one of the five codes as a text
+// node. A resolved site sits in a display slot too, so the slot match excludes anything
+// already inside phaseLabel( — the wiring clause above pins the resolved sites by name,
+// this one catches the shape going back to raw. The career arc's trajectory phases never
+// reach a slot, so a bare .phase here is a drill code by elimination; a trajectory
+// display would red this too, which is the point: two families sharing a field name
+// must not share an alibi.
+const phWords = ["warmup", "technique", "decision", "game", "cooldown"];
+const phBareIn = (code) => [...code.matchAll(/\x3e\s*\{([^{}]*\.phase[^{}]*)\}\s*</g)]
+  .filter((m) => !/\bphaseLabel\s*\(/.test(m[1])).length
+  + phWords.filter((w) => code.includes(`>${w}<`)).length;
+const phBare = [...appSrc].map(([p, c]) => [p, phBareIn(c)]).filter(([, n]) => n > 0);
+const PH_PLANT_BARE = "<span>{e.phase}</span><b>game</b>";
+const plantPhBare = phBareIn(PH_PLANT_BARE) === 2 && phBareIn("{phaseLabel(e.phase, t)}") === 0;
+ok(`no module prints a stored drill phase straight into a display slot and no screen types one of the five codes as a text node (${phBare.map(([p, n]) => `${p} x${n}`).join(", ") || "none"} of ${appSrc.size}), while the planted pair is caught twice and the resolved shape is clean (${plantPhBare})`,
+  phBare.length === 0 && plantPhBare);
+// The two producers of one five-value space, compared to each other: the union's type in
+// the domain types module against the composer's switch cases. Each side is pinned at 5,
+// and the plant feeds the extractor a two-case switch, so a dropped case reddens the pin
+// rather than sliding a floor.
+const PH_CODES = spaceOf("domain/types.ts", /export type DrillPhase = [^;]+;/, quoted);
+const phCasesOf = (src) => [...src.matchAll(/case "(warmup|technique|decision|game|cooldown)":/g)].map((m) => m[1]);
+const phCases = phCasesOf(appSrc.get("domain/rowText.ts") ?? "");
+const PH_PLANT_CASES = 'switch (x) {\n    case "warmup": return t("a");\n    case "game": return t("b");\n}';
+ok(`the drill-phase union's type and the composer's switch carry the same codes (${PH_CODES.join(",")} vs ${[...phCases].sort().join(",")}; planted two-case switch reads ${phCasesOf(PH_PLANT_CASES).length})`,
+  PH_CODES.length === 5 && phCases.length === 5 && [...PH_CODES].sort().join() === [...phCases].sort().join()
+    && phCasesOf(PH_PLANT_CASES).length === 2);
+// One spelling of the word, counted rather than trusted: exactly one module names a
+// training.phase.* key and it is the composer, not a screen.
+const phQuotedIn = (code) => [...code.matchAll(/["']training\.phase\.(warmup|technique|decision|game|cooldown)["']/g)].length;
+const phComposers = [...appSrc].filter(([, c]) => phQuotedIn(c) > 0).map(([p, c]) => `${p} x${phQuotedIn(c)}`);
+const PH_PLANT_QUOTE = 'const w = (p: string) => t("training.phase.game");';
+ok(`exactly 1 module names a training.phase.* key and it is the composer, not a screen (${phComposers.join(", ") || "none"}), while a screen that starts quoting one is caught (${phQuotedIn(PH_PLANT_QUOTE)}), and the loaded composer is the module that declares phaseLabel (${rtDeclared.includes("phaseLabel")})`,
+  phComposers.length === 1 && phComposers[0] === "domain/rowText.ts x5" &&
+  phQuotedIn(PH_PLANT_QUOTE) === 1 && rtDeclared.includes("phaseLabel") && typeof rowTextModule.phaseLabel === "function");
+// The behavioural half, through the shipped door, in all five codes and all locales —
+// pinned by how many readings are NOT the code, so a composer that fell through to its
+// unknown-code branch everywhere could not pass.
+const phReadBad = [];
+let phDiffer = 0;
+const PH_DIFFER_PIN = 15;
+for (const { id } of L) {
+  for (const code of PH_CODES) {
+    const shown = rowTextModule.phaseLabel(code, tReader(id));
+    const want = D[id][`training.phase.${code}`];
+    if (shown.startsWith("training.phase.")) phReadBad.push(`${id}: ${code} prints the key`);
+    else if (shown !== want) phReadBad.push(`${id}: ${code} prints “${shown}” while the dictionary says “${want}”`);
+    else if (shown !== code) phDiffer++;
+  }
+}
+ok(`the shipped phaseLabel answers all ${PH_CODES.length} drill phases in all ${L.length} locales with the dictionary's own word and never a key (${phReadBad.join(" | ") || "no bad reading"}), and ${phDiffer}/${PH_CODES.length * L.length} of those readings are not the code already spelled (pin ${PH_DIFFER_PIN})`,
+  phReadBad.length === 0 && phDiffer === PH_DIFFER_PIN);
+ok(`and the same fallback is still the last resort for a phase outside the union (${rowTextModule.phaseLabel("Planted", tReader("en"))})`,
+  rowTextModule.phaseLabel("Planted", tReader("en")) === "Planted");
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 

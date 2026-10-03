@@ -542,7 +542,7 @@ function SearchPage() {
               {items.map((r) => (
                 <EntityLink key={r.type + r.id} to={r.to}>
                   <div className="text-sm font-medium">{r.title}</div>
-                  <div className="truncate text-xs text-muted-foreground">{r.subtitle}</div>
+                  <div className="truncate text-xs text-muted-foreground">{rowLine(r.subtitle, t)}</div>
                 </EntityLink>
               ))}
             </div>

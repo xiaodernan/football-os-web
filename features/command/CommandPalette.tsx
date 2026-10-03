@@ -14,6 +14,7 @@ import { useI18n } from "@/i18n";
 import { useTheme } from "@/lib/theme";
 import { useOs } from "@/store/useFootballOS";
 import { globalSearch } from "@/data/footballService";
+import { rowLine } from "@/domain/rowText";
 import { useDebounced } from "@/lib/hooks";
 
 interface ActionCmd {
@@ -136,7 +137,7 @@ export function CommandPalette() {
                   >
                     <span className="mr-2 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground">{r.type}</span>
                     <span className="font-medium">{r.title}</span>
-                    <span className="ml-auto truncate pl-3 text-xs text-muted-foreground">{r.subtitle}</span>
+                    <span className="ml-auto truncate pl-3 text-xs text-muted-foreground">{rowLine(r.subtitle, t)}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>

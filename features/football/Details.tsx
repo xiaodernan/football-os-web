@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
-import { matchStatusLabel, positionGroupLabel, rowLine } from "@/domain/rowText";
+import { footLabel, matchStatusLabel, positionGroupLabel, rowLine } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import {
   footballProvider,
@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-function EntityHeader({ title, subtitle, back, crest }: { title: string; subtitle?: ReactNode; back?: string; crest?: ReactNode }) {
+function EntityHeader({ title, sub, back, crest }: { title: string; sub?: ReactNode; back?: string; crest?: ReactNode }) {
   const { t } = useI18n();
   return (
     <div className="flex flex-wrap items-center gap-4">
@@ -45,7 +45,7 @@ function EntityHeader({ title, subtitle, back, crest }: { title: string; subtitl
           <h1 className="truncate text-2xl font-bold tracking-tight">{title}</h1>
           {DEMO_MODE && <DemoBadge />}
         </div>
-        {subtitle && <div className="mt-0.5 text-sm text-muted-foreground">{subtitle}</div>}
+        {sub && <div className="mt-0.5 text-sm text-muted-foreground">{sub}</div>}
       </div>
     </div>
   );
@@ -98,7 +98,7 @@ export function PlayerDetail({ id }: { id: string }) {
         title={p.name}
         back="/players"
         crest={<div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary/15 text-2xl" style={{ boxShadow: `inset 0 0 0 2px ${club?.colors[0] ?? "#333"}` }}>{p.name[0]}</div>}
-        subtitle={<span>{p.position} · <Link to={`/clubs/${club?.id}`} className="hover:text-primary">{club?.name}</Link> · {p.nation} · {p.age}y · {p.foot}F</span>}
+        sub={<span>{p.position} · <Link to={`/clubs/${club?.id}`} className="hover:text-primary">{club?.name}</Link> · {p.nation} · {p.age}y · {footLabel(p.foot, t)}</span>}
       />
 
       <div className="flex gap-2">
@@ -121,7 +121,7 @@ export function PlayerDetail({ id }: { id: string }) {
             <dt className="text-muted-foreground">{t("fw.pgroup")}</dt><dd className="text-right font-mono">{positionGroupLabel(p.positionGroup, t)}</dd>
             <dt className="text-muted-foreground">{t("common.age")}</dt><dd className="text-right font-mono">{p.age}</dd>
             <dt className="text-muted-foreground">{t("common.nation")}</dt><dd className="text-right">{p.nation}</dd>
-            <dt className="text-muted-foreground">{t("fw.foot")}</dt><dd className="text-right font-mono">{p.foot}</dd>
+            <dt className="text-muted-foreground">{t("fw.foot")}</dt><dd className="text-right font-mono">{footLabel(p.foot, t)}</dd>
             <dt className="text-muted-foreground">{t("common.club")}</dt><dd className="text-right"><Link to={`/clubs/${club?.id}`} className="hover:text-primary">{club?.name}</Link></dd>
             <dt className="text-muted-foreground">{t("fw.ovrPot")}</dt><dd className="text-right font-mono">{p.overall} / {p.potential}</dd>
           </dl>
@@ -350,7 +350,7 @@ export function ClubDetail({ id }: { id: string }) {
         title={c.name}
         back="/clubs"
         crest={<Crest colors={c.colors} short={c.short} size={64} />}
-        subtitle={<span>{c.nation} · <Link to={`/competitions/${c.competitionId}`} className="hover:text-primary">{comp?.name}</Link> · {c.stadium}</span>}
+        sub={<span>{c.nation} · <Link to={`/competitions/${c.competitionId}`} className="hover:text-primary">{comp?.name}</Link> · {c.stadium}</span>}
       />
       <div className="flex gap-2">
         <FavoriteButton kind="club" id={id} />
@@ -538,7 +538,7 @@ export function MatchDetail({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
-      <EntityHeader title={`${home.name} v ${away.name}`} back="/matches" subtitle={<span>{comp?.name} · {t("det.round")} {m.round} · {m.status === "SCHEDULED" ? fmtDateTime(locale, m.kickoff) : matchStatusLabel(m.status, t)}</span>} />
+      <EntityHeader title={`${home.name} v ${away.name}`} back="/matches" sub={<span>{comp?.name} · {t("det.round")} {m.round} · {m.status === "SCHEDULED" ? fmtDateTime(locale, m.kickoff) : matchStatusLabel(m.status, t)}</span>} />
 
       <Panel className="p-5">
         <div className="grid grid-cols-3 items-center gap-2">

@@ -11,7 +11,7 @@
 import { ATTRIBUTE_KEYS, CATEGORIES, POSITION_GROUPS } from "./attributes";
 import { ARCHETYPE_KEYS } from "./playerDna";
 import { TRAJECTORIES } from "./careerArc";
-import { MATCH_STATUSES, MODES, NEWS_KINDS, RECORD_FEELS, SEARCH_KINDS, SHOT_TYPES } from "./types";
+import { MATCH_STATUSES, MODES, NEWS_KINDS, RECORD_FEELS, SEARCH_KINDS, SHOT_TYPES, FOOTS } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 // A variable normally holds a word or a number, but one row may also carry another whole
@@ -46,7 +46,13 @@ export type Translate = (key: string, vars?: Record<string, string | number>) =>
 // lists the coach's diagnosis and its continuity line name: before M230 the coach handed those
 // rows the English *label* of each key, so a 简体中文 reader read "Ball Control, Weak Foot" inside a
 // Chinese sentence, and the row contract could not put it back — the value was already a word.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "foci", "arch", "arch2", "kind", "stance", "feels", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr"];
+// `status` is one fixture status the global search names in a result subtitle (M257): the
+// subtitle leaves the data layer as a row, so the door that words it is this list, through
+// `matchStatusLabel`'s lookup, and the reader's column decides the language. `foot` is one
+// preferred foot (M259): the player byline, the profile table, the scout sentence and the
+// intelligence fact all name it, three as words and one as a var the sentence already
+// nouns — so the door words the bare side and every reading shares one lookup.
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "foci", "arch", "arch2", "kind", "stance", "feels", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr", "status", "foot"];
 
 function codeWord(code: string, t: Translate): string {
   // Two variables hold a LIST, and the shape of an item tells them apart. `focus` is a plain
@@ -73,6 +79,7 @@ function codeWord(code: string, t: Translate): string {
   if ((SEARCH_KINDS as readonly string[]).includes(code)) return t(`ai.legend.${code}`);
   if ((NEWS_KINDS as readonly string[]).includes(code)) return t(`ni.kind.${code.toLowerCase()}`);
   if ((MATCH_STATUSES as readonly string[]).includes(code)) return t(`fw.status.${code.toLowerCase()}`);
+  if ((FOOTS as readonly string[]).includes(code)) return t(code === "L" ? "foot.left" : "foot.right");
   if ((RECORD_FEELS as readonly string[]).includes(code)) return t(`comm.feels.${code}`);
   if ((TRAJECTORIES as readonly string[]).includes(code)) return t(`det.arc.${code}`);
   if ((CATEGORIES as readonly string[]).includes(code)) return t(`attr.${code}`);
@@ -117,6 +124,51 @@ export const positionGroupLabel = (group: string, t: Translate): string => codeW
  *  here both ask this module. The three codes come out of `MATCH_STATUSES`, the union's own
  *  runtime list, so a fourth status is a missing key rather than a code on screen. */
 export const matchStatusLabel = (status: string, t: Translate): string => codeWord(status, t);
+
+/** The word for a player's preferred foot — `L` on the model, 「左」 to a reader in 简体中文.
+ *  The fourth family of the class M249 charged: the code reached the glass three ways at once
+ *  (a byline initial with an English `F` after it, a bare letter in the profile table, and a
+ *  `L / R` string handed to a translated sentence as a variable), plus a fourth through the
+ *  back door — `ai.fact.player` already writes `{foot} foot` / `{foot} 脚` around the var, so
+ *  the word here is the bare side and the sentence supplies the noun. From here every one of
+ *  those asks this module, and the two codes come out of `FOOTS`, the union's own runtime
+ *  list, so a third foot is a missing key rather than a letter on screen. */
+export const footLabel = (foot: string, t: Translate): string => codeWord(foot, t);
+
+/** The word for a scout filter bucket — `DEF` on the model, 「后卫」 to a reader in 简体中文.
+ *  The fifth family of the class M249 charged: the filter chips printed the codes raw, the
+ *  only display position in the tree. It is a switch of static literals rather than a
+ *  codeWord branch on purpose — no row will ever carry a bucket, so there is no door to
+ *  open, and every key the composer can name stays a literal the t()-shape census reads
+ *  as one. The five cases are pinned against `PosBucket` by the gate, so a sixth bucket
+ *  is a missing case rather than a code on a chip. */
+export const bucketLabel = (bucket: string, t: Translate): string => {
+  switch (bucket) {
+    case "ALL": return t("scout.bucket.all");
+    case "GK": return t("scout.bucket.gk");
+    case "DEF": return t("scout.bucket.def");
+    case "MID": return t("scout.bucket.mid");
+    case "ATT": return t("scout.bucket.att");
+    default: return bucket;
+  }
+};
+/** The word for a drill's session phase — `technique` on the model, 「技术」 to a reader in
+ *  简体中文. The sixth family of the class M249 charged: the session screen tagged each
+ *  exercise with its phase code (upper-cased by CSS, so every locale shouted English), the
+ *  only display position in the tree — filters and comparisons elsewhere stay codes. Like
+ *  the bucket composer it is a switch of static literals rather than a codeWord branch:
+ *  no row will ever carry a phase, so there is no door to open, and every key stays a
+ *  literal the t()-shape census reads as one. */
+export const phaseLabel = (phase: string, t: Translate): string => {
+  switch (phase) {
+    case "warmup": return t("training.phase.warmup");
+    case "technique": return t("training.phase.technique");
+    case "decision": return t("training.phase.decision");
+    case "game": return t("training.phase.game");
+    case "cooldown": return t("training.phase.cooldown");
+    default: return phase;
+  }
+};
 
 export function isCodeVar(name: string): boolean {
   return CODE_VARS.includes(name);

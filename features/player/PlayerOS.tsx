@@ -17,7 +17,7 @@ import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { FIXTURES_KEY } from "@/domain/localData";
 import { goalProgressPct, isValidGoalTarget } from "@/domain/goals";
-import { ageGroupLabel, goalLabel, rowLine } from "@/domain/rowText";
+import { ageGroupLabel, goalLabel, phaseLabel, rowLine } from "@/domain/rowText";
 import { getClub, getPlayer } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, Crest } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
@@ -293,7 +293,7 @@ function Coach() {
               <div className="mt-2 space-y-1.5">
                 {plan.session.exercises.map((e, i) => (
                   <div key={i} className="flex items-center justify-between rounded-md border bg-card/30 px-3 py-1.5 text-sm">
-                    <span><span className="mr-2 font-mono text-[10px] uppercase text-muted-foreground">{e.phase}</span>{t(`drill.${e.key}`)}</span>
+                    <span><span className="mr-2 font-mono text-[10px] text-muted-foreground">{phaseLabel(e.phase, t)}</span>{t(`drill.${e.key}`)}</span>
                     <span className="font-mono text-xs text-muted-foreground">{e.minutes}′</span>
                   </div>
                 ))}

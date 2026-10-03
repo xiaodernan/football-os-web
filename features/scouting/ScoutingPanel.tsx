@@ -16,6 +16,7 @@ import {
 import type { PlayerRef } from "@/domain/types";
 
 import { useI18n } from "@/i18n";
+import { bucketLabel, footLabel } from "@/domain/rowText";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +84,7 @@ export function ScoutingPanel() {
           <div className="mt-3 space-y-2">
             {profile.map((r) => (
               <div key={r.bucket}>
-                <div className="flex justify-between text-xs"><span className="font-medium">{r.bucket}</span><span className="text-muted-foreground">{t("scout.playersAvg", { count: r.count, avg: r.avg || "—" })}</span></div>
+                <div className="flex justify-between text-xs"><span className="font-medium">{bucketLabel(r.bucket, t)}</span><span className="text-muted-foreground">{t("scout.playersAvg", { count: r.count, avg: r.avg || "—" })}</span></div>
                 <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full rounded", r.count < 4 || r.avg < 74 ? "bg-warning" : "bg-success")} style={{ width: `${Math.min(100, (r.avg / 90) * 100)}%` }} /></div>
               </div>
             ))}
@@ -96,7 +97,7 @@ export function ScoutingPanel() {
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {picks.map((p) => (
               <div key={p.b} className="flex items-center gap-3 rounded-md border bg-card/40 px-3 py-2">
-                <Badge variant="outline" className="text-[10px]">{p.b}</Badge>
+                <Badge variant="outline" className="text-[10px]">{bucketLabel(p.b, t)}</Badge>
                 <div className="min-w-0 flex-1"><Link to={`/players/${p.player.id}`} className="truncate text-sm hover:text-primary hover:underline">{p.player.name}</Link><div className="text-[11px] text-muted-foreground">{p.clubName} · {t("scout.ovr")} {p.player.overall} · {formatValue(p.player.value)}</div></div>
                 <Button size="sm" variant={state.watchlist.includes(p.player.id) ? "secondary" : "outline"} onClick={() => toggleWatch(p.player.id)}>{state.watchlist.includes(p.player.id) ? "★" : "☆"}</Button>
               </div>
@@ -109,7 +110,7 @@ export function ScoutingPanel() {
         <SectionTitle title={t("scout.discover")} />
         <div className="flex flex-wrap items-center gap-2">
           {BUCKETS.map((b) => (
-            <button key={b} onClick={() => setBucket(b)} className={cn("rounded-md border px-2.5 py-1 text-xs", bucket === b ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{b}</button>
+            <button key={b} onClick={() => setBucket(b)} className={cn("rounded-md border px-2.5 py-1 text-xs", bucket === b ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{bucketLabel(b, t)}</button>
           ))}
           <span className="mx-1 h-4 w-px bg-border" />
           {SORTS.map((s) => (
@@ -223,7 +224,7 @@ function CompareView({ a, b }: { a: PlayerRef; b: PlayerRef }) {
           );
         })}
       </div>
-      <p className="mt-3 text-[11px] text-muted-foreground">{t("scout.groupNote", { same: bucketOf(a.positionGroup) === bucketOf(b.positionGroup) ? t("scout.yes") : t("scout.no"), feet: `${a.foot} / ${b.foot}` })}</p>
+      <p className="mt-3 text-[11px] text-muted-foreground">{t("scout.groupNote", { same: bucketOf(a.positionGroup) === bucketOf(b.positionGroup) ? t("scout.yes") : t("scout.no"), feet: `${footLabel(a.foot, t)} / ${footLabel(b.foot, t)}` })}</p>
     </div>
   );
 }
