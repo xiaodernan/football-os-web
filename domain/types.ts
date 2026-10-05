@@ -14,6 +14,14 @@ export const MODES: readonly Mode[] = ["FAN", "PLAYER", "MANAGER"];
 // both resolve a kind through `ai.legend.…`, and the i18n gate audits that space.
 export const SEARCH_KINDS = ["club", "player", "competition", "match", "news"] as const;
 
+// The same five names as a TYPE. Every carrier of a retrieval kind — a search result, a graph
+// node, the canvas's colour table, a section list — is typed against this rather than against a
+// hand-typed copy of the union, so the runtime list is the one fact and a sixth kind is a
+// compile error in every copy instead of an unnamed word in one of them (M265 found four copies
+// and a fifth list, and one chip on the glass printing the code because no copy said which
+// family it belonged to).
+export type SearchKind = (typeof SEARCH_KINDS)[number];
+
 // The article types a news story can carry. The impact panel prints this value twice in
 // two different shapes — as the certainty paragraph (`ni.stance.…`) and as the noun in its
 // evidence line (`ni.kind.…`) — so one list keeps the two from drifting, the same reason

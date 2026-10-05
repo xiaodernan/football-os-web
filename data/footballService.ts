@@ -1,6 +1,6 @@
 import { WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, type TeamMetrics } from "@/domain/analytics";
-import type { Club, Competition, Match, NewsArticle, PlayerRef, Standing } from "@/domain/types";
+import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
 import type { RowText } from "@/domain/rowText";
 
 // Data Provider Layer (spec §11): the UI never talks to the seed directly, so a
@@ -143,8 +143,12 @@ export const getNews = (id: string) => WORLD.news.find((n) => n.id === id);
 // composed in a module no component-side scan reads. A producer now has to say which half
 // is a key — proper nouns ride as plain vars, codes ride as CODE_VARS — and the two
 // readers resolve it through rowLine.
+// `type` is the same record's other half, and it stayed a hand-typed copy of the union while its
+// neighbour became a row: the palette chip printed it, so the field that names which family a
+// result belongs to was the one field whose family the glass could not read. It is `SearchKind`
+// now, and the chip asks the composer.
 export interface SearchResult {
-  type: "club" | "player" | "competition" | "match" | "news";
+  type: SearchKind;
   id: string;
   title: string;
   subtitle: RowText;

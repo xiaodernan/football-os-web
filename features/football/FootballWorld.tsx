@@ -15,7 +15,7 @@ import {
   globalSearch,
   DEMO_MODE,
 } from "@/data/footballService";
-import type { Club, Match, PlayerRef, Standing } from "@/domain/types";
+import type { Club, Match, PlayerRef, SearchKind, Standing } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -304,7 +304,10 @@ function CompetitionsList() {
 // until it moved out (the Landing page learned this at M164). The status buttons below
 // print the keyed word, so the codes never reach a visitor.
 const MATCH_STATUSES = ["LIVE", "SCHEDULED", "FINISHED"] as const;
-const SEARCH_TYPES = ["player", "club", "competition", "match", "news"] as const;
+// The search page's section order is its own (players before clubs), but which kinds exist is
+// not: this is a listing of SearchKind, so a kind that reaches the data layer appears here as a
+// compile error until the page gives it a heading — a heading the door words.
+const SEARCH_TYPES: readonly SearchKind[] = ["player", "club", "competition", "match", "news"];
 
 function MatchesList() {
   const { t } = useI18n();

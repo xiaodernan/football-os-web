@@ -496,10 +496,11 @@ const DYN_SITES = [
   { path: "ui/primitives.tsx", expr: "dna.primary.id", prefix: "dna.arch.", suffix: "" },
   { path: "ui/primitives.tsx", expr: "dna.secondary.id", prefix: "dna.arch.", suffix: "" },
   { path: "ui/primitives.tsx", expr: "dna.primary.id", prefix: "dna.blurb.", suffix: "" },
-  // M180: the graph's legend is derived from TYPE_COLOR, the one table that names every
-  // kind the canvas can draw, so a sixth kind cannot appear without a word for it. The
-  // value space below reads that table rather than restating it.
-  { path: "features/ai/AiStudio.tsx", expr: "kind", prefix: "ai.legend.", suffix: "" },
+  // M180: the graph's legend was derived from TYPE_COLOR, the one table naming every kind the
+  // canvas can draw, and keyed `ai.legend.…` at the screen. M265 folded that site onto the door
+  // — the legend now asks `searchKindLabel`, whose own branch is declared against
+  // `domain/rowText.ts` below — so the screen row is gone rather than re-pointed: a declaration
+  // for a call that no longer exists would be the stale kind check 16 reads as `stale`.
   // M217: the chip label is keyed off the same id the provider-side pair carries, so the screen
   // reads the reader's row and `data/ai.ts` sends the English row of that key.
   { path: "features/ai/AiStudio.tsx", expr: "a.id", prefix: "ai.sug.", suffix: "" },
@@ -687,7 +688,10 @@ const SPACES = new Map([
   }],
   ["fw.type.|type", {
     name: "search result types",
-    values: spaceOf("features/football/FootballWorld.tsx", /\["player"[^\]]*\] as const/, quoted),
+    // Read the whole statement, not one spelling of it: M265 put a `readonly SearchKind[]`
+    // annotation on this list, and an anchor that only matched `] as const` would have handed
+    // the space zero values and reported the five heading keys as unreachable.
+    values: spaceOf("features/football/FootballWorld.tsx", /const SEARCH_TYPES[^;]*;/, quoted),
   }],
   ["landing.pillars.|k", S_PILLAR],
   ["landing.pillarDesc.|k", S_PILLAR],
@@ -3775,7 +3779,7 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1281 && shapeCounts.template === 99 && shapeCounts.expression === 28
+  shapeCounts.literal === 1281 && shapeCounts.template === 98 && shapeCounts.expression === 28
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4693,8 +4697,11 @@ ok(`a switch-cases extractor reads the composer it names, not the file it lives 
 
   // The pool: every string array and every string-returning predicate exported by the
   // modules rowText.ts itself imports, so the census cannot be handed a list the shipped
-  // chain never consulted.
-  const cwImports = [...cwSrc.matchAll(/from "\.\/(\w+)"/g)].map((m) => m[1]);
+  // chain never consulted. Keyed by MODULE, not by import statement: a file may take a value
+  // and a type from the same module in two lines (M265's `SearchKind` is a second
+  // `from "./types"`), and registering that module twice would make every list it exports
+  // ambiguous and read as UNRESOLVED.
+  const cwImports = [...new Set([...cwSrc.matchAll(/from "\.\/(\w+)"/g)].map((m) => m[1]))];
   const cwPool = { lists: [], preds: [] };
   for (const mod of cwImports) {
     const m = await server.ssrLoadModule(`/domain/${mod}.ts`);
@@ -4764,6 +4771,202 @@ ok(`a switch-cases extractor reads the composer it names, not the file it lives 
     cwTotal === CW_MEMBER_PIN && cwMismatch.length === 0 && cwUnknown.seen.length === 0 && cwUnknown.out === "NO_SUCH_CODE_ANYWHERE");
   ok(`the ${cwTotal} codes are pairwise disjoint across the ${cwSpaces.length} spaces (${cwPairs} pairs, ${cwCollide.length} shared${cwCollide.length ? ": " + cwCollide.join(" | ") : ""}), and the same detector run on a planted table where a later branch re-claims one foot code names exactly that one shadowing and blames the earlier branch (${cwPlant.length ? cwPlant.join(" | ") : "plant read clean — the detector is blind"})`,
     cwBranches.length === CW_BRANCH_PIN && cwTotal === CW_MEMBER_PIN && cwCollide.length === 0 && cwPlant.length === 1 && /branch 1 answers for 2/.test(cwPlant[0]));
+}
+
+// ─── 45 · one retrieval kind, one type, one door, one word (M265) ─────────────────────
+// `club`, `player`, `competition`, `match`, `news` is the app's oldest value space: a search
+// result carries one, a knowledge-graph node carries one, the canvas colours one, and the search
+// page prints one section per kind. None of it reached a reader as a word. The five names had
+// been re-typed by hand in four places — SearchResult["type"], KgNode["type"], the canvas's
+// Record<KgNode["type"], string> colour table and the page's section list — so a sixth kind was a
+// compile error in none of them at once, while the command palette interpolated the stored code
+// ({r.type}) and the graph legend beside it built its own ai.legend.… key. One type now derives
+// from the runtime list, the door owns the key, and a composer words the kind THROUGH the door.
+//
+// What is charged is the drift those four copies made possible. Every negative here is bound to a
+// plant the SAME detector reads, and the detectors work by set relation rather than by name: a
+// hand copy is charged when a quoted union or an array literal holds EXACTLY the family, while a
+// favourite's three names and a news-impact role's two are a different space — printed, not
+// charged. Matching the five words forever would read clean through its own narrowing; charging
+// the subsets would charge working code, so the near-miss rows are named in the same sentence.
+{
+  const skRuntime = await server.ssrLoadModule("/domain/types.ts");
+  const SK = skRuntime.SEARCH_KINDS;
+  const SK_FILE = "domain/types.ts";
+  const skRowSrc = appSrc.get("domain/rowText.ts") ?? "";
+  const skSet = (xs) => xs.slice().sort().join("|");
+  const skNames = (text) => [...new Set([...text.matchAll(/"([^"]+)"/g)].map((m) => m[1]))];
+  const skInFamily = (xs) => xs.every((n) => SK.includes(n));
+
+  // A quoted union and an array literal of string literals, read structurally: one alternative
+  // then one or more `| "literal"`, one element then zero or more `, "literal"`. Nothing in the
+  // pattern names a kind, so the family can only be matched by holding the whole family.
+  const SK_UNION = /"[^"]*"(?:\s*\|\s*"[^"]*")+/g;
+  const SK_ARRAY = /\[\s*"[^"]*"(?:\s*,\s*"[^"]*")*\s*\]/g;
+  const skScan = (code) => {
+    const unions = [], arrays = [];
+    for (const m of code.matchAll(SK_UNION)) {
+      const members = skNames(m[0]);
+      if (members.length > 1 && skInFamily(members)) unions.push({ members, exact: skSet(members) === skSet(SK), at: m.index });
+    }
+    for (const m of code.matchAll(SK_ARRAY)) {
+      const members = skNames(m[0]);
+      if (members.length > 1 && skInFamily(members)) arrays.push({ members, exact: skSet(members) === skSet(SK), at: m.index });
+    }
+    return { unions, arrays };
+  };
+  const skUnions = [], skArrays = [];
+  for (const [path, code] of appSrc) {
+    const s = skScan(code);
+    for (const u of s.unions) skUnions.push({ ...u, path });
+    for (const a of s.arrays) skArrays.push({ ...a, path });
+  }
+  const skExactUnions = skUnions.filter((u) => u.exact);
+  const skExactArrays = skArrays.filter((a) => a.exact);
+  const skNear = skUnions.concat(skArrays).filter((x) => !x.exact);
+
+  // The text between a literal's line start and the literal itself is where an annotation lives.
+  // A list that names SearchKind is a LISTING (the search page's own display order); one that
+  // does not is a second definition of the family — unless it is the list the type derives from.
+  const skHead = (hit) => {
+    const code = appSrc.get(hit.path) ?? "";
+    return code.slice(code.lastIndexOf("\n", hit.at - 1) + 1, hit.at).trim();
+  };
+  const skBareCopies = skExactArrays
+    .filter((a) => a.path !== SK_FILE && !/SearchKind/.test(skHead(a)))
+    .concat(skExactUnions);
+
+  const skTypeDecl = ((appSrc.get(SK_FILE) ?? "").match(/export type SearchKind\s*=\s*[^;]+;/) || [""])[0];
+  const skDerived = /typeof\s+SEARCH_KINDS\s*\)\s*\[\s*number\s*\]/.test(skTypeDecl) && !/"club"/.test(skTypeDecl);
+
+  // The canvas's colour table, balanced-read out of the shipped file: its keys ARE the legend's
+  // rows, so the table holding exactly the family is what stops a kind drawing colourless.
+  const aiSrc = appSrc.get("features/ai/AiStudio.tsx") ?? "";
+  const skTableAt = aiSrc.indexOf("const TYPE_COLOR");
+  const skTableOpen = aiSrc.indexOf("{", skTableAt);
+  let skDepth = 0, skTableEnd = -1;
+  for (let i = skTableOpen; i >= 0 && i < aiSrc.length; i++) {
+    if (aiSrc[i] === "{") skDepth++;
+    else if (aiSrc[i] === "}" && --skDepth === 0) { skTableEnd = i; break; }
+  }
+  const skTableKeys = skTableEnd < 0 ? [] : [...aiSrc.slice(skTableOpen + 1, skTableEnd).matchAll(/^\s*(\w+):/gm)].map((m) => m[1]);
+  const skTableHead = skTableAt < 0 ? "" : aiSrc.slice(aiSrc.lastIndexOf("\n", skTableAt - 1) + 1, skTableOpen).trim();
+  const skLegendDerived = /Object\.keys\(\s*TYPE_COLOR\s*\)/.test(aiSrc);
+
+  const skPlant = skScan('type ShadowKind = "club" | "player" | "competition" | "match" | "news";\nconst SHADOW: readonly string[] = ["club", "player", "competition", "match", "news"];');
+  const skGhost = skScan('type Favours = "club" | "player" | "competition";\nconst STATUSES = ["LIVE", "SCHEDULED", "FINISHED"];');
+
+  ok(`the ${SK.length} retrieval kinds (${SK.join(", ")}) are typed once: SearchKind is ${skDerived ? "derived from (typeof SEARCH_KINDS)[number]" : 'RESTATED BY HAND (' + (skTypeDecl || "missing") + ")"}, the canvas's colour table holds ${skTableKeys.length} rows (${skTableKeys.join(",")}) declared ${skTableHead || "absent"} and the legend walks ${skLegendDerived ? "Object.keys(TYPE_COLOR)" : "a second list"}, ${skExactArrays.length} arrays write all ${SK.length} names (${skExactArrays.map((a) => `${a.path}: ${skHead(a) || "bare"}`).join(" | ")}) of which ${skBareCopies.length} define the family instead of naming it (${skBareCopies.map((b) => `${b.path}:${b.members.length}`).join(" | ") || "none"} — that is the four-copies test, because a carrier that restates the union is a carrier no sixth kind can reach), while ${skNear.length} near-miss subsets stay a different space (${skNear.map((n) => `${n.path}=${n.members.length}`).join(" ")}) and the same scan charges a planted union and a planted list (${skPlant.unions.length}/${skPlant.arrays.length} exact) yet never charges the subsets (${skGhost.unions.length} read, ${skGhost.unions.filter((u) => u.exact).length} charged)`,
+    SK.length === 5 && skDerived && skSet(skTableKeys) === skSet(SK) && /SearchKind/.test(skTableHead) && skLegendDerived &&
+    skExactArrays.length === 2 && skBareCopies.length === 0 && skNear.length === 4 &&
+    skPlant.unions.length === 1 && skPlant.unions[0].exact === true && skPlant.arrays.length === 1 && skPlant.arrays[0].exact === true &&
+    skGhost.unions.length === 1 && skGhost.unions[0].exact === false);
+
+  // Who builds the door's key, and who words a kind beside it.
+  const skLegendScan = (code) => [...code.matchAll(/ai\.legend\./g)].length;
+  const skLegendSites = [];
+  for (const [path, code] of appSrc) for (let i = skLegendScan(code); i > 0; i--) skLegendSites.push(path);
+  const skCom = skRowSrc.match(/export const searchKindLabel = \(([^)]*)\)([^=]*)=>\s*([^;]+);/) || [];
+  const skComParams = skCom[1] ?? "(composer missing)";
+  const skComBody = skCom[3] ?? "";
+  const skCallSites = [];
+  for (const [path, code] of appSrc) for (const m of code.matchAll(/searchKindLabel\(/g)) skCallSites.push(path);
+  const skPlantLegend = skLegendScan("const label = t(`ai.legend.${kind}`);");
+
+  ok(`ai.legend. is composed by ${skLegendSites.length} line in the ${appSrc.size} app modules (${skLegendSites.join(" ") || "none"}) — the door's own branch — and the shipped composer takes (${skComParams}) and its body is ${skComBody || "unread"}, so it words a kind THROUGH the door rather than beside it, while the ${skCallSites.length} modules that show a kind (${[...new Set(skCallSites)].join(" ")}) both ask it and a chrome-side lookup written into a planted module is counted by the same scan (${skPlantLegend})`,
+    skLegendSites.length === 1 && skLegendSites[0] === "domain/rowText.ts" &&
+    /SearchKind/.test(skComParams) && !/kind:\s*string/.test(skComParams) &&
+    skComBody === "codeWord(kind, t)" && skCallSites.length === 2 &&
+    new Set(skCallSites).size === 2 && skPlantLegend === 1);
+
+  // The display half of the class: a code shown AS text is the reader's problem, a code sitting in
+  // an attribute (a React key, cmdk's filter value) is the app's own identity, and only the first
+  // is charged. A text child is charged only when the WHOLE expression is a bare member access:
+  // `{searchKindLabel(r.type, t)}` reads the same field and is the fix, so a detector that charged
+  // it would charge every converted screen — the read count is printed and pinned with the charge,
+  // so `0 charged` can never come from `read nothing`.
+  const SK_TEXT_CHILD_PIN = 25;
+  const SK_ATTR = /\b(?:key|value|id)\s*=\s*\{[^=]{0,80}?\.(?:type|kind)\b/g;
+  const SK_MEMBER = /^[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*$/;
+  const SK_CHILD_KIND = /\.(?:type|kind)\b/;
+  const skBareText = (e) => SK_MEMBER.test(e) && /\.(?:type|kind)\??$/.test(e);
+  // Read a JSX text child with a BALANCED walk, not `[^{}]+`: an expression that opens braces
+  // itself — the pre-M265 shape `t(`ai.legend.${r.type}`)` — is exactly the site this census
+  // exists to see, and a scan that stops at its inner brace reads 9 and pins 10, so the count
+  // would move on a refactor that added and removed nothing.
+  const skTextChildren = (code) => {
+    const out = [];
+    for (let i = 0; i < code.length; i++) {
+      if (code[i] !== "{" || !/>\s*$/.test(code.slice(Math.max(0, i - 40), i))) continue;
+      let depth = 0, j = i;
+      for (; j < code.length; j++) {
+        if (code[j] === "{") depth++;
+        else if (code[j] === "}" && --depth === 0) break;
+      }
+      if (depth !== 0 || !/^\s*</.test(code.slice(j + 1, j + 41))) continue;
+      out.push(code.slice(i + 1, j).trim());
+    }
+    return out;
+  };
+  const skDisplayScan = (code) => {
+    const kindKids = skTextChildren(code).filter((e) => SK_CHILD_KIND.test(e));
+    return { read: kindKids.length, bare: kindKids.filter(skBareText), attr: [...code.matchAll(SK_ATTR)].length };
+  };
+  const skBareChild = [], skAttrSites = [];
+  let skRead = 0;
+  for (const [path, code] of appSrc) {
+    const s = skDisplayScan(code);
+    skRead += s.read;
+    for (const b of s.bare) skBareChild.push(`${path} {${b}}`);
+    if (s.attr) skAttrSites.push(`${path}=${s.attr}`);
+  }
+  const skTotalAttr = skAttrSites.reduce((a, x) => a + (+x.split("=")[1]), 0);
+  const skPlantChild = skDisplayScan("<span>{r.type}</span>");
+  const skPlantWorded = skDisplayScan("<span>{searchKindLabel(r.type, t)}</span>");
+  const skPlantTemplate = skDisplayScan('<span>{t(`ai.legend.${r.type}`)}</span>');
+  const skPlantAttr = skDisplayScan('<CommandItem key={`${r.type}-${r.id}`}>');
+
+  ok(`${skRead} text children read a kind or type field and ${skBareChild.length} of them show the stored code bare (${skBareChild.join(" | ") || "none"}) while ${skTotalAttr} attribute positions still carry it, and those are the app's own identity rather than the reader's copy (${skAttrSites.join(" ")}) — the same scan charges a planted code in a text child (${skPlantChild.bare.length}), reads a planted worded composer as ${skPlantWorded.read} child charged ${skPlantWorded.bare.length}, reads a planted key built inside a template literal as ${skPlantTemplate.read} child charged ${skPlantTemplate.bare.length} (the walk is balanced, so the braces of ${"${}"} do not end the read), and an attribute-bearing key as ${skPlantAttr.bare.length} text child and ${skPlantAttr.attr} attribute`,
+    skBareChild.length === 0 && skRead === SK_TEXT_CHILD_PIN && skTotalAttr === 5 &&
+    skPlantChild.bare.length === 1 && skPlantChild.read === 1 &&
+    skPlantWorded.read === 1 && skPlantWorded.bare.length === 0 &&
+    skPlantTemplate.read === 1 && skPlantTemplate.bare.length === 0 &&
+    skPlantAttr.bare.length === 0 && skPlantAttr.attr === 1);
+
+  // The behavioural leg: the shipped door and the shipped composer, every kind, every locale.
+  const skAsk = (code) => {
+    const seen = [];
+    const filled = rowTextModule.fillRowVars({ kind: code }, (k, v) => { seen.push(k); return translate("en", k, v); });
+    return { seen, out: filled ? filled.kind : "" };
+  };
+  const skT = (loc) => tReader(loc.id);
+  const skRows = SK.map((code) => {
+    const ask = skAsk(code);
+    return { code, asked: ask.seen.length, key: ask.seen[0] ?? "", door: ask.out,
+      words: L.map((loc) => rowTextModule.searchKindLabel(code, skT(loc))),
+      plural: L.map((loc) => D[loc.id][`fw.type.${code}`] ?? "") };
+  });
+  const skWrongKey = skRows.filter((r) => r.asked !== 1 || r.key !== `ai.legend.${r.code}`);
+  const skRawWords = [];
+  for (const r of skRows) L.forEach((loc, i) => {
+    const w = r.words[i];
+    if (!w || w === r.code || w === `ai.legend.${r.code}`) skRawWords.push(`${r.code}/${loc.id}="${w}"`);
+  });
+  const skDoorDrift = skRows.filter((r) => r.door !== r.words[0]);
+  const skEnFamily = skRows.map((r) => `${r.code}: ${r.words.join(" / ")} | plural ${r.plural.join(" / ")}`).join("  ·  ");
+  // Measured at M265: the two families the app words a kind with are not synonyms. English gives
+  // a chip the singular and a section heading the plural, so four of the five disagree (`news`
+  // writes the same word either way); both Chinese locales agree on every kind except `match`,
+  // where the chip says 赛程/賽程 (a fixture list) and the heading says 比赛/比賽 (the sport).
+  // The pin is the per-locale diff SET, so a locale drifting toward the other family is named.
+  const skDiff = L.map((loc, i) => `${loc.id}=${skRows.filter((r) => r.words[i] !== r.plural[i]).map((r) => r.code).join("+") || "none"}`);
+  const SK_DIFF_PIN = ["en=club+player+competition+match", "zh-CN=match", "zh-TW=match"];
+  const skKeyCounts = L.map((loc) => [Object.keys(D[loc.id]).filter((k) => k.startsWith("ai.legend.")).length, Object.keys(D[loc.id]).filter((k) => k.startsWith("fw.type.")).length]);
+
+  ok(`all ${skRows.length} kinds go through the shipped door and the shipped composer in ${L.length} locales (${skEnFamily}): every kind asks exactly one key of its own family (${skWrongKey.map((r) => `${r.code} asked ${r.asked}=${r.key}`).join(" | ") || "0 wrong"}), the composer's English answer is the door's own (${skDoorDrift.map((r) => `${r.code} door="${r.door}" composer="${r.words[0]}"`).join(" | ") || "all agree"}), no locale shows the code or the key back (${skRawWords.join(" | ") || "none"}), the two families disagree on ${skDiff.join(" ")} — English splits singular chip from plural section heading, Chinese writes one word except for the fixture/match pair — and ${skKeyCounts.map(([a, b]) => `${a}+${b}`).join(" ")} keys carry them`,
+    skRows.length === 5 && skWrongKey.length === 0 && skRawWords.length === 0 && skDoorDrift.length === 0 &&
+    skDiff.join("|") === SK_DIFF_PIN.join("|") && skRows.find((r) => r.code === "match").words[0] === "Fixture" &&
+    skKeyCounts.every(([a, b]) => a === 5 && b === 5));
 }
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);

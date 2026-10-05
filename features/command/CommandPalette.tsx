@@ -14,7 +14,7 @@ import { useI18n } from "@/i18n";
 import { useTheme } from "@/lib/theme";
 import { useOs } from "@/store/useFootballOS";
 import { globalSearch } from "@/data/footballService";
-import { rowLine } from "@/domain/rowText";
+import { rowLine, searchKindLabel } from "@/domain/rowText";
 import { useDebounced } from "@/lib/hooks";
 
 interface ActionCmd {
@@ -135,7 +135,11 @@ export function CommandPalette() {
                       setOpen(false);
                     }}
                   >
-                    <span className="mr-2 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground">{r.type}</span>
+                    {/* The kind chip used to print the stored code, so a reader in 简体中文 saw
+                        「club」 in an otherwise translated list — the only display position in the
+                        tree that showed a retrieval kind. It asks the door's composer now, the same
+                        line that words a kind anywhere else. */}
+                    <span className="mr-2 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground">{searchKindLabel(r.type, t)}</span>
                     <span className="font-medium">{r.title}</span>
                     <span className="ml-auto truncate pl-3 text-xs text-muted-foreground">{rowLine(r.subtitle, t)}</span>
                   </CommandItem>

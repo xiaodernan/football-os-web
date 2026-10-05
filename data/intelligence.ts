@@ -4,6 +4,7 @@
 // provider. Answers always carry evidence, sources and confidence.
 
 import type { RowText } from "@/domain/rowText";
+import type { SearchKind } from "@/domain/types";
 import { formatDate } from "@/i18n/format";
 import type { Locale } from "@/i18n/dictionaries";
 import { scoutReport } from "@/domain/scouting";
@@ -347,7 +348,7 @@ export function askIntelligence(question: string, locale: Locale): RagAnswer {
 }
 
 // ---- Knowledge graph (spec §45) ----
-export interface KgNode { id: string; label: string; type: "club" | "player" | "competition" | "news" | "match"; to: string }
+export interface KgNode { id: string; label: string; type: SearchKind; to: string }
 // An edge's label is a word the app chooses ("plays for"), not a value a record
 // carries, so it publishes a row and the canvas resolves it — see domain/rowText.ts.
 export interface KgEdge { from: string; to: string; relation: RowText }

@@ -12,6 +12,7 @@ import { ATTRIBUTE_KEYS, CATEGORIES, POSITION_GROUPS } from "./attributes";
 import { ARCHETYPE_KEYS } from "./playerDna";
 import { TRAJECTORIES } from "./careerArc";
 import { MATCH_STATUSES, MODES, NEWS_KINDS, RECORD_FEELS, SEARCH_KINDS, SHOT_TYPES, FOOTS } from "./types";
+import type { SearchKind } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 // A variable normally holds a word or a number, but one row may also carry another whole
@@ -160,6 +161,15 @@ export const matchStatusLabel = (status: string, t: Translate): string => codeWo
  *  those asks this module, and the two codes come out of `FOOTS`, the union's own runtime
  *  list, so a third foot is a missing key rather than a letter on screen. */
 export const footLabel = (foot: string, t: Translate): string => codeWord(foot, t);
+
+/** The word for a retrieval kind — `club` on the model, 「俱乐部」 to a reader in 简体中文.
+ *  The eighth family of the class M249 charged, and the one the command palette printed raw:
+ *  the five codes had four carriers and two key families — `ai.legend.*` singular, for chips and
+ *  the graph legend, and `fw.type.*` plural, for the search page's section headings — and the
+ *  door's branch owns the singular one. Like `matchStatusLabel` and `footLabel` this composes
+ *  THROUGH the door rather than beside it, so a row carrying a kind and a chip holding one are
+ *  worded by the same line and no reader builds the key itself. */
+export const searchKindLabel = (kind: SearchKind, t: Translate): string => codeWord(kind, t);
 
 /** The word for a scout filter bucket — `DEF` on the model, 「后卫」 to a reader in 简体中文.
  *  The fifth family of the class M249 charged: the filter chips printed the codes raw, the

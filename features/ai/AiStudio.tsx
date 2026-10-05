@@ -2,9 +2,10 @@ import { useMemo, useRef, useState } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useLocalStorage, useOnline } from "@/lib/hooks";
 import { useI18n } from "@/i18n";
-import { askIntelligence, buildGraph, type EvidenceFact, type KgGraph, type KgNode } from "@/data/intelligence";
+import { askIntelligence, buildGraph, type EvidenceFact, type KgGraph } from "@/data/intelligence";
 import { SUGGESTED_ASKS } from "@/data/ai";
-import { rowLine, asRowText, type RowText } from "@/domain/rowText";
+import { rowLine, asRowText, searchKindLabel, type RowText } from "@/domain/rowText";
+import type { SearchKind } from "@/domain/types";
 import { AI_CHAT_KEY } from "@/domain/localData";
 import { Panel, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -161,7 +162,7 @@ function Graph() {
       </Panel>
       {graph.nodes.length > 0 && (
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-          {KG_KINDS.map((kind) => <Legend key={kind} color={TYPE_COLOR[kind]} label={t(`ai.legend.${kind}`)} />)}
+          {KG_KINDS.map((kind) => <Legend key={kind} color={TYPE_COLOR[kind]} label={searchKindLabel(kind, t)} />)}
           <span className="ml-auto font-mono">{t("ai.graphMeta", { nodes: graph.nodes.length, edges: graph.edges.length })}</span>
         </div>
       )}
@@ -173,10 +174,11 @@ function Legend({ color, label }: { color: string; label: string }) {
   return <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />{label}</span>;
 }
 
-// One table names every kind the canvas can draw: its keys are the legend's rows and
-// the key of each `ai.legend.…` lookup, and typing it against KgNode["type"] means a
-// sixth kind is a compile error rather than an unnamed colour.
-const TYPE_COLOR: Record<KgNode["type"], string> = {
+// One table names every kind the canvas can draw: its keys are the legend's rows and the key of
+// each kind's word, and typing it against SearchKind — the same type as a KgNode's own field —
+// means a sixth kind is a compile error in the table rather than an unnamed colour, and that the
+// legend and the node can never disagree about which kinds exist.
+const TYPE_COLOR: Record<SearchKind, string> = {
   club: "var(--color-primary)",
   player: "var(--color-info)",
   competition: "var(--color-chart-4)",
