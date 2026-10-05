@@ -4644,6 +4644,128 @@ const psWholeRT = bkCasesOf(appSrc.get("domain/rowText.ts") ?? "");
 ok(`a switch-cases extractor reads the composer it names, not the file it lives in (${psScopePlant} cases in the planted bucket switch where the same text scanned whole reads ${psScopeWhole}; shipped bucket switch ${bkCases.length} of ${psWholeRT.length} whole-file matches), and the difference is load-bearing rather than decorative (${psWholeRT.length > bkCases.length ? "a second family in the same module shares its spellings" : "no family currently collides — re-derive this"})`,
   psScopePlant === 2 && psScopeWhole === 3 && bkCases.length === 5 && psWholeRT.length > bkCases.length);
 
+// ─── 44 · codeWord answers by SPELLING, so its branch order is load-bearing (M264) ─────
+// The door's lookup walks a list of value spaces and the FIRST branch whose list contains a
+// code returns that branch's key; the code's family is never part of the question. So a
+// spelling two families share is not a tie — one family answers for the other, and which one
+// speaks is decided by which line is written above. M263 charged the pair that was colliding
+// (GK, CB, DM, CM and ST are both a PositionGroup id and a position abbreviation) by moving
+// the `position` var to a NAME dispatch; nothing read the remaining spaces, and an attribute
+// key one day spelled `player` would have been answered by the graph-legend branch above it
+// with no clause firing.
+//
+// Both ends are derived rather than copied: the branch table is scanned out of the shipped
+// function body with a balanced-paren read, and every branch is matched to an exported array
+// of the modules the SAME file imports — a predicate branch (isGoalCode) to the exported
+// arrays whose every element that predicate accepts. So a branch consulting a list nobody
+// registers, and a registered list no branch consults, both redden here instead of going
+// unread. The behavioural half feeds every member of every branch through the shipped door
+// with a recorder in place of the dictionary, which is what makes a shadowing visible: the
+// later branch's code asks the earlier branch's key.
+{
+  // The scanned file is named ONCE, and the clause's own sentence reads that name, so a
+  // census pointed at another module cannot report that it walked the door's file.
+  const cwFile = "domain/rowText.ts";
+  const cwSrc = appSrc.get(cwFile) ?? "";
+  const cwFn = cwSrc.indexOf("function codeWord(");
+  const cwOpen = cwSrc.indexOf("{", cwFn);
+  let cwDepth = 0, cwEnd = -1;
+  for (let i = cwOpen; i < cwSrc.length; i++) {
+    if (cwSrc[i] === "{") cwDepth++;
+    else if (cwSrc[i] === "}" && --cwDepth === 0) { cwEnd = i; break; }
+  }
+  const cwBody = cwEnd < 0 ? "" : cwSrc.slice(cwOpen + 1, cwEnd);
+
+  // One branch line reads `if (<cond>) return t(<key>);`. The condition is taken between the
+  // first `(` and the sentinel `) return t(` — a regex over the whole line would stop at the
+  // `)` inside `(X as readonly string[]).includes(code)`.
+  const cwBranches = [];
+  for (const line of cwBody.split("\n")) {
+    const cut = line.indexOf(") return t(");
+    if (!line.trim().startsWith("if (") || cut < 0) continue;
+    const cond = line.slice(line.indexOf("(") + 1, cut);
+    const name = (cond.match(/[A-Za-z_][A-Za-z0-9_]*/) || [""])[0];
+    const arg = line.slice(cut + ") return t(".length).replace(/\)\s*;?\s*$/, "").trim();
+    const tmpl = arg.match(/^`([^$]*)\$\{/);
+    const literals = tmpl ? [] : [...arg.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    cwBranches.push({ name, cond, prefix: tmpl ? tmpl[1] : null, literals, order: cwBranches.length });
+  }
+
+  // The pool: every string array and every string-returning predicate exported by the
+  // modules rowText.ts itself imports, so the census cannot be handed a list the shipped
+  // chain never consulted.
+  const cwImports = [...cwSrc.matchAll(/from "\.\/(\w+)"/g)].map((m) => m[1]);
+  const cwPool = { lists: [], preds: [] };
+  for (const mod of cwImports) {
+    const m = await server.ssrLoadModule(`/domain/${mod}.ts`);
+    for (const [k, v] of Object.entries(m)) {
+      // Pool every non-empty exported array, not just arrays of strings: POSITION_GROUPS is
+      // an array of objects and the branch that consults it reads `.id` off each one, so a
+      // string-only pool would report the group branch as UNRESOLVED.
+      if (Array.isArray(v) && v.length > 0) cwPool.lists.push({ name: k, value: v, mod });
+      if (typeof v === "function") cwPool.preds.push({ name: k, value: v, mod });
+    }
+  }
+  const cwOf = (b) => {
+    const direct = cwPool.lists.filter((e) => e.name === b.name);
+    if (direct.length === 1) {
+      const raw = direct[0].value;
+      return { how: b.name, members: /\.map\(/.test(b.cond) ? raw.map((o) => o.id ?? o) : raw };
+    }
+    const pred = cwPool.preds.find((e) => e.name === b.name);
+    if (!pred) return { how: `UNRESOLVED ${b.name}`, members: [] };
+    const claimed = cwPool.lists.filter((e) => e.value.every((v) => pred.value(v)));
+    if (claimed.length !== 1) return { how: `AMBIGUOUS ${b.name}:${claimed.map((c) => c.name).join("+") || "none"}`, members: [] };
+    return { how: `${b.name}<-${claimed[0].name}`, members: claimed[0].value };
+  };
+  const cwSpaces = cwBranches.map((b) => ({ ...b, ...cwOf(b) }));
+  const cwTotal = cwSpaces.reduce((a, s) => a + s.members.length, 0);
+  const cwBadLists = cwSpaces.filter((s) => /UNRESOLVED|AMBIGUOUS/.test(s.how) || !s.members.length);
+  // A branch that consults a list nobody registers must come back named, or "every branch
+  // resolved" is a claim about a scan that resolved nothing.
+  const cwGhost = cwOf({ name: "NOT_A_REGISTERED_LIST", cond: "NOT_A_REGISTERED_LIST.includes(code)", order: 0 });
+
+  const CW_BRANCH_PIN = 14;
+  const CW_MEMBER_PIN = 95;
+  const cwAsk = (code) => {
+    const seen = [];
+    const filled = rowTextModule.fillRowVars({ kind: code }, (k, v) => { seen.push(k); return translate("en", k, v); });
+    return { seen, out: filled ? filled.kind : "" };
+  };
+  const cwOwner = (code) => cwSpaces.find((s) => s.members.includes(code)) ?? null;
+  const cwOwns = (s, key) => (s.prefix ? key.startsWith(s.prefix) : s.literals.includes(key));
+  const cwMismatch = [];
+  for (const s of cwSpaces) for (const code of s.members) {
+    const owner = cwOwner(code);
+    const a = cwAsk(code);
+    if (a.seen.length !== 1) { cwMismatch.push(`${code} asked ${a.seen.length}`); continue; }
+    if (owner !== s) cwMismatch.push(`${code} claimed by branch ${s.order} and ${owner.order}`);
+    else if (!cwOwns(s, a.seen[0])) cwMismatch.push(`${code} ${s.prefix || s.literals.join("/")} but asked ${a.seen[0]}`);
+  }
+  const cwUnknown = cwAsk("NO_SUCH_CODE_ANYWHERE");
+
+  // Pairwise disjointness over the loaded lists, and the same detector aimed at a planted
+  // table where two branches claim one spelling — so a 0 that means "the scan read nothing"
+  // cannot pass. The plant tests the detector; the real numbers come from the shipped lists.
+  const cwShared = (spaces) => {
+    const out = [];
+    for (let i = 0; i < spaces.length; i++) for (let j = i + 1; j < spaces.length; j++) {
+      for (const c of spaces[i].members) if (spaces[j].members.includes(c)) out.push(`${c} branch ${spaces[i].order} answers for ${spaces[j].order}`);
+    }
+    return out;
+  };
+  const cwPairs = (cwSpaces.length * (cwSpaces.length - 1)) / 2;
+  const cwCollide = cwShared(cwSpaces);
+  const cwPlant = cwShared([{ order: 1, members: ["L", "R"] }, { order: 2, members: ["technical", "L"] }]);
+
+  ok(`codeWord's body walks ${cwBranches.length} branches in source order (${cwSpaces.map((s) => `${s.order}:${s.how}=${s.members.length}`).join(" ")}) totalling ${cwTotal} codes, each one matched to an exported list of a module ${cwFile} itself imports and none of them empty or ambiguous (${cwBadLists.map((s) => s.how).join(" | ") || "all resolved"}), while a branch naming a list nobody registers comes back ${cwGhost.how} rather than as an empty success`,
+    cwBranches.length === CW_BRANCH_PIN && cwTotal === CW_MEMBER_PIN && cwBadLists.length === 0 && /^UNRESOLVED/.test(cwGhost.how));
+  ok(`all ${cwTotal} codes go through the shipped door and each asks its OWN branch's key (${cwMismatch.join(" | ") || "0 mismatched"}) — that is the shadowing test, because a spelling two branches claim asks the earlier one's prefix — and a code no branch claims asks nothing and is returned exactly as written (${cwUnknown.seen.length} keys asked, reads "${cwUnknown.out}")`,
+    cwTotal === CW_MEMBER_PIN && cwMismatch.length === 0 && cwUnknown.seen.length === 0 && cwUnknown.out === "NO_SUCH_CODE_ANYWHERE");
+  ok(`the ${cwTotal} codes are pairwise disjoint across the ${cwSpaces.length} spaces (${cwPairs} pairs, ${cwCollide.length} shared${cwCollide.length ? ": " + cwCollide.join(" | ") : ""}), and the same detector run on a planted table where a later branch re-claims one foot code names exactly that one shadowing and blames the earlier branch (${cwPlant.length ? cwPlant.join(" | ") : "plant read clean — the detector is blind"})`,
+    cwBranches.length === CW_BRANCH_PIN && cwTotal === CW_MEMBER_PIN && cwCollide.length === 0 && cwPlant.length === 1 && /branch 1 answers for 2/.test(cwPlant[0]));
+}
+
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 
 console.log(`${pass}/${pass + fail} checks passed`);

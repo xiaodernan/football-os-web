@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M263 (a few numbers in that range
+Work ships one milestone per commit and is currently at M264 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,68 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M264 — the door answers by SPELLING, so which branch is written first is load-bearing
+
+`codeWord` is how the row door words a code for 26 variable names, and it is not a table keyed by
+family. It is an ordered chain of fourteen `if (<list>.includes(code)) return t(<key>)` lines:
+nothing in the question names the family the value came from, so two families that ever spell one
+code do not tie — the earlier line answers for the later one, and every reader of the later family
+gets the wrong word with no error raised. M263 charged one instance of exactly this (`GK`, `CB`,
+`DM`, `CM`, `ST` are each both a `PositionGroup` id and a position abbreviation) by moving the
+`position` var onto a NAME dispatch, and after that nothing read the rest of the chain. An
+attribute key one day spelled `player` would have been answered by the graph-legend branch five
+lines above it. This unit reads it.
+
+Measured today, and derived rather than copied: **14 branches, 95 codes, 91 pairs, 0 shared**
+(`0:ATTRIBUTE_KEYS=32 1:POSITION_GROUPS=8 2:MODES=3 3:ARCHETYPE_KEYS=10 4:SEARCH_KINDS=5
+5:NEWS_KINDS=5 6:MATCH_STATUSES=3 7:FOOTS=2 8:RECORD_FEELS=3 9:TRAJECTORIES=3 10:CATEGORIES=4
+11:SHOT_TYPES=7 12:isGoalCode<-GOAL_CODES=6 13:isAgeGroupWord<-TRANSLATED_AGE_GROUPS=4`). The
+branch table is scanned out of the shipped function body with a balanced-paren read — a regex over
+the line stops at the `)` inside `(X as readonly string[]).includes(code)` — and every branch is
+matched to an exported list of a module `domain/rowText.ts` itself imports. The two predicate
+branches are matched the same way as the named ones: to the single exported array every element of
+which that predicate accepts, which is why those two lines print `<-GOAL_CODES` and
+`<-TRANSLATED_AGE_GROUPS` in the clause's own message. A branch that consults a list nobody
+registers comes back `UNRESOLVED` and reddens clause 1, and the clause asks that question of a
+deliberately unregistered name in its own condition, so "all resolved" cannot be a claim about a
+resolver that resolved nothing.
+
+The behavioural half feeds all 95 codes through the shipped door with a recorder standing in for
+the dictionary: each must ask exactly one key, and it must be **its own branch's** key — that is
+the shadowing test, because a spelling two branches claim asks the earlier one's prefix. A code no
+branch claims must ask nothing and be returned exactly as written. Then disjointness runs twice,
+over the loaded lists and over a planted table where a later branch re-claims one foot code, so a
+`0 shared` means *no collision* and never *no scan*; clauses 2 and 3 also pin the 95 as a floor
+after the first read showed a narrowed scan could otherwise print "0 mismatched" about an empty
+set (arm A3's red messages do print `all 0 codes`, which is the floor doing its job).
+
+The seed for this surface had a bug, and the record keeps it. Its first probe was lexical and cut
+each list with `[^\]]*`, which stops at the `]` inside `readonly Mode[]`: nine of fourteen spaces
+read as empty, two more pointed at the wrong module, and the probe still printed a clean
+"0 shared". The gate is immune because its pool loads the modules instead of slicing their
+source, but the failure mode is a real one, so arm A3 encodes it (`cwImports = []` must redden
+three clauses, not report a tidy census) and every branch's member count is printed in the
+message so an empty space names itself.
+
+**7/7 arms MATCHED**, control 336/336 green, every restore byte-exact.
+A2 was wrong on the first round and is the interesting one. It replaced the body slice with the
+whole module and predicted three reds; it came back 336/336 **green**. `rowText.ts` has exactly 14
+`) return t(` lines and all 14 are inside `codeWord` (measured over the file and over the
+function's own range), so a superset region of the same file cannot read a different table: the
+arm was vacuous and proved nothing, and the body scoping it aimed at is defense for a line added
+later, not a hole observable today. Re-aimed at the claim that does bind — which module the
+census reads — the mutation is real: pointing it at `domain/attributes.ts` walks 0 branches and
+three clauses redden. What that arm forced into the gate is the better half of the unit: the
+scanned file is now named once, and the clause's own sentence prints that name, so a census
+pointed elsewhere can no longer report that it walked the door's file.
+
++3 clauses: **336/336** against the frozen `git archive HEAD` plane (`0aedbe6`) at **333/333** —
++3, +0 red. Nothing in the app changed and none of it was broken: the collision set is empty
+today, so this is the first unit of the arc whose diff is the gate and the record only, closing a
+class of defect rather than a present one. Measured on the working tree: `tsc` rc=0, `npm run
+build` rc=0, suite **41/41 · 2,245/2,245 · exit 0**, dictionary **1,980 keys · 3 locales** and the
+literal-shape pin **1,281** both unmoved, as they must be when no string was added or moved.
 
 ### M263 — the seventh family, and the first one the census was blind to
 
