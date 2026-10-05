@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M264 (a few numbers in that range
+Work ships one milestone per commit and is currently at M265 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,57 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M265 — the app's oldest value space stops being typed by hand in four places
+
+`club`, `player`, `competition`, `match`, `news` is the space the search layer was built on, and it
+was the one enum family the raw-UI audit could not see: it reached the glass through a variable. The
+command palette interpolated the stored code — a reader in `zh-CN` saw `club` on the chip — while
+the knowledge canvas built its own `ai.legend.` + kind key beside the door. Five names, four hand
+copies: `SearchResult.type`, `KgNode.type`, the canvas's colour table, and the search page's section
+list. A sixth kind was a compile error in none of them at once and an unnamed colour plus a
+code-printing chip in all of them.
+
+`SearchKind` now derives from `(typeof SEARCH_KINDS)[number]`, every carrier is typed against it, the
+door claims the family and `searchKindLabel` words a kind THROUGH the door rather than beside it. The
+palette's React key and cmdk's filter value keep the code on purpose: that is the app's own identity,
+not the reader's copy.
+
+Section 45 charges the drift in four checks, and every negative is bound to a plant the same detector
+reads. The detectors work by set relation, never by listing the five words: a carrier is charged when
+a quoted union or an array literal holds EXACTLY the family, while a favourite's three names and a
+news-impact role's two are printed as a different space. Typing `club|player|…` anywhere in the 95 app
+modules is now a red check without the gate ever naming a kind.
+
+Three pre-existing checks moved with the conversion and were repaired, not loosened: `DYN_SITES` lost
+the AiStudio legend site (check 16 read it `stale`, and the t()-shape census went 99 → 98), the
+`fw.type.` anchor had to become annotation-blind because `SEARCH_TYPES` now carries a `readonly
+SearchKind[]`, and section 44's import pool is keyed by MODULE — a file taking a value and a type from
+`./types` in two lines registered the module twice and read every list it exports as UNRESOLVED
+(cwTotal 95 → 67).
+
+The witness caught a hole in my own scan. Arm A7 re-added a screen-side legend lookup, and instead of
+the charge moving, the census count moved: 10 → 9. The text-child pattern was `>{…}<` with `[^{}]+`
+inside, so a display site written as `t(` + backtick + `ai.legend.${r.type}` + backtick + `)` — the
+exact pre-M265 spelling — was invisible to it. The scan is now a balanced brace walk, and the pin was
+re-measured after inspecting all fifteen sites the widened walk newly reads (`{searchResults.map(...)}`
+and friends: real children, containers rather than display slots): **25 read, 0 charged**, with three
+plants — a bare code in a child charged 1, a worded composer charged 0, a template-shaped child read
+and charged 0.
+
+Measured this run: `proof-i18n` **339/339** (was 335) · 1,980 keys × 3 locales; `npm run build` exit 0;
+`npm run proof` **41/41 scripts · 2,248/2,248 checks**; witness arms **18/18 as predicted** in round 2 —
+round 1 scored 11/18 and every mismatch was prediction-side, seven of them a pre-existing check that
+binds the same fact (the graph's drawable-kind list; `DYN_SITES` and the t-shape census always move
+together; renaming one dictionary row reddens 7 checks under 4 names: locale parity both ways, space
+completeness, key reachability). Code and gate landed as **9669755** (+257/−22); the frozen
+`git archive HEAD` plane at that commit reproduces **339/339, 0 reds**. This section is a docs-only
+follow-up commit, so the milestone number was claimed from `git log` before it was written.
+
+Next unit, measured rather than guessed: the favourite family's triple copy — `features/football/Details.tsx`
+and two sites in `store/useFootballOS.tsx` spell a three-name union and `domain/newsImpact.ts` a
+two-name one, all subsets of a different space with `fav.<kind>.active/idle` keys. Section 45 reads
+them and deliberately does not charge them; the unit is to give that family its own door.
 
 ### M264 — the door answers by SPELLING, so which branch is written first is load-bearing
 
