@@ -1,4 +1,4 @@
-import type { AttributeDef, Attributes, PositionGroup } from "./types";
+import type { AttributeDef, Attributes, PositionCode, PositionGroup } from "./types";
 import { ATTRIBUTE_LABELS, POSITION_GROUP_LABELS, CATEGORY_LABELS, POSITION_BY_GROUP_LABELS } from "../data/attributesLabels";
 
 const L = (key: string) => ATTRIBUTE_LABELS[key] ?? key;
@@ -109,7 +109,7 @@ export const POSITION_GROUPS: { id: PositionGroup; label: string }[] = [
   { id: "ST", label: PG("ST") },
 ];
 
-export const POSITION_BY_GROUP: Record<PositionGroup, string> = POSITION_BY_GROUP_LABELS;
+export const POSITION_BY_GROUP: Record<PositionGroup, PositionCode> = POSITION_BY_GROUP_LABELS;
 
 export function baselineAttributes(group: PositionGroup, skill: number): Attributes {
   const b = GROUP_BASELINE[group];

@@ -6,6 +6,7 @@
 // reads that club's own squad depth — still only over data the dataset has.
 
 import { getPlayer, getClub, newsFeed } from "@/data/footballService";
+import type { PositionCode } from "./types";
 import type { NewsArticle } from "@/domain/types";
 import { bucketOf, headroom, valueIndex, squadProfile } from "./scouting";
 
@@ -20,7 +21,7 @@ export interface RumourLink {
   publishedAt: string;
   playerId: string;
   playerName: string;
-  position: string;
+  position: PositionCode;
   age: number;
   fromClubId: string;
   fromClubName: string;

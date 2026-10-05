@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { positionLabel } from "@/domain/rowText";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
@@ -148,7 +149,7 @@ export function DynamicWorld() {
               <div className="space-y-1.5">
                 {last.prospects.slice(0, 10).map((p) => (
                   <Link key={p.id} to={`/clubs/${p.clubId}`} className="flex items-center justify-between rounded-lg px-1 py-1.5 text-sm hover:bg-secondary/40">
-                    <span className="truncate">{p.name} <span className="text-xs text-muted-foreground">· {p.position} · {p.age}</span></span>
+                    <span className="truncate">{p.name} <span className="text-xs text-muted-foreground">· {positionLabel(p.position, t)} · {p.age}</span></span>
                     <span className="flex items-center gap-2 font-mono text-xs">
                       <span className="text-muted-foreground">{p.overall}</span>
                       <Badge variant="outline" className="border-success/40 text-success">→ {p.potential}</Badge>

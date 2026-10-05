@@ -48,11 +48,14 @@ export type Translate = (key: string, vars?: Record<string, string | number>) =>
 // Chinese sentence, and the row contract could not put it back — the value was already a word.
 // `status` is one fixture status the global search names in a result subtitle (M257): the
 // subtitle leaves the data layer as a row, so the door that words it is this list, through
-// `matchStatusLabel`'s lookup, and the reader's column decides the language. `foot` is one
+// `matchStatusLabel`'s lookup, and the reader's column decides the language.// `position` is one player position abbreviation (M263): the shared badge, twelve text nodes
+// and two intelligence facts all name it; the door answers that one by NAME, because GK, CB, DM,
+// CM and ST are spelled identically by the group family and one family must not lend its word to
+// the other. `foot` is one
 // preferred foot (M259): the player byline, the profile table, the scout sentence and the
 // intelligence fact all name it, three as words and one as a var the sentence already
 // nouns — so the door words the bare side and every reading shares one lookup.
-const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "foci", "arch", "arch2", "kind", "stance", "feels", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr", "status", "foot"];
+const CODE_VARS: readonly string[] = ["mode", "group", "a", "b", "focus", "foci", "arch", "arch2", "kind", "stance", "feels", "traj", "cat", "cat2", "goal", "ageGroup", "shot", "drill", "attrs", "trained", "last", "new", "attr", "status", "foot", "position"];
 
 function codeWord(code: string, t: Translate): string {
   // Two variables hold a LIST, and the shape of an item tells them apart. `focus` is a plain
@@ -114,6 +117,29 @@ export const newsKindLabel = (kind: string, t: Translate): string => codeWord(ki
  *  of one lowercase rule and a reader-visible code, which is the news-kind defect (M249) on a
  *  second family. This is the only module that composes `group.*`. */
 export const positionGroupLabel = (group: string, t: Translate): string => codeWord(group, t);
+
+/** The word for a player's position abbreviation — `LB / RB` on the model, 「左后卫 / 右后卫」 to a
+ *  reader in 简体中文. The seventh family of the class M249 charged, and the first whose display
+ *  centre of mass is chrome: one badge in ui/primitives.tsx carries it to seven call sites in six
+ *  screens, and twelve more read the stored abbreviation into a text node directly. It is a switch
+ *  of static literals rather than a codeWord branch because the two families share five spellings:
+ *  GK, CB, DM, CM and ST are both a PositionGroup id and a position abbreviation, and codeWord's
+ *  table is name-blind — asking it for "GK" answers "Goalkeeper", which is the group's word, not
+ *  the badge's. So the row door dispatches on the variable's NAME (`position` here, `group` over
+ *  there) and one spelling can never lend its answer to the other family. */
+export const positionLabel = (position: string, t: Translate): string => {
+  switch (position) {
+    case "GK": return t("pos.gk");
+    case "CB": return t("pos.cb");
+    case "LB / RB": return t("pos.fb");
+    case "DM": return t("pos.dm");
+    case "CM": return t("pos.cm");
+    case "AMC": return t("pos.am");
+    case "LW / RW": return t("pos.w");
+    case "ST": return t("pos.st");
+    default: return position;
+  }
+};
 
 /** The word for what a fixture's status field says — `LIVE` on the model, 「进行中」 to a reader
  *  in 简体中文. This is the third family of the class M249 charged and M255 named per-family: the
@@ -199,7 +225,10 @@ export function fillRowVars(vars: RowVars | undefined, t: Translate): Record<str
     out[name] =
       typeof raw === "object" ? (rowLine(raw, t) ?? "")
         : typeof raw !== "string" ? raw
-          : isCodeVar(name) ? codeWord(raw, t)
+          // One code var is dispatched by name rather than by table: `position` holds an
+          // abbreviation that five PositionGroup ids also spell, so codeWord's name-blind lookup
+          // would answer a position row with the group's word. See positionLabel.
+          : isCodeVar(name) ? (name === "position" ? positionLabel(raw, t) : codeWord(raw, t))
             : isKeyVar(name) ? (raw === "" ? "" : t(raw))
               : raw;
   }

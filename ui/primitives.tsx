@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DEMO_MODE } from "@/data/footballService";
 import { useI18n } from "@/i18n";
-import { rowLine } from "@/domain/rowText";
+import { positionLabel, rowLine } from "@/domain/rowText";
 import type { Dna } from "@/domain/playerDna";
 
 export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
@@ -67,7 +67,8 @@ export function Crest({ colors, short, size = 36 }: { colors?: [string, string];
 }
 
 export function PositionTag({ position }: { position: string }) {
-  return <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-secondary-foreground">{position}</span>;
+  const { t } = useI18n();
+  return <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-secondary-foreground">{positionLabel(position, t)}</span>;
 }
 
 export function AttributeBar({ label, value, max = 99 }: { label: string; value: number; max?: number }) {

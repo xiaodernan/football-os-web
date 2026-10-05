@@ -35,6 +35,13 @@ export type PositionGroup = "GK" | "CB" | "FB" | "DM" | "CM" | "AM" | "W" | "ST"
 // A player's preferred foot. Two codes, and the composer that words them reads the runtime
 // list below — the same arrangement MatchStatus got in M256 — so a third foot is a missing
 // key rather than a letter on screen.
+// The eight abbreviations a player's position field may carry, one per PositionGroup and no
+// more: its only producer is POSITION_BY_GROUP, so "CDM" and "RB" — which domain/worldEngine.ts
+// hand-copied until M263 collapsed that table onto the domain's — are not positions this app
+// can hold. Five of the eight (GK/CB/DM/CM/ST) are spelled exactly like five PositionGroup ids,
+// which is why the row door dispatches `position` to its own composer instead of joining
+// codeWord's name-blind table.
+export type PositionCode = "GK" | "CB" | "LB / RB" | "DM" | "CM" | "AMC" | "LW / RW" | "ST";
 export type Foot = "L" | "R";
 export const FOOTS: readonly Foot[] = ["L", "R"];
 
@@ -58,7 +65,7 @@ export interface AttributeDef {
 export interface PlayerRef {
   id: string;
   name: string;
-  position: string;
+  position: PositionCode;
   positionGroup: PositionGroup;
   age: number;
   nation: string;
@@ -173,7 +180,7 @@ export interface UserProfile {
   displayName: string;
   mode: Mode;
   positionGroup: PositionGroup;
-  position: string;
+  position: PositionCode;
   ageGroup: string;
   goal: string;
   favoriteClubId: string | null;

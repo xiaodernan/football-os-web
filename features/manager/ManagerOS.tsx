@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router";
 import { cn } from "@/lib/utils";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
-import { rowLine } from "@/domain/rowText";
+import { positionLabel, rowLine } from "@/domain/rowText";
 
 const KEY = CAREER_KEY;
 type Tab = "overview" | "squad" | "transfers" | "tactics" | "table" | "outlook" | "prep";
@@ -255,7 +255,7 @@ function Squad({ career, onSell }: { career: CareerState; onSell: (id: string) =
           <tbody>
             {squad.map((p) => (
               <tr key={p.id} className="border-t">
-                <td className="px-2 py-1.5 font-mono text-xs text-muted-foreground">{p.position}</td>
+                <td className="px-2 py-1.5 font-mono text-xs text-muted-foreground">{positionLabel(p.position, t)}</td>
                 <td className="px-2 py-1.5"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link><span className="ml-2 text-xs text-muted-foreground">{p.nation}</span></td>
                 <td className="px-2 py-1.5 text-right font-mono text-xs">{p.age}</td>
                 <td className="px-2 py-1.5 text-right font-mono text-xs font-semibold">{p.overall}</td>
@@ -294,7 +294,7 @@ function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string)
           const from = getClub(p.id in career.moved ? career.moved[p.id] : p.clubId);
           return (
             <div key={p.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-              <div className="min-w-0"><Link to={`/players/${p.id}`} className="truncate hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{p.position} · {p.age} · {t("mgr.thOvr")} {p.overall} · {from?.name ?? t("mgr.freeAgent")}</span></div>
+              <div className="min-w-0"><Link to={`/players/${p.id}`} className="truncate hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{positionLabel(p.position, t)} · {p.age} · {t("mgr.thOvr")} {p.overall} · {from?.name ?? t("mgr.freeAgent")}</span></div>
               <Button size="sm" disabled={!afford} onClick={() => onBuy(p.id)} title={afford ? t("mgr.sign") : t("mgr.noBudget")}>{afford ? t("mgr.signFee", { fee: formatValue(fee) }) : t("mgr.needFee", { fee: formatValue(fee) })}</Button>
             </div>
           );

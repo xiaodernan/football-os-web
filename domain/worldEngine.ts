@@ -11,13 +11,16 @@
 // regeneration and a simulated league champion.
 
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
-import type { Club, Competition, PlayerRef, PositionGroup } from "@/domain/types";
+import { POSITION_BY_GROUP, POSITION_GROUPS } from "@/domain/attributes";
+import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
 
 const BASE_START_YEAR = 2026; // base season is 2026/27
-const POS_GROUPS: PositionGroup[] = ["GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"];
-const POS_LABEL: Record<PositionGroup, string> = {
-  GK: "GK", CB: "CB", FB: "RB", DM: "CDM", CM: "CM", AM: "CAM", W: "RW", ST: "ST",
-};
+const POS_GROUPS: PositionGroup[] = POSITION_GROUPS.map((g) => g.id);
+// One table spells a group's abbreviation, and it is the domain's: this engine used to carry a
+// hand copy whose four values disagreed with it (RB/CDM/CAM/RW where the world's players read
+// "LB / RB", DM, AMC, "LW / RW"), so a regenerated player was labelled one way on /world and
+// another everywhere else. Deriving it is what makes the eight spellings one space (M263).
+const POS_LABEL = POSITION_BY_GROUP;
 // Compact name pools so the engine stays self-contained and reproducible.
 const P_FIRST = ["Luca", "Kai", "Mateo", "Noah", "Emre", "Rafa", "Theo", "Enzo", "Iker", "Milan", "Yann", "Omar"];
 const P_LAST = ["Silva", "Rossi", "Novak", "Berg", "Vidal", "Nagy", "Marín", "Pires", "Roche", "Toth", "Blom", "Grassi"];
@@ -41,7 +44,7 @@ export interface PlayerChange {
   id: string;
   name: string;
   clubId: string;
-  position: string;
+  position: PositionCode;
   age: number;
   from: number;
   to: number;
@@ -52,7 +55,7 @@ export interface Prospect {
   id: string;
   name: string;
   clubId: string;
-  position: string;
+  position: PositionCode;
   age: number;
   overall: number;
   potential: number;

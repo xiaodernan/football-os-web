@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
-import { footLabel, matchStatusLabel, positionGroupLabel, rowLine } from "@/domain/rowText";
+import { footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import {
   footballProvider,
@@ -98,7 +98,7 @@ export function PlayerDetail({ id }: { id: string }) {
         title={p.name}
         back="/players"
         crest={<div className="grid h-16 w-16 place-items-center rounded-2xl bg-primary/15 text-2xl" style={{ boxShadow: `inset 0 0 0 2px ${club?.colors[0] ?? "#333"}` }}>{p.name[0]}</div>}
-        sub={<span>{p.position} · <Link to={`/clubs/${club?.id}`} className="hover:text-primary">{club?.name}</Link> · {p.nation} · {p.age}y · {footLabel(p.foot, t)}</span>}
+        sub={<span>{positionLabel(p.position, t)} · <Link to={`/clubs/${club?.id}`} className="hover:text-primary">{club?.name}</Link> · {p.nation} · {p.age}y · {footLabel(p.foot, t)}</span>}
       />
 
       <div className="flex gap-2">

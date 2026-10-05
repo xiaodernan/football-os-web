@@ -1,4 +1,5 @@
 import { Link } from "@/lib/router";
+import { positionLabel } from "@/domain/rowText";
 import { useI18n } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { WORLD } from "@/data/footballSeed";
@@ -83,7 +84,7 @@ export function Landing() {
                   <div className="text-right text-lg font-bold tabular-nums">{p.overall}</div>
                 </div>
                 <div className="mt-3 truncate text-sm font-semibold">{p.name}</div>
-                <div className="text-xs text-muted-foreground">{p.position} · {t("landing.ageSuffix", { age: p.age })} · {club?.name}</div>
+                <div className="text-xs text-muted-foreground">{positionLabel(p.position, t)} · {t("landing.ageSuffix", { age: p.age })} · {club?.name}</div>
               </Link>
             );
           })}

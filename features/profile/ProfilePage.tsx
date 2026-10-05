@@ -6,7 +6,7 @@ import { useOs } from "@/store/useFootballOS";
 import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
 import { goalProgressPct, goalUnitKey } from "@/domain/goals";
-import { rowLine } from "@/domain/rowText";
+import { positionLabel, rowLine } from "@/domain/rowText";
 import { overallRating, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { seasonSummary, type CareerState } from "@/domain/career";
@@ -171,7 +171,7 @@ export function ProfilePage() {
             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
               <Badge variant="outline" className="text-primary capitalize">{t(`prof.mode.${p.mode}`)}</Badge>
               <span>·</span>
-              <span>{p.position}</span>
+              <span>{positionLabel(p.position, t)}</span>
               <span>·</span>
               <span>{t("prof.created")} {fmtDate(locale, p.createdAt)}</span>
             </div>

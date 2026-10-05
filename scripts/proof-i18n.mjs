@@ -2774,6 +2774,15 @@ const NOT_PROSE = [
   // would have exempted it. Matched against the quote-stripped inner text, like the rest of
   // this list, so there is no `["']` anchor here. M181 narrowed the same rule for formats.
   /^(?:\S*[-/:]\S*)(?:\s+\S*[-/:]\S*)*$/,
+  // A compound POSITION abbreviation. `"LB / RB"` and `"LW / RW"` are the two values
+  // `Player.position` carries for a full-back and a winger (M263), and the class-list rule
+  // above cannot see them: no token in them contains a `-`, `/` or `:`, because the solidus
+  // is a token of its own with spaces either side. There are no words here for a
+  // dictionary to improve on — the whole literal is a code, and this file's value-space
+  // clause enumerates the eight of them. M181 narrowed this rule for formats; this
+  // narrows it for a separator, and the sample list keeps the narrowing honest in both
+  // directions: a real sentence that happens to hold a solidus must stay prose.
+  /^[A-Z]{1,4}(?: \/ [A-Z]{1,4})+$/,
 ];
 // True when the literal still names something in English with its interpolated values cut
 // out. `€${…}M` and `${home.name} ${hg} – ${ag} ${away.name}` do not; "Window: last {n}
@@ -2867,6 +2876,12 @@ const PROSE_SAMPLES = [
   [false, '`${home.name} ${hg} – ${ag} ${away.name}`'],
   [false, '"M."'],
   [false, '"attr.name.passing"'],
+  // The separator rule, both directions. The first is `POSITION_BY_GROUP`'s own value and
+  // is a code; the second is a constructed near-miss — same solidus, same shape, but its
+  // segments carry lowercase, so it is a sentence about two roles and must stay charged.
+  // It is the only sample here that is not copied out of the tree.
+  [false, '"LB / RB"'],
+  [true, '"Left / Right back"'],
 ];
 const classifyProse = (raw) => {
   const inner = raw.slice(1, -1);
@@ -3760,7 +3775,7 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1273 && shapeCounts.template === 99 && shapeCounts.expression === 28
+  shapeCounts.literal === 1281 && shapeCounts.template === 99 && shapeCounts.expression === 28
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4292,8 +4307,22 @@ ok(`no module prints a stored bucket straight into a display slot beyond the chi
 // the plant feeds the extractor a two-case switch, so a dropped case reddens the pin
 // rather than sliding a floor.
 const BK_CODES = spaceOf("domain/scouting.ts", /export type PosBucket = [^;]+;/, quoted);
+// Both composers in domain/rowText.ts are switches over a fixed code space, and until M263
+// the extractor that read one of them read the WHOLE FILE — which was safe only while no
+// other family happened to spell one of its codes. `positionLabel`'s `case "GK":` is a
+// player position and `bucketLabel`'s is a scout filter, so a whole-file scan counted the
+// bucket six times and reddened a clause about a file that was correct. Scoping the
+// extractor to the named composer's own body is what lets two families share a spelling;
+// the clause at the end of section 43 feeds the extractor a file holding both switches and
+// reads two either way.
+const switchBodyOf = (src, fn) => {
+  const at = src.indexOf(`export const ${fn} = `);
+  if (at < 0) return "";
+  const end = src.indexOf("\n};", at);
+  return end < 0 ? "" : src.slice(at, end + 3);
+};
 const bkCasesOf = (src) => [...src.matchAll(/case "(ALL|GK|DEF|MID|ATT)":/g)].map((m) => m[1]);
-const bkCases = bkCasesOf(appSrc.get("domain/rowText.ts") ?? "");
+const bkCases = bkCasesOf(switchBodyOf(appSrc.get("domain/rowText.ts") ?? "", "bucketLabel"));
 const BK_PLANT_CASES = 'switch (x) {\n    case "ALL": return t("a");\n    case "GK": return t("b");\n}';
 ok(`the bucket union's type and the composer's switch carry the same codes (${BK_CODES.join(",")} vs ${[...bkCases].sort().join(",")}; planted two-case switch reads ${bkCasesOf(BK_PLANT_CASES).length})`,
   BK_CODES.length === 5 && bkCases.length === 5 && [...BK_CODES].sort().join() === [...bkCases].sort().join()
@@ -4374,7 +4403,7 @@ ok(`no module prints a stored drill phase straight into a display slot and no sc
 // rather than sliding a floor.
 const PH_CODES = spaceOf("domain/types.ts", /export type DrillPhase = [^;]+;/, quoted);
 const phCasesOf = (src) => [...src.matchAll(/case "(warmup|technique|decision|game|cooldown)":/g)].map((m) => m[1]);
-const phCases = phCasesOf(appSrc.get("domain/rowText.ts") ?? "");
+const phCases = phCasesOf(switchBodyOf(appSrc.get("domain/rowText.ts") ?? "", "phaseLabel"));
 const PH_PLANT_CASES = 'switch (x) {\n    case "warmup": return t("a");\n    case "game": return t("b");\n}';
 ok(`the drill-phase union's type and the composer's switch carry the same codes (${PH_CODES.join(",")} vs ${[...phCases].sort().join(",")}; planted two-case switch reads ${phCasesOf(PH_PLANT_CASES).length})`,
   PH_CODES.length === 5 && phCases.length === 5 && [...PH_CODES].sort().join() === [...phCases].sort().join()
@@ -4406,6 +4435,214 @@ ok(`the shipped phaseLabel answers all ${PH_CODES.length} drill phases in all ${
   phReadBad.length === 0 && phDiffer === PH_DIFFER_PIN);
 ok(`and the same fallback is still the last resort for a phase outside the union (${rowTextModule.phaseLabel("Planted", tReader("en"))})`,
   rowTextModule.phaseLabel("Planted", tReader("en")) === "Planted");
+
+// ─── 43 · the seventh family of the class M249 closed (M263) ───────────────────
+// A player's position is one of eight English abbreviations — GK, CB, "LB / RB", DM, CM,
+// AMC, "LW / RW", ST — and every one of them reached the glass as itself: a badge in the
+// shared chrome, twelve text nodes in eight screens, and two intelligence facts whose
+// sentence already nouns the var. The class M249 charged has always converted N call sites
+// in N screens; here the centre of mass is ONE line of ui/primitives.tsx, which is why the
+// wiring table counts 13 positions across 9 modules while the chrome conversion is a single
+// position. Predictions written before the first run: the space is 8 and the composer's
+// switch carries the same 8; exactly 1 module names a pos.* key; 24 direct readings of
+// which 16 are not the code already spelled (the en value IS the abbreviation — a family
+// that displays an abbreviation keeps its English, so the differ pin is an honest floor
+// rather than the whole count); 24 door readings through `position`; the badge's 7
+// attribute sites and the rank family's 2 stay codes and are pinned as counted shapes; and
+// the unknown-code fallback. This family is also the first that cannot join codeWord's
+// table: five of its codes are spelled exactly like five PositionGroup ids that M255
+// already claimed, so the door dispatches on the variable's NAME — collision clause below.
+// The literal-shape pin moves 1273 → 1281 here: the eight keys of the switch and nothing
+// else.
+const PS_WIRING = [
+  ["ui/primitives.tsx", "positionLabel(position, t)", 1],
+  ["features/compare/ComparePage.tsx", "positionLabel(selected.position, t)", 1],
+  ["features/compare/ComparePage.tsx", "positionLabel(p.position, t)", 1],
+  ["features/football/Details.tsx", "positionLabel(p.position, t)", 1],
+  ["features/landing/Landing.tsx", "positionLabel(p.position, t)", 1],
+  ["features/manager/ManagerOS.tsx", "positionLabel(p.position, t)", 2],
+  ["features/player/PlayerOS.tsx", "positionLabel(state.profile.position, t)", 1],
+  ["features/profile/ProfilePage.tsx", "positionLabel(p.position, t)", 1],
+  ["features/scouting/ScoutingPanel.tsx", "positionLabel(p.position, t)", 3],
+  ["features/world/DynamicWorld.tsx", "positionLabel(p.position, t)", 1],
+];
+const PS_FILES_PIN = 9;
+const PS_POSITIONS_PIN = 13;
+const PS_IMPORT = /^import \{[^}]*\bpositionLabel\b[^}]*\} from "@\/domain\/rowText"/m;
+const psFiles = [...new Set(PS_WIRING.map(([p]) => p))];
+const psSrc = new Map(psFiles.map((p) => [p, appSrc.get(p) ?? ""]));
+const psCallsIn = (p, expr) => psSrc.get(p).split(expr).length - 1;
+const psBad = PS_WIRING.filter(([p, expr, n]) => psCallsIn(p, expr) !== n)
+  .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${psCallsIn(p, expr)}`);
+const psPositions = PS_WIRING.reduce((s, [, , n]) => s + n, 0);
+ok(`the ${psFiles.length} modules that show a player's position word it through the shared composer at all ${psPositions} position(s) (pins ${PS_FILES_PIN} files/${PS_POSITIONS_PIN} positions), and each imports it from domain/rowText (${psBad.join(" | ") || "none"})`,
+  psBad.length === 0 && psFiles.length === PS_FILES_PIN && psPositions === PS_POSITIONS_PIN &&
+  psFiles.every((p) => PS_IMPORT.test(psSrc.get(p))));
+
+// The census of what is still a code on the glass, and the only clause of this class that
+// charges a chrome module. A raw read is a JSX expression container whose entire content is
+// one read of the field, and the receiver is OPTIONAL: the shared badge destructures its own
+// prop, so `{position}` with no dot in front of it is the one display shape that carries this
+// family's code out of a chrome module. Arm A5 of this unit's witness is what proved that —
+// unwrapping the badge reddened the wiring table and left this census green, because the
+// pattern used to demand `x.position`. Shapes are then counted apart by the character that
+// opens the container rather than by a hand-written file list: `=` means the read is an
+// attribute feeding the shared badge, which words it; `$` means it is `${…}` inside a `#`
+// template, the league-RANK family, a number that shares this field name and must not share
+// this family's alibi; `(` means a binding pattern — the badge's own parameter — which is not
+// a display slot and is therefore counted and named instead of being quietly dropped. Every
+// bucket is pinned, so a scan that reads nothing cannot pass and a scan that reads everything
+// cannot either, and the plant carries one of each of the four shapes.
+const PS_READ = String.raw`\s*(?:[\w$]+(?:\.[\w$]+)*\.)?position\s*`;
+const PS_READ_RE = new RegExp(String.raw`\{${PS_READ}\}`, "g");
+const psReadsIn = (code) => {
+  const display = [];
+  let attr = 0, rank = 0, pattern = 0;
+  for (const m of code.matchAll(PS_READ_RE)) {
+    const before = code[m.index - 1];
+    if (before === "=") attr++;
+    else if (before === "$") rank++;
+    else if (before === "(") pattern++;
+    else display.push(m[0].replace(/\s+/g, ""));
+  }
+  return { display, attr, rank, pattern };
+};
+const psAgg = { display: [], attr: 0, rank: 0, pattern: [] };
+for (const [p, c] of appSrc) {
+  const s = psReadsIn(c);
+  psAgg.attr += s.attr;
+  psAgg.rank += s.rank;
+  for (let i = 0; i < s.pattern; i++) psAgg.pattern.push(`${p} {position}`);
+  for (const d of s.display) psAgg.display.push(`${p} ${d}`);
+}
+const PS_ATTR_PIN = 7;
+const PS_RANK_PIN = 2;
+const PS_PATTERN = ["ui/primitives.tsx {position}"];
+const PS_PLANT = '<td>{p.position}</td><PositionTag position={r.position} /> value={`#${s.position}`} call(f({ position })) <b>{p.name} {position}</b>';
+const psPlant = psReadsIn(PS_PLANT);
+ok(`no module words a player's position as a raw code in a display slot, and the shapes this census counts apart are pinned rather than waved through (${psAgg.display.length} display, ${psAgg.attr} badge attributes pin ${PS_ATTR_PIN}, ${psAgg.rank} rank templates pin ${PS_RANK_PIN}, ${psAgg.pattern.length} binding pattern(s) excluded by name; ${psAgg.display.join(" | ") || "none on the glass"}) — and the receiver-less display shape is not simply trusted: a plant holding one of each of the four shapes reads ${psPlant.display.length}/${psPlant.attr}/${psPlant.rank}/${psPlant.pattern}`,
+  psAgg.display.length === 0 && psAgg.attr === PS_ATTR_PIN && psAgg.rank === PS_RANK_PIN
+    && psAgg.pattern.length === PS_PATTERN.length && psAgg.pattern.join() === PS_PATTERN.join()
+    && psPlant.display.length === 2 && psPlant.attr === 1 && psPlant.rank === 1 && psPlant.pattern === 1);
+
+// The value space, produced twice and compared to itself: the union in the domain types and
+// the composer's switch, read from the switch's OWN body because GK is a bucket and a
+// position at once. The key each case hands to t() comes from the same body, so the
+// behavioural readings below are bound to the composer's actual spelling rather than to a
+// table this file keeps by hand.
+const PS_CODES = spaceOf("domain/types.ts", /export type PositionCode = [^;]+;/, quoted);
+const psSwitch = switchBodyOf(appSrc.get("domain/rowText.ts") ?? "", "positionLabel");
+const posCasesIn = (body) => [...body.matchAll(/case "(GK|CB|LB \/ RB|DM|CM|AMC|LW \/ RW|ST)":/g)].map((m) => m[1]);
+const psKey = new Map([...psSwitch.matchAll(/case "(.*?)": return t\("pos\.(\w+)"\);/g)].map((m) => [m[1], m[2]]));
+const PS_PLANT_CASES = 'export const positionLabel = (p: string, t: Translate): string => {\n  switch (p) {\n    case "GK": return t("a");\n    case "CB": return t("b");\n  }\n};';
+ok(`the position union's type and the composer's switch carry the same codes (${PS_CODES.join(", ")} vs ${[...posCasesIn(psSwitch)].sort().join(", ")}), the switch names a pos.* key for every one of them (${psKey.size} pairs), and a planted two-case switch reads 2 rather than sliding a floor (${posCasesIn(PS_PLANT_CASES).length})`,
+  PS_CODES.length === 8 && [...posCasesIn(psSwitch)].sort().join() === [...PS_CODES].sort().join()
+    && psKey.size === 8 && PS_CODES.every((c) => psKey.has(c))
+    && posCasesIn(PS_PLANT_CASES).length === 2);
+// The clause that says why this family is not a codeWord branch: one spelling, two families,
+// two tables. Ask the door for GK as a group and it must answer with the group's word; ask
+// it for GK as a position and it must answer with the badge's. Both readings are checked
+// against their own dictionary key in every locale, and the count of locales where the two
+// words actually differ is reported — English is the discriminating one ("Goalkeeper" vs
+// "GK"), while the two Chinese dictionaries happen to word GK the same way, which is exactly
+// why the assertion is per-key rather than "they must differ everywhere".
+const psCollideBad = [];
+let psCollideDiffer = 0;
+for (const { id } of L) {
+  const asGroup = rowTextModule.fillRowVars({ group: "GK" }, tReader(id)).group;
+  const asPosition = rowTextModule.fillRowVars({ position: "GK" }, tReader(id)).position;
+  if (asGroup !== D[id]["group.GK"]) psCollideBad.push(`${id}: \`group\` read “${asGroup}”, the dictionary says “${D[id]["group.GK"]}”`);
+  else if (asPosition !== D[id]["pos.gk"]) psCollideBad.push(`${id}: \`position\` read “${asPosition}”, the dictionary says “${D[id]["pos.gk"]}”`);
+  else if (asGroup !== asPosition) psCollideDiffer++;
+}
+ok(`the two families that share five spellings answer from two tables: GK through \`group\` is the group's word and through \`position\` the badge's, in all ${L.length} locales, and in ${psCollideDiffer} of them one spelling really does mean two different things (pin ≥1 — en words the group "Goalkeeper" and the position "GK") (${psCollideBad.join(" | ") || "no misread"})`,
+  psCollideBad.length === 0 && psCollideDiffer >= 1);
+
+// One spelling of the word, counted: exactly one module names a pos.* key and it is the
+// composer. The keys are reachable from the switch's literals, so the key-reachability gate
+// reads them the same way it reads the bucket and phase families.
+const posQuotedIn = (code) => [...code.matchAll(/["']pos\.(gk|cb|fb|dm|cm|am|w|st)["']/g)].length;
+const posComposers = [...appSrc].filter(([, c]) => posQuotedIn(c) > 0).map(([p, c]) => `${p} x${posQuotedIn(c)}`);
+const PS_PLANT_QUOTE = 'const w = (p: string) => t("pos.st");';
+ok(`exactly 1 module names a pos.* key and it is the composer, not a screen (${posComposers.join(", ") || "none"}), while a screen that starts quoting one is caught (${posQuotedIn(PS_PLANT_QUOTE)}), and the loaded composer is the module that declares positionLabel (${rtDeclared.includes("positionLabel")})`,
+  posComposers.length === 1 && posComposers[0] === "domain/rowText.ts x8" &&
+  posQuotedIn(PS_PLANT_QUOTE) === 1 && rtDeclared.includes("positionLabel") && typeof rowTextModule.positionLabel === "function");
+
+// The behavioural half, asked of the shipped composer directly in all eight codes and all
+// three locales, and pinned by how many readings are NOT the code — 16 of 24, because the en
+// dictionary holds the abbreviation the badge has always shown.
+const psReadBad = [];
+let psDiffer = 0;
+const PS_DIFFER_PIN = 16;
+for (const { id } of L) {
+  for (const code of PS_CODES) {
+    const shown = rowTextModule.positionLabel(code, tReader(id));
+    const want = D[id][`pos.${psKey.get(code)}`];
+    if (shown.startsWith("pos.")) psReadBad.push(`${id}: ${code} prints the key`);
+    else if (shown !== want) psReadBad.push(`${id}: ${code} prints “${shown}” while the dictionary says “${want}”`);
+    else if (shown !== code) psDiffer++;
+  }
+}
+ok(`the shipped positionLabel answers all ${PS_CODES.length} position codes in all ${L.length} locales with the dictionary's own word and never a key (${psReadBad.join(" | ") || "no bad reading"}), and ${psDiffer}/${PS_CODES.length * L.length} of those readings are not the code already spelled (pin ${PS_DIFFER_PIN})`,
+  psReadBad.length === 0 && psDiffer === PS_DIFFER_PIN);
+ok(`and the same fallback is still the last resort for a position outside the space (${rowTextModule.positionLabel("Planted", tReader("en"))})`,
+  rowTextModule.positionLabel("Planted", tReader("en")) === "Planted");
+
+// The back door, now a front door: both intelligence facts have always carried a position as
+// a row var, and the CODE_VARS list plus the name dispatch words them in every locale with no
+// producer edit. The rank family proves the other half of the same door — a var called
+// `position` that holds a NUMBER passes straight through, which is the one thing standing
+// between this family and a squad-slot rank being read as a position.
+const PS_ROW_SITES = [...appSrc].filter(([, c]) => /vars:\s*\{[^}]*\bposition:/.test(c)).map(([p]) => p);
+const psFactBad = [];
+for (const { id } of L) {
+  const shown = rowTextModule.rowLine({ key: "ai.fact.player", vars: { name: "X", position: "CM", age: 24, nation: "England", club: "Arsenal", overall: 87, potential: 90, value: "€50M", foot: "L" } }, tReader(id));
+  if (shown === undefined || /[{}]/.test(shown)) psFactBad.push(`${id} leaves braces: ${shown}`);
+  else if (!shown.includes(D[id]["pos.cm"])) psFactBad.push(`${id} never words the position: ${shown}`);
+  else if (id !== "en" && /(^|[^A-Za-z])CM([^A-Za-z]|$)/.test(shown)) psFactBad.push(`${id} still prints the code: ${shown}`);
+}
+const psDoorBad = [];
+for (const { id } of L) {
+  for (const code of PS_CODES) {
+    const shown = rowTextModule.fillRowVars({ position: code }, tReader(id)).position;
+    const want = D[id][`pos.${psKey.get(code)}`];
+    if (shown !== want) psDoorBad.push(`${id}: ${code} reads “${shown}” where the dictionary says “${want}”`);
+  }
+}
+const PS_ROW_PLANT = 'add({ key: "ai.fact.keyMan", vars: { name: n, position: p } });';
+const plantPsRow = /vars:\s*\{[^}]*\bposition:/.test(PS_ROW_PLANT) && !/vars:\s*\{[^}]*\bposition:/.test('add({ key: "ai.fact.keyMan", vars: { name: n } });');
+ok(`the ${PS_ROW_SITES.length} shipped row(s) carrying a position go through the CODE_VARS door (door open: ${rowTextModule.isCodeVar("position")}; ${PS_ROW_SITES.join(", ")}), all ${PS_CODES.length * L.length} door readings match the dictionary (${psDoorBad.join(" | ") || "clean"}), the fact words a CM in all ${L.length} locales and prints no bare code to the two Chinese ones (${psFactBad.join(" | ") || "clean"}), a rank row's number still passes through untouched (${rowTextModule.fillRowVars({ position: 7 }, tReader("en")).position}), and the detector tells a position-carrying vars body from a clean one (${plantPsRow})`,
+  PS_ROW_SITES.length === 2 && rowTextModule.isCodeVar("position") && psDoorBad.length === 0
+    && psFactBad.length === 0 && rowTextModule.fillRowVars({ position: 7 }, tReader("en")).position === 7 && plantPsRow);
+
+// The space typed rather than stringly, and the hand copy that used to disagree with it.
+// domain/worldEngine.ts carried its own POS_LABEL whose four values (RB, CDM, CAM, RW)
+// spelled positions no producer can emit, so a regenerated player was labelled one way on
+// /world and another everywhere else — a second producer of the same value space, invisible
+// to every clause above because it never reached the glass as a code. domain/transfers.ts
+// widened the same value to `string` on the way out, which the type clause below now
+// refuses.
+const psUnionDecls = [...appSrc].filter(([, c]) => /export type PositionCode =/.test(c)).map(([p]) => p);
+const psTyped = [...appSrc].reduce((n, [, c]) => n + (c.match(/position: PositionCode;/g) ?? []).length, 0);
+const psUntyped = [...appSrc].filter(([, c]) => /position: string;/.test(c)).map(([p]) => p);
+const PS_STRAY = [...appSrc].filter(([, c]) => /"(RB|RW|CDM|CAM)"/.test(c)).map(([p]) => p);
+ok(`exactly 1 module declares the position space (${psUnionDecls.join(", ") || "none"}), ${psTyped} fields are typed with it and ${psUntyped.length} still take any string (pin 0; ${psUntyped.join(", ") || "none"}), and no module abbreviates a position with one of the four spellings only the engine's retired hand copy used (${PS_STRAY.join(", ") || "none"})`,
+  psUnionDecls.length === 1 && psUnionDecls[0] === "domain/types.ts" && psTyped === 5 && psUntyped.length === 0 && PS_STRAY.length === 0);
+
+// The witness for the gate fix this family forced. Sections 41 and 42 counted a composer's
+// switch cases by scanning the WHOLE of domain/rowText.ts, which was harmless while no two
+// families shared a spelling; `case "GK":` is a scout bucket AND a player position, so the
+// bucket clause read six codes in a file holding five and reddened a clause about a correct
+// file. The extractors are now scoped to the named composer's own body, and this clause
+// proves the scoping carries it: a planted file with both switches reads 2 per family where
+// the same text scanned whole reads 3, and on the shipped file the scoped count is the
+// family's own 5 while the unscoped count is strictly larger.
+const PS_SCOPE_PLANT = 'export const bucketLabel = (b: string): string => {\n  switch (b) {\n    case "ALL": return "a";\n    case "GK": return "b";\n  }\n};\nexport const positionLabel = (p: string): string => {\n  switch (p) {\n    case "GK": return "c";\n    case "ST": return "d";\n  }\n};';
+const psScopeWhole = bkCasesOf(PS_SCOPE_PLANT).length;
+const psScopePlant = bkCasesOf(switchBodyOf(PS_SCOPE_PLANT, "bucketLabel")).length;
+const psWholeRT = bkCasesOf(appSrc.get("domain/rowText.ts") ?? "");
+ok(`a switch-cases extractor reads the composer it names, not the file it lives in (${psScopePlant} cases in the planted bucket switch where the same text scanned whole reads ${psScopeWhole}; shipped bucket switch ${bkCases.length} of ${psWholeRT.length} whole-file matches), and the difference is load-bearing rather than decorative (${psWholeRT.length > bkCases.length ? "a second family in the same module shares its spellings" : "no family currently collides — re-derive this"})`,
+  psScopePlant === 2 && psScopeWhole === 3 && bkCases.length === 5 && psWholeRT.length > bkCases.length);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { positionLabel } from "@/domain/rowText";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
@@ -232,7 +233,7 @@ function PlayerPicker({ players, value, onChange, exclude, side }: {
           <Crest colors={getClub(selected.clubId)?.colors} short={getClub(selected.clubId)?.short} size={28} />
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-medium">{selected.name}</div>
-            <div className="truncate text-xs text-muted-foreground">{selected.position} · {getClub(selected.clubId)?.name}</div>
+            <div className="truncate text-xs text-muted-foreground">{positionLabel(selected.position, t)} · {getClub(selected.clubId)?.name}</div>
           </div>
           <button onClick={() => { onChange(""); setQ(""); }} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
         </div>
@@ -249,7 +250,7 @@ function PlayerPicker({ players, value, onChange, exclude, side }: {
             >
               <Crest colors={getClub(p.clubId)?.colors} short={getClub(p.clubId)?.short} size={20} />
               <span className="min-w-0 flex-1 truncate">{p.name}</span>
-              <span className="shrink-0 text-xs text-muted-foreground">{p.position} · {p.overall}</span>
+              <span className="shrink-0 text-xs text-muted-foreground">{positionLabel(p.position, t)} · {p.overall}</span>
             </button>
           ))}
           {!matches.length && <div className="px-2 py-3 text-center text-xs text-muted-foreground">{t("compare.noMatch")} “{q}”.</div>}

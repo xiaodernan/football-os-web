@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M262 (a few numbers in that range
+Work ships one milestone per commit and is currently at M263 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,61 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M263 — the seventh family, and the first one the census was blind to
+
+M256 named this family third and last of the keyless ones: a player's position is one of
+eight English abbreviations — `GK`, `CB`, `LB / RB`, `DM`, `CM`, `AMC`, `LW / RW`, `ST` —
+and every one of them reached the glass as itself. Twelve text nodes in eight screens, and
+one line in `ui/primitives.tsx`: the shared `PositionTag`, which seven attribute sites hand
+their code to. That chrome module is why this unit is not a copy of M259–M261. In those
+families the conversion was N call sites in N screens; here the centre of mass is a single
+component, so a census that only walks screens would have called the badge done while the
+badge printed `CM` at every reader in every locale. It took a mutation arm to find out
+whether the census could see it — and the first arm proved it could not.
+
+Eight `pos.*` keys in all three locales (1,972 → **1,980**), `PositionCode` in
+`domain/types.ts` with five fields typed to it, and `positionLabel` as the composer. The
+row door had to change shape rather than grow: `GK`, `CB`, `DM`, `CM` and `ST` are both a
+`PositionGroup` id (M255) and a position abbreviation, and `codeWord`'s table is
+name-blind — asking it for `GK` answers "Goalkeeper", which is the group's word, not the
+badge's. So `fillRowVars` dispatches that var on the variable's NAME (`position` here,
+`group` over there), and one spelling can no longer lend its answer to the other family.
+Three older wounds closed on the way: `worldEngine` carried a hand copy of the position
+labels that disagreed with the table it shadowed (`RB`/`RW`/`CDM`/`CAM`, four spellings no
+producer writes), the type-space clause found `domain/transfers.ts` still typing a
+rumour's position as any string, and two defects were in the gate rather than the app —
+the switch-case extractors scanned the whole module, so the bucket family's five codes were
+being compared against six matches that included `positionLabel`'s `case "GK"`, and the
+prose ratchet charged `"LB / RB"` as key-carrying prose.
+
+Section 43 adds ten clauses: the wiring table (9 modules / 13 positions, each importing the
+composer), the display census — now four named buckets, because the receiver is optional
+and `(` marks a binding rather than a slot: 0 on the glass, 7 badge attributes, 2 rank
+templates, 1 pattern excluded by name — the union's eight codes against the switch's eight
+cases, the collision clause (`GK` through `group` versus through `position`, each answered
+from its own table in all three locales), the single-composer clause (one module names a
+`pos.*` key, eight times), 24 behavioural readings of which **16** differ from the code
+already spelled — en keeps the abbreviation, so this family's differ pin is an honest floor
+rather than the whole count — the unknown-code fallback, 24 door readings through
+`position` including the fact that words a CM in Chinese, the type space, and the extractor
+scope clause that the gate's own defect needed.
+
+Witness: **9/9 arms MATCHED**, control 333/333 green, every restore byte-exact. Three of
+them were wrong on the first round and the record keeps the reason. A2 lost one switch case
+and predicted four reds; six came back, and the two extras are this family's own structure
+— the composer's switch is the only reader a `pos.*` key has, so dropping a case orphans the
+key and M145's reachability gate is what catches it, and the eight switch literals are what
+the t()-shape pin counts, so 1,281 → 1,280. A6 took `position` out of `CODE_VARS` and
+predicted the collision clause green; it reddened, correctly — that clause answers through
+the door, and a var the door does not recognise cannot be worded by it either. A5 is the
+finding: unwrapping the badge reddened the wiring table and left the census green, because
+the pattern demanded `x.position`. The fix makes the receiver optional and binds that shape
+to a plant carrying one of each bucket, then adds A8 — re-tighten the pattern and the tree
+still reads 0 on the glass, so only the plant can betray it, and exactly one clause fires.
+Measured on the working tree: `tsc` rc=0, `npm run build` rc=0, suite **41/41 · 2,242/2,242
+· exit 0**, `proof-i18n` **333/333** against the frozen `git archive HEAD` plane's
+**323/323** — +10 clauses, +0 red — and the literal-shape pin 1,273 → 1,281.
 
 ### M262 — check 24 walks the whole tree, and the five-directory filter leaves the gate
 

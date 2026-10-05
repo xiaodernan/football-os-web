@@ -4,7 +4,7 @@
 // via attributeLabel(), POSITION_GROUPS, CATEGORY_LABEL. UIs read attr.name.* / group.*
 // from the dictionary instead.
 
-import type { AttributeDef, PositionGroup } from "../domain/types";
+import type { AttributeDef, PositionCode, PositionGroup } from "../domain/types";
 
 export const ATTRIBUTE_LABELS: Record<string, string> = {
   ball_control: "Ball Control",
@@ -59,7 +59,7 @@ export const CATEGORY_LABELS: Record<AttributeDef["category"], string> = {
   mental: "Mental",
 };
 
-export const POSITION_BY_GROUP_LABELS: Record<PositionGroup, string> = {
+export const POSITION_BY_GROUP_LABELS: Record<PositionGroup, PositionCode> = {
   GK: "GK",
   CB: "CB",
   FB: "LB / RB",

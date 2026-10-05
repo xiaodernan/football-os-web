@@ -16,7 +16,7 @@ import {
 import type { PlayerRef } from "@/domain/types";
 
 import { useI18n } from "@/i18n";
-import { bucketLabel, footLabel } from "@/domain/rowText";
+import { bucketLabel, footLabel, positionLabel } from "@/domain/rowText";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +136,7 @@ export function ScoutingPanel() {
             <tbody>
               {results.map((p) => (
                 <tr key={p.id} className={cn("border-t", compare.includes(p.id) && "bg-primary/5")}>
-                  <td className="px-2 py-1.5 font-mono text-xs text-muted-foreground">{p.position}</td>
+                  <td className="px-2 py-1.5 font-mono text-xs text-muted-foreground">{positionLabel(p.position, t)}</td>
                   <td className="px-2 py-1.5"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link><span className="ml-2 text-xs text-muted-foreground">{getClub(p.clubId)?.short} · {t(`dna.arch.${p.archetype}`)}</span></td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{p.age}</td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs font-semibold">{p.overall}</td>
@@ -183,7 +183,7 @@ function Watchlist({ watch, onRemove, onCompare, comparing }: { watch: PlayerRef
         <div className="space-y-1.5">
           {watch.map((p) => (
             <div key={p.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-sm">
-              <div className="min-w-0"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{p.position} · {t("scout.ovr")} {p.overall} · {t("scout.primeY", { n: primeYearsLabel(p) })}</span></div>
+              <div className="min-w-0"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{positionLabel(p.position, t)} · {t("scout.ovr")} {p.overall} · {t("scout.primeY", { n: primeYearsLabel(p) })}</span></div>
               <div className="flex items-center gap-1">
                 <Button size="sm" variant={comparing.includes(p.id) ? "secondary" : "ghost"} onClick={() => onCompare(p.id)}>⇄</Button>
                 <Button size="sm" variant="ghost" onClick={() => onRemove(p.id)}>✕</Button>
@@ -230,12 +230,13 @@ function CompareView({ a, b }: { a: PlayerRef; b: PlayerRef }) {
 }
 
 function Side({ p }: { p: PlayerRef }) {
+  const { t } = useI18n();
   const c = getClub(p.clubId);
   return (
     <div className="flex flex-col items-center gap-1">
       <Crest colors={c?.colors} short={c?.short} size={30} />
       <Link to={`/players/${p.id}`} className="line-clamp-1 hover:text-primary hover:underline">{p.name}</Link>
-      <span className="text-[10px] text-muted-foreground">{p.position}</span>
+      <span className="text-[10px] text-muted-foreground">{positionLabel(p.position, t)}</span>
     </div>
   );
 }
