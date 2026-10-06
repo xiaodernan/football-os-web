@@ -3816,7 +3816,7 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1285 && shapeCounts.template === 98 && shapeCounts.expression === 28
+  shapeCounts.literal === 1298 && shapeCounts.template === 98 && shapeCounts.expression === 28
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5169,6 +5169,55 @@ const VS_KEYS = ["mgr.vs", "scout.vs"];
 const vsMissing = VS_KEYS.filter((k) => L.some((loc) => !D[loc.id][k]));
 ok(`the two-letter connector between two sides is keyed, not typed: the shipped modules carry 0 bare-vs text nodes and 0 bare-vs text children (planted node reads ${vsPlantedNode}, planted child reads ${vsPlantedChild}), and both connector rows exist in ${L.length} locales (${vsMissing.join(", ") || "none"} missing)`,
   vsNodeHits === 0 && vsChildHits === 0 && vsPlantedNode === 1 && vsPlantedChild === 1 && vsMissing.length === 0);
+
+// 37e. M271. The letter-bar scan change M224 deferred. hasProse wants three consecutive Latin
+// letters, so a text node whose every Latin run is two letters or fewer is invisible to it —
+// the class that hid "xG (us)" (M268) and "vs" (M270) in plain sight, one word at a time. The
+// walk generalizes check 12's node read to every shipped module: both node shapes, the same
+// code-fragment filter, and every node whose Latin runs all sit at two letters or below must
+// be on the decision list — the brand's own initial F (the logo glyph beside t("brand.name")
+// on three screens) and the ⌘K shortcut badge, both symbols rather than copy. Everything else
+// the walk found under the bar is a dictionary row now: the fixture connector (common.vs, the
+// word DataRoom's match link and the manager's stat duel ask), the level badge (the existing
+// common.level word, asked beside the number it labels — Dashboard, AppShell and the Review
+// tile's prop, which the node walk cannot see, so its shape is pinned directly, with plants),
+// the model's goal figure (common.xg — FootballWorld, DataRoom, and SimulationLab's stats
+// table, whose bare JS label sat beside keyed siblings), and the league table's five headers
+// (mgr.thP/thW/thD/thL/thGD), one cell away from keyed thClub and thPts. The walk's own read
+// is charged by a planted markup fixture: an F survives the decision list and a planted qq is
+// charged by the same pass.
+const UNDER_DECISIONS = ["F", "⌘K"];
+const underBar = [];
+for (const [path, src] of appSrc) {
+  const nodes = [
+    ...[...src.matchAll(/(?<!=)>[^<>{}\n]+(?=<)/g)].map((m) => m[0].slice(1)),
+    ...[...src.matchAll(/(?<!=)>[^<>{}\n]+(?=\{)/g)].map((m) => m[0].slice(1)),
+  ].map((x) => x.trim());
+  for (const node of nodes) {
+    if (!node || /[):;=}&|]/.test(node)) continue;
+    const runs = node.match(/[A-Za-z]+/g) ?? [];
+    if (!runs.length || runs.some((w) => w.length >= 3)) continue;
+    underBar.push({ path, node });
+  }
+}
+const underStray = underBar.filter((x) => !UNDER_DECISIONS.includes(x.node));
+const underPlantSrc = "<span>F</span><span>qq</span>";
+const underPlantNodes = [...underPlantSrc.matchAll(/(?<!=)>[^<>{}\n]+(?=<)/g)].map((m) => m[0].slice(1).trim())
+  .filter((node) => node && !/[):;=}&|]/.test(node))
+  .filter((node) => { const runs = node.match(/[A-Za-z]+/g) ?? []; return runs.length && !runs.some((w) => w.length >= 3); });
+const underPlantCharged = underPlantNodes.filter((n) => !UNDER_DECISIONS.includes(n)).length;
+const RV_FILE = "features/review/ReviewPage.tsx";
+const MS_FILE = "features/sim/SimulationLab.tsx";
+const lvPropLeft = [...appSrc.get(RV_FILE).matchAll(/`Lv \$\{/g)].length;
+const lvPlanted = [..."`Lv ${n}`".matchAll(/`Lv \$\{/g)].length;
+const xgLabelLeft = [...appSrc.get(MS_FILE).matchAll(/label: "xG"/g)].length;
+const xgPlanted = [...'label: "xG"'.matchAll(/label: "xG"/g)].length;
+const UNDER_KEYS = ["common.vs", "common.xg", "mgr.thP", "mgr.thW", "mgr.thD", "mgr.thL", "mgr.thGD"];
+const underMissing = UNDER_KEYS.filter((k) => L.some((loc) => !D[loc.id][k]));
+ok(`every text node the letter bar cannot see is a decision or a row: the app-wide walk reads ${underBar.length} under-bar nodes (${underBar.map((x) => x.node).join(" ")}) and ${underStray.length} of them stray off the decision list, a planted fixture charges ${underPlantCharged} under-bar word, the two prop-string shapes the walk cannot see are gone (a planted Lv template reads ${lvPlanted}, a planted xG label reads ${xgPlanted}), and all ${UNDER_KEYS.length} rows exist in ${L.length} locales (${underMissing.join(", ") || "none"} missing)`,
+  underBar.length === 4 && underStray.length === 0 && underPlantCharged === 1 &&
+  lvPropLeft === 0 && lvPlanted === 1 && xgLabelLeft === 0 && xgPlanted === 1 &&
+  underMissing.length === 0);
 
 // 38. The suite's own blind spots.
 //

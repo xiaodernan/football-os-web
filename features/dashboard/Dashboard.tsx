@@ -94,7 +94,7 @@ export function Dashboard() {
         </div>
         {info && (
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono">Lv {info.level}</Badge>
+            <Badge variant="outline" className="font-mono">{t("common.level")} {info.level}</Badge>
             <Badge variant="outline" className="font-mono text-primary">{t("dash.xpBadge", { n: profile?.xp ?? 0 })}</Badge>
             <Badge variant="outline" className="font-mono">🔥 {t("dash.streakDays", { n: state.streak.current })}</Badge>
           </div>

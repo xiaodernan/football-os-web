@@ -162,7 +162,7 @@ export function ReviewPage() {
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             <StatTile label={t("rv.statSessions")} value={review.completed} sub={`${review.planned} ${t("rv.planned")} · ${review.missed} ${t("rv.missed")}`} />
             <StatTile label={t("rv.statMinutes")} value={review.minutes} sub={t("rv.minutesUnit")} />
-            <StatTile label={t("rv.statXp")} value={`+${review.xpGained}`} tone="up" sub={info ? `Lv ${info.level}` : undefined} />
+            <StatTile label={t("rv.statXp")} value={`+${review.xpGained}`} tone="up" sub={info ? `${t("common.level")} ${info.level}` : undefined} />
             <StatTile label={t("rv.streak")} value={`${review.streak}d`} />
             <StatTile
               label={t("rv.overall")}

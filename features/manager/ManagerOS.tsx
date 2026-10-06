@@ -341,7 +341,7 @@ function Table({ career }: { career: CareerState }) {
       <SectionTitle title={`${comp?.name ?? t("mgr.leagueWord")} ${t("mgr.tableWord")}`} hint={t("mgr.tableHint")} />
       <div className="mt-2 overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">#</th><th className="px-2 py-1">{t("mgr.thClub")}</th><th className="px-2 py-1 text-right">P</th><th className="px-2 py-1 text-right">W</th><th className="px-2 py-1 text-right">D</th><th className="px-2 py-1 text-right">L</th><th className="px-2 py-1 text-right">GD</th><th className="px-2 py-1 text-right">{t("mgr.thPts")}</th></tr></thead>
+          <thead className="text-left text-xs text-muted-foreground"><tr><th className="px-2 py-1">#</th><th className="px-2 py-1">{t("mgr.thClub")}</th><th className="px-2 py-1 text-right">{t("mgr.thP")}</th><th className="px-2 py-1 text-right">{t("mgr.thW")}</th><th className="px-2 py-1 text-right">{t("mgr.thD")}</th><th className="px-2 py-1 text-right">{t("mgr.thL")}</th><th className="px-2 py-1 text-right">{t("mgr.thGD")}</th><th className="px-2 py-1 text-right">{t("mgr.thPts")}</th></tr></thead>
           <tbody>
             {rows.map((r, i) => {
               const c = getClub(r.clubId);
@@ -464,7 +464,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
   const vs = (label: string, a: number, b: number) => (
     <div className="flex items-center justify-between rounded-md border bg-card/30 px-3 py-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-mono">{a} <span className="text-muted-foreground">v</span> {b}</span>
+      <span className="font-mono">{a} <span className="text-muted-foreground">{t("common.vs")}</span> {b}</span>
       <span className={cn("font-mono text-xs", a >= b ? "text-success" : "text-destructive")}>{a - b >= 0 ? "+" : ""}{a - b}</span>
     </div>
   );

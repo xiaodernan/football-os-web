@@ -198,7 +198,7 @@ function ResultView({ result, home, away }: { result: SimResult; home: string; a
     { label: t("ms.possession"), h: Math.round(s.home.possession), a: Math.round(s.away.possession), unit: "%" },
     { label: t("ms.shots"), h: s.home.shots, a: s.away.shots, unit: "" },
     { label: t("ms.onTarget"), h: s.home.onTarget, a: s.away.onTarget, unit: "" },
-    { label: "xG", h: +s.home.xg.toFixed(2), a: +s.away.xg.toFixed(2), unit: "" },
+    { label: t("common.xg"), h: +s.home.xg.toFixed(2), a: +s.away.xg.toFixed(2), unit: "" },
     { label: t("ms.corners"), h: s.home.corners, a: s.away.corners, unit: "" },
     { label: t("sim.cards"), h: s.home.yellows + s.home.reds * 2, a: s.away.yellows + s.away.reds * 2, unit: "" },
   ];

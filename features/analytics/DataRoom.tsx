@@ -245,7 +245,7 @@ export function DataRoom() {
                     <Link to={`/matches/${match.id}`} className="flex items-center gap-2 hover:text-primary">
                       <Crest colors={h?.colors} short={h?.short} size={20} />
                       <span className="truncate font-medium">{h?.name}</span>
-                      <span className="text-xs text-muted-foreground">v</span>
+                      <span className="text-xs text-muted-foreground">{t("common.vs")}</span>
                       <span className="truncate font-medium">{a?.name}</span>
                       <Crest colors={a?.colors} short={a?.short} size={20} />
                     </Link>
@@ -262,7 +262,7 @@ export function DataRoom() {
                     <span><span className="font-mono text-foreground">{pct.home}%</span> {h?.short}</span>
                     <span><span className="font-mono text-foreground">{pct.draw}%</span> {t("data.draw")}</span>
                     <span><span className="font-mono text-foreground">{pct.away}%</span> {a?.short}</span>
-                    <span>xG {odds.lambdaHome.toFixed(2)}–{odds.lambdaAway.toFixed(2)}</span>
+                    <span>{t("common.xg")} {odds.lambdaHome.toFixed(2)}–{odds.lambdaAway.toFixed(2)}</span>
                     <span>{t("data.totalGoals", { n: odds.expectedTotalGoals.toFixed(2) })}</span>
                     <span>{t("data.mostLikely", { score: odds.mostLikelyScore, pct: Math.round(odds.mostLikelyPct * 100) })}</span>
                     <span>{t(sample === 1 ? "data.sampleOne" : "data.sampleMany", { n: sample })}</span>

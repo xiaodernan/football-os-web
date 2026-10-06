@@ -122,7 +122,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mb-3 rounded-lg border border-sidebar-border bg-sidebar-accent/40 p-3">
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium">{state.profile?.displayName}</span>
-            <span className="font-mono text-sidebar-primary">Lv {info.level}</span>
+            <span className="font-mono text-sidebar-primary">{t("common.level")} {info.level}</span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sidebar">
             <div className="h-full rounded-full bg-sidebar-primary transition-all" style={{ width: `${Math.round(info.progress * 100)}%` }} />
