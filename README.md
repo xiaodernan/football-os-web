@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M281 (a few numbers in that range
+Work ships one milestone per commit and is currently at M282 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6278,6 +6278,25 @@ named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `too
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
 
+### M282 — the seed's goal events name the shot, not the dictionary key
+
+M279 filled the long-dormant match events seam: every finished fixture now carries
+generated goal events whose detail row is `sim.ev.goal`. But the seed filled the shot
+var with a dictionary KEY (`sim.shot.${shotType}`) instead of the raw code the code-word
+lookup expects — "shot" is a code var, so `fillRowVars` handed `sim.shot.tap_in` to
+`codeWord`, which matches no raw-code list and falls through to its honest fallback:
+print the code as written. Measured over the shipped seed: 834 goal events × 3 locales
+= **2,502/2,502 renders leaking** — a reader in any language saw `xG 0.13 ·
+sim.shot.right_foot` on the match page's timeline (`Details.tsx` renders `m.events` when
+present). The two-line data fix itself rides in the stats-reader commit below; this
+milestone adds its lasting contract: proof-world renders every seed goal event in all
+three locales and pins each shot word to the dictionary's own value for that event's
+code (floor 400 events), so no future var can hand a key where a code belongs. (M281
+was double-used — the dead-field deletion above and the stats-reader commit below —
+a side effect of two sessions sharing the repo; M282 is single-owned.)
+
+Measured: `tsc` clean; proof-world **37/37**; suite **41/41 · 2,341/2,341**;
+`npm run build` exit 0. Code as **1829295** (+21 gate lines in proof-world.mjs).
 ### M281 — the seed's sixth English sentence is deleted, not just unread
 
 M274 keyed the news headline and rebuilt the summary on the glass, but the record kept
