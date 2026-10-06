@@ -10,6 +10,7 @@ import type {
   Competition,
   Match,
   MatchEvent,
+  MatchStats,
   NewsArticle,
   PlayerRef,
   PositionGroup,
@@ -367,6 +368,7 @@ function buildMatches(clubs: Club[], compMap: Map<string, Competition>, rng: () 
             m.awayGoals = s.a;
             // Generate detailed match events and stats
             m.events = generateMatchEvents(home, away, s, rng);
+            m.stats = generateMatchStats(home, away, s, rng);
           }
           matches.push(m);
         }
@@ -437,6 +439,75 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
   }
   
   return events.sort((a, b) => a.minute - b.minute);
+}
+
+function generateMatchStats(home: Club, away: Club, score: { h: number; a: number }, rng: () => number): { home: MatchStats; away: MatchStats } {
+  // Possession based on overall strength with some randomness
+  const strengthDiff = home.overall - away.overall;
+  let basePossession = 50 + strengthDiff * 0.8;
+  basePossession = Math.max(35, Math.min(65, basePossession + rngFloat(rng, -5, 5)));
+  
+  const totalShots = rngInt(rng, 15, 30);
+  const homeShotShare = basePossession / 100 + rngFloat(rng, -0.1, 0.1);
+  const homeShots = Math.round(totalShots * homeShotShare);
+  const awayShots = totalShots - homeShots;
+  
+  const homeOnTarget = Math.round(homeShots * rngFloat(rng, 0.25, 0.45));
+  const awayOnTarget = Math.round(awayShots * rngFloat(rng, 0.25, 0.45));
+  
+  const homeXg = parseFloat((homeOnTarget * rngFloat(rng, 0.08, 0.15) + score.h * rngFloat(rng, 0.1, 0.2)).toFixed(2));
+  const awayXg = parseFloat((awayOnTarget * rngFloat(rng, 0.08, 0.15) + score.a * rngFloat(rng, 0.1, 0.2)).toFixed(2));
+  
+  const homePasses = rngInt(rng, 300, 550);
+  const awayPasses = rngInt(rng, 300, 550);
+  const homePassAcc = parseFloat((rngFloat(rng, 75, 90)).toFixed(1));
+  const awayPassAcc = parseFloat((rngFloat(rng, 75, 90)).toFixed(1));
+  
+  const homeTackles = rngInt(rng, 12, 25);
+  const awayTackles = rngInt(rng, 12, 25);
+  const homeDuels = rngInt(rng, 40, 70);
+  const awayDuels = rngInt(rng, 40, 70);
+  
+  const homeCorners = rngInt(rng, 2, 10);
+  const awayCorners = rngInt(rng, 2, 10);
+  const homeFouls = rngInt(rng, 8, 18);
+  const awayFouls = rngInt(rng, 8, 18);
+  
+  const homeYellows = rng() > 0.4 ? rngInt(rng, 1, 4) : 0;
+  const awayYellows = rng() > 0.4 ? rngInt(rng, 1, 4) : 0;
+  const homeReds = rng() > 0.9 ? 1 : 0;
+  const awayReds = rng() > 0.9 ? 1 : 0;
+  
+  return {
+    home: {
+      possession: Math.round(basePossession),
+      shots: homeShots,
+      onTarget: homeOnTarget,
+      xg: homeXg,
+      passes: homePasses,
+      passAcc: homePassAcc,
+      tackles: homeTackles,
+      duelsWon: homeDuels,
+      corners: homeCorners,
+      fouls: homeFouls,
+      yellows: homeYellows,
+      reds: homeReds,
+    },
+    away: {
+      possession: Math.round(100 - basePossession),
+      shots: awayShots,
+      onTarget: awayOnTarget,
+      xg: awayXg,
+      passes: awayPasses,
+      passAcc: awayPassAcc,
+      tackles: awayTackles,
+      duelsWon: awayDuels,
+      corners: awayCorners,
+      fouls: awayFouls,
+      yellows: awayYellows,
+      reds: awayReds,
+    },
+  };
 }
 
 function buildStandings(clubs: Club[], matches: Match[]): Record<string, Standing[]> {

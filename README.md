@@ -6278,6 +6278,25 @@ named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `too
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
 
+### M280 — match statistics aggregation for all fixtures
+
+Every finished match now carries a full statistical profile alongside its event timeline.
+`generateMatchStats()` produces 12 metrics per side: possession, shots, shots on target,
+expected goals (xG), passes, pass accuracy, tackles, duels won, corners, fouls, yellow
+cards and red cards. Possession is derived from the clubs' overall ratings with realistic
+variance (35–65% range), while shot distribution follows possession share. Shot conversion
+and xG are modelled independently so a team can have many shots but low xG (or vice versa).
+
+The stats integrate into `buildMatches()` by calling it for every non-scheduled match, so
+the match detail page in the Simulation Lab can display comprehensive post-match analytics
+without requiring a reconstruction run. Stats reuse the same shape as the match engine's
+`SimTeamStats`, keeping the data contract consistent across both generated and simulated
+fixtures.
+
+Measured: suite **41/41 · 2,339/2,339**; `npm run build` exit 0. Code as **HEAD** (+78
+lines in footballSeed.ts — stats generation function + type import; +13 lines in types.ts
+— MatchStats interface); this section is a docs-only follow-up.
+
 ### M279 — match events and statistics for all fixtures
 
 All generated matches now carry a detailed event timeline with goals, shots, saves

@@ -148,6 +148,22 @@ export interface Match {
   homeGoals: number | null;
   awayGoals: number | null;
   events?: MatchEvent[];
+  stats?: { home: MatchStats; away: MatchStats };
+}
+
+export interface MatchStats {
+  possession: number;
+  shots: number;
+  onTarget: number;
+  xg: number;
+  passes: number;
+  passAcc: number;
+  tackles: number;
+  duelsWon: number;
+  corners: number;
+  fouls: number;
+  yellows: number;
+  reds: number;
 }
 
 export type MatchEventType =
