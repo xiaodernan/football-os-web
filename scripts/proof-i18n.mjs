@@ -361,11 +361,12 @@ ok(`no Scouting string prop still carries raw English (${engProps.join(" | ") ||
 //     turned the three stat codes this check used to excuse — OVR, POT and OVR/€M
 //     — into keys, because the dictionary already has a word for each of them on
 //     this very screen (compare.m.overall is 综合/綜合 and scout.noMatchHint says
-//     综合分), and a code the dictionary names is copy, not a code. What is left is
-//     "vs": a separator between two names that reads the same in all three locales.
-//     It is listed as a decision, not as a gated fact — nothing would catch it
-//     turning into prose, which is why the scan below walks every node it can find.
-const CODE_TEXT = ["vs"];
+//     综合分), and a code the dictionary names is copy, not a code. The last entry,
+//     "vs", is a keyed row too now — M270 gave the scout `scout.vs` (the word the
+//     manager's side already asks as `mgr.vs`), so the decision list is empty and
+//     the class a two-letter word used to slip under the letter bar through is held
+//     by clause 37d's bare-vs shape census instead of by this excuse list.
+const CODE_TEXT = [];
 // `(?<!=)` skips arrow functions: `() => scoutCandidates({` would otherwise read
 // as a text node running into an interpolation.
 const nodeTexts = [
@@ -3815,7 +3816,7 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1282 && shapeCounts.template === 98 && shapeCounts.expression === 28
+  shapeCounts.literal === 1285 && shapeCounts.template === 98 && shapeCounts.expression === 28
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5146,6 +5147,28 @@ ok(`the match page's AI path is rows end to end: the provider takes { label, fac
   !/facts: string\[\]/.test(appSrc.get(AI_FILE)) &&
   detQfKeys >= 6 && !/facts: string\[\]/.test(appSrc.get(DET_FILE)) &&
   qfMissing.length === 0 && aiGone.length === 0);
+
+// 37d. M270. "vs" is two letters and the raw-UI scan wants three consecutive ones, so the
+// connector between the two sides of a score reached both Chinese locales as bare English
+// text in two shapes: a text node between a closed element and an expression (`</span> vs
+// {…}`) in the manager's season panel, and a whole text child (`>vs<`) in the scout compare
+// header. The dictionary already carried the word for one of the two screens — `mgr.vs`,
+// asked one section title away — so the manager's fix is asking for it, and the scout gets
+// its own row (`scout.vs`, the same 对阵/對陣 pair). The census pins both shapes at zero
+// across every shipped module; the dictionary is outside the scan (appSrc excludes i18n/),
+// because an English row may legitimately say vs — the Chinese reader never reads it. A
+// planted instance of each shape is charged by the same read, so a scanner that stopped
+// seeing either shape would say so rather than print a green zero.
+const VS_NODE = />[^\S\n]*vs[^\S\n]*\{/g;
+const VS_CHILD = />[^\S\n]*vs[^\S\n]*</g;
+const vsNodeHits = [...appSrc.values()].reduce((n, c) => n + [...c.matchAll(VS_NODE)].length, 0);
+const vsChildHits = [...appSrc.values()].reduce((n, c) => n + [...c.matchAll(VS_CHILD)].length, 0);
+const vsPlantedNode = [..."<span>{s.score}</span> vs {s.opp}".matchAll(VS_NODE)].length;
+const vsPlantedChild = [..."<div>vs</div>".matchAll(VS_CHILD)].length;
+const VS_KEYS = ["mgr.vs", "scout.vs"];
+const vsMissing = VS_KEYS.filter((k) => L.some((loc) => !D[loc.id][k]));
+ok(`the two-letter connector between two sides is keyed, not typed: the shipped modules carry 0 bare-vs text nodes and 0 bare-vs text children (planted node reads ${vsPlantedNode}, planted child reads ${vsPlantedChild}), and both connector rows exist in ${L.length} locales (${vsMissing.join(", ") || "none"} missing)`,
+  vsNodeHits === 0 && vsChildHits === 0 && vsPlantedNode === 1 && vsPlantedChild === 1 && vsMissing.length === 0);
 
 // 38. The suite's own blind spots.
 //

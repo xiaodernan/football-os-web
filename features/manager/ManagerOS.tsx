@@ -234,8 +234,8 @@ function SeasonSummaryPanel({ career }: { career: CareerState }) {
       </div>
       {(s.bestWin || s.worstLoss) && (
         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-          {s.bestWin && <div> {t("mgr.biggestWin")} <span className="text-foreground">{s.bestWin.score}</span> vs {s.bestWin.opponent}</div>}
-          {s.worstLoss && <div> {t("mgr.heaviestDefeat")} <span className="text-foreground">{s.worstLoss.score}</span> vs {s.worstLoss.opponent}</div>}
+          {s.bestWin && <div> {t("mgr.biggestWin")} <span className="text-foreground">{s.bestWin.score}</span> {t("mgr.vs")} {s.bestWin.opponent}</div>}
+          {s.worstLoss && <div> {t("mgr.heaviestDefeat")} <span className="text-foreground">{s.worstLoss.score}</span> {t("mgr.vs")} {s.worstLoss.opponent}</div>}
         </div>
       )}
       <p className="mt-2 text-[11px] text-muted-foreground">{s.complete ? t("mgr.seasonDone") : t("mgr.fixturesLeft", { n: Math.max(0, (s.clubCount - 1) * 2 - s.played) })}</p>

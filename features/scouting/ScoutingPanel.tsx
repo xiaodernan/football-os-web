@@ -209,7 +209,7 @@ function CompareView({ a, b }: { a: PlayerRef; b: PlayerRef }) {
   return (
     <div className="mt-2">
       <div className="grid grid-cols-3 items-center gap-2 text-center text-xs">
-        <Side p={a} /><div className="text-muted-foreground">vs</div><Side p={b} />
+        <Side p={a} /><div className="text-muted-foreground">{t("scout.vs")}</div><Side p={b} />
       </div>
       <div className="mt-3 space-y-2">
         {rows.map((r) => {
