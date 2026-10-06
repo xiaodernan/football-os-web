@@ -5219,6 +5219,27 @@ ok(`every text node the letter bar cannot see is a decision or a row: the app-wi
   lvPropLeft === 0 && lvPlanted === 1 && xgLabelLeft === 0 && xgPlanted === 1 &&
   underMissing.length === 0);
 
+// 37f. M272. The prop-string class the text-node walks cannot see, generalized from M271's two
+// pinned shapes: a display-named prop (label, title, sub, hint, text, description, subtitle,
+// alt, placeholder) assigned a bare quoted string carrying three consecutive Latin letters is
+// interface copy parked where no translator runs. CommandDialog's defaults were exactly that —
+// "Command Palette" and "Search for a command to run..." living behind a caller that always
+// keyed both props, an English reflow point waiting for the next caller to skip them — so the
+// types now require the two props and this census walks every shipped module with the reading
+// its plants are charged by: a destructured default and an object-literal label each read one,
+// while labelKey, type annotations, keyed calls and strings under the letter bar stay outside.
+const PROP_PROSE = /(?<![A-Za-z])(subtitle|placeholder|description|label|title|sub|hint|text|alt)(?![A-Za-z])\s*[:=]\s*"([^"]*)"/g;
+const propProseHits = [];
+for (const [path, src] of appSrc) {
+  for (const m of src.matchAll(PROP_PROSE)) {
+    if (/[A-Za-z]{3,}/.test(m[2])) propProseHits.push(`${path} ${m[1]}="${m[2]}"`);
+  }
+}
+const propPlantA = [...`{ title = "Command Palette" }`.matchAll(PROP_PROSE)].filter((m) => /[A-Za-z]{3,}/.test(m[2])).length;
+const propPlantB = [...`{ label: "Model projection" }`.matchAll(PROP_PROSE)].filter((m) => /[A-Za-z]{3,}/.test(m[2])).length;
+ok(`display-named props carry no bare prose: the app-wide walk reads ${propProseHits.length} bare strings on a display prop (${propProseHits.join(", ") || "none"}), and planted default-param and object-literal shapes read ${propPlantA} and ${propPlantB}`,
+  propProseHits.length === 0 && propPlantA === 1 && propPlantB === 1);
+
 // 38. The suite's own blind spots.
 //
 // A clause that asserts `=== 0` and carries neither a plant beside it nor a guard inside it

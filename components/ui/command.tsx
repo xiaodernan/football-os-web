@@ -29,16 +29,19 @@ function Command({
   )
 }
 
+// M272. The dialog's header copy carries no default: a default here is English prose parked in
+// a shared component where no translator runs. The one caller keys both props, so the types
+// require them instead of falling back to English.
 function CommandDialog({
-  title = "Command Palette",
-  description = "Search for a command to run...",
+  title,
+  description,
   children,
   className,
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
-  title?: string
-  description?: string
+  title: string
+  description: string
   className?: string
   showCloseButton?: boolean
 }) {
