@@ -6318,6 +6318,25 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M283 — the seed's match-stats contract gets its witness
+
+M280 shipped the seed's per-match statistics and M281 gave them a reader, but the contract
+itself had no runnable proof — a data shape that nothing pins is one editing accident away
+from drifting under every screen that reads it. This milestone adds `proof-matchstats.mjs`,
+which loads the demo world and pins four families of facts about all 970 played fixtures: a
+played match always carries both a stats pair and an event timeline while a scheduled one
+carries neither; each side's stats carry exactly the 12 declared `MatchStats` fields (so a
+`duelsWon`-style rename cannot come back); the pair obeys its own arithmetic (possession
+halves sum to 100 on every match, shots on target never exceed shots, every number finite
+and non-negative); and the timeline agrees with the scoreline it illustrates — goal events
+per side equal the recorded goals, minutes ascending, and every goal's shot var is the RAW
+`SHOT_TYPES` code the code-word lookup dispatches on, never a composed dictionary key. The
+last clause spells the M279/M282 defect from the data side, so a regression cannot hide
+behind the rendering gate alone.
+
+Measured: `proof-matchstats` 11/11; suite **42/42 · 2,352/2,352**. Code as **HEAD**
+(+64/−0, one new proof file).
+
 ### M281 — the recorded match stats find their reader
 
 M280 shipped `Match.stats` and left it write-only — the exact defect class M105/M106/M107
