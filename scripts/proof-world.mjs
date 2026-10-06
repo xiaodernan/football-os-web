@@ -148,6 +148,22 @@ ok(`every seed match event names a real squad player (${seedEvents.length} event
   seedPlaceholders.length === 0 &&
   seedEvents.every((e) => seedNames.has(e.player)));
 
+// --- the recorded board must equal the timeline it sits beside (M287) ---
+// M280 generated the stats pair independently of the events, so the comparison
+// board contradicted the timeline on the same screen: measured 1064/1074 played
+// matches with a shots mismatch and 993/1074 with an onTarget mismatch (goals
+// were already pinned by proof-matchstats). The countable figures are now the
+// timeline's own counts; this clause pins the reconstruction in both directions.
+const statEvents = WORLD.matches.filter((m) => m.status !== "SCHEDULED" && m.stats && m.events);
+const evCount = (m, type, side) => m.events.filter((e) => e.type === type && e.side === side).length;
+const statMismatch = statEvents.filter((m) => ["home", "away"].some((s) =>
+  m.stats[s].shots !== evCount(m, "SHOT", s) + evCount(m, "SAVE", s) + evCount(m, "GOAL", s) ||
+  m.stats[s].onTarget !== evCount(m, "SAVE", s) + evCount(m, "GOAL", s) ||
+  m.stats[s].yellows !== evCount(m, "YELLOW", s) ||
+  m.stats[s].reds !== evCount(m, "RED", s)));
+ok(`every countable board figure equals the timeline's own count (${statEvents.length} played matches, floor 1000)`,
+  statEvents.length >= 1000 && statMismatch.length === 0);
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

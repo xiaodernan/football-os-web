@@ -367,8 +367,9 @@ function buildMatches(clubs: Club[], players: PlayerRef[], compMap: Map<string, 
             // Generate detailed match events and stats
             const homePool = players.filter((p) => p.clubId === home.id);
             const awayPool = players.filter((p) => p.clubId === away.id);
-            m.events = generateMatchEvents(home, away, s, homePool, awayPool, rng);
-            m.stats = generateMatchStats(home, away, s, rng);
+            const evs = generateMatchEvents(home, away, s, homePool, awayPool, rng);
+            m.events = evs;
+            m.stats = generateMatchStats(home, away, s, evs, rng);
           }
           matches.push(m);
         }
@@ -442,23 +443,36 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
       player: named(cardSide === "home" ? homePool : awayPool),
     });
   }
+
+  // Straight reds are rare but real, so the board's reds figure has an event source too
+  if (rng() > 0.9) {
+    const cardSide = rng() > 0.5 ? "home" : "away";
+    events.push({
+      minute: rngInt(rng, 55, 89),
+      type: "RED",
+      side: cardSide,
+      player: named(cardSide === "home" ? homePool : awayPool),
+    });
+  }
   
   return events.sort((a, b) => a.minute - b.minute);
 }
 
-function generateMatchStats(home: Club, away: Club, score: { h: number; a: number }, rng: () => number): { home: MatchStats; away: MatchStats } {
+function generateMatchStats(home: Club, away: Club, score: { h: number; a: number }, events: MatchEvent[], rng: () => number): { home: MatchStats; away: MatchStats } {
   // Possession based on overall strength with some randomness
   const strengthDiff = home.overall - away.overall;
   let basePossession = 50 + strengthDiff * 0.8;
   basePossession = Math.max(35, Math.min(65, basePossession + rngFloat(rng, -5, 5)));
   
-  const totalShots = rngInt(rng, 15, 30);
-  const homeShotShare = basePossession / 100 + rngFloat(rng, -0.1, 0.1);
-  const homeShots = Math.round(totalShots * homeShotShare);
-  const awayShots = totalShots - homeShots;
+  // The countable board figures are the timeline's own counts (M287): the seed's
+  // stats pair describes the events printed beside it, not an independent model.
+  const count = (type: string, side: "home" | "away") =>
+    events.filter((e) => e.type === type && e.side === side).length;
+  const homeShots = count("SHOT", "home") + count("SAVE", "home") + count("GOAL", "home");
+  const awayShots = count("SHOT", "away") + count("SAVE", "away") + count("GOAL", "away");
   
-  const homeOnTarget = Math.round(homeShots * rngFloat(rng, 0.25, 0.45));
-  const awayOnTarget = Math.round(awayShots * rngFloat(rng, 0.25, 0.45));
+  const homeOnTarget = count("SAVE", "home") + count("GOAL", "home");
+  const awayOnTarget = count("SAVE", "away") + count("GOAL", "away");
   
   const homeXg = parseFloat((homeOnTarget * rngFloat(rng, 0.08, 0.15) + score.h * rngFloat(rng, 0.1, 0.2)).toFixed(2));
   const awayXg = parseFloat((awayOnTarget * rngFloat(rng, 0.08, 0.15) + score.a * rngFloat(rng, 0.1, 0.2)).toFixed(2));
@@ -478,10 +492,10 @@ function generateMatchStats(home: Club, away: Club, score: { h: number; a: numbe
   const homeFouls = rngInt(rng, 8, 18);
   const awayFouls = rngInt(rng, 8, 18);
   
-  const homeYellows = rng() > 0.4 ? rngInt(rng, 1, 4) : 0;
-  const awayYellows = rng() > 0.4 ? rngInt(rng, 1, 4) : 0;
-  const homeReds = rng() > 0.9 ? 1 : 0;
-  const awayReds = rng() > 0.9 ? 1 : 0;
+  const homeYellows = count("YELLOW", "home");
+  const awayYellows = count("YELLOW", "away");
+  const homeReds = count("RED", "home");
+  const awayReds = count("RED", "away");
   
   return {
     home: {
