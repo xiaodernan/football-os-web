@@ -139,7 +139,6 @@ export const MATCH_STATUSES: readonly MatchStatus[] = ["SCHEDULED", "LIVE", "FIN
 export interface Match {
   id: string;
   competitionId: string;
-  season: string;
   homeClubId: string;
   awayClubId: string;
   kickoff: string; // ISO

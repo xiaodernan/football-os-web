@@ -19,7 +19,6 @@ import type {
 
 // Fixed anchor so all demo fixtures/time states are reproducible.
 export const DEMO_NOW = "2026-09-22T18:00:00Z";
-const SEASON = "2026/27";
 const WORLD_SEED = "football-os-world-v1";
 
 interface ClubDef {
@@ -318,7 +317,7 @@ function makeWorld() {
   compMap.get("uel")!.clubIds = uelClubs;
   compMap.get("libertadores")!.clubIds = libertadoresClubs;
 
-  const matches = buildMatches(clubs, compMap, rng);
+  const matches = buildMatches(clubs, players, compMap, rng);
   const standings = buildStandings(clubs, matches);
   const news = buildNews(clubs, players, rng);
 
@@ -332,7 +331,7 @@ function makeWorld() {
   };
 }
 
-function buildMatches(clubs: Club[], compMap: Map<string, Competition>, rng: () => number): Match[] {
+function buildMatches(clubs: Club[], players: PlayerRef[], compMap: Map<string, Competition>, rng: () => number): Match[] {
   const matches: Match[] = [];
   const byId = new Map(clubs.map((c) => [c.id, c]));
   let anchor = new Date(DEMO_NOW).getTime();
@@ -353,7 +352,6 @@ function buildMatches(clubs: Club[], compMap: Map<string, Competition>, rng: () 
           const m: Match = {
             id: `M${(++idx).toString().padStart(4, "0")}`,
             competitionId: comp.id,
-            season: SEASON,
             homeClubId: home.id,
             awayClubId: away.id,
             kickoff,
@@ -367,7 +365,9 @@ function buildMatches(clubs: Club[], compMap: Map<string, Competition>, rng: () 
             m.homeGoals = s.h;
             m.awayGoals = s.a;
             // Generate detailed match events and stats
-            m.events = generateMatchEvents(home, away, s, rng);
+            const homePool = players.filter((p) => p.clubId === home.id);
+            const awayPool = players.filter((p) => p.clubId === away.id);
+            m.events = generateMatchEvents(home, away, s, homePool, awayPool, rng);
             m.stats = generateMatchStats(home, away, s, rng);
           }
           matches.push(m);
@@ -385,9 +385,13 @@ function scoreFromStrength(h: number, a: number, rng: () => number): { h: number
   return { h: Math.min(6, Math.round(lh * 1.4)), a: Math.min(6, Math.round(la * 1.4)) };
 }
 
-function generateMatchEvents(home: Club, away: Club, score: { h: number; a: number }, rng: () => number): MatchEvent[] {
+function generateMatchEvents(home: Club, away: Club, score: { h: number; a: number }, homePool: PlayerRef[], awayPool: PlayerRef[], rng: () => number): MatchEvent[] {
   const events: MatchEvent[] = [];
   const shotTypes = ["tap_in", "close_range", "header", "left_foot", "right_foot", "volley"];
+  const named = (pool: PlayerRef[]): string =>
+    pool.length > 0 ? pool[rngInt(rng, 0, pool.length - 1)].name : "Unknown";
+  const keeper = (pool: PlayerRef[]): string =>
+    pool.find((p) => p.position === "GK")?.name ?? named(pool);
   
   // Generate goal events with details
   for (let i = 0; i < score.h; i++) {
@@ -398,7 +402,7 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
       minute,
       type: "GOAL",
       side: "home",
-      player: `Player ${i + 1}`,
+      player: named(homePool),
       detail: { key: "sim.ev.goal", vars: { xg: xG, shot: shotType } },
     });
   }
@@ -411,7 +415,7 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
       minute,
       type: "GOAL",
       side: "away",
-      player: `Player ${i + 1}`,
+      player: named(awayPool),
       detail: { key: "sim.ev.goal", vars: { xg: xG, shot: shotType } },
     });
   }
@@ -422,19 +426,20 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
     const side = rng() > 0.5 ? "home" : "away";
     const minute = rngInt(rng, 1, 90);
     if (rng() > 0.7) {
-      events.push({ minute, type: "SAVE", side, player: "GK" });
+      events.push({ minute, type: "SAVE", side, player: keeper(side === "home" ? homePool : awayPool) });
     } else {
-      events.push({ minute, type: "SHOT", side, player: `Player ${rngInt(rng, 1, 11)}` });
+      events.push({ minute, type: "SHOT", side, player: named(side === "home" ? homePool : awayPool) });
     }
   }
   
   // Add occasional cards
   if (rng() > 0.6) {
+    const cardSide = rng() > 0.5 ? "home" : "away";
     events.push({
       minute: rngInt(rng, 1, 90),
       type: "YELLOW",
-      side: rng() > 0.5 ? "home" : "away",
-      player: `Player ${rngInt(rng, 1, 11)}`,
+      side: cardSide,
+      player: named(cardSide === "home" ? homePool : awayPool),
     });
   }
   

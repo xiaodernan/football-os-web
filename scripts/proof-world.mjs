@@ -131,6 +131,23 @@ ok(`every seed goal event renders the dictionary's own shot word in every locale
     return /\bxG /.test(line) && !/\{\w+\}/.test(line) &&
       line.split("\u00b7").pop()?.trim() === DICTIONARIES[l]["sim.shot." + code];
   })));
+// --- the seed's match events must name real squad players, never placeholders ---
+// M284: generateMatchEvents filled every event's player with template English:
+// `Player ${i + 1}` for goals/shots/cards and the bare "GK" for saves, rendered
+// raw by the match-details timeline (measured 14720/14720 FINISHED events
+// carrying a placeholder; LIVE fixtures leak the same way). The builder now
+// receives each side's squad pool and picks real names; this clause pins that
+// no placeholder survives and every printed name resolves to a seeded player.
+const seedEvents = WORLD.matches
+  .filter((m) => m.status !== "SCHEDULED")
+  .flatMap((m) => m.events ?? []);
+const seedNames = new Set(WORLD.players.map((p) => p.name));
+const seedPlaceholders = seedEvents.filter((e) => /^Player \d+$/.test(e.player) || e.player === "GK" || e.player === "Unknown");
+ok(`every seed match event names a real squad player (${seedEvents.length} events, floor 14000)`,
+  seedEvents.length >= 14000 &&
+  seedPlaceholders.length === 0 &&
+  seedEvents.every((e) => seedNames.has(e.player)));
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

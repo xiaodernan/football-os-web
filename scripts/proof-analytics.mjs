@@ -23,7 +23,7 @@ const near = (a, b, eps = 1e-9) => Math.abs(a - b) <= eps;
 // --- teamMetrics: a tiny league we scored by hand ------------------------
 const club = (id, competitionId) => ({ id, name: id, short: id, competitionId, nation: "X", overall: 70, colors: ["#111", "#fff"], stadium: "S" });
 const match = (id, comp, home, away, hg, ag, kickoff, status = "FINISHED") => ({
-  id, competitionId: comp, season: "2026", homeClubId: home, awayClubId: away, kickoff, round: 1, status,
+  id, competitionId: comp, homeClubId: home, awayClubId: away, kickoff, round: 1, status,
   homeGoals: status === "FINISHED" ? hg : null, awayGoals: status === "FINISHED" ? ag : null,
 });
 const clubs = [club("A", "T1"), club("B", "T1"), club("C", "T1"), club("D", "T2"), club("E", "T2")];

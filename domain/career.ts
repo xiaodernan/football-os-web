@@ -242,12 +242,14 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
       const theirProj = projected.find((p) => p.row.clubId === r.clubId)!.pts;
       const gdEdge = (ours.gf - ours.ga) - (r.gf - r.ga);
       const beat = sigmoid((theirProj - ourProj + gdEdge * 0.08) / sigma);
+      const theirShown = Math.round(theirProj * 10) / 10;
+      const ourShown = Math.round(ourProj * 10) / 10;
       return {
         clubId: r.clubId,
         clubName: getClub(r.clubId)?.name ?? r.clubId,
         currentPpg: Math.round(ppg(r) * 100) / 100,
-        projectedPoints: Math.round(theirProj * 10) / 10,
-        aheadOfUs: theirProj > ourProj,
+        projectedPoints: theirShown,
+        aheadOfUs: theirShown > ourShown,
         beatUsChance: beat,
       };
     })
