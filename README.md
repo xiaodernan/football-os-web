@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M275 (a few numbers in that range
+Work ships one milestone per commit and is currently at M281 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6278,6 +6278,27 @@ named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `too
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
 
+### M281 — the seed's sixth English sentence is deleted, not just unread
+
+M274 keyed the news headline and rebuilt the summary on the glass, but the record kept
+a raw `summary` string composed from a sixth English template at boot, "kept for
+matching". The measurement that would justify keeping it never existed: `globalSearch`
+scores the raw title, retrieval ranks by it, and every summary the AI evidence card or a
+community thread quotes is rebuilt from `ni.summaryLine` — zero readers in app code,
+zero in the proofs. M281 deletes the field and the boot-time composition (`NewsArticle`
+and `buildNews` each lose a line), so the seed no longer writes English prose nobody
+reads.
+
+The same pass removed a stale claim next door: `intelligence.ts` said the scout's
+headline was still composed English inside `domain/scouting.ts`, but scouting has been
+keyed (`sc.out.head.*`) since M270. And clause **37i** now pins the deletion in source
+— no `summary` field on the record, no `summary:` line in the builder, no raw
+`.summary` read in the composer file — with one planted shape charging the pass.
+
+Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuity
+census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
+**26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
+in intelligence.ts, +16 gate lines in proof-i18n.mjs).
 ### M280 — match statistics aggregation for all fixtures
 
 Every finished match now carries a full statistical profile alongside its event timeline.
