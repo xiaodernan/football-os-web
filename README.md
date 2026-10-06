@@ -6278,6 +6278,28 @@ named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `too
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
 
+### M277 — expand WORLD seed with 4 new competitions and 30 additional clubs
+
+The demo world grew from 39 clubs across 8 competitions to **69 clubs across 12
+competitions**. Added Major League Soccer (5 clubs: LA Galaxy, Inter Miami, Seattle
+Sounders, Atlanta United, New York Red Bulls), Brasileirão Série A (5 clubs:
+Flamengo, Palmeiras, São Paulo, Corinthians, Santos), J1 League (4 clubs: Kawasaki
+Frontale, Yokohama F. Marinos, Vissel Kobe, Urawa Red Diamonds), and Süper Lig (4
+clubs: Galatasaray, Fenerbahçe, Beşiktaş, Trabzonspor). Existing European leagues
+gained 12 more clubs across Premier League, La Liga, Serie A, Bundesliga, and Ligue 1.
+
+Added **10 new curated stars** including Lionel Messi (Inter Miami), Mohamed Salah
+(Liverpool), Harry Kane (Bayern München), Lautaro Martínez (Inter), Bradley Barcola
+(PSG), Gabriel Jesus (Flamengo), Mauro Icardi (Galatasaray), Edin Džeko (Fenerbahçe),
+and Yuki Soma (Kawasaki Frontale).
+
+Player count increased from ~350 to approximately **620+ players** while maintaining
+deterministic generation via the same seeded RNG pipeline. All 41 proof scripts remain
+green with no regressions.
+
+Measured: suite **41/41 · 2,339/2,339**; `npm run build` exit 0. Code as **d0f2347**
+(+67 lines in footballSeed.ts); this section is a docs-only follow-up.
+
 ### M275 — the search results' news title rides on its row too
 
 M274 left two bare `.title` renders pinned as a known boundary: the command
