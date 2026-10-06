@@ -6392,6 +6392,23 @@ here; its section follows as M285.
 Measured: `tsc` clean; `proof-world` 38/38; suite **42/42 · 2,355/2,355**; `npm run
 build` exit 0. Code as **72ad682**.
 
+### M285 — the Match interface loses its season field
+
+A field-reader sweep over all 17 domain interfaces (`dev/.m285-sweep.mjs`: every declared
+field against every UI-directory reference) found three candidates, and hand-checking
+settled two of them as readers the sweep could not see — `NewsArticle.titleVars` is read by
+rowText's title interpreter and `CoachPlan.prompt` by the History page's `asRowText`. The
+third was real: `Match.season` was declared, written once per fixture by the seed, and read
+by nothing — not a screen, not the AI, not a domain module. The M105 defect class, third
+closure, this time by deletion: the season is a single constant across the whole demo world
+(`2026/27`), so a reader would have printed the same string on all 1,516 fixtures — noise,
+not information. The field, its sole writer, and the now-unused `SEASON` constant are gone,
+along with the inert `season` key in proof-analytics' fixture.
+
+Measured: `tsc` clean; analytics 67/67 · matchengine 30/30 · ids 15/15 · timeline 100/100 ·
+world 38/38 · matchstats 13/13; suite **42/42 · 2,355/2,355**; `npm run build` exit 0.
+Code as **72ad682**.
+
 ### M284 — the recorded stats' card fields find their readers
 
 M280 wrote `yellows` and `reds` into every side of the seed's stats pair, and nothing ever
