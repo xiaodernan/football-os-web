@@ -12,7 +12,7 @@ import { ATTRIBUTE_KEYS, CATEGORIES, POSITION_GROUPS } from "./attributes";
 import { ARCHETYPE_KEYS } from "./playerDna";
 import { TRAJECTORIES } from "./careerArc";
 import { MATCH_STATUSES, MODES, NEWS_KINDS, RECORD_FEELS, SEARCH_KINDS, SHOT_TYPES, FOOTS } from "./types";
-import type { SearchKind } from "./types";
+import type { FavoriteKind, SearchKind } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 // A variable normally holds a word or a number, but one row may also carry another whole
@@ -170,6 +170,16 @@ export const footLabel = (foot: string, t: Translate): string => codeWord(foot, 
  *  THROUGH the door rather than beside it, so a row carrying a kind and a chip holding one are
  *  worded by the same line and no reader builds the key itself. */
 export const searchKindLabel = (kind: SearchKind, t: Translate): string => codeWord(kind, t);
+
+/** The copy for the favourite control — 「我的球會」 when it is already on, 「設為我的球會」
+ *  when it is not. The ninth family of the class M249 charged, and the first whose key carries
+ *  TWO variable slots: the kind and the state of the button. The door cannot own it even though
+ *  the codes look like retrieval kinds — asking `codeWord` for club answers the legend, because
+ *  that branch is reached first and the table is name-blind, which is M263 collision on a
+ *  second family. So the family gets its own composer, and this is the only place in the app
+ *  that builds a `fav.*` key: the screen used to spell it itself. */
+export const favoriteLabel = (kind: FavoriteKind, active: boolean, t: Translate): string =>
+  active ? t(`fav.${kind}.active`) : t(`fav.${kind}.idle`);
 
 /** The word for a scout filter bucket — `DEF` on the model, 「后卫」 to a reader in 简体中文.
  *  The fifth family of the class M249 charged: the filter chips printed the codes raw, the

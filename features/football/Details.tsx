@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
-import { footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine } from "@/domain/rowText";
+import { favoriteLabel, footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine } from "@/domain/rowText";
+import { FAVORITES, type FavoriteKind } from "@/domain/types";
 import { useOs } from "@/store/useFootballOS";
 import {
   footballProvider,
@@ -64,14 +65,14 @@ function WatchButton({ playerId }: { playerId: string }) {
 
 // The control's copy follows from what it is favouriting, so the caller passes the
 // kind rather than two hand-translated strings.
-export function FavoriteButton({ kind, id }: { kind: "club" | "player" | "competition"; id: string }) {
+export function FavoriteButton({ kind, id }: { kind: FavoriteKind; id: string }) {
   const { state, setFavorite } = useOs();
   const { t } = useI18n();
-  const current = kind === "club" ? state.profile?.favoriteClubId : kind === "player" ? state.profile?.favoritePlayerId : state.profile?.favoriteCompetitionId;
+  const current = state.profile ? FAVORITES[kind].read(state.profile) : null;
   const active = current === id;
   return (
     <Button size="sm" variant={active ? "default" : "outline"} onClick={() => setFavorite(kind, active ? null : id)}>
-      {active ? `★ ${t(`fav.${kind}.active`)}` : `☆ ${t(`fav.${kind}.idle`)}`}
+      {active ? `★ ${favoriteLabel(kind, true, t)}` : `☆ ${favoriteLabel(kind, false, t)}`}
     </Button>
   );
 }

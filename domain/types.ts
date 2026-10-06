@@ -22,6 +22,17 @@ export const SEARCH_KINDS = ["club", "player", "competition", "match", "news"] a
 // family it belonged to).
 export type SearchKind = (typeof SEARCH_KINDS)[number];
 
+// What a visitor can mark as theirs: three of the five retrieval kinds, because a match and a
+// news story have no slot on the profile to be favourite in. The subset is why this is its own
+// list rather than a member test on `SEARCH_KINDS` — the key it composes (`fav.<kind>.<state>`)
+// exists for three names only, so the space the control can be handed has to be narrower than
+// the space the graph can draw. M266 found this family spelled by hand three times (the
+// control's prop, the store's action, the store's public API) with its display key composed at
+// the screen, which is the M265 defect class on a second family.
+export const FAVORITE_KINDS = ["club", "player", "competition"] as const;
+
+export type FavoriteKind = (typeof FAVORITE_KINDS)[number];
+
 // The article types a news story can carry. The impact panel prints this value twice in
 // two different shapes — as the certainty paragraph (`ni.stance.…`) and as the noun in its
 // evidence line (`ni.kind.…`) — so one list keeps the two from drifting, the same reason
@@ -199,6 +210,22 @@ export interface UserProfile {
   level: number;
   createdAt: string;
 }
+
+// One row per favourite kind, and the `Record` is what makes it exhaustive: a fourth kind in
+// `FAVORITE_KINDS` is a compile error here before it is a button that silently sets your
+// league, and a fifth slot on the profile is a row no reader can reach. Reading and writing
+// the same slot are named in the SAME literal on purpose — before M266 the control's reader
+// and the store's writer were two ternary chains that each ended in a fallback arm, so a key
+// outside the space resolved to the competition slot in both, and nothing tied the two chains
+// to each other.
+export const FAVORITES: Record<FavoriteKind, {
+  read: (p: UserProfile) => string | null;
+  write: (p: UserProfile, id: string | null) => UserProfile;
+}> = {
+  club: { read: (p) => p.favoriteClubId, write: (p, id) => ({ ...p, favoriteClubId: id }) },
+  player: { read: (p) => p.favoritePlayerId, write: (p, id) => ({ ...p, favoritePlayerId: id }) },
+  competition: { read: (p) => p.favoriteCompetitionId, write: (p, id) => ({ ...p, favoriteCompetitionId: id }) },
+};
 
 export interface TrainingExercise {
   key: string;

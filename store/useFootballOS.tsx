@@ -28,6 +28,7 @@ import { countGoalTitle, repairGoalTitles } from "@/domain/goals";
 import { coachMemory, profileMemory, repairMemoryTexts, trainingMemory } from "@/domain/memory";
 import { normalizeGoalChoice } from "@/domain/onboarding";
 import type { RowText } from "@/domain/rowText";
+import { FAVORITES, type FavoriteKind } from "@/domain/types";
 import { buildLoad } from "@/domain/load";
 import { coachProvider, repairPlanPrompts, type PlanInput } from "@/data/ai";
 import { OS_STATE_KEY } from "@/domain/localData";
@@ -67,7 +68,7 @@ type Action =
   | { type: "SET_MODE"; mode: Mode }
   | { type: "PLAN"; plan: CoachPlan }
   | { type: "COMPLETE"; sessionId: string; selfRating: number; notes?: string }
-  | { type: "FAVORITE"; key: "club" | "player" | "competition"; id: string | null }
+  | { type: "FAVORITE"; key: FavoriteKind; id: string | null }
   | { type: "WATCH"; playerId: string }
   | { type: "GOAL_ADD"; goal: Goal }
   | { type: "GOAL_TOGGLE"; id: string }
@@ -208,13 +209,7 @@ function reducer(state: OsState, action: Action): OsState {
     }
     case "FAVORITE": {
       if (!state.profile) return state;
-      const patch: Partial<UserProfile> =
-        action.key === "club"
-          ? { favoriteClubId: action.id }
-          : action.key === "player"
-            ? { favoritePlayerId: action.id }
-            : { favoriteCompetitionId: action.id };
-      return { ...state, profile: { ...state.profile, ...patch } };
+      return { ...state, profile: FAVORITES[action.key].write(state.profile, action.id) };
     }
     case "WATCH": {
       const has = state.watchlist.includes(action.playerId);
@@ -242,7 +237,7 @@ interface OsContext {
   // its own English reading from the same row, so a caller never composes a sentence by hand.
   requestPlan: (prompt: RowText, availableMinutes: number, focusKeys?: string[]) => Promise<CoachPlan>;
   completeSession: (sessionId: string, selfRating: number, notes?: string) => GrowthDelta[];
-  setFavorite: (key: "club" | "player" | "competition", id: string | null) => void;
+  setFavorite: (key: FavoriteKind, id: string | null) => void;
   toggleWatch: (playerId: string) => void;
   addGoal: (g: Omit<Goal, "id" | "createdAt" | "done">) => void;
   toggleGoal: (id: string) => void;

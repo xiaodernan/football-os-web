@@ -599,8 +599,8 @@ const DYN_SITES = [
   { path: "features/watchlist/WatchlistBoard.tsx", expr: "s", prefix: "watch.sort.", suffix: "" },
   // M148: the favourite control derives its own copy from the kind it favours, and
   // the career-arc badge prints the trajectory the model returned.
-  { path: "features/football/Details.tsx", expr: "kind", prefix: "fav.", suffix: ".active" },
-  { path: "features/football/Details.tsx", expr: "kind", prefix: "fav.", suffix: ".idle" },
+  { path: "domain/rowText.ts", expr: "kind", prefix: "fav.", suffix: ".active" },
+  { path: "domain/rowText.ts", expr: "kind", prefix: "fav.", suffix: ".idle" },
   { path: "features/football/Details.tsx", expr: "arc.trajectory", prefix: "det.arc.", suffix: "" },
   // M161: the board's six tags and two sorts are data strings read out of the
   // domain/Tab strip, so their sites are declared against the arrays that produce
@@ -673,10 +673,13 @@ const SPACES = new Map([
     values: spaceOf("domain/careerArc.ts", /export type Trajectory = [^;]+;/, quoted),
   }],
   ["fav.|kind", {
-    // The store's own action signature: it is what every caller must satisfy, so
-    // it is the space the control can actually be handed.
+    // M266: the space is now the runtime list the type derives from, not one caller's signature.
+    // The anchor used to read `setFavorite: (key: "club" | …` — a hand-typed union in the store's
+    // public API, so a second hand copy of the same three names could exist anywhere and this
+    // check would still see a healthy three-value space. An anchor that reads a consumer cannot
+    // tell a definition from a copy; this one can, and section 46 charges the copies.
     name: "favourite kinds",
-    values: spaceOf("store/useFootballOS.tsx", /setFavorite: \(key: "[a-z]+"(?: \| "[a-z]+")+/, quoted),
+    values: spaceOf("domain/types.ts", /export const FAVORITE_KINDS[^=]*=[^\]]*\]/, quoted),
   }],
   ["fw.status.|code.toLowerCase()", {
     // M256. The three statuses a fixture carries, read off the union's own runtime list in
@@ -4793,6 +4796,11 @@ ok(`a switch-cases extractor reads the composer it names, not the file it lives 
   const skRuntime = await server.ssrLoadModule("/domain/types.ts");
   const SK = skRuntime.SEARCH_KINDS;
   const SK_FILE = "domain/types.ts";
+  // The subsets are named row by row, not counted: M266 collapsed the favourite family's three
+  // hand-typed unions into one runtime list, so the 3-name row here IS that list and section 46
+  // owns it, while the 2-name row is a news-impact role — a different space again. A count would
+  // let either of them move into a third file without being read.
+  const SK_NEAR_PIN = "domain/newsImpact.ts=2 domain/types.ts=3";
   const skRowSrc = appSrc.get("domain/rowText.ts") ?? "";
   const skSet = (xs) => xs.slice().sort().join("|");
   const skNames = (text) => [...new Set([...text.matchAll(/"([^"]+)"/g)].map((m) => m[1]))];
@@ -4858,7 +4866,8 @@ ok(`a switch-cases extractor reads the composer it names, not the file it lives 
 
   ok(`the ${SK.length} retrieval kinds (${SK.join(", ")}) are typed once: SearchKind is ${skDerived ? "derived from (typeof SEARCH_KINDS)[number]" : 'RESTATED BY HAND (' + (skTypeDecl || "missing") + ")"}, the canvas's colour table holds ${skTableKeys.length} rows (${skTableKeys.join(",")}) declared ${skTableHead || "absent"} and the legend walks ${skLegendDerived ? "Object.keys(TYPE_COLOR)" : "a second list"}, ${skExactArrays.length} arrays write all ${SK.length} names (${skExactArrays.map((a) => `${a.path}: ${skHead(a) || "bare"}`).join(" | ")}) of which ${skBareCopies.length} define the family instead of naming it (${skBareCopies.map((b) => `${b.path}:${b.members.length}`).join(" | ") || "none"} — that is the four-copies test, because a carrier that restates the union is a carrier no sixth kind can reach), while ${skNear.length} near-miss subsets stay a different space (${skNear.map((n) => `${n.path}=${n.members.length}`).join(" ")}) and the same scan charges a planted union and a planted list (${skPlant.unions.length}/${skPlant.arrays.length} exact) yet never charges the subsets (${skGhost.unions.length} read, ${skGhost.unions.filter((u) => u.exact).length} charged)`,
     SK.length === 5 && skDerived && skSet(skTableKeys) === skSet(SK) && /SearchKind/.test(skTableHead) && skLegendDerived &&
-    skExactArrays.length === 2 && skBareCopies.length === 0 && skNear.length === 4 &&
+    skExactArrays.length === 2 && skBareCopies.length === 0 &&
+    skNear.map((n) => `${n.path}=${n.members.length}`).join(" ") === SK_NEAR_PIN &&
     skPlant.unions.length === 1 && skPlant.unions[0].exact === true && skPlant.arrays.length === 1 && skPlant.arrays[0].exact === true &&
     skGhost.unions.length === 1 && skGhost.unions[0].exact === false);
 
@@ -4967,6 +4976,100 @@ ok(`a switch-cases extractor reads the composer it names, not the file it lives 
     skRows.length === 5 && skWrongKey.length === 0 && skRawWords.length === 0 && skDoorDrift.length === 0 &&
     skDiff.join("|") === SK_DIFF_PIN.join("|") && skRows.find((r) => r.code === "match").words[0] === "Fixture" &&
     skKeyCounts.every(([a, b]) => a === 5 && b === 5));
+}
+
+// ---- 46 (M266): the favourite family — three names, one list, one composer, one slot table.
+// The family the retrieval scan reads and deliberately does NOT charge: club, player and
+// competition are also three of the five retrieval kinds, so a set relation cannot tell the two
+// families apart on members alone, and `codeWord` cannot answer for both (its table is
+// name-blind, and the legend branch is reached first — the M263 collision). So this family needs
+// its own three checks: that the space is written once, that the slot table is exhaustive over
+// it, and that the key is built in exactly one module.
+{
+  const FA_FILE = "domain/types.ts";
+  const FA = ["club", "player", "competition"];
+  const faKey = (xs) => xs.slice().sort().join("|");
+  const faNames = (text) => [...new Set([...text.matchAll(/"([^"]+)"/g)].map((m) => m[1]))];
+  const FA_UNION = /"[^"]*"(?:\s*\|\s*"[^"]*")+/g;
+  const FA_ARRAY = /\[\s*"[^"]*"(?:\s*,\s"[^"]*")*\s*\]/g;
+  const faScan = (code) => {
+    const out = [];
+    for (const m of code.matchAll(FA_UNION)) {
+      const xs = faNames(m[0]);
+      if (xs.length > 1 && xs.every((n) => FA.includes(n))) out.push({ kind: "union", xs });
+    }
+    for (const m of code.matchAll(FA_ARRAY)) {
+      const xs = faNames(m[0]);
+      if (xs.length > 1 && xs.every((n) => FA.includes(n))) out.push({ kind: "array", xs });
+    }
+    return out;
+  };
+  const faRows = [];
+  for (const [path, code] of appSrc) for (const h of faScan(code)) faRows.push({ path, ...h });
+  const faExact = faRows.filter((r) => faKey(r.xs) === faKey(FA));
+  const faCopy = faExact.filter((r) => !(r.path === FA_FILE && r.kind === "array"));
+  // Two plants, because a scan that charges nothing proves only that it read nothing: both forms
+  // of a second copy of the exact space, a union and an array. The ghost pair is the other
+  // direction and it has two different answers — the five-name list is not even a candidate of
+  // this space (a member is outside it), while a two-name subset IS read and must NOT be charged:
+  // that is a role, a filter, or any other partial use of the same words. Only the exact three
+  // names belong to this section.
+  const faPlant = faScan('const T = (k: "club" | "player" | "competition") => 0; const L2 = ["club", "player", "competition"];');
+  const faGhost = faScan('const S = ["club", "player", "competition", "match", "news"]; const U = "club" | "player";');
+
+  const typesSrc = appSrc.get(FA_FILE) ?? "";
+  const faList = (typesSrc.match(/export const FAVORITE_KINDS[^;]*;/) || [""])[0];
+  const faType = (typesSrc.match(/export type FavoriteKind\s*=\s*[^;]+;/) || [""])[0];
+  const faTable = (typesSrc.match(/export const FAVORITES[\s\S]*?\n\};/) || [""])[0];
+  const faSlots = [...faTable.matchAll(/(\w+):\s*\{\s*read:\s*\(p\)\s*=>\s*p\.(\w+),\s*write:\s*\(p,\s*id\)\s*=>\s*\(\{\s*\.\.\.p,\s*(\w+):\s*id\s*\}\)/g)]
+    .map((m) => ({ code: m[1], read: m[2], write: m[3] }));
+  const profileFields = ((typesSrc.match(/export interface UserProfile\s*\{([\s\S]*?)\n\}/) || [, ""])[1].match(/favorite[A-Za-z]*/g) || []);
+
+  const rtSrc = appSrc.get("domain/rowText.ts") ?? "";
+  const composer = (rtSrc.match(/export const favoriteLabel = \([^)]*\)[^=]*=>[\s\S]*?;/) || [""])[0];
+  const favSites = (code) => (code.match(/`fav\.\$\{/g) || []).length;
+  const siteRows = [...appSrc].map(([path, code]) => ({ path, n: favSites(code) })).filter((r) => r.n > 0);
+  const siteTotal = siteRows.reduce((a, r) => a + r.n, 0);
+  const callRows = [...appSrc].filter(([p, c]) => /favoriteLabel\s*\(/.test(c) && p !== "domain/rowText.ts").map(([p]) => p);
+
+  ok(`the ${FA.length} favourite kinds are one runtime list: ${FA_FILE} holds ${faList || "NO LIST"} and the type is ${/typeof\s+FAVORITE_KINDS\s*\)\s*\[number\]/.test(faType) ? "derived from it" : "RESTATED BY HAND (" + (faType || "missing") + ")"}, while ${faExact.length} carriers in the ${appSrc.size} modules hold all ${FA.length} names (${faExact.map((r) => `${r.path}:${r.kind}`).join(" | ") || "none"}) of which ${faCopy.length} is a copy rather than the list (${faCopy.map((r) => r.path).join(" | ") || "none"}), and the same scan charges a planted union and a planted array (${faPlant.length} read, ${faPlant.filter((r) => faKey(r.xs) === faKey(FA)).length} charged) yet leaves a planted five-name list out of the population entirely and a planted two-name subset read-but-uncharged (${faGhost.length} read, ${faGhost.filter((r) => faKey(r.xs) === faKey(FA)).length} charged)`,
+    faList.length > 0 && faType.includes("typeof FAVORITE_KINDS") && faExact.length === 1 && faCopy.length === 0 &&
+    faPlant.length === 2 && faPlant.every((r) => faKey(r.xs) === faKey(FA)) &&
+    faGhost.length === 1 && faKey(faGhost[0].xs) === "club|player");
+
+  ok(`the slot table is exhaustive over the list: ${faSlots.length} rows (${faSlots.map((r) => `${r.code}->${r.read}`).join(" ")}) against ${FA.length} kinds, every row reads and writes the SAME field (${faSlots.filter((r) => r.read !== r.write).map((r) => r.code).join(" ") || "0 mismatched"}), every field it names is on UserProfile (${faSlots.filter((r) => !profileFields.includes(r.read)).map((r) => r.read).join(" ") || "0 invented"}), and every favorite field on the profile has a row (${profileFields.filter((f) => !faSlots.some((r) => r.read === f)).join(" ") || "0 orphan"}) — the two ternary chains this replaced each ended in a fallback arm, so a kind outside the space resolved to the competition slot on both sides of the app`,
+    faSlots.length === FA.length && faKey(faSlots.map((r) => r.code)) === faKey(FA) &&
+    faSlots.every((r) => r.read === r.write && profileFields.includes(r.read)) &&
+    faSlots.every((r) => profileFields.includes(r.read)) && new Set(faSlots.map((r) => r.read)).size === profileFields.length);
+
+  ok(`a favourite key is built in one module: ${siteTotal} interpolation sites across ${siteRows.length} files (${siteRows.map((r) => `${r.path}=${r.n}`).join(" | ") || "none"}), the composer is ${composer ? composer.replace(/\s+/g, " ").slice(0, 96) : "MISSING"}, and ${callRows.length} screen modules call it (${callRows.join(" ") || "none"})`,
+    siteRows.length === 1 && siteRows[0].path === "domain/rowText.ts" && siteTotal === 2 &&
+    composer.includes("kind: FavoriteKind") && composer.includes("active: boolean") && composer.includes("t: Translate") &&
+    composer.includes("fav.${kind}.active") && composer.includes("fav.${kind}.idle") &&
+    callRows.length === 1 && callRows[0] === "features/football/Details.tsx");
+
+  // The behavioural leg: the shipped composer, every kind, both states, every locale, read
+  // against the dictionary rows the app is supposed to be showing.
+  const faAsk = (code, active) => {
+    const seen = [];
+    const out = rowTextModule.favoriteLabel(code, active, (k, v) => { seen.push(k); return translate("en", k, v); });
+    return { seen, out };
+  };
+  const faTable2 = FA.map((code) => {
+    const a = faAsk(code, true), i = faAsk(code, false);
+    return { code, asked: [a.seen.join("+"), i.seen.join("+")], en: [a.out, i.out],
+      w: L.map((loc) => rowTextModule.favoriteLabel(code, true, tReader(loc.id))),
+      i: L.map((loc) => rowTextModule.favoriteLabel(code, false, tReader(loc.id))) };
+  });
+  const faWrongKey = faTable2.filter((r) => r.asked[0] !== `fav.${r.code}.active` || r.asked[1] !== `fav.${r.code}.idle`);
+  const faDrift = faTable2.filter((r) => L.some((loc, k) => r.w[k] !== D[loc.id][`fav.${r.code}.active`] || r.i[k] !== D[loc.id][`fav.${r.code}.idle`]));
+  const faRaw = faTable2.filter((r) => L.some((loc, k) => !r.w[k] || !r.i[k] || r.w[k] === `fav.${r.code}.active` || r.w[k] === r.code || r.i[k] === r.code));
+  const faSame = L.map((_, k) => new Set(faTable2.map((r) => r.w[k])).size);
+  const faEnDistinct = new Set(faTable2.map((r) => r.en[0])).size;
+  const favKeys = L.map((loc) => Object.keys(D[loc.id]).filter((k) => k.startsWith("fav.")).length);
+  ok(`all ${faTable2.length} kinds go through the shipped composer in ${L.length} locales (${faTable2.map((r) => `${r.code}: ${r.en[0]} / ${r.en[1]}`).join(" | ")}): each asks exactly its own two keys (${faWrongKey.map((r) => r.code).join(" ") || "0 wrong"}), the answer is the dictionary row every time (${faDrift.map((r) => r.code).join(" ") || "all agree"}), no locale shows the code or the key (${faRaw.map((r) => r.code).join(" ") || "none"}), the three kinds give three different words (${faEnDistinct} in en) so the answer moves with the code rather than being a constant, and ${favKeys.join("/")} fav keys are exactly the space times the two states (${FA.length * 2} expected)`,
+    faTable2.length === 3 && faWrongKey.length === 0 && faDrift.length === 0 && faRaw.length === 0 &&
+    faEnDistinct === 3 && favKeys.every((n) => n === FA.length * 2) && faSame.every((n) => n === 3));
 }
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
