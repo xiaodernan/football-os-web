@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M272 (a few numbers in that range
+Work ships one milestone per commit and is currently at M273 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,30 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M273 — the forms the display-prop read leaves outside are held too
+
+The 37f census reads double-quoted strings only, and it names no accessibility attribute —
+two gaps in the same class. The **aria display attributes** (`aria-label`,
+`aria-placeholder`, `aria-valuetext`, `aria-roledescription`) are the screen reader's copy,
+interface text spoken to a user the dictionary never reaches; a bare quoted string on one
+is English no keyed sibling exposes. The **quote-form gap** is the same display-name regex
+against single quotes and backticks without interpolation, which a quoted-strings-only read
+never sees. The measurement walked both classes across the shipped modules and found
+eleven aria display attributes: ten resolved through `t()` at the site, and the eleventh —
+GraphCanvas's `aria-label={ariaLabel}` — forwarded as a required prop whose only call site
+passes `t("ai.graphAria")`. The forward is pinned at its source rather than counted as
+prose, because a forwarded label is exactly where a default would hide: the bare read
+counts string literals, quoted outright or quoted inside the braces, and an expression
+holding an identifier is the pinned shape. Both quote forms read 0 across the tree.
+
+Clause 37g holds all three reads with plants of the same pass: a planted bare
+`aria-label`, a planted single-quoted label and a planted backtick label each read 1.
+Gate-only — the tree was already clean, so no dictionary row moves.
+
+Measured: `proof-i18n` **354/354** (was 353) · 1,995 keys × 3 locales; suite **41/41 ·
+2,270/2,270** (was 2,269); `npm run build` exit 0. Code as **e9ba3d6** (+41 across 1 file);
+this section is a docs-only follow-up.
 
 ### M272 — display-named props carry no bare prose
 
