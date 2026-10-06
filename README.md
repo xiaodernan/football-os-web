@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M271 (a few numbers in that range
+Work ships one milestone per commit and is currently at M272 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,30 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M272 — display-named props carry no bare prose
+
+M271's walk caught one bare JS label in SimulationLab's stats table because a keyed sibling
+sat beside it; the class behind that site is wider than the two pinned shapes. A prop named
+for what it displays — `label`, `title`, `sub`, `hint`, `text`, `description`, `subtitle`,
+`alt`, `placeholder` — assigned a bare quoted string of three or more Latin letters is
+interface copy parked where no translator runs, and no text-node walk can see it. The
+measurement walked 158 assigned props across the shipped modules: the data carriers (`key`,
+`id`, `labelKey`, `name`, `nation`, `stadium`) are code or data rather than copy, the
+community and learn tag sites resolve through the declared dynamic prefixes, and one real
+defect came back — `CommandDialog` defaulted its header copy to English
+(`"Command Palette"`, `"Search for a command to run..."`) behind the one caller that always
+keys both props: an English reflow point waiting for the next caller to skip them. The
+defaults are gone and the types require the two props now.
+
+Clause 37f holds the class with one reading everywhere: the census walks every shipped
+module and reads **0**, a planted default-param shape and a planted object-literal label
+each read 1, and `labelKey`, type annotations, keyed calls and strings under the letter bar
+stay outside the read.
+
+Measured: `proof-i18n` **353/353** (was 352) · 1,995 keys × 3 locales; suite **41/41 ·
+2,269/2,269** (was 2,268); `tsc --noEmit` exit 0; `npm run build` exit 0. Code as **98ee26f**
+(+28/−4 across 2 files); this section is a docs-only follow-up.
 
 ### M271 — every word the letter bar cannot see is a decision or a row
 
