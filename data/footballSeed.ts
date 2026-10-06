@@ -9,6 +9,7 @@ import type {
   Club,
   Competition,
   Match,
+  MatchEvent,
   NewsArticle,
   PlayerRef,
   PositionGroup,
@@ -364,6 +365,8 @@ function buildMatches(clubs: Club[], compMap: Map<string, Competition>, rng: () 
             const s = scoreFromStrength(home.overall, away.overall, rng);
             m.homeGoals = s.h;
             m.awayGoals = s.a;
+            // Generate detailed match events and stats
+            m.events = generateMatchEvents(home, away, s, rng);
           }
           matches.push(m);
         }
@@ -378,6 +381,62 @@ function scoreFromStrength(h: number, a: number, rng: () => number): { h: number
   const lh = Math.max(0, diff + rngFloat(rng, -0.9, 0.9));
   const la = Math.max(0, -diff + rngFloat(rng, -0.9, 0.9));
   return { h: Math.min(6, Math.round(lh * 1.4)), a: Math.min(6, Math.round(la * 1.4)) };
+}
+
+function generateMatchEvents(home: Club, away: Club, score: { h: number; a: number }, rng: () => number): MatchEvent[] {
+  const events: MatchEvent[] = [];
+  const shotTypes = ["tap_in", "close_range", "header", "left_foot", "right_foot", "volley"];
+  
+  // Generate goal events with details
+  for (let i = 0; i < score.h; i++) {
+    const minute = rngInt(rng, 1, 90);
+    const shotType = pick(rng, shotTypes);
+    const xG = (rngFloat(rng, 0.05, 0.85)).toFixed(2);
+    events.push({
+      minute,
+      type: "GOAL",
+      side: "home",
+      player: `Player ${i + 1}`,
+      detail: { key: "sim.ev.goal", vars: { xg: xG, shot: `sim.shot.${shotType}` } },
+    });
+  }
+  
+  for (let i = 0; i < score.a; i++) {
+    const minute = rngInt(rng, 1, 90);
+    const shotType = pick(rng, shotTypes);
+    const xG = (rngFloat(rng, 0.05, 0.85)).toFixed(2);
+    events.push({
+      minute,
+      type: "GOAL",
+      side: "away",
+      player: `Player ${i + 1}`,
+      detail: { key: "sim.ev.goal", vars: { xg: xG, shot: `sim.shot.${shotType}` } },
+    });
+  }
+  
+  // Add some shots and saves
+  const totalShots = rngInt(rng, 8, 20);
+  for (let i = 0; i < totalShots; i++) {
+    const side = rng() > 0.5 ? "home" : "away";
+    const minute = rngInt(rng, 1, 90);
+    if (rng() > 0.7) {
+      events.push({ minute, type: "SAVE", side, player: "GK" });
+    } else {
+      events.push({ minute, type: "SHOT", side, player: `Player ${rngInt(rng, 1, 11)}` });
+    }
+  }
+  
+  // Add occasional cards
+  if (rng() > 0.6) {
+    events.push({
+      minute: rngInt(rng, 1, 90),
+      type: "YELLOW",
+      side: rng() > 0.5 ? "home" : "away",
+      player: `Player ${rngInt(rng, 1, 11)}`,
+    });
+  }
+  
+  return events.sort((a, b) => a.minute - b.minute);
 }
 
 function buildStandings(clubs: Club[], matches: Match[]): Record<string, Standing[]> {
