@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M274 (a few numbers in that range
+Work ships one milestone per commit and is currently at M275 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,41 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M275 — the search results' news title rides on its row too
+
+M274 left two bare `.title` renders pinned as a known boundary: the command
+palette and the search page print `SearchResult.title` raw, and for the news
+family that string is the seed's composed English sentence. The boundary was
+honest but not clean — the same sentence leaked through three more string-
+shaped doors the census read as data: the AI source line's `name` var, the
+answer lead's `{title}` var, and the knowledge-graph node's label, all of
+which are glass, and one field that was only ever glass-adjacent: `retrieve`
+wrote `RagContext.entityLabel` and nothing in the tree read it.
+
+`SearchResult` gains `titleRow` (news only). The palette and the search page
+word it through `rowLine` when present and keep the record's own word for the
+four proper-noun families — club, player, competition and match titles are
+names, not prose, so their raw display IS the record contract, the same one
+their names carry everywhere. The AI layer's three var sites hand the row to
+`fillRowVars` the same way it resolves every var, so a 简体中文 reader who
+asks about a story reads a Chinese headline in the source line, the answer
+lead and the graph's root node. `KgNode.label` becomes a `RowText` and the
+canvas resolves it through `rowLine`, taking the ellipsis cut on the READ
+words rather than on the row object. The raw `title` stays exactly what
+matching needs it to be: the scorer reads it, the ranker checks the question
+against it, and no reader prints it.
+
+Clause 37h's pins moved: bare `.title` JSX renders now census **0** across
+every shipped module, the single `titleRow` producer and its three consumer
+shapes (two palette/search conditionals, three AI var sites) are pinned, and
+`proof-ai-grounding`'s source-line check applies its word/`type:id` reads to
+whichever half the var carries, so the keyed news name cannot hide behind a
+`String(object)` that would always pass.
+
+Measured: `proof-i18n` **355/355** · 2,001 keys × 3 locales; suite **41/41 ·
+2,271/2,271**; `npm run build` exit 0. Code as **7864333** (+63 across 7
+files); this section is a docs-only follow-up.
 
 ### M274 — the seed news sentences leave the glass
 
