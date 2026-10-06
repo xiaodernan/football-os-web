@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M269 (a few numbers in that range
+Work ships one milestone per commit and is currently at M270 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,32 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M270 — the two-letter connector is keyed, not typed
+
+M269's section retired the attribute-position probe with the letter-bar class empty, and the
+next measurement walked the word the bar was always blind to: "vs" is two letters, `hasProse`
+wants three consecutive ones, and the connector between the two sides of a score line reached
+both Chinese locales as bare English text in two shapes — a text node between a closed element
+and an expression (`</span> vs {…}`) twice in [ManagerOS.tsx](features/manager/ManagerOS.tsx)'s
+season panel, and a whole text child (`>vs<`) in
+[ScoutingPanel.tsx](features/scouting/ScoutingPanel.tsx)'s compare header. The suite knew
+about the word: check 12's `CODE_TEXT` carried "vs" as a *decision* — a separator that reads
+the same in all three locales — explicitly not a gated fact, which is another way of saying
+nothing would catch it.
+
+The manager's side asks the row it already had — `mgr.vs`（vs / 对阵 / 對陣）， asked one section
+title away in the same file — and the scout gets its own row, `scout.vs`, the same pair. The
+decision list is empty now, and the class moves from an excuse to a gate: clause 37d pins both
+bare-vs shapes at zero across every shipped module (the dictionary stays outside the scan,
+because an English row may legitimately say vs — the Chinese reader never reads that row), and
+a planted instance of each shape is charged by the same read, so a scanner that stopped seeing
+either shape says so instead of printing a green zero. The literal-shape pin moves
+**1282 → 1285**: two manager sites and one scout site now ask for the word.
+
+Measured: `proof-i18n` **351/351** (was 350) · 1,988 keys × 3 locales; suite **41/41 ·
+2,267/2,267** (was 2,266); `tsc --noEmit` exit 0; `npm run build` exit 0. Code as **de46f5c**
+(+35/−9 across 4 files); this section is a docs-only follow-up.
 
 ### M269 — the last ungated answer surface reads rows end to end
 
