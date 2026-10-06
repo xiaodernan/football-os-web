@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M266 (a few numbers in that range
+Work ships one milestone per commit and is currently at M267 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,32 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M267 — the suite audits its own blind spots, and the zeros have to prove they bite
+
+A clause that asserts `=== 0` passes in two worlds: the debt is gone, or the scan behind it
+stopped reading anything. M247 banned the population pins that could not go red
+(`X === X`), M254 replaced a spent cap with a plant — and three of this file's oldest
+verdicts still carried neither device: the placeholder agreement, the call-site unknown-key
+rule, and the sentence-duplicate rule. This milestone plants each one
+through the same predicate its zero walks: `varsOf` on a pair that does disagree, the
+`STATIC` regex plus the `in en` test on a key the dictionary does not hold, and the
+length-floor plus bucket map on a fixture pair that is a duplicate. Three clauses, each
+green only if the zero above it is measured.
+
+Section 38 generalizes the device into a census. It parses every proof script's `ok()`
+calls — this file included — and counts the clauses still asserting a zero with none of
+the three instruments the suite already uses: a plant in the clause, a floor or pin in
+the clause, or a planted companion within eight lines, which is how the suite writes them.
+The count is pinned at **384 as a ceiling that may only fall**: adding a zero-asserting
+clause without one of the three has to be paid for here, in the same commit, the same
+bargain every other ceiling in this file asks for. And the census audits itself last — a
+source it cannot split into clauses would count zero clauses and zero debts, so a fixture
+with one unguarded zero-asserting clause must read as exactly that.
+
+Measured: pure gate change, no app or dictionary edits — `proof-i18n` **348/348** (five new
+clauses: three plants plus the census pair), suite **41/41 · 2,257/2,257**. The ceiling
+opens at 384 owing; the direction from here is down.
 
 ### M266 — the family the last gate read as a near-miss and refused to charge
 
