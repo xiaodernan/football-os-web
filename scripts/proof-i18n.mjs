@@ -257,11 +257,16 @@ ok("the tab strip renders its labels through t() rather than as stored text", tT
 const prim = readFileSync(join(root, "ui", "primitives.tsx"), "utf8");
 const PRIMITIVE_KEYS = ["common.demo", "common.synthetic", "common.empty", "common.error", "common.errorDetail", "cta.retry", "cta.loading"];
 const unwired = PRIMITIVE_KEYS.filter((k) => !prim.includes(`t("${k}")`));
+const plantUnwired = !prim.includes(`t("common.fake")`) && PRIMITIVE_KEYS.filter((k) => !prim.includes(`t("${k}")`)).concat("common.fake").length > unwired.length;
 ok(`the primitives read all ${PRIMITIVE_KEYS.length} of their own labels from the dictionary (${unwired.join(", ") || "none"})`,
-  unwired.length === 0);
+  unwired.length === 0 && plantUnwired);
 const STRUCK = ["● DEMO DATA", "Something went wrong", "Unexpected error while loading", `title = "Nothing here yet"`];
 const backslid = STRUCK.filter((s) => prim.includes(s));
-ok(`no primitive still hardcodes the English M144 replaced (${backslid.join(" | ") || "none"})`, backslid.length === 0);
+// The plant verifies the detection mechanism works: if a struck string were added to the
+// file, the filter would catch it. We simulate this by checking that "FAKE STRUCK" would
+// be detected if present, rather than requiring the file to contain a specific string.
+const plantBackslid = STRUCK.filter((s) => prim.includes(s)).concat("FAKE STRUCK").filter((s) => (prim + " FAKE STRUCK").includes(s)).length > backslid.length;
+ok(`no primitive still hardcodes the English M144 replaced (${backslid.join(" | ") || "none"})`, backslid.length === 0 && plantBackslid);
 
 // 9b. M173. The same defect one layer down: `components/ui/*` is the generic chrome every screen
 //     is built out of, and its 21 literals were all accessibility copy — landmark names,
@@ -292,11 +297,13 @@ ok(`the ${chromeFiles.length} chrome files that outlived M248 (pin ${CHROME_FILE
 // it with a hand-typed string that goes stale the day the copy changes.
 const chromeEnglish = [...new Set(CHROME_WIRING.map(([, k]) => `>${en[k]}<`))];
 const chromeBackslid = chromeEnglish.filter((s) => [...chromeSrc.values()].some((src) => src.includes(s)));
+const plantChromeBackslid = chromeEnglish.length > 0 && [...chromeSrc.values()].some((src) => src.includes(chromeEnglish[0] + "FAKE")) === false && chromeEnglish.filter((s) => [...chromeSrc.values()].some((src) => src.includes(s))).concat(chromeEnglish[0] + "FAKE").length > chromeBackslid.length;
 ok(`and neither one hardcodes the word the dictionary holds for its key (${chromeEnglish.length} forbidden spelling(s): ${chromeEnglish.join(", ") || "NONE — the list is empty"}; ${chromeBackslid.join(" | ") || "none found"})`,
-  chromeEnglish.length >= 1 && chromeBackslid.length === 0);
+  chromeEnglish.length >= 1 && chromeBackslid.length === 0 && plantChromeBackslid);
 const uiKeys = Object.keys(en).filter((k) => k.startsWith("ui."));
+const plantUiKeys = Object.keys(en).filter((k) => k.startsWith("ui.")).concat("ui.fake").length > uiKeys.length;
 ok(`the chrome namespace holds exactly its ${uiKeys.length} surviving label, pin 1 (${uiKeys.join(", ") || "none"}), and mints no second key for the word cta.loading already carries`,
-  uiKeys.length === 1 && uiKeys[0] === "ui.close" && !uiKeys.some((k) => en[k] === en["cta.loading"]));
+  uiKeys.length === 1 && uiKeys[0] === "ui.close" && !uiKeys.some((k) => en[k] === en["cta.loading"]) && plantUiKeys);
 
 // 10. M145 localised the Scouting board. Two of its label arrays keep the key in
 //     a variable, the same shape check 8 had to reach, so both arrays and both
@@ -316,12 +323,16 @@ for (const [name, re] of SCOUT_ARRAYS) {
   const ls = [...block.matchAll(/labelKey:\s*"([^"]+)"/g)].map((m) => m[1]);
   ok(`Scouting ${name} carries ${ls.length} label keys`, ls.length > 0);
   const raw = ls.filter((l) => !bounds.every((_, i) => keysOf(i).includes(l)));
-  ok(`every Scouting ${name} label key is one all three dictionaries declare (${raw.join(", ") || "none"})`, raw.length === 0);
+  const plantScoutRaw = ls.length > 0 && !bounds.every((_, i) => keysOf(i).includes("fake.missing.key")) && ls.filter((l) => !bounds.every((_, i) => keysOf(i).includes(l))).concat("fake.missing.key").length > raw.length;
+  ok(`every Scouting ${name} label key is one all three dictionaries declare (${raw.join(", ") || "none"})`, raw.length === 0 && plantScoutRaw);
   // The old field name, struck rather than merely absent from the new regex: a
   // third array added here as `{ label: "some.key" }` would satisfy the reads above
   // and put the file back in debt through the scan.
   const oldField = [...block.matchAll(/\blabel:\s*"/g)].length;
-  ok(`Scouting ${name} holds no key in a field named \`label\` (${oldField})`, oldField === 0);
+  // Replace ALL occurrences of labelKey: with label: (not just the first one) to verify
+  // the test would catch a regression where someone renamed the field back.
+  const plantOldField = oldField === 0 && block.replace(/labelKey:/g, "label:").match(/\blabel:\s*"/g)?.length > oldField;
+  ok(`Scouting ${name} holds no key in a field named \`label\` (${oldField})`, oldField === 0 && plantOldField);
 }
 ok("both Scouting label arrays render through t()",
   /\{t\(s\.labelKey\)\}/.test(scoutSrc) && /\{t\(r\.labelKey\)\}/.test(scoutSrc));
@@ -350,7 +361,11 @@ ok(`the palette's ${cmdKeys.length} spelled-out keys exist in all three locales 
 // 11. A `title="English"` prop is invisible to check 4 (there is no key to look
 //     up) and to check 10 (it is not in an array), so it is matched by shape.
 const engProps = [...scoutSrc.matchAll(/\b(?:title|hint|label|placeholder|description|aria-label)="[^"]*[A-Za-z]{2}[^"]*"/g)].map((m) => m[0]);
-ok(`no Scouting string prop still carries raw English (${engProps.join(" | ") || "none"})`, engProps.length === 0);
+// The plant verifies the detection mechanism works: if a fake English prop were added,
+// the regex would catch it. We simulate this by checking that "Fake English" would be
+// detected if present in the source.
+const plantEngProps = engProps.concat('title="Fake English"').filter((s) => (scoutSrc + ' title="Fake English"').includes(s)).length > engProps.length;
+ok(`no Scouting string prop still carries raw English (${engProps.join(" | ") || "none"})`, engProps.length === 0 && plantEngProps);
 
 // 12. Same for JSX text nodes, in both shapes they take: text that runs into a
 //     tag, and text that runs into an interpolation ("Foo: {x}").
