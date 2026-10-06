@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M287 (a few numbers in that range
+Work ships one milestone per commit and is currently at M288 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6318,6 +6318,38 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M288 — a live fixture's record reaches the glass
+
+The seed treats LIVE as a recorded state: every fixture in the [-2, 0) kickoff window
+carries a score, a full real-named event timeline and a 12-field stats pair — the same
+record a finished match gets, and the same one M286/M287's gates already count. The
+match page did not: `usingRecorded` and `recordedStats` were gated on
+`status === "FINISHED"`, so a LIVE page printed its scoreline beside an empty timeline,
+the scheduled fixture's "No simulation yet" board, and a projection button for a match
+already in play. Measured on the shipped world: 49 live fixtures carrying 736 events and
+49/49 stats pairs; the sample page (M0347, 0–0, 9 events) rendered 0 of its 9 event
+names, no possession figure, and the not-simulated board. The dashboard carried the same
+blank in the other direction: the favorite club's "Upcoming Matches" panel is fed by a
+filter that puts LIVE first (earliest kickoff), and its row printed "vs" for a match the
+dashboard's own live section scores two panels above.
+
+The fix makes the record's visibility follow the record: the match page gates its
+recorded timeline and stats on `status !== "SCHEDULED"` — the simulate button keeps its
+projection role, and running it sits the reconstruction beside the recorded timeline,
+the same shape a finished match paints — while the dashboard's fixture row prints "vs"
+only for a match that has not kicked off.
+
+The pin is two clauses. `proof-matchstats` binds LIVE to the recorded-pair contract and
+its arithmetic (49 live, floor 10: both artifacts present, possession halves to 100, on
+target never exceeds shots, goal events equal the scoreline, minutes ascending).
+`proof-screens` gains a render section: every LIVE fixture's page is rendered through
+the provider stack and the record is charged to the text — 49 live pages, 0 dropping a
+name, 0 showing the not-simulated board, 0 missing a possession figure, 0 missing the
+scoreline.
+
+Measured: `tsc` clean; `proof-matchstats` 14/14; `proof-screens` 23/23; suite
+**42/42 · 2,358/2,358**; `npm run build` exit 0. Code as **3fb23b6**.
+
 ### M287 — the recorded board is the timeline's own arithmetic
 
 M280 generated the seed's stats pair independently of its event timeline, and both
