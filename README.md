@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M286 (a few numbers in that range
+Work ships one milestone per commit and is currently at M287 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6318,6 +6318,37 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M287 — the recorded board is the timeline's own arithmetic
+
+M280 generated the seed's stats pair independently of its event timeline, and both
+landed on the same match page: the comparison board printed figures the timeline
+beside it contradicted. Measured across the 1,074 played fixtures the seed shipped,
+`stats.shots` equalled the timeline's attempts in 10 and `stats.onTarget` in 81 —
+1,064/1,074 (99.1%) and 993/1,074 (93.3%) mismatched — while goals agreed
+1,074/1,074 only because proof-matchstats already pinned them. The board's yellows
+and reds carried the same fault in the opposite direction: M284 wired them to the
+glass, but the seed rolled them from a separate generator that could claim four
+cautions beside a timeline showing one.
+
+The fix makes the timeline the single source of truth: `generateMatchStats` now
+receives the events and counts them — shots are the attempts (SHOT + SAVE + GOAL),
+on target the saves plus goals, yellows and reds the cards — and only the figures
+with no event counterpart (possession, xG, passes, pass accuracy, tackles, duels,
+corners, fouls) stay modelled. Straight reds were rare enough that the derived
+column read zero on every fixture, so the seed now records the rare red card it
+claims (about one match in ten, the rate the old generator faked), keeping M284's
+reader fed with real events. The engine's own recorded pair (`matchEngine`) already
+derived its cards this way; the seed now obeys the same contract.
+
+The pin is a new `proof-world` clause: for every played fixture the board's four
+countable figures must equal the timeline's own counts per side — measured 1,064
+played matches (floor 1,000), zero mismatches — while proof-matchstats' existing
+arithmetic (on target never exceeds shots, possession halves to 100, goals equal
+the scoreline) holds by construction.
+
+Measured: `tsc` clean; `proof-world` 39/39; `proof-matchstats` 13/13; suite
+**42/42 · 2,356/2,356**; `npm run build` exit 0. Code as **cda90b9**.
+
 ### M286 — the seed's match events stop speaking in placeholders
 
 M279 filled the seed's events seam, and filled every event's player with template
