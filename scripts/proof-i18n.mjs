@@ -129,6 +129,12 @@ for (const k of enKeys) {
   }
 }
 ok("placeholders agree across locales", varMismatch.length === 0);
+// M267. A zero here is only a measurement if the comparison that produced it still bites. The
+// plant runs `varsOf` — the same function the loop above uses — on a pair that DOES disagree,
+// so a scan that stopped comparing would fail here instead of reporting a clean run.
+const plantedMismatch = varsOf("{n} days") !== varsOf("{n} {m} days");
+ok(`the placeholder rule still reports a disagreement, so the zero above is measured and not a blind spot (${plantedMismatch})`,
+  plantedMismatch === true && varMismatch.length === 0);
 if (varMismatch.length) console.log("       mismatch: " + varMismatch.slice(0, 12).join(", "));
 
 // 4. Every static t("key") literal in the app names a key that exists.
@@ -158,6 +164,13 @@ for (const f of files) {
   for (const m of src.matchAll(DYNAMIC)) dynPrefixes.add(m[1]);
 }
 ok(`no t() call site names an undefined key (${unknown.size})`, unknown.size === 0);
+// M267. Same device: the STATIC regex and the `in en` test that produced the zero must still
+// catch a call site naming a key the dictionary does not hold.
+const plantedUnknown = [...'const x = t("this.key.does.not.exist");'.matchAll(STATIC)]
+  .filter((m) => !(m[1] in en))
+  .map((m) => m[1]);
+ok(`the call-site rule still reports an undefined key, so the zero above is measured and not a blind spot (${plantedUnknown.length} of 1)`,
+  plantedUnknown.length === 1 && plantedUnknown[0] === "this.key.does.not.exist" && unknown.size === 0);
 for (const u of [...unknown].slice(0, 15)) console.log("       undefined: " + u);
 
 // 5. Dynamic keys are built by interpolation, so we can only check the prefix
@@ -3048,6 +3061,21 @@ for (const [k, v] of pairsOf(0)) {
 const twiceCarried = [...shared.entries()].filter(([, ks]) => ks.length > 1);
 ok(`no English sentence is carried by two keys (${twiceCarried.length} of ${shared.size} sentences shared)`,
   twiceCarried.length === 0);
+// M267. The duplicate rule reads a length floor and a bucket map; a zero passes if either
+// stopped working. The plant walks the same shape on a fixture pair that IS a duplicate — long
+// enough to clear SENTENCE_MIN — and must be reported.
+const plantedShared = (() => {
+  const sentence = "This sentence is long enough to clear the length floor and be counted.";
+  const buckets = new Map();
+  for (const [k, v] of [["a.fake.one", sentence], ["a.fake.two", sentence]]) {
+    if (v.trim().length < SENTENCE_MIN) continue;
+    if (!buckets.has(v)) buckets.set(v, []);
+    buckets.get(v).push(k);
+  }
+  return [...buckets.values()].filter((ks) => ks.length > 1).length;
+})();
+ok(`the sentence rule still reports a duplicate, so the zero above is measured and not a blind spot (${plantedShared} of 1)`,
+  plantedShared === 1 && twiceCarried.length === 0);
 for (const [v, ks] of twiceCarried.slice(0, 5)) console.log(`       duplicated: ${ks.join(" | ")} — ${v.slice(0, 60)}`);
 ok(`the collapsed triples are read as one row by both screens (${[...appSrc.values()].reduce((n, c) => n + (c.match(/\bt\(\s*"common\.build/g) ?? []).length, 0)} sites)`,
   [...appSrc.values()].reduce((n, c) => n + (c.match(/\bt\(\s*"common\.build/g) ?? []).length, 0) === 6);
@@ -5071,6 +5099,73 @@ ok(`a switch-cases extractor reads the composer it names, not the file it lives 
     faTable2.length === 3 && faWrongKey.length === 0 && faDrift.length === 0 && faRaw.length === 0 &&
     faEnDistinct === 3 && favKeys.every((n) => n === FA.length * 2) && faSame.every((n) => n === 3));
 }
+
+// 38. The suite's own blind spots.
+//
+// A clause that asserts `=== 0` and carries neither a plant beside it nor a guard inside it
+// would also pass if the scan behind it simply stopped reading anything — the shape M247 banned
+// for the population pins (`X === X` cannot go red) and M254 replaced with a plant when its own
+// cap reached zero. This runs the census over every proof script, this file included, and pins
+// the count of clauses still asserting a zero with none of the three devices the suite already
+// uses: a plant in the clause itself, a floor or pin in the clause itself, or a planted
+// companion written immediately after it. A companion is only credited within eight lines,
+// because that is how the suite writes them.
+//
+// The number may only fall. Adding a zero-asserting clause without one of the three has to be
+// paid for here, in the same commit — which is the same bargain every other ceiling in this
+// file asks for.
+const VACUITY_CEILING = 384;
+const clauseDepth = (text) => {
+  let d = 0, str = null, tmpl = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (str) { if (c === "\\") { i++; continue; } if (c === str) str = null; continue; }
+    if (c === '"' || c === "'") { str = c; continue; }
+    if (c === "`") { if (tmpl) tmpl--; else tmpl++; continue; }
+    if (tmpl) continue;
+    if (c === "(") d++;
+    else if (c === ")") d--;
+  }
+  return d;
+};
+const clausesIn = (src) => {
+  const lines = src.split(/\r?\n/);
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^ok\(/.test(lines[i])) continue;
+    let body = "";
+    for (let j = i; j < lines.length; j++) {
+      body += (j === i ? "" : "\n") + lines[j];
+      if (clauseDepth(body) <= 0) break;
+    }
+    out.push({ line: i + 1, body });
+  }
+  return out;
+};
+const isPlant = (s) => /plant/i.test(s);
+const isZeroish = (s) => /\bnone\b|\b0\b|\bnothing\b|\bno [a-z]+\b/i.test(s);
+const GUARD_RE = /rather than nothing|not an empty set|against pin|pin \d+|> 0|>= 1|\.length >= \d+/;
+const unguardedZeroes = [];
+const proofFiles = readdirSync(join(root, "scripts")).filter((f) => /^proof-.*\.mjs$/.test(f)).sort();
+for (const f of proofFiles) {
+  const cls = clausesIn(readFileSync(join(root, "scripts", f), "utf8"));
+  for (const c of cls) {
+    if (isPlant(c.body) || !isZeroish(c.body.split("\n")[0])) continue;
+    const next = cls.find((x) => x.line > c.line && x.line - c.line < 8);
+    if (GUARD_RE.test(c.body) || (next && isPlant(next.body))) continue;
+    unguardedZeroes.push(`${f}:${c.line}`);
+  }
+}
+ok(`the suite's own zero-asserting clauses carry a plant, a pin or a planted companion (${unguardedZeroes.length} owing across ${proofFiles.length} proof scripts, ceiling ${VACUITY_CEILING})`,
+  unguardedZeroes.length <= VACUITY_CEILING);
+if (unguardedZeroes.length > VACUITY_CEILING) console.log("       owing: " + unguardedZeroes.slice(0, 20).join(", "));
+// The census itself is the last thing that could go blind: a source it cannot split into
+// clauses counts zero clauses and therefore zero debts. The plant is a fixture with one
+// unguarded zero-asserting clause, which the census must report.
+const plantedClauses = clausesIn('ok("nothing here", debt.length === 0);\n');
+const plantedOwing = plantedClauses.filter((c) => !isPlant(c.body) && isZeroish(c.body.split("\n")[0])).length;
+ok(`…and the census reads clauses rather than an empty set (${plantedOwing} of 1 owing in the planted script; the suite read ${proofFiles.length} scripts)`,
+  plantedOwing === 1 && proofFiles.length >= 41);
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 
