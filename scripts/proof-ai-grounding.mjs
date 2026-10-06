@@ -324,6 +324,55 @@ if (vf) {
   }
 }
 
+// ---- M269: the match page's Match Intelligence path is rows end-to-end ----
+// `askFootballAI` is the second answer surface (the fixture page's panel), and until now it
+// took the caller's facts as English strings: the seeded pick interpolated one of them as a
+// `{fact}` value var, so every sentence the caller composed reached both Chinese locales
+// verbatim — in the answer lead and again in the evidence list. The panel now hands rows and
+// reads rows; this block pins the contract the way the RAG path's blocks pin theirs.
+{
+  const { askFootballAI, englishRow } = await server.ssrLoadModule("/data/ai.ts");
+  const compOf = (id) => footballProvider.competitions().find((c) => c.id === id)?.name ?? "";
+  const m = footballProvider.matches().find((x) => x.status === "SCHEDULED");
+  const home = footballProvider.clubs().find((c) => c.id === m.homeClubId);
+  const away = footballProvider.clubs().find((c) => c.id === m.awayClubId);
+  // The facts exactly as the screen builds them — one per live branch of the page's ask block
+  // (matchup, no-simulation fallback, kickoff, possession), with fixture data as vars.
+  const facts = [
+    { key: "ai.qf.matchup", vars: { home: home.name, away: away.name, comp: compOf(m.competitionId) } },
+    { key: "ai.qf.noSim" },
+    { key: "ai.qf.kickoff", vars: { when: "Sep 12, 15:00" } },
+    { key: "ai.qf.possession", vars: { n: "50" } },
+  ];
+  const label = { key: "ai.matchLabel", vars: { home: home.short, away: away.short } };
+  const ans = await askFootballAI("Who controlled the midfield?", { label, facts });
+
+  ok("the match-page answer is a list of rows, never a composed string",
+    Array.isArray(ans.text) && ans.text.length >= 3 && ans.text.every(isRow));
+  ok("the lead row is the question's own key, not a value var inside one sentence",
+    "key" in ans.text[0] && ans.text[0].key === "ai.lead.player");
+  ok("the evidence list is the fact rows themselves (" + ans.evidence.length + " rows)",
+    ans.evidence.length === facts.length && ans.evidence.every(isRow));
+  ok("every match-page row resolves in every locale with no placeholder and no bare key",
+    locales.every((l) => [...ans.text, ...ans.evidence, ...ans.sources].every((r) => {
+      const s = say(l)(r);
+      return !!s.trim() && !/\{\w+\}/.test(s) && !/^(ai|qf)\./.test(s);
+    })));
+  ok("a Chinese reader reads a Chinese answer — none of the caller's old English survives",
+    locales.filter((l) => l !== "en").every((l) => {
+      const s = [...ans.text, ...ans.evidence].map((r) => say(l)(r)).join(" ");
+      return !/Model projection|Possession bias|No simulation|Kickoff |Scoreline |vs /.test(s);
+    }));
+  ok("the seeded pick is reader-independent: the label's ENGLISH reading drives the draw, not its locale row",
+    (await askFootballAI("Who controlled the midfield?", { label, facts })).confidence ===
+    (await askFootballAI("Who controlled the midfield?", { label: { value: englishRow(label) }, facts })).confidence);
+  const again = await askFootballAI("Who controlled the midfield?", { label, facts });
+  ok("deterministic answer rows, evidence and confidence",
+    JSON.stringify(again.text) === JSON.stringify(ans.text) &&
+    JSON.stringify(again.evidence) === JSON.stringify(ans.evidence) &&
+    again.confidence === ans.confidence);
+}
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

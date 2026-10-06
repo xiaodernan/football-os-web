@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
-import { favoriteLabel, footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine } from "@/domain/rowText";
+import { favoriteLabel, footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine, type RowText } from "@/domain/rowText";
 import { FAVORITES, type FavoriteKind } from "@/domain/types";
 import { useOs } from "@/store/useFootballOS";
 import {
@@ -524,13 +524,19 @@ export function MatchDetail({ id }: { id: string }) {
     if (!q.trim()) return;
     setBusy(true);
     try {
-      const facts = [
-        `${home.name} vs ${away.name} (${comp?.name})`,
-        sim ? `Model projection: ${sim.homeGoals}–${sim.awayGoals}, xG ${sim.stats.home.xg.toFixed(2)}–${sim.stats.away.xg.toFixed(2)}` : "No simulation run yet",
-        `${m.status === "SCHEDULED" ? "Kickoff " + fmtDateTime(locale, m.kickoff) : `Scoreline ${m.homeGoals}–${m.awayGoals}`}`,
-        `Possession bias home ${Math.round((sim?.stats.home.possession ?? 50))}%`,
+      // M269: the facts are rows, not English strings — the provider picks one by seed and
+      // the reader sees it in their own language, wherever it lands (answer, evidence).
+      const facts: RowText[] = [
+        { key: "ai.qf.matchup", vars: { home: home.name, away: away.name, comp: comp?.name ?? "" } },
+        sim
+          ? { key: "ai.qf.projection", vars: { score: `${sim.homeGoals}–${sim.awayGoals}`, xgH: sim.stats.home.xg.toFixed(2), xgA: sim.stats.away.xg.toFixed(2) } }
+          : { key: "ai.qf.noSim" },
+        m.status === "SCHEDULED"
+          ? { key: "ai.qf.kickoff", vars: { when: fmtDateTime(locale, m.kickoff) } }
+          : { key: "ai.qf.scoreline", vars: { score: `${m.homeGoals}–${m.awayGoals}` } },
+        { key: "ai.qf.possession", vars: { n: String(Math.round(sim?.stats.home.possession ?? 50)) } },
       ];
-      const ans = await askFootballAI(q, { label: `${home.short} v ${away.short}`, facts });
+      const ans = await askFootballAI(q, { label: { key: "ai.matchLabel", vars: { home: home.short, away: away.short } }, facts });
       setAi(ans);
     } finally {
       setBusy(false);
@@ -587,7 +593,7 @@ export function MatchDetail({ id }: { id: string }) {
         </div>
         {ai && (
           <div className="mt-3 space-y-2 rounded-lg border bg-card/40 p-3 text-sm">
-            <p>{rowLine(ai.text, t)}</p>
+            <p>{ai.text.map((r) => rowLine(r, t)).join(" ")}</p>
             <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("common.evidence")}</div><ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{ai.evidence.map((x, i) => <li key={i}>{rowLine(x, t)}</li>)}</ul></div>
             <div className="flex items-center gap-3 text-xs">
               <span>{t("common.confidence")} <span className="font-mono text-primary">{ai.confidence}%</span></span>

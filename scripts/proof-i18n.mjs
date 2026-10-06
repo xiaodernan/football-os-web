@@ -2590,10 +2590,15 @@ for (const [name, extra] of PLAN_SHAPES) {
 }
 const ANSWER_SHAPES = [["who is the best player at ARS?", "the ranking question"], ["why did they win?", "the pattern question"], ["tell me about the match", "the general question"]];
 for (const [question, name] of ANSWER_SHAPES) {
-  const answer = await askFootballAI(question, { label: "ARS v CHE", facts: ["Arsenal 2-1 Chelsea (Premier League)"] });
+  // The M269 signature: rows in, rows out. The label is the same row the page asks with,
+  // and the answer is read the way the screen reads it — line by line, joined with spaces.
+  const answer = await askFootballAI(question, {
+    label: { key: "ai.matchLabel", vars: { home: "ARS", away: "CHE" } },
+    facts: [{ key: "ai.qf.scoreline", vars: { score: "2-1" } }],
+  });
   for (const { id } of L) {
     planReadings++;
-    const shown = say(id)(answer.text);
+    const shown = answer.text.map((r) => say(id)(r)).join(" ");
     if (/[{}]/.test(shown)) planRowBad.push(`${name} [${id}] a placeholder survived: ${shown}`);
   }
 }
@@ -5115,6 +5120,32 @@ const xgRows = L.map((loc) => [D[loc.id]["mgr.xgUs"], D[loc.id]["mgr.xgThem"]]);
 ok(`the manager's xG fact pair reads the dictionary on both sides (${xgRows.map(([u, th]) => `${u} / ${th}`).join(" | ")}) and the file carries no label-attribute literal the letter bar hides (0; a planted one reads ${plantedLabelLit})`,
   mgrLabelLits === 0 && plantedLabelLit === 1 &&
   xgRows.every(([u, th]) => u && th && u !== "mgr.xgUs" && th !== "mgr.xgThem"));
+
+// 37c. M269. The match page's AI panel was the last answer surface with no gate at all, and it
+// composed its facts as English sentences handed to the panel as {fact} values — the exact
+// shape M224 banned everywhere else (a {value} row holding prose outside the domain). The path
+// is rows end to end now: askFootballAI takes { label, facts } rows, seeds its draw on the
+// label's ENGLISH reading so the seeded pick stays reader-independent, and returns text,
+// evidence and sources as rows. The clause pins the signature in the provider's source, the
+// question keys on the page, and the dictionary rows in all three locales; the keys the old
+// string path leaned on must be gone, not orphaned beside their replacements. The planted
+// signatures charge the type regex the way 37b's planted label charges the attribute one:
+// a planted RowText signature must read, and a planted string[] one must not — a regex that
+// matched any bracket type would pass both pins into one.
+const AI_FILE = "data/ai.ts";
+const DET_FILE = "features/football/Details.tsx";
+const aiPlantedRow = [..."{ label: RowText; facts: RowText[] }".matchAll(/facts: RowText\[\]/g)].length;
+const aiPlantedStr = [..."{ label: RowText; facts: string[] }".matchAll(/facts: RowText\[\]/g)].length;
+const detQfKeys = [...appSrc.get(DET_FILE).matchAll(/key: "ai\.qf\.[A-Za-z]+"/g)].length;
+const QF_KEYS = ["ai.answer.confidence", "ai.matchLabel", "ai.qf.matchup", "ai.qf.projection", "ai.qf.noSim", "ai.qf.kickoff", "ai.qf.scoreline", "ai.qf.possession", "ai.fact.none", "ai.src.matchEngine"];
+const qfMissing = QF_KEYS.filter((k) => L.some((loc) => !D[loc.id][k]));
+const aiGone = ["ai.answer.text", "ai.evidence.fact", "ai.src.matchLabel"].filter((k) => L.some((loc) => k in D[loc.id]));
+ok(`the match page's AI path is rows end to end: the provider takes { label, facts } rows (a planted RowText signature reads ${aiPlantedRow}, a planted string[] one reads ${aiPlantedStr}) and seeds on the label's English reading, Details asks ${detQfKeys} ai.qf.* question keys with no string-array facts anywhere in the file, all ${QF_KEYS.length} dictionary rows exist in ${L.length} locales (${qfMissing.join(", ") || "none"} missing), and the three keys the old string path leaned on are gone (planted absence reads ${aiGone.length})`,
+  aiPlantedRow === 1 && aiPlantedStr === 0 &&
+  /facts: RowText\[\]/.test(appSrc.get(AI_FILE)) && /englishRow\(context\.label\)/.test(appSrc.get(AI_FILE)) &&
+  !/facts: string\[\]/.test(appSrc.get(AI_FILE)) &&
+  detQfKeys >= 6 && !/facts: string\[\]/.test(appSrc.get(DET_FILE)) &&
+  qfMissing.length === 0 && aiGone.length === 0);
 
 // 38. The suite's own blind spots.
 //

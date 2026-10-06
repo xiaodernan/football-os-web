@@ -211,7 +211,11 @@ export const SUGGESTED_ASKS = ["keyPlayer", "league", "value", "transfer"].map((
 
 // Match-chat / analyst answer (evidence-first) used by Match Intelligence.
 export interface AiAnswer {
-  text: RowText;
+  // M269: the answer is three rows — the lead the question picked, the fact the seed chose,
+  // and the confidence note — so every sentence a reader sees is keyed in their own language.
+  // The old single row interpolated the chosen fact as a string var, which carried the
+  // caller's English prose into both Chinese locales verbatim.
+  text: RowText[];
   evidence: RowText[];
   sources: RowText[];
   confidence: number;
@@ -219,11 +223,14 @@ export interface AiAnswer {
 
 export async function askFootballAI(
   question: string,
-  context: { label: string; facts: string[] },
+  context: { label: RowText; facts: RowText[] },
 ): Promise<AiAnswer> {
   await new Promise((r) => setTimeout(r, 200));
-  const rng = makeRng(`${question}-${context.label}`);
-  const fact = context.facts[Math.floor(rng() * context.facts.length)] ?? "No direct data.";
+  // The seed reads the label's ENGLISH rendering so the draw is the reader-independent
+  // constant it always was: the label row's English reading is the exact string the
+  // caller used to pass as a bare value ("ARS v CHE"), so existing seeds reproduce.
+  const rng = makeRng(`${question}-${englishRow(context.label)}`);
+  const fact = context.facts[Math.floor(rng() * context.facts.length)] ?? { key: "ai.fact.none" };
   const lower = question.toLowerCase();
   let leadKey: string;
   if (/who|player|rating|star|最重要/.test(lower))
@@ -233,10 +240,14 @@ export async function askFootballAI(
   else
     leadKey = "ai.lead.general";
   return {
-    text: { key: "ai.answer.text", vars: { lead: leadKey, fact, count: context.facts.length } },
-    evidence: context.facts.slice(0, 4).map((f) => ({ key: "ai.evidence.fact", vars: { fact: f } })),
+    text: [
+      { key: leadKey },
+      fact,
+      { key: "ai.answer.confidence", vars: { count: context.facts.length } },
+    ],
+    evidence: context.facts.slice(0, 4),
     sources: [
-      { key: "ai.src.matchLabel", vars: { label: context.label } },
+      context.label,
       { key: "ai.src.matchEngine" },
     ],
     confidence: 55 + Math.floor(rng() * 30),
