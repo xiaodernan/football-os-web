@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M288 (a few numbers in that range
+Work ships one milestone per commit and is currently at M289 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6318,6 +6318,32 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M289 — the today panel runs on the world's clock
+
+The dashboard's "Today's Matches" panel filtered the demo world's fixtures by the
+reader's wall clock: it hoisted `const now = Date.now()` and measured every kickoff
+against it, while every timestamp the world ships derives from the seed's own anchor
+(`DEMO_NOW`). Measured on 2026-10-06: the reader's ±2d window held 88 scheduled
+fixtures against the world anchor's 45 — a different population, drifting one real day
+at a time — and once the reader's clock passes 2026-10-16 the panel sits empty forever
+beside a hint that promises "Next up in the demo world". The alias was also the one
+site M214's ledger queued: the relative-math census could not see a clock read hidden
+behind a named variable.
+
+The fix moves the selection into the data layer, where the anchor lives:
+`footballService` exports `todayMatches`, filtering scheduled fixtures by
+`DEMO_ANCHOR_MS`, and the dashboard calls it — the screen no longer parses a kickoff
+beside a clock read at all.
+
+The pin is in `proof-matchstats`, at both ends: the window is a real population
+(45 scheduled fixtures within DEMO_NOW ± 2d, floor 20, every row scheduled and inside
+the window — so a regression to the reader's clock reddens the moment the proof runs
+outside the world's fortnight), and neither the screen nor the service parses a kickoff
+beside `Date.now()` — the M214 alias site, closed.
+
+Measured: `tsc` clean; `proof-matchstats` 16/16; `proof-screens` 23/23; suite
+**42/42 · 2,360/2,360**; `npm run build` exit 0. Code as **f2142e8**.
+
 ### M288 — a live fixture's record reaches the glass
 
 The seed treats LIVE as a recorded state: every fixture in the [-2, 0) kickoff window
