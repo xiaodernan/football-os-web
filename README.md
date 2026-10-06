@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M270 (a few numbers in that range
+Work ships one milestone per commit and is currently at M271 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,36 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M271 — every word the letter bar cannot see is a decision or a row
+
+M224's deferral had two halves: "the key it needs is a translation" landed at M268, and "the
+letter bar is a scan change, its own milestone" is this one. `hasProse` wants three consecutive
+Latin letters, so a text node whose every Latin run is two letters or fewer is invisible to
+the suite's main raw-UI device — the class that hid `xG (us)` (M268) and `vs` (M270), one
+word at a time. The scan change is a walk, not a bar-lowering: check 12's two-shape node read
+generalized to every shipped module, the same code-fragment filter, and every node whose
+Latin runs all sit at two letters or below has to be accounted for. The walk found **ten
+words on fifteen sites**.
+
+Two are decisions, named rather than keyed: the brand's own initial `F` (the logo glyph beside
+`t("brand.name")` on three screens) and the `⌘K` shortcut badge — symbols, not copy. The rest
+are dictionary rows now: the fixture connector (`common.vs`, asked by DataRoom's match link
+and the manager's stat duel), the model's goal figure (`common.xg` — FootballWorld, DataRoom,
+and SimulationLab's stats table, whose `label: "xG"` was a bare JS string sitting beside keyed
+siblings), the league table's five headers (`mgr.thP/thW/thD/thL/thGD` — 赛/胜/平/负/净胜，
+one cell away from keyed `thClub` and `thPts`), and the level badge, which asks the existing
+`common.level` word beside the number it labels (Dashboard, AppShell, and the Review tile's
+prop — a template literal the node walk cannot see, so its shape is pinned directly).
+
+Clause 37e holds the class: the walk is pinned at exactly the four decision nodes, a planted
+markup fixture charges an under-bar word through the same pass (the planted `F` survives the
+list, the planted `qq` is charged), and the two prop-string shapes are pinned with plants of
+their own. The literal-shape pin moves **1285 → 1298**.
+
+Measured: `proof-i18n` **352/352** (was 351) · 1,995 keys × 3 locales; suite **41/41 ·
+2,268/2,268** (was 2,267); `tsc --noEmit` exit 0; `npm run build` exit 0. Code as **8627ff3**
+(+80/−10 across 9 files); this section is a docs-only follow-up.
 
 ### M270 — the two-letter connector is keyed, not typed
 
