@@ -10,10 +10,12 @@
 // cannot hide behind the rendering gate alone.
 // Run: node scripts/proof-matchstats.mjs
 import { createServer } from "vite";
+import { readFileSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { WORLD } = await server.ssrLoadModule("/data/footballSeed.ts");
 const { SHOT_TYPES } = await server.ssrLoadModule("/domain/types.ts");
+const { DICTIONARIES, LOCALES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond, detail = "") => {
@@ -58,6 +60,18 @@ ok(`every goal event's shot var is a raw SHOT_TYPES code (${goals.length} goals)
   goals.every((e) => SHOT_TYPES.includes(e.detail.vars?.shot) && !String(e.detail.vars?.shot).includes(".")));
 ok("every goal detail row is the sim.ev.goal row with an xg var",
   goals.every((e) => e.detail.key === "sim.ev.goal" && typeof e.detail.vars?.xg === "string"));
+
+// M284. Every field the seed writes must have a reader: the label census binds the
+// comparison table's own literal (the consumer side), the dictionary census binds all
+// three locales (the display side). Both ends of the same wire, neither trusted alone.
+const detailsSrc = readFileSync(new URL("../features/football/Details.tsx", import.meta.url), "utf8");
+const unwired = STATS_FIELDS.filter((f) => !detailsSrc.includes(`"ms.${f}"`));
+ok(`every declared MatchStats field is wired to its ms.* label in the comparison table (${STATS_FIELDS.length} fields)`,
+  unwired.length === 0, "not wired: " + unwired.join(", "));
+const missingKeys = STATS_FIELDS.flatMap((f) =>
+  LOCALES.filter((l) => !String(DICTIONARIES[l.id][`ms.${f}`] ?? "").length).map((l) => `${l.id}:ms.${f}`));
+ok(`every field's ms.* label key resolves in all ${LOCALES.length} locales (${STATS_FIELDS.length * LOCALES.length} lookups)`,
+  missingKeys.length === 0, missingKeys.join(", "));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

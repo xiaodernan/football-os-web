@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M282 (a few numbers in that range
+Work ships one milestone per commit and is currently at M284 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6318,6 +6318,25 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M284 — the recorded stats' card fields find their readers
+
+M280 wrote `yellows` and `reds` into every side of the seed's stats pair, and nothing ever
+read them — the comparison table rendered 10 of the contract's 12 fields, and the only cards
+reader in the product (Simulation Lab's `sim.cards` row) reads the engine's `SimTeamStats`,
+not the recorded pair. The same write-only defect class M105/M106/M107 charged, and M281
+closed for the stats pair as a whole, had survived in two of its fields. `StatCompare` now
+renders 12 rows: the recorded pair and the simulated pair both carry cards into the glass.
+
+The pin is two-sided and lives in `proof-matchstats.mjs` (+2 clauses, 13 total): a consumer
+census requires every declared `MatchStats` field to appear as its own `ms.*` label literal
+in Details.tsx's comparison table, and a display census requires all 12 keys to resolve in
+all three locales (36 lookups). Neither end trusted alone. Both clauses were mutation-witnessed
+before landing: deleting the two table rows reddens exactly the consumer census (naming
+`reds, yellows`); deleting the English `ms.reds` key reddens exactly the display census
+(naming `en:ms.reds`).
+
+Measured: `proof-matchstats` 13/13; suite **42/42 · 2,354/2,354**; `tsc` clean. Code as **HEAD**.
+
 ### M283 — the seed's match-stats contract gets its witness
 
 M280 shipped the seed's per-match statistics and M281 gave them a reader, but the contract

@@ -1750,6 +1750,8 @@ const en: Dict = {
   "ms.tackles": "Tackles",
   "ms.duels": "Duels",
   "ms.fouls": "Fouls",
+  "ms.yellows": "Yellow cards",
+  "ms.reds": "Red cards",
   // Community Hub (spec §34). Thread titles, bodies and author names are the
   // user's or the dataset's own words and are never translated; only the board's
   // copy is. `comm.tag.*` translates the six tags for display while the raw
@@ -3804,6 +3806,8 @@ const zhCN: Dict = {
   "ms.tackles": "抢断",
   "ms.duels": "对抗",
   "ms.fouls": "犯规",
+  "ms.yellows": "黄牌",
+  "ms.reds": "红牌",
   "comm.agoNow": "刚刚",
   "comm.agoMin": "{n} 分钟前",
   "comm.agoHour": "{n} 小时前",
@@ -5753,6 +5757,8 @@ const zhTW: Dict = {
   "ms.tackles": "搶斷",
   "ms.duels": "對抗",
   "ms.fouls": "犯規",
+  "ms.yellows": "黃牌",
+  "ms.reds": "紅牌",
   "comm.agoNow": "剛剛",
   "comm.agoMin": "{n} 分鐘前",
   "comm.agoHour": "{n} 小時前",

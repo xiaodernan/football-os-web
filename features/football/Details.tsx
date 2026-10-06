@@ -635,6 +635,8 @@ function StatCompare({ stats, home, away, ratings }: { stats: { home: MatchStats
     { labelKey: "ms.tackles", h: stats.home.tackles, a: stats.away.tackles },
     { labelKey: "ms.duels", h: stats.home.duels, a: stats.away.duels },
     { labelKey: "ms.fouls", h: stats.home.fouls, a: stats.away.fouls },
+    { labelKey: "ms.yellows", h: stats.home.yellows, a: stats.away.yellows },
+    { labelKey: "ms.reds", h: stats.home.reds, a: stats.away.reds },
   ];
   return (
     <div className="mt-2 space-y-2.5">
