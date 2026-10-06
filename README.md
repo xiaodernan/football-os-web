@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M268 (a few numbers in that range
+Work ships one milestone per commit and is currently at M269 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,45 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M269 — the last ungated answer surface reads rows end to end
+
+M268 left the letter bar where M224 deferred it and measured around it, so the next
+measurement walked that class itself: an attribute-position probe over every shipped file —
+`label=`, `title=`, `alt=`, `placeholder=`, `aria-label=` — came back **zero** literals with
+Latin letters, so the class has no standing members and the probe stays a dev-side scratch
+file rather than a scan the suite has to feed. What the walk turned up instead is the match
+page's AI panel: the second answer surface, and the only one with no gate at all — it handed
+`askFootballAI` four facts as English strings, took back a single composed sentence, and
+interpolated those facts as `{fact}` values, so every English sentence the caller built
+reached both Chinese locales verbatim, in the lead and again in the evidence list. That is
+M224's banned shape — prose riding a value var outside the domain — surviving one screen
+longer because value slots sit below every prose scan.
+
+[data/ai.ts](data/ai.ts) takes rows now — `context: { label: RowText; facts: RowText[] }` —
+and returns rows: `text` is a lead row, one fact row and a confidence row; `evidence` is the
+fact rows themselves; `sources` name the match and the engine through keys. The seeded draw
+reads the label's ENGLISH reading (`englishRow(context.label)`), which resolves to exactly
+the string the old caller passed, so the seeded pick does not move when the reader switches
+language. [Details.tsx](features/football/Details.tsx) asks its questions as `ai.qf.*` rows
+and renders the answer line by line through `rowLine` — the way every other row in the
+product is read. Three dictionary rows the string path leaned on (`ai.answer.text`,
+`ai.evidence.fact`, `ai.src.matchLabel`) are deleted rather than orphaned; ten rows exist in
+all three locales.
+
+The gate lands with the change, not after it. `proof-ai-grounding` gains the path's first
+behavioural contract: seven checks walk a real scheduled fixture through all three locales —
+the answer is a list of rows, the lead is the question's own key, the evidence is the fact
+rows themselves, no placeholder or bare key survives, a Chinese reader reads a Chinese answer
+with none of the caller's English left, the seeded pick is reader-independent, and a second
+draw returns identical rows. `proof-i18n` gains clause 37c: the provider's signature is
+pinned in source with a planted `RowText[]` fixture that must read and a planted `string[]`
+one that must not, the page's question keys are counted, and the key swap is asserted
+complete; the shape census stays at 1282 because the milestone adds no `t()` call site.
+
+Measured: `proof-ai-grounding` **63/63** (was 56) · `proof-i18n` **350/350** (was 349) ·
+1,987 keys × 3 locales; suite **41/41 · 2,266/2,266** (was 2,258); `npm run build` exit 0.
+Code as **a3f7b5d** (+141/−26 across 5 files); this section is a docs-only follow-up.
 
 ### M268 — the one label the letter bar hid
 
