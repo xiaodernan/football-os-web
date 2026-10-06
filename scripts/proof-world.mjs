@@ -110,6 +110,27 @@ ok("real WORLD evolution is deterministic", JSON.stringify(r2a) === JSON.stringi
 ok("evolving the real dataset does not mutate WORLD.players (shared singleton)", JSON.stringify(WORLD.players) === realJson);
 ok("real evolved squad stays populated and in bounds", r2a.players.length > 0 && r2a.players.every((p) => p.overall >= 40 && p.overall <= 99 && p.value === marketValue(p.overall, p.age)));
 
+// --- the seed's own match events must reach the glass worded, never as keys ----
+// M279 filled the old events seam with generated goal events, but filled the shot var
+// with a DICTIONARY KEY (`sim.shot.tap_in`) instead of the raw code the code-word
+// lookup expects, so every goal line in every locale read `xG 0.13 · sim.shot.tap_in`
+// (measured 2502/2502 renders leaking, 834 goal events x 3 locales). M282 passes the
+// code; this clause pins the rendering: each locale's shot word must equal the
+// dictionary's own value for that event's code, and no line may keep an unfilled var.
+const { makeSay } = await import("./lib/rows.mjs");
+const { say, locales, DICTIONARIES } = await makeSay(server);
+const seedGoals = WORLD.matches
+  .filter((m) => m.status === "FINISHED")
+  .flatMap((m) => m.events ?? [])
+  .filter((e) => e.type === "GOAL" && e.detail);
+ok(`every seed goal event renders the dictionary's own shot word in every locale (${seedGoals.length} goal events, floor 400, x ${locales.length} locales)`,
+  seedGoals.length >= 400 &&
+  seedGoals.every((e) => locales.every((l) => {
+    const line = say(l)(e.detail);
+    const code = String(e.detail.vars?.shot ?? "");
+    return /\bxG /.test(line) && !/\{\w+\}/.test(line) &&
+      line.split("\u00b7").pop()?.trim() === DICTIONARIES[l]["sim.shot." + code];
+  })));
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);
