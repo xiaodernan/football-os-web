@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M273 (a few numbers in that range
+Work ships one milestone per commit and is currently at M274 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,50 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M274 — the seed news sentences leave the glass
+
+M274's measurement opened two probe files and closed most of what they found. The
+hardcoded-locale date class was already M225's (the i18n formatter and its guard
+clause); the bare toast/confirm class was already M159/M220's scan; the dead-code
+candidates from M241's README note were already M242's deletion, leaving only the
+three legitimately unreachable config files. What remained was the **template-
+literal prose class**: 197 hits, almost all of them dynamic `t()` key templates
+(`attr.name.${key}`) and routing/storage keys — code carriers, not copy. The one
+real defect was the **seed news text**: `data/footballSeed.ts` composed all 24
+articles' headlines from five English templates and the summary from a sixth
+English frame, so every screen that printed the record raw — the news list and
+article page, the dashboard's breaking panel, the transfer board, the community
+starters, and the AI evidence card — put an English sentence on the glass
+whatever the locale. The same defect M249 charged for the kind badge, one
+sentence-shaped family larger.
+
+The repair gives the record a row beside its matcher data. `NewsArticle` now
+carries `titleKey` + `titleVars` (`club`, player surname) while the raw `title`
+stays for search scoring and the AI fact layer — data to match on, never a
+surface to print. `rowText` gains `newsTitle` / `newsSummary`, the only readers
+of the six new rows (`ni.headline.confirmed/reported/rumor/analysis/opinion` +
+`ni.summaryLine`, ×3 locales, kind worded through the badge's own lookup). Five
+call sites re-compose through them; the community thread quotes the localized
+summary line as a **nested row** (M236's row-in-a-row, kind var resolved by the
+door), and the rumour board's `RumourLink.title` becomes a keyed `RowText` read
+through `rowLine` — `proof-transfers`' grounding check now pins key + vars
+instead of string equality. The two bare `.title` renders that remain are the
+search results', whose contract IS the record's own word, as club and player
+names are; they are pinned as the known boundary of this milestone.
+
+Clause 37h holds the class: bare `.summary` JSX renders census 0, the two bare
+`.title` renders pinned at the search sites, composer and `rowLine(r.title)`
+call sites pinned (newsTitle's fourth match is the summary composer's internal
+wording call), with two planted shapes charging the same pass. The `t()` shape
+pins moved with the new calls — literal 1298→1299 (`ni.summaryLine` at the
+composer), expression 28→29 (`t(n.titleKey, …)`), literal-with-vars 134→135.
+Dictionary 1,995→2,001 keys. `proof-community` and `proof-transfers` moved with
+the contract.
+
+Measured: `proof-i18n` **355/355** (was 354) · 2,001 keys × 3 locales; suite
+**41/41 · 2,271/2,271** (was 2,270); `npm run build` exit 0. Code as
+**4bfedc1** (+163 across 13 files); this section is a docs-only follow-up.
 
 ### M273 — the forms the display-prop read leaves outside are held too
 
