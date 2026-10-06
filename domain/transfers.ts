@@ -8,13 +8,17 @@
 import { getPlayer, getClub, newsFeed } from "@/data/footballService";
 import type { PositionCode } from "./types";
 import type { NewsArticle } from "@/domain/types";
+import type { RowText } from "./rowText";
 import { bucketOf, headroom, valueIndex, squadProfile } from "./scouting";
 
 const RUMOUR_KINDS: NewsArticle["kind"][] = ["Rumor", "Reported", "Confirmed"];
 
 export interface RumourLink {
   articleId: string;
-  title: string;
+  // The article's own headline row (M274): keyed, so the reader's locale words
+  // it — a raw string here would print the seed's English sentence on every
+  // board, which is the news-headline defect on the transfer screen.
+  title: RowText;
   kind: NewsArticle["kind"];
   source: string;
   credibility: number; // 0..1
@@ -62,7 +66,7 @@ export function transferRumours(viewerClubId?: string, kinds: NewsArticle["kind"
     const fit = profile ? fitFor(profile, bucket, headroom(player), player.overall) : null;
     out.push({
       articleId: n.id,
-      title: n.title,
+      title: { key: n.titleKey, vars: n.titleVars },
       kind: n.kind,
       source: n.source,
       credibility: n.credibility,

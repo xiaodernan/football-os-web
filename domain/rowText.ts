@@ -12,7 +12,7 @@ import { ATTRIBUTE_KEYS, CATEGORIES, POSITION_GROUPS } from "./attributes";
 import { ARCHETYPE_KEYS } from "./playerDna";
 import { TRAJECTORIES } from "./careerArc";
 import { MATCH_STATUSES, MODES, NEWS_KINDS, RECORD_FEELS, SEARCH_KINDS, SHOT_TYPES, FOOTS } from "./types";
-import type { FavoriteKind, SearchKind } from "./types";
+import type { FavoriteKind, NewsArticle, SearchKind } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
 
 // A variable normally holds a word or a number, but one row may also carry another whole
@@ -109,6 +109,29 @@ export const ageGroupLabel = (ageGroup: string, t: Translate): string => codeWor
  *  `Rumor` on the model side and the reader's own word — English "Rumour", 简体「传闻」— on the
  *  glass, and keeps this file the only place that composes `ni.kind.*`. */
 export const newsKindLabel = (kind: string, t: Translate): string => codeWord(kind, t);
+
+/** The glass words for a seeded news story's headline. The headline is a keyed row
+ *  by construction (M274): the seed stores `titleKey` + `titleVars` beside the raw
+ *  English `title` it also keeps for the search matcher and the AI fact layer —
+ *  data to match on, never a surface to print. Before this, every news screen
+ *  printed that raw English sentence whatever the locale, which is the same
+ *  defect M249 charged for the kind badge — the record's words on the reader's
+ *  glass — one sentence-shaped family larger. These two are the only readers of
+ *  `ni.headline.*` and `ni.summaryLine`. */
+export const newsTitle = (n: Pick<NewsArticle, "titleKey" | "titleVars">, t: Translate): string =>
+  t(n.titleKey, n.titleVars);
+
+/** The summary line the article screen prints: the localized headline composed
+ *  into a localized frame, with the story's kind worded through the same lookup
+ *  the badge uses and the credibility shown as a whole percent. */
+export const newsSummary = (n: NewsArticle, t: Translate): string =>
+  t("ni.summaryLine", {
+    title: newsTitle(n, t),
+    club: n.titleVars.club,
+    player: n.titleVars.player,
+    kind: newsKindLabel(n.kind, t),
+    cred: Math.round(n.credibility * 100),
+  });
 
 /** The word for a positional group — `CM` on the model, 「中场中路」 to a reader in 简体中文.
  *  The code has to stay the code everywhere it is an IDENTITY: the picker compares it, the two

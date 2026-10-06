@@ -3816,7 +3816,7 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1298 && shapeCounts.template === 98 && shapeCounts.expression === 28
+  shapeCounts.literal === 1299 && shapeCounts.template === 98 && shapeCounts.expression === 29
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -3828,10 +3828,10 @@ const plantTick = tickPlant.shape === "literal" && tickPlant.tick === true
 ok(`a literal wearing backticks is still a literal — check 24 and this census read it as one (${[...new Set(tickKeys)].sort().join(", ") || "none"}; planted ticked literal classifies and reports its missing variable: ${plantTick})`,
   [...new Set(tickKeys)].sort().join(",") === "attr.name.decision_making,attr.name.first_touch,attr.name.passing" && plantTick);
 ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
-  litVarSites === 134 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 135 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
-  exprWithObj.length === 0 && shapeCounts.expression === 28 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 29 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three
@@ -5280,6 +5280,40 @@ const tlPlant = [..."{ label: `Model projection` }".matchAll(TL_FORM)].filter((m
 ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} aria display attributes resolve through t() and the one forwarded label is pinned at its source (a planted aria bare string reads ${ariaPlant}), and the single-quote and no-interpolation forms of the display-prop class read ${sqHits.length} and ${tlHits.length} bare strings (planted shapes read ${sqPlant} and ${tlPlant})`,
   ariaBare.length === 0 && ariaKeyed === 10 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
+
+// 37h. M274. The seed news sentence class. The seed composes every headline from five English
+// templates, so the record's `title` was an English sentence, and every screen that printed it
+// raw — the news list, the article page, the dashboard's breaking panel, the transfer board —
+// put English prose on the glass whatever the locale: the same defect M249 charged for the kind
+// badge, one sentence-shaped family larger. The record now carries `titleKey` + `titleVars`
+// beside the raw `title` it keeps for matching (search scoring, AI fact layer), and the glass
+// reads go through the `newsTitle` / `newsSummary` composers. This census walks every shipped
+// module: a bare JSX render of a `.summary` field reads 0 (the field belongs to the news
+// record alone; the sim lab's summary rows already went through rowLine), the bare `.title`
+// renders are pinned at the two search-result sites whose contract IS the record's own word
+// (SearchResult.title is the matched string, as club and player names are), and the composer
+// and rowLine reads are pinned at their call sites so a new screen cannot quietly regress to
+// printing the field (newsTitle()'s fourth match is the summary composer wording the headline
+// inside its own frame — the other three are the glass readers). Two planted shapes charge the
+// same pass.
+const NEWS_SUMMARY_RAW = /\{\s*[A-Za-z_$][\w$]*\.summary\s*\}/g;
+const NEWS_TITLE_RAW = /\{\s*[A-Za-z_$][\w$]*\.title\s*\}/g;
+const summaryBare = [];
+const titleBare = [];
+for (const [path, src] of appSrc) {
+  for (const m of src.matchAll(NEWS_SUMMARY_RAW)) summaryBare.push(`${path} ${m[0].trim()}`);
+  for (const m of src.matchAll(NEWS_TITLE_RAW)) titleBare.push(`${path} ${m[0].trim()}`);
+}
+const allShipped = [...appSrc.values()].join("\n");
+const newsTitleSites = [...allShipped.matchAll(/\bnewsTitle\(/g)].length;
+const newsSummarySites = [...allShipped.matchAll(/\bnewsSummary\(/g)].length;
+const rumourRowSites = [...allShipped.matchAll(/rowLine\(r\.title,\s*t\)/g)].length;
+const summaryPlant = [...`<p>{article.summary}</p>`.matchAll(NEWS_SUMMARY_RAW)].length;
+const titlePlant = [...`<div>{n.title}</div>`.matchAll(NEWS_TITLE_RAW)].length;
+ok(`the seeded news sentences are read through the composers: ${summaryBare.length} bare .summary renders (a planted one reads ${summaryPlant}), the ${titleBare.length} bare .title renders are the pinned search-result record-word sites (${titleBare.join(", ") || "none"}; a planted one reads ${titlePlant}), and the glass reads sit at ${newsTitleSites} newsTitle() + ${newsSummarySites} newsSummary() + ${rumourRowSites} rowLine(r.title) call sites`,
+  summaryBare.length === 0 && summaryPlant === 1 && titleBare.length === 2 && titlePlant === 1 &&
+  titleBare.every((x) => / \{r\.title\}$/.test(x)) &&
+  newsTitleSites === 4 && newsSummarySites === 2 && rumourRowSites === 1);
 
 // 38. The suite's own blind spots.
 //

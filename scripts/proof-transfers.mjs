@@ -51,7 +51,13 @@ ok("the board is deterministic", JSON.stringify(transferRumours()) === JSON.stri
 ok("every row's article exists and its kind is one of the rumour kinds",
   board.every((r) => { const n = getNews(r.articleId); return !!n && availableKinds().includes(n.kind); }));
 ok("row metadata is the ARTICLE's own fields, copied not invented",
-  board.every((r) => { const n = getNews(r.articleId); return n.title === r.title && n.kind === r.kind && n.source === r.source && n.credibility === r.credibility && n.publishedAt === r.publishedAt; }));
+  board.every((r) => {
+    const n = getNews(r.articleId);
+    // M274 keyed the headline: the row must be the article's own key + vars, not the
+    // raw English string the record also carries for matching.
+    return r.title.key === n.titleKey && JSON.stringify(r.title.vars) === JSON.stringify(n.titleVars) &&
+      n.kind === r.kind && n.source === r.source && n.credibility === r.credibility && n.publishedAt === r.publishedAt;
+  }));
 ok("the player named by a row is really referenced by that article",
   board.every((r) => getNews(r.articleId).entityIds.includes(r.playerId)));
 // "First resolvable entity wins" is NOT a falsifiable claim on this dataset —

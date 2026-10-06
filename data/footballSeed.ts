@@ -310,12 +310,16 @@ function buildStandings(clubs: Club[], matches: Match[]): Record<string, Standin
   return table;
 }
 
-const NEWS_TEMPLATES: [NewsArticle["kind"], string][] = [
-  ["Confirmed", "{club} confirm {player} fit for the derby"],
-  ["Reported", "{club} open talks over {player} extension"],
-  ["Rumor", "{club} weighing a January move for {player}"],
-  ["Analysis", "How {club}'s press is breaking the first line"],
-  ["Opinion", "{club} need to trust their academy, not the market"],
+// Each template is [kind, raw English headline, dictionary key]. The raw form
+// stays on the record for matching (search scoring, AI fact layer); the key is
+// what the glass reads, through `newsTitle`, so a 简体中文 reader gets the
+// headline in their own words and the proper nouns ride as vars.
+const NEWS_TEMPLATES: [NewsArticle["kind"], string, string][] = [
+  ["Confirmed", "{club} confirm {player} fit for the derby", "ni.headline.confirmed"],
+  ["Reported", "{club} open talks over {player} extension", "ni.headline.reported"],
+  ["Rumor", "{club} weighing a January move for {player}", "ni.headline.rumor"],
+  ["Analysis", "How {club}'s press is breaking the first line", "ni.headline.analysis"],
+  ["Opinion", "{club} need to trust their academy, not the market", "ni.headline.opinion"],
 ];
 
 function buildNews(clubs: Club[], players: PlayerRef[], rng: () => number): NewsArticle[] {
@@ -332,12 +336,16 @@ function buildNews(clubs: Club[], players: PlayerRef[], rng: () => number): News
     const club = pick(rng, clubs);
     const pool = players.filter((p) => p.clubId === club.id);
     const player = pool.length ? pick(rng, pool) : pick(rng, players);
-    const title = kind[1].replace("{club}", club.name).replace("{player}", player.name.split(" ").slice(-1)[0]);
+    const clubName = club.name;
+    const playerSurname = player.name.split(" ").slice(-1)[0];
+    const title = kind[1].replace("{club}", clubName).replace("{player}", playerSurname);
     const src = pick(rng, sources);
     const cred = Math.max(0.3, Math.min(0.97, src.cred + rngFloat(rng, -0.12, 0.08)));
     out.push({
       id: `N${(i + 1).toString().padStart(3, "0")}`,
       title,
+      titleKey: kind[2],
+      titleVars: { club: clubName, player: playerSurname },
       summary: `${title}. Our intelligence layer cross-checks this against ${club.name}'s recent match data and ${player.name}'s form. Flagged as ${kind[0]} with ${Math.round(cred * 100)}% source confidence.`,
       source: src.name,
       publishedAt: new Date(anchor - rngInt(rng, 0, 72) * 3600000).toISOString(),

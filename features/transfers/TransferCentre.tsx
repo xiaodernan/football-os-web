@@ -4,7 +4,7 @@ import { useI18n } from "@/i18n";
 import { getClub, formatValue } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { transferRumours, clubOf, availableKinds, type RumourLink } from "@/domain/transfers";
-import { newsKindLabel } from "@/domain/rowText";
+import { newsKindLabel, rowLine } from "@/domain/rowText";
 import type { NewsArticle } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
@@ -125,7 +125,7 @@ function RumourCard({ r, showFit }: { r: RumourLink; showFit: boolean }) {
         <Badge variant="outline" className={cn("shrink-0 text-[10px]", KIND_TONE[r.kind])}>{newsKindLabel(r.kind, t)}</Badge>
       </div>
 
-      <p className="mt-3 line-clamp-2 text-sm">{r.title}</p>
+      <p className="mt-3 line-clamp-2 text-sm">{rowLine(r.title, t)}</p>
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <Cell label={t("transfers.askingFee")} value={formatValue(r.askingFee)} />

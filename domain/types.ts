@@ -180,6 +180,12 @@ export interface MatchEvent {
 export interface NewsArticle {
   id: string;
   title: string;
+  // The headline's own row: the seed composes key + name vars, and every glass
+  // reader words it through `newsTitle`. `title` stays on the record as the raw
+  // English string the search matcher and the AI fact layer score against —
+  // data to match on, never a surface to print.
+  titleKey: string;
+  titleVars: { club: string; player: string };
   summary: string;
   source: string;
   // Genuine external reference a real news provider can supply. Demo Mode never

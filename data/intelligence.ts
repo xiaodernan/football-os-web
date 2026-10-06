@@ -202,7 +202,20 @@ function newsFacts(nid: string): EvidenceFact[] {
   return [
     {
       label: { value: n.kind },
-      text: { key: "ai.fact.news", vars: { title: n.title, summary: n.summary, source: n.source } },
+      // Title and summary ride as their keyed rows (M274), so the evidence card
+      // words the story in the reader's locale instead of quoting the seed's
+      // English sentence; the raw `n.title` stays the matcher's data, not glass.
+      text: {
+        key: "ai.fact.news",
+        vars: {
+          title: { key: n.titleKey, vars: n.titleVars },
+          summary: {
+            key: "ni.summaryLine",
+            vars: { title: { key: n.titleKey, vars: n.titleVars }, club: n.titleVars.club, player: n.titleVars.player, kind: n.kind, cred: Math.round(n.credibility * 100) },
+          },
+          source: n.source,
+        },
+      },
       to: `/news/${n.id}`,
     },
   ];

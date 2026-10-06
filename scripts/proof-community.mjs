@@ -87,17 +87,25 @@ ok("a race thread is tagged as a debate, never as news", races.every((t) => t.ta
 ok("…and a race thread is written in the reader's own language, not the module's",
   races.every((t) => en(t.title) !== say("zh-CN")(t.title) && /争冠/.test(say("zh-CN")(t.title))));
 
-// News threads: title, tag, timestamp and credibility all come from the item, verbatim.
+// News threads: title, tag, timestamp and credibility all come from the item. M274 keyed the
+// headline: the thread carries the article's own row (ni.headline.*), and the body quotes the
+// localized summary line (ni.summaryLine) the article screen composes — so the expectation is
+// recomposed here from the item's own key + vars and read through the reader, not copied.
 const news = T.filter((t) => t.id.startsWith("t-news-"));
+const summaryRow = (item) => ({
+  key: "ni.summaryLine",
+  vars: { title: { key: item.titleKey, vars: item.titleVars }, club: item.titleVars.club, player: item.titleVars.player, kind: item.kind, cred: Math.round(item.credibility * 100) },
+});
 const badNews = news.filter((t) => {
   const item = newsFeed.find((n) => `t-news-${n.id}` === t.id);
   if (!item) return true;
   const wantTag = item.kind === "Rumor" ? "Rumours" : "News";
   const pct = (item.credibility * 100).toFixed(0);
-  // The headline is the article's own word and stays a value; the summary and the credibility
-  // figure are variables of a keyed sentence.
-  return !("value" in t.title) || t.title.value !== item.title || t.tag !== wantTag || t.at !== item.publishedAt ||
-    !en(t.body).startsWith(item.summary) || !en(t.body).includes(`${pct}%`);
+  // The headline is the article's own keyed row; the summary and the credibility figure are
+  // variables of a keyed sentence.
+  return t.title.key !== item.titleKey || JSON.stringify(t.title.vars) !== JSON.stringify(item.titleVars) ||
+    t.tag !== wantTag || t.at !== item.publishedAt ||
+    !en(t.body).startsWith(en(summaryRow(item))) || !en(t.body).includes(`${pct}%`);
 });
 ok(`every news thread copies its item's title, tag, published time and credibility (${news.length} items, kinds ${news.map((t) => t.tag).join("/")})`,
   news.length > 0 && badNews.length === 0, badNews.map((t) => `${t.id}:${t.tag}`).join(", "));

@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
-import { matchStatusLabel, newsKindLabel, rowLine } from "@/domain/rowText";
+import { matchStatusLabel, newsKindLabel, newsSummary, newsTitle, rowLine } from "@/domain/rowText";
 
 const fmtDate = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric" });
@@ -153,8 +153,8 @@ function NewsRow({ id, compact }: { id: string; compact?: boolean }) {
         <span>{fmtDate(locale, n.publishedAt)}</span>
         <span className="ml-auto font-mono">{Math.round(n.credibility * 100)}%</span>
       </div>
-      <div className="mt-1 text-sm font-medium leading-snug">{n.title}</div>
-      {!compact && <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">{n.summary}</div>}
+      <div className="mt-1 text-sm font-medium leading-snug">{newsTitle(n, t)}</div>
+      {!compact && <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">{newsSummary(n, t)}</div>}
     </EntityLink>
   );
 }
@@ -385,14 +385,14 @@ function NewsDetail({ id }: { id: string }) {
   const entities = n.entityIds.map((e) => getPlayer(e) ? { label: getPlayer(e)!.name, to: `/players/${e}` } : getClub(e) ? { label: getClub(e)!.name, to: `/clubs/${e}` } : null).filter(Boolean) as { label: string; to: string }[];
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <PageHeader title={n.title} back="/news" />
+      <PageHeader title={newsTitle(n, t)} back="/news" />
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="outline" className={kindTone(n.kind)}>{newsKindLabel(n.kind, t)}</Badge>
         <span>{n.source}</span><span>·</span><span>{fmtDateTime(locale, n.publishedAt)}</span>
         <span className="ml-auto">{t("fw.news.credibility")} <span className="font-mono text-primary">{Math.round(n.credibility * 100)}%</span></span>
       </div>
       <Panel className="space-y-3 p-5 text-sm leading-relaxed">
-        <p className="text-base">{n.summary}</p>
+        <p className="text-base">{newsSummary(n, t)}</p>
         <p className="text-muted-foreground">{t("fw.news.demoNote")}</p>
         <div className="flex flex-wrap gap-1.5 pt-1">{n.topics.map((tp) => <Badge key={tp} variant="secondary" className="text-xs">#{tp}</Badge>)}</div>
       </Panel>

@@ -123,16 +123,26 @@ export function seedThreads(): Thread[] {
   // A thread per top transfer-style news item.
   for (const n of newsFeed.slice(0, 4)) {
     const id = `t-news-${n.id}`;
+    // The article's own headline as its keyed row (M274): before, the thread
+    // title was `{ value: n.title }` — the seed's English sentence frozen at
+    // seed time — so a 简体中文 reader opened a Chinese community and read an
+    // English headline. The body quotes the localized summary line the same
+    // way the article screen composes it: title row inside, kind code var
+    // resolved by the row door, whole-percent credibility.
     threads.push({
       id,
-      // The article's own headline, so it is the record's word and not the model's: a value,
-      // shown exactly as the feed wrote it, never re-read as a key.
-      title: { value: n.title },
+      title: { key: n.titleKey, vars: n.titleVars },
       tag: n.kind === "Rumor" ? "Rumours" : "News",
       author: pick(makeRng(id), HANDLES),
       body: {
         key: "comm.thread.newsBody",
-        vars: { summary: n.summary, cred: (n.credibility * 100).toFixed(0) },
+        vars: {
+          summary: {
+            key: "ni.summaryLine",
+            vars: { title: { key: n.titleKey, vars: n.titleVars }, club: n.titleVars.club, player: n.titleVars.player, kind: n.kind, cred: Math.round(n.credibility * 100) },
+          },
+          cred: (n.credibility * 100).toFixed(0),
+        },
       },
       at: n.publishedAt,
       seeded: true,
