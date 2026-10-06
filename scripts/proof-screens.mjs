@@ -218,7 +218,7 @@ const OWN_SRC = read("scripts/proof-screens.mjs");
 const OWN_ROOT_RE = /ssrLoadModule\(\s*["'`]\/([\w./-]+?)["'`]/g;
 const ownLiteral = [...OWN_SRC.matchAll(OWN_ROOT_RE)].map((m) => m[1]);
 const ownVariable = (OWN_SRC.match(/ssrLoadModule\("\/" \+/g) || []).length;
-ok(`this file's own loads are split by how visible they are to that ratchet: ${ownLiteral.length} literal-path loads (${ownLiteral.join(", ")}) it can attribute, ${ownVariable} computed-path loads (the ${screens.length} screens + the ${PROVIDERS.length} providers) it cannot`,
+ok(`this file's own loads are split by how visible they are to that ratchet: ${ownLiteral.length} literal-path loads (${ownLiteral.join(", ")}) it can attribute, ${ownVariable} computed-path loads (the ${screens.length} screens, the ${PROVIDERS.length} providers, this file's live-record fixtures) it cannot`,
   ownLiteral.length >= 1 && ownVariable >= 1 && ownLiteral.filter((p) => p.startsWith("features/")).length === 0,
   `literal=${ownLiteral.length} variable=${ownVariable}`);
 
@@ -313,6 +313,35 @@ ok(`the honesty label arrives in the reader's language: ${badged.length} renders
 const noBadge = [...new Set(Object.entries(byScreen).filter(([, per]) => per.en && !per.en.badgeEn).map(([id]) => nameOf(id)))];
 ok(`…and the census names the screens whose FIRST paint shows no badge at all, so the clause above is read as an equivalence, not as a claim that every screen is labelled (${noBadge.length} of ${new Set(screens.map((s) => s.name)).size} distinct components: ${noBadge.join(", ")})`,
   noBadge.length < new Set(screens.map((s) => s.name)).size, "");
+
+// ---------------------------------------------------------------------------
+// 5b · the status renders: a LIVE fixture's record must reach the glass
+// ---------------------------------------------------------------------------
+// The seed writes a full record for a fixture in play — score, real-named events,
+// a 12-field stats pair (the data side is pinned by proof-matchstats' LIVE
+// clause). M288: the match page gated that record on status === "FINISHED", so a
+// LIVE page printed its scoreline beside an empty timeline and a "No simulation
+// yet" board — measured on the shipped world: 49 live fixtures carrying 736
+// events, and the sample page showed 0 of its 9 event names. This section
+// renders every LIVE fixture's page and charges the record to the text.
+const DETAILS = (await tryLoad(() => server.ssrLoadModule("/" + "features/football/Details.tsx"))).mod;
+const FOOT = (await tryLoad(() => server.ssrLoadModule("/" + "data/footballService.ts"))).mod;
+const liveFixtures = DETAILS && FOOT ? FOOT.matchesByStatus("LIVE") : [];
+const livePages = [];
+for (const lm of liveFixtures) {
+  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  globalThis.window.location.hash = "#/matches/" + lm.id;
+  let html = "";
+  try { html = renderToStaticMarkup(tree(React.createElement(DETAILS.MatchDetail, { id: lm.id }))); } catch { html = ""; }
+  livePages.push({ lm, text: nodesOf(html).join(" ") });
+}
+const liveNameMiss = livePages.filter((r) => (r.lm.events ?? []).some((e) => !r.text.includes(e.player)));
+const liveBoardMiss = livePages.filter((r) => !r.text.includes(EN["det.engine.statsRecorded"]) || r.text.includes(EN["det.engine.emptySimTitle"]));
+const livePossMiss = livePages.filter((r) => !r.text.includes(`${Math.round(r.lm.stats.home.possession)}%`) || !r.text.includes(`${Math.round(r.lm.stats.away.possession)}%`));
+const liveScoreMiss = livePages.filter((r) => !r.text.includes(`${r.lm.homeGoals}–${r.lm.awayGoals}`));
+ok(`a LIVE fixture's record reaches the glass: every event name, the board's own figures and the recorded title render on the live page (${livePages.length} live pages, ${liveNameMiss.length} dropping a name, ${liveBoardMiss.length} showing the not-simulated board, ${livePossMiss.length} missing a possession figure, ${liveScoreMiss.length} missing the scoreline)`,
+  livePages.length >= 10 && liveNameMiss.length === 0 && liveBoardMiss.length === 0 && livePossMiss.length === 0 && liveScoreMiss.length === 0,
+  `names:${liveNameMiss.map((r) => r.lm.id).join(",")} board:${liveBoardMiss.map((r) => r.lm.id).join(",")}`);
 
 // ---------------------------------------------------------------------------
 // 6 · what this harness cannot see, demonstrated rather than asserted

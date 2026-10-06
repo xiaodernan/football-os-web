@@ -409,7 +409,7 @@ function FixtureRow({ m }: { m: Match }) {
           <span className="truncate text-right text-sm">{h?.name}</span>
           <Crest colors={h?.colors} short={h?.short} size={24} />
         </div>
-        <div className="rounded bg-secondary px-2 py-0.5 font-mono text-sm tabular-nums">{m.status === "FINISHED" ? `${m.homeGoals}–${m.awayGoals}` : "vs"}</div>
+        <div className="rounded bg-secondary px-2 py-0.5 font-mono text-sm tabular-nums">{m.status === "SCHEDULED" ? "vs" : `${m.homeGoals}–${m.awayGoals}`}</div>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <Crest colors={a?.colors} short={a?.short} size={24} />
           <span className="truncate text-sm">{a?.name}</span>

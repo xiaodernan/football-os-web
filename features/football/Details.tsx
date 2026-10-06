@@ -513,8 +513,12 @@ export function MatchDetail({ id }: { id: string }) {
   const away = getClub(m.awayClubId)!;
   const comp = getCompetition(m.competitionId);
   const played = m.status === "FINISHED";
-  const usingRecorded = played && !!m.events?.length;
-  const recordedStats = played && m.stats ? m.stats : null;
+  // M288: a fixture in play is a recorded state — the seed writes its score,
+  // events and stats pair, so the page shows the record it prints a scoreline
+  // from, not a "no simulation yet" board beside a live score.
+  const started = m.status !== "SCHEDULED";
+  const usingRecorded = started && !!m.events?.length;
+  const recordedStats = started && m.stats ? m.stats : null;
   const events: MatchEvent[] = usingRecorded ? m.events! : sim?.timeline ?? [];
 
   const runSim = () => {

@@ -33,6 +33,20 @@ ok("every played match carries both stats and events; every scheduled one carrie
   played.every((m) => !!m.stats && !!m.events && m.events.length > 0) &&
   scheduled.every((m) => !m.stats && !(m.events && m.events.length)));
 
+// M288. LIVE is a recorded state, not a blank one: the seed writes the same
+// stats-and-events pair for a fixture in play (the M286/M287 gates already count
+// it), so the same contract and the same arithmetic bind at status LIVE —
+// measured with a floor, not assumed from the generator's shared code path.
+const live = matches.filter((m) => m.status === "LIVE");
+ok(`every LIVE fixture carries the same recorded pair under the same arithmetic (${live.length} live, floor 10)`,
+  live.length >= 10 &&
+  live.every((m) => !!m.stats && !!m.events && m.events.length > 0) &&
+  live.every((m) => m.stats.home.possession + m.stats.away.possession === 100 &&
+    m.stats.home.onTarget <= m.stats.home.shots && m.stats.away.onTarget <= m.stats.away.shots &&
+    m.events.filter((e) => e.type === "GOAL" && e.side === "home").length === m.homeGoals &&
+    m.events.filter((e) => e.type === "GOAL" && e.side === "away").length === m.awayGoals &&
+    m.events.every((e, i) => i === 0 || m.events[i - 1].minute <= e.minute)));
+
 const STATS_FIELDS = ["possession", "shots", "onTarget", "xg", "passes", "passAcc", "tackles", "duels", "corners", "fouls", "yellows", "reds"].sort();
 const shapeOk = played.every((m) =>
   JSON.stringify(Object.keys(m.stats.home).sort()) === JSON.stringify(STATS_FIELDS) &&
