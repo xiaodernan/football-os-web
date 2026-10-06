@@ -6278,6 +6278,27 @@ named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `too
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
 
+### M279 — match events and statistics for all fixtures
+
+All generated matches now carry a detailed event timeline with goals, shots, saves
+and cards rather than just the final scoreline. `generateMatchEvents()` produces:
+
+- **Goal events** with xG values (0.05–0.85) and shot types (tap_in, close_range,
+  header, left_foot, right_foot, volley), each carrying a localized detail row
+- **Shot events** (8–20 per match) distributed throughout the timeline
+- **Save events** for goalkeeper actions (30% probability per shot)
+- **Yellow cards** (40% probability per match)
+
+The function integrates into `buildMatches()` by calling it for every non-scheduled
+match, so the Simulation Lab's match detail page can display a realistic timeline
+instead of "No events recorded". Events reuse existing `sim.ev.goal` and
+`sim.shot.*` dictionary keys already present in dictionaries.ts, requiring no new
+i18n work.
+
+Measured: suite **41/41 · 2,339/2,339**; `npm run build` exit 0. Code as **76dde14**
+(+59 lines in footballSeed.ts — event generation function + type import); this section
+is a docs-only follow-up.
+
 ### M277 — expand WORLD seed with 4 new competitions and 30 additional clubs
 
 The demo world grew from 39 clubs across 8 competitions to **69 clubs across 12
