@@ -43,6 +43,10 @@ const COMPETITIONS: Competition[] = [
   { id: "brasileirao", name: "Brasileirão Série A", nation: "Brazil", tier: 1, clubIds: [] },
   { id: "jleague", name: "J1 League", nation: "Japan", tier: 1, clubIds: [] },
   { id: "superlig", name: "Süper Lig", nation: "Türkiye", tier: 1, clubIds: [] },
+  // Continental competitions
+  { id: "ucl", name: "UEFA Champions League", nation: "Europe", tier: 0, clubIds: [] },
+  { id: "uel", name: "UEFA Europa League", nation: "Europe", tier: 0, clubIds: [] },
+  { id: "libertadores", name: "Copa Libertadores", nation: "South America", tier: 0, clubIds: [] },
 ];
 
 const CLUB_DEFS: ClubDef[] = [
@@ -280,6 +284,37 @@ function makeWorld() {
       attributes: attrs,
     });
   }
+
+  // Populate continental competitions based on league strength
+  const uclClubs: string[] = [];
+  const uelClubs: string[] = [];
+  const libertadoresClubs: string[] = [];
+
+  // UEFA Champions League: top European clubs
+  for (const compId of ["pl", "liga", "seriea", "bundes", "ligue1"]) {
+    const compClubs = clubs.filter((c) => c.competitionId === compId).sort((a, b) => b.overall - a.overall);
+    uclClubs.push(...compClubs.slice(0, Math.min(4, compClubs.length)).map((c) => c.id));
+    if (compClubs.length > 4) {
+      uelClubs.push(...compClubs.slice(4, Math.min(6, compClubs.length)).map((c) => c.id));
+    }
+  }
+  // Add Dutch and Portuguese champions to UCL
+  for (const compId of ["eredivisie", "liga1"]) {
+    const compClubs = clubs.filter((c) => c.competitionId === compId).sort((a, b) => b.overall - a.overall);
+    if (compClubs.length > 0) uclClubs.push(compClubs[0].id);
+  }
+  // Turkish champion to Europa League
+  const turkishClubs = clubs.filter((c) => c.competitionId === "superlig").sort((a, b) => b.overall - a.overall);
+  if (turkishClubs.length > 0) uelClubs.push(turkishClubs[0].id);
+
+  // Copa Libertadores: top South American clubs
+  const brazilianClubs = clubs.filter((c) => c.competitionId === "brasileirao").sort((a, b) => b.overall - a.overall);
+  libertadoresClubs.push(...brazilianClubs.slice(0, Math.min(4, brazilianClubs.length)).map((c) => c.id));
+
+  // Assign continental clubs to their competitions
+  compMap.get("ucl")!.clubIds = uclClubs;
+  compMap.get("uel")!.clubIds = uelClubs;
+  compMap.get("libertadores")!.clubIds = libertadoresClubs;
 
   const matches = buildMatches(clubs, compMap, rng);
   const standings = buildStandings(clubs, matches);
