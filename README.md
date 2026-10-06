@@ -6299,6 +6299,24 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M281 — the recorded match stats find their reader
+
+M280 shipped `Match.stats` and left it write-only — the exact defect class M105/M106/M107
+charged for, reintroduced by my own milestone. This closes it: a played match whose seed
+carries stats now shows the recorded stat comparison on the match detail page immediately,
+without requiring the visitor to run a reconstruction first. `StatCompare` no longer takes
+a `SimResult`; it takes a plain stats pair plus optional player ratings, so the engine's
+`SimTeamStats` (a structural superset) and the seed's `MatchStats` both feed the same ten
+rows, and the ratings `<details>` renders only when a simulation actually produced them.
+The section title distinguishes the two origins (`det.engine.statsRecorded` — new key in
+all three locales — vs the existing reconstructed/projected titles), and the Ask-Football-AI
+possession fact falls back to the recorded figure instead of a hardcoded 50 when no
+simulation has been run. The seed's `duelsWon` field was renamed `duels` to make the
+"reuses the engine's shape" claim in M280's section literally true.
+
+Measured: suite **41/41 · 2,341/2,341** (proof-i18n +2 for the new key); `npm run build`
+exit 0. Code as **HEAD** (+35/−27 across 4 files); this section is a docs-only follow-up.
+
 ### M280 — match statistics aggregation for all fixtures
 
 Every finished match now carries a full statistical profile alongside its event timeline.

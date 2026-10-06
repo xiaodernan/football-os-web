@@ -24,7 +24,7 @@ import { careerArc } from "@/domain/careerArc";
 import { playerDna } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
-import type { MatchEvent, PlayerRef } from "@/domain/types";
+import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard } from "@/ui/primitives";
 import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
@@ -514,6 +514,7 @@ export function MatchDetail({ id }: { id: string }) {
   const comp = getCompetition(m.competitionId);
   const played = m.status === "FINISHED";
   const usingRecorded = played && !!m.events?.length;
+  const recordedStats = played && m.stats ? m.stats : null;
   const events: MatchEvent[] = usingRecorded ? m.events! : sim?.timeline ?? [];
 
   const runSim = () => {
@@ -534,7 +535,7 @@ export function MatchDetail({ id }: { id: string }) {
         m.status === "SCHEDULED"
           ? { key: "ai.qf.kickoff", vars: { when: fmtDateTime(locale, m.kickoff) } }
           : { key: "ai.qf.scoreline", vars: { score: `${m.homeGoals}–${m.awayGoals}` } },
-        { key: "ai.qf.possession", vars: { n: String(Math.round(sim?.stats.home.possession ?? 50)) } },
+        { key: "ai.qf.possession", vars: { n: String(Math.round(sim?.stats.home.possession ?? m.stats?.home.possession ?? 50)) } },
       ];
       const ans = await askFootballAI(q, { label: { key: "ai.matchLabel", vars: { home: home.short, away: away.short } }, facts });
       setAi(ans);
@@ -570,8 +571,10 @@ export function MatchDetail({ id }: { id: string }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel className="p-4">
-          <SectionTitle title={t(sim ? (played ? "det.engine.statsRecon" : "det.engine.statsProj") : "det.engine.statsNone")} />
-          {sim ? <StatCompare sim={sim} home={home.name} away={away.name} /> : (
+          <SectionTitle title={t(sim ? (played ? "det.engine.statsRecon" : "det.engine.statsProj") : recordedStats ? "det.engine.statsRecorded" : "det.engine.statsNone")} />
+          {sim ? <StatCompare stats={sim.stats} home={home.name} away={away.name} ratings={{ home: sim.stats.home.ratings, away: sim.stats.away.ratings }} /> : recordedStats ? (
+            <StatCompare stats={recordedStats} home={home.name} away={away.name} />
+          ) : (
             <EmptyState title={t(played ? "det.engine.emptyReconTitle" : "det.engine.emptySimTitle")} hint={t(played ? "det.engine.emptyReconHint" : "det.engine.emptySimHint")} icon="▶" />
           )}
         </Panel>
@@ -619,19 +622,19 @@ function EventRow({ e, home, away }: { e: MatchEvent; home: string; away: string
   );
 }
 
-function StatCompare({ sim, home, away }: { sim: SimResult; home: string; away: string }) {
+function StatCompare({ stats, home, away, ratings }: { stats: { home: MatchStats; away: MatchStats }; home: string; away: string; ratings?: { home: { player: string; rating: number }[]; away: { player: string; rating: number }[] } }) {
   const { t } = useI18n();
   const rows: { labelKey: string; h: number; a: number; fmt?: (n: number) => string }[] = [
-    { labelKey: "ms.possession", h: sim.stats.home.possession, a: sim.stats.away.possession, fmt: (n) => `${Math.round(n)}%` },
-    { labelKey: "ms.shots", h: sim.stats.home.shots, a: sim.stats.away.shots },
-    { labelKey: "ms.onTarget", h: sim.stats.home.onTarget, a: sim.stats.away.onTarget },
-    { labelKey: "ms.xg", h: sim.stats.home.xg, a: sim.stats.away.xg, fmt: (n) => n.toFixed(2) },
-    { labelKey: "ms.passes", h: sim.stats.home.passes, a: sim.stats.away.passes },
-    { labelKey: "ms.passAcc", h: sim.stats.home.passAcc, a: sim.stats.away.passAcc, fmt: (n) => `${Math.round(n)}%` },
-    { labelKey: "ms.corners", h: sim.stats.home.corners, a: sim.stats.away.corners },
-    { labelKey: "ms.tackles", h: sim.stats.home.tackles, a: sim.stats.away.tackles },
-    { labelKey: "ms.duels", h: sim.stats.home.duels, a: sim.stats.away.duels },
-    { labelKey: "ms.fouls", h: sim.stats.home.fouls, a: sim.stats.away.fouls },
+    { labelKey: "ms.possession", h: stats.home.possession, a: stats.away.possession, fmt: (n) => `${Math.round(n)}%` },
+    { labelKey: "ms.shots", h: stats.home.shots, a: stats.away.shots },
+    { labelKey: "ms.onTarget", h: stats.home.onTarget, a: stats.away.onTarget },
+    { labelKey: "ms.xg", h: stats.home.xg, a: stats.away.xg, fmt: (n) => n.toFixed(2) },
+    { labelKey: "ms.passes", h: stats.home.passes, a: stats.away.passes },
+    { labelKey: "ms.passAcc", h: stats.home.passAcc, a: stats.away.passAcc, fmt: (n) => `${Math.round(n)}%` },
+    { labelKey: "ms.corners", h: stats.home.corners, a: stats.away.corners },
+    { labelKey: "ms.tackles", h: stats.home.tackles, a: stats.away.tackles },
+    { labelKey: "ms.duels", h: stats.home.duels, a: stats.away.duels },
+    { labelKey: "ms.fouls", h: stats.home.fouls, a: stats.away.fouls },
   ];
   return (
     <div className="mt-2 space-y-2.5">
@@ -649,13 +652,15 @@ function StatCompare({ sim, home, away }: { sim: SimResult; home: string; away: 
           </div>
         );
       })}
-      <details className="mt-1 rounded-md border bg-card/30 p-2 text-xs">
-        <summary className="cursor-pointer uppercase tracking-widest text-muted-foreground">{t("det.ratings.key")}</summary>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <RatingsCol title={home} ratings={sim.stats.home.ratings} />
-          <RatingsCol title={away} ratings={sim.stats.away.ratings} />
-        </div>
-      </details>
+      {ratings && (
+        <details className="mt-1 rounded-md border bg-card/30 p-2 text-xs">
+          <summary className="cursor-pointer uppercase tracking-widest text-muted-foreground">{t("det.ratings.key")}</summary>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <RatingsCol title={home} ratings={ratings.home} />
+            <RatingsCol title={away} ratings={ratings.away} />
+          </div>
+        </details>
+      )}
     </div>
   );
 }

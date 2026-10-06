@@ -159,7 +159,7 @@ export interface MatchStats {
   passes: number;
   passAcc: number;
   tackles: number;
-  duelsWon: number;
+  duels: number;
   corners: number;
   fouls: number;
   yellows: number;

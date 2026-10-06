@@ -399,7 +399,7 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
       type: "GOAL",
       side: "home",
       player: `Player ${i + 1}`,
-      detail: { key: "sim.ev.goal", vars: { xg: xG, shot: `sim.shot.${shotType}` } },
+      detail: { key: "sim.ev.goal", vars: { xg: xG, shot: shotType } },
     });
   }
   
@@ -412,7 +412,7 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
       type: "GOAL",
       side: "away",
       player: `Player ${i + 1}`,
-      detail: { key: "sim.ev.goal", vars: { xg: xG, shot: `sim.shot.${shotType}` } },
+      detail: { key: "sim.ev.goal", vars: { xg: xG, shot: shotType } },
     });
   }
   
@@ -487,7 +487,7 @@ function generateMatchStats(home: Club, away: Club, score: { h: number; a: numbe
       passes: homePasses,
       passAcc: homePassAcc,
       tackles: homeTackles,
-      duelsWon: homeDuels,
+      duels: homeDuels,
       corners: homeCorners,
       fouls: homeFouls,
       yellows: homeYellows,
@@ -501,7 +501,7 @@ function generateMatchStats(home: Club, away: Club, score: { h: number; a: numbe
       passes: awayPasses,
       passAcc: awayPassAcc,
       tackles: awayTackles,
-      duelsWon: awayDuels,
+      duels: awayDuels,
       corners: awayCorners,
       fouls: awayFouls,
       yellows: awayYellows,
