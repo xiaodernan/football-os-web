@@ -1,4 +1,4 @@
-import { WORLD } from "./footballSeed";
+import { DEMO_NOW, WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
 import type { RowText } from "@/domain/rowText";
@@ -69,6 +69,20 @@ export function recentMatchesForClub(clubId: string, limit = 5): Match[] {
 export function upcomingMatchesForClub(clubId: string, limit = 5): Match[] {
   return WORLD.matches
     .filter((m) => m.status !== "FINISHED" && (m.homeClubId === clubId || m.awayClubId === clubId))
+    .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
+    .slice(0, limit);
+}
+
+// M289. The demo world has one clock: every fixture and news timestamp derives
+// from this anchor. A panel that promises the demo world's "today" must select
+// on it — the reader's wall clock drifts away from the anchor (measured
+// 2026-10-06: 88 fixtures in the reader's ±2d window against the world's 45)
+// and empties the panel forever once it leaves the world's window.
+export const DEMO_ANCHOR_MS = new Date(DEMO_NOW).getTime();
+
+export function todayMatches(limit = 5): Match[] {
+  return WORLD.matches
+    .filter((m) => m.status === "SCHEDULED" && Math.abs(new Date(m.kickoff).getTime() - DEMO_ANCHOR_MS) < 2 * 86400000)
     .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
     .slice(0, limit);
 }

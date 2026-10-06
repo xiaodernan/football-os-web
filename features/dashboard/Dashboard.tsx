@@ -9,6 +9,7 @@ import {
   getCompetition,
   getPlayer,
   upcomingMatchesForClub,
+  todayMatches,
   formatValue,
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
@@ -45,12 +46,7 @@ export function Dashboard() {
   const info = profile ? levelInfo(profile.xp) : null;
 
   const live = matchesByStatus("LIVE").slice(0, 4);
-  const today = useMemo(() => {
-    const now = Date.now();
-    return matchesByStatus("SCHEDULED")
-      .filter((m) => Math.abs(new Date(m.kickoff).getTime() - now) < 2 * 86400000)
-      .slice(0, 5);
-  }, []);
+  const today = todayMatches(5);
   const breaking = personalNews.items.slice(0, 4);
   const trending = trendingPlayers(6);
   const nextSession = state.sessions.find((s) => s.status === "planned");

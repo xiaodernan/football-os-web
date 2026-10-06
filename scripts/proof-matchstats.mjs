@@ -13,7 +13,7 @@ import { createServer } from "vite";
 import { readFileSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { WORLD } = await server.ssrLoadModule("/data/footballSeed.ts");
+const { DEMO_NOW, WORLD } = await server.ssrLoadModule("/data/footballSeed.ts");
 const { SHOT_TYPES } = await server.ssrLoadModule("/domain/types.ts");
 const { DICTIONARIES, LOCALES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 
@@ -46,6 +46,26 @@ ok(`every LIVE fixture carries the same recorded pair under the same arithmetic 
     m.events.filter((e) => e.type === "GOAL" && e.side === "home").length === m.homeGoals &&
     m.events.filter((e) => e.type === "GOAL" && e.side === "away").length === m.awayGoals &&
     m.events.every((e, i) => i === 0 || m.events[i - 1].minute <= e.minute)));
+
+// M289. The dashboard's "Today's Matches" panel filtered the world's fixtures by
+// the reader's wall clock: measured 2026-10-06, the reader's ±2d window held 88
+// scheduled fixtures against the world anchor's 45, the population drifted every
+// real day, and past 2026-10-16 the panel would sit empty forever beside a hint
+// promising the demo world. The filter now runs on the world's one clock
+// (DEMO_NOW) — closing the alias site M214 queued — and the census pins both
+// ends: the window is a real population, and neither the screen nor the service
+// parses a kickoff beside a clock read.
+const { todayMatches } = await server.ssrLoadModule("/data/footballService.ts");
+const worldToday = todayMatches(5000);
+ok(`the world's own today window is a real population (${worldToday.length} scheduled fixtures within DEMO_NOW ± 2d, floor 20)`,
+  worldToday.length >= 20 &&
+  worldToday.every((m) => m.status === "SCHEDULED" &&
+    Math.abs(new Date(m.kickoff).getTime() - new Date(DEMO_NOW).getTime()) < 2 * 86400000));
+const dashSrc = readFileSync(new URL("../features/dashboard/Dashboard.tsx", import.meta.url), "utf8");
+const serviceSrc = readFileSync(new URL("../data/footballService.ts", import.meta.url), "utf8");
+const clockBesideKickoff = (src) => /Date\.now\(\)[\s\S]{0,120}kickoff|kickoff[\s\S]{0,120}Date\.now\(\)/.test(src);
+ok(`the today panel selects by the world's clock, not the reader's: the screen calls the service helper and neither file parses a kickoff beside Date.now() (the alias site M214 queued, now closed)`,
+  dashSrc.includes("todayMatches(") && !clockBesideKickoff(dashSrc) && !clockBesideKickoff(serviceSrc));
 
 const STATS_FIELDS = ["possession", "shots", "onTarget", "xg", "passes", "passAcc", "tackles", "duels", "corners", "fouls", "yellows", "reds"].sort();
 const shapeOk = played.every((m) =>
