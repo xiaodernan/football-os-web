@@ -5240,6 +5240,47 @@ const propPlantB = [...`{ label: "Model projection" }`.matchAll(PROP_PROSE)].fil
 ok(`display-named props carry no bare prose: the app-wide walk reads ${propProseHits.length} bare strings on a display prop (${propProseHits.join(", ") || "none"}), and planted default-param and object-literal shapes read ${propPlantA} and ${propPlantB}`,
   propProseHits.length === 0 && propPlantA === 1 && propPlantB === 1);
 
+// 37g. M273. The forms the 37f reading leaves outside. The display-attr class is the screen
+// reader's copy: aria-label and its announcing cousins (aria-placeholder, aria-valuetext,
+// aria-roledescription) are interface text spoken to a user the dictionary never reaches, and
+// a bare quoted string on one is English no keyed sibling exposes. The quote-form gap is the
+// same display-name regex against single quotes and backticks without interpolation, which a
+// quoted-strings-only read never sees. The walk reads both classes across every shipped
+// module: eleven aria display attributes, ten resolved through t() at the site and the
+// eleventh forwarded as a required prop whose only call site passes t("ai.graphAria") — that
+// forward is pinned, because a forwarded label is exactly where a default would hide. Both
+// censuses read 0, and three planted fixtures charge the same pass.
+const ARIA_ATTR = /(?<![A-Za-z-])(aria-(?:label|placeholder|valuetext|roledescription))\s*=\s*("(?:[^"]*)"|\{(?:[^}]*)\})/g;
+const ariaBare = [];
+let ariaKeyed = 0;
+for (const [path, src] of appSrc) {
+  for (const m of src.matchAll(ARIA_ATTR)) {
+    const v = m[2];
+    // The bare read is of string literals — quoted outright, or quoted inside the braces. An
+    // expression holding an identifier is the forwarded shape, pinned below, not prose.
+    if (v.startsWith("{")) {
+      if (/t\(/.test(v)) ariaKeyed++;
+      else if (/"[^"]*[A-Za-z]{3,}[^"]*"/.test(v)) ariaBare.push(`${path} ${m[1]}=${v}`);
+    } else if (/[A-Za-z]{3,}/.test(v)) ariaBare.push(`${path} ${m[1]}=${v}`);
+  }
+}
+const ariaFwd = [...aiStudioSrc.matchAll(/aria-label=\{ariaLabel\}/g)].length;
+const ariaSource = [...aiStudioSrc.matchAll(/ariaLabel=\{t\("ai\.graphAria"\)\}/g)].length;
+const ariaPlant = [...`<svg aria-label="Knowledge graph" />`.matchAll(ARIA_ATTR)].filter((m) => /[A-Za-z]{3,}/.test(m[2])).length;
+const SQ_FORM = /(?<![A-Za-z])(subtitle|placeholder|description|label|title|sub|hint|text|alt)(?![A-Za-z])\s*[:=]\s*'([^']*)'/g;
+const TL_FORM = /(?<![A-Za-z])(subtitle|placeholder|description|label|title|sub|hint|text|alt)(?![A-Za-z])\s*[:=]\s*`([^`$]*)`/g;
+const sqHits = [];
+const tlHits = [];
+for (const [path, src] of appSrc) {
+  for (const m of src.matchAll(SQ_FORM)) if (/[A-Za-z]{3,}/.test(m[2])) sqHits.push(`${path} ${m[0]}`);
+  for (const m of src.matchAll(TL_FORM)) if (/[A-Za-z]{3,}/.test(m[2])) tlHits.push(`${path} ${m[0]}`);
+}
+const sqPlant = [...`{ label: 'Model projection' }`.matchAll(SQ_FORM)].filter((m) => /[A-Za-z]{3,}/.test(m[2])).length;
+const tlPlant = [..."{ label: `Model projection` }".matchAll(TL_FORM)].filter((m) => /[A-Za-z]{3,}/.test(m[2])).length;
+ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} aria display attributes resolve through t() and the one forwarded label is pinned at its source (a planted aria bare string reads ${ariaPlant}), and the single-quote and no-interpolation forms of the display-prop class read ${sqHits.length} and ${tlHits.length} bare strings (planted shapes read ${sqPlant} and ${tlPlant})`,
+  ariaBare.length === 0 && ariaKeyed === 10 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+  sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
+
 // 38. The suite's own blind spots.
 //
 // A clause that asserts `=== 0` and carries neither a plant beside it nor a guard inside it
