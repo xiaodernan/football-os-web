@@ -202,7 +202,6 @@ export interface NewsArticle {
   // data to match on, never a surface to print.
   titleKey: string;
   titleVars: { club: string; player: string };
-  summary: string;
   source: string;
   // Genuine external reference a real news provider can supply. Demo Mode never
   // fabricates one, so the article UI only shows a "read at source" link when a

@@ -5334,6 +5334,22 @@ ok(`the seeded news sentences are read through the composers: ${summaryBare.leng
   titleRowProducers === 1 && titleRowPalettes === 2 && titleRowAIVars === 3 &&
   newsTitleSites === 4 && newsSummarySites === 2 && rumourRowSites === 1);
 
+// 37i. M281. The seed's sixth English sentence is gone. M274 keyed the headline and the glass
+// rebuilt the summary from `ni.summaryLine`, but the record kept a raw `summary` string
+// composed from a sixth English template at boot, "kept for matching" - and the measurement
+// that would justify keeping it never existed: search scores the raw title, retrieval ranks
+// by it, and every summary the AI evidence card or a community thread quotes is rebuilt from
+// the key. M281 deletes the field and the boot-time composition. The pins below refuse any
+// resurrection - a `summary` field back on the news record, a `summary:` line back in the
+// seed's builder, or a raw `.summary` read inside the composer file. One planted shape
+// charges the pass.
+const NEWS_IFACE = (appSrc.get("domain/types.ts") ?? "").match(/export interface NewsArticle \{[\s\S]*?\n\}/)?.[0] ?? "";
+const seedSummaryLines = ((appSrc.get("data/footballSeed.ts") ?? "").match(/^\s*summary: .*/gm) ?? []).length;
+const composerRawSummary = [...(appSrc.get("domain/rowText.ts") ?? "").matchAll(/\b\w+\.summary\b/g)].length;
+const newsFieldPlant = /summary: string;/.test(`export interface NewsArticle {\n  summary: string;\n}`) ? 1 : 0;
+ok(`the news record carries no seed-composed summary sentence: the NewsArticle interface holds ${/^\s*summary:/m.test(NEWS_IFACE) ? 1 : 0} summary field, the seed builder composes ${seedSummaryLines} summary line, and the composer file holds ${composerRawSummary} raw .summary reads - all 0 (planted shape reads ${newsFieldPlant})`,
+  !/^\s*summary:/m.test(NEWS_IFACE) && seedSummaryLines === 0 && composerRawSummary === 0 && newsFieldPlant === 1);
+
 // 38. The suite's own blind spots.
 //
 // A clause that asserts `=== 0` and carries neither a plant beside it nor a guard inside it

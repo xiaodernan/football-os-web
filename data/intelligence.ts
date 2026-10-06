@@ -133,9 +133,9 @@ function playerFacts(pid: string): EvidenceFact[] {
     down = report.concerns.slice(-3).reverse().map((s) => s.key).join(",");
     out.push({
       label: { key: "ai.lab.templateEdge" },
-      // `report.headline` is still composed English inside domain/scouting.ts, so this row
-      // names the comparison and the two rows after it name the attributes; the headline
-      // itself joins when scouting.ts is keyed.
+      // The scout's headline is keyed (sc.out.head.*, M270); this row names the
+      // template comparison itself, and the two rows after it name the attributes
+      // by their code words.
       text: { key: "ai.fact.templateEdge", vars: { group: p.positionGroup } },
       to: `/players/${p.id}`,
     });
