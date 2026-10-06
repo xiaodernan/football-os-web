@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M284 (a few numbers in that range
+Work ships one milestone per commit and is currently at M286 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6318,6 +6318,49 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M286 — the seed's match events stop speaking in placeholders
+
+M279 filled the seed's events seam, and filled every event's player with template
+English: goals printed `Player 1`, `Player 2` by index, shots and cards drew
+`Player N` from the shirt-number generator, and saves printed the bare abbreviation
+`GK`. The timeline renders that field raw, so the measured defect was total:
+14,720 of 14,720 FINISHED events (shots 9,447 · saves 4,061 · goals 834 · yellows 378)
+carried a placeholder into the glass, and a non-English reader met "Player 7" and
+"GK" inside an otherwise fully keyed row. The same seam M282 fixed one level down —
+there the sentence was keyed and only the shot word leaked; here the whole name is
+fiction.
+
+The fix is structural, not lexical: `makeWorld` already owns the completed player
+roster when it builds fixtures, so `buildMatches` now receives it and hands each
+match's two squads to `generateMatchEvents` — goals, shots and cards draw a real
+name from the acting side's pool, and saves name the side's actual goalkeeper
+(`position === "GK"`, falling back to any teammate). Names are proper nouns under
+the i18n contract, so no new keys and no dictionary edits; the rng sequence shifts
+by the extra draws (goal census 834 → 897 on the same seed), which stays inside the
+determinism contract: identical inputs still produce identical worlds, and no clause
+pins a count the shift would break.
+
+The shift also earned its keep as a fuzzer: the extra rng draws moved the world's
+scores, and the outlook's rival census — green on every world this repo had ever
+sampled — suddenly reddened on a rounding tie. The defect it found was real and
+predates this milestone: `aheadOfUs` was derived from the unrounded projections
+while the board prints both sides rounded to a tenth, so a rival could be flagged
+ahead beside two identical printed numbers. The flag now derives from the printed
+values (a tie reads as level, not ahead), and the census stands unmodified.
+
+The pin is a new `proof-world` clause: every event of every FINISHED or LIVE fixture
+must carry a real squad name — no `/^Player \d+$/`, no `"GK"`, no `"Unknown"` fallback
+reaching the glass — and every printed name must resolve to a seeded player.
+Measured 16,282 events, zero placeholders (floor 14,000).
+
+Also landing in this commit: the M285 author's `Match.season` removal (the declared-
+never-read field, its sole writer in the seed, the now-unused `SEASON` constant, and
+the analytics fixture) was uncommitted in the shared working tree and rides along
+here; its section follows as M285.
+
+Measured: `tsc` clean; `proof-world` 38/38; suite **42/42 · 2,355/2,355**; `npm run
+build` exit 0. Code as **72ad682**.
+
 ### M284 — the recorded stats' card fields find their readers
 
 M280 wrote `yellows` and `reds` into every side of the seed's stats pair, and nothing ever
