@@ -344,6 +344,37 @@ ok(`a LIVE fixture's record reaches the glass: every event name, the board's own
   `names:${liveNameMiss.map((r) => r.lm.id).join(",")} board:${liveBoardMiss.map((r) => r.lm.id).join(",")}`);
 
 // ---------------------------------------------------------------------------
+// 5c · the competition page must not swallow its own live fixtures
+// ---------------------------------------------------------------------------
+// The "next fixtures" section fed from SCHEDULED alone, so a competition with a
+// game in play showed no in-play match anywhere on its own page — measured on
+// the shipped world, 12 of the 15 competitions carrying 49 live matches between
+// them. The section now leads with them (kickoff ascending), and this clause
+// renders every live competition's page and charges each live scoreline to the
+// text, in MatchRow's own "h – a" shape.
+const FWORLD = (await tryLoad(() => server.ssrLoadModule("/" + "features/football/FootballWorld.tsx"))).mod;
+const ROUTER = (await tryLoad(() => server.ssrLoadModule("/" + "lib/router.tsx"))).mod;
+const liveByComp = new Map();
+for (const lm of liveFixtures) {
+  if (!liveByComp.has(lm.competitionId)) liveByComp.set(lm.competitionId, []);
+  liveByComp.get(lm.competitionId).push(lm);
+}
+const compPages = [];
+if (FWORLD && ROUTER) {
+  for (const [cid, lms] of liveByComp) {
+    mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+    globalThis.window.location.hash = "#/competitions/" + cid;
+    let html = "";
+    try { html = renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld)))); } catch { html = ""; }
+    compPages.push({ cid, lms, text: nodesOf(html).join(" ") });
+  }
+}
+const compScoreMiss = compPages.filter((r) => r.lms.some((m) => !r.text.includes(`${m.homeGoals} – ${m.awayGoals}`)));
+ok(`a competition's own page shows its live fixtures: every in-play scoreline renders in the next-fixtures section (${compPages.length} live competitions, floor 10; ${compScoreMiss.length} missing a live score)`,
+  compPages.length >= 10 && compScoreMiss.length === 0,
+  `missing:${compScoreMiss.map((r) => r.cid).join(",")}`);
+
+// ---------------------------------------------------------------------------
 // 6 · what this harness cannot see, demonstrated rather than asserted
 // ---------------------------------------------------------------------------
 const Probe = () => {

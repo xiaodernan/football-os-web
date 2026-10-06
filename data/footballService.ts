@@ -87,6 +87,16 @@ export function todayMatches(limit = 5): Match[] {
     .slice(0, limit);
 }
 
+// M290. The same contract at competition scope: the next-fixtures list is every
+// match not yet finished, kickoff ascending, so a competition's live matches
+// lead its own page instead of appearing nowhere on it.
+export function upcomingMatchesForCompetition(compId: string, limit = 8): Match[] {
+  return WORLD.matches
+    .filter((m) => m.status !== "FINISHED" && m.competitionId === compId)
+    .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
+    .slice(0, limit);
+}
+
 export function matchesByStatus(status: Match["status"]): Match[] {
   return WORLD.matches.filter((m) => m.status === status);
 }

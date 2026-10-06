@@ -10,6 +10,7 @@ import {
   clubIdsByCompetition,
   matchesByStatus,
   fixtureForecast,
+  upcomingMatchesForCompetition,
   trendingPlayers,
   newsFeed,
   globalSearch,
@@ -444,7 +445,9 @@ function CompetitionDetail({ id }: { id: string }) {
   const table = footballProvider.standings(id);
   const clubs = clubIdsByCompetition(id).map((cid) => getClub(cid)).filter(Boolean) as Club[];
   const recent = matchesByStatus("FINISHED").filter((m) => m.competitionId === id).slice(0, 8);
-  const upcoming = matchesByStatus("SCHEDULED").filter((m) => m.competitionId === id).slice(0, 8);
+  // M290: everything not yet finished, kickoff ascending — a competition's live
+  // matches lead the next-fixtures list instead of vanishing from their own page.
+  const upcoming = upcomingMatchesForCompetition(id, 8);
   return (
     <div className="space-y-6">
       <PageHeader title={comp.name} hint={t("fw.comp.hint", { nation: comp.nation, tier: comp.tier, teams: clubs.length })} back="/competitions" />
