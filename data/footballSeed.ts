@@ -39,6 +39,10 @@ const COMPETITIONS: Competition[] = [
   { id: "eredivisie", name: "Eredivisie", nation: "Netherlands", tier: 1, clubIds: [] },
   { id: "liga1", name: "Primeira Liga", nation: "Portugal", tier: 1, clubIds: [] },
   { id: "spl", name: "Saudi Pro League", nation: "Saudi Arabia", tier: 1, clubIds: [] },
+  { id: "mls", name: "Major League Soccer", nation: "USA", tier: 1, clubIds: [] },
+  { id: "brasileirao", name: "Brasileirão Série A", nation: "Brazil", tier: 1, clubIds: [] },
+  { id: "jleague", name: "J1 League", nation: "Japan", tier: 1, clubIds: [] },
+  { id: "superlig", name: "Süper Lig", nation: "Türkiye", tier: 1, clubIds: [] },
 ];
 
 const CLUB_DEFS: ClubDef[] = [
@@ -88,6 +92,58 @@ const CLUB_DEFS: ClubDef[] = [
   { name: "Al-Hilal", short: "HIL", nation: "Saudi Arabia", competitionId: "spl", strength: 0.78, colors: ["#0057B7", "#FFFFFF"], stadium: "Kingdom Arena" },
   { name: "Al-Nassr", short: "NSR", nation: "Saudi Arabia", competitionId: "spl", strength: 0.74, colors: ["#F5D000", "#005499"], stadium: "Al-Awwal Park" },
   { name: "Al-Ahli", short: "AHL", nation: "Saudi Arabia", competitionId: "spl", strength: 0.72, colors: ["#00843D", "#FFFFFF"], stadium: "King Abdullah Sports City" },
+
+  // Premier League additions
+  { name: "Newcastle United", short: "NEW", nation: "England", competitionId: "pl", strength: 0.76, colors: ["#241F20", "#FFFFFF"], stadium: "St James' Park" },
+  { name: "Aston Villa", short: "AVL", nation: "England", competitionId: "pl", strength: 0.74, colors: ["#670E36", "#95BFE5"], stadium: "Villa Park" },
+  { name: "West Ham United", short: "WHU", nation: "England", competitionId: "pl", strength: 0.7, colors: ["#7A263A", "#1BB1E7"], stadium: "London Stadium" },
+  { name: "Brighton & Hove Albion", short: "BHA", nation: "England", competitionId: "pl", strength: 0.68, colors: ["#0057B8", "#FFCD00"], stadium: "American Express Stadium" },
+
+  // La Liga additions
+  { name: "Real Sociedad", short: "RSO", nation: "Spain", competitionId: "liga", strength: 0.7, colors: ["#003DA5", "#FFFFFF"], stadium: "Reale Arena" },
+  { name: "Villarreal", short: "VIL", nation: "Spain", competitionId: "liga", strength: 0.68, colors: ["#FFE667", "#005187"], stadium: "Estadio de la Cerámica" },
+  { name: "Real Betis", short: "BET", nation: "Spain", competitionId: "liga", strength: 0.66, colors: ["#00954C", "#FFFFFF"], stadium: "Benito Villamarín" },
+
+  // Serie A additions
+  { name: "Atalanta", short: "ATA", nation: "Italy", competitionId: "seriea", strength: 0.76, colors: ["#1E71B8", "#000000"], stadium: "Gewiss Stadium" },
+  { name: "Fiorentina", short: "FIO", nation: "Italy", competitionId: "seriea", strength: 0.7, colors: ["#482B83", "#FFFFFF"], stadium: "Artemio Franchi" },
+  { name: "Torino", short: "TOR", nation: "Italy", competitionId: "seriea", strength: 0.66, colors: ["#8B1A10", "#FFFFFF"], stadium: "Stadio Olimpico Grande Torino" },
+
+  // Bundesliga additions
+  { name: "Borussia Mönchengladbach", short: "BMG", nation: "Germany", competitionId: "bundes", strength: 0.68, colors: ["#000000", "#FFFFFF"], stadium: "Borussia-Park" },
+  { name: "VfL Wolfsburg", short: "WOB", nation: "Germany", competitionId: "bundes", strength: 0.66, colors: ["#65B32E", "#FFFFFF"], stadium: "Volkswagen Arena" },
+  { name: "Union Berlin", short: "FCU", nation: "Germany", competitionId: "bundes", strength: 0.66, colors: ["#EB1923", "#FFFFFF"], stadium: "Stadion An der Alten Försterei" },
+
+  // Ligue 1 additions
+  { name: "Lens", short: "RCL", nation: "France", competitionId: "ligue1", strength: 0.72, colors: ["#FFC627", "#C8102E"], stadium: "Stade Bollaert-Delelis" },
+  { name: "Rennes", short: "REN", nation: "France", competitionId: "ligue1", strength: 0.68, colors: ["#E30613", "#000000"], stadium: "Roazhon Park" },
+  { name: "Strasbourg", short: "STR", nation: "France", competitionId: "ligue1", strength: 0.64, colors: ["#009EE0", "#FFFFFF"], stadium: "Stade de la Meinau" },
+
+  // MLS clubs
+  { name: "LA Galaxy", short: "LAG", nation: "USA", competitionId: "mls", strength: 0.68, colors: ["#00245D", "#EFB734"], stadium: "Dignity Health Sports Park" },
+  { name: "Inter Miami", short: "MIA", nation: "USA", competitionId: "mls", strength: 0.72, colors: ["#F7B5CD", "#231F20"], stadium: "Chase Stadium" },
+  { name: "Seattle Sounders", short: "SEA", nation: "USA", competitionId: "mls", strength: 0.66, colors: ["#5D9741", "#00599F"], stadium: "Lumen Field" },
+  { name: "Atlanta United", short: "ATL", nation: "USA", competitionId: "mls", strength: 0.64, colors: ["#80000A", "#A19060"], stadium: "Mercedes-Benz Stadium" },
+  { name: "New York Red Bulls", short: "NYRB", nation: "USA", competitionId: "mls", strength: 0.62, colors: ["#BA0C2F", "#FFFFFF"], stadium: "Red Bull Arena" },
+
+  // Brasileirão clubs
+  { name: "Flamengo", short: "FLA", nation: "Brazil", competitionId: "brasileirao", strength: 0.76, colors: ["#C3281E", "#000000"], stadium: "Maracanã" },
+  { name: "Palmeiras", short: "PAL", nation: "Brazil", competitionId: "brasileirao", strength: 0.78, colors: ["#006430", "#FFFFFF"], stadium: "Allianz Parque" },
+  { name: "São Paulo", short: "SAO", nation: "Brazil", competitionId: "brasileirao", strength: 0.72, colors: ["#C6122D", "#000000"], stadium: "Morumbi" },
+  { name: "Corinthians", short: "COR", nation: "Brazil", competitionId: "brasileirao", strength: 0.7, colors: ["#000000", "#FFFFFF"], stadium: "Neo Química Arena" },
+  { name: "Santos", short: "SAN", nation: "Brazil", competitionId: "brasileirao", strength: 0.66, colors: ["#000000", "#FFFFFF"], stadium: "Vila Belmiro" },
+
+  // J-League clubs
+  { name: "Kawasaki Frontale", short: "KAW", nation: "Japan", competitionId: "jleague", strength: 0.7, colors: ["#00A0E9", "#000000"], stadium: "Todoroki Athletics Stadium" },
+  { name: "Yokohama F. Marinos", short: "YFM", nation: "Japan", competitionId: "jleague", strength: 0.68, colors: ["#004B9D", "#ED1C24"], stadium: "Nissan Stadium" },
+  { name: "Vissel Kobe", short: "VIS", nation: "Japan", competitionId: "jleague", strength: 0.66, colors: ["#8B1A10", "#000000"], stadium: "Noevir Stadium Kobe" },
+  { name: "Urawa Red Diamonds", short: "URD", nation: "Japan", competitionId: "jleague", strength: 0.64, colors: ["#E60012", "#000000"], stadium: "Saitama Stadium 2002" },
+
+  // Süper Lig clubs
+  { name: "Galatasaray", short: "GAL", nation: "Türkiye", competitionId: "superlig", strength: 0.74, colors: ["#FFA500", "#C8102E"], stadium: "NEF Stadyumu" },
+  { name: "Fenerbahçe", short: "FEN", nation: "Türkiye", competitionId: "superlig", strength: 0.72, colors: ["#FFED00", "#001489"], stadium: "Şükrü Saracoğlu Stadyumu" },
+  { name: "Beşiktaş", short: "BES", nation: "Türkiye", competitionId: "superlig", strength: 0.68, colors: ["#000000", "#FFFFFF"], stadium: "Tüpraş Stadyumu" },
+  { name: "Trabzonspor", short: "TRA", nation: "Türkiye", competitionId: "superlig", strength: 0.64, colors: ["#7B1F2C", "#004B9D"], stadium: "Papara Park" },
 ];
 
 const FIRST = ["Luca", "Marco", "Diego", "Kai", "Youssef", "Andrés", "Bruno", "Tomas", "Milan", "Ivan", "Noah", "Ethan", "Rafa", "Luka", "Emre", "Pavel", "Simone", "Adam", "Yann", "Nico", "Mateo", "Omar", "Felix", "Jonas", "Andre", "Karim", "Diogo", "Piotr", "Sven", "Tariq", "Enzo", "Ravi", "Malik", "Theo", "Milos", "Pau", "Iker", "Jota", "Aleks", "Nabil"];
@@ -107,6 +163,17 @@ const STARS: { name: string; club: string; group: PositionGroup; age: number; na
   { name: "Vinícius Júnior", club: "RMA", group: "W", age: 25, nation: "Brazil", skill: 0.93, foot: "R" },
   { name: "Rodri", club: "MCI", group: "DM", age: 29, nation: "Spain", skill: 0.92, foot: "R" },
   { name: "Florian Wirtz", club: "B04", group: "AM", age: 22, nation: "Germany", skill: 0.89, foot: "R" },
+  // New stars for expanded clubs
+  { name: "Mohamed Salah", club: "LIV", group: "W", age: 33, nation: "Egypt", skill: 0.91, foot: "L" },
+  { name: "Bruno Fernandes", club: "MUN", group: "AM", age: 31, nation: "Portugal", skill: 0.86, foot: "R" },
+  { name: "Harry Kane", club: "FCB", group: "ST", age: 32, nation: "England", skill: 0.9, foot: "R" },
+  { name: "Lautaro Martínez", club: "INT", group: "ST", age: 28, nation: "Argentina", skill: 0.88, foot: "R" },
+  { name: "Bradley Barcola", club: "PSG", group: "W", age: 23, nation: "France", skill: 0.82, foot: "R" },
+  { name: "Lionel Messi", club: "MIA", group: "AM", age: 38, nation: "Argentina", skill: 0.88, foot: "L" },
+  { name: "Gabriel Jesus", club: "FLA", group: "ST", age: 28, nation: "Brazil", skill: 0.84, foot: "R" },
+  { name: "Mauro Icardi", club: "GAL", group: "ST", age: 32, nation: "Argentina", skill: 0.82, foot: "R" },
+  { name: "Edin Džeko", club: "FEN", group: "ST", age: 39, nation: "Bosnia and Herzegovina", skill: 0.78, foot: "R" },
+  { name: "Yuki Soma", club: "KAW", group: "W", age: 28, nation: "Japan", skill: 0.76, foot: "R" },
 ];
 
 // A squad is this plan read from the FRONT, so every prefix a club can be dealt
