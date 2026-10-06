@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M289 (a few numbers in that range
+Work ships one milestone per commit and is currently at M290 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6318,6 +6318,30 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M290 — a competition's own page shows its live fixtures
+
+The competition page's two fixture lists were gated on terminal states only: "Next
+fixtures" took `SCHEDULED` alone and "Recent" took `FINISHED`, so a competition with
+a game in play showed the in-play match nowhere on its own page. Measured on the
+shipped world: 12 of the 15 competitions carry 49 live fixtures between them (ucl 17,
+ligue1 7, uel 6, liga 4, seriea 3, pl 3, bundes 2, brasileirao 2, superlig 2, liga 1,
+eredivisie 1, mls 1), and none of those pages rendered their live fixture in either
+list — the same fixture renders fine on its match page since M288; only the
+competition page, its own competition-scoped surface, dropped it.
+
+The fix mirrors the hub's selection at competition scope: `footballService` exports
+`upcomingMatchesForCompetition`, filtering everything not yet finished by competition
+and sorting kickoff ascending, and `CompetitionDetail` calls it — a live match leads
+the next-fixtures list in MatchRow's live shape (red status tag, score where the
+kickoff stamp sits on scheduled rows).
+
+The pin is `proof-screens` 5c: the clause renders every live competition's own page
+through the router (`FootballWorld` inside `RouterProvider`, the hash set per
+competition) and charges each live fixture's scoreline, in MatchRow's own "h – a"
+shape, to the page text — 12 live competitions, floor 10, 0 missing.
+
+Measured: `tsc` clean; `proof-matchstats` 16/16; `proof-screens` 24/24; suite
+**42/42 · 2,361/2,361**; `npm run build` exit 0. Code as **11e9cdb**.
 ### M289 — the today panel runs on the world's clock
 
 The dashboard's "Today's Matches" panel filtered the demo world's fixtures by the
