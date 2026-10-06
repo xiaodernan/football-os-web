@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M267 (a few numbers in that range
+Work ships one milestone per commit and is currently at M268 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,39 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M268 — the one label the letter bar hid
+
+M266's section handed the next unit to the standing queue's demo-coach prose, to be measured
+before anything was written for it. The measurement retired the queue instead: the coach's
+composed sentences have been `RowText` since M222, `data/intelligence.ts` sits behind a cap of
+0, and the archetype names M173 flagged as English-under-zh ride the `codeWord` door
+(`dna.arch.*`) — so "measure first" showed the queue had already been closed by its own earlier
+milestones, and the honest next step was to measure for a real defect rather than convert
+something to fit the paragraph.
+
+The defect it found is [ManagerOS.tsx:167](features/manager/ManagerOS.tsx): `label="xG (us)"`
+beside `:168`'s `t("mgr.xgThem")` — one `Fact` row where the two halves of the same fact were
+keyed differently. The raw-UI scan never saw the literal, and that is the point: `hasProse`
+wants three consecutive Latin letters and `xG (us)` is two on each side of the bar, so the one
+screen registered as fully localised printed a Chinese label over an English one, in the same
+row, to both Chinese locales, for as long as the pair has existed. The class was named when it
+was found (M224's "still not claimed") and deferred as "the key it needs is a translation and
+the letter bar is a scan change, each of them its own milestone" — this is the first half of
+that deferral landing.
+
+`mgr.xgUs` joins its sibling in all three locales — `xG (us)` / 预期进球（我方） / 預期進球
+（我方）， the same 我方/对手 pair the dictionary already draws — and the label asks for it.
+Section 37b holds the site: the file is pinned at **zero `label=`-attribute literals**, a
+planted literal under the bar is charged by the same read, and the `mgr.xgUs`/`mgr.xgThem`
+pair must resolve to dictionary rows in both slots across the three locales. The class-wide
+device — lowering or sidestepping `hasProse`'s letter bar — stays what M224 deferred it to, a
+milestone of its own, now with a name and a site to test it on. The new call site moves
+section 37's literal-shape pin **1281 → 1282**.
+
+Measured: `proof-i18n` **349/349** (was 348) · 1,981 keys × 3 locales; suite **41/41 ·
+2,258/2,258**; `tsc --noEmit` exit 0; `npm run build` exit 0. Code as **9197469** (+21/−2
+across 3 files); this section is a docs-only follow-up.
 
 ### M267 — the suite audits its own blind spots, and the zeros have to prove they bite
 
