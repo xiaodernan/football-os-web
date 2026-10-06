@@ -544,7 +544,7 @@ function SearchPage() {
             <div className="grid gap-2 sm:grid-cols-2">
               {items.map((r) => (
                 <EntityLink key={r.type + r.id} to={r.to}>
-                  <div className="text-sm font-medium">{r.title}</div>
+                  <div className="text-sm font-medium">{r.titleRow ? rowLine(r.titleRow, t) : r.title}</div>
                   <div className="truncate text-xs text-muted-foreground">{rowLine(r.subtitle, t)}</div>
                 </EntityLink>
               ))}

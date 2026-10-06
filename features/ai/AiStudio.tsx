@@ -224,10 +224,13 @@ function GraphCanvas({ graph, ariaLabel }: { graph: KgGraph; ariaLabel: string }
       {graph.nodes.map((n) => {
         const c = pos.get(n.id); if (!c) return null;
         const isRoot = n.id === graph.root;
+        // The label is a row now (M275): the news family's headline words itself in the
+        // reader's locale, and the ellipsis cut is taken on the READ words, not the row.
+        const lbl = rowLine(n.label, t) ?? "";
         return (
           <g key={n.id} className="cursor-pointer" onClick={() => window.location.hash = n.to}>
             <circle cx={c.x} cy={c.y} r={isRoot ? 16 : 11} fill={TYPE_COLOR[n.type]} opacity={isRoot ? 0.95 : 0.8} />
-            <text x={c.x} y={c.y + (isRoot ? 30 : 24)} fontSize={isRoot ? 12 : 10} fontWeight={isRoot ? 700 : 500} fill="var(--color-foreground)" textAnchor="middle">{n.label.length > 18 ? n.label.slice(0, 17) + "…" : n.label}</text>
+            <text x={c.x} y={c.y + (isRoot ? 30 : 24)} fontSize={isRoot ? 12 : 10} fontWeight={isRoot ? 700 : 500} fill="var(--color-foreground)" textAnchor="middle">{lbl.length > 18 ? lbl.slice(0, 17) + "…" : lbl}</text>
           </g>
         );
       })}

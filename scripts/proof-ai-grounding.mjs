@@ -194,12 +194,16 @@ if (vf) {
   const answers = ["How much is Mbappé worth?", "Where do Arsenal sit in the Premier League?", "Any transfer news about Haaland?", "Real Madrid"]
     .map((q) => askIntelligence(q, EN));
   const isRow = (x) => !!x && typeof x === "object" && ("key" in x || "value" in x);
+  // M275: a source line's name var is the proper noun as a plain value, or — for the
+  // news family — the headline's keyed row. Either half must be a real word, and the
+  // `type:id` read applies to whichever half the var carries.
+  const titleWord = (n) => (isRow(n) ? ("key" in n ? n.key : n.value) : String(n));
   const sources = answers.flatMap((a) => a.sources);
   const labels = answers.flatMap((a) => a.facts.map((f) => f.label));
   ok("every source line is a row naming a kind and a retrieved title",
-    sources.length >= 4 && sources.every((s) => isRow(s) && "key" in s && s.key === "ai.src.entity" && SEARCH_KINDS.includes(s.vars.kind) && String(s.vars.name).length > 1));
+    sources.length >= 4 && sources.every((s) => isRow(s) && "key" in s && s.key === "ai.src.entity" && SEARCH_KINDS.includes(s.vars.kind) && titleWord(s.vars.name).length > 1));
   ok("no source line carries the retrieval layer's own `type:id` code",
-    !sources.some((s) => isRow(s) && "key" in s && String(s.vars.name).includes(":")));
+    !sources.some((s) => isRow(s) && "key" in s && titleWord(s.vars.name).includes(":")));
   const leaked = [];
   for (const s of sources) for (const l of locales) {
     if (!isRow(s)) { leaked.push(`${l}: ${JSON.stringify(s)} is not a row`); continue; }

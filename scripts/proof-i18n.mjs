@@ -5289,13 +5289,14 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
 // beside the raw `title` it keeps for matching (search scoring, AI fact layer), and the glass
 // reads go through the `newsTitle` / `newsSummary` composers. This census walks every shipped
 // module: a bare JSX render of a `.summary` field reads 0 (the field belongs to the news
-// record alone; the sim lab's summary rows already went through rowLine), the bare `.title`
-// renders are pinned at the two search-result sites whose contract IS the record's own word
-// (SearchResult.title is the matched string, as club and player names are), and the composer
-// and rowLine reads are pinned at their call sites so a new screen cannot quietly regress to
-// printing the field (newsTitle()'s fourth match is the summary composer wording the headline
-// inside its own frame — the other three are the glass readers). Two planted shapes charge the
-// same pass.
+// record alone; the sim lab's summary rows already went through rowLine), and since M275
+// carried the search results' news title on `titleRow` too, NO bare `.title` JSX render
+// remains anywhere — the four proper-noun families show their record word through the
+// conditional the pin names, and the composed news family resolves its row. The composer,
+// titleRow and rowLine reads are pinned at their call sites so a new screen cannot quietly
+// regress to printing the field (newsTitle()'s fourth match is the summary composer wording
+// the headline inside its own frame — the other three are the glass readers). Two planted
+// shapes charge the same pass.
 const NEWS_SUMMARY_RAW = /\{\s*[A-Za-z_$][\w$]*\.summary\s*\}/g;
 const NEWS_TITLE_RAW = /\{\s*[A-Za-z_$][\w$]*\.title\s*\}/g;
 const summaryBare = [];
@@ -5308,11 +5309,14 @@ const allShipped = [...appSrc.values()].join("\n");
 const newsTitleSites = [...allShipped.matchAll(/\bnewsTitle\(/g)].length;
 const newsSummarySites = [...allShipped.matchAll(/\bnewsSummary\(/g)].length;
 const rumourRowSites = [...allShipped.matchAll(/rowLine\(r\.title,\s*t\)/g)].length;
+const titleRowProducers = [...allShipped.matchAll(/titleRow:\s*\{\s*key:\s*n\.titleKey/g)].length;
+const titleRowPalettes = [...allShipped.matchAll(/r\.titleRow \? rowLine\(r\.titleRow,\s*t\) : r\.title/g)].length;
+const titleRowAIVars = [...allShipped.matchAll(/(?:h|top)\.titleRow \?\? /g)].length;
 const summaryPlant = [...`<p>{article.summary}</p>`.matchAll(NEWS_SUMMARY_RAW)].length;
 const titlePlant = [...`<div>{n.title}</div>`.matchAll(NEWS_TITLE_RAW)].length;
-ok(`the seeded news sentences are read through the composers: ${summaryBare.length} bare .summary renders (a planted one reads ${summaryPlant}), the ${titleBare.length} bare .title renders are the pinned search-result record-word sites (${titleBare.join(", ") || "none"}; a planted one reads ${titlePlant}), and the glass reads sit at ${newsTitleSites} newsTitle() + ${newsSummarySites} newsSummary() + ${rumourRowSites} rowLine(r.title) call sites`,
-  summaryBare.length === 0 && summaryPlant === 1 && titleBare.length === 2 && titlePlant === 1 &&
-  titleBare.every((x) => / \{r\.title\}$/.test(x)) &&
+ok(`the seeded news sentences are read through the composers: ${summaryBare.length} bare .summary and ${titleBare.length} bare .title renders, both 0 (planted shapes read ${summaryPlant} and ${titlePlant}), the news title row is produced once and read at ${titleRowPalettes} palette/search sites and ${titleRowAIVars} AI var sites, and the glass reads sit at ${newsTitleSites} newsTitle() + ${newsSummarySites} newsSummary() + ${rumourRowSites} rowLine(r.title) call sites`,
+  summaryBare.length === 0 && titleBare.length === 0 && summaryPlant === 1 && titlePlant === 1 &&
+  titleRowProducers === 1 && titleRowPalettes === 2 && titleRowAIVars === 3 &&
   newsTitleSites === 4 && newsSummarySites === 2 && rumourRowSites === 1);
 
 // 38. The suite's own blind spots.

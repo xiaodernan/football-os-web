@@ -42,7 +42,6 @@ export interface RagContext {
    *  the bug class M58 was about. */
   sources: RowText[];
   confidence: number;
-  entityLabel: string | null;
 }
 
 export interface RagAnswer {
@@ -309,7 +308,10 @@ export function retrieve(question: string, locale: Locale): RagContext {
     const id = `${h.type}:${h.id}`;
     if (seenHit.has(id)) continue;
     seenHit.add(id);
-    sources.push({ key: "ai.src.entity", vars: { kind: h.type, name: h.title } });
+    // The news family's name is a composed sentence, so it rides on its keyed row
+    // (M275); the proper-noun families pass their string as a value var. Either way
+    // fillRowVars words it in the reader's locale, never the seed's English.
+    sources.push({ key: "ai.src.entity", vars: { kind: h.type, name: h.titleRow ?? h.title } });
   }
   let confidence = 20;
   if (ranked.length) confidence = Math.min(92, 45 + ranked.length * 8 + (facts.length > 2 ? 6 : 0));
@@ -318,7 +320,6 @@ export function retrieve(question: string, locale: Locale): RagContext {
     facts: facts.slice(0, 6),
     sources: sources.length ? sources : [{ key: "ai.src.none" }],
     confidence,
-    entityLabel: ranked[0]?.title ?? null,
   };
 }
 
@@ -339,12 +340,16 @@ function composeAnswer(question: string, ctx: RagContext): RowText[] {
   const player = top.type === "player" ? getPlayer(top.id) : null;
   const askingValue = /value|worth|cost|price|费用|身价/.test(q);
   let lead: RowText;
-  if (askingValue && player) lead = { key: "ai.answer.value", vars: { title: top.title, v: formatValue(player.value) } };
-  else if (askingValue) lead = { key: "ai.answer.valueUnknown", vars: { title: top.title } };
-  else if (/who|which|best|top|key|star|核心|谁/.test(q)) lead = { key: "ai.answer.given", vars: { title: top.title } };
-  else if (/stand|position|table|排名|榜首|第几/.test(q)) lead = { key: "ai.answer.standing", vars: { title: top.title } };
-  else if (/when|kickoff|fixture|next|time|何时|比赛/.test(q)) lead = { key: "ai.answer.fixture", vars: { title: top.title } };
-  else lead = { key: "ai.answer.default", vars: { title: top.title } };
+  // The lead's {title} var takes the news family's keyed row when the top hit is a
+  // story (M275) and the proper nouns as plain values otherwise — fillRowVars words
+  // either against the reader's dictionary.
+  const titleVar: string | RowText = top.titleRow ?? top.title;
+  if (askingValue && player) lead = { key: "ai.answer.value", vars: { title: titleVar, v: formatValue(player.value) } };
+  else if (askingValue) lead = { key: "ai.answer.valueUnknown", vars: { title: titleVar } };
+  else if (/who|which|best|top|key|star|核心|谁/.test(q)) lead = { key: "ai.answer.given", vars: { title: titleVar } };
+  else if (/stand|position|table|排名|榜首|第几/.test(q)) lead = { key: "ai.answer.standing", vars: { title: titleVar } };
+  else if (/when|kickoff|fixture|next|time|何时|比赛/.test(q)) lead = { key: "ai.answer.fixture", vars: { title: titleVar } };
+  else lead = { key: "ai.answer.default", vars: { title: titleVar } };
   return [lead, ...ctx.facts.slice(0, 3).map((f) => f.text)];
 }
 
@@ -361,7 +366,11 @@ export function askIntelligence(question: string, locale: Locale): RagAnswer {
 }
 
 // ---- Knowledge graph (spec §45) ----
-export interface KgNode { id: string; label: string; type: SearchKind; to: string }
+// A node's label is a row, not a string: four families label themselves with the
+// record's own proper noun (a value row), but a news hit labels itself with the
+// composed headline, which is a keyed row (M275) — the canvas resolves both
+// through rowLine, the same door every other row goes through.
+export interface KgNode { id: string; label: RowText; type: SearchKind; to: string }
 // An edge's label is a word the app chooses ("plays for"), not a value a record
 // carries, so it publishes a row and the canvas resolves it — see domain/rowText.ts.
 export interface KgEdge { from: string; to: string; relation: RowText }
@@ -374,26 +383,26 @@ export function buildGraph(query: string): KgGraph {
   const add = (n: KgNode) => { if (!nodes.has(n.id)) nodes.set(n.id, n); };
 
   for (const h of hits) {
-    add({ id: h.type + ":" + h.id, label: h.title, type: h.type, to: h.to });
+    add({ id: h.type + ":" + h.id, label: h.titleRow ?? { value: h.title }, type: h.type, to: h.to });
     if (h.type === "club") {
       const c = getClub(h.id)!;
-      const compN: KgNode = { id: "competition:" + c.competitionId, label: getCompetition(c.competitionId)?.name ?? c.competitionId, type: "competition", to: `/competitions/${c.competitionId}` };
+      const compN: KgNode = { id: "competition:" + c.competitionId, label: { value: getCompetition(c.competitionId)?.name ?? c.competitionId }, type: "competition", to: `/competitions/${c.competitionId}` };
       add(compN); edges.push({ from: "club:" + c.id, to: compN.id, relation: { key: "ai.rel.competes" } });
       for (const p of playersByClub(c.id).sort((a, b) => b.overall - a.overall).slice(0, 6)) {
-        const pn: KgNode = { id: "player:" + p.id, label: p.name, type: "player", to: `/players/${p.id}` };
+        const pn: KgNode = { id: "player:" + p.id, label: { value: p.name }, type: "player", to: `/players/${p.id}` };
         add(pn); edges.push({ from: "club:" + c.id, to: pn.id, relation: { key: "ai.rel.hasPlayer" } });
       }
     }
     if (h.type === "player") {
       const p = getPlayer(h.id)!;
-      const cn: KgNode = { id: "club:" + p.clubId, label: getClub(p.clubId)?.name ?? p.clubId, type: "club", to: `/clubs/${p.clubId}` };
+      const cn: KgNode = { id: "club:" + p.clubId, label: { value: getClub(p.clubId)?.name ?? p.clubId }, type: "club", to: `/clubs/${p.clubId}` };
       add(cn); edges.push({ from: "player:" + p.id, to: cn.id, relation: { key: "ai.rel.playsFor" } });
     }
     if (h.type === "news") {
       const n = getNews(h.id)!;
       for (const e of n.entityIds) {
-        if (getPlayer(e)) { const pn: KgNode = { id: "player:" + e, label: getPlayer(e)!.name, type: "player", to: `/players/${e}` }; add(pn); edges.push({ from: "news:" + n.id, to: pn.id, relation: { key: "ai.rel.mentions" } }); }
-        else if (getClub(e)) { const cn: KgNode = { id: "club:" + e, label: getClub(e)!.name, type: "club", to: `/clubs/${e}` }; add(cn); edges.push({ from: "news:" + n.id, to: cn.id, relation: { key: "ai.rel.mentions" } }); }
+        if (getPlayer(e)) { const pn: KgNode = { id: "player:" + e, label: { value: getPlayer(e)!.name }, type: "player", to: `/players/${e}` }; add(pn); edges.push({ from: "news:" + n.id, to: pn.id, relation: { key: "ai.rel.mentions" } }); }
+        else if (getClub(e)) { const cn: KgNode = { id: "club:" + e, label: { value: getClub(e)!.name }, type: "club", to: `/clubs/${e}` }; add(cn); edges.push({ from: "news:" + n.id, to: cn.id, relation: { key: "ai.rel.mentions" } }); }
       }
     }
     if (h.type === "competition") {
@@ -401,7 +410,7 @@ export function buildGraph(query: string): KgGraph {
       for (const s of table.slice(0, 8)) {
         const c = getClub(s.clubId);
         if (!c) continue;
-        const cn: KgNode = { id: "club:" + c.id, label: c.name, type: "club", to: `/clubs/${c.id}` };
+        const cn: KgNode = { id: "club:" + c.id, label: { value: c.name }, type: "club", to: `/clubs/${c.id}` };
         add(cn); edges.push({ from: "competition:" + h.id, to: cn.id, relation: { key: "ai.kg.pts", vars: { n: s.points } } });
       }
     }

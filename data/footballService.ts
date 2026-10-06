@@ -150,7 +150,14 @@ export const getNews = (id: string) => WORLD.news.find((n) => n.id === id);
 export interface SearchResult {
   type: SearchKind;
   id: string;
+  // The matched record's own word — the string the scorer matched and the four
+  // proper-noun families (club, player, competition, match) show as-is, the same
+  // contract the record's name carries everywhere. The news family's title is a
+  // composed English SENTENCE, so its glass words ride on `titleRow` (M275) and
+  // the string here stays what matching needs: data, never a surface to print.
   title: string;
+  // The keyed row for a family whose title is composed prose (news only, M275).
+  titleRow?: RowText;
   subtitle: RowText;
   to: string;
 }
@@ -189,7 +196,7 @@ export function globalSearch(query: string, limit = 24): SearchResult[] {
   }
   for (const n of WORLD.news) {
     const s = score(n.title, q);
-    if (s > 0) out.push({ type: "news", id: n.id, title: n.title, subtitle: { key: "sr.newsLine", vars: { source: n.source, kind: n.kind } }, to: `/news/${n.id}`, s });
+    if (s > 0) out.push({ type: "news", id: n.id, title: n.title, titleRow: { key: n.titleKey, vars: n.titleVars }, subtitle: { key: "sr.newsLine", vars: { source: n.source, kind: n.kind } }, to: `/news/${n.id}`, s });
   }
   for (const m of WORLD.matches) {
     const label = `${getClub(m.homeClubId)?.name} v ${getClub(m.awayClubId)?.name}`;
