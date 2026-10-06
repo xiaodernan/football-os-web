@@ -3810,7 +3810,7 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1281 && shapeCounts.template === 98 && shapeCounts.expression === 28
+  shapeCounts.literal === 1282 && shapeCounts.template === 98 && shapeCounts.expression === 28
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5099,6 +5099,22 @@ ok(`a switch-cases extractor reads the composer it names, not the file it lives 
     faTable2.length === 3 && faWrongKey.length === 0 && faDrift.length === 0 && faRaw.length === 0 &&
     faEnDistinct === 3 && favKeys.every((n) => n === FA.length * 2) && faSame.every((n) => n === 3));
 }
+
+// 37b. M268. The manager's xG fact pair printed one side from the dictionary and the other
+// from a literal the raw-UI scan cannot see: "xG (us)" is two Latin letters on each side of
+// the bar, and hasProse wants three consecutive ones, so a reader in either Chinese locale
+// saw one Chinese label over an English one in the same row. The pair now asks the
+// dictionary on both sides; the clause pins the file at zero label-attribute literals — the
+// scan that would hold this class is the letter bar itself, the device M224 deferred to its
+// own milestone — and a planted literal under the bar is charged by the same read. The new
+// call site moves section 37's literal-shape pin 1281 → 1282.
+const MGR_FILE = "features/manager/ManagerOS.tsx";
+const mgrLabelLits = [...appSrc.get(MGR_FILE).matchAll(/label="[^"]*[A-Za-z][^"]*"/g)].length;
+const plantedLabelLit = [...'<Fact label="xG (us)" />'.matchAll(/label="[^"]*[A-Za-z][^"]*"/g)].length;
+const xgRows = L.map((loc) => [D[loc.id]["mgr.xgUs"], D[loc.id]["mgr.xgThem"]]);
+ok(`the manager's xG fact pair reads the dictionary on both sides (${xgRows.map(([u, th]) => `${u} / ${th}`).join(" | ")}) and the file carries no label-attribute literal the letter bar hides (0; a planted one reads ${plantedLabelLit})`,
+  mgrLabelLits === 0 && plantedLabelLit === 1 &&
+  xgRows.every(([u, th]) => u && th && u !== "mgr.xgUs" && th !== "mgr.xgThem"));
 
 // 38. The suite's own blind spots.
 //

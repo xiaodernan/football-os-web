@@ -164,7 +164,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
               <div className="text-sm">{last.opponentName}</div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <Fact label="xG (us)" value={last.ourXg.toFixed(2)} />
+              <Fact label={t("mgr.xgUs")} value={last.ourXg.toFixed(2)} />
               <Fact label={t("mgr.xgThem")} value={last.oppXg.toFixed(2)} />
               <Fact label={t("mgr.prizeMoney")} value={formatValue(last.prize)} />
             </div>
