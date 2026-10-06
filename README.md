@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M265 (a few numbers in that range
+Work ships one milestone per commit and is currently at M266 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6277,6 +6277,76 @@ Measured on the plane at this commit: `npm run build` exit 0, suite **41/41 proo
 named by `proof-i18n` section 9b's path list and stay, 3 more (`separator`, `tooltip`, `use-mobile`)
 are imported by `sidebar.tsx` so they cannot go before it does, and the remaining **42 modules ·
 5,019 lines** are deletable without breaking `tsc`.
+
+### M266 — the family the last gate read as a near-miss and refused to charge
+
+`club`, `player`, `competition` are three of the five retrieval kinds, and section 45's
+set-relation scan saw them as a subset of a different space and deliberately left them alone.
+That was correct for the retrieval family and left the favourite family with no reader at all:
+the space was typed by hand three times — the control's prop, the store's action, the store's
+public API — its display key was built at the screen (`t(` + backtick + `fav.${kind}.active` +
+backtick + `)`), and the two chains that resolve a kind to a profile slot were ternary runs
+ending in a fallback arm, so a kind outside the space resolved to the competition slot on both
+sides of the app.
+
+`FAVORITE_KINDS` is now the one runtime list and `FavoriteKind` derives from it. `FAVORITES` is
+a `Record<FavoriteKind, { read, write }>` whose two functions name the same field in the same
+literal: the control reads the slot the store writes, a fourth kind is a missing row rather than
+a button that quietly sets your league, and a fifth favourite field on the profile is an orphan
+the gate names by row. `favoriteLabel` in `domain/rowText.ts` is the only module that builds a
+`fav.*` key. The family cannot ride `codeWord`: asked for `club` the door answers the legend's
+word, because its table is name-blind and the retrieval branch is reached first — M263's
+collision, on a second family.
+
+Section 46 adds four checks, each with a plant the same detector reads. The exact-three census
+charges a planted union and a planted array (2 read, 2 charged) while a planted five-name list is
+not even a candidate of the space and a planted two-name subset is read but uncharged. The slot
+clause walks the real rows and requires read === write, the field on `UserProfile`, and no orphan
+field. The composer clause counts interpolation sites per module (2 in `domain/rowText.ts`, 0
+anywhere else) and names the one screen that calls it. The behavioural leg drives the shipped
+composer through the shipped door for 3 kinds × 2 states × 3 locales and requires the answer to
+be the dictionary row — never the key, never the code — and the three kinds to give three
+different words, so the answer cannot be a constant.
+
+Three pre-existing measurements moved with the conversion and were repaired, not loosened: the
+dynamic-site declarations re-pointed from `Details.tsx` to `rowText.ts` (check 16: 86 live sites,
+0 undeclared, 0 stale); the `fav.|kind` value space re-anchored off `setFavorite: (key: "club" |
+…` onto the runtime list, because an anchor reading a consumer cannot tell a definition from a
+copy; and section 45's near-miss pin became a row-by-row pin (`domain/newsImpact.ts=2
+domain/types.ts=3`) instead of a count of 4, since a count would let either row migrate files
+without being read.
+
+Measured: `proof-i18n` **343/343** (was 339) · 1,980 keys × 3 locales; witness arms **7/7
+MATCHED** (control 0 reds; A1/A2 — re-typing or copying the space — 2 reds each, one of them
+section 45; A3/A4 slot rows 1 each; A5 screen-built key 2; A6 a composer naming a key that does
+not exist 3). Round 1 scored 5/7: A4's anchor missed on CRLF, and A6 predicted the reachability
+check and it stayed green — reachability builds its candidates from the DECLARED suffixes, so it
+cannot see what the composer actually writes; the carrier there is 46.3. `npm run build` exit 0,
+`npm run proof` **41/41 · 2,252/2,252**, code and gate as **a52c70b** (+156/−20), and the frozen
+`git archive HEAD` plane at that commit reproduces **343/343, 0 reds**. This section is a
+docs-only follow-up commit, so the milestone number was claimed from `git log` before it was
+written.
+
+Next unit, and a correction that had to be paid first: an earlier draft of this paragraph claimed
+`domain/newsImpact.ts:15`'s `role: "player" | "club"` was *the last* quoted union in `domain/` with no
+list behind it, and that the news detail printed that field's own words from a second table. Both halves
+are false, and enumerating every `role` site is what showed it. Measured: `domain/*.ts` carries **43**
+inline quoted value-space union spellings (excluding `Pick<…>` key lists, which are not value spaces),
+**13** of them backed by a runtime string array and **30** not — so the first claim was wrong by an order
+of magnitude, and 30 over-counts the residual anyway, because several of those spaces do have a runtime
+carrier in the other shape the tree uses: `STANCE_KEY: Record<NewsKind, string>` (`newsImpact.ts:49`) and
+`CERTAINTY_TONE: Record<Certainty, string>` (`newsImpact.ts:134`). And `ImpactEntity.role` has exactly one
+reader — `domain/newsImpact.ts:86`, `if (e.role === "player" && e.clubName)`, a branch — plus two writers,
+`FootballWorld.tsx:360` and `:367`. The panel displays the entity's `label`, never its role, so the code
+never reaches the glass. Section 45 reading it as a 2-name subset (`domain/newsImpact.ts=2` in
+`SK_NEAR_PIN`) and declining to charge it is therefore correct, and converting it would have been
+inventing a defect to satisfy a paragraph.
+
+The lesson for the census is that *a quoted union with no list behind it is not the signal* — most of the
+30 are not defects. The signal is a stored code reaching a reader-visible string, and that class is
+already closed on its own evidence: check 16's dynamic-site scan reports 86 live sites, 0 undeclared,
+0 stale. So the next unit comes from the standing queue rather than from this count: **#150 / M160**, the
+demo coach's generated prose, measured before anything is written for it.
 
 ### M265 — the app's oldest value space stops being typed by hand in four places
 
