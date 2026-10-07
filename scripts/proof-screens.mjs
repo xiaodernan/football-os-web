@@ -455,6 +455,29 @@ ok(`the live strip names the world's in-play count and opens the full LIVE tab: 
   `liveAll=${dashLiveAll ?? "missing"}`);
 
 // ---------------------------------------------------------------------------
+// 5g · the matches screen's counter counts the world, not its own page
+// ---------------------------------------------------------------------------
+// The matches list keeps 60 rows, and its header printed the ROW count —
+// "{n} scheduled" with n read off the sliced array — so the header said 60
+// while the world held 502 (finished read 60 of 1015 too; only the live tab's
+// 49 slipped under the cap and read true by accident). The header now counts
+// the untruncated family, so the page's own number must name a population the
+// 60-row cap cannot reach. MatchesList is not a route-table leaf (FootballWorld
+// dispatches it), so the render walks the hub itself the way 5c walks it.
+const matchesText = (() => {
+  if (!FWORLD || !ROUTER) return "";
+  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  globalThis.window.location.hash = "#/matches";
+  try { return nodesOf(renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld))))).join(" "); }
+  catch { return ""; }
+})();
+const scheduledTotal = FOOT.matchesByStatus("SCHEDULED").length;
+const matchesPrinted = Number((matchesText.match(/\b(\d+) scheduled\b/) ?? [])[1]);
+ok(`the matches screen's header counts the world's family, not the 60 rows it keeps (printed ${matchesPrinted ?? "none"}, world ${scheduledTotal}; cap 60)`,
+  matchesPrinted === scheduledTotal && scheduledTotal > 60,
+  `printed=${matchesPrinted ?? "none"} world=${scheduledTotal}`);
+
+// ---------------------------------------------------------------------------
 // 6 · what this harness cannot see, demonstrated rather than asserted
 // ---------------------------------------------------------------------------
 const Probe = () => {

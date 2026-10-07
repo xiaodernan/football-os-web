@@ -316,10 +316,14 @@ function MatchesList() {
   const [tab, setTab] = useState<"LIVE" | "SCHEDULED" | "FINISHED">(
     (query.get("status") as "LIVE") || "SCHEDULED",
   );
-  const rows = matchesByStatus(tab).slice(0, 60);
+  // M295: the header's counter describes the world's family, not this page's
+  // rows — the list keeps 60, the family holds hundreds, and the counter used
+  // to print the slice and call it the total.
+  const all = matchesByStatus(tab);
+  const rows = all.slice(0, 60);
   return (
     <div className="space-y-5">
-      <PageHeader title={t("fw.matches.title")} hint={t("fw.matches.hint", { n: rows.length, status: matchStatusLabel(tab, t) })} back="/football" />
+      <PageHeader title={t("fw.matches.title")} hint={t("fw.matches.hint", { n: all.length, status: matchStatusLabel(tab, t) })} back="/football" />
       <div className="flex gap-1.5">
         {MATCH_STATUSES.map((s) => (
           <button key={s} onClick={() => setTab(s)} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === s ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{matchStatusLabel(s, t)}</button>
