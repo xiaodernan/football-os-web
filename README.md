@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M309 (a few numbers in that range
+Work ships one milestone per commit and is currently at M310 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6533,7 +6533,53 @@ This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
 
+### M310 — the edit that never read the decision it reversed
+
+M309's section is the next one down and it was wrong. M216's block charged that `time.inDays` and
+`time.agoDay` "still print compact English abbreviations … which is consistent but not pretty, and
+unifying them means choosing a compactness policy per locale rather than editing rows". M309 read
+that as an instruction to unify and spelled the English unit out. **M304 had already chosen the
+policy, one milestone earlier, and written it beside the rows**: English counts compactly because
+the dashboard's day stamp sits in a fixed-width 56px `w-14` box (`Dashboard.tsx:411`) where
+"3 days ago" wraps, while both Chinese columns spell 天 out because a Latin abbreviation inside
+Chinese text reads as foreign. M309 reversed a documented decision without reading it and left the
+stamp wrapping.
+
+This is the third face of one failure in this repository. M299 charged a *repair* that had outlived
+its ledger line. M305 charged a *ledger line* that had outlived its repair. M309 is the *edit* that
+never read the decision it reversed — and the cause is structural rather than careless: the charge
+lived in a README block, the decision lived in a source comment, and nothing connected them. So the
+repair is not "read more carefully".
+
+**The coupling is a clause now.** `proof-i18n` reads both halves from the tree — the two English rows
+from the dictionary, the stamp from `Dashboard.tsx` — and asserts them as one thing: while the stamp
+is narrow, the English rows are compact. Widening the column and spelling the unit out is a legal
+pair, but it has to be one commit, and this clause is where the pair is paid for. The plant runs the
+predicate on all three pairs, so a green cannot mean it stopped looking at either half: M309's
+(spelled out, narrow) must be refused, M304's (compact, narrow) must pass, and a widened stamp must
+accept the spelled form. The stamp is asserted to still be there, because the clause's whole claim
+is the coupling — a detector that lost the stamp would otherwise pass by finding nothing to couple.
+
+The rows are back to `{n}d ago` / `in {n}d`, the comment beside them records the reversal and the
+coupling, and `proof-screens`' detector went back to `/\b\d+d ago\b/g` with them. M309 had moved it
+to `/\b\d+ days? ago\b/g` — the right instinct applied to the wrong change, and worth keeping in the
+record as the one part of M309 that would have been needed had the copy change been the right call.
+
+Two mutations, both caught, and each names its half: the English unit spelled out while the stamp
+stays narrow (`English compact: false`), and the stamp widened without touching the rows
+(`the 56px w-14 stamp still renders relativeDay: false`).
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **362/362** · 2,007 keys × 3 locales
+(vacuity census 387 owing / ceiling 387), `proof-screens` **31/31**.
+
 ### M309 — the day unit becomes a word, and the detector that would have gone blind with it
+
+> **Superseded by M310 — read that section first.** The policy this unit chose was already written
+> down beside the rows: M304 had decided English stays compact because the dashboard's day stamp
+> sits in a 56px `w-14` box that wraps on anything longer, and M309 read M216's *charge* without
+> reading M304's *decision*. M310 put the rows back and turned the coupling into a clause. What
+> survives from this unit is the part it got right — the detector had to move with the copy, and it
+> moved. The rest is kept as written, because the wrong version is the useful record.
 
 M216's block left one charge standing for the longest of any in the file: "`time.inDays`/`time.agoDay`
 still print compact English abbreviations (`in 3d`, `3d ago`) that the community feed shares — the

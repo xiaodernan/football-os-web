@@ -1771,6 +1771,11 @@ const en: Dict = {
   // two Chinese columns spell the word form (`{n} 天前`) — a Latin abbreviation inside
   // Chinese text reads as foreign, and the word form is what the ±1 words beside
   // them already speak.
+  // M309 read M216's charge ("consistent but not pretty") as an instruction to unify the two,
+  // spelled the English unit out, and left the 56px stamp wrapping — the policy was already
+  // written down here and M309 did not read it. M310 put the rows back and gave the coupling a
+  // gate: the two English rows may only spell the unit out in the same commit that widens the
+  // dashboard's stamp, because the column is the reason they are compact.
   // `time.tomorrow` / `time.yesterday` answer ±1 calendar day and carry no variable on purpose:
   // the day a reader calls "yesterday" is a word, not a measurement they want counted.
   // `time.today` is the one day word that carries a variable — a day the reader is inside
@@ -1782,14 +1787,8 @@ const en: Dict = {
   "time.today": "Today {at}",
   "time.tomorrow": "Tomorrow",
   "time.yesterday": "Yesterday",
-  // M303: the day unit is a word here, like the two direction words above it and like both
-  // Chinese locales, which already spell 天 out. These read `{n}d ago` / `in {n}d` until now,
-  // so the dashboard's fixture column printed "Tomorrow" and "in 3d" side by side. The form is
-  // plural-only because `relativeDay` routes ±1 day to the direction words and 0 to the today
-  // word, so `n` reaches these keys at 2 or more — `REL_CASES` in proof-i18n pins that boundary
-  // at exactly 2 and -2, which is why there is no singular arm to add.
-  "time.agoDay": "{n} days ago",
-  "time.inDays": "in {n} days",
+  "time.agoDay": "{n}d ago",
+  "time.inDays": "in {n}d",
   "comm.title": "Community",
   "comm.subtitle": "Discussion topics are generated from the world dataset. Your posts and replies stay on this device.",
   "comm.newThread": "＋ New thread",

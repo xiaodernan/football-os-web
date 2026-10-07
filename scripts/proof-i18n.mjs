@@ -2493,32 +2493,38 @@ ok(`the door counts the reader's calendar days over ${REL_CASES.length} planted 
   !/-\d/.test(translate("en", "time.agoDay", { n: 2 })) &&
   !/\b(in|ago)\b/.test(translate("zh-CN", "time.inDays", { n: 3 })));
 
-// 26c-3. The day unit is a word, in the one locale that had abbreviated it. English printed
-//        `{n}d ago` and `in {n}d` while `Tomorrow` and `Yesterday` sat in the same column and
-//        both Chinese locales already spelled 天 out, so the dashboard's fixture rows read
-//        "Tomorrow" and "in 3d" a line apart. M303 chose the policy the other two locales
-//        already had and moved the two rows with it.
+// 26c-3. The day rows' compactness is a per-locale decision, and it is COUPLED to a layout.
+//        English counts compactly (`{n}d ago`, `in {n}d`) because the dashboard's day stamp sits
+//        in a 56px `w-14` box that wraps on anything longer; both Chinese columns spell the unit
+//        out, because a Latin abbreviation inside Chinese text reads as foreign. M216 charged the
+//        inconsistency, M304 chose the policy and wrote it beside the rows.
 //
-//        The predicate is shape rather than text, so it needs no per-locale branch: a bare
-//        Latin letter as the unit right after the number is an abbreviation, and none of the
-//        three languages writes its day unit that way. The plant runs it in both directions —
-//        the two forms this replaced must be refused, and the three shipped now must pass —
-//        which is what keeps a green here from meaning "the loop read nothing".
-const spelledUnit = (v) => !/\{n\}\s*[a-z]\b/.test(v);
-const compactDay = [];
-let dayRowsRead = 0;
-for (const { id } of L) {
-  for (const k of ["time.agoDay", "time.inDays"]) {
-    const v = D[id][k];
-    if (typeof v !== "string") continue;
-    dayRowsRead++;
-    if (!spelledUnit(v)) compactDay.push(`${id} ${k} = "${v}"`);
-  }
-}
-const plantedCompact = ["{n}d ago", "in {n}d"].filter(spelledUnit);
-const plantedSpelled = ["{n} days ago", "in {n} days", "{n} 天前"].filter(spelledUnit);
-ok(`every locale spells the day unit instead of abbreviating it (${dayRowsRead} of ${L.length * 2} rows read, ${compactDay.join(" | ") || "none"}; the two forms this replaced are refused: ${plantedCompact.length === 0}, the three shipped now are accepted: ${plantedSpelled.length === 3})`,
-  dayRowsRead === L.length * 2 && compactDay.length === 0 && plantedCompact.length === 0 && plantedSpelled.length === 3);
+//        M309 is why this clause exists in this shape. It read M216's charge — "consistent but
+//        not pretty" — and never read M304's decision, spelled the English unit out, and left the
+//        stamp wrapping. This repository has now met three faces of one failure: a repair that
+//        outlived its charge, a charge that outlived its repair, and an edit that never read the
+//        decision it reversed. So the assertion is the COUPLING rather than either half of it:
+//        while the stamp stays narrow the English rows are compact, and spelling them out is
+//        legal only in the commit that widens the stamp. Both halves are read from the tree —
+//        the rows from the dictionary, the stamp from `Dashboard.tsx` — so the pair cannot be
+//        satisfied by editing one of them.
+const COMPACT_DAY = /\{n\}\s*d\b/;
+const WORD_DAY = /\{n\}\s*天/;
+const dashStampSrc = appSrc.get("features/dashboard/Dashboard.tsx") ?? "";
+const narrowStamp = /className="w-14 shrink-0[^"]*"[\s\S]{0,160}?relativeDay\(/.test(dashStampSrc);
+// A narrow stamp requires the compact rows; a widened one permits either form, which is what
+// makes "widen the column and spell the unit out" a legal single commit rather than a bypass.
+const dayPolicyHolds = (ago, inDays, narrow) => !narrow || (COMPACT_DAY.test(ago) && COMPACT_DAY.test(inDays));
+const enCompact = dayPolicyHolds(D.en["time.agoDay"], D.en["time.inDays"], narrowStamp);
+const zhWord = ["zh-CN", "zh-TW"].every((id) => WORD_DAY.test(D[id]["time.agoDay"]) && WORD_DAY.test(D[id]["time.inDays"]));
+// The plant runs the predicate on the exact pair M309 shipped: English spelled out while the
+// stamp stayed narrow. It must be refused, and the pair M304 chose must pass — so a green here
+// cannot mean the predicate stopped looking at either half.
+const plantedM309 = dayPolicyHolds("{n} days ago", "in {n} days", true);
+const plantedM304 = dayPolicyHolds("{n}d ago", "in {n}d", true);
+const plantedWidened = dayPolicyHolds("{n} days ago", "in {n} days", false);
+ok(`the day rows keep M304's per-locale policy while the dashboard's stamp stays narrow (English compact: ${enCompact}, the two Chinese columns word-form: ${zhWord}, the 56px w-14 stamp still renders relativeDay: ${narrowStamp}; M309's pair is refused: ${!plantedM309}, M304's passes: ${plantedM304}, and the widened stamp accepts the spelled form: ${plantedWidened})`,
+  narrowStamp && enCompact && zhWord && plantedM309 === false && plantedM304 === true && plantedWidened === true);
 
 // 26c-2. The door can be told WHICH now to measure against. The dashboard's fixture rows
 //        are the caller that needs it: the panel selects its fixtures on the world's clock
