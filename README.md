@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M294 (a few numbers in that range
+Work ships one milestone per commit and is currently at M295 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6374,6 +6374,30 @@ parity checks the dictionary already walks.
 Measured: `tsc` clean; `proof-i18n` **357/357** · 2,006 keys × 3 locales (vacuity
 census 384/384); `proof-screens` **27/27**; suite **42/42 · 2,365/2,365**; `npm run build`
 exit 0. Code as **6a391ce**.
+### M295 — the matches screen's counter counts the world, not its page
+
+The matches list keeps 60 rows, and its header printed the ROW count —
+`{n} {status}` with `n` read off the sliced array — so the header said
+`60 scheduled` while the world held 502, and `60 finished` of 1015. Only the
+live tab's 49 slipped under the cap and read true, by accident rather than by
+construction. The same slip shipped on the hub's own turf: the dashboard
+learned to name the world's in-play count at M294, and one screen later the
+matches page was still counting its own rows and calling the count the
+world's.
+
+The counter now reads the untruncated family — `matchesByStatus(tab)` for the
+number, the 60-row page cap unchanged — so the header names the population it
+draws from instead of the slice it kept.
+
+One gate. `proof-screens` 5g renders the hub itself — MatchesList is
+FootballWorld's own dispatch, not a route-table leaf, so the render walks the
+hub the way 5c walks it — and charges the printed number to the world's
+family: printed 502, world 502, cap 60. The vacuity ceiling pays for the new
+clause in the same commit (384 → 385).
+
+Measured: `tsc` clean; `proof-i18n` **357/357** · 2,006 keys × 3 locales (vacuity
+census 385/385); `proof-screens` **28/28**; suite **42/42 · 2,366/2,366**; `npm run build`
+exit 0. Code as **fa7ab1b**.
 ### M292 — today reads as a word, not a bare clock
 
 `relativeDay`'s within-a-day branch was the one arm with no reader word: an
