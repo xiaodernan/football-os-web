@@ -3353,6 +3353,19 @@ ok(`the declared ISO day keys are still there and still keys (${lostHand.map(([p
   lostHand.length === 0);
 ok(`the day-key scan is reading the builders it claims (${handSites.length})`, handSites.length === 2);
 
+// (c') A day count that leaves the gate gives a shared row a second meaning. The feed's
+//     relative-time helper divides elapsed hours by 24 — honest for minutes and hours, but
+//     a day is what the wall calendar settles (M216) — and printed its own count into the
+//     same day row the dashboard reads from `relativeDay`, so one row aged a thread in
+//     24-hour blocks on one screen and in midnights crossed on another. M304 routes the
+//     feed's day branch through the gate: the helper no longer names the day row at all,
+//     and a month-old thread falls back to an absolute date.
+const feedSrc = appSrc.get("features/community/CommunityHub.tsx") ?? "";
+const feedAgoDay = (feedSrc.match(/time\.agoDay/g) ?? []).length;
+const feedGate = /relativeDay\(locale/.test(feedSrc);
+ok(`the feed's day branch asks the calendar-day gate rather than counting its own (relativeDay call ${feedGate ? "present" : "MISSING"}, inline day-row names ${feedAgoDay})`,
+  feedGate && feedAgoDay === 0);
+
 // (d) A memo is a cache. If its body reads `locale` and its dependency array does not name
 //     it, the first render's language is kept forever — so a chart's labels can be in the
 //     wrong language on a screen every static formatting check calls clean.

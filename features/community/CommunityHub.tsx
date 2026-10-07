@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useOnline, useLearnRecords } from "@/lib/hooks";
 import { newId } from "@/lib/ids";
-import { useI18n, formatDate, type Locale } from "@/i18n";
+import { useI18n, formatDate, relativeDay, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildStarters, allTags, repairCommunityTexts, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
 import { LESSONS, isCompleted, summarizeLearn } from "@/domain/learn";
@@ -39,8 +39,16 @@ function timeAgo(locale: Locale, iso: string): RowText {
   if (m < 60) return { key: "comm.agoMin", vars: { n: m } };
   const h = Math.floor(m / 60);
   if (h < 24) return { key: "comm.agoHour", vars: { n: h } };
-  const d = Math.floor(h / 24);
-  return d < 30 ? { key: "time.agoDay", vars: { n: d } } : { value: formatDate(locale, iso) };
+  // Past a day the age is calendar days, not clock hours: `floor(h / 24)` counts
+  // 24-hour blocks since posting while every other surface counts midnights crossed
+  // (M216), and both readings were printed into the same shared day row. The count
+  // leaves this helper — `relativeDay` measures the wall calendar the way the rest of
+  // the app reads a day, and ≥24h elapsed is always yesterday or older, so the gate's
+  // same-day and ahead-of-day words cannot come back. A thread older than a month
+  // reads its absolute date.
+  if (Math.floor(h / 24) >= 30) return { value: formatDate(locale, iso) };
+  const rel = relativeDay(locale, iso);
+  return "key" in rel ? rel : { value: formatDate(locale, iso) };
 }
 
 // The two sort codes. Kept at module scope rather than inline in the JSX child

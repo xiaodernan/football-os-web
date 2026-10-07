@@ -1762,8 +1762,15 @@ const en: Dict = {
   "comm.agoMin": "{n}m ago",
   "comm.agoHour": "{n}h ago",
   // The day words are shared, not the community's: `relativeDay` in i18n/format.ts
-  // names them and the dashboard's fixture/growth line prints what it hands back,
-  // while the feed's own helper names the past one. A word two surfaces say is one row.
+  // names them and every surface prints what it hands back — the dashboard's
+  // fixture/growth line, and since M304 the feed's helper too, which used to count
+  // its own days into the past row. A word two surfaces say is one row.
+  // The compactness policy is per locale and lives in these rows: the English column
+  // counts compactly (`{n}d ago`) because its day stamp sits in a narrow fixed-width
+  // column (the dashboard's 56px `w-14` stamp wraps on anything longer), while the
+  // two Chinese columns spell the word form (`{n} 天前`) — a Latin abbreviation inside
+  // Chinese text reads as foreign, and the word form is what the ±1 words beside
+  // them already speak.
   // `time.tomorrow` / `time.yesterday` answer ±1 calendar day and carry no variable on purpose:
   // the day a reader calls "yesterday" is a word, not a measurement they want counted.
   // `time.today` is the one day word that carries a variable — a day the reader is inside
