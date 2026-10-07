@@ -5622,7 +5622,7 @@ ok(`the news record carries no seed-composed summary sentence: the NewsArticle i
 // The number may only fall. Adding a zero-asserting clause without one of the three has to be
 // paid for here, in the same commit — which is the same bargain every other ceiling in this
 // file asks for.
-const VACUITY_CEILING = 293;
+const VACUITY_CEILING = 268;
 const clauseDepth = (text) => {
   let d = 0, str = null, tmpl = 0;
   for (let i = 0; i < text.length; i++) {
@@ -5656,7 +5656,16 @@ const clausesIn = (src) => {
 // beside it. The two phrasings are both in the device witness below, so a third one cannot arrive
 // without being named there.
 const isPlant = (s) => /plant|blind spot|is measured and not/i.test(s);
-const isZeroish = (s) => /\bnone\b|\b0\b|\bnothing\b|\bno [a-z]+\b/i.test(s);
+// M315: `\b0\b` charged any standalone zero token, so a pin against a decimal constant
+// (0.77, 0.15, 0.002), a score (4-2-0-2) and a range bound were read as zero-assertions.
+// They never were: a zero that is part of a larger number is not the asserted value, and
+// undefined data makes such a clause fail or throw, never pass vacuously. The zero that
+// matters is one the clause holds a measurement TO — an equality against it, a value
+// phrase naming it, a bound zero this reader still keeps charged on purpose. Measured
+// across the tree with the census's own classifier: this reading de-charges exactly the
+// 27 clauses whose only zero token was a decimal fragment (293 → 268), each hand-judged;
+// the token reading itself is witnessed below, next to the device reading.
+const isZeroish = (s) => /\bnone\b|(?<![\w.])0(?![\d.])|\bnothing\b|\bno [a-z]+\b/i.test(s);
 const GUARD_RE = /rather than nothing|not an empty set|against pin|pin \d+|> 0|>= 1|\.length >= \d+/;
 const unguardedZeroes = [];
 const proofFiles = readdirSync(join(root, "scripts")).filter((f) => /^proof-.*\.mjs$/.test(f)).sort();
@@ -5709,6 +5718,23 @@ const deviceVerdicts = DEVICE_FIXTURES.map(([name, src, want]) => {
 });
 ok(`the device reader credits each of the three devices at each distance the suite writes them and refuses a clause with none (${deviceVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
   deviceVerdicts.every(([, v]) => v));
+// M315 witnessed the token reading the same way, because correcting isZeroish is exactly the
+// kind of change that could turn the census quiet: one fixture per reading, each of which must
+// classify as the census now classifies it. A reader that stopped charging zero-assertions
+// altogether would report no debts and look perfect.
+const TOKEN_FIXTURES = [
+  ["a pin against a decimal constant is not a zero-assertion", 'ok("defence is gaAvg / leagueAvg (1.00/1.3 = 0.77)", near(x.defence, 0.77));\n', false],
+  ["an equality against zero is", 'ok("no fabricated facts", a.facts.length === 0);\n', true],
+  ["a label that states a zero value is, even with the comparison below the first line", 'ok("ppg is round2(points/played) and exactly 0 before the first fixture",\n  st().ppg === 0);\n', true],
+  ["a bound zero is kept charged on purpose", 'ok("skill is a 0..1 tier", a.skill >= 0 && a.skill <= 1);\n', true],
+  ["a zero inside a score is kept charged (the conservative side)", 'ok("A: hand-computed record 4-2-0-2", a.won === 2);\n', true],
+];
+const tokenVerdicts = TOKEN_FIXTURES.map(([name, src, want]) => {
+  const c = clausesIn(src)[0];
+  return [name, isZeroish(c.body.split("\n")[0]) === want];
+});
+ok(`the zeroish reader refuses a zero that is part of a larger number and keeps every zero a clause is held to (${tokenVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
+  tokenVerdicts.every(([, v]) => v));
 if (unguardedZeroes.length > VACUITY_CEILING) console.log("       owing: " + unguardedZeroes.slice(0, 20).join(", "));
 // The census itself is the last thing that could go blind: a source it cannot split into
 // clauses counts zero clauses and therefore zero debts. The plant is a fixture with one

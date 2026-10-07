@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M314 (a few numbers in that range
+Work ships one milestone per commit and is currently at M315 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6532,6 +6532,37 @@ probe-midpoint caveat, and the untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M315 — the zero that is part of a larger number
+
+The census's zeroish reader charged any standalone `0` token, so the analytics family's seven
+owing clauses were all accidents: pins against decimal constants (0.77, 0.15, 0.002), a range
+bound (`>= 0`), a score (4-2-0-2), a label phrase ("conceded 0"). None of them asserts a zero.
+The distinction that matters: a zero that is part of a larger number can never be the value a
+clause is held to — undefined data makes such a clause fail or throw, never pass vacuously.
+
+Two candidate readers were run against the whole tree through the census's own classifier. A
+compare-shaped reading (a zero only when held to by `===`/`!==`) de-charged 85 clauses — and
+among them were real zero-assertions it could not see: `ppg is … exactly 0 before the first
+fixture` keeps its `=== 0` on the line below the label, so a first-line comparison reader
+would have released exactly the clause the census exists to charge. The decimal reading
+de-charges exactly 27, every one a clause whose only zero token is a fragment of a larger
+number, each hand-judged; the conservative half of the class — scores, bound zeros, value
+phrases — stays charged on purpose and remains available as future spend.
+
+A correction to the reader is exactly the kind of change that could turn the census quiet, so
+the token reading is witnessed like the device reading before it: five fixtures, each of which
+must classify the way the census now classifies it — the decimal pin refused, the equality
+against zero kept, the value phrase kept (with its comparison below the first line), the bound
+zero kept, the score kept. The debt falls **293 → 268** with the ceiling following the
+measurement, and the planted-census clause still reads 1 of 1.
+
+The arm, run before landing: with the old reader restored and the ceiling already at 268,
+exactly two clauses redden — the census (293 owing against 268) and the token reader's decimal
+fixture — 365/367. Restored (hash-verified), the run is 367/367.
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
+(vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
 
 ### M314 — the empty answer's floors, held from both sides
 
