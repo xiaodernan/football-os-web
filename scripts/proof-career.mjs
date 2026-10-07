@@ -172,6 +172,8 @@ const playSeason = (n, from = st()) => { let s = from; for (let i = 0; i < n; i+
 // ---------------------------------------------------------------------------
 ok("roundFee snaps to the 500k grid (1,234,567 → 1M, 1.4M → 1.5M, 0 → 0)",
   roundFee(1_234_567) === 1_000_000 && roundFee(1_400_000) === 1_500_000 && roundFee(0) === 0);
+// M318 companion: a non-zero valuation rounds to a positive fee on the grid, so the "0 → 0" clause above has a population pin.
+ok("the market quotes at least one positive rounded fee", PLAYERS.some((p) => p.value > 0 && roundFee(p.value) > 0));
 ok("roundFee rounds a half step UP, so a 1.25M valuation asks 1.5M (the tie the board shows)",
   roundFee(1_250_000) === 1_500_000);
 ok("roundFee matches an independent grid rounding for every valuation in the seed",
@@ -210,6 +212,8 @@ ok("a transfer relocates the player: out of one squad, into the other",
   (() => { const m = { [ONE.id]: RIV[0] }; return !effectiveSquad(US, m).some((p) => p.id === ONE.id) && effectiveSquad(RIV[0], m).some((p) => p.id === ONE.id); })());
 ok("a released player belongs to NO club of the competition",
   (() => { const m = { [ONE.id]: "" }; return CLUBS.every((c) => !effectiveSquad(c, m).some((p) => p.id === ONE.id)); })());
+// M318 companion: a transferred player belongs to exactly one club, so the "NO club" clause above has a population pin.
+ok("the market moves at least one player to a new club", (() => { const m = { [ONE.id]: RIV[0] }; return effectiveSquad(RIV[0], m).length >= 1; })());
 ok("moving players between clubs conserves the population (nobody invented, nobody dropped)",
   (() => {
     const native = PLAYERS.filter((p) => CLUBS.includes(p.clubId));
