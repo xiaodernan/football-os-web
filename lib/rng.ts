@@ -30,12 +30,19 @@ export function rngFloat(rng: () => number, min: number, max: number): number {
   return rng() * (max - min) + min;
 }
 
+// An empty pool is a caller bug: the signature promises a T, and the old answer —
+// `undefined` from `arr[NaN]` — was a type lie whose poison landed wherever the result
+// was read, far from the cause. Fail here instead, with a named error.
 export function pick<T>(rng: () => number, arr: readonly T[]): T {
+  if (arr.length === 0) throw new Error("pick: empty pool");
   return arr[Math.floor(rng() * arr.length)];
 }
 
 /** Weighted pick: entries are [value, weight]. */
 export function weightedPick<T>(rng: () => number, entries: readonly [T, number][]): T {
+  // Same contract as ./pick: an empty pool throws at the cause rather than falling off
+  // the loop into `entries[-1][0]` — a TypeError that named nothing.
+  if (entries.length === 0) throw new Error("weightedPick: empty pool");
   const total = entries.reduce((s, [, w]) => s + w, 0);
   let r = rng() * total;
   for (const [value, w] of entries) {

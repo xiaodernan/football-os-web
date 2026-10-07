@@ -196,7 +196,7 @@ const at = (v) => () => v;
 }
 
 // ---------------------------------------------------------------------------
-// 4 · pick — the helper that types a lie for an empty array
+// 4 · pick — fail-at-the-cause on an empty pool, like every helper here
 // ---------------------------------------------------------------------------
 {
   const ARR = ["a", "b", "c", "d", "e"];
@@ -215,8 +215,10 @@ const at = (v) => () => v;
   let bad = 0;
   for (let i = 0; i < 100000; i++) if (!ARR.includes(pick(f, ARR))) bad++;
   ok(`100 000 real draws never leave the array (${bad} out-of-bounds)`, bad === 0);
-  ok(`an empty array yields ${String(pick(at(0.5), []))} while the signature says T — unreachable for the app's literal pools, and the reason the census clause below exists`,
-    pick(at(0), []) === undefined && pick(at(0.5), []) === undefined);
+  let pickEmpty = "";
+  try { pick(at(0.5), []); } catch (e) { pickEmpty = e.message; }
+  ok(`an empty pool throws at the cause ("${pickEmpty}") — the signature promises a T, and the old undefined answer from arr[NaN] was a type lie whose poison landed wherever the result was read`,
+    pickEmpty === "pick: empty pool");
 }
 
 // ---------------------------------------------------------------------------
@@ -240,10 +242,10 @@ const at = (v) => () => v;
     weightedPick(at(0), [["never", 0], ["always", 5]]) === "never" && weightedPick(at(0.001), [["never", 0], ["always", 5]]) === "always");
   ok(`all-zero weights fall through to the first entry (${weightedPick(at(0), [["a", 0], ["b", 0]])}) rather than returning nothing`,
     weightedPick(at(0), [["a", 0], ["b", 0]]) === "a");
-  let threw = "";
-  try { weightedPick(at(0), []); } catch (e) { threw = e.constructor.name; }
-  ok(`an empty entry list THROWS where pick returns undefined (${threw || "did not throw"}) — the two helpers refuse differently, so a call site cannot rely on either`,
-    threw === "TypeError");
+  let wpEmpty = "";
+  try { weightedPick(at(0), []); } catch (e) { wpEmpty = `${e.constructor.name}: ${e.message}`; }
+  ok(`an empty entry list throws "${wpEmpty}" — the same fail-at-the-cause contract as pick, no longer a TypeError from the fallback line that named nothing`,
+    wpEmpty === "Error: weightedPick: empty pool");
   ok(`negative weights are not validated: [[a,5],[b,-5]] totals 0 and yields ${weightedPick(at(0.5), [["a", 5], ["b", -5]])} at both extremes`,
     weightedPick(at(0.5), [["a", 5], ["b", -5]]) === "a" && weightedPick(at(0.9), [["a", 5], ["b", -5]]) === "a");
   const entries = [["a", 5], ["b", -5]];
