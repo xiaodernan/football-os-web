@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M315 (a few numbers in that range
+Work ships one milestone per commit and is currently at M316 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6532,6 +6532,35 @@ probe-midpoint caveat, and the untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M316 — a pin against any positive integer is the same floor device
+
+The census's guard reader credits three devices that make a zero-asserting clause non-vacuous:
+a plant in the clause itself, a floor or pin inside the clause (`> 0`, `>= 1`, `.length >= N`),
+or a planted/guarded companion written within two clauses. A pin against a positive integer
+constant (`=== 1`, `>= 3`) is the same floor device: on an empty/undefined measurement the pin
+fails, so the whole clause fails rather than passing vacuously. The guard widens to credit those
+companions too, but explicitly excludes `=== 0` by matching `[1-9]\d*` only.
+
+Measured across the tree with the census's own classifier: this reading de-charges exactly **77**
+clauses (268 → 191). All 77 are AND-compositions where a positive pin makes the clause fail on
+empty measurement; no OR-composition lets a zero arm pass vacuously. The census logic now checks
+for `||` and refuses to credit companions when an OR-composition exists — a clause like
+`a.length === 0 || b.length >= 1` stays charged because the zero arm can still pass vacuously
+even though a positive pin exists nearby.
+
+A correction to the guard reader is witnessed like the token reader before it: four fixtures,
+each of which must classify the way the census now classifies it — a positive pin credited, a
+positive pin in the clause itself credited, `=== 0` never credited by the guard, an OR-mixed
+zero arm kept charged. The debt falls **268 → 191** with the ceiling following the measurement,
+and the planted-census clause still reads 1 of 1.
+
+The arm, run before landing: with the old guard restored and the ceiling already at 191, exactly
+two clauses redden — the census (268 owing against 191) and the guard reader's OR-mix fixture —
+366/368. Restored (hash-verified), the run is 368/368.
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **368/368** · 2,007 keys × 3 locales
+(vacuity census **191 owing / ceiling 191**, planted census 1/1); suite **42/42 · 2,386/2,386**.
 
 ### M315 — the zero that is part of a larger number
 

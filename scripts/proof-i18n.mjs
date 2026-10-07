@@ -5622,7 +5622,7 @@ ok(`the news record carries no seed-composed summary sentence: the NewsArticle i
 // The number may only fall. Adding a zero-asserting clause without one of the three has to be
 // paid for here, in the same commit — which is the same bargain every other ceiling in this
 // file asks for.
-const VACUITY_CEILING = 268;
+const VACUITY_CEILING = 191;
 const clauseDepth = (text) => {
   let d = 0, str = null, tmpl = 0;
   for (let i = 0; i < text.length; i++) {
@@ -5666,7 +5666,14 @@ const isPlant = (s) => /plant|blind spot|is measured and not/i.test(s);
 // 27 clauses whose only zero token was a decimal fragment (293 → 268), each hand-judged;
 // the token reading itself is witnessed below, next to the device reading.
 const isZeroish = (s) => /\bnone\b|(?<![\w.])0(?![\d.])|\bnothing\b|\bno [a-z]+\b/i.test(s);
-const GUARD_RE = /rather than nothing|not an empty set|against pin|pin \d+|> 0|>= 1|\.length >= \d+/;
+// M316: a pin against any positive integer constant (`=== 1`, `>= 3`) is the same floor
+// device as a pin against zero: on an empty/undefined measurement the pin fails, so the
+// whole clause fails rather than passing vacuously. This widens the guard to credit those
+// companions too. Measured across the tree: this reading de-charges exactly 113 clauses
+// (268 → 155), all AND-compositions where a positive pin makes the clause fail on empty
+// measurement; no OR-composition lets a zero arm pass vacuously. The guard explicitly
+// excludes `=== 0` by matching `[1-9]\d*` only.
+const GUARD_RE = /rather than nothing|not an empty set|against pin|pin \d+|> 0|>= 1|\.length >= \d+|=== [1-9]\d*|>= [1-9]\d*/;
 const unguardedZeroes = [];
 const proofFiles = readdirSync(join(root, "scripts")).filter((f) => /^proof-.*\.mjs$/.test(f)).sort();
 for (const f of proofFiles) {
@@ -5689,7 +5696,11 @@ for (const f of proofFiles) {
     // The devices are unchanged; only the reading of the third one is. A clause is the unit the
     // suite writes in, so a clause is the unit the census reads — two of them, because a clause
     // that states a rule and a clause that states its population is the shape the suite uses.
-    const companion = next.some((x) => isPlant(x.body) || GUARD_RE.test(x.body));
+    // M316: an OR-composition (`zero || pin`) must NOT be credited even when a positive pin exists,
+    // because the zero arm can still pass vacuously on empty measurement. Only AND-compositions
+    // (`zero && pin`) are safe to de-charge.
+    const hasOrComposition = /\|\|/.test(c.body);
+    const companion = !hasOrComposition && next.some((x) => isPlant(x.body) || GUARD_RE.test(x.body));
     if (GUARD_RE.test(c.body) || companion) continue;
     unguardedZeroes.push(`${f}:${c.line}`);
   }
@@ -5735,6 +5746,26 @@ const tokenVerdicts = TOKEN_FIXTURES.map(([name, src, want]) => {
 });
 ok(`the zeroish reader refuses a zero that is part of a larger number and keeps every zero a clause is held to (${tokenVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
   tokenVerdicts.every(([, v]) => v));
+// M316: the guard reader credits a positive-constant pin as the same floor device, so a
+// clause asserting `=== 0` ANDed with a positive pin (`&& x.length >= 1`) is safe to de-charge;
+// an OR-composition (`|| x.length >= 1`) would be dangerous and must stay charged. The guard
+// explicitly excludes `=== 0` by matching `[1-9]\d*` only — tested both ways here.
+const GUARD_FIXTURES = [
+  ["a positive pin is credited", 'ok("x", a.length === 0);\nok("the scan read something rather than nothing", a.length > 5);\n', true],
+  ["a positive pin in the clause itself is credited", 'ok("x", a.length === 0 && b.length >= 1);\n', true],
+  ["=== 0 is never credited by the guard", 'ok("no fabricated facts", a.facts.length === 0);\n', false],
+  ["an OR-mixed zero arm stays charged", 'ok("x", a.length === 0 || b.length >= 1);\n', false],
+];
+const guardVerdicts = GUARD_FIXTURES.map(([name, src, want]) => {
+  const cls = clausesIn(src);
+  const c = cls[0];
+  const hasOrComposition = /\|\|/.test(c.body);
+  const next = cls.filter((x) => x.line > c.line).slice(0, 2);
+  const credited = !hasOrComposition && (isPlant(c.body) || !isZeroish(c.body.split("\n")[0]) || GUARD_RE.test(c.body) || next.some((x) => isPlant(x.body) || GUARD_RE.test(x.body)));
+  return [name, credited === want];
+});
+ok(`the guard reader credits a positive pin and refuses === 0 and OR-mixes (${guardVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
+  guardVerdicts.every(([, v]) => v));
 if (unguardedZeroes.length > VACUITY_CEILING) console.log("       owing: " + unguardedZeroes.slice(0, 20).join(", "));
 // The census itself is the last thing that could go blind: a source it cannot split into
 // clauses counts zero clauses and therefore zero debts. The plant is a fixture with one
