@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M306 (a few numbers in that range
+Work ships one milestone per commit and is currently at M307 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -3805,9 +3805,7 @@ Measured on the working copy: `tsc --noEmit` clean, `npm run build` exit 0, suit
 **37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, no retries in the final run. On
 the clean plane (`git archive HEAD` plus this milestone's two files, `node_modules` joined): `tsc --noEmit` exit 0, `npm run build` exit 0, suite **37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, and no `UNVERIFIED` line in the log. The first plane attempt of the same tree is worth recording because it says something about reading numbers off a loaded machine rather than about this code: `tsc` died with `FATAL ERROR: Zone Allocation failed - process out of memory` at exit 134, and `proof:load` died the same way twice, which M203's policy reported as `UNVERIFIED … no tally` rather than as a red. Re-running the plane with `--max-old-space-size=4096` gave the four green readings above; the heap ceiling is the host's, and the honest part is only that the runner named the dead script instead of smoothing it over.
 
-**Still outstanding** (deliberately not faked): the two
-relaxations above stay un-witnessed by the harness and are claimed only as a joint property;
-`sourceBalance` says nothing about whether the *regions* are right in the middle of a file, only
+**Still outstanding** (deliberately not faked): `sourceBalance` says nothing about whether the *regions* are right in the middle of a file, only
 where the walk ended — an interior wrongness that self-heals by EOF is invisible to both clauses,
 which is what the probe covers and why the pair is kept; `useEffect`-half router coverage still needs
 a browser pass, `lib/hooks.ts`/`theme.tsx`/`utils.ts` stay exempt, and the untracked `dev/` scratch
@@ -3822,6 +3820,19 @@ a plant (the runaway `tick`; a block comment still open at the boundary, which `
 whole) are held at zero across every `.tsx` midpoint, the other three cannot hide a caption (the
 walker re-enters on the plant's own `<div`), 46 of 49 midpoints carry one of them, and three
 witnesses pin the reader. M306's section records the strike.
+
+One more charge this block carried has a closer to name. The two probe-choice relaxations —
+plant at end-of-file instead of the interior, demand any half instead of both — were dropped
+from the harness after `m213h` and `m213i` both MISSED on a healthy tree, and kept as a
+claimed joint property. M307 witnessed the position choice in the gate itself: a fixture
+broken in its interior and recovered by its end reads 0 at the midpoint and 2 at end-of-file,
+so the interior choice is load-bearing against exactly the shape that exists for it, and
+end-of-file is where interior breakage reads healthy under any demand. The demand choice has
+no reproducible shape of its own in a minimal fixture — an unterminated attribute or an open
+element self-heals and the plant reads 2 or 4 — so any-half and both-halves agree on every
+shape a fixture can carry, and the record now says so at the clause instead of asserting the
+pair blind. M307's section records the strike.
+
 ### M214 — a helper that returns a sentence is invisible to a scan that reads positions
 
 A reader-facing complaint about dates on the dashboard turned into two defects in one function once
@@ -6516,6 +6527,39 @@ probe-midpoint caveat, and the untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M307 — what a healthy tree cannot show, a fixture can
+
+M213's probe makes two choices — plant in the file's interior, demand both halves back — and its
+block carried the honest residue of choosing them: arms that relax either choice MISS on a
+healthy tree (`m213h`, `m213i`, measured), because the healthy tree is exactly where the two
+relaxations are indistinguishable from the standing form. The choices are load-bearing only
+against a broken tree, so the block recorded the pair as a claimed joint property and the arms
+were dropped. This milestone moves that record from the ledger into the gate.
+
+**The measurement first.** Restoring the escape defect onto candidate fixtures and planting the
+probe at both positions: a runaway template reads 0 at the midpoint and 0 at end-of-file (the
+walk never resumes, so no demand can tell the positions apart); an unterminated attribute and an
+open element self-heal and read 2 or 4 — the plant's own `<div` re-enters, and an attribute
+literal counts as a hit the same as body text; the shape that hides is the one M213 measured on
+`chart.tsx`, a broken state so deep that exactly one half survives, and no minimal fixture
+reproduces it. The fixture that isolates the position choice is a template that opens in the
+interior and closes before the end: the plant at the midpoint lands inside it (0), the plant at
+end-of-file lands after the recovery (2).
+
+**So the gate now carries that fixture.** `proof-i18n` plants the probe at both positions of a
+recover-then-close fixture and a healthy fixture, and asserts the four numbers: 0 at the broken
+midpoint, 2 at the broken end, 2 and 2 on the healthy tree. The position choice is witnessed in
+the shipped gate — end-of-file is where interior breakage goes to hide, and the interior choice
+is what gives the probe its teeth against exactly this shape. The demand choice is recorded at
+the clause with its boundary: every shape a minimal fixture can carry reads 0 (blind under any
+demand) or 2-or-4 (healthy under any demand), so any-half and both-halves agree everywhere
+reproducible, and the demand stays both-halves because it costs nothing where the tree is
+healthy. A claim that survived four milestones as a property is now a measurement.
+
+Measured: `proof-i18n` **360/360** · 2,007 keys × 3 locales (vacuity census 386 owing / ceiling
+387), suite **42/42 · 2,377/2,377**, `tsc --noEmit` clean, `npm run build` exit 0.
+
 
 ### M306 — a blind report has to say whose fault it is
 
