@@ -2841,12 +2841,32 @@ ok(`every dictionary row closes its own brackets in its own script (${enKeys.len
 //     which path reads it. 21 hand-rolled call sites were collapsed onto t()'s own
 //     variables at M153; this is what stops them coming back one at a time.
 //     data/ is exempt: it fills a seeded news headline template, not a dictionary string.
-const HANDROLLED = /\.replace\(\s*["'`]\{/g;
+//     M312: the needle is either a quoted string or a regex literal, and this rule only saw the
+//     quoted one. `replace(/{n}/, …)` fills only the first occurrence exactly as
+//     `replace("{n}", …)` does — the same half-filled render — so the plant that runs this rule
+//     found the gap instead of confirming it. Both needles are refused now, and the two shapes
+//     that must stay legal (`.replace("a", "b")`, `.replace(/-/g, "/")`) are planted beside them.
+const HANDROLLED = /\.replace\(\s*(?:["'`]\{|\/\{)/g;
 const handRolled = [...appSrc]
   .filter(([p, src]) => !p.startsWith("data/") && src.match(HANDROLLED))
   .map(([p, src]) => `${p} (${src.match(HANDROLLED).length})`);
 ok(`t()'s variable filling is the only interpolator in the UI source (${handRolled.join(", ") || "none"})`,
   handRolled.length === 0);
+// M312. The clause above is one regex over every app file; a zero passes if the regex stopped
+// matching, and the two shapes it exists to refuse are worth naming. `replace("{n}", …)` fills only
+// the first occurrence — the half-filled render M153 collapsed 21 sites away from — and
+// `replace(/{n}/, …)` is the same mistake written with a regex needle. Both must be caught, and a
+// replacement with no placeholder in it must not be accused, because the day that happens the
+// clause is charging ordinary string work.
+const PLANTED_HANDROLLED = [
+  ['const s = tpl.replace("{n}", String(n));', true],
+  ['const s = tpl.replace(/{n}/, String(n));', true],
+  ['const s = tpl.replace("a", "b");', false],
+  ['const s = iso.replace(/-/g, "/");', false],
+];
+const handRolledVerdicts = PLANTED_HANDROLLED.map(([line, want]) => [line, new RegExp(HANDROLLED.source).test(line) === want]);
+ok(`the hand-rolled interpolator rule, planted both ways, still catches the two shapes it refuses and accuses neither shape it does not (${handRolledVerdicts.map(([l, v]) => `${v ? "ok" : "MISS"} ${l}`).join("; ")})`,
+  handRolledVerdicts.every(([, v]) => v));
 
 // 28-29. The scan's own escape hatch, pinned from the other side. A raw-UI count can go
 //      down without a single translation being written: rename a row's `label` field to
@@ -3352,6 +3372,27 @@ for (const [path, code] of appSrc) {
 // the whole tree — so `0` here is a measured zero, not an empty set reporting clean.
 ok(`no file formats an instant for the browser (${hostSites.map((s) => `${s.path}:${s.receiver}`).join(", ") || "0 sites anywhere in the app"}; one bare toLocale* call reddens this)`,
   hostSites.length === 0);
+// M312. This census is two regexes and a list of four argument shapes, and a zero passes if either
+// half stopped working. The plant runs them — the SAME two pieces, not copies — over the four ways
+// of asking the host and the three ways of telling it, so a green above cannot mean the classifier
+// went quiet. The empty-argument form is the one that slips a hand-written check, because it is an
+// argument list and therefore looks like a decision.
+const plantAsksHost = (line) => {
+  const m = new RegExp(LOCALE_CALL.source).exec(line);
+  return m ? ASKS_THE_HOST.includes(firstArgOf(m[2])) : false;
+};
+const HOST_PLANTS = [
+  ["d.toLocaleDateString()", true],
+  ['d.toLocaleDateString(undefined, { month: "short" })', true],
+  ['d.toLocaleDateString([], { month: "short" })', true],
+  ['d.toLocaleDateString("default")', true],
+  ["d.toLocaleDateString(locale)", false],
+  ['d.toLocaleDateString("en-GB")', false],
+  ["formatDate(locale, iso)", false],
+];
+const hostVerdicts = HOST_PLANTS.map(([line, want]) => [line, plantAsksHost(line) === want]);
+ok(`the browser-locale classifier, planted both ways, still refuses all four ways of asking the host and accuses none of the three ways of telling it (${hostVerdicts.filter(([, v]) => !v).map(([l]) => l).join(", ") || "all 7 as declared"})`,
+  hostVerdicts.every(([, v]) => v));
 // The way back into the same defect that no argument-shape scan can see: a call that DOES
 // pass a locale, but sources it from the host. Reading the browser once is correct — the app
 // picks a starting locale from it, the reader can override that in the header, and the choice
@@ -5545,7 +5586,7 @@ ok(`the news record carries no seed-composed summary sentence: the NewsArticle i
 // The number may only fall. Adding a zero-asserting clause without one of the three has to be
 // paid for here, in the same commit — which is the same bargain every other ceiling in this
 // file asks for.
-const VACUITY_CEILING = 298;
+const VACUITY_CEILING = 296;
 const clauseDepth = (text) => {
   let d = 0, str = null, tmpl = 0;
   for (let i = 0; i < text.length; i++) {
@@ -5573,7 +5614,12 @@ const clausesIn = (src) => {
   }
   return out;
 };
-const isPlant = (s) => /plant/i.test(s);
+// M311/M312. The suite writes a planted witness two ways — `plant…` and `…so the zero above is
+// measured and not a blind spot` — and this recogniser only knew the first, so every clause
+// written in the second phrasing was reported as owing while it stood there with its witness
+// beside it. The two phrasings are both in the device witness below, so a third one cannot arrive
+// without being named there.
+const isPlant = (s) => /plant|blind spot|is measured and not/i.test(s);
 const isZeroish = (s) => /\bnone\b|\b0\b|\bnothing\b|\bno [a-z]+\b/i.test(s);
 const GUARD_RE = /rather than nothing|not an empty set|against pin|pin \d+|> 0|>= 1|\.length >= \d+/;
 const unguardedZeroes = [];
@@ -5612,6 +5658,7 @@ ok(`the suite's own zero-asserting clauses carry a plant, a pin or a planted com
 // flagged. A reader that credited everything would report 0 owing and look perfect.
 const DEVICE_FIXTURES = [
   ["a plant in the clause itself", 'ok("a planted witness in the clause itself", a.length === 0);\n', true],
+  ["a blind-spot witness in the clause itself", 'ok("the rule still reports it, so the zero above is measured and not a blind spot", a.length === 0);\n', true],
   ["a floor in the clause itself", 'ok("x", a.length === 0 && a.length >= 3);\n', true],
   ["a guarded companion one clause down", 'ok("x", a.length === 0);\nok("the scan read something rather than nothing", a.length > 5);\n', true],
   ["a guarded companion two clauses down", 'ok("x", a.length === 0);\nok("an unrelated clause", b.length === 0);\nok("the scan read something rather than nothing", a.length > 5);\n', true],

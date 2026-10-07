@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M311 (a few numbers in that range
+Work ships one milestone per commit and is currently at M312 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6532,6 +6532,45 @@ probe-midpoint caveat, and the untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M312 — the plant that found a blind spot instead of confirming one
+
+M311 corrected what the vacuity census reads and left the ceiling at 298. This unit spends two of
+that debt on the two clauses the census named first, and one of the two plants did not confirm the
+clause it was written for — it found a hole in it.
+
+**`t()'s variable filling is the only interpolator in the UI source`** read one regex, `HANDROLLED`,
+and that regex only saw a *quoted* needle: `replace("{n}", …)`. The plant was written with the two
+shapes the rule exists to refuse — the quoted needle and the regex needle `replace(/{n}/, …)` — and
+the second one came back `MISS`. It is the same defect either way: `String.prototype.replace` with a
+non-global needle fills only the first occurrence, which is the half-filled render M153 collapsed 21
+sites away from. The rule now refuses both needles, and a search of the tree confirms no site was
+ever written the second way, so closing the hole changed no reading. The two shapes that must stay
+legal (`.replace("a", "b")`, `.replace(/-/g, "/")`) are planted beside them.
+
+**`no file formats an instant for the browser`** is two regexes and a list of four argument shapes,
+and a zero passes if either half stopped working. The plant runs the *same two pieces* — not copies —
+over the four ways of asking the host (`()`, `undefined`, `[]`, `"default"`) and the three ways of
+telling it (a locale variable, a literal locale, the `formatDate` door). The empty-argument form is
+the one worth naming, because it is an argument list and therefore looks like a decision.
+
+**One more reading was wrong, in the same place as M311's.** The census recognised a planted witness
+by the word `plant`, but the suite also writes them as `…so the zero above is measured and not a blind
+spot` — and every clause in that phrasing was reported as owing while it stood there with its witness
+beside it. Both phrasings are recognised now, and both are in the device witness, so a third one
+cannot arrive without being named there. The two new plant clauses also had to be *named* as plants,
+which is itself the convention this census depends on: a witness the census cannot see is a witness
+it will charge you for.
+
+The ceiling falls with the measurement, **298 → 296**.
+
+Two mutations, both caught: the hand-rolled rule back to the quoted needle only (the plant reports
+`MISS const s = tpl.replace(/{n}/, String(n));`), and the host classifier no longer refusing `[]` —
+caught by the new plant **and** by the standing `the census still recognises all 5 ways of asking the
+host` clause beside it.
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **365/365** · 2,007 keys × 3 locales
+(vacuity census **296 owing / ceiling 296**).
 
 ### M311 — the census that charged clauses for evidence it could not see
 
