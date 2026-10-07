@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M291 (a few numbers in that range
+Work ships one milestone per commit and is currently at M292 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6318,6 +6318,38 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M292 — today reads as a word, not a bare clock
+
+`relativeDay`'s within-a-day branch was the one arm with no reader word: an
+instant inside the reader's own day printed a clock time alone — `12:30 AM` /
+`00:30` / `上午12:30` — in every locale, with nothing marking it as today. M214
+queued the branch as outstanding and M216's calendar-day rewrite deliberately
+left it standing. The branch is live on the dashboard's recent-activity line (a
+`completedAt` the reader wrote today) and on its fixture rows for any reader
+inside the world's window; measured against this tree the demo anchor
+(2026-09-22) sits two weeks behind the reader's clock, so the today panel's 45
+rows currently print `14d ago`/`13d ago` and none of them reach the branch —
+the arm was dead on the pinned world and wrong for everyone it was written
+for.
+
+The fix keeps the clock and adds the word: the branch returns a row — key
+`time.today`, the clock formatted the reader's way as the `{at}` variable, one
+row per locale (`Today {at}` / `今天 {at}`). It is the only day word that
+carries a variable, because a day the reader is inside has no honest count:
+the word says which day, the clock says when. A bare clock cannot say the
+first thing and a word without a clock drops the second.
+
+The gate is `proof-i18n`'s calendar-day clause, extended rather than added to:
+the two planted within-a-day anchors now want `time.today`, the row must carry
+a clock-shaped `at`, and each locale's line must be more than the clock it
+carries and must still carry it — the sentences the branch shipped until now,
+refused by name. The regression arms are named too: `m216c` re-tipped to the
+dropped word, `m292a` the dictionary row collapsed to its clock, `m292b` the
+word shipped without its variable.
+
+Measured: `tsc` clean; `proof-i18n` **356/356** · 2,005 keys × 3 locales (vacuity
+census 382/384); `proof-screens` 25/25; suite **42/42 · 2,362/2,362**; `npm run build`
+exit 0. Code as **4dcc55f**.
 ### M291 — a club with a match in play keeps its next-up projection
 
 ClubDetail pointed its "Next up" projection row at the first entry of the club's
