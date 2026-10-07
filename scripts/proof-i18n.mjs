@@ -2045,6 +2045,38 @@ const commentPlant = midThreads("const a = 1;\n/* a comment\nthat spans the midp
 const commentClean = midThreads("const a = 1;\n/* a comment */\nconst b = 2;");
 ok(`the midpoint every caption is planted at opens no thread that swallows it (compromised: ${midCompromised.join(", ") || "none"}; other walker threads open at midpoints: ${midThreaded} of ${tsxFiles.length}), and the reader names the control's own runaway template (${controlThreads.join("+") || "NAMED NOTHING"}) and a planted spanning comment (${commentPlant.join(",") || "NAMED NOTHING"}) while a closed one reads clean (${commentClean.join(",") || "clean"})`,
   midCompromised.length === 0 && controlThreads.includes("tick") && commentPlant.join(",") === "comment" && commentClean.length === 0);
+
+// M213 dropped its two probe-choice arms because on a healthy tree neither relaxation is
+// catchable — measured `MISSED m213h` and `MISSED m213i` — and recorded the pair as a joint
+// property instead of claiming it quietly. What a healthy tree cannot show, a fixture can:
+// this one is broken in its interior and recovers before the end, which is exactly the shape
+// the position choice exists for. At the midpoint the plant lands inside the runaway template
+// and the walk ends before it (0 hits — the standing demand calls that blind); at end-of-file
+// the same broken tree reads the plant in full (2 hits — no demand can call that blind, so
+// end-of-file is where interior breakage goes to hide). The healthy fixture reads 2 at both
+// positions, so the teeth cost nothing on a tree that is not broken. The demand choice has no
+// reproducible shape of its own in a minimal fixture — an unterminated attribute or an open
+// element self-heals and the plant reads 2 or 4 (measured), so any-half and both-halves agree
+// on every shape a fixture can carry; the demand stays both-halves because it is free.
+const midCount = (L, at) =>
+  scanSource([...L.slice(0, at), "  " + MID_PROBE, ...L.slice(at)].join("\n")).hits
+    .filter((h) => /Probe untranslated/.test(String(h.text))).length;
+const MID_RECOVER = [
+  "export const Broken = () => {",
+  "  const css = `@media print {",
+  "    color: red;",
+  "  }`;",
+  "  return <div>ok</div>;",
+  "};",
+  "",
+];
+const MID_HEALTHY = ["export const Ok = () => (", "  <div>fine</div>", ");", ""];
+const recMid = midCount(MID_RECOVER, Math.floor(MID_RECOVER.length / 2));
+const recEof = midCount(MID_RECOVER, MID_RECOVER.length);
+const okMid = midCount(MID_HEALTHY, Math.floor(MID_HEALTHY.length / 2));
+const okEof = midCount(MID_HEALTHY, MID_HEALTHY.length);
+ok(`the probe's position choice is load-bearing against the shape that exists for it: a fixture broken in its interior and recovered by its end reads ${recMid} at the midpoint (blind under the standing demand) and ${recEof} at end-of-file, where no demand can call it blind, while the healthy fixture reads ${okMid} and ${okEof} at the same two positions (the runaway control above reads 0 under the same arithmetic)`,
+  recMid === 0 && recEof === 2 && okMid === 2 && okEof === 2);
 // Non-vacuity, and deliberately *not* a floor on the total. The previous clause read
 // `openTotal >= 300`, which is a bound on the exact quantity every milestone is trying
 // to shrink: localise three more screens and the check goes red while the scan is
