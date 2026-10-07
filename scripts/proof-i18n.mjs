@@ -1,4 +1,4 @@
-// Proof for the i18n contract. The dictionary is a loose Record<string,string>
+﻿// Proof for the i18n contract. The dictionary is a loose Record<string,string>
 // and `t()` falls back to English then to the raw key, so a missing translation
 // never fails loudly — a Chinese user just sees English, or a bare `fw.hub.title`.
 // This pins the ways that goes wrong:

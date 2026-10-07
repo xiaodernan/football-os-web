@@ -381,8 +381,14 @@ function Training() {
   const { state, completeSession } = useOs();
   const { t, locale } = useI18n();
   const planned = state.sessions.filter((s) => s.status === "planned");
-  const missed = state.sessions.filter((s) => s.status === "missed").slice(0, 8);
-  const history = state.sessions.filter((s) => s.status === "completed").slice(0, 20);
+  // The counters count the world, the rows render a cut — the same split the
+  // dashboard's live strip took at M294 and the hub's at M297: a hint that
+  // reads the sliced array prints the cut's size against worlds the cut
+  // cannot represent (9 missed → "8 slipped", 40 done → "20 completed").
+  const missedAll = state.sessions.filter((s) => s.status === "missed");
+  const missed = missedAll.slice(0, 8);
+  const historyAll = state.sessions.filter((s) => s.status === "completed");
+  const history = historyAll.slice(0, 20);
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Panel className="p-4">
@@ -395,7 +401,7 @@ function Training() {
       </Panel>
       {missed.length > 0 && (
         <Panel className="p-4">
-          <SectionTitle title={t("player.missed")} hint={t("player.slippedCount", { n: missed.length })} />
+          <SectionTitle title={t("player.missed")} hint={t("player.slippedCount", { n: missedAll.length })} />
           <div className="divide-y">
             {missed.map((sess) => (
               <div key={sess.id} className="flex items-center justify-between gap-2 py-2 text-sm">
@@ -410,7 +416,7 @@ function Training() {
         </Panel>
       )}
       <Panel className="p-4">
-        <SectionTitle title={t("player.history")} hint={t("player.completedCount", { n: history.length })} />
+        <SectionTitle title={t("player.history")} hint={t("player.completedCount", { n: historyAll.length })} />
         {history.length ? (
           <div className="divide-y">
             {history.map((sess) => (

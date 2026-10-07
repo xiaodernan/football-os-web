@@ -354,6 +354,7 @@ ok(`a LIVE fixture's record reaches the glass: every event name, the board's own
 // text, in MatchRow's own "h – a" shape.
 const FWORLD = (await tryLoad(() => server.ssrLoadModule("/" + "features/football/FootballWorld.tsx"))).mod;
 const ROUTER = (await tryLoad(() => server.ssrLoadModule("/" + "lib/router.tsx"))).mod;
+const PLAYER = (await tryLoad(() => server.ssrLoadModule("/" + "features/player/PlayerOS.tsx"))).mod;
 const liveByComp = new Map();
 for (const lm of liveFixtures) {
   if (!liveByComp.has(lm.competitionId)) liveByComp.set(lm.competitionId, []);
@@ -526,6 +527,45 @@ const hubPrinted = Number((hubText.match(/\b(\d+) in play\b/) ?? [])[1]);
 ok(`the hub's in-play counter counts the world's family, not its six-row strip (printed ${hubPrinted ?? "none"}, world ${liveTotal}; strip rows 6)`,
   hubPrinted === liveTotal && liveTotal > 6,
   `printed=${hubPrinted ?? "none"} world=${liveTotal}`);
+
+// ---------------------------------------------------------------------------
+// 5j · the player OS's training counters — NOT COVERED here, measured
+// ---------------------------------------------------------------------------
+// M298 fixed the Training tab's two counters the same way 5h and 5i fixed
+// theirs: "missed" and "history" were filter(...).slice(...) pairs whose hints
+// read the sliced array's length, so a world of 9 missed sessions printed
+// "8 slipped" and 40 completions printed "20 completed". The fix is real, but
+// a screen gate for it is NOT possible in this harness, and the claim is
+// measured, not asserted: the counters live behind `state.profile`, and the
+// OsProvider reads localStorage inside a useEffect — which never runs under
+// renderToStaticMarkup. So this clause PLANTS a full os-state blob (a profile
+// plus 9 missed and 21 completed sessions — worlds the 8/20 cuts cannot
+// represent) and renders the training route anyway. If the page still shows
+// the profile-setup empty state, the harness provably cannot feed the player
+// OS data, the training counters owe the live browser pass (#142), and any
+// green render of this tab here would have been the empty state wearing the
+// tab's name.
+const plantedSessions = [
+  ...Array.from({ length: 9 }, (_, i) => ({ id: `s-m${i}`, title: { en: `Missed session ${i}` }, status: "missed", date: "2026-01-0" + (i + 1), targetMinutes: 45 })),
+  ...Array.from({ length: 21 }, (_, i) => ({ id: `s-c${i}`, title: { en: `Done session ${i}` }, status: "completed", date: "2026-02-0" + ((i % 9) + 1), targetMinutes: 60, completedAt: "2026-02-0" + ((i % 9) + 1) })),
+];
+const plantedState = {
+  onboarded: true,
+  profile: { displayName: "Probe", mode: "player", positionGroup: "midfielder", position: "CM", ageGroup: "u18", goal: "pro", attributes: {}, xp: 0 },
+  sessions: plantedSessions,
+};
+mem.set(LOCALDATA.mod.OS_STATE_KEY, JSON.stringify(plantedState));
+const playerText = (() => {
+  if (!PLAYER || !ROUTER) return "";
+  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  globalThis.window.location.hash = "#/player/training";
+  try { return nodesOf(renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(PLAYER.PlayerOS))))).join(" "); }
+  catch { return ""; }
+})();
+mem.delete(LOCALDATA.mod.OS_STATE_KEY);
+ok(`NOT COVERED HERE, measured: the player OS's training counters cannot be gated from this harness — a full os-state blob (profile + 9 missed + 21 completed sessions) is planted under the app's own storage key and the training route is rendered, yet the page still shows the profile-setup empty state because the OsProvider reads localStorage inside a useEffect that renderToStaticMarkup never runs (${JSON.stringify(playerText.match(/Set up your Player profile/)?.[0] ?? null)} printed, slipped/completed counters seen: ${/\d+ (slipped|completed)/.test(playerText)}), so the fixed counters owe the live browser pass (#142)`,
+  playerText.includes("Set up your Player profile") && !/\d+ (slipped|completed)/.test(playerText),
+  playerText.slice(0, 120));
 
 // ---------------------------------------------------------------------------
 // 6 · what this harness cannot see, demonstrated rather than asserted
