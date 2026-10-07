@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M295 (a few numbers in that range
+Work ships one milestone per commit and is currently at M296 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6398,6 +6398,31 @@ clause in the same commit (384 → 385).
 Measured: `tsc` clean; `proof-i18n` **357/357** · 2,006 keys × 3 locales (vacuity
 census 385/385); `proof-screens` **28/28**; suite **42/42 · 2,366/2,366**; `npm run build`
 exit 0. Code as **fa7ab1b**.
+### M296 — the search screen's counters count the world, not the cut
+
+SearchPage rendered `globalSearch(term, 60)` — five kinds ranked together,
+then cut to 60 survivors — and printed each surviving group's length as its
+count. A broad query fills the 60 slots with high-scored players and clubs:
+`q="a"` printed `48` players and `12` clubs while the world holds 591 and 55,
+and 1,464 matching matches plus 23 news items left the page with no trace
+they existed — the screen declared kinds empty that were not. The same probe
+cleared the news screen: `rankNewsForClub` reorders, never filters, so its
+hint and body agree at every favourite-club setting.
+
+The scans move to an uncut `searchAll`; `globalSearch` stays the ranked cut,
+and a new `searchTotalsByType` reads the uncut per-kind totals. Each group
+counter now prints its kind's world total — `{n} found`, one row per locale.
+
+One gate. `proof-screens` 5h renders `#/search?q=a` and charges the printed
+numbers to the world's uncut family: 591 and 55 printed where the cut held
+48 and 12, and the largest printed total exceeds the 60-slot cap, so no
+residue of the cut can satisfy it. `proof-i18n` pays for the new `t()` site
+and the new clause in the same commit (literal 1300 → 1301, var sites 136 →
+137, vacuity ceiling 385 → 386).
+
+Measured: `tsc` clean; `proof-i18n` **357/357** · 2,007 keys × 3 locales (vacuity
+census 386/386); `proof-screens` **29/29**; suite **42/42 · 2,367/2,367**; `npm run build`
+exit 0. Code as **72ff14f**.
 ### M292 — today reads as a word, not a bare clock
 
 `relativeDay`'s within-a-day branch was the one arm with no reader word: an
