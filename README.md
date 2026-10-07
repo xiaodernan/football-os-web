@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M300 (a few numbers in that range
+Work ships one milestone per commit and is currently at M301 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6509,6 +6509,45 @@ untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+### M301 — an empty pool now fails at the cause, in one shared contract
+
+M210's ledger line — "`weightedPick([])` still throws where `pick([])` returns
+`undefined`" — survived eight syncs as a documented difference, and `proof-rng`
+recorded both refusals side by side. What the line charged was never the throw
+itself: it was that two helpers with one job had two failure contracts, and the
+worse one was pick's — a signature promising `T` while `arr[NaN]` handed back
+`undefined`, so the poison landed wherever the result was read, the same
+silent-derivation shape the `lib/ids.ts` comment calls a live bug class.
+weightedPick threw, but from its own fallback line, and `Cannot read properties
+of undefined (reading '0')` names nothing.
+
+The contract is now one sentence for both helpers: an empty pool is a caller
+bug, and it throws at the cause with a named error — `pick: empty pool`,
+`weightedPick: empty pool`. Both keep their signatures and both keep their
+draws: the 400-match battery digest is unchanged, so no seed reproducibility
+moved. What M301 deliberately does not touch: the all-zero-weight fall-through
+to the first entry and the un-validated negative weights stay exactly as their
+clauses state them — documented behaviors, not accidents, and a weights-
+validation pass would be a different argument.
+
+The 19 app-source `pick` call sites and the 2 `weightedPick` sites were
+measured for reachability of the new throw: every pool is a module constant or
+an inline literal (FILM_KINDS, HANDLES, POS_GROUPS, the seed's
+FIRST/LAST/NATIONS, SHOT_HIGH_XG/SHOT_LOW_XG), the seed's news pool guards its
+split with a ternary fallback, worldEngine's `comp.clubIds` has its own census
+clause (no empty pools), and training's `focusDrills(key)` is covered by the
+buildSession battery that draws a real session for every attribute key at both
+minute extremes. The suite's battery and seed world run the changed paths end
+to end.
+
+Gate: proof-rng's two empty-pool clauses are **reversed, not added** — the pick
+clause now asserts the named throw it used to assert the undefined against, and
+the weightedPick clause asserts `Error: weightedPick: empty pool` where it
+asserted `TypeError`. **55/55** checks, the same count the script carried
+before this milestone (two clauses replaced two, one for one). Measured: `tsc`
+clean; `proof-rng` **55/55** with the battery digest unchanged; suite **42/42 ·
+2,374/2,374**; `npm run build` exit 0. Code as **7b3c26e**.
+
 ### M292 — today reads as a word, not a bare clock
 
 `relativeDay`'s within-a-day branch was the one arm with no reader word: an
