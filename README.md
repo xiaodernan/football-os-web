@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M303 (a few numbers in that range
+Work ships one milestone per commit and is currently at M304 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6506,6 +6506,47 @@ This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
 
+### M304 — one row, two calendars: the feed counted its own days into the gate's word
+
+M216's rule is that a reader counts the days the wall calendar shows, and `relativeDay` in
+`i18n/format.ts` is the door that measures them — midnights crossed, rounded, because a DST
+day is 23 or 25 hours. The feed's `timeAgo` helper (`CommunityHub.tsx`) spent its life on
+one side of that rule: minutes and hours it counted as elapsed time, which is honest —
+below a day the wall clock is the measure and no calendar unit is claimed — but at the day
+boundary it divided elapsed hours by 24 and printed the count into `time.agoDay`, the same
+row the dashboard fills from the gate. One row, two meanings. A thread 25 hours old read
+"1d ago" on the feed where the dashboard's arithmetic — and the calendar — said
+"Yesterday"; around every midnight boundary the two ages disagreed by a day, and on a DST
+day by an hour either way. The ±1 word the M216 rewrite added everywhere else never reached
+the feed at all.
+
+**The repair takes the count out of the helper.** The day branch routes through
+`relativeDay(locale, iso)` and accepts whatever day word the gate hands back — and the
+routing is safe by measurement, not luck: ≥24h elapsed is always calendar yesterday or
+older, so the gate's same-day and ahead-of-day words cannot come back. Yesterday gets its
+word, ≥2 days the calendar count, and the month-old thread still falls back to the absolute
+date — the threshold stays elapsed on purpose, a usefulness policy about when a reader
+stops parsing day counts, not a semantics claim. The minutes/hours branches stay as they
+were.
+
+**The compactness charge closes at the rows.** M216 declined to unify the day words without
+"choosing a compactness policy per locale rather than editing rows", and the policy now
+lives as a comment beside the `time.*` block in `dictionaries.ts`: the English column
+counts compactly (`{n}d ago`) because its day stamp sits in the dashboard's fixed-width
+56px `w-14` column (`Dashboard.tsx:411`) — "3 days ago" wraps — while the two Chinese
+columns spell the word form (`{n} 天前`), a Latin abbreviation inside Chinese text reading
+as foreign, and the word form is what the ±1 words beside them already speak.
+
+**The gate grows one structural clause** beside the hand-label family: the feed's helper
+must ask the gate (`relativeDay(locale` present) and must not name the day row at all —
+neither its code nor its comment does, so the clause reads a literal zero, and a reverted
+count or a fresh inline day arithmetic flips it.
+
+Measured on the working copy: `tsc --noEmit` clean, `npm run build` exit 0, `proof-i18n`
+**358/358** · 2,007 keys × 3 locales (vacuity census 386 owing / ceiling 387, unmoved —
+the new clause asserts a positive beside its zero), suite **42/42 · 2,375/2,375**. Code as
+**fc89041**.
+
 ### M303 — the census's population was the shapes it already knew, and the tree carried two it did not
 
 The `Dashboard.tsx:51` alias charge retired here, and it retired the honest way: not by arguing
@@ -6617,12 +6658,13 @@ This is a docs-only milestone, so the suite is quoted as measured rather than as
 changed.
 
 **Still outstanding, re-checked against this tree rather than carried forward**: the
-`time.inDays`/`time.agoDay` compactness policy, the `useEffect` half of the router and the
-populated-state browser walk (#142), M218's `m218d` charging arm, M213's probe-midpoint caveat,
-and the untracked `dev/` scratch (~250 files). Each was looked for in this commit; none of them
-has a later repair to name - and the alias discriminator this block carried is the one M303
-closed, whose section records the shape M218's population still missed and the two sites it
-held.
+`useEffect` half of the router and the populated-state browser walk (#142), M218's `m218d`
+charging arm, M213's probe-midpoint caveat, and the untracked `dev/` scratch (~250 files).
+Each was looked for in this commit; none of them has a later repair to name - and two charges
+this block carried are closed by later milestones: the alias discriminator M303 closed, whose
+section records the shape M218's population still missed and the two sites it held, and the
+`time.inDays`/`time.agoDay` compactness policy M304 closed, whose section records the feed
+leaving the count to the gate and the per-locale word forms declared at the rows.
 
 ### M301 — an empty pool now fails at the cause, in one shared contract
 
