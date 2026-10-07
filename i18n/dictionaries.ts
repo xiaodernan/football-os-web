@@ -849,6 +849,7 @@ const en: Dict = {
 
   "dash.today": "Today's Matches",
   "dash.live": "Live",
+  "dash.liveAll": "All {n} live →",
   "dash.training": "Training Today",
   "dash.coach": "AI Coach",
   "dash.breaking": "Breaking Football",
@@ -2944,6 +2945,7 @@ const zhCN: Dict = {
   "onboarding.manager.desc": "经营俱乐部，球探、转会、模拟整个赛季。",
   "dash.today": "今日比赛",
   "dash.live": "进行中",
+  "dash.liveAll": "全部 {n} 场进行中 →",
   "dash.training": "今日训练",
   "dash.coach": "AI 教练",
   "dash.breaking": "足球快讯",
@@ -5444,6 +5446,7 @@ const zhTW: Dict = {
   "nav.themeToggle": "切換主題",
   "dash.today": "今日比賽",
   "dash.live": "進行中",
+  "dash.liveAll": "全部 {n} 場進行中 →",
   "player.overview": "總覽",
   "player.attributes": "屬性",
   "player.skills": "技能",

@@ -441,6 +441,20 @@ ok(`the dashboard's fixture rows are labelled on the world's clock: the today pa
   `ago=${dashAgo} today=${dashTodayRows}`);
 
 // ---------------------------------------------------------------------------
+// 5f · the live strip's count is the world's, and it has a door
+// ---------------------------------------------------------------------------
+// The strip keeps four cells, but the world is playing far more than four
+// matches at its anchor instant — measured 49, of which 45 were reachable from
+// nowhere on this page. The strip's header now carries the world's in-play
+// count and links to the matches screen's LIVE tab, so the number the page
+// prints must exceed the strip's own capacity — the shape the shipped header
+// (a bare word, no count, no door) did not have.
+const dashLiveAll = (dashText.match(/\bAll (\d+) live\b/) ?? [])[1];
+ok(`the live strip names the world's in-play count and opens the full LIVE tab: the header prints a count bigger than the strip's four cells (${dashLiveAll ?? "none"} in play; strip cells 4)`,
+  dashLiveAll !== undefined && Number(dashLiveAll) > 4,
+  `liveAll=${dashLiveAll ?? "missing"}`);
+
+// ---------------------------------------------------------------------------
 // 6 · what this harness cannot see, demonstrated rather than asserted
 // ---------------------------------------------------------------------------
 const Probe = () => {

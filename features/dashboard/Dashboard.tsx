@@ -46,7 +46,8 @@ export function Dashboard() {
   const profile = state.profile;
   const info = profile ? levelInfo(profile.xp) : null;
 
-  const live = matchesByStatus("LIVE").slice(0, 4);
+  const liveAll = matchesByStatus("LIVE");
+  const live = liveAll.slice(0, 4);
   const today = todayMatches(5);
   const breaking = personalNews.items.slice(0, 4);
   const trending = trendingPlayers(6);
@@ -103,6 +104,11 @@ export function Dashboard() {
         <Panel className="p-0">
           <div className="flex items-center gap-2 border-b px-4 py-2 text-xs font-semibold uppercase tracking-widest text-destructive">
             <span className="fo-live-dot h-2 w-2 rounded-full bg-destructive" /> {t("dash.live")}
+            {/* M294: the strip shows 4 of the world's in-play matches; the count and the
+                door to the full LIVE tab make the other 45 reachable from here. */}
+            <Link to="/matches?status=LIVE" className="ml-auto normal-case tracking-normal hover:underline">
+              {t("dash.liveAll", { n: liveAll.length })}
+            </Link>
           </div>
           <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-4">
             {live.map((m) => <LiveCell key={m.id} m={m} />)}
