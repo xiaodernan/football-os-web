@@ -127,6 +127,8 @@ ok(`every thread is flagged seeded and every comment flagged sample (${T.length}
   T.every((t) => t.seeded === true) && C.every((c) => c.sample === true));
 ok(`no sample comment claims a like (${C.filter((c) => c.likes !== 0).length} would have to be real)`,
   C.every((c) => c.likes === 0));
+// M320 companion: at least one seeded thread has comments, so the "no likes" clause above has a population pin.
+ok("the community feed carries at least one seeded thread with comments", T.some((t) => t.comments.length >= 1));
 ok("authors come only from the declared handle bank — no invented person",
   T.every((t) => HANDLES.includes(t.author)) && C.every((c) => HANDLES.includes(c.author)),
   [...new Set([...T.map((t) => t.author), ...C.map((c) => c.author)].filter((a) => !HANDLES.includes(a)))].join(", "));
@@ -185,6 +187,8 @@ ok(`a fully populated visitor gets all four drafts in the declared order (${all.
   all.map((d) => d.id).join(",") === "starter-career,starter-training,starter-academy,starter-watchlist");
 ok("…and the default limit is 3", buildStarters(FULL).length === 3 && buildStarters(FULL, 4).length === 4 && buildStarters(FULL, 1).length === 1);
 ok("an empty input offers nothing rather than inventing something", buildStarters({}, 5).length === 0);
+// M320 companion: a fully populated visitor gets all four drafts, so the "empty input offers nothing" clause above has a population pin.
+ok("a fully populated visitor gets all four starter drafts", all.length >= 4 && all.every((d) => d.id.startsWith("starter-")));
 
 // Each arm's own admission rule, asserted at the boundary and one either side.
 const GAMES = [{ won: 1, drawn: 1, lost: 0 }, { won: 1, drawn: 1, lost: 1 }, { won: 2, drawn: 0, lost: 1 }];
@@ -258,6 +262,8 @@ const FEEL_CASES = [
 const feelBad = FEEL_CASES.filter(([ppg, want]) => !feels(ppg).startsWith(want));
 ok(`the record-feeling word switches at 1.8 and 1.2, measured on both sides of each (${FEEL_CASES.map(([p, w]) => `${p}→${feels(p)}`).join(" ")})`,
   feelBad.length === 0);
+// M320 companion: the feeling word actually changes across the thresholds, so the "no mismatches" clause above has a population pin.
+ok("the feeling word produces different labels for different points-per-game values", new Set(FEEL_CASES.map(([ppg]) => feels(ppg))).size >= 2);
 ok("…and the sentence never claims a number that is not the one it was given",
   FEEL_CASES.every(([ppg]) => S(buildStarters({ career: { ...career, pointsPerGame: ppg } }, 5)[0].title).includes(`${ppg.toFixed(2)} pts/game`)));
 
