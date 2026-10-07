@@ -111,6 +111,8 @@ ok(`every news thread copies its item's title, tag, published time and credibili
   news.length > 0 && badNews.length === 0, badNews.map((t) => `${t.id}:${t.tag}`).join(", "));
 ok("…so no thread invents a timestamp: a news thread's `at` IS the article's publishedAt",
   news.every((t) => newsFeed.some((n) => n.publishedAt === t.at)));
+// M320 companion: the community feed carries at least one news thread with a valid timestamp, so the "no thread invents" clause above has a population pin.
+ok("the community feed carries at least one news thread with a real timestamp", news.length >= 1 && news[0].at !== undefined);
 ok("…and the credibility figure quoted in the body equals the item's own, as a percentage",
   news.every((t) => {
     const item = newsFeed.find((n) => `t-news-${n.id}` === t.id);
