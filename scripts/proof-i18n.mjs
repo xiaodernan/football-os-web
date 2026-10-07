@@ -2077,6 +2077,24 @@ const okMid = midCount(MID_HEALTHY, Math.floor(MID_HEALTHY.length / 2));
 const okEof = midCount(MID_HEALTHY, MID_HEALTHY.length);
 ok(`the probe's position choice is load-bearing against the shape that exists for it: a fixture broken in its interior and recovered by its end reads ${recMid} at the midpoint (blind under the standing demand) and ${recEof} at end-of-file, where no demand can call it blind, while the healthy fixture reads ${okMid} and ${okEof} at the same two positions (the runaway control above reads 0 under the same arithmetic)`,
   recMid === 0 && recEof === 2 && okMid === 2 && okEof === 2);
+
+// The charge left after the probe's choices: `sourceBalance` reads only where the walk ended,
+// so a wrongness that heals before EOF is invisible to it — the one shape that opens mid-file
+// and heals without any balance change is an unterminated attribute (its quote bails at the
+// newline, `inTag` stays set, and the next `>` closes it as if nothing had happened). On that
+// shape the walker must resume true regions: the healed fragment is charged exactly once, as
+// the attribute it opened, and the caption standing after the heal reads exactly once per half
+// — the same two hits the clean fixture gives. A scanner that stayed lost past the heal would
+// swallow the caption (fewer) or rebuild its regions (more); both redden here. The swallowed
+// span itself charges nothing — a caption inside the recover fixture's open template reads 0,
+// because string content is not code — and that boundary, not a vague fear of mid-file
+// wrongness, is what the interior-of-a-file charge resolves to.
+const MID_HEALED = ["export const Card = () => (", '  <div title="unterminated', "  " + MID_PROBE, ");", ""];
+const healedScan = scanSource(MID_HEALED.join("\n")).hits;
+const healAttr = healedScan.filter((h) => h.kind === "attr:title" && /unterminate/.test(String(h.text))).length;
+const healHits = healedScan.filter((h) => /Probe untranslated/.test(String(h.text))).length;
+ok(`a wrongness that heals before the walk ends leaves true regions behind it: on the unterminated-attribute fixture the healed fragment charges itself exactly once (${healAttr}, as the attribute it opened) and the caption after the heal reads ${healHits} — the two hits the clean fixture reads — while a caption inside the open template above reads 0, because string content is not code`,
+  healAttr === 1 && healHits === 2);
 // Non-vacuity, and deliberately *not* a floor on the total. The previous clause read
 // `openTotal >= 300`, which is a bound on the exact quantity every milestone is trying
 // to shrink: localise three more screens and the check goes red while the scan is
