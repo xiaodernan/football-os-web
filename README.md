@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M290 (a few numbers in that range
+Work ships one milestone per commit and is currently at M291 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6318,6 +6318,29 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M291 — a club with a match in play keeps its next-up projection
+
+ClubDetail pointed its "Next up" projection row at the first entry of the club's
+upcoming list and withheld it unless that entry was `SCHEDULED`, so a club whose next
+fixture was in play lost the row entirely. Measured on the shipped world: 51 of the 73
+clubs have a live match as their next fixture, and 47 of them have a schedulable
+fixture sitting right behind the live one — a row the page could honestly render,
+withheld because of a game it is not about.
+
+The fix points the projection at the next schedulable fixture instead of the first
+upcoming one: `upcoming.find((m) => m.status === "SCHEDULED")`. An in-play match no
+longer suppresses the row; the row describes the fixture that has not kicked off,
+which is what it always claimed to describe.
+
+The pin is `proof-screens` 5d: it renders every club page whose next schedulable
+fixture is priceable in its own competition (59 pages, floor 55) and charges the
+row's own "Next up vs" label text to the page text. The ten clubs whose next
+schedulable fixture is a cross-competition tie are the named boundary — the
+projection prices both sides from domestic metrics, so an out-of-competition
+opponent is excluded by the same rule the page applies, not silently dropped.
+
+Measured: `tsc` clean; `proof-matchstats` 16/16; `proof-screens` 25/25; suite
+**42/42 · 2,362/2,362**; `npm run build` exit 0. Code as **fd400b1**.
 ### M290 — a competition's own page shows its live fixtures
 
 The competition page's two fixture lists were gated on terminal states only: "Next
