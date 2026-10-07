@@ -3865,7 +3865,7 @@ const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nReplie
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1300 && shapeCounts.template === 98 && shapeCounts.expression === 29
+  shapeCounts.literal === 1301 && shapeCounts.template === 98 && shapeCounts.expression === 29
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -3877,7 +3877,7 @@ const plantTick = tickPlant.shape === "literal" && tickPlant.tick === true
 ok(`a literal wearing backticks is still a literal — check 24 and this census read it as one (${[...new Set(tickKeys)].sort().join(", ") || "none"}; planted ticked literal classifies and reports its missing variable: ${plantTick})`,
   [...new Set(tickKeys)].sort().join(",") === "attr.name.decision_making,attr.name.first_touch,attr.name.passing" && plantTick);
 ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
-  litVarSites === 136 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 137 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 29 && exprObjPlant.args[1].trim().startsWith("{"));
@@ -5398,7 +5398,7 @@ ok(`the news record carries no seed-composed summary sentence: the NewsArticle i
 // The number may only fall. Adding a zero-asserting clause without one of the three has to be
 // paid for here, in the same commit — which is the same bargain every other ceiling in this
 // file asks for.
-const VACUITY_CEILING = 385;
+const VACUITY_CEILING = 386;
 const clauseDepth = (text) => {
   let d = 0, str = null, tmpl = 0;
   for (let i = 0; i < text.length; i++) {

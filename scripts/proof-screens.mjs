@@ -478,6 +478,36 @@ ok(`the matches screen's header counts the world's family, not the 60 rows it ke
   `printed=${matchesPrinted ?? "none"} world=${scheduledTotal}`);
 
 // ---------------------------------------------------------------------------
+// 5h · the search screen's group counters count the world, not the cut
+// ---------------------------------------------------------------------------
+// SearchPage renders globalSearch(term, 60) — five kinds ranked together, then cut to 60
+// survivors — and printed each surviving group's length as its count. A broad query fills
+// the 60 slots with high-scored players and clubs, so q="a" printed player 48 / club 12
+// while the world holds 591 and 55, and 1,464 matching matches plus 23 news items left the
+// page with no trace they existed. The counters now read searchTotalsByType — the uncut
+// per-kind totals — so the numbers the page prints must be populations the 60-slot cut
+// cannot produce.
+const searchQ = "a";
+const searchTotals = FOOT.searchTotalsByType(searchQ);
+const searchCapped = FOOT.globalSearch(searchQ, 60);
+const cappedByType = new Map();
+for (const r of searchCapped) cappedByType.set(r.type, (cappedByType.get(r.type) ?? 0) + 1);
+const searchText = (() => {
+  if (!FWORLD || !ROUTER) return "";
+  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  globalThis.window.location.hash = `#/search?q=${searchQ}`;
+  try { return nodesOf(renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld))))).join(" "); }
+  catch { return ""; }
+})();
+const printedFound = [...searchText.matchAll(/\b(\d+) found\b/g)].map((m) => Number(m[1]));
+const visibleKinds = [...cappedByType.keys()].filter((k) => cappedByType.get(k) > 0);
+const expectedFound = visibleKinds.map((k) => searchTotals[k]).sort((a, b) => a - b);
+const actualFound = printedFound.slice().sort((a, b) => a - b);
+ok(`the search screen's group counters count the world's uncut family, not the 60-slot cut's leftovers (q="${searchQ}" prints ${actualFound.join("/")} found; cut holds ${visibleKinds.map((k) => `${k} ${cappedByType.get(k)}`).join(", ")}; world ${visibleKinds.map((k) => `${k} ${searchTotals[k]}`).join(", ")})`,
+  actualFound.length === expectedFound.length && actualFound.every((n, i) => n === expectedFound[i]) && Math.max(...expectedFound) > 60,
+  `printed=[${actualFound.join(",")}] expected=[${expectedFound.join(",")}]`);
+
+// ---------------------------------------------------------------------------
 // 6 · what this harness cannot see, demonstrated rather than asserted
 // ---------------------------------------------------------------------------
 const Probe = () => {

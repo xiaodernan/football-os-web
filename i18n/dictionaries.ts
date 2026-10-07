@@ -1358,6 +1358,7 @@ const en: Dict = {
   "fw.search.empty": "Type to search",
   "fw.search.emptyHint": "Results are grouped by entity type.",
   "fw.search.noMatch": "No matches for “{term}”",
+  "fw.search.found": "{n} found",
   // Search-result subtitles (spec §36). The subtitle slot is a row, so each producer
   // names a sentence key and hands only values for its slots: proper nouns pass
   // through raw, while a code (group, kind, status) resolves through CODE_VARS.
@@ -3439,6 +3440,7 @@ const zhCN: Dict = {
   "fw.search.empty": "输入以搜索",
   "fw.search.emptyHint": "结果按实体类型分组。",
   "fw.search.noMatch": "没有与“{term}”匹配的结果",
+  "fw.search.found": "找到 {n} 项",
   "sr.clubLine": "{nation} · {competition}",
   "sr.playerLine": "{group} · {club} · 综合 {overall}",
   "sr.competitionLine": "{nation} · 赛事",
@@ -5285,6 +5287,7 @@ const zhTW: Dict = {
   "fw.search.empty": "輸入以搜尋",
   "fw.search.emptyHint": "結果依實體類型分組。",
   "fw.search.noMatch": "沒有與「{term}」相符的結果",
+  "fw.search.found": "找到 {n} 項",
   "sr.clubLine": "{nation} · {competition}",
   "sr.playerLine": "{group} · {club} · 綜合 {overall}",
   "sr.competitionLine": "{nation} · 賽事",

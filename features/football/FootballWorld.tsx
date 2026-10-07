@@ -14,6 +14,7 @@ import {
   trendingPlayers,
   newsFeed,
   globalSearch,
+  searchTotalsByType,
   DEMO_MODE,
 } from "@/data/footballService";
 import type { Club, Match, PlayerRef, SearchKind, Standing } from "@/domain/types";
@@ -525,6 +526,10 @@ function SearchPage() {
   const { query, navigate, path } = useRouter();
   const [term, setTerm] = useState(query.get("q") ?? "");
   const results = useMemo(() => globalSearch(term, 60), [term]);
+  // M296 — the group counters count the world's uncut totals, not what survived the 60-slot
+  // cut: q="a" once printed player 48 / club 12 while the world holds 591 and 55, and whole
+  // kinds (1,464 matching matches) left the page with no trace they existed.
+  const totals = useMemo(() => searchTotalsByType(term), [term]);
   const grouped = useMemo(() => {
     const g: Record<string, typeof results> = {};
     for (const r of results) (g[r.type] ??= []).push(r);
@@ -547,7 +552,7 @@ function SearchPage() {
         if (!items?.length) return null;
         return (
           <div key={type} className="space-y-2">
-            <SectionTitle title={t(`fw.type.${type}`)} hint={`${items.length}`} />
+            <SectionTitle title={t(`fw.type.${type}`)} hint={t("fw.search.found", { n: totals[type] ?? items.length })} />
             <div className="grid gap-2 sm:grid-cols-2">
               {items.map((r) => (
                 <EntityLink key={r.type + r.id} to={r.to}>

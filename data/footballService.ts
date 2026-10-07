@@ -202,7 +202,11 @@ function score(hay: string, needle: string): number {
   return i >= n.length ? 30 : 0;
 }
 
-export function globalSearch(query: string, limit = 24): SearchResult[] {
+// M296. The five retrieval scans, uncut. globalSearch ranks across every kind and then
+// truncates to the caller's limit, so a broad query fills the limit with high-scored rows
+// while whole kinds silently vanish from the survivors — anything derived from the cut
+// result describes the cut, not the world.
+function searchAll(query: string): (SearchResult & { s: number })[] {
   const q = query.trim();
   if (!q) return [];
   const out: (SearchResult & { s: number })[] = [];
@@ -227,7 +231,23 @@ export function globalSearch(query: string, limit = 24): SearchResult[] {
     const s = score(label, q);
     if (s > 0) out.push({ type: "match", id: m.id, title: label, subtitle: { key: "sr.matchLine", vars: { status: m.status } }, to: `/matches/${m.id}`, s });
   }
-  return out.sort((a, b) => b.s - a.s).slice(0, limit).map(({ s: _s, ...r }) => r);
+  return out;
+}
+
+export function globalSearch(query: string, limit = 24): SearchResult[] {
+  return searchAll(query)
+    .sort((a, b) => b.s - a.s)
+    .slice(0, limit)
+    .map(({ s: _s, ...r }) => r);
+}
+
+// M296. Per-kind totals over the uncut scan: the search screen's group counters count these,
+// not the truncated page's leftovers (measured 2026-10-07: q="a" printed player 48 / club 12
+// while the world holds 591 and 55, and 1,464 matching matches rendered nowhere at all).
+export function searchTotalsByType(query: string): Record<SearchKind, number> {
+  const totals: Record<SearchKind, number> = { club: 0, player: 0, competition: 0, match: 0, news: 0 };
+  for (const r of searchAll(query)) totals[r.type]++;
+  return totals;
 }
 
 export function comparePlayers(aId: string, bId: string) {
