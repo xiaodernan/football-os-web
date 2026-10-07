@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M304 (a few numbers in that range
+Work ships one milestone per commit and is currently at M305 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -4223,10 +4223,15 @@ Measured on the working copy: `npm run build` (which runs `tsc --noEmit` first) 
 tsc no output / exit 0, build exit 0, suite **37/37 proof scripts proven . 1963/1963 checks counted . exit 0**, and no retry line either this time. `proof-i18n` stays at **233** checks — 26b was rewritten, not extended, which is the same
 trade M216 made: the clause now covers more shapes with the same number of claims.
 
-**Still outstanding**: the cross-function flow above; the `sentence`-bucket charging arm (`m218d` needs
-the plants to declare their charged outcome, not just their bucket); the compactness
-of `time.inDays`/`time.agoDay` beside `Tomorrow`; the
+**Still outstanding**: the cross-function flow above; the
 populated-state browser walk (#142); and the untracked `dev/` scratch.
+
+Two charges this block carried have closers to name. The `sentence`-bucket charging arm —
+`m218d`, "the plants declare their charged outcome, not just their bucket" — is what M219
+built one milestone later: the two-declaration split (`REL_CHARGED_KINDS` for the census's
+rule, `REL_PLANT_CHARGED` for the plants' own expectation, coverage over all four buckets,
+mutation witnesses `m219a`/`m219b`), and M305's section records the strike. The compactness
+of `time.inDays`/`time.agoDay` beside `Tomorrow` closed at M304, at the rows and in the feed.
 
 ### M219 — the charging rule and the plant table must not be the same list
 
@@ -6506,6 +6511,33 @@ This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
 
+### M305 — the charge outlived its own closer by one milestone
+
+M300's sweep read the ten `Still outstanding` blocks of M208–M218 and struck only what a later
+milestone demonstrably closed — and M218's line survived the sweep carrying `m218d`, the
+`sentence`-bucket charging arm, "needs the plants to declare their charged outcome, not just
+their bucket". The tree disagrees with the ledger, and the closer is the very next milestone:
+M219's section opens by naming the gap as its own — "the plants graded *classification* only,
+so an arm that dropped `sentence` from the charged list would have left the harness fully
+green" — and closes it with the two-declaration split (`REL_CHARGED_KINDS` for the census's
+rule, `REL_PLANT_CHARGED` for the plants' independent expectation, commit **9b9d3de**), a
+coverage floor requiring all four buckets in the plant table, and two mutation witnesses
+(`m219a` drops `sentence` from the charged list, `m219b` deletes `selection` from the plant
+table). "The plants declare their charged outcome" is what that split is; the M218 block
+just never heard about it. Today the clause reads 10 plants over 4 buckets, all as
+predicted; untested buckets: none.
+
+Struck with the closer named, per M300's rule. And one more line in the same block dies
+today rather than later: the compactness of `time.inDays`/`time.agoDay` beside `Tomorrow` —
+M304 closed it at the rows and in the feed this same day, so M218's block drops it with the
+pointer to M304's section. What the block still carries is what has no closer yet: the
+cross-function flow caveat, the populated-state browser walk (#142), and the untracked
+`dev/` scratch. M302's re-checked block drops the `m218d` line the same way.
+
+This is a docs-only milestone: no source file changes, so the suite is quoted unchanged from
+the M304 plane — `proof-i18n` **358/358** · 2,007 keys × 3 locales (vacuity census 386 owing
+/ ceiling 387), suite **42/42 · 2,375/2,375**, `npm run build` exit 0.
+
 ### M304 — one row, two calendars: the feed counted its own days into the gate's word
 
 M216's rule is that a reader counts the days the wall calendar shows, and `relativeDay` in
@@ -6658,13 +6690,15 @@ This is a docs-only milestone, so the suite is quoted as measured rather than as
 changed.
 
 **Still outstanding, re-checked against this tree rather than carried forward**: the
-`useEffect` half of the router and the populated-state browser walk (#142), M218's `m218d`
-charging arm, M213's probe-midpoint caveat, and the untracked `dev/` scratch (~250 files).
-Each was looked for in this commit; none of them has a later repair to name - and two charges
-this block carried are closed by later milestones: the alias discriminator M303 closed, whose
-section records the shape M218's population still missed and the two sites it held, and the
+`useEffect` half of the router and the populated-state browser walk (#142), M213's
+probe-midpoint caveat, and the untracked `dev/` scratch (~250 files). Each was looked for in
+this commit; none of them has a later repair to name - and three charges this block carried
+are closed by later milestones: the alias discriminator M303 closed, whose section records
+the shape M218's population still missed and the two sites it held; the
 `time.inDays`/`time.agoDay` compactness policy M304 closed, whose section records the feed
-leaving the count to the gate and the per-locale word forms declared at the rows.
+leaving the count to the gate and the per-locale word forms declared at the rows; and
+M218's `m218d` charging arm, closed by M219 one milestone after it was charged - the
+two-declaration split whose section records the mutation witnesses - struck at M305.
 
 ### M301 — an empty pool now fails at the cause, in one shared contract
 
