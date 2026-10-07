@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M293 (a few numbers in that range
+Work ships one milestone per commit and is currently at M294 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6348,6 +6348,32 @@ clock 14 days behind, and stays `13d ago` on the reader's own. `proof-screens`
 Measured: `tsc` clean; `proof-i18n` **357/357** · 2,005 keys × 3 locales (vacuity
 census 383/384); `proof-screens` **26/26**; suite **42/42 · 2,364/2,364**; `npm run build`
 exit 0. Code as **6998f1c**.
+### M294 — the live strip names the world's in-play count
+
+The dashboard's live strip kept four cells and its header printed the bare
+word "Live" — no count, no door. Measured on the shipped world: 49 matches are
+in play at the anchor instant (UCL alone 17), the strip shows 4 of them, and
+the other 45 were reachable from nowhere on the page the reader lands on — the
+today panel selects `SCHEDULED` only, so a match left the dashboard the moment
+it kicked off. Search reaches all 49 by club name and every competition's page
+leads with its live fixtures (M290), but the front door hid most of the
+world's present.
+
+The fix is a count and a door: the strip's header now prints the world's
+in-play total (`dash.liveAll`, three locales) and links to the matches
+screen's LIVE tab — a deep link the tab already honoured via `?status=`. The
+number the header prints is the world's (49), not the strip's own capacity
+(4).
+
+Two gates. `proof-screens` 5f charges the dashboard's English render: the
+header's count must exceed the strip's four cells — the exact shape the bare
+word shipped without. `proof-i18n`'s call-shape census pins the new literal
+vars site (1,300 literal / 136 with placeholders), and the new key joins the
+parity checks the dictionary already walks.
+
+Measured: `tsc` clean; `proof-i18n` **357/357** · 2,006 keys × 3 locales (vacuity
+census 384/384); `proof-screens` **27/27**; suite **42/42 · 2,365/2,365**; `npm run build`
+exit 0. Code as **6a391ce**.
 ### M292 — today reads as a word, not a bare clock
 
 `relativeDay`'s within-a-day branch was the one arm with no reader word: an
