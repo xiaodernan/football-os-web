@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M298 (a few numbers in that range
+Work ships one milestone per commit and is currently at M299 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -4119,9 +4119,7 @@ only way to tell a quiet tree from a lucky one.
 **Still outstanding**: the alias hole above; `time.inDays`/`time.agoDay` still print compact English
 abbreviations (`in 3d`, `3d ago`) that the community feed shares — the dashboard now reads them
 beside `Tomorrow`, which is consistent but not pretty, and unifying them means choosing a compactness
-policy per locale rather than editing rows; the four displayed English sample prompts (M217); the
-`data/ai.ts` prose ledger and the `attributeLabel()` calls inside it (`archetypeLabelEn` is now a
-*declared* model-input door, but 12 sentences a person reads still interpolate English words); the 46
+policy per locale rather than editing rows; the four displayed English sample prompts (M217); the 46
 raw-UI debt lines in `features/sim/SimulationLab.tsx`; the plan-id collision; the populated-state
 browser walk; and the untracked `dev/` scratch.
 
@@ -6473,6 +6471,32 @@ ceiling, not the owing.
 Measured: `tsc` clean; `proof-i18n` **357/357** · 2,007 keys × 3 locales (vacuity
 census 386 owing / ceiling 387); `proof-screens` **31/31**; suite **42/42 · 2,369/2,369**; `npm run build`
 exit 0. Code as **b3b849c**.
+### M299 — the ledger line that outlived its own repair
+
+M216's outstanding list charged `data/ai.ts` with "12 sentences a person
+reads still interpolate English words", and the charge survived every
+later sync — but the code it described did not. M230 built the NAME
+contract in `domain/rowText.ts` (a row's variable is dispatched by its
+NAME: `focus`/`attrs`/`trained`/`last`/`new`/`arch`/`arch2`/`drill`
+resolve part by part through `codeWord`, `target`/`game` resolve as
+keys, the load zone through `zoneKey()`) and rewired the coach's rows to
+it. The ledger line was reading a repair that had already happened.
+
+M299 charges the module instead of the memory. Static: every vars name
+`ai.ts` writes is a code var, a key var, or one of five plain
+word/number slots, and every joined list is a code var; all 25 keys the
+module names resolve in all three dictionaries. Dynamic: eleven
+`generatePlan` variants — targeted exact/partial (the partial arm needs
+a session too short to carry every asked attribute), the three load
+zones with caution both with and without a ratio, a flagged request, a
+memory that continues and one that rotates, recent history — render 372
+rows across the locales with no raw attribute key, no placeholder, no
+bare key and no broken figure, and the variants reach all 22 coach keys
+the module names, so no sentence's leak check is vacuous. The M216
+ledger line loses its `data/ai.ts` item in this commit.
+
+Measured: `tsc` clean; `proof-ai-grounding` **68/68**; suite **42/42 · 2,374/2,374**; `npm run build`
+exit 0. Code as **812a1d4**.
 ### M292 — today reads as a word, not a bare clock
 
 `relativeDay`'s within-a-day branch was the one arm with no reader word: an
