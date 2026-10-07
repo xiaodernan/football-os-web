@@ -46,9 +46,17 @@ const localMidnight = (value: string | number | Date): number => {
  *  because a DST day is 23 or 25 hours) and ±1 day has its own word. Within the reader's own
  *  day there is no honest day count either, so the instant rides the locale's today word and
  *  its clock time — formatted their way — rides along as the variable; until M292 the branch
- *  printed the bare clock alone, the last arm with no reader word. */
-export function relativeDay(locale: Locale, iso: string): RowText {
-  const d = Math.round((localMidnight(new Date(iso)) - localMidnight(Date.now())) / 86_400_000);
+ *  printed the bare clock alone, the last arm with no reader word.
+ *
+ *  M293 lets the caller say WHICH now to measure against. The default is still the reader's
+ *  clock — a timestamp the reader wrote (an activity line's completedAt) is theirs to read.
+ *  But a panel that selects on the demo world's clock must label on it too: the dashboard's
+ *  today panel picked its fixtures off the world's anchor (M289) and then measured every
+ *  kickoff against the reader's midnight, so on a tree whose anchor drifted two weeks behind,
+ *  the panel promised "today" and printed "14d ago" on every row, and a fixture the world
+ *  counts six days out read "8d ago" — the direction inverted by drift alone. */
+export function relativeDay(locale: Locale, iso: string, now: string | number | Date = Date.now()): RowText {
+  const d = Math.round((localMidnight(new Date(iso)) - localMidnight(now)) / 86_400_000);
   if (d > 1) return { key: "time.inDays", vars: { n: d } };
   if (d === 1) return { key: "time.tomorrow" };
   if (d === 0) return { key: "time.today", vars: { at: formatDate(locale, iso, { hour: "2-digit", minute: "2-digit" }) } };

@@ -2219,12 +2219,17 @@ const allSrc = files.map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]);
 // arithmetic reaches `Date.now()` through a call wrapper (M216's door, which the widened pattern
 // caught) or it reaches a *hoisted* `now` (`const now = Date.now()` in the same file, subtracted
 // from a parsed instant, which nothing caught). Candidates are therefore built from what each file
-// declares: every name bound to `Date.now()` becomes a receiver beside the literal itself. Building
+// declares: every name bound to `Date.now()` becomes a receiver beside the literal itself. M293
+// adds the binding shape its door now ships — a parameter default (`now = Date.now()`), which is
+// the same hoist wearing a signature. Building
 // a RegExp out of a string is where escapes go missing, so the receivers are reported in the plant
 // verdicts and every plant demands exactly one candidate — a pattern that matches nothing cannot
 // hide behind an agreeable empty census.
 const REL_INSTANT = "new Date\\([^)]*\\)";
-const aliasNames = (code) => [...code.matchAll(/(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*Date\.now\(\)/g)].map((m) => m[1]);
+const aliasNames = (code) => [
+  ...[...code.matchAll(/(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*Date\.now\(\)/g)].map((m) => m[1]),
+  ...[...code.matchAll(/([A-Za-z_$][\w$]*)\s*\??:\s*[^=,)]*=\s*Date\.now\(\)/g)].map((m) => m[1]),
+];
 function relCandidates(code) {
   const receivers = ["Date\\.now\\(\\)", ...aliasNames(code).map((a) => a.replace(/\$/g, "\\$"))];
   const out = [];
@@ -2287,6 +2292,7 @@ const REL_PLANTS = [
   ["planted wrapped arithmetic in a row-returning helper", "function plantedWrappedRow(iso: string): RowText {\n  const ms = __mid(new Date(iso)) - __mid(Date.now());\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", "row"],
   ["planted aliased now in a string-returning helper", "function plantedAlias(iso: string): string {\n  const __now = Date.now();\n  const ms = __now - new Date(iso).getTime();\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", "sentence"],
   ["planted aliased now feeding only a comparison", "function plantedFilter(isos: string[]) {\n  const __now = Date.now();\n  return isos.filter((s) => Math.abs(new Date(s).getTime() - __now) < 2 * 86400000);\n}\n", "selection"],
+  ["planted parameter-default now in a row-returning helper", "function plantedParamNow(iso: string, now: Date = Date.now()): RowText {\n  const ms = now - new Date(iso).getTime();\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", "row"],
 ];
 const plantVerdicts = REL_PLANTS.map(([name, src, want]) => {
   const cs = relCandidates(src);
@@ -2385,6 +2391,21 @@ ok(`the door counts the reader's calendar days over ${REL_CASES.length} planted 
   /-2d ago/.test(oldRelTime(-2)) && /in 3d/.test(oldRelTime(3)) &&
   !/-\d/.test(translate("en", "time.agoDay", { n: 2 })) &&
   !/\b(in|ago)\b/.test(translate("zh-CN", "time.inDays", { n: 3 })));
+
+// 26c-2. The door can be told WHICH now to measure against. The dashboard's fixture rows
+//        are the caller that needs it: the panel selects its fixtures on the world's clock
+//        (M289) and must label on it too, but the door only ever measured the reader's — on
+//        a tree whose anchor drifts two weeks behind, a fixture the world counts six days
+//        out read "8d ago". The default stays the reader's clock, and a planted reference
+//        now flips the answer exactly the way the drifted panel shipped it.
+const relNowBad = [];
+const driftNow = dayAt(-14, 9);
+const flipped = relativeDay("en", dayAt(-13, 9), driftNow);
+if (relativeDay("en", dayAt(-14, 9), driftNow).key !== "time.today") relNowBad.push("the reference clock's own day is not today on itself");
+if (flipped.key !== "time.tomorrow" || flipped.vars?.n !== undefined) relNowBad.push("a reader-past day is not the bare tomorrow word on a 14d-behind clock");
+if (relativeDay("en", dayAt(-13, 9)).key !== "time.agoDay" || relativeDay("en", dayAt(-13, 9)).vars?.n !== 13) relNowBad.push("the default stopped measuring the reader's own clock");
+ok(`the door measures against a given now: a day the reader calls 13d ago reads as tomorrow on a clock 14 days behind, and stays 13d ago on the reader's own (${relNowBad.join(" | ") || "clean"})`,
+  relNowBad.length === 0);
 
 // 26d. Provider vocabulary: the one English row a non-screen may ask for.
 //      `t()` answers in the reader's language, which is right for a person and wrong for a

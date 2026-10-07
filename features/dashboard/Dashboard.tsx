@@ -10,6 +10,7 @@ import {
   getPlayer,
   upcomingMatchesForClub,
   todayMatches,
+  DEMO_ANCHOR_MS,
   formatValue,
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
@@ -397,9 +398,11 @@ function FixtureRow({ m }: { m: Match }) {
   const { locale, t } = useI18n();
   const h = getClub(m.homeClubId);
   const a = getClub(m.awayClubId);
+  // Both call sites list world fixtures, so the label measures against the world's
+  // anchor — the same clock the lists select on — not the reader's (M293).
   return (
     <Link to={`/matches/${m.id}`} className="flex items-center gap-3 py-2.5 hover:bg-secondary/40">
-      <div className="w-14 shrink-0 text-xs text-muted-foreground">{rowLine(relativeDay(locale, m.kickoff), t)}</div>
+      <div className="w-14 shrink-0 text-xs text-muted-foreground">{rowLine(relativeDay(locale, m.kickoff, DEMO_ANCHOR_MS), t)}</div>
       <div className="flex flex-1 items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
           <span className="truncate text-right text-sm">{h?.name}</span>
