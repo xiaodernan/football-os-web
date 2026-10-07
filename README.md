@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M301 (a few numbers in that range
+Work ships one milestone per commit and is currently at M302 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -3189,9 +3189,7 @@ ceiling there is 149 while the tree currently reports **58 across 2 files**, bec
 session's in-flight work has been paying that debt down; the number belongs to them, not to this
 commit, which is why it is quoted as measured rather than as a milestone result.
 
-**Still outstanding** (deliberately not faked): the starter drafts' prose is still English literals in
-a domain module — keying them is #184+, and `community.ts` is at its prose cap, so that work has to
-move the strings rather than add to them; and a visitor's own post, once written, is stored with
+**Still outstanding** (deliberately not faked): a visitor's own post, once written, is stored with
 `likes` they can add to, which is fine, but the board still has no server behind it.
 
 ### M205 — the profile's cross-mode record had never been read by a gate
@@ -3311,10 +3309,9 @@ set names the file *and* the key it displaced stops being reachable), one zh-TW 
 `{n}` dropped from a translated placeholder, and one `DYN_SITES` entry removed (the count drift
 message reads `(2 vs 3)`). Build clean, suite **33/33 proof scripts — 1727 checks**.
 
-**Still outstanding** (deliberately not faked): the two remaining screens, Simulation Lab and Data
-Room, are localisation debt of 51 and 29 hits and are untouched here; and this milestone was landed
-on a worktree another session was writing to, so its `player.*` dictionary keys and call sites are
-this commit's content too — the provenance is a takeover, not a solo author.
+**Provenance** (kept, and not an outstanding charge): this milestone was landed on a worktree another
+session was writing to, so its `player.*` dictionary keys and call sites are this commit's content
+too — the provenance is a takeover, not a solo author.
 
 
 ### M208 — the Data Room speaks the reader's language, and the last fixture date goes through the door
@@ -6502,13 +6499,63 @@ What the audit charged and the tree still carries stays exactly as written:
 `weightedPick([])` throwing where `pick([])` returns `undefined`, the alias hole
 at `Dashboard.tsx:51` waiting on a shape-based discriminator, the compactness
 policy for `time.inDays`/`time.agoDay`, the `useEffect` half of the router and
-the populated-state browser walk (#142), the `lib/hooks.ts`/`theme.tsx`/`utils.ts`
-exemptions, M218's `m218d` charging arm, M213's probe-midpoint caveat, and the
-untracked `dev/` scratch.
+the populated-state browser walk (#142), M218's `m218d` charging arm, M213's
+probe-midpoint caveat, and the untracked `dev/` scratch.
 
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M302 — two more outstanding charges whose repairs had already landed
+
+M300 read the `Still outstanding` blocks of M208–M218 against the tree and struck the charges a
+later milestone had demonstrably closed. It stopped at M218. This unit reads the blocks from M219
+onward the same way, and two charges are closed the same way — each named here with the milestone
+that closed it and the gate that holds it now, because a charge that outlives its repair is worse
+than no charge: it spends a reader's attention on work that is already done.
+
+**The starter drafts' prose (M207's block, "keying them is #184+, and `community.ts` is at its
+prose cap").** M243 moved the board's seeded content onto rows and M244 finished the four
+`buildStarters` drafts, so the module that was "at its prose cap" is at zero: `community.ts`'s cap
+went 36 → 21 → 0 and it joined `PROSE_ZERO`. The claim that the work "has to move the strings
+rather than add to them" was true when written and is now moot — the strings were keyed, in three
+locales, not relocated. Held by `DOMAIN_PROSE_CEILING = 0`, the per-module caps summing to 0, and
+the empty inventory line.
+
+**Simulation Lab and Data Room (M207's block, "localisation debt of 51 and 29 hits").** Both files
+are in `RAW_COVERED` by name (`features/sim/SimulationLab.tsx`, `features/analytics/DataRoom.tsx`),
+the clause that walks the covered set reports `none`, and the debt outside it is `0 across 0 files`
+against a ceiling of 0. The 51 and 29 were real; they were paid down by the milestones that added
+those two paths to the covered set.
+
+**The three library exemptions (M300's own carry-forward list, "the `lib/hooks.ts`/`theme.tsx`/
+`utils.ts` exemptions").** `proof-coverage`'s `EXEMPT` table holds one entry now — `src/main.tsx`,
+the SPA entry — and the clause that keeps it honest asserts exactly that (`Object.keys(EXEMPT)
+.length === 1`, and every entry names why). `lib/hooks.ts` was retired by M238 when `proof-storage`
+began rendering it, `lib/utils.ts` by M239's screen proof, and `theme.tsx` is reached the same way;
+the gate's own comment records the two retirements by name. The clause at the bottom of that file
+is the strongest form of the claim: the directories the gate was built around carry *not one*
+exemption between them.
+
+**What stays, and why.** The same M207 block's other half — "the board still has no server behind
+it" — is untouched: this project is deliberately local-only, and no later milestone changed that.
+M207's second paragraph is relabelled **Provenance**: it records that the commit was landed on a
+worktree another session was writing to, which is a fact about authorship rather than work still
+owed, and `Still outstanding` was the wrong heading for it.
+
+Also fixed: the missing blank line between M300's and M301's sections.
+
+This is a docs-only milestone, so the suite is quoted as measured rather than as a result:
+`proof-i18n` **357/357** · 2,007 keys × 3 locales (vacuity census **386 owing / ceiling 387**),
+`proof-coverage` **24/24**, suite **42/42 · 2,374/2,374**, `npm run build` exit 0. No source file
+changed.
+
+**Still outstanding, re-checked against this tree rather than carried forward**: the
+`Dashboard.tsx:51` alias discriminator, the `time.inDays`/`time.agoDay` compactness policy, the
+`useEffect` half of the router and the populated-state browser walk (#142), M218's `m218d` charging
+arm, M213's probe-midpoint caveat, and the untracked `dev/` scratch (~250 files). Each of the six
+was looked for in this commit; none of them has a later repair to name.
+
 ### M301 — an empty pool now fails at the cause, in one shared contract
 
 M210's ledger line — "`weightedPick([])` still throws where `pick([])` returns
