@@ -339,6 +339,8 @@ ok("tempo, press, fatigue, morale and form are carried into the engine untouched
 // 5 · careerForm — the last-five rungs the advisor and the projection both use.
 // ---------------------------------------------------------------------------
 ok("a career with no fixtures has no form at all (exactly 0, not a neutral half-way value)", careerForm(st()) === 0);
+// M318 companion: a career with fixtures produces non-zero form, so the "no form" clause above has a population pin.
+ok("a career with five wins shows positive form", near(careerForm(st({ results: runOf("WWWWW") })), 1));
 ok("five wins are the ceiling (+1)", near(careerForm(st({ results: runOf("WWWWW") })), 1));
 ok("five losses are the floor (−1)", near(careerForm(st({ results: runOf("LLLLL") })), -1));
 ok("five draws are the hand value (5/15)×2 − 1", near(careerForm(st({ results: runOf("DDDDD") })), (5 / 15) * 2 - 1));
@@ -529,6 +531,8 @@ ok("a balanced mentality is always explained as a threshold outcome, never as an
   PREPS.filter(({ p }) => p.recommended.mentality === 0).every(({ p }) => /threshold/i.test(say(p.rationale[0])) && !/even/i.test(say(p.rationale[0]))));
 ok("no club still gets advice that calls an edge of +4 or more an even matchup",
   CONTRADICTED.length === 0);
+// M318 companion: at least one club receives balanced mentality advice, so the "no contradictions" clause above has a population pin.
+ok("at least one club receives balanced mentality advice (edge within threshold)", PREPS.some(({ p }) => p.recommended.mentality === 0));
 ok("the sentence that used to lie is gone from the model itself",
   !/Even matchup on paper/.test(SRC));
 // Every sentence in matchPrep that repeats a figure the panel ALSO prints as a
@@ -980,6 +984,8 @@ ok("the summary prints the career's own points, never the live table's total",
   SUM.points === handPts(played6.results) && liveStandings(played6).find((r) => r.clubId === US).points !== SUM.points);
 ok("ppg is round2(points/played) and exactly 0 before the first fixture",
   SUM.ppg === r2(SUM.points / SUM.played) && seasonSummary(st()).ppg === 0);
+// M318 companion: a career with points shows positive ppg, so the "exactly 0" clause above has a population pin.
+ok("a career with wins shows positive points-per-game", seasonSummary(played6).ppg > 0);
 ok("the record line prints the W-D-L, the goals and the signed goal difference the fields carry",
   (() => { const l = say(SUM.evidence[0]); return l.startsWith(`${SUM.won}-${SUM.drawn}-${SUM.lost} from ${SUM.played} fixtures`) && l.includes(`${SUM.gf} scored, ${SUM.ga} conceded`) && l.includes(`GD ${SUM.gd >= 0 ? "+" : ""}${SUM.gd}`); })());
 ok("the clean-sheet count pluralises on its own value",
@@ -987,6 +993,8 @@ ok("the clean-sheet count pluralises on its own value",
 const DRAWS = st({ results: [res(RIV[0], 1, 1), res(RIV[1], 2, 2)] });
 ok("a career of draws has no biggest win and no heaviest defeat (null, not a fabricated 0-0)",
   (() => { const s = seasonSummary(DRAWS); return s.bestWin === null && s.worstLoss === null && s.won === 0 && s.lost === 0 && s.drawn === 2; })());
+// M318 companion: a career with wins and losses produces non-null best/worst records, so the "no biggest win" clause above has a population pin.
+ok("a career with mixed results shows a biggest win and heaviest defeat", seasonSummary(played6).bestWin !== null && seasonSummary(played6).worstLoss !== null);
 const TIEBEST = st({ results: [res(RIV[0], 3, 0), res(RIV[1], 3, 0)] });
 const TIEWORST = st({ results: [res(RIV[0], 0, 3), res(RIV[1], 0, 3)] });
 ok("the FIRST of two equally big wins is the one remembered (a strict > comparison, not >=)",
@@ -1007,6 +1015,8 @@ ok("the honour follows the declared ladder over position, table size and complet
 const TITLE = st({ results: Array.from({ length: TOTAL }, (_, i) => res(RIV[i % RIV.length], 8, 0)) });
 ok("a completed title run does print the champions honour (the ladder is reachable, not decorative)",
   (() => { const s = seasonSummary(TITLE); return s.complete === true && s.position === 1 && s.honour.label.key === "mgr.honourChampions" && s.honour.tone === "good"; })());
+// M318 companion: a completed season with a league position produces an honour, so the "no honour" clause above has a population pin.
+ok("a completed season with a top position shows champions honour", seasonSummary(TITLE).honour !== null && seasonSummary(TITLE).honour.label.key === "mgr.honourChampions");
 const LEAD_NOT_DONE = st({ results: Array.from({ length: TOTAL - 1 }, (_, i) => res(RIV[i % RIV.length], 8, 0)) });
 ok("leading an unfinished season prints the top-place honour, not the champions one",
   (() => { const s = seasonSummary(LEAD_NOT_DONE); return s.complete === false && s.position === 1 && s.honour.label.key === "mgr.honourTop"; })());
