@@ -377,6 +377,92 @@ if (vf) {
     again.confidence === ans.confidence);
 }
 
+// ---- M299: the coach's diagnosis sentences obey the var-name contract; the M216 ledger line closes ----
+// M216's ledger charged data/ai.ts with "12 sentences a person reads still interpolate
+// English words". M230 answered it by building the NAME contract — a row's variable is
+// dispatched by its NAME (`focus`/`attrs`/`trained`/`last`/`new`/`arch`/`arch2`/`drill`
+// resolve part by part through `codeWord`, `target`/`game` resolve as keys, `zone` through
+// `zoneKey()`) — but the ledger line was never cleared. This block closes it against the
+// provider itself: every vars slot the module writes dispatches by name, every coach key
+// the module names is reached by a variant below and resolves in all three dictionaries,
+// and eleven runs of generatePlan render their diagnosis, rationale and sources with no
+// raw attribute key, no English label, no bare key and no broken figure in any locale.
+{
+  const { coachProvider } = await server.ssrLoadModule("/data/ai.ts");
+  const { isCodeVar, isKeyVar } = await server.ssrLoadModule("/domain/rowText.ts");
+  const { baselineAttributes, ATTRIBUTE_KEYS } = await server.ssrLoadModule("/domain/attributes.ts");
+
+  // Static: every vars slot written in ai.ts, its NAME and whether its value is a joined list.
+  const aiSrc = readFileSync(new URL("../data/ai.ts", import.meta.url), "utf8");
+  const varNames = [...new Set(
+    [...aiSrc.matchAll(/vars: \{([^}]*)\}/g)].flatMap((m) => [...m[1].matchAll(/(\w+):/g)].map((v) => v[1])),
+  )];
+  // A var that is neither code nor key may only carry a word or a number the record owns.
+  const PLAIN_VARS = ["acwr", "rating", "minutes", "n", "count"];
+  const joinedNames = [...new Set(
+    [...aiSrc.matchAll(/(\w+): [^,}:{]*\.join\(/g)].map((m) => m[1]),
+  )];
+  ok(`ai.ts writes ${varNames.length} vars names (${varNames.sort().join(", ")}); every joined list is a CODE var (${joinedNames.sort().join(", ")})`,
+    varNames.length >= 12 && joinedNames.length >= 5 && joinedNames.every((n) => isCodeVar(n)));
+  ok(`every vars name is a code var, a key var, or one of the plain word/number slots (${PLAIN_VARS.join(", ")}) — nothing else carries prose`,
+    varNames.every((n) => isCodeVar(n) || isKeyVar(n) || PLAIN_VARS.includes(n)));
+
+  // The keys the source names outright (`key: "..."`); the `target`/`game` sub-keys ride
+  // inside vars values and are charged by the dynamic block through the reader's column.
+  const namedKeys = [...aiSrc.matchAll(/key: "((?:coach|ai|ld)\.[^"]+)"/g)].map((m) => m[1]);
+  ok(`every one of the ${namedKeys.length} keys ai.ts names resolves in all three dictionaries`,
+    namedKeys.length >= 20 && namedKeys.every((k) => locales.every((l) => !!DICTIONARIES[l][k])));
+
+  // Dynamic: variants aimed at each branch of generatePlan — targeted exact/partial (the
+  // partial arm needs a session too short to carry every asked attribute), the three load
+  // zones with caution both with and without a ratio, a flagged request, a memory that
+  // continues and one that rotates, and history that makes "trained recently" speak.
+  const attrs = baselineAttributes("CM", 72);
+  const profile = { displayName: "Probe", mode: "player", positionGroup: "CM", attributes: attrs };
+  const ld = (zone, acwr, weekLoad) => ({ zone, acwr, weekLoad });
+  const variants = [
+    { name: "plain", input: { prompt: { value: "get better" }, availableMinutes: 45 } },
+    { name: "targeted-exact", input: { prompt: { value: "role gap plan" }, availableMinutes: 45, focusKeys: ["passing", "dribbling"] } },
+    { name: "targeted-partial", input: { prompt: { value: "role gap plan" }, availableMinutes: 5, focusKeys: ["passing", "dribbling", "scanning"] } },
+    { name: "load-high", input: { prompt: { value: "get better" }, availableMinutes: 45, load: ld("high", 1.62, 2400) } },
+    { name: "load-caution", input: { prompt: { value: "get better" }, availableMinutes: 45, load: ld("caution", 1.21, 1800) } },
+    { name: "load-caution-no-ratio", input: { prompt: { value: "get better" }, availableMinutes: 45, load: ld("caution", null, 900) } },
+    { name: "load-under", input: { prompt: { value: "get better" }, availableMinutes: 45, load: ld("under", 0.62, 300) } },
+    { name: "requested", input: { prompt: { value: "I want passing and shooting work" }, availableMinutes: 45 } },
+    { name: "continue", input: { prompt: { value: "same again" }, availableMinutes: 45, lastFocus: ["first_touch"] } },
+    { name: "rotate", input: { prompt: { value: "something new" }, availableMinutes: 45, lastFocus: ["sprint"] } },
+    { name: "recent", input: { prompt: { value: "passing session please" }, availableMinutes: 45, history: [{ focus: "passing", completed: 3 }] } },
+  ];
+  const keysSeen = new Set();
+  const leaks = [];
+  let renderedRows = 0;
+  for (const v of variants) {
+    const plan = await coachProvider.generatePlan({ profile, history: [], availableMinutes: 45, ...v.input });
+    const rows = [...plan.diagnosis, ...plan.rationale, ...plan.sources];
+    for (const r of rows) if ("key" in r) keysSeen.add(r.key);
+    for (const l of locales) for (const r of rows) {
+      renderedRows++;
+      const s = say(l)(r) ?? "";
+      const bad = [];
+      if (/\{\w+\}/.test(s)) bad.push("placeholder");
+      if (/(^|\s)(coach|ai|ld)\.[a-z]/.test(s)) bad.push("bare key");
+      if (/\[object Object\]|undefined|NaN/.test(s)) bad.push("broken figure");
+      if (l !== "en") {
+        for (const k of ATTRIBUTE_KEYS) if (new RegExp(`(^|[^a-z])${k}([^a-z]|$)`, "i").test(s)) { bad.push(`raw key ${k}`); break; }
+      }
+      if (bad.length) leaks.push(`${v.name}/${l}: ${bad.join(",")} — ${s}`);
+    }
+  }
+  ok(`eleven runs of the coach render ${renderedRows} rows across ${locales.length} locales with no raw attribute key, no placeholder, no bare key and no broken figure (leaks ${leaks.length})`,
+    renderedRows > 300 && leaks.length === 0, leaks.slice(0, 3).join(" | "));
+  // Coverage: the variants must REACH every coach key the source names — a branch nothing
+  // renders would make the leak check vacuous for exactly that sentence.
+  const coachKeys = namedKeys.filter((k) => k.startsWith("coach."));
+  const missed = coachKeys.filter((k) => !keysSeen.has(k));
+  ok(`the variants reach all ${coachKeys.length} coach keys the module names (${missed.length} unreached)`,
+    coachKeys.length >= 20 && missed.length === 0, `unreached: ${missed.join(", ")}`);
+}
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);
