@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M299 (a few numbers in that range
+Work ships one milestone per commit and is currently at M300 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -3341,8 +3341,8 @@ comment at M176 named. Measured after this commit: build 0, proof-i18n **214/214
 **1587 keys × 3 locales**. Nothing was clicked in a browser — the in-app browser still will not
 commit a React tree.
 
-**Still outstanding** (deliberately not faked): Simulation Lab is the last screen and its 51 hits are
-untouched; `dev/` and the repository root carry untracked scratch from the M197–M207 mutation runs
+**Still outstanding** (deliberately not faked): `dev/` and the repository root carry untracked scratch
+from the M197–M207 mutation runs
 (probes, per-milestone mutation cases, a driver whose `./mutcases.mjs` no longer exists), which this
 commit deliberately neither committed nor deleted.
 
@@ -3375,8 +3375,8 @@ With that in place the mutation reds three clauses at once, one naming the swall
 Measured after this commit: build 0, proof-i18n **215/215**, dictionary **1587 keys × 3 locales**.
 Nothing was clicked in a browser.
 
-**Still outstanding** (deliberately not faked): Simulation Lab remains the last screen at 46 hits, and
-the untracked `dev/` scratch described under M208 is still there.
+**Still outstanding** (deliberately not faked): the untracked `dev/` scratch described under M208 is
+still there.
 
 ### M210 — the generator every seeded claim rests on had no gate, and two of its exports had no callers
 
@@ -3538,11 +3538,8 @@ Measured on the plane (`git archive HEAD` plus this milestone's three files): `t
 `npm run build` exit 0, suite **36/36 proof scripts proven · 1917/1917 checks counted · exit 0**, with
 no retry line in the summary. Nothing was clicked in a browser.
 
-**Still outstanding** (deliberately not faked): the coach's composed sentences are still English-only
-prose in `data/ai.ts`, which the raw-UI scan does not read (it covers `.tsx`), so that file's text is
-outside the prose ratchet — M184+ owns it; `weightedPick([])` still throws where `pick([])` returns
-`undefined`; the plan id is still `S${Date.now()…}`, which can collide across two plans built in the
-same second; and the untracked `dev/` scratch from M197 onward is still in the tree.
+**Still outstanding** (deliberately not faked): `weightedPick([])` still throws where `pick([])`
+returns `undefined`; and the untracked `dev/` scratch from M197 onward is still in the tree.
 
 
 ### M212 — the router was exempted for a reason that was not true, and a typed `%` blanked the page
@@ -3711,15 +3708,11 @@ and not at the page.
 `#/` bootstrap, click guard) needs a real DOM or a browser pass — it is named as uncovered inside
 the proof; `lib/hooks.ts`, `lib/theme.tsx` and `lib/utils.ts` stay exempt, and `hooks.ts`'s
 `useLearnRecords`/`useFilmClips`/`usePersonalNews` are the same React-shaped problem one file over;
-the coach's composed sentences are still English-only in `data/ai.ts` (M184+), and measured while
-fixing the scan that exposed them, that prose is English *by construction*: it interpolates
-`attributeLabel()` (which returns `ATTRIBUTE_DEFS`' Latin `label` field) and `archetypeLabelEn()`
-(which reads `DICTIONARIES.en` by name), and no text ledger reads a `.ts` data file, so none of it is
-in the raw-UI debt count either; `weightedPick([])`
+`weightedPick([])`
 still throws where `pick([])` returns `undefined` — its **2** app call sites are both in
 `domain/matchEngine.ts`'s `shotType` and pass literal non-empty lists, so that is a documented
 difference between two helpers, not a reachable crash, and
-it stays a clause rather than becoming an invented fix; the plan id is still `S${Date.now()…}`; and the
+it stays a clause rather than becoming an invented fix; and the
 untracked `dev/` scratch from M197 onward is still in the tree. One hole this milestone *measured*
 rather than closed: `rawUiScan`'s walker had no notion of having lost the thread — the control above
 shows it dropping **5 of 7** hits purely because the text it was handed left two `<div>`s open, and
@@ -3815,24 +3808,16 @@ Measured on the working copy: `tsc --noEmit` clean, `npm run build` exit 0, suit
 **37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, no retries in the final run. On
 the clean plane (`git archive HEAD` plus this milestone's two files, `node_modules` joined): `tsc --noEmit` exit 0, `npm run build` exit 0, suite **37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, and no `UNVERIFIED` line in the log. The first plane attempt of the same tree is worth recording because it says something about reading numbers off a loaded machine rather than about this code: `tsc` died with `FATAL ERROR: Zone Allocation failed - process out of memory` at exit 134, and `proof:load` died the same way twice, which M203's policy reported as `UNVERIFIED … no tally` rather than as a red. Re-running the plane with `--max-old-space-size=4096` gave the four green readings above; the heap ceiling is the host's, and the honest part is only that the runner named the dead script instead of smoothing it over.
 
-**Still outstanding** (deliberately not faked): the fixes changed no counted copy, so the 46 debt
-lines in `features/sim/SimulationLab.tsx` are untouched and are still the next raw-UI work; the
+**Still outstanding** (deliberately not faked): the
 probe's midpoint is a *line* boundary, so a file whose middle falls inside a multi-line expression
 could in principle report blind for a reason that is the probe's, not the file's — measured 0 times
 today over 96 files, and a future red there must be classified before the position is moved; the two
 relaxations above stay un-witnessed by the harness and are claimed only as a joint property;
 `sourceBalance` says nothing about whether the *regions* are right in the middle of a file, only
 where the walk ended — an interior wrongness that self-heals by EOF is invisible to both clauses,
-which is what the probe covers and why the pair is kept; the coach's composed prose in `data/ai.ts`
-is now measured rather than assumed — **30** sentence-shaped literals there, **32** interpolation
-holes, and **12** of the literals interpolate `attributeLabel()` or `archetypeLabelEn()`, which
-return `ATTRIBUTE_DEFS`' Latin `label` and `DICTIONARIES.en[…]` respectively even though all three
-locales carry `attr.name.*` and `dna.arch.*` keys. Two distinct debts, then: the sentences are not
-on keys, and the values they interpolate ignore the reader's locale. Neither is visible to the
-raw-UI ledger, which reads `.tsx` regions, or the domain prose ratchet, which scopes to `domain/`.
-The plan id is still `S${Date.now()…}`, `useEffect`-half router coverage still needs a browser pass,
-`lib/hooks.ts`/`theme.tsx`/`utils.ts` stay exempt, and the untracked `dev/` scratch is still in the
-tree.
+which is what the probe covers and why the pair is kept; `useEffect`-half router coverage still needs
+a browser pass, `lib/hooks.ts`/`theme.tsx`/`utils.ts` stay exempt, and the untracked `dev/` scratch
+is still in the tree.
 
 ### M214 — a helper that returns a sentence is invisible to a scan that reads positions
 
@@ -3938,19 +3923,13 @@ the log. `README.md` itself is in neither plane leg because no proof script read
 mention of the filename in `scripts/` is a comment in `proof-careerarc.mjs` — so the six files are
 what the numbers above were taken from.
 
-**Still outstanding** (deliberately not faked): the within-a-day branch above; the census's own hole,
+**Still outstanding** (deliberately not faked): the census's own hole,
 measured this milestone — `RELATIVE_MATH` needs the literal `Date.now()`, so a helper that hoists
 `const now = Date.now()` and subtracts the alias would escape it, and today's tree has exactly **1**
 such alias site (`Dashboard.tsx:51`, a selection filter that prints nothing) and **0** printing
 helpers, so nothing ships broken but the class can dodge the clause by naming a variable (queued);
-`data/ai.ts` is still outside every prose ledger (**30** sentence-shaped literals, **32**
-interpolation holes, **12** of them interpolating `attributeLabel()` / `archetypeLabelEn()`, which
-return Latin and `DICTIONARIES.en` values whatever the reader's locale is); the 46 raw-UI debt lines
-in `features/sim/SimulationLab.tsx`; the single `DICTIONARIES.en` reader outside `i18n/`
-(`domain/playerDna.ts:123`) and the dead `attributeLabel`/`archetypeLabelEn` imports in
-`data/intelligence.ts`; the plan id still `S${Date.now()…}`; `lib/hooks.ts`/`theme.tsx`/`utils.ts`
-exempt; the browser walk of the i18n surfaces in a populated state; and the untracked `dev/` scratch
-is still in the tree.
+`lib/hooks.ts`/`theme.tsx`/`utils.ts` exempt; the browser walk of the i18n surfaces in a populated
+state; and the untracked `dev/` scratch is still in the tree.
 
 ### M215 — the words a model reads and the words a person read need different doors
 
@@ -4035,15 +4014,11 @@ attempt that printed its own tally, and the suite therefore says plainly which s
 same shape M212 recorded for `matchprobability`, and the reason the retry is quoted instead of hidden
 by running until the line goes away.
 
-**Still outstanding**: the four displayed English sample prompts (queued, with the module-scope-array
-blind spot); the relative-time census's alias hole, now re-scoped — tolerating aliases naively would
+**Still outstanding**: the relative-time census's alias hole, now re-scoped — tolerating aliases naively would
 charge `Dashboard.tsx:51`, a selection filter whose value is never displayed, so the rule needs a
 shape-based "reaches a displayed string" discriminator rather than a wider pattern and an allowlist;
-`data/ai.ts`'s 30 prose literals and the two English-label helpers inside them (12 interpolate
-`attributeLabel()` / `archetypeLabelEn()`, which is now a *declared* model-input door but still an
-English word inside a sentence a person reads); the 46 raw-UI debt lines in `features/sim/SimulationLab.tsx`;
-the `S${Date.now()…}` plan-id collision; `lib/hooks.ts`/`theme.tsx`/`utils.ts` exemptions; the
-populated-state browser walk; and the untracked `dev/` scratch.
+`lib/hooks.ts`/`theme.tsx`/`utils.ts` exemptions; the populated-state browser walk; and the untracked
+`dev/` scratch.
 
 ### M216 — tomorrow is a day, not an hour count
 
@@ -4119,8 +4094,7 @@ only way to tell a quiet tree from a lucky one.
 **Still outstanding**: the alias hole above; `time.inDays`/`time.agoDay` still print compact English
 abbreviations (`in 3d`, `3d ago`) that the community feed shares — the dashboard now reads them
 beside `Tomorrow`, which is consistent but not pretty, and unifying them means choosing a compactness
-policy per locale rather than editing rows; the four displayed English sample prompts (M217); the 46
-raw-UI debt lines in `features/sim/SimulationLab.tsx`; the plan-id collision; the populated-state
+policy per locale rather than editing rows; the populated-state
 browser walk; and the untracked `dev/` scratch.
 
 ### M217 — one question, two readings: what the reader sees and what the provider matches
@@ -4185,10 +4159,7 @@ working-copy-only artefact.
 JSX child is still invisible to the position scan, and 26e covers *this* site by construction rather
 than teaching the scanner the shape (the alias/wrapper case in the relative-time census, #192, is the
 same class of "derive the rule, don't enumerate the sites"); `time.inDays`/`time.agoDay` still read as
-compact abbreviations beside the new word-shaped `Tomorrow`; `data/ai.ts`'s 30 composed sentences are
-still English (its `attributeLabel()`/`archetypeLabelEn()` interpolations now go through a *declared*
-door, but a person still reads them in English); the 46 raw-UI debt lines in
-`features/sim/SimulationLab.tsx`; the plan-id collision; the populated-state browser walk; and the
+compact abbreviations beside the new word-shaped `Tomorrow`; the populated-state browser walk; and the
 untracked `dev/` scratch — which now also holds `m217.patch`, the superseded pre-declaration draft.
 
 ### M218 — a census that cannot see a shape must not also approve it
@@ -4256,9 +4227,8 @@ tsc no output / exit 0, build exit 0, suite **37/37 proof scripts proven . 1963/
 trade M216 made: the clause now covers more shapes with the same number of claims.
 
 **Still outstanding**: the cross-function flow above; the `sentence`-bucket charging arm (`m218d` needs
-the plants to declare their charged outcome, not just their bucket); `data/ai.ts`'s 30 composed
-sentences (#150/#165); the 46 raw-UI debt lines in `features/sim/SimulationLab.tsx`; the compactness
-of `time.inDays`/`time.agoDay` beside `Tomorrow`; the `S${Date.now()…}` plan-id collision; the
+the plants to declare their charged outcome, not just their bucket); the compactness
+of `time.inDays`/`time.agoDay` beside `Tomorrow`; the
 populated-state browser walk (#142); and the untracked `dev/` scratch.
 
 ### M219 — the charging rule and the plant table must not be the same list
@@ -6497,6 +6467,48 @@ ledger line loses its `data/ai.ts` item in this commit.
 
 Measured: `tsc` clean; `proof-ai-grounding` **68/68**; suite **42/42 · 2,374/2,374**; `npm run build`
 exit 0. Code as **812a1d4**.
+### M300 — the outstanding lists carried charges their own repairs had already closed
+
+The `Still outstanding` blocks of M208–M218 are copied forward by every sync, and
+the audit behind M299 kept finding charges there whose code had been repaired
+miles earlier. This milestone reads each of the ten blocks against the tree and
+strikes only what a later milestone demonstrably closed, naming the closer and
+the gate that holds it now:
+
+- **Simulation Lab's raw-UI debt** — "51 hits untouched" (M208) and "the last
+  screen at 46 hits" (M209, M213, M214, M215, M216, M217, M218). M209's scan fix
+  corrected the count 51 → 46 and M220 repaired the screen and registered its
+  remainder in the covered set the scan checks against, so the file has carried
+  no debt since. Every block above drops its line.
+- **The four sample prompts** (M215, M216) — M217 keyed the display half
+  (`SUGGESTED_ASKS`) and clause 26e holds that exact site.
+- **The plan-id collision `S${Date.now()…}`** (M211, M212, M213, M214, M215,
+  M217, M218) — M226 replaced the truncating clock with `lib/ids.ts`'s `newId`
+  (whole clock + per-process sequence + per-module salt) and `proof-ids` holds
+  the shape.
+- **The coach's English prose in `data/ai.ts`** (M211, M212, M213, M214, M215,
+  M217, M218) — M222 turned the composed sentences to the reader's language,
+  M230's NAME contract fixed the words interpolated inside them, and M299's
+  static-plus-dynamic audit (`proof-ai-grounding` **68/68**) holds the whole
+  surface. M216's line was already struck there; the other seven go now.
+- **The within-a-day branch** (M214) — M216's calendar-day rewrite left the
+  branch standing on purpose and M292 gave it its word (`time.today`), so the
+  charge died at M292.
+- **The direct `DICTIONARIES.en` reader and the dead imports** (M214) — M215
+  built the `englishWord` door and removed `data/intelligence.ts`'s two dead
+  value imports in the same milestone.
+
+What the audit charged and the tree still carries stays exactly as written:
+`weightedPick([])` throwing where `pick([])` returns `undefined`, the alias hole
+at `Dashboard.tsx:51` waiting on a shape-based discriminator, the compactness
+policy for `time.inDays`/`time.agoDay`, the `useEffect` half of the router and
+the populated-state browser walk (#142), the `lib/hooks.ts`/`theme.tsx`/`utils.ts`
+exemptions, M218's `m218d` charging arm, M213's probe-midpoint caveat, and the
+untracked `dev/` scratch.
+
+This is a docs-only milestone: no source file changes, so the suite is quoted
+unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
+stays at **68/68**.
 ### M292 — today reads as a word, not a bare clock
 
 `relativeDay`'s within-a-day branch was the one arm with no reader word: an
