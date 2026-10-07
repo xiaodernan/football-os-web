@@ -425,19 +425,25 @@ ok(`a club with a match in play keeps its next-up projection: every club whose n
 // The today panel selects its fixtures on the world's clock (M289) but labelled
 // them with the reader's: relativeDay measured every kickoff against the
 // reader's midnight, so on this tree — whose anchor sits two weeks behind the
-// reader's clock — the panel promised "today" and printed "14d ago"/"13d ago"
-// on all 45 rows, and a fixture the world counts six days out read "8d ago",
+// reader's clock — the panel promised "today" and printed "14 days ago"/"13 days ago"
+// on all 45 rows, and a fixture the world counts six days out read "8 days ago",
 // the direction inverted by drift alone. The rows now measure against the same
 // anchor the panel selected on. This clause charges the dashboard's own English
 // render. The panel renders five rows (todayMatches' limit 5), and on the world's
 // clock its earliest five are all the world's "Today" — so the page must carry five
 // clock-bearing today rows, the shape the shipped page did not have, and none of
-// the "d ago" labels it shipped with instead.
+// the "days ago" labels it shipped with instead.
+//
+// M303 spelled that unit out (`{n}d ago` → `{n} days ago`), which would have left the
+// detector below matching a form the dictionary can no longer produce: it would still have
+// read 0, and it would have read 0 for every page, including the broken one it was written
+// to catch. The pattern moved with the copy in the same commit, and the two word forms are
+// the only two the door can emit.
 const dashEn = Object.entries(byScreen).find(([id]) => nameOf(id) === "Dashboard")?.[1]?.en;
 const dashText = dashEn ? dashEn.nodes.join(" ") : "";
-const dashAgo = (dashText.match(/\b\d+d ago\b/g) ?? []).length;
+const dashAgo = (dashText.match(/\b\d+ days? ago\b/g) ?? []).length;
 const dashTodayRows = (dashText.match(/\bToday \d/g) ?? []).length;
-ok(`the dashboard's fixture rows are labelled on the world's clock: the today panel renders clock-bearing today rows and no reader-clock past (${dashTodayRows} today rows, floor 5; ${dashAgo} "d ago" labels, want 0)`,
+ok(`the dashboard's fixture rows are labelled on the world's clock: the today panel renders clock-bearing today rows and no reader-clock past (${dashTodayRows} today rows, floor 5; ${dashAgo} "days ago" labels, want 0)`,
   dashText !== "" && dashTodayRows >= 5 && dashAgo === 0,
   `ago=${dashAgo} today=${dashTodayRows}`);
 

@@ -2493,6 +2493,33 @@ ok(`the door counts the reader's calendar days over ${REL_CASES.length} planted 
   !/-\d/.test(translate("en", "time.agoDay", { n: 2 })) &&
   !/\b(in|ago)\b/.test(translate("zh-CN", "time.inDays", { n: 3 })));
 
+// 26c-3. The day unit is a word, in the one locale that had abbreviated it. English printed
+//        `{n}d ago` and `in {n}d` while `Tomorrow` and `Yesterday` sat in the same column and
+//        both Chinese locales already spelled 天 out, so the dashboard's fixture rows read
+//        "Tomorrow" and "in 3d" a line apart. M303 chose the policy the other two locales
+//        already had and moved the two rows with it.
+//
+//        The predicate is shape rather than text, so it needs no per-locale branch: a bare
+//        Latin letter as the unit right after the number is an abbreviation, and none of the
+//        three languages writes its day unit that way. The plant runs it in both directions —
+//        the two forms this replaced must be refused, and the three shipped now must pass —
+//        which is what keeps a green here from meaning "the loop read nothing".
+const spelledUnit = (v) => !/\{n\}\s*[a-z]\b/.test(v);
+const compactDay = [];
+let dayRowsRead = 0;
+for (const { id } of L) {
+  for (const k of ["time.agoDay", "time.inDays"]) {
+    const v = D[id][k];
+    if (typeof v !== "string") continue;
+    dayRowsRead++;
+    if (!spelledUnit(v)) compactDay.push(`${id} ${k} = "${v}"`);
+  }
+}
+const plantedCompact = ["{n}d ago", "in {n}d"].filter(spelledUnit);
+const plantedSpelled = ["{n} days ago", "in {n} days", "{n} 天前"].filter(spelledUnit);
+ok(`every locale spells the day unit instead of abbreviating it (${dayRowsRead} of ${L.length * 2} rows read, ${compactDay.join(" | ") || "none"}; the two forms this replaced are refused: ${plantedCompact.length === 0}, the three shipped now are accepted: ${plantedSpelled.length === 3})`,
+  dayRowsRead === L.length * 2 && compactDay.length === 0 && plantedCompact.length === 0 && plantedSpelled.length === 3);
+
 // 26c-2. The door can be told WHICH now to measure against. The dashboard's fixture rows
 //        are the caller that needs it: the panel selects its fixtures on the world's clock
 //        (M289) and must label on it too, but the door only ever measured the reader's — on

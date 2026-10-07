@@ -1782,8 +1782,14 @@ const en: Dict = {
   "time.today": "Today {at}",
   "time.tomorrow": "Tomorrow",
   "time.yesterday": "Yesterday",
-  "time.agoDay": "{n}d ago",
-  "time.inDays": "in {n}d",
+  // M303: the day unit is a word here, like the two direction words above it and like both
+  // Chinese locales, which already spell 天 out. These read `{n}d ago` / `in {n}d` until now,
+  // so the dashboard's fixture column printed "Tomorrow" and "in 3d" side by side. The form is
+  // plural-only because `relativeDay` routes ±1 day to the direction words and 0 to the today
+  // word, so `n` reaches these keys at 2 or more — `REL_CASES` in proof-i18n pins that boundary
+  // at exactly 2 and -2, which is why there is no singular arm to add.
+  "time.agoDay": "{n} days ago",
+  "time.inDays": "in {n} days",
   "comm.title": "Community",
   "comm.subtitle": "Discussion topics are generated from the world dataset. Your posts and replies stay on this device.",
   "comm.newThread": "＋ New thread",

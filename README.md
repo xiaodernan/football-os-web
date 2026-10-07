@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M308 (a few numbers in that range
+Work ships one milestone per commit and is currently at M309 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -4113,11 +4113,8 @@ and exit 0, `npm run build` exit 0, suite **37/37 proof scripts proven · 1961/1
 exit 0**, no `UNVERIFIED` line — and, unlike M215's plane leg, no retry line either, which is the
 only way to tell a quiet tree from a lucky one.
 
-**Still outstanding**: the alias hole above; `time.inDays`/`time.agoDay` still print compact English
-abbreviations (`in 3d`, `3d ago`) that the community feed shares — the dashboard now reads them
-beside `Tomorrow`, which is consistent but not pretty, and unifying them means choosing a compactness
-policy per locale rather than editing rows; the populated-state
-browser walk; and the untracked `dev/` scratch.
+**Still outstanding**: the alias hole above; the populated-state browser walk; and the untracked
+`dev/` scratch.
 
 ### M217 — one question, two readings: what the reader sees and what the provider matches
 
@@ -6535,6 +6532,50 @@ probe-midpoint caveat, and the untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M309 — the day unit becomes a word, and the detector that would have gone blind with it
+
+M216's block left one charge standing for the longest of any in the file: "`time.inDays`/`time.agoDay`
+still print compact English abbreviations (`in 3d`, `3d ago`) that the community feed shares — the
+dashboard now reads them beside `Tomorrow`, which is consistent but not pretty, and unifying them
+means choosing a compactness policy per locale rather than editing rows". It was right that the fix
+was a policy rather than an edit. This unit chooses it: **the day unit is a word**, which is the
+choice both Chinese locales had already made on their own (`{n} 天前` / `{n} 天后`), so English was
+the only locale abbreviating and the dashboard's fixture column was the only place a reader saw
+`Tomorrow` and `in 3d` a line apart.
+
+**The form is plural-only, and that is measured rather than assumed.** `relativeDay` routes `d === 1`
+to `time.tomorrow`, `d === -1` to `time.yesterday` and `d === 0` to `time.today`, so `n` reaches
+`time.inDays` and `time.agoDay` at 2 or more. `REL_CASES` already pins that boundary at exactly `2`
+and `-2` — the smallest magnitudes that reach the two keys — which is why there is no singular arm
+to add here: one would be unreachable, and an unreachable key is the shape this file refuses
+elsewhere rather than ships.
+
+**The part worth recording is the detector.** `proof-screens` charges the dashboard's own render and
+counted the wrong-clock labels with `/\b\d+d ago\b/g`, wanting 0. Spelling the unit out would have
+left that pattern matching a form the dictionary can no longer produce: the clause would still have
+read 0 — on every page, including the broken one it was written to catch. The pattern moved to
+`/\b\d+ days? ago\b/g` in the same commit, and the comment above it says why, because a detector that
+survives its subject's rename by going quiet is worse than no detector. The division of labour is now
+explicit: `proof-i18n` owns the copy's shape, `proof-screens` owns the page's clock.
+
+The new gate clause is `proof-i18n`'s, next to the calendar-day clause it extends. Its predicate is
+shape rather than text and needs no per-locale branch — a bare Latin letter as the unit right after
+the number is an abbreviation, and none of the three languages writes its day unit that way — and it
+carries its own population count (6 of `L.length * 2` rows read) so a loop that stopped finding the
+keys cannot report a clean run. The plant runs the predicate both ways: the two forms this replaced
+must be refused and the three shipped now must pass.
+
+Two mutations, both caught: the copy reverted to `{n}d ago` (the clause names both offending rows),
+and the loop pointed at keys that do not exist (`0 of 6 rows read`).
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **362/362** · 2,007 keys × 3 locales
+(vacuity census 387 owing / ceiling 387), `proof-screens` **31/31**, suite **42 scripts · 2,275
+checks with 41 green**. `proof-runner` is the one red, and it is red on this machine rather than on
+this change: `scripts/run-proofs.mjs` spawns each script with `spawnSync` and the sandbox refuses the
+child (`exit 0 — got null`), which is the standing local artifact this file records rather than a
+verdict about the tree. Every other script was run directly, one process each, which is the mode this
+file says to use here.
 
 ### M308 — string content is not code, and a healed walk resumes true
 
