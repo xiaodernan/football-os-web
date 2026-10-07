@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M296 (a few numbers in that range
+Work ships one milestone per commit and is currently at M297 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6423,6 +6423,21 @@ and the new clause in the same commit (literal 1300 → 1301, var sites 136 →
 Measured: `tsc` clean; `proof-i18n` **357/357** · 2,007 keys × 3 locales (vacuity
 census 386/386); `proof-screens` **29/29**; suite **42/42 · 2,367/2,367**; `npm run build`
 exit 0. Code as **72ff14f**.
+### M297 — the hub's in-play counter counts the world, not its strip
+
+The hub keeps a six-row live strip and printed `{n} in play` with `n` read
+off the sliced array — so the hub said `6 in play` while the world held 49.
+M294 taught the dashboard's strip to carry the world's count; the football
+hub, one screen over, was still counting its own rows. The counter reads the
+uncut family — `liveAll` for the number, the six-row strip unchanged.
+
+One gate. `proof-screens` 5i renders `#/football` and charges the printed
+number to the world's live count: printed 49, world 49, strip rows 6. The
+vacuity ceiling pays for the new clause in the same commit (386 → 387).
+
+Measured: `tsc` clean; `proof-i18n` **357/357** · 2,007 keys × 3 locales (vacuity
+census 387/387); `proof-screens` **30/30**; suite **42/42 · 2,368/2,368**; `npm run build`
+exit 0. Code as **f5f70c5**.
 ### M292 — today reads as a word, not a bare clock
 
 `relativeDay`'s within-a-day branch was the one arm with no reader word: an
