@@ -3434,14 +3434,50 @@ ok(`the census scanned the app rather than an empty set (${appSrc.size} source f
 // (b) The door is the only formatter, and it takes the reader's locale.
 const DOOR_CALLS = callsOf("formatDate");
 const unresolvedDoor = DOOR_CALLS.filter((c) => !c.args);
-const literalLocale = DOOR_CALLS.filter((c) => /^["'`]/.test((c.args?.[0] ?? "").trim()));
-const noLocaleArg = DOOR_CALLS.filter((c) => !/(^|[.\w$])locale$/.test((c.args?.[0] ?? "").trim()));
+// M313: the two argument tests are NAMED, because the plant below has to run the same expressions
+// these filters run. Its first draft re-wrote them inline, which made it a second reader of the
+// same idea — neutering either filter left the plant green, so it was guarding nothing. That is the
+// failure this file already names for `callArgs` ("two scanners over the same source is two chances
+// to disagree"), applied to a test instead of a scanner.
+const isLiteralFirstArg = (args) => /^["'`]/.test((args?.[0] ?? "").trim());
+const firstArgIsReaderLocale = (args) => /(^|[.\w$])locale$/.test((args?.[0] ?? "").trim());
+const literalLocale = DOOR_CALLS.filter((c) => isLiteralFirstArg(c.args));
+const noLocaleArg = DOOR_CALLS.filter((c) => !firstArgIsReaderLocale(c.args));
 const doorFiles = [...new Set(DOOR_CALLS.map((c) => c.path))];
 const IMPORT_DOOR = /import\s*\{[^}]*\bformatDate\b[^}]*\}\s*from\s*"@\/i18n(\/format)?"/;
 const unimportedDoor = doorFiles.filter((p) => !IMPORT_DOOR.test(appSrc.get(p) ?? ""));
 const otherDoors = [...appSrc].filter(([, code]) => /new Intl\.DateTimeFormat\(/.test(code)).map(([p]) => p);
 ok(`every formatDate call resolves and none was mis-parsed (${DOOR_CALLS.length} calls, ${unresolvedDoor.length} unresolved)`,
   unresolvedDoor.length === 0);
+// M313. The three clauses that follow read one call census and two argument tests over it, and each
+// is a zero that passes if its reader stopped working. The plant runs the SAME readers — `callArgs`,
+// then the literal test, then the locale test — over the four shapes the door's contract names: the
+// reader's locale passes all three, a literal locale is caught by the second, and a first argument
+// that is not a locale variable is caught by the third. A fixture that stopped resolving is planted
+// too, because "no call was mis-parsed" and "every call resolved" are the same sentence read twice.
+const plantDoorArgs = (line) => {
+  const open = line.indexOf("formatDate(") + "formatDate".length;
+  const args = callArgs(line, open);
+  // The two tests come from the filters above, not from copies of them.
+  return { resolves: Boolean(args), literal: isLiteralFirstArg(args), notLocale: !firstArgIsReaderLocale(args) };
+};
+// The expectations are what the two tests ACTUALLY say, read off the fixtures rather than assumed:
+// a literal locale is charged by both tests (it is not the reader's locale either), and an
+// unparseable call is charged by the third as well as the first — which is correct, since a call
+// that did not resolve is a defect whichever clause reads it.
+const DOOR_PLANTS = [
+  ["formatDate(locale, iso)", true, false, false],
+  ['formatDate("en-GB", iso)', true, true, true],
+  ["formatDate(undefined, iso)", true, false, true],
+  ["formatDate(reader, iso)", true, false, true],
+  ["formatDate(", false, false, true],
+];
+const doorVerdicts = DOOR_PLANTS.map(([line, wantResolves, wantLiteral, wantNotLocale]) => {
+  const v = plantDoorArgs(line);
+  return [line, v.resolves === wantResolves && v.literal === wantLiteral && v.notLocale === wantNotLocale];
+});
+ok(`the door's argument readers, planted both ways, still pass the reader's locale and still catch a literal locale, a non-locale first argument and an unparseable call (${doorVerdicts.filter(([, v]) => !v).map(([l]) => l).join(", ") || "all 5 as declared"})`,
+  doorVerdicts.every(([, v]) => v));
 ok(`no formatDate call passes a literal locale — that renders one language for everyone (${literalLocale.map((c) => `${c.path}:${c.line}`).join(", ") || "none"})`,
   literalLocale.length === 0);
 ok(`every formatDate call's first argument is the reader's locale (${noLocaleArg.map((c) => `${c.path}:${c.line}[${(c.args?.[0] ?? "").trim()}]`).join(", ") || "all clear"})`,
@@ -5586,7 +5622,7 @@ ok(`the news record carries no seed-composed summary sentence: the NewsArticle i
 // The number may only fall. Adding a zero-asserting clause without one of the three has to be
 // paid for here, in the same commit — which is the same bargain every other ceiling in this
 // file asks for.
-const VACUITY_CEILING = 296;
+const VACUITY_CEILING = 295;
 const clauseDepth = (text) => {
   let d = 0, str = null, tmpl = 0;
   for (let i = 0; i < text.length; i++) {

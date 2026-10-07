@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M312 (a few numbers in that range
+Work ships one milestone per commit and is currently at M313 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6532,6 +6532,36 @@ probe-midpoint caveat, and the untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M313 — the plant that re-implemented the predicate it was guarding
+
+M312 ended with the rule "plant the rule's whole reason, not one sample you know passes". This unit
+took the next two clauses on the census's list — `every formatDate call resolves and none was
+mis-parsed` and `no formatDate call passes a literal locale` — and the plant written for them broke
+the rule in a way the rule does not cover: **it re-wrote the two tests instead of running them**.
+
+The plant ran `callArgs` on five fixture call sites and then tested the first argument with its own
+copies of `/^["'`]/` and `/(^|[.\w$])locale$/`. So the mutation that mattered — neutering
+`literalLocale`'s filter, or `noLocaleArg`'s — left the plant **green**, because the plant was not
+reading those filters. It was a second reader of the same idea, which is the failure this file
+already names for scanners ("two scanners over the same source is two chances to disagree"),
+applied to a test instead of a scanner. The two tests are now named functions —
+`isLiteralFirstArg` and `firstArgIsReaderLocale` — and both the filters and the plant call them.
+
+**With that fixed, the mutations bite.** Neutering the literal test names
+`formatDate("en-GB", iso)`; neutering the locale test names four of the five fixtures at once. Before
+the fix, neither was caught by anything.
+
+**Reading the fixtures instead of assuming them found two things.** A literal locale is charged by
+*both* tests — it is not the reader's locale either — and an unparseable call is charged by the
+locale test as well as the resolve test, which is correct: a call that did not resolve is a defect
+whichever clause reads it. The expectations in the table are the measured ones, and the comment
+above them says so, because the first draft had three of the five wrong.
+
+The ceiling falls with the measurement, **296 → 295**.
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **366/366** · 2,007 keys × 3 locales
+(vacuity census **295 owing / ceiling 295**).
 
 ### M312 — the plant that found a blind spot instead of confirming one
 
