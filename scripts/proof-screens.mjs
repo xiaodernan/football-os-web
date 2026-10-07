@@ -508,6 +508,26 @@ ok(`the search screen's group counters count the world's uncut family, not the 6
   `printed=[${actualFound.join(",")}] expected=[${expectedFound.join(",")}]`);
 
 // ---------------------------------------------------------------------------
+// 5i · the hub's in-play counter counts the world, not its strip
+// ---------------------------------------------------------------------------
+// The hub keeps a six-row live strip and printed "{n} in play" with n read
+// off the sliced array — so the hub said "6 in play" while the world held 49.
+// The counter now reads the uncut family, so the printed number must be the
+// world's live count, a population the six-row strip cannot reach.
+const hubText = (() => {
+  if (!FWORLD || !ROUTER) return "";
+  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  globalThis.window.location.hash = "#/football";
+  try { return nodesOf(renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld))))).join(" "); }
+  catch { return ""; }
+})();
+const liveTotal = FOOT.matchesByStatus("LIVE").length;
+const hubPrinted = Number((hubText.match(/\b(\d+) in play\b/) ?? [])[1]);
+ok(`the hub's in-play counter counts the world's family, not its six-row strip (printed ${hubPrinted ?? "none"}, world ${liveTotal}; strip rows 6)`,
+  hubPrinted === liveTotal && liveTotal > 6,
+  `printed=${hubPrinted ?? "none"} world=${liveTotal}`);
+
+// ---------------------------------------------------------------------------
 // 6 · what this harness cannot see, demonstrated rather than asserted
 // ---------------------------------------------------------------------------
 const Probe = () => {

@@ -175,7 +175,8 @@ function FootballHub() {
   const { t } = useI18n();
   const personalNews = usePersonalNews();
   const comps = footballProvider.competitions();
-  const live = matchesByStatus("LIVE").slice(0, 6);
+  const liveAll = matchesByStatus("LIVE");
+  const live = liveAll.slice(0, 6);
   const upcoming = matchesByStatus("SCHEDULED").slice(0, 6);
   const trending = trendingPlayers(8);
   const news = personalNews.items.slice(0, 6);
@@ -191,7 +192,7 @@ function FootballHub() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-3 lg:col-span-2">
-          <SectionTitle title={t("fw.hub.live")} hint={t("fw.hub.inPlay", { n: live.length || 0 })} />
+          <SectionTitle title={t("fw.hub.live")} hint={t("fw.hub.inPlay", { n: liveAll.length })} />
           {live.length ? live.map((m) => <MatchRow key={m.id} m={m} />) : (
             <Panel className="p-4"><EmptyState title={t("fw.hub.noLive")} hint={t("fw.hub.noLiveHint")} /></Panel>
           )}
