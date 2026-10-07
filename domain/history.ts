@@ -204,7 +204,11 @@ export function groupByDay(events: TimelineEvent[]): { day: string; items: Timel
   return groups;
 }
 
-function dayKey(iso: string): string {
+// The shared local-calendar day key: the day the reader's wall calendar shows, padded,
+// compared against another key and never shown. M303 moved the streak's day keys here;
+// the elapsed-24-hour and UTC-clock arithmetic they replaced was the last blind shape in
+// the relative-time census.
+export function dayKey(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "invalid";
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

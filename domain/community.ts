@@ -71,7 +71,12 @@ const OPINION_KEYS = [
 const QUESTION_KEYS = ["comm.question.1", "comm.question.2", "comm.question.3", "comm.question.4"];
 
 function ago(days: number): string {
-  return new Date(Date.now() - days * 86_400_000).toISOString();
+  // Calendar days, not elapsed 24-hour blocks - the convention relativeDay counts, so a
+  // seeded instant and the word the door renders for it agree on a DST day (M303; the
+  // constructor-wrapped subtraction this replaced was the relative-time census's blind shape).
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString();
 }
 
 function seededComments(threadSeed: string): Comment[] {

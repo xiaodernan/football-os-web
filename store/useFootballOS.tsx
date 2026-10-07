@@ -30,6 +30,7 @@ import { normalizeGoalChoice } from "@/domain/onboarding";
 import type { RowText } from "@/domain/rowText";
 import { FAVORITES, type FavoriteKind } from "@/domain/types";
 import { buildLoad } from "@/domain/load";
+import { dayKey } from "@/domain/history";
 import { coachProvider, repairPlanPrompts, type PlanInput } from "@/data/ai";
 import { OS_STATE_KEY } from "@/domain/localData";
 import { newId } from "@/lib/ids";
@@ -159,8 +160,15 @@ function reducer(state: OsState, action: Action): OsState {
       const rating = action.selfRating;
       const intensity = clamp(Math.round(session.exercises.reduce((s, e) => s + e.intensity * e.minutes, 0) / (session.exercises.reduce((s, e) => s + e.minutes, 0) || 1)), 1, 5);
 
-      const today = new Date().toISOString().slice(0, 10);
-      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      // The streak counts the days the reader's wall calendar shows (M303), not elapsed
+      // 24-hour blocks on the UTC clock - under which the boundary sat 8 hours into a
+      // UTC+8 reader's morning and two completions before noon could grow it twice in
+      // one local day. The keys come from the shared local-calendar builder; a key is
+      // compared, never shown.
+      const today = dayKey(new Date().toISOString());
+      const yesterdayCal = new Date();
+      yesterdayCal.setDate(yesterdayCal.getDate() - 1);
+      const yesterday = dayKey(yesterdayCal.toISOString());
       const continues = state.streak.lastCompletedDate === today ? state.streak.current : state.streak.lastCompletedDate === yesterday ? state.streak.current + 1 : 1;
       const baseXp = xpForSession({ minutes: session.targetMinutes, intensity, selfRating: rating, focusCount: session.focusAttributes.length });
       const awarded = baseXp + streakBonus(continues) * 5;

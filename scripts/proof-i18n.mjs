@@ -2225,6 +2225,12 @@ const allSrc = files.map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]);
 // a RegExp out of a string is where escapes go missing, so the receivers are reported in the plant
 // verdicts and every plant demands exactly one candidate — a pattern that matches nothing cannot
 // hide behind an agreeable empty census.
+// M303 adds the shape both operand orders still miss: the subtraction *inside* the constructor
+// (`new Date(Date.now() - 86400000)`), the same arithmetic one brace to the left. The tree carried
+// two such sites - the streak's `yesterday` and the board's seed `ago` - and the census could not
+// see either, which the M303 probe measured as 2 operand-shaped candidates beside 2 invisible
+// wrapped ones. The wrapped content is bounded to one statement and one paren depth beyond the
+// receiver's own call (`[^;()\n]*`), the depth the live shapes actually wear.
 const REL_INSTANT = "new Date\\([^)]*\\)";
 const aliasNames = (code) => [
   ...[...code.matchAll(/(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*Date\.now\(\)/g)].map((m) => m[1]),
@@ -2234,7 +2240,12 @@ function relCandidates(code) {
   const receivers = ["Date\\.now\\(\\)", ...aliasNames(code).map((a) => a.replace(/\$/g, "\\$"))];
   const out = [];
   for (const r of receivers) {
-    for (const pat of [`${REL_INSTANT}[^;\\n]*?\\s*-\\s*[^;\\n]*?${r}`, `${r}[^;\\n]*?\\s*-\\s*[^;\\n]*?${REL_INSTANT}`]) {
+    for (const pat of [
+      `${REL_INSTANT}[^;\\n]*?\\s*-\\s*[^;\\n]*?${r}`,
+      `${r}[^;\\n]*?\\s*-\\s*[^;\\n]*?${REL_INSTANT}`,
+      `new Date\\([^;()\\n]*${r}[^;()\\n]*-\\s*[^;()\\n]*\\)`,
+      `new Date\\([^;()\\n]*-\\s*[^;()\\n]*${r}[^;()\\n]*\\)`,
+    ]) {
       const re = new RegExp(pat, "g");
       let m;
       while ((m = re.exec(code))) {
@@ -2293,6 +2304,8 @@ const REL_PLANTS = [
   ["planted aliased now in a string-returning helper", "function plantedAlias(iso: string): string {\n  const __now = Date.now();\n  const ms = __now - new Date(iso).getTime();\n  return `${Math.round(ms / 86400000)}d ago`;\n}\n", "sentence"],
   ["planted aliased now feeding only a comparison", "function plantedFilter(isos: string[]) {\n  const __now = Date.now();\n  return isos.filter((s) => Math.abs(new Date(s).getTime() - __now) < 2 * 86400000);\n}\n", "selection"],
   ["planted parameter-default now in a row-returning helper", "function plantedParamNow(iso: string, now: Date = Date.now()): RowText {\n  const ms = now - new Date(iso).getTime();\n  return { key: \"time.agoDay\", vars: { n: Math.round(ms / 86400000) } };\n}\n", "row"],
+  ["planted wrapped instant in a string-returning helper", "function plantedWrappedInstant(): string {\n  return new Date(Date.now() - 3 * 86400000).toISOString();\n}\n", "sentence"],
+  ["planted wrapped alias feeding only a comparison", "function plantedWrappedSelection(items: string[]) {\n  const __w = Date.now();\n  return items.filter((s) => new Date(__w - 604800000) < new Date(s.at));\n}\n", "selection"],
 ];
 const plantVerdicts = REL_PLANTS.map(([name, src, want]) => {
   const cs = relCandidates(src);
