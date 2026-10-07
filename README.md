@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M307 (a few numbers in that range
+Work ships one milestone per commit and is currently at M308 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -3703,9 +3703,7 @@ and not at the page.
 
 **Still outstanding** (deliberately not faked): the `useEffect` half of the router (subscription,
 `#/` bootstrap, click guard) needs a real DOM or a browser pass — it is named as uncovered inside
-the proof; `lib/hooks.ts`, `lib/theme.tsx` and `lib/utils.ts` stay exempt, and `hooks.ts`'s
-`useLearnRecords`/`useFilmClips`/`usePersonalNews` are the same React-shaped problem one file over;
-`weightedPick([])`
+the proof; `weightedPick([])`
 still throws where `pick([])` returns `undefined` — its **2** app call sites are both in
 `domain/matchEngine.ts`'s `shotType` and pass literal non-empty lists, so that is a documented
 difference between two helpers, not a reachable crash, and
@@ -3805,11 +3803,8 @@ Measured on the working copy: `tsc --noEmit` clean, `npm run build` exit 0, suit
 **37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, no retries in the final run. On
 the clean plane (`git archive HEAD` plus this milestone's two files, `node_modules` joined): `tsc --noEmit` exit 0, `npm run build` exit 0, suite **37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, and no `UNVERIFIED` line in the log. The first plane attempt of the same tree is worth recording because it says something about reading numbers off a loaded machine rather than about this code: `tsc` died with `FATAL ERROR: Zone Allocation failed - process out of memory` at exit 134, and `proof:load` died the same way twice, which M203's policy reported as `UNVERIFIED … no tally` rather than as a red. Re-running the plane with `--max-old-space-size=4096` gave the four green readings above; the heap ceiling is the host's, and the honest part is only that the runner named the dead script instead of smoothing it over.
 
-**Still outstanding** (deliberately not faked): `sourceBalance` says nothing about whether the *regions* are right in the middle of a file, only
-where the walk ended — an interior wrongness that self-heals by EOF is invisible to both clauses,
-which is what the probe covers and why the pair is kept; `useEffect`-half router coverage still needs
-a browser pass, `lib/hooks.ts`/`theme.tsx`/`utils.ts` stay exempt, and the untracked `dev/` scratch
-is still in the tree.
+**Still outstanding** (deliberately not faked): `useEffect`-half router coverage still needs
+a browser pass, and the untracked `dev/` scratch is still in the tree.
 
 One charge this block carried has a closer to name. The probe-midpoint caveat — "a file whose
 middle falls inside a multi-line expression could in principle report blind for a reason that is
@@ -3832,6 +3827,19 @@ no reproducible shape of its own in a minimal fixture — an unterminated attrib
 element self-heals and the plant reads 2 or 4 — so any-half and both-halves agree on every
 shape a fixture can carry, and the record now says so at the clause instead of asserting the
 pair blind. M307's section records the strike.
+
+Two more charges this block carried have closers to name. The mid-file regions charge —
+`sourceBalance` "says nothing about whether the regions are right in the middle of a file" — is
+what M308 resolved to a boundary: the one shape that opens mid-file and heals without any
+balance change (an unterminated attribute) leaves true regions behind it — the healed fragment
+charges itself once as the attribute it opened and the caption after it reads once per half —
+while a caption inside an open template reads 0, because string content is not code; both
+halves of that boundary are now asserted at the clause. And the exemption line —
+`lib/hooks.ts`/`theme.tsx`/`utils.ts` stay exempt — was already false when this block was
+written: the three retirements happened at M238/M239, M302's section records them and
+`proof-coverage`'s single-entry `EXEMPT` asserts the table, so the line goes with the pointer —
+and M212's block carries the same stale claim (with `hooks.ts`'s three named hooks retired
+alongside the file at M238), which goes the same way. M308's section records the strike.
 
 ### M214 — a helper that returns a sentence is invisible to a scan that reads positions
 
@@ -6527,6 +6535,40 @@ probe-midpoint caveat, and the untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M308 — string content is not code, and a healed walk resumes true
+
+M213's block kept one charge the probe could not reach: `sourceBalance` reads only where the walk
+ended, so a wrongness that heals before EOF is invisible to it — and the block hedged that "an
+interior wrongness that self-heals by EOF is invisible to both clauses, which is what the probe
+covers and why the pair is kept". This milestone resolves the charge to a measured boundary
+instead of a fear.
+
+**The one shape that heals without any balance change.** A template that closes brings `tick`
+back to zero but swallows everything between open and close, and that is correct — string content
+is not code, so a caption inside it reading 0 is the walker working, not failing. The shape worth
+scrutiny is the unterminated attribute: its quote bails at the newline, `inTag` stays set across
+the boundary, and the next `>` at brace zero closes it as if nothing had happened — the only
+thread that opens mid-file and heals with `elem`, `depth` and `inTag` all back at zero. Measured
+on that fixture: the healed fragment charges itself exactly once, as the attribute it opened
+(`kind=attr:title`), and the caption standing after the heal reads exactly once per half — the
+same two hits the clean fixture reads. Regions resume true after a heal; a scanner that stayed
+lost would read fewer (caption swallowed) or more (regions rebuilt), and both redden at the
+clause.
+
+**So the gate carries the boundary.** `proof-i18n` asserts both halves: the healed fragment once,
+the caption after the heal twice, and — via the recover fixture M307 installed — the caption
+inside an open template zero times. What the charge was actually afraid of (regions silently
+wrong with a clean EOF) now has its two outcomes measured: healing is true, and swallowing is
+string content. The blocks also drop their exemption lines the same way: M213's `lib/hooks.ts`/
+`theme.tsx`/`utils.ts`, and M212's `lib/hooks.ts`/`lib/theme.tsx`/`lib/utils.ts` with its three
+named hooks retired alongside the file — all retired at M238/M239, M302's section records the
+retirements and `proof-coverage`'s single-entry `EXEMPT` asserts the table — and M300's sweep
+missed both stale lines; they go now with the pointer.
+
+Measured: `proof-i18n` **361/361** · 2,007 keys × 3 locales (vacuity census 386 owing / ceiling
+387), suite **42/42 · 2,378/2,378**, `tsc --noEmit` clean, `npm run build` exit 0.
+
 
 ### M307 — what a healthy tree cannot show, a fixture can
 
