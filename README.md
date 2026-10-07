@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M292 (a few numbers in that range
+Work ships one milestone per commit and is currently at M293 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6318,6 +6318,36 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+### M293 — the dashboard's fixture labels run on the world's clock
+
+The today panel selects its fixtures on the world's clock (M289) but labelled
+them with the reader's: `relativeDay` measured every kickoff against the
+reader's midnight, so on this tree — whose anchor (2026-09-22) sits two weeks
+behind the reader's clock — the panel promised "today" and printed
+`14d ago`/`13d ago` on every row. Measured: 45 of 45 panel rows read as past.
+Across the favorite-club upcoming lists the drift inverts direction outright:
+141 distinct fixtures, and a fixture the world counts six days out read
+`8d ago` — the panel's own "Today" was nowhere on it.
+
+The fix gives the door a reference: `relativeDay(locale, iso, now)` takes the
+now to measure against as an optional third argument, defaulting to the
+reader's clock — a timestamp the reader wrote (the activity line's
+`completedAt`) is theirs to read, and stays reader-relative. `FixtureRow`
+passes the world's anchor, the same clock its lists select on; the panel's
+five rows now read `Today 09:30 AM`-shaped, and a fixture six days out reads
+`in 6d`.
+
+Two gates. `proof-i18n`'s relative census now treats a parameter default as
+the alias it is — `now = Date.now()` is the M218 hoist wearing a signature —
+with a new plant pinning the shape, and a new clause plants the flip the
+drifted panel shipped: a day the reader calls `13d ago` reads as tomorrow on a
+clock 14 days behind, and stays `13d ago` on the reader's own. `proof-screens`
+5e charges the dashboard's own English render: five clock-bearing today rows
+(floor 5) and zero of the `d ago` labels the page shipped with.
+
+Measured: `tsc` clean; `proof-i18n` **357/357** · 2,005 keys × 3 locales (vacuity
+census 383/384); `proof-screens` **26/26**; suite **42/42 · 2,364/2,364**; `npm run build`
+exit 0. Code as **6998f1c**.
 ### M292 — today reads as a word, not a bare clock
 
 `relativeDay`'s within-a-day branch was the one arm with no reader word: an
