@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M305 (a few numbers in that range
+Work ships one milestone per commit and is currently at M306 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -3805,10 +3805,7 @@ Measured on the working copy: `tsc --noEmit` clean, `npm run build` exit 0, suit
 **37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, no retries in the final run. On
 the clean plane (`git archive HEAD` plus this milestone's two files, `node_modules` joined): `tsc --noEmit` exit 0, `npm run build` exit 0, suite **37/37 proof scripts proven · 1954/1954 checks counted · exit 0**, and no `UNVERIFIED` line in the log. The first plane attempt of the same tree is worth recording because it says something about reading numbers off a loaded machine rather than about this code: `tsc` died with `FATAL ERROR: Zone Allocation failed - process out of memory` at exit 134, and `proof:load` died the same way twice, which M203's policy reported as `UNVERIFIED … no tally` rather than as a red. Re-running the plane with `--max-old-space-size=4096` gave the four green readings above; the heap ceiling is the host's, and the honest part is only that the runner named the dead script instead of smoothing it over.
 
-**Still outstanding** (deliberately not faked): the
-probe's midpoint is a *line* boundary, so a file whose middle falls inside a multi-line expression
-could in principle report blind for a reason that is the probe's, not the file's — measured 0 times
-today over 96 files, and a future red there must be classified before the position is moved; the two
+**Still outstanding** (deliberately not faked): the two
 relaxations above stay un-witnessed by the harness and are claimed only as a joint property;
 `sourceBalance` says nothing about whether the *regions* are right in the middle of a file, only
 where the walk ended — an interior wrongness that self-heals by EOF is invisible to both clauses,
@@ -3816,6 +3813,15 @@ which is what the probe covers and why the pair is kept; `useEffect`-half router
 a browser pass, `lib/hooks.ts`/`theme.tsx`/`utils.ts` stay exempt, and the untracked `dev/` scratch
 is still in the tree.
 
+One charge this block carried has a closer to name. The probe-midpoint caveat — "a file whose
+middle falls inside a multi-line expression could in principle report blind for a reason that is
+the probe's, not the file's" — is what M306 settled: the walker now reports the thread it ended on
+(`sourceBalance` gained `tick`, the template literal that never closed, beside `elem`, `depth` and
+`inTag`), and the midpoint clause classifies before it asserts — the two threads that can swallow
+a plant (the runaway `tick`; a block comment still open at the boundary, which `normalize` erases
+whole) are held at zero across every `.tsx` midpoint, the other three cannot hide a caption (the
+walker re-enters on the plant's own `<div`), 46 of 49 midpoints carry one of them, and three
+witnesses pin the reader. M306's section records the strike.
 ### M214 — a helper that returns a sentence is invisible to a scan that reads positions
 
 A reader-facing complaint about dates on the dashboard turned into two defects in one function once
@@ -6511,6 +6517,46 @@ This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
 
+### M306 — a blind report has to say whose fault it is
+
+M213's probe plants a caption at the midpoint of every `.tsx` file and demands both halves back,
+and its own block carried one honest escape hatch: the midpoint is a *line* boundary, so if the
+first half of a file ends inside a construct the walker tracks, the plant lands inside it too, and
+a swallowed caption would be the probe's fault, not the file's — "a future red there must be
+classified before the position is moved". The clause has been green ever since, which kept the
+caveat a promise rather than a mechanism. This milestone keeps the promise: the classification is
+the gate.
+
+**Which threads can swallow a plant is not all of them, and the difference is what makes the gate
+honest.** The walker's own account of where it ended, `sourceBalance`, gains a fourth field —
+`tick`, the template literal that never closed, read at both quote-skip sites and enumerated past
+the field pin (`elem,depth,inTag,tick`), so a report that quietly drops it goes red. A runaway
+template skips the walker to end-of-source, so a caption planted after it is never read; a block
+comment still open at the boundary is erased whole by `normalize`, so a caption inside it never
+existed. Both hide the plant and blame the tree for the probe's blindness, and the clause demands
+both at zero on every real midpoint (`compromised: none`). The rest cannot hide it: an open
+element, bracket depth and an unterminated attribute list all re-enter on the plant's own `<div`,
+bending what is read without hiding that something was — 46 of 49 midpoints carry one, reported,
+never fatal.
+
+**The comment arm needs a reader of its own, because a comment leaves no balance behind.** The
+gate runs a vanish test: a marker appended on a fresh line — where the probe actually lands —
+must read the same to `normalize` as an empty line, both ends trimmed (a stripped comment keeps
+its newlines while its words become same-length spaces, so an untrimmed comparison disagrees by a
+trailing newline — the first draft of this test missed the very shape it hunts, and the
+empty-line control is what the miss bought). Only a block comment reaches across a line boundary;
+a line comment dies at its own newline, so an open `//` at a midpoint is correctly not a
+compromise.
+
+So `proof-i18n` gains one clause and one refusal. The refusal joins the standing filter: a
+runaway template planted into source trips exactly `tick` and nothing else, and the filter has to
+flag exactly four offenders (was three). Three witnesses pin the reader: the control's own
+runaway template names `depth+tick`, a planted spanning comment names `comment` by vanishing, and
+a closed comment names nothing. Measured: `proof-i18n` **359/359** · 2,007 keys × 3 locales
+(vacuity census 386 owing / ceiling 387), suite **42/42 · 2,376/2,376**, `tsc --noEmit` clean,
+`npm run build` exit 0.
+
+
 ### M305 — the charge outlived its own closer by one milestone
 
 M300's sweep read the ten `Still outstanding` blocks of M208–M218 and struck only what a later
@@ -6690,15 +6736,18 @@ This is a docs-only milestone, so the suite is quoted as measured rather than as
 changed.
 
 **Still outstanding, re-checked against this tree rather than carried forward**: the
-`useEffect` half of the router and the populated-state browser walk (#142), M213's
-probe-midpoint caveat, and the untracked `dev/` scratch (~250 files). Each was looked for in
-this commit; none of them has a later repair to name - and three charges this block carried
+`useEffect` half of the router and the populated-state browser walk (#142), and the untracked
+`dev/` scratch (~250 files). Each was looked for in this commit; none of them has a later repair
+to name - and four charges this block carried
 are closed by later milestones: the alias discriminator M303 closed, whose section records
 the shape M218's population still missed and the two sites it held; the
 `time.inDays`/`time.agoDay` compactness policy M304 closed, whose section records the feed
 leaving the count to the gate and the per-locale word forms declared at the rows; and
 M218's `m218d` charging arm, closed by M219 one milestone after it was charged - the
-two-declaration split whose section records the mutation witnesses - struck at M305.
+two-declaration split whose section records the mutation witnesses - struck at M305; and
+M213's probe-midpoint caveat M306 closed, whose section records the walker's `tick` field, the
+vanish test that names a spanning comment, and the two swallowing threads held at zero across
+every `.tsx` midpoint while the rest are reported as unable to hide a caption.
 
 ### M301 — an empty pool now fails at the cause, in one shared contract
 
