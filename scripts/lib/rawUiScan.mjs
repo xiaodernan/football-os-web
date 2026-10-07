@@ -244,6 +244,7 @@ function walk(s, from, to, tags, kids) {
   let brace = 0;
   let elem = 0;
   let depth = 0;
+  let tick = 0;
   let i = from;
   const endChild = (at) => {
     if (childStart >= 0) kids.push([childStart, at]);
@@ -287,14 +288,23 @@ function walk(s, from, to, tags, kids) {
         continue;
       }
       if (c === `"` || c === "'" || c === "`") {
-        i = skipQuoted(s, i);
+        const e = skipQuoted(s, i);
+        // A template that never closes is a thread the report has to name: everything
+        // after the opening tick is swallowed by the search for its close, so regions
+        // built past it are not the regions the source describes. A closed template
+        // returns one past its own quote; a bail returns the string's end with some
+        // other character under it.
+        if (c === "`" && s[e - 1] !== "`") tick++;
+        i = e;
         continue;
       }
       i++;
       continue;
     }
     if (c === `"` || c === "'" || c === "`") {
-      i = skipQuoted(s, i);
+      const e = skipQuoted(s, i);
+      if (c === "`" && s[e - 1] !== "`") tick++;
+      i = e;
       continue;
     }
     if (c === "{") brace++;
@@ -331,7 +341,7 @@ function walk(s, from, to, tags, kids) {
   }
   if (inTag) tags.push([tagStart, to]);
   endChild(to);
-  return { elem, depth, inTag };
+  return { elem, depth, inTag, tick };
 }
 
 const holeless = (t) => t.replace(/\$\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, "");
@@ -436,9 +446,11 @@ export function normalize(src) {
 
 // Where the walker stands when the normalized text runs out. `elem` is the number of
 // elements left open, `depth` the brackets still unclosed, `inTag` an attribute list
-// that never reached its `>`. A file whose scan can see its own copy has all three at
-// zero; anything else means the walker lost the thread somewhere and the regions it
-// built after that point are not the regions the source describes.
+// that never reached its `>`, `tick` a template literal that never closed - the one
+// thread nothing closes for you, and the shape of the probe's blind control. A file
+// whose scan can see its own copy has all four at zero; anything else means the walker
+// lost the thread somewhere and the regions it built after that point are not the
+// regions the source describes.
 export function sourceBalance(src) {
   return regions(normalize(src)).balance;
 }

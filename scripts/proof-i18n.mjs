@@ -78,7 +78,7 @@
 //      sees the model's own code (M249).
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
-import { scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
+import { normalize, scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -1931,16 +1931,17 @@ ok(`the skip-list audit read ${specSeen} import specifiers over ${appSrc.size} f
 // told to look at.
 const BAL_FIELDS = Object.keys(sourceBalance(""));
 ok(`the balance the census reads reports one field per thread the walker can lose (${BAL_FIELDS.join(", ")})`,
-  BAL_FIELDS.join(",") === "elem,depth,inTag");
-// Three planted refusals, each breaking exactly one thread and no other, are measured in the
+  BAL_FIELDS.join(",") === "elem,depth,inTag,tick");
+// Four planted refusals, each breaking exactly one thread and no other, are measured in the
 // *same* filter as the population. Without them a weakened filter — one left checking only
 // `elem`, say — would report a clean census forever, because the population is clean. With
-// them, the filter has to flag exactly three offenders to be green, and every real file that
+// them, the filter has to flag exactly four offenders to be green, and every real file that
 // loses its thread pushes the count above that.
 const BAL_REFUSALS = [
   ["planted unclosed element", ["export const X = () => (", "  <div>", '    {"kept"}', ");", ""].join("\n"), "elem"],
   ["planted bracket open at EOF", ["export const X = () => {", "  const y = [", "    <div>{'kept'}</div>", "  ;", "};", ""].join("\n"), "depth"],
   ["planted unclosed attribute", ['export const Card = () => (', '  <div title="unterminated', ");", ""].join("\n"), "inTag"],
+  ["planted runaway template", ["const s = `unterminated template literal", ""].join("\n"), "tick"],
 ].map(([name, src, field]) => [name, field, sourceBalance(src)]);
 const offenders = [...[...appSrc].map(([p, src]) => [p, sourceBalance(src)]), ...BAL_REFUSALS.map(([name, , b]) => [name, b])]
   .filter(([, b]) => BAL_FIELDS.some((k) => b[k]));
@@ -2007,6 +2008,43 @@ const blind = tsxFiles
   .map(([p]) => p);
 ok(`a caption planted at the midpoint of every one of the ${tsxFiles.length} .tsx files (pin ${TSX_PIN}, and the two selectors agree: ${tsxSelectorsAgree}) comes back in full (blind: ${blind.join(", ") || "none"}), while the file planted blind here is reported blind (${midBlind(MID_CONTROL)})`,
   blind.length === 0 && midBlind(MID_CONTROL) && tsxFiles.length === TSX_PIN && tsxSelectorsAgree);
+// The midpoint probe above plants at a line boundary, which is exactly where the walker's own
+// threads live: if the first half of a file ends inside a construct the walker tracks, the
+// plant lands inside it too, and a swallowed caption would be the probe's fault, not the
+// tree's. Not every open thread can swallow a plant, though, and the difference is what
+// makes this gate honest. An unclosed template literal skips the walker to end-of-source,
+// so a caption planted after it is never read; a block comment still open at the boundary
+// is erased whole by `normalize`, so a caption inside it never existed. Both hide the plant
+// and blame the tree for the probe's blindness, so both must be zero at every real
+// midpoint. The rest cannot hide it: an open element, bracket depth and an unterminated
+// attribute list all re-enter on the plant's own `<div`, bending what is read without
+// hiding that something was — those are merely reported, never fatal. The comment arm is
+// measured by a vanish test that appends a marker on a *fresh line*, where the probe
+// actually lands: if `normalize` reads that marker line exactly as it reads an empty one
+// (both ends trimmed — a stripped comment keeps its newlines while its words turn into
+// same-length spaces), the marker was swallowed; a line comment cannot manage it, for it
+// dies at its own newline, so a marker on the next line survives.
+// Three witnesses pin the reader: the control's own runaway template names `tick`, a
+// planted spanning comment names `comment` by vanishing, and a closed comment names nothing.
+const midPrefix = (f) => {
+  const lines = readFileSync(f, "utf8").replace(/\r\n/g, "\n").split("\n");
+  return lines.slice(0, Math.floor(lines.length / 2)).join("\n");
+};
+const midThreads = (prefix) => {
+  const open = BAL_FIELDS.filter((k) => sourceBalance(prefix)[k]);
+  if (normalize(prefix + "\n").trimEnd() === normalize(prefix + "\nM306X").trimEnd()) open.push("comment");
+  return open;
+};
+const midCompromised = tsxFiles
+  .map((f) => [rel(f), midThreads(midPrefix(f))])
+  .filter(([, open]) => open.includes("tick") || open.includes("comment"))
+  .map(([p, open]) => `${p} ${open.join("+")}`);
+const midThreaded = tsxFiles.filter((f) => BAL_FIELDS.some((k) => sourceBalance(midPrefix(f))[k])).length;
+const controlThreads = midThreads(MID_CONTROL.slice(0, 2).join("\n"));
+const commentPlant = midThreads("const a = 1;\n/* a comment\nthat spans the midpoint");
+const commentClean = midThreads("const a = 1;\n/* a comment */\nconst b = 2;");
+ok(`the midpoint every caption is planted at opens no thread that swallows it (compromised: ${midCompromised.join(", ") || "none"}; other walker threads open at midpoints: ${midThreaded} of ${tsxFiles.length}), and the reader names the control's own runaway template (${controlThreads.join("+") || "NAMED NOTHING"}) and a planted spanning comment (${commentPlant.join(",") || "NAMED NOTHING"}) while a closed one reads clean (${commentClean.join(",") || "clean"})`,
+  midCompromised.length === 0 && controlThreads.includes("tick") && commentPlant.join(",") === "comment" && commentClean.length === 0);
 // Non-vacuity, and deliberately *not* a floor on the total. The previous clause read
 // `openTotal >= 300`, which is a bound on the exact quantity every milestone is trying
 // to shrink: localise three more screens and the check goes red while the scan is
