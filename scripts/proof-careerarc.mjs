@@ -30,7 +30,11 @@ ok("annualChange: a rising step = round1(headroom × share)", annualChange({ age
 ok("annualChange: nearer the peak the same headroom moves less (flattening rise)",
   annualChange({ age: 18, overall: 70, potential: 90, peakAge: 29 }) > annualChange({ age: 26, overall: 70, potential: 90, peakAge: 29 }));
 ok("annualChange: no headroom → no rise even when young", annualChange({ age: 18, overall: 90, potential: 90, peakAge: 29 }) === 0);
+// M319 companion: a player with headroom shows positive rise, so the "no headroom" clause above has a population pin.
+ok("the career arc computes at least one positive annual change", annualChange({ age: 20, overall: 60, potential: 80, peakAge: 29 }) > 0);
 ok("annualChange: rise is never negative", annualChange({ age: 20, overall: 60, potential: 60, peakAge: 29 }) >= 0);
+// M319 companion: a player with headroom shows strictly positive rise, so the "never negative" clause above has a population pin.
+ok("the career arc computes at least one strictly positive annual change", annualChange({ age: 20, overall: 60, potential: 80, peakAge: 29 }) > 0);
 // Decline: first step at the peak age is exactly -0.4, and it deepens each year.
 ok("annualChange: first decline step (age == peakAge) is -0.4", annualChange({ age: 29, overall: 80, potential: 80, peakAge: 29 }) === -0.4);
 ok("annualChange: decline grows with years past the peak", annualChange({ age: 33, overall: 80, potential: 80, peakAge: 29 }) === -2.0);
@@ -87,7 +91,11 @@ const declining = careerArc(player({ positionGroup: "ST", age: 36, overall: 80, 
 ok("a late-career player past the peak is 'declining'", declining.trajectory === "declining" && declining.declineFromAge <= declining.age + 1);
 const atPeak = careerArc(player({ positionGroup: "AM", age: 27, overall: 85, potential: 85 })); // AM peak 27
 ok("a player at his ceiling and peak age is 'peak' (not rising, not declining)", atPeak.trajectory === "peak" && atPeak.yearsToPeak === 0);
+// M319 companion: a young player with headroom has positive years to peak, so the "yearsToPeak === 0" clause above has a population pin.
+ok("the career arc computes at least one positive years-to-peak", careerArc(player({ positionGroup: "CM", age: 19, overall: 62, potential: 84 })).yearsToPeak > 0);
 ok("remainingPrimeYears never goes negative for an old player", careerArc(player({ positionGroup: "CM", age: 37 })).remainingPrimeYears === 0);
+// M319 companion: a young player has positive remaining prime years, so the "=== 0" clause above has a population pin.
+ok("the career arc computes at least one positive remaining prime years", careerArc(player({ positionGroup: "ST", age: 19 })).remainingPrimeYears > 0);
 
 // ---------------------------------------------------------------------------
 // Confidence: base 55, +20 for a young high-headroom player, clamped to [20, 85].
@@ -119,7 +127,11 @@ ok("sources name the dataset fields AND label this a demo model",
   rising.sources.some((s) => s.key === "arc.src.model"));
 ok("hasData requires a positive overall and age", rising.hasData === true);
 ok("a zero-overall player reports hasData false", careerArc(player({ overall: 0 })).hasData === false);
+// M319 companion: a valid player with positive overall reports hasData true, so the "zero-overall" clause above has a population pin.
+ok("the career arc accepts at least one player with positive overall", careerArc(player({ overall: 70, age: 25 })).hasData === true);
 ok("a zero-age player reports hasData false", careerArc(player({ age: 0 })).hasData === false);
+// M319 companion: a valid player with positive age reports hasData true, so the "zero-age" clause above has a population pin.
+ok("the career arc accepts at least one player with positive age", careerArc(player({ overall: 70, age: 25 })).hasData === true);
 
 // ---------------------------------------------------------------------------
 // Purity + determinism.
