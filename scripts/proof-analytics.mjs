@@ -44,7 +44,11 @@ ok("scheduled match is ignored", byId.A.played === 4);
 ok("A: hand-computed record 4-2-0-2, GF7 GA4 GD+3 Pts6",
   byId.A.played === 4 && byId.A.won === 2 && byId.A.drawn === 0 && byId.A.lost === 2 &&
   byId.A.gf === 7 && byId.A.ga === 4 && byId.A.gd === 3 && byId.A.points === 6);
+// M321 companion: at least one club has positive draws, so the "drawn === 0" clause above has a population pin.
+ok("the table shows at least one club with positive draws", Object.values(byId).some((c) => c.drawn > 0));
 ok("A: two clean sheets (conceded 0 in m1 and m3)", byId.A.cleanSheets === 2);
+// M321 companion: at least one club has positive clean sheets, so the "cleanSheets === 2" clause above has a population pin.
+ok("the table shows at least one club with positive clean sheets", Object.values(byId).some((c) => c.cleanSheets > 0));
 ok("A: form is results in kickoff order (W,W,L,L)", byId.A.form.join(",") === "W,W,L,L");
 ok("B: 3-1-1-1, GD-1", byId.B.played === 3 && byId.B.won === 1 && byId.B.drawn === 1 && byId.B.lost === 1 && byId.B.gd === -1);
 ok("C: 3-1-1-1, GD-2 (loses the point-tiebreak to B)", byId.C.played === 3 && byId.C.gd === -2);
