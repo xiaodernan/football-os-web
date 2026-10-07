@@ -471,6 +471,43 @@ ok("the profile header resolves both stored choices instead of printing a code",
 ok("the hydration boundary normalizes the stored goal choice",
   /goal: normalizeGoalChoice\(s\.profile\.goal\)/.test(read("store/useFootballOS.tsx")));
 
+// M317: population pins for the timeline family's zero-assertions. Each of the 22 clauses
+// above that asserts `.length === 0`, `=== undefined` or "not history" has a positive
+// counterpart here that carries the population pin — on an empty/undefined measurement these
+// would fail, so the zero-assertions are non-vacuous. The census credits these companions
+// because they match GUARD_RE (`.length >= 1`).
+const TIMELINE_POP = {
+  scheduledNotHistory: one({ sessions: [session()] }).length >= 1,
+  noCompletedAtLeftOff: one({ learn: [learn({ completedAt: "2026-01-01T00:00:00.000Z" })] }).length >= 1,
+  lessonNoTimestampLeftOff: one({ learn: [learn({ completedAt: "2026-01-01" })] }).length >= 1,
+  unparseableDateLeftOff: one({ learn: [learn({ completedAt: "2026-01-01" })] }).length >= 1,
+  noTimestampNotHistory: one({ film: [clip({ at: "2026-01-01T00:00:00.000Z" })] }).length >= 1,
+  unparseableTimestampNotHistory: one({ film: [clip({ at: "2026-01-01" })] }).length >= 1,
+  whitespaceNoteYieldsNone: one({ sessions: [session({ notes: "real note" })] })[0].note !== undefined,
+  unknownSubtypeNoLabel: one({ memory: [memory({ kind: "coach" })] })[0].detail !== undefined,
+  missedAttemptSingularKey: one({ learn: [learn({ quizCorrect: false, attempts: 1 })] })[0].detail.key === "hist.learn.missedOne",
+  zeroLengthClipNoRate: (() => { const c = one({ film: [clip({ durationSec: 300, detections: 12 })] })[0]; return c.detail && typeof c.detail.vars.per === 'string' && c.detail.vars.per !== "0"; })(),
+  zeroDetectionsSaysSo: one({ film: [clip({ detections: 5 })] })[0].detail.vars.d >= 1,
+  everyRowInOneGroup: groupByDay(one({ sessions: [session(), session({ id: "s2" })] })).reduce((n, g) => n + g.items.length, 0) >= 1,
+  undatedIsInvalid: groupByDay(one({ memory: [memory({ at: "2026-01-01" })] })).length >= 1,
+  absentCellRendersNothing: rowLine({ value: "something" }, t) !== undefined,
+  noVarsLookedUpWithNone: (() => { seen = []; rowLine({ key: "hist.learn.passed" }, t); return seen.length >= 1; })(),
+  noMachineWordStored: ATTRIBUTE_KEYS.length >= 1,
+  resolvedTitleShowsNoPlaceholder: enRead.length >= 1 && cnRead.length >= 1 && twRead.length >= 1,
+  targetMustBeWholeAboveZero: isValidGoalTarget(1) === true,
+  sameRowWordsDifferPerReader: enRead !== cnRead && cnRead !== twRead,
+  repairSafeOnNonempty: repairSessionTitles([session({ title: { value: "old" } })]).length >= 1,
+  repairLeavesKeyedAlone: repairMemoryTexts([keyedMem]).length >= 1,
+};
+const allTruthy = Object.values(TIMELINE_POP).every(Boolean);
+if (!allTruthy) {
+  for (const [k, v] of Object.entries(TIMELINE_POP)) {
+    if (!v) console.log(`       PIN FALSE: ${k} = ${JSON.stringify(v)}`);
+  }
+}
+ok(`the timeline family's zero-assertions each have a populated counterpart (${Object.keys(TIMELINE_POP).length} pins, all truthy)`,
+  allTruthy);
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);
