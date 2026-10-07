@@ -5545,7 +5545,7 @@ ok(`the news record carries no seed-composed summary sentence: the NewsArticle i
 // The number may only fall. Adding a zero-asserting clause without one of the three has to be
 // paid for here, in the same commit — which is the same bargain every other ceiling in this
 // file asks for.
-const VACUITY_CEILING = 387;
+const VACUITY_CEILING = 298;
 const clauseDepth = (text) => {
   let d = 0, str = null, tmpl = 0;
   for (let i = 0; i < text.length; i++) {
@@ -5582,13 +5582,50 @@ for (const f of proofFiles) {
   const cls = clausesIn(readFileSync(join(root, "scripts", f), "utf8"));
   for (const c of cls) {
     if (isPlant(c.body) || !isZeroish(c.body.split("\n")[0])) continue;
-    const next = cls.find((x) => x.line > c.line && x.line - c.line < 8);
-    if (GUARD_RE.test(c.body) || (next && isPlant(next.body))) continue;
+    const next = cls.filter((x) => x.line > c.line).slice(0, 2);
+    // M311: a companion that carries a FLOOR is as much a device as one that carries a plant,
+    // the companion is a CLAUSE rather than a run of lines, and the window is the next two of
+    // them. All three readings were wrong before and each made this census report clauses that
+    // already had their evidence:
+    //   · `every dictionary key is reachable` has `the reachability scan claims the dictionary
+    //     rather than nothing (… > 500 …)` below it — the exact non-vacuity device this census
+    //     asks for, counted as owing because the word it looked for was "plant".
+    //   · `no English sentence is carried by two keys` has a planted companion that a multi-line
+    //     IIFE pushed 15 lines down, so an eight-line window never saw it.
+    //   · `every row text a domain module hands the screen is a real key` has its evidence two
+    //     clauses down (`the row-text scan is reading modules that actually carry the union`),
+    //     with an unrelated clause in between.
+    // The devices are unchanged; only the reading of the third one is. A clause is the unit the
+    // suite writes in, so a clause is the unit the census reads — two of them, because a clause
+    // that states a rule and a clause that states its population is the shape the suite uses.
+    const companion = next.some((x) => isPlant(x.body) || GUARD_RE.test(x.body));
+    if (GUARD_RE.test(c.body) || companion) continue;
     unguardedZeroes.push(`${f}:${c.line}`);
   }
 }
 ok(`the suite's own zero-asserting clauses carry a plant, a pin or a planted companion (${unguardedZeroes.length} owing across ${proofFiles.length} proof scripts, ceiling ${VACUITY_CEILING})`,
   unguardedZeroes.length <= VACUITY_CEILING);
+// M311 corrected what this census READS — a guarded companion counts, and the companion is the
+// next two clauses rather than the next few lines — and a correction to the reader is exactly the
+// kind of change that can turn a census into a rubber stamp. So the reader gets a witness: one
+// fixture clause per device, each of which must be credited, and one with none, which must be
+// flagged. A reader that credited everything would report 0 owing and look perfect.
+const DEVICE_FIXTURES = [
+  ["a plant in the clause itself", 'ok("a planted witness in the clause itself", a.length === 0);\n', true],
+  ["a floor in the clause itself", 'ok("x", a.length === 0 && a.length >= 3);\n', true],
+  ["a guarded companion one clause down", 'ok("x", a.length === 0);\nok("the scan read something rather than nothing", a.length > 5);\n', true],
+  ["a guarded companion two clauses down", 'ok("x", a.length === 0);\nok("an unrelated clause", b.length === 0);\nok("the scan read something rather than nothing", a.length > 5);\n', true],
+  ["nothing at all", 'ok("x", a.length === 0);\nconst y = 1;\n', false],
+];
+const deviceVerdicts = DEVICE_FIXTURES.map(([name, src, want]) => {
+  const cls = clausesIn(src);
+  const c = cls[0];
+  const next = cls.filter((x) => x.line > c.line).slice(0, 2);
+  const credited = isPlant(c.body) || GUARD_RE.test(c.body) || next.some((x) => isPlant(x.body) || GUARD_RE.test(x.body));
+  return [name, credited === want];
+});
+ok(`the device reader credits each of the three devices at each distance the suite writes them and refuses a clause with none (${deviceVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
+  deviceVerdicts.every(([, v]) => v));
 if (unguardedZeroes.length > VACUITY_CEILING) console.log("       owing: " + unguardedZeroes.slice(0, 20).join(", "));
 // The census itself is the last thing that could go blind: a source it cannot split into
 // clauses counts zero clauses and therefore zero debts. The plant is a fixture with one

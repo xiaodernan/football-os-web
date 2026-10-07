@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M310 (a few numbers in that range
+Work ships one milestone per commit and is currently at M311 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6532,6 +6532,43 @@ probe-midpoint caveat, and the untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M311 — the census that charged clauses for evidence it could not see
+
+Section 38's vacuity census recognises three devices — a plant in the clause, a floor or pin in the
+clause, or a planted companion — and reported **387 owing** against a ceiling of 387. It was
+over-reporting by 89, and all three causes were in how it read the third device:
+
+- **A companion that carries a floor did not count, only one that carries a plant.** `every
+  dictionary key is reachable` has `the reachability scan claims the dictionary rather than nothing
+  (… > 500 …)` directly below it — the exact non-vacuity device this census exists to ask for —
+  and the census called it owing because the word it looked for was "plant".
+- **The companion window was eight lines.** `no English sentence is carried by two keys` has a
+  planted companion that a multi-line IIFE pushed fifteen lines down, so the window never saw it.
+- **The companion was one clause, not the evidence's own shape.** `every row text a domain module
+  hands the screen is a real key` has its population clause two below it, with an unrelated clause
+  in between.
+
+A census that over-reports is not harmless: it spends the reader's attention on clauses that already
+have their evidence, and it makes the ceiling look like progress when nothing moved. The three
+readings are corrected to what the suite actually writes — a companion is a **clause**, the window
+is the **next two** of them, and a **floor counts as much as a plant** — and the reported debt falls
+**387 → 298** with no clause edited.
+
+**A correction to the reader needs a witness of its own.** Widening what counts is exactly the change
+that can turn a census into a rubber stamp: a reader that credited everything would report 0 owing
+and look perfect. So the reader is planted with five fixtures — a plant in the clause, a floor in the
+clause, a guarded companion one clause down, a guarded companion two clauses down, and a clause with
+nothing at all — and each declares the verdict it must get, the last one being "flagged".
+
+The ceiling falls with the measurement, **387 → 298**, and it can only fall from here.
+
+Two mutations, both caught: the old reading restored (owing jumps to **367** against the ceiling of
+298), and the reader crediting everything (the "nothing at all" fixture reports credited, so the
+witness clause reddens instead of the census silently passing).
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **363/363** · 2,007 keys × 3 locales
+(vacuity census **298 owing / ceiling 298**).
 
 ### M310 — the edit that never read the decision it reversed
 
