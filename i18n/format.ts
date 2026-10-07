@@ -44,13 +44,14 @@ const localMidnight = (value: string | number | Date): number => {
  *  as today. A reader does not count hours since the last midnight, they count the days the
  *  wall calendar shows, so the arithmetic now runs between the two local midnights (rounded,
  *  because a DST day is 23 or 25 hours) and ±1 day has its own word. Within the reader's own
- *  day there is still no honest day count, and the instant's clock time — formatted their way —
- *  answers. */
+ *  day there is no honest day count either, so the instant rides the locale's today word and
+ *  its clock time — formatted their way — rides along as the variable; until M292 the branch
+ *  printed the bare clock alone, the last arm with no reader word. */
 export function relativeDay(locale: Locale, iso: string): RowText {
   const d = Math.round((localMidnight(new Date(iso)) - localMidnight(Date.now())) / 86_400_000);
   if (d > 1) return { key: "time.inDays", vars: { n: d } };
   if (d === 1) return { key: "time.tomorrow" };
-  if (d === 0) return { value: formatDate(locale, iso, { hour: "2-digit", minute: "2-digit" }) };
+  if (d === 0) return { key: "time.today", vars: { at: formatDate(locale, iso, { hour: "2-digit", minute: "2-digit" }) } };
   if (d === -1) return { key: "time.yesterday" };
   return { key: "time.agoDay", vars: { n: -d } };
 }

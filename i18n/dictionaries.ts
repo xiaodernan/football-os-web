@@ -1759,15 +1759,18 @@ const en: Dict = {
   "comm.agoNow": "just now",
   "comm.agoMin": "{n}m ago",
   "comm.agoHour": "{n}h ago",
-  // The two day words are shared, not the community's: `relativeDay` in i18n/format.ts
-  // names both of them and the dashboard's fixture/growth line prints what it hands back,
+  // The day words are shared, not the community's: `relativeDay` in i18n/format.ts
+  // names them and the dashboard's fixture/growth line prints what it hands back,
   // while the feed's own helper names the past one. A word two surfaces say is one row.
   // `time.tomorrow` / `time.yesterday` answer ±1 calendar day and carry no variable on purpose:
   // the day a reader calls "yesterday" is a word, not a measurement they want counted.
+  // `time.today` is the one day word that carries a variable — a day the reader is inside
+  // has no honest count, so the word rides with the clock `relativeDay` formats their way.
   "ai.sug.keyPlayer": "Who is the key player at Real Madrid?",
   "ai.sug.league": "Where do Arsenal sit in the Premier League?",
   "ai.sug.value": "How much is Mbappé worth?",
   "ai.sug.transfer": "Any transfer news about Haaland?",
+  "time.today": "Today {at}",
   "time.tomorrow": "Tomorrow",
   "time.yesterday": "Yesterday",
   "time.agoDay": "{n}d ago",
@@ -3815,6 +3818,7 @@ const zhCN: Dict = {
   "ai.sug.league": "阿森纳在英超排第几？",
   "ai.sug.value": "姆巴佩值多少钱？",
   "ai.sug.transfer": "有哈兰德的转会新闻吗？",
+  "time.today": "今天 {at}",
   "time.tomorrow": "明天",
   "time.yesterday": "昨天",
   "time.agoDay": "{n} 天前",
@@ -5766,6 +5770,7 @@ const zhTW: Dict = {
   "ai.sug.league": "阿森納在英超排第幾？",
   "ai.sug.value": "姆巴佩值多少錢？",
   "ai.sug.transfer": "有哈蘭德的轉會新聞嗎？",
+  "time.today": "今天 {at}",
   "time.tomorrow": "明天",
   "time.yesterday": "昨天",
   "time.agoDay": "{n} 天前",

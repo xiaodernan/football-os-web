@@ -2316,7 +2316,9 @@ const DAY_MS = 86400000;
 // days since M216, and an offset like `1.4 * DAY_MS` answers differently at 23:30 than at 10:00,
 // so a case table built from offsets would let the start time of the run decide the result.
 // `dayAt(1, 0)` is tomorrow at 00:30 whenever this executes — the case that separates the two
-// rules, because the elapsed one has not finished a day yet.
+// rules, because the elapsed one has not finished a day yet. The two `0` rows want the today
+// word: M214 queued the within-a-day branch as the one arm with no reader word, and M292 pays
+// it — a bare clock is refused, and a word that lost its clock is refused.
 const dayAt = (shift, hour) => {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -2325,7 +2327,7 @@ const dayAt = (shift, hour) => {
   return d.toISOString();
 };
 const REL_CASES = [
-  [0, 9, null], [0, 23, null],
+  [0, 9, "time.today"], [0, 23, "time.today"],
   [1, 0, "time.tomorrow"], [1, 12, "time.tomorrow"], [1, 23, "time.tomorrow"],
   [-1, 0, "time.yesterday"], [-1, 23, "time.yesterday"],
   [2, 0, "time.inDays"], [5, 12, "time.inDays"],
@@ -2339,10 +2341,14 @@ for (const [shift, hour, wantKey] of REL_CASES) {
   const row = relativeDay("en", iso);
   const key = "key" in row ? row.key : null;
   const n = "vars" in row && row.vars ? row.vars.n : null;
+  const at = "vars" in row && row.vars ? row.vars.at : null;
   const where = `day ${shift} @${String(hour).padStart(2, "0")}:30`;
   if (key !== wantKey) relBad.push(`${where} -> ${key ?? "value"} (wanted ${wantKey ?? "value"})`);
   if (wantKey === "time.tomorrow" || wantKey === "time.yesterday") {
     if (n !== null) relBad.push(`${where} -> a direction word carrying n=${n}`);
+  } else if (wantKey === "time.today") {
+    if (n !== null && n !== undefined) relBad.push(`${where} -> the today word carrying n=${n}`);
+    if (typeof at !== "string" || !at.includes(":")) relBad.push(`${where} -> the today word without a clock (${JSON.stringify(at)})`);
   } else if (key && (!Number.isInteger(n) || n <= 0 || n !== Math.abs(shift))) {
     relBad.push(`${where} -> n=${n} is not the whole positive day count`);
   }
@@ -2352,6 +2358,12 @@ for (const [shift, hour, wantKey] of REL_CASES) {
     if (/-\d/.test(line)) relBad.push(`${locale} ${where} prints "${line}"`);
     if (/\{[a-z]/i.test(line)) relBad.push(`${locale} ${where} left a hole: "${line}"`);
     if (locale !== "en" && /\b(in|ago)\b/.test(line)) relBad.push(`${locale} ${where} speaks English: "${line}"`);
+    if (wantKey === "time.today" && key) {
+      // The sentence the branch shipped until M292, refused by name: the line must be more than
+      // the clock it carries, and it must still carry the clock.
+      if (line === at) relBad.push(`${locale} ${where} prints a bare clock: "${line}"`);
+      else if (at && !line.includes(at)) relBad.push(`${locale} ${where} dropped the clock: "${line}"`);
+    }
   }
 }
 // The two direction words are read out of the table rather than typed into this file, so the
@@ -2366,9 +2378,10 @@ for (const locale of ["en", "zh-CN", "zh-TW"]) {
   if (up === down) shapeBad.push(`${locale}: one word for both directions`);
   if (/\d/.test(up) || /\d/.test(down)) shapeBad.push(`${locale}: a direction word with a number in it`);
 }
-ok(`the door counts the reader's calendar days over ${REL_CASES.length} planted date anchors × 3 locales (${relBad.slice(0, 3).join(" | ") || "clean"}; ${shapeBad.join(" | ") || "the two direction words differ"}), while the elapsed-24-hour rule it replaced still calls tomorrow at 00:30 “${elapsedRule(straddle)} days” (${oldRelTime(elapsedRule(straddle))})`,
+ok(`the door counts the reader's calendar days over ${REL_CASES.length} planted date anchors × 3 locales (${relBad.slice(0, 3).join(" | ") || "clean"}; ${shapeBad.join(" | ") || "the two direction words differ, and today is a word plus its clock"}), while the elapsed-24-hour rule it replaced still calls tomorrow at 00:30 “${elapsedRule(straddle)} days” (${oldRelTime(elapsedRule(straddle))})`,
   relBad.length === 0 && shapeBad.length === 0 && !(elapsedRule(straddle) > 1) &&
   "key" in relativeDay("en", straddle) && relativeDay("en", straddle).key === "time.tomorrow" &&
+  relativeDay("en", dayAt(0, 9)).key === "time.today" &&
   /-2d ago/.test(oldRelTime(-2)) && /in 3d/.test(oldRelTime(3)) &&
   !/-\d/.test(translate("en", "time.agoDay", { n: 2 })) &&
   !/\b(in|ago)\b/.test(translate("zh-CN", "time.inDays", { n: 3 })));
