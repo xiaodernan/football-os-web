@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M302 (a few numbers in that range
+Work ships one milestone per commit and is currently at M303 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6506,6 +6506,72 @@ This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
 
+### M303 — the census's population was the shapes it already knew, and the tree carried two it did not
+
+The `Dashboard.tsx:51` alias charge retired here, and it retired the honest way: not by arguing
+M218's discriminator was enough, but by finding the shape the discriminator's population still
+could not see. `relCandidates` matched a subtraction whose operands are a parsed instant and a
+now-receiver — `new Date(iso).getTime() - Date.now()`. M218 added the file's own `Date.now()`
+bindings as receivers and M293 added the parameter-default shape; every member of that family
+was witnessed by a plant demanding exactly one candidate. What no pattern covered was the same
+arithmetic **one brace to the left**: a subtraction *inside* the constructor,
+`new Date(Date.now() - 86400000)`, which builds the instant from the relative math instead of
+subtracting from a parsed one. Both operand orders miss it, no plant wore it, and the census
+counted a clean population while the class it exists for walked past it.
+
+The M303 probe measured the tree both ways. The census as the gate runs it saw **2** operand
+candidates — the two row-typed doors, `CommunityHub.tsx timeAgo` and `i18n/format.ts
+relativeDay`. The wrapped shape saw **2** sites the census could not:
+
+- `store/useFootballOS.tsx:163` — the streak's `yesterday`, computed as
+  `new Date(Date.now() - 86400000).toISOString().slice(0, 10)` and fed to the `continues`
+  comparison whose result the dashboard and profile print. Doubly defective, and both defects
+  are ones this record had already named elsewhere: the **elapsed-24-hour rule** M216 removed
+  from the display door was still running in the streak, and the day keys came from
+  `toISOString()`, the **UTC clock** — a day boundary no reader has. A UTC+8 reader completing
+  two sessions before 08:00 local could grow the streak twice in one wall-calendar day; the
+  number on the badge counted a calendar the reader does not live in.
+- `domain/community.ts:74` — the board seed's `ago(days)`, the same wrapped shape producing the
+  seeded threads' `at` instants. Its defect was the convention, not the clock: N *elapsed*
+  hours where the door that renders those instants counts N *calendar* days — the two disagree
+  on a DST day, and the seed should speak the same convention its reader uses.
+
+**Both sites are repaired by leaving the population rather than by reclassifying it.** The seed's
+`ago` now walks calendar days (`d.setDate(d.getDate() - days)`) and emits the same ISO instants;
+the streak's `today`/`yesterday` are local-calendar keys built by `dayKey`, the shared
+local-calendar builder in `domain/history.ts` — now exported, because the first draft of this fix
+inlined a third hand-assembled key template and the hand-label clause (`no hand-assembled date
+label reaches a screen`, its pin at **2** builders) caught it in the same commit it was written.
+A key is compared against `lastCompletedDate` and never shown; the builder that already held the
+pin is where it comes from.
+
+**The gate widens with the shape instead of with a list.** `relCandidates` gains the wrapped
+patterns — receiver either side of the minus, content bounded to one statement and one paren
+depth beyond the receiver's own call (`[^;()\n]*`), the depth the live shapes wear — and two
+plants join the table (**8 → 10**, still over the same 4 buckets, each demanding exactly one
+candidate): a wrapped instant in a string-returning helper classifies **sentence** (charged), and
+a wrapped alias feeding only a comparison classifies **selection** (not charged — the second
+plant also exercises the wrapped-vs-operand overlap through the dedup pass). The census clause
+itself is unchanged and still demands `charged === 0`; the tree now satisfies it with both
+former wearers gone rather than excused.
+
+**The charge's paper trail.** M215 measured the alias hole (1 site, 0 printing helpers, "the
+class can dodge the clause by naming a variable"), M216 declined to widen the pattern without a
+"reaches a displayed string" discriminator, M218 built the discriminator and classified the
+selection filter as measured-not-shown, and M300/M302 kept the line alive. What none of them
+re-checked was whether the named site still existed: M289 moved the today panel onto the demo
+world's anchor and the `const now = Date.now()` filter left `Dashboard.tsx` with it. The class
+outlived its last named site by exactly one shape, and this milestone closes both — the shape in
+the pattern table, the site in the tree. Still outside the census's claim, unchanged from M218's
+own record: cross-function flow (a duration computed in one function and printed in another) is
+a different defect than a hand-formatted relative sentence, and the classifier answers only the
+shape of one expression.
+
+Measured on the working copy: `tsc --noEmit` clean, `npm run build` exit 0, `proof-i18n` **357/357**
+· 2,007 keys × 3 locales (vacuity census 386 owing / ceiling 387) with the plant table at
+**10 plants over 4 buckets, all as predicted** and the census reading **2 candidates in 2 files —
+row-typed 2, selection-only 0, charged none**, suite **42/42 · 2,374/2,374**, `proof-rng` 55/55.
+
 ### M302 — two more outstanding charges whose repairs had already landed
 
 M300 read the `Still outstanding` blocks of M208–M218 against the tree and struck the charges a
@@ -6551,10 +6617,12 @@ This is a docs-only milestone, so the suite is quoted as measured rather than as
 changed.
 
 **Still outstanding, re-checked against this tree rather than carried forward**: the
-`Dashboard.tsx:51` alias discriminator, the `time.inDays`/`time.agoDay` compactness policy, the
-`useEffect` half of the router and the populated-state browser walk (#142), M218's `m218d` charging
-arm, M213's probe-midpoint caveat, and the untracked `dev/` scratch (~250 files). Each of the six
-was looked for in this commit; none of them has a later repair to name.
+`time.inDays`/`time.agoDay` compactness policy, the `useEffect` half of the router and the
+populated-state browser walk (#142), M218's `m218d` charging arm, M213's probe-midpoint caveat,
+and the untracked `dev/` scratch (~250 files). Each was looked for in this commit; none of them
+has a later repair to name - and the alias discriminator this block carried is the one M303
+closed, whose section records the shape M218's population still missed and the two sites it
+held.
 
 ### M301 — an empty pool now fails at the cause, in one shared contract
 
