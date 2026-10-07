@@ -375,6 +375,50 @@ ok(`a competition's own page shows its live fixtures: every in-play scoreline re
   `missing:${compScoreMiss.map((r) => r.cid).join(",")}`);
 
 // ---------------------------------------------------------------------------
+// 5d · a club with a match in play keeps its next-up projection
+// ---------------------------------------------------------------------------
+// ClubDetail pointed its projection row at the first entry of the club's
+// upcoming list and withheld it unless that entry was SCHEDULED, so a club
+// whose next fixture was in play — 51 of the 73 clubs on the shipped world —
+// lost the row entirely, 47 of them while a schedulable fixture sat right
+// behind the live one. The row now waits for the next schedulable fixture
+// instead of vanishing, and this clause renders every club page that owns
+// one and charges the row's own label text to the page. The ten clubs whose
+// next schedulable fixture is a cross-competition tie sit outside their
+// domestic model and are excluded by the same rule the page applies.
+const METRICS = (await tryLoad(() => server.ssrLoadModule("/" + "domain/analytics.ts"))).mod;
+const metricsIdx = new Map();
+const metricsFor = (compId) => {
+  if (!metricsIdx.has(compId)) metricsIdx.set(compId, new Map(METRICS.teamMetrics(compId, FOOT.footballProvider.matches(), FOOT.footballProvider.clubs()).map((m) => [m.clubId, m])));
+  return metricsIdx.get(compId);
+};
+const schedNextClubs = [];
+if (FOOT && METRICS) {
+  for (const c of FOOT.footballProvider.clubs()) {
+    const up = FOOT.upcomingMatchesForClub(c.id, 5);
+    const sched = up.find((m) => m.status === "SCHEDULED");
+    if (!sched) continue;
+    const oppId = sched.homeClubId === c.id ? sched.awayClubId : sched.homeClubId;
+    const oppName = FOOT.getClub(oppId)?.name;
+    if (oppName && metricsFor(c.competitionId).has(oppId)) schedNextClubs.push({ cid: c.id, oppName });
+  }
+}
+const clubPages = [];
+if (FWORLD && ROUTER) {
+  for (const r of schedNextClubs) {
+    mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+    globalThis.window.location.hash = "#/clubs/" + r.cid;
+    let html = "";
+    try { html = renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld)))); } catch { html = ""; }
+    clubPages.push({ ...r, text: nodesOf(html).join(" ") });
+  }
+}
+const clubRowMiss = clubPages.filter((r) => !r.text.includes("Next up vs " + r.oppName));
+ok(`a club with a match in play keeps its next-up projection: every club whose next schedulable fixture is priceable in its own competition renders the row (${clubPages.length} club pages, floor 55; ${clubRowMiss.length} missing the row)`,
+  clubPages.length >= 55 && clubRowMiss.length === 0,
+  `missing:${clubRowMiss.map((r) => r.cid).join(",")}`);
+
+// ---------------------------------------------------------------------------
 // 6 · what this harness cannot see, demonstrated rather than asserted
 // ---------------------------------------------------------------------------
 const Probe = () => {

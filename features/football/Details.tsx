@@ -320,7 +320,10 @@ export function ClubDetail({ id }: { id: string }) {
   const c = getClub(id);
   const { t } = useI18n();
   const upcoming = c ? upcomingMatchesForClub(id, 5) : [];
-  const next = upcoming[0];
+  // M291: the projection describes a fixture that has not kicked off. A club
+  // with a match in play keeps its row — pointed at the next fixture that is
+  // still schedulable — instead of losing it to the live game ahead of it.
+  const next = upcoming.find((m) => m.status === "SCHEDULED");
   // Both hooks run on every render, including the club-missing render: a memo
   // that only exists while the club does would change the hook count between
   // navigations from a valid club to an unknown id.
@@ -330,7 +333,7 @@ export function ClubDetail({ id }: { id: string }) {
   );
   const mine = metrics.find((m) => m.clubId === id) ?? null;
   const preview = useMemo(() => {
-    if (!mine || !next || next.status !== "SCHEDULED") return null;
+    if (!mine || !next) return null;
     const oppId = next.homeClubId === id ? next.awayClubId : next.homeClubId;
     const opp = metrics.find((m) => m.clubId === oppId);
     if (!opp) return null;
