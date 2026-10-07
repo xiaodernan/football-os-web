@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M297 (a few numbers in that range
+Work ships one milestone per commit and is currently at M298 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6438,6 +6438,41 @@ vacuity ceiling pays for the new clause in the same commit (386 → 387).
 Measured: `tsc` clean; `proof-i18n` **357/357** · 2,007 keys × 3 locales (vacuity
 census 387/387); `proof-screens` **30/30**; suite **42/42 · 2,368/2,368**; `npm run build`
 exit 0. Code as **f5f70c5**.
+### M298 — the player OS's training counters count the world, not their cut
+
+The Training tab derived both of its counters from the same expressions it
+rendered rows with: `missed` was `filter(status === "missed").slice(0, 8)`
+and the slipped hint printed `missed.length`; `history` was
+`filter(status === "completed").slice(0, 20)` and the completed hint printed
+`history.length`. A reader with 9 missed sessions saw `8 slipped`; 40
+completions printed `20 completed`. The probe pairs each derivation with its
+hint and computes the shortfall against worlds the cuts cannot represent
+(9 → 8, 40 → 20).
+
+The counters now read the uncut family — `missedAll`/`historyAll` for the
+numbers, the 8- and 20-row cuts unchanged — the same split the dashboard's
+strip took at M294, the football hub's at M297, and the search screen's at
+M296.
+
+The gate is the first clause that measures its own absence. The training
+counters live behind `state.profile`, and the OsProvider reads localStorage
+inside a `useEffect`, which renderToStaticMarkup never runs — so no screen
+render here can reach the tab with data in it. `proof-screens` 5j plants a
+full os-state blob (a profile plus 9 missed and 21 completed sessions, worlds
+the cuts cannot represent) under the app's own storage key and renders
+`#/player/training` anyway, and the page still shows the profile-setup empty
+state: the harness provably cannot feed the player OS data, the fixed
+counters owe the live browser pass (#142), and any green render of this tab
+here would have been the empty state wearing the tab's name. The vacuity
+ceiling does not move: 5j asserts a positive fact (the empty state prints)
+alongside its zero, so the census's zero-asserting class does not count it —
+the census read 386 owing against ceiling 387 before and after this commit,
+which also shows the earlier sections' `N/N` census figures recorded the
+ceiling, not the owing.
+
+Measured: `tsc` clean; `proof-i18n` **357/357** · 2,007 keys × 3 locales (vacuity
+census 386 owing / ceiling 387); `proof-screens` **31/31**; suite **42/42 · 2,369/2,369**; `npm run build`
+exit 0. Code as **b3b849c**.
 ### M292 — today reads as a word, not a bare clock
 
 `relativeDay`'s within-a-day branch was the one arm with no reader word: an
