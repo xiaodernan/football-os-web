@@ -99,6 +99,14 @@ ok("empty retrieval refuses to invent an answer", /will not invent/i.test(AT(non
 ok("empty retrieval labels the demo provider", /Demo retrieval|no live model|API key/i.test(AT(none)));
 ok("empty retrieval has no fabricated facts", none.facts.length === 0);
 ok("empty retrieval confidence sits at the honest floor", none.confidence === 20);
+// M314. The empty answer's two floors are only honest if the populated side clears them —
+// otherwise `confidence === 20` could be a constant and `facts === 0` a retrieval that always
+// comes back empty. The two grounded fixtures this file already built were measured before this
+// was written: confidence 91 and 6 facts on both. The clause is self-guarded, so the vacuity
+// census credits the two clauses above it through its companion window.
+const grounded = [vf, cf].map((x) => x?.ans).filter(Boolean);
+ok(`the empty answer's floors are floors: every grounded answer on this panel clears them (${grounded.length} grounded, confidence ${grounded.map((a) => a.confidence).join("/")} > 20, facts ${grounded.map((a) => a.facts.length).join("/")})`,
+  grounded.length >= 2 && grounded.every((a) => a.confidence > 20 && a.facts.length >= 1));
 
 // ---- Every answer, not just the ones a fixture happened to pick ----
 // Questions chosen to reach each retrievable kind: a club, a player, a competition, a

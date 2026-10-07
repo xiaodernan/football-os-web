@@ -5622,7 +5622,7 @@ ok(`the news record carries no seed-composed summary sentence: the NewsArticle i
 // The number may only fall. Adding a zero-asserting clause without one of the three has to be
 // paid for here, in the same commit — which is the same bargain every other ceiling in this
 // file asks for.
-const VACUITY_CEILING = 295;
+const VACUITY_CEILING = 293;
 const clauseDepth = (text) => {
   let d = 0, str = null, tmpl = 0;
   for (let i = 0; i < text.length; i++) {

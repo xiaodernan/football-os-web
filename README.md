@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M313 (a few numbers in that range
+Work ships one milestone per commit and is currently at M314 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
@@ -6532,6 +6532,30 @@ probe-midpoint caveat, and the untracked `dev/` scratch.
 This is a docs-only milestone: no source file changes, so the suite is quoted
 unchanged from the M299 plane — **42/42 · 2,374/2,374** — and `proof-ai-grounding`
 stays at **68/68**.
+
+### M314 — the empty answer's floors, held from both sides
+
+The census's next family was the no-hits refusal in `proof-ai-grounding`: four clauses asserting
+that an empty retrieval refuses to invent, labels its provider, carries no facts and sits at the
+confidence floor. Two of them — `no fabricated facts` and `confidence === 20` — could both stay
+green if retrieval always came back empty or if confidence were a constant 20 everywhere: the zero
+sides were pinned, the populated sides were not. The spend is one companion clause that reads the
+two grounded fixtures this proof already built and demands that both clear the floors the empty
+answer sits at — measured before it was written: confidence 91 and 6 facts on each. The clause is
+self-guarded, so the census credits the two clauses above it through its companion window, and the
+debt falls **295 → 293** with the ceiling following the measurement.
+
+Two of the four stay charged on purpose: the refusal-sentence and provider-label clauses are
+behavioral assertions whose zero-vocabulary is the fixture's own name (`none`) and a quoted
+provider string, and de-charging them would take a reader correction that has not yet earned its
+witness. They stay on the books until a correction earns it.
+
+The arm, run before landing: with the companion deleted and the ceiling already at 293, the census
+reports **295 owing against 293** and exactly one clause reddens — the fall is earned by the
+companion, not by the number.
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-ai-grounding` **69/69**, `proof-i18n`
+**366/366** · 2,007 keys × 3 locales (vacuity census **293 owing / ceiling 293**).
 
 ### M313 — the plant that re-implemented the predicate it was guarding
 
