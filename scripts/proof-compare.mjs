@@ -64,6 +64,8 @@ const srcMatch =
   metric(r, "value").a === pa.value &&
   metric(r, "valueIndex").a === round1(valueIndex(pa)) && metric(r, "valueIndex").b === round1(valueIndex(pb));
 ok("every metric value traces to the stored player fields (nothing estimated)", srcMatch);
+// M324 companion: a comparison with real players produces non-zero metrics, so the "nothing estimated" clause above has a population pin.
+ok("the comparison produces all 7 headline metrics with real values", r.metrics.length === 7 && r.metrics.every((m) => typeof m.a === "number" && typeof m.b === "number"));
 
 // --- aWins / bWins tally, recomputed from the stated directions ------------
 let expA = 0, expB = 0, ties = 0;
