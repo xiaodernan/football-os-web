@@ -145,9 +145,11 @@ ok("a session's own title row is forwarded, not re-worded here",
 ok("a session carries its rating, XP and growth through unchanged",
   s.score === 4 && s.xp === 30 && eq(s.growth, [{ key: "passing", delta: 2 }]));
 ok("the stored note is trimmed, not truncated or blanked", s.note === "keep head down");
-ok("a whitespace-only note yields no note", one({ sessions: [session({ notes: "   " })] })[0].note === undefined);
+ok("a whitespace-only note yields no note",
+  one({ sessions: [session({ notes: "   " })] })[0].note === undefined &&
+  one({ sessions: [session({ notes: "real note" })] })[0].note !== undefined); /* M324-TIMELINE: a timeline that dropped every note would satisfy the blank arm alone */
 // M317 companion: a session with a real note carries the trimmed text, so the "no note" clause above has a population pin.
-ok("the timeline carries at least one session with a non-empty note", one({ sessions: [session({ notes: "real note" })] })[0].note !== undefined);
+ok("the timeline carries at least one session with a non-empty note", one({ sessions: [session({ notes: "real note" })] })[0].note !== undefined && one({ sessions: [session({ notes: "real note" })] })[0].note.length > 0);
 const p = one({ plans: [plan()] })[0];
 ok("a plan row shows the user's own prompt and the provider that answered it",
   p.title.value === "Plan prompt B" && p.detail.value === "demo-coach-v1");
@@ -166,15 +168,17 @@ ok("the three stored memory subtypes each resolve through a key",
   eq(["coach", "training", "profile"].map((k) => one({ memory: [memory({ kind: k })] })[0].detail),
     [{ key: "hist.mem.coach" }, { key: "hist.mem.training" }, { key: "hist.mem.profile" }]));
 ok("an unrecognised memory subtype gets no label rather than the raw code",
-  one({ memory: [memory({ kind: "future-kind" })] })[0].detail === undefined);
+  one({ memory: [memory({ kind: "future-kind" })] })[0].detail === undefined &&
+  one({ memory: [memory({ kind: "coach" })] })[0].detail !== undefined); /* M324-TIMELINE: a reader that labelled nothing would satisfy the unknown arm alone */
 // M317 companion: a recognised memory subtype gets a label, so the "no label" clause above has a population pin.
-ok("the timeline carries at least one memory with a known subtype", one({ memory: [memory({ kind: "coach" })] })[0].detail !== undefined);
+ok("the timeline carries at least one memory with a known subtype", one({ memory: [memory({ kind: "coach" })] })[0].detail !== undefined && one({ memory: [memory({ kind: "coach" })] }).length === 1);
 
 // ---- 5. The academy verdict is read off the record, plural included.
 ok("a passed check quiz reads as passed whatever the attempt count says",
   eq(one({ learn: [learn({ quizCorrect: true, attempts: 3 })] })[0].detail, { key: "hist.learn.passed" }));
 ok("a single missed attempt takes the singular key and no variable",
-  eq(one({ learn: [learn({ quizCorrect: false, attempts: 1 })] })[0].detail, { key: "hist.learn.missedOne" }));
+  eq(one({ learn: [learn({ quizCorrect: false, attempts: 1 })] })[0].detail, { key: "hist.learn.missedOne" }) &&
+  one({ learn: [learn({ quizCorrect: false, attempts: 1 })] }).length === 1);
 ok("two missed attempts take the plural key with n = 2",
   eq(one({ learn: [learn({ quizCorrect: false, attempts: 2 })] })[0].detail, { key: "hist.learn.missed", vars: { n: 2 } }));
 ok("reading without attempting is not reported as a failed quiz",
@@ -191,7 +195,8 @@ ok("the duration is stated in minutes to one decimal", fv.min === "5.0");
 ok("the per-minute rate is detections over that duration", fv.per === (12 / (300 / 60)).toFixed(1));
 ok("the provider confidence passes through untouched", fv.conf === 68);
 ok("a zero-length clip reports no rate instead of dividing into Infinity",
-  one({ film: [clip({ durationSec: 0 })] })[0].detail.vars.per === "0");
+  one({ film: [clip({ durationSec: 0 })] })[0].detail.vars.per === "0" &&
+  Number(one({ film: [clip({ durationSec: 10 })] })[0].detail.vars.per) > 0); /* M324-TIMELINE: a rate that always read 0 would satisfy the zero-length arm alone */
 // M317 companion: a clip with non-zero duration and detections computes a rate, so the "no rate" clause above has a population pin.
 ok("the timeline carries at least one clip with a computed per-minute rate", (() => { const c = one({ film: [clip({ durationSec: 300, detections: 12 })] })[0]; return c.detail && typeof c.detail.vars.per === 'string' && c.detail.vars.per !== "0"; })());
 ok("a clip with zero detections says so", one({ film: [clip({ detections: 0 })] })[0].detail.vars.d === 0);
@@ -229,7 +234,7 @@ ok("an undated row groups as invalid rather than as today", undated.length === 1
 // ---- 9. rowLine is the only place the union is interpreted.
 ok("an absent cell renders as nothing, not as an empty string", rowLine(undefined, t) === undefined);
 // M317 companion: a present value cell renders its text, so the "nothing" clause above has a population pin.
-ok("the timeline carries at least one rendered value cell", rowLine({ value: "something" }, t) !== undefined);
+ok("the timeline carries at least one rendered value cell", rowLine({ value: "something" }, t) !== undefined && rowLine({ value: "something" }, t).length > 0);
 seen = [];
 ok("a value row reaches the reader verbatim and never consults the dictionary",
   rowLine({ value: "Session title A" }, t) === "Session title A" && seen.length === 0);
@@ -290,7 +295,7 @@ ok("the two counted metrics do not collapse onto one title key",
 const stored = JSON.stringify([countGoalTitle("xp", 500), countGoalTitle("sessions", 5), attributeGoalTitle(attrKey)]);
 const frozen = ATTRIBUTE_KEYS.filter((k) => ["en", "zh-CN", "zh-TW"].some((l) => stored.includes(DICTIONARIES[l][`attr.name.${k}`])));
 ok(`no machine-built goal row stores a display word from any locale (${frozen.join(", ") || "none"})`,
-  frozen.length === 0);
+  frozen.length === 0 && ATTRIBUTE_KEYS.length > 0); /* M324-TIMELINE: an empty key population would satisfy the universal alone */
 
 // Same row, three readers, three languages — the assertion the defect fails.
 const readBy = (loc) => rowLine(attrRow.title, (k, v) => {
@@ -302,7 +307,8 @@ const [enRead, cnRead, twRead] = ["en", "zh-CN", "zh-TW"].map(readBy);
 ok("one stored row reads differently to readers in different locales",
   enRead !== cnRead && enRead !== twRead && cnRead !== twRead);
 ok("a resolved goal title shows no placeholder and no bare key to any reader",
-  [enRead, cnRead, twRead].every((s) => s && !s.includes("{") && !s.startsWith("goal.")));
+  [enRead, cnRead, twRead].every((s) => s && !s.includes("{") && !s.startsWith("goal.")) &&
+  enRead.length > 0 && cnRead.length > 0 && twRead.length > 0); /* M324-TIMELINE: a reader that returned nothing would satisfy all three arms at once */
 ok("the English reading is the dictionary's own sentence for that row",
   enRead === DICTIONARIES.en["goal.title.attrTarget"].split("{a}").join(DICTIONARIES.en[`attr.name.${attrKey}`]));
 
@@ -413,7 +419,7 @@ ok("a memory line nests the session's own title row and resolves it for the read
 const nestedRow = trainingMemory(builtTitle, 50, 4, 3);
 const nestedReadings = locales.map((loc) => [loc, say(loc)(nestedRow)]);
 ok(`the same stored memory row words its nested title differently per reader (${nestedReadings.map(([l, r]) => `${l}:"${r}"`).join(" ").slice(0, 150)})`,
-  new Set(nestedReadings.map(([, r]) => r)).size === locales.length &&
+  nestedReadings.length >= 3 && new Set(nestedReadings.map(([, r]) => r)).size === locales.length &&
   nestedReadings.every(([, r]) => typeof r === "string" && !/object Object|\[object/.test(r)));
 
 // A session stored before its title was a row keeps the sentence the app wrote then; a session
@@ -443,7 +449,7 @@ ok("a remembered row stored while these were sentences keeps its words as a valu
 ok("and a row already keyed is left alone, identity included", mRepaired[1] === keyedMem);
 ok("repair keeps every other field of a legacy memory row",
   mRepaired[0].id === "M1" && mRepaired[0].kind === "coach" && mRepaired[0].at === "2026-01-02T00:00:00.000Z");
-ok("repair is safe on an empty library", repairMemoryTexts([]).length === 0);
+ok("repair is safe on an empty library", repairMemoryTexts([]).length === 0 && repairMemoryTexts([memRow("x")]).length === 1); /* M324-TIMELINE: a repair that dropped every row would satisfy the empty arm alone */
 const cleanMem = [keyedMem];
 ok("a library with nothing to repair is returned as the same array, not a rebuild",
   repairMemoryTexts(cleanMem) === cleanMem && repairMemoryTexts(cleanMem)[0] === keyedMem);
