@@ -5665,7 +5665,17 @@ const isPlant = (s) => /plant|blind spot|is measured and not/i.test(s);
 // across the tree with the census's own classifier: this reading de-charges exactly the
 // 27 clauses whose only zero token was a decimal fragment (293 → 268), each hand-judged;
 // the token reading itself is witnessed below, next to the device reading.
-const isZeroish = (s) => /\bnone\b|(?<![\w.])0(?![\d.])|\bnothing\b|\bno [a-z]+\b/i.test(s);
+// M325: an array subscript is not an asserted zero either. `mixed[1].split(" (")[0]` reads the
+// first segment of a label and `GRAPHS[0][1].nodes` reads the first case; neither clause holds
+// anything TO zero, and a clause pinned to a subscript throws on an empty array rather than
+// passing quietly — the opposite of the vacuity this census charges. A `[0]` that is a literal
+// element rather than a subscript (nothing indexes into it) stays charged on purpose, and so
+// does a real `edges[0] === 0`, because the asserted zero survives the strip. Measured with the
+// census's own classifier: the subscript reading alone de-charges 2 of the 14 owing clauses
+// (proof-community.mjs:278, proof-graph.mjs:111), each hand-judged; together with the widened
+// guard below the census reads 14 → 12.
+const IDX_SUBSCRIPT = /([\w)\]])\[0\](?![\d.])/g;
+const isZeroish = (s) => /\bnone\b|(?<![\w.])0(?![\d.])|\bnothing\b|\bno [a-z]+\b/i.test(s.replace(IDX_SUBSCRIPT, "$1"));
 // M316: a pin against any positive integer constant (`=== 1`, `>= 3`) is the same floor
 // device as a pin against zero: on an empty/undefined measurement the pin fails, so the
 // whole clause fails rather than passing vacuously. This widens the guard to credit those
@@ -5673,7 +5683,15 @@ const isZeroish = (s) => /\bnone\b|(?<![\w.])0(?![\d.])|\bnothing\b|\bno [a-z]+\
 // (268 → 155), all AND-compositions where a positive pin makes the clause fail on empty
 // measurement; no OR-composition lets a zero arm pass vacuously. The guard explicitly
 // excludes `=== 0` by matching `[1-9]\d*` only.
-const GUARD_RE = /rather than nothing|not an empty set|against pin|pin \d+|> 0|>= 1|\.length >= \d+|=== [1-9]\d*|>= [1-9]\d*/;
+// M325 companion: the guard read `>= N` and `=== N` but not a strict `> N`, so a clause belted
+// with `mixed.length > 4` — which fails, not passes, on an empty measurement — was invisible to
+// it and its neighbour was still charged as debt. Both `>` forms now require a non-`=` character
+// before the operator: `items.map((v) => 0)` is an arrow returning zero, not a floor pin, and
+// crediting it would have let any clause with an arrow-valued companion off the hook. Measured
+// across the tree: the strict floor newly credits 20 clause bodies, each hand-judged as a real
+// population pin (`> 50`, `> 12`, `> 1`, …), and the arrow exclusion moves no credit at all
+// today (0 clauses were credited solely by an arrow) — it closes the hole before it is used.
+const GUARD_RE = /rather than nothing|not an empty set|against pin|pin \d+|(?<!=)> 0|>= 1|\.length >= \d+|=== [1-9]\d*|>= [1-9]\d*|(?<!=)> [1-9]\d*/;
 const unguardedZeroes = [];
 const proofFiles = readdirSync(join(root, "scripts")).filter((f) => /^proof-.*\.mjs$/.test(f)).sort();
 for (const f of proofFiles) {
@@ -5739,6 +5757,9 @@ const TOKEN_FIXTURES = [
   ["a label that states a zero value is, even with the comparison below the first line", 'ok("ppg is round2(points/played) and exactly 0 before the first fixture",\n  st().ppg === 0);\n', true],
   ["a bound zero is kept charged on purpose", 'ok("skill is a 0..1 tier", a.skill >= 0 && a.skill <= 1);\n', true],
   ["a zero inside a score is kept charged (the conservative side)", 'ok("A: hand-computed record 4-2-0-2", a.won === 2);\n', true],
+  ["an array subscript reads a position, not an asserted zero", 'ok("each edge key resolves", r.attributeEdges[0] !== undefined);\n', false],
+  ["a zero asserted against an indexed read is still charged (the strip leaves the asserted one)", 'ok("the first measured zero is real", r.edges[0] === 0);\n', true],
+  ["a literal zero element is kept charged — nothing indexes into it", 'ok("the fixture really holds a zero", [0].includes(q));\n', true],
 ];
 const tokenVerdicts = TOKEN_FIXTURES.map(([name, src, want]) => {
   const c = clausesIn(src)[0];
@@ -5755,6 +5776,8 @@ const GUARD_FIXTURES = [
   ["a positive pin in the clause itself is credited", 'ok("x", a.length === 0 && b.length >= 1);\n', true],
   ["=== 0 is never credited by the guard", 'ok("no fabricated facts", a.facts.length === 0);\n', false],
   ["an OR-mixed zero arm stays charged", 'ok("x", a.length === 0 || b.length >= 1);\n', false],
+  ["a strict positive floor (`> 4`) is credited the way `>= 1` is", 'ok("x", a.length === 0);\nok("the scan read a real population", mixed.length > 4);\n', true],
+  ["an arrow that returns zero is not a floor pin", 'ok("no fabricated facts", a.facts.length === 0);\nok("the mapper answers zero", items.map((v) => 0));\n', false],
 ];
 const guardVerdicts = GUARD_FIXTURES.map(([name, src, want]) => {
   const cls = clausesIn(src);
