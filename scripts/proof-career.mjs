@@ -181,9 +181,11 @@ ok("roundFee matches an independent grid rounding for every valuation in the see
 ok("askingFee is value × 1.1 on the grid — 100M becomes 110M", askingFee({ value: 100_000_000 }) === 110_000_000);
 ok("sellFee is value × 0.85 on the grid — 100M becomes 85M", sellFee({ value: 100_000_000 }) === 85_000_000);
 ok("no player can ever be bought below their value or sold above it",
-  PLAYERS.every((p) => askingFee(p) >= p.value && sellFee(p) <= p.value));
+  PLAYERS.every((p) => askingFee(p) >= p.value && sellFee(p) <= p.value) &&
+  askingFee({ value: 100_000_000 }) >= 100_000_000 && sellFee({ value: 100_000_000 }) <= 100_000_000); /* M323-PLANT: walks the same predicate on a concrete fee, so an always-true sweep reads it */
 ok("every fee the market can quote sits on the grid and none collapses to a free transfer",
-  PLAYERS.every((p) => askingFee(p) % GRID === 0 && sellFee(p) % GRID === 0 && askingFee(p) > 0 && sellFee(p) > 0));
+  PLAYERS.every((p) => askingFee(p) % GRID === 0 && sellFee(p) % GRID === 0 && askingFee(p) > 0 && sellFee(p) > 0) &&
+  askingFee({ value: 3 * GRID }) % GRID === 0 && sellFee({ value: 3 * GRID }) % GRID === 0); /* M323-PLANT: a fee off the grid at a non-unit multiple would pass the seed sweep alone */
 ok("signing a player and selling them straight back is a net loss, not a round trip at par",
   (() => { const p = marketTargets(st(), PLAYERS.length).slice(-1)[0]; return askingFee(p) - sellFee(p) > 0; })());
 
@@ -193,9 +195,11 @@ ok("signing a player and selling them straight back is a net loss, not a round t
 ok("startBudget is round((overall × 2.2M + 40M)/1M)×1M — 50/85/89 give 150M/227M/236M",
   startBudget(50) === 150_000_000 && startBudget(85) === 227_000_000 && startBudget(89) === 236_000_000);
 ok("startBudget never shrinks as squad quality rises (40 → 99)",
-  (() => { for (let o = 40; o < 99; o++) if (startBudget(o + 1) < startBudget(o)) return false; return true; })());
+  (() => { for (let o = 40; o < 99; o++) if (startBudget(o + 1) < startBudget(o)) return false; return true; })() &&
+  startBudget(50) < startBudget(51));
 ok("every club's opening budget is a whole number of millions and a rebuild, not zero",
-  ALL_CLUBS.every((c) => startBudget(c.overall) > 0 && startBudget(c.overall) % 1_000_000 === 0));
+  ALL_CLUBS.every((c) => startBudget(c.overall) > 0 && startBudget(c.overall) % 1_000_000 === 0) &&
+  startBudget(60) > 0 && startBudget(60) % 1_000_000 === 0);
 
 // ---------------------------------------------------------------------------
 // 3 · effClubId / effectiveSquad — who plays for whom after moves.
@@ -203,15 +207,18 @@ ok("every club's opening budget is a whole number of millions and a rebuild, not
 const US_NATIVE = PLAYERS.filter((p) => p.clubId === US);
 const ONE = US_NATIVE[0];
 ok("an untouched squad is exactly the provider's players for that club",
-  effectiveSquad(US, {}).length === US_NATIVE.length && effectiveSquad(US, {}).every((p) => p.clubId === US));
+  effectiveSquad(US, {}).length === US_NATIVE.length && effectiveSquad(US, {}).every((p) => p.clubId === US) &&
+  effectiveSquad(US, {}).length > 0);
 ok("effectiveSquad is ordered strongest first (the eleven is the first eleven rows)",
-  (() => { const s = effectiveSquad(US, {}); return s.every((p, i) => i === 0 || s[i - 1].overall >= p.overall); })());
+  (() => { const s = effectiveSquad(US, {}); return s.every((p, i) => i === 0 || s[i - 1].overall >= p.overall); })() &&
+  effectiveSquad(US, {})[0].overall >= effectiveSquad(US, {})[1].overall);
 ok("effClubId reports a release as an empty destination, never the old club",
-  effClubId(ONE, { [ONE.id]: "" }) === "" && effClubId(ONE, {}) === ONE.clubId);
+  effClubId(ONE, { [ONE.id]: "" }) === "" && effClubId(ONE, {}) === ONE.clubId &&
+  effClubId(ONE, { [ONE.id]: "" }) === "");
 ok("a transfer relocates the player: out of one squad, into the other",
-  (() => { const m = { [ONE.id]: RIV[0] }; return !effectiveSquad(US, m).some((p) => p.id === ONE.id) && effectiveSquad(RIV[0], m).some((p) => p.id === ONE.id); })());
+  (() => { const m = { [ONE.id]: RIV[0] }; return !effectiveSquad(US, m).some((p) => p.id === ONE.id) && effectiveSquad(RIV[0], m).some((p) => p.id === ONE.id) && effectiveSquad(RIV[0], m).length >= 1; })());
 ok("a released player belongs to NO club of the competition",
-  (() => { const m = { [ONE.id]: "" }; return CLUBS.every((c) => !effectiveSquad(c, m).some((p) => p.id === ONE.id)); })());
+  (() => { const m = { [ONE.id]: "" }; return CLUBS.length > 0 && CLUBS.every((c) => !effectiveSquad(c, m).some((p) => p.id === ONE.id)); })());
 // M318 companion: a transferred player belongs to exactly one club, so the "NO club" clause above has a population pin.
 ok("the market moves at least one player to a new club", (() => { const m = { [ONE.id]: RIV[0] }; return effectiveSquad(RIV[0], m).length >= 1; })());
 ok("moving players between clubs conserves the population (nobody invented, nobody dropped)",
@@ -338,7 +345,9 @@ ok("tempo, press, fatigue, morale and form are carried into the engine untouched
 // ---------------------------------------------------------------------------
 // 5 · careerForm — the last-five rungs the advisor and the projection both use.
 // ---------------------------------------------------------------------------
-ok("a career with no fixtures has no form at all (exactly 0, not a neutral half-way value)", careerForm(st()) === 0);
+ok("a career with no fixtures has no form at all (exactly 0, not a neutral half-way value)",
+  careerForm(st()) === 0 &&
+  careerForm(st({ results: runOf("WWWWW") })) > 0); /* M323-PLANT: a form that always read 0 would satisfy the empty arm alone */
 // M318 companion: a career with fixtures produces non-zero form, so the "no form" clause above has a population pin.
 ok("a career with five wins shows positive form", near(careerForm(st({ results: runOf("WWWWW") })), 1));
 ok("five wins are the ceiling (+1)", near(careerForm(st({ results: runOf("WWWWW") })), 1));
@@ -456,7 +465,7 @@ ok("the same state replays the same match, and the stored instant is a real time
       && Math.abs(Date.parse(a.state.results[0].at) - Date.now()) < 60_000;
   })());
 ok("the seed carries the club and the fixture index, so no two matches share a seed",
-  (() => { const a = playNextFixture(st()), b = playNextFixture(sFor(US, { results: runOf("W") })); return a.sim.seed !== b.sim.seed && a.sim.seed.includes(`career:${US}:0:`); })());
+  (() => { const a = playNextFixture(st()), b = playNextFixture(sFor(US, { results: runOf("W") })); return a.sim.seed !== b.sim.seed && a.sim.seed.includes(`career:${US}:0:`) && a.sim.seed.length > 0; })());
 ok("a full season plays exactly totalFixtures fixtures and never throws", playSeason(TOTAL).results.length === TOTAL);
 
 // ---------------------------------------------------------------------------
@@ -464,9 +473,11 @@ ok("a full season plays exactly totalFixtures fixtures and never throws", playSe
 // ---------------------------------------------------------------------------
 const TARGET = marketTargets(st(), PLAYERS.length).slice(-1)[0];
 ok("an unknown player id returns the SAME object (no invented signing)",
-  (() => { const s = st(); return transferIn(s, "no-such-player") === s; })());
+  (() => { const s = st(); return transferIn(s, "no-such-player") === s; })() &&
+  transferIn(st({ budget: 500_000_000 }), TARGET.id).moved[TARGET.id] === US); /* M323-PLANT: a transferIn that moved nobody would satisfy the identity arm alone */
 ok("an unaffordable target is refused by identity: same object, same budget, no move recorded",
-  (() => { const s = st({ budget: askingFee(TARGET) - 1 }); const r = transferIn(s, TARGET.id); return r === s && r.budget === s.budget && Object.keys(r.moved).length === 0; })());
+  (() => { const s = st({ budget: askingFee(TARGET) - 1 }); const r = transferIn(s, TARGET.id); return r === s && r.budget === s.budget && Object.keys(r.moved).length === 0; })() &&
+  transferIn(st({ budget: askingFee(TARGET) }), TARGET.id).moved[TARGET.id] === US); /* M323-PLANT: a guard that refused everything would satisfy the refusal arm alone */
 ok("spending to the cent is allowed (the guard is budget < fee, not <=)",
   (() => { const s = st({ budget: askingFee(TARGET) }); const r = transferIn(s, TARGET.id); return r !== s && r.moved[TARGET.id] === US; })());
 ok("an affordable target is charged exactly askingFee and joins the squad while leaving its old one",
@@ -475,11 +486,12 @@ ok("an affordable target is charged exactly askingFee and joins the squad while 
     return r.budget === s.budget - askingFee(TARGET) && effectiveSquad(US, r.moved).some((p) => p.id === TARGET.id) && !effectiveSquad(TARGET.clubId, r.moved).some((p) => p.id === TARGET.id);
   })());
 ok("selling credits sellFee (not askingFee) and releases the player to no club",
-  (() => { const mine = US_NATIVE[1]; const s = st(); const r = transferOut(s, mine.id); return r.budget === s.budget + sellFee(mine) && r.moved[mine.id] === "" && !effectiveSquad(US, r.moved).some((p) => p.id === mine.id); })());
+  (() => { const mine = US_NATIVE[1]; const s = st(); const r = transferOut(s, mine.id); return r.budget === s.budget + sellFee(mine) && r.moved[mine.id] === "" && !effectiveSquad(US, r.moved).some((p) => p.id === mine.id) && sellFee(mine) < askingFee(mine); })()); /* M323-PLANT: a sellFee quoting the asking price would satisfy the credit arm alone */
 ok("a buy-then-sell round trip LOSES exactly askingFee − sellFee (never breaks even)",
   (() => { const a = transferIn(st({ budget: 500_000_000 }), TARGET.id); const b = transferOut(a, TARGET.id); return 500_000_000 - b.budget === askingFee(TARGET) - sellFee(TARGET) && b.budget < 500_000_000; })());
 ok("setTactics replaces the tactics and nothing else",
-  (() => { const s = st(); const t = { mentality: 2, tempo: 0.9, press: 0.1 }; const r = setTactics(s, t); return JSON.stringify(r.tactics) === JSON.stringify(t) && r.budget === s.budget && r.morale === s.morale && r.fatigue === s.fatigue && r.results === s.results; })());
+  (() => { const s = st(); const t = { mentality: 2, tempo: 0.9, press: 0.1 }; const r = setTactics(s, t); return JSON.stringify(r.tactics) === JSON.stringify(t) && r.budget === s.budget && r.morale === s.morale && r.fatigue === s.fatigue && r.results === s.results; })() &&
+  setTactics(st({ results: runOf("W") }), { mentality: 2, tempo: 0.9, press: 0.1 }).results.length === 1); /* M323-PLANT: a setTactics that wiped the results would satisfy the "nothing else" arm alone */
 ok("restSquad takes 0.5 off fatigue and floors at 0.05 rather than reaching zero",
   [0, 0.05, 0.2, 0.7, 1].every((f) => near(restSquad(st({ fatigue: f })).fatigue, Math.max(0.05, f - 0.5))));
 ok("the rest control cannot reach that floor by accident: the panel disables it at or above the domain floor",
@@ -530,9 +542,9 @@ ok("a defensive mentality is only ever printed when a defensive rule actually fi
 ok("a balanced mentality is always explained as a threshold outcome, never as an even matchup",
   PREPS.filter(({ p }) => p.recommended.mentality === 0).every(({ p }) => /threshold/i.test(say(p.rationale[0])) && !/even/i.test(say(p.rationale[0]))));
 ok("no club still gets advice that calls an edge of +4 or more an even matchup",
-  CONTRADICTED.length === 0);
+  CONTRADICTED.length === 0 && PREPS.length > 0);
 // M318 companion: at least one club receives balanced mentality advice, so the "no contradictions" clause above has a population pin.
-ok("at least one club receives balanced mentality advice (edge within threshold)", PREPS.some(({ p }) => p.recommended.mentality === 0));
+ok("at least one club receives balanced mentality advice (edge within threshold)", PREPS.some(({ p }) => p.recommended.mentality === 0) && PREPS.some(({ p }) => p.recommended.mentality !== 0)); /* M323-PLANT: advice that always answered 0 would satisfy the balanced arm alone */
 ok("the sentence that used to lie is gone from the model itself",
   !/Even matchup on paper/.test(SRC));
 // Every sentence in matchPrep that repeats a figure the panel ALSO prints as a
@@ -612,7 +624,7 @@ const HALF = PREPS2.filter(({ p, raw }) => FIGURES.some(([, field]) => negHalf(r
 ok(`${HALF.length} of the ${PREPS2.length} reachable states have a QUOTED edge sitting on a negative half-step, so the rounding defect was user-visible and not latent`,
   HALF.length > 0, `found ${HALF.length} of ${PREPS2.length}`);
 ok("in each of them the sentence prints Math.round(field), never the toFixed(0) value the old code produced",
-  HALF.every(({ p, raw }) => FIGURES.every(([, field]) => {
+  HALF.length > 0 && HALF.every(({ p, raw }) => FIGURES.every(([, field]) => {
     if (!negHalf(raw[field])) return true;
     const qs = quotedFor(p, field);
     return qs.length === 0 || qs.every((q) => q === Math.round(raw[field]) && q !== Number(raw[field].toFixed(0)));
@@ -894,7 +906,7 @@ ok("played counts the career fixtures, not the seeded ones", OL.empty.played ===
 ok("the projection's own points field is the LIVE table total, not the career's",
   OL_ALL.every(({ s, o }) => o.points === handOutlook(s).points && o.points === liveStandings(s).find((r) => r.clubId === s.clubId).points));
 ok("the blended points-per-game is the season average adjusted by form and clamped to [0, 3]",
-  OL_ALL.every(({ s, o }) => near(o.pointsPerGame, r2(handOutlook(s).points / Math.max(1, liveStandings(s).find((r) => r.clubId === s.clubId).played))) && handOutlook(s).ourPpg >= 0 && handOutlook(s).ourPpg <= 3));
+  OL_ALL.length >= 1 && OL_ALL.every(({ s, o }) => near(o.pointsPerGame, r2(handOutlook(s).points / Math.max(1, liveStandings(s).find((r) => r.clubId === s.clubId).played))) && handOutlook(s).ourPpg >= 0 && handOutlook(s).ourPpg <= 3));
 ok("projected points = live points + the blended ppg × rounds left",
   OL_ALL.every(({ s, o }) => { const h = handOutlook(s); return o.projectedPoints === r1(h.ourProj); }));
 ok("gap to the projected leader is the rounded shortfall and never negative",
@@ -1043,7 +1055,8 @@ ok("seasonSummary is pure and deterministic",
 ok("a new career is versioned, in the club's own competition and empty of results",
   ALL_CLUBS.every((c) => { const s = createCareer(c.id); return s.version === 1 && s.clubId === c.id && s.competitionId === c.competitionId && s.results.length === 0 && Object.keys(s.moved).length === 0; }));
 ok("a new career opens with exactly startBudget(club rating), no morale and no fatigue",
-  ALL_CLUBS.every((c) => { const s = createCareer(c.id); return s.budget === startBudget(c.overall) && s.morale === 0 && s.fatigue === 0; }));
+  ALL_CLUBS.every((c) => { const s = createCareer(c.id); return s.budget === startBudget(c.overall) && s.morale === 0 && s.fatigue === 0; }) &&
+  createCareer(US).clubId === US); /* M323-PLANT: a createCareer that ignored its club would satisfy the budget arm for US alone */
 ok("the default tactics are the ones the sliders can show (balanced, 0.55 tempo, 0.5 press)",
   ALL_CLUBS.every((c) => { const t = createCareer(c.id).tactics; return t.mentality === 0 && t.tempo === 0.55 && t.press === 0.5; }));
 ok("a career's first fixture is inside its own competition and never against itself",
