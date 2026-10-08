@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M323 (a few numbers in that range
+Work ships one milestone per commit and is currently at M324 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,42 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M324 — the ceiling follows the census, and eight families pay at once
+
+M323 left the ceiling equal to the measurement for one family. This unit pays down eight more —
+`proof-i18n` (35 owing), `proof-transfers` (12), `proof-timeline` (11), `proof-load` (10),
+`proof-footprint` (8), `proof-feedranking` (7), `proof-storage` (7) and `proof-localdata` (7) —
+and the ceiling follows the total: **172 → 77 owing across 42 scripts**, with the bar set to the
+measurement so the next unguarded clause fails the suite rather than living inside slack.
+
+The device is the census's own, and the shape of the debt decided its form. Three species repeat:
+
+- **A scan that can read nothing.** `no zh-TW value reintroduces a corrected character`, `no
+  typeof-localStorage guard remains`, `there is no error boundary` — these assert a violation list
+  is empty, and an empty list is what a blind scan produces too. Each gains the population its scan
+  walks: the character table, the app files, the reader list. A reader that stopped reading fails.
+- **A negation without its positive arm.** `countRecords of empty is zero`, `a reset reports zero
+  keys cleared`, `the focus line is absent for an empty list` — each now carries the populated case
+  beside it: the nested shape that counts 2, the reset that clears real keys, the non-empty focus
+  line that renders. An implementation that always answered the empty answer fails.
+- **A reader whose payload is never read.** A captured theme, a detected locale, a rendered line:
+  the clauses asserted equality against a string and never that the string was there. Each now
+  reads length or keys of what the harness captured, so a harness that captured nothing fails.
+
+Two lessons were paid for in the working tree, not in the prose. A plant written against the wrong
+population — `wordTexts` on a Scouting board that M165 had already turned entirely to keys — reddened
+and was corrected to the source the scan actually reads; and a population pinned on a derived
+filter rather than the scan's own subject fails exactly when the subject is genuinely empty. Both
+are the same rule M323's repair made explicit: run the plant, and let it be able to fail.
+
+Because a concurrent line of work shares this tree, every family was applied through a replayable
+script (`dev/m324-plants*.mjs`, one per family) and landed in the same step that verified it, so a
+concurrent checkout cannot take the work back; the family scripts also try both line endings, since
+the tree carries LF blocks inside a CRLF file.
+
+Measured: `tsc` clean, `npm run build` exit 3.44s, full suite **42/42 · 2,419/2,419**, and
+`proof-i18n` **368/368** with the vacuity census at **77 owing / ceiling 77**.
 
 ### M323 — the ceiling follows the census, and the family with the deepest debt pays first
 
