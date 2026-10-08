@@ -130,7 +130,7 @@ function fakeStore(rows = {}) {
 setStore(undefined);
 const d1 = probeDoor();
 ok(`a document with no localStorage at all gets null, not a ReferenceError (${JSON.stringify(d1.got)}${d1.threw ? `, threw ${d1.threw}` : ""})`,
-  d1.got === null && !d1.threw, d1.threw);
+  Object.keys(d1).length > 0 && d1.got === null && !d1.threw, d1.threw);
 
 const store = fakeStore({ [THEME_KEY]: "light" });
 setStore(store);
@@ -182,7 +182,7 @@ ok(`a saved dark reads as dark (${themeCap && themeCap.theme})`, !t_dark.err && 
 
 const t_junk = renderTheme({ [THEME_KEY]: "sepia" });
 ok(`a stored value the app cannot honour is ignored rather than trusted — the reader gets the dark-first shell, not a class that styles nothing (${themeCap && themeCap.theme})`,
-  !t_junk.err && themeCap.theme === "dark");
+  !t_junk.err && themeCap.theme === "dark" && themeCap.theme.length > 0);
 
 const t_none = renderTheme({});
 ok(`a fresh document resolves to dark, which is the promise index.html's hardcoded class makes (theme ${themeCap && themeCap.theme})`,
@@ -190,7 +190,7 @@ ok(`a fresh document resolves to dark, which is the promise index.html's hardcod
 
 const t_throw = renderTheme("throw");
 ok(`THE DEFECT: with site data blocked the old code threw out of getInitialTheme; now the render completes and the shell is dark (theme ${JSON.stringify(t_throw.err ? "no render" : themeCap && themeCap.theme)}${t_throw.err ? `, THREW ${t_throw.err.name}: ${t_throw.err.message}` : ""})`,
-  !t_throw.err && themeCap && themeCap.theme === "dark", t_throw.err && `${t_throw.err.name}: ${t_throw.err.message}`);
+  !t_throw.err && themeCap && themeCap.theme === "dark" && themeCap.theme.length > 0, t_throw.err && `${t_throw.err.name}: ${t_throw.err.message}`);
 
 const t_types = themeCap && { setTheme: typeof themeCap.setTheme, toggle: typeof themeCap.toggle };
 ok(`the provider publishes both mutators as functions (${JSON.stringify(t_types)})`,
@@ -229,7 +229,7 @@ ok(`a locale the app does not ship is not a locale the app renders — detection
 
 const l_nav = renderLocale({}, "zh-Hant-TW");
 ok(`with no stored row a Traditional-Chinese browser is detected without being asked (navigator zh-Hant-TW -> ${localeCap && localeCap.locale})`,
-  !l_nav.err && localeCap.locale === "zh-TW");
+  !l_nav.err && localeCap.locale === "zh-TW" && localeCap.locale.length > 0);
 
 const l_en = renderLocale({}, "pt-BR");
 ok(`an unrecognised browser language lands on the authored locale (navigator pt-BR -> ${localeCap && localeCap.locale})`,
@@ -494,7 +494,7 @@ const typeofSites = APP_FILES.flatMap((f) => {
   return [...s.matchAll(/typeof\s+localStorage/g)].map((m) => ({ f, at: lineAt(s, m.index) }));
 });
 ok(`the existence check is not the safety check, and no code path uses it any more (${typeofSites.length} typeof-localStorage guard(s) outside comments: ${typeofSites.map((x) => `${x.f}:${x.at}`).join(", ") || "none"})`,
-  typeofSites.length === 0, typeofSites.map((x) => `${x.f}:${x.at}`).join(", "));
+  APP_FILES.length > 0 && typeofSites.length === 0, typeofSites.map((x) => `${x.f}:${x.at}`).join(", "));
 
 {
   /** The classifier is tested against the shapes a distance test gets wrong, not against prose
@@ -550,7 +550,7 @@ ok(`the existence check is not the safety check, and no code path uses it any mo
 // ---------------------------------------------------------------------------
 const boundaries = APP_FILES.filter((f) => /componentDidCatch|getDerivedStateFromError|ErrorBoundary/.test(read(f)));
 ok(`there is no error boundary for either throw to be caught by instead (${boundaries.length} boundary implementations across ${APP_FILES.length} app files — the door is the only defence)`,
-  boundaries.length === 0);
+  APP_FILES.length > 0 && boundaries.length === 0);
 
 const rootOrder = read("src/App.tsx");
 const themeFirst = rootOrder.indexOf("ThemeProvider") < rootOrder.indexOf("I18nProvider");
@@ -645,7 +645,7 @@ ok(`lib/hooks.ts is a door caller now, not a fourth hand-rolled guard: ${hooksRa
 
 const hookSrc = read("lib/hooks.ts");
 ok(`…and the writer moved out of the effect: useLocalStorage persists inside the setter and hands the caller the verdict, so a screen can branch on it in the same tick (setter returns WriteVerdict: ${/WriteVerdict/.test(hookSrc)}, writeJson in the setter body: ${/const verdict = writeJson/.test(hookSrc)}, no setItem left in the file: ${!/setItem/.test(hookSrc)})`,
-  /WriteVerdict/.test(hookSrc) && /const verdict = writeJson/.test(hookSrc) && !/setItem/.test(hookSrc));
+  hookSrc.length > 0 && /WriteVerdict/.test(hookSrc) && /const verdict = writeJson/.test(hookSrc) && !/setItem/.test(hookSrc));
 
 {
   /** The claim rule, keyed on what the page SAYS rather than on which function the author happened
