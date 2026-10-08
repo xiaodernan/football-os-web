@@ -223,7 +223,7 @@ const SIMPLIFIED_SEEN = "赛进档属训练标视频术体战经验龄评画并�
 const twValues = valuesOf(2);
 const strays = [...new Set(twValues.flatMap((v) => [...v]).filter((c) => SIMPLIFIED_SEEN.includes(c)))];
 ok(`no zh-TW value reintroduces one of the ${SIMPLIFIED_SEEN.length} 简体 characters the audits corrected (${strays.join("") || "none"})`,
-  strays.length === 0);
+  strays.length === 0 && SIMPLIFIED_SEEN.length > 0);
 
 // 8. A label held in a variable is invisible to check 4 — `t(tab.label)` contains
 //    no literal key to match. The player tab strip is the case that matters: the
@@ -246,7 +246,7 @@ ok(`all ten tabs carry a label (${tabLabels.length})`, tabLabels.length === 10);
 // the parity and the t() call are checked instead of the glyphs.
 const rawLabels = tabLabels.filter((l) => !bounds.every((_, i) => keysOf(i).includes(l)));
 ok(`every tab label is a key all three dictionaries declare (${rawLabels.join(", ") || "none"})`,
-  rawLabels.length === 0);
+  rawLabels.length === 0 && tabSrc.length > 0);
 const tTab = new RegExp(`\\{t\\(\\s*tab\\.${TAB_FIELD}\\s*\\)\\}`).test(tabSrc);
 ok("the tab strip renders its labels through t() rather than as stored text", tTab);
 // 9. The shared primitives sit on nearly every screen, so a literal inside one of
@@ -290,7 +290,7 @@ const chromeSrc = new Map(chromeFiles.map((p) => [p, readFileSync(join(root, ...
 const chromeBad = CHROME_WIRING.filter(([p, k, n]) => chromeSrc.get(p).split(`t("${k}")`).length - 1 !== n)
   .map(([p, k, n]) => `${p}:${k} wants ${n} call site(s), found ${chromeSrc.get(p).split(`t("${k}")`).length - 1}`);
 ok(`the ${chromeFiles.length} chrome files that outlived M248 (pin ${CHROME_FILES_PIN}) read their own labels from the dictionary at all ${CHROME_WIRING.reduce((s, [, , n]) => s + n, 0)} positions (pin ${CHROME_POSITIONS_PIN}) (${chromeBad.join(" | ") || "none"})`,
-  chromeBad.length === 0 && chromeFiles.length === CHROME_FILES_PIN &&
+  chromeBad.length === 0 && chromeFiles.length > 0 && chromeFiles.length === CHROME_FILES_PIN &&
   CHROME_WIRING.reduce((s, [, , n]) => s + n, 0) === CHROME_POSITIONS_PIN);
 // What these files would fall back to is not a list anyone maintains: it is the word the
 // dictionary holds for the key they read, so the refusal follows the copy instead of shadowing
@@ -393,7 +393,7 @@ const nodeTexts = [
 const wordTexts = nodeTexts.filter((x) => /[A-Za-z]{2}/.test(x) && !/[):;=}&|]/.test(x));
 const strayTexts = wordTexts.filter((x) => !CODE_TEXT.includes(x));
 ok(`the Scouting board renders no untranslated short text node (${strayTexts.join(" | ") || "none"})`,
-  strayTexts.length === 0);
+  strayTexts.length === 0 && scoutSrc.length > 0);
 // Vacuity is pinned on the *pre-filter* count. After M165 only one node survives
 // the filters, so a floor on the survivors would go vacuous the moment "vs" is
 // keyed too; the nodes these regexes find is what proves they still read the file.
@@ -416,7 +416,7 @@ const SCOUT_STRUCK = [
   "Growth headroom",
 ];
 const scoutBack = SCOUT_STRUCK.filter((s) => scoutSrc.includes(s));
-ok(`no Scouting string reintroduces the English M145 replaced (${scoutBack.join(" | ") || "none"})`, scoutBack.length === 0);
+ok(`no Scouting string reintroduces the English M145 replaced (${scoutBack.join(" | ") || "none"})`, scoutBack.length === 0 && SCOUT_STRUCK.length > 0);
 
 // 14. A domain function that hands the UI a *display label* is invisible to every
 //     check above: it reaches the screen as an interpolation, not a text node or a
@@ -430,7 +430,7 @@ const EDGE_SOURCES = [
   ["the watchlist board", readFileSync(join(root, "features", "watchlist", "WatchlistBoard.tsx"), "utf8")],
 ];
 const leakedLabels = EDGE_SOURCES.flatMap(([name, src]) => [...src.matchAll(/\b(?:best|worst)Label\b/g)].map(() => name));
-ok(`no template-edge display label reaches either board (${leakedLabels.join(", ") || "none"})`, leakedLabels.length === 0);
+ok(`no template-edge display label reaches either board (${leakedLabels.join(", ") || "none"})`, leakedLabels.length === 0 && EDGE_SOURCES.length > 0);
 // The row types themselves: M147 removed `label` from TemplateEdge,
 // CategoryEdgeRow and ModelledAttribute, so the compiler — not a reading of the
 // prose — is what stops a label being re-added and printed. A proof that only
@@ -440,7 +440,7 @@ ok(`the scout-report rows domain/scouting.ts exports carry no label field (${sco
 const untranslatedEdge = EDGE_SOURCES
   .filter(([, src]) => !src.includes("attr.${edge.bestCategory}") || !src.includes("attr.${edge.worstCategory}"))
   .map(([name]) => name);
-ok(`both boards translate both template-edge categories (${untranslatedEdge.join(", ") || "none"})`, untranslatedEdge.length === 0);
+ok(`both boards translate both template-edge categories (${untranslatedEdge.join(", ") || "none"})`, untranslatedEdge.length === 0 && EDGE_SOURCES.length > 0);
 
 // 15. That render site is a dynamic key, and check 5 can only prove the prefix
 //     resolves to *something*. A category the dictionary misses would print its
@@ -997,7 +997,7 @@ const dynKeys = new Set(DYN_SITES.flatMap((s) => (SPACES.get(`${s.prefix}|${s.ex
 for (const sp of DOMAIN_SPACES) for (const v of sp.values) dynKeys.add(sp.prefix + v);
 const unreachable = enKeys.filter((k) => !claimed.has(k) && !dynKeys.has(k));
 ok(`every dictionary key is reachable — static, quoted, or a value a dynamic site can build (${KEY_READERS.length} reader files, ${unreachable.join(", ") || "none"})`,
-  unreachable.length === 0);
+  unreachable.length === 0 && KEY_READERS.length > 0);
 // Anti-vacuity: the scan has to be reading real claims, not passing because a
 // regex stopped matching anything.
 ok(`the reachability scan claims the dictionary rather than nothing (${claimed.size} static/quoted + ${dynKeys.size} dynamic)`,
@@ -1073,7 +1073,7 @@ ok(`no screen prints a domain name table's English label (${rowMappers} files ma
 const dupCatKeys = [0, 1, 2].flatMap((i) => keysOf(i).filter((k) => k.startsWith("compare.cat.")));
 const dupCatSites = [...appSrc].filter(([, code]) => code.includes("compare.cat.")).map(([p]) => p);
 ok(`compare.cat.* stays deleted from every locale and every caller (${[...new Set(dupCatKeys)].join(", ") || "no keys"} / ${dupCatSites.join(", ") || "no sites"})`,
-  dupCatKeys.length === 0 && dupCatSites.length === 0);
+  dupCatKeys.length === 0 && dupCatSites.length === 0 && keysOf(0).length > 0);
 
 // 21. The English name tables belong to the prose layer. A UI file that mentions
 //     `attributeLabel` is composing a display string in English — the exact shape no
@@ -1171,7 +1171,7 @@ const revived = STRUCK_ROWS.flatMap(([path, exprs]) => {
   return exprs.filter((e) => code.includes(e)).map((e) => `${path}: ${e}`);
 });
 ok(`none of the ${STRUCK_ROWS.reduce((s, [, e]) => s + e.length, 0)} converted row reads came back (${revived.join(" | ") || "none"})`,
-  revived.length === 0);
+  revived.length === 0 && STRUCK_ROWS.reduce((s, [, e]) => s + e.length, 0) > 0);
 
 // 24. A key whose value interpolates is only complete once the caller supplies the
 //     value: t() fills {a} from its second argument, and a call that forgets it prints
@@ -1627,7 +1627,7 @@ const callBad = CALL_PROBE
   ? callProbes.filter(([src, want]) => CALL_PROBE.test(src) !== want).map(([src]) => src)
   : ["CALL_NAME not read"];
 ok(`the call rule reads a method receiver as well as a bare call, and nothing that merely ends in "toast" (${callBody} · ${callBad.join(" | ") || `${callProbes.length} probes as predicted`})`,
-  Boolean(CALL_PROBE) && callBad.length === 0);
+  Boolean(CALL_PROBE) && callBad.length === 0 && callProbes.length > 0);
 
 const RAW_COVERED = [
   // M166. The palette was the one overlay reachable from every screen, and it was also
@@ -2130,7 +2130,7 @@ const allLookups = tsxSrc.flatMap(([p, src]) => lookupsIn(src).map((k) => [p, k]
 const enSet = new Set(enKeys);
 const badLookups = allLookups.filter(([, k]) => !enSet.has(k));
 ok(`every literal the raw-UI exemption treats as a t() lookup is a real key (${allLookups.length} lookups, ${[...new Set(badLookups.map(([p, k]) => `${p}: ${k}`))].slice(0, 8).join(", ") || "no unknown"})`,
-  badLookups.length === 0);
+  badLookups.length === 0 && allLookups.length > 0);
 ok(`the exemption audit is reading real lookups rather than nothing (${allLookups.length})`, allLookups.length >= 500);
 
 // 25. A key a domain module composes is as exposed to the reader as one a component
@@ -2257,7 +2257,7 @@ for (const [path, src] of ROW_FILES) {
   for (const m of src.matchAll(/\{\s*value:\s*["'`]/g)) badRows.push(`${path}: a row value is prose typed in this module (${m[0]})`);
 }
 ok(`every row text a domain module hands the screen is a real key with exactly its placeholders (${rowKeys} keys, ${badRows.slice(0, 6).join(" | ") || "clean"})`,
-  badRows.length === 0);
+  badRows.length === 0 && rowKeys > 0);
 // The dot rule above is a discriminator, so it has to be pinned rather than trusted: if the
 // dictionary ever gains a dotless key, `ROW_LITERAL` would stop seeing rows that use it and
 // this file would go quiet for the wrong reason.
@@ -2927,9 +2927,9 @@ for (const [path, code] of appSrc) {
   }
 }
 ok(`every key held in a *Key field is a real dictionary row in all ${L.length} locales (${keySites} sites across ${keyFiles.size} files, ${badKeys.slice(0, 4).join(" | ") || "clean"})`,
-  badKeys.length === 0);
+  badKeys.length === 0 && keySites > 0 && keyFiles.size > 0);
 ok(`every *Key field is read back through t(), so a rename can never dodge the scan by leaving the translation out (${unresolved.slice(0, 4).join(" | ") || "all resolved"})`,
-  unresolved.length === 0);
+  unresolved.length === 0 && keySites > 0);
 
 // Non-vacuity for the pair above: the counts come from the tree, and a floor on them is
 // a floor on how much of the app relies on this hatch — 99 sites / 9 files as measured
@@ -3371,7 +3371,7 @@ for (const [path, code] of appSrc) {
 // asking and none of the ways of telling, and the population pin proves the walk read
 // the whole tree — so `0` here is a measured zero, not an empty set reporting clean.
 ok(`no file formats an instant for the browser (${hostSites.map((s) => `${s.path}:${s.receiver}`).join(", ") || "0 sites anywhere in the app"}; one bare toLocale* call reddens this)`,
-  hostSites.length === 0);
+  hostSites.length === 0 && appSrc.size > 0);
 // M312. This census is two regexes and a list of four argument shapes, and a zero passes if either
 // half stopped working. The plant runs them — the SAME two pieces, not copies — over the four ways
 // of asking the host and the three ways of telling it, so a green above cannot mean the classifier
@@ -3428,7 +3428,7 @@ const falseControls = HOST_CONTROLS.filter(([, src]) => censusOf(src) !== 0);
 ok(`the census still recognises all ${HOST_SPELLINGS.length} ways of asking the host (${missedSpellings.map(([n]) => n).join(", ") || "all caught"})`,
   missedSpellings.length === 0);
 ok(`and recognises none of the ${HOST_CONTROLS.length} calls that name a locale (${falseControls.map(([n]) => n).join(", ") || "no false positives"})`,
-  falseControls.length === 0);
+  falseControls.length === 0 && HOST_CONTROLS.length > 0);
 ok(`the census scanned the app rather than an empty set (${appSrc.size} source files against pin ${APP_SRC_PIN}, ${hostSites.length} browser-locale sites left)`,
   appSrc.size === APP_SRC_PIN);
 // (b) The door is the only formatter, and it takes the reader's locale.
@@ -3479,11 +3479,11 @@ const doorVerdicts = DOOR_PLANTS.map(([line, wantResolves, wantLiteral, wantNotL
 ok(`the door's argument readers, planted both ways, still pass the reader's locale and still catch a literal locale, a non-locale first argument and an unparseable call (${doorVerdicts.filter(([, v]) => !v).map(([l]) => l).join(", ") || "all 5 as declared"})`,
   doorVerdicts.every(([, v]) => v));
 ok(`no formatDate call passes a literal locale — that renders one language for everyone (${literalLocale.map((c) => `${c.path}:${c.line}`).join(", ") || "none"})`,
-  literalLocale.length === 0);
+  literalLocale.length === 0 && DOOR_CALLS.length > 0);
 ok(`every formatDate call's first argument is the reader's locale (${noLocaleArg.map((c) => `${c.path}:${c.line}[${(c.args?.[0] ?? "").trim()}]`).join(", ") || "all clear"})`,
-  noLocaleArg.length === 0);
+  noLocaleArg.length === 0 && DOOR_CALLS.length > 0);
 ok(`every file that formats a date imports the door from @/i18n (${unimportedDoor.join(", ") || "none missing"})`,
-  unimportedDoor.length === 0);
+  unimportedDoor.length === 0 && doorFiles.length > 0);
 // The umbrella's export list is read, not matched against one remembered name: check 26c
 // imports `relativeDay` through it, so a rewrite that dropped it back to `{ formatDate }`
 // would break that clause by accident rather than report the door being unreachable. Neither
@@ -3508,7 +3508,7 @@ ok(`the umbrella re-exports exactly the doors outside i18n/ ask for (${doorDecls
   doorDecls.length >= 3 && importedNames.size >= 3 && doorsAsked.length >= 2 &&
   unreachableDoors.length === 0 && phantomDoors.length === 0);
 ok(`the door is the ONE door — nothing else constructs a formatter (${otherDoors.join(", ") || "none"})`,
-  otherDoors.length === 0);
+  otherDoors.length === 0 && DOOR_CALLS.length > 0);
 ok(`the door scan is reading real call sites (${DOOR_CALLS.length} across ${doorFiles.length} files)`,
   DOOR_CALLS.length >= 12 && doorFiles.length >= 8);
 
@@ -3526,7 +3526,7 @@ const RAG_DECL = (appSrc.get("data/intelligence.ts") ?? "").match(/export functi
 ok(`every askIntelligence call resolves and passes an answer language (${RAG_CALLS.length} calls, ${unresolvedRag.length} unresolved)`,
   unresolvedRag.length === 0 && RAG_CALLS.length >= 1);
 ok(`no askIntelligence call hard-codes the reader (${ragLiteralLocale.map((c) => `${c.path}:${c.line}`).join(", ") || "none"})`,
-  ragLiteralLocale.length === 0);
+  ragLiteralLocale.length === 0 && RAG_CALLS.length > 0);
 ok(`every askIntelligence call hands over the live locale (${ragNoLocale.map((c) => `${c.path}:${c.line}[${(c.args?.[1] ?? "").trim()}]`).join(", ") || "all clear"})`,
   ragNoLocale.length === 0);
 ok(`the RAG entry point requires a Locale rather than defaulting it (${RAG_DECL})`,
@@ -3546,7 +3546,7 @@ const handByFile = (p) => handSites.filter((s) => s.path === p).length;
 const badHand = handSites.filter((s) => !s.isKey || DAY_KEY_FILES[s.path] === undefined);
 const lostHand = Object.entries(DAY_KEY_FILES).filter(([p, n]) => handByFile(p) !== n);
 ok(`no hand-assembled date label reaches a screen (${badHand.map((s) => `${s.path} ${s.text.slice(0, 34)}`).join(" | ") || "none"})`,
-  badHand.length === 0);
+  badHand.length === 0 && handSites.length > 0);
 ok(`the declared ISO day keys are still there and still keys (${lostHand.map(([p, n]) => `${p} ${handByFile(p)}/${n}`).join(", ") || "all in place"})`,
   lostHand.length === 0);
 ok(`the day-key scan is reading the builders it claims (${handSites.length})`, handSites.length === 2);
@@ -3648,9 +3648,9 @@ const SURGERY = [...appSrc].flatMap(([path, code]) =>
   postProcessed(code, DOOR_ALIASES).map((h) => `${path} ${h.name}().${h.method}`));
 const LAUNDERED = [...appSrc].flatMap(([path, code]) => laundered(code, DOOR_ALIASES).map((h) => `${path} ${h}`));
 ok(`no screen rewrites what the door rendered (${SURGERY.length === 0 ? "0 rewrites" : SURGERY.join(", ")}; door and ${DOOR_ALIASES.size - 1} per-file aliases walked)`,
-  SURGERY.length === 0);
+  SURGERY.length === 0 && DOOR_ALIASES.size > 0);
 ok(`and no formatted value is laundered through a local and then edited (${LAUNDERED.length === 0 ? "0 holders edited" : LAUNDERED.join(", ")} of ${DOOR_CALLS.length} door call sites)`,
-  LAUNDERED.length === 0);
+  LAUNDERED.length === 0 && DOOR_CALLS.length > 0);
 // The census has to be seen refusing, not just reported clean (M194's rule). The planted
 // spellings include the two the naive regex misses — a nested argument and a rewrite several
 // methods down the chain — and the controls include the shapes that must stay legal.
@@ -3670,7 +3670,7 @@ const falseSurgery = SURGICAL_CONTROLS.filter(([, src]) => (postProcessed(src, D
 ok(`the surgery scan catches all ${SURGICAL_SPELLINGS.length} ways of rewriting a rendered value (${missedSurgery.map(([n]) => n).join(", ") || "all caught"})`,
   missedSurgery.length === 0);
 ok(`and refuses none of the ${SURGICAL_CONTROLS.length} ways of using one honestly (${falseSurgery.map(([n]) => n).join(", ") || "no false positives"})`,
-  falseSurgery.length === 0);
+  falseSurgery.length === 0 && SURGICAL_CONTROLS.length > 0);
 // Why the stripped comma was not a cosmetic nothing: measured through the shipped door, the
 // comma is English-only punctuation, so the rewrite only ever applied to the English reader.
 const WHEN2 = "2026-09-12T08:30:00Z";
@@ -3784,7 +3784,7 @@ const accusedHonest = PROOF_ROW_ACCEPT.filter(([, src]) => proofRowFiller(src).b
 ok(`the classifier catches all ${PROOF_ROW_REFUSE.length} ways of hand-resolving a row, the removed one included (${missedFillers.join(", ") || "all caught"})`,
   missedFillers.length === 0);
 ok(`and none of the ${PROOF_ROW_ACCEPT.length} shapes that read a dictionary without resolving a row (${accusedHonest.join(", ") || "no false accusations"})`,
-  accusedHonest.length === 0);
+  accusedHonest.length === 0 && PROOF_ROW_ACCEPT.length > 0);
 ok(`so the census is a shape test with both ends demonstrated (${PROOF_ROW_REFUSE.length} refused + ${PROOF_ROW_ACCEPT.length} accepted shapes, through the same classifier that just cleared ${proofRowsOf.length} scripts)`,
   proofRowFiller(PROOF_ROW_VERBATIM).fills.length > 0 && proofDictReaders.includes("scripts/proof-i18n.mjs"));
 
@@ -3814,7 +3814,7 @@ const kindBad = KIND_WIRING.filter(([p, expr, n]) => kindCallsIn(p, expr) !== n)
   .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${kindCallsIn(p, expr)}`);
 const kindPositions = KIND_WIRING.reduce((s, [, , n]) => s + n, 0);
 ok(`the ${kindFiles.length} screens that show what a news story claims read it through the shared composer at all ${kindPositions} position(s) (pins ${KIND_FILES_PIN} files/${KIND_POSITIONS_PIN} positions), and each imports it from domain/rowText (${kindBad.join(" | ") || "none"})`,
-  kindBad.length === 0 && kindFiles.length === KIND_FILES_PIN && kindPositions === KIND_POSITIONS_PIN &&
+  kindBad.length === 0 && kindPositions > 0 && kindFiles.length === KIND_FILES_PIN && kindPositions === KIND_POSITIONS_PIN &&
   kindFiles.every((p) => KIND_IMPORT.test(badgeSrc.get(p))));
 // What the class falls BACK to is derived, not typed: the union's own codes and the display
 // slots they would appear in. The plant runs through the same two predicates, because "0 found"
@@ -4191,7 +4191,7 @@ const grpBad = GRP_WIRING.filter(([p, expr, n]) => grpCallsIn(p, expr) !== n)
   .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${grpCallsIn(p, expr)}`);
 const grpPositions = GRP_WIRING.reduce((s, [, , n]) => s + n, 0);
 ok(`the ${grpFiles.length} screens that show which positional group a player is in read it through the shared composer at all ${grpPositions} position(s) (pins ${GRP_FILES_PIN} files/${GRP_POSITIONS_PIN} positions), and each imports it from domain/rowText (${grpBad.join(" | ") || "none"})`,
-  grpBad.length === 0 && grpFiles.length === GRP_FILES_PIN && grpPositions === GRP_POSITIONS_PIN &&
+  grpBad.length === 0 && grpPositions > 0 && grpFiles.length === GRP_FILES_PIN && grpPositions === GRP_POSITIONS_PIN &&
   grpFiles.every((p) => GRP_IMPORT.test(grpSrc.get(p))));
 // The value space comes out of the union itself, and the table that ships the same ids is
 // cross-checked against it — two producers of one space must not be allowed to drift, and a
@@ -4268,7 +4268,7 @@ for (const { id } of L) {
   }
 }
 ok(`the shipped positionGroupLabel answers all ${GRP_CODES.length} positional groups in all ${L.length} locales with the dictionary's own word and never a key (${grpReadBad.join(" | ") || "no bad reading"}), and ${grpDiffer}/${GRP_CODES.length * L.length} of those readings are not the code already spelled (pin ${GRP_DIFFER_PIN} — every one differs here, unlike M249's 11/15)`,
-  grpReadBad.length === 0 && grpDiffer === GRP_DIFFER_PIN);
+  grpReadBad.length === 0 && grpDiffer === GRP_DIFFER_PIN && GRP_CODES.length > 0);
 ok(`and the same fallback M249 measured is still the last resort for a code outside the union (${rowTextModule.positionGroupLabel("Planted", tReader("en"))})`,
   rowTextModule.positionGroupLabel("Planted", tReader("en")) === "Planted");
 
@@ -4313,7 +4313,7 @@ const stBad = ST_WIRING.filter(([p, expr, n]) => stCallsIn(p, expr) !== n)
   .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${stCallsIn(p, expr)}`);
 const stPositions = ST_WIRING.reduce((s, [, , n]) => s + n, 0);
 ok(`the ${stFiles.length} screens that show what state a fixture is in read it through the shared composer at all ${stPositions} position(s) (pins ${ST_FILES_PIN} files/${ST_POSITIONS_PIN} positions), and each imports it from domain/rowText (${stBad.join(" | ") || "none"})`,
-  stBad.length === 0 && stFiles.length === ST_FILES_PIN && stPositions === ST_POSITIONS_PIN &&
+  stBad.length === 0 && stPositions > 0 && stFiles.length === ST_FILES_PIN && stPositions === ST_POSITIONS_PIN &&
   stFiles.every((p) => ST_IMPORT.test(stSrc.get(p))));
 // Three producers of one three-value space, now compared to each other: the union's runtime list
 // (what the composer looks up), the same file's type-level union (what every record field is
@@ -4473,7 +4473,7 @@ const ftBad = FT_WIRING.filter(([p, expr, n]) => ftCallsIn(p, expr) !== n)
   .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${ftCallsIn(p, expr)}`);
 const ftPositions = FT_WIRING.reduce((s, [, , n]) => s + n, 0);
 ok(`the ${ftFiles.length} screens that show a preferred foot read it through the shared composer at all ${ftPositions} position(s) (pins ${FT_FILES_PIN} files/${FT_POSITIONS_PIN} positions), and each imports it from domain/rowText (${ftBad.join(" | ") || "none"})`,
-  ftBad.length === 0 && ftFiles.length === FT_FILES_PIN && ftPositions === FT_POSITIONS_PIN &&
+  ftBad.length === 0 && ftPositions > 0 && ftFiles.length === FT_FILES_PIN && ftPositions === FT_POSITIONS_PIN &&
   ftFiles.every((p) => FT_IMPORT.test(ftSrc.get(p))));
 // The two producers of one two-value space, compared to each other: the union's runtime
 // list (what the composer looks up) against the same file's type-level union (what the
@@ -4581,7 +4581,7 @@ const bkBad = BK_WIRING.filter(([p, expr, n]) => bkCallsIn(p, expr) !== n)
   .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${bkCallsIn(p, expr)}`);
 const bkPositions = BK_WIRING.reduce((s, [, , n]) => s + n, 0);
 ok(`the ${bkFiles.length} screen that shows a bucket word reads it through the shared composer at all ${bkPositions} position(s) (pins ${BK_FILES_PIN} files/${BK_POSITIONS_PIN} positions), and each imports it from domain/rowText (${bkBad.join(" | ") || "none"})`,
-  bkBad.length === 0 && bkFiles.length === BK_FILES_PIN && bkPositions === BK_POSITIONS_PIN &&
+  bkBad.length === 0 && bkPositions > 0 && bkFiles.length === BK_FILES_PIN && bkPositions === BK_POSITIONS_PIN &&
   bkFiles.every((p) => BK_IMPORT.test(bkSrc.get(p))));
 // The chip is the loop-variable case for the fourth time: `{b}` is legitimate wherever `b`
 // is already a word, so the charge is read out of the loop the file declares — which keeps
@@ -4693,7 +4693,7 @@ const phBad = PH_WIRING.filter(([p, expr, n]) => phCallsIn(p, expr) !== n)
   .map(([p, expr, n]) => `${p} wants ${expr} x${n}, found ${phCallsIn(p, expr)}`);
 const phPositions = PH_WIRING.reduce((s, [, , n]) => s + n, 0);
 ok(`the ${phFiles.length} screen that tags a drill with its phase reads it through the shared composer at all ${phPositions} position(s) (pins ${PH_FILES_PIN} files/${PH_POSITIONS_PIN} positions), and each imports it from domain/rowText (${phBad.join(" | ") || "none"})`,
-  phBad.length === 0 && phFiles.length === PH_FILES_PIN && phPositions === PH_POSITIONS_PIN &&
+  phBad.length === 0 && phPositions > 0 && phFiles.length === PH_FILES_PIN && phPositions === PH_POSITIONS_PIN &&
   phFiles.every((p) => PH_IMPORT.test(phSrc.get(p))));
 // No stored phase in a display slot, and no screen types one of the five codes as a text
 // node. A resolved site sits in a display slot too, so the slot match excludes anything
@@ -5728,7 +5728,7 @@ const deviceVerdicts = DEVICE_FIXTURES.map(([name, src, want]) => {
   return [name, credited === want];
 });
 ok(`the device reader credits each of the three devices at each distance the suite writes them and refuses a clause with none (${deviceVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
-  deviceVerdicts.every(([, v]) => v));
+  deviceVerdicts.length > 0 && deviceVerdicts.every(([, v]) => v));
 // M315 witnessed the token reading the same way, because correcting isZeroish is exactly the
 // kind of change that could turn the census quiet: one fixture per reading, each of which must
 // classify as the census now classifies it. A reader that stopped charging zero-assertions
