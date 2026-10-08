@@ -80,7 +80,7 @@ ok("A: scanPerMinute = scans / total minutes", a.scanPerMinute === r2((tally.sca
 ok("A: olderScanRate = older scans / older minutes", a.olderScanRate === r2(3 / (180 / 60)));
 ok("A: newerScanRate = newer scans / newer minutes", a.newerScanRate === r2(1 / (120 / 60)));
 ok("A: scanTrend = newer - older (2dp)", a.scanTrend === r2(a.newerScanRate - a.olderScanRate));
-ok("A: trend is negative here (scanning fell off in newer clips)", a.scanTrend === r2(0.5 - 1.0) && a.scanTrend < 0);
+ok("A: trend is negative here (scanning fell off in newer clips)", a.actionsPerMinute > 0 && a.scanTrend === r2(0.5 - 1.0) && a.scanTrend < 0);
 
 // -- topFocus: per-clip dedupe, then rank by clip count and label -----------
 // scanning×2, first_touch×1, passing×1
@@ -150,10 +150,10 @@ ok("empty: zero clips/minutes/detections, confidence 0", e.clips === 0 && e.anal
 ok("empty: byKind still lists all kinds at zero (a legend never loses a row)",
   e.byKind.length === 7 && e.byKind.every((k) => k.count === 0 && k.perMinute === 0));
 ok("empty: rates and trend are 0 / null, not NaN",
-  e.actionsPerMinute === 0 && e.scanPerMinute === 0 && e.scanTrend === null);
+  a.actionsPerMinute > 0 && e.actionsPerMinute === 0 && e.scanPerMinute === 0 && e.scanTrend === null);
 ok("empty: hasData false and the busiest-detection line says none recorded",
-  e.hasData === false && evidenceEn(e).some((s) => /No detections/i.test(s)));
-ok("empty: topFocus is empty rather than fabricated", e.topFocus.length === 0);
+  evidenceEn(e).length > 0 && e.hasData === false && evidenceEn(e).some((s) => /No detections/i.test(s)));
+ok("empty: topFocus is empty rather than fabricated", a.topFocus.length > 0 && e.topFocus.length === 0);
 
 // -- confidence ladder across 1..5 valid clips (cap at 5 clips = 85) --------
 const ladder = [1, 2, 3, 4, 5, 6].map((n) =>
@@ -208,7 +208,7 @@ for (const [kind, id] of noteIds) {
   }
 }
 ok(`each of the ${VIDEO_KINDS.length} detections carries captions of its own, every one a row in all ${LOCALES.length} locales (${noteIds.length} ids, ${noteBad.slice(0, 3).join(" | ") || "clean"})`,
-  noteIds.length === VIDEO_KINDS.length * 3 && noteBad.length === 0);
+  LOCALES.length >= 3 && noteIds.length === VIDEO_KINDS.length * 3 && noteBad.length === 0);
 const codeKinds = VIDEO_KINDS.filter((k) => translate("zh-CN", VIDEO_KIND_KEY[k]) === VIDEO_KIND_KEY[k]);
 ok(`and a detection is named by a row rather than by its code on a 简体中文 screen (${VIDEO_KINDS.map((k) => `${k}=${translate("zh-CN", VIDEO_KIND_KEY[k])}`).join(" ")})`,
   codeKinds.length === 0 && new Set(VIDEO_KINDS.map((k) => VIDEO_KIND_KEY[k])).size === VIDEO_KINDS.length);
@@ -306,7 +306,7 @@ for (const [rel, anchors] of [
   else if (badgeLines.some((l) => !/\bt\(\s*VIDEO_KIND_KEY\[/.test(l))) seamBad.push(`${rel} badge not translated: ${badgeLines.find((l) => !/\bt\(\s*VIDEO_KIND_KEY\[/.test(l)).trim()}`);
 }
 ok(`the film and weekly panels read every one of those rows through the seam instead of printing the id (${seamBad.slice(0, 3).join(" | ") || "4 render sites + 2 badges"})`,
-  seamBad.length === 0);
+  VIDEO_KINDS.length > 0 && seamBad.length === 0);
 
 
 // A clip stored before this milestone holds plain strings where a row is expected, and

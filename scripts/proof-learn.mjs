@@ -57,13 +57,13 @@ const dispatched = new Set([...appSrc.matchAll(/path === "(\/[a-z-]+)"|path\.sta
 ok("the router's own source yields a non-empty route set", dispatched.size > 10);
 ok("every lesson offers a try-it (the hub claims a place to try EACH idea)", LESSONS.every((l) => l.tryIt && l.tryIt.labelKey && l.tryIt.to));
 ok("every try-it target is a route App actually dispatches", LESSONS.every((l) => dispatched.has(l.tryIt.to)));
-ok("no try-it label names the screen it links from (nothing points at /learn)", LESSONS.every((l) => l.tryIt.to !== "/learn" && l.tryIt.to !== "/"));
+ok("no try-it label names the screen it links from (nothing points at /learn)", LESSONS.length > 0 && LESSONS.every((l) => l.tryIt.to !== "/learn" && l.tryIt.to !== "/"));
 
 // The press dial: Tactical Studio arranges shape and mentality only — the press
 // intensity control is in the Simulation Lab. Read both files' text, never import them.
 const studioSrc = readFileSync(new URL("../features/tactical/TacticalStudio.tsx", import.meta.url), "utf8");
 const labSrc = readFileSync(new URL("../features/sim/SimulationLab.tsx", import.meta.url), "utf8");
-ok("Tactical Studio really has no press control", !/press/i.test(studioSrc));
+ok("Tactical Studio really has no press control", studioSrc.length > 0 && !/press/i.test(studioSrc));
 // M220 keyed the four slider labels, so the dial is now named by the key its label reads
 // instead of by the English word in the attribute. The control is the same one; what has
 // to stay true is that the lab is the screen carrying it, which the key's own provenance
@@ -101,7 +101,7 @@ ok("isCompleted: any non-empty completedAt counts", isCompleted(rec("xg", { comp
 // ---------------------------------------------------------------------------
 const N = LESSONS.length;
 const empty = summarizeLearn([]);
-ok("summarizeLearn: no records → zeroed, hasData false", empty.completed === 0 && empty.mastered === 0 && empty.pct === 0 && empty.masteredPct === 0 && empty.hasData === false && empty.started === 0);
+ok("summarizeLearn: no records → zeroed, hasData false", N > 0 && empty.completed === 0 && empty.mastered === 0 && empty.pct === 0 && empty.masteredPct === 0 && empty.hasData === false && empty.started === 0);
 ok("summarizeLearn: totalLessons is the whole catalogue, not the records seen", empty.totalLessons === N);
 ok("summarizeLearn: sources name the local device and label the lessons editorial", (() => {
   const keys = empty.sources.map((s) => s.key);
@@ -109,9 +109,9 @@ ok("summarizeLearn: sources name the local device and label the lessons editoria
   return JSON.stringify(keys) === JSON.stringify(["learn.src.device", "learn.src.catalogue"]) &&
     /this device/.test(text) && /editorial/.test(text) && !text.includes("scraped");
 })());
-ok("summarizeLearn: per-category totals sum to the catalogue size", empty.byCategory.reduce((s, c) => s + c.total, 0) === N);
+ok("summarizeLearn: per-category totals sum to the catalogue size", N > 0 && empty.byCategory.reduce((s, c) => s + c.total, 0) === N);
 ok("summarizeLearn: byCategory is sorted by category name", JSON.stringify(empty.byCategory.map((c) => c.category)) === JSON.stringify(empty.byCategory.map((c) => c.category).sort((a, b) => a.localeCompare(b))));
-ok("summarizeLearn: with nothing done the weakest category is the first untouched one", empty.weakestCategory && empty.weakestCategory.completed === 0 && empty.evidence.some((e) => e.key === "learn.ev.noCat"));
+ok("summarizeLearn: with nothing done the weakest category is the first untouched one", empty.byCategory.length > 0 && empty.weakestCategory && empty.weakestCategory.completed === 0 && empty.evidence.some((e) => e.key === "learn.ev.noCat"));
 
 const partial = summarizeLearn([
   rec("xg", { completedAt: "2026-01-01", quizCorrect: true, attempts: 1 }),
@@ -193,7 +193,7 @@ ok("recommendLessons: the development branch wins over the load branch when both
 ok("recommendLessons: at 0 sessions the load branch takes over and words the attribute codes through the reader's dictionary", (() => {
   const row = recommendLessons([], sig({ weakestAttributes: ["sprint", "passing"] }), 9).find((p) => p.lesson.id === "load").reason;
   const lines = { en: say("en")(row), "zh-CN": say("zh-CN")(row), "zh-TW": say("zh-TW")(row) };
-  return row.key === "learn.rec.load" && row.vars.attrs === "sprint,passing" &&
+  return lines.en.length > 0 && row.key === "learn.rec.load" && row.vars.attrs === "sprint,passing" &&
     Object.entries(lines).every(([loc, line]) =>
       line.includes(DICTIONARIES[loc]["attr.name.sprint"]) && line.includes(DICTIONARIES[loc]["attr.name.passing"])) &&
     !/sprint|passing/i.test(lines["zh-CN"]) && !lines["zh-CN"].includes("{");
