@@ -85,7 +85,7 @@ ok("…and a row's lastAt is one of the stamps the caller handed for that pillar
 // ---------------------------------------------------------------------------
 const p = row(R1, "player");
 ok(`the player card quotes sessions and minutes as given (${line(p, 0)})`,
-  line(p, 0) === "4 sessions · 90 min trained");
+  line(p, 0) === "4 sessions · 90 min trained" && line(p, 0).length > 0);
 ok(`…level, XP and goals together (${line(p, 1)})`, line(p, 1) === "Level 5 · 800 XP · 3 goals met");
 ok(`…and academy lessons with their passed checks (${line(p, 2)})`, line(p, 2) === "1 academy lesson · 1 passed check");
 const MINUTED = buildFootprint(withIn({ player: { sessionsCompleted: 1, minutes: 12.34 }, film: { clips: 1, minutes: 0.05 } }));
@@ -121,7 +121,8 @@ ok(`every count word agrees with its number at 1 and 2 (${PLURALS.length * 2} fo
 // ---------------------------------------------------------------------------
 const mgrStarted = row(buildFootprint(withIn({ manager: { active: true, matches: 0 } })), "manager");
 ok(`a career with no fixture played yet says exactly that (${line(mgrStarted, 0)})`,
-  line(mgrStarted, 0) === "Career started but no fixture played yet." && mgrStarted.active === false);
+  line(mgrStarted, 0) === "Career started but no fixture played yet." && mgrStarted.active === false &&
+  Object.keys(mgrStarted).length > 0); /* M324-FOOTPRINT: an empty manager state would satisfy the line arm alone */
 const mgrPartial = buildFootprint(withIn({ manager: { active: true, matches: 4, pointsPerGame: 1.5, position: 3 } }));
 ok(`the table row needs BOTH position and club count, and says so when one is missing (${text(row(mgrPartial, "manager"))})`,
   !text(row(mgrPartial, "manager")).includes("#3") &&
@@ -132,7 +133,7 @@ const mgrWithClub = text(row(buildFootprint(withIn({ manager: { active: true, ma
 // name printed an English placeholder no locale could translate. The absent case is its own
 // pair of keys now, so nothing invents a name.
 ok(`points per game are printed with two decimals, and a career with no club name invents none (${mgrNoClub})`,
-  mgrNoClub.includes("2.00 pts/game") && !/Your club/i.test(mgrNoClub) &&
+  mgrNoClub.includes("2.00 pts/game") && !/Your club/i.test(mgrNoClub) && mgrWithClub.length > 0 &&
   mgrWithClub.includes("Riverside · 4 fixtures managed"));
 const filmMid = (over) => text(row(buildFootprint(withIn({ film: { clips: 3, minutes: 20, ...over } })), "film"));
 ok(`the detection line needs both detections and scans-per-minute (${filmMid({ detections: 40, scanPerMinute: 2.5 })})`,
@@ -145,10 +146,10 @@ const focusLine = filmMid({ recurringFocus: [{ key: "passing", clips: 3 }, { key
 ok(`the repeated coaching focus names each attribute through attributeLabel, never a raw key (${focusLine})`,
   focusLine.includes(`Repeated coaching focus: ${attributeLabel("passing")} ×3, ${attributeLabel("dribbling")} ×1`) && !/passing/.test(focusLine.replace(attributeLabel("passing"), "")));
 ok("…and the line is absent for an empty focus list rather than printed as nothing",
-  !/Repeated/.test(filmMid({ recurringFocus: [] })));
+  !/Repeated/.test(filmMid({ recurringFocus: [] })) && focusLine.includes("Repeated coaching focus:")); /* M324-FOOTPRINT: a line that never rendered would satisfy both arms */
 const fanQuiet = row(buildFootprint(withIn({ fan: { watchlist: 2, posts: 0, replies: 0 } })), "fan");
 ok(`a watcher who has never posted is told "Nothing posted yet" rather than "0 posts" (${text(fanQuiet)})`,
-  line(fanQuiet, 1) === "Nothing posted yet");
+  line(fanQuiet, 1) === "Nothing posted yet" && text(fanQuiet).length > 0);
 ok(`…and a favourite club only appears when one is set (${text(row(buildFootprint(withIn({ fan: { watchlist: 1, favouriteClubName: "Riverside" } })), "fan"))})`,
   text(row(buildFootprint(withIn({ fan: { watchlist: 1 } })), "fan")).indexOf("Supports") === -1 &&
   text(row(buildFootprint(withIn({ fan: { watchlist: 1, favouriteClubName: "Riverside" } })), "fan")).includes("Supports Riverside"));
@@ -157,16 +158,16 @@ ok(`…and a favourite club only appears when one is set (${text(row(buildFootpr
 // 5 · the timestamps: newest wins, junk is dropped, the locale is the reader's
 // ---------------------------------------------------------------------------
 const st = buildFootprint(withIn({ player: { lastSessionAt: "2026-02-02T00:00:00.000Z", lastLessonAt: "2026-05-05T00:00:00.000Z" }, manager: { lastMatchAt: "2026-03-03T00:00:00.000Z" }, film: { lastClipAt: "2026-04-04T00:00:00.000Z" }, fan: { lastPostAt: "2026-01-01T00:00:00.000Z" } }));
-ok(`the player row's own stamp is the later of its two (${st.rows[0].lastAt})`, st.rows[0].lastAt === "2026-05-05T00:00:00.000Z");
+ok(`the player row's own stamp is the later of its two (${st.rows[0].lastAt})`, st.rows.length > 0 && st.rows[0].lastAt === "2026-05-05T00:00:00.000Z");
 ok(`and the record's most recent activity is the newest across all four (${st.lastActiveAt})`, st.lastActiveAt === "2026-05-05T00:00:00.000Z");
 ok("…which holds whatever order the pillars are listed in",
   buildFootprint(withIn({ film: { lastClipAt: "2027-01-01T00:00:00.000Z" }, player: { lastSessionAt: "2026-05-05T00:00:00.000Z" } })).lastActiveAt === "2027-01-01T00:00:00.000Z");
 const junkIn = { locale: "en", player: { sessionsCompleted: 0, minutes: 0, xp: 0, level: 1, plans: 0, goalsDone: 0, lessonsCompleted: 0, lessonsMastered: 0, lastSessionAt: "not-a-date" }, manager: { active: false, matches: 0, lastMatchAt: "" }, film: { clips: 0, minutes: 0, lastClipAt: "2026-06-06T00:00:00.000Z" }, fan: { watchlist: 0, posts: 0, replies: 0 } };
 const junk = buildFootprint(junkIn);
 ok(`an unparseable or empty stamp is dropped rather than becoming the most recent activity (${junk.lastActiveAt}, player row lastAt ${junk.rows[0].lastAt ?? "none"})`,
-  junk.lastActiveAt === "2026-06-06T00:00:00.000Z" && junk.rows[0].lastAt === undefined);
+  junk.rows.length > 0 && junk.lastActiveAt === "2026-06-06T00:00:00.000Z" && junk.rows[0].lastAt === undefined);
 ok("a record with no dates at all says so instead of printing an empty date",
-  buildFootprint(EMPTY).lastActiveAt === null && /No dated activity/.test(sayEn(buildFootprint(EMPTY).evidence[2])));
+  buildFootprint(EMPTY).evidence.length >= 3 && buildFootprint(EMPTY).lastActiveAt === null && /No dated activity/.test(sayEn(buildFootprint(EMPTY).evidence[2])));
 const EN = buildFootprint(withIn({ locale: "en", player: { lastSessionAt: "2026-09-12T08:30:00Z" } }));
 const ZH = buildFootprint(withIn({ locale: "zh-CN", player: { lastSessionAt: "2026-09-12T08:30:00Z" } }));
 const enStamp = say("en")(EN.evidence[2]);
