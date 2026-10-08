@@ -38,15 +38,15 @@ const baseJson = JSON.stringify(base);
 const clubIds = new Set(clubs.map((c) => c.id));
 
 // --- labels & market curve ------------------------------------------------
-ok("seasonLabel maps elapsed→the correct two-year label", seasonLabel(0) === "2026/27" && seasonLabel(1) === "2027/28" && seasonLabel(5) === "2031/32");
+ok("seasonLabel maps elapsed→the correct two-year label", seasonLabel(0) === "2026/27" && seasonLabel(1) === "2027/28" && seasonLabel(5) === "2031/32" && seasonLabel(3) === "2029/30");
 ok("market value rises with ability at fixed age", marketValue(80, 25) > marketValue(70, 25));
 ok("market value carries a youth premium at fixed ability", marketValue(75, 22) > marketValue(75, 32) && marketValue(75, 26) > marketValue(75, 35));
-ok("market value is non-negative and rounded to €100k", marketValue(50, 25) % 100000 === 0 && marketValue(45, 40) === 0);
+ok("market value is non-negative and rounded to €100k", marketValue(50, 25) > 0 && marketValue(50, 25) % 100000 === 0 && marketValue(45, 40) === 0);
 ok("formatMarket renders M and B units", formatMarket(12_400_000) === "€12M" && formatMarket(1_500_000_000) === "€1.50B");
 
 // --- seasons=0 is a faithful, copied identity -----------------------------
 const zero = runWorld(base, 0);
-ok("runWorld(base,0) advances no seasons and returns empty history", zero.seasonsElapsed === 0 && zero.history.length === 0);
+ok("runWorld(base,0) advances no seasons and returns empty history", base.players.length > 0 && zero.seasonsElapsed === 0 && zero.history.length === 0);
 ok("runWorld(base,0) returns equal-but-not-identical player copies", JSON.stringify(zero.players) === JSON.stringify(base.players) && zero.players[0] !== base.players[0]);
 
 // --- determinism + purity -------------------------------------------------
@@ -64,6 +64,7 @@ ok("every end-state player stays inside rating bounds with potential >= overall"
 ok("every player's market value is recomputed from its live rating & age",
   allPlayers.every((p) => p.value === marketValue(p.overall, p.age)));
 ok("the engine invents no clubs — every affiliation is a base club",
+  clubIds.size > 0 && allPlayers.length > 0 && s3a.history.every((st) => st.champions.length > 0) &&
   allPlayers.every((p) => clubIds.has(p.clubId)) && s3a.history.every((st) => st.champions.every((c) => clubIds.has(c.clubId))));
 
 // --- developments / declines are sign-pure and capped ---------------------
@@ -82,7 +83,7 @@ for (const st of s3a.history) {
 // The final step's roster *is* the returned players, so recompute its two
 // aggregate figures exactly (the earlier steps' full rosters aren't retained).
 const last = s3a.history[s3a.history.length - 1];
-ok("final step marketTotal equals the summed player values", last.marketTotal === s3a.players.reduce((s, p) => s + p.value, 0));
+ok("final step marketTotal equals the summed player values", s3a.players.length > 0 && last.marketTotal === s3a.players.reduce((s, p) => s + p.value, 0));
 ok("final step avgOverall equals the rounded mean of player ratings",
   last.avgOverall === Math.round((s3a.players.reduce((s, p) => s + p.overall, 0) / s3a.players.length) * 10) / 10);
 

@@ -82,7 +82,7 @@ ok("trend compares the older and newer in-window half", r7.filmScanTrend === -3.
 
 const r90 = base(90);
 ok("90d window includes the 60-day clip", r90.filmClips === 3, `filmClips=${r90.filmClips}`);
-ok("no lifetime numbers leak into the 7d digest", r7.filmClips !== r90.filmClips);
+ok("no lifetime numbers leak into the 7d digest", r7.filmClips > 0 && r90.filmClips > r7.filmClips); /* M325: the two digests both read a real count, and the 90d one is the larger */
 
 const texts = r7.insights.map((i) => say(i.text));
 ok(
@@ -108,13 +108,13 @@ ok(
 );
 
 const ev = r7.evidence.map(say);
-ok("evidence carries the film line", ev.some((e) => e === "Film · 2 clips · 5.0 min · detection count 39"), ev.find((e) => e.startsWith("Film")) ?? "(none)");
-ok("evidence carries the scanning line", ev.some((e) => e === "Scanning 7.00/min (trend -3.33)"), ev.find((e) => e.startsWith("Scanning")) ?? "(none)");
+ok("evidence carries the film line", ev.length > 0 && ev.some((e) => e === "Film · 2 clips · 5.0 min · detection count 39"), ev.find((e) => e.startsWith("Film")) ?? "(none)");
+ok("evidence carries the scanning line", ev.length > 0 && ev.some((e) => e === "Scanning 7.00/min (trend -3.33)"), ev.find((e) => e.startsWith("Scanning")) ?? "(none)");
 const srcs = r7.sources.map(say);
 ok("sources name the film library", srcs.some((s) => s.includes("film library")), srcs.join(" | "));
 
 const rNoFilm = base(7, { film: [] });
-ok("no film -> zeroed fields, no film lines", rNoFilm.filmClips === 0 && rNoFilm.sources.every((s) => !say(s).includes("film library")));
+ok("no film -> zeroed fields, no film lines", rNoFilm.sources.length > 0 && rNoFilm.filmClips === 0 && rNoFilm.sources.every((s) => !say(s).includes("film library")));
 const thin = { film: [clip(now - 2 * DAY, 120, 10), clip(now - 5 * DAY, 180, 25)] };
 const thinBase = { sessions: [], goals: [], progress: [], streak: 0, learn: [] };
 const rThinFilm = base(7, { ...thinBase, film: thin.film });
@@ -163,7 +163,7 @@ const malformed = buildReview({
   streak: 0,
   film: [{ at: iso(now - 2 * DAY), durationSec: 0, confidence: 0, events: [], recommendedFocus: [] }],
 });
-ok("unusable clip is dropped, not guessed", malformed.filmClips === 0 && !malformed.hasData, `clips=${malformed.filmClips} hasData=${malformed.hasData}`);
+ok("unusable clip is dropped, not guessed", MALFORMED_CLIPS.length > 0 && malformed.filmClips === 0 && !malformed.hasData, `clips=${malformed.filmClips} hasData=${malformed.hasData}`);
 
 for (const [status, name, detail] of checks) console.log(`${status}  ${name}${detail ? `  — ${detail}` : ""}`);
 const failed = checks.filter((c) => c[0] === "FAIL").length;

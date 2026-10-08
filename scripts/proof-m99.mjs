@@ -26,8 +26,8 @@ ok(`exactly ${VECTOR_MIN_KEYS} keys → kept`, playerVector(exact) === exact);
 
 // 2. No vector → no DNA. A secondary archetype read off a ratings-only record
 //    would be invented, so playerDna must refuse rather than guess.
-ok("no vector → no DNA", playerDna(undefined) === null);
-ok("short vector → no DNA", playerDna(short) === null);
+ok("no vector → no DNA", playerDna(undefined) === null && VECTOR_MIN_KEYS > 0);
+ok("short vector → no DNA", playerDna(short) === null && Object.keys(short).length > 0);
 
 // 3. With a vector, DNA is present and the two archetypes differ (a single
 //    archetype cannot be both primary and secondary).
@@ -46,7 +46,7 @@ ok("primary and secondary differ", dna.primary.id !== dna.secondary.id);
 ok("evolution row names secondary then primary, in the reader’s own words",
   locales.every((l) => say(l)(dna.evolution) === `${archName(l, dna.secondary.id)} → ${archName(l, dna.primary.id)}`));
 ok("and no locale prints an archetype id where a name belongs",
-  locales.every((l) => !/[a-z]+_[a-z0-9]+/.test(say(l)(dna.evolution))));
+  locales.length >= 3 && locales.every((l) => !/[a-z]+_[a-z0-9]+/.test(say(l)(dna.evolution))));
 ok("the primary archetype’s name is a human name, not a slug", !/_/.test(archName("en", dna.primary.id)));
 ok("the model publishes codes only: no name or description rides on the table",
   !("label" in dna.primary) && !("blurb" in dna.primary) &&
@@ -65,7 +65,7 @@ for (const p of players) {
   if (derived.primary.id !== p.archetype) mismatched++;
 }
 ok("seeded players carry a vector", withVector === players.length);
-ok("re-derived primary reproduces the stored archetype for every player", mismatched === 0);
+ok("re-derived primary reproduces the stored archetype for every player", players.length > 0 && mismatched === 0);
 
 // 5. The shared rule did not change what the scouting models report: they must
 //    agree with playerVector on every player, measured and modelled alike.
@@ -76,13 +76,13 @@ for (const p of players) {
   if (modelPlayerProfile(p).measured !== has) disagreements++;
   if ((templateEdge(p) !== null) !== has) disagreements++;
 }
-ok("scoutReport / modelPlayerProfile / templateEdge agree with playerVector", disagreements === 0);
+ok("scoutReport / modelPlayerProfile / templateEdge agree with playerVector", players.length > 0 && disagreements === 0);
 
 // 6. A ratings-only record still degrades honestly rather than throwing.
 const lean = { id: "lean-1", name: "Lean", position: "CM", positionGroup: "CM", age: 22, nation: "XX",
   clubId: "none", overall: 70, potential: 76, archetype: "creator", value: 1_000_000, foot: "R" };
 const leanReport = scoutReport(lean);
-ok("ratings-only player: report says no vector", leanReport.hasVector === false);
+ok("ratings-only player: report says no vector", leanReport !== null && leanReport.hasVector === false);
 ok("ratings-only player: DNA withheld", playerDna(lean.attributes) === null);
 ok("ratings-only player: the English accessor the demo provider uses still resolves the stored id", archetypeLabelEn(lean.archetype) === "Creator");
 

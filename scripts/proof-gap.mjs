@@ -57,12 +57,12 @@ ok("each item row carries keys and numbers, never a display label",
 ok("every item key resolves in the attribute name table, so the dictionary can name it",
   a.items.every((it) => attributeLabel(it.key) !== it.key));
 ok("delta = round(target - actual, 1) and criticality = max(0, target - floor)",
-  a.items.every((it) => it.delta === r1(it.target - it.actual) && it.criticality === Math.max(0, it.target - ROLE_FLOOR)));
-ok("criticality is never negative", a.items.every((it) => it.criticality >= 0));
+  a.items.length > 0 && a.items.every((it) => it.delta === r1(it.target - it.actual) && it.criticality === Math.max(0, it.target - ROLE_FLOOR)));
+ok("criticality is never negative", a.items.length > 0 && a.items.every((it) => it.criticality >= 0));
 
 // --- overall is the same weighting the rest of the app uses -----------------
 ok("overall equals overallRating of the very attributes passed in", a.overall === overallRating(fixture));
-ok("skill is a 0..1 tier", a.skill >= 0 && a.skill <= 1);
+ok("skill is a 0..1 tier", a.skill > 0 && a.skill <= 1);
 
 // --- readiness re-derived from the weighted covered/required formula --------
 function recomputeReadiness(items) {
@@ -115,7 +115,7 @@ const none = analyzeGap({ attributes: {}, group: "W" });
 ok("no saved attributes → hasData false, confidence 0", none.hasData === false && none.confidence === 0);
 ok("no saved attributes → an explicit 'No saved attributes' evidence line, not a fabricated read",
   none.evidence.length === 1 && /no saved attributes/i.test(line(none.evidence[0])));
-ok("partial data flips hasData true", analyzeGap({ attributes: { [KEYS[0]]: 60 }, group: "W" }).hasData === true);
+ok("partial data flips hasData true", KEYS.length > 0 && analyzeGap({ attributes: { [KEYS[0]]: 60 }, group: "W" }).hasData === true);
 
 // --- every row the model publishes is a key ----------------------------------
 // Checked across all four scenarios, not only the populated one: the empty-data
@@ -125,7 +125,7 @@ const ALL_ROWS = [a, star, weak, none].flatMap((x) => [...x.evidence, ...x.sourc
 ok("every evidence and source row is a key, never a sentence typed in the module",
   ALL_ROWS.every((r) => r && typeof r === "object" && typeof r.key === "string"));
 ok("no row resolves to its own key — each one has words in the dictionary",
-  ALL_ROWS.every((r) => line(r) && !line(r).startsWith("gap.")));
+  ALL_ROWS.length > 0 && ALL_ROWS.every((r) => line(r) && !line(r).startsWith("gap.")));
 
 // --- the group word now comes from the dictionary, not a helper in this module ---
 // `groupLabel` was deleted when the evidence line stopped composing the label itself:
