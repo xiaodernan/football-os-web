@@ -34,9 +34,11 @@ ok("askingFee(0) is 0, not a phantom fee", askingFee(0) === 0);
 // two pin the rounding direction rather than the uplift.
 ok("askingFee snaps to the nearest €100k (1.045M→1.0M, 1.595M→1.6M)", askingFee(950_000) === 1_000_000 && askingFee(1_450_000) === 1_600_000);
 const values = footballProvider.players().map((p) => p.value);
-ok("every real fee is a positive multiple of €100k", values.every((v) => askingFee(v) % 100_000 === 0 && askingFee(v) >= 0));
+ok("every real fee is a positive multiple of €100k", values.every((v) => askingFee(v) % 100_000 === 0 && askingFee(v) >= 0) &&
+  values.length > 0 && askingFee(1_000_000) % 100_000 === 0); /* M324-TRANSFERS: a sweep of an empty population, or a concrete fee off the grid, reddens */
 ok("fee never undercuts the stored market value", values.every((v) => askingFee(v) >= v));
-ok("askingFee is monotone in value", values.slice().sort((a, b) => a - b).every((v, i, s) => i === 0 || askingFee(v) >= askingFee(s[i - 1])));
+ok("askingFee is monotone in value", values.slice().sort((a, b) => a - b).every((v, i, s) => i === 0 || askingFee(v) >= askingFee(s[i - 1])) &&
+  askingFee(1_000_000) <= askingFee(2_000_000)); /* M324-TRANSFERS: the concrete pair the sweep's direction implies */
 
 // --- the board's own vocabulary ---------------------------------------------
 ok("availableKinds is the three reportable story types", JSON.stringify(availableKinds()) === JSON.stringify(["Rumor", "Reported", "Confirmed"]));
@@ -66,11 +68,13 @@ ok("the player named by a row is really referenced by that article",
 // instead, so an article that ever names two players turns this red and forces
 // the ambiguity decision rather than silently ranking one of them.
 ok("no rumour article names more than one player (the board's pick is unambiguous)",
-  newsFeed.filter((n) => availableKinds().includes(n.kind)).every((n) => n.entityIds.filter((id) => !!getPlayer(id)).length <= 1));
+  newsFeed.filter((n) => availableKinds().includes(n.kind)).length > 0 &&
+  newsFeed.filter((n) => availableKinds().includes(n.kind)).every((n) => n.entityIds.filter((id) => !!getPlayer(id)).length <= 1)); /* M324-TRANSFERS: an empty feed would satisfy the universal alone */
 ok("the row's player is a player that article actually names",
   board.every((r) => getNews(r.articleId).entityIds.filter((id) => !!getPlayer(id)).includes(r.playerId)));
 ok("no row is invented from an article that names no player",
-  newsFeed.filter((n) => availableKinds().includes(n.kind) && !n.entityIds.some((id) => getPlayer(id))).every((n) => !board.some((r) => r.articleId === n.id)));
+  newsFeed.length > 0 && newsFeed.filter((n) => availableKinds().includes(n.kind)).length > 0 &&
+  newsFeed.filter((n) => availableKinds().includes(n.kind) && !n.entityIds.some((id) => getPlayer(id))).every((n) => !board.some((r) => r.articleId === n.id))); /* M324-TRANSFERS: a feed the board never read would pass the universal alone */
 const expectedRows = newsFeed.filter((n) => availableKinds().includes(n.kind) && n.entityIds.some((id) => getPlayer(id))).length;
 ok("every eligible article produces exactly one row", board.length === expectedRows);
 
@@ -79,17 +83,17 @@ ok("row player fields equal the stored player record",
   board.every((r) => { const p = getPlayer(r.playerId); return p.name === r.playerName && p.position === r.position && p.age === r.age && p.clubId === r.fromClubId; }));
 ok("fromClubName is the real club name", board.every((r) => getClub(r.fromClubId)?.name === r.fromClubName));
 ok("the club-id fallback in fromClubName is unreachable on the shipped dataset (no orphan players)",
-  footballProvider.players().every((p) => !!getClub(p.clubId)));
+  footballProvider.players().length > 0 && footballProvider.players().every((p) => !!getClub(p.clubId))); /* M324-TRANSFERS: an empty player set would satisfy the universal alone */
 ok("row money/index/headroom are recomputable from the stored player",
   board.every((r) => { const p = getPlayer(r.playerId); return r.askingFee === askingFee(p.value) && r.headroom === headroom(p) && r.valueIndex === Math.round(valueIndex(p) * 10) / 10; }));
-ok("headroom is never negative", board.every((r) => r.headroom >= 0));
-ok("credibility stays in the 0..1 band the article stores", board.every((r) => r.credibility >= 0 && r.credibility <= 1));
+ok("headroom is never negative", board.length > 0 && board.every((r) => r.headroom >= 0) && board.some((r) => r.headroom >= 0));
+ok("credibility stays in the 0..1 band the article stores", board.length > 0 && board.every((r) => r.credibility >= 0 && r.credibility <= 1) && board.some((r) => r.credibility >= 0));
 
 // --- without a viewer club there is no fit claim at all ----------------------
-ok("no viewer → every fitScore is null (the board invents no need)", board.every((r) => r.fitScore === null));
-ok("no viewer → nothing is flagged as a target", board.every((r) => !r.isTarget));
+ok("no viewer → every fitScore is null (the board invents no need)", board.length > 0 && board.every((r) => r.fitScore === null) && board.some((r) => r.fitScore === null));
+ok("no viewer → nothing is flagged as a target", board.length > 0 && board.every((r) => !r.isTarget) && board.some((r) => r.isTarget === false));
 ok("no viewer → the order is credibility then recency",
-  board.every((r, i) => i === 0 || board[i - 1].credibility > r.credibility || (board[i - 1].credibility === r.credibility && board[i - 1].publishedAt >= r.publishedAt)));
+  board.length > 1 && board.every((r, i) => i === 0 || board[i - 1].credibility > r.credibility || (board[i - 1].credibility === r.credibility && board[i - 1].publishedAt >= r.publishedAt)) && board[0].credibility >= board[1].credibility);
 
 // --- with a viewer club: fit reads THAT club's squad, own players are excluded
 const clubs = footballProvider.clubs();
@@ -139,7 +143,8 @@ ok("…and it is the clamp doing it, not the sum: the same bucket at a strong av
 ok("…and the floor is the same clamp: a thick, weak-target query lands on 5, never below",
   fitFor(avgMap(90), "ATT", 0, 40) === 5 && fitFor(avgMap(97), "ATT", 0, 50) === 5);
 ok("a bucket the viewer's profile does not carry returns 0, below the floor — the branch the seeded board cannot reach",
-  fitFor(new Map(), "ATT", 20, 80) === 0);
+  fitFor(new Map(), "ATT", 20, 80) === 0 &&
+  fitFor(new Map([["ATT", 20]]), "ATT", 20, 80) > 0); /* M324-TRANSFERS: a fitFor that returned 0 for every profile would satisfy the empty-profile arm alone */
 ok("at least one viewer genuinely has a priority target, so the badge is reachable",
   withViewer.some(({ rows }) => rows.some((r) => r.isTarget)));
 ok("choosing a different club can change the ranking (fit is really viewer-scoped)",
@@ -147,7 +152,7 @@ ok("choosing a different club can change the ranking (fit is really viewer-scope
 ok("viewer boards are deterministic per club", withViewer.every(({ club }) => JSON.stringify(transferRumours(club.id)) === JSON.stringify(transferRumours(club.id))));
 
 // --- kind filter -------------------------------------------------------------
-ok("an empty kind set yields no rows", transferRumours(undefined, []).length === 0);
+ok("an empty kind set yields no rows", transferRumours(undefined, []).length === 0 && transferRumours(undefined, availableKinds()).length > 0);
 ok("a single kind yields only that kind", ["Rumor", "Reported", "Confirmed"].every((k) => {
   const only = transferRumours(undefined, [k]);
   return only.every((r) => r.kind === k) && only.length <= board.length;
