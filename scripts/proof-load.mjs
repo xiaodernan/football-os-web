@@ -36,19 +36,19 @@ const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } 
 // 1. No sessions: honest empty state, no invented baseline.
 let L = buildLoad({ nowMs, sessions: [] });
 ok("empty: hasData false", L.hasData === false);
-ok("empty: zone none", L.zone === "none");
+ok("empty: zone none", Object.keys(L).length > 0 && L.zone === "none");
 ok("empty: acwr null", L.acwr === null);
 ok("empty: recommendation null", L.recommendation === null);
 ok("empty: daily empty", L.daily.length === 0);
 ok("empty: monotony null", L.monotony === null && L.strain === null);
 ok("empty: sources are 3 fixed rows, each keyed", L.sources.length === 3 && L.sources.every((s) => "key" in s));
 const keyed = (z) => rowLine(ZONE_LABEL[z], (k) => `⟨${k}⟩`);
-ok("empty: the zone name is a dictionary key, not a word", keyed("none") === "⟨ld.zoneNone⟩");
+ok("empty: the zone name is a dictionary key, not a word", keyed("none") === "⟨ld.zoneNone⟩" && keyed("none") !== "none");
 
 // 2. Only an out-of-window (>28d) session is ignored entirely.
 L = buildLoad({ nowMs, sessions: [mk(40, 40, 3)] });
 ok("40d-old session: hasData false", L.hasData === false);
-ok("40d-old session: zone none", L.zone === "none");
+ok("40d-old session: zone none", Object.keys(L).length > 0 && L.zone === "none");
 
 // 3. A future-dated session (completedAt after now) is filtered out.
 L = buildLoad({ nowMs, sessions: [mk(-10, 40, 3)] });
@@ -167,10 +167,10 @@ const tiny = FIX[5];
 ok("a 3 AU week really is the no-ratio case", tiny.weekLoad === 3 && tiny.chronic === 0 && tiny.acwr === null && tiny.zone === "caution");
 const tinyAdvice = say("en")(tiny.advice);
 const tinyRec = say("en")(tiny.recommendation.text);
-ok("its advice quotes no dash as a number and claims no climb", !/Ratio —|is —|— —|climbing/i.test(tinyAdvice));
+ok("its advice quotes no dash as a number and claims no climb", tinyAdvice.length > 0 && !/Ratio —|is —|— —|climbing/i.test(tinyAdvice));
 ok("its advice names the missing baseline instead", /28-day history/.test(tinyAdvice) && /not available yet/.test(tinyAdvice));
 ok("its advice is a row, not a sentence typed into the module", "key" in tiny.advice && tiny.advice.key === "ld.ad.noRatio");
-ok("its recommendation no longer deloads a ratio that does not exist", !/hardest planned session/i.test(tinyRec) && /Not enough of a 28-day history/.test(tinyRec));
+ok("its recommendation no longer deloads a ratio that does not exist", tinyRec.length > 0 && !/hardest planned session/i.test(tinyRec) && /Not enough of a 28-day history/.test(tinyRec));
 ok("and the confidence stays capped while the ratio is missing", tiny.recommendation.confidence <= 45);
 ok("no published sentence prints the dash as a measurement",
   FIX.every((x) => {
@@ -186,11 +186,11 @@ const rest = buildLoad({ nowMs, sessions: [mk(10, 40, 3), mk(17, 40, 3)] });
 ok("a month of history with an empty week really is the rest-week case",
   rest.hasData === true && rest.totalSessions === 2 && rest.weekLoad === 0 && rest.acwr === 0 && rest.zone === "none");
 const restSaid = (row) => say("en")(row);
-ok("its advice no longer denies the sessions behind it", !/28 days/.test(restSaid(rest.advice)) && /last 7 days/.test(restSaid(rest.advice)));
+ok("its advice no longer denies the sessions behind it", restSaid(rest.advice).length > 0 && !/28 days/.test(restSaid(rest.advice)) && /last 7 days/.test(restSaid(rest.advice)));
 ok("its recommendation names the empty week instead of a missing baseline",
   !/establish a reliable baseline/.test(restSaid(rest.recommendation.text)) && /Nothing logged in the last 7 days/.test(restSaid(rest.recommendation.text)));
 ok("the empty-week name says which window is empty, not that there is no data",
-  /week/i.test(DICTIONARIES.en["ld.zoneNone"]) && !/no data/i.test(DICTIONARIES.en["ld.zoneNone"]));
+  DICTIONARIES.en["ld.zoneNone"].length > 0 && /week/i.test(DICTIONARIES.en["ld.zoneNone"]) && !/no data/i.test(DICTIONARIES.en["ld.zoneNone"]));
 ok("and the no-history reader is told there is nothing to recommend yet",
   FIX[0].recommendation === null && FIX[0].zone === "none");
 
@@ -209,7 +209,7 @@ ok("the dead arm is gone from the classifier's signature", classifyZone.length =
 ok("the legend prints the same ranges the banner's classifier uses",
   JSON.stringify(ZONE_LEGEND.map((r) => r.band)) === JSON.stringify(["<0.8", "0.8–1.3", "1.3–1.5", ">1.5"]));
 ok("one legend row per band, in band order, and none for the empty state",
-  ZONE_LEGEND.length === ACWR_BANDS.length && ZONE_LEGEND.every((r, i) => r.zone === ACWR_BANDS[i].zone) && !ZONE_LEGEND.some((r) => r.zone === "none"));
+  ACWR_BANDS.length > 0 && ZONE_LEGEND.length === ACWR_BANDS.length && ZONE_LEGEND.every((r, i) => r.zone === ACWR_BANDS[i].zone) && !ZONE_LEGEND.some((r) => r.zone === "none"));
 ok("every legend row names a zone the classifier can return", ZONE_LEGEND.every((r) => ZONE_LABEL[r.zone] !== undefined));
 
 // 16. classifyZone is the function buildLoad runs, not a second copy published for the
@@ -318,9 +318,9 @@ const between = (from, to) => PAGE_SRC.slice(PAGE_SRC.indexOf(from), PAGE_SRC.in
 const evBlock = between("load.evidence.map", "/ul>");
 const srcBlock = between("load.sources.map", "/div>");
 ok("each evidence row is interpreted, and none is dropped into JSX raw",
-  /rowLine\(e,\s*t\)/.test(evBlock) && !/\{\s*e\s*\}/.test(evBlock));
+  evBlock.length > 0 && /rowLine\(e,\s*t\)/.test(evBlock) && !/\{\s*e\s*\}/.test(evBlock));
 ok("each source chip is interpreted, and none is dropped into JSX raw",
-  /rowLine\(s,\s*t\)/.test(srcBlock) && !/\{\s*s\s*\}/.test(srcBlock));
+  srcBlock.length > 0 && /rowLine\(s,\s*t\)/.test(srcBlock) && !/\{\s*s\s*\}/.test(srcBlock));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
