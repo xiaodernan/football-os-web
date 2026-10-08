@@ -142,9 +142,10 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M316 (a few numbers in that range
+Work ships one milestone per commit and is currently at M323 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
-three). Everything added in the current line of work (M37 onward) was built green, and
+three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
+first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
 evidence for a change is now the proof suite plus, where a component renders without the
@@ -6593,7 +6594,31 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
 
-### M314 — the empty answer's floors, held from both sides
+### M323 — the ceiling follows the census, and the family with the deepest debt pays first
+
+The ceiling had drifted: 183 clauses owing against a ceiling of 191, the gap left by milestones that
+lowered the count without lowering the bar. This unit takes the family with the largest remaining
+debt — `proof-career`, 11 owing clauses — and pays it with witnesses rather than with a tighter word
+list. The device is the census's own: each clause now carries a concrete conjunct that walks the
+same predicate the zero names, so the clause cannot pass on an empty or undefined measurement.
+
+Every plant was written against the shape of the claim, not against a sample that happens to pass:
+
+- `no player can ever be bought below their value` gains `askingFee(100M) >= 100M && sellFee(100M) <= 100M` — the same predicate on a concrete fee, which is what M312's rule demands: the plant re-runs the rule, not a value the author picked.
+- `startBudget never shrinks` gains `startBudget(50) < startBudget(51)`, and the whole-millions clause gains the same shape at rating 60 — boundary witnesses beside the sweeps.
+- `a released player belongs to NO club` gains `CLUBS.length > 0` — the census's floor on the population the sweep reads, which is what turns the universal into a measurement.
+- `careerForm` reads `0` for an empty career and now also reads a five-win run as non-zero, so a form that always returned 0 fails.
+- `transferIn` on an unknown id is identity, and now a real affordable target still moves — the two arms together, as M316's AND-composition rule requires.
+- `setTactics` replaces the tactics and nothing else, and now a career with results keeps them — the arm a state-resetting mutation would have broken.
+- `advice` answers 0 for a balanced club and now also answers non-zero somewhere — both arms of the recommendation, so an always-zero advisor fails.
+
+The first version of this unit was written with the wrong species of plant: `askingFee({ value: 1 }) < 1 === false` read as a tautology against the 500k grid — value 1 rounds to 0, so the sub-expression is true and the clause reddened. The repair is the witness above, and the lesson is M312's restated: a plant must be able to fail, and the way to know it can is to run it.
+
+Because a concurrent line of work shares this tree (it advanced the proofs to M322 while the README still stood at M316), the plants were applied through a replayable script, `dev/m323-plants.mjs`, and landed as a commit in the same step that verified them, so a concurrent checkout cannot take them back. Census: **183 → 172 owing across 42 scripts**, ceiling lowered to match — the bar is now the measurement, and the next unguarded clause fails the suite rather than living inside the slack.
+
+Measured: `tsc` clean, `npm run build` exit 0 (only the standing chunk-size notice), full suite **42/42 · 2,415/2,415**, `proof-career` **193/193**, `proof-i18n` **368/368** (vacuity census **172 owing / ceiling 172**).
+
+
 
 The census's next family was the no-hits refusal in `proof-ai-grounding`: four clauses asserting
 that an empty retrieval refuses to invent, labels its provider, carries no facts and sits at the
