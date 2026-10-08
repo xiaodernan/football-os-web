@@ -42,11 +42,11 @@ const art = (id, entityIds) => ({ id, entityIds, title: "t-" + id });
 // --- 1. no club selected → the feed is handed back unchanged ------------------
 const base = [art("A", ["c1", "p9"]), art("B", ["c2"]), art("C", ["c1"])];
 const none = rankNewsForClub(base, null, []);
-ok("undefined club keeps the original order", JSON.stringify(ids(none)) === JSON.stringify(["A", "B", "C"]));
+ok("undefined club keeps the original order", base.length > 0 && JSON.stringify(ids(none)) === JSON.stringify(["A", "B", "C"]));
 ok("null club keeps the original order", JSON.stringify(ids(rankNewsForClub(base, null))) === JSON.stringify(["A", "B", "C"]));
-ok("empty-string club is treated as no club", rankNewsForClub(base, "").matched === 0 && JSON.stringify(ids(rankNewsForClub(base, ""))) === JSON.stringify(["A", "B", "C"]));
-ok("no club reports matched 0 rather than claiming relevance", none.matched === 0);
-ok("no club still returns a fresh array (caller may sort it)", none.items !== base);
+ok("empty-string club is treated as no club", base.length > 0 && rankNewsForClub(base, "").matched === 0 && JSON.stringify(ids(rankNewsForClub(base, ""))) === JSON.stringify(["A", "B", "C"]));
+ok("no club reports matched 0 rather than claiming relevance", none.items.length > 0 && none.matched === 0);
+ok("no club still returns a fresh array (caller may sort it)", none.items.length === base.length && none.items !== base);
 const before = JSON.stringify(base);
 rankNewsForClub(base, "c1", ["p9"]);
 ok("ranking never mutates the caller's article array", JSON.stringify(base) === before);
@@ -57,9 +57,9 @@ ok("stories naming the club move to the front", JSON.stringify(ids(one)) === JSO
 ok("matched counts the club's own stories", one.matched === 2);
 ok("a player of the club also makes a story relevant", JSON.stringify(ids(rankNewsForClub(base, "cX", ["p9"]))) === JSON.stringify(["A", "B", "C"]) && rankNewsForClub(base, "cX", ["p9"]).matched === 1);
 ok("player ids work alongside the club id", JSON.stringify(ids(rankNewsForClub(base, "c1", ["p9"]))) === JSON.stringify(["A", "C", "B"]));
-ok("an unknown club with no coverage leaves the order intact", JSON.stringify(ids(rankNewsForClub(base, "nope", []))) === JSON.stringify(["A", "B", "C"]));
-ok("an unknown club reports matched 0", rankNewsForClub(base, "nope", []).matched === 0);
-ok("player ids that appear in no story change nothing", JSON.stringify(ids(rankNewsForClub(base, "nope", ["zz1", "zz2"]))) === JSON.stringify(["A", "B", "C"]));
+ok("an unknown club with no coverage leaves the order intact", base.length > 0 && JSON.stringify(ids(rankNewsForClub(base, "nope", []))) === JSON.stringify(["A", "B", "C"]));
+ok("an unknown club reports matched 0", rankNewsForClub(base, "nope", []).items.length > 0 && rankNewsForClub(base, "nope", []).matched === 0);
+ok("player ids that appear in no story change nothing", base.length > 0 && JSON.stringify(ids(rankNewsForClub(base, "nope", ["zz1", "zz2"]))) === JSON.stringify(["A", "B", "C"]));
 
 // --- 3. stability, counting and content integrity ----------------------------
 // Deliberately built so each group's feed order is NOT id-sorted: a partition
