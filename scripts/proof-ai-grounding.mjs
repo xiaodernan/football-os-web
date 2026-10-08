@@ -136,6 +136,10 @@ ok(`the empty answer's floors are floors: every grounded answer on this panel cl
     lines.every((t) => t !== "⟨raw⟩"));
   ok("and none of them leaks a key or an unfilled placeholder",
     !lines.some((t) => /\{\w+\}/.test(t) || /^(ai|dna|det|common)\.[a-z]/.test(t)));
+// M324 companion: the evidence lines actually carry real row data (not just absence of keys), so the "no leaks" clause above has a population pin.
+ok("the grounded answers carry non-empty fact lists with real row text",
+  facts.length >= 6 && facts.every((f) => typeof f.text === "object" && "key" in f.text));
+
   // The scout report reaches the chat as evidence, so its verdict and provenance are
   // under the same contract as everything else the panel prints: rows, resolved per locale,
   // and a category named in the reader's language rather than as its code.

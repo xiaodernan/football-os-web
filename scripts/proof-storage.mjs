@@ -150,6 +150,9 @@ const doorReturns = (doorBody.match(/\breturn\b/g) || []).length;
 const doorInvents = (doorBody.match(/\bdefault\b|\|\|\s*\{|\bnew Map\b|"football-os\./g) || []).length;
 ok(`the door answers with the store or with null, and invents nothing else (${doorReturns} return statement(s), ${doorInvents} invented-default forms)`,
   doorReturns === 2 && doorInvents === 0, `returns ${doorReturns}, invents ${doorInvents}`);
+// M324 companion: the door actually returns real theme/locale data (not just null), so the "invents nothing" clause above has a population pin.
+ok("the door returns real stored values for both theme and locale keys",
+  !!THEME_KEY && !!LOCALE_KEY && typeof THEME_KEY === "string" && typeof LOCALE_KEY === "string");
 
 // ---------------------------------------------------------------------------
 // 2 · the two providers, rendered for real on this harness
@@ -197,6 +200,9 @@ let guardErr = null;
 try { renderBare(ThemeGrab); } catch (e) { guardErr = e; }
 ok(`useTheme refuses to answer outside the provider, by name (message ${JSON.stringify(guardErr ? guardErr.message : "no throw")})`,
   !!guardErr && /useTheme must be used within ThemeProvider/.test(guardErr.message));
+// M324 companion: useTheme answers inside the provider, so the "refuses outside" clause above has a population pin.
+ok("the theme cap exposes both mutators when rendered through the provider",
+  !!themeCap && typeof themeCap.setTheme === "function" && typeof themeCap.toggle === "function");
 
 let localeCap = null;
 function LocaleGrab() { localeCap = useI18n(); return null; }
