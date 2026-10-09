@@ -95,7 +95,7 @@ if (cf) {
 
 // ---- No-hits refusal: never invent when retrieval comes up empty ----
 const none = askIntelligence("qqzz xxwv nonexistent fixture zzz 42711", EN);
-ok("empty retrieval refuses to invent an answer", /will not invent/i.test(AT(none)));
+ok("empty retrieval refuses to invent an answer", AT(none).length > 0 && /will not invent/i.test(AT(none)));
 ok("empty retrieval labels the demo provider", /Demo retrieval|no live model|API key/i.test(AT(none)));
 ok("empty retrieval has no fabricated facts", none.facts.length === 0);
 ok("empty retrieval confidence sits at the honest floor", none.confidence === 20);

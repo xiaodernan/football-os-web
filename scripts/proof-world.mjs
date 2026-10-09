@@ -39,6 +39,10 @@ const clubIds = new Set(clubs.map((c) => c.id));
 
 // --- labels & market curve ------------------------------------------------
 ok("seasonLabel maps elapsed→the correct two-year label", seasonLabel(0) === "2026/27" && seasonLabel(1) === "2027/28" && seasonLabel(5) === "2031/32" && seasonLabel(3) === "2029/30");
+// M326 population pin: the mapping moves, so the label pinned above at elapsed 0 is one point on
+// a curve rather than the only thing the function ever prints.
+ok(`…and the elapsed values the screen hands it produce ${new Set([0, 1, 2, 3, 4, 5].map(seasonLabel)).size} distinct labels, so seasonLabel is not a constant`,
+  new Set([0, 1, 2, 3, 4, 5].map(seasonLabel)).size === 6);
 ok("market value rises with ability at fixed age", marketValue(80, 25) > marketValue(70, 25));
 ok("market value carries a youth premium at fixed ability", marketValue(75, 22) > marketValue(75, 32) && marketValue(75, 26) > marketValue(75, 35));
 ok("market value is non-negative and rounded to €100k", marketValue(50, 25) > 0 && marketValue(50, 25) % 100000 === 0 && marketValue(45, 40) === 0);
@@ -47,7 +51,7 @@ ok("formatMarket renders M and B units", formatMarket(12_400_000) === "€12M" &
 // --- seasons=0 is a faithful, copied identity -----------------------------
 const zero = runWorld(base, 0);
 ok("runWorld(base,0) advances no seasons and returns empty history", base.players.length > 0 && zero.seasonsElapsed === 0 && zero.history.length === 0);
-ok("runWorld(base,0) returns equal-but-not-identical player copies", JSON.stringify(zero.players) === JSON.stringify(base.players) && zero.players[0] !== base.players[0]);
+ok("a zero-season run returns equal-but-not-identical player copies", JSON.stringify(zero.players) === JSON.stringify(base.players) && zero.players[0] !== base.players[0]);
 
 // --- determinism + purity -------------------------------------------------
 const s3a = runWorld(base, 3);

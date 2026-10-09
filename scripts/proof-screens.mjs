@@ -167,7 +167,7 @@ ok(`the screen population is derived from src/App.tsx's own route table, per cal
   lazy.length + direct.length === byName.size && unusedModules.length === 0 && POP.length >= lazy.length,
   `unused: ${unusedModules.join(", ")}`);
 ok(`…and the ${wrappers.length} name(s) whose JSX tag takes children are chrome, not a route, so they are reported here instead of rendered alone (${wrappers.join(", ") || "none"})`,
-  wrappers.length <= 1, wrappers.join(", "));
+  tagsAll.length > 0 && wrappers.length <= 1, wrappers.join(", "));
 
 const ROUTE_OF = {};
 for (const m of APP_SRC.matchAll(/path === "(\/[^"]+)"[^\n]*?inner = <(\w+)([^>]*)\/>/g)) ROUTE_OF[`${m[2]} ${m[3].trim()}`] = m[1];

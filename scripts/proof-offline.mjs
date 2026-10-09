@@ -107,7 +107,7 @@ const featureSource = featureFiles.map((f) => readFileSync(f, "utf8")).join("\n"
 const disabledGates = featureSource.match(/disabled=\{[^}]*!online[^}]*\}/g) ?? [];
 ok(`no control is disabled merely because the device is offline (${disabledGates.length})`, disabledGates.length === 0);
 for (const d of disabledGates.slice(0, 5)) console.log("       gated control: " + d);
-ok("the gate above is not vacuous — disabled= is used in this app", /disabled=\{/.test(featureSource));
+ok("the gate above is not vacuous — disabled= is used in this app", (featureSource.match(/disabled=\{/g) ?? []).length >= 1);
 
 console.log(`\n${offlineKeys.length} offline notices · ${sites.length} render sites · ${appFiles.length} files scanned`);
 console.log(`${pass}/${pass + fail} checks passed`);

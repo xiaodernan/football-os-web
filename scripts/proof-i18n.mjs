@@ -5622,7 +5622,22 @@ ok(`the news record carries no seed-composed summary sentence: the NewsArticle i
 // The number may only fall. Adding a zero-asserting clause without one of the three has to be
 // paid for here, in the same commit — which is the same bargain every other ceiling in this
 // file asks for.
-const VACUITY_CEILING = 77;
+// M326: 77 → 31, and the number is read on a PLANE, not off this checkout. The census scans the
+// working tree, and this tree is shared: thirteen proof scripts are dirty in another session,
+// mid-paydown, so the tree right now reads 3 owing. Pinning 3 would record a measurement no
+// checkout of this commit reproduces. The plane this commit ships — my nine files, every other
+// script at HEAD — reads 31, and `node dev/m326-ceiling-plane.mjs proof-ai-grounding
+// proof-analytics proof-feedranking proof-m99 proof-offline proof-screens proof-world proof-xp
+// proof-i18n` re-derives that list from the census block itself. The 31 sit in
+// proof-careerarc(2) proof-community(2) proof-compare(3) proof-coverage(1) proof-filmlibrary(5)
+// proof-impact(2) proof-m67(4) proof-m74(3) proof-matchengine(1) proof-projection(2)
+// proof-review(2) proof-router(3) proof-transfers(1) — all thirteen files are in the other
+// session's diff, so that residue is theirs to pay and this ceiling is mine to leave honest.
+//
+// The ceiling is load-bearing on this commit's own work: the same tool keeping only proof-i18n
+// (the eight paydowns reverted to HEAD) reads 40 and prints OVER, and every site the revert adds
+// sits inside the eight files edited here — proof-world carries two of them, the rest one each.
+const VACUITY_CEILING = 31;
 const clauseDepth = (text) => {
   let d = 0, str = null, tmpl = 0;
   for (let i = 0; i < text.length; i++) {

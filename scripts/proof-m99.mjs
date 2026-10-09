@@ -83,6 +83,11 @@ const lean = { id: "lean-1", name: "Lean", position: "CM", positionGroup: "CM", 
   clubId: "none", overall: 70, potential: 76, archetype: "creator", value: 1_000_000, foot: "R" };
 const leanReport = scoutReport(lean);
 ok("ratings-only player: report says no vector", leanReport !== null && leanReport.hasVector === false);
+// M326 population pin: the vectored side of the same split really is populated, so the
+// withheld report above is a measured absence rather than what every player is handed.
+const vectored = players.filter((p) => playerVector(p.attributes) !== null).length;
+ok(`…and ${vectored} of the ${players.length} seeded players do carry a vector, so the withheld report above is a measurement`,
+  vectored >= 1);
 ok("ratings-only player: DNA withheld", playerDna(lean.attributes) === null);
 ok("ratings-only player: the English accessor the demo provider uses still resolves the stored id", archetypeLabelEn(lean.archetype) === "Creator");
 

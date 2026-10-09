@@ -67,8 +67,9 @@ ok("a maximal 90-min/5/5/4-focus session scores exactly 210",
   xpForSession({ minutes: 90, intensity: 5, selfRating: 5, focusCount: 4 }) === 210);
 ok("even a degenerate 0-minute completion still floors at 10 (never a bare zero)",
   xpForSession({ minutes: 0, intensity: 1, selfRating: 1, focusCount: 1 }) === 10);
-ok("the time factor saturates at 90 minutes (extra hours add nothing)",
-  xpForSession({ minutes: 90, intensity: 1, selfRating: 1, focusCount: 1 }) === xpForSession({ minutes: 600, intensity: 1, selfRating: 1, focusCount: 1 }));
+ok("the time factor saturates at 90 minutes: a 600-minute session scores the same",
+  xpForSession({ minutes: 90, intensity: 1, selfRating: 1, focusCount: 1 }) === xpForSession({ minutes: 600, intensity: 1, selfRating: 1, focusCount: 1 }) &&
+  xpForSession({ minutes: 90, intensity: 1, selfRating: 1, focusCount: 1 }) >= 10);
 const baseS = { minutes: 60, intensity: 2, selfRating: 2, focusCount: 2 };
 ok("more intensity never lowers XP", xpForSession({ ...baseS, intensity: 1 }) <= xpForSession({ ...baseS, intensity: 3 }) && xpForSession({ ...baseS, intensity: 3 }) <= xpForSession({ ...baseS, intensity: 5 }));
 ok("a higher self-rating never lowers XP", xpForSession({ ...baseS, selfRating: 1 }) <= xpForSession({ ...baseS, selfRating: 5 }));

@@ -92,7 +92,7 @@ ok("expectedGoals is deterministic", JSON.stringify(expectedGoals(even, strong, 
 
 const o = outcomeOdds(even, even, 1.3);
 ok("outcome probabilities sum to ~1", Math.abs(o.home + o.draw + o.away - 1) < 0.002);
-ok("every outcome probability is a valid fraction", [o.home, o.draw, o.away].every((p) => p >= 0 && p <= 1));
+ok("every outcome probability is a strictly positive fraction of at most 1", [o.home, o.draw, o.away].every((p) => p > 0 && p <= 1));
 ok("λ pair equals expectedGoals rounded onto the 2dp grid the UI prints",
   o.lambdaHome === Math.round(xgEven.home * 100) / 100 && o.lambdaAway === Math.round(xgEven.away * 100) / 100);
 // Exact, not `near`: this is the arithmetic a visitor can do off the screen.

@@ -46,7 +46,7 @@ ok("undefined club keeps the original order", base.length > 0 && JSON.stringify(
 ok("null club keeps the original order", JSON.stringify(ids(rankNewsForClub(base, null))) === JSON.stringify(["A", "B", "C"]));
 ok("empty-string club is treated as no club", base.length > 0 && rankNewsForClub(base, "").matched === 0 && JSON.stringify(ids(rankNewsForClub(base, ""))) === JSON.stringify(["A", "B", "C"]));
 ok("no club reports matched 0 rather than claiming relevance", none.items.length > 0 && none.matched === 0);
-ok("no club still returns a fresh array (caller may sort it)", none.items.length === base.length && none.items !== base);
+ok("no club still returns a fresh array (caller may sort it)", base.length > 0 && none.items.length === base.length && none.items !== base);
 const before = JSON.stringify(base);
 rankNewsForClub(base, "c1", ["p9"]);
 ok("ranking never mutates the caller's article array", JSON.stringify(base) === before);
