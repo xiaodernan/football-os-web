@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M329 (a few numbers in that range
+Work ships one milestone per commit and is currently at M330 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,37 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M330 — the vacuity census reaches zero, and the ceiling is set to zero with it
+
+M311 charged the suite's own zero-assertions for evidence it could not see, and thirty-one
+milestones later the census has paid down to nothing. The last four owing clauses were
+`proof-filmlibrary`'s — `toClipInputs` over every raw shape, a sparse report narrowing to `0`
+and `[]`, a throwing `localStorage` never escaping the module, and the JSON round-trip keeping
+its events — and each one gains the population its scan reads, so an empty measurement fails
+rather than passing vacuously. The ceiling follows the measurement all the way to **0 owing /
+ceiling 0**, which is the point the census was built for: a new zero-assertion that arrives
+without a plant, a pin or a planted companion now fails the suite immediately, and cannot
+quiet down inside slack.
+
+Two of the plants written on the way were wrong, and both were caught in the working tree
+rather than in the prose — the same lesson M323 and M324 each paid for, restated once more:
+
+- `proof-community`'s "nothing prints as `undefined`" clause was pinned on a population of
+  **0 drafts**. A focus with no count yields nothing *by design* — the draft is withheld, not
+  guessed — so the pin asserted a falsehood and reddened. The honest witness is the complete
+  training record beside it, which does yield drafts and gets the same check. That arm then
+  found a real hazard: it read through a helper (`S`) declared further down the file, which
+  the vacuous zero-draft version had never actually executed.
+- `proof-careerarc`'s two zero-overall / zero-age clauses had their paired arms and their
+  floor appended *after* the statement's semicolon — a syntax error that reddened two files
+  whose behaviour had not changed at all.
+
+Both are the discipline this census enforces: **a plant that cannot fail is not a plant**, and
+the way to know it can fail is to run it.
+
+Measured: full suite **42/42 · 2,427/2,427**, `proof-i18n` **368/368** with the vacuity census
+at **0 owing / ceiling 0**, `tsc` clean, `npm run build` exit 0.
 
 ### M329 — the completion XP now asks the shared `sessionIntensity`, not a hand-copied mean
 
