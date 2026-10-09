@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M324 (a few numbers in that range
+Work ships one milestone per commit and is currently at M327 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,39 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M327 — a vacuity companion clause for the community composer's undefined guard
+
+The census flagged one zero-asserting clause in `proof-community.mjs`: "nothing is ever printed as
+'undefined'" asserts 0 drafts from a focus with no count, but has no device. The fix adds a planted
+companion within the next two clauses: "the training draft's evidence row names its own unit" pins
+that the first draft's evidence carries real words ("sessions"), so a harness that captured nothing
+fails. This is the same pattern M313 used: run the plant, and let it be able to fail.
+
+Measured: `proof-community` **57/57** (was 55/56); full suite **42/42 · 2,386/2,386**; vacuity
+census **31 owing / ceiling 31** (unchanged — the new clause is not zero-asserting).
+
+### M326 — pay down eight vacuity debts, and re-pin the ceiling on a plane it can be re-derived from
+
+Eight zero-asserting proof clauses got a plant/pin/companion — `proof-ai-grounding`, `analytics`,
+`feedranking`, `m99`, `offline`, `screens`, `world` (two sites), `xp` — and `VACUITY_CEILING` in
+`scripts/proof-i18n.mjs` fell 77 → 31.
+
+The census scans the working tree, and this tree is shared: thirteen proof scripts were dirty in
+another session mid-paydown, so the tree right now reads 3 owing. Pinning 3 would record a
+measurement no checkout of this commit reproduces. The plane this commit ships — my nine files,
+every other script at HEAD — reads 31, and `node dev/m326-ceiling-plane.mjs <the nine script names>`
+re-derives that list from the census block itself. The 31 sit in `proof-careerarc(2)
+proof-community(2) proof-compare(3) proof-coverage(1) proof-filmlibrary(5) proof-impact(2)
+proof-m67(4) proof-m74(3) proof-matchengine(1) proof-projection(2) proof-review(2) proof-router(3)
+proof-transfers(1)` — all thirteen in the other session's diff, so that residue is theirs to pay.
+
+The ceiling is load-bearing on this commit's own work: the same tool keeping only `proof-i18n` (the
+eight paydowns reverted to HEAD) reads 40 and prints OVER, and every site the revert adds sits
+inside the eight files edited here — `proof-world` carries two of them, the rest one each.
+
+Measured: `proof-i18n` **368/368**; the eight scripts green individually (70/69/189/29/46/31/40/28);
+pure-HEAD plane via `dev/m326-ceiling-plane.mjs` = **31 owing / ceiling 31 WITHIN**.
 
 ### M324 — the ceiling follows the census, and eight families pay at once
 

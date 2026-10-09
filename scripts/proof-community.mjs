@@ -200,11 +200,16 @@ ok("a training draft needs 2 sessions, a known top focus AND its count — an in
   trainingHeld({ sessions: 1 }) && trainingHeld({ topFocusKey: undefined }) && trainingHeld({ topFocusSessions: undefined }) &&
     buildStarters({ training }, 5).some((d) => d.id === "starter-training"));
 ok(`…and nothing is ever printed as "undefined" (${buildStarters({ training: { sessions: 4, minutes: 100, topFocusKey: "passing", avgRating: null } }, 5).length} drafts from a focus with no count)`,
+  buildStarters({ training }, 5).length > 0 &&
+  buildStarters({ training }, 5).every((d) => !/undefined|NaN/.test(`${en(d.title)} ${en(d.body)} ${d.evidence.map(en).join(" ")}`)) &&
   buildStarters({ training: { sessions: 4, minutes: 100, topFocusKey: "passing", avgRating: null } }, 5).every((d) => !/undefined|NaN/.test(`${S(d.title)} ${S(d.body)} ${d.evidence.map(S).join(" ")}`)));
 ok("an academy draft needs a completed lesson AND its title",
   buildStarters({ academy: { completed: 0, mastered: 0, lastLesson: "x" } }, 5).every((d) => d.id !== "starter-academy") &&
   buildStarters({ academy: { completed: 2, mastered: 0 } }, 5).every((d) => d.id !== "starter-academy") &&
   buildStarters({ academy }, 5).some((d) => d.id === "starter-academy"));
+// M327 companion for the undefined-guard at line 202: the training draft's evidence carries real words.
+ok("the training draft's evidence row names its own unit",
+  buildStarters({ training }, 5)[0].evidence.some((r) => en(r).includes("sessions")));
 ok("a watchlist draft needs at least one watched player",
   buildStarters({ watchlist: 0 }, 5).every((d) => d.id !== "starter-watchlist") && buildStarters({ watchlist: 1 }, 5).some((d) => d.id === "starter-watchlist"));
 
@@ -224,7 +229,7 @@ ok("the academy draft pluralises from the count it was given", S(ad.body).includ
 ok("…and keeps the singular when the count is 1",
   S(buildStarters({ academy: { completed: 1, mastered: 1, lastLesson: "X" } }, 5)[0].body).includes("1 lesson completed, 1 with a passed check"));
 const wd = buildStarters({ watchlist: 1 }, 5)[0];
-ok("…same for the watchlist wording", S(wd.title).includes("1 player —") && S(buildStarters({ watchlist: 3 }, 5)[0].title).includes("3 players —"));
+ok("…same for the watchlist wording", S(wd.title).includes("1 player —") && S(wd.title).length > 0 && S(buildStarters({ watchlist: 3 }, 5)[0].title).includes("3 players —"));
 const noRating = buildStarters({ training: { ...training, avgRating: null } }, 5)[0];
 ok(`a visitor with no self-ratings is not given one (${S(noRating.evidence[2])})`,
   S(noRating.evidence[2]) === "no self-ratings yet" && !S(noRating.body).includes("self-rated"));
@@ -275,7 +280,7 @@ ok("…while a genuine majority still says most (4 of 5 sessions)",
   /^Most of my work/.test(S(buildStarters({ training: { sessions: 5, minutes: 200, topFocusKey: "dribbling", topFocusSessions: 4, avgRating: null } }, 5)[0].title)));
 const mixed = [1, 2, 3, 4, 5].map((k) => S(buildStarters({ training: { sessions: 5, minutes: 50, topFocusKey: "passing", topFocusSessions: k, avgRating: 4 } }, 5)[0].title));
 ok(`…and the switch happens between 2 of 5 and 3 of 5 — a strict majority, not a bare plurality (${mixed[1].split(" (")[0]} vs ${mixed[2].split(" (")[0]})`,
-  mixed.slice(0, 2).every((t) => !/^Most of my work/.test(t)) && mixed.slice(2).every((t) => /^Most of my work/.test(t)));
+  mixed.length > 0 && mixed.slice(0, 2).every((t) => !/^Most of my work/.test(t)) && mixed.slice(2).every((t) => /^Most of my work/.test(t)));
 
 // The drafts never contradict their inputs when only some pillars exist.
 ok("a visitor with only a watchlist gets only the watchlist draft",
