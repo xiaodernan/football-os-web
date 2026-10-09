@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M328 (a few numbers in that range
+Work ships one milestone per commit and is currently at M329 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,26 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M329 — the completion XP now asks the shared `sessionIntensity`, not a hand-copied mean
+
+The store's `COMPLETE` reducer paid XP off a minute-weighted intensity it recomputed inline —
+`clamp(round(Σ e.intensity·e.minutes / (Σ e.minutes||1)), 1, 5)` — a second copy of exactly what
+`domain/training.ts`'s exported `sessionIntensity` already computes for the weekly review and the
+XP proof. Its own comment claimed "Same math the completion UI and projection reuse, so shown ==
+persisted", but nothing reused it: two formulas that agree today drift the moment either is fixed,
+and neither the XP path nor the review would notice. This is the same single-source-of-truth defect
+M90 closed for `buildLoad`.
+
+The store now imports and calls `sessionIntensity(session)`; its private `clamp` (used only by that
+one line) is deleted. `proof-timeline.mjs` charges both directions of the seam: the call is present,
+the duplicated mean is gone. Reverting the store to the hand-rolled mean reddens exactly those two
+clauses (110/112), and the restore is byte-identical.
+
+Measured: `tsc` clean, `npm run build` green; `proof-timeline` **112/112**, `proof-screens` **31/31**,
+`proof-ids` **15/15** (the three store-source readers). The full-suite tally remains blocked on the
+concurrent writer's in-flight `proof-careerarc.mjs`; this commit touches only the store, `proof-timeline`
+and this README.
 
 ### M328 — pin `sweepOverdueSessions`'s default clock, the store's real call shape
 

@@ -23,7 +23,7 @@ import {
   POSITION_BY_GROUP,
 } from "@/domain/attributes";
 import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
-import { applyFocusGrowth, repairSessionTitles, sweepOverdueSessions, type GrowthDelta } from "@/domain/training";
+import { applyFocusGrowth, repairSessionTitles, sessionIntensity, sweepOverdueSessions, type GrowthDelta } from "@/domain/training";
 import { countGoalTitle, repairGoalTitles } from "@/domain/goals";
 import { coachMemory, profileMemory, repairMemoryTexts, trainingMemory } from "@/domain/memory";
 import { normalizeGoalChoice } from "@/domain/onboarding";
@@ -75,10 +75,6 @@ type Action =
   | { type: "GOAL_TOGGLE"; id: string }
   | { type: "GOAL_REMOVE"; id: string }
   | { type: "RESET" };
-
-function clamp(v: number, lo: number, hi: number) {
-  return Math.max(lo, Math.min(hi, v));
-}
 
 // Records persisted by earlier builds can omit array fields that consumers
 // iterate (a session without `exercises` blanked the whole Dashboard). Repair
@@ -158,7 +154,10 @@ function reducer(state: OsState, action: Action): OsState {
       const session = state.sessions.find((s) => s.id === action.sessionId);
       if (!session || session.status === "completed") return state;
       const rating = action.selfRating;
-      const intensity = clamp(Math.round(session.exercises.reduce((s, e) => s + e.intensity * e.minutes, 0) / (session.exercises.reduce((s, e) => s + e.minutes, 0) || 1)), 1, 5);
+      // The XP the completion pays and every other reader of the session must agree on
+      // this intensity, so it comes from the shared function rather than a second copy
+      // of the formula here (a hand-rolled mean drifted from sessionIntensity silently).
+      const intensity = sessionIntensity(session);
 
       // The streak counts the days the reader's wall calendar shows (M303), not elapsed
       // 24-hour blocks on the UTC clock - under which the boundary sat 8 hours into a

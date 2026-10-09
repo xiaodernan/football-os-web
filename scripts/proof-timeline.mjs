@@ -441,6 +441,17 @@ ok("a list of sessions with nothing to repair comes back as the same array, not 
 ok("the hydration boundary repairs a legacy session title on the way in",
   /sessions:\s*sweepOverdueSessions\(repairSessionTitles\(/.test(read("store/useFootballOS.tsx")));
 
+// M329: the completion reducer paid XP off a hand-copied minute-weighted intensity mean
+// rather than the shared sessionIntensity the review and projection use. Two formulas that
+// happen to agree today drift the moment either is fixed — the XP the session earns and the
+// load every other reader reports would disagree while both stayed green. So the store asks
+// the shared function, and this gate charges BOTH directions: the call is present, the copy is gone.
+const intensitySrc = read("store/useFootballOS.tsx");
+ok(`the completion reducer asks the shared sessionIntensity for the session's load (${intensitySrc.match(/sessionIntensity\(session\)/g)?.length ?? 0} call site)`,
+  /sessionIntensity\(session\)/.test(intensitySrc));
+ok(`and no longer carries a second copy of the minute-weighted intensity mean (${/e\.intensity\s*\*\s*e\.minutes/.test(intensitySrc) ? "the duplicated mean is still in the store" : "only sessionIntensity computes it"})`,
+  !/e\.intensity\s*\*\s*e\.minutes/.test(intensitySrc));
+
 const memRow = (text, extra) => ({ id: "M1", kind: "coach", text, at: "2026-01-02T00:00:00.000Z", ...extra });
 const keyedMem = memRow(coachMemory(["passing"], 25));
 const mRepaired = repairMemoryTexts([memRow("Coach focused on passing (25′)"), keyedMem]);
