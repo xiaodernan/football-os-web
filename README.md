@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M327 (a few numbers in that range
+Work ships one milestone per commit and is currently at M328 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,23 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M328 — pin `sweepOverdueSessions`'s default clock, the store's real call shape
+
+Every sweep clause in `proof-m73.mjs` injected an explicit `NOW`, so the proof graded a call shape the
+production store never makes. At hydration the store calls `sweepOverdueSessions(repairSessionTitles(…))`
+with **no** second argument and leans on the parameter's `nowMs = Date.now()` default. If that default were
+broken or dropped, `startOfToday` would go `NaN`, the guard would never hold, and the missed count would
+silently return to permanently zero — the exact dead signal M73 closed — while this proof stayed green.
+
+The new clause sweeps two fixtures through the default path (2000 → missed, 2100 → planned, wide enough to be
+clock- and timezone-independent). It is failable, not decorative: mutating the default to epoch reads
+`past:planned fut:planned` and turns only this clause red (18/19), confirming the assertion binds the default
+argument and no other clause; restored, `training.ts` is byte-identical to HEAD.
+
+Measured: `proof-m73` **19/19** (was 18/18). This commit touches only `scripts/proof-m73.mjs` (and this
+README), so the rest of the suite is unaffected by it; the full-suite tally remains blocked on the concurrent
+writer's in-flight `proof-careerarc.mjs`.
 
 ### M327 — a vacuity companion clause for the community composer's undefined guard
 

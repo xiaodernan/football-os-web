@@ -53,6 +53,21 @@ ok("sweep returns a new array", out !== input);
 // Idempotent: sweeping the swept result changes nothing further.
 ok("sweep is idempotent", JSON.stringify(sweepOverdueSessions(out, NOW)) === JSON.stringify(out));
 
+// The store's real call at hydration passes NO nowMs and relies on the default
+// (`Date.now()`); every clause above injects NOW, so a broken default would leave
+// the production missed count permanently at zero — the exact dead signal M73
+// closed — while this proof stayed green. Wide margins make this clock- and
+// timezone-independent: 2000 has fully passed and 2100 has not, whenever Date.now() runs.
+const defaulted = sweepOverdueSessions([
+  sess({ id: "past", date: new Date(Date.UTC(2000, 0, 1)).toISOString(), status: "planned" }),
+  sess({ id: "fut", date: new Date(Date.UTC(2100, 0, 1)).toISOString(), status: "planned" }),
+]);
+const defById = (id) => defaulted.find((s) => s.id === id);
+ok(
+  `sweep with the default nowMs (the store's call shape) flips a long-past session to missed and leaves a long-future one planned (${defaulted.map((s) => `${s.id}:${s.status}`).join(" ")})`,
+  defById("past").status === "missed" && defById("fut").status === "planned",
+);
+
 // 2. buildReview now sees a real missed count + the slipped-session insight.
 const swept = sweepOverdueSessions([
   sess({ id: "r1", date: yestDate, status: "planned" }),
