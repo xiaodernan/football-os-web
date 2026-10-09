@@ -108,7 +108,7 @@ ok("projectedAttributes keeps every non-focus attribute verbatim",
 ok("projectedAttributes sets each focus key to its projected value",
   p.items.every((it) => p.projectedAttributes[it.key] === it.to));
 ok("projectedAttributes has no extra keys and none missing",
-  Object.keys(p.projectedAttributes).length === Object.keys(attrs).length);
+  Object.keys(attrs).length > 0 && Object.keys(p.projectedAttributes).length === Object.keys(attrs).length);
 
 // --- overall figures re-derived from the shared weighting --------------------
 ok("overallBefore equals overallRating of the input attributes", p.overallBefore === overallRating(attrs));
@@ -117,7 +117,7 @@ ok("overallAfter equals overallRating of the projected attributes", p.overallAft
 // their difference was write-only (M142 removed it). Pin the absence AND the fact
 // that the two endpoints really are what a visitor sees, so nobody re-adds a
 // derived field or deletes the display that made it redundant.
-ok("no write-only overallDelta is exported", !("overallDelta" in p));
+ok("no write-only overallDelta is exported", Object.keys(p).length > 0 && !("overallDelta" in p));
 ok("the projection panel renders both endpoints the reader subtracts by hand", (() => {
   const page = readFileSync(resolve(root, "features/development/DevelopmentPage.tsx"), "utf8");
   return page.includes("projection.proj.overallBefore") && page.includes("projection.proj.overallAfter");

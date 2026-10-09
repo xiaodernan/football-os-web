@@ -51,7 +51,7 @@ ok("formatMarket renders M and B units", formatMarket(12_400_000) === "€12M" &
 // --- seasons=0 is a faithful, copied identity -----------------------------
 const zero = runWorld(base, 0);
 ok("runWorld(base,0) advances no seasons and returns empty history", base.players.length > 0 && zero.seasonsElapsed === 0 && zero.history.length === 0);
-ok("a zero-season run returns equal-but-not-identical player copies", JSON.stringify(zero.players) === JSON.stringify(base.players) && zero.players[0] !== base.players[0]);
+ok("a zero-season run returns equal-but-not-identical player copies", base.players.length > 0 && JSON.stringify(zero.players) === JSON.stringify(base.players) && zero.players[0] !== base.players[0]);
 
 // --- determinism + purity -------------------------------------------------
 const s3a = runWorld(base, 3);

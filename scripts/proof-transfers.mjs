@@ -38,7 +38,7 @@ ok("every real fee is a positive multiple of €100k", values.every((v) => askin
   values.length > 0 && askingFee(1_000_000) % 100_000 === 0); /* M324-TRANSFERS: a sweep of an empty population, or a concrete fee off the grid, reddens */
 ok("fee never undercuts the stored market value", values.every((v) => askingFee(v) >= v));
 ok("askingFee is monotone in value", values.slice().sort((a, b) => a - b).every((v, i, s) => i === 0 || askingFee(v) >= askingFee(s[i - 1])) &&
-  askingFee(1_000_000) <= askingFee(2_000_000)); /* M324-TRANSFERS: the concrete pair the sweep's direction implies */
+  values.length > 0 && askingFee(1_000_000) <= askingFee(2_000_000)); /* M324-TRANSFERS: the concrete pair the sweep's direction implies */
 
 // --- the board's own vocabulary ---------------------------------------------
 ok("availableKinds is the three reportable story types", JSON.stringify(availableKinds()) === JSON.stringify(["Rumor", "Reported", "Confirmed"]));
@@ -93,7 +93,7 @@ ok("credibility stays in the 0..1 band the article stores", board.length > 0 && 
 ok("no viewer → every fitScore is null (the board invents no need)", board.length > 0 && board.every((r) => r.fitScore === null) && board.some((r) => r.fitScore === null));
 ok("no viewer → nothing is flagged as a target", board.length > 0 && board.every((r) => !r.isTarget) && board.some((r) => r.isTarget === false));
 ok("no viewer → the order is credibility then recency",
-  board.length > 1 && board.every((r, i) => i === 0 || board[i - 1].credibility > r.credibility || (board[i - 1].credibility === r.credibility && board[i - 1].publishedAt >= r.publishedAt)) && board[0].credibility >= board[1].credibility);
+  board.length >= 1 && board.length > 1 && board.every((r, i) => i === 0 || board[i - 1].credibility > r.credibility || (board[i - 1].credibility === r.credibility && board[i - 1].publishedAt >= r.publishedAt)) && board[0].credibility >= board[1].credibility);
 
 // --- with a viewer club: fit reads THAT club's squad, own players are excluded
 const clubs = footballProvider.clubs();

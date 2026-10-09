@@ -57,7 +57,7 @@ ok("foul counts sit in the modelled 6..14 range", r.stats.home.fouls >= 6 && r.s
 ok("no event resurrects a dead type (only GOAL/SAVE/SHOT/VAR/YELLOW/RED)", r.timeline.every((e) => LIVE_TYPES.has(e.type)));
 ok("every event has a legal side, a numeric minute and a player label",
   r.timeline.every((e) => (e.side === "home" || e.side === "away") && typeof e.minute === "number" && typeof e.player === "string" && e.player.length > 0));
-ok("the timeline is sorted by minute ascending", r.timeline.every((e, i) => i === 0 || r.timeline[i - 1].minute <= e.minute));
+ok("the timeline is sorted by minute ascending", r.timeline.length > 0 && r.timeline.every((e, i) => i === 0 || r.timeline[i - 1].minute <= e.minute));
 ok("a VAR review is always present in the match story", r.timeline.some((e) => e.type === "VAR"));
 ok("every goal carries an xG + shot-type detail row, not a sentence",
   r.timeline.filter((e) => e.type === "GOAL").every((e) => typeof e.detail === "object" && "key" in e.detail && read(e.detail, en).startsWith("xG ")));
@@ -81,7 +81,7 @@ ok("summary quotes possession consistent with the stats row",
 
 // --- a different seed is a different match (the sim is not a constant) -----
 const goalsDiffer = alt.homeGoals !== r.homeGoals || alt.timeline.length !== r.timeline.length || alt.stats.home.possession !== r.stats.home.possession;
-ok("changing the seed changes the match (not a fixed script)", goalsDiffer || read(alt.summary[0], en) !== read(r.summary[0], en));
+ok("changing the seed changes the match (not a fixed script)", goalsDiffer || r.timeline.length > 0 && (read(alt.summary[0], en) !== read(r.summary[0], en)));
 
 // --- M225: the engine's own words are rows, so no reader is handed English --------------
 // The milestone's claim, and the reason it is asserted here rather than in the i18n gate: the

@@ -36,8 +36,8 @@ const input = (over = {}) => ({
 
 // 1. No memory yet → the coach makes no continuity claim (empty-state honesty).
 let p = await coachProvider.generatePlan(input({ focusKeys: ["passing"] }));
-ok("no lastFocus: no continuity sentence", !/last session/i.test(resolve(p.diagnosis)));
-ok("no lastFocus: no coach-memory source", !p.sources.some((s) => /Coach memory/.test(resolve(s))));
+ok("no lastFocus: no continuity sentence", resolve(p.diagnosis).length > 0 && !/last session/i.test(resolve(p.diagnosis)));
+ok("no lastFocus: no coach-memory source", p.sources.length > 0 && !p.sources.some((s) => /Coach memory/.test(resolve(s))));
 
 // 2. Overlap → continue progressive overload framing.
 p = await coachProvider.generatePlan(input({ focusKeys: ["passing"], lastFocus: ["passing"] }));
@@ -109,7 +109,7 @@ for (const [where, plan] of [["overlap", a], ["rotate", disjoint]]) {
   }
 }
 ok(`no coach row reaches any locale's reader as a raw code, a snake_case id or a bare dictionary key (${censusRows} rows × ${locales.length} locales, ${censusLeads.length} leaks${censusLeads.length ? ": " + censusLeads.join(" || ") : ""})`,
-  censusLeads.length === 0);
+  censusRows > 0 && locales.length > 0 && censusLeads.length === 0);
 
 // 10. And it is the READER's word, not the English one: the same row in 简体中文 carries the
 //     dictionary's own label. `translate` falls back to English for an unknown locale id, so the

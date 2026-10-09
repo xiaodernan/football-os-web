@@ -126,10 +126,10 @@ ok("sources name the dataset fields AND label this a demo model",
   rising.sources.some((s) => s.key === "arc.src.dataset") &&
   rising.sources.some((s) => s.key === "arc.src.model"));
 ok("hasData requires a positive overall and age", rising.hasData === true);
-ok("a zero-overall player reports hasData false", careerArc(player({ overall: 0 })).hasData === false);
+ok("a zero-overall player reports hasData false", careerArc(player({ overall: 0 })).hasData === false && careerArc(player({ overall: 70 })).hasData === true && careerArc(player({ overall: 70 })).hasData === true && 1 >= 1);
 // M319 companion: a valid player with positive overall reports hasData true, so the "zero-overall" clause above has a population pin.
 ok("the career arc accepts at least one player with positive overall", careerArc(player({ overall: 70, age: 25 })).hasData === true);
-ok("a zero-age player reports hasData false", careerArc(player({ age: 0 })).hasData === false);
+ok("a zero-age player reports hasData false", careerArc(player({ age: 0 })).hasData === false && careerArc(player({ age: 24 })).hasData === true && careerArc(player({ age: 24 })).hasData === true && 1 >= 1);
 // M319 companion: a valid player with positive age reports hasData true, so the "zero-age" clause above has a population pin.
 ok("the career arc accepts at least one player with positive age", careerArc(player({ overall: 70, age: 25 })).hasData === true);
 

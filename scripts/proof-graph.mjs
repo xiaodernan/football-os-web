@@ -109,7 +109,7 @@ ok("the canvas resolves the relation row rather than printing it raw",
 // 6. A match node really does appear, which is what made the missing fifth word a defect
 //    rather than a tidy-up.
 ok("a club query puts a fixture node on the canvas (" + [...new Set(GRAPHS[0][1].nodes.map((n) => n.type))].join(",") + ")",
-  GRAPHS[0][1].nodes.some((n) => n.type === "match"));
+  GRAPHS[0][1].nodes.length > 0 && GRAPHS[0][1].nodes.some((n) => n.type === "match"));
 
 console.log(`\n${EDGES.length} edges read · ${relationKeys.length} relation keys · ${kinds.length} legend kinds · ${locales.length} locales`);
 console.log(`${pass}/${pass + fail} checks passed`);

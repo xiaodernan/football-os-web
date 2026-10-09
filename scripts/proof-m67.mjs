@@ -36,8 +36,8 @@ ok("analyst ids", JSON.stringify(ids) === JSON.stringify(["first_clip", "five_cl
 
 // 2. No clips: zero analyst badges unlocked, pct = 0.
 let r = evaluateAchievements(base);
-ok("no clips: first_clip locked", !find(r, "first_clip").unlocked);
-ok("no clips: first_clip value 0", find(r, "first_clip").value === 0);
+ok("no clips: first_clip locked", ACHIEVEMENTS.length > 0 && !find(r, "first_clip").unlocked);
+ok("no clips: first_clip value 0", ACHIEVEMENTS.length > 0 && find(r, "first_clip").value === 0);
 ok("no clips: five_clips pct 0", find(r, "five_clips").pct === 0);
 
 // 3. One clip: first_clip unlocked, five_clips at 1/5.
@@ -147,7 +147,7 @@ ok("the ranking covers every locked badge in the catalogue",
 
 // 14. The fabricated row cannot come back: no badge in the catalogue is an XP total,
 //     and no screen types "1000 XP" any more.
-ok("no achievement in the catalogue has a 1000 target", ACHIEVEMENTS.every((a) => a.target !== 1000));
+ok("no achievement in the catalogue has a 1000 target", ACHIEVEMENTS.length > 0 && ACHIEVEMENTS.every((a) => a.target !== 1000));
 const typedLabels = ["features/player/PlayerOS.tsx", "features/dashboard/Dashboard.tsx", "features/achievements/AchievementsPage.tsx"];
 ok("the string \"1000 XP\" is gone from every screen",
   typedLabels.every((p) => !code(p).includes("1000 XP")));
@@ -159,7 +159,7 @@ ok("the string \"1000 XP\" is gone from every screen",
 //     add silently — it would have to re-derive all ten fields.
 const inline = typedLabels.filter((p) => /evaluateAchievements\(\s*\{/.test(code(p)));
 ok(`no screen assembles an AchievementInput by hand (${inline.join(", ") || "all three call achievementInput"})`,
-  inline.length === 0 && typedLabels.every((p) => code(p).includes("achievementInput(")));
+  typedLabels.length > 0 && inline.length === 0 && typedLabels.every((p) => code(p).includes("achievementInput(")));
 
 // 16. Player OS reads badge names out of the dictionary and caps its panel at six —
 //     the same space /achievements walks, so a row can never name a badge that

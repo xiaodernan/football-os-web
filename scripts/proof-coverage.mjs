@@ -238,7 +238,7 @@ const dirDelta = [...new Set([...Object.keys(BY_DIR_PIN), ...Object.keys(byDir)]
 ok(`${proofs.length} proofs load ${roots.length} modules directly, reaching ${population.length - unreachable.length} of the ${population.length} app modules in ${popDirs.length} directories walked recursively`,
   proofs.length >= 30 && roots.length >= 25 && population.length === POP_PIN);
 ok(`…by directory: ${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}${silentDirs.length ? ` (${silentDirs.join(", ")} contributes none)` : ""}`,
-  dirDelta.length === 0 && Object.keys(byDir).length === Object.keys(BY_DIR_PIN).length
+  Object.keys(byDir).length > 0 && dirDelta.length === 0 && Object.keys(byDir).length === Object.keys(BY_DIR_PIN).length
     && Object.values(byDir).reduce((n, k) => n + k, 0) === population.length);
 ok(`…and the walk really is recursive (of ${population.length} modules, ${population.filter((p) => p.split("/").length > 2).length} sit two or more levels down, which the old scan could not produce)`,
   population.filter((p) => p.split("/").length > 2).length === DEEP_PIN);
@@ -251,7 +251,7 @@ ok(`every unreachable module is declared, with a reason (${unreachable.length} u
   undeclared.length === 0,
   `undeclared: ${undeclared.join(", ") || "none"}`);
 ok(`…and no exemption has gone stale (a module that became reachable must be deleted from this list)`,
-  stale.length === 0, `stale: ${stale.join(", ") || "none"}`);
+  Object.keys(EXEMPT).length > 0 && stale.length === 0, `stale: ${stale.join(", ") || "none"}`);
 const exemptLines = Object.keys(EXEMPT).reduce((n, p) => n + lines(p), 0);
 ok(`the exempt surface is ${exemptLines} lines of app code against a ceiling of ${EXEMPT_CEILING}, and every entry states why (${Object.entries(EXEMPT).map(([p, why]) => `${p}:${why.length > 12 ? "why given" : "TOO SHORT"}`).join(" ")})`,
   Object.values(EXEMPT).every((why) => typeof why === "string" && why.length > 12) && exemptLines === EXEMPT_CEILING);

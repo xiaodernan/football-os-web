@@ -104,7 +104,7 @@ for (const [label, v] of SHAPES) {
   try { toClipInputs(parseFilmClips([v])); } catch (err) { thrown.push(`${label}: ${err.message}`); }
 }
 ok(`nothing the parse returns can make a reader throw — toClipInputs ran over all ${SHAPES.length} raw inputs without an exception (${thrown.join(" | ") || "clean"})`,
-  thrown.length === 0);
+  SHAPES.length > 0 && thrown.length === 0);
 const afterFix = ["an events array containing null", "an events array containing a number"];
 ok(`…and the corrupt-event shapes are refused BY THE PARSE rather than rescued downstream (${afterFix.map((l) => { const [, v] = SHAPES.find(([n]) => n === l); return `${l}=${kept(v) ? "kept" : "skipped"}`; }).join(", ")})`,
   afterFix.every((l) => !kept(SHAPES.find(([n]) => n === l)[1])));
@@ -122,7 +122,7 @@ ok("…and keeps only the event kind — the library-level analysis must not see
   JSON.stringify(Object.keys(ins[0].events[0]).sort()) === JSON.stringify(["kind"]));
 const sparse = toClipInputs([{ clipId: "s", addedAt: "t", report: { events: [] } }]);
 ok(`a report missing its optional numbers narrows to 0 and [] rather than undefined (${JSON.stringify(sparse[0])})`,
-  sparse[0].durationSec === 0 && sparse[0].confidence === 0 && JSON.stringify(sparse[0].recommendedFocus) === JSON.stringify([]));
+  sparse.length > 0 && sparse[0].durationSec === 0 && sparse[0].confidence === 0 && JSON.stringify(sparse[0].recommendedFocus) === JSON.stringify([]));
 ok("an empty clip list narrows to an empty list", toClipInputs([]).length === 0);
 const before = JSON.stringify([clip()]);
 toClipInputs([clip()]);
@@ -143,7 +143,7 @@ ok(`it returns the newest ISO stamp regardless of list order (${newestClipAt(sta
   newestClipAt(stamps) === "2026-07-04T00:00:00.000Z" && newestClipAt([...stamps].reverse()) === "2026-07-04T00:00:00.000Z");
 ok(`…and ignores an empty stamp rather than returning it (${newestClipAt([clip({ addedAt: "" }), ...stamps]) ?? "undefined"})`,
   newestClipAt([clip({ addedAt: "" }), ...stamps]) === "2026-07-04T00:00:00.000Z");
-ok("a library of nothing but empty stamps has no newest clip", newestClipAt([clip({ addedAt: "" })]) === undefined);
+ok("a library of nothing but empty stamps has no newest clip", newestClipAt([clip({ addedAt: "" })]) === undefined && newestClipAt([clip({ addedAt: "2026-01-01T00:00:00.000Z" })]) === "2026-01-01T00:00:00.000Z" && 1 > 0);
 const stampBefore = JSON.stringify(stamps);
 newestClipAt(stamps);
 ok("it does not reorder the list it was given", JSON.stringify(stamps) === stampBefore);
@@ -184,9 +184,9 @@ ok(`null in the slot loads empty (${withStore({ [FILM_KEY]: "null" }, loadFilmCl
 ok("a corrupt LIST drops only the bad entries (the good clip still reaches the page)",
   withStore({ [FILM_KEY]: JSON.stringify([clip(), { nope: 1 }, clip({ clipId: "c3" })]) }, loadFilmClips).out.map((c) => c.clipId).join(",") === "c1,c3");
 ok(`a throwing localStorage never escapes the module (load=${withBrokenStore(loadFilmClips).length}, save=${(() => { try { withBrokenStore(() => saveFilmClips(written)); return "no throw"; } catch { return "THREW"; } })()})`,
-  withBrokenStore(loadFilmClips).length === 0 && (() => { try { withBrokenStore(() => saveFilmClips(written)); return true; } catch { return false; } })());
+  written.length > 0 && withBrokenStore(loadFilmClips).length === 0 && (() => { try { withBrokenStore(() => saveFilmClips(written)); return true; } catch { return false; } })());
 ok(`a round-trip through JSON keeps the events intact (${rt[0]?.report?.events?.[0]?.kind ?? "no event"})`,
-  rt[0]?.report?.events?.[0]?.kind === "shot");
+  rt.length > 0 && rt[0]?.report?.events?.[0]?.kind === "shot");
 
 // ---------------------------------------------------------------------------
 // 6 · provenance: the key, the registry, and the readers.

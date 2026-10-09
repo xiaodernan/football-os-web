@@ -5637,7 +5637,7 @@ ok(`the news record carries no seed-composed summary sentence: the NewsArticle i
 // The ceiling is load-bearing on this commit's own work: the same tool keeping only proof-i18n
 // (the eight paydowns reverted to HEAD) reads 40 and prints OVER, and every site the revert adds
 // sits inside the eight files edited here — proof-world carries two of them, the rest one each.
-const VACUITY_CEILING = 31;
+const VACUITY_CEILING = 0;
 const clauseDepth = (text) => {
   let d = 0, str = null, tmpl = 0;
   for (let i = 0; i < text.length; i++) {
@@ -5812,6 +5812,186 @@ const plantedClauses = clausesIn('ok("nothing here", debt.length === 0);\n');
 const plantedOwing = plantedClauses.filter((c) => !isPlant(c.body) && isZeroish(c.body.split("\n")[0])).length;
 ok(`…and the census reads clauses rather than an empty set (${plantedOwing} of 1 owing in the planted script; the suite read ${proofFiles.length} scripts)`,
   plantedOwing === 1 && proofFiles.length >= 41);
+
+// ===== 39. The two ways a green can be empty ===========================================
+// Section 38 asks whether a CLAUSE can pass vacuously: an `ok("…", x.length === 0)` whose scan
+// read nothing passes, and the census charges it unless it carries a plant, a pin or a planted
+// companion. Two strictly more fundamental questions were never asked, and both are the same
+// worry — a green that is green because nothing was measured.
+//
+// **Can a FILE pass vacuously?** Every milestone in this file quotes "N/N checks green" from
+// this suite, and that claim rests on each of the 42 scripts doing two things: counting its
+// verdicts into a variable, and letting that variable reach `process.exit`. A script whose
+// `ok()` counts into a variable no exit reads is a permanently green script: it prints
+// "0/0 checks passed", exits 0, and section 38 counts its clauses as healthy while it is blind.
+//
+// **Can a CLAUSE never fail?** The census only looks at clauses that assert a zero. A clause
+// whose predicate is `true`, or `a.length === a.length`, or `x === 0 || true` is green for a
+// different reason and no section reads it — M247 banned exactly this shape when it found two
+// file-count floors pinned as `X === X`, but nothing generalised the ban.
+//
+// Both readings are named functions so that the gate and its witnesses run the SAME code (M313:
+// a witness that re-implements the predicate it guards proves nothing — mutate one and the
+// other stays green).
+//
+// The honest limit, stated rather than hidden: both are syntactic readings. The harness reading
+// proves a counter reaches an exit CALL; it cannot prove that call is on the path the script
+// actually takes, so `if (never) process.exit(fail ? 1 : 0)` would pass here. The predicate
+// reading knows the three shapes a predicate can be trivially true in and not the infinite
+// others. What they catch is what this repository can actually write — a copied `ok()` whose
+// counter was renamed on one side of the copy, which is how 42 hand-copied harnesses drift —
+// and no other section can see either.
+const harnessOf = (src) => {
+  const lines = src.split(/\r?\n/);
+  let def = null;
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^(export\s+)?const ok = /.test(lines[i])) continue;
+    let depth = 0;
+    let body = "";
+    for (let j = i; j < lines.length; j++) {
+      for (const ch of lines[j]) {
+        if (ch === "(" || ch === "{") depth++;
+        else if (ch === ")" || ch === "}") depth--;
+      }
+      body += lines[j] + "\n";
+      if (depth <= 0) break;
+    }
+    def = body;
+    break;
+  }
+  if (def === null) return { definesOk: false, calls: 0, sinks: [], exits: [], linked: false };
+  const sinks = new Set();
+  // Both increment shapes are real: 40 scripts write `pass++`, `proof-runner` writes `pass += 1`.
+  for (const m of def.matchAll(/([A-Za-z_$][\w$]*)\s*(?:\+\+|\+=\s*[1-9]\d*)/g)) sinks.add(m[1]);
+  for (const m of def.matchAll(/([A-Za-z_$][\w$]*)\.push\(/g)) sinks.add(m[1]);
+  // Close the assignment graph, so a variable derived from a counter counts as the counter:
+  // `proof-m65` collects verdicts into `checks` and exits on `failed`, a filter of it.
+  const reach = new Set(sinks);
+  for (let pass = 0; pass < 3; pass++) {
+    for (const m of src.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^;\n]*)/g)) {
+      if ([...reach].some((v) => new RegExp(`\\b${v}\\b`).test(m[2]))) reach.add(m[1]);
+    }
+  }
+  const exits = [...src.matchAll(/process\.exit\(([^;]*)\)/g)].map((m) => m[1].trim());
+  // ANY exit rather than the first: `proof-router` and `proof-storage` open with an early
+  // `process.exit(1)` in a catch, which is not the path a counted failure takes.
+  const linked = exits.some((e) => [...reach].some((v) => new RegExp(`\\b${v}\\b`).test(e)));
+  // Leading whitespace counts: `proof-training` indents its forty calls.
+  return { definesOk: true, calls: (src.match(/^\s*ok\(/gm) ?? []).length, sinks: [...sinks], exits, linked };
+};
+const ownTallyOf = (src) => {
+  // The LAST line mentioning "checks passed" — `proof-runner`'s fixtures quote four others.
+  const rows = src.split(/\r?\n/).filter((l) => /checks passed/.test(l));
+  if (rows.length === 0) return { found: false, computed: false, line: "" };
+  const line = rows[rows.length - 1].trim();
+  return { found: true, computed: /\$\{/.test(line), line };
+};
+const harnessOk = (src) => {
+  const h = harnessOf(src);
+  const t = ownTallyOf(src);
+  return h.definesOk && h.calls > 0 && h.linked && t.found && t.computed;
+};
+const harnessRows = proofFiles.map((f) => {
+  const src = readFileSync(join(root, "scripts", f), "utf8");
+  return { f, src, h: harnessOf(src), t: ownTallyOf(src), ok: harnessOk(src) };
+});
+const noOkDef = harnessRows.filter((r) => !r.h.definesOk);
+const neverCalled = harnessRows.filter((r) => r.h.definesOk && r.h.calls === 0);
+const noSink = harnessRows.filter((r) => r.h.definesOk && r.h.calls > 0 && r.h.sinks.length === 0);
+const unlinked = harnessRows.filter(
+  (r) => r.h.definesOk && r.h.calls > 0 && r.h.sinks.length > 0 && !r.h.linked,
+);
+const noTally = harnessRows.filter((r) => !r.t.found);
+const literalTally = harnessRows.filter((r) => r.t.found && !r.t.computed);
+ok(`every proof script's verdicts reach an exit path (${harnessRows.length} scripts: ${noOkDef.length} with no ok() definition, ${neverCalled.length} that define it and never call it, ${noSink.length} whose ok() counts into nothing, ${unlinked.length} whose exit reads none of its counters${unlinked.length ? ` — ${unlinked.map((r) => `${r.f} exits (${r.h.exits.join(" | ")}) reading none of [${r.h.sinks.join(", ")}]`).join("; ")}` : ""})`,
+  harnessRows.length >= 41 &&
+    noOkDef.length === 0 &&
+    neverCalled.length === 0 &&
+    noSink.length === 0 &&
+    unlinked.length === 0);
+ok(`every proof script prints its own tally as a computation rather than a fixed number (${harnessRows.length - noTally.length - literalTally.length} of ${harnessRows.length} computed${noTally.length ? `, ${noTally.length} with no tally line` : ""}${literalTally.length ? `, ${literalTally.length} literal: ${literalTally.map((r) => `${r.f} "${r.t.line.slice(0, 60)}"`).join("; ")}` : ""})`,
+  harnessRows.length >= 41 && noTally.length === 0 && literalTally.length === 0);
+// The census above would count a blind script's clauses as healthy, so this section's own
+// reader is witnessed the way every corrected reader in section 38 is: one fixture per way a
+// harness can lie, each declaring the verdict it must get and each running `harnessOk` rather
+// than a paraphrase of it. Every fixture carries a computed tally line so the only thing that
+// varies is the axis under test — otherwise "no tally" would fail a fixture for a reason the
+// fixture is not about.
+const HARNESS_FIXTURES = [
+  ["ok() counts into fail and the exit reads it", 'const ok = (n, c) => { if (c) { pass++; } else { fail++; } };\nok("x", true);\nconsole.log(`${pass}/${pass + fail} checks passed`);\nprocess.exit(fail ? 1 : 0);\n', true],
+  ["ok() counts into a variable no exit reads", 'const ok = (n, c) => { if (c) { pass++; } else { unused++; } };\nok("x", true);\nconsole.log(`${pass}/${pass + fail} checks passed`);\nprocess.exit(fail ? 1 : 0);\n', false],
+  ["ok() counts with += 1 rather than ++, as proof-runner does", 'const ok = (n, c) => { if (c) { pass += 1; } else { fail += 1; } };\nok("x", true);\nconsole.log(`${pass}/${pass + fail} checks passed`);\nprocess.exit(fail ? 1 : 0);\n', true],
+  ["ok() collects verdicts and the exit reads the collection, as proof-m65 does", 'const ok = (n, c) => checks.push([c]);\nok("x", true);\nconst failed = checks.filter((r) => r[0] === false).length;\nconsole.log(`${pass}/${pass + fail} checks passed`);\nprocess.exit(failed ? 1 : 0);\n', true],
+  ["ok() is defined and never called", 'const ok = (n, c) => { fail++; };\nconsole.log(`${pass}/${pass + fail} checks passed`);\nprocess.exit(fail ? 1 : 0);\n', false],
+  ["the tally is printed as a literal", 'const ok = (n, c) => { fail++; };\nok("x", true);\nconsole.log("3/3 checks passed");\nprocess.exit(fail ? 1 : 0);\n', false],
+  ["the tally is computed from the counters", 'const ok = (n, c) => { fail++; };\nok("x", true);\nconsole.log(`${pass}/${pass + fail} checks passed`);\nprocess.exit(fail ? 1 : 0);\n', true],
+];
+const harnessVerdicts = HARNESS_FIXTURES.map(([name, src, want]) => [name, harnessOk(src) === want]);
+ok(`the harness reader, planted both ways, links a counter that reaches an exit and refuses one that does not, and refuses a literal tally (${harnessVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
+  harnessVerdicts.every(([, v]) => v));
+// The second axis: the predicate itself. `clausesIn` gives the clause body; the predicate is
+// its first argument that is not the label string. Splitting the arguments has to be done here
+// rather than by regex, because a predicate is full of commas that are not argument separators.
+// Slice-based rather than `cur += ch`: 1,700 clauses is enough for the string building to show
+// up as minutes on this suite's runtime.
+const topLevelArgs = (body) => {
+  const inner = body.replace(/^ok\(/, "").replace(/\)\s*;?\s*$/, "");
+  const cuts = [];
+  let depth = 0;
+  let inStr = null;
+  for (let i = 0; i < inner.length; i++) {
+    const ch = inner[i];
+    if (inStr) {
+      if (ch === "\\") { i++; continue; }
+      if (ch === inStr) inStr = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") { inStr = ch; continue; }
+    if (ch === "(" || ch === "[" || ch === "{") depth++;
+    else if (ch === ")" || ch === "]" || ch === "}") depth--;
+    else if (ch === "," && depth === 0) cuts.push(i);
+  }
+  const parts = [];
+  let start = 0;
+  for (const c of cuts) { parts.push(inner.slice(start, c).trim()); start = c + 1; }
+  parts.push(inner.slice(start).trim());
+  return parts;
+};
+const predicateOf = (body) => topLevelArgs(body).find((a) => a && !/^[`"']/.test(a)) ?? "";
+const SELF_CMP = /([A-Za-z_$][\w$.[\]"']*)\s*(?:===|==|!==|!=|<=|>=|<|>)\s*([A-Za-z_$][\w$.[\]"']*)/;
+const neverFails = (pred) => {
+  if (/^(true|1)$/.test(pred)) return "a literal true";
+  if (/\|\|\s*true\b/.test(pred)) return "an `|| true` arm";
+  const m = pred.match(SELF_CMP);
+  if (m && m[1] === m[2]) return `a self-comparison (${m[0]})`;
+  return null;
+};
+const unfailable = [];
+let predicatesRead = 0;
+for (const { f, src } of harnessRows) {
+  for (const c of clausesIn(src)) {
+    const pred = predicateOf(c.body);
+    if (!pred) continue;
+    predicatesRead++;
+    const why = neverFails(pred);
+    if (why) unfailable.push(`${f}:${c.line} — ${why}`);
+  }
+}
+ok(`no clause's predicate is true by construction (${predicatesRead} predicates read across ${proofFiles.length} scripts, floor 1000, ${unfailable.length} unfailable${unfailable.length ? `: ${unfailable.slice(0, 5).join("; ")}` : ""})`,
+  predicatesRead >= 1000 && unfailable.length === 0);
+const FAILABLE_FIXTURES = [
+  ["a literal true", 'ok("x", true);\n', true],
+  ["a self-comparison", 'ok("x", a.length === a.length);\n', true],
+  ["an `|| true` arm", 'ok("x", a.length === 0 || true);\n', true],
+  ["a real zero-assertion", 'ok("x", a.length === 0);\n', false],
+  ["a real floor", 'ok("x", a.length >= 3);\n', false],
+];
+const failableVerdicts = FAILABLE_FIXTURES.map(([name, src, want]) => {
+  const c = clausesIn(src)[0];
+  return [name, (neverFails(predicateOf(c.body)) !== null) === want];
+});
+ok(`the failable reader, planted both ways, catches a literal, a self-comparison and an \`|| true\` arm and accuses no real assertion (${failableVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
+  failableVerdicts.every(([, v]) => v));
 
 console.log(`\n${enKeys.length} keys · ${L.length} locales`);
 

@@ -147,7 +147,8 @@ ok("every key the model can reach exists in all three dictionaries",
 ok("a single completed session takes the singular row", keyOf(armIn(FIX.one, "rv.ins.done")) === "rv.ins.doneOne");
 ok("three completed sessions take the plural row", keyOf(armIn(FIX.many, "rv.ins.done")) === "rv.ins.doneMany");
 ok("no row whose value names a count of one is ever chosen for two",
-  FIX.many.insights.every((i) => !(keyOf(i.text) ?? "").endsWith("One")) ||
+FIX.many.insights.length > 0 &&
+    FIX.many.insights.every((i) => !(keyOf(i.text) ?? "").endsWith("One")) ||
   FIX.many.insights.filter((i) => (keyOf(i.text) ?? "").endsWith("One")).every((i) => {
     const k = keyOf(i.text);
     return /\b1\b/.test(DICTIONARIES.en[k]) && !/\{n\}/.test(DICTIONARIES.en[k]);
@@ -161,7 +162,8 @@ ok("every …One row either spells its own 1 or is singular by pronoun",
 ok("each countable pair hands its number to the plural arm",
   keysUsed.filter((k) => k.endsWith("One") && countable(k)).every((k) => /\{n\}/.test(DICTIONARIES.en[k.replace(/One$/, "Many")])));
 ok("a pronoun-only pair mints no number for either arm to disagree about",
-  keysUsed.filter((k) => k.endsWith("One") && !countable(k)).every((k) => !/\{n\}/.test(DICTIONARIES.en[k.replace(/One$/, "Many")])));
+keysUsed.length > 0 &&
+    keysUsed.filter((k) => k.endsWith("One") && !countable(k)).every((k) => !/\{n\}/.test(DICTIONARIES.en[k.replace(/One$/, "Many")])));
 // The real risk in a pair is one arm carrying a figure the other forgot: the sentence
 // then loses a number on one side of the count and no locale check can see it.
 const pairDrift = keysUsed.filter((k) => k.endsWith("One")).filter((k) => {
@@ -225,7 +227,7 @@ ok("both attribute words are the reader's own, in all three locales",
 
 // 6. The ledger lines.
 const evOf = (r) => r.evidence.map(en);
-ok("the window line names the window the review was built for", evOf(FIX.busy)[0] === "Window: last 7 days");
+ok("the window line names the window the review was built for", evOf(FIX.busy).length > 0 && evOf(FIX.busy)[0] === "Window: last 7 days");
 ok("the focus line lists the trained focuses by name and totals the blocks",
   evOf(FIX.busy).includes(`Focus mix: ${DICTIONARIES.en["attr.name.passing"]} · 3 focus blocks`), evOf(FIX.busy).join(" | "));
 ok("the focus line names all three distinct focuses of a spread log",

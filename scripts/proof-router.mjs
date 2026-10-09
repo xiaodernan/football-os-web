@@ -137,7 +137,7 @@ ok(`a hash is parsed into path / segments / query exactly as documented (#/playe
 
 const r2 = renderAt("");
 ok(`an unset hash still reports a root path, because the app dispatches on strings and "" matches nothing (path ${JSON.stringify(r2.err ? `threw ${r2.err.constructor.name}` : cap && cap.path)})`,
-  !r2.err && cap && cap.path === "/");
+  !r2.err && cap && Object.keys(cap).length > 0 && cap.path === "/");
 
 const r3 = renderAt("#/players/");
 ok(`a trailing slash does not invent a segment (#/players/ -> ${JSON.stringify(cap && cap.segments)})`,
@@ -232,7 +232,7 @@ for (const p of patterns) for (const q of PATHS) {
   if (!same) diverge.push(`${p} × ${q} → ${JSON.stringify(got)} but the rule says ${JSON.stringify(want)}`);
 }
 ok(`the shipped matcher agrees with the documented rule over ${patterns.length} patterns × ${PATHS.length} paths = ${patterns.length * PATHS.length} rows (0 divergences)`,
-  diverge.length === 0, diverge.slice(0, 4).join(" ;; "));
+  patterns.length > 0 && PATHS.length > 0 && diverge.length === 0, diverge.slice(0, 4).join(" ;; "));
 ok(`no pattern/path row throws at all (${threw.length} threw over ${patterns.length * PATHS.length} rows)`,
   threw.length === 0, threw.slice(0, 3).join(" ;; "));
 
@@ -324,7 +324,7 @@ ok(`the nav predicate has ${arms.length} arm(s), all recognised by this census a
   arms.length >= 2 && vacuous.length === 0 && unknownArms.length === 0,
   `vacuous: ${vacuous.join(" ;; ") || "none"} · unreadable: ${unknownArms.join(" ;; ") || "none"}`);
 ok(`…and no arm is written twice (${dupArms.length} duplicates: ${dupArms.join(" | ") || "none"})`,
-  dupArms.length === 0, dupArms.join(", "));
+  arms.length > 0 && dupArms.length === 0, dupArms.join(", "));
 
 const firesAlone = reachable.filter((p) => navPrefixes.some((m) => p.startsWith(m + "/") && p !== m) && !navPrefixes.includes(p));
 ok(`the prefix arm is load-bearing rather than decorative (${firesAlone.length} reachable paths activate only because of startsWith, e.g. ${JSON.stringify(firesAlone.slice(0, 2))})`,

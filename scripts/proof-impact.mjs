@@ -60,7 +60,7 @@ for (const locale of locales) {
   }
 }
 ok(`no row reaches a reader as a key, an empty string or a snake_case code (${ALL.length} rows × ${locales.length} locales, ${leaks.slice(0, 4).join(" | ") || "clean"})`,
-  leaks.length === 0);
+  ALL.length > 0 && locales.length > 0 && leaks.length === 0);
 
 // --- the reader's language actually changes the words ----------------------
 const en = say("en"), zh = say("zh-CN");
@@ -81,7 +81,7 @@ for (const locale of locales) {
   }
 }
 ok(`no standing line carries an English ordinal suffix in any locale (${ordinals.slice(0, 3).join(" | ") || "clean"})`,
-  ordinals.length === 0);
+  ALL.length > 0 && ordinals.length === 0);
 ok("the rank the module hands the row is the raw number",
   impact.context.filter((r) => r.key.startsWith("ni.ctx.standing")).every((r) => typeof r.vars.rank === "number"));
 

@@ -97,7 +97,7 @@ ok("attribute edges equal the fully recomputed shared-key set", JSON.stringify(r
 ok("each edge's delta is exactly a − b and favor tracks its sign",
   r.attributeEdges.every((e) => e.delta === e.a - e.b && e.favor === (e.delta > 0 ? "a" : e.delta < 0 ? "b" : "even")));
 ok("every attribute edge carries its key and numbers only — no display label reaches the UI",
-  r.attributeEdges.every((e) => Object.keys(e).sort().join(",") === "a,b,delta,favor,key"));
+  r.attributeEdges.length > 0 && r.attributeEdges.every((e) => Object.keys(e).sort().join(",") === "a,b,delta,favor,key"));
 ok("each edge key resolves in the attribute name table (an unknown key would echo itself, a raw key reads as snake_case)",
   r.attributeEdges.every((e) => attributeLabel(e.key) !== e.key && !/_/.test(attributeLabel(e.key))));
 const sortedDesc = r.attributeEdges.every((e, i) => i === 0 || Math.abs(r.attributeEdges[i - 1].delta) >= Math.abs(e.delta));
@@ -136,7 +136,7 @@ for (let i = 0; i < players.length && !(sawSame && sawDiff); i++) {
     if (sawSame && sawDiff) break;
   }
 }
-ok("sameBucket matches the recomputed position-group bucket test", bucketBad === 0);
+ok("sameBucket matches the recomputed position-group bucket test", players.length > 0 && sawSame && sawDiff && bucketBad === 0);
 ok("dataset exercises both same- and cross-bucket pairings", sawSame && sawDiff);
 
 // --- EUR / number formatting branch coverage (display fn is exposed) -------
@@ -200,7 +200,7 @@ ok("the verdict reads the uncapped window, and the clamped figure is gone from t
 const readers = ["features/scouting/ScoutingPanel.tsx", "features/watchlist/WatchlistBoard.tsx"];
 const bareReaders = readers.filter((f) => /\bprimeYears\(/.test(readFileSync(f, "utf8")));
 ok(`both prime columns print the labelled window, never the raw bound (${bareReaders.join(", ") || "none bare"})`,
-  bareReaders.length === 0 && readers.every((f) => readFileSync(f, "utf8").includes("primeYearsLabel(")));
+  readers.length > 0 && bareReaders.length === 0 && readers.every((f) => readFileSync(f, "utf8").includes("primeYearsLabel(")));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
