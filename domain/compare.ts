@@ -5,7 +5,7 @@
 // than inventing a profile. Every winner is chosen by a stated direction, so a
 // verdict stays explainable.
 
-import { getPlayer, getClub } from "@/data/footballService";
+import { getPlayer, getClub, formatValue } from "@/data/footballService";
 import type { PlayerRef } from "./types";
 import { categoryAverages } from "./attributes";
 import { headroom, valueIndex, primeHold, bucketOf } from "./scouting";
@@ -77,7 +77,7 @@ export function compare(aId: string, bId: string): CompareResult | null {
     { key: "headroom", dir: "high", a: headroom(a), b: headroom(b), display: (v) => `+${v}` },
     { key: "age", dir: "low", a: a.age, b: b.age, display: (v) => `${v}` },
     { key: "prime", dir: "high", a: Math.round(primeHold(a)), b: Math.round(primeHold(b)), display: (v) => `${v}` },
-    { key: "value", dir: "info", a: a.value, b: b.value, display: (v) => formatEUR(v) },
+    { key: "value", dir: "info", a: a.value, b: b.value, display: formatValue },
     { key: "valueIndex", dir: "high", a: round1(valueIndex(a)), b: round1(valueIndex(b)), display: (v) => `${v.toFixed(1)}` },
   ];
 
@@ -142,9 +142,7 @@ export function compare(aId: string, bId: string): CompareResult | null {
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-function formatEUR(v: number): string {
-  if (v >= 1_000_000_000) return `€${(v / 1_000_000_000).toFixed(1)}B`;
-  if (v >= 1_000_000) return `€${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`;
-  if (v >= 1_000) return `€${(v / 1_000).toFixed(0)}K`;
-  return `€${v}`;
-}
+// The value row prints money through the app's one `formatValue`, not a local copy: this
+// module once carried its own euro formatter, so a future rounding tweak to the shared one
+// would silently leave the comparison page quoting the same transfer fee a different way
+// than the player page, dashboard and manager all already do.

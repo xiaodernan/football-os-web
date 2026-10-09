@@ -12,7 +12,7 @@ const { compare } = await server.ssrLoadModule("/domain/compare.ts");
 const { headroom, valueIndex, primeYears, primeWindow, primeHold, primeYearsLabel, bucketOf } =
   await server.ssrLoadModule("/domain/scouting.ts");
 const { categoryAverages, attributeLabel } = await server.ssrLoadModule("/domain/attributes.ts");
-const { footballProvider, getPlayer } = await server.ssrLoadModule("/data/footballService.ts");
+const { footballProvider, getPlayer, formatValue } = await server.ssrLoadModule("/data/footballService.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -146,6 +146,19 @@ ok("€M integer for ≥ 10M", money(120_000_000) === "€120M");
 ok("€M one decimal below 10M", money(5_500_000) === "€5.5M");
 ok("€K below 1M", money(900_000) === "€900K");
 ok("€ raw below 1K", money(500) === "€500");
+// M331: /compare's value row must ride the app's single currency door. It used to call a
+// private `formatEUR` that happened to be a byte-for-byte copy of footballService's
+// `formatValue` — identical today, so nothing the reader sees changes, but two formulas that
+// can drift apart the moment one is edited. These clauses bind the seam three ways: the exact
+// function the row resolves to, the source that imports it, and the absence of any money
+// formatting left in compare.ts itself.
+ok("the value row's display is the shared formatValue itself, not a lookalike copy",
+  metric(r, "value").display === formatValue);
+const cmpMoneySrc = readFileSync("domain/compare.ts", "utf8");
+const cmpEurs = (cmpMoneySrc.match(/€/g) || []).length;
+ok(`domain/compare.ts imports formatValue from the data layer and quotes no currency of its own (${cmpEurs} "€" glyph, formatEUR present: ${/formatEUR/.test(cmpMoneySrc)})`,
+  /import[^;]*\bformatValue\b[^;]*from "@\/data\/footballService"/.test(cmpMoneySrc) &&
+    cmpEurs === 0 && !/formatEUR/.test(cmpMoneySrc));
 ok("overall displays as a bare integer", metric(r, "overall").display(70) === "70");
 ok("headroom displays with an explicit + sign", metric(r, "headroom").display(5) === "+5");
 ok("valueIndex displays one decimal", metric(r, "valueIndex").display(3.14) === "3.1");
