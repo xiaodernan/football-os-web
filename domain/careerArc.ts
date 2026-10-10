@@ -1,6 +1,7 @@
 import type { RowText } from "./rowText";
 import type { PlayerRef, PositionGroup } from "./types";
 import { round1 } from "./scouting";
+import { clamp } from "@/lib/utils";
 
 // Career arc: how a squad player's level is expected to move with age.
 //
@@ -56,8 +57,6 @@ const PEAK_AGE: Record<PositionGroup, number> = {
 
 /** Last season still modelled — no one's curve is credible beyond that. */
 const LAST_AGE = 38;
-
-const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 /**
  * Year-on-year change. Before the peak the gain is a share of the remaining

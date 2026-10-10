@@ -1,6 +1,7 @@
 import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, TrainingSession } from "./types";
 import { asRowText, type RowText } from "./rowText";
 import { makeRng, pick, rngInt } from "@/lib/rng";
+import { clamp } from "@/lib/utils";
 
 // Training database: exercises keyed to the attributes they develop, organised by
 // phase, so a session is a coherent Warm-up -> Technique -> Decision -> Game ->
@@ -189,10 +190,6 @@ export function sessionIntensity(session: TrainingSession): number {
 // must all agree on how a trained focus attribute rises, so the number a player
 // sees is exactly the number that gets persisted. Diminishing returns toward the
 // 95 ceiling, hard-capped at +2 per session so gamification never fakes a jump.
-
-function clamp(v: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, v));
-}
 
 /** Gain a single focus attribute earns from one session rated `rating` (1..5). */
 export function perSessionGain(current: number, rating: number): number {

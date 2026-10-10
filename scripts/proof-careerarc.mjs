@@ -1,4 +1,5 @@
 import { createServer } from "vite";
+import { readFileSync, readdirSync } from "node:fs";
 
 // Pins domain/careerArc.ts — the modelled career arc rendered on EVERY player
 // detail page (Details.tsx "Career arc" panel, README-prominent as "a modelled
@@ -14,6 +15,10 @@ import { createServer } from "vite";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { careerArc, annualChange } = await server.ssrLoadModule("/domain/careerArc.ts");
+// careerArc now pulls `clamp` in from lib/utils, so that module is already in this boot;
+// load its shared clamp explicitly (aliased so it never shadows the test-local `clamp` below,
+// which re-derives the arc independently) and pin it against the app-wide seam.
+const { clamp: sharedClamp } = await server.ssrLoadModule("/lib/utils.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -141,6 +146,39 @@ const snap = JSON.stringify(input);
 careerArc(input);
 ok("careerArc never mutates the PlayerRef it is given", JSON.stringify(input) === snap);
 ok("careerArc is deterministic (same player → identical arc)", JSON.stringify(careerArc(input)) === JSON.stringify(careerArc(input)));
+
+// --- M341: the clamp seam ----------------------------------------------
+// domain/{careerArc,transfers,worldEngine,projection,training} each kept their own
+// `Math.max(lo, Math.min(hi, v))` — three byte-identical arrows and two function forms. Same
+// result today, so nothing a reader sees changes, but five definitions that part company the
+// moment one gains a NaN guard. All five now import the one exported clamp from lib/utils.
+// domain/career.ts is left as the single documented private residue: it is the M335 lane another
+// session is actively editing, so this unit pins it instead of touching it — the residue clause
+// going red the day that lane converges is the point, not a failure. These clauses bind the seam
+// three ways (the one declaration, the five imports, the size of the residue), and arm each scan
+// with a planted witness of the exact shape it charges, so "no consumer declares one" is a
+// measurement rather than a regex that matches nothing.
+const CLAMP_HOME = "lib/utils.ts";
+const CLAMP_CONSUMERS = ["domain/careerArc.ts", "domain/transfers.ts", "domain/worldEngine.ts", "domain/projection.ts", "domain/training.ts"];
+const CLAMP_DEF = /\n[ \t]*(?:export[ \t]+)?(?:const|function)[ \t]+clamp[ \t]*[(=]/g;
+const IMPORTS_CLAMP = /import[^;]*\bclamp\b[^;]*from "@\/lib\/utils"/g;
+const nDef = (p) => (readFileSync(p, "utf8").match(CLAMP_DEF) || []).length;
+const nImp = (p) => (readFileSync(p, "utf8").match(IMPORTS_CLAMP) || []).length;
+const plantArrow = ("\nconst clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));".match(CLAMP_DEF) || []).length;
+const plantFn = ("\nfunction clamp(v: number, min: number, max: number): number {\n  return Math.max(min, Math.min(max, v));\n}".match(CLAMP_DEF) || []).length;
+const plantImp = ('import { clamp } from "@/lib/utils";'.match(IMPORTS_CLAMP) || []).length;
+const domainWithDef = readdirSync("domain").filter((f) => f.endsWith(".ts")).map((f) => `domain/${f}`).filter((f) => nDef(f) > 0);
+const consumerDefs = CLAMP_CONSUMERS.filter((f) => nDef(f) > 0).map((f) => `${f}(${nDef(f)})`);
+const clampImporters = CLAMP_CONSUMERS.filter((f) => nImp(f) > 0);
+
+ok(`lib/utils exports the one clamp and none of the five converged consumers re-declares it (${consumerDefs.join(", ") || "none"}; plants armed: ${plantArrow}${plantFn})`,
+  plantArrow === 1 && plantFn === 1 && nDef(CLAMP_HOME) === 1 && consumerDefs.length === 0);
+ok(`the only private clamp left anywhere in domain is the pinned career.ts residue, so the seam is otherwise closed (${domainWithDef.join(", ") || "none"})`,
+  plantFn === 1 && domainWithDef.length === 1 && domainWithDef[0] === "domain/career.ts");
+ok(`each of the five converged consumers imports clamp from @/lib/utils (${clampImporters.length} of ${CLAMP_CONSUMERS.length})`,
+  plantImp === 1 && clampImporters.length === 5);
+ok("the shared clamp holds a value to a range from below, above and inside alike",
+  sharedClamp(-5, 0, 10) === 0 && sharedClamp(20, 0, 10) === 10 && sharedClamp(5, 0, 10) === 5 && sharedClamp(10, 0, 10) === 10 && sharedClamp(0, 0, 10) === 0);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

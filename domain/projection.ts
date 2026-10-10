@@ -1,15 +1,12 @@
 import type { Attributes } from "./types";
 import { overallRating } from "./attributes";
 import { perSessionGain } from "./training";
+import { clamp } from "@/lib/utils";
 
 // Development Projection: simulates the *same* diminishing-returns per-session
 // gain the store applies when a session is completed, replayed over a weekly
 // cadence. It answers "if I train these focus traits N×/week for W weeks at
 // rating R, where does my profile land?" — a transparent model, not a promise.
-
-function clamp(v: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, v));
-}
 
 export interface ProjectionItem {
   key: string;

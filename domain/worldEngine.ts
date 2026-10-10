@@ -11,6 +11,7 @@
 // regeneration and a simulated league champion.
 
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
+import { clamp } from "@/lib/utils";
 import { POSITION_BY_GROUP, POSITION_GROUPS } from "@/domain/attributes";
 import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
 
@@ -37,8 +38,6 @@ export function marketValue(overall: number, age: number): number {
   const ageCurve = age < 23 ? 1.5 : age < 28 ? 1.3 : age < 31 ? 1.0 : age < 34 ? 0.6 : 0.3;
   return Math.round((base * ageCurve) / 100_000) * 100_000;
 }
-
-const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 export interface PlayerChange {
   id: string;

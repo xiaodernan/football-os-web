@@ -10,6 +10,7 @@ import type { PositionCode } from "./types";
 import type { NewsArticle } from "@/domain/types";
 import type { RowText } from "./rowText";
 import { bucketOf, headroom, valueIndex, squadProfile, round1 } from "./scouting";
+import { clamp } from "@/lib/utils";
 
 const RUMOUR_KINDS: NewsArticle["kind"][] = ["Rumor", "Reported", "Confirmed"];
 
@@ -39,8 +40,6 @@ export interface RumourLink {
 export function askingFee(value: number): number {
   return Math.round((value * 1.1) / 100_000) * 100_000;
 }
-
-const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 // Fit: how much the viewer's club could use this player, from that club's own
 // average rating at the relevant bucket. Thin/weak bucket → higher need.
