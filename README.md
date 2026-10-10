@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M334 (a few numbers in that range
+Work ships one milestone per commit and is currently at M335 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,36 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M335 — the arms: both directions of each seam, charged by different clauses
+
+M332's `removeJson` and M333/M334's `TeamInput` seam each landed with their clauses green, and a
+clause that has never been watched fail is a clause nobody has tested. This unit runs the
+mutation arms for both, and the result is what makes the seams worth what they cost: **each
+direction of each seam is charged by a different clause**, so neither arm can be satisfied by the
+other.
+
+| arm | mutation | result |
+| --- | --- | --- |
+| `removeJson` forced to claim every removal landed | 1 red | the four-document removal clause — the one written to catch a reset that could not remove |
+| `lineMean` forced to average without its fallback | 3 reds | the domain's own fallback clauses ("an emptied attack group falls back to the club's own rating"), which predate this line of work |
+| `SimulationLab` forced back to holding its own copy | 2 reds | M334's two seam clauses — the ones written to catch a page that re-derives the formula |
+
+The second arm is the one that would have been easy to get **wrong**. The seam clause asserts
+that the page *calls* the domain, so a mutation inside the domain correctly leaves it green: that
+mutation is the domain's own clauses' business. Had the clause instead asserted the page's output
+*values*, the arm would have passed for the wrong reason — the page would still be calling the
+domain, and the clause would have been measuring the domain a second time while saying nothing
+about the page. That is the difference between a seam clause and a duplicate measurement, and it
+is only visible by running the arm.
+
+The arms live in `dev/m335-arm.mjs` (and its two follow-ups), which patch the source in place, run
+the affected proof, and restore from a pristine copy. They are re-runnable after any change to
+either side of the seam, which is the only reason to keep them.
+
+Measured: the three arms above; tree restored and green after each — `proof-career` **198/198**,
+full suite **42/42 · 2,438/2,438**, `tsc` clean, build exit 0, vacuity census **0 owing /
+ceiling 0**.
 
 ### M334 — the simulation lab asks the same domain function the career match does
 
