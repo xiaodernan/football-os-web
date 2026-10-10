@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M332 (a few numbers in that range
+Work ships one milestone per commit and is currently at M333 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,43 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M333 — the club page asks the domain for its line means, and its match preview stops re-deriving the team input
+
+M332 closed the storage seam. This unit takes the next family of the same defect — a screen
+holding its own copy of a formula the domain owns — and it was sitting in the biggest file in
+the app.
+
+`features/football/Details.tsx` carried **two** copies:
+
+- `avgBy(squad, groups)` re-derived the per-position-group mean of player overalls, which
+  `domain/career.ts` has computed as the private `avgOf` since the career engine was built.
+- `clubTeamInput(clubId)` was a **third** copy of `clubInput`'s arithmetic — the same three line
+  means, the same neutral adjustments, and its own literal constants for the zero terms of
+  mentality, form and fatigue — handed to `simulateMatch` for the pre-match preview.
+
+The copies had already drifted, in both directions. `avgBy` answered `0` for an empty position
+group where the domain answers the club's own rating — the difference between "this club fields
+no attackers" and a rating the page then substituted at the call site. And `clubTeamInput`
+held its own `possessionBias: 0.5` where `clubInput` computes `0.5 + midfield / 400`, so the
+preview simulated a match on a **different possession basis** than the career match the same
+engine would produce a round later. A correction to the domain's arithmetic would have landed
+in one place and been invisible on this screen.
+
+The domain exports `lineMean` — the exported form of what `avgOf` computed, with its fallback
+semantics documented — and `clubInput` is called with the same neutral inputs the career match
+hands the away side, so the preview and the engine agree **by construction** rather than because
+anyone re-derived them. Both local copies are deleted.
+
+`proof-career` charges the seam in both directions, because one direction is the direction that
+lies: the page imports `lineMean` and `clubInput` from the domain, the page's own `avgBy` and
+its hand-built `TeamInput` body are gone, the duplicated `reduce` is gone — and then the domain
+function itself is re-measured over every seeded club, so a `lineMean` that silently returned the
+fallback for a populated group would fail the third clause rather than the first two. The census
+credits the new clause by construction: its plant names the failure it exists to catch.
+
+Measured: full suite **42/42 · 2,436/2,436**, `proof-career` **196/196** (three new seam
+clauses), `tsc` clean, build exit 0, vacuity census **0 owing / ceiling 0**.
 
 ### M332 — the app's last bare `localStorage` calls go through the door, and the door grows a removal reader
 
