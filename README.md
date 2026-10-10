@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M333 (a few numbers in that range
+Work ships one milestone per commit and is currently at M334 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,36 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M334 — the simulation lab asks the same domain function the career match does
+
+M333 took the copies out of the club page and its match preview, and named the family while it
+was there: `baseInput` in `features/sim/SimulationLab.tsx` was a **fourth** hand-written copy of
+`clubInput` — its own `avg` beside the domain's (by then exported) `lineMean`, its own
+mentality/press/fatigue adjustments, its own `possessionBias: 0.5 + midfield / 400`.
+
+It was the worst of the four, because it is the biggest simulation surface in the app: the lab
+runs **250 Monte Carlo matches** through `matchProbability` on top of a `TeamInput` it derived
+itself. Every correction to the team input's arithmetic — how mentality moves the attack line,
+what an empty position group falls back to, the possession basis — landed in
+`domain/career.ts` and the lab kept simulating on the old one, so the probability it printed was
+the engine's answer to a question the engine no longer asks.
+
+The one honest difference is kept rather than flattened: the lab derives morale from the
+mentality slider (`m * 0.2`) where the career match passes the squad's stored morale. That
+mapping is now a named argument at the call site instead of a line hidden inside a copy of the
+formula, so a reader can see what the lab assumes and where the career path differs.
+
+The seam is charged with the family named: `proof-career` now reads **all three sites** that
+build a `TeamInput` — the domain's own `matchPrep`, the club page's preview, the lab — and
+asserts each calls `clubInput`, that the lab's private `avg` and its inline adjustments are gone,
+and that the count of call sites is measured rather than assumed, so a third copy appearing
+anywhere fails the clause instead of quietly joining the family.
+
+Measured: full suite **42/42 · 2,438/2,438**, `proof-career` **198/198** (two new seams), `tsc`
+clean, build exit 0, vacuity census **0 owing / ceiling 0**. A tree-wide scan for the family's
+signature (`possessionBias`, the mental adjustment, the fatigue term) now reads nothing outside
+the domain.
 
 ### M333 — the club page asks the domain for its line means, and its match preview stops re-deriving the team input
 
