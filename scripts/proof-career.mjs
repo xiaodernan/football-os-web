@@ -1075,6 +1075,15 @@ ok("only createdAt is non-deterministic, so every determinism claim above is sta
 // match the engine would not produce. The page calls the domain now; these two clauses are the
 // seam, charged in both directions.
 const DETAILS_SRC = readFileSync(new URL("../features/football/Details.tsx", import.meta.url), "utf8");
+const SIMLAB_SRC = readFileSync(new URL("../features/sim/SimulationLab.tsx", import.meta.url), "utf8");
+// M334: the four sites that build a TeamInput are the two the career match already used
+// (`matchPrep`'s both sides) plus the two the UI used to hand-build. The clause below names all
+// four, so a THIRD copy appearing anywhere in the tree fails it rather than joining the family.
+const TEAM_INPUT_BUILDERS = [
+  ["domain/career.ts (matchPrep, home)", (readFileSync(new URL("../domain/career.ts", import.meta.url), "utf8").match(/clubInput\(/g) || []).length],
+  ["features/football/Details.tsx (preview)", (DETAILS_SRC.match(/clubInput\(/g) || []).length],
+  ["features/sim/SimulationLab.tsx (lab)", (SIMLAB_SRC.match(/clubInput\(/g) || []).length],
+];
 ok("the club page reads its three line means through the domain's lineMean, and keeps no second copy of the formula beside it",
   /import \{[^}]*\blineMean\b[^}]*\} from "@\/domain\/career"/.test(DETAILS_SRC) &&
   !/function avgBy\(/.test(DETAILS_SRC) &&
@@ -1083,6 +1092,19 @@ ok("…and the match preview builds its TeamInput through clubInput with the neu
   /import \{[^}]*\bclubInput\b[^}]*\} from "@\/domain\/career"/.test(DETAILS_SRC) &&
   /clubInput\(clubId, \{\}, /.test(DETAILS_SRC) &&
   !/function clubTeamInput\(clubId: string\): TeamInput \{\s*const club =/.test(DETAILS_SRC));
+// M334: the simulation lab was a FOURTH copy — its own `avg` beside the domain's lineMean, its
+// own mental/press/fatigue adjustments, its own possession bias. Charged the same way: it calls
+// the domain, and its private copy of the arithmetic is gone from the file.
+ok("…and the simulation lab asks the same domain function, with the studio's mentality mapped onto the morale the career match passes — its own copy of the three line means and the adjustments is gone",
+  /import \{[^}]*\bclubInput\b[^}]*\} from "@\/domain\/career"/.test(SIMLAB_SRC) &&
+  /return clubInput\(clubId, \{\}, \{ mentality: tac\.mentality, tempo: tac\.tempo, press: tac\.press \}, 0, tac\.mentality \* 0\.2, tac\.fatigue\);/.test(SIMLAB_SRC) &&
+  !/const avg = \(groups: string\[\]\) =>/.test(SIMLAB_SRC) &&
+  !/possessionBias: 0\.5 \+/.test(SIMLAB_SRC) &&
+  !/attack: attack \+ m \* 3/.test(SIMLAB_SRC));
+ok("…so every site in the tree that builds a TeamInput for the engine now asks the domain, and the count is named rather than assumed",
+  TEAM_INPUT_BUILDERS.length === 3 && TEAM_INPUT_BUILDERS.every(([, n]) => n >= 1) &&
+  TEAM_INPUT_BUILDERS[1][1] >= 1 && TEAM_INPUT_BUILDERS[2][1] >= 1,
+  TEAM_INPUT_BUILDERS.map(([site, n]) => `${site}: ${n}`).join(" · "));
 // The domain function the page now calls, over every seeded club: the neutral call the preview
 // makes is the same input the career match hands the away side, so the two paths agree by
 // construction rather than by anyone re-deriving them.

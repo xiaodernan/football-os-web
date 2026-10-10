@@ -4,6 +4,7 @@ import { useRouter } from "@/lib/router";
 import { simulateMatch, type TeamInput, type SimResult } from "@/domain/matchEngine";
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine } from "@/domain/rowText";
+import { clubInput } from "@/domain/career";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,31 +25,15 @@ const DEFAULT_TACTICS: Tactics = { mentality: 0, tempo: 0.5, press: 0.5, fatigue
 const mentalityWord = (t: (key: string) => string, i: number) => t(`tac.mentality.${i}`);
 const PROB_RUNS = 250;
 
+// M334: this was a fourth hand-written copy of `domain/career.ts`'s `clubInput` — the same
+// three line means, the same mentality/press/fatigue adjustments, the same possession bias —
+// with its own local `avg` beside the domain's (now exported) `lineMean`. M333 took the copies
+// out of the club page and its match preview; this one was in the biggest simulation surface in
+// the app, so a correction to the team input landed in the domain and the lab kept simulating on
+// the old arithmetic. It calls the domain now, and maps the studio's 0..4 mentality index onto
+// the morale the domain expects the same way the career match does.
 function baseInput(clubId: string, tac: Tactics): TeamInput {
-  const c = getClub(clubId)!;
-  const squad = playersByClub(clubId);
-  const avg = (groups: string[]) => {
-    const g = squad.filter((p) => groups.includes(p.positionGroup));
-    return g.length ? g.reduce((s, p) => s + p.overall, 0) / g.length : c.overall;
-  };
-  const attack = avg(["ST", "W", "AM"]);
-  const midfield = avg(["CM", "DM"]);
-  const defense = avg(["CB", "FB", "GK"]);
-  // Mentality shifts the balance of attack vs defensive contribution and shape.
-  const m = tac.mentality;
-  return {
-    name: c.name,
-    overall: c.overall,
-    attack: attack + m * 3 - tac.fatigue * 4,
-    midfield: midfield + m * 0.5 - tac.fatigue * 3,
-    defense: defense - m * 2.5 + (tac.press * 3 - 1.5) - tac.fatigue * 3,
-    possessionBias: 0.5 + midfield / 400,
-    press: tac.press,
-    tempo: tac.tempo,
-    fatigue: tac.fatigue,
-    morale: m * 0.2,
-    form: 0,
-  };
+  return clubInput(clubId, {}, { mentality: tac.mentality, tempo: tac.tempo, press: tac.press }, 0, tac.mentality * 0.2, tac.fatigue);
 }
 
 export function SimulationLab() {
