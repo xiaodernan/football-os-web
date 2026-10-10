@@ -58,12 +58,32 @@ function finish(s: Split, g: number, c: number) {
 const isFinished = (m: Match): m is Match & { homeGoals: number; awayGoals: number } =>
   m.status === "FINISHED" && m.homeGoals != null && m.awayGoals != null;
 
+/** The competition's finished matches, in kickoff order — the one list every figure here is
+ *  measured over.
+ *
+ *  M336: the count of this list was private (it fed `leagueAvg` and nothing else), so the data
+ *  room re-derived the same number on the page as `Σ per-team played / 2 | 0`. That derivation
+ *  is right only while the sum is even: a competition mid-round has one team a match ahead of
+ *  another, an odd total floors to one less than the truth, and the page quietly reports a
+ *  match that was never played. The count is exported now, and the page reads it. */
+export function finishedFixtures(compId: string, matches: Match[]): (Match & { homeGoals: number; awayGoals: number })[] {
+  return matches
+    .filter((m): m is Match & { homeGoals: number; awayGoals: number } => m.competitionId === compId && isFinished(m))
+    .sort((a, b) => a.kickoff.localeCompare(b.kickoff));
+}
+
+/** How many matches this competition has actually finished — a count of the list above, not a
+ *  sum the caller has to halve. */
+export function finishedCount(compId: string, matches: Match[]): number {
+  return finishedFixtures(compId, matches).length;
+}
+
 /** Compute per-club metrics for a competition from its finished matches. */
 export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): TeamMetrics[] {
   const byId = new Map(clubs.map((c) => [c.id, c]));
-  const fixtures = matches.filter(
-    (m): m is Match & { homeGoals: number; awayGoals: number } => m.competitionId === compId && isFinished(m),
-  ).sort((a, b) => a.kickoff.localeCompare(b.kickoff));
+  // M336: the same list `finishedCount` counts, so a correction to what "finished" means lands
+  // in one place instead of in the metrics and in the page's count separately.
+  const fixtures = finishedFixtures(compId, matches);
 
   let totalGoals = 0;
   let games = 0;

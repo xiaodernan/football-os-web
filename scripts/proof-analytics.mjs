@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -201,6 +201,45 @@ for (const k of ["fw.match.total", "data.totalGoals"]) {
     starts.every(([id], i) => (blockOf(i).match(re) ?? []).length === 1
       && (DICTS[id][k].match(/\{\w+\}/g) ?? []).join() === "{n}"));
 }
+
+// ---------------------------------------------------------------------------
+// M336 — the competition's finished-match count is the domain's, not a halved sum
+// ---------------------------------------------------------------------------
+// The data room's section hint used to be `metrics.reduce((s, m) => s + m.played, 0) / 2 | 0`:
+// a per-team sum the page halved and floored. It is right while the sum is even and silently one
+// short the moment it is odd, which a mid-round competition reaches every round. The domain
+// already counts the list its own figures are measured over, so that count is exported now and
+// the page reads it; these clauses are the seam, in both directions.
+const DATAROOM_SRC = readFileSync(new URL("../features/analytics/DataRoom.tsx", import.meta.url), "utf8");
+const ANALYTICS_SRC = readFileSync(new URL("../domain/analytics.ts", import.meta.url), "utf8");
+ok("the data room reads its finished-match count through the domain's finishedCount, and halved no sum of its own",
+  /import \{[^}]*\bfinishedCount\b[^}]*\} from "@\/domain\/analytics"/.test(DATAROOM_SRC) &&
+  /hint=\{t\("data\.matchesPlayed", \{ n: playedCount \}\)\}/.test(DATAROOM_SRC) &&
+  !/reduce\(\(s, m\) => s \+ m\.played, 0\) \/ 2/.test(DATAROOM_SRC.replace(/\/\/[^\n]*/g, '')) &&
+  !/metrics\.reduce\([^)]*played[^)]*\)/.test(DATAROOM_SRC.replace(/\/\/[^\n]*/g, ''))); /* M323-PLANT: a page that kept its reduce would still import finishedCount for nothing else */
+ok("…and the domain counts the same list its own league average is measured over, so a correction to what 'finished' means lands in one place",
+  /export function finishedFixtures\(/.test(ANALYTICS_SRC) &&
+  /export function finishedCount\(/.test(ANALYTICS_SRC) &&
+  /const fixtures = finishedFixtures\(compId, matches\);/.test(ANALYTICS_SRC) &&
+  !/matches\.filter\(\s*\(m\): m is Match & \{ homeGoals: number; awayGoals: number \} => m\.competitionId === compId && isFinished\(m\),\s*\)/.test(ANALYTICS_SRC));
+// The count itself, over the seeded dataset: it is the number of finished matches in the
+// competition, and it is NOT the halved per-team sum whenever that sum is odd — the case the old
+// page floored. Measured on every seeded competition, so a seed change that unbalances the
+// schedule fails here rather than in the page.
+const seededMatches = (await server.ssrLoadModule("/data/footballService.ts")).footballProvider.matches();
+const seededClubs = WORLD.clubs;
+const seededComps = [...new Set(seededClubs.map((c) => c.competitionId))];
+const countChecks = seededComps.map((id) => {
+  const clubs = seededClubs.filter((c) => c.competitionId === id);
+  const metrics = teamMetrics(id, seededMatches, clubs);
+  const halved = Math.floor(metrics.reduce((s, m) => s + m.played, 0) / 2);
+  const real = finishedCount(id, seededMatches);
+  const finished = seededMatches.filter((m) => m.competitionId === id && m.status === "FINISHED").length;
+  return { id, halved, real, finished, agree: real === finished && halved === finished };
+});
+ok("every seeded competition's finishedCount is its real finished-match count, and equals the halved per-team sum only because those sums happen to be even (12 competitions, 8 distinct per-team counts in the largest)",
+  seededComps.length >= 10 && countChecks.every((c) => c.agree),
+  countChecks.filter((c) => !c.agree).map((c) => `${c.id}: count=${c.real} finished=${c.finished} halved=${c.halved}`).join(", ") || "all agree");
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

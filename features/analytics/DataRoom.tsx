@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n, formatDate } from "@/i18n";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
-import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, type TeamMetrics, type FormLetter } from "@/domain/analytics";
+import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +67,12 @@ export function DataRoom() {
   const [picked, setPicked] = useState<string | null>(null);
 
   const metrics = useMemo(() => teamMetrics(compId, matches, clubs), [compId, matches, clubs]);
+  // M336: the competition's finished-match count comes from the domain, which already counts
+  // the list its own figures are measured over. This used to be
+  // `metrics.reduce((s, m) => s + m.played, 0) / 2 | 0` — a sum the page had to halve, which is
+  // only right while the sum is even, and floors to one short of the truth for a competition
+  // sitting mid-round.
+  const playedCount = useMemo(() => finishedCount(compId, matches), [compId, matches]);
   const lead = useMemo(() => leaders(metrics), [metrics]);
   const comp = getCompetition(compId);
   const pickedTeam = metrics.find((m) => m.clubId === picked) ?? null;
@@ -133,7 +139,7 @@ export function DataRoom() {
         <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
           <Panel className="p-0">
             <div className="flex items-center justify-between px-4 pt-4">
-              <SectionTitle title={comp?.name ?? ""} hint={t("data.matchesPlayed", { n: metrics.reduce((s, m) => s + m.played, 0) / 2 | 0 })} />
+              <SectionTitle title={comp?.name ?? ""} hint={t("data.matchesPlayed", { n: playedCount })} />
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
