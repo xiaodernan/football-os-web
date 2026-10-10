@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M330 (a few numbers in that range
+Work ships one milestone per commit and is currently at M332 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,45 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M332 — the app's last bare `localStorage` calls go through the door, and the door grows a removal reader
+
+M329 routed the store's XP path through the shared `sessionIntensity` and left the rest of the
+app's storage touching the accessor by hand. This unit takes the other **eleven** sites — the
+film library's read and write, the OS provider's hydrate/persist/reset, the two root providers'
+locale and theme writes, and the six reads the community, learn, player, profile and world
+pillars do — and sends each one through `domain/localData.ts`.
+
+Three of those were worse than "not through the door", and each is now measured instead of
+argued:
+
+- **`loadFilmClips` wrapped `localStorage.getItem` in its own `try`/`catch`, which does not
+  help.** Reading the accessor *itself* throws `SecurityError` when site data is blocked, so a
+  `try` around the access turns a visible crash into a silent empty library: the device holding
+  clips now says "no clips" only when it holds none.
+- **`useFootballOS.reset` called `removeItem` inside a `try` that said `/* ignore */`.** A store
+  that refused the removal still reset the view and reported nothing. A reset is a write, so the
+  door grows `removeJson`, which answers `true` only when a row was really there and really went
+  away — four documents, the same shape of answer `writeJson` gives.
+- **The footprint's community read could not tell a device with no community store from one
+  whose row is corrupt**, and answered "0 posts" for both. `readJson`'s `present` is that
+  distinction, and `/manager` and `/learn` already depend on it.
+
+`proof-storage`'s census reads the whole tree structurally, so the claims moved with the code
+rather than being re-derived by eye: the app touches browser storage in **28 sites across 11
+files, all 28 through the door, 0 raw, 0 unguarded**. The three clauses that used to assert "at
+least five raw reads, each inside a catch" now assert the stronger property that replaced it —
+zero raw sites anywhere — with the population they were read over named inside the claim, so a
+scan handed nothing to scan cannot pass.
+
+The concurrent line landed its own M331 (routing `/compare`'s value row through `formatValue`)
+while this was in the tree, so this unit is M332. Its two new clauses were charged by the
+vacuity census the moment they landed — `cmpEurs "€"` and a `0`-shaped phrase — and are credited
+here with the populations they read, so the ceiling stays at **0** with the tree green.
+
+Measured: full suite **42/42 · 2,433/2,433**, `proof-storage` **59/59** (`removeJson` witnessed
+in four documents), `proof-compare` **56/56**, `proof-timeline` **112/112**, `proof-i18n`
+**372/373** with the vacuity census back at **0 owing / ceiling 0**, `tsc` clean, build exit 0.
 
 ### M330 — the vacuity census reaches zero, and the ceiling is set to zero with it
 
