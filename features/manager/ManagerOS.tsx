@@ -216,7 +216,6 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
 function SeasonSummaryPanel({ career }: { career: CareerState }) {
   const { t } = useI18n();
   const s = seasonSummary(career);
-  const money = (v: number) => (v >= 1_000_000 ? `€${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M` : `€${Math.round(v / 1000)}k`);
   const tone = s.honour?.tone === "good" ? "text-success" : s.honour?.tone === "bad" ? "text-destructive" : "text-info";
   return (
     <Panel className="p-4">
@@ -230,7 +229,7 @@ function SeasonSummaryPanel({ career }: { career: CareerState }) {
         <Fact label={t("mgr.ppg")} value={s.ppg.toFixed(2)} />
         <Fact label={t("mgr.cleanSheets")} value={s.cleanSheets} />
         <Fact label={t("onb.position")} value={`#${s.position}`} />
-        <Fact label={t("mgr.prizeWon")} value={money(s.prizeTotal)} />
+        <Fact label={t("mgr.prizeWon")} value={formatValue(s.prizeTotal)} />
       </div>
       {(s.bestWin || s.worstLoss) && (
         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
