@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M335 (a few numbers in that range
+Work ships one milestone per commit and is currently at M336 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,43 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M336 — the data room's match count is the domain's count, not a sum the page halves
+
+This is the fifth member of the family M332–M334 cleared, and the first one that could tell the
+reader a **false number** rather than merely drift.
+
+`features/analytics/DataRoom.tsx` printed the competition's played count as
+`metrics.reduce((s, m) => s + m.played, 0) / 2 | 0` — the per-team totals, halved and floored.
+The domain had already counted the same thing: `teamMetrics` filters the competition's finished
+matches into a list and counts it to build its league average. That count was private, so the
+page re-derived one.
+
+The derivation is right whenever the total is even, and it is: every seeded competition is a
+balanced schedule, so the page has never shown a wrong number. It is still wrong, in a way the
+seed **hides** rather than removes:
+
+- a competition sitting mid-round has one club a match ahead of another — the normal state of a
+  league in progress — and the sum is then odd, and `| 0` floors to one less than the truth, so
+  the page reports a match that was never played with nothing red and nothing to warn the reader;
+- the per-team counts are already wildly uneven in the seed (the largest competition has **eight**
+  distinct totals, 11 to 21), so "even by luck" is doing all the work;
+- the smaller competitions (three clubs, a handful of matches) are one postponed fixture away
+  from odd.
+
+The domain exports `finishedFixtures` (the list) and `finishedCount` (its length), `teamMetrics`
+now reads the same list instead of filtering a second time, and the page reads the count. One
+definition of "finished", one place it is counted, one place it is printed.
+
+`proof-analytics` charges the seam in both directions **plus the value**: the page calls
+`finishedCount` and keeps no `reduce` of its own; the domain's `teamMetrics` reads the exported
+list rather than filtering again; and the count is measured over all twelve seeded competitions,
+so a seed change that unbalances a schedule fails the proof rather than the page.
+
+Measured: full suite **42/42 · 2,441/2,441**, `proof-analytics` **72/72** (three new seam clauses),
+`tsc` clean, build exit 0, vacuity census **0 owing / ceiling 0**. A tree scan for the family's
+remaining signatures — a per-team sum halved for a competition count, the raw `localStorage`
+accessor, the team-input arithmetic outside the domain — reads nothing.
 
 ### M335 — the arms: both directions of each seam, charged by different clauses
 
