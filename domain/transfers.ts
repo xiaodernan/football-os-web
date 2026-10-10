@@ -9,7 +9,7 @@ import { getPlayer, getClub, newsFeed } from "@/data/footballService";
 import type { PositionCode } from "./types";
 import type { NewsArticle } from "@/domain/types";
 import type { RowText } from "./rowText";
-import { bucketOf, headroom, valueIndex, squadProfile } from "./scouting";
+import { bucketOf, headroom, valueIndex, squadProfile, round1 } from "./scouting";
 
 const RUMOUR_KINDS: NewsArticle["kind"][] = ["Rumor", "Reported", "Confirmed"];
 
@@ -78,7 +78,7 @@ export function transferRumours(viewerClubId?: string, kinds: NewsArticle["kind"
       fromClubId: player.clubId,
       fromClubName: getClub(player.clubId)?.name ?? player.clubId,
       askingFee: askingFee(player.value),
-      valueIndex: Math.round(valueIndex(player) * 10) / 10,
+      valueIndex: round1(valueIndex(player)),
       headroom: headroom(player),
       fitScore: fit,
       isTarget: fit != null && fit >= 70,

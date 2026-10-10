@@ -8,7 +8,7 @@
 import { getPlayer, getClub, formatValue } from "@/data/footballService";
 import type { PlayerRef } from "./types";
 import { categoryAverages } from "./attributes";
-import { headroom, valueIndex, primeHold, bucketOf } from "./scouting";
+import { headroom, valueIndex, primeHold, bucketOf, round1 } from "./scouting";
 
 export type MetricDir = "high" | "low" | "info";
 
@@ -140,9 +140,9 @@ export function compare(aId: string, bId: string): CompareResult | null {
   };
 }
 
-const round1 = (n: number) => Math.round(n * 10) / 10;
-
-// The value row prints money through the app's one `formatValue`, not a local copy: this
+// `round1` rides in from the scouting module above rather than being re-declared here: three
+// domain modules each kept a byte-identical copy of this one-line rounder. And the value row
+// prints money through the app's one `formatValue`, not a local copy: this
 // module once carried its own euro formatter, so a future rounding tweak to the shared one
 // would silently leave the comparison page quoting the same transfer fee a different way
 // than the player page, dashboard and manager all already do.

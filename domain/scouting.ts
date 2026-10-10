@@ -191,7 +191,7 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
   };
 }
 
-const round1 = (n: number) => Math.round(n * 10) / 10;
+export const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export interface TemplateEdgeSummary {
   bestCategory: CategoryAverage["category"];

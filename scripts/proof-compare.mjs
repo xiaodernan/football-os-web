@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { compare } = await server.ssrLoadModule("/domain/compare.ts");
-const { headroom, valueIndex, primeYears, primeWindow, primeHold, primeYearsLabel, bucketOf } =
+const { headroom, valueIndex, primeYears, primeWindow, primeHold, primeYearsLabel, bucketOf, round1: shippedRound1 } =
   await server.ssrLoadModule("/domain/scouting.ts");
 const { categoryAverages, attributeLabel } = await server.ssrLoadModule("/domain/attributes.ts");
 const { footballProvider, getPlayer, formatValue } = await server.ssrLoadModule("/data/footballService.ts");
@@ -215,6 +215,41 @@ const readers = ["features/scouting/ScoutingPanel.tsx", "features/watchlist/Watc
 const bareReaders = readers.filter((f) => /\bprimeYears\(/.test(readFileSync(f, "utf8")));
 ok(`both prime columns print the labelled window, never the raw bound (${bareReaders.join(", ") || "none bare"})`,
   readers.length > 0 && bareReaders.length === 0 && readers.every((f) => readFileSync(f, "utf8").includes("primeYearsLabel(")));
+
+// --- M340: the round1 seam -----------------------------------------------
+// compare.ts, transfers.ts and careerArc.ts each carried a byte-identical
+// `const round1 = n => Math.round(n * 10) / 10`, and transfers inlined a fourth copy around
+// valueIndex. Identical today, so nothing a reader sees changes — but four formulas that part
+// company the moment one is re-rounded (to banker's rounding, say: the comparison row, the
+// transfer feed and the career arc would then disagree on the same number). All four now ride
+// scouting's single exported round1. These clauses bind the seam three ways — the one declaration,
+// the imports, the absence of any private or inline copy — and each is armed by a planted witness
+// of the exact shape it charges, so "no copies found" is a measurement and not a scan that
+// matches nothing.
+const R1_FILES = ["domain/scouting.ts", "domain/compare.ts", "domain/transfers.ts", "domain/careerArc.ts"];
+const r1src = Object.fromEntries(R1_FILES.map((f) => [f, readFileSync(f, "utf8")]));
+const LOCAL_DEF = /\n[ \t]*(?:export[ \t]+)?const[ \t]+round1[ \t]*=/g;
+const INLINE_ROUND = /Math\.round\((?:[^()]|\([^()]*\))*[ \t]*\* ?10\)[ \t]*\/[ \t]*10/g;
+const IMPORTS_R1 = /import[^;]*\bround1\b[^;]*from "\.\/scouting"/g;
+const nlocal = (s) => (s.match(LOCAL_DEF) || []).length;
+const ninline = (s) => (s.match(INLINE_ROUND) || []).length;
+// Plants: the two shapes the scans above must catch. The inline one is the nested
+// `Math.round(valueIndex(player) * 10) / 10`, the exact form the naive `[^)]*` pattern goes blind
+// to. If either plant reads 0 the scan is broken and the "no copies" verdict below is vacuous.
+const plantLocal = nlocal("\nconst round1 = (n: number) => Math.round(n * 10) / 10;");
+const plantInline = ninline("      valueIndex: Math.round(valueIndex(player) * 10) / 10,");
+const privateDefs = R1_FILES.filter((f) => f !== "domain/scouting.ts" && nlocal(r1src[f]) > 0).map((f) => `${f}(${nlocal(r1src[f])})`);
+const inlineCopies = R1_FILES.filter((f) => f !== "domain/scouting.ts" && ninline(r1src[f]) > 0).map((f) => `${f}(${ninline(r1src[f])})`);
+const importers = R1_FILES.filter((f) => (r1src[f].match(IMPORTS_R1) || []).length > 0);
+
+ok(`scouting.ts declares the one round1 and no consumer re-declares it (${privateDefs.join(", ") || "none"}; plant armed: ${plantLocal})`,
+  plantLocal === 1 && nlocal(r1src["domain/scouting.ts"]) === 1 && privateDefs.length === 0);
+ok(`no consumer inlines its own *10)/10 and scouting's exported body is the only one left (${inlineCopies.join(", ") || "none"}; plant armed: ${plantInline})`,
+  plantInline === 1 && ninline(r1src["domain/scouting.ts"]) === 1 && inlineCopies.length === 0);
+ok(`each of the three consumers imports round1 from ./scouting (${importers.join(", ") || "none"})`,
+  importers.length === 3 && ["domain/compare.ts", "domain/transfers.ts", "domain/careerArc.ts"].every((f) => importers.includes(f)));
+ok("the shared rounder still rounds to one decimal for the model and the display alike",
+  shippedRound1(2.467) === 2.5 && shippedRound1(3.14) === 3.1 && shippedRound1(-2.467) === -2.5 && shippedRound1(12) === 12);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
