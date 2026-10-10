@@ -9,7 +9,7 @@ import {
 } from "react";
 import { DICTIONARIES, type Locale, LOCALES } from "./dictionaries";
 import { interpolate } from "./format";
-import { LOCALE_KEY, browserStore } from "@/domain/localData";
+import { LOCALE_KEY, browserStore, writeJson } from "@/domain/localData";
 
 export type { Locale } from "./dictionaries";
 
@@ -56,11 +56,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    try {
-      localStorage.setItem(STORAGE_KEY, locale);
-    } catch {
-      /* ignore */
-    }
+    // M331: through the door, like the read above. A bare `localStorage.setItem` inside a try
+    // turns "the reader's language did not survive the reload" into nothing at all.
+    writeJson(browserStore(), STORAGE_KEY, locale);
   }, [locale]);
 
   const setLocale = useCallback((l: Locale) => setLocaleState(l), []);

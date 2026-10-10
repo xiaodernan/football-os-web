@@ -32,7 +32,7 @@ import { FAVORITES, type FavoriteKind } from "@/domain/types";
 import { buildLoad } from "@/domain/load";
 import { dayKey } from "@/domain/history";
 import { coachProvider, repairPlanPrompts, type PlanInput } from "@/data/ai";
-import { OS_STATE_KEY } from "@/domain/localData";
+import { OS_STATE_KEY, browserStore, readJson, removeJson, writeJson } from "@/domain/localData";
 import { newId } from "@/lib/ids";
 
 export const STORAGE_KEY = OS_STATE_KEY;
@@ -259,22 +259,18 @@ export function OsProvider({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) dispatch({ type: "HYDRATE", state: normalizeHydrated({ ...initialState, ...(JSON.parse(raw) as Partial<OsState>) }) });
-    } catch {
-      /* fall back to fresh state */
-    } finally {
-      setHydrated(true);
-    }
+    // M331: the read goes through the door. `localStorage` is a declared accessor and reading
+    // it throws `SecurityError` when site data is blocked, which an embedded frame hits on the
+    // first render; `browserStore()` answers null there, and `readJson` keeps a corrupt row
+    // from being hydrated as state.
+    const { value, present } = readJson<Partial<OsState>>(browserStore(), STORAGE_KEY, {});
+    if (present) dispatch({ type: "HYDRATE", state: normalizeHydrated({ ...initialState, ...value }) });
+    setHydrated(true);
   }, []);
 
   const persist = useCallback((s: OsState) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-    } catch {
-      /* quota or unavailable: in-memory still works for the session */
-    }
+    // M331: through the door as well, so a refused write is answered rather than swallowed.
+    writeJson(browserStore(), STORAGE_KEY, s);
   }, []);
 
   // Don't expose `ready` (and don't persist) until the stored state has been read
@@ -352,11 +348,9 @@ export function OsProvider({ children }: { children: ReactNode }) {
       toggleGoal: (id) => dispatch({ type: "GOAL_TOGGLE", id }),
       removeGoal: (id) => dispatch({ type: "GOAL_REMOVE", id }),
       reset: () => {
-        try {
-          localStorage.removeItem(STORAGE_KEY);
-        } catch {
-          /* ignore */
-        }
+        // M331: a reset is a write, so it goes through the door and answers for itself — the
+        // old bare removeItem inside a try could fail silently and still reset the view.
+        removeJson(browserStore(), STORAGE_KEY);
         dispatch({ type: "RESET" });
       },
     }),

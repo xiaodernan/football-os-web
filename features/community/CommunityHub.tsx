@@ -6,7 +6,7 @@ import { useOs } from "@/store/useFootballOS";
 import { buildStarters, allTags, repairCommunityTexts, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
 import { LESSONS, isCompleted, summarizeLearn } from "@/domain/learn";
 import { seasonSummary, type CareerState } from "@/domain/career";
-import { CAREER_KEY, COMMUNITY_KEY } from "@/domain/localData";
+import { CAREER_KEY, COMMUNITY_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { rowLine, type RowText, type Translate } from "@/domain/rowText";
 import { getClub } from "@/data/footballService";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
@@ -84,7 +84,9 @@ export function CommunityHub() {
   const [composing, setComposing] = useState(false);
   const [mine, setMine] = useState(false);
 
-  const save = (next: CommunityStore) => { setStore(next); try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* quota */ } };
+  // M331: through the door. A bare setItem inside a try turns "this thread did not survive the
+  // reload" into nothing at all; writeJson answers with a verdict the screen can act on.
+  const save = (next: CommunityStore) => { setStore(next); writeJson(browserStore(), KEY, next); };
 
   const merged = useMemo<Thread[]>(() => {
     const base = [...store.userThreads, ...seedThreads()];
@@ -107,28 +109,26 @@ export function CommunityHub() {
   // Draft topics built only from figures the user's own pillars produced.
   const starters = useMemo<StarterDraft[]>(() => {
     let career: StarterInput["career"];
-    try {
-      const raw = localStorage.getItem(CAREER_KEY);
-      if (raw) {
-        const cs = JSON.parse(raw) as CareerState;
-        const s = seasonSummary(cs);
-        career = {
-          clubName: getClub(cs.clubId)?.name ?? cs.clubId,
-          position: s.position,
-          clubCount: s.clubCount,
-          won: s.won,
-          drawn: s.drawn,
-          lost: s.lost,
-          pointsPerGame: s.ppg,
-          gamesRemaining: Math.max(0, (s.clubCount - 1) * 2 - s.played),
-        };
-      }
-    } catch {
-      /* unreadable career — that starter is simply not offered */
+    // M331: through the door — `browserStore()` answers null when this document is not allowed
+    // one (site data blocked, an embedded frame), and `readJson` keeps a corrupt row from being
+    // read as a career. `present` is what says the device really holds one.
+    const held = readJson<CareerState>(browserStore(), CAREER_KEY, null as unknown as CareerState);
+    if (held.present && held.value) {
+      const cs = held.value;
+      const s = seasonSummary(cs);
+      career = {
+        clubName: getClub(cs.clubId)?.name ?? cs.clubId,
+        position: s.position,
+        clubCount: s.clubCount,
+        won: s.won,
+        drawn: s.drawn,
+        lost: s.lost,
+        pointsPerGame: s.ppg,
+        gamesRemaining: Math.max(0, (s.clubCount - 1) * 2 - s.played),
+      };
     }
 
-    const done = state.sessions.filter((x) => x.status === "completed");
-    const focus = new Map<string, number>();
+    const done = state.sessions.filter((x) => x.status === "completed");    const focus = new Map<string, number>();
     for (const x of done) for (const k of x.focusAttributes) focus.set(k, (focus.get(k) ?? 0) + 1);
     const top = [...focus.entries()].sort((a, b) => b[1] - a[1])[0];
     const ratings = done.map((x) => x.selfRating).filter((r): r is number => typeof r === "number");
@@ -382,16 +382,14 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
 }
 
 function load(): CommunityStore {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return EMPTY;
-    // The hydration boundary, like the store's: threads and replies written while `title`,
-    // `body` and a reply's `body` were plain strings are repaired into rows here, so no read
-    // site has to defend itself against a stored string.
-    return repairCommunityTexts({ ...EMPTY, ...JSON.parse(raw) });
-  } catch {
-    return EMPTY;
-  }
+  // M331: through the door. `present` distinguishes "this device holds no community store" from
+  // "the row is there but unreadable", which the old `if (!raw)` could not: both answered EMPTY.
+  const { value, present } = readJson<Partial<CommunityStore>>(browserStore(), KEY, null as unknown as Partial<CommunityStore>);
+  if (!present || !value) return EMPTY;
+  // The hydration boundary, like the store's: threads and replies written while `title`,
+  // `body` and a reply's `body` were plain strings are repaired into rows here, so no read
+  // site has to defend itself against a stored string.
+  return repairCommunityTexts({ ...EMPTY, ...value });
 }
 
 export { CommunityHub as default };

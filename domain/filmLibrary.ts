@@ -1,5 +1,5 @@
 import type { VideoReport } from "@/data/video";
-import { FILM_KEY } from "./localData";
+import { FILM_KEY, browserStore, readJson, type WriteVerdict, writeJson } from "./localData";
 import type { FilmClipInput } from "./filmInsights";
 import { asRowText } from "./rowText";
 
@@ -50,20 +50,23 @@ export function parseFilmClips(raw: unknown): FilmClip[] {
   return out;
 }
 
+/** M331: the library used to read and write `localStorage` directly, each call inside its own
+ *  try/catch. That is the third copy of the same hazard the door (`domain/localData.ts`) exists
+ *  to hold: reading the `localStorage` accessor itself throws `SecurityError` when site data is
+ *  blocked, and a `try` around the access does not help — it only turns a crash the reader could
+ *  see into a silent empty library. `browserStore()` answers null in that case, and `readJson`
+ *  keeps a corrupt row from being read as a value, so the page degrades honestly instead of
+ *  showing "no clips" about clips the device is holding. */
 export function loadFilmClips(): FilmClip[] {
-  try {
-    return parseFilmClips(JSON.parse(localStorage.getItem(FILM_KEY) ?? "null"));
-  } catch {
-    return [];
-  }
+  const { value, present } = readJson<unknown>(browserStore(), FILM_KEY, null);
+  return present ? parseFilmClips(value) : [];
 }
 
-export function saveFilmClips(clips: FilmClip[]): void {
-  try {
-    localStorage.setItem(FILM_KEY, JSON.stringify(clips));
-  } catch {
-    /* storage may be unavailable; the session still works in-memory */
-  }
+/** The write goes through the door as well, so a browser that refuses the write is answered
+ *  rather than swallowed: `saveFilmClips` returns `writeJson`'s verdict, which is the only way
+ *  the Film Room can know the clip it just analysed did not land. */
+export function saveFilmClips(clips: FilmClip[]): WriteVerdict {
+  return writeJson(browserStore(), FILM_KEY, clips);
 }
 
 /** Narrow a clip list to the shape the library-level analysis consumes.

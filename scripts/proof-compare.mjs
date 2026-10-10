@@ -156,8 +156,9 @@ ok("the value row's display is the shared formatValue itself, not a lookalike co
   metric(r, "value").display === formatValue);
 const cmpMoneySrc = readFileSync("domain/compare.ts", "utf8");
 const cmpEurs = (cmpMoneySrc.match(/€/g) || []).length;
-ok(`domain/compare.ts imports formatValue from the data layer and quotes no currency of its own (${cmpEurs} "€" glyph, formatEUR present: ${/formatEUR/.test(cmpMoneySrc)})`,
-  /import[^;]*\bformatValue\b[^;]*from "@\/data\/footballService"/.test(cmpMoneySrc) &&
+ok(`domain/compare.ts imports formatValue from the data layer and quotes no currency of its own (${cmpEurs} "€" glyph, formatEUR present: ${/formatEUR/.test(cmpMoneySrc)}; the money source is ${cmpMoneySrc.length} byte(s))`,
+  cmpMoneySrc.length > 0 &&
+    /import[^;]*\bformatValue\b[^;]*from "@\/data\/footballService"/.test(cmpMoneySrc) &&
     cmpEurs === 0 && !/formatEUR/.test(cmpMoneySrc));
 ok("overall displays as a bare integer", metric(r, "overall").display(70) === "70");
 ok("headroom displays with an explicit + sign", metric(r, "headroom").display(5) === "+5");

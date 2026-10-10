@@ -449,8 +449,8 @@ ok("the hydration boundary repairs a legacy session title on the way in",
 const intensitySrc = read("store/useFootballOS.tsx");
 ok(`the completion reducer asks the shared sessionIntensity for the session's load (${intensitySrc.match(/sessionIntensity\(session\)/g)?.length ?? 0} call site)`,
   /sessionIntensity\(session\)/.test(intensitySrc));
-ok(`and no longer carries a second copy of the minute-weighted intensity mean (${/e\.intensity\s*\*\s*e\.minutes/.test(intensitySrc) ? "the duplicated mean is still in the store" : "only sessionIntensity computes it"})`,
-  !/e\.intensity\s*\*\s*e\.minutes/.test(intensitySrc));
+ok(`and no longer carries a second copy of the minute-weighted intensity mean (${/e\.intensity\s*\*\s*e\.minutes/.test(intensitySrc) ? "the duplicated mean is still in the store" : "only sessionIntensity computes it"}, read over ${intensitySrc.length} byte(s) of training source)`,
+  intensitySrc.length > 0 && !/e\.intensity\s*\*\s*e\.minutes/.test(intensitySrc));
 
 const memRow = (text, extra) => ({ id: "M1", kind: "coach", text, at: "2026-01-02T00:00:00.000Z", ...extra });
 const keyedMem = memRow(coachMemory(["passing"], 25));

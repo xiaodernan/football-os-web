@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { useLocalStorage } from "@/lib/hooks";
-import { type WriteVerdict } from "@/domain/localData";
+import { CAREER_KEY, browserStore, readJson, removeJson, type WriteVerdict } from "@/domain/localData";
 import { useOs } from "@/store/useFootballOS";
 import { weakestAttributes } from "@/domain/attributes";
 import { loadFilmClips } from "@/domain/filmLibrary";
-import { CAREER_KEY } from "@/domain/localData";
 import {
   LESSONS,
   LEGACY_LEARN_KEY,
@@ -41,15 +40,14 @@ export function LearnHub() {
 
   // One-time upgrade of pre-existing on-device progress (plain id list).
   useEffect(() => {
-    try {
-      const legacy = localStorage.getItem(LEGACY_LEARN_KEY);
-      if (!legacy) return;
-      const migrated = parseLearnRecords(JSON.parse(legacy));
-      if (migrated.length) setRecords((cur) => (cur.length ? cur : migrated));
-      localStorage.removeItem(LEGACY_LEARN_KEY);
-    } catch {
-      /* unreadable legacy store — start fresh rather than crash the page */
-    }
+    // M331: through the door on both legs. `present` says the device really holds the legacy
+    // list, and `removeJson` answers whether the legacy key was actually cleared — the old
+    // bare `removeItem` inside a try could fail and still report a successful migration.
+    const legacy = readJson<unknown>(browserStore(), LEGACY_LEARN_KEY, null);
+    if (!legacy.present || legacy.value == null) return;
+    const migrated = parseLearnRecords(legacy.value);
+    if (migrated.length) setRecords((cur) => (cur.length ? cur : migrated));
+    removeJson(browserStore(), LEGACY_LEARN_KEY);
   }, [setRecords]);
 
   const byId = useMemo(() => new Map(records.map((r) => [r.id, r])), [records]);
@@ -62,12 +60,11 @@ export function LearnHub() {
       // opens /manager, so a mere key presence is not a career — only a stored
       // value that parses back to a real object counts (matches CommunityHub).
       hasCareer: (() => {
-        try {
-          const raw = localStorage.getItem(CAREER_KEY);
-          return raw != null && JSON.parse(raw) != null;
-        } catch {
-          return false;
-        }
+        // M331: through the door. useLocalStorage writes JSON.stringify(null) = "null" the
+        // moment anyone opens /manager, so a mere key presence is not a career — only a stored
+        // value that parses back to a real object counts (matches CommunityHub).
+        const held = readJson<unknown>(browserStore(), CAREER_KEY, null);
+        return held.present && held.value != null;
       })(),
       filmClips: loadFilmClips().length,
       watchlist: state.watchlist.length,

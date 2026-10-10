@@ -4,7 +4,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { runWorld, seasonLabel, formatMarket, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
-import { WORLD_KEY } from "@/domain/localData";
+import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,14 +12,13 @@ import { Badge } from "@/components/ui/badge";
 const STORE_KEY = WORLD_KEY;
 
 function loadElapsed(): number {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return 0;
-    const n = Number(JSON.parse(raw).seasonsElapsed);
-    return Number.isFinite(n) && n >= 0 && n < 60 ? Math.floor(n) : 0;
-  } catch {
-    return 0;
-  }
+  // M331: through the door. `browserStore()` answers null for a document that is not allowed
+  // one — reading the `localStorage` accessor itself throws `SecurityError` there — and
+  // `readJson` keeps a corrupt row from being read as a number of seasons.
+  const { value, present } = readJson<{ seasonsElapsed?: unknown } | null>(browserStore(), STORE_KEY, null);
+  if (!present || !value) return 0;
+  const n = Number(value.seasonsElapsed);
+  return Number.isFinite(n) && n >= 0 && n < 60 ? Math.floor(n) : 0;
 }
 
 export function DynamicWorld() {
@@ -30,11 +29,8 @@ export function DynamicWorld() {
   const [nonce, setNonce] = useState(0);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ seasonsElapsed: elapsed }));
-    } catch {
-      /* storage may be unavailable; world sim still runs in-memory */
-    }
+    // M331: through the door, so a refused write is answered rather than swallowed.
+    writeJson(browserStore(), STORE_KEY, { seasonsElapsed: elapsed });
   }, [elapsed]);
 
   const base = useMemo<WorldInput>(

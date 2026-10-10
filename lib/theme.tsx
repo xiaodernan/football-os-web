@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { THEME_KEY, browserStore } from "@/domain/localData";
+import { THEME_KEY, browserStore, writeJson } from "@/domain/localData";
 
 type Theme = "dark" | "light";
 const STORAGE_KEY = THEME_KEY;
@@ -34,11 +34,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
     root.classList.toggle("light", theme === "light");
-    try {
-      localStorage.setItem(STORAGE_KEY, theme);
-    } catch {
-      /* storage unavailable: theme still applies for the session */
-    }
+    // M331: through the door, like the read above — see i18n/index.tsx's provider for the
+    // same correction. The theme still applies for the session either way; what the door
+    // adds is that a refused write is no longer indistinguishable from a stored one.
+    writeJson(browserStore(), STORAGE_KEY, theme);
   }, [theme]);
 
   const setTheme = useCallback((t: Theme) => setThemeState(t), []);

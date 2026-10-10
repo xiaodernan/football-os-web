@@ -89,6 +89,20 @@ export type WriteVerdict =
   | { landed: true; bytes: number }
   | { landed: false; reason: "no-store" | "refused" | "unserializable" };
 
+/** Removing a row is a write, so it gets the same shape of answer: a reset that could not
+ *  remove anything must not report that it did. `false` covers all three ways it cannot
+ *  land — no store at all, a key the store refuses to touch, and a key nobody wrote. */
+export function removeJson(storage: StorageLike | null, key: string): boolean {
+  if (!storage) return false;
+  try {
+    if (storage.getItem(key) == null) return false;
+    storage.removeItem(key);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** One writer's answer for the whole app: did the device keep this value, yes or no, and why not.
  *
  *  `applyImport` already refuses to report keys it did not keep; a caller that persists a single

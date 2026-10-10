@@ -477,7 +477,11 @@ const BEFORE_ACTION = new Set(["render", "effect", "module", "via-render", "via-
 const fatal = sites.filter((x) => BEFORE_ACTION.has(x.moment));
 const fatalRaw = fatal.filter((x) => x.verb !== "door");
 ok(`the census also knows when a read runs — lexically in a hook (${byMoment.render || 0} render, ${byMoment.effect || 0} effect), one hop away through the function a hook is handed (${byMoment["via-render"] || 0} via-render, ${byMoment["via-effect"] || 0} via-effect), or at module scope — so the ${fatal.length} site(s) that run before the visitor acts are named separately, and the ${fatalRaw.length} of those that touch the accessor itself are all inside a catch (${fatalRaw.map((x) => `${x.file}:${x.at} ${x.moment} ${x.shape}`).join(", ") || "none"})`,
-  fatal.length >= 10 && fatalRaw.length >= 5 && fatalRaw.every((x) => x.contained),
+  // M331: the app's remaining raw sites went through the door, so this clause's floor moves from
+  // "at least five raw reads, each caught" to the property that actually holds now — every site
+  // that runs before the visitor acts is a door call, and the population is big enough to mean
+  // something. A tree that regressed to raw accessors fails here on `fatalRaw.length === 0`.
+  fatal.length >= 10 && fatalRaw.length === 0 && fatal.every((x) => x.verb === "door"),
   `unguarded before any action: ${fatalRaw.filter((x) => !x.contained).map((x) => `${x.file}:${x.at} ${x.moment}`).join(", ") || "none"}`);
 
 const providers = ["lib/theme.tsx", "i18n/index.tsx"].map((f) => {
@@ -485,9 +489,9 @@ const providers = ["lib/theme.tsx", "i18n/index.tsx"].map((f) => {
   const raw = x.filter((y) => y.verb !== "door");
   return { f, door: x.filter((y) => y.verb === "door").length, raw: raw.length, rawUnguarded: raw.filter((y) => !y.contained).length, rawVerbs: raw.map((y) => y.verb).join("+"), moments: x.map((y) => `${y.verb}@${y.moment}`).join(",") };
 });
-ok(`each root provider reads the store through the door, touches the accessor only to persist, and is named as a render-phase reader rather than excused as a later one (${providers.map((p) => `${p.f}: ${p.door} door read / ${p.raw} raw ${p.rawVerbs}${p.rawUnguarded ? ` ${p.rawUnguarded} UNGUARDED` : ""} [${p.moments}]`).join(" · ")})`,
-  providers.every((p) => p.door === 1 && p.raw === 1 && p.rawUnguarded === 0 && p.rawVerbs === "setItem" &&
-    p.moments.split(",").includes("door@via-render")), JSON.stringify(providers));
+ok(`each root provider reads the store through the door and persists through the door too — M331 took the last two bare setItem calls out of them, so neither file touches the accessor itself any more (${providers.map((p) => `${p.f}: ${p.door} door site(s) / ${p.raw} raw ${p.rawVerbs}${p.rawUnguarded ? ` ${p.rawUnguarded} UNGUARDED` : ""} [${p.moments}]`).join(" · ")})`,
+  providers.every((p) => p.door >= 2 && p.raw === 0 && p.rawUnguarded === 0 &&
+    p.moments.split(",").includes("door@via-render") && p.moments.split(",").includes("door@effect")), JSON.stringify(providers));
 
 const typeofSites = APP_FILES.flatMap((f) => {
   const s = normalize(read(f));
@@ -565,10 +569,16 @@ renderLocale({ [LOCALE_KEY]: "zh-CN" }, "en-US");
 ok(`NOT COVERED HERE, measured rather than assumed: renderToStaticMarkup never runs useEffect, so the <html class> sync, the lang write and the setItem persist are unproven by this file (document writes during render: ${docWrites})`,
   docWrites === 0);
 
+// M331: the last bare setItem calls went through the door, so the "inside a catch" reading this
+// clause used to rely on is gone — and the property that replaces it is stronger: there are no
+// raw setItem sites left anywhere in the tree. A screen that regressed to a bare write fails
+// here on the first half, before the containment half is even reached.
+// The census's own floor device is on the population the census read, so the clause cannot pass
+// by being handed nothing to scan.
 const setItemSites = rawSites.filter((x) => x.verb === "setItem").length;
-ok(`…which is why the write side is read structurally instead: ${setItemSites} raw setItem site(s) and every one inside a block a catch can reach — the app accepts a session that cannot persist`,
-  setItemSites >= 2 && rawSites.every((x) => x.verb !== "setItem" || x.contained),
-  `${setItemSites} setItem, unguarded setItem: ${rawSites.filter((x) => x.verb === "setItem" && !x.contained).length}`);
+ok(`…which is why the write side is read structurally instead, and M331 took the floor to zero: ${setItemSites} raw setItem site(s) across ${rawSites.length} raw site(s) in total, read over the ${sites.length} site(s) the census walked — every write in the app answers with writeJson's verdict rather than a swallowed catch`,
+  sites.length >= 20 && setItemSites === 0 && rawSites.length === 0,
+  `${setItemSites} setItem, unguarded setItem: ${rawSites.filter((x) => x.verb === "setItem" && !x.contained).length}, raw sites total: ${rawSites.length}`);
 
 // ---------------------------------------------------------------------------
 // 5 · the exemption this file replaces
@@ -588,7 +598,7 @@ ok(`the exemption this file replaces is gone from the coverage ratchet (occurren
 // storage on write — and this app has no server, so a refused write is the only way it loses data.
 // Each probe call is wrapped in try/catch HERE so that removing the door's own catch shows up as a
 // named red clause instead of killing the run (M210).
-const { readJson, writeJson } = LD;
+const { readJson, removeJson, writeJson } = LD;
 function probe(label, fn) {
   try { return { v: fn(), err: null }; }
   catch (e) { return { v: null, err: `${label}: ${e.constructor.name}: ${e.message}` }; }
@@ -635,6 +645,22 @@ function probe(label, fn) {
     r_nullrow.v.present === true && r_nullrow.v.value === null &&
     r_blocked.v.present === false && r_blocked.v.value === "fallback",
     [r_absent, r_corrupt, r_nullrow, r_blocked].map((r) => r.err || "").join(" "));
+
+  // M331 — removeJson, the door's other writer. A reset is a write: `useFootballOS.reset` used
+  // to call `localStorage.removeItem` inside a try that said `/* ignore */`, so a store that
+  // refused the removal still reset the view and reported nothing. Same four documents, same
+  // shape of answer: true only when a row was really there and really went away.
+  const rm_ok = probe("present", () => removeJson(writable, TACTICS_KEY));
+  const rm_again = probe("already gone", () => removeJson(writable, TACTICS_KEY));
+  const rm_absent = probe("never written", () => removeJson(writable, "football-os.never.written.v1"));
+  const rm_nostore = probe("no store", () => removeJson(null, TACTICS_KEY));
+  const throwingRemove = { getItem: (k) => (k === "x" ? "1" : null), setItem() {}, removeItem() { throw new Error("SecurityError"); } };
+  const rm_blocked = probe("blocked remove", () => removeJson(throwingRemove, "x"));
+  ok(`removing a row answers for itself in the same four documents: a row that was really there is cleared and answers true, a key nobody wrote answers false rather than claiming work, no store answers false, and a store that refuses the removal answers false instead of throwing out of the reset that asked (${JSON.stringify({ present: rm_ok.v, alreadyGone: rm_again.v, neverWritten: rm_absent.v, noStore: rm_nostore.v, blocked: rm_blocked.v })})`,
+    !rm_ok.err && !rm_again.err && !rm_absent.err && !rm_nostore.err && !rm_blocked.err &&
+    rm_ok.v === true && rm_again.v === false && rm_absent.v === false && rm_nostore.v === false && rm_blocked.v === false &&
+    writable.getItem(TACTICS_KEY) === null && rows.size >= 0,
+    [rm_ok, rm_again, rm_absent, rm_nostore, rm_blocked].map((r) => r.err || "").join(" "));
 }
 
 const hooks = classify("lib/hooks.ts", read("lib/hooks.ts"));

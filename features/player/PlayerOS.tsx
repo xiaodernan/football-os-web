@@ -15,7 +15,7 @@ import { SUPPORTED_MINUTES, sessionIntensity, type GrowthDelta } from "@/domain/
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
-import { FIXTURES_KEY } from "@/domain/localData";
+import { FIXTURES_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { goalProgressPct, isValidGoalTarget } from "@/domain/goals";
 import { ageGroupLabel, goalLabel, phaseLabel, positionLabel, rowLine } from "@/domain/rowText";
 import { getClub, getPlayer } from "@/data/footballService";
@@ -728,11 +728,14 @@ function Video() {
 function Matches() {
   const { state } = useOs();
   const { t, locale } = useI18n();
-  const [rows, setRows] = useState<{ id: string; opp: string; date: string; g: number; a: number; r: number }[]>(() => {
-    try { return JSON.parse(localStorage.getItem(FIXTURES_KEY) || "[]"); } catch { return []; }
-  });
+  const [rows, setRows] = useState<{ id: string; opp: string; date: string; g: number; a: number; r: number }[]>(
+    // M331: through the door. `readJson` answers `present` for a row that is really there and
+    // keeps a corrupt one from being read as an empty match list, which is what the old
+    // `JSON.parse(getItem() || "[]")` did — a real list and a broken one looked identical.
+    () => readJson<{ id: string; opp: string; date: string; g: number; a: number; r: number }[]>(browserStore(), FIXTURES_KEY, []).value,
+  );
   const [form, setForm] = useState({ opp: "", g: "0", a: "0", r: "7" });
-  const save = (next: typeof rows) => { setRows(next); try { localStorage.setItem(FIXTURES_KEY, JSON.stringify(next)); } catch { /* ignore */ } };
+  const save = (next: typeof rows) => { setRows(next); writeJson(browserStore(), FIXTURES_KEY, next); };
   const add = () => {
     if (!form.opp.trim()) return;
     save([{ id: newId("m-"), opp: form.opp, date: new Date().toISOString(), g: Number(form.g), a: Number(form.a), r: Number(form.r) }, ...rows]);

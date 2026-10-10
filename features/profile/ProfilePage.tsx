@@ -13,7 +13,7 @@ import { seasonSummary, type CareerState } from "@/domain/career";
 import { buildFootprint } from "@/domain/footprint";
 import { buildFilmInsights } from "@/domain/filmInsights";
 import { loadFilmClips, newestClipAt, toClipInputs } from "@/domain/filmLibrary";
-import { CAREER_KEY, COMMUNITY_KEY } from "@/domain/localData";
+import { CAREER_KEY, COMMUNITY_KEY, browserStore, readJson } from "@/domain/localData";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Badge } from "@/components/ui/badge";
@@ -53,24 +53,22 @@ export function ProfilePage() {
     const lastLesson = learn.filter((r) => isCompleted(r)).sort((a, b) => ts(b.completedAt) - ts(a.completedAt))[0];
 
     let manager = { active: false, matches: 0 } as Parameters<typeof buildFootprint>[0]["manager"];
-    try {
-      const raw = localStorage.getItem(CAREER_KEY);
-      if (raw) {
-        const cs = JSON.parse(raw) as CareerState;
-        const s = seasonSummary(cs);
-        const lastResult = cs.results[cs.results.length - 1];
-        manager = {
-          active: true,
-          clubName: getClub(cs.clubId)?.name,
-          matches: s.played,
-          pointsPerGame: s.ppg,
-          position: s.position,
-          clubCount: s.clubCount,
-          lastMatchAt: lastResult?.at,
-        };
-      }
-    } catch {
-      /* unreadable career — reported as not started */
+    // M331: through the door, like every other read of this key. `present` is what makes the
+    // difference between "no career on this device" and "a career the page cannot read".
+    const heldCareer = readJson<CareerState | null>(browserStore(), CAREER_KEY, null);
+    if (heldCareer.present && heldCareer.value) {
+      const cs = heldCareer.value;
+      const s = seasonSummary(cs);
+      const lastResult = cs.results[cs.results.length - 1];
+      manager = {
+        active: true,
+        clubName: getClub(cs.clubId)?.name,
+        matches: s.played,
+        pointsPerGame: s.ppg,
+        position: s.position,
+        clubCount: s.clubCount,
+        lastMatchAt: lastResult?.at,
+      };
     }
 
     let film = { clips: 0, minutes: 0 } as Parameters<typeof buildFootprint>[0]["film"];
@@ -91,15 +89,17 @@ export function ProfilePage() {
     let posts = 0;
     let replies = 0;
     let lastPostAt: string | undefined;
-    try {
-      const st = JSON.parse(localStorage.getItem(COMMUNITY_KEY) ?? "null");
+    // M331: through the door. The old `JSON.parse(getItem() ?? "null")` could not tell a device
+    // with no community store from one whose row is corrupt, and the footprint silently read
+    // both as zero — the same "nothing to show" answer for two very different situations.
+    const heldCommunity = readJson<{ userThreads?: { at: string }[]; replies?: Record<string, unknown[]> } | null>(browserStore(), COMMUNITY_KEY, null);
+    if (heldCommunity.present && heldCommunity.value) {
+      const st = heldCommunity.value;
       const threads = Array.isArray(st?.userThreads) ? st.userThreads : [];
       posts = threads.length;
       lastPostAt = threads[0]?.at;
       const groups = st?.replies && typeof st.replies === "object" ? Object.values(st.replies as Record<string, unknown[]>) : [];
       replies = groups.reduce((n, a) => n + (Array.isArray(a) ? a.length : 0), 0);
-    } catch {
-      /* ignore */
     }
 
     return buildFootprint({
