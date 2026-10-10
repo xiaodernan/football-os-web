@@ -1,4 +1,4 @@
-import { footballProvider, getClub, clubIdsByCompetition } from "@/data/footballService";
+import { footballProvider, getClub, clubIdsByCompetition, formatValue } from "@/data/footballService";
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
@@ -71,7 +71,15 @@ export function effectiveSquad(clubId: string, moved: Record<string, string>): P
     .sort((a, b) => b.overall - a.overall);
 }
 
-function avgOf(squad: PlayerRef[], groups: string[], fallback: number): number {
+/** The mean overall of the players in a position group, or `fallback` when that group is empty.
+ *
+ *  M333: this was private, and the club page (`features/football/Details.tsx`) carried its own
+ *  copy of the same three calls — `avgBy(squad, ["ST","W","AM"])` and so on — because nothing
+ *  exported it. Two copies of one formula drift the moment either is corrected, and the page's
+ *  copy differed already: it answered 0 for an empty group where the domain answers the club's
+ *  own rating, which is the difference between "this club fields no attackers" and a rating the
+ *  page then substituted at the call site. It is exported now, and the page calls it. */
+export function lineMean(squad: PlayerRef[], groups: string[], fallback: number): number {
   const g = squad.filter((p) => groups.includes(p.positionGroup));
   return g.length ? g.reduce((s, p) => s + p.overall, 0) / g.length : fallback;
 }
@@ -89,9 +97,9 @@ export function clubInput(clubId: string, moved: Record<string, string>, tac: Ta
   const squad = effectiveSquad(clubId, moved);
   const best = squad.slice(0, 11);
   const overall = best.length ? best.reduce((s, p) => s + p.overall, 0) / best.length : c.overall;
-  const attack = avgOf(squad, ["ST", "W", "AM"], c.overall);
-  const midfield = avgOf(squad, ["CM", "DM"], c.overall);
-  const defense = avgOf(squad, ["CB", "FB", "GK"], c.overall);
+  const attack = lineMean(squad, ["ST", "W", "AM"], c.overall);
+  const midfield = lineMean(squad, ["CM", "DM"], c.overall);
+  const defense = lineMean(squad, ["CB", "FB", "GK"], c.overall);
   const m = tac.mentality;
   return {
     name: c.name,
@@ -581,7 +589,7 @@ export function seasonSummary(state: CareerState): SeasonSummary {
       ? [
           { key: played === 1 ? "mgr.summary.recordOne" : "mgr.summary.record", vars: recordVars },
           { key: cleanSheets === 1 ? "mgr.summary.statsOne" : "mgr.summary.stats", vars: { points, ppg: (points / played).toFixed(2), clean: cleanSheets } },
-          { key: played === 1 ? "mgr.summary.prizeOne" : "mgr.summary.prize", vars: { money: formatMoney(prizeTotal), played } },
+          { key: played === 1 ? "mgr.summary.prizeOne" : "mgr.summary.prize", vars: { money: formatValue(prizeTotal), played } },
         ]
       : [{ key: "mgr.summary.noFixtures" }]),
     ...(best && best.diff > 0 ? [{ key: "mgr.summary.bestWin", vars: { score: best.score, opponent: best.opponent } }] : []),
@@ -603,10 +611,11 @@ export function seasonSummary(state: CareerState): SeasonSummary {
   };
 }
 
-function formatMoney(v: number): string {
-  if (v >= 1_000_000) return `€${(v / 1_000_000).toFixed(v % 1_000_000 === 0 ? 0 : 1)}M`;
-  return `€${Math.round(v / 1000)}k`;
-}
+// The season prize total prints through the app's one `formatValue`, not a private copy: this
+// module kept its own euro rule (drop the decimals on a whole million, a lowercase 'k' below one)
+// while the Manager OS panel beside it already rounded the same currency the shared way (one
+// decimal up to ten million, none beyond), so a single screen could quote a manager's earnings
+// under two rules at once — a whole-million season read '7M' here and '7.0M' through the door.
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));

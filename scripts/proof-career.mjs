@@ -59,7 +59,7 @@ const CAREER = await server.ssrLoadModule("/domain/career.ts");
 const {
   roundFee, askingFee, sellFee, startBudget, effClubId, effectiveSquad, clubInput, careerForm, fixtureAt,
   seedStandings, liveStandings, positionOf, seasonOutlook, createCareer, playNextFixture, transferIn,
-  transferOut, setTactics, restSquad, matchPrep, projectFixture, seasonSummary, marketTargets,
+  transferOut, setTactics, restSquad, matchPrep, projectFixture, seasonSummary, marketTargets, lineMean,
 } = CAREER;
 const SVC = await server.ssrLoadModule("/data/footballService.ts");
 const { footballProvider, getClub, clubIdsByCompetition } = SVC;
@@ -1063,6 +1063,39 @@ ok("a career's first fixture is inside its own competition and never against its
   ALL_CLUBS.every((c) => { const s = createCareer(c.id); const fx = fixtureAt(s.competitionId, s.clubId, 0); return clubIdsByCompetition(s.competitionId).includes(fx.opponent) && fx.opponent !== c.id; }));
 ok("only createdAt is non-deterministic, so every determinism claim above is stated with that exception",
   (() => { const a = createCareer(US), b = createCareer(US); const { createdAt: _x, ...ra } = a; const { createdAt: _y, ...rb } = b; return JSON.stringify(ra) === JSON.stringify(rb) && !Number.isNaN(Date.parse(a.createdAt)); })());
+
+// ---------------------------------------------------------------------------
+// 12 · M333 — the club page asks this domain, not its own copy of it.
+// ---------------------------------------------------------------------------
+// `features/football/Details.tsx` carried `avgBy` (this formula) and `clubTeamInput` (a third
+// copy of clubInput's arithmetic) beside the domain that owns both. Two copies of one formula
+// drift the moment either is corrected, and the page's copy already differed: it answered 0 for
+// an empty position group where the domain answers the club's own rating, and it held its own
+// constants for the zero terms of mentality, form and fatigue — so the preview could show a
+// match the engine would not produce. The page calls the domain now; these two clauses are the
+// seam, charged in both directions.
+const DETAILS_SRC = readFileSync(new URL("../features/football/Details.tsx", import.meta.url), "utf8");
+ok("the club page reads its three line means through the domain's lineMean, and keeps no second copy of the formula beside it",
+  /import \{[^}]*\blineMean\b[^}]*\} from "@\/domain\/career"/.test(DETAILS_SRC) &&
+  !/function avgBy\(/.test(DETAILS_SRC) &&
+  !/reduce\(\(s, p\) => s \+ p\.overall, 0\)/.test(DETAILS_SRC)); /* M323-PLANT: a page that kept its own reduce would still import lineMean for the other call */
+ok("…and the match preview builds its TeamInput through clubInput with the neutral inputs, so what it simulates is what the engine would compute",
+  /import \{[^}]*\bclubInput\b[^}]*\} from "@\/domain\/career"/.test(DETAILS_SRC) &&
+  /clubInput\(clubId, \{\}, /.test(DETAILS_SRC) &&
+  !/function clubTeamInput\(clubId: string\): TeamInput \{\s*const club =/.test(DETAILS_SRC));
+// The domain function the page now calls, over every seeded club: the neutral call the preview
+// makes is the same input the career match hands the away side, so the two paths agree by
+// construction rather than by anyone re-deriving them.
+ok("every club's neutral clubInput is the same TeamInput the match preview now builds — attack, midfield, defence, the possession bias and the zero terms",
+  CLUBS.every((c) => {
+    const i = ci(c, {}, NEUTRAL, 0, 0, 0);
+    return typeof i.name === "string" && typeof i.overall === "number" &&
+      near(i.attack, lineMean(effectiveSquad(c, {}), ["ST", "W", "AM"], c.overall)) &&
+      near(i.midfield, lineMean(effectiveSquad(c, {}), ["CM", "DM"], c.overall)) &&
+      near(i.defense, lineMean(effectiveSquad(c, {}), ["CB", "FB", "GK"], c.overall)) &&
+      near(i.possessionBias, 0.5 + i.midfield / 400, 1e-12) &&
+      i.press === 0.5 && i.tempo === 0.5 && i.fatigue === 0 && i.morale === 0 && i.form === 0;
+  }));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

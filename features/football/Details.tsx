@@ -21,6 +21,10 @@ import {
 import { simulateMatch, type SimResult, type TeamInput } from "@/domain/matchEngine";
 import { modelPlayerProfile, scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
+// M333: the three line means come from the domain now. They used to be `avgBy` below — this
+// file's own copy of the formula `domain/career.ts`'s `clubInput` already had, answering 0 for
+// an empty group where the domain answers the club's own rating.
+import { clubInput, lineMean } from "@/domain/career";
 import { playerDna } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
@@ -345,9 +349,12 @@ export function ClubDetail({ id }: { id: string }) {
   const comp = getCompetition(c.competitionId);
   const squad = playersByClub(id).sort((a, b) => b.overall - a.overall);
   const recent = recentMatchesForClub(id, 5);
-  const attack = avgBy(squad, ["ST", "W", "AM"]);
-  const midfield = avgBy(squad, ["CM", "DM"]);
-  const defense = avgBy(squad, ["CB", "FB", "GK"]);
+  // M333: the domain's own line mean, over the club's effective squad. An empty group answers
+  // the club's rating, which is what the `|| club.overall` at the two call sites below used to
+  // paper over.
+  const attack = lineMean(playersByClub(id), ["ST", "W", "AM"], 0);
+  const midfield = lineMean(playersByClub(id), ["CM", "DM"], 0);
+  const defense = lineMean(playersByClub(id), ["CB", "FB", "GK"], 0);
   return (
     <div className="space-y-6">
       <EntityHeader
@@ -425,12 +432,6 @@ export function ClubDetail({ id }: { id: string }) {
   );
 }
 
-function avgBy(squad: PlayerRef[], groups: string[]): number {
-  const pick = squad.filter((p) => groups.includes(p.positionGroup));
-  if (!pick.length) return 0;
-  return Math.round(pick.reduce((s, p) => s + p.overall, 0) / pick.length);
-}
-
 function Ratio({ label, value, goodHigh = false }: { label: string; value: number; goodHigh?: boolean }) {
   const good = goodHigh ? value >= 1 : value <= 1;
   const pct = Math.max(4, Math.min(100, (value / 2) * 100));
@@ -486,22 +487,16 @@ function MiniMatches({ title, matches }: { title: string; matches: ReturnType<ty
 }
 
 // ---------------- Match detail + engine ----------------
+// M333: this was a third hand-written copy of the domain's `clubInput` — same three line means,
+// same neutral adjustments, its own constants for the zero terms. A correction to the team
+// input's arithmetic (how mentality moves the attack line, what an empty group falls back to)
+// landed in `domain/career.ts` and the preview kept the old behaviour, so the page could show a
+// match the engine would not produce. It calls the domain now, with the same neutral inputs the
+// career match already uses for the away side.
+const NEUTRAL_TACTICS = { mentality: 0, tempo: 0.5, press: 0.5 };
+
 function clubTeamInput(clubId: string): TeamInput {
-  const club = getClub(clubId)!;
-  const squad = playersByClub(clubId);
-  return {
-    name: club.name,
-    overall: club.overall,
-    attack: avgBy(squad, ["ST", "W", "AM"]) || club.overall,
-    midfield: avgBy(squad, ["CM", "DM"]) || club.overall,
-    defense: avgBy(squad, ["CB", "FB", "GK"]) || club.overall,
-    possessionBias: 0.5,
-    press: 0.5,
-    tempo: 0.5,
-    fatigue: 0,
-    morale: 0,
-    form: 0,
-  };
+  return clubInput(clubId, {}, NEUTRAL_TACTICS, 0, 0, 0);
 }
 
 export function MatchDetail({ id }: { id: string }) {
