@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M336 (a few numbers in that range
+Work ships one milestone per commit and is currently at M337 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6593,6 +6593,34 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
+
+### M337 — the false-positive arms: what happens when the check itself goes blind
+
+M335 ran the arms that break the thing a seam charges. This unit runs the other direction — the
+arms that break the **check**, which is the failure mode a green suite cannot warn about: a clause
+that has stopped measuring is a clause that says yes.
+
+| arm | mutation | result |
+| --- | --- | --- |
+| `finishedCount` made to answer a constant while the page prints it | 1 red | the value clause over all twelve seeded competitions — the count is measured, not assumed |
+| `browserStore` made to answer `null` unconditionally | 3 reds | the door's pass-through clause, its structural read of the source, and `ThemeProvider`'s "needs a DOM" clause |
+
+The second arm is the one that earns its keep. Bypassing the door makes **every** storage read in
+the tree answer the caller's initial, which is exactly the state a vacuity-blind clause would
+accept as "nothing to see here": the theme renders, the locale resolves, the app runs. Three
+different clauses caught it, from three different families — a clause whose only defence was its
+own existence would have been the fourth one to go quiet, and nothing in the suite would have
+said so.
+
+One arm was written and **discarded**, which is worth recording: widening M334's import regex to
+match any member of `@/domain/career` changed no truth value, because the clause's other half (the
+page's own copy is gone) was already true. An arm that cannot fail is not an arm, and the way to
+find out is to run it. The mutation that *does* test that half — the page keeping its own
+arithmetic while still calling the domain — matched in M335 and is the arm that stays.
+
+Measured: the four arms above (`dev/m337-arms.mjs`, `dev/m337-arms2.mjs`), tree restored and green
+after each — full suite **42/42 · 2,441/2,441**, `proof-career` **198/198**, `proof-analytics`
+**72/72**, `proof-storage` green, `tsc` clean, build exit 0, vacuity census **0 owing / ceiling 0**.
 
 ### M336 — the data room's match count is the domain's count, not a sum the page halves
 
