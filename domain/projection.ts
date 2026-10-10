@@ -2,6 +2,7 @@ import type { Attributes } from "./types";
 import { overallRating } from "./attributes";
 import { perSessionGain } from "./training";
 import { clamp } from "@/lib/utils";
+import { round1 } from "./scouting";
 
 // Development Projection: simulates the *same* diminishing-returns per-session
 // gain the store applies when a session is completed, replayed over a weekly
@@ -45,9 +46,9 @@ export function projectGrowth(input: ProjectionInput): Projection {
     const from = attributes[key];
     let cur = from;
     for (let i = 0; i < weeks * sessionsPerWeek; i++) {
-      cur = clamp(Math.round((cur + perSessionGain(cur, rating)) * 10) / 10, 1, 99);
+      cur = clamp(round1(cur + perSessionGain(cur, rating)), 1, 99);
     }
-    return { key, from, to: cur, delta: Math.round((cur - from) * 10) / 10 };
+    return { key, from, to: cur, delta: round1(cur - from) };
   });
   for (const it of items) projected[it.key] = it.to;
 

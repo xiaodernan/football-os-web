@@ -12,6 +12,7 @@
 
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
 import { clamp } from "@/lib/utils";
+import { round1 } from "@/domain/scouting";
 import { POSITION_BY_GROUP, POSITION_GROUPS } from "@/domain/attributes";
 import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
 
@@ -213,7 +214,7 @@ function stepSeason(input: WorldInput, elapsed: number): { players: PlayerRef[];
   const champions = input.competitions.map((c) => simulateChampion(c, clubsById, rng));
   const developments = [...changed].filter((c) => c.delta > 0).sort((a, b) => b.delta - a.delta || b.to - a.to).slice(0, 8);
   const declines = [...changed].filter((c) => c.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 6);
-  const avgOverall = Math.round((next.reduce((s, p) => s + p.overall, 0) / Math.max(1, next.length)) * 10) / 10;
+  const avgOverall = round1(next.reduce((s, p) => s + p.overall, 0) / Math.max(1, next.length));
   const marketTotal = next.reduce((s, p) => s + p.value, 0);
 
   return {

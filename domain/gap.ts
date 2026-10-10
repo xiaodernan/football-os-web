@@ -5,6 +5,7 @@ import {
   overallRating,
 } from "./attributes";
 import type { RowText } from "./rowText";
+import { round1 } from "./scouting";
 
 // Role Gap Analysis: compares a player's saved attributes against a heuristic
 // archetype for their position group at their current level, then ranks the
@@ -60,7 +61,7 @@ export function analyzeGap(input: GapInput): GapAnalysis {
       key: k,
       actual,
       target: t,
-      delta: Math.round((t - actual) * 10) / 10,
+      delta: round1(t - actual),
       criticality: Math.max(0, t - ROLE_FLOOR),
     };
   });

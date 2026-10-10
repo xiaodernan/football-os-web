@@ -5,7 +5,7 @@
 // quietly make the "who has the edge" read contradict its own stated rule.
 // Run: node scripts/proof-compare.mjs
 import { createServer } from "vite";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { compare } = await server.ssrLoadModule("/domain/compare.ts");
@@ -216,38 +216,73 @@ const bareReaders = readers.filter((f) => /\bprimeYears\(/.test(readFileSync(f, 
 ok(`both prime columns print the labelled window, never the raw bound (${bareReaders.join(", ") || "none bare"})`,
   readers.length > 0 && bareReaders.length === 0 && readers.every((f) => readFileSync(f, "utf8").includes("primeYearsLabel(")));
 
-// --- M340: the round1 seam -----------------------------------------------
-// compare.ts, transfers.ts and careerArc.ts each carried a byte-identical
-// `const round1 = n => Math.round(n * 10) / 10`, and transfers inlined a fourth copy around
-// valueIndex. Identical today, so nothing a reader sees changes — but four formulas that part
-// company the moment one is re-rounded (to banker's rounding, say: the comparison row, the
-// transfer feed and the career arc would then disagree on the same number). All four now ride
-// scouting's single exported round1. These clauses bind the seam three ways — the one declaration,
-// the imports, the absence of any private or inline copy — and each is armed by a planted witness
-// of the exact shape it charges, so "no copies found" is a measurement and not a scan that
-// matches nothing.
-const R1_FILES = ["domain/scouting.ts", "domain/compare.ts", "domain/transfers.ts", "domain/careerArc.ts"];
-const r1src = Object.fromEntries(R1_FILES.map((f) => [f, readFileSync(f, "utf8")]));
+// --- M340→M342: the round1 seam -------------------------------------------
+// M340 folded compare/transfers/careerArc's three private `round1` copies and transfers' inline
+// fourth onto scouting's single export. M342 completes the sweep: review, filmInsights, footprint,
+// gap, projection, training and worldEngine each inlined `Math.round(<expr> * 10) / 10` — seven more
+// spellings of the same rounding, three of them nested two parens deep (avgOverall divides inside
+// Math.round's argument; avgRating sums a reduce; the projection/training delta wraps a clamp).
+// Identical today, so nothing a reader sees changes — but ten formulas that part company the moment
+// one is re-rounded (to banker's rounding, say: the comparison row, the transfer feed, the career
+// arc, the review card, the film evidence and the world average would then disagree on one number).
+// All ten now ride scouting's single exported round1, except domain/career.ts — a separate session's
+// active M335 lane this unit must not touch, so it is pinned below as the sole known residue and a
+// reader can see exactly what is left and nothing more. The inline scan is a balanced-paren walk,
+// not a fixed-nesting regex: `[^)]*` and even the one-level `(?:[^()]|\([^()]*\))*` go blind at depth
+// two, which is precisely the shape three of these files carried. Each clause is armed by planted
+// witnesses of the exact shape it charges, so "no copies found" is a measurement and not a blind scan.
+const R1_HOME = "domain/scouting.ts";
+const R1_CONSUMERS = ["domain/compare.ts", "domain/transfers.ts", "domain/careerArc.ts",
+  "domain/review.ts", "domain/filmInsights.ts", "domain/footprint.ts", "domain/gap.ts",
+  "domain/projection.ts", "domain/training.ts", "domain/worldEngine.ts"];
+const r1src = Object.fromEntries([R1_HOME, ...R1_CONSUMERS].map((f) => [f, readFileSync(f, "utf8")]));
 const LOCAL_DEF = /\n[ \t]*(?:export[ \t]+)?const[ \t]+round1[ \t]*=/g;
-const INLINE_ROUND = /Math\.round\((?:[^()]|\([^()]*\))*[ \t]*\* ?10\)[ \t]*\/[ \t]*10/g;
-const IMPORTS_R1 = /import[^;]*\bround1\b[^;]*from "\.\/scouting"/g;
+// Both spellings in the tree: nine consumers under domain/ import "./scouting", worldEngine imports
+// "@/domain/scouting". The scan accepts either, so the importer pin is not blind to the @/ form.
+const IMPORTS_R1 = /import[^;]*\bround1\b[^;]*from ["'](?:\.\/|@\/domain\/)scouting["']/g;
 const nlocal = (s) => (s.match(LOCAL_DEF) || []).length;
-const ninline = (s) => (s.match(INLINE_ROUND) || []).length;
-// Plants: the two shapes the scans above must catch. The inline one is the nested
-// `Math.round(valueIndex(player) * 10) / 10`, the exact form the naive `[^)]*` pattern goes blind
-// to. If either plant reads 0 the scan is broken and the "no copies" verdict below is vacuous.
+// Balanced-paren inline round1 counter: find `Math.round(`, walk to its matching close, require the
+// argument to end in `* 10` and the close to be followed by `/ 10`. Catches any nesting depth, which
+// a fixed-nesting regex cannot.
+const inlineRound1 = (src) => {
+  let n = 0, i = 0;
+  const KEY = "Math.round(";
+  while ((i = src.indexOf(KEY, i)) !== -1) {
+    let depth = 1, j = i + KEY.length;
+    while (j < src.length && depth > 0) { const c = src[j++]; if (c === "(") depth++; else if (c === ")") depth--; }
+    if (/\*\s*10$/.test(src.slice(i + KEY.length, j - 1).trimEnd()) && /^\s*\/\s*10\b/.test(src.slice(j))) n++;
+    i = j;
+  }
+  return n;
+};
+// Plants: each scan above must prove it matches. plantLocal arms the re-declaration scan; plantFlat
+// and plantNested arm the balanced walk on both a flat and a two-level-nested rounding (the naive
+// one-level regex reads plantNested as 0 — that blind spot is the whole reason for the walk); the two
+// import plants arm the spelling-tolerant importer scan. A plant reading 0 makes the verdict vacuous.
 const plantLocal = nlocal("\nconst round1 = (n: number) => Math.round(n * 10) / 10;");
-const plantInline = ninline("      valueIndex: Math.round(valueIndex(player) * 10) / 10,");
-const privateDefs = R1_FILES.filter((f) => f !== "domain/scouting.ts" && nlocal(r1src[f]) > 0).map((f) => `${f}(${nlocal(r1src[f])})`);
-const inlineCopies = R1_FILES.filter((f) => f !== "domain/scouting.ts" && ninline(r1src[f]) > 0).map((f) => `${f}(${ninline(r1src[f])})`);
-const importers = R1_FILES.filter((f) => (r1src[f].match(IMPORTS_R1) || []).length > 0);
+const plantFlat = inlineRound1("      valueIndex: Math.round(valueIndex(player) * 10) / 10,");
+const plantNested = inlineRound1("  const a = Math.round((xs.reduce((s, x) => s + x, 0) / n) * 10) / 10;");
+const plantImpDot = ("import { round1 } from \"./scouting\";".match(IMPORTS_R1) || []).length;
+const plantImpAt = ("import { round1 } from \"@/domain/scouting\";".match(IMPORTS_R1) || []).length;
+const privateDefs = R1_CONSUMERS.filter((f) => nlocal(r1src[f]) > 0).map((f) => `${f}(${nlocal(r1src[f])})`);
+const importers = R1_CONSUMERS.filter((f) => (r1src[f].match(IMPORTS_R1) || []).length > 0);
+const inlineInConsumers = R1_CONSUMERS.filter((f) => inlineRound1(r1src[f]) > 0).map((f) => `${f}(${inlineRound1(r1src[f])})`);
+// Domain-wide residue: walk every domain module and list the ones that still inline a rounding. The
+// measurement is that this is scouting's own exported body (the one legitimate copy) plus career.ts
+// and nothing else — so the seam is otherwise closed across the whole directory, not just the ten.
+const domainCarriers = readdirSync("domain").filter((f) => f.endsWith(".ts"))
+  .map((f) => [`domain/${f}`, inlineRound1(readFileSync(`domain/${f}`, "utf8"))])
+  .filter(([, n]) => n > 0);
+const residue = domainCarriers.map(([f]) => f).filter((f) => f !== R1_HOME);
 
-ok(`scouting.ts declares the one round1 and no consumer re-declares it (${privateDefs.join(", ") || "none"}; plant armed: ${plantLocal})`,
-  plantLocal === 1 && nlocal(r1src["domain/scouting.ts"]) === 1 && privateDefs.length === 0);
-ok(`no consumer inlines its own *10)/10 and scouting's exported body is the only one left (${inlineCopies.join(", ") || "none"}; plant armed: ${plantInline})`,
-  plantInline === 1 && ninline(r1src["domain/scouting.ts"]) === 1 && inlineCopies.length === 0);
-ok(`each of the three consumers imports round1 from ./scouting (${importers.join(", ") || "none"})`,
-  importers.length === 3 && ["domain/compare.ts", "domain/transfers.ts", "domain/careerArc.ts"].every((f) => importers.includes(f)));
+ok(`scouting.ts declares the one round1 and none of the ten consumers re-declares it (${privateDefs.join(", ") || "none"}; plant armed: ${plantLocal})`,
+  plantLocal === 1 && nlocal(r1src[R1_HOME]) === 1 && privateDefs.length === 0);
+ok(`the balanced inline scan is armed at both nesting depths and no consumer still inlines it (${inlineInConsumers.join(", ") || "none"}; plants: flat ${plantFlat}, nested ${plantNested})`,
+  plantFlat === 1 && plantNested === 1 && inlineInConsumers.length === 0 && inlineRound1(r1src[R1_HOME]) === 1);
+ok(`each of the ten consumers imports round1 from scouting, either spelling (${importers.join(", ") || "none"})`,
+  plantImpDot === 1 && plantImpAt === 1 && importers.length === R1_CONSUMERS.length && R1_CONSUMERS.every((f) => importers.includes(f)));
+ok(`across the whole domain directory the only inline round1 outside scouting's own body is the pinned career.ts residue (${residue.join(", ") || "none"}; carriers: ${domainCarriers.map(([f, n]) => `${f}:${n}`).join(", ")})`,
+  plantNested === 1 && residue.length === 1 && residue[0] === "domain/career.ts" && inlineRound1(r1src[R1_HOME]) === 1);
 ok("the shared rounder still rounds to one decimal for the model and the display alike",
   shippedRound1(2.467) === 2.5 && shippedRound1(3.14) === 3.1 && shippedRound1(-2.467) === -2.5 && shippedRound1(12) === 12);
 

@@ -2,6 +2,7 @@ import type { Attributes, Goal, TrainingSession } from "./types";
 import type { RowText } from "./rowText";
 import { weakestAttributes } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
+import { round1 } from "./scouting";
 
 // A period digest compiled purely from the user's local training log, goals,
 // progress history, academy records and analysed film. Nothing here is invented —
@@ -109,7 +110,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const minutes = completed.reduce((sum, s) => sum + s.targetMinutes, 0);
   const xpGained = completed.reduce((sum, s) => sum + (s.xpAwarded ?? 0), 0);
   const ratings = completed.map((s) => s.selfRating).filter((r): r is number => typeof r === "number");
-  const avgRating = ratings.length ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : null;
+  const avgRating = ratings.length ? round1(ratings.reduce((a, b) => a + b, 0) / ratings.length) : null;
 
   const prog = input.progress
     .filter((p) => withinWindow(p.date, fromMs, nowMs))
@@ -129,7 +130,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const gainMap = new Map<string, number>();
   for (const s of completed) for (const g of s.growth ?? []) gainMap.set(g.key, (gainMap.get(g.key) ?? 0) + g.delta);
   const attributeGains: AttributeGain[] = [...gainMap.entries()]
-    .map(([key, delta]) => ({ key, delta: Math.round(delta * 10) / 10 }))
+    .map(([key, delta]) => ({ key, delta: round1(delta) }))
     .filter((g) => g.delta > 0)
     .sort((a, b) => b.delta - a.delta || a.key.localeCompare(b.key));
 
@@ -225,7 +226,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     lessonsCompleted,
     lessonsMastered,
     filmClips: film?.clips ?? 0,
-    filmMinutes: film ? Math.round(film.analysedMinutes * 10) / 10 : 0,
+    filmMinutes: film ? round1(film.analysedMinutes) : 0,
     filmScanRate: film?.scanPerMinute ?? 0,
     filmScanTrend: film?.scanTrend ?? null,
     filmDetections: film?.detections ?? 0,

@@ -5,6 +5,7 @@
 // every rate is a real count over real detections — nothing is invented.
 
 import type { RowText } from "./rowText";
+import { round1 } from "./scouting";
 
 export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
 
@@ -119,7 +120,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   const evidence: RowText[] = [
     {
       key: valid.length === 1 ? "fi.ev.clipsOne" : "fi.ev.clips",
-      vars: { n: valid.length, min: Math.round(analysedMinutes * 10) / 10, d: totalEvents },
+      vars: { n: valid.length, min: round1(analysedMinutes), d: totalEvents },
     },
     busiest
       ? {

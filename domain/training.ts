@@ -2,6 +2,7 @@ import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, Train
 import { asRowText, type RowText } from "./rowText";
 import { makeRng, pick, rngInt } from "@/lib/rng";
 import { clamp } from "@/lib/utils";
+import { round1 } from "./scouting";
 
 // Training database: exercises keyed to the attributes they develop, organised by
 // phase, so a session is a coherent Warm-up -> Technique -> Decision -> Game ->
@@ -210,9 +211,9 @@ export function applyFocusGrowth(
   const deltas: GrowthDelta[] = [];
   for (const focus of focusKeys) {
     const cur = next[focus] ?? 50;
-    const to = clamp(Math.round((cur + perSessionGain(cur, rating)) * 10) / 10, 1, 99);
+    const to = clamp(round1(cur + perSessionGain(cur, rating)), 1, 99);
     next[focus] = to;
-    deltas.push({ key: focus, from: cur, to, delta: Math.round((to - cur) * 10) / 10 });
+    deltas.push({ key: focus, from: cur, to, delta: round1(to - cur) });
   }
   return { attributes: next, deltas };
 }

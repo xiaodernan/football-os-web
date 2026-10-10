@@ -7,6 +7,7 @@
 import { formatDate } from "@/i18n/format";
 import type { Locale } from "@/i18n/dictionaries";
 import type { RowText } from "./rowText";
+import { round1 } from "./scouting";
 
 export interface PlayerInput {
   sessionsCompleted: number;
@@ -85,7 +86,7 @@ const ts = (iso?: string) => {
 const later = (...isos: (string | undefined)[]): string | undefined =>
   isos.filter((i): i is string => !!i && ts(i) > 0).sort((a, b) => ts(b) - ts(a))[0];
 
-const mins = (v: number) => `${Math.round(v * 10) / 10}`;
+const mins = (v: number) => `${round1(v)}`;
 
 /** Drop the arms a pillar's record did not supply. The parameter is typed rather than
  *  inferred on purpose: an array of object literals with different `vars` shapes does not
@@ -200,7 +201,7 @@ export function buildFootprint(i: FootprintInput): Footprint {
   return {
     rows,
     pillarsTouched: touched,
-    totalMinutes: Math.round(totalMinutes * 10) / 10,
+    totalMinutes: round1(totalMinutes),
     lastActiveAt,
     evidence,
     sources: [{ key: "fp.src.state" }, { key: "fp.src.local" }],
