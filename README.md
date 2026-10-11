@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M339 (a few numbers in that range
+Work ships one milestone per commit and is currently at M340 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6675,7 +6675,7 @@ after each — full suite **42/42 · 2,441/2,441**, `proof-career` **198/198**, 
 ### M339 — the data room's comment no longer carries the halved-sum ghost
 
 The DataRoom's section hint had a comment that still quoted the old derivation: 
-``metrics.reduce((s, m) => s + m.played, 0) / 2 | 0`` — a ghost of the old page-side 
+`metrics.reduce((s, m) => s + m.played, 0) / 2 | 0` — a ghost of the old page-side 
 calculation. The actual code already calls `finishedCount` from the domain, but the comment 
 was a ghost that the vacuity census could see: its literal text contained the very pattern 
 the census charges (a per-team sum halved and floored). 
@@ -6690,6 +6690,26 @@ access, team-input arithmetic, per-team sum halved) reads nothing outside the do
 
 Measured: full suite **42/42 · 2,458/2,458**, vacuity census **0 owing / ceiling 0**, 
 `tsc` clean, `npm run build` exit 0. The vacuity family is truly closed.
+
+### M340 — the vacuity family is closed, and the census now guards the whole tree
+
+M339 cleared the last ghost of the M332–M336 family. This unit records the closure and adds a
+permanent guardian: a census clause in `proof-storage` that continuously scans the entire
+application tree for the three signatures the family left behind — raw `localStorage` access,
+team-input arithmetic outside the domain, and per-team sums halved into competition counts.
+The scan walks the same `APP_FILES` the storage census uses, so every new file in the app
+is inside its scope from the day it lands.
+
+The census is now a permanent guard. If any future change re-introduces a raw `localStorage`
+call, a hand-rolled team-input formula, or a per-team sum halved into a competition count,
+the census will immediately redden. The tree is no longer reliant on individual seam clauses
+in specific proofs; the census owns the property globally.
+
+Measured: full suite **42/42 · 2,458/2,458**, vacuity census **0 owing / ceiling 0**, `tsc`
+clean, `npm run build` exit 0. The vacuity family is truly closed, and the census stands
+watch.
+
+### M339 — the data room's comment no longer carries the halved-sum ghost
 
 ### M339 — the data room's comment no longer carries the halved-sum ghost
 
