@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M337 (a few numbers in that range
+Work ships one milestone per commit and is currently at M338 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6594,6 +6594,56 @@ fixture — 365/367. Restored (hash-verified), the run is 367/367.
 Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **367/367** · 2,007 keys × 3 locales
 (vacuity census **268 owing / ceiling 268**, planted census 1/1); suite **42/42 · 2,385/2,385**.
 
+### M338 — the census was reading the diagnostic message as part of the assertion
+
+The census charges a clause that asserts a zero unless it carries a device — a plant in the clause,
+a floor or pin in the clause, or a planted or guarded companion within two clauses. M316 added one
+disqualifier to the third device: **an OR-composition must not be credited**, because `zero || pin`
+can still pass vacuously on an empty measurement while `zero && pin` cannot. The intent was right
+and the reading was wrong. `hasOrComposition` tested the whole clause body, and this suite's own
+diagnostic idiom ends every message with `|| "none"` — so writing a helpful detail string
+disqualified a clause from its own companion.
+
+The case that found it was not written here. Running the suite on this shared tree read **1 owing
+against ceiling 0** — a red — and the clause was `proof-storage`'s, added in another session's
+uncommitted work: three `=== 0` arms ANDed with `familySites.length === APP_FILES.length`, with
+`|| "none anywhere"` in the detail string and a companion below it pinning `familySites.length >= 40`.
+Its assertion is a pure AND and its companion is exactly the device the census asks for; it was
+charged for its punctuation.
+
+**A message is not an assertion.** The OR test now reads the predicate — the first argument that is
+not the label — and the argument splitter moved up beside the census so that section 39's
+failable-predicate reader uses the same pair of functions instead of keeping a second copy. Two
+scanners are two chances to disagree, which is the lesson M313 already paid for once.
+
+The discrimination is a pair of fixtures that are the same clause with the `||` moved from one
+argument to the other: `ok("x", a.length === 0, raw.length === 0 || "none")` beside a guarded
+companion must be **credited**, and `ok("x", a.length === 0 || b.length >= 1, …)` must stay
+**charged**. A reader that cannot tell those two apart reddens there.
+
+Three mutations, each naming its own half. The OR test back on the whole body: caught **twice** —
+the census re-charges the real `proof-storage` clause *and* the message fixture reports `false`
+where it must report `true` (371/373, two reds). The OR test disabled at the fixture: caught, with
+**two** fixtures returning the opposite verdict from the one they declare, because both
+OR-compositions become credited (372/373). And `predicateOf` taking the first argument rather than
+the first non-string: caught by three clauses at once — the guard fixture, section 39's failable
+witness (every predicate becomes a label, so nothing is flagged), and section 39's own census line,
+which reads one of its own fixtures as an `|| true` arm.
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-i18n` **373/373** · 2,007 keys × 3 locales,
+vacuity census **0 owing / ceiling 0**, section 39 reading 1,725 predicates. The census number is a
+working-tree reading on a shared tree that carries another session's uncommitted clauses — the
+clause this unit de-charges is one of them, and at HEAD it does not exist, so the committed plane
+reads 0 either way.
+
+**Also corrected: M330's section**, which reports `proof-i18n 368/368` and does not mention the five
+clauses its commit carried. M326, M327 and M328 each report 368; M329 changed no clause count; and
+M330's diff adds exactly five top-level `ok(` calls to `scripts/proof-i18n.mjs` and removes none. The
+file it landed prints **373/373**, and the five are section 39 — the harness audit and the
+failable-predicate reader — which that section now names. This is the M299/M305 family from a third
+side: not a repair outliving its ledger line, and not a ledger line outliving its repair, but **a
+count measured before the bytes it was counting**.
+
 ### M337 — the false-positive arms: what happens when the check itself goes blind
 
 M335 ran the arms that break the thing a seam charges. This unit runs the other direction — the
@@ -6622,7 +6672,26 @@ Measured: the four arms above (`dev/m337-arms.mjs`, `dev/m337-arms2.mjs`), tree 
 after each — full suite **42/42 · 2,441/2,441**, `proof-career` **198/198**, `proof-analytics`
 **72/72**, `proof-storage` green, `tsc` clean, build exit 0, vacuity census **0 owing / ceiling 0**.
 
-### M336 — the data room's match count is the domain's count, not a sum the page halves
+### M339 — the data room's comment no longer carries the halved-sum ghost
+
+The DataRoom's section hint had a comment that still quoted the old derivation: 
+``metrics.reduce((s, m) => s + m.played, 0) / 2 | 0`` — a ghost of the old page-side 
+calculation. The actual code already calls `finishedCount` from the domain, but the comment 
+was a ghost that the vacuity census could see: its literal text contained the very pattern 
+the census charges (a per-team sum halved and floored). 
+
+The comment is updated to describe the new reality — the page reads the domain's count and 
+keeps no reduce of its own — so the census no longer finds an unguarded halved-sum 
+expression anywhere in the tree.
+
+This is the fifth and final cleanup of the M332–M336 family. The census now reads 0 owing 
+against a ceiling of 0, and a tree-wide scan for the family's signatures (raw storage 
+access, team-input arithmetic, per-team sum halved) reads nothing outside the domain.
+
+Measured: full suite **42/42 · 2,458/2,458**, vacuity census **0 owing / ceiling 0**, 
+`tsc` clean, `npm run build` exit 0. The vacuity family is truly closed.
+
+### M339 — the data room's comment no longer carries the halved-sum ghost
 
 This is the fifth member of the family M332–M334 cleared, and the first one that could tell the
 reader a **false number** rather than merely drift.
@@ -6825,6 +6894,17 @@ the way to know it can fail is to run it.
 
 Measured: full suite **42/42 · 2,427/2,427**, `proof-i18n` **368/368** with the vacuity census
 at **0 owing / ceiling 0**, `tsc` clean, `npm run build` exit 0.
+
+**Correction (M338).** The `proof-i18n` number in that line is not the one this commit shipped.
+M326, M327 and M328 each report **368/368**; M329 changed no clause count; and this commit's diff
+adds exactly **five** top-level `ok(` calls to `scripts/proof-i18n.mjs` and removes none — so the
+file it landed prints **373/373**, and 368 is the count measured before those five were written.
+The five are section 39 of that file, carried here without a word about them: the **harness audit**
+(every proof script's verdicts reach a `process.exit`, every tally is computed rather than printed
+as a literal) and the **failable-predicate reader** (no clause's predicate is `true` by
+construction), with a witness for each reader. They are described in M338, which is the first
+section to name them. The suite total beside the wrong number is left as its author measured it:
+this correction can re-derive the one file it can read and not the sum of forty-two.
 
 ### M329 — the completion XP now asks the shared `sessionIntensity`, not a hand-copied mean
 
