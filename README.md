@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M340 (a few numbers in that range
+Work ships one milestone per commit and is currently at M346 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6311,6 +6311,19 @@ Measured: `tsc` clean; proof-i18n **356/356** · 2,001 keys × 3 locales (vacuit
 census 381/384); suite **41/41 · 2,340/2,340**; `npm run build` exit 0. Code as
 **26e698b** (−1 line in types.ts, −1 in footballSeed.ts, 3 comment lines corrected
 in intelligence.ts, +16 gate lines in proof-i18n.mjs).
+
+**A second unit under the same number (M346).** Two sessions took M281 at once, and both landed.
+The other is `bc4f917`, whose commit subject is the heading it used to carry — "the recorded match
+stats find their reader" — and it is a different unit entirely: `Match.stats`, shipped write-only by
+M280, finds its reader on the match detail page; `StatCompare` takes a plain stats pair instead of a
+`SimResult`, so the engine's `SimTeamStats` and the seed's `MatchStats` feed the same ten rows; the
+ratings `<details>` renders only when a simulation produced them; and the seed's `duelsWon` field is
+renamed `duels` so M280's "reuses the engine's shape" claim is literally true. Measured there: suite
+**41/41 · 2,341/2,341**, `npm run build` exit 0, +35/−27 across 4 files.
+
+Both accounts live under this one heading, because neither can be renumbered without inventing a
+number no commit carries. The collision is recorded rather than papered over.
+
 ### M293 — the dashboard's fixture labels run on the world's clock
 
 The today panel selects its fixtures on the world's clock (M289) but labelled
@@ -6691,6 +6704,20 @@ access, team-input arithmetic, per-team sum halved) reads nothing outside the do
 Measured: full suite **42/42 · 2,458/2,458**, vacuity census **0 owing / ceiling 0**, 
 `tsc` clean, `npm run build` exit 0. The vacuity family is truly closed.
 
+**Provenance (M346).** This heading was written **three times** by concurrent sessions, and the
+record carried it silently until `proof-record` was added to check the file against itself. One of
+the three was not a new account at all: its body was `M336`'s section verbatim, its heading renamed
+from `### M336 — the data room's match count is the domain's count…` by `a5f17ea` — a docs sync for
+M339 that deleted the heading it was not about. That section is restored to **M336** above. The third
+was an empty heading, a heading with no body at all, and it is deleted.
+
+What is left is this account, and it is the one two docs-sync commits named M339 (`a5f17ea` and
+`1d93697`, both "the data room's comment ghost cleared"). It is kept with a caveat rather than
+silently: **the commit whose subject carries M339 is a different unit** — `9b408f7`, "the Manager OS
+panel's season prize stops rounding money differently from the career retrospective" — which has no
+section of its own. Which of the two claims the number is not something a gate can settle, so both
+are on the record.
+
 ### M340 — the vacuity family is closed, and the census now guards the whole tree
 
 M339 cleared the last ghost of the M332–M336 family. This unit records the closure and adds a
@@ -6709,9 +6736,49 @@ Measured: full suite **42/42 · 2,458/2,458**, vacuity census **0 owing / ceilin
 clean, `npm run build` exit 0. The vacuity family is truly closed, and the census stands
 watch.
 
-### M339 — the data room's comment no longer carries the halved-sum ghost
+### M346 — the record checked against itself, and the two collisions it was carrying
 
-### M339 — the data room's comment no longer carries the halved-sum ghost
+`README.md` is this project's ledger: one `### M###` section per milestone, and a pointer paragraph
+naming the current one. Nothing checked either. Two kinds of damage had accumulated silently, and
+neither is a code defect — the file is prose, and prose was not being read.
+
+- **A milestone recorded three times.** `M339` carried three headings. One of the three was not a new
+  account at all: its body was `M336`'s section **verbatim**, its heading renamed from
+  `### M336 — the data room's match count is the domain's count…` by `a5f17ea` — a docs sync for M339
+  that deleted the heading it was not about. The third was a heading with **no body at all**, sitting
+  immediately above the next heading and reading as a section.
+- **A milestone recorded twice, for two different units.** `M281` carried both `26e698b`'s deleted
+  seed sentence and `bc4f917`'s recorded match stats — two sessions that took the same number.
+
+`scripts/proof-record.mjs` reads the file now: three clauses — no milestone recorded twice, no heading
+without a body, and the pointer naming the newest milestone the file records — each with a population
+in its label and a witness that runs the same reading rather than a paraphrase of it. It is the 43rd
+proof script, and it is held to its own standard: section 39 of `proof-i18n` audits its harness, and
+the vacuity census reads its clauses like any other script's.
+
+The repair is exact where the record is unambiguous and stated where it is not. `M336`'s section is
+**restored** — its body was never lost, only its heading — and `M339`'s empty heading is deleted. The
+two `M281` accounts are merged under one heading with the collision recorded, because neither can be
+renumbered without inventing a number no commit carries. `M339` keeps a caveat in the same spirit: the
+commit whose subject carries that number is `9b408f7`, the Manager OS season prize, which has no
+section of its own — which of the two claims the number is not something a gate can settle, so both
+are on the record.
+
+**The honest limit.** This checks the record against itself, not against the commits. It cannot tell
+whether a section describes the work its number belongs to; both collisions above were found by
+reading, not by running. What it refuses is the shape the damage actually took: a heading written
+twice, or written empty.
+
+Three mutations, each naming its own half: `M340` written a second time (the duplicate clause reddens
+— and the body clause with it, because the inserted heading is also empty); `M340`'s body deleted (the
+body clause reddens); and the reader made to credit everything (the witness clause reddens, with four
+of its five fixtures reporting the opposite of what they declare).
+
+Measured: `proof-record` **4/4** · **160 milestone headings, 160 distinct** (159 of each before this
+section, which is the one this count includes); `tsc` clean, `npm run build` exit 0; full suite
+**43/43 scripts · 2,466/2,466 checks**, run one process per script. The 43rd is this milestone's.
+
+### M336 — the data room's match count is the domain's count, not a sum the page halves
 
 This is the fifth member of the family M332–M334 cleared, and the first one that could tell the
 reader a **false number** rather than merely drift.
@@ -7879,24 +7946,6 @@ behind the rendering gate alone.
 
 Measured: `proof-matchstats` 11/11; suite **42/42 · 2,352/2,352**. Code as **HEAD**
 (+64/−0, one new proof file).
-
-### M281 — the recorded match stats find their reader
-
-M280 shipped `Match.stats` and left it write-only — the exact defect class M105/M106/M107
-charged for, reintroduced by my own milestone. This closes it: a played match whose seed
-carries stats now shows the recorded stat comparison on the match detail page immediately,
-without requiring the visitor to run a reconstruction first. `StatCompare` no longer takes
-a `SimResult`; it takes a plain stats pair plus optional player ratings, so the engine's
-`SimTeamStats` (a structural superset) and the seed's `MatchStats` both feed the same ten
-rows, and the ratings `<details>` renders only when a simulation actually produced them.
-The section title distinguishes the two origins (`det.engine.statsRecorded` — new key in
-all three locales — vs the existing reconstructed/projected titles), and the Ask-Football-AI
-possession fact falls back to the recorded figure instead of a hardcoded 50 when no
-simulation has been run. The seed's `duelsWon` field was renamed `duels` to make the
-"reuses the engine's shape" claim in M280's section literally true.
-
-Measured: suite **41/41 · 2,341/2,341** (proof-i18n +2 for the new key); `npm run build`
-exit 0. Code as **HEAD** (+35/−27 across 4 files); this section is a docs-only follow-up.
 
 ### M280 — match statistics aggregation for all fixtures
 
