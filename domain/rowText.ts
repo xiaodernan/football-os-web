@@ -14,6 +14,7 @@ import { TRAJECTORIES } from "./careerArc";
 import { MATCH_STATUSES, MODES, NEWS_KINDS, RECORD_FEELS, SEARCH_KINDS, SHOT_TYPES, FOOTS } from "./types";
 import type { FavoriteKind, NewsArticle, SearchKind } from "./types";
 import { isAgeGroupWord, isGoalCode } from "./onboarding";
+import { pct } from "@/lib/utils";
 
 // A variable normally holds a word or a number, but one row may also carry another whole
 // row: the coach's remembered line names the session it completed, and that session's
@@ -130,7 +131,7 @@ export const newsSummary = (n: NewsArticle, t: Translate): string =>
     club: n.titleVars.club,
     player: n.titleVars.player,
     kind: newsKindLabel(n.kind, t),
-    cred: Math.round(n.credibility * 100),
+    cred: pct(n.credibility),
   });
 
 /** The word for a positional group — `CM` on the model, 「中场中路」 to a reader in 简体中文.

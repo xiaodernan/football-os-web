@@ -1,5 +1,5 @@
 import type { RowText } from "./rowText";
-import { indexById } from "@/lib/utils";
+import { indexById, pct } from "@/lib/utils";
 
 // Knowledge Academy domain (spec §8). The lesson text is editorial content
 // authored for this product; everything in this module is *accounting* — it turns
@@ -241,8 +241,8 @@ export function summarizeLearn(records: LearnRecord[]): LearnSummary {
     completed,
     mastered,
     attemptedOnly,
-    pct: Math.round((completed / LESSONS.length) * 100),
-    masteredPct: Math.round((mastered / LESSONS.length) * 100),
+    pct: pct(completed / LESSONS.length),
+    masteredPct: pct(mastered / LESSONS.length),
     byCategory,
     weakestCategory,
     evidence,

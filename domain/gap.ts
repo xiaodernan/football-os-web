@@ -6,6 +6,7 @@ import {
 } from "./attributes";
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
+import { pct } from "@/lib/utils";
 
 // Role Gap Analysis: compares a player's saved attributes against a heuristic
 // archetype for their position group at their current level, then ranks the
@@ -75,7 +76,7 @@ export function analyzeGap(input: GapInput): GapAnalysis {
     covered += Math.min(it.actual, it.target) * w;
     required += it.target * w;
   }
-  const readiness = required > 0 ? Math.round((covered / required) * 100) : 0;
+  const readiness = required > 0 ? pct(covered / required) : 0;
 
   const priorities = items
     .filter((it) => it.criticality > 0 && it.delta > 0)

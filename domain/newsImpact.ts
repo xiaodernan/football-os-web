@@ -1,5 +1,6 @@
 import type { NewsArticle, NewsKind } from "./types";
 import type { RowText } from "./rowText";
+import { pct } from "@/lib/utils";
 
 // A grounded "what does this mean" read for a news article. It never invents
 // facts: every line is built from the article's own metadata (kind,
@@ -97,7 +98,7 @@ export function buildImpact(input: ImpactInput): NewsImpact {
   if (resolved === 0) watch.push({ key: "ni.watch.unresolved" });
 
   const evidence: RowText[] = [
-    { key: "ni.ev.credibility", vars: { n: Math.round(article.credibility * 100) } },
+    { key: "ni.ev.credibility", vars: { n: pct(article.credibility) } },
     // `stance` is a rowText code variable, so the article's own type is resolved to the
     // reader's word rather than printed as the dataset's `Confirmed`/`Rumor`.
     { key: "ni.ev.kind", vars: { stance: article.kind } },

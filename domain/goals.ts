@@ -7,6 +7,7 @@
 import type { Goal, GoalMetric } from "./types";
 import type { RowText } from "./rowText";
 import { asRowText } from "./rowText";
+import { clamp, pct } from "@/lib/utils";
 
 // Mirrors the `GoalMetric` union in ./types; proof-timeline fails if the two drift,
 // because both the compiler and the dictionary have to agree on this list.
@@ -66,6 +67,5 @@ export function isValidGoalTarget(target: number): boolean {
 // did the division itself.
 export function goalProgressPct(goal: Goal): number {
   if (!(goal.target > 0)) return 0;
-  const pct = Math.round((Math.min(goal.current, goal.target) / goal.target) * 100);
-  return Math.max(0, Math.min(100, pct));
+  return clamp(pct(Math.min(goal.current, goal.target) / goal.target), 0, 100);
 }

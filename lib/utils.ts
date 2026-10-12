@@ -35,3 +35,11 @@ export const round3 = (v: number): number => Math.round(v * 1000) / 1000;
 // home as round3, for the same cycle reason: analytics is reached from scouting through
 // data/footballService, so a rounder it shares must not live in scouting.
 export const round2 = (v: number): number => Math.round(v * 100) / 100;
+
+// The app's shared ratio-to-whole-percent helper. A credibility, a readiness, a goal's progress or
+// a lesson completion rate is stored as a 0..1 fraction, and the integer figure a reader is shown is
+// `Math.round(fraction * 100)`. Seven domain sites each spelled that inline. NOTE this is NOT the
+// round2 above: round2 keeps two decimals (`... / 100`) for a stored rating, while pct drops the
+// fraction entirely for a displayed percentage — the same `Math.round(… * 100)` prefix hides a
+// different denominator, so the census that charges these sites must exclude the `/ 100` form.
+export const pct = (ratio: number): number => Math.round(ratio * 100);
