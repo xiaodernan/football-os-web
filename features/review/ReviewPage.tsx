@@ -13,7 +13,7 @@ import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primi
 import { ProgressLine } from "@/ui/charts";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, signed } from "@/lib/utils";
 
 const WINDOWS = [7, 30, 90];
 
@@ -308,8 +308,7 @@ export function ReviewPage() {
                     {review.filmScanTrend != null && (
                       <>
                         {" · "}
-                        {t("rv.filmTrend")} {review.filmScanTrend >= 0 ? "+" : ""}
-                        {review.filmScanTrend}
+                        {t("rv.filmTrend")} {signed(review.filmScanTrend)}
                       </>
                     )}
                   </p>

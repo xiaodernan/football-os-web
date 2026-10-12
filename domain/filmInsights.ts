@@ -6,7 +6,7 @@
 
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
-import { round2 } from "@/lib/utils";
+import { round2, signed } from "@/lib/utils";
 
 export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
 
@@ -135,7 +135,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
           vars: {
             older: olderScanRate!.toFixed(2),
             newer: newerScanRate!.toFixed(2),
-            delta: `${scanTrend >= 0 ? "+" : ""}${scanTrend}`,
+            delta: signed(scanTrend),
           },
         }
       : valid.length < 2

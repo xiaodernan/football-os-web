@@ -4,6 +4,7 @@ import { weakestAttributes } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions } from "./training";
+import { signed } from "@/lib/utils";
 
 // A period digest compiled purely from the user's local training log, goals,
 // progress history, academy records and analysed film. Nothing here is invented —
@@ -47,10 +48,6 @@ export interface ReviewRecommendation {
   reason: RowText;
   confidence: number;
 }
-
-// A signed figure, so the `+` a rising rating earns lives in the number the row
-// interpolates and not in a clause the module stitches onto an English sentence.
-const signed = (n: number) => (n >= 0 ? "+" + n : String(n));
 
 export interface WeeklyReview {
   windowDays: number;

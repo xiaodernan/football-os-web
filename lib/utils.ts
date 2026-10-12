@@ -43,3 +43,15 @@ export const round2 = (v: number): number => Math.round(v * 100) / 100;
 // fraction entirely for a displayed percentage — the same `Math.round(… * 100)` prefix hides a
 // different denominator, so the census that charges these sites must exclude the `/ 100` form.
 export const pct = (ratio: number): number => Math.round(ratio * 100);
+
+// The app's signed-display door. A rising rating, a scan trend or a goal difference earns a literal
+// `+` prefix when the figure is non-negative and a plain number when it is negative. domain/review
+// spelled this as a private `signed` helper (3 call sites); film Insights, the Manager record and
+// the ManagerOS delta each stitched the same sign-or-nothing ternary inline. Identical today, so
+// nothing a reader sees moves — but a sign convention spelled four ways that part company the moment
+// one gains a locale or a zero-width space. NOTE this door takes the RAW number and coerces it, so
+// it is NOT the sibling that signs a PRE-FORMATTED fixed-width figure (a `+` glued in front of a
+// two-decimal string): that one keeps padding a caller here would drop, so FilmRoom's trend cell and
+// the Manager career's form stay on the padded form and the DynamicWorld delta stays sign-driven by a
+// boolean — neither is this door's shape.
+export const signed = (n: number): string => (n >= 0 ? "+" + n : String(n));
