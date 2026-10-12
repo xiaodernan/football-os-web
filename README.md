@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M347 (a few numbers in that range
+Work ships one milestone per commit and is currently at M348 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6831,6 +6831,49 @@ tree and the section is accurate; only the number has no commit behind it. `proo
 this, because the check needs the git log and spawning git from a proof script is not reliable on this
 machine (it returns `EBUSY` under the sandbox, the same standing artifact `run-proofs.mjs` records).
 So it is written down here instead of gated.
+
+### M348 — the kickoff comparator had six copies, and a census found the seventh
+
+M347 closed one triplicate by reading three files. This unit asks the question reading cannot answer
+at scale: **how many computations in this app are written more than once?** A probe normalised every
+computation-bearing line across the app and grouped it — **583 distinct expressions, 9 written in more
+than one file**. The class is bounded and real, and it earned its keep immediately: the probe's
+line-based normalisation missed two of the copies it was looking for, and the clause written from it
+found both.
+
+**Kickoff ordering was the worst.** Six readers ordered a list by kickoff with a byte-identical
+comparator — `finishedFixtures` (the list every figure in `domain/analytics.ts` is measured over), the
+data room's forecast, three service functions, and the AI's next-fixture lookup. A kickoff is this
+app's clock, and six copies of the ordering rule are six chances for one of them to drift into a
+different order than the rest. `byKickoff` is the door now, in the module that owns the comparison,
+and the sum of copies is one.
+
+**The seventh copy, and the one that must not be "fixed".** The census charges the **forward** shape,
+with backreferences on the two parameter names — so a reverse comparator is not a copy. That
+distinction is load-bearing: the probe *and* a looser clause both charged
+`data/footballService.ts:65`, `recentMatchesForClub`, which sorts **newest first** on purpose. A census
+that could not tell forward from reverse would drive the next reader to "unify" it and invert a real
+semantic. The exception is pinned by its own clause, so a future tidy-up reddens instead of quietly
+reversing the page.
+
+**The honest limits.** A line-based grouping sees a computation only where it is written on one line,
+so an expression spread over several lines is invisible to it — which is how M347's triplicate
+survived the probe in the first place. And an expression written two *different* ways is not a
+duplicate by this measurement, however wrong one of them is. The census charges a signature, not a
+semantic; what it guarantees is that the same words cannot be written twice.
+
+Three mutations, each naming its own half: a service writing its own comparator again (**75/77** — the
+census clause lists both sites and the reader clause reports the drop), intelligence writing its own
+(**75/77**, the same shape from the other side), and the reverse site routed through the door
+(**76/77** — "the reverse comparator is GONE").
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-analytics` **77/77** (72 before this unit, +5),
+and the suite run one process per script — **42 of 43 scripts green, 2,376 checks**. `proof-runner` is
+the one red and it is red on this machine rather than on this change (`run-proofs.mjs` spawns each
+script with `spawnSync` and the sandbox refuses the child, `got null`), the standing local artifact
+this file records; it died before printing a tally, so its own checks are not in the 2,376. The 2,376
+is a **working-tree** count: this tree also carries another session's uncommitted proof scripts, so a
+few of those checks are theirs rather than this unit's.
 
 ### M336 — the data room's match count is the domain's count, not a sum the page halves
 

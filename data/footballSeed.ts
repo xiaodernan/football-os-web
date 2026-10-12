@@ -5,6 +5,7 @@ import {
   POSITION_BY_GROUP,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
+import { byKickoff } from "@/domain/analytics";
 import type {
   Club,
   Competition,
@@ -376,7 +377,7 @@ function buildMatches(clubs: Club[], players: PlayerRef[], compMap: Map<string, 
       }
     }
   }
-  return matches.sort((x, y) => x.kickoff.localeCompare(y.kickoff));
+  return matches.sort(byKickoff);
 }
 
 function scoreFromStrength(h: number, a: number, rng: () => number): { h: number; a: number } {

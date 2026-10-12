@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n, formatDate } from "@/i18n";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
-import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, type TeamMetrics, type FormLetter } from "@/domain/analytics";
+import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
@@ -84,7 +84,7 @@ export function DataRoom() {
     const byId = new Map(metrics.map((m) => [m.clubId, m]));
     return matches
       .filter((m) => m.competitionId === compId && m.status === "SCHEDULED")
-      .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
+      .sort(byKickoff)
       .map((m) => {
         const h = byId.get(m.homeClubId);
         const a = byId.get(m.awayClubId);

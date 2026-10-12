@@ -1,5 +1,5 @@
 import { createServer } from "vite";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -240,6 +240,64 @@ const countChecks = seededComps.map((id) => {
 ok("every seeded competition's finishedCount is its real finished-match count, and equals the halved per-team sum only because those sums happen to be even (12 competitions, 8 distinct per-team counts in the largest)",
   seededComps.length >= 10 && countChecks.every((c) => c.agree),
   countChecks.filter((c) => !c.agree).map((c) => `${c.id}: count=${c.real} finished=${c.finished} halved=${c.halved}`).join(", ") || "all agree");
+
+// ---- kickoff ordering, written once ----
+// Six readers ordered a list by kickoff: `finishedFixtures`, the data room's forecast, three
+// service functions and the AI's next-fixture lookup. Six identical comparators is six chances
+// for one of them to drift into a different order than the rest — and the two that matter most
+// (the finished-fixtures list every figure is measured over, and the data room's forecast) had
+// no visible connection at all. `byKickoff` is the door, and this census charges it both ways.
+const walkSrc = (dir) => {
+  const out = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === "node_modules" || e.name.startsWith(".")) continue;
+    const p = `${dir}/${e.name}`;
+    if (e.isDirectory()) out.push(...walkSrc(p));
+    else if (/\.tsx?$/.test(e.name)) out.push(p);
+  }
+  return out;
+};
+const APP_SRC = ["domain", "features", "lib", "store", "data", "src", "components"].flatMap(walkSrc);
+const DOOR_FILE = "domain/analytics.ts";
+const comparatorSites = APP_SRC.filter((f) => /a\.kickoff\.localeCompare\(b\.kickoff\)/.test(readFileSync(f, "utf8")));
+const bareSort = APP_SRC.filter((f) => /\.sort\(\s*\(\s*(\w+)\s*,\s*(\w+)\s*\)\s*=>\s*\1\.kickoff\.localeCompare\(\s*\2\.kickoff\s*\)/.test(readFileSync(f, "utf8")));
+ok(`the kickoff comparator is written in exactly one place, and it is the domain's door (${APP_SRC.length} app files walked, ${comparatorSites.length} site(s): ${comparatorSites.join(", ") || "none"}; ${bareSort.length} hand-rolled ordering rule(s))`,
+  APP_SRC.length >= 90 && comparatorSites.length === 1 && comparatorSites[0] === DOOR_FILE && bareSort.length === 0);
+const KICKOFF_READERS = [
+  "domain/analytics.ts",
+  "features/analytics/DataRoom.tsx",
+  "data/footballService.ts",
+  "data/intelligence.ts",
+];
+const readerReads = KICKOFF_READERS.map((f) => [f, readFileSync(f, "utf8").split(/\r?\n/).filter((l) => /\.sort\(/.test(l) && /byKickoff/.test(l)).length]);
+ok(`every reader that orders by kickoff calls the door (${readerReads.map(([f, n]) => `${f}: ${n}`).join("; ")})`,
+  KICKOFF_READERS.every((f) => readerReads.find(([g]) => g === f)[1] >= 1) &&
+  readerReads.reduce((n, [, c]) => n + c, 0) >= 6);
+// The plant: a reader that writes its own comparator again, and a line that sorts by something
+// else. The first must be flagged, the second must not — a reader that flagged every `.sort(`
+// would pass the clause above while accusing the app of nothing.
+const plantedOwn = 'return matches.sort((a, b) => a.kickoff.localeCompare(b.kickoff));';
+const plantedOther = 'return rows.sort((a, b) => b.overall - a.overall);';
+ok(`the ordering reader, planted both ways, flags a hand-written kickoff comparator and accuses a sort by any other field (${/a\.kickoff\.localeCompare\(b\.kickoff\)/.test(plantedOwn)} of 1 flagged, ${/a\.kickoff\.localeCompare\(b\.kickoff\)/.test(plantedOther)} of 0 flagged)`,
+  /a\.kickoff\.localeCompare\(b\.kickoff\)/.test(plantedOwn) === true &&
+  /a\.kickoff\.localeCompare\(b\.kickoff\)/.test(plantedOther) === false);
+// And the value: the door orders chronologically, including across same-day kickoffs, and it is
+// a pure comparator so it can be handed straight to `.sort`.
+const laterDay = { kickoff: "2026-03-02T19:00:00Z" };
+const earlierDay = { kickoff: "2026-01-31T15:00:00Z" };
+const laterSameDay = { kickoff: "2026-01-31T18:00:00Z" };
+const kickoffOrder = byKickoff(laterDay, earlierDay);
+const sameDay = byKickoff(laterSameDay, earlierDay);
+ok(`byKickoff is the text ordering of the ISO kickoff, so it sorts chronologically at any time of day (${kickoffOrder} for a later day, ${sameDay} for a later time on the same day)`,
+  kickoffOrder > 0 && sameDay > 0 && byKickoff(earlierDay, laterDay) < 0);
+// The one place that orders by kickoff the other way round. `recentMatchesForClub` wants newest
+// first, so a future "let us use the door here too" would invert a real semantic. The census above
+// deliberately does not charge it — a reverse comparator is not a copy — and this clause is what
+// stops the exception from being quietly normalised away.
+const SERVICE_SRC = readFileSync(resolve(root, "data/footballService.ts"), "utf8");
+const recentBlock = (SERVICE_SRC.match(/export function recentMatchesForClub[\s\S]*?\n}/) || [""])[0];
+ok(`recentMatchesForClub still orders newest-first rather than through the door (the reverse comparator ${/b\.kickoff\.localeCompare\(a\.kickoff\)/.test(recentBlock) ? "is present" : "is GONE"})`,
+  /b\.kickoff\.localeCompare\(a\.kickoff\)/.test(recentBlock) === true && /byKickoff/.test(recentBlock) === false);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

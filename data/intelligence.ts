@@ -8,6 +8,7 @@ import type { SearchKind } from "@/domain/types";
 import { formatDate } from "@/i18n/format";
 import type { Locale } from "@/i18n/dictionaries";
 import { scoutReport } from "@/domain/scouting";
+import { byKickoff } from "@/domain/analytics";
 import { careerArc } from "@/domain/careerArc";
 import {
   globalSearch,
@@ -85,7 +86,7 @@ function clubFacts(clubId: string): EvidenceFact[] {
       text: { key: "ai.fact.keyMan", vars: { name: squad[0].name, position: squad[0].position, overall: squad[0].overall, value: formatValue(squad[0].value) } },
       to: `/players/${squad[0].id}`,
     });
-  const fixture = [...matchesByStatus("SCHEDULED").filter((m) => m.homeClubId === clubId || m.awayClubId === clubId)].sort((a, b) => a.kickoff.localeCompare(b.kickoff))[0];
+  const fixture = [...matchesByStatus("SCHEDULED").filter((m) => m.homeClubId === clubId || m.awayClubId === clubId)].sort(byKickoff)[0];
   if (fixture) {
     const opp = fixture.homeClubId === clubId ? getClub(fixture.awayClubId) : getClub(fixture.homeClubId);
     out.push({

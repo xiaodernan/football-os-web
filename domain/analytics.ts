@@ -59,6 +59,14 @@ function finish(s: Split, g: number, c: number) {
 const isFinished = (m: Match): m is Match & { homeGoals: number; awayGoals: number } =>
   m.status === "FINISHED" && m.homeGoals != null && m.awayGoals != null;
 
+/** Chronological by kickoff — the ISO timestamp, compared as text. One comparator, because five
+ *  readers order the same list: the competition's finished fixtures, the data room's forecast, and
+ *  three service functions. A kickoff is this app's clock, and five copies of the ordering rule are
+ *  five chances for one of them to drift into a different order than the rest. */
+export function byKickoff(a: Match, b: Match): number {
+  return a.kickoff.localeCompare(b.kickoff);
+}
+
 /** The competition's finished matches, in kickoff order — the one list every figure here is
  *  measured over.
  *
@@ -70,7 +78,7 @@ const isFinished = (m: Match): m is Match & { homeGoals: number; awayGoals: numb
 export function finishedFixtures(compId: string, matches: Match[]): (Match & { homeGoals: number; awayGoals: number })[] {
   return matches
     .filter((m): m is Match & { homeGoals: number; awayGoals: number } => m.competitionId === compId && isFinished(m))
-    .sort((a, b) => a.kickoff.localeCompare(b.kickoff));
+    .sort(byKickoff);
 }
 
 /** How many matches this competition has actually finished — a count of the list above, not a

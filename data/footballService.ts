@@ -1,5 +1,5 @@
 import { DEMO_NOW, WORLD } from "./footballSeed";
-import { oddsPercents, outcomeOdds, teamMetrics, type TeamMetrics } from "@/domain/analytics";
+import { oddsPercents, outcomeOdds, teamMetrics, byKickoff, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
 import type { RowText } from "@/domain/rowText";
 
@@ -69,7 +69,7 @@ export function recentMatchesForClub(clubId: string, limit = 5): Match[] {
 export function upcomingMatchesForClub(clubId: string, limit = 5): Match[] {
   return WORLD.matches
     .filter((m) => m.status !== "FINISHED" && (m.homeClubId === clubId || m.awayClubId === clubId))
-    .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
+    .sort(byKickoff)
     .slice(0, limit);
 }
 
@@ -83,7 +83,7 @@ export const DEMO_ANCHOR_MS = new Date(DEMO_NOW).getTime();
 export function todayMatches(limit = 5): Match[] {
   return WORLD.matches
     .filter((m) => m.status === "SCHEDULED" && Math.abs(new Date(m.kickoff).getTime() - DEMO_ANCHOR_MS) < 2 * 86400000)
-    .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
+    .sort(byKickoff)
     .slice(0, limit);
 }
 
@@ -93,7 +93,7 @@ export function todayMatches(limit = 5): Match[] {
 export function upcomingMatchesForCompetition(compId: string, limit = 8): Match[] {
   return WORLD.matches
     .filter((m) => m.status !== "FINISHED" && m.competitionId === compId)
-    .sort((a, b) => a.kickoff.localeCompare(b.kickoff))
+    .sort(byKickoff)
     .slice(0, limit);
 }
 
