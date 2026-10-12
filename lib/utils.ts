@@ -55,3 +55,17 @@ export const pct = (ratio: number): number => Math.round(ratio * 100);
 // the Manager career's form stay on the padded form and the DynamicWorld delta stays sign-driven by a
 // boolean — neither is this door's shape.
 export const signed = (n: number): string => (n >= 0 ? "+" + n : String(n));
+
+// The app's parse-a-timestamp door: an ISO-ish string to epoch milliseconds, with a missing or
+// unparseable string floored to 0. domain/footprint, domain/history and the Profile record each
+// spelled this as a private `ts` helper (identical modulo history's shorter signature — its single
+// call passes a defined `.at`, and `!""`/`!undefined` return the same 0 the raw `new Date` NaN floor
+// would). Nothing a reader sees moves. NOTE this door is NOT the bare inline `new Date(x).getTime()`
+// it replaces inside a comparator: a bare parse yields NaN for a bad string, so a list sorted by it
+// keeps that pair in place, whereas this door's 0 floor would yank the bad entry to one end and
+// reorder it. That ordering-visible difference is why the ~dozen inline comparator parses stay inline.
+export const epochMs = (iso?: string): number => {
+  if (!iso) return 0;
+  const t = new Date(iso).getTime();
+  return Number.isNaN(t) ? 0 : t;
+};

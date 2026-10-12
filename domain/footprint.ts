@@ -8,6 +8,7 @@ import { formatDate } from "@/i18n/format";
 import type { Locale } from "@/i18n/dictionaries";
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
+import { epochMs } from "@/lib/utils";
 
 export interface PlayerInput {
   sessionsCompleted: number;
@@ -77,14 +78,8 @@ export interface Footprint {
   sources: RowText[];
 }
 
-const ts = (iso?: string) => {
-  if (!iso) return 0;
-  const t = new Date(iso).getTime();
-  return Number.isNaN(t) ? 0 : t;
-};
-
 const later = (...isos: (string | undefined)[]): string | undefined =>
-  isos.filter((i): i is string => !!i && ts(i) > 0).sort((a, b) => ts(b) - ts(a))[0];
+  isos.filter((i): i is string => !!i && epochMs(i) > 0).sort((a, b) => epochMs(b) - epochMs(a))[0];
 
 const mins = (v: number) => `${round1(v)}`;
 

@@ -20,13 +20,7 @@ import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-const ts = (iso?: string) => {
-  if (!iso) return 0;
-  const t = new Date(iso).getTime();
-  return Number.isNaN(t) ? 0 : t;
-};
+import { cn, epochMs } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
 // raw-UI scan reads every string literal there as a child text node — three hits on one
@@ -51,7 +45,7 @@ export function ProfilePage() {
   // One record across every pillar, read from what this device actually holds.
   const footprint = useMemo(() => {
     const lessons = summarizeLearn(learn);
-    const lastLesson = learn.filter((r) => isCompleted(r)).sort((a, b) => ts(b.completedAt) - ts(a.completedAt))[0];
+    const lastLesson = learn.filter((r) => isCompleted(r)).sort((a, b) => epochMs(b.completedAt) - epochMs(a.completedAt))[0];
 
     let manager = { active: false, matches: 0 } as Parameters<typeof buildFootprint>[0]["manager"];
     // M331: through the door, like every other read of this key. `present` is what makes the
@@ -318,7 +312,7 @@ export function ProfilePage() {
               <ul className="mt-1.5 space-y-0.5 text-xs text-muted-foreground">
                 {r.lines.map((l, i) => <li key={i}>{rowLine(l, t)}</li>)}
               </ul>
-              {r.lastAt && ts(r.lastAt) > 0 && (
+              {r.lastAt && epochMs(r.lastAt) > 0 && (
                 <div className="mt-1.5 text-[10px] text-muted-foreground">{t("prof.lastActivity")} {formatDate(locale, r.lastAt, ACTIVITY_TIME)}</div>
               )}
             </Link>

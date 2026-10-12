@@ -10,6 +10,7 @@
 
 import type { AttributeDelta } from "./types";
 import { asRowText, type RowText } from "./rowText";
+import { epochMs } from "@/lib/utils";
 
 export type TimelineKind = "session" | "plan" | "memory" | "learn" | "film";
 
@@ -90,11 +91,6 @@ export interface HistoryInput {
   learn?: LearnSeed[];
   film?: FilmSeed[];
 }
-
-const ts = (iso: string) => {
-  const t = new Date(iso).getTime();
-  return Number.isNaN(t) ? 0 : t;
-};
 
 export function buildTimeline(input: HistoryInput): TimelineEvent[] {
   const events: TimelineEvent[] = [];
@@ -189,7 +185,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
     });
   }
 
-  return events.sort((a, b) => ts(b.at) - ts(a.at));
+  return events.sort((a, b) => epochMs(b.at) - epochMs(a.at));
 }
 
 /** Group a sorted timeline into calendar-day buckets (newest day first). */
