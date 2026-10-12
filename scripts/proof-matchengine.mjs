@@ -1,4 +1,9 @@
 import { createServer } from "vite";
+import { readFileSync, readdirSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // Pins domain/matchEngine.ts — the deterministic match simulator behind the match
 // detail timeline (M101), the stat comparison rows (M92) and Simulation Lab. Its
@@ -8,7 +13,7 @@ import { createServer } from "vite";
 // on, and guards that it can never emit the retired SUB event type (M96/M89).
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { simulateMatch } = await server.ssrLoadModule("/domain/matchEngine.ts");
+const { simulateMatch, EVENT_GLYPH } = await server.ssrLoadModule("/domain/matchEngine.ts");
 // M225. The engine hands the interface rows, not sentences, so the reader's side of every
 // assertion below is the row resolved the way a screen resolves it: `rowLine` for the union and
 // the dictionary's own interpolator for the variables. Reading `summary[0]` as a string is what
@@ -27,7 +32,17 @@ const team = (o = {}) => ({
   name: "Team", overall: 75, attack: 70, midfield: 72, defense: 68, possessionBias: 0.5,
   press: 0.5, tempo: 0.5, fatigue: 0.1, morale: 0.1, form: 0, ...o,
 });
-const LIVE_TYPES = new Set(["GOAL", "SAVE", "SHOT", "VAR", "YELLOW", "RED"]);
+// M347. `MatchEventType` is a type-only union in domain/types.ts — there is no runtime array to
+// import the way `SHOT_TYPES` carries — so the value space is read off the declaration itself
+// rather than hand-copied (the old `LIVE_TYPES` below was a hand copy, which a seventh kind would
+// silently disagree with). Parsing the declaration makes this proof's notion of "the event kinds"
+// the same as the compiler's: add a kind to the union and it appears here, in EVENT_GLYPH's
+// exhaustiveness check, and in the census without a second hand edit.
+const typesSrc = readFileSync(join(ROOT, "domain/types.ts"), "utf8");
+const DECL = /export type MatchEventType =([\s\S]*?);/;
+const declMatch = typesSrc.match(DECL);
+const EVENT_TYPES = declMatch ? [...declMatch[1].matchAll(/"([A-Z]+)"/g)].map((m) => m[1]) : [];
+const LIVE_TYPES = new Set(EVENT_TYPES);
 
 const home = team({ name: "Arsenal", midfield: 74, attack: 78 });
 const away = team({ name: "Chelsea", midfield: 70, defense: 71 });
@@ -146,6 +161,71 @@ for (let i = 0; i < 80; i++) {
 }
 ok(`the engine draws every shot type the dictionary has words for (${drawn.size}/${SHOT_TYPES.length}: ${[...drawn].sort().join(", ")})`,
   SHOT_TYPES.every((s) => drawn.has(s)) && [...drawn].every((s) => SHOT_TYPES.includes(s)));
+
+// --- M347: one glyph door, three screens ----------------------------------
+// The match page's event rows, the Simulation Lab's key moments and Manager OS's last-match
+// line-up each put the same marks on the same engine events, but each spelled the table itself:
+// the match page typed all six kinds, the Lab retyped three as a ternary chain and Manager two.
+// Only the match page's copy was exhaustive, and nothing tied the shared entries — so a goal's
+// mark could change on one screen and leave the other two printing the old one for the same
+// event. These clauses census the STRUCTURAL spelling (a `KIND: "…"` line, a `.type === … ? "…"`
+// ternary), never the bare emoji: five other screens carry ⚽/🎯/… for their own reasons and are
+// correctly outside this family.
+const SRC_DIRS = ["domain", "data", "lib", "features", "components", "store", "i18n"];
+const srcFiles = [];
+for (const d of SRC_DIRS) {
+  for (const f of readdirSync(join(ROOT, d), { recursive: true })) {
+    if (!/\.(ts|tsx)$/.test(f)) continue;
+    const rel = `${d}/${String(f).replace(/\\/g, "/")}`;
+    srcFiles.push([rel, readFileSync(join(ROOT, d, f), "utf8")]);
+  }
+}
+const byPath = new Map(srcFiles);
+const srcOf = (p) => byPath.get(p) ?? "";
+
+ok(`the glyph census walks the real source tree, not a hand-picked list (${srcFiles.length} .ts/.tsx files)`,
+  srcFiles.length >= 80 && srcFiles.some(([p]) => p === "domain/matchEngine.ts") && srcFiles.some(([p]) => p === "features/manager/ManagerOS.tsx"));
+
+const declSites = srcFiles.filter(([, s]) => /export const EVENT_GLYPH\b/.test(s)).map(([p]) => p);
+ok(`the glyph table is declared exactly once, in the door (${declSites.join(", ")})`,
+  declSites.length === 1 && declSites[0] === "domain/matchEngine.ts" && srcFiles.length >= 80);
+
+const glyphKeys = Object.keys(EVENT_GLYPH);
+ok(`the door's keys are exactly the declared MatchEventType space (${glyphKeys.slice().sort().join("/")})`,
+  EVENT_TYPES.length >= 6 && glyphKeys.length === EVENT_TYPES.length && EVENT_TYPES.every((t) => t in EVENT_GLYPH));
+
+ok(`each declared kind maps to a real glyph, not an empty slot (${glyphKeys.map((k) => EVENT_GLYPH[k]).join(" ")})`,
+  glyphKeys.every((k) => typeof EVENT_GLYPH[k] === "string" && EVENT_GLYPH[k].length > 0) && glyphKeys.length >= 6);
+
+const keyedCount = (t) => srcFiles.reduce((n, [, s]) => n + (s.match(new RegExp(`\\b${t}:[ \t]*"`, "g")) || []).length, 0);
+const retyped = EVENT_TYPES.map((t) => [t, keyedCount(t)]).filter(([, n]) => n !== 1);
+ok(`no screen re-types a glyph entry the door already owns — each kind's \`KIND: "…"\` line exists once (${retyped.map(([t, n]) => `${t}=${n}`).join(" ") || "all kinds: 1"})`,
+  retyped.length === 0 && EVENT_TYPES.every((t) => (srcOf("domain/matchEngine.ts").match(new RegExp(`\\b${t}:[ \t]*"`, "g")) || []).length === 1) && srcFiles.length >= 80);
+
+const ternaryRe = (s) => /\.type === "[A-Z]+" \? "/.test(s);
+const ternarySites = srcFiles.filter(([, s]) => ternaryRe(s)).map(([p]) => p);
+ok(`a screen composing a glyph from a ternary is refused, and the shipped tree writes none across ${srcFiles.length} files (fixture ${ternaryRe('x.type === "GOAL" ? "⚽" : y')} / tree ${ternarySites.length})`,
+  ternaryRe('a.type === "GOAL" ? "⚽" : b') && ternarySites.length === 0 && srcFiles.length >= 80);
+
+const CONSUMERS = ["features/football/Details.tsx", "features/sim/SimulationLab.tsx", "features/manager/ManagerOS.tsx"];
+const indexed = CONSUMERS.filter((p) => /from "@\/domain\/matchEngine"/.test(srcOf(p)) && /EVENT_GLYPH\[e\.type\]/.test(srcOf(p)));
+ok(`all three event-glyph screens import the door and index it by e.type (${indexed.length}/${CONSUMERS.length})`,
+  indexed.length === 3 && CONSUMERS.every((p) => srcOf(p).includes("EVENT_GLYPH")));
+
+ok(`every event on a real seeded match resolves through the door (timeline ${r.timeline.length} rows)`,
+  r.timeline.length > 0 && r.timeline.every((e) => typeof EVENT_GLYPH[e.type] === "string") && EVENT_TYPES.includes(r.timeline[0].type));
+
+const reached = new Set();
+for (let i = 0; i < 200; i++) for (const e of simulateMatch({ ...input, seed: `m347-glyph-${i}` }).timeline) reached.add(e.type);
+ok(`a 200-match sweep reaches every declared kind, so all six door glyphs are live (${reached.size}/${EVENT_TYPES.length}: ${[...reached].sort().join("/")})`,
+  EVENT_TYPES.every((t) => reached.has(t) && typeof EVENT_GLYPH[t] === "string") && [...reached].every((t) => EVENT_TYPES.includes(t)) && reached.size >= 6);
+
+const filtersOf = (p) => [...srcOf(p).matchAll(/\.filter\(\(e\) =>([^)]*)\)/g)].map((m) => m[1].trim());
+const detF = filtersOf(CONSUMERS[0]), labF = filtersOf(CONSUMERS[1]), mgrF = filtersOf(CONSUMERS[2]);
+ok(`the door is a table, not a filter: Details shows all kinds, the Lab keeps its own GOAL/RED/VAR subset, Manager its own GOAL/RED — a tidy-up that unifies them reddens here`,
+  detF.length === 0 && labF.length === 1 && mgrF.length === 1 &&
+    /VAR/.test(labF[0]) && !/VAR/.test(mgrF[0]) &&
+    /GOAL/.test(labF[0]) && /GOAL/.test(mgrF[0]));
 
 // --- a goalless and a heavy schedule both stay consistent ------------------
 for (const mins of [1, 120]) {

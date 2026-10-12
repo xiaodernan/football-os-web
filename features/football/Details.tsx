@@ -18,7 +18,7 @@ import {
   formatValue,
   DEMO_MODE,
 } from "@/data/footballService";
-import { simulateMatch, type SimResult, type TeamInput } from "@/domain/matchEngine";
+import { simulateMatch, EVENT_GLYPH, type SimResult, type TeamInput } from "@/domain/matchEngine";
 import { modelPlayerProfile, scoutReport } from "@/domain/scouting";
 import { careerArc } from "@/domain/careerArc";
 // M333: the three line means come from the domain now. They used to be `avgBy` below — this
@@ -613,11 +613,12 @@ export function MatchDetail({ id }: { id: string }) {
 
 function EventRow({ e, home, away }: { e: MatchEvent; home: string; away: string }) {
   const { t } = useI18n();
-  const glyph: Record<string, string> = { GOAL: "⚽", YELLOW: "🟨", RED: "🟥", SHOT: "🎯", SAVE: "🧤", VAR: "📺" };
   return (
     <li className="flex items-center gap-2 text-sm">
       <span className="w-9 text-right font-mono text-xs text-muted-foreground">{e.minute}'</span>
-      <span>{glyph[e.type] ?? "•"}</span>
+      {/* The table is exhaustive over MatchEventType, but a match logged before a kind was retired
+          still carries that kind in local storage, so an unknown type stays a dot, not a crash. */}
+      <span>{EVENT_GLYPH[e.type] ?? "•"}</span>
       <span className="flex-1 truncate">{e.player}{e.detail ? <span className="text-muted-foreground"> — {rowLine(e.detail, t)}</span> : null}</span>
       <span className="text-[11px] text-muted-foreground">{e.side === "home" ? home : away}</span>
     </li>

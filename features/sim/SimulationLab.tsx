@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { footballProvider, getClub, getCompetition, playersByClub, clubIdsByCompetition } from "@/data/footballService";
 import { useRouter } from "@/lib/router";
-import { simulateMatch, type TeamInput, type SimResult } from "@/domain/matchEngine";
+import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/domain/matchEngine";
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine } from "@/domain/rowText";
 import { clubInput } from "@/domain/career";
@@ -206,7 +206,7 @@ function ResultView({ result, home, away }: { result: SimResult; home: string; a
         })}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <div><div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">{t("mgr.keyMoments")}</div><ul className="max-h-40 space-y-1 overflow-y-auto text-xs">{result.timeline.filter((e) => e.type === "GOAL" || e.type === "RED" || e.type === "VAR").slice(0, 10).map((e, i) => <li key={i} className="flex gap-2"><span className="w-8 font-mono text-muted-foreground">{e.minute}'</span><span className="truncate">{e.type === "GOAL" ? "⚽" : e.type === "RED" ? "🟥" : "📺"} {e.player} <span className="text-muted-foreground">({e.side === "home" ? home : away})</span></span></li>)}</ul></div>
+        <div><div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">{t("mgr.keyMoments")}</div><ul className="max-h-40 space-y-1 overflow-y-auto text-xs">{result.timeline.filter((e) => e.type === "GOAL" || e.type === "RED" || e.type === "VAR").slice(0, 10).map((e, i) => <li key={i} className="flex gap-2"><span className="w-8 font-mono text-muted-foreground">{e.minute}'</span><span className="truncate">{EVENT_GLYPH[e.type]} {e.player} <span className="text-muted-foreground">({e.side === "home" ? home : away})</span></span></li>)}</ul></div>
         <div><div className="mb-1 text-[11px] uppercase tracking-widest text-muted-foreground">{t("sim.matchSummary")}</div><ul className="space-y-1 text-xs text-muted-foreground">{result.summary.map((x, i) => <li key={i}>• {rowLine(x, t)}</li>)}</ul></div>
       </div>
     </div>

@@ -54,6 +54,22 @@ export interface SimResult {
   summary: RowText[];
 }
 
+// The timeline glyph contract. The match page's event rows, the Simulation Lab's key moments and
+// Manager OS's last-match line-up each put the same six marks on the same six event types, but
+// only the first spelled all six: the Lab retyped three of them as a ternary chain and Manager OS
+// two, and each was kept honest solely by a `filter` that happened to drop the kinds its own table
+// was missing. Nothing tied the shared entries, so changing a goal's mark on one screen would leave
+// the other two printing the old one for the same engine event. `MatchEventType` is the key, so a
+// seventh kind is a compile error here rather than a row that silently falls through.
+export const EVENT_GLYPH: Record<MatchEventType, string> = {
+  GOAL: "⚽",
+  YELLOW: "🟨",
+  RED: "🟥",
+  SHOT: "🎯",
+  SAVE: "🧤",
+  VAR: "📺",
+};
+
 function effStrength(t: TeamInput): number {
   return (
     t.overall * (1 - t.fatigue * 0.15) +

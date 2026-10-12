@@ -31,7 +31,7 @@ import { CAREER_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router";
-import { cn } from "@/lib/utils";import type { PosBucket } from "@/domain/scouting";
+import { cn } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
 import { positionLabel, rowLine } from "@/domain/rowText";
 
@@ -171,7 +171,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
             <div className="mt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("mgr.keyMoments")}</div>
             <ul className="mt-1 max-h-40 space-y-1 overflow-y-auto text-xs">
               {last.sim.timeline.filter((e) => e.type === "GOAL" || e.type === "RED").slice(0, 12).map((e, i) => (
-                <li key={i} className="flex gap-2"><span className="w-8 font-mono text-muted-foreground">{e.minute}'</span><span className="truncate">{e.type === "GOAL" ? "⚽" : "🟥"} {e.player}</span></li>
+                <li key={i} className="flex gap-2"><span className="w-8 font-mono text-muted-foreground">{e.minute}'</span><span className="truncate">{EVENT_GLYPH[e.type]} {e.player}</span></li>
               ))}
               {!last.sim.timeline.some((e) => e.type === "GOAL" || e.type === "RED") && <li className="text-muted-foreground">{t("mgr.noKeyMoments")}</li>}
             </ul>
