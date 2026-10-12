@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M348 (a few numbers in that range
+Work ships one milestone per commit and is currently at M351 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6874,6 +6874,58 @@ script with `spawnSync` and the sandbox refuses the child, `got null`), the stan
 this file records; it died before printing a tally, so its own checks are not in the 2,376. The 2,376
 is a **working-tree** count: this tree also carries another session's uncommitted proof scripts, so a
 few of those checks are theirs rather than this unit's.
+
+### M349 — the storage families' census reads code rather than comments
+
+M340 added a permanent guardian in `proof-storage` for the three signatures M332-M336 left behind.
+M349 makes it blank both comment forms before the family regexes see them, so a comment that *quotes*
+a halved sum is documentation about the removal rather than evidence the removal failed — and adds the
+scan's own population to the clause. The guardian is the clause that was still red on this shared tree
+when M338 was written; M349 is what closed it. Recorded here from the commit (`f4f0972`) by a later
+session; the measurements it made are in its own message and are not restated as this section's.
+
+### M350 — the slider control was written twice
+
+`ManagerOS` and `SimulationLab` each carried their own slider — the same control, the same label row,
+the same value readout, written twice. `components/ui/simple-slider.tsx` is the shared one now and both
+screens render it. Same class as M347's sum and M348's comparator: one thing, two copies, converging on
+one definition. Recorded here from the commit (`d0db2cc`) by a later session.
+
+### M351 — the by-id index, recorded under a number another unit had already used
+
+Eleven places in this app built `new Map(list.map((x) => [x.id, x]))` — a lookup by id, written out in
+full every time. Two of them were one seam: `domain/learn.ts` looked the academy's records up by id,
+and the Learn Hub page built the same index itself — the domain and a page, each with its own copy of
+one lookup, which is the shape M332-M340 charged six times. `indexById` in `lib/utils.ts` is the door,
+and it sits beside `clamp`, which was made for exactly this reason (five byte-identical clamps). After
+it the expression exists in **one** place across 90 app files.
+
+The clauses live in `proof-learn`, beside the M133 navigation contract, because the seam that matters
+most is the academy's. Four of them: the census (90 files walked, **1 site**, and the clause **names**
+the door rather than merely counting); both readers asserted to call it; a plant that runs the same
+predicate both ways (a hand-built by-id index must be flagged, a `Map` keyed by anything else must
+not); and the value — three rows in, `get("b")` answers the row and a miss answers `undefined` rather
+than throwing. The comment stripper is `rawUiScan`'s own `normalize`, reused rather than rewritten: a
+doc comment that quotes the expression is documentation *about* the door, and the census's first run
+counted it as a build of one.
+
+Three mutations. `domain/learn.ts` building its own again (**75/77** — the census lists both sites and
+the reader clause reports `domain/learn.ts: 0`), the Learn Hub doing the same from the page side
+(**75/77**, the same shape), and the door keyed by `String(id)` instead of `id` (**76/77**). The third
+earns its line: `String(id)` is **behaviour-identical** for string ids, so the value clause could not
+see it — the mutation was caught by the *shape* check, which is the half of the defence that exists for
+exactly this. A value test proves the door works; it cannot prove it is still the only door.
+
+**Provenance, because this is the failure the record keeps paying for.** The unit was written in a
+working tree another session was also holding, and that session committed it as **`c9e8709`, whose
+subject says M348** — a number `59752da` had already used for the kickoff comparator. `proof-record`
+cannot see this: it checks the README against itself, and two commits can carry one number while the
+file stays internally consistent. So the unit is recorded here, under the next free number, with the
+collision stated rather than hidden. `c9e8709` also carried a second convergence from that session —
+the day key, moved into `domain/history.ts` and read by `HistoryPage` — and `scripts/proof-i18n.mjs`
+changes that were theirs.
+
+Measured (this unit's own): `proof-learn` **77/77**, `tsc` clean, `npm run build` exit 0.
 
 ### M336 — the data room's match count is the domain's count, not a sum the page halves
 
