@@ -76,7 +76,7 @@ function rotate<T>(rng: () => number, pool: readonly T[]): T[] {
 /** Spend exactly `budget` minutes on the front of an already-ordered drill pool. */
 function phaseBlock(pool: TrainingExercise[], budget: number): TrainingExercise[] {
   if (budget <= 0 || pool.length === 0) return [];
-  const count = Math.max(1, Math.min(pool.length, Math.round(budget / BLOCK_MINUTES)));
+  const count = clamp(Math.round(budget / BLOCK_MINUTES), 1, pool.length);
   const chosen = pool.slice(0, count);
   const minutes = splitMinutes(budget, chosen.map((d) => d.minutes));
   return chosen.map((d, i) => ({ ...d, minutes: minutes[i] }));
@@ -101,9 +101,9 @@ export function buildSession(input: BuildSessionInput): TrainingSession {
 
   // The bookends never eat the work in between: a 1-minute session gets its minute,
   // and the cool-down is dropped before the warm-up so the list still reads in order.
-  const bookend = Math.min(BOOKEND_MAX, Math.max(1, Math.round(target * BOOKEND_SHARE)));
-  const warmupM = Math.min(bookend, Math.max(0, target - 1));
-  const cooldownM = Math.min(bookend, Math.max(0, target - warmupM - 1));
+  const bookend = clamp(Math.round(target * BOOKEND_SHARE), 1, BOOKEND_MAX);
+  const warmupM = clamp(target - 1, 0, bookend);
+  const cooldownM = clamp(target - warmupM - 1, 0, bookend);
   const phaseM = splitMinutes(target - warmupM - cooldownM, PHASE_WEIGHTS);
   for (const i of [1, 2]) {
     if (phaseM[i] > 0 && phaseM[i] < PHASE_MINUTES) {
@@ -206,7 +206,7 @@ export function completedMinutes(sessions: TrainingSession[]): number {
 export function sessionIntensity(session: TrainingSession): number {
   const load = session.exercises.reduce((s, e) => s + e.intensity * e.minutes, 0);
   const mins = session.exercises.reduce((s, e) => s + e.minutes, 0) || 1;
-  return Math.max(1, Math.min(5, Math.round(load / mins)));
+  return clamp(Math.round(load / mins), 1, 5);
 }
 
 // ---- Attribute growth: single source of truth ----

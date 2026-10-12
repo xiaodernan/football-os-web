@@ -1,4 +1,5 @@
 import { makeRng, rngInt, rngFloat, weightedPick, hashString } from "@/lib/rng";
+import { clamp } from "@/lib/utils";
 import type { MatchEvent, MatchEventType, ShotType } from "./types";
 import type { RowText } from "./rowText";
 
@@ -89,7 +90,7 @@ export function simulateMatch(input: SimInput): SimResult {
 
   // Possession from midfield + press + bias.
   let possH = 50 + mid * 2 + (home.possessionBias - away.possessionBias) * 12;
-  possH = Math.max(32, Math.min(68, possH + rngFloat(rng, -3, 3)));
+  possH = clamp(possH + rngFloat(rng, -3, 3), 32, 68);
 
   const events: MatchEvent[] = [];
   let hg = 0;
@@ -242,6 +243,6 @@ function buildRatings(names: string[], goals: number, xg: number, rng: () => num
     let rating = 6.3 + rngFloat(rng, -0.6, 0.9) + (isHome ? 0.15 : 0) + (xg / 3) * 0.3;
     // goalscorers stand out
     if (i < goals) rating += 0.9;
-    return { player, rating: +Math.max(5.2, Math.min(9.6, rating)).toFixed(2) };
+    return { player, rating: +clamp(rating, 5.2, 9.6).toFixed(2) };
   });
 }

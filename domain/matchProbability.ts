@@ -1,5 +1,5 @@
 import { simulateMatch, type TeamInput } from "./matchEngine";
-import { round3 } from "@/lib/utils";
+import { clamp, round3 } from "@/lib/utils";
 
 // A fixture-level probabilistic outlook produced by running the SAME
 // deterministic Match Engine many times with varied seeds. Nothing is guessed
@@ -37,7 +37,7 @@ export interface MatchProbabilityInput {
 }
 
 export function matchProbability(input: MatchProbabilityInput): MatchProbability {
-  const runs = Math.max(1, Math.min(1000, Math.floor(input.runs ?? 250)));
+  const runs = clamp(Math.floor(input.runs ?? 250), 1, 1000);
   let hw = 0, dr = 0, aw = 0, hg = 0, ag = 0, hx = 0, ax = 0, btts = 0, over = 0;
   const scores = new Map<string, number>();
   for (let i = 0; i < runs; i++) {

@@ -6,7 +6,7 @@
 // means "scores at the league-average rate".
 
 import type { Club, Match } from "@/domain/types";
-import { round2, round3, indexById } from "@/lib/utils";
+import { clamp, round2, round3, indexById } from "@/lib/utils";
 
 export type FormLetter = "W" | "D" | "L";
 
@@ -184,7 +184,7 @@ const shrink = (value: number, played: number) => {
   return 1 + (value - 1) * weight;
 };
 
-const clampLambda = (v: number) => Math.max(LAMBDA_MIN, Math.min(LAMBDA_MAX, v));
+const clampLambda = (v: number) => clamp(v, LAMBDA_MIN, LAMBDA_MAX);
 
 /** Modelled expected goals for a single fixture from the two sides' ratings. */
 export function expectedGoals(home: TeamMetrics, away: TeamMetrics, leagueAvg?: number): { home: number; away: number } {

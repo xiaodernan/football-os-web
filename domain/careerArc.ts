@@ -79,7 +79,7 @@ export function annualChange(input: { age: number; overall: number; potential: n
 export function careerArc(p: PlayerRef): CareerArc {
   const group = p.positionGroup as PositionGroup;
   const peakAge = PEAK_AGE[group] ?? 28;
-  const startAge = Math.max(15, Math.min(LAST_AGE, Math.round(p.age)));
+  const startAge = clamp(Math.round(p.age), 15, LAST_AGE);
   const current = p.overall;
   const potential = Math.max(p.potential, current); // potential below overall is treated as already realised
 

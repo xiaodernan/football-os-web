@@ -1,7 +1,7 @@
 import type { RowText } from "./rowText";
 import type { TrainingSession } from "./types";
 import { sessionIntensity } from "./training";
-import { round2 } from "@/lib/utils";
+import { clamp, round2 } from "@/lib/utils";
 
 // Training-load management built on the same monotony/strain + acute:chronic
 // ratio (ACWR) ideas used in strength & conditioning. Every number is derived
@@ -289,7 +289,7 @@ function buildRecommendation(
 }
 
 function confidenceInput(sessions: number, activeWeeks: number): number {
-  return Math.max(35, Math.min(92, 40 + sessions * 4 + activeWeeks * 4));
+  return clamp(40 + sessions * 4 + activeWeeks * 4, 35, 92);
 }
 
 function buildEvidence(

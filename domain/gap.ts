@@ -6,7 +6,7 @@ import {
 } from "./attributes";
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
-import { pct } from "@/lib/utils";
+import { clamp, pct } from "@/lib/utils";
 
 // Role Gap Analysis: compares a player's saved attributes against a heuristic
 // archetype for their position group at their current level, then ranks the
@@ -38,7 +38,7 @@ export interface GapAnalysis {
 }
 
 function skillForOverall(overall: number): number {
-  return Math.max(0, Math.min(1, (overall - ROLE_FLOOR) / 30));
+  return clamp((overall - ROLE_FLOOR) / 30, 0, 1);
 }
 
 export interface GapInput {
@@ -114,7 +114,7 @@ export function analyzeGap(input: GapInput): GapAnalysis {
     { key: "gap.src.profile" },
   ];
 
-  const confidence = hasData ? Math.max(55, Math.min(80, 60 + Math.round(present.length / 8))) : 0;
+  const confidence = hasData ? clamp(60 + Math.round(present.length / 8), 55, 80) : 0;
 
   return {
     group,
