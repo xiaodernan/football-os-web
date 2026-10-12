@@ -14,7 +14,7 @@ import {
   formatValue,
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
-import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
+import { buildLoad, ZONE_LABEL, ZONE_TONE, type LoadZone } from "@/domain/load";
 import { newsKindLabel, newsTitle, rowLine } from "@/domain/rowText";
 import { overallRating } from "@/domain/attributes";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -32,10 +32,7 @@ import { cn } from "@/lib/utils";
 
 const RECOVERY_TONE: Record<LoadZone, string> = {
   none: "border-border text-muted-foreground",
-  under: "border-primary/40 bg-primary/10 text-primary",
-  optimal: "border-success/40 bg-success/10 text-success",
-  caution: "border-warning/40 bg-warning/10 text-warning",
-  high: "border-destructive/40 bg-destructive/10 text-destructive",
+  ...ZONE_TONE,
 };
 
 export function Dashboard() {

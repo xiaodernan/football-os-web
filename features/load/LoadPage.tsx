@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
-import { buildLoad, ZONE_LABEL, ZONE_LEGEND, type LoadZone } from "@/domain/load";
+import { buildLoad, ZONE_LABEL, ZONE_LEGEND, ZONE_TONE, type LoadZone } from "@/domain/load";
 import { rowLine } from "@/domain/rowText";
 import { DEMO_MODE } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
@@ -11,12 +11,9 @@ import { ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const ZONE_TONE: Record<LoadZone, string> = {
+const ZONE_BANNER_TONE: Record<LoadZone, string> = {
   none: "border-border bg-secondary/30 text-muted-foreground",
-  under: "border-primary/40 bg-primary/10 text-primary",
-  optimal: "border-success/40 bg-success/10 text-success",
-  caution: "border-warning/40 bg-warning/10 text-warning",
-  high: "border-destructive/40 bg-destructive/10 text-destructive",
+  ...ZONE_TONE,
 };
 
 const ACWR_TONE = (z: LoadZone): "up" | "down" | "neutral" =>
@@ -88,7 +85,7 @@ export function LoadPage() {
       ) : (
         <div className="space-y-4">
           {/* zone banner */}
-          <div className={cn("rounded-xl border px-4 py-3", ZONE_TONE[load.zone])}>
+          <div className={cn("rounded-xl border px-4 py-3", ZONE_BANNER_TONE[load.zone])}>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-semibold uppercase tracking-widest">{rowLine(ZONE_LABEL[load.zone], t)}</span>
               <span className="font-mono text-sm">{t("ld.acwr")} {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>

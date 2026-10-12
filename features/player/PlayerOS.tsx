@@ -12,7 +12,7 @@ import {
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
 import { SUPPORTED_MINUTES, sessionIntensity, type GrowthDelta } from "@/domain/training";
-import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
+import { buildLoad, ZONE_LABEL, ZONE_TONE, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { FIXTURES_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
@@ -206,10 +206,7 @@ function Coach() {
   const load = useMemo(() => buildLoad({ nowMs: Date.now(), sessions: state.sessions }), [state.sessions]);
   const LOAD_TONE: Record<LoadZone, string> = {
     none: "border-border text-muted-foreground",
-    under: "border-primary/40 bg-primary/10 text-primary",
-    optimal: "border-success/40 bg-success/10 text-success",
-    caution: "border-warning/40 bg-warning/10 text-warning",
-    high: "border-destructive/40 bg-destructive/10 text-destructive",
+    ...ZONE_TONE,
   };
 
   const onBriefChange = (v: string) => {
