@@ -180,6 +180,29 @@ export function repairSessionTitles(sessions: TrainingSession[]): TrainingSessio
   );
 }
 
+// ---- "Completed" is decided once, and its minutes are counted once ----
+// Three readers publish the same two numbers — how many sessions are done, and how many
+// minutes they were budgeted for — and each decided for itself what "done" meant and summed
+// for itself: the weekly review, the community starters and the profile footprint. The sum is
+// byte-identical in all three, which is exactly the state M332-M340 charged elsewhere: not a
+// wrong number yet, but three chances for one of them to drift. `completedSessions` is the
+// filter and `completedMinutes` is the sum, so a fourth reader calls these rather than writing
+// a fourth filter and a fourth reduce.
+
+/** The sessions in `sessions` whose status is `completed`, in the order given. */
+export function completedSessions(sessions: TrainingSession[]): TrainingSession[] {
+  return sessions.filter((s) => s.status === "completed");
+}
+
+/** The minutes the completed sessions were budgeted for — the number the weekly review, the
+ *  community starters and the profile footprint all publish. Planned and missed sessions are
+ *  not counted: they were never spent. */
+export function completedMinutes(sessions: TrainingSession[]): number {
+  let total = 0;
+  for (const s of sessions) if (s.status === "completed") total += s.targetMinutes;
+  return total;
+}
+
 export function sessionIntensity(session: TrainingSession): number {
   const load = session.exercises.reduce((s, e) => s + e.intensity * e.minutes, 0);
   const mins = session.exercises.reduce((s, e) => s + e.minutes, 0) || 1;

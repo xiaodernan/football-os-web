@@ -8,7 +8,7 @@
 // its own header comment — a warm-up → technique → decision → game → cool-down
 // session whose exercises sum to exactly the target the player picked.
 import { createServer } from "vite";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { makeSay } from "./lib/rows.mjs";
 
 let pass = 0, fail = 0;
@@ -463,6 +463,57 @@ else {
   }
   ok(`every session the coach hands back spends the minutes it reports and trains every attribute it names (${coachMiss.length} breaks over 9 budget × load-zone combinations)`,
     coachMiss.length === 0);
+
+  // ---- 12. the completed-minutes sum is written once, and every reader calls the door ----
+  // M347: "completed sessions' minutes" had three definitions. The weekly review, the community
+  // starters and the profile footprint each filtered for themselves and summed for themselves, and
+  // the three sums were byte-identical — not a wrong number yet, and exactly the state M332-M340
+  // charged elsewhere: three chances for one of them to drift. `completedSessions` and
+  // `completedMinutes` in the training domain are the definitions now. This section charges the seam
+  // in both directions: the sum is written in exactly one place, and every reader calls the door.
+  const { completedMinutes: doorMinutesOf, completedSessions: doorSessionsOf, buildSession: buildForDoor } = TR;
+  const walkSrc = (dir) => {
+    const out = [];
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.name === "node_modules" || e.name.startsWith(".")) continue;
+      const p = `${dir}/${e.name}`;
+      if (e.isDirectory()) out.push(...walkSrc(p));
+      else if (/\.tsx?$/.test(e.name)) out.push(p);
+    }
+    return out;
+  };
+  const APP_SRC = ["domain", "features", "lib", "store", "data", "src", "components"].flatMap(walkSrc);
+  // A sum of the budgeted minutes: a `reduce` over it, or an accumulating loop that adds it.
+  const sumsTargetMinutes = (src) => /(?:\.reduce\(|\+=)[^\n]*targetMinutes/.test(src);
+  const DOOR_FILE = "domain/training.ts";
+  const sumSites = APP_SRC.filter((f) => sumsTargetMinutes(readFileSync(f, "utf8")));
+  ok(`the completed-minutes sum is written in exactly one place, and it is the training domain's door (${APP_SRC.length} app files walked, ${sumSites.length} site(s): ${sumSites.join(", ") || "none"})`,
+    APP_SRC.length >= 90 && sumSites.length === 1 && sumSites[0] === DOOR_FILE);
+  const READER_FILES = [
+    "domain/review.ts",
+    "features/community/CommunityHub.tsx",
+    "features/profile/ProfilePage.tsx",
+  ];
+  const readersCallDoor = READER_FILES.map((f) => [f, /completedMinutes\(/.test(readFileSync(f, "utf8"))]);
+  ok(`every reader that publishes the number calls the door rather than summing again (${readersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+    READER_FILES.length === 3 && readersCallDoor.every(([, v]) => v));
+  // The plant runs the same predicate both ways: a hand-written sum must be flagged, and a reduce
+  // over a different field must not be — a reader that flagged every `reduce` would pass the clause
+  // above while accusing every aggregate in the app.
+  const plantedSum = "const minutes = completed.reduce((sum, s) => sum + s.targetMinutes, 0);";
+  const plantedOther = "const xp = completed.reduce((sum, s) => sum + s.xpAwarded, 0);";
+  ok(`the sum reader, planted both ways, flags a hand-written sum of the budgeted minutes and accuses a reduce over another field (${sumsTargetMinutes(plantedSum)} of 1 flagged, ${sumsTargetMinutes(plantedOther)} of 0 flagged)`,
+    sumsTargetMinutes(plantedSum) === true && sumsTargetMinutes(plantedOther) === false);
+  // And the value: the door counts what was actually spent and keeps the order it was given.
+  const mkSession = (id, minutes, status) => ({
+    ...buildForDoor({ id, date: "2026-01-01", targetMinutes: minutes, focusAttributes: ["first_touch"], group: "CM", seed: id }),
+    status,
+  });
+  const doorInput = [mkSession("a", 30, "completed"), mkSession("b", 20, "planned"), mkSession("c", 60, "completed"), mkSession("d", 90, "missed")];
+  const doorMinutes = doorMinutesOf(doorInput);
+  const doorList = doorSessionsOf(doorInput);
+  ok(`the door counts the completed sessions' minutes and nothing else (${doorMinutes}′ from a 30′ and a 60′ completed session, ignoring a planned 20′ and a missed 90′; ${doorList.length} sessions returned, in the order ${doorList.map((s) => s.id).join(" then ")})`,
+    doorMinutes === 90 && doorList.length === 2 && doorList[0].id === "a" && doorList[1].id === "c");
 }
 
 await server.close();

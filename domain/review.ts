@@ -3,6 +3,7 @@ import type { RowText } from "./rowText";
 import { weakestAttributes } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
+import { completedMinutes, completedSessions } from "./training";
 
 // A period digest compiled purely from the user's local training log, goals,
 // progress history, academy records and analysed film. Nothing here is invented —
@@ -103,11 +104,12 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const fromMs = nowMs - windowDays * 86400000;
 
   const inWindow = input.sessions.filter((s) => withinWindow(sessionStamp(s), fromMs, nowMs));
-  const completed = inWindow.filter((s) => s.status === "completed");
+  // M347: "completed" and its minutes are the training domain's definitions, not this file's.
+  const completed = completedSessions(inWindow);
   const planned = inWindow.filter((s) => s.status === "planned");
   const missed = inWindow.filter((s) => s.status === "missed");
 
-  const minutes = completed.reduce((sum, s) => sum + s.targetMinutes, 0);
+  const minutes = completedMinutes(inWindow);
   const xpGained = completed.reduce((sum, s) => sum + (s.xpAwarded ?? 0), 0);
   const ratings = completed.map((s) => s.selfRating).filter((r): r is number => typeof r === "number");
   const avgRating = ratings.length ? round1(ratings.reduce((a, b) => a + b, 0) / ratings.length) : null;

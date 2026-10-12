@@ -9,6 +9,7 @@ import { goalProgressPct, goalUnitKey } from "@/domain/goals";
 import { positionLabel, rowLine } from "@/domain/rowText";
 import { overallRating, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
+import { completedMinutes, completedSessions } from "@/domain/training";
 import { seasonSummary, type CareerState } from "@/domain/career";
 import { buildFootprint } from "@/domain/footprint";
 import { buildFilmInsights } from "@/domain/filmInsights";
@@ -44,7 +45,7 @@ export function ProfilePage() {
   const learn = useLearnRecords();
   const p = state.profile;
 
-  const completed = useMemo(() => state.sessions.filter((s) => s.status === "completed"), [state.sessions]);
+  const completed = useMemo(() => completedSessions(state.sessions), [state.sessions]);
   const goalsDone = state.goals.filter((g) => g.done).length;
 
   // One record across every pillar, read from what this device actually holds.
@@ -106,7 +107,7 @@ export function ProfilePage() {
       locale,
       player: {
         sessionsCompleted: completed.length,
-        minutes: completed.reduce((s, x) => s + x.targetMinutes, 0),
+        minutes: completedMinutes(state.sessions),
         xp: p?.xp ?? 0,
         level: p ? levelInfo(p.xp).level : 1,
         plans: state.plans.length,

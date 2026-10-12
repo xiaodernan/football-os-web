@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M346 (a few numbers in that range
+Work ships one milestone per commit and is currently at M347 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6777,6 +6777,60 @@ of its five fixtures reporting the opposite of what they declare).
 Measured: `proof-record` **4/4** · **160 milestone headings, 160 distinct** (159 of each before this
 section, which is the one this count includes); `tsc` clean, `npm run build` exit 0; full suite
 **43/43 scripts · 2,466/2,466 checks**, run one process per script. The 43rd is this milestone's.
+
+### M347 — three readers published one number, and each computed it for itself
+
+`M332`–`M340` charged one family five times: a screen re-deriving something the domain already
+computes. Every one of those had drifted or could drift into a **wrong** number. This unit finds the
+same shape one layer down, in the domain's own neighbourhood — not wrong yet, which is what makes it
+worth closing before it is.
+
+**The number.** "How many minutes the completed sessions were budgeted for" was written three times,
+and the three expressions were byte-identical:
+
+- `domain/review.ts:110` — `completed.reduce((sum, s) => sum + s.targetMinutes, 0)`;
+- `features/community/CommunityHub.tsx:143` — `done.reduce((s, x) => s + x.targetMinutes, 0)`;
+- `features/profile/ProfilePage.tsx:109` — `completed.reduce((s, x) => s + x.targetMinutes, 0)`.
+
+Each also decided for itself what "completed" meant, with its own `status === "completed"` filter.
+Three identical sums is not three correct sums; it is three chances for one of them to drift, and the
+weekly review's own file header already records that these readers **once disagreed** about a session.
+
+**One door, in the module that owns the field.** `domain/training.ts` exports `completedSessions`
+(the filter) and `completedMinutes` (the sum), beside `sessionIntensity` — the module that defines
+`targetMinutes` is the module that counts it. `review.ts` reads `completedSessions(inWindow)` and
+`completedMinutes(inWindow)`; both pages call the same two functions. **The sum now exists in exactly
+one place in the whole app**, measured over 90 files.
+
+**The clauses.** `proof-training` gains a section that charges the seam in both directions and reads
+its own population: the app walk reports **90 files and 1 site** for the sum (the door itself, which
+the clause names rather than merely counting); the three readers are asserted to name `completedMinutes`;
+a plant runs the same predicate both ways — a hand-written sum must be flagged, and a `reduce` over a
+different field must not, so a reader that accused every aggregate would redden; and the value is
+measured on four real sessions built by the module's own builder, so the door must count the 30′ and
+60′ completed ones and ignore a planned 20′ and a missed 90′, keeping the order it was given.
+
+Three mutations, each naming its own half: `CommunityHub` summing again (**46/48** — the one-place
+clause lists both sites and the reader clause names the offending file), the weekly review summing
+again (**46/48**, same shape, other file), and the door forgetting the status test (**47/48** — the
+value clause reports `200′` where 90′ is owed).
+
+Measured: `tsc` clean, `npm run build` exit 0, `proof-training` **48/48**, and the suite run one
+process per script — **42 of 43 scripts green, 2,366 checks**. `proof-runner` is the one red and it is
+red on this machine rather than on this change: `run-proofs.mjs` spawns each script with `spawnSync`
+and the sandbox refuses the child (`got null`), which is the standing local artifact this file records.
+It died before printing a tally, so its own checks (104 on its last successful run here) are not in the
+2,366. What is deliberately **not** done here: the `status === "completed"` filter still appears in
+eleven places, because those are eleven different questions — a stamp, a count for a goal, a history
+list — and folding them together is its own unit with its own measurement, not a rider on this one.
+
+**Also recorded (the record gate's first finding outside README's own shape).** `M338` is the one
+milestone heading whose number **no commit claims**: it was landed by `a5f17ea`, a commit whose subject
+carries `M339` — the same commit that renamed `M336`'s heading and duplicated `M339`. The work is in the
+tree and the section is accurate; only the number has no commit behind it. `proof-record` cannot check
+this, because the check needs the git log and spawning git from a proof script is not reliable on this
+machine (it returns `EBUSY` under the sandbox, the same standing artifact `run-proofs.mjs` records).
+So it is written down here instead of gated.
 
 ### M336 — the data room's match count is the domain's count, not a sum the page halves
 

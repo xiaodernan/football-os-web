@@ -5,6 +5,7 @@ import { useI18n, formatDate, relativeDay, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildStarters, allTags, repairCommunityTexts, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
 import { LESSONS, isCompleted, summarizeLearn } from "@/domain/learn";
+import { completedMinutes, completedSessions } from "@/domain/training";
 import { seasonSummary, type CareerState } from "@/domain/career";
 import { CAREER_KEY, COMMUNITY_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { rowLine, type RowText, type Translate } from "@/domain/rowText";
@@ -128,7 +129,7 @@ export function CommunityHub() {
       };
     }
 
-    const done = state.sessions.filter((x) => x.status === "completed");    const focus = new Map<string, number>();
+    const done = completedSessions(state.sessions);    const focus = new Map<string, number>();
     for (const x of done) for (const k of x.focusAttributes) focus.set(k, (focus.get(k) ?? 0) + 1);
     const top = [...focus.entries()].sort((a, b) => b[1] - a[1])[0];
     const ratings = done.map((x) => x.selfRating).filter((r): r is number => typeof r === "number");
@@ -140,7 +141,7 @@ export function CommunityHub() {
       training: done.length
         ? {
             sessions: done.length,
-            minutes: done.reduce((s, x) => s + x.targetMinutes, 0),
+            minutes: completedMinutes(state.sessions),
             topFocusKey: top ? top[0] : undefined,
             topFocusSessions: top ? top[1] : undefined,
             avgRating: ratings.length ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : null,
