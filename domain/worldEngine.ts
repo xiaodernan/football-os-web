@@ -11,7 +11,7 @@
 // regeneration and a simulated league champion.
 
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
-import { clamp } from "@/lib/utils";
+import { clamp, indexById } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
 import { POSITION_BY_GROUP, POSITION_GROUPS } from "@/domain/attributes";
 import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
@@ -159,8 +159,8 @@ function simulateChampion(comp: Competition, clubsById: Map<string, Club>, rng: 
 
 function stepSeason(input: WorldInput, elapsed: number): { players: PlayerRef[]; step: SeasonStep } {
   const rng = makeRng(`football-os-season-${elapsed}`);
-  const clubsById = new Map(input.clubs.map((c) => [c.id, c]));
-  const byId = new Map(input.players.map((p) => [p.id, p]));
+  const clubsById = indexById(input.clubs);
+  const byId = indexById(input.players);
 
   // Carry forward any players already aged; freshly generated prospects develop
   // in later steps too, so the working set only needs base + new prospects.

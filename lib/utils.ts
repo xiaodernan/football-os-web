@@ -10,6 +10,14 @@ export function cn(...inputs: ClassValue[]): string {
 // definitions that drift the moment one gains a NaN guard. Callers pass (value, low, high).
 export const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
 
+/** Index a list of entities by their `id`. Eleven places in this app built the same
+ *  `new Map(list.map((x) => [x.id, x]))`, and the two that matter most are the weekly review's
+ *  record lookup and the Learn Hub's — the domain and a page, each with its own copy of one
+ *  lookup, which is the seam M332-M340 charged six times. */
+export function indexById<T extends { id: string }>(list: readonly T[]): Map<string, T> {
+  return new Map(list.map((x) => [x.id, x]));
+}
+
 // The app's shared round-to-three helper. domain/analytics and domain/matchProbability each carried
 // a byte-identical private helper of this shape — the figures behind the Data Room's Poisson
 // forecast and the Simulation Lab / Manager match outlook. Identical today, so nothing a reader

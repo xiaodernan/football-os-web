@@ -5,6 +5,7 @@ import {
   POSITION_BY_GROUP,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
+import { indexById, round2 } from "@/lib/utils";
 import { byKickoff } from "@/domain/analytics";
 import type {
   Club,
@@ -334,7 +335,7 @@ function makeWorld() {
 
 function buildMatches(clubs: Club[], players: PlayerRef[], compMap: Map<string, Competition>, rng: () => number): Match[] {
   const matches: Match[] = [];
-  const byId = new Map(clubs.map((c) => [c.id, c]));
+  const byId = indexById(clubs);
   let anchor = new Date(DEMO_NOW).getTime();
   let idx = 0;
   for (const comp of compMap.values()) {
@@ -532,7 +533,7 @@ function generateMatchStats(home: Club, away: Club, score: { h: number; a: numbe
 
 function buildStandings(clubs: Club[], matches: Match[]): Record<string, Standing[]> {
   const table: Record<string, Standing[]> = {};
-  const byId = new Map(clubs.map((c) => [c.id, c]));
+  const byId = indexById(clubs);
   const ensure = (compId: string, clubId: string): Standing => {
     if (!table[compId]) table[compId] = [];
     let row = table[compId].find((s) => s.clubId === clubId);
@@ -600,7 +601,7 @@ function buildNews(clubs: Club[], players: PlayerRef[], rng: () => number): News
       titleVars: { club: clubName, player: playerSurname },
       source: src.name,
       publishedAt: new Date(anchor - rngInt(rng, 0, 72) * 3600000).toISOString(),
-      credibility: Math.round(cred * 100) / 100,
+      credibility: round2(cred),
       kind: kind[0],
       entityIds: [club.id, player.id],
       topics: [pick(rng, ["Transfers", "Tactics", "Injury", "Match Preview", "Academy"]), club.name],

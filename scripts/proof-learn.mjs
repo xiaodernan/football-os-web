@@ -1,6 +1,7 @@
 import { createServer } from "vite";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { makeSay } from "./lib/rows.mjs";
+import { normalize } from "./lib/rawUiScan.mjs";
 
 // Pins domain/learn.ts — the Knowledge Academy accounting layer (/learn), and
 // with it the M133 contract that every lesson's "Try it" link lands on a screen
@@ -22,6 +23,7 @@ const {
   parseLearnRecords, isCompleted, summarizeLearn, recommendLessons,
 } = await server.ssrLoadModule("/domain/learn.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
+const { indexById } = await server.ssrLoadModule("/lib/utils.ts");
 // Rows are read through the app's own interpreter at every locale, so a reason that
 // reaches a reader without its words is visible here rather than only on screen.
 const { say } = await makeSay(server);
@@ -235,6 +237,47 @@ ok("recommendLessons: never mutates its inputs and is deterministic", (() => {
   const b = JSON.stringify(recommendLessons(records, s, 9).map((p) => [p.lesson.id, p.score, p.reason]));
   return a === b && JSON.stringify(records) === rb && JSON.stringify(s) === sb;
 })());
+
+// ---- the by-id index is written once ----
+// Eleven places in this app built `new Map(list.map((x) => [x.id, x]))`. Two of them are this
+// seam: `domain/learn.ts` looked the academy's records up by id, and the Learn Hub page built
+// the same index itself — the domain and a page, each with its own copy of one lookup, which is
+// the shape M332-M340 charged six times. `indexById` in lib/utils.ts is the door. This census
+// charges it in both directions and reads its own population.
+const walkSrc = (dir) => {
+  const out = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === "node_modules" || e.name.startsWith(".")) continue;
+    const p = `${dir}/${e.name}`;
+    if (e.isDirectory()) out.push(...walkSrc(p));
+    else if (/\.tsx?$/.test(e.name)) out.push(p);
+  }
+  return out;
+};
+const APP_SRC = ["domain", "features", "lib", "store", "data", "src", "components"].flatMap(walkSrc);
+// `normalize` is the shared scanner's comment stripper, reused rather than rewritten: a doc
+// comment that quotes the expression is documentation about the door, not a build of the index.
+const ID_INDEX = /new Map\(\s*[\w.]*\.map\(\((\w+)\)\s*=>\s*\[\s*\1\.id\s*,\s*\1\s*\]\s*\)/g;
+const DOOR_FILE = "lib/utils.ts";
+const indexSites = APP_SRC.filter((f) => ID_INDEX.test(normalize(readFileSync(f, "utf8"))));
+ok(`the by-id index is written in exactly one place, and it is the shared door (${APP_SRC.length} app files walked, ${indexSites.length} site(s): ${indexSites.join(", ") || "none"})`,
+  APP_SRC.length >= 90 && indexSites.length === 1 && indexSites[0] === DOOR_FILE);
+const LEARN_READERS = ["domain/learn.ts", "features/learn/LearnHub.tsx"];
+const learnReaderReads = LEARN_READERS.map((f) => [f, normalize(readFileSync(new URL(`../${f}`, import.meta.url), "utf8")).split(/\r?\n/).filter((l) => /indexById\(/.test(l)).length]);
+ok(`every reader of the academy's records by id calls the door (${learnReaderReads.map(([f, n]) => `${f}: ${n}`).join("; ")})`,
+  LEARN_READERS.length === 2 && learnReaderReads.every(([, n]) => n >= 1));
+// The plant runs the same predicate both ways: a hand-built index must be flagged, and a reduce
+// over another field must not — a reader that flagged every `new Map` would pass the clause above
+// while accusing the whole app.
+const plantedOwn = "const byId = new Map(records.map((r) => [r.id, r]));";
+const plantedOther = "const byName = new Map(records.map((r) => [r.title, r]));";
+ok(`the index reader, planted both ways, flags a hand-built by-id index and accuses a map keyed by anything else (${ID_INDEX.test(normalize(plantedOwn))} of 1 flagged, ${ID_INDEX.test(normalize(plantedOther))} of 0 flagged)`,
+  ID_INDEX.test(normalize(plantedOwn)) === true && ID_INDEX.test(normalize(plantedOther)) === false);
+// And the value: the door indexes by id, answers a miss with undefined rather than a crash, and
+// returns a real Map so `.get`/`.has` are the same call they always were.
+const doorRows = indexById([{ id: "a", n: 1 }, { id: "b", n: 2 }, { id: "c", n: 3 }]);
+ok(`indexById keys the rows by their id and answers a miss with undefined (${doorRows.size} rows, get("b")=${doorRows.get("b")?.n}, has("z")=${doorRows.has("z")}, get("z")=${doorRows.get("z")})`,
+  doorRows.size === 3 && doorRows.get("b")?.n === 2 && doorRows.has("z") === false && doorRows.get("z") === undefined);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

@@ -1,6 +1,7 @@
 import { DEMO_NOW, WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, byKickoff, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
+import { indexById } from "@/lib/utils";
 import type { RowText } from "@/domain/rowText";
 
 // Data Provider Layer (spec §11): the UI never talks to the seed directly, so a
@@ -41,10 +42,10 @@ export const footballProvider: FootballDataProvider = new DemoFootballProvider()
 export const DEMO_MODE = footballProvider.mode === "demo";
 
 // --- Lookups ---
-const clubById = new Map(WORLD.clubs.map((c) => [c.id, c]));
-const playerById = new Map(WORLD.players.map((p) => [p.id, p]));
-const compById = new Map(WORLD.competitions.map((c) => [c.id, c]));
-const matchById = new Map(WORLD.matches.map((m) => [m.id, m]));
+const clubById = indexById(WORLD.clubs);
+const playerById = indexById(WORLD.players);
+const compById = indexById(WORLD.competitions);
+const matchById = indexById(WORLD.matches);
 
 export const getClub = (id: string) => clubById.get(id);
 export const getPlayer = (id: string) => playerById.get(id);

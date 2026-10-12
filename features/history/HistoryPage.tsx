@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
-import { buildTimeline, groupByDay, type TimelineKind } from "@/domain/history";
+import { buildTimeline, groupByDay, dayKey, type TimelineKind } from "@/domain/history";
 import { rowLine, type RowText } from "@/domain/rowText";
 import { LESSONS } from "@/domain/learn";
 import { useLearnRecords, useFilmRecords } from "@/lib/hooks";
@@ -166,16 +166,12 @@ export function HistoryPage() {
 function dayLabel(key: string, t: (k: string) => string, locale: Locale): string {
   if (key === "invalid") return t("hist.invalid");
   const now = new Date();
-  const today = keyOf(now);
+  const today = dayKey(now.toISOString());
   const y = new Date(now.getTime() - 86400000);
   if (key === today) return t("hist.today");
-  if (key === keyOf(y)) return t("hist.yesterday");
+  if (key === dayKey(y.toISOString())) return t("hist.yesterday");
   const [yy, mm, dd] = key.split("-").map(Number);
   return formatDate(locale, new Date(yy, mm - 1, dd), { month: "numeric", day: "numeric", year: "numeric" });
-}
-
-function keyOf(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function fmtTime(locale: Locale, iso: string): string {

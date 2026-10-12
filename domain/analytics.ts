@@ -6,7 +6,7 @@
 // means "scores at the league-average rate".
 
 import type { Club, Match } from "@/domain/types";
-import { round3 } from "@/lib/utils";
+import { round2, round3, indexById } from "@/lib/utils";
 
 export type FormLetter = "W" | "D" | "L";
 
@@ -89,7 +89,7 @@ export function finishedCount(compId: string, matches: Match[]): number {
 
 /** Compute per-club metrics for a competition from its finished matches. */
 export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): TeamMetrics[] {
-  const byId = new Map(clubs.map((c) => [c.id, c]));
+  const byId = indexById(clubs);
   // M336: the same list `finishedCount` counts, so a correction to what "finished" means lands
   // in one place instead of in the metrics and in the page's count separately.
   const fixtures = finishedFixtures(compId, matches);
@@ -150,16 +150,16 @@ export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): Te
       ga,
       gd: gf - ga,
       points: won * 3 + drawn,
-      ppg: played ? Math.round(((won * 3 + drawn) / played) * 100) / 100 : 0,
-      gfAvg: Math.round(gfAvg * 100) / 100,
-      gaAvg: Math.round(gaAvg * 100) / 100,
+      ppg: played ? round2(((won * 3 + drawn) / played)) : 0,
+      gfAvg: round2(gfAvg),
+      gaAvg: round2(gaAvg),
       cleanSheets,
       form,
       home: a.home,
       away: a.away,
-      attack: leagueAvg ? Math.round((gfAvg / leagueAvg) * 100) / 100 : 0,
-      defence: leagueAvg ? Math.round((gaAvg / leagueAvg) * 100) / 100 : 0,
-      leagueAvg: Math.round(leagueAvg * 100) / 100,
+      attack: leagueAvg ? round2(gfAvg / leagueAvg) : 0,
+      defence: leagueAvg ? round2(gaAvg / leagueAvg) : 0,
+      leagueAvg: round2(leagueAvg),
     });
   }
   return out.sort((x, y) => y.points - x.points || y.gd - x.gd || y.gf - x.gf);
@@ -191,7 +191,7 @@ export function expectedGoals(home: TeamMetrics, away: TeamMetrics, leagueAvg?: 
   const base = leagueAvg ?? Math.min(home.leagueAvg || 1.4, away.leagueAvg || 1.4);
   const h = clampLambda(base * shrink(home.attack, home.played) * shrink(away.defence, away.played) * 1.12);
   const a = clampLambda(base * shrink(away.attack, away.played) * shrink(home.defence, home.played) * 0.92);
-  return { home: Math.round(h * 100) / 100, away: Math.round(a * 100) / 100 };
+  return { home: round2(h), away: round2(a) };
 }
 
 // Goals in a football match are close enough to Poisson-distributed for a
@@ -236,8 +236,8 @@ export function outcomeOdds(home: TeamMetrics, away: TeamMetrics, leagueAvg?: nu
     }
   }
   const total = ph + pd + pa || 1; // renormalise the truncated tail
-  const lambdaHome = Math.round(lH * 100) / 100;
-  const lambdaAway = Math.round(lA * 100) / 100;
+  const lambdaHome = round2(lH);
+  const lambdaAway = round2(lA);
   return {
     home: round3(ph / total),
     draw: round3(pd / total),
@@ -247,7 +247,7 @@ export function outcomeOdds(home: TeamMetrics, away: TeamMetrics, leagueAvg?: nu
     // Sums the two λ figures this is displayed beside, so the line can never
     // contradict the arithmetic a visitor does on screen. expectedGoals already
     // hands back 2-dp lambdas today; this keeps that true if it ever stops.
-    expectedTotalGoals: Math.round((lambdaHome + lambdaAway) * 100) / 100,
+    expectedTotalGoals: round2(lambdaHome + lambdaAway),
     lambdaHome,
     lambdaAway,
   };

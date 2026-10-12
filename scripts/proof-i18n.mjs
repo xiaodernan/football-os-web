@@ -3074,8 +3074,39 @@ function proseOnLine(line) {
   return out;
 }
 
+function stripComments(code) {
+  let out = "";
+  let i = 0;
+  while (i < code.length) {
+    if (code[i] === "/" && i + 1 < code.length) {
+      if (code[i + 1] === "/") {
+        // Single-line comment: skip to end of line
+        while (i < code.length && code[i] !== "\n") i++;
+        continue;
+      }
+      if (code[i + 1] === "*") {
+        // Block comment: skip to */
+        i += 2;
+        while (i < code.length - 1) {
+          if (code[i] === "*" && code[i + 1] === "/") {
+            i += 2;
+            break;
+          }
+          i++;
+        }
+        continue;
+      }
+    }
+    out += code[i];
+    i++;
+  }
+  return out;
+}
+
 function proseDebt(relPath) {
-  const lines = readFileSync(join(root, ...relPath.split("/")), "utf8").split(/\r?\n/);
+  const code = readFileSync(join(root, ...relPath.split("/")), "utf8");
+  const cleaned = stripComments(code);
+  const lines = cleaned.split(/\r?\n/);
   const hits = [];
   lines.forEach((line, i) => {
     for (const _ of proseOnLine(line)) hits.push(i + 1);
@@ -3235,6 +3266,10 @@ ok(`the scan walks the whole domain population (${debtFiles.length} of ${domainF
 // M254 measured the last two: both were the question parser's regexes, whose apostrophes the
 // literal scanner read as opening a string. `proseOnLine` strips regex literals first, so the
 // file is at 0 — and a cap of 0 can only stay there.
+// M345: proseDebt now runs every line through the scanner's own comment stripper first, so a
+// block comment that QUOTES a sentence is no longer debt — it is documentation about the code.
+// The measured count is still 0, which is the point of the change: the cap stays where the
+// comment above says it may only stay, and the rule can no longer be reddened by a comment.
 const EXTRA_PROSE = [{ path: "data/intelligence.ts", cap: 0 }];
 for (const { path, cap } of EXTRA_PROSE) {
   const hits = proseDebt(path);
@@ -3247,8 +3282,21 @@ for (const { path, cap } of EXTRA_PROSE) {
 const plantedProse = proseOnLine('const x = "The reader would see this sentence.";');
 const plantedRegex = proseOnLine('const words = q.toLowerCase().replace(/[^a-z0-9\' -]/g, " ").split(/\\s+/);');
 ok(`the prose rule still reports a sentence and still ignores a regex, so the zero above is measured and not a blind spot (${plantedProse.length} of 1 prose, ${plantedRegex.length} of 0 regex)`,
-  plantedProse.length === 1 && plantedRegex.length === 0 &&
-  EXTRA_PROSE.every((e) => proseDebt(e.path).length === 0));
+  plantedProse.length === 1 && plantedRegex.length === 0);
+// proseDebt's own two-sided test. M345 put the comment stripper in front of the line walk, which
+// is a change that can fail BOTH ways: a stripper that strips nothing raises the measured count
+// on any file whose comments quote a sentence, and a stripper that strips too much would erase a
+// real literal and turn debt into a false zero. So the same planted line is charged twice — once
+// as a live string (must read 1, proving nothing was over-stripped) and once inside a block
+// comment (must read 0, proving the stripper runs at all).
+const plantedLive = stripComments('const x = "The reader would see this sentence.";').split("\n")
+  .flatMap((l) => proseOnLine(l)).length;
+const plantedComment = stripComments('/* const x = "The reader would see this sentence."; */\nconst y = 1;').split("\n")
+  .flatMap((l) => proseOnLine(l)).length;
+ok(`…and proseDebt reads code rather than comments, both ways: the same sentence as a live literal still counts (${plantedLive} of 1) and inside a block comment counts for nothing (${plantedComment} of 0)`,
+  plantedLive === 1 && plantedComment === 0);
+ok(`the extra prose allowances are respected (${EXTRA_PROSE.map((e) => `${e.path} ${proseDebt(e.path).length}/${e.cap}`).join(", ")})`,
+  EXTRA_PROSE.every((e) => Number.isInteger(e.cap) && e.cap >= 0 && proseDebt(e.path).length <= e.cap));
 
 // 32. One English sentence, one key. Check 30 pins a handful of declared shared words;
 // this is the same drift class measured across the whole dictionary instead of a list
@@ -3534,9 +3582,11 @@ ok(`the RAG entry point requires a Locale rather than defaulting it (${RAG_DECL}
 
 // (c) A label built out of date parts by hand never calls a formatter, so (a) cannot see
 //     it. What is allowed here is a grouping KEY — `YYYY-MM-DD`, padded, compared against
-//     another key and never shown — so each declared site has to still have that shape.
+//     another key and never shown — so the single centralized builder must still have that shape.
+// M348 centralized the day key in domain/history.ts (the dayKey function); HistoryPage.tsx now
+// calls it rather than duplicating the arithmetic.
 const HAND = /`[^`]*\$\{[^}]*\.get(?:Month|Date|FullYear)\(\)[^`]*`/g;
-const DAY_KEY_FILES = { "domain/history.ts": 1, "features/history/HistoryPage.tsx": 1 };
+const DAY_KEY_FILES = { "domain/history.ts": 1 };
 const ISO_KEY = /^\$\{[\w.]+\.getFullYear\(\)\}-\$\{[^}]*padStart\(2, ?"0"\)\}-\$\{[^}]*padStart\(2, ?"0"\)/;
 const handSites = [];
 for (const [path, code] of appSrc) {
@@ -3549,7 +3599,7 @@ ok(`no hand-assembled date label reaches a screen (${badHand.map((s) => `${s.pat
   badHand.length === 0 && handSites.length > 0);
 ok(`the declared ISO day keys are still there and still keys (${lostHand.map(([p, n]) => `${p} ${handByFile(p)}/${n}`).join(", ") || "all in place"})`,
   lostHand.length === 0);
-ok(`the day-key scan is reading the builders it claims (${handSites.length})`, handSites.length === 2);
+ok(`the day-key scan is reading the builders it claims (${handSites.length})`, handSites.length === 1);
 
 // (c') A day count that leaves the gate gives a shared row a second meaning. The feed's
 //     relative-time helper divides elapsed hours by 24 — honest for minutes and hours, but
@@ -5665,6 +5715,35 @@ const clausesIn = (src) => {
   }
   return out;
 };
+// M338. Splitting a clause's arguments is needed by two readers now — the census's OR test and
+// section 39's failable-predicate test — so it is one pair of functions rather than two copies
+// (two scanners are two chances to disagree). Slice-based rather than `cur += ch`: 1,700 clauses
+// is enough for string building to show up as minutes on this suite's runtime.
+const topLevelArgs = (body) => {
+  const inner = body.replace(/^ok\(/, "").replace(/\)\s*;?\s*$/, "");
+  const cuts = [];
+  let depth = 0;
+  let inStr = null;
+  for (let i = 0; i < inner.length; i++) {
+    const ch = inner[i];
+    if (inStr) {
+      if (ch === "\\") { i++; continue; }
+      if (ch === inStr) inStr = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") { inStr = ch; continue; }
+    if (ch === "(" || ch === "[" || ch === "{") depth++;
+    else if (ch === ")" || ch === "]" || ch === "}") depth--;
+    else if (ch === "," && depth === 0) cuts.push(i);
+  }
+  const parts = [];
+  let start = 0;
+  for (const c of cuts) { parts.push(inner.slice(start, c).trim()); start = c + 1; }
+  parts.push(inner.slice(start).trim());
+  return parts;
+};
+// The predicate: the first argument that is not the label string. `ok(label, cond, detail)`.
+const predicateOf = (body) => topLevelArgs(body).find((a) => a && !/^[`"']/.test(a)) ?? "";
 // M311/M312. The suite writes a planted witness two ways — `plant…` and `…so the zero above is
 // measured and not a blind spot` — and this recogniser only knew the first, so every clause
 // written in the second phrasing was reported as owing while it stood there with its witness
@@ -5732,7 +5811,13 @@ for (const f of proofFiles) {
     // M316: an OR-composition (`zero || pin`) must NOT be credited even when a positive pin exists,
     // because the zero arm can still pass vacuously on empty measurement. Only AND-compositions
     // (`zero && pin`) are safe to de-charge.
-    const hasOrComposition = /\|\|/.test(c.body);
+    // M338: the OR has to be in the ASSERTION. This test read the whole clause body, and the
+    // suite's own diagnostic idiom ends every message with `|| "none"` — so a clause whose
+    // predicate is a pure AND lost its companion the moment someone wrote a helpful message on
+    // it. `proof-storage`'s four-family clause is the case that found it: three `=== 0` arms and
+    // `familySites.length === APP_FILES.length`, ANDed, with `|| "none anywhere"` in the detail
+    // string, charged as an OR-composition. A message is not an assertion.
+    const hasOrComposition = /\|\|/.test(predicateOf(c.body));
     const companion = !hasOrComposition && next.some((x) => isPlant(x.body) || GUARD_RE.test(x.body));
     if (GUARD_RE.test(c.body) || companion) continue;
     unguardedZeroes.push(`${f}:${c.line}`);
@@ -5793,11 +5878,17 @@ const GUARD_FIXTURES = [
   ["an OR-mixed zero arm stays charged", 'ok("x", a.length === 0 || b.length >= 1);\n', false],
   ["a strict positive floor (`> 4`) is credited the way `>= 1` is", 'ok("x", a.length === 0);\nok("the scan read a real population", mixed.length > 4);\n', true],
   ["an arrow that returns zero is not a floor pin", 'ok("no fabricated facts", a.facts.length === 0);\nok("the mapper answers zero", items.map((v) => 0));\n', false],
+  // M338: the pair that separates an OR in the assertion from an OR in the message. The suite's
+  // diagnostic idiom ends messages with `|| "none"`, and reading the whole body made that a
+  // disqualifier. These two fixtures are the same clause with the `||` moved from one argument
+  // to the other, so a reader that cannot tell them apart reddens here.
+  ["an OR in the message is not an OR in the assertion", 'ok("x", a.length === 0, raw.length === 0 || "none");\nok("the scan read something rather than nothing", a.length > 5);\n', true],
+  ["an OR in the assertion is still an OR, message or no message", 'ok("x", a.length === 0 || b.length >= 1, raw.length === 0 || "none");\nok("the scan read something rather than nothing", a.length > 5);\n', false],
 ];
 const guardVerdicts = GUARD_FIXTURES.map(([name, src, want]) => {
   const cls = clausesIn(src);
   const c = cls[0];
-  const hasOrComposition = /\|\|/.test(c.body);
+  const hasOrComposition = /\|\|/.test(predicateOf(c.body));
   const next = cls.filter((x) => x.line > c.line).slice(0, 2);
   const credited = !hasOrComposition && (isPlant(c.body) || !isZeroish(c.body.split("\n")[0]) || GUARD_RE.test(c.body) || next.some((x) => isPlant(x.body) || GUARD_RE.test(x.body)));
   return [name, credited === want];
@@ -5929,35 +6020,8 @@ const HARNESS_FIXTURES = [
 const harnessVerdicts = HARNESS_FIXTURES.map(([name, src, want]) => [name, harnessOk(src) === want]);
 ok(`the harness reader, planted both ways, links a counter that reaches an exit and refuses one that does not, and refuses a literal tally (${harnessVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
   harnessVerdicts.every(([, v]) => v));
-// The second axis: the predicate itself. `clausesIn` gives the clause body; the predicate is
-// its first argument that is not the label string. Splitting the arguments has to be done here
-// rather than by regex, because a predicate is full of commas that are not argument separators.
-// Slice-based rather than `cur += ch`: 1,700 clauses is enough for the string building to show
-// up as minutes on this suite's runtime.
-const topLevelArgs = (body) => {
-  const inner = body.replace(/^ok\(/, "").replace(/\)\s*;?\s*$/, "");
-  const cuts = [];
-  let depth = 0;
-  let inStr = null;
-  for (let i = 0; i < inner.length; i++) {
-    const ch = inner[i];
-    if (inStr) {
-      if (ch === "\\") { i++; continue; }
-      if (ch === inStr) inStr = null;
-      continue;
-    }
-    if (ch === '"' || ch === "'" || ch === "`") { inStr = ch; continue; }
-    if (ch === "(" || ch === "[" || ch === "{") depth++;
-    else if (ch === ")" || ch === "]" || ch === "}") depth--;
-    else if (ch === "," && depth === 0) cuts.push(i);
-  }
-  const parts = [];
-  let start = 0;
-  for (const c of cuts) { parts.push(inner.slice(start, c).trim()); start = c + 1; }
-  parts.push(inner.slice(start).trim());
-  return parts;
-};
-const predicateOf = (body) => topLevelArgs(body).find((a) => a && !/^[`"']/.test(a)) ?? "";
+// The second axis: the predicate itself. `clausesIn` gives the clause body and `predicateOf`
+// — declared beside the census, because the census reads a predicate too — gives the assertion.
 const SELF_CMP = /([A-Za-z_$][\w$.[\]"']*)\s*(?:===|==|!==|!=|<=|>=|<|>)\s*([A-Za-z_$][\w$.[\]"']*)/;
 const neverFails = (pred) => {
   if (/^(true|1)$/.test(pred)) return "a literal true";

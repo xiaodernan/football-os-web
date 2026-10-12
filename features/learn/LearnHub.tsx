@@ -21,7 +21,7 @@ import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { rowLine } from "@/domain/rowText";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, indexById } from "@/lib/utils";
 import { toast } from "sonner";
 import { useI18n } from "@/i18n";
 
@@ -50,7 +50,7 @@ export function LearnHub() {
     removeJson(browserStore(), LEGACY_LEARN_KEY);
   }, [setRecords]);
 
-  const byId = useMemo(() => new Map(records.map((r) => [r.id, r])), [records]);
+  const byId = useMemo(() => indexById(records), [records]);
   const summary = useMemo(() => summarizeLearn(records), [records]);
   const signals = useMemo(
     () => ({

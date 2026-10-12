@@ -1,4 +1,5 @@
 import type { RowText } from "./rowText";
+import { indexById } from "@/lib/utils";
 
 // Knowledge Academy domain (spec §8). The lesson text is editorial content
 // authored for this product; everything in this module is *accounting* — it turns
@@ -192,7 +193,7 @@ export interface LearnSummary {
 export const isCompleted = (r: LearnRecord | undefined): boolean => !!r && r.completedAt !== "";
 
 export function summarizeLearn(records: LearnRecord[]): LearnSummary {
-  const byId = new Map(records.map((r) => [r.id, r]));
+  const byId = indexById(records);
   const completed = LESSONS.filter((l) => isCompleted(byId.get(l.id))).length;
   const mastered = LESSONS.filter((l) => byId.get(l.id)?.quizCorrect && isCompleted(byId.get(l.id))).length;
   const attemptedOnly = records.filter((r) => r.attempts > 0 && !isCompleted(r)).length;
