@@ -1,5 +1,5 @@
 import { createServer } from "vite";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { makeSay } from "./lib/rows.mjs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
@@ -321,6 +321,69 @@ ok("each evidence row is interpreted, and none is dropped into JSX raw",
   evBlock.length > 0 && /rowLine\(e,\s*t\)/.test(evBlock) && !/\{\s*e\s*\}/.test(evBlock));
 ok("each source chip is interpreted, and none is dropped into JSX raw",
   srcBlock.length > 0 && /rowLine\(s,\s*t\)/.test(srcBlock) && !/\{\s*s\s*\}/.test(srcBlock));
+
+// M344: the round2 seam --------------------------------------------------
+// analytics.ts (the Data Room's λ pair and attack/defence ratings), filmInsights.ts (per-minute
+// and scan rates), load.ts (ACWR and monotony) and data/footballSeed.ts (a news row's credibility
+// field) each carried a byte-identical inline `Math.round(v * 100) / 100`. Identical today, so no
+// stored figure moves — but four copies that part company the moment one is re-rounded,
+// desynchronising numbers a reader sees side by side. All four now import lib/utils's single round2,
+// the same dependency-free home as round3 and clamp: analytics is reached from scouting through
+// data/footballService, so a rounder it shares cannot live beside round1 in scouting without
+// closing a cycle. career.ts is a separate writer's lane and its three sites stay inline — so,
+// unlike round3, this seam PINS domain/career.ts as the one expected residue rather than demanding
+// an empty scan. The clauses bind the seam four ways — the one declaration, the four imports, the
+// absence of any private or inline copy in the four consumers, and the whole domain+lib+data residue
+// set — each armed by a planted witness so "no copies found" is a measurement, not a blind scan.
+const R2_HOME = "lib/utils.ts";
+const R2_CONSUMERS = ["domain/analytics.ts", "domain/filmInsights.ts", "domain/load.ts", "data/footballSeed.ts"];
+const r2src = Object.fromEntries([R2_HOME, ...R2_CONSUMERS].map((f) => [f, readFileSync(f, "utf8")]));
+const LOCAL_DEF2 = /\n[ \t]*(?:export[ \t]+)?(?:const|function)[ \t]+(?:round2|r2)[ \t]*[(=]/g;
+const IMPORTS_R2 = /import[^;]*\bround2\b[^;]*from ["']@\/lib\/utils["']/g;
+// Balanced-paren inline round-to-2 counter: walk Math.round( to its matching close, require the
+// argument to end in `* 100` and the close to be followed by `/ 100` — catches any nesting depth,
+// the blind spot that made a fixed-nesting regex miss career.ts's `Math.round((points / played) * 100) / 100`.
+const inlineRound2 = (src) => {
+  let n = 0, i = 0;
+  const KEY = "Math.round(";
+  while ((i = src.indexOf(KEY, i)) !== -1) {
+    let depth = 1, j = i + KEY.length;
+    while (j < src.length && depth > 0) { const c = src[j++]; if (c === "(") depth++; else if (c === ")") depth--; }
+    if (/\*\s*100$/.test(src.slice(i + KEY.length, j - 1).trimEnd()) && /^\s*\/\s*100\b/.test(src.slice(j))) n++;
+    i = j;
+  }
+  return n;
+};
+const nlocal2 = (s) => (s.match(LOCAL_DEF2) || []).length;
+// Plants arm each scan: a private const-decl, a module-scope function alias, an inline two-level
+// nested rounding, and the @/lib/utils import must each read 1, else a "0 found" verdict below is
+// vacuous.
+const plantDecl2 = nlocal2("\nconst r2 = (v: number) => Math.round(v * 100) / 100;");
+const plantFn2 = nlocal2("\nfunction round2(v: number): number {\n  return Math.round(v * 100) / 100;\n}");
+const plantInline2 = inlineRound2("  const a = Math.round((xs.reduce((s, x) => s + x, 0) / 100) * 100) / 100;");
+const plantImp2 = ('import { round2 } from "@/lib/utils";'.match(IMPORTS_R2) || []).length;
+const privateDefs2 = R2_CONSUMERS.filter((f) => nlocal2(r2src[f]) > 0).map((f) => `${f}(${nlocal2(r2src[f])})`);
+const importers2 = R2_CONSUMERS.filter((f) => (r2src[f].match(IMPORTS_R2) || []).length > 0);
+const inlineInR2 = R2_CONSUMERS.filter((f) => inlineRound2(r2src[f]) > 0).map((f) => `${f}(${inlineRound2(r2src[f])})`);
+const r2Carriers = [
+  ...readdirSync("domain").filter((f) => f.endsWith(".ts")).map((f) => `domain/${f}`),
+  ...readdirSync("lib").filter((f) => f.endsWith(".ts")).map((f) => `lib/${f}`),
+  ...readdirSync("data").filter((f) => f.endsWith(".ts")).map((f) => `data/${f}`),
+]
+  .map((f) => [f, inlineRound2(readFileSync(f, "utf8"))]).filter(([, n]) => n > 0);
+const r2Residue = r2Carriers.map(([f]) => f).filter((f) => f !== R2_HOME);
+const { round2: shippedRound2 } = await server.ssrLoadModule("/lib/utils.ts");
+
+ok(`lib/utils exports the one round2 and no consumer re-declares it (${privateDefs2.join(", ") || "none"}; plants armed: ${plantDecl2}${plantFn2})`,
+  plantDecl2 === 1 && plantFn2 === 1 && nlocal2(r2src[R2_HOME]) === 1 && privateDefs2.length === 0);
+ok(`the balanced inline scan is armed at depth two and none of the four consumers still inlines *100)/100 (${inlineInR2.join(", ") || "none"}; plant: ${plantInline2})`,
+  plantInline2 === 1 && inlineInR2.length === 0 && inlineRound2(r2src[R2_HOME]) === 1);
+ok(`all four consumers import round2 from @/lib/utils (${importers2.join(", ") || "none"}; plant: ${plantImp2})`,
+  plantImp2 === 1 && importers2.length === R2_CONSUMERS.length && R2_CONSUMERS.every((f) => importers2.includes(f)));
+ok(`across domain, lib and data the only inline round-to-2 copies are lib/utils's own body and career.ts's pinned-residue sites — nothing else (${r2Residue.join(", ") || "none"}; carriers: ${r2Carriers.map(([f, n]) => `${f}:${n}`).join(", ")})`,
+  plantInline2 === 1 && r2Residue.length === 1 && r2Residue[0] === "domain/career.ts" && inlineRound2(r2src[R2_HOME]) === 1);
+ok("the shared round2 still rounds to two decimals for the rates, the ratio and the credibility field",
+  shippedRound2(0.12345) === 0.12 && shippedRound2(2.5) === 2.5 && shippedRound2(1) === 1);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

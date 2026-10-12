@@ -6,6 +6,7 @@
 
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
+import { round2 } from "@/lib/utils";
 
 export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
 
@@ -75,7 +76,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   const byKind: KindRate[] = FILM_KINDS.map((kind) => ({
     kind,
     count: counts.get(kind) ?? 0,
-    perMinute: Math.round(perMin(counts.get(kind) ?? 0) * 100) / 100,
+    perMinute: round2(perMin(counts.get(kind) ?? 0)),
   })).sort((a, b) => b.count - a.count || a.kind.localeCompare(b.kind));
 
   const totalEvents = valid.reduce((s, c) => s + c.events.length, 0);
@@ -95,10 +96,10 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
     };
     const older = sorted.slice(0, half);
     const newer = sorted.slice(sorted.length - half);
-    olderScanRate = Math.round(rate(older) * 100) / 100;
-    newerScanRate = Math.round(rate(newer) * 100) / 100;
+    olderScanRate = round2(rate(older));
+    newerScanRate = round2(rate(newer));
   }
-  const scanTrend = olderScanRate != null && newerScanRate != null ? Math.round((newerScanRate - olderScanRate) * 100) / 100 : null;
+  const scanTrend = olderScanRate != null && newerScanRate != null ? round2(newerScanRate - olderScanRate) : null;
 
   const focusMap = new Map<string, number>();
   for (const c of valid) for (const key of new Set(c.recommendedFocus)) focusMap.set(key, (focusMap.get(key) ?? 0) + 1);
@@ -149,11 +150,11 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
 
   return {
     clips: valid.length,
-    analysedMinutes: Math.round(analysedMinutes * 100) / 100,
+    analysedMinutes: round2(analysedMinutes),
     detections: totalEvents,
     byKind,
-    actionsPerMinute: Math.round(perMin(totalEvents) * 100) / 100,
-    scanPerMinute: Math.round(perMin(scans) * 100) / 100,
+    actionsPerMinute: round2(perMin(totalEvents)),
+    scanPerMinute: round2(perMin(scans)),
     scanTrend,
     olderScanRate,
     newerScanRate,

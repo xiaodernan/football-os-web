@@ -18,3 +18,12 @@ export const clamp = (v: number, lo: number, hi: number): number => Math.max(lo,
 // data/footballService — analytics importing from scouting would close a cycle, so a rounder shared
 // by its consumers must live in this dependency-free module.
 export const round3 = (v: number): number => Math.round(v * 1000) / 1000;
+
+// The app's shared round-to-two helper. domain/analytics (the Data Room's λ pair and
+// attack/defence ratings), domain/filmInsights (per-minute action and scan rates),
+// domain/load (ACWR and monotony) and the news seed's credibility field each carried a
+// byte-identical private form of this shape. Identical today, so no stored figure moves,
+// but four formulas that part company the moment one is re-rounded. Same dependency-free
+// home as round3, for the same cycle reason: analytics is reached from scouting through
+// data/footballService, so a rounder it shares must not live in scouting.
+export const round2 = (v: number): number => Math.round(v * 100) / 100;

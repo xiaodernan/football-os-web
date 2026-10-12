@@ -1,6 +1,7 @@
 import type { RowText } from "./rowText";
 import type { TrainingSession } from "./types";
 import { sessionIntensity } from "./training";
+import { round2 } from "@/lib/utils";
 
 // Training-load management built on the same monotony/strain + acute:chronic
 // ratio (ACWR) ideas used in strength & conditioning. Every number is derived
@@ -108,7 +109,7 @@ export function buildLoad(input: LoadInput): LoadSummary {
   const acute = Math.round(acuteTotal / ACUTE_DAYS);
   const chronic = Math.round(chronicTotal / CHRONIC_DAYS);
   const weekLoad = acuteTotal;
-  const acwr = chronic > 0 ? Math.round((acute / chronic) * 100) / 100 : null;
+  const acwr = chronic > 0 ? round2(acute / chronic) : null;
 
   const weekly = buildWeekly(nowMs, daily);
   const { monotony, strain } = buildMonotony(weekly);
@@ -179,7 +180,7 @@ function buildMonotony(weekly: WeeklyLoad[]): { monotony: number | null; strain:
   const variance = loads.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
   const sd = Math.sqrt(variance);
   if (mean <= 0) return { monotony: null, strain: null };
-  const monotony = sd > 0 ? Math.round((mean / sd) * 100) / 100 : null;
+  const monotony = sd > 0 ? round2(mean / sd) : null;
   const strain = monotony != null ? Math.round(mean * monotony) : null;
   return { monotony, strain };
 }
