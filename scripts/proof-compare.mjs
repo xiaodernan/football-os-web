@@ -9,7 +9,7 @@ import { readFileSync, readdirSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { compare } = await server.ssrLoadModule("/domain/compare.ts");
-const { headroom, valueIndex, primeYears, primeWindow, primeHold, primeYearsLabel, bucketOf, round1: shippedRound1 } =
+const { headroom, valueIndex, primeYears, primeWindow, primeHold, primeYearsLabel, bucketOf, scoutComparators, round1: shippedRound1 } =
   await server.ssrLoadModule("/domain/scouting.ts");
 const { categoryAverages, attributeLabel } = await server.ssrLoadModule("/domain/attributes.ts");
 const { footballProvider, getPlayer, formatValue } = await server.ssrLoadModule("/data/footballService.ts");
@@ -285,6 +285,87 @@ ok(`across the whole domain directory the only inline round1 outside scouting's 
   plantNested === 1 && residue.length === 1 && residue[0] === "domain/career.ts" && inlineRound1(r1src[R1_HOME]) === 1);
 ok("the shared rounder still rounds to one decimal for the model and the display alike",
   shippedRound1(2.467) === 2.5 && shippedRound1(3.14) === 3.1 && shippedRound1(-2.467) === -2.5 && shippedRound1(12) === 12);
+
+// --- M345: the scout sort-comparator seam ---------------------------------
+// `features/watchlist/WatchlistBoard.tsx` used to re-type the four-comparator object
+// (value / potential / overall / age) that `domain/scouting.ts` uses to order the
+// scout board's candidate list. Byte-identical, both in-place: today the two screens
+// agree, tomorrow a rule edit on one (say, tie-break potential by headroom, or flip
+// the age sign) means the two lists diverge and no reader can see why. The rule is
+// one door now: `scoutComparators` in the module that owns the ranking, and every
+// other consumer rides the import. This is the sort-rule class M348 closed for
+// byKickoff; the comparator object is that class's other shape.
+//
+// Charge the signature of the value arm (`value: (a, b) => valueIndex(b) - valueIndex(a)`
+// on one line) rather than the whole object literal: it is the least-collidable shape
+// a re-typed copy has to carry to actually mean what scouting means, and a per-arm scan
+// catches a partial re-inline (someone copies three of four arms and stops caring about
+// the fourth). The plant below is the exact line the removed copy used.
+const SC_COMP_HOME = "domain/scouting.ts";
+const SC_CONSUMERS = ["features/watchlist/WatchlistBoard.tsx"];
+const scSrc = Object.fromEntries([SC_COMP_HOME, ...SC_CONSUMERS].map((f) => [f, readFileSync(f, "utf8")]));
+const DECL = /\nexport const scoutComparators[ \t]*[:=]/g;
+const IMPORTS_SC = /import[^;]*\bscoutComparators\b[^;]*from ["']@\/domain\/scouting["']/g;
+// Value-arm signature: `value: (a, b) => valueIndex(b) - valueIndex(a)` — a re-typed
+// copy has to carry the argument order to actually mean the same rule.
+const VALUE_ARM = /[ \t]value:[ \t]*\(a,[ \t]*b\)[ \t]*=>[ \t]*valueIndex\(b\)[ \t]*-[ \t]*valueIndex\(a\)[ \t]*,?/g;
+const decl = (s) => (s.match(DECL) || []).length;
+const arm = (s) => (s.match(VALUE_ARM) || []).length;
+// Plants arm each scan so a "no copies" reading is a measurement.
+const plantDecl = decl("\nexport const scoutComparators: Record<X, (a, b) => number> = {\n  value: (a, b) => 0,\n};");
+const plantValueArm = arm("  value: (a, b) => valueIndex(b) - valueIndex(a),");
+// Population: everything under domain/ and features/ (walk every subtree; features
+// nests two levels for shell pages, so recursion is required).
+const walk = (d) => {
+  const out = [];
+  for (const e of readdirSync(d, { withFileTypes: true })) {
+    const p = `${d}/${e.name}`;
+    if (e.isDirectory()) out.push(...walk(p));
+    else if (/\.(ts|tsx)$/.test(e.name)) out.push(p);
+  }
+  return out;
+};
+const tree = [...walk("domain"), ...walk("features"), ...walk("data"), ...walk("lib")];
+const valueArmSites = tree.filter((f) => arm(readFileSync(f, "utf8")) > 0);
+const scImporters = SC_CONSUMERS.filter((f) => (scSrc[f].match(IMPORTS_SC) || []).length > 0);
+// Residue = anything charging VALUE_ARM that is neither the door itself nor a declared
+// import of the door. Today: only the door's own body.
+const scResidue = valueArmSites.filter((f) => f !== SC_COMP_HOME);
+ok(`scouting.ts exports the one comparator object and the watchlist re-imports rather than retypes it (${scResidue.join(", ") || "none"}; plants: decl ${plantDecl}, arm ${plantValueArm})`,
+  plantDecl === 1 && plantValueArm === 1 && decl(scSrc[SC_COMP_HOME]) === 1 && SC_CONSUMERS.every((f) => arm(scSrc[f]) === 0));
+ok(`the value-arm signature appears in the tree exactly once, inside scouting (${valueArmSites.join(", ") || "none"})`,
+  valueArmSites.length === 1 && valueArmSites[0] === SC_COMP_HOME);
+ok(`every watchlist consumer of the shared comparator imports it by name from @/domain/scouting (${scImporters.join(", ") || "none"})`,
+  scImporters.length === SC_CONSUMERS.length && SC_CONSUMERS.every((f) => scImporters.includes(f)));
+
+// Behavioural: the four orderings on the real provider list obey their stated rules
+// for consecutive pairs — this is the shipped comparator, so the measurement is
+// about the file, not about a hand-typed twin.
+const list = players;
+const chkValue = [...list].sort(scoutComparators.value).every((p, i, a) => i === 0 || valueIndex(a[i - 1]) >= valueIndex(p));
+const chkPotential = [...list].sort(scoutComparators.potential).every((p, i, a) => {
+  if (i === 0) return true; const prev = a[i - 1];
+  return prev.potential > p.potential || (prev.potential === p.potential && headroom(prev) >= headroom(p));
+});
+const chkOverall = [...list].sort(scoutComparators.overall).every((p, i, a) => i === 0 || a[i - 1].overall >= p.overall);
+const chkAge = [...list].sort(scoutComparators.age).every((p, i, a) => {
+  if (i === 0) return true; const prev = a[i - 1];
+  return prev.age < p.age || (prev.age === p.age && prev.potential >= p.potential);
+});
+ok("the shipped comparators agree with their own rules across the whole provider list",
+  list.length >= 8 && chkValue && chkPotential && chkOverall && chkAge);
+// One arm's rule is not the others': a list already sorted by overall descending must
+// not, on a fresh sort, also happen to be age-ascending unless age and overall are
+// perfectly monotone in the data — on a real seed they are not.
+const byOverall = [...list].sort(scoutComparators.overall);
+const byAge = [...list].sort(scoutComparators.age);
+const sameOrder = byOverall.length === byAge.length && byOverall.every((p, i) => p.id === byAge[i].id);
+ok("the four comparators are four orderings, not one relabelled", !sameOrder && new Set([
+  byOverall.map((p) => p.id).join(","),
+  byAge.map((p) => p.id).join(","),
+  [...list].sort(scoutComparators.value).map((p) => p.id).join(","),
+  [...list].sort(scoutComparators.potential).map((p) => p.id).join(","),
+]).size === 4);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

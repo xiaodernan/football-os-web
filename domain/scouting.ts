@@ -62,6 +62,17 @@ export interface ScoutFilters {
 
 export type ScoutSort = "value" | "potential" | "overall" | "age";
 
+// The four scout orderings, one door. The watchlist board used to retype this object
+// verbatim beside its own SORTS array, so an edit to the scout rule (tie-break by
+// headroom, sign on the age sort) silently diverged from what a reader sees on the
+// other screen. Both now import this table; ScoutSort and SORTS name the same four.
+export const scoutComparators: Record<ScoutSort, (a: PlayerRef, b: PlayerRef) => number> = {
+  value: (a, b) => valueIndex(b) - valueIndex(a),
+  potential: (a, b) => b.potential - a.potential || headroom(b) - headroom(a),
+  overall: (a, b) => b.overall - a.overall,
+  age: (a, b) => a.age - b.age || b.potential - a.potential,
+};
+
 export function scoutCandidates(filters: ScoutFilters, sort: ScoutSort, limit = 60): PlayerRef[] {
   let list = footballProvider.players().filter((p) => {
     if (filters.bucket !== "ALL" && bucketOf(p.positionGroup) !== filters.bucket) return false;
@@ -71,13 +82,7 @@ export function scoutCandidates(filters: ScoutFilters, sort: ScoutSort, limit = 
     if (filters.clubId && p.clubId === filters.clubId) return false;
     return true;
   });
-  const cmp: Record<ScoutSort, (a: PlayerRef, b: PlayerRef) => number> = {
-    value: (a, b) => valueIndex(b) - valueIndex(a),
-    potential: (a, b) => b.potential - a.potential || headroom(b) - headroom(a),
-    overall: (a, b) => b.overall - a.overall,
-    age: (a, b) => a.age - b.age || b.potential - a.potential,
-  };
-  list = [...list].sort(cmp[sort]);
+  list = [...list].sort(scoutComparators[sort]);
   return list.slice(0, limit);
 }
 

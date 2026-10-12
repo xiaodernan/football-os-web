@@ -3,17 +3,20 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { getPlayer, getClub, formatValue } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
-import { headroom, valueIndex, primeYearsLabel, templateEdge } from "@/domain/scouting";
+import { headroom, valueIndex, primeYearsLabel, templateEdge, scoutComparators } from "@/domain/scouting";
+import type { ScoutSort } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type Sort = "value" | "potential" | "overall" | "age";
+type Sort = ScoutSort;
 
 // The four sort codes, at module scope rather than inline in a JSX child position
 // where the raw-UI scan reads them as display copy. They select a comparator and a
 // `watch.sort.*` dictionary key; the board renders t()-ed labels, never these.
+// The comparator is scouting's (see scoutComparators): the same four orderings shape
+// the scout board's list, and a rule typed twice is a rule that drifts between screens.
 const SORTS: Sort[] = ["value", "potential", "overall", "age"];
 
 export function WatchlistBoard() {
@@ -25,13 +28,7 @@ export function WatchlistBoard() {
 
   const players = useMemo(() => {
     const list = state.watchlist.map(getPlayer).filter(Boolean) as PlayerRef[];
-    const cmp: Record<Sort, (a: PlayerRef, b: PlayerRef) => number> = {
-      value: (a, b) => valueIndex(b) - valueIndex(a),
-      potential: (a, b) => b.potential - a.potential || headroom(b) - headroom(a),
-      overall: (a, b) => b.overall - a.overall,
-      age: (a, b) => a.age - b.age || b.potential - a.potential,
-    };
-    return [...list].sort(cmp[sort]);
+    return [...list].sort(scoutComparators[sort]);
   }, [state.watchlist, sort]);
 
   const togglePick = (id: string) =>
