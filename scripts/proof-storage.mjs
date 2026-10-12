@@ -842,6 +842,75 @@ ok(`…and the writer moved out of the effect: useLocalStorage persists inside t
 if (savedStore) Object.defineProperty(globalThis, "localStorage", savedStore);
 else Reflect.deleteProperty(globalThis, "localStorage");
 
+// ---------------------------------------------------------------------------
+// 7 · M338 — the four families M332-M336 cleared, held closed
+// ---------------------------------------------------------------------------
+// Each of those units left its own seam clause in the proof that owns the family. This is the
+// unit that says NONE OF THEM CAME BACK, because a family is not closed when its last member is
+// fixed - it is closed when the tree is read for its signatures and reads nothing. The scan is
+// over the same APP_FILES the storage census walks, so a new screen anywhere in features/, src/,
+// store/, lib/ or i18n/ is inside it from the day it lands. It sits at the END of the file, after
+// the census and the door probes, because APP_FILES, read() and normalize() are declared below the
+// load guard: the first draft parked it inside that guard's failure arm, where a healthy tree
+// never ran it and the two clauses counted as passing while measuring nothing.
+//
+// Text goes through normalize(), the shared string-aware stripper this proof already measures at
+// the top of the file, rather than a second local regex stripper: two strippers are two chances
+// to disagree about what counts as code, and the plant below charges whichever one is in use.
+//
+// The team-input family is scanned OUTSIDE domain/ on purpose. domain/career.ts is where
+// clubInput lives - it is the formula's home, not a copy of it, and M334's own clause reads the
+// three call sites that must all reach it. What was cleared, and what must not come back, is that
+// formula written out anywhere else in the app.
+const FAMILY_RAW = /localStorage\.(get|set|remove)Item/;
+const FAMILY_TEAM = [/possessionBias:\s*0\.5\s*\+/, /\bm\s*\*\s*3\b/, /attack:\s*attack\s*\+/];
+// The callback's own parentheses are why this cannot be `[^)]*` — the first version of it read
+// nothing, and the arm that caught that is recorded in the README.
+const FAMILY_HALF = /\.reduce\([\s\S]{0,200}?played[\s\S]{0,80}?\)\s*\/\s*2\b/;
+const familyScan = (file) => {
+  const code = normalize(read(file));
+  return {
+    f: file,
+    // 1 · the raw storage accessor outside the door (M332). domain/localData.ts is the door and
+    //     still does not write the accessor form, so this one is charged over the whole tree.
+    rawAccessor: FAMILY_RAW.test(code),
+    // 2 · a team-input formula outside the domain (M333/M334): the possession bias, the mental
+    //     adjustment, the fatigue term - any one of them means someone rebuilt clubInput.
+    teamInput: file.startsWith("domain/") ? false : FAMILY_TEAM.some((r) => r.test(code)),
+    // 3 · a per-team sum halved for a competition-level count (M336), charged over the whole tree.
+    halvedCount: FAMILY_HALF.test(code),
+  };
+};
+const familySites = APP_FILES.map(familyScan);
+const rawAccessorSites = familySites.filter((x) => x.rawAccessor);
+const teamInputSites = familySites.filter((x) => x.teamInput);
+const halvedCountSites = familySites.filter((x) => x.halvedCount);
+// Every scan above answers "0 found" on the shipped tree, and a zero that nothing can redden is
+// not a measurement. Each regex family is therefore fired here at a planted witness of its own
+// shape, and the stripper is charged with a witness of each comment form: if the stripper stopped
+// working, the comment plant would go from clean to a hit and the population clause below would
+// name it rather than quietly widening the population it reports.
+const familyPlants = {
+  raw: FAMILY_RAW.test(normalize("  const v = localStorage.getItem(KEY);")),
+  teamBias: FAMILY_TEAM.some((r) => r.test(normalize("    possessionBias: 0.5 + (a - b) * 0.1,"))),
+  teamMental: FAMILY_TEAM.some((r) => r.test(normalize("    attack: a.attack + m * 3,"))),
+  teamFatigue: FAMILY_TEAM.some((r) => r.test(normalize("    attack: attack + Math.round(x),"))),
+  halved: FAMILY_HALF.test(normalize(
+    "  const total = fx.reduce((s, f) => s + (f.home.played + f.away.played), 0) / 2 | 0;")),
+  commentLine: FAMILY_RAW.test(normalize("// we used to call localStorage.getItem here\nconst x = 1;")),
+  commentBlock: FAMILY_RAW.test(normalize("/* localStorage.getItem(KEY) */\nconst x = 1;")),
+};
+ok(`the four families M332-M336 cleared stay closed: over the ${APP_FILES.length} app files the storage census walks, the raw storage accessor appears in ${rawAccessorSites.length} file(s), the team-input arithmetic outside the domain in ${teamInputSites.length}, and a per-team sum halved into a competition count in ${halvedCountSites.length} (${[...rawAccessorSites, ...teamInputSites, ...halvedCountSites].map((x) => x.f).join(", ") || "none anywhere"}; plants armed: raw ${familyPlants.raw}, bias ${familyPlants.teamBias}, mental ${familyPlants.teamMental}, fatigue ${familyPlants.teamFatigue}, halved ${familyPlants.halved})`,
+  familySites.length === APP_FILES.length && APP_FILES.length === APP_FILES_PIN &&
+    familyPlants.raw && familyPlants.teamBias && familyPlants.teamMental && familyPlants.teamFatigue && familyPlants.halved &&
+    rawAccessorSites.length === 0 && teamInputSites.length === 0 && halvedCountSites.length === 0,
+  `raw: ${rawAccessorSites.map((x) => x.f).join(", ") || "none"} · teamInput: ${teamInputSites.map((x) => x.f).join(", ") || "none"} · halved: ${halvedCountSites.map((x) => x.f).join(", ") || "none"}`);
+// …and the stripper is charged in both directions, so the zeros above cannot be produced by a
+// stripper that stopped stripping and started reporting every comment that names a removed call.
+ok(`…and the scan is reading code rather than comments: both comment forms are blanked before the family regexes see them (line-comment plant ${familyPlants.commentLine}, block-comment plant ${familyPlants.commentBlock} — each must be CLEAN, i.e. false)`,
+  familyPlants.commentLine === false && familyPlants.commentBlock === false,
+  `line plant ${familyPlants.commentLine}, block plant ${familyPlants.commentBlock}`);
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);
