@@ -10,14 +10,14 @@
 //
 // Run: node scripts/proof-timeline.mjs
 import { createServer } from "vite";
-import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
+import { dirname, resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { makeSay } from "./lib/rows.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const server = await createServer({ root, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { buildTimeline, groupByDay } = await server.ssrLoadModule("/domain/history.ts");
+const { buildTimeline, groupByDay, dayKey } = await server.ssrLoadModule("/domain/history.ts");
 const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
 const { GOAL_METRICS, goalUnitKey, countGoalTitle, attributeGoalTitle, repairGoalTitles, isValidGoalTarget, goalProgressPct } =
   await server.ssrLoadModule("/domain/goals.ts");
@@ -507,6 +507,64 @@ ok("the profile header resolves both stored choices instead of printing a code",
   read("features/player/PlayerOS.tsx").includes("ageGroupLabel(state.profile.ageGroup, t)"));
 ok("the hydration boundary normalizes the stored goal choice",
   /goal: normalizeGoalChoice\(s\.profile\.goal\)/.test(read("store/useFootballOS.tsx")));
+
+// ---- M353. The day-key census: one local door, one deliberate UTC sibling.
+// domain/history.ts exports the local-calendar day key the timeline buckets on and the streak
+// reads (store/useFootballOS.tsx) — but HistoryPage's "Today/Yesterday" label kept its own
+// byte-for-byte copy of the door's body under a different name (`keyOf`), so the screen and the
+// bucketing could silently disagree the moment the door's shape changed. domain/load.ts holds a
+// SEPARATE private `dayKey` that must NOT ride the door: ACWR's 7/28-DAY sums need UTC day
+// boundaries so the same local store reads one ACWR on every device, whereas the reader's wall
+// calendar is what the timeline groups by. The census keys on the STRUCTURAL shape of the two
+// definitions — a local `function dayKey` vs a UTC `toISOString().slice(0, 10)` in the file that
+// never imports the door — so a future tidy-up that unifies them, or a new copy that reintroduces
+// `keyOf`, reddens here rather than silently shipping.
+const SRC_DIRS = ["domain", "data", "lib", "features", "components", "store", "i18n"];
+const srcFiles = [];
+for (const d of SRC_DIRS) {
+  for (const f of readdirSync(join(root, d), { recursive: true })) {
+    if (!/\.(ts|tsx)$/.test(f)) continue;
+    const rel = `${d}/${String(f).replace(/\\/g, "/")}`;
+    srcFiles.push([rel, readFileSync(join(root, d, f), "utf8")]);
+  }
+}
+const byPath = new Map(srcFiles);
+const keyOfHit = (s) => /\bkeyOf\b/.test(s);
+const keyOfSites = srcFiles.filter(([, s]) => keyOfHit(s)).map(([p]) => p);
+const pageSrc = read("features/history/HistoryPage.tsx");
+const loadSrc = read("domain/load.ts");
+
+ok(`the day-key census walks the real source tree, and every subject file is inside it (${srcFiles.length} .ts/.tsx)`,
+  srcFiles.length >= 80 &&
+    ["domain/history.ts", "domain/load.ts", "features/history/HistoryPage.tsx"].every((p) => byPath.has(p)));
+
+const doorFiles = srcFiles.filter(([, s]) => /export function dayKey\b/.test(s)).map(([p]) => p);
+ok(`the local day key is exported from exactly one door (${doorFiles.join(", ")})`,
+  doorFiles.length === 1 && doorFiles[0] === "domain/history.ts" && srcFiles.length >= 80);
+
+const doorBody = (read("domain/history.ts").match(/export function dayKey[\s\S]*?\n}/) || [""])[0];
+ok(`the door builds a padded LOCAL calendar day — the same shape groupByDay buckets on`,
+  /getFullYear\(\)/.test(doorBody) && /getDate\(\)/.test(doorBody) && /padStart\(2, "0"\)/.test(doorBody) && doorBody.length > 40);
+
+const privateFiles = srcFiles.filter(([, s]) => /(?<!export )function dayKey\b/.test(s)).map(([p]) => p);
+ok(`the one private dayKey is load.ts's UTC sibling, and that file never imports the local door (${privateFiles.join(", ")})`,
+  privateFiles.length === 1 && privateFiles[0] === "domain/load.ts" &&
+    !/from "@\/domain\/history"/.test(loadSrc) &&
+    /\.toISOString\(\)\.slice\(0, ?10\)/.test(loadSrc));
+
+ok(`HistoryPage's private keyOf is gone and the screen rides the door (fixture ${keyOfHit("const today = keyOf(now)")} / tree ${keyOfSites.length})`,
+  keyOfHit("const today = keyOf(now)") && keyOfSites.length === 0 &&
+    /import \{[^}]*\bdayKey\b[^}]*\} from "@\/domain\/history"/.test(pageSrc) &&
+    pageSrc.includes("dayKey(now.toISOString())"));
+
+const pad2 = (n) => String(n).padStart(2, "0");
+const localKey = (d) => [d.getFullYear(), pad2(d.getMonth() + 1), pad2(d.getDate())].join("-");
+const nowD = new Date();
+const ydayD = new Date(nowD.getTime() - 86400000);
+ok(`the door reproduces the exact local-calendar string the screen used to build, so the toISOString round-trip does not shift today/yesterday (${dayKey(nowD.toISOString())} / ${dayKey(ydayD.toISOString())})`,
+  dayKey(nowD.toISOString()) === localKey(nowD) &&
+    dayKey(ydayD.toISOString()) === localKey(ydayD) &&
+    /^\d{4}-\d{2}-\d{2}$/.test(dayKey(nowD.toISOString())));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

@@ -55,6 +55,13 @@ export interface LoadSummary {
 
 const DAY = 86400000;
 
+// M353: this dayKey is a deliberate UTC sibling of the shared LOCAL day key that
+// `domain/history.ts` exports, not a copy of it. The ACWR windows are 7 and 28 DAY sums, and their
+// day boundaries must line up across every device that reads the same local store; using the
+// reader's wall-clock day would make the chronic load shift by hours for anyone east/west of UTC
+// and let one dataset show a different ACWR on a laptop and a phone. Proof-timeline pins the split:
+// this file holds the tree's only non-exported day key, builds its string from
+// `toISOString().slice(0, 10)`, and must NOT import the local door.
 function dayKey(iso: string): string {
   const t = new Date(iso).getTime();
   if (Number.isNaN(t)) return "";
