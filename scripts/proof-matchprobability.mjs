@@ -1,4 +1,5 @@
 import { createServer } from "vite";
+import { readFileSync, readdirSync } from "node:fs";
 
 // Pins domain/matchProbability.ts — the deterministic Monte-Carlo projection that
 // powers Simulation Lab's "Project odds" and the Manager OS fixture preview. Its
@@ -114,6 +115,66 @@ ok("a dominant side projects more goals than its opponent", skew.avgHomeGoals > 
 // Reversing venue keeps the same talent edge pointing at the same team.
 const skewRev = matchProbability({ seedBase: "skew-strong-weak", home: weak, away: strong, runs: 200 });
 ok("swapping home/away flips which side is projected to win", skewRev.awayWinPct > skewRev.homeWinPct);
+
+// --- M343: the round3 seam --------------------------------------------------
+// analytics.ts (the Data Room's Poisson forecast) and matchProbability.ts (this module, the
+// Simulation Lab / Manager match outlook) each carried a byte-identical private
+// `Math.round(v * 1000) / 1000`. Identical today, so nothing a reader sees changes — but two
+// formulas that part company the moment one is re-rounded, desynchronising the forecast and the
+// outlook on the same percentage. Both now import lib/utils's single round3, the same neutral home
+// clamp uses: scouting reaches analytics through data/footballService, so a rounder shared by
+// analytics must live in a dependency-free module or the import graph would close a cycle. The
+// clauses bind the seam three ways — the one declaration, the two imports, and the absence of any
+// private or inline copy anywhere in domain+lib — each armed by a planted witness so "no copies
+// found" is a measurement, not a blind scan. career.ts carried no round3, so (unlike round1) there
+// is no pinned residue: the whole-source scan must come back empty but for lib/utils's own body.
+const R3_HOME = "lib/utils.ts";
+const R3_CONSUMERS = ["domain/analytics.ts", "domain/matchProbability.ts"];
+const r3src = Object.fromEntries([R3_HOME, ...R3_CONSUMERS].map((f) => [f, readFileSync(f, "utf8")]));
+const LOCAL_DEF3 = /\n[ \t]*(?:export[ \t]+)?(?:const|function)[ \t]+(?:round3|r3)[ \t]*[(=]/g;
+const IMPORTS_R3 = /import[^;]*\bround3\b[^;]*from ["']@\/lib\/utils["']/g;
+// Balanced-paren inline round-to-3 counter: walk Math.round( to its matching close, require the
+// argument to end in `* 1000` and the close to be followed by `/ 1000` — catches any nesting depth,
+// which a fixed-nesting regex cannot (the same blind spot that made round1's one-level scan miss
+// three of its carriers).
+const inlineRound3 = (src) => {
+  let n = 0, i = 0;
+  const KEY = "Math.round(";
+  while ((i = src.indexOf(KEY, i)) !== -1) {
+    let depth = 1, j = i + KEY.length;
+    while (j < src.length && depth > 0) { const c = src[j++]; if (c === "(") depth++; else if (c === ")") depth--; }
+    if (/\*\s*1000$/.test(src.slice(i + KEY.length, j - 1).trimEnd()) && /^\s*\/\s*1000\b/.test(src.slice(j))) n++;
+    i = j;
+  }
+  return n;
+};
+const nlocal3 = (s) => (s.match(LOCAL_DEF3) || []).length;
+// Plants arm each scan: a private const-decl, a module-scope function alias, an inline two-level
+// nested rounding, and the @/lib/utils import must each read 1, else a "0 found" verdict below is
+// vacuous.
+const plantDecl3 = nlocal3("\nconst r3 = (v: number) => Math.round(v * 1000) / 1000;");
+const plantFn3 = nlocal3("\nfunction round3(v: number): number {\n  return Math.round(v * 1000) / 1000;\n}");
+const plantInline3 = inlineRound3("  const a = Math.round((xs.reduce((s, x) => s + x, 0) / 1000) * 1000) / 1000;");
+const plantImp3 = ('import { round3 } from "@/lib/utils";'.match(IMPORTS_R3) || []).length;
+const privateDefs3 = R3_CONSUMERS.filter((f) => nlocal3(r3src[f]) > 0).map((f) => `${f}(${nlocal3(r3src[f])})`);
+const importers3 = R3_CONSUMERS.filter((f) => (r3src[f].match(IMPORTS_R3) || []).length > 0);
+const inlineInR3 = R3_CONSUMERS.filter((f) => inlineRound3(r3src[f]) > 0).map((f) => `${f}(${inlineRound3(r3src[f])})`);
+const r3Carriers = [...readdirSync("domain").filter((f) => f.endsWith(".ts")).map((f) => `domain/${f}`),
+  ...readdirSync("lib").filter((f) => f.endsWith(".ts")).map((f) => `lib/${f}`)]
+  .map((f) => [f, inlineRound3(readFileSync(f, "utf8"))]).filter(([, n]) => n > 0);
+const r3Residue = r3Carriers.map(([f]) => f).filter((f) => f !== R3_HOME);
+const { round3: shippedRound3 } = await server.ssrLoadModule("/lib/utils.ts");
+
+ok(`lib/utils exports the one round3 and neither consumer re-declares it (${privateDefs3.join(", ") || "none"}; plants armed: ${plantDecl3}${plantFn3})`,
+  plantDecl3 === 1 && plantFn3 === 1 && nlocal3(r3src[R3_HOME]) === 1 && privateDefs3.length === 0);
+ok(`the balanced inline scan is armed at depth two and neither consumer still inlines *1000)/1000 (${inlineInR3.join(", ") || "none"}; plant: ${plantInline3})`,
+  plantInline3 === 1 && inlineInR3.length === 0 && inlineRound3(r3src[R3_HOME]) === 1);
+ok(`both consumers import round3 from @/lib/utils (${importers3.join(", ") || "none"}; plant: ${plantImp3})`,
+  plantImp3 === 1 && importers3.length === R3_CONSUMERS.length && R3_CONSUMERS.every((f) => importers3.includes(f)));
+ok(`across all of domain and lib the only inline round-to-3 is lib/utils's own exported body — no residue (${r3Residue.join(", ") || "none"}; carriers: ${r3Carriers.map(([f, n]) => `${f}:${n}`).join(", ")})`,
+  plantInline3 === 1 && r3Residue.length === 0 && inlineRound3(r3src[R3_HOME]) === 1);
+ok("the shared round3 still rounds to three decimals for both the forecast and the outlook",
+  shippedRound3(0.12345) === 0.123 && shippedRound3(1) === 1 && shippedRound3(2.9999) === 3);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

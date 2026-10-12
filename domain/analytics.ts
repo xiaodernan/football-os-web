@@ -6,6 +6,7 @@
 // means "scores at the league-average rate".
 
 import type { Club, Match } from "@/domain/types";
+import { round3 } from "@/lib/utils";
 
 export type FormLetter = "W" | "D" | "L";
 
@@ -227,15 +228,14 @@ export function outcomeOdds(home: TeamMetrics, away: TeamMetrics, leagueAvg?: nu
     }
   }
   const total = ph + pd + pa || 1; // renormalise the truncated tail
-  const r3 = (v: number) => Math.round(v * 1000) / 1000;
   const lambdaHome = Math.round(lH * 100) / 100;
   const lambdaAway = Math.round(lA * 100) / 100;
   return {
-    home: r3(ph / total),
-    draw: r3(pd / total),
-    away: r3(pa / total),
+    home: round3(ph / total),
+    draw: round3(pd / total),
+    away: round3(pa / total),
     mostLikelyScore: bestScore,
-    mostLikelyPct: r3(best / total),
+    mostLikelyPct: round3(best / total),
     // Sums the two λ figures this is displayed beside, so the line can never
     // contradict the arithmetic a visitor does on screen. expectedGoals already
     // hands back 2-dp lambdas today; this keeps that true if it ever stops.

@@ -1,4 +1,5 @@
 import { simulateMatch, type TeamInput } from "./matchEngine";
+import { round3 } from "@/lib/utils";
 
 // A fixture-level probabilistic outlook produced by running the SAME
 // deterministic Match Engine many times with varied seeds. Nothing is guessed
@@ -34,8 +35,6 @@ export interface MatchProbabilityInput {
   away: TeamInput;
   runs?: number;
 }
-
-const round3 = (v: number) => Math.round(v * 1000) / 1000;
 
 export function matchProbability(input: MatchProbabilityInput): MatchProbability {
   const runs = Math.max(1, Math.min(1000, Math.floor(input.runs ?? 250)));
