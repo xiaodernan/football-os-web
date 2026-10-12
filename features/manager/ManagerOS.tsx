@@ -30,6 +30,7 @@ import type { MatchProbability } from "@/domain/matchProbability";
 import { CAREER_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
+import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
 import { cn } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
@@ -312,9 +313,9 @@ function TacticsPanel({ career, onChange, onRest }: { career: CareerState; onCha
       <Panel className="p-4">
         <SectionTitle title={t("mgr.instructions")} />
         <div className="mt-3 space-y-4">
-          <Slider label={t("tac.mentality")} min={-2} max={2} step={1} value={tactics.mentality} onChange={(v) => onChange({ ...tactics, mentality: v })} format={(v) => mentalityWord(t, v + 2)} />
-          <Slider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={tactics.tempo} onChange={(v) => onChange({ ...tactics, tempo: v })} format={(v) => tempoWord(t, v)} />
-          <Slider label={t("mgr.press")} min={0} max={1} step={0.05} value={tactics.press} onChange={(v) => onChange({ ...tactics, press: v })} format={(v) => pressWord(t, v)} />
+          <SimpleSlider label={t("tac.mentality")} min={-2} max={2} step={1} value={tactics.mentality} onChange={(v) => onChange({ ...tactics, mentality: v })} format={(v) => mentalityWord(t, v + 2)} />
+          <SimpleSlider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={tactics.tempo} onChange={(v) => onChange({ ...tactics, tempo: v })} format={(v) => tempoWord(t, v)} />
+          <SimpleSlider label={t("mgr.press")} min={0} max={1} step={0.05} value={tactics.press} onChange={(v) => onChange({ ...tactics, press: v })} format={(v) => pressWord(t, v)} />
         </div>
         <p className="mt-3 text-xs text-muted-foreground">{t("mgr.instrHint")}</p>
       </Panel>
@@ -586,15 +587,6 @@ function Metric({ label, value, tone }: { label: string; value: string | undefin
 
 function Fact({ label, value }: { label: string; value: string | number }) {
   return <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-[10px] text-muted-foreground">{label}</div><div className="font-mono text-sm">{value}</div></div>;
-}
-
-function Slider({ label, min, max, step, value, onChange, format }: { label: string; min: number; max: number; step: number; value: number; onChange: (v: number) => void; format: (v: number) => string }) {
-  return (
-    <label className="block">
-      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-medium text-primary">{format(value)}</span></div>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="mt-1 w-full accent-[var(--color-primary)]" />
-    </label>
-  );
 }
 
 export { ManagerOS as default };

@@ -141,7 +141,7 @@ const DEAD = {
 };
 const DEAD_CEILING = 22;
 // M248: section 9b and the HOST_OK exemptions retired with their files, POP_PIN drops by 11.
-const POP_PIN = 97;
+const POP_PIN = 98;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -150,8 +150,8 @@ const POP_PIN = 97;
 // written down here, and a directory going quiet is reported by name in the clause's own text.
 // Same reason the recursion floor becomes a pin: after 48 deletions a `>= 42` is a taste, and only
 // the measured number says what this tree actually looks like.
-const BY_DIR_PIN = { components: 14, data: 7, domain: 31, features: 28, functions: 2, i18n: 3, lib: 6, src: 3, store: 1, ui: 2 };
-const DEEP_PIN = 42;
+const BY_DIR_PIN = { components: 15, data: 7, domain: 31, features: 28, functions: 2, i18n: 3, lib: 6, src: 3, store: 1, ui: 2 };
+const DEEP_PIN = 43;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

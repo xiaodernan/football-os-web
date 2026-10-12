@@ -471,15 +471,15 @@ const codeOf = (src) => src.split(/\r?\n/).filter((l) => !/^\s*(\/\/|\*|\/\*)/.t
 const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]));
 // Three population pins, each a number measured from this gate's own report at M248 — 95 app
 // modules, 49 of them .tsx, 98 files including i18n/. They are written as literals on purpose.
-// M247 landed the same three guards as `const TSX_PIN = tsxSrc.length; … tsxSrc.length === TSX_PIN`,
+// M350: new SimpleSlider component adds one module (components/ui/simple-slider.tsx) and one .tsx file.
 // which is `X === X`: it cannot go red, cannot notice a scan that lost files, and reads as a pin
 // while being nothing. A floor (`appSrc.size > 100`) is the other failure mode — it passes a
 // narrowing walk right up to the day it doesn't, and then the honest repair is to lower the floor,
 // which is exactly the move this file bans elsewhere. A literal makes the next deletion pay here,
 // in the same commit, and prints measured-vs-pin when it does.
-const APP_SRC_PIN = 95;
-const TSX_PIN = 49;
-const SRC_PIN = 98;
+const APP_SRC_PIN = 96;
+const TSX_PIN = 50;
+const SRC_PIN = 99;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;

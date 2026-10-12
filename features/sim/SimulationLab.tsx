@@ -8,6 +8,7 @@ import { clubInput } from "@/domain/career";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SimpleSlider } from "@/components/ui/simple-slider";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 
@@ -158,38 +159,29 @@ function TeamPanel({ title, club, colors, short, value, onChange, clubs, selecte
         <Badge variant="outline" className="font-mono">{title}</Badge>
       </div>
       <div className="mt-3 space-y-3">
-        <Slider label={t("tac.mentality")} min={-2} max={2} step={1} value={value.mentality} onChange={(v) => onChange({ ...value, mentality: v })} format={(v) => mentalityWord(t, v + 2)} />
-        <Slider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={value.tempo} onChange={(v) => onChange({ ...value, tempo: v })} format={(v) => (v < 0.35 ? t("sim.low") : v < 0.7 ? t("sim.medium") : t("sim.high"))} />
-        <Slider label={t("mgr.press")} min={0} max={1} step={0.05} value={value.press} onChange={(v) => onChange({ ...value, press: v })} format={(v) => (v < 0.35 ? t("sim.pressDeep") : v < 0.7 ? t("sim.medium") : t("sim.highPress"))} />
-        <Slider label={t("mgr.fatigue")} min={0} max={1} step={0.1} value={value.fatigue} onChange={(v) => onChange({ ...value, fatigue: v })} format={(v) => `${Math.round(v * 100)}%`} />
+        <SimpleSlider label={t("tac.mentality")} min={-2} max={2} step={1} value={value.mentality} onChange={(v) => onChange({ ...value, mentality: v })} format={(v) => mentalityWord(t, v + 2)} />
+        <SimpleSlider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={value.tempo} onChange={(v) => onChange({ ...value, tempo: v })} format={(v) => (v < 0.35 ? t("sim.low") : v < 0.7 ? t("sim.medium") : t("sim.high"))} />
+        <SimpleSlider label={t("mgr.press")} min={0} max={1} step={0.05} value={value.press} onChange={(v) => onChange({ ...value, press: v })} format={(v) => (v < 0.35 ? t("sim.pressDeep") : v < 0.7 ? t("sim.medium") : t("sim.highPress"))} />
+        <SimpleSlider label={t("mgr.fatigue")} min={0} max={1} step={0.1} value={value.fatigue} onChange={(v) => onChange({ ...value, fatigue: v })} format={(v) => `${Math.round(v * 100)}%`} />
       </div>
     </Panel>
-  );
-}
-
-function Slider({ label, min, max, step, value, onChange, format }: { label: string; min: number; max: number; step: number; value: number; onChange: (v: number) => void; format: (v: number) => string }) {
-  return (
-    <label className="block">
-      <div className="flex justify-between text-xs"><span className="text-muted-foreground">{label}</span><span className="font-medium text-primary">{format(value)}</span></div>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="mt-1 w-full accent-[var(--color-primary)]" />
-    </label>
   );
 }
 
 function ResultView({ result, home, away }: { result: SimResult; home: string; away: string }) {
   const { t } = useI18n();
   const s = result.stats;
-  const rows = [
-    { label: t("ms.possession"), h: Math.round(s.home.possession), a: Math.round(s.away.possession), unit: "%" },
-    { label: t("ms.shots"), h: s.home.shots, a: s.away.shots, unit: "" },
-    { label: t("ms.onTarget"), h: s.home.onTarget, a: s.away.onTarget, unit: "" },
-    { label: t("common.xg"), h: +s.home.xg.toFixed(2), a: +s.away.xg.toFixed(2), unit: "" },
-    { label: t("ms.corners"), h: s.home.corners, a: s.away.corners, unit: "" },
-    { label: t("sim.cards"), h: s.home.yellows + s.home.reds * 2, a: s.away.yellows + s.away.reds * 2, unit: "" },
-  ];
+const rows = [
+      { name: t("ms.possession"), h: Math.round(s.home.possession), a: Math.round(s.away.possession), unit: "%" },
+      { name: t("ms.shots"), h: s.home.shots, a: s.away.shots, unit: "" },
+      { name: t("ms.onTarget"), h: s.home.onTarget, a: s.away.onTarget, unit: "" },
+      { name: t("common.xg"), h: +s.home.xg.toFixed(2), a: +s.away.xg.toFixed(2), unit: "" },
+      { name: t("ms.corners"), h: s.home.corners, a: s.away.corners, unit: "" },
+      { name: t("sim.cards"), h: s.home.yellows + s.home.reds * 2, a: s.away.yellows + s.away.reds * 2, unit: "" },
+    ];
   return (
     <div className="mt-4 space-y-4">
-      <div className="grid grid-cols-3 items-center">
+      <div className="grid grid-cols-3 items_center">
         <div className="text-center"><div className="truncate text-sm font-medium">{home}</div></div>
         <div className="text-center font-mono text-4xl font-bold">{result.homeGoals}–{result.awayGoals}</div>
         <div className="text-center"><div className="truncate text-sm font-medium">{away}</div></div>
@@ -198,8 +190,8 @@ function ResultView({ result, home, away }: { result: SimResult; home: string; a
         {rows.map((r) => {
           const total = r.h + r.a || 1;
           return (
-            <div key={r.label}>
-              <div className="flex justify-between text-[11px]"><span className="font-mono">{r.h}{r.unit}</span><span className="text-muted-foreground">{r.label}</span><span className="font-mono">{r.a}{r.unit}</span></div>
+            <div key={r.name}>
+              <div className="flex justify-between text-[11px]"><span className="font-mono">{r.h}{r.unit}</span><span className="text-muted-foreground">{r.name}</span><span className="font-mono">{r.a}{r.unit}</span></div>
               <div className="mt-0.5 flex h-1.5 overflow-hidden rounded bg-muted"><div className="bg-primary" style={{ width: `${(r.h / total) * 100}%` }} /><div className="flex-1 bg-muted-foreground/40" /></div>
             </div>
           );
