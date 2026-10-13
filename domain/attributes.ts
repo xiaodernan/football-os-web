@@ -155,3 +155,12 @@ export function strongestAttributes(attrs: Attributes, n = 3): { key: string; va
     .sort((a, b) => b.value - a.value)
     .slice(0, n);
 }
+
+/** Best overall first. Six places ordered a list of players this way, and only one of them —
+ *  `scoutComparators.overall` — was a named rule: the squad list, the market targets, the compare
+ *  picker, the club page's squad and Football World's browse each hand-wrote `b.overall - a.overall`.
+ *  The scout table's own comment already records why that shape is dangerous (the watchlist board
+ *  used to retype the table beside its own array), so the arm now rides this door too. */
+export function byOverall(a: { overall: number }, b: { overall: number }): number {
+  return b.overall - a.overall;
+}

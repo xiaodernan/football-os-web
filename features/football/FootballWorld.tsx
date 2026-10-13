@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, matchRoute, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
+import { byOverall } from "@/domain/attributes";
 import {
   footballProvider,
   getClub,
@@ -244,7 +245,7 @@ function PlayersList() {
     return all
       .filter((p) => (!clubFilter || p.clubId === clubFilter))
       .filter((p) => !q || p.name.toLowerCase().includes(q) || p.nation.toLowerCase().includes(q) || p.position.toLowerCase().includes(q))
-      .sort((a, b) => b.overall - a.overall);
+      .sort(byOverall);
   }, [all, q, clubFilter]);
   return (
     <div className="space-y-5">
@@ -268,7 +269,7 @@ function ClubsList() {
     <div className="space-y-5">
       <PageHeader title={t("fw.clubs.title")} hint={t("fw.clubs.hint", { clubs: all.length, comps: comps.length })} back="/football" />
       {comps.map((comp) => {
-        const clubs = all.filter((c) => c.competitionId === comp.id).sort((a, b) => b.overall - a.overall);
+        const clubs = all.filter((c) => c.competitionId === comp.id).sort(byOverall);
         if (!clubs.length) return null;
         return (
           <div key={comp.id} className="space-y-2">

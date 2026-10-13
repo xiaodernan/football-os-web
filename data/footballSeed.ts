@@ -3,6 +3,7 @@ import {
   baselineAttributes,
   overallRating,
   POSITION_BY_GROUP,
+  byOverall,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
 import { indexById, round2 } from "@/lib/utils";
@@ -295,7 +296,7 @@ function makeWorld() {
 
   // UEFA Champions League: top European clubs
   for (const compId of ["pl", "liga", "seriea", "bundes", "ligue1"]) {
-    const compClubs = clubs.filter((c) => c.competitionId === compId).sort((a, b) => b.overall - a.overall);
+    const compClubs = clubs.filter((c) => c.competitionId === compId).sort(byOverall);
     uclClubs.push(...compClubs.slice(0, Math.min(4, compClubs.length)).map((c) => c.id));
     if (compClubs.length > 4) {
       uelClubs.push(...compClubs.slice(4, Math.min(6, compClubs.length)).map((c) => c.id));
@@ -303,15 +304,15 @@ function makeWorld() {
   }
   // Add Dutch and Portuguese champions to UCL
   for (const compId of ["eredivisie", "liga1"]) {
-    const compClubs = clubs.filter((c) => c.competitionId === compId).sort((a, b) => b.overall - a.overall);
+    const compClubs = clubs.filter((c) => c.competitionId === compId).sort(byOverall);
     if (compClubs.length > 0) uclClubs.push(compClubs[0].id);
   }
   // Turkish champion to Europa League
-  const turkishClubs = clubs.filter((c) => c.competitionId === "superlig").sort((a, b) => b.overall - a.overall);
+  const turkishClubs = clubs.filter((c) => c.competitionId === "superlig").sort(byOverall);
   if (turkishClubs.length > 0) uelClubs.push(turkishClubs[0].id);
 
   // Copa Libertadores: top South American clubs
-  const brazilianClubs = clubs.filter((c) => c.competitionId === "brasileirao").sort((a, b) => b.overall - a.overall);
+  const brazilianClubs = clubs.filter((c) => c.competitionId === "brasileirao").sort(byOverall);
   libertadoresClubs.push(...brazilianClubs.slice(0, Math.min(4, brazilianClubs.length)).map((c) => c.id));
 
   // Assign continental clubs to their competitions

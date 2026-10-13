@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
+import { byOverall } from "@/domain/attributes";
 import { favoriteLabel, footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine, type RowText } from "@/domain/rowText";
 import { FAVORITES, type FavoriteKind } from "@/domain/types";
 import { useOs } from "@/store/useFootballOS";
@@ -347,7 +348,7 @@ export function ClubDetail({ id }: { id: string }) {
   }, [mine, next, metrics, id]);
   if (!c) return <EmptyState title={t("det.notFound.club")} />;
   const comp = getCompetition(c.competitionId);
-  const squad = playersByClub(id).sort((a, b) => b.overall - a.overall);
+  const squad = playersByClub(id).sort(byOverall);
   const recent = recentMatchesForClub(id, 5);
   // M333: the domain's own line mean, over the club's effective squad. An empty group answers
   // the club's rating, which is what the `|| club.overall` at the two call sites below used to

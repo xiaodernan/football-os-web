@@ -6,12 +6,13 @@
 // Run: node scripts/proof-compare.mjs
 import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";
+import { normalize } from "./lib/rawUiScan.mjs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { compare } = await server.ssrLoadModule("/domain/compare.ts");
 const { headroom, valueIndex, primeYears, primeWindow, primeHold, primeYearsLabel, bucketOf, scoutComparators, round1: shippedRound1 } =
   await server.ssrLoadModule("/domain/scouting.ts");
-const { categoryAverages, attributeLabel } = await server.ssrLoadModule("/domain/attributes.ts");
+const { categoryAverages, attributeLabel, byOverall: byOverallCmp } = await server.ssrLoadModule("/domain/attributes.ts");
 const { footballProvider, getPlayer, formatValue } = await server.ssrLoadModule("/data/footballService.ts");
 
 let pass = 0, fail = 0;
@@ -325,7 +326,10 @@ const walk = (d) => {
   }
   return out;
 };
-const tree = [...walk("domain"), ...walk("features"), ...walk("data"), ...walk("lib")];
+// M352: the population is every app source directory, not four of them — a comparator written in
+// `components/` (the slider M350 moved there is the proof it happens) was outside this walk.
+const tree = [...walk("domain"), ...walk("features"), ...walk("data"), ...walk("lib"),
+  ...walk("store"), ...walk("src"), ...walk("components")];
 const valueArmSites = tree.filter((f) => arm(readFileSync(f, "utf8")) > 0);
 const scImporters = SC_CONSUMERS.filter((f) => (scSrc[f].match(IMPORTS_SC) || []).length > 0);
 // Residue = anything charging VALUE_ARM that is neither the door itself nor a declared
@@ -366,6 +370,37 @@ ok("the four comparators are four orderings, not one relabelled", !sameOrder && 
   [...list].sort(scoutComparators.value).map((p) => p.id).join(","),
   [...list].sort(scoutComparators.potential).map((p) => p.id).join(","),
 ]).size === 4);
+
+// The same class, its third shape after byKickoff and the scout table. `b.overall - a.overall` was
+// written SIXTEEN times: the squad list and the market targets, the compare picker, the club page's
+// squad, Football World's browse and its per-competition club lists, three screens' club pickers,
+// four seed lists, two service lookups and the AI's squad facts. Exactly one of those had a name —
+// `scoutComparators.overall`. The arm rides `byOverall` now, and the door is the only place the
+// subtraction is written.
+const OA_HOME = "domain/attributes.ts";
+const OA_RE = /b\.overall[ \t]*-[ \t]*a\.overall/;
+// `normalize` blanks comments first: the door's own doc comment quotes the expression it replaced,
+// and a census that counted that quote would charge the door for documenting itself.
+const oaSites = tree.filter((f) => OA_RE.test(normalize(readFileSync(f, "utf8"))));
+ok(`the best-overall ordering is written in exactly one place, and it is the attributes door (${tree.length} app files walked, ${oaSites.length} site(s): ${oaSites.join(", ") || "none"})`,
+  tree.length >= 90 && oaSites.length === 1 && oaSites[0] === OA_HOME);
+// The scout table's arm must ride the door rather than re-typing the subtraction: that table is
+// where the ordering was first named, so it is the one place a re-inline would look harmless.
+const scoutArmReadsDoor = /overall:[ \t]*byOverall[ \t]*,/.test(scSrc[SC_COMP_HOME]);
+ok(`the scout table's overall arm rides the door rather than re-typing it (${scoutArmReadsDoor ? "reads byOverall" : "hand-writes the subtraction"})`,
+  scoutArmReadsDoor === true);
+// Plants both ways: a hand-written comparator must be flagged, and a sort by another field must not
+// — a reader that flagged every `.sort((a, b) =>` would pass the census while accusing the app.
+const plantedOa = "const squad = players.sort((a, b) => b.overall - a.overall);";
+const plantedOtherField = "const squad = players.sort((a, b) => b.value - a.value);";
+ok(`the ordering reader, planted both ways, flags a hand-written best-overall comparator and accuses a sort by another field (${OA_RE.test(normalize(plantedOa))} of 1 flagged, ${OA_RE.test(normalize(plantedOtherField))} of 0 flagged)`,
+  OA_RE.test(normalize(plantedOa)) === true && OA_RE.test(normalize(plantedOtherField)) === false);
+// And the value: best first, and a tie keeps the order it was given (Array.prototype.sort is
+// stable), so two players on the same overall do not shuffle between renders.
+const oaInput = [{ id: "low", overall: 60 }, { id: "high", overall: 90 }, { id: "tie1", overall: 75 }, { id: "tie2", overall: 75 }];
+const oaOrder = [...oaInput].sort(byOverallCmp).map((p) => p.id).join(",");
+ok(`byOverall puts the best first and leaves a tie in the order it was given (${oaOrder})`,
+  oaOrder === "high,tie1,tie2,low");
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

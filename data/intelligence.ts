@@ -9,6 +9,7 @@ import { formatDate } from "@/i18n/format";
 import type { Locale } from "@/i18n/dictionaries";
 import { scoutReport } from "@/domain/scouting";
 import { byKickoff } from "@/domain/analytics";
+import { byOverall } from "@/domain/attributes";
 import { careerArc } from "@/domain/careerArc";
 import {
   globalSearch,
@@ -60,7 +61,7 @@ export interface RagAnswer {
 function clubFacts(clubId: string): EvidenceFact[] {
   const c = getClub(clubId);
   if (!c) return [];
-  const squad = playersByClub(clubId).sort((a, b) => b.overall - a.overall);
+  const squad = playersByClub(clubId).sort(byOverall);
   const table = footballProvider.standings(c.competitionId);
   const pos = table.findIndex((s) => s.clubId === clubId);
   const out: EvidenceFact[] = [
@@ -389,7 +390,7 @@ export function buildGraph(query: string): KgGraph {
       const c = getClub(h.id)!;
       const compN: KgNode = { id: "competition:" + c.competitionId, label: { value: getCompetition(c.competitionId)?.name ?? c.competitionId }, type: "competition", to: `/competitions/${c.competitionId}` };
       add(compN); edges.push({ from: "club:" + c.id, to: compN.id, relation: { key: "ai.rel.competes" } });
-      for (const p of playersByClub(c.id).sort((a, b) => b.overall - a.overall).slice(0, 6)) {
+      for (const p of playersByClub(c.id).sort(byOverall).slice(0, 6)) {
         const pn: KgNode = { id: "player:" + p.id, label: { value: p.name }, type: "player", to: `/players/${p.id}` };
         add(pn); edges.push({ from: "club:" + c.id, to: pn.id, relation: { key: "ai.rel.hasPlayer" } });
       }

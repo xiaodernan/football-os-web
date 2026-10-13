@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -69,7 +69,7 @@ export type ScoutSort = "value" | "potential" | "overall" | "age";
 export const scoutComparators: Record<ScoutSort, (a: PlayerRef, b: PlayerRef) => number> = {
   value: (a, b) => valueIndex(b) - valueIndex(a),
   potential: (a, b) => b.potential - a.potential || headroom(b) - headroom(a),
-  overall: (a, b) => b.overall - a.overall,
+  overall: byOverall,
   age: (a, b) => a.age - b.age || b.potential - a.potential,
 };
 

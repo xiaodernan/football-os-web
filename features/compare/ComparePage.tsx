@@ -3,6 +3,7 @@ import { positionLabel } from "@/domain/rowText";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
+import { byOverall } from "@/domain/attributes";
 import { compare, type CompareMetric } from "@/domain/compare";
 import { playerDna } from "@/domain/playerDna";
 import type { PlayerRef } from "@/domain/types";
@@ -16,7 +17,7 @@ export function ComparePage() {
   const players = useMemo(() => footballProvider.players(), []);
   const ids = useMemo(() => new Set(players.map((p) => p.id)), [players]);
   const defaults = useMemo(
-    () => [...players].sort((a, b) => b.overall - a.overall).slice(0, 2).map((p) => p.id),
+    () => [...players].sort(byOverall).slice(0, 2).map((p) => p.id),
     [players],
   );
   const [aId, setAId] = useState(() => {

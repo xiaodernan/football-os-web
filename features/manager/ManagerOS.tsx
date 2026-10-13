@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
+import { byOverall } from "@/domain/attributes";
 import { footballProvider, getClub, getCompetition, formatValue } from "@/data/footballService";
 import { useLocalStorage } from "@/lib/hooks";
 import {
@@ -544,7 +545,7 @@ function ClubPicker({ onStart }: { onStart: (clubId: string) => void }) {
   const { t } = useI18n();
   const comps = footballProvider.competitions();
   const [compId, setCompId] = useState(comps[0]?.id ?? "");
-  const clubs = useMemo(() => footballProvider.clubs().filter((c) => c.competitionId === compId).sort((a, b) => b.overall - a.overall), [compId]);
+  const clubs = useMemo(() => footballProvider.clubs().filter((c) => c.competitionId === compId).sort(byOverall), [compId]);
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M351 (a few numbers in that range
+Work ships one milestone per commit and is currently at M352 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -6926,6 +6926,49 @@ the day key, moved into `domain/history.ts` and read by `HistoryPage` — and `s
 changes that were theirs.
 
 Measured (this unit's own): `proof-learn` **77/77**, `tsc` clean, `npm run build` exit 0.
+
+### M352 — the best-overall ordering had sixteen copies, and one of them was already named
+
+M348 asked how many computations this app writes more than once and found nine; M347, M348, M350 and
+M351 each closed one. This unit is the largest of them and the most embarrassing, because the rule was
+**already a door** and fifteen sites walked past it.
+
+**The number.** `b.overall - a.overall` — best first — was written **sixteen** times: the squad list
+and the market targets (`domain/career.ts`), the compare picker, the club page's squad, Football
+World's browse and its per-competition club lists, three screens' club pickers (`ManagerOS`,
+`SimulationLab`, `FootballWorld`), four seeded lists in `data/footballSeed.ts`, two service lookups in
+`data/footballService.ts` and `data/intelligence.ts`, and `domain/scouting.ts`. Exactly **one** of the
+sixteen had a name: `scoutComparators.overall`, whose own comment already records why a re-typed copy
+is dangerous — the watchlist board used to retype that whole table beside its own array, "so an edit to
+the scout rule silently diverged from what a reader sees on the other screen".
+
+**One door, and the named arm rides it.** `byOverall` in `domain/attributes.ts` — the module that owns
+the rating, and already imported by `scouting.ts`, so the door adds no edge to the graph. The scout
+table's `overall` arm now reads `byOverall` rather than re-typing the subtraction, so the one place
+that had a name is no longer a second place that could drift.
+
+**The census had a blind population.** `proof-compare`'s `tree` walked four directories (`domain`,
+`features`, `data`, `lib`) — 72 files. `components/` was outside it, which is exactly where M350 had
+just moved a shared control, and `store/` and `src/` were outside too. The walk now covers all seven
+(**91 files**), and the census reads **1 site** for the subtraction: the door itself, which the clause
+names rather than merely counting. The comment stripper is `rawUiScan`'s `normalize`, for the same
+reason as M351's: the door's own doc comment quotes the expression it replaced.
+
+Three mutations. The club page re-typing the comparator (**69/70** — the census lists both sites), the
+scout arm re-typing it (**68/70** — the census *and* the arm clause, which reports "hand-writes the
+subtraction"), and the door flipped to `a.overall - b.overall` (**70/70 → red** on the value clause,
+which reports the order `low,tie1,tie2,high`). That last one also reddens an existing clause about the
+shipped comparators agreeing with their own rules — two clauses from two families catching one flip.
+
+The value clause pins the **tie** as well as the order: `Array.prototype.sort` is stable, so two
+players on the same overall keep the order they were given and do not shuffle between renders.
+
+Measured: `tsc --noEmit` clean; `proof-compare` **70/70** (66 before this unit, +4); the suite run one
+process per script. **`npm run build` could not complete on this machine**: `tsc` passes and Vite
+transforms all 2,624 modules, then `prepare-out-dir` fails because the sandbox's safe-delete shim
+refuses to empty `dist/` (`SAFE_DELETE_BULK_GUARD_ERROR state lock timeout`, reproduced across three
+attempts). That is the environment, not this change — it is recorded here rather than hidden, the way
+this file records the standing `proof-runner` artifact.
 
 ### M336 — the data room's match count is the domain's count, not a sum the page halves
 

@@ -2,6 +2,7 @@ import { footballProvider, getClub, clubIdsByCompetition, formatValue } from "@/
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
+import { byOverall } from "./attributes";
 import type { RowText } from "./rowText";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
@@ -68,7 +69,7 @@ export function effClubId(p: PlayerRef, moved: Record<string, string>): string {
 export function effectiveSquad(clubId: string, moved: Record<string, string>): PlayerRef[] {
   return allPlayers()
     .filter((p) => effClubId(p, moved) === clubId)
-    .sort((a, b) => b.overall - a.overall);
+    .sort(byOverall);
 }
 
 /** The mean overall of the players in a position group, or `fallback` when that group is empty.
@@ -624,6 +625,6 @@ function clamp(v: number, lo: number, hi: number) {
 export function marketTargets(state: CareerState, limit = 40): PlayerRef[] {
   return allPlayers()
     .filter((p) => effClubId(p, state.moved) !== state.clubId)
-    .sort((a, b) => b.overall - a.overall)
+    .sort(byOverall)
     .slice(0, limit);
 }

@@ -2,6 +2,7 @@ import { DEMO_NOW, WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, byKickoff, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
 import { indexById } from "@/lib/utils";
+import { byOverall } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
 
 // Data Provider Layer (spec §11): the UI never talks to the seed directly, so a
@@ -53,7 +54,7 @@ export const getCompetition = (id: string) => compById.get(id);
 export const getMatch = (id: string) => matchById.get(id);
 
 export function playersByClub(clubId: string): PlayerRef[] {
-  return WORLD.players.filter((p) => p.clubId === clubId).sort((a, b) => b.overall - a.overall);
+  return WORLD.players.filter((p) => p.clubId === clubId).sort(byOverall);
 }
 
 export function clubIdsByCompetition(compId: string): string[] {
