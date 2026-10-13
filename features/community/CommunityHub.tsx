@@ -10,6 +10,7 @@ import { seasonSummary, type CareerState } from "@/domain/career";
 import { CAREER_KEY, COMMUNITY_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { rowLine, type RowText, type Translate } from "@/domain/rowText";
 import { getClub } from "@/data/footballService";
+import { round1 } from "@/domain/scouting";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -144,7 +145,7 @@ export function CommunityHub() {
             minutes: completedMinutes(state.sessions),
             topFocusKey: top ? top[0] : undefined,
             topFocusSessions: top ? top[1] : undefined,
-            avgRating: ratings.length ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10 : null,
+            avgRating: ratings.length ? round1(ratings.reduce((a, b) => a + b, 0) / ratings.length) : null,
           }
         : undefined,
       academy: lessons.completed
