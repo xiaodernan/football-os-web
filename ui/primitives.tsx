@@ -53,6 +53,22 @@ export function StatTile({ label, value, sub, tone }: { label: string; value: Re
   );
 }
 
+// The compact stat tile: a bold figure ABOVE a small uppercase label, in a tighter px-2 py-1.5 box than
+// StatTile's label-first px-4 py-3 card. DataRoom's per-team tiles and ProfilePage's progress tiles each
+// carried a byte-identical private `Mini` — only the `value` prop's declared type differed (number vs
+// ReactNode; `value` is only ever rendered as `{value}`, so ReactNode, the superset, is behaviour-
+// preserving for both). NOTE this is NOT StatTile: that one prints label first, reserves a larger type
+// scale, and carries `sub`/`tone`; folding Mini into it would flip the visual order and gain a line no
+// caller passes, so the two tiles coexist on purpose.
+export function Mini({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="rounded-lg border bg-card/50 px-2 py-1.5">
+      <div className="text-lg font-semibold tabular-nums">{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
 export function Crest({ colors, short, size = 36 }: { colors?: [string, string]; short?: string; size?: number }) {
   const [a, b] = colors ?? ["#1f2937", "#111827"];
   return (

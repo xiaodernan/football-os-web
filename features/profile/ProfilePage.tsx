@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
 import { getClub, getPlayer } from "@/data/footballService";
@@ -15,7 +15,7 @@ import { buildFootprint } from "@/domain/footprint";
 import { buildFilmInsights } from "@/domain/filmInsights";
 import { loadFilmClips, newestClipAt, toClipInputs } from "@/domain/filmLibrary";
 import { CAREER_KEY, COMMUNITY_KEY, browserStore, readJson } from "@/domain/localData";
-import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -332,15 +332,6 @@ export function ProfilePage() {
       </div>
 
       <p className="text-[11px] text-muted-foreground">{t("prof.disclaimer")}</p>
-    </div>
-  );
-}
-
-function Mini({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="rounded-lg border bg-card/50 px-2 py-1.5">
-      <div className="text-lg font-semibold tabular-nums">{value}</div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useI18n, formatDate } from "@/i18n";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
-import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
@@ -297,11 +297,3 @@ function SplitCard({ title, s }: { title: string; s: TeamMetrics["home"] }) {
   );
 }
 
-function Mini({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-lg border bg-card/50 px-2 py-1.5">
-      <div className="text-lg font-semibold tabular-nums">{value}</div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-    </div>
-  );
-}
