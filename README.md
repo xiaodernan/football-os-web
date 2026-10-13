@@ -6963,6 +6963,13 @@ shipped comparators agreeing with their own rules — two clauses from two famil
 The value clause pins the **tie** as well as the order: `Array.prototype.sort` is stable, so two
 players on the same overall keep the order they were given and do not shuffle between renders.
 
+**Provenance.** This section was written in the working tree while the unit was being finished, and
+the unit then landed in **two** commits: `b8f0dd8` — **whose subject says M359** — carried fifteen of
+the sixteen sites and this section, and `a9865c3` — **M352**, the number this heading carries —
+carried `domain/career.ts`'s two sites and the measured line below. One unit under two numbers is the
+third time in three milestones this tree has done that: M339 records the first collision and M351 the
+second. It is written down here so that a reader who greps for M359 lands on the section describing it.
+
 Measured: `tsc --noEmit` clean; `proof-compare` **70/70** (66 before this unit, +4); the suite run one
 process per script — **43 of 44 scripts green, 2,413 checks**, `proof-runner` the one red (the standing
 sandbox artifact: `run-proofs.mjs` spawns each script with `spawnSync` and the sandbox refuses the
