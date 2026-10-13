@@ -13,7 +13,7 @@ import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primi
 import { ProgressLine } from "@/ui/charts";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { cn, signed } from "@/lib/utils";
+import { cn, signed, DAY_MS } from "@/lib/utils";
 
 const WINDOWS = [7, 30, 90];
 
@@ -96,7 +96,7 @@ export function ReviewPage() {
 
   const points = useMemo(() => {
     if (!state.profile) return [];
-    const from = Date.now() - days * 86400000;
+    const from = Date.now() - days * DAY_MS;
     const win = state.progress
       .filter((p) => new Date(p.date).getTime() >= from)
       .slice(0, 30);

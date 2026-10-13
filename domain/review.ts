@@ -4,7 +4,7 @@ import { weakestAttributes } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions } from "./training";
-import { signed } from "@/lib/utils";
+import { signed, DAY_MS } from "@/lib/utils";
 
 // A period digest compiled purely from the user's local training log, goals,
 // progress history, academy records and analysed film. Nothing here is invented —
@@ -98,7 +98,7 @@ function sessionStamp(s: TrainingSession): string | undefined {
 
 export function buildReview(input: ReviewInput): WeeklyReview {
   const { windowDays, nowMs } = input;
-  const fromMs = nowMs - windowDays * 86400000;
+  const fromMs = nowMs - windowDays * DAY_MS;
 
   const inWindow = input.sessions.filter((s) => withinWindow(sessionStamp(s), fromMs, nowMs));
   // M347: "completed" and its minutes are the training domain's definitions, not this file's.

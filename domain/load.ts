@@ -1,7 +1,7 @@
 import type { RowText } from "./rowText";
 import type { TrainingSession } from "./types";
 import { sessionIntensity } from "./training";
-import { clamp, round2 } from "@/lib/utils";
+import { clamp, round2, DAY_MS } from "@/lib/utils";
 
 // Training-load management built on the same monotony/strain + acute:chronic
 // ratio (ACWR) ideas used in strength & conditioning. Every number is derived
@@ -53,10 +53,8 @@ export interface LoadSummary {
   sources: RowText[];
 }
 
-const DAY = 86400000;
-
 // M353: this dayKey is a deliberate UTC sibling of the shared LOCAL day key that
-// `domain/history.ts` exports, not a copy of it. The ACWR windows are 7 and 28 DAY sums, and their
+// `domain/history.ts` exports, not a copy of it. The ACWR windows are 7 and 28 DAY_MS sums, and their
 // day boundaries must line up across every device that reads the same local store; using the
 // reader's wall-clock day would make the chronic load shift by hours for anyone east/west of UTC
 // and let one dataset show a different ACWR on a laptop and a phone. Proof-timeline pins the split:
@@ -79,7 +77,7 @@ function sessionLoad(s: TrainingSession): { minutes: number; load: number } {
 
 export function buildLoad(input: LoadInput): LoadSummary {
   const { nowMs } = input;
-  const chronicFrom = nowMs - CHRONIC_DAYS * DAY;
+  const chronicFrom = nowMs - CHRONIC_DAYS * DAY_MS;
 
   const completed = input.sessions.filter((s) => s.status === "completed");
 
@@ -111,7 +109,7 @@ export function buildLoad(input: LoadInput): LoadSummary {
   // window, so rest days correctly pull the mean down.
   const sumLoad = (fromMs: number) =>
     daily.reduce((s, d) => (new Date(d.date + "T00:00:00Z").getTime() >= fromMs ? s + d.load : s), 0);
-  const acuteTotal = sumLoad(nowMs - ACUTE_DAYS * DAY);
+  const acuteTotal = sumLoad(nowMs - ACUTE_DAYS * DAY_MS);
   const chronicTotal = sumLoad(chronicFrom);
   const acute = Math.round(acuteTotal / ACUTE_DAYS);
   const chronic = Math.round(chronicTotal / CHRONIC_DAYS);
@@ -163,8 +161,8 @@ export function buildLoad(input: LoadInput): LoadSummary {
 function buildWeekly(nowMs: number, daily: DailyLoad[]): WeeklyLoad[] {
   const weeks: WeeklyLoad[] = [];
   for (let k = CHRONIC_DAYS / 7 - 1; k >= 0; k--) {
-    const end = nowMs - k * 7 * DAY;
-    const start = end - 7 * DAY;
+    const end = nowMs - k * 7 * DAY_MS;
+    const start = end - 7 * DAY_MS;
     let load = 0;
     let sessions = 0;
     for (const d of daily) {

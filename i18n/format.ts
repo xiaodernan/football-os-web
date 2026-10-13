@@ -1,5 +1,6 @@
 import { DICTIONARIES, type Locale } from "./dictionaries";
 import type { RowText, RowVars } from "@/domain/rowText";
+import { DAY_MS } from "@/lib/utils";
 
 // One module for the words a non-screen may need. Kept out of index.tsx on purpose: a domain
 // module builds a date into a row it hands a screen (footprint's last-activity line) and names an
@@ -56,7 +57,7 @@ const localMidnight = (value: string | number | Date): number => {
  *  the panel promised "today" and printed "14d ago" on every row, and a fixture the world
  *  counts six days out read "8d ago" — the direction inverted by drift alone. */
 export function relativeDay(locale: Locale, iso: string, now: string | number | Date = Date.now()): RowText {
-  const d = Math.round((localMidnight(new Date(iso)) - localMidnight(now)) / 86_400_000);
+  const d = Math.round((localMidnight(new Date(iso)) - localMidnight(now)) / DAY_MS);
   if (d > 1) return { key: "time.inDays", vars: { n: d } };
   if (d === 1) return { key: "time.tomorrow" };
   if (d === 0) return { key: "time.today", vars: { at: formatDate(locale, iso, { hour: "2-digit", minute: "2-digit" }) } };

@@ -8,7 +8,7 @@ import { LESSONS } from "@/domain/learn";
 import { useLearnRecords, useFilmRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, DAY_MS } from "@/lib/utils";
 
 const KINDS: { id: TimelineKind | "all"; icon: string; labelKey: string }[] = [
   { id: "all", icon: "≡", labelKey: "hist.all" },
@@ -167,7 +167,7 @@ function dayLabel(key: string, t: (k: string) => string, locale: Locale): string
   if (key === "invalid") return t("hist.invalid");
   const now = new Date();
   const today = dayKey(now.toISOString());
-  const y = new Date(now.getTime() - 86400000);
+  const y = new Date(now.getTime() - DAY_MS);
   if (key === today) return t("hist.today");
   if (key === dayKey(y.toISOString())) return t("hist.yesterday");
   const [yy, mm, dd] = key.split("-").map(Number);

@@ -80,3 +80,16 @@ export const epochMs = (iso?: string): number => {
   const t = new Date(iso).getTime();
   return Number.isNaN(t) ? 0 : t;
 };
+
+// The app's one "how many milliseconds is a day" figure. domain/load named it `const DAY = 86400000`,
+// domain/review and the Review page's points window multiplied a raw `* 86400000`, the History page
+// subtracted a bare `- 86400000` for yesterday, and i18n/format divided a `86_400_000` — four
+// spellings of one number, two of them already differing by the underscore separator, each a missing
+// or doubled zero away from a wrong window. This door shares only the NUMBER; it is deliberately NOT
+// a `daysBefore`/`daysBetween` function, because the three arithmetic shapes around it are genuinely
+// different computations that must not be merged: load/review take `nowMs - days * DAY_MS` (a UTC
+// elapsed-block window), format.ts differences two LOCAL midnights and divides by DAY_MS (DST-aware,
+// 23/25h days round to the calendar day), and HistoryPage subtracts one DAY_MS from a fixed instant
+// to label yesterday. A future "just use one helper" that folds the divide into the multiply would
+// re-introduce M216's bug — an elapsed-block count that reads tomorrow as today.
+export const DAY_MS = 86400000;
