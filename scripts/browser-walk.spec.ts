@@ -75,6 +75,12 @@ async function checkLocale(page, locale) {
   if (bodyText.includes('undefined') && !bodyText.includes('undefined') === false) badValues.push('undefined');
   if (bodyText.includes('NaN')) badValues.push('NaN');
 
+  // M227 checks: html:lang matches locale, html.class has theme
+  const localeToLang: Record<string, string> = { 'en-US': 'en', 'zh-CN': 'zh-CN', 'zh-TW': 'zh-TW' };
+  const expectedLang = localeToLang[locale] || locale;
+  const langOk = htmlLang === expectedLang;
+  const hasThemeClass = htmlClass && (htmlClass.includes('light') || htmlClass.includes('dark'));
+
   return {
     locale,
     route: page.url(),
@@ -84,6 +90,8 @@ async function checkLocale(page, locale) {
     foundKeys: [...new Set(foundKeys)],
     placeholders: [...new Set(placeholders)],
     badValues,
+    langOk,
+    hasThemeClass,
   };
 }
 
@@ -215,6 +223,52 @@ async function testStorageBlocked(page) {
   return { storageBlocked: hasNotStored };
 }
 
+async function testThemePersistence(page) {
+  // Test that theme changes persist across reloads (effect-side persist)
+  await page.goto(`${BASE_URL}?locale=en-US`);
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(500);
+
+  // Get initial theme
+  const initialClass = await page.getAttribute('html', 'class');
+  const initialTheme = initialClass?.includes('dark') ? 'dark' : 'light';
+
+  // Toggle theme via the theme toggle button
+  const themeToggle = page.locator('button[aria-label*="theme" i], button[aria-label*="主题" i], button:has-text("Toggle theme"), button:has-text("切换主题"), [data-testid="theme-toggle"]').first();
+  if (await themeToggle.count()) {
+    await themeToggle.click();
+    await page.waitForTimeout(300);
+  } else {
+    // Try clicking any button that might toggle theme
+    const toggles = page.locator('button:has(svg.lucide-sun), button:has(svg.lucide-moon), button[title*="theme" i], button[title*="主题" i]');
+    if (await toggles.count()) {
+      await toggles.first().click();
+      await page.waitForTimeout(300);
+    }
+  }
+
+  const afterToggleClass = await page.getAttribute('html', 'class');
+  const afterToggleTheme = afterToggleClass?.includes('dark') ? 'dark' : 'light';
+
+  // Reload page
+  await page.reload();
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(500);
+
+  const afterReloadClass = await page.getAttribute('html', 'class');
+  const afterReloadTheme = afterReloadClass?.includes('dark') ? 'dark' : 'light';
+
+  // Theme should persist after reload
+  const persisted = afterToggleTheme === afterReloadTheme;
+
+  return {
+    initialTheme,
+    afterToggleTheme,
+    afterReloadTheme,
+    persisted,
+  };
+}
+
 test.describe('Three-locale browser walk', () => {
   test.setTimeout(300000);
   test('all routes in three locales', async () => {
@@ -247,15 +301,21 @@ test.describe('Three-locale browser walk', () => {
     const storageResult = await testStorageBlocked(page);
     allResults.push(storageResult);
 
+    console.log('Testing theme persistence (M227 effect-side persist)...');
+    const themeResult = await testThemePersistence(page);
+    allResults.push(themeResult);
+
     await browser.close();
 
     // Report
     console.log('\n=== BROWSER WALK REPORT ===');
     console.log(`Total results: ${allResults.length}`);
     let totalIssues = 0;
+    let langIssues = 0;
+    let themeIssues = 0;
     for (let i = 0; i < allResults.length; i++) {
       const r = allResults[i];
-      console.log(`[${i}] foundKeys: ${r.foundKeys?.length}, locale: ${r.locale}, route: ${r.route}, textLength: ${r.textLength}`);
+      console.log(`[${i}] foundKeys: ${r.foundKeys?.length}, locale: ${r.locale}, route: ${r.route}, textLength: ${r.textLength}, langOk: ${r.langOk}, themeClass: ${r.hasThemeClass}`);
       if (r.foundKeys && r.foundKeys.length > 0) {
         console.log(`⚠️  ${r.locale} ${r.route}: RAW KEYS: ${r.foundKeys.join(', ')}`);
         totalIssues += r.foundKeys.length;
@@ -268,12 +328,31 @@ test.describe('Three-locale browser walk', () => {
         console.log(`⚠️  ${r.locale} ${r.route}: BAD VALUES: ${r.badValues.join(', ')}`);
         totalIssues += r.badValues.length;
       }
+      if (r.langOk === false) {
+        console.log(`⚠️  ${r.locale} ${r.route}: HTML LANG MISMATCH (got ${r.htmlLang})`);
+        langIssues++;
+      }
+      if (r.hasThemeClass === false && r.route !== undefined) {
+        console.log(`⚠️  ${r.locale} ${r.route}: NO THEME CLASS (class="${r.htmlClass}")`);
+        themeIssues++;
+      }
       if (!r.foundKeys && (!r.placeholders || r.placeholders.length === 0) && (!r.badValues || r.badValues.length === 0)) {
-        console.log(`✅ ${r.locale} ${r.route}: clean (${r.textLength} chars, html:lang=${r.htmlLang})`);
+        console.log(`✅ ${r.locale} ${r.route}: clean (${r.textLength} chars, html:lang=${r.htmlLang}, theme=${r.hasThemeClass ? 'yes' : 'no'})`);
       }
     }
 
-    console.log(`\nTotal issues: ${totalIssues}`);
+    // Theme persistence result
+    const themePersistResult = allResults.find(r => r.persisted !== undefined);
+    if (themePersistResult) {
+      if (themePersistResult.persisted) {
+        console.log(`✅ M227 theme persistence: ${themePersistResult.initialTheme} → ${themePersistResult.afterToggleTheme} → ${themePersistResult.afterReloadTheme} (persisted)`);
+      } else {
+        console.log(`⚠️  M227 theme persistence FAILED: ${themePersistResult.initialTheme} → ${themePersistResult.afterToggleTheme} → ${themePersistResult.afterReloadTheme} (NOT persisted)`);
+        totalIssues++;
+      }
+    }
+
+    console.log(`\nTotal issues: ${totalIssues} (raw keys: ${totalIssues - langIssues - themeIssues}, lang: ${langIssues}, theme: ${themeIssues})`);
     expect(totalIssues).toBe(0);
   });
 });
