@@ -10,7 +10,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
-import { cn } from "@/lib/utils";
+import { cn, pctLabel } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 
 interface Tactics {
@@ -163,7 +163,7 @@ function TeamPanel({ title, club, colors, short, value, onChange, clubs, selecte
         <SimpleSlider label={t("tac.mentality")} min={-2} max={2} step={1} value={value.mentality} onChange={(v) => onChange({ ...value, mentality: v })} format={(v) => mentalityWord(t, v + 2)} />
         <SimpleSlider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={value.tempo} onChange={(v) => onChange({ ...value, tempo: v })} format={(v) => (v < 0.35 ? t("sim.low") : v < 0.7 ? t("sim.medium") : t("sim.high"))} />
         <SimpleSlider label={t("mgr.press")} min={0} max={1} step={0.05} value={value.press} onChange={(v) => onChange({ ...value, press: v })} format={(v) => (v < 0.35 ? t("sim.pressDeep") : v < 0.7 ? t("sim.medium") : t("sim.highPress"))} />
-        <SimpleSlider label={t("mgr.fatigue")} min={0} max={1} step={0.1} value={value.fatigue} onChange={(v) => onChange({ ...value, fatigue: v })} format={(v) => `${Math.round(v * 100)}%`} />
+        <SimpleSlider label={t("mgr.fatigue")} min={0} max={1} step={0.1} value={value.fatigue} onChange={(v) => onChange({ ...value, fatigue: v })} format={pctLabel} />
       </div>
     </Panel>
   );
@@ -208,7 +208,6 @@ const rows = [
 
 function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
   const { t } = useI18n();
-  const pct = (v: number) => `${Math.round(v * 100)}%`;
   const seg = (v: number) => `${v * 100}%`;
   return (
     <Panel className="p-4">
@@ -223,22 +222,22 @@ function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
           <div className="bg-info" style={{ width: seg(prob.awayWinPct) }} />
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
-          <div><div className="truncate text-xs text-muted-foreground">{t("sim.teamWin", { team: prob.homeName })}</div><div className="font-mono font-semibold text-primary">{pct(prob.homeWinPct)}</div></div>
-          <div><div className="text-xs text-muted-foreground">{t("mgr.draw")}</div><div className="font-mono font-semibold">{pct(prob.drawPct)}</div></div>
-          <div><div className="truncate text-xs text-muted-foreground">{t("sim.teamWin", { team: prob.awayName })}</div><div className="font-mono font-semibold text-info">{pct(prob.awayWinPct)}</div></div>
+          <div><div className="truncate text-xs text-muted-foreground">{t("sim.teamWin", { team: prob.homeName })}</div><div className="font-mono font-semibold text-primary">{pctLabel(prob.homeWinPct)}</div></div>
+          <div><div className="text-xs text-muted-foreground">{t("mgr.draw")}</div><div className="font-mono font-semibold">{pctLabel(prob.drawPct)}</div></div>
+          <div><div className="truncate text-xs text-muted-foreground">{t("sim.teamWin", { team: prob.awayName })}</div><div className="font-mono font-semibold text-info">{pctLabel(prob.awayWinPct)}</div></div>
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
         <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgGoals")}</div><div className="font-mono text-sm">{prob.avgHomeGoals.toFixed(2)}–{prob.avgAwayGoals.toFixed(2)}</div></div>
         <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgXg")}</div><div className="font-mono text-sm">{prob.avgHomeXg.toFixed(2)}–{prob.avgAwayXg.toFixed(2)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.bothScore")}</div><div className="font-mono text-sm">{pct(prob.bttsPct)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.over25")}</div><div className="font-mono text-sm">{pct(prob.over25Pct)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.bothScore")}</div><div className="font-mono text-sm">{pctLabel(prob.bttsPct)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.over25")}</div><div className="font-mono text-sm">{pctLabel(prob.over25Pct)}</div></div>
       </div>
       <div className="mt-4">
         <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("sim.mostLikelyScores")}</div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {prob.mostLikely.map((s) => (
-            <span key={s.score} className="rounded-md border bg-card/40 px-2 py-1 text-sm"><span className="font-mono font-semibold">{s.score}</span> <span className="text-xs text-muted-foreground">{pct(s.pct)}</span></span>
+            <span key={s.score} className="rounded-md border bg-card/40 px-2 py-1 text-sm"><span className="font-mono font-semibold">{s.score}</span> <span className="text-xs text-muted-foreground">{pctLabel(s.pct)}</span></span>
           ))}
         </div>
       </div>

@@ -20,7 +20,7 @@ import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { cn, epochMs } from "@/lib/utils";
+import { cn, epochMs, pctLabel } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
 // raw-UI scan reads every string literal there as a child text node — three hits on one
@@ -185,7 +185,7 @@ export function ProfilePage() {
       <Panel className="p-4">
         <div className="mb-1 flex items-center justify-between">
           <SectionTitle title={t("prof.toNextLevel")} />
-          <span className="font-mono text-xs text-muted-foreground tabular-nums">{Math.round(info.progress * 100)}%</span>
+          <span className="font-mono text-xs text-muted-foreground tabular-nums">{pctLabel(info.progress)}</span>
         </div>
         <Progress value={info.progress * 100} />
       </Panel>

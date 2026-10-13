@@ -23,7 +23,7 @@ import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadg
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, pctLabel } from "@/lib/utils";
 import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
@@ -154,7 +154,7 @@ function NewsRow({ id, compact }: { id: string; compact?: boolean }) {
         <span>{n.source}</span>
         <span>·</span>
         <span>{fmtDate(locale, n.publishedAt)}</span>
-        <span className="ml-auto font-mono">{Math.round(n.credibility * 100)}%</span>
+        <span className="ml-auto font-mono">{pctLabel(n.credibility)}</span>
       </div>
       <div className="mt-1 text-sm font-medium leading-snug">{newsTitle(n, t)}</div>
       {!compact && <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">{newsSummary(n, t)}</div>}
@@ -397,7 +397,7 @@ function NewsDetail({ id }: { id: string }) {
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="outline" className={kindTone(n.kind)}>{newsKindLabel(n.kind, t)}</Badge>
         <span>{n.source}</span><span>·</span><span>{fmtDateTime(locale, n.publishedAt)}</span>
-        <span className="ml-auto">{t("fw.news.credibility")} <span className="font-mono text-primary">{Math.round(n.credibility * 100)}%</span></span>
+        <span className="ml-auto">{t("fw.news.credibility")} <span className="font-mono text-primary">{pctLabel(n.credibility)}</span></span>
       </div>
       <Panel className="space-y-3 p-5 text-sm leading-relaxed">
         <p className="text-base">{newsSummary(n, t)}</p>

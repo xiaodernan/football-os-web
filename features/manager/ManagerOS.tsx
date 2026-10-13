@@ -33,7 +33,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
-import { cn } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
+import { cn, pctLabel } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
 import { positionLabel, rowLine } from "@/domain/rowText";
 
@@ -132,8 +132,8 @@ function CareerHeader({ career, onChange, onPlay, onReset }: { career: CareerSta
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Metric label={t("mgr.budget")} value={formatValue(career.budget)} />
           <Metric label={t("mgr.leaguePos")} value={pos ? `#${pos}` : "—"} />
-          <Metric label={t("mgr.morale")} value={`${Math.round(((career.morale + 1) / 2) * 100)}%`} tone={career.morale >= 0 ? "good" : "bad"} />
-          <Metric label={t("mgr.fatigue")} value={`${Math.round(career.fatigue * 100)}%`} tone={career.fatigue > 0.6 ? "bad" : "good"} />
+          <Metric label={t("mgr.morale")} value={pctLabel((career.morale + 1) / 2)} tone={career.morale >= 0 ? "good" : "bad"} />
+          <Metric label={t("mgr.fatigue")} value={pctLabel(career.fatigue)} tone={career.fatigue > 0.6 ? "bad" : "good"} />
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={onPlay}>▶ {t("mgr.playNext")}</Button>
@@ -324,7 +324,7 @@ function TacticsPanel({ career, onChange, onRest }: { career: CareerState; onCha
         <SectionTitle title={t("mgr.recovery")} />
         <div className="mt-2 flex items-center justify-between rounded-md border px-3 py-2 text-sm">
           <span className="text-muted-foreground">{t("mgr.currentFatigue")}</span>
-          <span className="font-mono">{Math.round(career.fatigue * 100)}%</span>
+          <span className="font-mono">{pctLabel(career.fatigue)}</span>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">{t("mgr.fatigueHint")}</p>
         <Button className="mt-3" variant="outline" onClick={onRest} disabled={career.fatigue <= 0.06}>{t("mgr.rest")}</Button>
@@ -370,7 +370,6 @@ function Table({ career }: { career: CareerState }) {
 function Outlook({ career }: { career: CareerState }) {
   const { t } = useI18n();
   const o = seasonOutlook(career);
-  const pct = (v: number) => `${Math.round(v * 100)}%`;
   const zoneTone = o.zone.tone === "good" ? "text-success" : o.zone.tone === "bad" ? "text-destructive" : "text-info";
   return (
     <div className="grid gap-4 lg:grid-cols-3">
@@ -392,7 +391,7 @@ function Outlook({ career }: { career: CareerState }) {
             <Metric label={t("mgr.zone")} value={rowLine(o.zone.label, t)} />
           </div>
           <div className="mt-4">
-            <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t("mgr.titleChance")}</span><span className={cn("font-mono font-semibold", zoneTone)}>{pct(o.titleChance)}</span></div>
+            <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t("mgr.titleChance")}</span><span className={cn("font-mono font-semibold", zoneTone)}>{pctLabel(o.titleChance)}</span></div>
             <div className="mt-1 h-2 overflow-hidden rounded bg-muted"><div className="h-full bg-primary" style={{ width: `${Math.max(2, o.titleChance * 100)}%` }} /></div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
@@ -415,7 +414,7 @@ function Outlook({ career }: { career: CareerState }) {
                     <span>{r.clubName}</span>
                     <span className="text-[11px] text-muted-foreground">{t("mgr.ppg")} {r.currentPpg.toFixed(2)} · {t("mgr.projWord")} {r.projectedPoints}</span>
                   </span>
-                  <span className={cn("font-mono text-xs", r.beatUsChance >= 0.5 ? "text-destructive" : "text-muted-foreground")}>{pct(r.beatUsChance)}</span>
+                  <span className={cn("font-mono text-xs", r.beatUsChance >= 0.5 ? "text-destructive" : "text-muted-foreground")}>{pctLabel(r.beatUsChance)}</span>
                 </div>
                 <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full", r.beatUsChance >= 0.5 ? "bg-destructive" : "bg-primary/60")} style={{ width: `${Math.max(2, r.beatUsChance * 100)}%` }} /></div>
               </div>
@@ -515,11 +514,11 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
               <div className="bg-info" style={{ width: `${theirWin * 100}%` }} />
             </div>
             <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
-              <div><div className="text-xs text-muted-foreground">{t("mgr.usWin")}</div><div className="font-mono font-semibold text-primary">{Math.round(ourWin * 100)}%</div></div>
-              <div><div className="text-xs text-muted-foreground">{t("mgr.draw")}</div><div className="font-mono font-semibold">{Math.round(odds.drawPct * 100)}%</div></div>
-              <div><div className="truncate text-xs text-muted-foreground">{p.opponentName} {t("mgr.winWord")}</div><div className="font-mono font-semibold text-info">{Math.round(theirWin * 100)}%</div></div>
+              <div><div className="text-xs text-muted-foreground">{t("mgr.usWin")}</div><div className="font-mono font-semibold text-primary">{pctLabel(ourWin)}</div></div>
+              <div><div className="text-xs text-muted-foreground">{t("mgr.draw")}</div><div className="font-mono font-semibold">{pctLabel(odds.drawPct)}</div></div>
+              <div><div className="truncate text-xs text-muted-foreground">{p.opponentName} {t("mgr.winWord")}</div><div className="font-mono font-semibold text-info">{pctLabel(theirWin)}</div></div>
             </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">{t("mgr.oddsNote")} {t("mgr.avgGoals")} {odds.avgHomeGoals.toFixed(2)}–{odds.avgAwayGoals.toFixed(2)} · {t("mgr.overWord", { n: 2.5 })} {Math.round(odds.over25Pct * 100)}%.</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">{t("mgr.oddsNote")} {t("mgr.avgGoals")} {odds.avgHomeGoals.toFixed(2)}–{odds.avgAwayGoals.toFixed(2)} · {t("mgr.overWord", { n: 2.5 })} {pctLabel(odds.over25Pct)}.</p>
           </Panel>
         )}
       </div>

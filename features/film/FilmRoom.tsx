@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, pctLabel } from "@/lib/utils";
 
 // Film Room (spec §19): the video analysis pipeline as its own pillar. Clips are
 // analysed by the swappable videoProvider (Demo provider runs the same stages over
@@ -270,7 +270,7 @@ export function FilmRoom() {
                       <span className="w-12 shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{ev.t}s</span>
                       <span className={cn("w-16 shrink-0 text-xs font-semibold uppercase", KIND_TONE[ev.kind])}>{t(VIDEO_KIND_KEY[ev.kind])}</span>
                       <span className="min-w-0 flex-1 truncate">{rowLine(ev.note, t)}</span>
-                      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{Math.round(ev.confidence * 100)}%</span>
+                      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{pctLabel(ev.confidence)}</span>
                     </div>
                   ))}
                 </div>

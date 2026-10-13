@@ -44,6 +44,17 @@ export const round2 = (v: number): number => Math.round(v * 100) / 100;
 // different denominator, so the census that charges these sites must exclude the `/ 100` form.
 export const pct = (ratio: number): number => Math.round(ratio * 100);
 
+// The app's percent-label door: a 0..1 fraction rendered as an integer followed by a literal `%`.
+// Two screens each carried a byte-identical local `const pct = (v) => \`${Math.round(v * 100)}%\``
+// (ManagerOS's odds panel and SimulationLab's fatigue slider), and five more stitched the same
+// `Math.round(x * 100)}%` shape inline in JSX (FilmRoom confidence, FootballWorld credibility ×2,
+// ManagerOS fatigue ×2, Profile progress, TransferCentre credibility). Identical today, so no
+// figure a reader sees moves — but a label convention spelled seven ways that part company the
+// moment one gains a locale separator or a decimal. NOTE this door is NOT the domain `pct` above:
+// that one returns the bare integer for an i18n var, while this one appends the `%` for a JSX
+// text node; a caller that swapped them would double the percent sign or lose it.
+export const pctLabel = (ratio: number): string => `${Math.round(ratio * 100)}%`;
+
 // The app's signed-display door. A rising rating, a scan trend or a goal difference earns a literal
 // `+` prefix when the figure is non-negative and a plain number when it is negative. domain/review
 // spelled this as a private `signed` helper (3 call sites); film Insights, the Manager record and
