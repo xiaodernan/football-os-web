@@ -205,7 +205,7 @@ ok(`…so @/i18n resolves to the index that holds it, not to the directory (${re
 // A skip list is a hiding place too, so POP_SKIP is charged twice: the floors below pin that
 // the walked population still contains the directories the app is made of, and the entry
 // census below re-reads every module it finds.
-const POP_SKIP = new Set(["node_modules", "dist", "scripts", "dev", "vendor", "public", "coverage"]);
+const POP_SKIP = new Set(["node_modules", "dist", "scripts", "dev", "vendor", "public", "coverage", "test-results"]);
 const walk = (d) => readdirSync(resolve(root, d), { withFileTypes: true }).flatMap((e) => {
   const rel = `${d}/${e.name}`;
   if (e.isDirectory()) return POP_SKIP.has(e.name) ? [] : walk(rel);
@@ -213,7 +213,8 @@ const walk = (d) => readdirSync(resolve(root, d), { withFileTypes: true }).flatM
 });
 const popDirs = readdirSync(root, { withFileTypes: true })
   .filter((e) => e.isDirectory() && !POP_SKIP.has(e.name) && !e.name.startsWith("."))
-  .map((e) => e.name);
+  .map((e) => e.name)
+  .filter((d) => d !== "test-results");
 const APP_ENTRY = "src/main.tsx";
 
 const population = popDirs.flatMap(walk);

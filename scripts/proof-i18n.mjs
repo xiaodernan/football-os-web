@@ -472,14 +472,15 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // Three population pins, each a number measured from this gate's own report at M248 — 95 app
 // modules, 49 of them .tsx, 98 files including i18n/. They are written as literals on purpose.
 // M350: new SimpleSlider component adds one module (components/ui/simple-slider.tsx) and one .tsx file.
+// M351: browser walk test adds one module (scripts/browser-walk.spec.ts).
 // which is `X === X`: it cannot go red, cannot notice a scan that lost files, and reads as a pin
 // while being nothing. A floor (`appSrc.size > 100`) is the other failure mode — it passes a
 // narrowing walk right up to the day it doesn't, and then the honest repair is to lower the floor,
 // which is exactly the move this file bans elsewhere. A literal makes the next deletion pay here,
 // in the same commit, and prints measured-vs-pin when it does.
-const APP_SRC_PIN = 96;
+const APP_SRC_PIN = 97;
 const TSX_PIN = 50;
-const SRC_PIN = 99;
+const SRC_PIN = 100;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -4176,7 +4177,7 @@ for (const [, code] of appSrc) {
 const filmKindSrc = appSrc.get("domain/filmInsights.ts") ?? "";
 const filmKindBlock = (/const FILM_KIND_KEY[^=]*=\s*\{([^}]*)\}/.exec(filmKindSrc) ?? [])[1] ?? "";
 const filmKindKeys = [...filmKindBlock.matchAll(/"([A-Za-z0-9_.$-]+)"/g)].map((x) => x[1]);
-const POOL_FIELDS_PIN = ["bodyKeys", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
+const POOL_FIELDS_PIN = ["bodyKeys", "foundKeys", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
 const poolFieldsGot = [...poolFields, ...poolArrFields].sort();
 const poolVars = [...poolKeys, ...filmKindKeys].filter((k) => L.some((loc) => phList(D[loc.id][k] ?? "").length > 0));
 const plantPool = L.some((loc) => phList((loc.id === "en" ? D.en["learn.l.xg.title"] + " {n}" : D[loc.id]["learn.l.xg.title"]) ?? "").length > 0);

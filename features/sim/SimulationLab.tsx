@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { footballProvider, getClub, getCompetition, playersByClub, clubIdsByCompetition } from "@/data/footballService";
 import { useRouter } from "@/lib/router";
+import { byOverall } from "@/domain/attributes";
 import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/domain/matchEngine";
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine } from "@/domain/rowText";
@@ -40,7 +41,7 @@ function baseInput(clubId: string, tac: Tactics): TeamInput {
 export function SimulationLab() {
   const { query } = useRouter();
   const { t } = useI18n();
-  const clubs = useMemo(() => [...footballProvider.clubs()].sort((a, b) => b.overall - a.overall), []);
+  const clubs = useMemo(() => [...footballProvider.clubs()].sort(byOverall), []);
   const [homeId, setHomeId] = useState(clubs.find((c) => c.name.includes("City"))?.id ?? clubs[0].id);
   const [awayId, setAwayId] = useState(clubs.find((c) => c.name.includes("Madrid"))?.id ?? clubs[1].id);
   // Tactical Studio's "Take to Simulation Lab" carries the mentality you set there
