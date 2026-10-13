@@ -2947,29 +2947,47 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 //     every check above: each key stays reachable, each locale stays complete, each
 //     literal stays inside the ceiling.
 //     A global one-key-per-word rule is not available — 130 of the English values repeat
-//     legitimately, because "Pass" as a stat name and "Pass" as a button verb are
-//     different strings with different futures. So this is a declared list that only a
-//     milestone may lengthen, and each entry is pinned three ways: exactly one English
-//     value carries the word, at least two call sites read that key (single-sourcing a
-//     word one reader uses is decoration, not sharing), and no screen renders the bare
-//     word as copy again.
-const SHARED_WORDS = [
-  { word: "start", key: "common.chartStart" },
-];
-const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-for (const s of SHARED_WORDS) {
-  const carriers = pairsOf(0).filter(([, v]) => v.trim().toLowerCase() === s.word).map(([k]) => k);
-  ok(`"${s.word}" is carried by exactly one English key (${carriers.join(", ") || "none"})`,
-    carriers.length === 1 && carriers[0] === s.key);
-  const readerRe = new RegExp("\\bt\\(\\s*[\"'`]" + escRe(s.key) + "[\"'`]\\s*[,)]", "g");
-  const readers = [...appSrc.values()].reduce((n, code) => n + (code.match(readerRe) ?? []).length, 0);
-  ok(`${s.key} is read by ${readers} call sites, so the shared row really is shared`, readers >= 2);
-  const bare = tsxSrc.flatMap(([p, code]) => scanSource(code).hits
-    .filter((h) => h.text.replace(/^["'`]|["'`]$/g, "").trim().toLowerCase() === s.word)
-    .map((h) => `${p} (${h.kind})`));
-  ok(`no screen renders "${s.word}" as raw copy any more (${bare.slice(0, 4).join(" | ") || "none"})`,
-    bare.length === 0);
+// ===== 30b. SHARED VALUES — a ratchet on English duplicates ================================
+// The English block has values carried by more than one key ("Football World" is the
+// nav label, the landing pillar title and the football-world hub title). That is
+// legitimate — the same word has different futures in different screens — but an
+// unbounded duplicate count is debt. So this is a ratchet: the number of duplicated
+// English values may only fall. A milestone that removes a duplicate updates the pin
+// downward; nothing may raise it. Alongside the count, every currently-duplicated value
+// must be carried by all three locales, so a duplicate at least translates everywhere.
+const DUP_VALUES_PIN = 107;
+const DUP_EXCESS_KEYS_PIN = 177;
+// Build a reverse map once: English value → the keys that carry it.
+const enPairs = pairsOf(0);
+const valueToKeys = new Map();
+for (const [k, v] of enPairs) {
+  const val = v.trim();
+  if (!valueToKeys.has(val)) valueToKeys.set(val, []);
+  valueToKeys.get(val).push(k);
 }
+const dupEntries = [...valueToKeys.entries()].filter(([, ks]) => ks.length > 1);
+const dupExcess = dupEntries.reduce((n, [, ks]) => n + ks.length - 1, 0);
+ok(`English duplicate-value count is pinned at ${DUP_VALUES_PIN} (actual: ${dupEntries.length})`,
+  dupEntries.length <= DUP_VALUES_PIN);
+ok(`English excess-key count is pinned at ${DUP_EXCESS_KEYS_PIN} (actual: ${dupExcess})`,
+  dupExcess <= DUP_EXCESS_KEYS_PIN);
+// Every duplicated value's keys must exist (non-empty) in all three locales.
+const dupKeyMissing = dupEntries
+  .flatMap(([val, ks]) => ks.map((k) => [val, k, L.filter((loc) => !(k in D[loc.id]) || !D[loc.id][k].trim()).map((l) => l.id)]))
+  .filter(([, , missing]) => missing.length > 0);
+ok(`every key carrying a duplicated English value is present in all ${L.length} locales (${dupKeyMissing.length} missing)`,
+  dupKeyMissing.length === 0,
+  dupKeyMissing.slice(0, 6).map(([, k, m]) => `${k}: missing ${m.join(", ")}`).join(" | "));
+// No screen renders a duplicated value as raw copy (the shared-word hygiene clause).
+const sharedWordsLower = new Set(dupEntries.map(([v]) => v.toLowerCase()));
+const bareShared = tsxSrc.flatMap(([p, code]) => scanSource(code).hits
+  .filter((h) => {
+    const t = h.text.replace(/^["'`]|["'`]$/g, "").trim().toLowerCase();
+    return sharedWordsLower.has(t);
+  })
+  .map((h) => `${p} (${h.text.replace(/^["'`]|["'`]$/g, "").trim()})`));
+ok(`no screen renders a shared English value as raw copy (${bareShared.length} bare hits)`,
+  bareShared.length === 0, bareShared.slice(0, 6).join(" | "));
 
 // 31. Prose typed into a domain module. Everything above this line reads component
 //     source, and a sentence composed in `domain/*.ts` never appears there: the module
