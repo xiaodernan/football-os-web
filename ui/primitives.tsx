@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, clamp } from "@/lib/utils";
 import { DEMO_MODE } from "@/data/footballService";
 import { useI18n } from "@/i18n";
 import { positionLabel, rowLine } from "@/domain/rowText";
@@ -88,7 +88,7 @@ export function PositionTag({ position }: { position: string }) {
 }
 
 export function AttributeBar({ label, value, max = 99 }: { label: string; value: number; max?: number }) {
-  const pct = Math.max(2, Math.min(100, (value / max) * 100));
+  const pct = clamp((value / max) * 100, 2, 100);
   const color = value >= 78 ? "var(--color-success)" : value >= 62 ? "var(--color-info)" : value >= 48 ? "var(--color-warning)" : "var(--color-destructive)";
   return (
     <div className="flex items-center gap-3">

@@ -7,7 +7,7 @@ import { getClub, playersByClub } from "@/data/footballService";
 import { TACTICS_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, clamp } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface Token { id: string; label: string; x: number; y: number; role: "GK" | "DEF" | "MID" | "ATT" }
@@ -41,7 +41,7 @@ export function TacticalStudio() {
   const carriedMt = query.get("mt");
   const carriedMentality =
     carriedMt !== null && Number.isFinite(Number(carriedMt))
-      ? Math.max(0, Math.min(4, Math.round(Number(carriedMt))))
+      ? clamp(Math.round(Number(carriedMt)), 0, 4)
       : null;
   const [formation, setFormation] = useState("4-3-3");
   const [mentality, setMentality] = useState(carriedMentality ?? 2);
@@ -56,8 +56,8 @@ export function TacticalStudio() {
   const onMove = (e: ReactPointerEvent) => {
     if (!drag.current || !svgRef.current) return;
     const r = svgRef.current.getBoundingClientRect();
-    const x = Math.max(0.03, Math.min(0.97, (e.clientX - r.left) / r.width));
-    const y = Math.max(0.03, Math.min(0.97, (e.clientY - r.top) / r.height));
+    const x = clamp((e.clientX - r.left) / r.width, 0.03, 0.97);
+    const y = clamp((e.clientY - r.top) / r.height, 0.03, 0.97);
     setTokens((ts) => ts.map((t) => t.id === drag.current!.id ? { ...t, x, y } : t));
   };
 

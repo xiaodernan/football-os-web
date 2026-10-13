@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import { cn, clamp } from "@/lib/utils";
 
 const RECOVERY_TONE: Record<LoadZone, string> = {
   none: "border-border text-muted-foreground",
@@ -72,7 +72,7 @@ export function Dashboard() {
     const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
     const focusGoals = state.goals
       .filter((g) => g.metric === "attribute" && g.key && !g.done)
-      .map((g) => ({ key: g.key!, current: g.current, target: g.target, pct: Math.max(0, Math.min(1, g.target ? g.current / g.target : 0)) }))
+      .map((g) => ({ key: g.key!, current: g.current, target: g.target, pct: clamp(g.target ? g.current / g.target : 0, 0, 1) }))
       .sort((a, b) => b.pct - a.pct)
       .slice(0, 3);
     return { next, total: list.length, unlocked: list.filter((a) => a.unlocked).length, last, recovery: load.hasData ? { acwr: load.acwr, zone: load.zone } : null, focusGoals };

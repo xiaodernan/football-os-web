@@ -5,7 +5,7 @@ import { footballProvider, getClub, getCompetition } from "@/data/footballServic
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
-import { cn } from "@/lib/utils";
+import { cn, clamp } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
 // raw-UI scan reads every string literal there as a child text node — four hits on the
@@ -41,7 +41,7 @@ function FormPips({ form }: { form: FormLetter[] }) {
 }
 
 function RatingBar({ label, value, better }: { label: string; value: number; better: "high" | "low" }) {
-  const scale = Math.min(2, Math.max(0, value)) / 2; // 0..2 → 0..100%
+  const scale = clamp(value, 0, 2) / 2; // 0..2 → 0..100%
   const tone = better === "high" ? "bg-info" : "bg-warning";
   return (
     <div className="flex items-center gap-2 text-xs">
