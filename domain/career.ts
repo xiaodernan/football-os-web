@@ -4,6 +4,7 @@ import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
 import { byOverall } from "./attributes";
 import type { RowText } from "./rowText";
+import { clamp } from "@/lib/utils";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
 // runs entirely in Demo Mode with no backend, yet a real save/load contract could
@@ -617,10 +618,6 @@ export function seasonSummary(state: CareerState): SeasonSummary {
 // while the Manager OS panel beside it already rounded the same currency the shared way (one
 // decimal up to ten million, none beyond), so a single screen could quote a manager's earnings
 // under two rules at once — a whole-million season read '7M' here and '7.0M' through the door.
-
-function clamp(v: number, lo: number, hi: number) {
-  return Math.max(lo, Math.min(hi, v));
-}
 
 export function marketTargets(state: CareerState, limit = 40): PlayerRef[] {
   return allPlayers()

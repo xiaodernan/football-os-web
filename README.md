@@ -6964,11 +6964,14 @@ The value clause pins the **tie** as well as the order: `Array.prototype.sort` i
 players on the same overall keep the order they were given and do not shuffle between renders.
 
 Measured: `tsc --noEmit` clean; `proof-compare` **70/70** (66 before this unit, +4); the suite run one
-process per script. **`npm run build` could not complete on this machine**: `tsc` passes and Vite
-transforms all 2,624 modules, then `prepare-out-dir` fails because the sandbox's safe-delete shim
-refuses to empty `dist/` (`SAFE_DELETE_BULK_GUARD_ERROR state lock timeout`, reproduced across three
-attempts). That is the environment, not this change — it is recorded here rather than hidden, the way
-this file records the standing `proof-runner` artifact.
+process per script — **43 of 44 scripts green, 2,413 checks**, `proof-runner` the one red (the standing
+sandbox artifact: `run-proofs.mjs` spawns each script with `spawnSync` and the sandbox refuses the
+child, so it dies before printing a tally and its own checks are not in the 2,413). **`npm run build`
+could not complete on this machine**: `tsc` passes and Vite transforms all 2,624 modules, then
+`prepare-out-dir` fails because the sandbox's safe-delete shim refuses to empty `dist/`
+(`SAFE_DELETE_BULK_GUARD_ERROR state lock timeout`, reproduced across three attempts, and `rm -rf dist`
+is blocked the same way). That is the environment, not this change — recorded here rather than hidden,
+the way this file records the standing `proof-runner` artifact.
 
 ### M336 — the data room's match count is the domain's count, not a sum the page halves
 
