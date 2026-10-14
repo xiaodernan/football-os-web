@@ -55,6 +55,19 @@ export const pct = (ratio: number): number => Math.round(ratio * 100);
 // text node; a caller that swapped them would double the percent sign or lose it.
 export const pctLabel = (ratio: number): string => `${Math.round(ratio * 100)}%`;
 
+// The app's share-of-a-max door for CSS lengths: a progress bar's fill, a marker's left offset or a
+// column's height whose size is one value expressed as a percentage of a maximum. Five render sites
+// across the development, player and review screens each spelled the same value-divided-by-max times
+// a hundred followed by a literal percent sign inside a style template string — three different
+// properties (width, left, height) but one fraction-of-a-scale computation. Identical today, so no
+// bar resizes, but a convention spelled five ways that drifts the moment the scale changes. NOTE this
+// is NOT the pctLabel above: pctLabel ROUNDS its ratio to an integer for a text node and treats the
+// input as a 0..1 fraction, while this keeps the raw fractional precision a style needs and takes a
+// value plus a separate max. It is also NOT the clamp-guarded fills (Math.max(2, …), Math.min(100, …))
+// some screens use to guarantee a visible sliver — those wrap a bound this door does not express, so
+// the census charges only the bare value-over-max-percent shape and leaves every guarded sibling inline.
+export const pctOf = (value: number, max: number): string => `${(value / max) * 100}%`;
+
 // The app's signed-display door. A rising rating, a scan trend or a goal difference earns a literal
 // `+` prefix when the figure is non-negative and a plain number when it is negative. domain/review
 // spelled this as a private `signed` helper (3 call sites); film Insights, the Manager record and

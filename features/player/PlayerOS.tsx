@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, pctOf } from "@/lib/utils";
 import { useLearnRecords } from "@/lib/hooks";
 import { summarizeLearn } from "@/domain/learn";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -607,7 +607,7 @@ function Workload() {
               const max = Math.max(...byWeek.map((x) => x.value), 1);
               return (
                 <div key={w.label} className="flex flex-1 flex-col items-center gap-1">
-                  <div className="w-full rounded-t bg-primary/60 transition-all" style={{ height: `${(w.value / max) * 100}%` }} />
+                  <div className="w-full rounded-t bg-primary/60 transition-all" style={{ height: pctOf(w.value, max) }} />
                   <span className="text-[10px] text-muted-foreground">{w.label}</span>
                 </div>
               );

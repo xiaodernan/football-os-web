@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, pctOf } from "@/lib/utils";
 
 import type { ReactNode } from "react";
 
@@ -38,11 +38,11 @@ function GapRow({ item, kind, action }: { item: GapItem; kind: "priority" | "str
       <div className="relative mt-2 h-2 rounded-full bg-secondary">
         <div
           className={cn("absolute inset-y-0 left-0 rounded-full", kind === "priority" ? "bg-warning/70" : "bg-success/70")}
-          style={{ width: `${(item.actual / max) * 100}%` }}
+          style={{ width: pctOf(item.actual, max) }}
         />
         <div
           className="absolute inset-y-0 w-0.5 bg-foreground/60"
-          style={{ left: `${(item.target / max) * 100}%` }}
+          style={{ left: pctOf(item.target, max) }}
           title={t("dv.roleTarget", { target: item.target })}
         />
       </div>

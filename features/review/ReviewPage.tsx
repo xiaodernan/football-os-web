@@ -13,7 +13,7 @@ import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primi
 import { ProgressLine } from "@/ui/charts";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { cn, signed, DAY_MS } from "@/lib/utils";
+import { cn, signed, DAY_MS, pctOf } from "@/lib/utils";
 
 const WINDOWS = [7, 30, 90];
 
@@ -249,7 +249,7 @@ export function ReviewPage() {
                             <span className="font-mono text-muted-foreground">×{f.sessions}</span>
                           </div>
                           <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
-                            <div className="h-full bg-primary" style={{ width: `${(f.sessions / max) * 100}%` }} />
+                            <div className="h-full bg-primary" style={{ width: pctOf(f.sessions, max) }} />
                           </div>
                         </div>
                       );
@@ -287,7 +287,7 @@ export function ReviewPage() {
                             </span>
                           </div>
                           <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
-                            <div className="h-full bg-primary" style={{ width: `${(k.perMinute / max) * 100}%` }} />
+                            <div className="h-full bg-primary" style={{ width: pctOf(k.perMinute, max) }} />
                           </div>
                         </div>
                       );
