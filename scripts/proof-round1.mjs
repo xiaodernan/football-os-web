@@ -28,8 +28,6 @@ const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } 
 const HOME = "domain/scouting.ts"; // the door's home (writer lane — read here, never edited by M363)
 // The two clean feature screens M363 folded onto the door.
 const CONSUMERS = ["features/community/CommunityHub.tsx", "features/world/DynamicWorld.tsx"];
-// The concurrent writer's domain file still hand-spells round1 inline; pinned as residue, not converged.
-const RESIDUE = ["domain/career.ts"];
 const UTILS = "lib/utils.ts"; // round2/round3 live here — the scale siblings to keep apart
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
@@ -59,7 +57,7 @@ ok(`the four round1 scans are armed (decl ${plantDecl}, import ${plantImport}, c
   plantDecl === 1 && plantImport === 1 && plantCall === 1 && plantInline === 1);
 
 // --- Population floor + subject presence (a blind walk would read 0 and pass a negative claim). ----
-const present = CONSUMERS.concat([HOME, UTILS], RESIDUE).every((p) => Object.prototype.hasOwnProperty.call(src, p));
+const present = CONSUMERS.concat([HOME, UTILS]).every((p) => Object.prototype.hasOwnProperty.call(src, p));
 ok(`the census walks the real source tree and every subject is inside it (${carriers.length} .ts/.tsx)`,
   carriers.length >= 80 && present);
 
@@ -80,12 +78,13 @@ const using = CONSUMERS.map((f) => [f, count(src[f], CALL_ROUND1)]);
 ok(`both M363 consumers re-inlined nothing and read the door instead (inline ${consumerInline}, importers ${importing.length}/${CONSUMERS.length}, per-file calls ${using.map(([, n]) => n).join(",")}; planted inline ${plantInline})`,
   consumerInline === 0 && plantInline === 1 && importing.length === CONSUMERS.length && using.every(([, n]) => n >= 1));
 
-// --- Convergence completeness: outside the door and the pinned career residue, no walked file still
+// --- Convergence completeness: outside the door's own body, no walked file still
 // hand-spells the round-to-1-dp formula. --------------------------------------------------------------
 const inlineFiles = carriers.filter((f) => inlineR1(src[f]) > 0);
-const strays = inlineFiles.filter((f) => f !== HOME && !RESIDUE.includes(f));
-ok(`the round-to-1-dp formula survives only in the door and the pinned career residue (carriers ${inlineFiles.join(",")}; strays ${strays.length})`,
-  inlineFiles.includes(HOME) && strays.length === 0 && RESIDUE.every((r) => inlineR1(src[r]) >= 1));
+const strays = inlineFiles.filter((f) => f !== HOME);
+const plantStray = inlineR1(`const z = Math.round(v * 10) / 10;`);
+ok(`the round-to-1-dp formula survives only in the door's own body (carriers ${inlineFiles.join(",")}; strays ${strays.length}; a planted inline would read ${plantStray})`,
+  inlineFiles.includes(HOME) && strays.length === 0 && plantStray === 1);
 
 // --- Must-not-unify, scale census: the ×10 door, the ×100 and ×1000 siblings are three different ----
 // --- decimal precisions that coexist in two homes; a merged helper would silently re-scale results. --

@@ -4,7 +4,8 @@ import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
 import { byOverall } from "./attributes";
 import type { RowText } from "./rowText";
-import { clamp } from "@/lib/utils";
+import { clamp, pct } from "@/lib/utils";
+import { round1 } from "./scouting";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
 // runs entirely in Demo Mode with no backend, yet a real save/load contract could
@@ -252,8 +253,8 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
       const theirProj = projected.find((p) => p.row.clubId === r.clubId)!.pts;
       const gdEdge = (ours.gf - ours.ga) - (r.gf - r.ga);
       const beat = sigmoid((theirProj - ourProj + gdEdge * 0.08) / sigma);
-      const theirShown = Math.round(theirProj * 10) / 10;
-      const ourShown = Math.round(ourProj * 10) / 10;
+      const theirShown = round1(theirProj);
+      const ourShown = round1(ourProj);
       return {
         clubId: r.clubId,
         clubName: getClub(r.clubId)?.name ?? r.clubId,
@@ -284,12 +285,12 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
   // two arms of the projection sentence differ in a whole clause ("level with or ahead of" vs
   // "{n} pts behind"), which no `{n}` can choose between.
   const leader = getClub(projLeader.row.clubId)?.name ?? projLeader.row.clubId;
-  const projPts = Math.round(ourProj * 10) / 10;
+  const projPts = round1(ourProj);
   const evidence: RowText[] = [
     { key: "mgr.outlook.liveTable", vars: { position, points: ours.points, careerPts, played, scheduled: totalFixtures } },
     gapToProjectedLeader === 0
       ? { key: "mgr.outlook.projectedLevel", vars: { points: projPts, leader } }
-      : { key: "mgr.outlook.projectedBehind", vars: { points: projPts, gap: Math.round(gapToProjectedLeader * 10) / 10, leader } },
+      : { key: "mgr.outlook.projectedBehind", vars: { points: projPts, gap: round1(gapToProjectedLeader), leader } },
     { key: "mgr.outlook.form", vars: { form: `${form >= 0 ? "+" : ""}${form.toFixed(2)}`, ppg: ourPpg.toFixed(2) } },
     { key: "mgr.outlook.method", vars: { remaining } },
   ];
@@ -302,12 +303,12 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
     position,
     points: ours.points,
     pointsPerGame: Math.round(ppg(ours) * 100) / 100,
-    projectedPoints: Math.round(ourProj * 10) / 10,
+    projectedPoints: round1(ourProj),
     projectedPosition,
-    gapToProjectedLeader: Math.round(gapToProjectedLeader * 10) / 10,
+    gapToProjectedLeader: round1(gapToProjectedLeader),
     leaderName: leader,
     titleChance,
-    expectedFinish: Math.round(expectedFinish * 10) / 10,
+    expectedFinish: round1(expectedFinish),
     zone,
     rivalRows: rivalRows.slice(0, 4),
     evidence,
@@ -475,7 +476,7 @@ export function matchPrep(state: CareerState): MatchPrep {
   let tempo = 0.5;
   if (state.fatigue > 0.6) {
     tempo = 0.35;
-    rationale.push({ key: "mgr.prep.tempoSlow", vars: { n: Math.round(state.fatigue * 100) } });
+    rationale.push({ key: "mgr.prep.tempoSlow", vars: { n: pct(state.fatigue) } });
   } else if (attackEdge >= 6) {
     tempo = 0.7;
     rationale.push({ key: "mgr.prep.tempoHigh", vars: { edge: aeR } });

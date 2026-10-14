@@ -269,8 +269,8 @@ const privateDefs = R1_CONSUMERS.filter((f) => nlocal(r1src[f]) > 0).map((f) => 
 const importers = R1_CONSUMERS.filter((f) => (r1src[f].match(IMPORTS_R1) || []).length > 0);
 const inlineInConsumers = R1_CONSUMERS.filter((f) => inlineRound1(r1src[f]) > 0).map((f) => `${f}(${inlineRound1(r1src[f])})`);
 // Domain-wide residue: walk every domain module and list the ones that still inline a rounding. The
-// measurement is that this is scouting's own exported body (the one legitimate copy) plus career.ts
-// and nothing else — so the seam is otherwise closed across the whole directory, not just the ten.
+// measurement is that this is scouting's own exported body (the one legitimate copy) and nothing
+// else — so the seam is closed across the whole directory, not just the ten.
 const domainCarriers = readdirSync("domain").filter((f) => f.endsWith(".ts"))
   .map((f) => [`domain/${f}`, inlineRound1(readFileSync(`domain/${f}`, "utf8"))])
   .filter(([, n]) => n > 0);
@@ -282,8 +282,8 @@ ok(`the balanced inline scan is armed at both nesting depths and no consumer sti
   plantFlat === 1 && plantNested === 1 && inlineInConsumers.length === 0 && inlineRound1(r1src[R1_HOME]) === 1);
 ok(`each of the ten consumers imports round1 from scouting, either spelling (${importers.join(", ") || "none"})`,
   plantImpDot === 1 && plantImpAt === 1 && importers.length === R1_CONSUMERS.length && R1_CONSUMERS.every((f) => importers.includes(f)));
-ok(`across the whole domain directory the only inline round1 outside scouting's own body is the pinned career.ts residue (${residue.join(", ") || "none"}; carriers: ${domainCarriers.map(([f, n]) => `${f}:${n}`).join(", ")})`,
-  plantNested === 1 && residue.length === 1 && residue[0] === "domain/career.ts" && inlineRound1(r1src[R1_HOME]) === 1);
+ok(`across the whole domain directory the only inline round1 is scouting's own body — no residue remains (${residue.join(", ") || "none"}; carriers: ${domainCarriers.map(([f, n]) => `${f}:${n}`).join(", ")})`,
+  plantNested === 1 && residue.length === 0 && inlineRound1(r1src[R1_HOME]) === 1);
 ok("the shared rounder still rounds to one decimal for the model and the display alike",
   shippedRound1(2.467) === 2.5 && shippedRound1(3.14) === 3.1 && shippedRound1(-2.467) === -2.5 && shippedRound1(12) === 12);
 

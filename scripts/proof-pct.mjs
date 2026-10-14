@@ -22,13 +22,12 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const HOME = "lib/utils.ts";
-// The six domain modules that now read the door.
+// The seven domain modules that now read the door.
 const CONSUMERS = [
   "domain/community.ts", "domain/gap.ts", "domain/goals.ts",
   "domain/learn.ts", "domain/newsImpact.ts", "domain/rowText.ts",
+  "domain/career.ts",
 ];
-// A declared, pinned residue: the writer's dirty career.ts still carries one inline percent site.
-const RESIDUE = "domain/career.ts";
 
 // Walk the shipped source roots. scripts/ is NOT walked, so the plants below are the reference the
 // scans are armed against, never a second charge in the census population.
@@ -54,7 +53,7 @@ ok(`the three scans are armed and the exclusion bites (percent ${plantPercent}, 
   plantPercent === 2 && plantDecl === 1 && plantImport === 1 && plantRound2Excluded === 0);
 
 // --- Population floor + subject presence (a blind walk reads 0 and would pass a negative claim). --
-const present = CONSUMERS.concat([HOME, RESIDUE]).every((p) => Object.prototype.hasOwnProperty.call(src, p));
+const present = CONSUMERS.concat([HOME]).every((p) => Object.prototype.hasOwnProperty.call(src, p));
 ok(`the census walks the real source tree and every subject is inside it (${carriers.length} .ts/.tsx)`,
   carriers.length >= 80 && present);
 
@@ -75,20 +74,21 @@ ok(`pct is Math.round(ratio * 100) with no denominator, while round2 keeps / 100
 
 // --- Every consumer imports the door. ----------------------------------------------------------
 const importing = CONSUMERS.filter((f) => count(src[f], IMPORT_PCT) >= 1);
-ok(`all six domain modules import pct from @/lib/utils (${importing.length}/${CONSUMERS.length}: ${importing.join(", ")})`,
+ok(`all ${CONSUMERS.length} domain modules import pct from @/lib/utils (${importing.length}/${CONSUMERS.length}: ${importing.join(", ")})`,
   importing.length === CONSUMERS.length);
 
 // --- No inline percent site survives in a converged consumer (planted, so the zero is measured).
 const consumerPercent = CONSUMERS.map((f) => [f, count(src[f], PERCENT)]);
 const plantConsumerHasSite = count(`  cred: Math.round(n.credibility * 100),`, PERCENT);
-ok(`none of the six consumers still spells the percent inline (read ${consumerPercent.map(([, n]) => n).join(",")}; planted inline reads ${plantConsumerHasSite})`,
+ok(`none of the ${CONSUMERS.length} consumers still spells the percent inline (read ${consumerPercent.map(([, n]) => n).join(",")}; planted inline reads ${plantConsumerHasSite})`,
   plantConsumerHasSite === 1 && consumerPercent.every(([, n]) => n === 0));
 
-// --- career.ts is the ONLY domain residue, charged by file identity, not by line. --------------
+// --- Completeness: no domain module carries an inline percent site — the seam is fully closed. ---
 const domainFiles = carriers.filter((f) => f.startsWith("domain/"));
 const domainPercentSites = domainFiles.filter((f) => count(src[f], PERCENT) > 0);
-ok(`exactly one domain module still carries an inline percent site and it is the pinned career.ts residue (${domainPercentSites.join(",") || "none"})`,
-  domainPercentSites.length === 1 && domainPercentSites[0] === RESIDUE);
+const plantDomainInline = count(`  const x = Math.round(v * 100);`, PERCENT);
+ok(`no domain module carries an inline percent site any more — the seam is fully closed (${domainPercentSites.join(",") || "none"}; a planted inline would read ${plantDomainInline})`,
+  plantDomainInline === 1 && domainPercentSites.length === 0);
 
 // --- Behavioural: the shipped door reproduces the formula on the values the app feeds it. ------
 // Ratios the six consumers actually pass: credibility/readiness/completion/goal fractions, plus the
