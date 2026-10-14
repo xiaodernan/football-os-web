@@ -35,7 +35,7 @@ import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { cn, pctOf } from "@/lib/utils";
+import { clamp, cn, pctOf } from "@/lib/utils";
 
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -435,7 +435,7 @@ export function ClubDetail({ id }: { id: string }) {
 
 function Ratio({ label, value, goodHigh = false }: { label: string; value: number; goodHigh?: boolean }) {
   const good = goodHigh ? value >= 1 : value <= 1;
-  const pct = Math.max(4, Math.min(100, (value / 2) * 100));
+  const pct = clamp((value / 2) * 100, 4, 100);
   return (
     <div>
       <div className="flex justify-between text-[11px]">

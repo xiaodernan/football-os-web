@@ -3,7 +3,10 @@
 // six genuine double-sided clamps that still lived in clean FEATURE/UI files — DataRoom's RatingBar
 // scale, Dashboard's focus-goal pct, TacticalStudio's carried-mentality index and its two pointer-drag
 // x/y reads, and primitives' AttributeBar pct. The door shares ONLY the double-sided `max(lo, min(hi, v))`
-// shape. Three siblings must NOT be folded in, because they are not clamps at all:
+// shape. M366 folded the last two feature twins that had been pinned as writer-owned — Details' ratio
+// bar floor and SimulationLab's carried-mentality index — so the only double-sided nests left are the
+// door itself, the shifted floor below, and the writer's data fixtures. Three siblings must NOT be
+// folded in, because they are not clamps at all:
 //   · a single-sided floor — `Math.max(0, potential - overall)`, `Math.max(1, tokens.length - 1)` — has
 //     no upper bound, so `clamp(v, lo, hi)` cannot express it; the door would demand a ceiling that does
 //     not exist.
@@ -49,18 +52,13 @@ const CONSUMERS = [
 ];
 // The one domain file that carries a max/min pair on a line but is a shifted clamp, not a door fold.
 const SHIFT = "domain/careerArc.ts";
-// Files the concurrent writer owns: M364 was forbidden to converge them, so a clamp still hand-nested
-// there is a DECLARED residue, not a stray. Keyed by file identity (the writer's lane), never by line.
-// Note SimulationLab's `Math.max(0, Math.min(4, Number(carriedMt)))` and Details'
-// `Math.max(4, Math.min(100, (value/2)*100))` are the writer's twins of the TacticalStudio/primitives
-// folds M364 did on the clean side — same shape, different owner, so they stay inline here.
-const WRITER = [
-  "domain/attributes.ts", "domain/career.ts", "domain/scouting.ts",
-  "data/footballSeed.ts", "data/footballService.ts", "data/intelligence.ts",
-  "features/compare/ComparePage.tsx", "features/football/Details.tsx",
-  "features/football/FootballWorld.tsx", "features/manager/ManagerOS.tsx",
-  "features/sim/SimulationLab.tsx",
-];
+// The concurrent writer's data fixtures: a clamp still hand-nested there is a DECLARED residue, not a
+// stray. Keyed by file identity (the writer's lane), never by line. The two feature twins that used to
+// sit here too — SimulationLab's `Math.max(0, Math.min(4, …))` and Details' `Math.max(4, Math.min(100, …))`
+// — were folded onto the door by M366, so a clause below now charges them zero-and-imports instead.
+const WRITER = ["data/footballSeed.ts", "data/footballService.ts", "data/intelligence.ts"];
+// Former writer-lane feature files, now converged: a re-inline reddens rather than being excused.
+const FORMER = ["features/football/Details.tsx", "features/sim/SimulationLab.tsx"];
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
   e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);
@@ -88,7 +86,7 @@ ok(`the four clamp scans are armed (decl ${plantDecl}, import ${plantImport}, ca
   plantDecl === 1 && plantImport === 1 && plantCall === 1 && plantDouble === 1);
 
 // --- Population floor + subject presence (a blind walk would read 0 and pass a negative claim). ----
-const present = CONSUMERS.concat([HOME, SHIFT]).every((p) => Object.prototype.hasOwnProperty.call(src, p));
+const present = CONSUMERS.concat([HOME, SHIFT], WRITER, FORMER).every((p) => Object.prototype.hasOwnProperty.call(src, p));
 ok(`the census walks the real source tree and every subject is inside it (${carriers.length} .ts/.tsx)`,
   carriers.length >= 80 && present);
 
@@ -110,15 +108,21 @@ ok(`the four M364 feature/UI consumers read the door and hand-nest nothing (impo
   importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 6 && CONSUMERS.every((f) => doubleIn(src[f]) === 0));
 
 // --- Convergence completeness: a hand-nested double-sided clamp survives only in the door, the ------
-// --- declared careerArc shifted residue, or a writer-owned file M364 must not converge. Critically, ---
-// --- none of M364's four CONSUMER files may appear here — so the writer exemption cannot hide my own. -
+// --- declared careerArc shifted residue, or the writer's data lane. Critically, neither the four ---
+// --- CONSUMER files nor the two former twins may appear here — an exemption cannot hide my own. ---
 const doubleFiles = carriers.filter((f) => doubleIn(src[f]) > 0);
 const allowed = new Set([HOME, SHIFT, ...WRITER]);
 const strays = doubleFiles.filter((f) => !allowed.has(f));
 const writerResidue = doubleFiles.filter((f) => WRITER.includes(f));
-const consumersClean = CONSUMERS.every((f) => !doubleFiles.includes(f));
-ok(`every hand-nested clamp is accounted for: door, careerArc shifted residue, or a writer-owned file M364 does not converge (carriers ${doubleFiles.length}, writer residue ${writerResidue.length}, strays ${strays.length})`,
+const consumersClean = CONSUMERS.every((f) => !doubleFiles.includes(f)) && FORMER.every((f) => !doubleFiles.includes(f));
+ok(`every hand-nested clamp is accounted for: door, careerArc shifted residue, or the writer's data lane (carriers ${doubleFiles.length}, writer residue ${writerResidue.length}, strays ${strays.length})`,
   doubleFiles.includes(HOME) && strays.length === 0 && doubleIn(src[SHIFT]) >= 1 && writerResidue.length >= 1 && consumersClean);
+
+// --- The former writer-lane feature twins carry ZERO hand-nested clamps now and read the door. ----
+const formerDouble = FORMER.map((f) => [f.split("/").pop(), doubleIn(src[f])]);
+const formerImport = FORMER.filter((f) => count(src[f], IMPORT_CLAMP) >= 1);
+ok(`the two former writer-lane feature twins re-inlined nothing and import clamp instead (double ${formerDouble.map(([n, c]) => `${n}=${c}`).join(", ")}; importers ${formerImport.length}/${FORMER.length}: ${formerImport.join(", ")})`,
+  formerDouble.every(([, c]) => c === 0) && formerImport.length === FORMER.length);
 
 // --- Must-not-unify, discrimination: the double-sided census charges a real nest but leaves a ------
 // --- single-sided floor and a lone two-argument min uncharged — the shapes the door must not claim. --

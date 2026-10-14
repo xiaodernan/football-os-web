@@ -10,7 +10,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
-import { cn, pctLabel, pctOf } from "@/lib/utils";
+import { clamp, cn, pctLabel, pctOf } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 
 interface Tactics {
@@ -50,7 +50,7 @@ export function SimulationLab() {
   const carriedMt = query.get("mt");
   const carriedShape = query.get("shape");
   const studioMentality = carriedMt !== null && !Number.isNaN(Number(carriedMt))
-    ? Math.max(0, Math.min(4, Number(carriedMt)))
+    ? clamp(Number(carriedMt), 0, 4)
     : null;
   const [homeTac, setHomeTac] = useState<Tactics>(
     studioMentality !== null ? { ...DEFAULT_TACTICS, mentality: studioMentality - 2 } : DEFAULT_TACTICS,
