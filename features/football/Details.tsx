@@ -35,7 +35,7 @@ import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, pctOf } from "@/lib/utils";
 
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -310,8 +310,8 @@ function CompareBars({ a, b }: { a: PlayerRef; b: PlayerRef }) {
               <span className="font-mono">{r.av}</span><span>{t(r.labelKey)}</span><span className="font-mono">{r.bv}</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="flex flex-1 justify-end"><div className={cn("h-2 rounded-l", aWin ? "bg-primary" : "bg-muted")} style={{ width: `${(r.av / r.max) * 100}%` }} /></div>
-              <div className="flex flex-1"><div className={cn("h-2 rounded-r", bWin ? "bg-primary" : "bg-muted")} style={{ width: `${(r.bv / r.max) * 100}%` }} /></div>
+              <div className="flex flex-1 justify-end"><div className={cn("h-2 rounded-l", aWin ? "bg-primary" : "bg-muted")} style={{ width: pctOf(r.av, r.max) }} /></div>
+              <div className="flex flex-1"><div className={cn("h-2 rounded-r", bWin ? "bg-primary" : "bg-muted")} style={{ width: pctOf(r.bv, r.max) }} /></div>
             </div>
           </div>
         );
@@ -652,7 +652,7 @@ function StatCompare({ stats, home, away, ratings }: { stats: { home: MatchStats
           <div key={r.labelKey}>
             <div className="flex justify-between text-[11px]"><span className="font-mono">{fmt(r.h)}</span><span className="text-muted-foreground">{t(r.labelKey)}</span><span className="font-mono">{fmt(r.a)}</span></div>
             <div className="mt-0.5 flex h-1.5 overflow-hidden rounded bg-muted">
-              <div className="bg-primary" style={{ width: `${(r.h / total) * 100}%` }} />
+              <div className="bg-primary" style={{ width: pctOf(r.h, total) }} />
               <div className="flex-1 bg-muted-foreground/40" />
             </div>
           </div>

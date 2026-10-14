@@ -10,7 +10,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
-import { cn, pctLabel } from "@/lib/utils";
+import { cn, pctLabel, pctOf } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 
 interface Tactics {
@@ -193,7 +193,7 @@ const rows = [
           return (
             <div key={r.name}>
               <div className="flex justify-between text-[11px]"><span className="font-mono">{r.h}{r.unit}</span><span className="text-muted-foreground">{r.name}</span><span className="font-mono">{r.a}{r.unit}</span></div>
-              <div className="mt-0.5 flex h-1.5 overflow-hidden rounded bg-muted"><div className="bg-primary" style={{ width: `${(r.h / total) * 100}%` }} /><div className="flex-1 bg-muted-foreground/40" /></div>
+              <div className="mt-0.5 flex h-1.5 overflow-hidden rounded bg-muted"><div className="bg-primary" style={{ width: pctOf(r.h, total) }} /><div className="flex-1 bg-muted-foreground/40" /></div>
             </div>
           );
         })}

@@ -4,7 +4,7 @@ import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
 import { byOverall } from "./attributes";
 import type { RowText } from "./rowText";
-import { clamp, pct, signed } from "@/lib/utils";
+import { clamp, pct, round2, signed } from "@/lib/utils";
 import { round1 } from "./scouting";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
@@ -258,7 +258,7 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
       return {
         clubId: r.clubId,
         clubName: getClub(r.clubId)?.name ?? r.clubId,
-        currentPpg: Math.round(ppg(r) * 100) / 100,
+        currentPpg: round2(ppg(r)),
         projectedPoints: theirShown,
         aheadOfUs: theirShown > ourShown,
         beatUsChance: beat,
@@ -302,7 +302,7 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
     remaining,
     position,
     points: ours.points,
-    pointsPerGame: Math.round(ppg(ours) * 100) / 100,
+    pointsPerGame: round2(ppg(ours)),
     projectedPoints: round1(ourProj),
     projectedPosition,
     gapToProjectedLeader: round1(gapToProjectedLeader),
@@ -606,7 +606,7 @@ export function seasonSummary(state: CareerState): SeasonSummary {
 
   return {
     played, won, drawn, lost, gf, ga, gd: gf - ga, points,
-    ppg: played ? Math.round((points / played) * 100) / 100 : 0,
+    ppg: played ? round2(points / played) : 0,
     cleanSheets, prizeTotal,
     bestWin: best && best.diff > 0 ? { opponent: best.opponent, score: best.score } : null,
     worstLoss: worst && worst.diff < 0 ? { opponent: worst.opponent, score: worst.score } : null,

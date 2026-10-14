@@ -9,7 +9,7 @@ import { playerDna } from "@/domain/playerDna";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, DemoBadge, DnaCard } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn, pctOf } from "@/lib/utils";
 
 export function ComparePage() {
   const { t } = useI18n();
@@ -111,13 +111,13 @@ export function ComparePage() {
                         <div className="flex items-center justify-end gap-2">
                           <span className={cn("font-mono tabular-nums", c.favor === "a" && "font-semibold text-success")}>{c.a}</span>
                           <span className="relative h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
-                            <span className="absolute inset-y-0 right-0 rounded-full bg-primary/50" style={{ width: `${(c.a / max) * 100}%` }} />
+                            <span className="absolute inset-y-0 right-0 rounded-full bg-primary/50" style={{ width: pctOf(c.a, max) }} />
                           </span>
                         </div>
                         <div className="text-center text-[11px] uppercase tracking-wider text-muted-foreground">{t(`attr.${c.category}`)}</div>
                         <div className="flex items-center gap-2">
                           <span className="relative h-1.5 w-20 overflow-hidden rounded-full bg-secondary">
-                            <span className="absolute inset-y-0 left-0 rounded-full bg-primary/50" style={{ width: `${(c.b / max) * 100}%` }} />
+                            <span className="absolute inset-y-0 left-0 rounded-full bg-primary/50" style={{ width: pctOf(c.b, max) }} />
                           </span>
                           <span className={cn("font-mono tabular-nums", c.favor === "b" && "font-semibold text-success")}>{c.b}</span>
                         </div>
@@ -168,7 +168,7 @@ function MetricRow({ m }: { m: CompareMetric }) {
         <span className={cn("font-mono tabular-nums", aBetter && "font-semibold text-success")}>{m.display(m.a)}</span>
         {m.dir !== "info" && (
           <span className="relative h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
-            <span className="absolute inset-y-0 right-0 rounded-full bg-primary/50" style={{ width: `${(m.a / max) * 100}%` }} />
+            <span className="absolute inset-y-0 right-0 rounded-full bg-primary/50" style={{ width: pctOf(m.a, max) }} />
           </span>
         )}
       </div>
@@ -176,7 +176,7 @@ function MetricRow({ m }: { m: CompareMetric }) {
       <div className="flex items-center gap-2">
         {m.dir !== "info" && (
           <span className="relative h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
-            <span className="absolute inset-y-0 left-0 rounded-full bg-primary/50" style={{ width: `${(m.b / max) * 100}%` }} />
+            <span className="absolute inset-y-0 left-0 rounded-full bg-primary/50" style={{ width: pctOf(m.b, max) }} />
           </span>
         )}
         <span className={cn("font-mono tabular-nums", bBetter && "font-semibold text-success")}>{m.display(m.b)}</span>

@@ -380,8 +380,8 @@ ok(`the balanced inline scan is armed at depth two and none of the four consumer
   plantInline2 === 1 && inlineInR2.length === 0 && inlineRound2(r2src[R2_HOME]) === 1);
 ok(`all four consumers import round2 from @/lib/utils (${importers2.join(", ") || "none"}; plant: ${plantImp2})`,
   plantImp2 === 1 && importers2.length === R2_CONSUMERS.length && R2_CONSUMERS.every((f) => importers2.includes(f)));
-ok(`across domain, lib and data the only inline round-to-2 copies are lib/utils's own body and career.ts's pinned-residue sites — nothing else (${r2Residue.join(", ") || "none"}; carriers: ${r2Carriers.map(([f, n]) => `${f}:${n}`).join(", ")})`,
-  plantInline2 === 1 && r2Residue.length === 1 && r2Residue[0] === "domain/career.ts" && inlineRound2(r2src[R2_HOME]) === 1);
+ok(`across domain, lib and data the only inline round-to-2 copy is lib/utils's own body — no residue remains (${r2Residue.join(", ") || "none"}; carriers: ${r2Carriers.map(([f, n]) => `${f}:${n}`).join(", ")})`,
+  plantInline2 === 1 && r2Residue.length === 0 && inlineRound2(r2src[R2_HOME]) === 1);
 ok("the shared round2 still rounds to two decimals for the rates, the ratio and the credibility field",
   shippedRound2(0.12345) === 0.12 && shippedRound2(2.5) === 2.5 && shippedRound2(1) === 1);
 

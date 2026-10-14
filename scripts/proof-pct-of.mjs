@@ -1,9 +1,11 @@
 // Proof for the shared share-of-a-max CSS-length door (`pctOf`, declared once in lib/utils.ts as a
-// value divided by a max, times a hundred, followed by a literal percent sign). M365 folded the last
-// five bare-inline spellings of that computation that lived in CLEAN feature files — DevelopmentPage's
-// gap bar (width) and target marker (left), PlayerOS's workload column (height), and ReviewPage's two
-// focus bars (width) — onto the door. The door centralises one fraction-of-a-scale rendered as a `%`
-// length, across three different style properties, so a scale change is one edit not five.
+// value divided by a max, times a hundred, followed by a literal percent sign). M362 folded the first
+// five bare-inline spellings in CLEAN feature files — DevelopmentPage's gap bar (width) and target
+// marker (left), PlayerOS's workload column (height), and ReviewPage's two focus bars (width) — onto
+// the door. M365 folded the last eight, which had been pinned as writer-owned residue: ComparePage's
+// four comparison bars, Details' three possession/rating bars, and SimulationLab's one split bar. The
+// door centralises one fraction-of-a-scale rendered as a `%` length, across three different style
+// properties, so a scale change is one edit, not thirteen.
 //
 // The door shares ONLY the bare `${(value / max) * 100}%` shape. Siblings that must NOT be folded in:
 //   · a clamp-guarded fill — `${Math.max(2, (x / y) * 100)}%` (LoadPage, FilmRoom) or `${Math.min(100, (x / y) * 100)}%`
@@ -13,9 +15,8 @@
 //   The discriminator is structural: the bare form opens the interpolation with `${(`, every guarded/rounded
 //   form opens it with `${Math.` — so the census anchors on `${(` and cannot charge a guarded sibling that
 //   nests the identical inner fraction.
-// Three writer-owned files still carry the bare shape (ComparePage, Details, SimulationLab) — same shape,
-// different owner — so M365 declares them residue; the exemption is keyed by file identity and clause 6
-// proves those carriers are non-empty (the exemption is earned, never a blanket dodge hiding my consumers).
+// No bare site survives anywhere but the door's own body; the three former writer files are charged
+// zero-and-imports by a dedicated clause, so a re-inline reddens instead of being excused by identity.
 // scripts/ is not walked, so the plants arm the scans instead of entering the census.
 // Run: node scripts/proof-pct-of.mjs
 import { createServer } from "vite";
@@ -41,14 +42,16 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const HOME = "lib/utils.ts";
-// The three clean feature files M365 folded onto the door (five sites).
+// All six feature files that now read the door: the original three (five call sites, zero bare)
+// plus the three former writer-lane files M365 folded in (eight bare sites at HEAD, none now).
 const CONSUMERS = [
   "features/development/DevelopmentPage.tsx",
   "features/player/PlayerOS.tsx",
   "features/review/ReviewPage.tsx",
+  "features/compare/ComparePage.tsx",
+  "features/football/Details.tsx",
+  "features/sim/SimulationLab.tsx",
 ];
-// Writer-owned files that still carry the bare shape — declared residue, keyed by identity.
-const WRITER = ["features/compare/ComparePage.tsx", "features/football/Details.tsx", "features/sim/SimulationLab.tsx"];
 // Clean files whose percent-fill is GUARDED (clamped or rounded) — must-not-unify siblings, left inline.
 const GUARDED = ["features/load/LoadPage.tsx", "features/film/FilmRoom.tsx", "features/scouting/ScoutingPanel.tsx", "features/shell/AppShell.tsx"];
 
@@ -83,7 +86,7 @@ ok(`the pctOf scans are armed (decl ${pDecl}, import ${pImport}, call ${pCall}, 
   pDecl === 1 && pImport === 1 && pCall === 1 && pBare === 1 && pGuardMax === 0 && pGuardMin === 0 && pGuardRound === 0 && pGuardLine === 1);
 
 // --- Population floor + subject presence (a blind walk would read an empty tree and pass a negative claim). ---
-const present = CONSUMERS.concat([HOME], WRITER, GUARDED).every((p) => Object.prototype.hasOwnProperty.call(src, p));
+const present = CONSUMERS.concat([HOME], GUARDED).every((p) => Object.prototype.hasOwnProperty.call(src, p));
 ok(`the census walks the real source tree and every subject is inside it (${carriers.length} .ts/.tsx, floor 80)`,
   carriers.length >= 80 && present);
 
@@ -99,22 +102,21 @@ const doorBody = (src[HOME].match(/export const pctOf = [^\n]*/) || [""])[0];
 ok(`the door body IS the bare value-over-max-percent shape and it is the sole such line in lib/utils (home bare ${homeBare}, body "${doorBody.trim()}")`,
   homeBare === 1 && /export const pctOf = \(value: number, max: number\): string => `\$\{\(value \/ max\) \* 100\}%`;/.test(doorBody.trim()));
 
-// --- All three M365 consumers read the door and write the bare shape nowhere. ---
+// --- All six consumers read the door and write the bare shape nowhere. ---
 const importing = CONSUMERS.filter((f) => count(src[f], IMPORT_PCTOF) >= 1);
 const perCall = CONSUMERS.map((f) => [f, count(src[f], CALL_PCTOF)]);
 const totalCalls = perCall.reduce((s, [, n]) => s + n, 0);
 const consumerBare = CONSUMERS.reduce((s, f) => s + count(src[f], BARE), 0);
-ok(`the three M365 consumers read the door and hand-spell the bare shape nowhere (imports ${importing.length}/3, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, bare inline across them ${consumerBare})`,
-  importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 5 && consumerBare === 0);
+ok(`all six consumers read the door and hand-spell the bare shape nowhere (imports ${importing.length}/6, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, bare inline across them ${consumerBare})`,
+  importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 10 && consumerBare === 0);
 
-// --- Convergence completeness: the bare shape survives only in the door or a writer-owned residue. ---
+// --- Convergence completeness: the bare shape survives only in the door. ---
 const bareFiles = carriers.filter((f) => count(src[f], BARE) > 0);
-const allowed = new Set([HOME, ...WRITER]);
-const strays = bareFiles.filter((f) => !allowed.has(f));
-const writerCarriers = bareFiles.filter((f) => WRITER.includes(f));
+const strays = bareFiles.filter((f) => f !== HOME);
 const consumersClean = CONSUMERS.every((f) => !bareFiles.includes(f));
-ok(`every bare value-over-max-percent survives only in the door or a writer-owned file M365 must not converge (carriers ${bareFiles.length}, writer carriers ${writerCarriers.length}, strays ${strays.length})`,
-  bareFiles.includes(HOME) && strays.length === 0 && writerCarriers.length >= 1 && consumersClean);
+const plantStray = count(`style={{ width: \`\${(a / b) * 100}%\` }}`, BARE);
+ok(`every bare value-over-max-percent survives only in the door — no residue remains (carriers ${bareFiles.join(",")}; strays ${strays.length}; planted bare reads ${plantStray})`,
+  plantStray === 1 && bareFiles.length === 1 && bareFiles[0] === HOME && strays.length === 0 && consumersClean);
 
 // --- Must-not-unify, discrimination: the four clean guarded-fill files (Math.max floor, Math.min ceiling, ---
 // --- Math.round integer) DO carry a guarded percent-fill yet the bare census charges every one of them zero -
@@ -124,11 +126,12 @@ const guardedUncharged = GUARDED.filter((f) => count(src[f], BARE) === 0);
 ok(`guarded percent-fills are armed by GUARD_LINE but left uncharged by BARE in all four clean files (armed ${guardedArmed.length}/4, uncharged ${guardedUncharged.length}/4 — a blind spot a naive fold would swallow)`,
   guardedArmed.length === GUARDED.length && guardedUncharged.length === GUARDED.length);
 
-// --- Must-not-unify, structural: the three writer files still carry the bare shape (>=1 each), so -------
-// --- clause 6's identity exemption is doing real work rather than hiding my own consumers. --------------
-const wCounts = WRITER.map((f) => [f.split("/").pop(), count(src[f], BARE)]);
-ok(`the writer-lane residue is non-empty by identity, so the exemption is earned (${wCounts.map(([n, c]) => `${n}=${c}`).join(", ")})`,
-  WRITER.every((f) => count(src[f], BARE) >= 1));
+// --- Former writer-lane files: zero bare sites now, and each reads the door (a regression to the
+// --- hand-spelled shape reddens this clause rather than being excused by an identity exemption). ---
+const formerBare = CONSUMERS.slice(3).map((f) => [f.split("/").pop(), count(src[f], BARE)]);
+const formerImport = CONSUMERS.slice(3).filter((f) => count(src[f], IMPORT_PCTOF) >= 1);
+ok(`the three former writer-lane files re-inlined nothing and import the door (bare ${formerBare.map(([n, c]) => `${n}=${c}`).join(", ")}; importers ${formerImport.length}/3)`,
+  formerBare.every(([, c]) => c === 0) && formerImport.length === 3);
 
 // --- Behavioural: pctOf reproduces the removed inline template byte-for-byte, keeps the fractional --------
 // --- precision an integer-rounded label would drop, and shares the inline code's unguarded divide-by-zero. ---
