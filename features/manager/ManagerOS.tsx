@@ -33,7 +33,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
-import { cn, pctLabel } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
+import { cn, pctLabel, signed } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
 import { positionLabel, rowLine } from "@/domain/rowText";
 
@@ -465,7 +465,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
     <div className="flex items-center justify-between rounded-md border bg-card/30 px-3 py-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-mono">{a} <span className="text-muted-foreground">{t("common.vs")}</span> {b}</span>
-      <span className={cn("font-mono text-xs", a >= b ? "text-success" : "text-destructive")}>{a - b >= 0 ? "+" : ""}{a - b}</span>
+      <span className={cn("font-mono text-xs", a >= b ? "text-success" : "text-destructive")}>{signed(a - b)}</span>
     </div>
   );
   return (

@@ -4,7 +4,7 @@ import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
 import { byOverall } from "./attributes";
 import type { RowText } from "./rowText";
-import { clamp, pct } from "@/lib/utils";
+import { clamp, pct, signed } from "@/lib/utils";
 import { round1 } from "./scouting";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
@@ -586,7 +586,7 @@ export function seasonSummary(state: CareerState): SeasonSummary {
   // sheet, the match count and the remaining-fixture line all read a number a reader can set to
   // one, and `1 fixtures` was the shape this produced. The optional lines are absent rather
   // than empty, which is what the `.filter(Boolean)` used to do.
-  const recordVars = { won, drawn, lost, played, gf, ga, gd: `${gd >= 0 ? "+" : ""}${gd}` };
+  const recordVars = { won, drawn, lost, played, gf, ga, gd: signed(gd) };
   const evidence: RowText[] = [
     ...(played
       ? [

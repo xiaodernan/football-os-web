@@ -32,8 +32,8 @@ const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } 
 const HOME = "lib/utils.ts";
 // Clean modules that now read the raw-number door (review dropped its private helper for it).
 const CONSUMERS = ["domain/review.ts", "domain/filmInsights.ts", "features/review/ReviewPage.tsx"];
-// Writer-lane raw residues (dirty bytes): inline sites pinned by file identity, not converged.
-const RAW_RESIDUES = ["domain/career.ts", "features/manager/ManagerOS.tsx"];
+// Former raw writer residues, now converged: both read the door, so a re-inline reddens.
+const FORMER_RAW = ["domain/career.ts", "features/manager/ManagerOS.tsx"];
 // The padded sign+toFixed(2) family: FilmRoom is clean but deliberately NOT this door; career also
 // carries a padded site. Charged separately so a future "just use signed" there reddens.
 const PADDED = ["domain/career.ts", "features/film/FilmRoom.tsx"];
@@ -70,7 +70,7 @@ ok(`the six scans are armed and the two exclusions bite (inline ${plantInline}, 
   plantInline === 1 && plantDoorBody === 0 && plantBoolean === 0 && plantPadded === 1 && plantDecl === 1 && plantPrivate === 1 && plantImport === 1);
 
 // --- Population floor + subject presence (a blind walk reads 0 and would pass a negative claim). --
-const subjects = CONSUMERS.concat([HOME, ...RAW_RESIDUES, ...PADDED, "features/world/DynamicWorld.tsx"]);
+const subjects = CONSUMERS.concat([HOME, ...FORMER_RAW, ...PADDED, "features/world/DynamicWorld.tsx"]);
 const present = subjects.every((p) => Object.prototype.hasOwnProperty.call(src, p));
 ok(`the census walks the real source tree and every subject is inside it (${carriers.length} .ts/.tsx)`,
   carriers.length >= 80 && present);
@@ -104,22 +104,25 @@ ok(`none of the three consumers still glues the numeric sign inline (read ${cons
 ok(`the DynamicWorld boolean delta (up ? "+" : "") reads 0 under the numeric sign scan so it is not silently charged (${count(src["features/world/DynamicWorld.tsx"], INLINE_SIGN)}; planted boolean reads ${plantBoolean})`,
   plantBoolean === 0 && count(src["features/world/DynamicWorld.tsx"], INLINE_SIGN) === 0);
 
-// --- Completeness: the ONLY files still carrying the numeric inline sign are the pinned residues
-// and the clean padded sibling (career, ManagerOS raw writer lanes; FilmRoom padded). No site is a
-// raw clean consumer — those all moved to signed().
+// --- Completeness: the ONLY files still carrying the numeric inline sign are the padded sibling
+// family (career's sign+toFixed(2) form line, FilmRoom's padded deltas). No raw site survives. ---
 const inlineByFile = carriers.filter((f) => count(src[f], INLINE_SIGN) > 0).sort();
-const expectedInline = [...new Set(RAW_RESIDUES.concat(PADDED))].sort();
-ok(`the files still spelling the numeric sign inline are exactly the pinned residues + the padded sibling (${inlineByFile.join(",")})`,
-  inlineByFile.length === expectedInline.length && inlineByFile.every((f, i) => f === expectedInline[i]));
+const expectedInline = [...new Set(PADDED)].sort();
+const plantRawSurvivor = count(`  delta: \`\${x >= 0 ? "+" : ""}\${x}\`,`, INLINE_SIGN);
+ok(`the files still spelling the numeric sign inline are exactly the padded sibling family (${inlineByFile.join(",")}) and no raw site survives (planted raw reads ${plantRawSurvivor})`,
+  plantRawSurvivor === 1 && inlineByFile.length === expectedInline.length && inlineByFile.every((f, i) => f === expectedInline[i]));
 
-// --- Raw writer residues carry >= 1 inline sign each, charged by identity not line. --------------
-const rawInline = RAW_RESIDUES.map((f) => [f, count(src[f], INLINE_SIGN)]);
-ok(`each raw residue still carries at least one inline sign site, not converged (${rawInline.map(([, n]) => n).join(",")})`,
-  rawInline.every(([, n]) => n >= 1));
+// --- The former raw residues carry ZERO raw (non-padded) inline sign sites now — both read the
+// door. career's single surviving inline is the padded toFixed(2) form charged below, not a raw one.
+const rawOnly = (f) => count(src[f], INLINE_SIGN) - count(src[f], PADDED_SIGN);
+const formerRawInline = FORMER_RAW.map((f) => [f, rawOnly(f)]);
+const formerRawImports = FORMER_RAW.filter((f) => count(src[f], IMPORT_SIGNED) >= 1);
+ok(`both former raw residues re-inlined nothing raw and import signed instead (raw ${formerRawInline.map(([, n]) => n).join(",")}; importers ${formerRawImports.length}/${FORMER_RAW.length}: ${formerRawImports.join(", ")})`,
+  formerRawInline.every(([, n]) => n === 0) && formerRawImports.length === FORMER_RAW.length);
 
 // --- Padded family: career AND FilmRoom each carry the sign+toFixed(2) sub-shape the door must not
-// absorb. The padded count charges ONLY the toFixed(2) sites, so a raw site (career's gd, ManagerOS)
-// does not satisfy it — the padded clause proves the padded family survives on its own terms.
+// absorb. The padded count charges ONLY the toFixed(2) sites, so a raw site would not satisfy it —
+// the padded clause proves the padded family survives on its own terms, distinct from the raw door.
 const paddedCount = PADDED.map((f) => [f, count(src[f], PADDED_SIGN)]);
 ok(`the padded sign+toFixed(2) family still stands in career and FilmRoom, charged separately from the raw door (${paddedCount.map(([, n]) => n).join(",")})`,
   plantPadded === 1 && paddedCount.every(([, n]) => n >= 1));
