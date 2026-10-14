@@ -1,5 +1,6 @@
 import type { AttributeDef, Attributes, PositionCode, PositionGroup } from "./types";
 import { ATTRIBUTE_LABELS, POSITION_GROUP_LABELS, CATEGORY_LABELS, POSITION_BY_GROUP_LABELS } from "../data/attributesLabels";
+import { clamp } from "@/lib/utils";
 
 const L = (key: string) => ATTRIBUTE_LABELS[key] ?? key;
 const PG = (id: PositionGroup) => POSITION_GROUP_LABELS[id];
@@ -118,13 +119,9 @@ export function baselineAttributes(group: PositionGroup, skill: number): Attribu
     const center = (b[key] as number | undefined) ?? b._base;
     // skill (0..1) scales from the amateur baseline upward
     const value = Math.round(center + skill * (95 - center) * 0.6);
-    out[key] = clampAttr(value);
+    out[key] = clamp(value, 1, 99);
   }
   return out;
-}
-
-function clampAttr(v: number): number {
-  return Math.max(1, Math.min(99, v));
 }
 
 export function overallRating(attrs: Attributes): number {

@@ -4,6 +4,7 @@ import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
 import type { RowText } from "./rowText";
+import { clamp } from "@/lib/utils";
 
 // Scouting model (spec §28). Deliberately built only from fields the dataset
 // actually provides (overall, potential, value, age, archetype, foot) — it never
@@ -39,7 +40,7 @@ export interface PrimeWindow {
 
 export const primeWindow = (p: PlayerRef): PrimeWindow => {
   const raw = (p.potential - p.overall) / 2 + (27 - p.age);
-  return { years: Math.max(0, Math.min(10, Math.round(raw))), raw, capped: raw > 10 };
+  return { years: clamp(Math.round(raw), 0, 10), raw, capped: raw > 10 };
 };
 
 export const primeYears = (p: PlayerRef) => primeWindow(p).years;
@@ -131,7 +132,7 @@ export interface ScoutReport {
 // *different from a same-rated archetype peer*, computed from two real vectors
 // rather than an opinion. Without a vector this reports that plainly.
 export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
-  const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
+  const skill = clamp((p.overall - 52) / 30, 0, 1);
   const real = playerVector(p.attributes);
 
   if (!real) {
@@ -213,7 +214,7 @@ export interface TemplateEdgeSummary {
 export function templateEdge(p: PlayerRef): TemplateEdgeSummary | null {
   const real = playerVector(p.attributes);
   if (!real) return null;
-  const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
+  const skill = clamp((p.overall - 52) / 30, 0, 1);
   const tmpl = categoryAverages(baselineAttributes(p.positionGroup as PositionGroup, skill));
   const own = categoryAverages(real);
   const deltas = own.map((c, i) => ({ category: c.category, delta: c.value - tmpl[i].value }));
@@ -256,7 +257,7 @@ export interface ModelledProfile {
 // provider) does this fall back to the demo baseline for the position, and the
 // note and confidence say which of the two the reader is looking at.
 export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
-  const skill = Math.max(0, Math.min(1, (p.overall - 52) / 30));
+  const skill = clamp((p.overall - 52) / 30, 0, 1);
   const real = playerVector(p.attributes);
   const attrs: Attributes = real ?? baselineAttributes(p.positionGroup as PositionGroup, skill);
   const attributes: ModelledAttribute[] = strongestAttributes(attrs, top).map((a) => ({
@@ -266,7 +267,7 @@ export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
   return {
     attributes,
     measured: !!real,
-    confidence: real ? 92 : Math.round(Math.max(35, Math.min(70, 40 + skill * 30))),
+    confidence: real ? 92 : Math.round(clamp(40 + skill * 30, 35, 70)),
     note: real ? { key: "sc.prof.note.measured" } : { key: "sc.prof.note.modelled" },
     sources: real
       ? [{ key: "sc.out.src.vector" }, { key: "sc.prof.src.labels" }]

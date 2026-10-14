@@ -230,7 +230,7 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
   const ppg = (r: StandingRow) => r.points / Math.max(1, r.played);
   // Blend season ppg with recent career form (-1..1 -> -0.30..+0.30 pts/game).
   const form = careerForm(state);
-  const ourPpg = Math.max(0, Math.min(3, ppg(ours) + form * 0.3));
+  const ourPpg = clamp(ppg(ours) + form * 0.3, 0, 3);
   const projectedOf = (r: StandingRow) =>
     r.clubId === state.clubId
       ? ours.points + ourPpg * remaining

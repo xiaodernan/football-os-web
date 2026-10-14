@@ -152,10 +152,9 @@ ok("careerArc is deterministic (same player → identical arc)", JSON.stringify(
 // `Math.max(lo, Math.min(hi, v))` — three byte-identical arrows and two function forms. Same
 // result today, so nothing a reader sees changes, but five definitions that part company the
 // moment one gains a NaN guard. All five now import the one exported clamp from lib/utils.
-// domain/career.ts is left as the single documented private residue: it is the M335 lane another
-// session is actively editing, so this unit pins it instead of touching it — the residue clause
-// going red the day that lane converges is the point, not a failure. These clauses bind the seam
-// three ways (the one declaration, the five imports, the size of the residue), and arm each scan
+// domain/career.ts was the last private residue; M361 converged it, so the seam is now fully
+// closed: no domain module declares its own clamp. These clauses bind the seam
+// three ways (the one declaration, the five imports, the absence of any private residue), and arm each scan
 // with a planted witness of the exact shape it charges, so "no consumer declares one" is a
 // measurement rather than a regex that matches nothing.
 const CLAMP_HOME = "lib/utils.ts";
@@ -173,8 +172,8 @@ const clampImporters = CLAMP_CONSUMERS.filter((f) => nImp(f) > 0);
 
 ok(`lib/utils exports the one clamp and none of the five converged consumers re-declares it (${consumerDefs.join(", ") || "none"}; plants armed: ${plantArrow}${plantFn})`,
   plantArrow === 1 && plantFn === 1 && nDef(CLAMP_HOME) === 1 && consumerDefs.length === 0);
-ok(`the only private clamp left anywhere in domain is the pinned career.ts residue, so the seam is otherwise closed (${domainWithDef.join(", ") || "none"})`,
-  plantFn === 1 && domainWithDef.length === 1 && domainWithDef[0] === "domain/career.ts");
+ok(`no private clamp remains anywhere in domain — the seam is fully closed (${domainWithDef.join(", ") || "none"})`,
+  plantFn === 1 && domainWithDef.length === 0);
 ok(`each of the five converged consumers imports clamp from @/lib/utils (${clampImporters.length} of ${CLAMP_CONSUMERS.length})`,
   plantImp === 1 && clampImporters.length === 5);
 ok("the shared clamp holds a value to a range from below, above and inside alike",
