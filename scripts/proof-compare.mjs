@@ -226,9 +226,10 @@ ok(`both prime columns print the labelled window, never the raw bound (${bareRea
 // Identical today, so nothing a reader sees changes — but ten formulas that part company the moment
 // one is re-rounded (to banker's rounding, say: the comparison row, the transfer feed, the career
 // arc, the review card, the film evidence and the world average would then disagree on one number).
-// All ten now ride scouting's single exported round1, except domain/career.ts — a separate session's
-// active M335 lane this unit must not touch, so it is pinned below as the sole known residue and a
-// reader can see exactly what is left and nothing more. The inline scan is a balanced-paren walk,
+// All ten now ride scouting's single exported round1, and M363 folded career.ts's six sites too, so
+// no domain module spells the ×10 rounding inline any more — a completeness clause walks the whole
+// directory and measures that closure (the only carrier left is the door's own exported body). The
+// inline scan is a balanced-paren walk,
 // not a fixed-nesting regex: `[^)]*` and even the one-level `(?:[^()]|\([^()]*\))*` go blind at depth
 // two, which is precisely the shape three of these files carried. Each clause is armed by planted
 // witnesses of the exact shape it charges, so "no copies found" is a measurement and not a blind scan.

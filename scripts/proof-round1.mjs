@@ -7,9 +7,10 @@
 // onto the door. The door shares ONLY the ×10 formula: the ×100 (round2) and ×1000 (round3) scale
 // siblings in lib/utils are genuinely different precisions and must NOT be folded in, and a
 // `.toFixed(1)` read is a different sink entirely — it returns a String, so swapping it for the
-// number-returning door would change the type the caller receives. domain/career.ts still hand-spells
-// `Math.round(... * 10) / 10` seven times; it is the concurrent writer's lane, so it is declared a
-// residue pinned by file identity — NOT converged here. The census keys on a line that carries BOTH
+// number-returning door would change the type the caller receives. M363 then folded career.ts's six
+// hand-inlined sites (projected points, gap, expected finish) onto the same door, so the ×10 formula
+// now survives only in the door's own body — a completeness clause measures that with a planted
+// inline. The census keys on a line that carries BOTH
 // `Math.round(` and the balanced-tail fingerprint `* 10) / 10`; a naive `[^)]*` cannot read an
 // argument that itself contains a call (`ratings.reduce(...)`), and `* 10) / 10` deliberately will not
 // match a `* 100) / 100` line, so the scale census stays honest. scripts/ is not walked, so the plants

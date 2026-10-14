@@ -1,7 +1,7 @@
 // Proof for the shared ratio-to-whole-percent helper (lib/utils.ts's pct). A credibility, a role
 // readiness, a goal's progress and a lesson completion rate are all stored as a 0..1 fraction, and
-// the figure a reader is shown is `Math.round(fraction * 100)`. Six domain modules each spelled that
-// inline. Identical today, so nothing a reader sees moves — but six formulas that part company the
+// the figure a reader is shown is `Math.round(fraction * 100)`. Seven domain modules each spelled that
+// inline. Identical today, so nothing a reader sees moves — but seven formulas that part company the
 // moment one gains a rounding tweak or a clamp. They now call one door.
 //
 // This census keys on the STRUCTURAL spelling, never a bare number: an inline percent site is a
@@ -9,8 +9,8 @@
 // load-bearing subtlety — round2 in the very same lib/utils.ts is `Math.round(v * 100) / 100`, a
 // different denominator (keep two decimals for a stored rating, not a displayed percentage), and the
 // proof PINS that the two doors stay distinct so a future "just use pct" reddens instead of silently
-// rescaling a stored figure. domain/career.ts is a declared residue: its writer lane is dirty and its
-// site is pinned (charged by file identity, not by line) rather than converged here.
+// rescaling a stored figure. M363 converged the last residue (career.ts), so no domain module carries
+// an inline percent site any more — a clause measures that closure with a planted inline.
 // Run: node scripts/proof-pct.mjs
 import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";

@@ -330,11 +330,11 @@ ok("each source chip is interpreted, and none is dropped into JSX raw",
 // desynchronising numbers a reader sees side by side. All four now import lib/utils's single round2,
 // the same dependency-free home as round3 and clamp: analytics is reached from scouting through
 // data/footballService, so a rounder it shares cannot live beside round1 in scouting without
-// closing a cycle. career.ts is a separate writer's lane and its three sites stay inline — so,
-// unlike round3, this seam PINS domain/career.ts as the one expected residue rather than demanding
-// an empty scan. The clauses bind the seam four ways — the one declaration, the four imports, the
-// absence of any private or inline copy in the four consumers, and the whole domain+lib+data residue
-// set — each armed by a planted witness so "no copies found" is a measurement, not a blind scan.
+// closing a cycle. M365 then folded career.ts's three sites (two ppg cells and the record ppg)
+// onto the same door, so the seam now demands an empty scan everywhere but lib/utils's own body —
+// the clauses bind it four ways: the one declaration, the four original imports, the absence of any
+// private or inline copy in the consumers, and the whole domain+lib+data residue set — each armed by
+// a planted witness so "no copies found" is a measurement, not a blind scan.
 const R2_HOME = "lib/utils.ts";
 const R2_CONSUMERS = ["domain/analytics.ts", "domain/filmInsights.ts", "domain/load.ts", "data/footballSeed.ts"];
 const r2src = Object.fromEntries([R2_HOME, ...R2_CONSUMERS].map((f) => [f, readFileSync(f, "utf8")]));

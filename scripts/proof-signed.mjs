@@ -17,8 +17,8 @@
 //     UI `${…}%` sites out of pct) and must not be routed through this door.
 //   · the BOOLEAN sibling (DynamicWorld's delta) is `up ? "+" : ""` — the sign comes from a boolean
 //     computed elsewhere, not a numeric comparison. The `>= 0` anchor deliberately reads 0 here.
-// career.ts and the ManagerOS delta are declared raw residues: their writer lanes are dirty, so their
-// inline sites are pinned by file identity, not converged.
+// M364 converged the last two raw residues (career.ts's goal-difference cell and the ManagerOS delta
+// readout), so no raw inline site survives anywhere; a clause charges both former lanes zero-and-imports.
 // Run: node scripts/proof-signed.mjs
 import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";

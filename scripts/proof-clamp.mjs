@@ -14,9 +14,9 @@
 // domain/careerArc.ts:99 — `Math.max(0, Math.min(LAST_AGE, peakAge + 2) - startAge)` — which floors a
 // DIFFERENCE (the ` - startAge` sits after the inner close), not a value. That file is a must-not-
 // unify witness: it holds a Math.max and a Math.min, so a literal scan would mischarge it, but the
-// shape scan reads it as zero. domain/career.ts, attributes.ts and scouting.ts are declared residues
-// (the writer's dirty lane): they keep their inline shapes and are charged by FILE IDENTITY, pinned
-// > 0, never converged here. Run: node scripts/proof-clamp.mjs
+// shape scan reads it as zero. M361 converged the last three residues (career.ts, attributes.ts's
+// clampAttr, scouting.ts's five inline sites), so all eleven domain modules now read the door and a
+// completeness clause measures the fully-closed seam with a planted inline. Run: node scripts/proof-clamp.mjs
 import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";
 
