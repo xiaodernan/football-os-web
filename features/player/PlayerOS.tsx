@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn, pctOf, fmt2 } from "@/lib/utils";
+import { cn, pctOf, fmt2, fmt1 } from "@/lib/utils";
 import { useLearnRecords } from "@/lib/hooks";
 import { summarizeLearn } from "@/domain/learn";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -762,7 +762,7 @@ function Matches() {
               <div key={r.id} className="group flex items-center justify-between py-2 text-sm">
                 <div><div>{r.opp}</div><div className="text-xs text-muted-foreground">{formatDate(locale, r.date)}</div></div>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-3 font-mono text-xs"><span>{r.g}G {r.a}A</span><Badge variant="outline">{r.r.toFixed(1)}</Badge></div>
+                  <div className="flex items-center gap-3 font-mono text-xs"><span>{r.g}G {r.a}A</span><Badge variant="outline">{fmt1(r.r)}</Badge></div>
                   <button onClick={() => remove(r.id)} aria-label={t("player.deleteMatch", { opp: r.opp })} className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus:opacity-100 group-hover:opacity-100">✕</button>
                 </div>
               </div>

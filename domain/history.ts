@@ -10,7 +10,7 @@
 
 import type { AttributeDelta } from "./types";
 import { asRowText, type RowText } from "./rowText";
-import { epochMs } from "@/lib/utils";
+import { epochMs, fmt1 } from "@/lib/utils";
 
 export type TimelineKind = "session" | "plan" | "memory" | "learn" | "film";
 
@@ -166,7 +166,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
     // A clip is history only once it has actually been analysed, so the entry
     // carries the detections the provider returned rather than a vague "reviewed".
     if (!c.at || Number.isNaN(new Date(c.at).getTime())) continue;
-    const perMin = c.durationSec > 0 ? (c.detections / (c.durationSec / 60)).toFixed(1) : "0";
+    const perMin = c.durationSec > 0 ? fmt1(c.detections / (c.durationSec / 60)) : "0";
     events.push({
       id: `film-${c.id}`,
       kind: "film",
@@ -177,7 +177,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
         vars: {
           d: c.detections,
           s: c.scans,
-          min: (c.durationSec / 60).toFixed(1),
+          min: fmt1(c.durationSec / 60),
           per: perMin,
           conf: c.confidence,
         },

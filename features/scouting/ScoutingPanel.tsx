@@ -21,7 +21,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
-import { cn } from "@/lib/utils";
+import { cn, fmt1 } from "@/lib/utils";
 
 const BUCKETS: PosBucket[] = ["ALL", "GK", "DEF", "MID", "ATT"];
 // `labelKey`, not `label`: a row field named `label` is one of the positions the
@@ -142,7 +142,7 @@ export function ScoutingPanel() {
                   <td className="px-2 py-1.5 text-right font-mono text-xs font-semibold">{p.overall}</td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{p.potential}<span className="text-success"> +{headroom(p)}</span></td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{formatValue(p.value)}</td>
-                  <td className="px-2 py-1.5 text-right font-mono text-xs">{valueIndex(p).toFixed(1)}</td>
+                  <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt1(valueIndex(p))}</td>
                   {(() => {
                     const edge = templateEdge(p);
                     if (!edge) return <td className="px-2 py-1.5 text-right text-xs text-muted-foreground">—</td>;
@@ -203,8 +203,8 @@ function CompareView({ a, b }: { a: PlayerRef; b: PlayerRef }) {
     { labelKey: "compare.m.potential", av: a.potential, bv: b.potential, better: "hi" },
     { labelKey: "scout.rowHeadroom", av: headroom(a), bv: headroom(b), better: "hi" },
     { labelKey: "common.age", av: a.age, bv: b.age, better: "lo" },
-    { labelKey: "scout.rowValue", av: +(a.value / 1e6).toFixed(1), bv: +(b.value / 1e6).toFixed(1), better: "lo" },
-    { labelKey: "scout.rowVindex", av: +valueIndex(a).toFixed(1), bv: +valueIndex(b).toFixed(1), better: "hi" },
+    { labelKey: "scout.rowValue", av: +fmt1(a.value / 1e6), bv: +fmt1(b.value / 1e6), better: "lo" },
+    { labelKey: "scout.rowVindex", av: +fmt1(valueIndex(a)), bv: +fmt1(valueIndex(b)), better: "hi" },
   ];
   return (
     <div className="mt-2">

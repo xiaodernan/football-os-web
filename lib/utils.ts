@@ -135,3 +135,17 @@ export const fmt2 = (v: number): string => v.toFixed(2);
 // subtraction and comparison, and a floor AFTER a divide (the player card node level) whose rounding
 // order is a different measurement.
 export const safeDiv = (num: number, den: number): number => num / Math.max(1, den);
+
+// The app's one-decimal display-string door — fmt2's twin at the next precision up: nineteen sites
+// across eleven files spelled `.toFixed(1)` inline (per-minute rates, analysed minutes, ratings,
+// value indices, one-decimal byte/K·B figures, and the two SVG path coordinates in primitives), one
+// convention that parts company the moment a site gains a locale separator or a second digit.
+// Identical today, so no figure a reader sees moves. NOTE this door is NOT round1 above-ish (the
+// one-decimal NUMBER re-rounded in domain/scouting for arithmetic): fmt1(2.04) is the string "2.0"
+// where String(round1(2.04)) is "2" — the pad is the point of a one-decimal cell — and it is NOT
+// fmt0 either, whose sites (community credibility, gap tier, the K/M/B formatter's K line) stay
+// inline until their own door, as does the one conditional-decimal line that picks 0 or 1 at
+// runtime and so cannot be a fixed-argument call. The seed's two parseFloat((…).toFixed(1)) sites
+// round straight back to a number — a rounding step, not a display — and proof-fmt1 counts exactly
+// those families plus the door.
+export const fmt1 = (v: number): string => v.toFixed(1);

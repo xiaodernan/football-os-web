@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { cn, clamp } from "@/lib/utils";
+import { cn, clamp, fmt1 } from "@/lib/utils";
 import { DEMO_MODE } from "@/data/footballService";
 import { useI18n } from "@/i18n";
 import { positionLabel, rowLine } from "@/domain/rowText";
@@ -181,7 +181,7 @@ export function Sparkline({ points, className, stroke = "var(--color-primary)" }
   const max = Math.max(...points);
   const span = max - min || 1;
   const step = w / (points.length - 1);
-  const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${(i * step).toFixed(1)} ${(h - ((p - min) / span) * h).toFixed(1)}`).join(" ");
+  const d = points.map((p, i) => `${i === 0 ? "M" : "L"} ${fmt1(i * step)} ${fmt1(h - ((p - min) / span) * h)}`).join(" ");
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className={cn("h-8 w-full", className)} aria-hidden>
       <path d={d} fill="none" stroke={stroke} strokeWidth={1.8} vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />

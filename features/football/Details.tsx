@@ -35,7 +35,7 @@ import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { clamp, cn, pctOf, fmt2 } from "@/lib/utils";
+import { clamp, cn, pctOf, fmt2, fmt1 } from "@/lib/utils";
 
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -679,7 +679,7 @@ function RatingsCol({ title, ratings }: { title: string; ratings: { player: stri
         <div key={i} className="mt-1 flex items-center gap-2">
           <span className="w-16 truncate">{r.player}</span>
           <div className="flex-1"><AttributeBar label="" value={r.rating} max={10} /></div>
-          <span className="w-7 text-right font-mono">{r.rating.toFixed(1)}</span>
+          <span className="w-7 text-right font-mono">{fmt1(r.rating)}</span>
         </div>
       ))}
     </div>

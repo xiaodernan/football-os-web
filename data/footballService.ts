@@ -1,7 +1,7 @@
 import { DEMO_NOW, WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, byKickoff, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
-import { DAY_MS, indexById } from "@/lib/utils";
+import { DAY_MS, fmt1, indexById } from "@/lib/utils";
 import { byOverall } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
 
@@ -257,7 +257,7 @@ export function comparePlayers(aId: string, bId: string) {
 }
 
 export function formatValue(v: number): string {
-  if (v >= 1_000_000_000) return `€${(v / 1_000_000_000).toFixed(1)}B`;
+  if (v >= 1_000_000_000) return `€${fmt1(v / 1_000_000_000)}B`;
   if (v >= 1_000_000) return `€${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`;
   if (v >= 1_000) return `€${(v / 1_000).toFixed(0)}K`;
   return `€${v}`;

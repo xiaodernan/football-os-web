@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn, pctLabel, fmt2 } from "@/lib/utils";
+import { cn, pctLabel, fmt2, fmt1 } from "@/lib/utils";
 
 // Film Room (spec §19): the video analysis pipeline as its own pillar. Clips are
 // analysed by the swappable videoProvider (Demo provider runs the same stages over
@@ -299,7 +299,7 @@ export function FilmRoom() {
               title={t("film.insightsTitle")}
               hint={t(insights.clips === 1 ? "film.insightsHintOne" : "film.insightsHintMany", {
                 n: insights.clips,
-                min: insights.analysedMinutes.toFixed(1),
+                min: fmt1(insights.analysedMinutes),
               })}
             />
             <div className="flex items-center gap-2 text-[11px] text-muted-foreground">

@@ -4,7 +4,7 @@ import { weakestAttributes } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions } from "./training";
-import { signed, DAY_MS, fmt2 } from "@/lib/utils";
+import { signed, DAY_MS, fmt2, fmt1 } from "@/lib/utils";
 
 // A period digest compiled purely from the user's local training log, goals,
 // progress history, academy records and analysed film. Nothing here is invented —
@@ -356,8 +356,8 @@ function buildInsights(a: {
       kind: "positive",
       text:
         f.clips === 1
-          ? { key: "rv.ins.filmOne", vars: { min: f.analysedMinutes.toFixed(1), conf: f.avgConfidence, d: f.detections } }
-          : { key: "rv.ins.filmMany", vars: { n: f.clips, min: f.analysedMinutes.toFixed(1), conf: f.avgConfidence, d: f.detections } },
+          ? { key: "rv.ins.filmOne", vars: { min: fmt1(f.analysedMinutes), conf: f.avgConfidence, d: f.detections } }
+          : { key: "rv.ins.filmMany", vars: { n: f.clips, min: fmt1(f.analysedMinutes), conf: f.avgConfidence, d: f.detections } },
     });
     out.push({
       kind: f.scanTrend == null ? "positive" : f.scanTrend >= 0 ? "positive" : "watch",
@@ -473,7 +473,7 @@ function buildEvidence(a: {
   if (a.goalsTotal) e.push({ key: "rv.ev.goals", vars: { done: a.goalsDone, total: a.goalsTotal } });
   if (a.lessonsCompleted) e.push({ key: "rv.ev.academy", vars: { n: a.lessonsCompleted, m: a.lessonsMastered } });
   if (a.film) {
-    const min = a.film.analysedMinutes.toFixed(1);
+    const min = fmt1(a.film.analysedMinutes);
     const d = a.film.detections;
     e.push(
       a.film.clips === 1

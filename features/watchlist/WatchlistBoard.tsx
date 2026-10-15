@@ -8,7 +8,7 @@ import type { ScoutSort } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, fmt1 } from "@/lib/utils";
 
 type Sort = ScoutSort;
 
@@ -130,7 +130,7 @@ export function WatchlistBoard() {
                   <div className="text-[11px] text-muted-foreground">↗ {p.potential}</div>
                 </div>
                 <div className="hidden w-16 text-right md:block">
-                  <div className="font-mono text-sm tabular-nums">{valueIndex(p).toFixed(1)}</div>
+                  <div className="font-mono text-sm tabular-nums">{fmt1(valueIndex(p))}</div>
                   <div className="text-[11px] text-muted-foreground">{t("watch.vindex")}</div>
                 </div>
                 <div className="hidden w-16 text-right md:block">
