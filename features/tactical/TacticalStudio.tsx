@@ -7,7 +7,7 @@ import { getClub, playersByClub } from "@/data/footballService";
 import { TACTICS_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
-import { cn, clamp, safeDiv } from "@/lib/utils";
+import { cn, clamp, pct, safeDiv } from "@/lib/utils";
 import { capRound } from "@/domain/attributes";
 import { toast } from "sonner";
 
@@ -132,7 +132,7 @@ export function TacticalStudio() {
             <SectionTitle title={t("tac.shape")} />
             <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
               <Stat label={t("tac.detected")} value={shapeLabel} />
-              <Stat label={t("tac.line")} value={t("tac.lineValue", { n: Math.round((1 - balance.line) * 100) })} />
+              <Stat label={t("tac.line")} value={t("tac.lineValue", { n: pct(1 - balance.line) })} />
               <Stat label={t("tac.width")} value={`${Math.round(balance.spread * 200)}%`} />
               <Stat label={t("tac.players")} value={tokens.length} />
             </div>

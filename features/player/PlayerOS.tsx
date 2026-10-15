@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn, pctOf, fmt2, fmt1 } from "@/lib/utils";
+import { cn, pct, pctOf, fmt2, fmt1 } from "@/lib/utils";
 import { useLearnRecords } from "@/lib/hooks";
 import { summarizeLearn } from "@/domain/learn";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -646,7 +646,7 @@ function Video() {
     try {
       for (let i = 0; i < 6; i++) {
         await new Promise((r) => setTimeout(r, 260));
-        setProgress(Math.round(((i + 1) / 6) * 100));
+        setProgress(pct((i + 1) / 6));
       }
       const rep = await videoProvider.analyze({ fileId: `${file.name}-${file.size}`, fileName: file.name, sizeBytes: file.size, attrs: state.profile.attributes });
       setReport(rep);

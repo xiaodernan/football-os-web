@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn, pctOf } from "@/lib/utils";
+import { cn, pct, pctOf } from "@/lib/utils";
 
 import type { ReactNode } from "react";
 
@@ -150,7 +150,7 @@ export function DevelopmentPage() {
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile label={t("dv.readiness")} value={`${analysis.readiness}%`} tone={readinessTone} sub={positionGroupLabel(analysis.group, t)} />
-          <StatTile label={t("dv.overall")} value={analysis.overall} sub={t("dv.tier", { n: Math.round(analysis.skill * 100) })} />
+          <StatTile label={t("dv.overall")} value={analysis.overall} sub={t("dv.tier", { n: pct(analysis.skill) })} />
           <StatTile label={t("dv.priorities")} value={analysis.priorities.length} sub={t("dv.toWork")} />
           <StatTile label={t("dv.strengths")} value={analysis.strengths.length} tone="up" sub={t("dv.atTarget")} />
         </div>
