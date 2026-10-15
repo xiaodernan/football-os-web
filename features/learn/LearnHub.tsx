@@ -7,6 +7,7 @@ import { weakestAttributes } from "@/domain/attributes";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import {
   LESSONS,
+  lessonById,
   LEGACY_LEARN_KEY,
   LEARN_STORE_KEY,
   isCompleted,
@@ -75,7 +76,7 @@ export function LearnHub() {
 
   const categories = useMemo(() => ["All", ...Array.from(new Set(LESSONS.map((l) => l.category)))], []);
   const list = LESSONS.filter((l) => category === "All" || l.category === category);
-  const open = openId ? LESSONS.find((l) => l.id === openId) ?? null : null;
+  const open = openId ? lessonById(openId) : null;
 
   // An attempt only counts tries; correctness is recorded by markLearned at the
   // point the learner commits the lesson, so "mastered" always needs a passed check.

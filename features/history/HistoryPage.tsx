@@ -4,7 +4,7 @@ import { formatDate, useI18n, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildTimeline, groupByDay, dayKey, type TimelineKind } from "@/domain/history";
 import { rowLine, type RowText } from "@/domain/rowText";
-import { LESSONS } from "@/domain/learn";
+import { lessonById } from "@/domain/learn";
 import { useLearnRecords, useFilmRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,7 @@ export function HistoryPage() {
   // the reader resolves it. An id that matches no lesson is not a sentence anyone wrote — it is
   // the record's own value, shown as written.
   const lessonTitleRow = (id: string): RowText => {
-    const l = LESSONS.find((x) => x.id === id);
+    const l = lessonById(id);
     return l ? { key: l.titleKey } : { value: id };
   };
 

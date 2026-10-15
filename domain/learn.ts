@@ -137,6 +137,17 @@ export const LESSONS: Lesson[] = [
   },
 ];
 
+// ---- "the lesson with this id" is asked in three places, and each asked by hand ----
+// The community hub, the history timeline and the learn hub all reached into the catalogue with
+// `LESSONS.find((x) => x.id === id)` and each wrote the predicate again. Byte-identical, so the
+// same drift risk the by-id index door (indexById) retired for record maps, on the constant the
+// Academy ships. `lessonById` is the lookup now; the literal survives in exactly one place — this
+// door's own body — and nowhere a reader spells it.
+/** The lesson with the given id, or undefined — the by-id lookup every reader spelled by hand. */
+export function lessonById(id: string): Lesson | undefined {
+  return LESSONS.find((l) => l.id === id);
+}
+
 export const LESSON_IDS = LESSONS.map((l) => l.id);
 
 export const LEARN_STORE_KEY = "football-os.learn.v2";

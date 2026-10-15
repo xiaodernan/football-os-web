@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M374 (a few numbers in that range
+Work ships one milestone per commit and is currently at M375 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,28 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M375 — the lesson-by-id lookup had three hand-written copies, and the catalogue is the constant
+
+M347 retired "completed" and M374 retired "planned" as per-reader computations; this unit closes the
+third member of the family on the same field, on the constant the Academy ships. The community hub,
+the history timeline and the learn hub each reached into `LESSONS` with `LESSONS.find((x) => x.id === id)`
+and wrote the predicate again. Byte-identical, so the same drift risk `indexById` retired for record
+maps (proof-learn's section above) — a fourth place could spell it and disagree, and a renamed lesson
+id would update the catalogue but not the hand-written find.
+
+`lessonById(id)` in `domain/learn.ts` is the lookup now. All three readers call the door; the literal
+survives in exactly one place, the door's own body, and the catalogue's `.map`/`.filter` on category and
+`LESSON_IDS` are derivations, not the id lookup, so they are not it.
+
+**The seam, charged both ways.** proof-learn's new clause counts `LESSONS.find((...).id ===)` across the
+walked tree and asserts it lives in exactly one file — the door — and that every reader that reaches for
+a lesson by id calls `lessonById(` rather than spelling the predicate; a re-inlined by-id find reddens,
+a find over another field does not (the plant runs the predicate both ways). And the value: the door
+returns the lesson with the id and answers a miss with undefined.
+
+**What the gauge says.** proof-learn **81/81** (its prior 77 across the existing sections, +4 for the new
+clause group); `tsc --noEmit` clean. No display string and no copy changed.
 
 ### M336 — the data room's match count is the domain's count, not a sum the page halves
 

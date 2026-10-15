@@ -20,7 +20,7 @@ import { normalize } from "./lib/rawUiScan.mjs";
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const {
   LESSONS, LESSON_IDS, LEARN_STORE_KEY, LEGACY_LEARN_KEY,
-  parseLearnRecords, isCompleted, summarizeLearn, recommendLessons,
+  parseLearnRecords, isCompleted, summarizeLearn, recommendLessons, lessonById,
 } = await server.ssrLoadModule("/domain/learn.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 const { indexById } = await server.ssrLoadModule("/lib/utils.ts");
@@ -278,6 +278,37 @@ ok(`the index reader, planted both ways, flags a hand-built by-id index and accu
 const doorRows = indexById([{ id: "a", n: 1 }, { id: "b", n: 2 }, { id: "c", n: 3 }]);
 ok(`indexById keys the rows by their id and answers a miss with undefined (${doorRows.size} rows, get("b")=${doorRows.get("b")?.n}, has("z")=${doorRows.has("z")}, get("z")=${doorRows.get("z")})`,
   doorRows.size === 3 && doorRows.get("b")?.n === 2 && doorRows.has("z") === false && doorRows.get("z") === undefined);
+
+// ---- the lesson-by-id lookup is written once ----
+// M375: the community hub, the history timeline and the learn hub each reached into the LESSONS
+// catalogue with `LESSONS.find((x) => x.id === id)` and wrote the predicate again — the same shape
+// the by-id index door (indexById, section above) retired for record maps, on the constant the
+// Academy ships. `lessonById` in domain/learn.ts is the lookup now. The seam is charged both ways:
+// the predicate is written in exactly one place, and every reader calls the door.
+const LESSON_BY_ID = /LESSONS\.find\(\((\w+)\)\s*=>\s*\1\.id\s*===/g;
+const lessonSites = APP_SRC.filter((f) => LESSON_BY_ID.test(normalize(readFileSync(new URL(`../${f}`, import.meta.url), "utf8"))));
+ok(`the lesson-by-id lookup is written in exactly one place, and it is the domain's door (${APP_SRC.length} app files walked, ${lessonSites.length} site(s): ${lessonSites.join(", ") || "none"})`,
+  APP_SRC.length >= 90 && lessonSites.length === 1 && lessonSites[0] === "domain/learn.ts");
+const LESSON_READERS = [
+  "features/community/CommunityHub.tsx",
+  "features/history/HistoryPage.tsx",
+  "features/learn/LearnHub.tsx",
+];
+const lessonReadersCallDoor = LESSON_READERS.map((f) => [f, /lessonById\(/.test(normalize(readFileSync(new URL(`../${f}`, import.meta.url), "utf8")))]);
+ok(`every reader that reaches for a lesson by id calls the door (${lessonReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+  LESSON_READERS.length === 3 && lessonReadersCallDoor.every(([, v]) => v));
+// The plant runs the predicate both ways: a re-inlined by-id find must be flagged, and a find over
+// another field must not be — a reader that flagged every `find` would pass the clause above while
+// accusing every lookup in the app.
+const plantedById = "const l = LESSONS.find((x) => x.id === id);";
+const plantedByCat = "const l = LESSONS.find((x) => x.category === cat);";
+ok(`the lesson-by-id reader, planted both ways, flags a re-inlined by-id find and accuses a find over another field (${LESSON_BY_ID.test(normalize(plantedById))} of 1 flagged, ${LESSON_BY_ID.test(normalize(plantedByCat))} of 0 flagged)`,
+  LESSON_BY_ID.test(normalize(plantedById)) === true && LESSON_BY_ID.test(normalize(plantedByCat)) === false);
+// And the value: the door returns the lesson and nothing else, and answers a miss with undefined.
+const doorLesson = lessonById("xg");
+const doorMiss = lessonById("does-not-exist");
+ok(`the door returns the lesson with the id and answers a miss with undefined (xg titleKey ${doorLesson?.titleKey}, miss ${doorMiss})`,
+  doorLesson?.id === "xg" && doorLesson?.titleKey === "learn.l.xg.title" && doorMiss === undefined);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

@@ -4,7 +4,7 @@ import { newId } from "@/lib/ids";
 import { useI18n, formatDate, relativeDay, type Locale } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { buildStarters, allTags, repairCommunityTexts, seedThreads, type StarterDraft, type StarterInput, type Thread, type Comment } from "@/domain/community";
-import { LESSONS, isCompleted, summarizeLearn } from "@/domain/learn";
+import { lessonById, isCompleted, summarizeLearn } from "@/domain/learn";
 import { completedMinutes, completedSessions } from "@/domain/training";
 import { seasonSummary, type CareerState } from "@/domain/career";
 import { CAREER_KEY, COMMUNITY_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
@@ -69,7 +69,7 @@ const nReplies = (t: Translate, n: number) => t(n === 1 ? "comm.nRepliesOne" : "
  *  key of it: the row says "The academy says {lesson}", and the lesson's own name is a value the
  *  catalogue named — so it is resolved here, where the reader is known. */
 function latestLessonTitle(t: Translate, id: string): string | undefined {
-  const l = LESSONS.find((x) => x.id === id);
+  const l = lessonById(id);
   return l ? t(l.titleKey) : undefined;
 }
 
