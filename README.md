@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M352 (a few numbers in that range
+Work ships one milestone per commit and is currently at M368 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -2549,7 +2549,8 @@ ceilings: this milestone changed no copy at all.
 ### M196 — The Manager OS career model gets its own arithmetic proof
 
 Every milestone up to here had been editing the app's *edges*: what a screen says, how a date is
-written, which key a row reads. `domain/career.ts` is the largest ungated module in the repository —
+written, which key a row reads. `domain/career.ts` was the largest module in the repository without a
+proof —
 586 lines, 33 exports, four panels (live league table, season outlook, next-match preparation,
 season retrospective) plus the transfer board's fee ladder — and **five** consumers read the same
 numbers out of it (`features/manager/ManagerOS.tsx`, `features/profile/ProfilePage.tsx`,
@@ -3075,7 +3076,7 @@ queued as its own milestone. Raw-UI ledger unchanged at **149 across 3 files**; 
 **Still outstanding** (deliberately not faked): the dep-scan crash is named and survived but not
 prevented, and a run of the suite may need a second attempt to print 31/31 — the honest reading is
 `checks counted` plus the `unverified` line, not the exit code alone. `domain/community.ts` (205
-lines) is the last substantial ungated module. The rest of the queue is unchanged — #142
+lines) was the last substantial module without a proof, and `proof-community` loads it now. The rest of the queue is unchanged — #142
 populated-state walk, #160 demo-coach prose, #184+ AI composed sentences, the two
 `components/ui/calendar.tsx` sites, PlayerOS/DataRoom browser dates held by the concurrent session.
 
@@ -3132,11 +3133,12 @@ files**, dictionary **1478 × 3** — no `src/` file and no display string in th
 **Still outstanding** (definitively not faked): the dep-scan crash is unrepaired — the retry hides
 one occurrence per script per run, and a script that dies twice still shows as `UNVERIFIED`, which
 is the correct answer and still requires a re-run to distinguish from a real hang. `community.ts`
-(205 lines) remains the last substantial ungated domain module.
+(205 lines) was the last substantial domain module without a proof, and `proof-community` loads it now.
 
 ### M204 — the community board's honesty claims, gated, and one of them was false
 
-`domain/community.ts` is the largest domain module with no proof of its own, and its header carries
+`domain/community.ts` was the largest domain module without a proof when this milestone ran —
+`proof-community` loads it now — and its header carries
 three claims: thread topics are derived deterministically from the real dataset; authors and replies
 are generated sample content, flagged as such, and "sample posts never claim likes"; and the
 discussion starters are "assembled ONLY from numbers the user's own pillars actually produced". The
@@ -3231,12 +3233,13 @@ Measured on a clean plane (`git archive HEAD`, only this milestone's file copied
 build 0, suite **33/33 proof scripts proven — 1809/1809 checks counted — exit 0, and the headline of that run is M203 earning its keep: `1 script(s) needed a retry: projection×1`. Vite's dep-scan killed `proof:projection` after its 42/42 tally, the retry ran it again, it finished, and the suite reported 33/33 rather than the false 32/33 that M202 had to describe as a caveat. Domain prose stays **256 literals across 10 files** and the raw-UI ledger
 is untouched, because no display file and no copy changed.
 
-**Still outstanding** (deliberately not faked): `lib/rng.ts` — the deterministic generator behind
-every seeded claim in the app — and `lib/hooks.ts`/`lib/router.tsx`/`lib/theme.tsx` remain outside
-any proof; the React-side three need a DOM this harness does not have, which is why they are named
-here instead of being quietly exempted. And there is still no gate that refuses a *new* ungated
-module: the census above is a measurement in a scratch file, not a ratchet, and turning it into one
-is the obvious next step.
+**Still outstanding** (deliberately not faked): there is still no gate that refuses a *new* module
+nothing loads — the census above is a measurement in a scratch file, not a ratchet, and turning it
+into one is the obvious next step. Everything else this block charged has since closed: `proof-rng`
+loads `lib/rng.ts` and asserts its own determinism, `proof-router` loads `lib/router.tsx`, and
+`proof-storage` loads `lib/hooks.ts` and `lib/theme.tsx`, so the React-side libs are exercised after
+all — a DOM turned out not to be the obstacle they were assumed to be. M368 struck the four charges
+and replaced them with the clause below.
 
 ### M206 — the coverage gap is now a ratchet, not a scratch file
 
@@ -3267,13 +3270,13 @@ Four mutations, **4 caught / 0 missed**: a type-only import counted as execution
 Clean plane (`git archive HEAD`, only this milestone's file copied in): `tsc` 0 errors, build 0,
 suite **34/34 proof scripts proven — 1824/1824 checks counted — exit 0**. The next sentence is not a footnote about that number: a second run of the same plane printed 33/34 — 1775 counted — 0 contract failures — 1 unverified, and an earlier attempt in the same window saw three scripts need a retry (`feedranking×1, m65×1, projection×1`) with one of them dying twice over before printing any tally. That is a loaded machine, not a loaded repo — a concurrent session was building at the time — and it is the reason the suite is reported as runs rather than as one figure: `M scripts proven / N unverified` is the reading, and a green-looking exit needs the counted total beside it..
 
-**Still outstanding** (deliberately not faked): the four exemptions are real gaps, not solved ones —
-`lib/rng.ts` is reached transitively (every seeded consumer imports it) but has no proof of its
-**own** properties, so a determinism change there would be caught only by whichever consumer happens
-to assert one; and the three React-side libs stay unexercised because there is no DOM, which is why
-they are listed with reasons rather than exempted silently. `data/` is outside the population on
-purpose: it is data, and M197 already showed that seeding changes need re-derivation rather than a
-new gate.
+**Still outstanding** (deliberately not faked): `data/` is outside the population on purpose — it is
+data, and M197 already showed that seeding changes need re-derivation rather than a new gate. The
+exemption list is down to **one** entry: `src/main.tsx` remains the one module no proof can load,
+because `createRoot` needs a DOM node, so `proof-screens` loads the App it mounts instead. The other
+three modules this block charged — `lib/rng.ts`, `lib/hooks.ts` and `lib/theme.tsx` — were being
+loaded by proofs before M368 read the claim, which is the whole reason the clause in `proof-coverage`
+exists now.
 
 ### M207 — the Player OS speaks the reader's locale
 
@@ -6979,6 +6982,72 @@ could not complete on this machine**: `tsc` passes and Vite transforms all 2,624
 (`SAFE_DELETE_BULK_GUARD_ERROR state lock timeout`, reproduced across three attempts, and `rm -rf dist`
 is blocked the same way). That is the environment, not this change — recorded here rather than hidden,
 the way this file records the standing `proof-runner` artifact.
+
+### M368 — the record charged four modules and four exemptions their own repairs had closed
+
+M300 and M305 struck stale charges out of the outstanding blocks by hand. This unit is the third
+arrival of the same class, and it is bigger than either: **seven charges across five sections**, all
+of them about this project's coverage ratchet, all of them already false when read.
+
+**What the record said, and what the ratchet measured.**
+
+- `lib/rng.ts` "has no proof of its **own** properties" (M209) — `proof-rng` loads it and asserts its
+  determinism.
+- `lib/hooks.ts`, `lib/router.tsx`, `lib/theme.tsx` "remain outside any proof … the React-side three
+  need a DOM this harness does not have" (M209) — all three are loaded: `proof-storage` for two of
+  them, `proof-router` for the third. **A DOM turned out not to be the obstacle it was assumed to be.**
+- "the four exemptions are real gaps, not solved ones" (M209) — the exemption list is **one** entry,
+  `src/main.tsx`, and has been since M238 retired the last library exemption.
+- `domain/community.ts` "is the largest domain module with no proof of its own" (M204) and "remains
+  the last substantial ungated domain module" (M205) — `proof-community` loads it.
+- `domain/career.ts` "is the largest ungated module in the repository" (M196) — `proof-career` and
+  `proof-careerarc` both load it.
+- "the runner spawns each proof with no timeout, so one hung script blocks the suite with no line
+  printed" (M202) — `run-proofs.mjs` passes a 600 s `timeoutMs` (overridable by `PROOF_TIMEOUT_MS`),
+  and `proof-runner` arms a real 40 ms budget against a hung child to measure that it comes back.
+- "the runner's 'all green but the process died' case is queued as its own gap" (M201/M202) —
+  `died-after-green` is a distinct verdict with its own fixtures and a ghost assertion.
+
+Each is now struck or rewritten to say what is true, with the closing proof named.
+
+**Why hand-striking was not enough.** M300 and M305 already did exactly this, and the charges came
+back — because the record states facts about a tree that moves, and nothing connected the two. So the
+files are welded instead: `proof-coverage` now reads the README and asserts that **every module the
+record names as unproven is one this ratchet measures as unreachable**. A module named that way has
+one of two states, and the clause refuses the third — "named as unproven while a proof loads it".
+
+**The three decisions that make it a gate rather than a nag — and two of them were wrong first.**
+
+*Only the "Still outstanding" blocks are live claims.* Section prose is the historical record: M196's
+opening says `domain/career.ts` is the largest ungated module, and it was, at M196. Rewriting that
+would be falsifying history rather than fixing a claim. The blocks marked "still outstanding" are the
+project's own convention since M208 for a statement about the tree as it is, and they are the blocks
+M300 and M305 struck charges out of.
+
+*Present tense only.* M210's intro says `lib/rng.ts` "had no proof of its own" and then writes one — a
+true account of that milestone. The first run of this clause charged it: **the predicate was wrong, not
+the prose**, so the phrase set now excludes the past form.
+
+*A quoted claim is reported speech, not assertion.* This milestone's own section quotes the seven
+charges it strikes, and a reader that could not tell a quote from an assertion would refuse the section
+that documents the repair. The first fix — blanking `"…"` spans by pattern — deleted the periods inside
+quotes and **merged sentences across paragraph boundaries**, which the next run read as a stale claim
+against five modules that have proofs. The blocks are a better boundary than a pattern, so the quote
+problem went away with the scoping instead of being patched. Both wrong readings are recorded here
+because they are the shape of this whole class of gate: **a prose predicate is only as good as the
+false positives it was measured against**, and this one needed two.
+
+The clause keeps a live subject rather than becoming vacuous: the exemption list is down to
+`src/main.tsx`, the record says so in the present tense, and the clause fails if the reader ever stops
+finding it.
+
+Three mutations. A stale present-tense claim about `lib/rng.ts` put back **inside an outstanding
+block** (**25/26** — the clause names it), the reader made to skip the "is it a claim" filter
+(**25/26** — it names **15** modules), and the phrase set losing the form the live claim is written in
+(**24/26** — the clause and its plant both redden, which is what the floor is for).
+
+Measured: `proof-coverage` **26/26** (24 before this unit, +2); `tsc --noEmit` clean; full suite
+reported below.
 
 ### M336 — the data room's match count is the domain's count, not a sum the page halves
 

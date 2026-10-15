@@ -318,5 +318,61 @@ const biggest = Object.keys(DEAD).map((p) => [p, safeLines(p)]).sort((a, b) => b
 ok(`the dead list is measured by reading the files, not by trusting the names: ${biggest.map(([p, n]) => `${p} ${n} lines`).join(", ")} are the three biggest of ${Object.keys(DEAD).length}`,
   biggest.every(([p, n]) => n === safeLines(p) && n > 0) && biggest.every(([p]) => p in DEAD) && biggest[1][1] >= biggest[2][1]);
 
+// ---------------------------------------------------------------------------
+// 2c · the record's claims about this ratchet must be this ratchet's
+// ---------------------------------------------------------------------------
+// M209's block named four modules as unexercised and four exemptions as "real gaps, not solved
+// ones". By M368 every one of those four modules had a proof of its own and the exemptions were
+// one — the claims had outlived their own repairs, which is M299/M300/M305's class arriving a
+// third time. Striking them by hand is what M300 and M305 already did, and it did not stop the
+// recurrence, so the two files are welded here instead: a module the record names as having no
+// proof must be one this ratchet measures as unreachable, or the claim has to go.
+//
+// The reading is a sentence that names a module AND asserts it is unproven — not every paragraph
+// that contains the word "ungated", because most of those are the historical record of a milestone
+// where it *was* true, and rewriting those would be falsifying history rather than fixing a claim.
+// Present tense only. M210's intro says `lib/rng.ts` "had no proof of its own" and then writes
+// one — a true historical account of that milestone, not a live claim, and reading it as one would
+// make the clause punish a section for describing the gap it was written to close.
+const NO_PROOF_PHRASE = /(?<!had )(no proof of its own|has no proof|no proof can load|outside any proof|remain outside any proof|is ungated|remains ungated|ungated module|ungated domain module)/i;
+const APP_MODULE = /^(domain|lib|data|features|store|src|components)\/[\w./-]+\.tsx?$/;
+/** The modules a set of outstanding blocks names in a sentence claiming they have no proof. */
+const claimsIn = (blocks) =>
+  [...new Set(blocks
+    .flatMap((b) => b.split(/(?<=\.)\s+/))
+    .filter((s) => NO_PROOF_PHRASE.test(s))
+    .flatMap((s) => [...s.matchAll(/[\w./-]+\/[\w.-]+\.tsx?/g)].map((m) => m[0])))
+  ].filter((p) => APP_MODULE.test(p));
+// The live claims are the **"Still outstanding"** blocks — the project's own convention since M208,
+// and the blocks M300 and M305 struck charges out of. Section prose is the historical record: M196's
+// opening says `domain/career.ts` was the largest module without a proof, and it was, at M196. Only a
+// block that says it is still outstanding is speaking about the tree as it is.
+//
+// Scoping this way also keeps the reader off quoted spans: this milestone's own section quotes the
+// seven charges it strikes, and a reader that could not tell a quote from an assertion would refuse
+// the section documenting the repair. (A first attempt blanked quotes by pattern and mispaired them
+// against the README's 1540 quotation marks, merging sentences across paragraph boundaries — the
+// convention is a better boundary than a pattern.)
+const README_SRC = readFileSync(resolve(root, "README.md"), "utf8");
+const OUTSTANDING_BLOCK = /\*\*Still outstanding\*\*[\s\S]*?(?=\n\s*\n|\n###|$)/g;
+const outstandingBlocks = README_SRC.match(OUTSTANDING_BLOCK) ?? [];
+const claimSentences = outstandingBlocks
+  .flatMap((b) => b.split(/(?<=\.)\s+/))
+  .filter((s) => NO_PROOF_PHRASE.test(s)).length;
+const claimedModules = claimsIn(outstandingBlocks);
+const closedSince = claimedModules.filter((p) => !unreachable.includes(p));
+ok(`every module the record names as unproven is one this ratchet measures as unreachable (${claimSentences} claim sentence(s) read, ${claimedModules.length} module(s) named: ${claimedModules.join(", ") || "none"}; ${closedSince.length} of them have proofs now)`,
+  claimedModules.length >= 1 && closedSince.length === 0,
+  `stale claims: ${closedSince.join(", ") || "none"}`);
+// The reader is one function used by both the clause and this plant, so a mutation of the predicate
+// cannot leave the witness measuring a different idea (M313).
+const plantedStale = "**Still outstanding**: `lib/rng.ts` is reached transitively but has no proof of its own.";
+const plantedLive = "**Still outstanding**: `src/main.tsx` remains the one module no proof can load, because createRoot needs a DOM node.";
+const staleRead = claimsIn([plantedStale]);
+const liveRead = claimsIn([plantedLive]);
+ok(`the unproven-claim reader, planted both ways, flags a module this ratchet reaches and accepts the one it does not (stale plant: ${staleRead.join(", ") || "none"} named, all reachable: ${staleRead.length > 0 && staleRead.every((p) => !unreachable.includes(p))}; live plant: ${liveRead.join(", ") || "none"} named, all unreachable: ${liveRead.length > 0 && liveRead.every((p) => unreachable.includes(p))})`,
+  staleRead.length === 1 && staleRead.every((p) => !unreachable.includes(p)) &&
+  liveRead.length === 1 && liveRead.every((p) => unreachable.includes(p)));
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);
