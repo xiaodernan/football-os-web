@@ -1,5 +1,5 @@
 import { createServer } from "vite";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { makeSay } from "./lib/rows.mjs";
 
 // Pins domain/career.ts — the Manager OS career model, the largest module in the
@@ -59,7 +59,7 @@ const CAREER = await server.ssrLoadModule("/domain/career.ts");
 const {
   roundFee, askingFee, sellFee, startBudget, effClubId, effectiveSquad, clubInput, careerForm, fixtureAt,
   seedStandings, liveStandings, positionOf, seasonOutlook, createCareer, playNextFixture, transferIn,
-  transferOut, setTactics, restSquad, matchPrep, projectFixture, seasonSummary, marketTargets, lineMean,
+  transferOut, setTactics, restSquad, matchPrep, projectFixture, seasonSummary, marketTargets, lineMean, meanOverall,
 } = CAREER;
 const SVC = await server.ssrLoadModule("/data/footballService.ts");
 const { footballProvider, getClub, clubIdsByCompetition, formatValue } = SVC;
@@ -1135,6 +1135,44 @@ ok("every club's neutral clubInput is the same TeamInput the match preview now b
       near(i.possessionBias, 0.5 + i.midfield / 400, 1e-12) &&
       i.press === 0.5 && i.tempo === 0.5 && i.fatigue === 0 && i.morale === 0 && i.form === 0;
   }));
+
+// M382: the "average overall with an empty-group fallback" primitive was spelled inline in three places —
+// the position-group mean (career.ts lineMean), the top-11 mean (career.ts clubInput) and the bucket mean
+// (scouting.ts). Each wrote `X.length ? X.reduce((s, p) => s + p.overall, 0) / X.length : Y`. Same
+// primitive the comparators M376–M381 retired in other forms, so it is a door (`meanOverall`) in the
+// attributes domain now. Charged both ways.
+{
+  const { meanOverall: meanOverallOf } = await server.ssrLoadModule("/domain/attributes.ts");
+  const walkApp = (dir) => {
+    const out = [];
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.name === "node_modules" || e.name.startsWith(".")) continue;
+      const p = `${dir}/${e.name}`;
+      if (e.isDirectory()) out.push(...walkApp(p));
+      else if (/\.tsx?$/.test(e.name)) out.push(p);
+    }
+    return out;
+  };
+  const APP_SRC = ["domain", "features", "lib", "store", "data", "src", "components"].flatMap(walkApp);
+  const AVG_OVERALL = /\.reduce\(\(s, p\) => s \+ p\.overall, 0\) \/ \w+\.length/;
+  const avgSites = APP_SRC.filter((f) => AVG_OVERALL.test(readFileSync(f, "utf8")));
+  ok(`the average-overall-with-fallback primitive is written in exactly one place, and it is the attributes domain's door (${APP_SRC.length} app files walked, ${avgSites.length} site(s): ${avgSites.join(", ") || "none"})`,
+    APP_SRC.length >= 90 && avgSites.length === 1 && avgSites[0] === "domain/attributes.ts");
+  const AVG_READER_FILES = [
+    "domain/career.ts",
+    "domain/scouting.ts",
+  ];
+  const avgReadersCallDoor = AVG_READER_FILES.map((f) => [f, /meanOverall\(/.test(readFileSync(f, "utf8"))]);
+  ok(`every caller that averages overall with a fallback calls the door rather than spelling the reduce (${avgReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+    AVG_READER_FILES.length === 2 && avgReadersCallDoor.every(([, v]) => v));
+  // Re-inlining the primitive in a reader must be flagged; a confidence-average (a different field) must not.
+  const plantedAvg = "return players.length ? players.reduce((s, p) => s + p.overall, 0) / players.length : fallback;";
+  const plantedConfidence = "const avg = valid.length ? Math.round(valid.reduce((s, c) => s + c.confidence, 0) / valid.length) : 0;";
+  ok(`the average-overall reader, planted both ways, flags a re-inlined overall average and accuses a confidence average (${AVG_OVERALL.test(plantedAvg)} of 1 flagged, ${AVG_OVERALL.test(plantedConfidence)} of 0 flagged)`,
+    AVG_OVERALL.test(plantedAvg) === true && AVG_OVERALL.test(plantedConfidence) === false);
+  ok(`the door averages a non-empty list and returns the fallback when empty ([80,60]→${meanOverallOf([{ overall: 80 }, { overall: 60 }], 0)}; empty→${meanOverallOf([], 42)})`,
+    meanOverallOf([{ overall: 80 }, { overall: 60 }], 0) === 70 && meanOverallOf([], 42) === 42);
+}
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

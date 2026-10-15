@@ -205,3 +205,12 @@ export function marketValue(overall: number, age: number): number {
   const ageCurve = age < 23 ? 1.5 : age < 28 ? 1.3 : age < 31 ? 1.0 : age < 34 ? 0.6 : 0.3;
   return roundTo100k(base * ageCurve);
 }
+
+/** Average overall of a player list, falling back when the list is empty. The position-group mean in
+ *  career.ts (lineMean), the top-11 mean in career.ts (clubInput) and the bucket mean in scouting.ts each
+ *  spelled `X.length ? X.reduce((s, p) => s + p.overall, 0) / X.length : Y` inline — the same
+ *  "average overall with a fallback" primitive the comparators M376–M381 retired in other forms, so it is
+ *  a door now. The callers build the list differently and pass their own fallback (or round the result). */
+export function meanOverall(players: { overall: number }[], fallback: number): number {
+  return players.length ? players.reduce((s, p) => s + p.overall, 0) / players.length : fallback;
+}

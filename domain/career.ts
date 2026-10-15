@@ -2,7 +2,7 @@ import { footballProvider, getClub, clubIdsByCompetition, formatValue } from "@/
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
-import { byOverall } from "./attributes";
+import { byOverall, meanOverall } from "./attributes";
 import type { RowText } from "./rowText";
 import { clamp, pct, round2, safeDiv, signed, fmt2 } from "@/lib/utils";
 import { round1 } from "./scouting";
@@ -84,7 +84,7 @@ export function effectiveSquad(clubId: string, moved: Record<string, string>): P
  *  page then substituted at the call site. It is exported now, and the page calls it. */
 export function lineMean(squad: PlayerRef[], groups: string[], fallback: number): number {
   const g = squad.filter((p) => groups.includes(p.positionGroup));
-  return g.length ? g.reduce((s, p) => s + p.overall, 0) / g.length : fallback;
+  return meanOverall(g, fallback);
 }
 
 // Team strength comes from the *effective* squad, so transfers change how a side
@@ -99,7 +99,7 @@ export function clubInput(clubId: string, moved: Record<string, string>, tac: Ta
   const c = getClub(clubId)!;
   const squad = effectiveSquad(clubId, moved);
   const best = squad.slice(0, 11);
-  const overall = best.length ? best.reduce((s, p) => s + p.overall, 0) / best.length : c.overall;
+  const overall = meanOverall(best, c.overall);
   const attack = lineMean(squad, ["ST", "W", "AM"], c.overall);
   const midfield = lineMean(squad, ["CM", "DM"], c.overall);
   const defense = lineMean(squad, ["CB", "FB", "GK"], c.overall);

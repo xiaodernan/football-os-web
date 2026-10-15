@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M381 (a few numbers in that range
+Work ships one milestone per commit and is currently at M382 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M382 — the average-overall-with-fallback primitive was spelled three times, and the third copy rounded
+
+M376–M381 retired the comparators, the nearest-100k rounding and the market-value curve; this unit closes the next duplication the census surfaced — the "average overall of a list, with an empty-list fallback" primitive `X.length ? X.reduce((s, p) => s + p.overall, 0) / X.length : Y`. It was written inline in three places: the position-group mean (`domain/career.ts` `lineMean`), the top-11 mean (`domain/career.ts` `clubInput`), and the scout's bucket mean (`domain/scouting.ts`). Same primitive the comparators retired in other forms; the scout copy also wrapped it in `Math.round` with a `0` fallback, which is the identical computation (the rounding is a display choice, not a different contract).
+
+`meanOverall(players, fallback)` in `domain/attributes.ts` (the home of the other averaged primitives) is the definition now. `career.ts` imports it (no cycle: `scouting` already imports `attributes`, and routing the door through `attributes` keeps `career`→`scouting` one-directional). The scout's `Math.round(meanOverall(g, 0))` is the only caller that still rounds, at the display edge. The proof lives in `proof-career.mjs` because that module is the door's heaviest consumer.
+
+**The seam, charged both ways.** proof-career's new clause counts the inline reduce across the app and asserts the only site is the attributes domain's door; it then asserts both `career.ts` and `scouting.ts` route through `meanOverall`, plants a re-inlined overall average (flagged) and a confidence average (not flagged), and checks the door against `[80,60]→70` and `[]→42`. The file passes 205/205.
+
+**Still outstanding.** The converged math now covers the comparators, the nearest-100k rounding, the market-value curve and the average-overall primitive. What remains hand-written is single-occurrence or genuinely different contracts; the rest of the rounding/percentage family (`round1`/`round2`/`round3`/`pct`/`fmt0`/`fmt1`/`fmt2`) already lives converged in `lib/utils.ts` (another session's in-flight file, left untouched). A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M381 — the player market-value curve was defined twice, and the engine admitted it "mirrors the generator"
 

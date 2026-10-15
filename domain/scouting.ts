@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -232,7 +232,7 @@ export function squadProfile(clubId: string): { bucket: Exclude<PosBucket, "ALL"
   const buckets: Exclude<PosBucket, "ALL">[] = ["GK", "DEF", "MID", "ATT"];
   return buckets.map((b) => {
     const g = squad.filter((p) => bucketOf(p.positionGroup) === b);
-    return { bucket: b, count: g.length, avg: g.length ? Math.round(g.reduce((s, p) => s + p.overall, 0) / g.length) : 0 };
+    return { bucket: b, count: g.length, avg: Math.round(meanOverall(g, 0)) };
   });
 }
 
