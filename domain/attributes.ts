@@ -179,3 +179,12 @@ export function byDeltaDescThenKey(a: { delta: number; key: string }, b: { delta
 export function byValueDesc(a: { value: number }, b: { value: number }): number {
   return b.value - a.value;
 }
+
+/** Descending by delta, no tiebreak. The same pure `(a, b) => b.delta - a.delta` was written twice
+ *  inside domain/scouting.ts (the category-edge and template-edge sorts). Not the same contract as
+ *  byDeltaDescThenKey (which breaks ties by key) or worldEngine's `|| b.to - a.to` variant, so it is a
+ *  separate door — but two identical copies in one file is still the drift risk the comparators
+ *  M376–M378 retired. This is the definition now. */
+export function byDeltaDesc(a: { delta: number }, b: { delta: number }): number {
+  return b.delta - a.delta;
+}

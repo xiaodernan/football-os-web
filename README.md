@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M378 (a few numbers in that range
+Work ships one milestone per commit and is currently at M379 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M379 — the category-edge and template-edge sorts shared one descending-delta comparator, and the same file could drift
+
+M376 retired `byDeltaDescThenKey` (descending delta, key tiebreak) and M378 retired `byValueDesc`; this unit closes the third comparator on the delta field, and the only one that lived entirely inside one module. `domain/scouting.ts` sorted its category edges and its template edges with the identical `(a, b) => b.delta - a.delta` — descending delta, no tiebreak. A different contract from `byDeltaDescThenKey` (which breaks ties by key) and from `worldEngine`'s `b.delta - a.delta || b.to - a.to` variant, so it does not fold into either; but two identical copies in one file is still the drift risk the comparators M376–M378 retired.
+
+`byDeltaDesc(a, b)` in `domain/attributes.ts` (with the rest of the comparator family) is the definition now. Both readers call the door; the literal survives in exactly one place, the door's own body. The proof's census uses a negative lookahead so it counts only the pure descending form and ignores `byDeltaDescThenKey`'s body and `worldEngine`'s `|| b.to` variant.
+
+**The seam, charged both ways.** proof-training's new clause (section 16) counts `b.delta - a.delta` (without a following `||`) across the app and asserts the only site is the attributes domain's door; it then asserts the scouting module calls `byDeltaDesc`, plants a re-inlined descending delta (flagged) and an ascending one (not flagged), and checks the door returns descending delta with equal deltas kept in given order. The file passes 64/64.
+
+**Still outstanding.** With the cross-module comparators retired, the only hand-written sorts left are single-occurrence (each owned by one call site) or genuinely different contracts. The next units on the list are the star renderer (if a real duplication surfaces) and a fresh tree census for any remaining repeated predicate.
 
 ### M378 — the descending-value comparator was hand-written three times, and "biggest first" could mean three things
 

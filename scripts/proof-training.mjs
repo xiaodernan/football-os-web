@@ -619,6 +619,38 @@ else {
   const valueSorted = [...valueItems].sort(byValueOf);
   ok(`the door orders by descending value, equal values in the given order (${valueSorted.map((x) => x.value).join(",")})`,
     valueSorted.map((x) => x.value).join(",") === "90,70,70,40");
+
+  // ---- 16. the pure descending-delta comparator is written once, and its readers call the door ----
+  // M379: "sort by descending delta, no tiebreak" was written twice inside domain/scouting.ts (the
+  // category-edge and template-edge sorts). A separate contract from byDeltaDescThenKey (which breaks
+  // ties by key) and from worldEngine's `|| b.to - a.to` variant, but two identical copies in one file
+  // is still the M376–M378 drift risk. `byDeltaDesc` in the attributes domain is the definition now.
+  // Charged both ways: the literal survives in exactly one place, and every reader calls the door.
+  // The lookahead excludes the byDeltaDescThenKey body and worldEngine's `b.delta - a.delta || b.to`
+  // variant, so only the pure descending form counts as a site.
+  const { byDeltaDesc: byDeltaDescOf } = AT;
+  const PURE_DELTA_DESC = /b\.delta - a\.delta(?!\s*\|\|)/;
+  const pureDeltaSites = APP_SRC.filter((f) => PURE_DELTA_DESC.test(readFileSync(f, "utf8")));
+  ok(`the pure descending-delta comparator is written in exactly one place, and it is the attributes domain's door (${APP_SRC.length} app files walked, ${pureDeltaSites.length} site(s): ${pureDeltaSites.join(", ") || "none"})`,
+    APP_SRC.length >= 90 && pureDeltaSites.length === 1 && pureDeltaSites[0] === "domain/attributes.ts");
+  const PURE_DELTA_READER_FILES = [
+    "domain/scouting.ts",
+  ];
+  const pureDeltaReadersCallDoor = PURE_DELTA_READER_FILES.map((f) => [f, /byDeltaDesc\b/.test(readFileSync(f, "utf8"))]);
+  ok(`every reader that orders by descending delta (no tiebreak) calls the door rather than spelling the comparator (${pureDeltaReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+    PURE_DELTA_READER_FILES.length === 1 && pureDeltaReadersCallDoor.every(([, v]) => v));
+  // The plant runs the predicate both ways: a re-inlined pure descending delta must be flagged, and a
+  // reversed one (`a.delta - b.delta`) must not be — a reader that flagged every `delta - ` sort would
+  // pass the clause above while accusing every delta ordering in the app.
+  const plantedPureDelta = "const sorted = list.sort((a, b) => b.delta - a.delta);";
+  const plantedAscDelta = "const sorted = list.sort((a, b) => a.delta - b.delta);";
+  ok(`the delta comparator reader, planted both ways, flags a re-inlined descending delta and accuses an ascending one (${PURE_DELTA_DESC.test(plantedPureDelta)} of 1 flagged, ${PURE_DELTA_DESC.test(plantedAscDelta)} of 0 flagged)`,
+    PURE_DELTA_DESC.test(plantedPureDelta) === true && PURE_DELTA_DESC.test(plantedAscDelta) === false);
+  // And the value: descending by delta, and equal deltas keep their given order.
+  const pdItems = [{ delta: 5 }, { delta: 9 }, { delta: 5 }, { delta: 2 }];
+  const pdSorted = [...pdItems].sort(byDeltaDescOf);
+  ok(`the door orders by descending delta, equal deltas in the given order (${pdSorted.map((x) => x.delta).join(",")})`,
+    pdSorted.map((x) => x.delta).join(",") === "9,5,5,2");
 }
 
 await server.close();

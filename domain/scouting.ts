@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -162,7 +162,7 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
     return { category: ca.category, value: ca.value, template: tmpl.value, delta: ca.value - tmpl.value };
   });
 
-  const sorted = [...cats].sort((a, b) => b.delta - a.delta);
+  const sorted = [...cats].sort(byDeltaDesc);
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
   const headline: RowText =
@@ -218,7 +218,7 @@ export function templateEdge(p: PlayerRef): TemplateEdgeSummary | null {
   const tmpl = categoryAverages(baselineAttributes(p.positionGroup as PositionGroup, skill));
   const own = categoryAverages(real);
   const deltas = own.map((c, i) => ({ category: c.category, delta: c.value - tmpl[i].value }));
-  const sorted = [...deltas].sort((a, b) => b.delta - a.delta);
+  const sorted = [...deltas].sort(byDeltaDesc);
   const best = sorted[0];
   const worst = sorted[sorted.length - 1];
   // Carries the category id, not CATEGORY_LABEL: the two list rows that show
