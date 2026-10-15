@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M380 (a few numbers in that range
+Work ships one milestone per commit and is currently at M381 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M381 — the player market-value curve was defined twice, and the engine admitted it "mirrors the generator"
+
+M376–M380 retired the comparators and the nearest-100k rounding; this unit closes the duplication those gates kept pointing at — the player pricing function `marketValue(overall, age)`, whose body (`Math.pow(Math.max(0, overall - 45) / 10, 3.1) * 6_000_000` with the age taper) was defined byte-identically as a local function in both the dynamic world engine (`domain/worldEngine.ts`) and the seed generator (`data/footballSeed.ts`). The engine's own comment says it "mirrors the world generator so evolved values stay consistent" — i.e. it already knew the two were the same contract and that they could drift. So the same risk the comparators retired, and the reason this unit exists.
+
+`marketValue(overall, age)` in `domain/attributes.ts` (returning the rounded price via `roundTo100k`) is the definition now; both callers pass `(overall, age)`. This unit also updated proof-training's M380 clause so `roundTo100k`'s reader census reflects that the two pricing callers now route through `marketValue` — the nearest-100k door's direct readers are `transfers.ts` (asking fee) and the `marketValue` door, counted as such.
+
+**The seam, charged both ways.** proof-training's new clause (section 18) counts the `Math.pow` base curve across the app and asserts the only site is the attributes domain's door; it then asserts both pricing callers route through `marketValue`, plants a re-inlined base curve (flagged) and a different one with a 50-point floor and 3.0 exponent (not flagged), and checks the door against measured fixtures (70/25→133,600,000; 60/32→12,700,000; 45/20→0). The file passes 72/72.
+
+**Still outstanding.** With the comparators, the nearest-100k rounding and the market-value curve retired, the remaining hand-written math is single-occurrence or genuinely different contracts (`round1`/`round2`/`round3`/`pct` already live in `lib/utils.ts` and are converged; `clamp` and `safeDiv` are converged). The next units on the list are a fresh tree census for any remaining repeated predicate and, if a real duplication surfaces, the star renderer.
 
 ### M380 — the nearest-100k rounding was hand-written three times, and a re-priced market could disagree with its own seed
 

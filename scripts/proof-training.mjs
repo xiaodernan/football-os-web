@@ -675,13 +675,12 @@ else {
   ok(`the nearest-100k rounding is written in exactly one place, and it is the attributes domain's door (${APP_SRC.length} app files walked, ${hundredKSites.length} site(s): ${hundredKSites.join(", ") || "none"})`,
     APP_SRC.length >= 90 && hundredKSites.length === 1 && hundredKSites[0] === "domain/attributes.ts");
   const HUNDRED_K_READER_FILES = [
-    "domain/worldEngine.ts",
-    "data/footballSeed.ts",
     "domain/transfers.ts",
+    "domain/attributes.ts",
   ];
   const hundredKReadersCallDoor = HUNDRED_K_READER_FILES.map((f) => [f, /roundTo100k\(/.test(readFileSync(f, "utf8"))]);
   ok(`every caller that rounds to the nearest 100k calls the door rather than spelling the rounding (${hundredKReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
-    HUNDRED_K_READER_FILES.length === 3 && hundredKReadersCallDoor.every(([, v]) => v));
+    HUNDRED_K_READER_FILES.length === 2 && hundredKReadersCallDoor.every(([, v]) => v));
   // The plant runs the predicate both ways: a re-inlined nearest-100k rounding must be flagged, and a
   // different scale (nearest 50k) must not be — a reader that flagged any rounding would pass the
   // clause above while accusing every rounding in the app.
@@ -700,6 +699,53 @@ else {
   const rtOk = rtCases.every(([inp, out]) => roundTo100kOf(inp) === out);
   ok(`the door rounds to the nearest 100k on both sides of each boundary (${rtCases.map(([i, o]) => `${i}→${roundTo100kOf(i)}`).join(", ")}; expected ${rtCases.map(([, o]) => o).join(", ")})`,
     rtOk);
+}
+
+// M381: the player market-value pricing `Math.pow(Math.max(0, overall - 45) / 10, 3.1) * 6_000_000`
+// with the age taper was defined as a byte-identical local `marketValue` in both the dynamic world
+// engine and the seed generator — the engine's own comment says it "mirrors the world generator". Same
+// pricing contract, so the same drift risk the comparators and roundTo100k retired. `marketValue` in the
+// attributes domain (returning the rounded price via roundTo100k) is the definition now.
+{
+  const { marketValue: marketValueOf } = AT;
+  const walkApp = (dir) => {
+    const out = [];
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.name === "node_modules" || e.name.startsWith(".")) continue;
+      const p = `${dir}/${e.name}`;
+      if (e.isDirectory()) out.push(...walkApp(p));
+      else if (/\.tsx?$/.test(e.name)) out.push(p);
+    }
+    return out;
+  };
+  const APP_SRC = ["domain", "features", "lib", "store", "data", "src", "components"].flatMap(walkApp);
+  const MARKET_BASE = /Math\.pow\(Math\.max\(0, overall - 45\) \/ 10, 3\.1\) \* 6_000_000/;
+  const marketSites = APP_SRC.filter((f) => MARKET_BASE.test(readFileSync(f, "utf8")));
+  ok(`the market-value base curve is written in exactly one place, and it is the attributes domain's door (${APP_SRC.length} app files walked, ${marketSites.length} site(s): ${marketSites.join(", ") || "none"})`,
+    APP_SRC.length >= 90 && marketSites.length === 1 && marketSites[0] === "domain/attributes.ts");
+  const MARKET_READER_FILES = [
+    "domain/worldEngine.ts",
+    "data/footballSeed.ts",
+  ];
+  const marketReadersCallDoor = MARKET_READER_FILES.map((f) => [f, /marketValue\(/.test(readFileSync(f, "utf8"))]);
+  ok(`every caller that prices a player calls the door rather than spelling the curve (${marketReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+    MARKET_READER_FILES.length === 2 && marketReadersCallDoor.every(([, v]) => v));
+  // The plant runs the predicate both ways: a re-inlined base curve must be flagged, and a different
+  // curve (a 50-point floor and 3.0 exponent) must not be — a reader that flagged any `Math.pow` would
+  // pass the clause above while accusing every power curve in the app.
+  const plantedMarketBase = "const base = Math.pow(Math.max(0, overall - 45) / 10, 3.1) * 6_000_000;";
+  const plantedOtherCurve = "const base = Math.pow(Math.max(0, overall - 50) / 10, 3.0) * 6_000_000;";
+  ok(`the market-value reader, planted both ways, flags a re-inlined base curve and accuses a different one (${MARKET_BASE.test(plantedMarketBase)} of 1 flagged, ${MARKET_BASE.test(plantedOtherCurve)} of 0 flagged)`,
+    MARKET_BASE.test(plantedMarketBase) === true && MARKET_BASE.test(plantedOtherCurve) === false);
+  // And the value: measured outputs from the door (not inferred from the formula).
+  const mvCases = [
+    [70, 25, 133_600_000],
+    [60, 32, 12_700_000],
+    [45, 20, 0],
+  ];
+  const mvOk = mvCases.every(([o, a, out]) => marketValueOf(o, a) === out);
+  ok(`the door prices the measured fixtures (${mvCases.map(([o, a, out]) => `${o}/${a}→${marketValueOf(o, a)}`).join(", ")}; expected ${mvCases.map(([, , out]) => out).join(", ")})`,
+    mvOk);
 }
 
 await server.close();

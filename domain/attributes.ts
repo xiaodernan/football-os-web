@@ -194,3 +194,14 @@ export function byDeltaDesc(a: { delta: number }, b: { delta: number }): number 
  *  the comparators M376–M378 retired, so it is a door now. Callers pass the already-scaled amount
  *  (e.g. `roundTo100k(base * ageCurve)`). The single site of the inline form is this body. */
 export const roundTo100k = (v: number): number => Math.round(v / 100_000) * 100_000;
+
+/** Player market value from overall + age. The dynamic world engine and the seed generator each defined a
+ *  byte-identical local pricing function (the engine's own comment says it "mirrors the world generator");
+ *  the same contract, so the same drift risk the comparators and roundTo100k retired. This is the
+ *  definition now — both callers pass (overall, age) and the rounded result reuses roundTo100k. The base
+ *  curve and age taper computed here are the single source of that formula. */
+export function marketValue(overall: number, age: number): number {
+  const base = Math.pow(Math.max(0, overall - 45) / 10, 3.1) * 6_000_000;
+  const ageCurve = age < 23 ? 1.5 : age < 28 ? 1.3 : age < 31 ? 1.0 : age < 34 ? 0.6 : 0.3;
+  return roundTo100k(base * ageCurve);
+}
