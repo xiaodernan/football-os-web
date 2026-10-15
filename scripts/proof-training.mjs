@@ -585,6 +585,40 @@ else {
   const deltaSorted = [...deltaItems].sort(byDeltaOf);
   ok(`the door orders by descending delta, ties broken by key ascending (${deltaSorted.map((x) => `${x.key}:${x.delta}`).join(" ")})`,
     deltaSorted.map((x) => `${x.key}:${x.delta}`).join(" ") === "delta:9 alpha:5 beta:5 gamma:2");
+
+  // ---- 15. the value-descending comparator is written once, and every reader calls the door ----
+  // M378: "sort by descending value" was hand-written three times — this module's strongest-attributes
+  // pick (domain/attributes.ts), the provider's top-players-by-value list (data/footballService.ts) and
+  // the profile's attribute bars (features/profile/ProfilePage.tsx), each `(a, b) => b.value - a.value`.
+  // Byte-identical, so the same drift risk the comparators M376/M377 retired: flip one to ascending and
+  // three "biggest first" lists disagree. `byValueDesc` in the attributes domain is the definition now.
+  // Charged both ways: the comparator is written in exactly one place, and every reader calls the door.
+  const { byValueDesc: byValueOf } = AT;
+  const VALUE_COMPARATOR = /b\.value - a\.value/;
+  const valueSites = APP_SRC.filter((f) => VALUE_COMPARATOR.test(readFileSync(f, "utf8")));
+  ok(`the value-descending comparator is written in exactly one place, and it is the attributes domain's door (${APP_SRC.length} app files walked, ${valueSites.length} site(s): ${valueSites.join(", ") || "none"})`,
+    APP_SRC.length >= 90 && valueSites.length === 1 && valueSites[0] === "domain/attributes.ts");
+  const VALUE_READER_FILES = [
+    "domain/attributes.ts",
+    "data/footballService.ts",
+    "features/profile/ProfilePage.tsx",
+  ];
+  const valueReadersCallDoor = VALUE_READER_FILES.map((f) => [f, /byValueDesc\b/.test(readFileSync(f, "utf8"))]);
+  ok(`every reader that orders by descending value calls the door rather than spelling the comparator (${valueReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+    VALUE_READER_FILES.length === 3 && valueReadersCallDoor.every(([, v]) => v));
+  // The plant runs the predicate both ways: a re-inlined descending-value comparator must be flagged,
+  // and an ascending one (`a.value - b.value`) must not be — a reader that flagged every `value - `
+  // sort would pass the clause above while accusing every value ordering in the app.
+  const plantedValue = "const top = list.sort((a, b) => b.value - a.value);";
+  const plantedAscValue = "const top = list.sort((a, b) => a.value - b.value);";
+  ok(`the value comparator reader, planted both ways, flags a re-inlined descending value comparator and accuses an ascending one (${VALUE_COMPARATOR.test(plantedValue)} of 1 flagged, ${VALUE_COMPARATOR.test(plantedAscValue)} of 0 flagged)`,
+    VALUE_COMPARATOR.test(plantedValue) === true && VALUE_COMPARATOR.test(plantedAscValue) === false);
+  // And the value: descending by value, and equal values keep their given order — the contract all
+  // three call sites signed (weakestAttributes keeps its own ascending sort, so it is not this door).
+  const valueItems = [{ value: 70 }, { value: 90 }, { value: 70 }, { value: 40 }];
+  const valueSorted = [...valueItems].sort(byValueOf);
+  ok(`the door orders by descending value, equal values in the given order (${valueSorted.map((x) => x.value).join(",")})`,
+    valueSorted.map((x) => x.value).join(",") === "90,70,70,40");
 }
 
 await server.close();

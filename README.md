@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M377 (a few numbers in that range
+Work ships one milestone per commit and is currently at M378 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M378 — the descending-value comparator was hand-written three times, and "biggest first" could mean three things
+
+M376 and M377 retired two cross-module comparators; this unit closes the third, and the strongest one yet — it was written three times. The attribute bank's strongest-attributes pick (`domain/attributes.ts`), the provider's top-players-by-value list (`data/footballService.ts`) and the profile's attribute bars (`features/profile/ProfilePage.tsx`) each sorted with `(a, b) => b.value - a.value`. Byte-identical, so the same drift risk — flip one to ascending and the three "biggest first" lists the app shows in three different places disagree.
+
+`byValueDesc(a, b)` in `domain/attributes.ts` (next to `byOverall` and `byDeltaDescThenKey`) is the comparator now. All three readers call the door; the literal survives in exactly one place, the door's own body. `weakestAttributes` keeps its own ascending `a.value - b.value` — a different direction, so it is not this door.
+
+**The seam, charged both ways.** proof-training's new clause (section 15) counts `b.value - a.value` across the app and asserts the only site is the attributes domain's door; it then asserts all three readers call `byValueDesc`, plants a re-inlined descending comparator (flagged) and an ascending one (not flagged), and checks the door returns descending value with equal values kept in given order. The file passes 60/60.
+
+**Still outstanding.** The comparators that remain hand-written are now either single-occurrence (owned by one call site) or genuinely different contracts (the kickoff localeCompare sort, the descending-minute sort's per-event variants). The next units on the list are the star renderer (if a real duplication surfaces) and any repeated predicate a fresh tree census turns up.
 
 ### M377 — the ascending-minute event sort was hand-written twice, and the timeline could order itself two ways
 

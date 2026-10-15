@@ -149,7 +149,7 @@ export function weakestAttributes(attrs: Attributes, n = 3): { key: string; valu
 
 export function strongestAttributes(attrs: Attributes, n = 3): { key: string; value: number }[] {
   return ATTRIBUTE_KEYS.map((k) => ({ key: k, value: attrs[k] ?? 0 }))
-    .sort((a, b) => b.value - a.value)
+    .sort(byValueDesc)
     .slice(0, n);
 }
 
@@ -170,4 +170,12 @@ export function byOverall(a: { overall: number }, b: { overall: number }): numbe
  *  two lists disagree on equal deltas. This is the definition now. */
 export function byDeltaDescThenKey(a: { delta: number; key: string }, b: { delta: number; key: string }): number {
   return b.delta - a.delta || a.key.localeCompare(b.key);
+}
+
+/** Best value first. Three readers hand-wrote the identical `(a, b) => b.value - a.value` — this
+ *  module's strongest-attributes pick, the provider's top-players-by-value list and the profile's
+ *  attribute bars. Byte-identical, so the same drift risk the comparators M376/M377 retired: flip
+ *  one to ascending and three "biggest first" lists disagree. This is the definition now. */
+export function byValueDesc(a: { value: number }, b: { value: number }): number {
+  return b.value - a.value;
 }

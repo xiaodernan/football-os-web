@@ -7,7 +7,7 @@ import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
 import { goalProgressPct, goalUnitKey } from "@/domain/goals";
 import { positionLabel, rowLine } from "@/domain/rowText";
-import { overallRating, weakestAttributes, ATTRIBUTE_DEFS } from "@/domain/attributes";
+import { overallRating, weakestAttributes, ATTRIBUTE_DEFS, byValueDesc } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { completedMinutes, completedSessions } from "@/domain/training";
 import { seasonSummary, type CareerState } from "@/domain/career";
@@ -125,7 +125,7 @@ export function ProfilePage() {
 
   const ranked = useMemo(() => {
     if (!p) return [];
-    return ATTRIBUTE_DEFS.map((d) => ({ key: d.key, value: p.attributes[d.key] ?? 0 })).sort((a, b) => b.value - a.value);
+    return ATTRIBUTE_DEFS.map((d) => ({ key: d.key, value: p.attributes[d.key] ?? 0 })).sort(byValueDesc);
   }, [p]);
   const strengths = ranked.slice(0, 4);
   const focus = p ? weakestAttributes(p.attributes, 4) : [];

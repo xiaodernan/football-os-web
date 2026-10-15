@@ -2,7 +2,7 @@ import { DEMO_NOW, WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, byKickoff, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
 import { DAY_MS, fmt1, indexById } from "@/lib/utils";
-import { byOverall } from "@/domain/attributes";
+import { byOverall, byValueDesc } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
 
 // Data Provider Layer (spec §11): the UI never talks to the seed directly, so a
@@ -157,7 +157,7 @@ export function fixtureForecast(matchId: string): FixtureForecast | null {
 }
 
 export function trendingPlayers(n = 6): PlayerRef[] {
-  return [...WORLD.players].sort((a, b) => b.value - a.value).slice(0, n);
+  return [...WORLD.players].sort(byValueDesc).slice(0, n);
 }
 
 export const newsFeed: NewsArticle[] = WORLD.news;
