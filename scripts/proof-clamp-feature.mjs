@@ -4,8 +4,9 @@
 // scale, Dashboard's focus-goal pct, TacticalStudio's carried-mentality index and its two pointer-drag
 // x/y reads, and primitives' AttributeBar pct. The door shares ONLY the double-sided `max(lo, min(hi, v))`
 // shape. M366 folded the last two feature twins that had been pinned as writer-owned — Details' ratio
-// bar floor and SimulationLab's carried-mentality index — so the only double-sided nests left are the
-// door itself, the shifted floor below, and the writer's data fixtures. Three siblings must NOT be
+// bar floor and SimulationLab's carried-mentality index — and M370 folded the writer data lane's five
+// seed nests, so the only double-sided nests left anywhere are the door itself and the shifted floor
+// below. Three siblings must NOT be
 // folded in, because they are not clamps at all:
 //   · a single-sided floor — `Math.max(0, potential - overall)`, `Math.max(1, tokens.length - 1)` — has
 //     no upper bound, so `clamp(v, lo, hi)` cannot express it; the door would demand a ceiling that does
@@ -52,11 +53,10 @@ const CONSUMERS = [
 ];
 // The one domain file that carries a max/min pair on a line but is a shifted clamp, not a door fold.
 const SHIFT = "domain/careerArc.ts";
-// The concurrent writer's data fixtures: a clamp still hand-nested there is a DECLARED residue, not a
-// stray. Keyed by file identity (the writer's lane), never by line. The two feature twins that used to
-// sit here too — SimulationLab's `Math.max(0, Math.min(4, …))` and Details' `Math.max(4, Math.min(100, …))`
-// — were folded onto the door by M366, so a clause below now charges them zero-and-imports instead.
-const WRITER = ["data/footballSeed.ts", "data/footballService.ts", "data/intelligence.ts"];
+// Former writer DATA files: M370 folded seed's five hand-nested clamps — the last writer-lane nests
+// in the tree — onto the door, and service/intelligence carry none when measured. A re-inline in any
+// of the three reddens the clause below rather than being excused by a lane exemption.
+const FORMER_WRITER = ["data/footballSeed.ts", "data/footballService.ts", "data/intelligence.ts"];
 // Former writer-lane feature files, now converged: a re-inline reddens rather than being excused.
 const FORMER = ["features/football/Details.tsx", "features/sim/SimulationLab.tsx"];
 
@@ -86,7 +86,7 @@ ok(`the four clamp scans are armed (decl ${plantDecl}, import ${plantImport}, ca
   plantDecl === 1 && plantImport === 1 && plantCall === 1 && plantDouble === 1);
 
 // --- Population floor + subject presence (a blind walk would read 0 and pass a negative claim). ----
-const present = CONSUMERS.concat([HOME, SHIFT], WRITER, FORMER).every((p) => Object.prototype.hasOwnProperty.call(src, p));
+const present = CONSUMERS.concat([HOME, SHIFT], FORMER_WRITER, FORMER).every((p) => Object.prototype.hasOwnProperty.call(src, p));
 ok(`the census walks the real source tree and every subject is inside it (${carriers.length} .ts/.tsx)`,
   carriers.length >= 80 && present);
 
@@ -107,16 +107,24 @@ const totalCalls = perCall.reduce((s, [, n]) => s + n, 0);
 ok(`the four M364 feature/UI consumers read the door and hand-nest nothing (imports ${importing.length}/4, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, double-sided inline ${CONSUMERS.reduce((s, f) => s + doubleIn(src[f]), 0)})`,
   importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 6 && CONSUMERS.every((f) => doubleIn(src[f]) === 0));
 
-// --- Convergence completeness: a hand-nested double-sided clamp survives only in the door, the ------
-// --- declared careerArc shifted residue, or the writer's data lane. Critically, neither the four ---
-// --- CONSUMER files nor the two former twins may appear here — an exemption cannot hide my own. ---
+// --- Convergence completeness: a hand-nested double-sided clamp survives only in the door or the ----
+// --- declared careerArc shifted residue — the writer lane exemption is gone, not narrowed. No ------
+// --- CONSUMER file and no former-twin file may appear here either; an exemption cannot hide mine. --
 const doubleFiles = carriers.filter((f) => doubleIn(src[f]) > 0);
-const allowed = new Set([HOME, SHIFT, ...WRITER]);
+const allowed = new Set([HOME, SHIFT]);
 const strays = doubleFiles.filter((f) => !allowed.has(f));
-const writerResidue = doubleFiles.filter((f) => WRITER.includes(f));
-const consumersClean = CONSUMERS.every((f) => !doubleFiles.includes(f)) && FORMER.every((f) => !doubleFiles.includes(f));
-ok(`every hand-nested clamp is accounted for: door, careerArc shifted residue, or the writer's data lane (carriers ${doubleFiles.length}, writer residue ${writerResidue.length}, strays ${strays.length})`,
-  doubleFiles.includes(HOME) && strays.length === 0 && doubleIn(src[SHIFT]) >= 1 && writerResidue.length >= 1 && consumersClean);
+const consumersClean = CONSUMERS.every((f) => !doubleFiles.includes(f)) && FORMER.every((f) => !doubleFiles.includes(f))
+  && FORMER_WRITER.every((f) => !doubleFiles.includes(f));
+ok(`every hand-nested clamp is accounted for: the door and the careerArc shifted residue, nothing else (carriers ${doubleFiles.join(",")}; strays ${strays.length})`,
+  doubleFiles.length === allowed.size && doubleFiles.includes(HOME) && strays.length === 0 && doubleIn(src[SHIFT]) >= 1 && consumersClean);
+
+// --- The three former writer data files hand-nest nothing now, and seed reads the door for its five
+// --- folds — a re-inline reddens this clause rather than being excused by the old lane identity. ----
+const formerWriterDouble = FORMER_WRITER.map((f) => [f.split("/").pop(), doubleIn(src[f])]);
+const seedImported = count(src["data/footballSeed.ts"], IMPORT_CLAMP) >= 1;
+const seedCalls = count(src["data/footballSeed.ts"], CALL_CLAMP);
+ok(`the three former writer data files hand-nest nothing and seed's five folds ride the door (double ${formerWriterDouble.map(([n, c]) => `${n}=${c}`).join(", ")}; seed import ${seedImported}, seed calls ${seedCalls}, floor 5)`,
+  formerWriterDouble.every(([, c]) => c === 0) && seedImported && seedCalls >= 5);
 
 // --- The former writer-lane feature twins carry ZERO hand-nested clamps now and read the door. ----
 const formerDouble = FORMER.map((f) => [f.split("/").pop(), doubleIn(src[f])]);

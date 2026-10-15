@@ -13,11 +13,13 @@
 //     today), so it must stay a divide between local midnights.
 //   · the FIXED-YESTERDAY (HistoryPage) is `new Date(now.getTime() - DAY_MS)`: one day off a chosen
 //     instant, neither a window span nor a rounded diff.
-// The census keys on the literal `86[_]?400[_]?000`; after convergence it should read 0 in every clean
-// consumer, 1 in the door's declaration (its explanatory comment names the old spellings and is
-// counted too, which the door-only clause accounts for), and stay in the two writer data files, which
-// are declared residues pinned by file identity — NOT converged (their lanes are the concurrent
-// writer's). scripts/ is not walked, so the plants below arm the scans rather than enter the census.
+// The census keys on the literal `86[_]?400[_]?000`; it reads 0 in every consumer, 1 in the door
+// (its explanatory comment names the old spellings and is counted with the declaration, which the
+// door-only clause accounts for) — and, since M370 folded the last two writer sites (seed's kickoff
+// offset and service's scheduled-match window), nowhere else at all. The two data files that used to
+// carry them are charged zero-and-imports by a dedicated clause, so a re-inline reddens instead of
+// being excused by an identity exemption. scripts/ is not walked, so the plants below arm the scans
+// rather than enter the census.
 // Run: node scripts/proof-day-ms.mjs
 import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";
@@ -34,8 +36,9 @@ const CONSUMERS = [
   "domain/load.ts", "domain/review.ts", "features/review/ReviewPage.tsx",
   "features/history/HistoryPage.tsx", "i18n/format.ts",
 ];
-// The concurrent writer's data files still hand-stitch the literal; pinned as residue, not converged.
-const WRITERS = ["data/footballSeed.ts", "data/footballService.ts"];
+// Former writer data files: M370 folded their hand-stitched literals onto the door, so they are
+// charged zero-and-imports rather than pinned as residue.
+const FORMER = ["data/footballSeed.ts", "data/footballService.ts"];
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
   e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);
@@ -64,7 +67,7 @@ ok(`the six scans are armed (literal ${plantLit}, decl ${plantDecl}, import ${pl
   plantLit === 2 && plantDecl === 1 && plantImport === 1 && plantMul === 1 && plantDiv === 1 && plantSub === 1);
 
 // --- Population floor + subject presence (a blind walk reads 0 and would pass a negative claim). --
-const present = CONSUMERS.concat([HOME], WRITERS).every((p) => Object.prototype.hasOwnProperty.call(src, p));
+const present = CONSUMERS.concat([HOME], FORMER).every((p) => Object.prototype.hasOwnProperty.call(src, p));
 ok(`the census walks the real source tree and every subject is inside it (${carriers.length} .ts/.tsx)`,
   carriers.length >= 80 && present);
 
@@ -85,12 +88,20 @@ const using = CONSUMERS.map((f) => [f, count(src[f], USE_DAY_MS) - count(src[f],
 ok(`all five consumers re-inlined nothing and read the door instead (consumer literals ${consumerLit}, importers ${importing.length}/${CONSUMERS.length}, per-file uses ${using.map(([, n]) => n).join(",")}; planted literal reads ${plantLit})`,
   consumerLit === 0 && plantLit === 2 && importing.length === CONSUMERS.length && using.every(([, n]) => n >= 1));
 
-// --- Convergence completeness: outside the door (decl + its explanatory comment) and the pinned
-// writer residues, no file in the walked tree carries the literal any more. -----------------------
+// --- Convergence completeness: outside the door (decl + its explanatory comment) no file in the
+// --- walked tree carries the literal any more — the writer exemption is gone, not narrowed. ------
 const litByFile = carriers.filter((f) => count(src[f], LIT) > 0);
-const strays = litByFile.filter((f) => f !== HOME && !WRITERS.includes(f));
-ok(`the literal survives only in the door and the two declared writer residues (carriers ${litByFile.join(",")}; strays ${strays.length})`,
-  litByFile.includes(HOME) && strays.length === 0 && WRITERS.every((w) => count(src[w], LIT) >= 1));
+const strays = litByFile.filter((f) => f !== HOME);
+ok(`the literal survives only in the door — no residue remains (carriers ${litByFile.join(",")}; strays ${strays.length}; planted literal reads ${plantLit})`,
+  litByFile.length === 1 && litByFile[0] === HOME && strays.length === 0 && plantLit === 2);
+
+// --- The two former writer data files re-inlined nothing and read the door instead — a re-inline
+// --- reddens this clause rather than being excused by an identity exemption. ---------------------
+const formerLit = FORMER.map((f) => [f.split("/").pop(), count(src[f], LIT)]);
+const formerImport = FORMER.filter((f) => count(src[f], IMPORT_DAY_MS) >= 1);
+const formerUse = FORMER.map((f) => [f.split("/").pop(), count(src[f], USE_DAY_MS) - count(src[f], IMPORT_DAY_MS)]);
+ok(`the two former writer data files hand-stitch nothing and read the door (literal ${formerLit.map(([n, c]) => `${n}=${c}`).join(", ")}; importers ${formerImport.length}/2; uses ${formerUse.map(([n, c]) => `${n}=${c}`).join(", ")})`,
+  formerLit.every(([, c]) => c === 0) && formerImport.length === FORMER.length && formerUse.every(([, c]) => c >= 1));
 
 // --- Must-not-unify, shape census: the three arithmetic folds coexist and stay in their lanes. ----
 const mulFiles = CONSUMERS.filter((f) => count(src[f], WINDOW_MUL) >= 1);

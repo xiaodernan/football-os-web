@@ -6,7 +6,7 @@ import {
   byOverall,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
-import { indexById, round2, fmt2 } from "@/lib/utils";
+import { clamp, DAY_MS, indexById, round2, fmt2 } from "@/lib/utils";
 import { byKickoff } from "@/domain/analytics";
 import type {
   Club,
@@ -224,7 +224,7 @@ function makeWorld() {
       short: def.short,
       competitionId: def.competitionId,
       nation: def.nation,
-      overall: Math.max(50, Math.min(90, overall)),
+      overall: clamp(overall, 50, 90),
       colors: def.colors,
       stadium: def.stadium,
     });
@@ -266,9 +266,9 @@ function makeWorld() {
     foot: "L" | "R",
     clubStrength: number,
   ) {
-    const attrs = baselineAttributes(group, Math.max(0.05, Math.min(1, skill)));
+    const attrs = baselineAttributes(group, clamp(skill, 0.05, 1));
     const prng = makeRng(`${club.id}-${name}`);
-    for (const k of Object.keys(attrs)) attrs[k] = Math.max(20, Math.min(97, attrs[k] + rngInt(prng, -6, 6)));
+    for (const k of Object.keys(attrs)) attrs[k] = clamp(attrs[k] + rngInt(prng, -6, 6), 20, 97);
     const overall = overallRating(attrs);
     const potential = Math.min(97, overall + (age < 23 ? rngInt(prng, 5, 16) : age < 27 ? rngInt(prng, 1, 6) : 0));
     const dna = computeDna(attrs);
@@ -349,7 +349,7 @@ function buildMatches(clubs: Club[], players: PlayerRef[], compMap: Map<string, 
           const home = byId.get(ids[a])!;
           const away = byId.get(ids[b])!;
           const offsetDays = rngInt(rng, -45, 21);
-          const kickoff = new Date(anchor + offsetDays * 86400000 + rngInt(rng, 0, 8) * 3600000).toISOString();
+          const kickoff = new Date(anchor + offsetDays * DAY_MS + rngInt(rng, 0, 8) * 3600000).toISOString();
           const status: Match["status"] =
             offsetDays < -2 ? "FINISHED" : offsetDays < 0 ? "LIVE" : "SCHEDULED";
           const m: Match = {
@@ -465,7 +465,7 @@ function generateMatchStats(home: Club, away: Club, score: { h: number; a: numbe
   // Possession based on overall strength with some randomness
   const strengthDiff = home.overall - away.overall;
   let basePossession = 50 + strengthDiff * 0.8;
-  basePossession = Math.max(35, Math.min(65, basePossession + rngFloat(rng, -5, 5)));
+  basePossession = clamp(basePossession + rngFloat(rng, -5, 5), 35, 65);
   
   // The countable board figures are the timeline's own counts (M287): the seed's
   // stats pair describes the events printed beside it, not an independent model.
@@ -594,7 +594,7 @@ function buildNews(clubs: Club[], players: PlayerRef[], rng: () => number): News
     const playerSurname = player.name.split(" ").slice(-1)[0];
     const title = kind[1].replace("{club}", clubName).replace("{player}", playerSurname);
     const src = pick(rng, sources);
-    const cred = Math.max(0.3, Math.min(0.97, src.cred + rngFloat(rng, -0.12, 0.08)));
+    const cred = clamp(src.cred + rngFloat(rng, -0.12, 0.08), 0.3, 0.97);
     out.push({
       id: `N${(i + 1).toString().padStart(3, "0")}`,
       title,

@@ -1,7 +1,7 @@
 import { DEMO_NOW, WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, byKickoff, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
-import { indexById } from "@/lib/utils";
+import { DAY_MS, indexById } from "@/lib/utils";
 import { byOverall } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
 
@@ -84,7 +84,7 @@ export const DEMO_ANCHOR_MS = new Date(DEMO_NOW).getTime();
 
 export function todayMatches(limit = 5): Match[] {
   return WORLD.matches
-    .filter((m) => m.status === "SCHEDULED" && Math.abs(new Date(m.kickoff).getTime() - DEMO_ANCHOR_MS) < 2 * 86400000)
+    .filter((m) => m.status === "SCHEDULED" && Math.abs(new Date(m.kickoff).getTime() - DEMO_ANCHOR_MS) < 2 * DAY_MS)
     .sort(byKickoff)
     .slice(0, limit);
 }
