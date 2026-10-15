@@ -1,6 +1,7 @@
 import type { NewsArticle, NewsKind } from "./types";
 import type { RowText } from "./rowText";
-import { clamp, pct } from "@/lib/utils";
+import { pct } from "@/lib/utils";
+import { capRound } from "./attributes";
 
 // A grounded "what does this mean" read for a news article. It never invents
 // facts: every line is built from the article's own metadata (kind,
@@ -70,7 +71,7 @@ export function buildImpact(input: ImpactInput): NewsImpact {
   const base = article.credibility * 100;
   const resolutionBonus = Math.min(15, resolved * 5);
   const kindPenalty = article.kind === "Rumor" ? 18 : article.kind === "Opinion" ? 12 : 0;
-  const confidence = clamp(Math.round(base + resolutionBonus - kindPenalty), 5, 96);
+  const confidence = capRound(base + resolutionBonus - kindPenalty, 5, 96);
   const certainty = bandCertainty(confidence);
 
   // A rank is a number, not an English ordinal: `1st`/`3rd` is a suffix only English has,

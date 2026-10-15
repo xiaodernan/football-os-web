@@ -214,3 +214,10 @@ export function marketValue(overall: number, age: number): number {
 export function meanOverall(players: { overall: number }[], fallback: number): number {
   return players.length ? players.reduce((s, p) => s + p.overall, 0) / players.length : fallback;
 }
+
+/** Round a value and clamp it to [lo, hi]. The round-then-bound pair was spelled about eight times across
+ *  career, scouting, transfers, training, worldEngine and careerArc — the same "round then bound" policy the
+ *  comparators and other doors retired. (worldEngine's `clamp(Math.round(a) + rng, lo, hi)` — lines 100–101 —
+ *  rounds, then adds a random nudge, then bounds: a different contract, and it stays inline. worldEngine's
+ *  line 102 has no nudge and rides this door instead.) This is the definition now. */
+export const capRound = (value: number, lo: number, hi: number): number => clamp(Math.round(value), lo, hi);

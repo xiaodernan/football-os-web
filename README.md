@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M382 (a few numbers in that range
+Work ships one milestone per commit and is currently at M383 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M383 — the round-then-bound pair was spelled ten times, and "round then clamp" could mean ten things
+
+M376–M382 retired the comparators, the nearest-100k rounding, the market-value curve and the average-overall primitive. This unit closes the next duplication the census surfaced — `clamp(Math.round(value), lo, hi)` (round a real figure, then bound it to a band). It was written inline about ten times: `domain/careerArc.ts` (start age), `domain/newsImpact.ts` (confidence), `domain/scouting.ts` (years-to-cap), `domain/training.ts` (session count, bookend, and load intensity — three sites), `domain/transfers.ts` (interest score), `domain/worldEngine.ts` (league points and one development gain), and the feature `features/tactical/TacticalStudio.tsx` (carried-mentality index). Same "round then bound" policy the comparators and other doors retired, so it is a door now.
+
+`capRound(value, lo, hi)` in `domain/attributes.ts` (the home of the rounding/comparator doors) is the definition now: `clamp(Math.round(value), lo, hi)`. It calls the single clamp door — it does NOT reimplement `Math.max(lo, Math.min(hi, v))`, which would be a second clamp and is already rejected by proof-clamp's "declared once" + "no consumer inlines a clamp shape" clauses. careerArc, scouting, training, worldEngine and TacticalStudio keep importing `clamp` (used elsewhere); `transfers.ts` and `newsImpact.ts` dropped their now-dead `clamp` import and route through `capRound`. The other session's in-flight files (`lib/utils.ts`, `data/footballService.ts`, `domain/community.ts`, `domain/gap.ts`) were left untouched.
+
+**The seam, charged both ways.** proof-capround counts the inline `clamp(Math.round(EXPR), lo, hi)` form across the whole tree and asserts the only occurrence is the door body — a re-inline at any reader reddens it. The scan keys on adjacency, not a literal: the outer clamp's first argument must be exactly one `Math.round` call whose close is immediately followed by the clamp's first-arg comma. worldEngine's lines 100–101 `clamp(Math.round(x) + rngInt(...), lo, hi)` round, then add a random nudge, then bound — a genuinely different contract — and the comma-adjacency rule refuses them, so they stay inline; worldEngine's line 102 has no nudge and rides the door. The proof also asserts capRound is declared once, its body rides clamp, all seven readers call it (ten call sites total), and `capRound(v, lo, hi) === clamp(Math.round(v), lo, hi)` on every band the sites use across below / at / above-both-bounds samples — the conversions move no number. The file passes 9/9.
+
+**Still outstanding.** The converged math now covers the comparators, the nearest-100k rounding, the market-value curve, the average-overall primitive and the round-then-bound pair. One genuine different-contract site survives on purpose (worldEngine's round-then-nudge-then-bound). What remains hand-written is single-occurrence or genuinely different contracts; the rest of the rounding/percentage family (`round1`/`round2`/`round3`/`pct`/`fmt0`/`fmt1`/`fmt2`) already lives converged in `lib/utils.ts` (another session's in-flight file, left untouched). A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M382 — the average-overall-with-fallback primitive was spelled three times, and the third copy rounded
 

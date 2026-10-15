@@ -10,8 +10,7 @@ import type { PositionCode } from "./types";
 import type { NewsArticle } from "@/domain/types";
 import type { RowText } from "./rowText";
 import { bucketOf, headroom, valueIndex, squadProfile, round1 } from "./scouting";
-import { clamp } from "@/lib/utils";
-import { roundTo100k } from "@/domain/attributes";
+import { roundTo100k, capRound } from "@/domain/attributes";
 
 const RUMOUR_KINDS: NewsArticle["kind"][] = ["Rumor", "Reported", "Confirmed"];
 
@@ -49,7 +48,7 @@ export function askingFee(value: number): number {
 export function fitFor(viewerAvgByBucket: Map<string, number>, bucket: string, playerHeadroom: number, playerOverall: number): number {
   const myAvg = viewerAvgByBucket.get(bucket);
   if (myAvg == null) return 0;
-  return clamp(Math.round(50 + (70 - myAvg) * 3 + playerHeadroom * 1.2 + (playerOverall - 60)), 5, 99);
+  return capRound(50 + (70 - myAvg) * 3 + playerHeadroom * 1.2 + (playerOverall - 60), 5, 99);
 }
 
 export function transferRumours(viewerClubId?: string, kinds: NewsArticle["kind"][] = RUMOUR_KINDS): RumourLink[] {

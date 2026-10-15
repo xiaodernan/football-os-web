@@ -30,9 +30,11 @@ const HOME = "lib/utils.ts";
 // The eleven domain modules whose inline clamp sites were converged onto the door.
 const CONSUMERS = [
   "domain/analytics.ts", "domain/careerArc.ts", "domain/load.ts", "domain/gap.ts",
-  "domain/newsImpact.ts", "domain/matchProbability.ts", "domain/matchEngine.ts", "domain/training.ts",
+  "domain/matchProbability.ts", "domain/matchEngine.ts", "domain/training.ts",
   "domain/career.ts", "domain/attributes.ts", "domain/scouting.ts",
 ];
+// newsImpact.ts's only clamp use was a round-then-clamp site, which moved to the capRound door in M383;
+// it no longer imports clamp directly, so it is no longer a direct consumer of this door.
 
 // Walk the shipped source roots. scripts/ is NOT walked, so the plants below arm the scans without
 // becoming a second charge in the census population.

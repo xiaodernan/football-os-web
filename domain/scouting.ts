@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall, capRound } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -40,7 +40,7 @@ export interface PrimeWindow {
 
 export const primeWindow = (p: PlayerRef): PrimeWindow => {
   const raw = (p.potential - p.overall) / 2 + (27 - p.age);
-  return { years: clamp(Math.round(raw), 0, 10), raw, capped: raw > 10 };
+  return { years: capRound(raw, 0, 10), raw, capped: raw > 10 };
 };
 
 export const primeYears = (p: PlayerRef) => primeWindow(p).years;

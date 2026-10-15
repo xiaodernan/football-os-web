@@ -2,6 +2,7 @@ import type { RowText } from "./rowText";
 import type { PlayerRef, PositionGroup } from "./types";
 import { round1 } from "./scouting";
 import { clamp } from "@/lib/utils";
+import { capRound } from "./attributes";
 
 // Career arc: how a squad player's level is expected to move with age.
 //
@@ -79,7 +80,7 @@ export function annualChange(input: { age: number; overall: number; potential: n
 export function careerArc(p: PlayerRef): CareerArc {
   const group = p.positionGroup as PositionGroup;
   const peakAge = PEAK_AGE[group] ?? 28;
-  const startAge = clamp(Math.round(p.age), 15, LAST_AGE);
+  const startAge = capRound(p.age, 15, LAST_AGE);
   const current = p.overall;
   const potential = Math.max(p.potential, current); // potential below overall is treated as already realised
 

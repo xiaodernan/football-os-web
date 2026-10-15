@@ -21,6 +21,9 @@
 // single-sided floor or a lone two-arg min/max has only one of them, so it is never charged — the
 // discrimination plants below prove exactly that. scripts/ is not walked, so the plants arm the scans
 // rather than enter the census.
+// One of TacticalStudio's six M364 folds — its carried-mentality index (a round-then-clamp) — moved to
+// the capRound door in M383, so it is no longer a bare clamp() call here; the feature lane now holds five
+// clamp folds (DataRoom, Dashboard, TacticalStudio's two pointer-drag x/y reads, primitives), not six.
 // Run: node scripts/proof-clamp-feature.mjs
 import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";
@@ -105,7 +108,7 @@ const importing = CONSUMERS.filter((f) => count(src[f], IMPORT_CLAMP) >= 1);
 const perCall = CONSUMERS.map((f) => [f, count(src[f], CALL_CLAMP)]);
 const totalCalls = perCall.reduce((s, [, n]) => s + n, 0);
 ok(`the four M364 feature/UI consumers read the door and hand-nest nothing (imports ${importing.length}/4, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, double-sided inline ${CONSUMERS.reduce((s, f) => s + doubleIn(src[f]), 0)})`,
-  importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 6 && CONSUMERS.every((f) => doubleIn(src[f]) === 0));
+  importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 5 && CONSUMERS.every((f) => doubleIn(src[f]) === 0));
 
 // --- Convergence completeness: a hand-nested double-sided clamp survives only in the door or the ----
 // --- declared careerArc shifted residue — the writer lane exemption is gone, not narrowed. No ------

@@ -13,7 +13,7 @@
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
 import { clamp, indexById, fmt2, safeDiv } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
-import { POSITION_BY_GROUP, POSITION_GROUPS, marketValue } from "@/domain/attributes";
+import { POSITION_BY_GROUP, POSITION_GROUPS, marketValue, capRound } from "@/domain/attributes";
 import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
 
 const BASE_START_YEAR = 2026; // base season is 2026/27
@@ -99,7 +99,7 @@ function develop(p: PlayerRef, rng: () => number): { player: PlayerRef; retired:
   let g: number;
   if (age <= 20) g = clamp(Math.round(headroom * 0.35) + rngInt(rng, 0, 2), 0, 6);
   else if (age <= 23) g = clamp(Math.round(headroom * 0.28) + rngInt(rng, 0, 1), 0, 4);
-  else if (age <= 26) g = clamp(Math.round(headroom * 0.18), 0, 2);
+  else if (age <= 26) g = capRound(headroom * 0.18, 0, 2);
   else if (age <= 30) g = rngInt(rng, -1, 1);
   else if (age <= 32) g = rngInt(rng, -2, 0);
   else if (age <= 34) g = rngInt(rng, -4, -1);
@@ -148,7 +148,7 @@ function simulateChampion(comp: Competition, clubsById: Map<string, Club>, rng: 
     if (!best || perf > best.perf) best = { club, perf };
   }
   const club = best?.club ?? clubsById.get(comp.clubIds[0])!;
-  const points = clamp(Math.round(58 + (club.overall - 60) * 1.4 + rngFloat(rng, -6, 12)), 30, 100);
+  const points = capRound(58 + (club.overall - 60) * 1.4 + rngFloat(rng, -6, 12), 30, 100);
   return { compId: comp.id, compName: comp.name, clubId: club.id, clubName: club.name, points };
 }
 

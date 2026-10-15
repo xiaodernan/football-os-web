@@ -8,6 +8,7 @@ import { TACTICS_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn, clamp, safeDiv } from "@/lib/utils";
+import { capRound } from "@/domain/attributes";
 import { toast } from "sonner";
 
 interface Token { id: string; label: string; x: number; y: number; role: "GK" | "DEF" | "MID" | "ATT" }
@@ -41,7 +42,7 @@ export function TacticalStudio() {
   const carriedMt = query.get("mt");
   const carriedMentality =
     carriedMt !== null && Number.isFinite(Number(carriedMt))
-      ? clamp(Math.round(Number(carriedMt)), 0, 4)
+      ? capRound(Number(carriedMt), 0, 4)
       : null;
   const [formation, setFormation] = useState("4-3-3");
   const [mentality, setMentality] = useState(carriedMentality ?? 2);
