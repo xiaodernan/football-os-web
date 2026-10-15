@@ -7,7 +7,7 @@ import { getClub, playersByClub } from "@/data/footballService";
 import { TACTICS_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
-import { cn, clamp } from "@/lib/utils";
+import { cn, clamp, safeDiv } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface Token { id: string; label: string; x: number; y: number; role: "GK" | "DEF" | "MID" | "ATT" }
@@ -65,8 +65,8 @@ export function TacticalStudio() {
     const backs = tokens.filter((t) => t.role === "DEF").length;
     const mids = tokens.filter((t) => t.role === "MID").length;
     const atts = tokens.filter((t) => t.role === "ATT").length;
-    const avgY = tokens.filter((t) => t.role !== "GK").reduce((s, t) => s + t.y, 0) / Math.max(1, tokens.length - 1);
-    const spread = tokens.filter((t) => t.role !== "GK").reduce((s, t) => s + Math.abs(t.x - 0.5), 0) / Math.max(1, tokens.length - 1);
+    const avgY = safeDiv(tokens.filter((t) => t.role !== "GK").reduce((s, t) => s + t.y, 0), tokens.length - 1);
+    const spread = safeDiv(tokens.filter((t) => t.role !== "GK").reduce((s, t) => s + Math.abs(t.x - 0.5), 0), tokens.length - 1);
     return { backs, mids, atts, line: avgY, spread };
   }, [tokens]);
 

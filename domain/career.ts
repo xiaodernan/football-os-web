@@ -4,7 +4,7 @@ import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
 import { byOverall } from "./attributes";
 import type { RowText } from "./rowText";
-import { clamp, pct, round2, signed, fmt2 } from "@/lib/utils";
+import { clamp, pct, round2, safeDiv, signed, fmt2 } from "@/lib/utils";
 import { round1 } from "./scouting";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
@@ -228,7 +228,7 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
   const played = state.results.length;
   const remaining = Math.max(0, totalFixtures - played);
 
-  const ppg = (r: StandingRow) => r.points / Math.max(1, r.played);
+  const ppg = (r: StandingRow) => safeDiv(r.points, r.played);
   // Blend season ppg with recent career form (-1..1 -> -0.30..+0.30 pts/game).
   const form = careerForm(state);
   const ourPpg = clamp(ppg(ours) + form * 0.3, 0, 3);

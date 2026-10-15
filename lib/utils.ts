@@ -123,3 +123,15 @@ export const DAY_MS = 86400000;
 // career form and FilmRoom scan trend — glue a `+` in front of a fixed-width string in the exact
 // form proof-signed pins by its literal.
 export const fmt2 = (v: number): string => v.toFixed(2);
+
+// The division door: a quotient whose denominator is floored at 1. Five quotients across four files
+// hand-stitched `a / Math.max(1, b)` because the count under them can arrive empty — an empty
+// position ring, a row not yet played, a filtered squad — and a bare `/0` is Infinity or NaN where
+// every caller wants a number. The body IS the old shape, so no quotient moves. NOTE the floor is 1,
+// not epsilon: safeDiv(10, 0.5) is 10 where a divide-by-nonzero guard would give 20 — this door
+// guards integer COUNTS by contract and does not honor fractional denominators. Three sibling
+// `Math.max(1, …)` floors stay hand-stitched and proof-div-guard charges exactly them: a count floor
+// that also guards a modulo (career's round-robin index), a computed season floor that feeds only
+// subtraction and comparison, and a floor AFTER a divide (the player card node level) whose rounding
+// order is a different measurement.
+export const safeDiv = (num: number, den: number): number => num / Math.max(1, den);

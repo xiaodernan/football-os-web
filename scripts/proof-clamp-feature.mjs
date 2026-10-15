@@ -8,7 +8,7 @@
 // seed nests, so the only double-sided nests left anywhere are the door itself and the shifted floor
 // below. Three siblings must NOT be
 // folded in, because they are not clamps at all:
-//   · a single-sided floor — `Math.max(0, potential - overall)`, `Math.max(1, tokens.length - 1)` — has
+//   · a single-sided floor — `Math.max(0, potential - overall)`, `Math.max(1, Math.floor(v / 12))` — has
 //     no upper bound, so `clamp(v, lo, hi)` cannot express it; the door would demand a ceiling that does
 //     not exist.
 //   · a two-argument min/max — `Math.min(h.played, a.played)`, `Math.min(growth.next.value, ….target)`,

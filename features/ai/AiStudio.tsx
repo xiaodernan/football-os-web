@@ -11,7 +11,7 @@ import { Panel, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, safeDiv } from "@/lib/utils";
 
 type ChatMsg =
   | { role: "user"; content: string; at: string }
@@ -200,7 +200,7 @@ function GraphCanvas({ graph, ariaLabel }: { graph: KgGraph; ariaLabel: string }
     const ring = graph.nodes.filter((n) => n.id !== graph.root);
     const R = Math.min(W, H) / 2 - 70;
     ring.forEach((n, i) => {
-      const ang = (i / Math.max(1, ring.length)) * Math.PI * 2 - Math.PI / 2;
+      const ang = safeDiv(i, ring.length) * Math.PI * 2 - Math.PI / 2;
       p.set(n.id, { x: cx + Math.cos(ang) * R, y: cy + Math.sin(ang) * R });
     });
     return p;
