@@ -8,6 +8,7 @@ import {
 import { computeDna } from "@/domain/playerDna";
 import { clamp, DAY_MS, indexById, round2, fmt2 } from "@/lib/utils";
 import { byKickoff } from "@/domain/analytics";
+import { byMinute } from "@/domain/matchEngine";
 import type {
   Club,
   Competition,
@@ -458,7 +459,7 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
     });
   }
   
-  return events.sort((a, b) => a.minute - b.minute);
+  return events.sort(byMinute);
 }
 
 function generateMatchStats(home: Club, away: Club, score: { h: number; a: number }, events: MatchEvent[], rng: () => number): { home: MatchStats; away: MatchStats } {

@@ -13,7 +13,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // on, and guards that it can never emit the retired SUB event type (M96/M89).
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { simulateMatch, EVENT_GLYPH } = await server.ssrLoadModule("/domain/matchEngine.ts");
+const { simulateMatch, EVENT_GLYPH, byMinute: byMinuteOf } = await server.ssrLoadModule("/domain/matchEngine.ts");
 // M225. The engine hands the interface rows, not sentences, so the reader's side of every
 // assertion below is the row resolved the way a screen resolves it: `rowLine` for the union and
 // the dictionary's own interpolator for the variables. Reading `summary[0]` as a string is what
@@ -235,6 +235,49 @@ for (const mins of [1, 120]) {
     rr.awayGoals === rr.timeline.filter((e) => e.type === "GOAL" && e.side === "away").length &&
     rr.stats.home.possession + rr.stats.away.possession === 100);
 }
+
+// --- the minute comparator is written once, and every reader calls the door ---
+// M377: "sort events by ascending minute" was hand-written twice — this simulator's timeline
+// (domain/matchEngine.ts) and the seed generator's event list (data/footballSeed.ts), each with
+// `(a, b) => a.minute - b.minute`. Byte-identical, so the same drift risk the comparators M376
+// retired: one reader flips to descending and the two timelines disagree on event order.
+// `byMinute` in the match-engine domain is the definition now. Charged both ways: the comparator
+// is written in exactly one place, and every reader calls the door.
+const walkSrc = (dir) => {
+  const out = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === "node_modules" || e.name.startsWith(".")) continue;
+    const p = `${dir}/${e.name}`;
+    if (e.isDirectory()) out.push(...walkSrc(p));
+    else if (/\.tsx?$/.test(e.name)) out.push(p);
+  }
+  return out;
+};
+const APP_SRC = ["domain", "features", "lib", "store", "data", "src", "components"].flatMap(walkSrc);
+const MINUTE_COMPARATOR = /a\.minute - b\.minute/;
+const minuteSites = APP_SRC.filter((f) => MINUTE_COMPARATOR.test(readFileSync(f, "utf8")));
+ok(`the ascending-minute comparator is written in exactly one place, and it is the match-engine domain's door (${APP_SRC.length} app files walked, ${minuteSites.length} site(s): ${minuteSites.join(", ") || "none"})`,
+  APP_SRC.length >= 90 && minuteSites.length === 1 && minuteSites[0] === "domain/matchEngine.ts");
+const MINUTE_READER_FILES = [
+  "domain/matchEngine.ts",
+  "data/footballSeed.ts",
+];
+const minuteReadersCallDoor = MINUTE_READER_FILES.map((f) => [f, /byMinute\b/.test(readFileSync(f, "utf8"))]);
+ok(`every reader that orders events by minute calls the door rather than spelling the comparator (${minuteReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+  MINUTE_READER_FILES.length === 2 && minuteReadersCallDoor.every(([, v]) => v));
+// The plant runs the predicate both ways: a re-inlined comparator must be flagged, and a comparator
+// over a different field (or reversed) must not be — a reader that flagged every `minute - ` sort
+// would pass the clause above while accusing every minute-based ordering in the app.
+const plantedMinute = "const sorted = list.sort((a, b) => a.minute - b.minute);";
+const plantedOther = "const sorted = list.sort((a, b) => b.minute - a.minute);";
+ok(`the minute comparator reader, planted both ways, flags a re-inlined ascending-minute comparator and accuses a reversed one (${MINUTE_COMPARATOR.test(plantedMinute)} of 1 flagged, ${MINUTE_COMPARATOR.test(plantedOther)} of 0 flagged)`,
+  MINUTE_COMPARATOR.test(plantedMinute) === true && MINUTE_COMPARATOR.test(plantedOther) === false);
+// And the value: ascending by minute, and equal minutes keep their given order (the contract both
+// call sites signed — the timeline and the seed list were already stable, the door just owns it).
+const minuteItems = [{ minute: 45 }, { minute: 12 }, { minute: 12 }, { minute: 90 }, { minute: 3 }];
+const minuteSorted = [...minuteItems].sort(byMinuteOf);
+ok(`the door orders by ascending minute, equal minutes in the given order (${minuteSorted.map((x) => x.minute).join(",")})`,
+  minuteSorted.map((x) => x.minute).join(",") === "3,12,12,45,90");
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

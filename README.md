@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M376 (a few numbers in that range
+Work ships one milestone per commit and is currently at M377 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M377 — the ascending-minute event sort was hand-written twice, and the timeline could order itself two ways
+
+M376 retired a cross-module comparator; this unit closes the next one on the same field. The match simulator's timeline (`domain/matchEngine.ts`) and the seed generator's event list (`data/footballSeed.ts`) each sorted with `(a, b) => a.minute - b.minute`. Byte-identical, so the same drift risk — one reader flips to descending and the two timelines disagree on event order, and the timeline the Simulation Lab and the detail page both read would no longer match the one the seed built.
+
+`byMinute(a, b)` in `domain/matchEngine.ts` is the comparator now. Both readers call the door; the literal survives in exactly one place, the door's own body. `data/footballSeed.ts` now imports it from the engine domain rather than re-deriving the sort.
+
+**The seam, charged both ways.** proof-matchengine's new clause counts `a.minute - b.minute` across the app and asserts the only site is the match-engine domain's door; it then asserts both readers call `byMinute`, plants a re-inlined ascending comparator (flagged) and a reversed one (not flagged), and checks the door returns ascending minute with equal minutes kept in given order. The file passes 44/44.
+
+**Still outstanding.** Nothing else hand-writes a minute sort; the next comparators on the list are the pure descending `b.delta - a.delta` still inlined twice in `domain/scouting.ts`, the star renderer, and any other repeated predicate a tree census turns up.
 
 ### M376 — the delta-then-key comparator was hand-written twice, and equal deltas ordered by whoever wrote them
 

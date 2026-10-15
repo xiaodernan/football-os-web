@@ -3,6 +3,14 @@ import { clamp, fmt2 } from "@/lib/utils";
 import type { MatchEvent, MatchEventType, ShotType } from "./types";
 import type { RowText } from "./rowText";
 
+// Ascending by minute. Two readers hand-wrote the identical `(a, b) => a.minute - b.minute` —
+// this simulator's timeline and the seed generator's event list — and the same drift risk as the
+// comparators M376 retired: one reader flips to descending and the two timelines disagree. This is
+// the definition now.
+export function byMinute(a: { minute: number }, b: { minute: number }): number {
+  return a.minute - b.minute;
+}
+
 // Deterministic match simulation: identical inputs + identical seed => identical
 // result (spec §21). It models team strength, tactics, home edge, fatigue, form,
 // morale and match state rather than a flat random().
@@ -157,7 +165,7 @@ export function simulateMatch(input: SimInput): SimResult {
   addCards(events, rng, "home", hFouls, homeNames);
   addCards(events, rng, "away", aFouls, awayNames);
   events.push({ minute: 45, type: "VAR", side: rng() < 0.5 ? "home" : "away", player: "—" });
-  events.sort((a, b) => a.minute - b.minute);
+  events.sort(byMinute);
 
   const passesH = Math.round((possH / 100) * rngInt(rng, 380, 520));
   const passesA = rngInt(rng, 380, 520) - passesH + rngInt(rng, 0, 40);
