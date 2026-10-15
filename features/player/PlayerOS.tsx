@@ -11,7 +11,7 @@ import {
   weakestAttributes,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
-import { SUPPORTED_MINUTES, sessionIntensity, type GrowthDelta } from "@/domain/training";
+import { SUPPORTED_MINUTES, sessionIntensity, plannedSessions, type GrowthDelta } from "@/domain/training";
 import { buildLoad, ZONE_LABEL, ZONE_TONE, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
@@ -125,7 +125,7 @@ function Overview() {
   const p = state.profile!;
   const info = levelInfo(p.xp);
   const dna = computeDna(p.attributes);
-  const next = state.sessions.find((s) => s.status === "planned");
+  const next = plannedSessions(state.sessions)[0];
   const weak = weakestAttributes(p.attributes, 3);
   return (
     <div className="grid gap-4 lg:grid-cols-3">
@@ -377,7 +377,7 @@ function Skills() {
 function Training() {
   const { state, completeSession } = useOs();
   const { t, locale } = useI18n();
-  const planned = state.sessions.filter((s) => s.status === "planned");
+  const planned = plannedSessions(state.sessions);
   // The counters count the world, the rows render a cut — the same split the
   // dashboard's live strip took at M294 and the hub's at M297: a hint that
   // reads the sliced array prints the cut's size against worlds the cut

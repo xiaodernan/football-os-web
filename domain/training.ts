@@ -203,6 +203,19 @@ export function completedMinutes(sessions: TrainingSession[]): number {
   return total;
 }
 
+// ---- "Planned" is decided once, and its list is read once ----
+// `buildReview` in domain/review.ts, the dashboard's "next session" and the player
+// OS's training panel each reached for the same "planned"-status predicate and each
+// wrote it again: a `.filter` for the planned list and a `.find` for the next one.
+// Byte-identical predicate, so the same drift risk M347 retired for "completed". `plannedSessions`
+// is the filter; the two `.find` sites read `plannedSessions(x)[0]`, which is exactly the first
+// planned session the `.find` returned. The literal still appears once in this file — the door's
+// own definition — and nowhere else a reader spells it.
+/** The sessions in `sessions` whose status is `planned`, in the order given. */
+export function plannedSessions(sessions: TrainingSession[]): TrainingSession[] {
+  return sessions.filter((s) => s.status === "planned");
+}
+
 export function sessionIntensity(session: TrainingSession): number {
   const load = session.exercises.reduce((s, e) => s + e.intensity * e.minutes, 0);
   const mins = session.exercises.reduce((s, e) => s + e.minutes, 0) || 1;

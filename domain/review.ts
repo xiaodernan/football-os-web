@@ -3,7 +3,7 @@ import type { RowText } from "./rowText";
 import { weakestAttributes } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
-import { completedMinutes, completedSessions } from "./training";
+import { completedMinutes, completedSessions, plannedSessions } from "./training";
 import { signed, DAY_MS, fmt2, fmt1 } from "@/lib/utils";
 
 // A period digest compiled purely from the user's local training log, goals,
@@ -103,7 +103,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const inWindow = input.sessions.filter((s) => withinWindow(sessionStamp(s), fromMs, nowMs));
   // M347: "completed" and its minutes are the training domain's definitions, not this file's.
   const completed = completedSessions(inWindow);
-  const planned = inWindow.filter((s) => s.status === "planned");
+  const planned = plannedSessions(inWindow);
   const missed = inWindow.filter((s) => s.status === "missed");
 
   const minutes = completedMinutes(inWindow);

@@ -19,6 +19,7 @@ import { newsKindLabel, newsTitle, rowLine } from "@/domain/rowText";
 import { overallRating } from "@/domain/attributes";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
+import { plannedSessions } from "@/domain/training";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords, usePersonalNews } from "@/lib/hooks";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
@@ -48,7 +49,7 @@ export function Dashboard() {
   const today = todayMatches(5);
   const breaking = personalNews.items.slice(0, 4);
   const trending = trendingPlayers(6);
-  const nextSession = state.sessions.find((s) => s.status === "planned");
+  const nextSession = plannedSessions(state.sessions)[0];
   const upcoming = profile?.favoriteClubId ? upcomingMatchesForClub(profile.favoriteClubId, 3) : [];
   const progressPts = state.progress.map((p, i) => ({ label: i === 0 ? t("common.chartStart") : `${i}`, value: p.overall }));
 

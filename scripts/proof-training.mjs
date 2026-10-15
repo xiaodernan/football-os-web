@@ -514,6 +514,39 @@ else {
   const doorList = doorSessionsOf(doorInput);
   ok(`the door counts the completed sessions' minutes and nothing else (${doorMinutes}′ from a 30′ and a 60′ completed session, ignoring a planned 20′ and a missed 90′; ${doorList.length} sessions returned, in the order ${doorList.map((s) => s.id).join(" then ")})`,
     doorMinutes === 90 && doorList.length === 2 && doorList[0].id === "a" && doorList[1].id === "c");
+
+  // ---- 13. the planned-status lookup is written once, and every reader calls the door ----
+  // M374: "the next planned session" and "the planned sessions" were three hand-written
+  // predicates (`s.status === "planned"`) — a `.find` in the dashboard and the player OS's
+  // Overview, and a `.filter` in the weekly review and the player OS's Training panel.
+  // Byte-identical, so the same drift risk M347 retired for "completed" (section 12 above).
+  // `plannedSessions` in the training domain is the definition now. The seam is charged in both
+  // directions: the lookup is written in exactly one place, and every reader calls the door.
+  const { plannedSessions: plannedOf } = TR;
+  const plansFor = (src) => (src.match(/\.status === "planned"/g) || []).length;
+  const planSites = APP_SRC.filter((f) => plansFor(readFileSync(f, "utf8")) > 0);
+  ok(`the planned-status lookup is written in exactly one place, and it is the training domain's door (${APP_SRC.length} app files walked, ${planSites.length} site(s): ${planSites.join(", ") || "none"})`,
+    APP_SRC.length >= 90 && planSites.length === 1 && planSites[0] === DOOR_FILE);
+  const PLAN_READER_FILES = [
+    "domain/review.ts",
+    "features/dashboard/Dashboard.tsx",
+    "features/player/PlayerOS.tsx",
+  ];
+  const planReadersCallDoor = PLAN_READER_FILES.map((f) => [f, /plannedSessions\(/.test(readFileSync(f, "utf8"))]);
+  ok(`every reader that reaches for the planned sessions calls the door rather than spelling the predicate (${planReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+    PLAN_READER_FILES.length === 3 && planReadersCallDoor.every(([, v]) => v));
+  // The plant runs the predicate both ways: a re-inlined lookup must be flagged, and a lookup over
+  // a different status must not be — a reader that flagged every `status` would pass the clause
+  // above while accusing every status check in the app.
+  const plantedPlan = "const next = sessions.find((s) => s.status === \"planned\");";
+  const plantedOtherStatus = "const live = sessions.find((s) => s.status === \"live\");";
+  ok(`the planned-lookup reader, planted both ways, flags a re-inlined planned predicate and accuses a lookup over another status (${plansFor(plantedPlan)} of 1 flagged, ${plansFor(plantedOtherStatus)} of 0 flagged)`,
+    plansFor(plantedPlan) === 1 && plansFor(plantedOtherStatus) === 0);
+  // And the value: the door returns the planned sessions and nothing else, in order.
+  const doorInput2 = [mkSession("a", 30, "completed"), mkSession("b", 20, "planned"), mkSession("c", 60, "planned"), mkSession("d", 90, "missed")];
+  const doorPlanned = plannedOf(doorInput2);
+  ok(`the door returns the planned sessions and nothing else, in the order given (${doorPlanned.length} returned, ids ${doorPlanned.map((s) => s.id).join(" then ")} from a mix of completed/planned/missed)`,
+    doorPlanned.length === 2 && doorPlanned[0].id === "b" && doorPlanned[1].id === "c");
 }
 
 await server.close();

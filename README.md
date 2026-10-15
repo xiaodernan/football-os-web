@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M368 (a few numbers in that range
+Work ships one milestone per commit and is currently at M374 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7048,6 +7048,36 @@ block** (**25/26** — the clause names it), the reader made to skip the "is it 
 
 Measured: `proof-coverage` **26/26** (24 before this unit, +2); `tsc --noEmit` clean; full suite
 reported below.
+
+### M374 — the planned-session lookup had three hand-written copies, and two of them were the same `.find`
+
+M347 retired "completed" as a per-reader computation and M368 welded the record's stale charges to
+the ratchet; this unit closes the sibling on the same field. `buildReview` in `domain/review.ts`, the
+dashboard's "next session" and the player OS's training panel each reached for `s.status === "planned"`
+and each wrote the predicate again — a `.filter` in the review and the training panel, and a `.find` in
+the dashboard and the player OS's Overview. Byte-identical, so the same drift risk: a fourth place
+could spell it and disagree, and the two `.find`s only agreed about *which* session they meant by
+accident of array order.
+
+`plannedSessions(sessions)` in `domain/training.ts` is the definition now — the filter — and the two
+`.find` sites read `plannedSessions(x)[0]`, which is exactly the first planned session the `.find`
+returned. All four readers call the door; the literal survives in exactly one place, the door's own
+body, and the buildSession assignment plus the sweepOverdue guard are the definition and the
+transition, not a query, so they are not the lookup.
+
+**The seam, charged both ways.** `proof-training`'s section 13 counts the `.status === "planned"`
+predicate across the walked tree and asserts it lives in exactly one file — the door — and that every
+reader that reaches for the planned sessions calls `plannedSessions(` rather than spelling the
+predicate; a re-inlined lookup reddens, a lookup over another status does not (the plant runs the
+predicate both ways). And the value: the door returns the planned sessions and nothing else, in the
+order given.
+
+**What the gauge says.** `proof-training` **52/52** (its prior 48 across the existing sections, +4 for
+the new clause group); `tsc --noEmit` clean. No display string and no copy changed.
+
+**Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
+for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
+reflects the latest section this file actually carries.
 
 ### M336 — the data room's match count is the domain's count, not a sum the page halves
 
