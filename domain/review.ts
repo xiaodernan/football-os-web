@@ -1,6 +1,6 @@
 import type { Attributes, Goal, TrainingSession } from "./types";
 import type { RowText } from "./rowText";
-import { weakestAttributes } from "./attributes";
+import { weakestAttributes, byDeltaDescThenKey } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions, plannedSessions } from "./training";
@@ -131,7 +131,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const attributeGains: AttributeGain[] = [...gainMap.entries()]
     .map(([key, delta]) => ({ key, delta: round1(delta) }))
     .filter((g) => g.delta > 0)
-    .sort((a, b) => b.delta - a.delta || a.key.localeCompare(b.key));
+    .sort(byDeltaDescThenKey);
 
   const goalsDone = input.goals.filter((g) => g.done).length;
   const goalsTotal = input.goals.length;

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M375 (a few numbers in that range
+Work ships one milestone per commit and is currently at M376 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M376 — the delta-then-key comparator was hand-written twice, and equal deltas ordered by whoever wrote them
+
+M347 retired "completed", M374 retired "planned", M375 retired the lesson-by-id find — each a byte-identical predicate spelled in two or three readers. This unit closes the same family on the comparators field: the scout report's attribute edges (`domain/scouting.ts`) and the weekly review's attribute-gains table (`domain/review.ts`) each sorted with `(a, b) => b.delta - a.delta || a.key.localeCompare(b.key)`. Byte-identical, so the same drift risk — change one reader's tiebreak and the two lists disagree on equal deltas, and a locale's sort implementation is not the contract.
+
+`byDeltaDescThenKey(a, b)` in `domain/attributes.ts` (next to `byOverall`) is the comparator now. Both readers call the door; the literal survives in exactly one place, the door's own body.
+
+**The seam, charged both ways.** proof-training's new clause (section 14) counts `b.delta - a.delta || a.key.localeCompare(b.key)` across the app and asserts the only site is the attributes domain's door; it then asserts both readers call `byDeltaDescThenKey`, plants a re-inlined comparator (flagged) and a different tiebreak `b.to - a.to` (not flagged), and checks the door returns descending delta with key-ascending ties. The file passes 56/56.
+
+**Still outstanding.** A pure descending `b.delta - a.delta` (no key tiebreak) is still hand-written twice inside `domain/scouting.ts` (the category-edge and template-edge sorts) — a different contract (those lists have no stable key to break ties on), so it is not this door; the next unit that wants a `byDeltaDesc` door can pick it up.
 
 ### M375 — the lesson-by-id lookup had three hand-written copies, and the catalogue is the constant
 

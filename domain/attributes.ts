@@ -161,3 +161,13 @@ export function strongestAttributes(attrs: Attributes, n = 3): { key: string; va
 export function byOverall(a: { overall: number }, b: { overall: number }): number {
   return b.overall - a.overall;
 }
+
+/** Best delta first; ties broken by key ascending so two equal deltas order the same way
+ *  everywhere (locale-stable, not sort-implementation-stable). Two readers hand-wrote the
+ *  identical `(a, b) => b.delta - a.delta || a.key.localeCompare(b.key)` — the scout report's
+ *  attribute edges and the weekly review's attribute-gains table — and the same drift risk as
+ *  the "completed"/"planned" lookups M347/M374 retired: one reader changes its tiebreak and the
+ *  two lists disagree on equal deltas. This is the definition now. */
+export function byDeltaDescThenKey(a: { delta: number; key: string }, b: { delta: number; key: string }): number {
+  return b.delta - a.delta || a.key.localeCompare(b.key);
+}

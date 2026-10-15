@@ -547,6 +547,44 @@ else {
   const doorPlanned = plannedOf(doorInput2);
   ok(`the door returns the planned sessions and nothing else, in the order given (${doorPlanned.length} returned, ids ${doorPlanned.map((s) => s.id).join(" then ")} from a mix of completed/planned/missed)`,
     doorPlanned.length === 2 && doorPlanned[0].id === "b" && doorPlanned[1].id === "c");
+
+  // ---- 14. the delta-then-key comparator is written once, and every reader calls the door ----
+  // M376: "sort by descending delta, ties broken by key" was hand-written twice — the scout
+  // report's attribute edges (domain/scouting.ts) and the weekly review's attribute-gains table
+  // (domain/review.ts). Byte-identical comparator, so the same drift risk the "completed"/"planned"
+  // lookups M347/M374 retired: one reader changes its tiebreak and the two lists order differently
+  // for equal deltas. `byDeltaDescThenKey` in the attributes domain is the definition now. Charged
+  // both ways: the comparator is written in exactly one place, and every reader calls the door.
+  const { byDeltaDescThenKey: byDeltaOf } = AT;
+  const DELTA_COMPARATOR = /b\.delta - a\.delta \|\| a\.key\.localeCompare\(b\.key\)/;
+  const deltaSites = APP_SRC.filter((f) => DELTA_COMPARATOR.test(readFileSync(f, "utf8")));
+  ok(`the delta-then-key comparator is written in exactly one place, and it is the attributes domain's door (${APP_SRC.length} app files walked, ${deltaSites.length} site(s): ${deltaSites.join(", ") || "none"})`,
+    APP_SRC.length >= 90 && deltaSites.length === 1 && deltaSites[0] === "domain/attributes.ts");
+  const DELTA_READER_FILES = [
+    "domain/scouting.ts",
+    "domain/review.ts",
+  ];
+  const deltaReadersCallDoor = DELTA_READER_FILES.map((f) => [f, /byDeltaDescThenKey\b/.test(readFileSync(f, "utf8"))]);
+  ok(`every reader that sorts by descending delta then key calls the door rather than spelling the comparator (${deltaReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+    DELTA_READER_FILES.length === 2 && deltaReadersCallDoor.every(([, v]) => v));
+  // The plant runs the predicate both ways: a re-inlined comparator must be flagged, and a
+  // comparator with a different tiebreak must not be — a reader that flagged every `delta - ` sort
+  // would pass the clause above while accusing every descending-delta sort in the app.
+  const plantedDelta = "const sorted = list.sort((a, b) => b.delta - a.delta || a.key.localeCompare(b.key));";
+  const plantedOtherTie = "const sorted = list.sort((a, b) => b.delta - a.delta || b.to - a.to);";
+  ok(`the delta comparator reader, planted both ways, flags a re-inlined delta-then-key comparator and accuses a comparator with a different tiebreak (${DELTA_COMPARATOR.test(plantedDelta)} of 1 flagged, ${DELTA_COMPARATOR.test(plantedOtherTie)} of 0 flagged)`,
+    DELTA_COMPARATOR.test(plantedDelta) === true && DELTA_COMPARATOR.test(plantedOtherTie) === false);
+  // And the value: descending by delta, ties broken by key ascending — the same contract the two
+  // call sites signed, now owned in one place.
+  const deltaItems = [
+    { key: "beta", delta: 5 },
+    { key: "alpha", delta: 5 },
+    { key: "gamma", delta: 2 },
+    { key: "delta", delta: 9 },
+  ];
+  const deltaSorted = [...deltaItems].sort(byDeltaOf);
+  ok(`the door orders by descending delta, ties broken by key ascending (${deltaSorted.map((x) => `${x.key}:${x.delta}`).join(" ")})`,
+    deltaSorted.map((x) => `${x.key}:${x.delta}`).join(" ") === "delta:9 alpha:5 beta:5 gamma:2");
 }
 
 await server.close();

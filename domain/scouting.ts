@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -152,7 +152,7 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
   const edges: TemplateEdge[] = Object.keys(real)
     .filter((k) => typeof template[k] === "number")
     .map((k) => ({ key: k, value: real[k], template: template[k], delta: real[k] - template[k] }))
-    .sort((a, b) => b.delta - a.delta || a.key.localeCompare(b.key));
+    .sort(byDeltaDescThenKey);
 
   const strengths = edges.filter((e) => e.delta > 0).slice(0, top);
   const concerns = [...edges].reverse().filter((e) => e.delta < 0).slice(0, top).reverse();
