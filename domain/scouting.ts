@@ -4,7 +4,7 @@ import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
 import type { RowText } from "./rowText";
-import { clamp } from "@/lib/utils";
+import { clamp, fmt2 } from "@/lib/utils";
 
 // Scouting model (spec §28). Deliberately built only from fields the dataset
 // actually provides (overall, potential, value, age, archetype, foot) — it never
@@ -179,7 +179,7 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
     concerns,
     headline,
     evidence: [
-      { key: "sc.out.ev.compare", vars: { group: p.positionGroup, skill: skill.toFixed(2) } },
+      { key: "sc.out.ev.compare", vars: { group: p.positionGroup, skill: fmt2(skill) } },
       strengths.length
         ? { key: "sc.out.ev.above", vars: { focus: strengths.slice(0, 3).map((s) => s.key).join(",") } }
         : { key: "sc.out.ev.noneAbove" },

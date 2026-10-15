@@ -35,7 +35,7 @@ import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { clamp, cn, pctOf } from "@/lib/utils";
+import { clamp, cn, pctOf, fmt2 } from "@/lib/utils";
 
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -406,7 +406,7 @@ export function ClubDetail({ id }: { id: string }) {
                 <Ratio label={t("data.attack")} value={mine.attack} goodHigh />
                 <Ratio label={t("det.analytics.ratioDefence")} value={mine.defence} />
                 <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("det.analytics.ppg")}</div><div className="font-mono text-sm">{mine.ppg.toFixed(2)}</div></div>
+                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("det.analytics.ppg")}</div><div className="font-mono text-sm">{fmt2(mine.ppg)}</div></div>
                   <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("det.analytics.cleanSheets")}</div><div className="font-mono text-sm">{mine.cleanSheets}</div></div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -416,7 +416,7 @@ export function ClubDetail({ id }: { id: string }) {
                 {preview && (
                   <div className="rounded-md border bg-card/40 px-3 py-2 text-xs">
                     <span className="text-muted-foreground">{t("det.analytics.nextUp", { club: preview.oppName })} </span>
-                    <span className="font-mono">{preview.us.toFixed(2)}–{preview.them.toFixed(2)}</span>
+                    <span className="font-mono">{fmt2(preview.us)}–{fmt2(preview.them)}</span>
                   </div>
                 )}
                 <p className="text-[11px] text-muted-foreground">{t("det.analytics.ratioNote")}</p>
@@ -440,7 +440,7 @@ function Ratio({ label, value, goodHigh = false }: { label: string; value: numbe
     <div>
       <div className="flex justify-between text-[11px]">
         <span className="text-muted-foreground">{label}</span>
-        <span className={cn("font-mono", good ? "text-success" : "text-destructive")}>{value.toFixed(2)}</span>
+        <span className={cn("font-mono", good ? "text-success" : "text-destructive")}>{fmt2(value)}</span>
       </div>
       <div className="relative mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
         <div className={cn("h-full", good ? "bg-success" : "bg-destructive")} style={{ width: `${pct}%` }} />
@@ -533,7 +533,7 @@ export function MatchDetail({ id }: { id: string }) {
       const facts: RowText[] = [
         { key: "ai.qf.matchup", vars: { home: home.name, away: away.name, comp: comp?.name ?? "" } },
         sim
-          ? { key: "ai.qf.projection", vars: { score: `${sim.homeGoals}–${sim.awayGoals}`, xgH: sim.stats.home.xg.toFixed(2), xgA: sim.stats.away.xg.toFixed(2) } }
+          ? { key: "ai.qf.projection", vars: { score: `${sim.homeGoals}–${sim.awayGoals}`, xgH: fmt2(sim.stats.home.xg), xgA: fmt2(sim.stats.away.xg) } }
           : { key: "ai.qf.noSim" },
         m.status === "SCHEDULED"
           ? { key: "ai.qf.kickoff", vars: { when: fmtDateTime(locale, m.kickoff) } }
@@ -632,7 +632,7 @@ function StatCompare({ stats, home, away, ratings }: { stats: { home: MatchStats
     { labelKey: "ms.possession", h: stats.home.possession, a: stats.away.possession, fmt: (n) => `${Math.round(n)}%` },
     { labelKey: "ms.shots", h: stats.home.shots, a: stats.away.shots },
     { labelKey: "ms.onTarget", h: stats.home.onTarget, a: stats.away.onTarget },
-    { labelKey: "ms.xg", h: stats.home.xg, a: stats.away.xg, fmt: (n) => n.toFixed(2) },
+    { labelKey: "ms.xg", h: stats.home.xg, a: stats.away.xg, fmt: (n) => fmt2(n) },
     { labelKey: "ms.passes", h: stats.home.passes, a: stats.away.passes },
     { labelKey: "ms.passAcc", h: stats.home.passAcc, a: stats.away.passAcc, fmt: (n) => `${Math.round(n)}%` },
     { labelKey: "ms.corners", h: stats.home.corners, a: stats.away.corners },

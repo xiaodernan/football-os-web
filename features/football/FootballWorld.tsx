@@ -23,7 +23,7 @@ import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadg
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn, pctLabel } from "@/lib/utils";
+import { cn, pctLabel, fmt2 } from "@/lib/utils";
 import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
@@ -133,8 +133,8 @@ function MatchRow({ m }: { m: Match }) {
           <span className="font-mono tabular-nums">
             {fc.homePct} · {fc.drawPct} · {fc.awayPct}%
           </span>
-          <span>{t("common.xg")} {fc.lambdaHome.toFixed(2)}–{fc.lambdaAway.toFixed(2)}</span>
-          <span>{t("fw.match.total", { n: fc.expectedTotalGoals.toFixed(2) })}</span>
+          <span>{t("common.xg")} {fmt2(fc.lambdaHome)}–{fmt2(fc.lambdaAway)}</span>
+          <span>{t("fw.match.total", { n: fmt2(fc.expectedTotalGoals) })}</span>
           <span>{t("fw.match.likely", { score: fc.mostLikelyScore })}</span>
           <span>{t(fc.sample === 1 ? "fw.match.formOne" : "fw.match.form", { n: fc.sample })}</span>
         </div>

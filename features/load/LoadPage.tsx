@@ -9,7 +9,7 @@ import { DEMO_MODE } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, fmt2 } from "@/lib/utils";
 
 const ZONE_BANNER_TONE: Record<LoadZone, string> = {
   none: "border-border bg-secondary/30 text-muted-foreground",
@@ -88,18 +88,18 @@ export function LoadPage() {
           <div className={cn("rounded-xl border px-4 py-3", ZONE_BANNER_TONE[load.zone])}>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-semibold uppercase tracking-widest">{rowLine(ZONE_LABEL[load.zone], t)}</span>
-              <span className="font-mono text-sm">{t("ld.acwr")} {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
+              <span className="font-mono text-sm">{t("ld.acwr")} {load.acwr == null ? "—" : fmt2(load.acwr)}</span>
             </div>
             <p className="mt-1 text-sm">{rowLine(load.advice, t)}</p>
           </div>
 
           {/* stats */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-            <StatTile label={t("ld.acwr")} value={load.acwr == null ? "—" : load.acwr.toFixed(2)} tone={ACWR_TONE(load.zone)} sub={t("ld.acwrSub")} />
+            <StatTile label={t("ld.acwr")} value={load.acwr == null ? "—" : fmt2(load.acwr)} tone={ACWR_TONE(load.zone)} sub={t("ld.acwrSub")} />
             <StatTile label={t("ld.weekLoad")} value={load.weekLoad} sub="AU · 7d" />
             <StatTile label={t("ld.acute")} value={load.acute} sub={`AU · ${t("ld.perDay")}`} />
             <StatTile label={t("ld.chronic")} value={load.chronic} sub={`AU · ${t("ld.perDay")}`} />
-            <StatTile label={t("ld.monotony")} value={load.monotony == null ? "—" : load.monotony.toFixed(2)} sub={load.strain == null ? t("ld.needWeeks") : `${t("ld.strain")} ${load.strain}`} />
+            <StatTile label={t("ld.monotony")} value={load.monotony == null ? "—" : fmt2(load.monotony)} sub={load.strain == null ? t("ld.needWeeks") : `${t("ld.strain")} ${load.strain}`} />
             <StatTile label={t("ld.sessions")} value={load.totalSessions} sub={`${load.durationMin} ${t("ld.minutesUnit")}`} />
           </div>
 

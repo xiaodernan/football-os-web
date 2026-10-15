@@ -1,5 +1,5 @@
 import { makeRng, rngInt, rngFloat, weightedPick, hashString } from "@/lib/rng";
-import { clamp } from "@/lib/utils";
+import { clamp, fmt2 } from "@/lib/utils";
 import type { MatchEvent, MatchEventType, ShotType } from "./types";
 import type { RowText } from "./rowText";
 
@@ -144,7 +144,7 @@ export function simulateMatch(input: SimInput): SimResult {
         type: "GOAL",
         side: isHome ? "home" : "away",
         player: scorer,
-        detail: { key: "sim.ev.goal", vars: { xg: xg.toFixed(2), shot: shotType(rng, xg) } },
+        detail: { key: "sim.ev.goal", vars: { xg: fmt2(xg), shot: shotType(rng, xg) } },
       });
     } else if (rng() < 0.4) {
       events.push({ minute: c.minute, type: rng() < 0.5 ? "SAVE" : "SHOT", side: isHome ? "home" : "away", player: names[rngInt(rng, 0, names.length - 1)] });
@@ -166,7 +166,7 @@ export function simulateMatch(input: SimInput): SimResult {
     possession: Math.round(possH),
     shots: hShots,
     onTarget: hOn,
-    xg: +hxg.toFixed(2),
+    xg: +fmt2(hxg),
     passes: passesH,
     passAcc: Math.round(78 + mid + rngInt(rng, -4, 6)),
     tackles: rngInt(rng, 10, 22),
@@ -181,7 +181,7 @@ export function simulateMatch(input: SimInput): SimResult {
     possession: 100 - Math.round(possH),
     shots: aShots,
     onTarget: aOn,
-    xg: +axg.toFixed(2),
+    xg: +fmt2(axg),
     passes: Math.max(120, passesA),
     passAcc: Math.round(78 - mid + rngInt(rng, -5, 5)),
     tackles: rngInt(rng, 10, 22),
@@ -199,7 +199,7 @@ export function simulateMatch(input: SimInput): SimResult {
   // and the midfield line is one of three keys rather than a ternary of three sentences.
   const summary: RowText[] = [
     { key: "sim.sum.score", vars: { home: home.name, hg, ag, away: away.name } },
-    { key: "sim.sum.xg", vars: { hxg: hxg.toFixed(2), axg: axg.toFixed(2), hp: Math.round(possH), ap: 100 - Math.round(possH) } },
+    { key: "sim.sum.xg", vars: { hxg: fmt2(hxg), axg: fmt2(axg), hp: Math.round(possH), ap: 100 - Math.round(possH) } },
     mid > 1
       ? { key: "sim.sum.midHome", vars: { team: home.name } }
       : mid < -1
@@ -243,6 +243,6 @@ function buildRatings(names: string[], goals: number, xg: number, rng: () => num
     let rating = 6.3 + rngFloat(rng, -0.6, 0.9) + (isHome ? 0.15 : 0) + (xg / 3) * 0.3;
     // goalscorers stand out
     if (i < goals) rating += 0.9;
-    return { player, rating: +clamp(rating, 5.2, 9.6).toFixed(2) };
+    return { player, rating: +fmt2(clamp(rating, 5.2, 9.6)) };
   });
 }

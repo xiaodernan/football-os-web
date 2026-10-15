@@ -11,7 +11,7 @@
 // regeneration and a simulated league champion.
 
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
-import { clamp, indexById } from "@/lib/utils";
+import { clamp, indexById, fmt2 } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
 import { POSITION_BY_GROUP, POSITION_GROUPS } from "@/domain/attributes";
 import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
@@ -248,6 +248,6 @@ export function runWorld(base: WorldInput, seasonsElapsed: number): WorldSnapsho
 }
 
 export function formatMarket(v: number): string {
-  if (v >= 1_000_000_000) return `€${(v / 1_000_000_000).toFixed(2)}B`;
+  if (v >= 1_000_000_000) return `€${fmt2((v / 1_000_000_000))}B`;
   return `€${Math.round(v / 1_000_000)}M`;
 }

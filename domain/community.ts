@@ -1,5 +1,5 @@
 import { makeRng, rngInt, pick } from "@/lib/rng";
-import { pct } from "@/lib/utils";
+import { pct, fmt2 } from "@/lib/utils";
 import { asRowText, type RowText } from "./rowText";
 import { footballProvider, getClub, getCompetition, newsFeed } from "@/data/footballService";
 
@@ -204,7 +204,7 @@ export function buildStarters(input: StarterInput, limit = 3): StarterDraft[] {
       tag: "Tactics",
       title: {
         key: "comm.starter.careerTitle",
-        vars: { club: c.clubName, won: c.won, drawn: c.drawn, lost: c.lost, ppg: c.pointsPerGame.toFixed(2) },
+        vars: { club: c.clubName, won: c.won, drawn: c.drawn, lost: c.lost, ppg: fmt2(c.pointsPerGame) },
       },
       body: {
         key: "comm.starter.careerBody",
@@ -212,7 +212,7 @@ export function buildStarters(input: StarterInput, limit = 3): StarterDraft[] {
       },
       evidence: [
         { key: "comm.starter.evRecord", vars: { won: c.won, drawn: c.drawn, lost: c.lost } },
-        { key: "comm.starter.evPpg", vars: { n: c.pointsPerGame.toFixed(2) } },
+        { key: "comm.starter.evPpg", vars: { n: fmt2(c.pointsPerGame) } },
         { key: "comm.starter.evTable", vars: { position: c.position, count: c.clubCount } },
         { key: "comm.starter.evRemaining", vars: { n: c.gamesRemaining } },
       ],

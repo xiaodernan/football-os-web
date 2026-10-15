@@ -25,6 +25,7 @@ import {
   formatValue,
   type SearchResult,
 } from "@/data/footballService";
+import { fmt2 } from "@/lib/utils";
 
 export interface EvidenceFact {
   /** Both halves are rows. A chip word the app chooses ("Standings") is a keyed row; the
@@ -103,8 +104,8 @@ function clubFacts(clubId: string): EvidenceFact[] {
         label: { key: "ai.lab.nextFixtureModel" },
         text:
           fc.sample === 1
-            ? { key: "ai.fact.poissonClubOne", vars: { home: home?.name ?? "", away: away?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fc.lambdaHome.toFixed(2), la: fc.lambdaAway.toFixed(2), score: fc.mostLikelyScore } }
-            : { key: "ai.fact.poissonClubMany", vars: { n: fc.sample, home: home?.name ?? "", away: away?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fc.lambdaHome.toFixed(2), la: fc.lambdaAway.toFixed(2), score: fc.mostLikelyScore } },
+            ? { key: "ai.fact.poissonClubOne", vars: { home: home?.name ?? "", away: away?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } }
+            : { key: "ai.fact.poissonClubMany", vars: { n: fc.sample, home: home?.name ?? "", away: away?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } },
         to: `/matches/${fixture.id}`,
       });
     }
@@ -189,8 +190,8 @@ function matchFacts(mid: string, locale: Locale): EvidenceFact[] {
       label: { key: "ai.lab.model" },
       text:
         fc.sample === 1
-          ? { key: "ai.fact.poissonMatchOne", vars: { home: h?.name ?? "", away: a?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fc.lambdaHome.toFixed(2), la: fc.lambdaAway.toFixed(2), score: fc.mostLikelyScore } }
-          : { key: "ai.fact.poissonMatchMany", vars: { n: fc.sample, home: h?.name ?? "", away: a?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fc.lambdaHome.toFixed(2), la: fc.lambdaAway.toFixed(2), score: fc.mostLikelyScore } },
+          ? { key: "ai.fact.poissonMatchOne", vars: { home: h?.name ?? "", away: a?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } }
+          : { key: "ai.fact.poissonMatchMany", vars: { n: fc.sample, home: h?.name ?? "", away: a?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } },
       to: `/matches/${m.id}`,
     });
   }

@@ -5,7 +5,7 @@ import { footballProvider, getClub, getCompetition } from "@/data/footballServic
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
-import { cn, clamp } from "@/lib/utils";
+import { cn, clamp, fmt2 } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
 // raw-UI scan reads every string literal there as a child text node — four hits on the
@@ -49,7 +49,7 @@ function RatingBar({ label, value, better }: { label: string; value: number; bet
       <span className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
         <span className={cn("absolute inset-y-0 left-0 rounded-full", tone)} style={{ width: `${scale * 100}%` }} />
       </span>
-      <span className="w-8 shrink-0 text-right font-mono tabular-nums">{value.toFixed(2)}</span>
+      <span className="w-8 shrink-0 text-right font-mono tabular-nums">{fmt2(value)}</span>
     </div>
   );
 }
@@ -128,9 +128,9 @@ export function DataRoom() {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label={t("data.bestForm")} value={lead.bestForm ? getClub(lead.bestForm.clubId)?.short ?? "–" : "–"} sub={lead.bestForm ? t("data.sub.formPts", { n: formPoints(lead.bestForm) }) : undefined} tone="up" />
-        <StatTile label={t("data.topAttack")} value={lead.strongestAttack ? getClub(lead.strongestAttack.clubId)?.short ?? "–" : "–"} sub={lead.strongestAttack ? t("data.sub.ratingAvg", { n: lead.strongestAttack.attack.toFixed(2) }) : undefined} />
-        <StatTile label={t("data.topDefence")} value={lead.bestDefence ? getClub(lead.bestDefence.clubId)?.short ?? "–" : "–"} sub={lead.bestDefence ? t("data.sub.ratingAvg", { n: lead.bestDefence.defence.toFixed(2) }) : undefined} />
-        <StatTile label={t("data.topScoring")} value={lead.highestScoring ? `${lead.highestScoring.gfAvg.toFixed(2)}` : "–"} sub={lead.highestScoring ? t("data.sub.goalsPerGame", { club: getClub(lead.highestScoring.clubId)?.short ?? "" }) : undefined} />
+        <StatTile label={t("data.topAttack")} value={lead.strongestAttack ? getClub(lead.strongestAttack.clubId)?.short ?? "–" : "–"} sub={lead.strongestAttack ? t("data.sub.ratingAvg", { n: fmt2(lead.strongestAttack.attack) }) : undefined} />
+        <StatTile label={t("data.topDefence")} value={lead.bestDefence ? getClub(lead.bestDefence.clubId)?.short ?? "–" : "–"} sub={lead.bestDefence ? t("data.sub.ratingAvg", { n: fmt2(lead.bestDefence.defence) }) : undefined} />
+        <StatTile label={t("data.topScoring")} value={lead.highestScoring ? `${fmt2(lead.highestScoring.gfAvg)}` : "–"} sub={lead.highestScoring ? t("data.sub.goalsPerGame", { club: getClub(lead.highestScoring.clubId)?.short ?? "" }) : undefined} />
       </div>
 
       {!metrics.length ? (
@@ -268,8 +268,8 @@ export function DataRoom() {
                     <span><span className="font-mono text-foreground">{pct.home}%</span> {h?.short}</span>
                     <span><span className="font-mono text-foreground">{pct.draw}%</span> {t("data.draw")}</span>
                     <span><span className="font-mono text-foreground">{pct.away}%</span> {a?.short}</span>
-                    <span>{t("common.xg")} {odds.lambdaHome.toFixed(2)}–{odds.lambdaAway.toFixed(2)}</span>
-                    <span>{t("data.totalGoals", { n: odds.expectedTotalGoals.toFixed(2) })}</span>
+                    <span>{t("common.xg")} {fmt2(odds.lambdaHome)}–{fmt2(odds.lambdaAway)}</span>
+                    <span>{t("data.totalGoals", { n: fmt2(odds.expectedTotalGoals) })}</span>
                     <span>{t("data.mostLikely", { score: odds.mostLikelyScore, pct: Math.round(odds.mostLikelyPct * 100) })}</span>
                     <span>{t(sample === 1 ? "data.sampleOne" : "data.sampleMany", { n: sample })}</span>
                   </div>

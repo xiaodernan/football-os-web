@@ -106,3 +106,20 @@ export const epochMs = (iso?: string): number => {
 // to label yesterday. A future "just use one helper" that folds the divide into the multiply would
 // re-introduce M216's bug — an elapsed-block count that reads tomorrow as today.
 export const DAY_MS = 86400000;
+
+// The app's two-decimal display-string door. Seventy-seven sites spelled `.toFixed(2)` inline —
+// monospace cells, i18n vars, template segments and Fact values across twenty-two files — one
+// display convention that parts company the moment a single site gains a locale separator or a
+// third decimal. Identical today, so no figure a reader sees moves. NOTE this door is NOT the
+// round2 above: round2 returns a NUMBER re-rounded for arithmetic or storage, while fmt2 returns
+// the fixed-point STRING a reader is shown — and the two even disagree on where a value lands
+// (fmt2(2.675) is "2.67" off the binary value, round2(2.675) is 2.68 off a multiplied Math.round),
+// so a swap moves figures, not just types; `+fmt2(x)` is exactly the `+x.toFixed(2)` the unary-plus
+// sites already spelled and stays where a number is wanted. Four families remain inline on purpose
+// and the census in proof-fmt2 counts exactly them: `x?.toFixed(2)` optional cells keep their
+// undefined short-circuit before a `?? "—"` fallback (five), a receiver behind `?.` short-circuits
+// the whole call to undefined and fmt2(undefined) would throw (Data Room league average), the two
+// `parseFloat((…).toFixed(2))` seeds round back to a number, and the two padded sign cells —
+// career form and FilmRoom scan trend — glue a `+` in front of a fixed-width string in the exact
+// form proof-signed pins by its literal.
+export const fmt2 = (v: number): string => v.toFixed(2);

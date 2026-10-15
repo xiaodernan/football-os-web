@@ -10,7 +10,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
-import { clamp, cn, pctLabel, pctOf } from "@/lib/utils";
+import { clamp, cn, pctLabel, pctOf, fmt2 } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 
 interface Tactics {
@@ -176,7 +176,7 @@ const rows = [
       { name: t("ms.possession"), h: Math.round(s.home.possession), a: Math.round(s.away.possession), unit: "%" },
       { name: t("ms.shots"), h: s.home.shots, a: s.away.shots, unit: "" },
       { name: t("ms.onTarget"), h: s.home.onTarget, a: s.away.onTarget, unit: "" },
-      { name: t("common.xg"), h: +s.home.xg.toFixed(2), a: +s.away.xg.toFixed(2), unit: "" },
+      { name: t("common.xg"), h: +fmt2(s.home.xg), a: +fmt2(s.away.xg), unit: "" },
       { name: t("ms.corners"), h: s.home.corners, a: s.away.corners, unit: "" },
       { name: t("sim.cards"), h: s.home.yellows + s.home.reds * 2, a: s.away.yellows + s.away.reds * 2, unit: "" },
     ];
@@ -228,8 +228,8 @@ function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgGoals")}</div><div className="font-mono text-sm">{prob.avgHomeGoals.toFixed(2)}–{prob.avgAwayGoals.toFixed(2)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgXg")}</div><div className="font-mono text-sm">{prob.avgHomeXg.toFixed(2)}–{prob.avgAwayXg.toFixed(2)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgGoals")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeGoals)}–{fmt2(prob.avgAwayGoals)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgXg")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeXg)}–{fmt2(prob.avgAwayXg)}</div></div>
         <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.bothScore")}</div><div className="font-mono text-sm">{pctLabel(prob.bttsPct)}</div></div>
         <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.over25")}</div><div className="font-mono text-sm">{pctLabel(prob.over25Pct)}</div></div>
       </div>

@@ -6,7 +6,7 @@ import {
   byOverall,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
-import { indexById, round2 } from "@/lib/utils";
+import { indexById, round2, fmt2 } from "@/lib/utils";
 import { byKickoff } from "@/domain/analytics";
 import type {
   Club,
@@ -401,7 +401,7 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
   for (let i = 0; i < score.h; i++) {
     const minute = rngInt(rng, 1, 90);
     const shotType = pick(rng, shotTypes);
-    const xG = (rngFloat(rng, 0.05, 0.85)).toFixed(2);
+    const xG = fmt2((rngFloat(rng, 0.05, 0.85)));
     events.push({
       minute,
       type: "GOAL",
@@ -414,7 +414,7 @@ function generateMatchEvents(home: Club, away: Club, score: { h: number; a: numb
   for (let i = 0; i < score.a; i++) {
     const minute = rngInt(rng, 1, 90);
     const shotType = pick(rng, shotTypes);
-    const xG = (rngFloat(rng, 0.05, 0.85)).toFixed(2);
+    const xG = fmt2((rngFloat(rng, 0.05, 0.85)));
     events.push({
       minute,
       type: "GOAL",

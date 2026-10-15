@@ -33,7 +33,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
-import { cn, pctLabel, signed } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
+import { cn, pctLabel, signed, fmt2 } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
 import { positionLabel, rowLine } from "@/domain/rowText";
 
@@ -166,8 +166,8 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
               <div className="text-sm">{last.opponentName}</div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <Fact label={t("mgr.xgUs")} value={last.ourXg.toFixed(2)} />
-              <Fact label={t("mgr.xgThem")} value={last.oppXg.toFixed(2)} />
+              <Fact label={t("mgr.xgUs")} value={fmt2(last.ourXg)} />
+              <Fact label={t("mgr.xgThem")} value={fmt2(last.oppXg)} />
               <Fact label={t("mgr.prizeMoney")} value={formatValue(last.prize)} />
             </div>
             <div className="mt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("mgr.keyMoments")}</div>
@@ -189,7 +189,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
             <Fact label={t("data.attack")} value={Math.round(inp.attack)} />
             <Fact label={t("det.midfield")} value={Math.round(inp.midfield)} />
             <Fact label={t("data.defence")} value={Math.round(inp.defense)} />
-            <Fact label={t("mgr.form")} value={`${careerForm(career).toFixed(2)}`} />
+            <Fact label={t("mgr.form")} value={`${fmt2(careerForm(career))}`} />
           </div>
           <p className="mt-2 text-xs text-muted-foreground">{t("mgr.squadOf", { n: squad.length })}</p>
         </Panel>
@@ -228,7 +228,7 @@ function SeasonSummaryPanel({ career }: { career: CareerState }) {
       <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
         <Fact label={t("mgr.wdl")} value={`${s.won}-${s.drawn}-${s.lost}`} />
         <Fact label={t("mgr.gfGa")} value={`${s.gf}-${s.ga}`} />
-        <Fact label={t("mgr.ppg")} value={s.ppg.toFixed(2)} />
+        <Fact label={t("mgr.ppg")} value={fmt2(s.ppg)} />
         <Fact label={t("mgr.cleanSheets")} value={s.cleanSheets} />
         <Fact label={t("onb.position")} value={`#${s.position}`} />
         <Fact label={t("mgr.prizeWon")} value={formatValue(s.prizeTotal)} />
@@ -396,7 +396,7 @@ function Outlook({ career }: { career: CareerState }) {
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <Fact label={t("mgr.playedTotal")} value={`${o.played} / ${o.totalFixtures}`} />
-            <Fact label={t("mgr.ppgPts")} value={`${o.points} (${o.pointsPerGame.toFixed(2)})`} />
+            <Fact label={t("mgr.ppgPts")} value={`${o.points} (${fmt2(o.pointsPerGame)})`} />
             <Fact label={t("mgr.projectedPts")} value={o.projectedPoints} />
             <Fact label={t("mgr.roundsLeft")} value={o.remaining} />
             <Fact label={t("mgr.projLeader")} value={o.leaderName} />
@@ -412,7 +412,7 @@ function Outlook({ career }: { career: CareerState }) {
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-2">
                     <span>{r.clubName}</span>
-                    <span className="text-[11px] text-muted-foreground">{t("mgr.ppg")} {r.currentPpg.toFixed(2)} · {t("mgr.projWord")} {r.projectedPoints}</span>
+                    <span className="text-[11px] text-muted-foreground">{t("mgr.ppg")} {fmt2(r.currentPpg)} · {t("mgr.projWord")} {r.projectedPoints}</span>
                   </span>
                   <span className={cn("font-mono text-xs", r.beatUsChance >= 0.5 ? "text-destructive" : "text-muted-foreground")}>{pctLabel(r.beatUsChance)}</span>
                 </div>
@@ -518,7 +518,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
               <div><div className="text-xs text-muted-foreground">{t("mgr.draw")}</div><div className="font-mono font-semibold">{pctLabel(odds.drawPct)}</div></div>
               <div><div className="truncate text-xs text-muted-foreground">{p.opponentName} {t("mgr.winWord")}</div><div className="font-mono font-semibold text-info">{pctLabel(theirWin)}</div></div>
             </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">{t("mgr.oddsNote")} {t("mgr.avgGoals")} {odds.avgHomeGoals.toFixed(2)}–{odds.avgAwayGoals.toFixed(2)} · {t("mgr.overWord", { n: 2.5 })} {pctLabel(odds.over25Pct)}.</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">{t("mgr.oddsNote")} {t("mgr.avgGoals")} {fmt2(odds.avgHomeGoals)}–{fmt2(odds.avgAwayGoals)} · {t("mgr.overWord", { n: 2.5 })} {pctLabel(odds.over25Pct)}.</p>
           </Panel>
         )}
       </div>

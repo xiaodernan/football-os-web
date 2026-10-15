@@ -4,7 +4,7 @@ import { weakestAttributes } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions } from "./training";
-import { signed, DAY_MS } from "@/lib/utils";
+import { signed, DAY_MS, fmt2 } from "@/lib/utils";
 
 // A period digest compiled purely from the user's local training log, goals,
 // progress history, academy records and analysed film. Nothing here is invented —
@@ -396,13 +396,13 @@ function buildInsights(a: {
 // rejoined — so each of the three shapes the model can be in is now a row of its own,
 // carrying every figure it names.
 function scanInsight(f: FilmSummary): RowText {
-  const rate = f.scanPerMinute.toFixed(2);
+  const rate = fmt2(f.scanPerMinute);
   const older = f.olderScanRate;
   const newer = f.newerScanRate;
   if (f.scanTrend != null && older != null && newer != null) {
     return {
       key: "rv.ins.scanTrend",
-      vars: { rate, older: older.toFixed(2), newer: newer.toFixed(2), trend: signed(f.scanTrend) },
+      vars: { rate, older: fmt2(older), newer: fmt2(newer), trend: signed(f.scanTrend) },
     };
   }
   return f.clips === 1 ? { key: "rv.ins.scanSecond", vars: { rate } } : { key: "rv.ins.scan", vars: { rate } };
@@ -480,7 +480,7 @@ function buildEvidence(a: {
         ? { key: "rv.ev.filmOne", vars: { min, d } }
         : { key: "rv.ev.filmMany", vars: { n: a.film.clips, min, d } },
     );
-    const rate = a.film.scanPerMinute.toFixed(2);
+    const rate = fmt2(a.film.scanPerMinute);
     e.push(a.film.scanTrend != null ? { key: "rv.ev.scanTrend", vars: { rate, trend: signed(a.film.scanTrend) } } : { key: "rv.ev.scan", vars: { rate } });
   }
   return e;

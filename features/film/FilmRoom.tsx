@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn, pctLabel } from "@/lib/utils";
+import { cn, pctLabel, fmt2 } from "@/lib/utils";
 
 // Film Room (spec §19): the video analysis pipeline as its own pillar. Clips are
 // analysed by the swappable videoProvider (Demo provider runs the same stages over
@@ -309,8 +309,8 @@ export function FilmRoom() {
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.actionsPerMin")}</div><div className="font-mono text-sm">{insights.actionsPerMinute.toFixed(2)}</div></div>
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.scansPerMin")}</div><div className="font-mono text-sm">{insights.scanPerMinute.toFixed(2)}</div></div>
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.actionsPerMin")}</div><div className="font-mono text-sm">{fmt2(insights.actionsPerMinute)}</div></div>
+            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.scansPerMin")}</div><div className="font-mono text-sm">{fmt2(insights.scanPerMinute)}</div></div>
             <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.scanTrend")}</div><div className={cn("font-mono text-sm", insights.scanTrend == null ? "text-muted-foreground" : insights.scanTrend >= 0 ? "text-success" : "text-destructive")}>{insights.scanTrend == null ? "—" : `${insights.scanTrend >= 0 ? "+" : ""}${insights.scanTrend.toFixed(2)}`}</div></div>
             <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.meanConf")}</div><div className="font-mono text-sm">{insights.avgConfidence}%</div></div>
           </div>
@@ -325,7 +325,7 @@ export function FilmRoom() {
                     <div key={k.kind}>
                       <div className="flex justify-between text-xs">
                         <span className={KIND_TONE[k.kind]}>{t(VIDEO_KIND_KEY[k.kind])}</span>
-                        <span className="font-mono text-muted-foreground">{k.perMinute.toFixed(2)} · ×{k.count}</span>
+                        <span className="font-mono text-muted-foreground">{fmt2(k.perMinute)} · ×{k.count}</span>
                       </div>
                       <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
                         <div className="h-full bg-primary" style={{ width: `${Math.max(3, (k.perMinute / max) * 100)}%` }} />

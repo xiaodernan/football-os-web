@@ -7,6 +7,7 @@ import { englishWord } from "@/i18n/format";
 import { buildLoad, zoneKey, type LoadZone } from "@/domain/load";
 import { makeRng, hashString } from "@/lib/rng";
 import { newId } from "@/lib/ids";
+import { fmt2 } from "@/lib/utils";
 
 // ---- Provider abstraction (spec §6, §50, §57) ----
 // The system is never hard-wired to one model. Today we ship a deterministic
@@ -135,7 +136,7 @@ class DeterministicCoachProvider implements CoachProvider {
       diagnosisParts.push(
         load.acwr == null
           ? { key: "coach.diag.loadCautionNoRatio" }
-          : { key: "coach.diag.loadCaution", vars: { acwr: load.acwr.toFixed(2) } },
+          : { key: "coach.diag.loadCaution", vars: { acwr: fmt2(load.acwr) } },
       );
     else if (load && load.zone === "under" && load.weekLoad > 0)
       diagnosisParts.push({ key: "coach.diag.loadUnder", vars: { acwr: load.acwr?.toFixed(2) ?? "—" } });

@@ -13,7 +13,7 @@ import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primi
 import { ProgressLine } from "@/ui/charts";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { cn, signed, DAY_MS, pctOf } from "@/lib/utils";
+import { cn, signed, DAY_MS, pctOf, fmt2 } from "@/lib/utils";
 
 const WINDOWS = [7, 30, 90];
 
@@ -177,7 +177,7 @@ export function ReviewPage() {
               value={review.filmClips || "—"}
               sub={
                 review.filmClips
-                  ? `${t("rv.statFilmMinutes", { n: review.filmMinutes })} · ${review.filmScanRate.toFixed(2)} ${t("rv.scansPerMin")}`
+                  ? `${t("rv.statFilmMinutes", { n: review.filmMinutes })} · ${fmt2(review.filmScanRate)} ${t("rv.scansPerMin")}`
                   : t("rv.noFilm")
               }
             />
@@ -283,7 +283,7 @@ export function ReviewPage() {
                           <div className="flex justify-between text-xs">
                             <span className="capitalize">{t(VIDEO_KIND_KEY[k.kind])}</span>
                             <span className="font-mono text-muted-foreground">
-                              {k.perMinute.toFixed(2)} {t("rv.filmPerMin")} · ×{k.count}
+                              {fmt2(k.perMinute)} {t("rv.filmPerMin")} · ×{k.count}
                             </span>
                           </div>
                           <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">

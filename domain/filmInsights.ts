@@ -6,7 +6,7 @@
 
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
-import { round2, signed } from "@/lib/utils";
+import { round2, signed, fmt2 } from "@/lib/utils";
 
 export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
 
@@ -126,15 +126,15 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
     busiest
       ? {
           key: "fi.ev.busiest",
-          vars: { event: FILM_KIND_KEY[busiest.kind], count: busiest.count, rate: busiest.perMinute.toFixed(2) },
+          vars: { event: FILM_KIND_KEY[busiest.kind], count: busiest.count, rate: fmt2(busiest.perMinute) },
         }
       : { key: "fi.ev.none" },
     scanTrend != null
       ? {
           key: "fi.ev.trend",
           vars: {
-            older: olderScanRate!.toFixed(2),
-            newer: newerScanRate!.toFixed(2),
+            older: fmt2(olderScanRate!),
+            newer: fmt2(newerScanRate!),
             delta: signed(scanTrend),
           },
         }

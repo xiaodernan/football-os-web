@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn, pctOf } from "@/lib/utils";
+import { cn, pctOf, fmt2 } from "@/lib/utils";
 import { useLearnRecords } from "@/lib/hooks";
 import { summarizeLearn } from "@/domain/learn";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -267,7 +267,7 @@ function Coach() {
           >
             <span className="flex items-center gap-1.5">
               <span className="font-semibold uppercase tracking-widest">{rowLine(ZONE_LABEL[load.zone], t)}</span>
-              <span className="font-mono">{t("player.acwr")} {load.acwr == null ? "—" : load.acwr.toFixed(2)}</span>
+              <span className="font-mono">{t("player.acwr")} {load.acwr == null ? "—" : fmt2(load.acwr)}</span>
             </span>
             <span className="text-muted-foreground">{t("player.coachAdapts")}</span>
           </Link>

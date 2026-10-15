@@ -8,7 +8,7 @@ import { formatDate } from "@/i18n/format";
 import type { Locale } from "@/i18n/dictionaries";
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
-import { epochMs } from "@/lib/utils";
+import { epochMs, fmt2 } from "@/lib/utils";
 
 export interface PlayerInput {
   sessionsCompleted: number;
@@ -127,7 +127,7 @@ export function buildFootprint(i: FootprintInput): Footprint {
             m.clubName
               ? { key: m.matches === 1 ? "fp.manager.fixturesOne" : "fp.manager.fixtures", vars: { club: m.clubName, n: m.matches } }
               : { key: m.matches === 1 ? "fp.manager.fixturesNoClubOne" : "fp.manager.fixturesNoClub", vars: { n: m.matches } },
-            m.pointsPerGame != null ? { key: "fp.manager.ppg", vars: { n: m.pointsPerGame.toFixed(2) } } : null,
+            m.pointsPerGame != null ? { key: "fp.manager.ppg", vars: { n: fmt2(m.pointsPerGame) } } : null,
             m.position != null && m.clubCount ? { key: "fp.manager.table", vars: { pos: m.position, total: m.clubCount } } : null,
           ])
         : m.active
@@ -147,8 +147,8 @@ export function buildFootprint(i: FootprintInput): Footprint {
             { key: f.clips === 1 ? "fp.film.clipsOne" : "fp.film.clips", vars: { n: f.clips, min: mins(f.minutes) } },
             f.detections != null && f.scanPerMinute != null
               ? f.avgConfidence
-                ? { key: "fp.film.detectionsConf", vars: { n: f.detections, rate: f.scanPerMinute.toFixed(2), conf: f.avgConfidence } }
-                : { key: "fp.film.detections", vars: { n: f.detections, rate: f.scanPerMinute.toFixed(2) } }
+                ? { key: "fp.film.detectionsConf", vars: { n: f.detections, rate: fmt2(f.scanPerMinute), conf: f.avgConfidence } }
+                : { key: "fp.film.detections", vars: { n: f.detections, rate: fmt2(f.scanPerMinute) } }
               : null,
             f.recurringFocus && f.recurringFocus.length
               ? { key: "fp.film.focus", vars: { foci: f.recurringFocus.map((x) => `${x.key}:${x.clips}`).join(",") } }

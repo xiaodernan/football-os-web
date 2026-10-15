@@ -1,7 +1,7 @@
 import type { RowText } from "./rowText";
 import type { TrainingSession } from "./types";
 import { sessionIntensity } from "./training";
-import { clamp, round2, DAY_MS } from "@/lib/utils";
+import { clamp, round2, DAY_MS, fmt2 } from "@/lib/utils";
 
 // Training-load management built on the same monotony/strain + acute:chronic
 // ratio (ACWR) ideas used in strength & conditioning. Every number is derived
@@ -240,7 +240,7 @@ function buildAdvice(zone: LoadZone, acwr: number | null): RowText {
       ? { key: "ld.ad.none", vars: { days: ACUTE_DAYS } }
       : { key: "ld.ad.noRatio", vars: { days: CHRONIC_DAYS } };
   }
-  const ratio = acwr.toFixed(2);
+  const ratio = fmt2(acwr);
   switch (zone) {
     case "under":
       return { key: "ld.ad.under", vars: { ratio } };
@@ -310,12 +310,12 @@ function buildEvidence(
   // The missing value is its own row rather than a word substituted into a number's
   // place: "ACWR: not enough chronic load" cannot be re-ordered by a translator who has
   // to put the label after the value.
-  e.push(acwr == null ? { key: "ld.ev.acwrNone" } : { key: "ld.ev.acwr", vars: { value: acwr.toFixed(2) } });
+  e.push(acwr == null ? { key: "ld.ev.acwrNone" } : { key: "ld.ev.acwr", vars: { value: fmt2(acwr) } });
   // One definition of "a week that counts" for all three places that need it: the number
   // on this line, the confidence figure and the early-trend caveat. If they disagreed, a
   // reader could be told they have 3 weeks of history and that the ratio is still early.
   e.push({ key: "ld.ev.weeks", vars: { active: activeWeeks, total: totalWeeks } });
-  if (monotony != null) e.push({ key: "ld.ev.monotony", vars: { value: monotony.toFixed(2) } });
+  if (monotony != null) e.push({ key: "ld.ev.monotony", vars: { value: fmt2(monotony) } });
   if (strain != null) e.push({ key: "ld.ev.strain", vars: { value: strain } });
   return e;
 }

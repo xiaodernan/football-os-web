@@ -9,7 +9,7 @@ import type { Mode } from "@/domain/types";
 import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, fmt2 } from "@/lib/utils";
 
 const MODES: Mode[] = ["FAN", "PLAYER", "MANAGER"];
 
@@ -240,5 +240,5 @@ function Line({ k, v }: { k: string; v: string }) {
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / 1024 / 1024).toFixed(2)} MB`;
+  return `${fmt2((n / 1024 / 1024))} MB`;
 }
