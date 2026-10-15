@@ -653,6 +653,55 @@ else {
     pdSorted.map((x) => x.delta).join(",") === "9,5,5,2");
 }
 
+// M380: the nearest-100k rounding `Math.round((base * ageCurve) / 100_000) * 100_000` was spelled
+// inline in both the dynamic world engine's market re-pricing and the seed generator's player pricing
+// — byte-identical, the same drift risk the comparators M376–M378 retired. `roundTo100k` in the
+// attributes domain is the definition now; both callers pass the already-scaled amount.
+{
+  const { roundTo100k: roundTo100kOf } = AT;
+  const walkApp = (dir) => {
+    const out = [];
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.name === "node_modules" || e.name.startsWith(".")) continue;
+      const p = `${dir}/${e.name}`;
+      if (e.isDirectory()) out.push(...walkApp(p));
+      else if (/\.tsx?$/.test(e.name)) out.push(p);
+    }
+    return out;
+  };
+  const APP_SRC = ["domain", "features", "lib", "store", "data", "src", "components"].flatMap(walkApp);
+  const HUNDRED_K = /Math\.round\(.*? \/ 100_000\) \* 100_000/;
+  const hundredKSites = APP_SRC.filter((f) => HUNDRED_K.test(readFileSync(f, "utf8")));
+  ok(`the nearest-100k rounding is written in exactly one place, and it is the attributes domain's door (${APP_SRC.length} app files walked, ${hundredKSites.length} site(s): ${hundredKSites.join(", ") || "none"})`,
+    APP_SRC.length >= 90 && hundredKSites.length === 1 && hundredKSites[0] === "domain/attributes.ts");
+  const HUNDRED_K_READER_FILES = [
+    "domain/worldEngine.ts",
+    "data/footballSeed.ts",
+    "domain/transfers.ts",
+  ];
+  const hundredKReadersCallDoor = HUNDRED_K_READER_FILES.map((f) => [f, /roundTo100k\(/.test(readFileSync(f, "utf8"))]);
+  ok(`every caller that rounds to the nearest 100k calls the door rather than spelling the rounding (${hundredKReadersCallDoor.map(([f, v]) => `${f}: ${v}`).join("; ")})`,
+    HUNDRED_K_READER_FILES.length === 3 && hundredKReadersCallDoor.every(([, v]) => v));
+  // The plant runs the predicate both ways: a re-inlined nearest-100k rounding must be flagged, and a
+  // different scale (nearest 50k) must not be — a reader that flagged any rounding would pass the
+  // clause above while accusing every rounding in the app.
+  const plantedHundredK = "return Math.round((base * ageCurve) / 100_000) * 100_000;";
+  const plantedFiftyK = "return Math.round((base * ageCurve) / 50_000) * 50_000;";
+  ok(`the rounding reader, planted both ways, flags a re-inlined nearest-100k rounding and accuses a nearest-50k one (${HUNDRED_K.test(plantedHundredK)} of 1 flagged, ${HUNDRED_K.test(plantedFiftyK)} of 0 flagged)`,
+    HUNDRED_K.test(plantedHundredK) === true && HUNDRED_K.test(plantedFiftyK) === false);
+  // And the value: round to the nearest 100k, half-up (Math.round behaviour).
+  const rtCases = [
+    [0, 0],
+    [99_999, 100_000],
+    [123_456, 100_000],
+    [150_000, 200_000],
+    [1_234_567, 1_200_000],
+  ];
+  const rtOk = rtCases.every(([inp, out]) => roundTo100kOf(inp) === out);
+  ok(`the door rounds to the nearest 100k on both sides of each boundary (${rtCases.map(([i, o]) => `${i}→${roundTo100kOf(i)}`).join(", ")}; expected ${rtCases.map(([, o]) => o).join(", ")})`,
+    rtOk);
+}
+
 await server.close();
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);

@@ -4,6 +4,7 @@ import {
   overallRating,
   POSITION_BY_GROUP,
   byOverall,
+  roundTo100k,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
 import { clamp, DAY_MS, indexById, round2, fmt2 } from "@/lib/utils";
@@ -207,7 +208,7 @@ function slug(s: string): string {
 function marketValue(overall: number, age: number): number {
   const base = Math.pow(Math.max(0, overall - 45) / 10, 3.1) * 6_000_000;
   const ageCurve = age < 23 ? 1.5 : age < 28 ? 1.3 : age < 31 ? 1.0 : age < 34 ? 0.6 : 0.3;
-  return Math.round((base * ageCurve) / 100_000) * 100_000;
+  return roundTo100k(base * ageCurve);
 }
 
 function makeWorld() {

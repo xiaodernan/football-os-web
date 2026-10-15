@@ -13,7 +13,7 @@
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
 import { clamp, indexById, fmt2, safeDiv } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
-import { POSITION_BY_GROUP, POSITION_GROUPS } from "@/domain/attributes";
+import { POSITION_BY_GROUP, POSITION_GROUPS, roundTo100k } from "@/domain/attributes";
 import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
 
 const BASE_START_YEAR = 2026; // base season is 2026/27
@@ -37,7 +37,7 @@ export function seasonLabel(elapsed: number): string {
 export function marketValue(overall: number, age: number): number {
   const base = Math.pow(Math.max(0, overall - 45) / 10, 3.1) * 6_000_000;
   const ageCurve = age < 23 ? 1.5 : age < 28 ? 1.3 : age < 31 ? 1.0 : age < 34 ? 0.6 : 0.3;
-  return Math.round((base * ageCurve) / 100_000) * 100_000;
+  return roundTo100k(base * ageCurve);
 }
 
 export interface PlayerChange {

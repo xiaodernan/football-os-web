@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M379 (a few numbers in that range
+Work ships one milestone per commit and is currently at M380 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M380 — the nearest-100k rounding was hand-written three times, and a re-priced market could disagree with its own seed
+
+M376–M379 retired four cross-module and one same-module comparator; this unit closes a fifth repeated primitive that is not a comparator — the nearest-100k rounding `Math.round((base * ageCurve) / 100_000) * 100_000`. It was spelled inline in three places: the dynamic world engine's market re-pricing (`domain/worldEngine.ts`), the seed generator's player pricing (`data/footballSeed.ts`), and the transfer board's asking-fee estimate (`domain/transfers.ts:41`, the same form with a `× 1.1` premium, i.e. `roundTo100k(value * 1.1)`). Byte-identical apart from that factor, so the same drift risk the comparators retired — flip one scale and the evolved market and the seeded squad price a player two different ways.
+
+`roundTo100k(v)` in `domain/attributes.ts` (next to the comparator family) is the definition now. All three callers pass the already-scaled amount. The proof's census uses a paren-tolerant regex so it catches the original nested-`(base * ageCurve)` form, not just a flat `v` one — a re-inline of the exact original must go red.
+
+**The seam, charged both ways.** proof-training's new clause (section 17) counts `Math.round(… / 100_000) * 100_000` across the app and asserts the only site is the attributes domain's door; it then asserts all three callers route through `roundTo100k`, plants a re-inlined nearest-100k rounding (flagged) and a nearest-50k one (not flagged), and checks the door rounds half-up on both sides of each 100k boundary. The file passes 68/68.
+
+**Still outstanding.** With the cross-module comparators and the nearest-100k rounding retired, the only hand-written math left is single-occurrence or genuinely different contracts (e.g. `round1`, `round2`, `round3`, `pct` already live in `lib/utils.ts` and are converged; `marketValue`'s `× 1.1` premium is the one scale that is intentional, not drift). The next units on the list are a fresh tree census for any remaining repeated predicate, and possibly the star renderer if a real duplication surfaces.
 
 ### M379 — the category-edge and template-edge sorts shared one descending-delta comparator, and the same file could drift
 

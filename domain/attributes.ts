@@ -188,3 +188,9 @@ export function byValueDesc(a: { value: number }, b: { value: number }): number 
 export function byDeltaDesc(a: { delta: number }, b: { delta: number }): number {
   return b.delta - a.delta;
 }
+
+/** Round a value to the nearest 100k. The dynamic world engine's market re-pricing and the seed
+ *  generator's player pricing each spelled the nearest-100k rounding inline — the same drift risk
+ *  the comparators M376–M378 retired, so it is a door now. Callers pass the already-scaled amount
+ *  (e.g. `roundTo100k(base * ageCurve)`). The single site of the inline form is this body. */
+export const roundTo100k = (v: number): number => Math.round(v / 100_000) * 100_000;

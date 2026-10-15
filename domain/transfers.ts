@@ -11,6 +11,7 @@ import type { NewsArticle } from "@/domain/types";
 import type { RowText } from "./rowText";
 import { bucketOf, headroom, valueIndex, squadProfile, round1 } from "./scouting";
 import { clamp } from "@/lib/utils";
+import { roundTo100k } from "@/domain/attributes";
 
 const RUMOUR_KINDS: NewsArticle["kind"][] = ["Rumor", "Reported", "Confirmed"];
 
@@ -38,7 +39,7 @@ export interface RumourLink {
 }
 
 export function askingFee(value: number): number {
-  return Math.round((value * 1.1) / 100_000) * 100_000;
+  return roundTo100k(value * 1.1);
 }
 
 // Fit: how much the viewer's club could use this player, from that club's own
