@@ -1,12 +1,15 @@
 // Proof for the FEATURE-layer closure of the shared integer-percent door (`pct`, declared once in
 // lib/utils.ts as `Math.round(ratio * 100)`). M354 folded the seven DOMAIN-module spellings and pinned
 // domain/ closure; the feature/UI layer was left unpinned because proof-pct's census scopes only domain/.
-// M366 + M367 converge the CLEAN bare-integer-percent sites a reader sees as a displayed number
+// M366 + M367 + M369 converge the CLEAN bare-integer-percent sites a reader sees as a displayed number
 // (not a `%`-suffixed label): TacticalStudio's back-line stat `Math.round((1 - balance.line) * 100)`,
 // DevelopmentPage's tier label `Math.round(analysis.skill * 100)`, PlayerOS's analysis progress
-// `Math.round(((i + 1) / 6) * 100)`, and FilmRoom's stage progress
-// `Math.round(((i + 1) / STAGES.length) * 100)`. Each now reads the door, so a rounding or clamp
-// change to the integer-percent figure is one edit, not five across four screens.
+// `Math.round(((i + 1) / 6) * 100)`, FilmRoom's stage progress
+// `Math.round(((i + 1) / STAGES.length) * 100)`, and data/ai.ts's coach-confidence figure. Each now reads
+// the door, so a rounding or clamp change to the integer-percent figure is one edit, not five. The ai.ts
+// site was spelled across lines with a trailing comma — `Math.round(\n  (r) * 100,\n)` — the single-line
+// census was blind to that form, so M369 widened PERCENT (see below) before folding it, or the fold would
+// have removed a shape the census could never re-see.
 //
 // The door claims ONLY `Math.round( <expr> * 100 )` with a trailing `/ 100` EXCLUDED (that is round2, a
 // two-decimal stored rating, not a displayed percentage — proof-pct pins that distinction). Two feature
@@ -47,14 +50,16 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const HOME = "lib/utils.ts";
-// The four feature files folded onto the door (M366: TacticalStudio, DevelopmentPage, PlayerOS;
+// The five consumers folded onto the door (M366: TacticalStudio, DevelopmentPage, PlayerOS;
 // M367: FilmRoom's stage-progress `Math.round(((i + 1) / STAGES.length) * 100)`, same shape as
-// PlayerOS's six-stage progress).
+// PlayerOS's six-stage progress; M369: data/ai.ts's coach confidence, the multi-line trailing-comma
+// `Math.round(\n (r) * 100,\n)` spelling the single-line-anchored census was blind to).
 const CONSUMERS = [
   "features/tactical/TacticalStudio.tsx",
   "features/development/DevelopmentPage.tsx",
   "features/player/PlayerOS.tsx",
   "features/film/FilmRoom.tsx",
+  "data/ai.ts",
 ];
 // Identity-keyed must-not-unify residues, charged by identity rather than excused by a blanket skip.
 const DENOM200 = "features/tactical/TacticalStudio.tsx"; // same file: its *200 site must stay inline
@@ -72,8 +77,10 @@ const count = (text, re) => (text.match(re) || []).length;
 
 // The bare integer-percent shape, up to two nesting levels deep (so a progress fraction spelled
 // `Math.round(((i + 1) / N) * 100)` is charged, not just `Math.round((a / b) * 100)`), whose closing
-// paren is NOT round2's `/ 100`.
-const PERCENT = /Math\.round\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\* *100\)(?! *\/ *100)/g;
+// paren is NOT round2's `/ 100`. The `100` may be followed by an optional trailing comma and any run of
+// whitespace (including newlines) before the `)` — the multi-line call style `Math.round(\n  (r) * 100,\n)`
+// (data/ai.ts's confidence figure) is the SAME integer percent and must be charged, not slipped past.
+const PERCENT = /Math\.round\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\* *100 *,?\s*\)(?! *\/ *100)/g;
 // A different denominator (a *200 whole) — charged by a SEPARATE scan so the door's closure over *100
 // does not accidentally claim it, and so the two scans prove disjoint.
 const DENOM200_RE = /Math\.round\((?:[^()]|\([^()]*\))*\* *200\)/g;
@@ -88,6 +95,14 @@ const pPercent = count(`  const p = Math.round(n.credibility * 100);\n  const q 
 // The two-level widening is witnessed here: a progress fraction spelled with a nested numerator
 // `Math.round(((i + 1) / N) * 100)` — the exact shape FilmRoom/PlayerOS folded — must charge ONE.
 const pPercentDouble = count(`  setProgress(Math.round(((i + 1) / STAGES.length) * 100));`, PERCENT);
+// The M369 widening is witnessed here: the SAME integer percent spelled across lines with a trailing
+// comma — `Math.round(\n  (ratio) * 100,\n)` (data/ai.ts's confidence) — must charge ONE. The old
+// `\* *100\)` anchor (requiring `100` immediately before `)`) read this form zero, so the fold would
+// have removed a shape the census could never re-see.
+const pPercentMultiline = count(
+  `  const confidence = Math.round(\n    (0.55 + (req.length ? 0.2 : 0)) * 100,\n  );`,
+  PERCENT,
+);
 const pPercentRound2Excluded = count(`  const r2 = Math.round(v * 100) / 100;`, PERCENT);
 const pDecl = count(`\nexport const pct = (ratio: number): number => Math.round(ratio * 100);\n`, DECL_PCT);
 const pImport = count(`import { cn, pct } from "@/lib/utils";`, IMPORT_PCT);
@@ -97,8 +112,8 @@ const pCallSibling = count(`const a = pctOf(x, y); const b = pctLabel(z);`, CALL
 const pDenom200 = count(`  const s = Math.round(balance.spread * 200);`, DENOM200_RE);
 const pDenom200NotPercent = count(`  const s = Math.round(balance.spread * 200);`, PERCENT);
 const pPctBinding = count(`forecast.map(({ match, odds, pct, sample }) => {`, PCT_BINDING);
-ok(`the scans are armed and each exclusion bites (percent ${pPercent}, double-paren percent ${pPercentDouble}, round2-form charged ${pPercentRound2Excluded}, decl ${pDecl}, import ${pImport}, call ${pCall}, sibling-call charged ${pCallSibling}, *200 ${pDenom200}, *200-as-percent ${pDenom200NotPercent}, pct-binding ${pPctBinding})`,
-  pPercent === 2 && pPercentDouble === 1 && pPercentRound2Excluded === 0 && pDecl === 1 && pImport === 1 && pCall === 1 &&
+ok(`the scans are armed and each exclusion bites (percent ${pPercent}, double-paren percent ${pPercentDouble}, multi-line trailing-comma percent ${pPercentMultiline}, round2-form charged ${pPercentRound2Excluded}, decl ${pDecl}, import ${pImport}, call ${pCall}, sibling-call charged ${pCallSibling}, *200 ${pDenom200}, *200-as-percent ${pDenom200NotPercent}, pct-binding ${pPctBinding})`,
+  pPercent === 2 && pPercentDouble === 1 && pPercentMultiline === 1 && pPercentRound2Excluded === 0 && pDecl === 1 && pImport === 1 && pCall === 1 &&
   pCallSibling === 0 && pDenom200 === 1 && pDenom200NotPercent === 0 && pPctBinding === 1);
 
 // --- Population floor + subject presence (a blind walk reads empty and would pass a negative claim). ---
@@ -111,16 +126,16 @@ const declByFile = carriers.filter((f) => count(src[f], DECL_PCT) > 0);
 ok(`pct is declared exactly once, in the door (home ${count(src[HOME], DECL_PCT)}, tree ${declByFile.join(",")})`,
   count(src[HOME], DECL_PCT) === 1 && declByFile.length === 1 && declByFile[0] === HOME);
 
-// --- All three feature consumers read the door: import it, and call it at least once. ------------------
+// --- Every consumer (four feature files + data/ai.ts) reads the door: imports it and calls it. ---------
 const importing = CONSUMERS.filter((f) => count(src[f], IMPORT_PCT) >= 1);
 const perCall = CONSUMERS.map((f) => count(src[f], CALL_PCT));
-ok(`all ${CONSUMERS.length} feature consumers import pct from @/lib/utils and call it (importers ${importing.length}/${CONSUMERS.length}, per-file calls ${perCall.join(",")})`,
+ok(`all ${CONSUMERS.length} consumers import pct from @/lib/utils and call it (importers ${importing.length}/${CONSUMERS.length}, per-file calls ${perCall.join(",")})`,
   importing.length === CONSUMERS.length && perCall.every((n) => n >= 1));
 
 // --- No hand-spelled integer-percent survives in a converged consumer (planted, so the zero is measured).
 const consumerPercent = CONSUMERS.map((f) => count(src[f], PERCENT));
 const pInline = count(`  const x = Math.round(analysis.skill * 100);`, PERCENT);
-ok(`none of the ${CONSUMERS.length} feature consumers still spells the integer percent inline (read ${consumerPercent.join(",")}; a planted inline reads ${pInline})`,
+ok(`none of the ${CONSUMERS.length} consumers still spells the integer percent inline (read ${consumerPercent.join(",")}; a planted inline reads ${pInline})`,
   pInline === 1 && consumerPercent.every((n) => n === 0));
 
 // --- must-not-unify (denominator): the *200 whole is a different figure. Read THAT LINE, not the file: ---

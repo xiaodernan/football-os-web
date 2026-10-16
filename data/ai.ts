@@ -7,7 +7,7 @@ import { englishWord } from "@/i18n/format";
 import { buildLoad, zoneKey, type LoadZone } from "@/domain/load";
 import { makeRng, hashString } from "@/lib/rng";
 import { newId } from "@/lib/ids";
-import { fmt2 } from "@/lib/utils";
+import { fmt2, pct } from "@/lib/utils";
 
 // ---- Provider abstraction (spec §6, §50, §57) ----
 // The system is never hard-wired to one model. Today we ship a deterministic
@@ -164,8 +164,8 @@ class DeterministicCoachProvider implements CoachProvider {
       { key: "coach.rat.dnaRead", vars: { arch: dna.primary.id, arch2: dna.secondary.id, game: hasBlock("game") ? "coach.rat.gameShaped" : "" } },
     ];
 
-    const confidence = Math.round(
-      (0.55 + (requested.length || isTargeted ? 0.2 : 0) + (input.history.length ? 0.15 : 0)) * 100,
+    const confidence = pct(
+      0.55 + (requested.length || isTargeted ? 0.2 : 0) + (input.history.length ? 0.15 : 0),
     );
 
     const sources: RowText[] = [
