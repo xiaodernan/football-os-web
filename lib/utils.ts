@@ -149,3 +149,16 @@ export const safeDiv = (num: number, den: number): number => num / Math.max(1, d
 // round straight back to a number — a rounding step, not a display — and proof-fmt1 counts exactly
 // those families plus the door.
 export const fmt1 = (v: number): string => v.toFixed(1);
+
+// The app's integer display-string door: a caller's number rendered `.toFixed(0)` — the three
+// unsigned sites that show whole percents and compact byte figures (community credibility, gap
+// evidence tier, the K line of the value formatter). Identical today, so no figure moves. NOTE this
+// door keeps toFixed's away-from-zero half-step and is NOT String(Math.round()): at a negative
+// half-step the two part company — `(-4.5).toFixed(0)` is "-5" while Math.round(-4.5) is -4 — which
+// is exactly why career's advisor quotes moved to Math.round when that trap was found (proof-career
+// pins the choice on its 41 half-step states) and why this door must never be swapped in there; all
+// three sites here feed unsigned magnitudes where the two spellings agree. It is also NOT fmt1's
+// padded cell — "2" and "2.0" are different displays. The one conditional-decimal line next door
+// picks 0 or 1 at runtime and stays out of both fixed-argument doors; proof-fmt0 counts the door
+// and those three sites.
+export const fmt0 = (v: number): string => v.toFixed(0);

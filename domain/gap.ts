@@ -6,7 +6,7 @@ import {
 } from "./attributes";
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
-import { clamp, pct } from "@/lib/utils";
+import { clamp, fmt0, pct } from "@/lib/utils";
 
 // Role Gap Analysis: compares a player's saved attributes against a heuristic
 // archetype for their position group at their current level, then ranks the
@@ -95,7 +95,7 @@ export function analyzeGap(input: GapInput): GapAnalysis {
   // being baked into an English sentence here.
   const evidence: RowText[] = [];
   if (hasData) {
-    evidence.push({ key: "gap.ev.calibrated", vars: { overall, tier: (skill * 100).toFixed(0) } });
+    evidence.push({ key: "gap.ev.calibrated", vars: { overall, tier: fmt0(skill * 100) } });
     const roleTraits = items.filter((it) => it.criticality > 0).length;
     evidence.push({ key: "gap.ev.traitsCompared", vars: { n: roleTraits, group } });
     if (priorities[0]) {

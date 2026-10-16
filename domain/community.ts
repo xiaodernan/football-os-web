@@ -1,5 +1,5 @@
 import { makeRng, rngInt, pick } from "@/lib/rng";
-import { pct, fmt2 } from "@/lib/utils";
+import { pct, fmt0, fmt2 } from "@/lib/utils";
 import { asRowText, type RowText } from "./rowText";
 import { footballProvider, getClub, getCompetition, newsFeed } from "@/data/footballService";
 
@@ -147,7 +147,7 @@ export function seedThreads(): Thread[] {
             key: "ni.summaryLine",
             vars: { title: { key: n.titleKey, vars: n.titleVars }, club: n.titleVars.club, player: n.titleVars.player, kind: n.kind, cred: pct(n.credibility) },
           },
-          cred: (n.credibility * 100).toFixed(0),
+          cred: fmt0(n.credibility * 100),
         },
       },
       at: n.publishedAt,

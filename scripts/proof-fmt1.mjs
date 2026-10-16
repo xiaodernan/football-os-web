@@ -11,10 +11,10 @@
 // pass: the seed's two `parseFloat((…).toFixed(1))` seeds round straight back to a number — a
 // rounding step, not a display — and the one conditional-decimal line in the value formatter picks
 // 0 or 1 at runtime (`.toFixed(v >= 10_000_000 ? 0 : 1)`) and so is not a `.toFixed(1)` site at all.
-// A third family is a blind spot rather than a residue: the fmt0 decimal (community credibility, gap
-// tier, the K line) stays hand-spelled until its own door exists, and the fmt0 census below measures
-// exactly those three so a mis-keyed door cannot quietly absorb them. scripts/ is not walked, so the
-// plants arm the scans instead of entering the census.
+// A third family crossed doors at M373: the fmt0 decimal (community credibility, gap evidence tier,
+// the K line of the value formatter) rode the fmt0 door next door, and the clause below charges those
+// three files zero-and-imports so a re-inline reddens rather than passing as a blind spot. scripts/
+// is not walked, so the plants arm the scans instead of entering the census.
 // Run: node scripts/proof-fmt1.mjs
 import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";
@@ -51,7 +51,7 @@ const CALL_PINS = {
   "features/watchlist/WatchlistBoard.tsx": 1, "ui/primitives.tsx": 2,
 };
 // The pinned families' homes: seed's parseFloat wraps, service's conditional decimal, and the three
-// fmt0 blind-spot sites.
+// former fmt0 sites (folded onto the fmt0 door at M373).
 const PARSE_FLOAT_FILE = "data/footballSeed.ts";
 const CONDITIONAL_FILE = "data/footballService.ts";
 const FMT0_FILES = ["data/footballService.ts", "domain/community.ts", "domain/gap.ts"];
@@ -69,7 +69,7 @@ const isIdent = (ch) => /[A-Za-z0-9_$]/.test(ch);
 // CODE-state occurrence finder (the proof-fmt2 lexer): line/block comments, string bodies and
 // template text are not code; a template's ${...} interior IS code, and a `${` pushes an expr frame
 // so its `}` pops exactly that frame — the off-by-one a naive stack makes desynchronises every later
-// file. Parameterised on the literal so the fmt0 blind-spot census can reuse it.
+// file. Parameterised on the literal so the fmt0 former-site census can reuse it.
 function findOccurrences(text, lit) {
   const occs = [];
   let i = 0;
@@ -182,6 +182,9 @@ const census = (text, lit) => {
 const DECL_FMT1 = /\nexport const fmt1\s*=\s*\(v: number\): string =>/g;
 const IMPORT_FMT1 = /import[^;]*\bfmt1\b[^;]*from ["']@\/lib\/utils["']/g;
 const CALL_FMT1 = /\bfmt1\(/g; // invocations only: the door's `fmt1 = (` and a doc mention are not calls in code files
+// The door next door (proof-fmt0's subject): charged zero-and-imports in the three former sites.
+const IMPORT_FMT0 = /import[^;]*\bfmt0\b[^;]*from ["']@\/lib\/utils["']/g;
+const CALL_FMT0 = /\bfmt0\(/g;
 // The conditional-decimal line: picks 0 or 1 at runtime, so it is not a `.toFixed(1)` site at all.
 const CONDITIONAL = /\.toFixed\(v >= 10_000_000 \? 0 : 1\)/g;
 
@@ -249,11 +252,14 @@ const condTotal = carriers.reduce((s, f) => s + count(src[f], CONDITIONAL), 0);
 ok(`the conditional-decimal formatter line survives unpooled, exactly once (files ${condByFile.join(",")}; total ${condTotal})`,
   condTotal === 1 && condByFile.length === 1 && condByFile[0] === CONDITIONAL_FILE);
 
-// --- Blind spot: the fmt0 decimal stays hand-spelled — three sites, three files, unabsorbed. ------
-const fmt0ByFile = FMT0_FILES.map((f) => [f.split("/").pop(), census(src[f], ".toFixed(0)").plain]);
-const fmt0Total = fmt0ByFile.reduce((s, [, n]) => s + n, 0);
-ok(`the fmt0 decimal stays hand-spelled until its own door (blind spot a mis-keyed fold would swallow: ${fmt0ByFile.map(([f, n]) => `${f}=${n}`).join(", ")}, total ${fmt0Total})`,
-  fmt0Total === 3 && fmt0ByFile.every(([, n]) => n === 1) && pFmt0 === 1);
+// --- Former fmt0 sites: M373 folded them onto the fmt0 door next door, so the three files are ------
+// --- charged zero-and-imports rather than pinned as a blind spot a fold may not cross. -------------
+const fmt0ByFile = FMT0_FILES.map((f) => [f.split("/").pop(),
+  census(src[f], ".toFixed(0)").plain, count(src[f], IMPORT_FMT0), count(src[f], CALL_FMT0)]);
+const fmt0PlainTotal = fmt0ByFile.reduce((s, [, p]) => s + p, 0);
+const fmt0Importers = fmt0ByFile.filter(([, , imp]) => imp >= 1).length;
+ok(`the three former fmt0 sites re-inlined nothing and read the fmt0 door next door (fmt0 plain ${fmt0ByFile.map(([f, p]) => `${f}=${p}`).join(", ")}, total ${fmt0PlainTotal}; importers ${fmt0Importers}/3; calls ${fmt0ByFile.map(([, , , c]) => c).join(",")})`,
+  fmt0PlainTotal === 0 && fmt0Importers === 3 && fmt0ByFile.every(([, , , c]) => c >= 1) && pFmt0 === 1);
 
 // --- Behavioural: fmt1 reproduces the removed inline call byte-for-byte and keeps the pad. --------
 const samples = [0, 0.04, 0.05, 1, 2.04, 2.5, -3.45, 9.99, 99.995, 1234.567, 1e6 / 3, -0.05];
