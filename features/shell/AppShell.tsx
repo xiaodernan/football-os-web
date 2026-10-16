@@ -8,7 +8,7 @@ import { levelInfo } from "@/store/useFootballOS";
 import { Button } from "@/components/ui/button";
 import { Command } from "@/components/ui/command";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { cn, pctLabel } from "@/lib/utils";
 import { DemoBadge } from "@/ui/primitives";
 import { CommandPalette } from "@/features/command/CommandPalette";
 
@@ -125,7 +125,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="font-mono text-sidebar-primary">{t("common.level")} {info.level}</span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sidebar">
-            <div className="h-full rounded-full bg-sidebar-primary transition-all" style={{ width: `${Math.round(info.progress * 100)}%` }} />
+            <div className="h-full rounded-full bg-sidebar-primary transition-all" style={{ width: pctLabel(info.progress) }} />
           </div>
           <div className="mt-1 text-[10px] text-muted-foreground">
             {info.intoLevel} / {info.forNext} XP · {state.mode}

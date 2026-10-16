@@ -10,8 +10,10 @@
 // The door shares ONLY the bare `${(value / max) * 100}%` shape. Siblings that must NOT be folded in:
 //   · a clamp-guarded fill — `${Math.max(2, (x / y) * 100)}%` (LoadPage, FilmRoom) or `${Math.min(100, (x / y) * 100)}%`
 //     (ScoutingPanel) — wraps a bound; `pctOf` has no floor/ceiling to express it.
-//   · an integer-rounded ratio label — AppShell's `${Math.round(… * 100)}%` — ROUNDS and treats the input as
-//     a 0..1 fraction, not value-over-max; the raw fractional precision a style needs is lost.
+//   · an integer-rounded ratio label — `${Math.round(… * 100)}%` — ROUNDS and treats the input as
+//     a 0..1 fraction, not value-over-max; the raw fractional precision a style needs is lost. AppShell's
+//     level bar was the last such sibling; M370 folded it onto the separate pctLabel door (see
+//     scripts/proof-pct-label.mjs), so the rounded fill is now pinned only by the in-script pGuardRound plant.
 //   The discriminator is structural: the bare form opens the interpolation with `${(`, every guarded/rounded
 //   form opens it with `${Math.` — so the census anchors on `${(` and cannot charge a guarded sibling that
 //   nests the identical inner fraction.
@@ -53,7 +55,12 @@ const CONSUMERS = [
   "features/sim/SimulationLab.tsx",
 ];
 // Clean files whose percent-fill is GUARDED (clamped or rounded) — must-not-unify siblings, left inline.
-const GUARDED = ["features/load/LoadPage.tsx", "features/film/FilmRoom.tsx", "features/scouting/ScoutingPanel.tsx", "features/shell/AppShell.tsx"];
+// AppShell used to appear here: its level bar spelled `${Math.round(info.progress * 100)}%`, an
+// integer-ROUNDED sibling of pctOf. M370 folded that onto the pctLabel door (its own proof,
+// scripts/proof-pct-label.mjs), so AppShell now carries no guarded percent-fill line and left this set.
+// The round-vs-bare discrimination is still pinned HERE by the in-script pGuardRound plant (clause 1),
+// so the BARE census demonstrably stays blind to `${Math.round(… * 100)}%` without needing a live site.
+const GUARDED = ["features/load/LoadPage.tsx", "features/film/FilmRoom.tsx", "features/scouting/ScoutingPanel.tsx"];
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
   e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);
@@ -118,12 +125,13 @@ const plantStray = count(`style={{ width: \`\${(a / b) * 100}%\` }}`, BARE);
 ok(`every bare value-over-max-percent survives only in the door — no residue remains (carriers ${bareFiles.join(",")}; strays ${strays.length}; planted bare reads ${plantStray})`,
   plantStray === 1 && bareFiles.length === 1 && bareFiles[0] === HOME && strays.length === 0 && consumersClean);
 
-// --- Must-not-unify, discrimination: the four clean guarded-fill files (Math.max floor, Math.min ceiling, ---
-// --- Math.round integer) DO carry a guarded percent-fill yet the bare census charges every one of them zero -
-// --- — the blind spot a naive census would fold into the door. ---
+// --- Must-not-unify, discrimination: the three clean guarded-fill files (Math.max floor, Math.min ceiling) ---
+// --- DO carry a guarded percent-fill yet the bare census charges every one of them zero — the blind spot a ---
+// --- naive census would fold into the door. AppShell's Math.round integer sibling once sat here; M370 folded ---
+// --- it onto the pctLabel door, so the round-vs-bare blind spot is pinned by the in-script pGuardRound plant. ---
 const guardedArmed = GUARDED.filter((f) => guardLines(src[f]) >= 1);
 const guardedUncharged = GUARDED.filter((f) => count(src[f], BARE) === 0);
-ok(`guarded percent-fills are armed by GUARD_LINE but left uncharged by BARE in all four clean files (armed ${guardedArmed.length}/4, uncharged ${guardedUncharged.length}/4 — a blind spot a naive fold would swallow)`,
+ok(`guarded percent-fills are armed by GUARD_LINE but left uncharged by BARE in all three clean files (armed ${guardedArmed.length}/3, uncharged ${guardedUncharged.length}/3 — a blind spot a naive fold would swallow)`,
   guardedArmed.length === GUARDED.length && guardedUncharged.length === GUARDED.length);
 
 // --- Former writer-lane files: zero bare sites now, and each reads the door (a regression to the
