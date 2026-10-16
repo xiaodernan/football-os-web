@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn, pctLabel, fmt2, fmt1 } from "@/lib/utils";
+import { cn, pct, pctLabel, fmt2, fmt1 } from "@/lib/utils";
 
 // Film Room (spec §19): the video analysis pipeline as its own pillar. Clips are
 // analysed by the swappable videoProvider (Demo provider runs the same stages over
@@ -69,7 +69,7 @@ export function FilmRoom() {
       try {
         for (let i = 0; i < STAGES.length; i++) {
           await new Promise((r) => setTimeout(r, 240));
-          setProgress(Math.round(((i + 1) / STAGES.length) * 100));
+          setProgress(pct((i + 1) / STAGES.length));
         }
         const fileId = `${file.name}-${file.size}`;
         const report = await videoProvider.analyze({ fileId, fileName: file.name, sizeBytes: file.size, attrs: state.profile.attributes });

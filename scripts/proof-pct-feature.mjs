@@ -1,11 +1,12 @@
 // Proof for the FEATURE-layer closure of the shared integer-percent door (`pct`, declared once in
 // lib/utils.ts as `Math.round(ratio * 100)`). M354 folded the seven DOMAIN-module spellings and pinned
 // domain/ closure; the feature/UI layer was left unpinned because proof-pct's census scopes only domain/.
-// M366 converges the three remaining CLEAN bare-integer-percent sites a reader sees as a displayed number
+// M366 + M367 converge the CLEAN bare-integer-percent sites a reader sees as a displayed number
 // (not a `%`-suffixed label): TacticalStudio's back-line stat `Math.round((1 - balance.line) * 100)`,
-// DevelopmentPage's tier label `Math.round(analysis.skill * 100)`, and PlayerOS's analysis progress
-// `Math.round(((i + 1) / 6) * 100)`. Each now reads the door, so a rounding or clamp change to the
-// integer-percent figure is one edit, not four across three screens.
+// DevelopmentPage's tier label `Math.round(analysis.skill * 100)`, PlayerOS's analysis progress
+// `Math.round(((i + 1) / 6) * 100)`, and FilmRoom's stage progress
+// `Math.round(((i + 1) / STAGES.length) * 100)`. Each now reads the door, so a rounding or clamp
+// change to the integer-percent figure is one edit, not five across four screens.
 //
 // The door claims ONLY `Math.round( <expr> * 100 )` with a trailing `/ 100` EXCLUDED (that is round2, a
 // two-decimal stored rating, not a displayed percentage — proof-pct pins that distinction). Two feature
@@ -18,8 +19,9 @@
 //     so the hand-spelled `Math.round(odds.mostLikelyPct * 100)` is a permanent, identity-keyed residue.
 // A `${Math.round(… * 100)}%` string label (AppShell's progress bar) is the pctLabel shape, NOT this
 // door, and is already pinned inline by sibling proof-pct-of; it is out of scope here so a fold of THAT
-// door cannot double-redden. Dashboard's and FilmRoom's integer-percent sites are legitimate future fold
-// candidates (writer lane in flight) and are deliberately NOT claimed, so this proof never fights their owner.
+// door cannot double-redden. M367 folded FilmRoom's stage-progress site onto the door (a fourth
+// consumer). Dashboard's integer-percent is a legitimate future candidate (writer lane in flight) and is
+// deliberately NOT claimed, so this proof never fights its owner.
 // scripts/ is not walked, so the plants arm the scans instead of entering the census.
 // Run: node scripts/proof-pct-feature.mjs
 import { createServer } from "vite";
@@ -45,11 +47,14 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const HOME = "lib/utils.ts";
-// The three feature files M366 folded onto the door.
+// The four feature files folded onto the door (M366: TacticalStudio, DevelopmentPage, PlayerOS;
+// M367: FilmRoom's stage-progress `Math.round(((i + 1) / STAGES.length) * 100)`, same shape as
+// PlayerOS's six-stage progress).
 const CONSUMERS = [
   "features/tactical/TacticalStudio.tsx",
   "features/development/DevelopmentPage.tsx",
   "features/player/PlayerOS.tsx",
+  "features/film/FilmRoom.tsx",
 ];
 // Identity-keyed must-not-unify residues, charged by identity rather than excused by a blanket skip.
 const DENOM200 = "features/tactical/TacticalStudio.tsx"; // same file: its *200 site must stay inline
@@ -65,8 +70,10 @@ const carriers = ["domain", "data", "lib", "features", "components", "ui", "app"
 const src = Object.fromEntries(carriers.map((f) => [f, readFileSync(f, "utf8")]));
 const count = (text, re) => (text.match(re) || []).length;
 
-// The bare integer-percent shape, one nesting level deep, whose closing paren is NOT round2's `/ 100`.
-const PERCENT = /Math\.round\((?:[^()]|\([^()]*\))*\* *100\)(?! *\/ *100)/g;
+// The bare integer-percent shape, up to two nesting levels deep (so a progress fraction spelled
+// `Math.round(((i + 1) / N) * 100)` is charged, not just `Math.round((a / b) * 100)`), whose closing
+// paren is NOT round2's `/ 100`.
+const PERCENT = /Math\.round\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\* *100\)(?! *\/ *100)/g;
 // A different denominator (a *200 whole) — charged by a SEPARATE scan so the door's closure over *100
 // does not accidentally claim it, and so the two scans prove disjoint.
 const DENOM200_RE = /Math\.round\((?:[^()]|\([^()]*\))*\* *200\)/g;
@@ -78,6 +85,9 @@ const PCT_BINDING = /\(\{[^{}]*\bpct\b[^{}]*\}\s*\)/g;
 
 // --- Plants: arm every scan so a "0 survives" or "only in the door" verdict is a measurement. ---------
 const pPercent = count(`  const p = Math.round(n.credibility * 100);\n  const q = Math.round((a / b) * 100);`, PERCENT);
+// The two-level widening is witnessed here: a progress fraction spelled with a nested numerator
+// `Math.round(((i + 1) / N) * 100)` — the exact shape FilmRoom/PlayerOS folded — must charge ONE.
+const pPercentDouble = count(`  setProgress(Math.round(((i + 1) / STAGES.length) * 100));`, PERCENT);
 const pPercentRound2Excluded = count(`  const r2 = Math.round(v * 100) / 100;`, PERCENT);
 const pDecl = count(`\nexport const pct = (ratio: number): number => Math.round(ratio * 100);\n`, DECL_PCT);
 const pImport = count(`import { cn, pct } from "@/lib/utils";`, IMPORT_PCT);
@@ -87,8 +97,8 @@ const pCallSibling = count(`const a = pctOf(x, y); const b = pctLabel(z);`, CALL
 const pDenom200 = count(`  const s = Math.round(balance.spread * 200);`, DENOM200_RE);
 const pDenom200NotPercent = count(`  const s = Math.round(balance.spread * 200);`, PERCENT);
 const pPctBinding = count(`forecast.map(({ match, odds, pct, sample }) => {`, PCT_BINDING);
-ok(`the scans are armed and each exclusion bites (percent ${pPercent}, round2-form charged ${pPercentRound2Excluded}, decl ${pDecl}, import ${pImport}, call ${pCall}, sibling-call charged ${pCallSibling}, *200 ${pDenom200}, *200-as-percent ${pDenom200NotPercent}, pct-binding ${pPctBinding})`,
-  pPercent === 2 && pPercentRound2Excluded === 0 && pDecl === 1 && pImport === 1 && pCall === 1 &&
+ok(`the scans are armed and each exclusion bites (percent ${pPercent}, double-paren percent ${pPercentDouble}, round2-form charged ${pPercentRound2Excluded}, decl ${pDecl}, import ${pImport}, call ${pCall}, sibling-call charged ${pCallSibling}, *200 ${pDenom200}, *200-as-percent ${pDenom200NotPercent}, pct-binding ${pPctBinding})`,
+  pPercent === 2 && pPercentDouble === 1 && pPercentRound2Excluded === 0 && pDecl === 1 && pImport === 1 && pCall === 1 &&
   pCallSibling === 0 && pDenom200 === 1 && pDenom200NotPercent === 0 && pPctBinding === 1);
 
 // --- Population floor + subject presence (a blind walk reads empty and would pass a negative claim). ---
@@ -132,13 +142,13 @@ ok(`DataRoom's integer-percent stays inline because the forecast row destructure
   drPercent === 1 && drBindings === 1 && drCallsDoor === 0);
 
 // --- Behavioural: the shipped door reproduces the formula each folded site removed, equality to the ---
-// --- formula it replaced (not a hand-typed number), across the operands those three screens pass. -----
+// --- formula it replaced (not a hand-typed number), across the operands those four screens pass. -----
 const inlineRound = (x) => Math.round(x * 100);
 const lineRatios = [0, 0.5, 0.375, 1]; // 1 - balance.line spans a 0..1 defensive line
 const skillRatios = [0.4999, 0.5, 0.625, 0.87, 0.999, 1]; // analysis.skill fraction, incl a .625 half case
-const stageFractions = [1, 2, 3, 4, 5, 6].map((n) => n / 6); // PlayerOS setProgress over its six stages
+const stageFractions = [1, 2, 3, 4, 5, 6].map((n) => n / 6); // PlayerOS (/6) and FilmRoom (/STAGES.length=6) progress
 const agrees = [...lineRatios, ...skillRatios, ...stageFractions].every((r) => pct(r) === inlineRound(r));
-ok(`the shipped pct answers Math.round(ratio * 100) for every ratio the three consumers pass (${lineRatios.length + skillRatios.length + stageFractions.length} ratios), incl pct(0.625)=${pct(0.625)} and pct(1/6)=${pct(1 / 6)}`,
+ok(`the shipped pct answers Math.round(ratio * 100) for every ratio the four consumers pass (${lineRatios.length + skillRatios.length + stageFractions.length} ratios), incl pct(0.625)=${pct(0.625)} and pct(1/6)=${pct(1 / 6)}`,
   agrees && pct(0.5) === 50 && pct(1) === 100 && pct(0) === 0 && pct(1 / 6) === 17);
 
 // --- must-not-unify (behavioral): pct drops the fraction; round2 keeps two decimals. The folded feature ---
