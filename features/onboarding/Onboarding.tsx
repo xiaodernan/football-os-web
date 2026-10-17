@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { cn } from "@/lib/utils";
+import {cn, ABSENT } from "@/lib/utils";
 import { Crest } from "@/ui/primitives";
 
 // The step rail. Keys live in a module-level table rather than inline in the JSX, where
@@ -149,14 +149,14 @@ export function Onboarding() {
             <div>
               <Label>{t("onb.favClub")}</Label>
               <select value={clubId ?? ""} onChange={(e) => { setClub(e.target.value || undefined); setPlayer(undefined); }} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm">
-                <option value="">—</option>
+                <option value="">{ABSENT}</option>
                 {WORLD.clubs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
               <Label>{t("onb.favComp")}</Label>
               <select value={compId ?? ""} onChange={(e) => setComp(e.target.value || undefined)} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm">
-                <option value="">—</option>
+                <option value="">{ABSENT}</option>
                 {WORLD.competitions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>

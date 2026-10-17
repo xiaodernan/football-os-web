@@ -13,7 +13,7 @@ import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primi
 import { ProgressLine } from "@/ui/charts";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { cn, signed, DAY_MS, pctOf, fmt2 } from "@/lib/utils";
+import {cn, signed, DAY_MS, pctOf, fmt2, ABSENT } from "@/lib/utils";
 
 const WINDOWS = [7, 30, 90];
 
@@ -166,15 +166,15 @@ export function ReviewPage() {
             <StatTile label={t("rv.streak")} value={`${review.streak}d`} />
             <StatTile
               label={t("rv.overall")}
-              value={review.overallEnd ?? "—"}
+              value={review.overallEnd ?? ABSENT}
               tone={review.overallDelta && review.overallDelta > 0 ? "up" : review.overallDelta && review.overallDelta < 0 ? "down" : "neutral"}
-              sub={review.overallDelta != null ? `${review.overallStart ?? "—"} → ${review.overallEnd ?? "—"}` : t("rv.noChange")}
+              sub={review.overallDelta != null ? `${review.overallStart ?? ABSENT} → ${review.overallEnd ?? ABSENT}` : t("rv.noChange")}
             />
-            <StatTile label={t("rv.quality")} value={review.avgRating ?? "—"} sub={review.avgRating != null ? t("rv.outOf5") : t("rv.noRating")} />
+            <StatTile label={t("rv.quality")} value={review.avgRating ?? ABSENT} sub={review.avgRating != null ? t("rv.outOf5") : t("rv.noRating")} />
             <StatTile label={t("rv.statAcademy")} value={review.lessonsCompleted} sub={t("rv.statAcademyPassed", { n: review.lessonsMastered })} />
             <StatTile
               label={t("rv.statFilm")}
-              value={review.filmClips || "—"}
+              value={review.filmClips || ABSENT}
               sub={
                 review.filmClips
                   ? `${t("rv.statFilmMinutes", { n: review.filmMinutes })} · ${fmt2(review.filmScanRate)} ${t("rv.scansPerMin")}`

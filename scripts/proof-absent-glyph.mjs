@@ -4,15 +4,17 @@
 // while nine Data Room tiles and one Dashboard goals column spelled it as an en dash, so the same "no
 // value" read differently one screen over. Worse, the en dash is ALSO this app's range/score separator
 // (`${prev}–${upTo}`, `${homeGoals}–${awayGoals}`), so a reader could not tell "nothing here" from "the
-// scoreline is 2–1" by glyph alone. M394 added the door and folded those ten outlier cells onto it; the
-// em-dash majority is untouched (its display does not move) and is charged here as the residue ledger the
-// next unit spends.
+// scoreline is 2–1" by glyph alone. M394 added the door, folded those ten outlier cells onto it and
+// charged the em-dash majority as a residue ledger; M395 spent that ledger — every render-time absence
+// marker in shipped code now goes through the door, and the three dash reads the census still finds are
+// the door's own body and the two generate-time values below. No displayed absence changed shape: the
+// residue was already the right glyph, so this fold moves bytes and a convention, not a figure.
 //
 // Three families sit on the same two glyphs and must NOT be unified, which is why every scan is planted
 // in both directions and the totals reconcile:
 //   · ABSENCE marker — a standalone dash literal (`"—"`, `'—'`, `` `—` ``) or a dash as a whole JSX text
-//     node (`>—<`). That is the door's family. The EN spelling of it is the class this unit closed, so a
-//     new `?? "–"` reddens clause 5.
+//     node (`>—<`). That is the door's family. The EN spelling of it is the class M394 closed, so a new
+//     `?? "–"` reddens clause 5, and a re-inlined `"—"` reddens clause 7.
 //   · RANGE / SCORE separator — a dash GLUED between two present figures (`}–${`, `} – {`, and the
 //     zh/en dictionary copies). Folding one of these onto the door would overwrite a real figure's
 //     joiner, so clause 10 measures the moved string instead of forbidding a spelling.
@@ -20,6 +22,10 @@
 //     unknown nation. Both are bytes written INTO simulated records, not a marker chosen at render time,
 //     so a locale- or theme-sensitive door would move generated data; they are charged by their exact
 //     shipped line in clause 8 and are deliberately outside the fold queue.
+// The residue bucket emptied in M395, and an empty bucket is exactly the shape that hid a mis-wired scan
+// in M394's first draft. So the census keeps a population it CAN see (the three surviving reads, floored)
+// and gains a bucket for the folded shape itself: clause 13 counts `{ABSENT}` in JSX position, planted
+// both ways, so a scan that goes blind on the door's own spelling reddens instead of reconciling.
 // scripts/ is not walked, so the plants below arm the scans instead of entering the census.
 // Run: node scripts/proof-absent-glyph.mjs
 import { createServer } from "vite";
@@ -44,6 +50,16 @@ const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } 
 
 const HOME = "lib/utils.ts";
 const FOLDED = ["features/analytics/DataRoom.tsx", "features/dashboard/Dashboard.tsx"];
+// The ledger M394 charged and M395 spent: every screen and domain module that rendered its own em-dash
+// absence. Pinned as the door's USER set in clause 6, so a new inline spelling shows up as a missing
+// user and a new fold shows up as an unlisted one.
+const SPENT = [
+  "data/ai.ts", "data/intelligence.ts", "domain/scouting.ts",
+  "features/film/FilmRoom.tsx", "features/football/Details.tsx", "features/load/LoadPage.tsx",
+  "features/manager/ManagerOS.tsx", "features/onboarding/Onboarding.tsx", "features/player/PlayerOS.tsx",
+  "features/review/ReviewPage.tsx", "features/scouting/ScoutingPanel.tsx",
+  "features/settings/SettingsPage.tsx", "features/transfers/TransferCentre.tsx",
+];
 // The two generate-time values: simulated data, not display. Pinned by their exact shipped line below.
 const DATA_VALUE = ["domain/matchEngine.ts", "domain/worldEngine.ts"];
 const MATCH_LINE = 'events.push({ minute: 45, type: "VAR", side: rng() < 0.5 ? "home" : "away", player: "—" });';
@@ -59,6 +75,10 @@ const quoted = (g) => new RegExp(`"${g}"|'${g}'|\`${g}\``, "g");
 const QUOTED_EM = quoted(EM), QUOTED_EN = quoted(EN);
 // A dash that is the entire JSX child — `<span>—</span>`, `<td>—</td>`, `<option value="">—</option>`.
 const JSX_EM = new RegExp(">" + EM + "<", "g"), JSX_EN = new RegExp(">" + EN + "<", "g");
+// The SAME JSX-child position after the fold: `<span>{ABSENT}</span>`, `<option value="">{ABSENT}</option>`.
+// The braces matter — `{ n: x ?? ABSENT }` is an expression slot, not a dash-shaped child, so this scan
+// reads the four cells that used to be bare `>—<` text nodes and nothing else.
+const JSX_DOOR = /(?<!\$)\{ABSENT\}/g;
 // The separator family: a dash glued between two interpolations (JSX `{a} – {b}` or template `}–${b}`).
 const SEP = new RegExp("\\}\\s*" + EN + "\\s*(?:\\$\\{|\\{)", "g");
 const DECL_ABSENT = /\nexport const ABSENT[ \t]*=/g;
@@ -148,23 +168,38 @@ const enLeft = enQuotedByFile.concat(enJsxByFile);
 ok(`no absence marker is spelled with the separator glyph any more (quoted-en carriers [${enQuotedByFile.join(",")}], jsx-en carriers [${enJsxByFile.join(",")}], total ${enLeft.length}; planted en literals read 1 each in clause 1)`,
   enLeft.length === 0);
 
-// --- 6. Derived caller census: every file that USES the door imports it, the users are exactly the two ---
-// --- folded screens, and each screen's use count is the number of cells folded onto the door. Users come ---
-// --- from the tree, never from a hand-typed list, so a third fold shows up here without editing this file. ---
+// --- 6. Derived caller census: every file that USES the door imports it, the users are exactly the ---
+// --- screens this door owns (M394's two outlier folds plus M395's spent ledger), and each user's use ---
+// --- count is the number of cells it renders through the door. Users come from the tree, never from a ---
+// --- hand-typed list, so a fold in a fifth file shows up here without editing this proof — and so does ---
+// --- a fold that forgot its import. ---
 const users = carriers.filter((f) => n(useText(f), USE_ABSENT) > 0).sort();
 const userImports = users.filter((f) => n(code[f], IMPORT_ABSENT) >= 1);
 const dataValueUsers = DATA_VALUE.filter((f) => n(useText(f), USE_ABSENT) > 0);
 const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
-const expectedPerUser = [`${FOLDED[0]}=9`, `${FOLDED[1]}=1`].join(",");
-ok(`the door is used by exactly the screens this unit folded, each importing it, and neither generate-time data file reaches for it (users [${users.join(",")}] with uses ${perUser}; importers ${userImports.length}/${users.length}; generate-time users ${dataValueUsers.length})`,
-  users.length === FOLDED.length && users.every((f) => FOLDED.includes(f)) &&
+// The ledger by carrier: 45 renders, 9 of them the Data Room's outlier cells (M394) and 36 the spent
+// residue (M395, including Dashboard's second cell). Order is the sorted carrier list.
+const expectedUsers = [...FOLDED, ...SPENT].sort();
+const expectedPerUser = [
+  ["data/ai.ts", 3], ["data/intelligence.ts", 2], ["domain/scouting.ts", 1],
+  ["features/analytics/DataRoom.tsx", 9], ["features/dashboard/Dashboard.tsx", 2],
+  ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 4],
+  ["features/load/LoadPage.tsx", 3], ["features/manager/ManagerOS.tsx", 2],
+  ["features/onboarding/Onboarding.tsx", 2], ["features/player/PlayerOS.tsx", 5],
+  ["features/review/ReviewPage.tsx", 5], ["features/scouting/ScoutingPanel.tsx", 2],
+  ["features/settings/SettingsPage.tsx", 2], ["features/transfers/TransferCentre.tsx", 2],
+].map(([f, c]) => `${f}=${c}`).join(",");
+ok(`the door is used by exactly the screens that render an absence, each importing it, and neither generate-time data file reaches for it (users ${users.length}/${expectedUsers.length} [${users.join(",")}] with uses ${perUser}; importers ${userImports.length}/${users.length}; generate-time users ${dataValueUsers.length})`,
+  users.length === expectedUsers.length && users.join(",") === expectedUsers.join(",") &&
   userImports.length === users.length && perUser === expectedPerUser && dataValueUsers.length === 0);
 
 // --- 7. Completeness by RECONCILIATION, not by a hand count: every standalone dash literal or JSX dash ---
 // --- node in shipped code is exactly one of {the door's own body, a generate-time data value, a render ---
-// --- residue}. The three buckets are scanned independently, so a fourth shape hiding from all of them ---
-// --- shows up as an arithmetic mismatch here — and so does any fold that moves a residue cell onto the ---
-// --- door, which is the ledger the next unit has to update. The carrier SET is pinned by identity. ---
+// --- residue}. The three buckets are scanned independently. M394 learned (in its own first draft) that a ---
+// --- mis-wired bucket still RECONCILES, because the residue total is whatever the other two leave over; ---
+// --- so the clause pins the carrier SET of each bucket, floors the population the scans can see, and ---
+// --- after M395 spends the ledger it also demands the surviving floor of 3 — a blind scan would read 0 ---
+// --- and pass a "residue 0" claim about nothing. ---
 const emQuoted = carriers.map((f) => [f, n(code[f], QUOTED_EM)]).filter(([, c]) => c > 0);
 const emJsx = carriers.map((f) => [f, n(code[f], JSX_EM)]).filter(([, c]) => c > 0);
 const emJsxTotal = emJsx.reduce((a, [, c]) => a + c, 0);
@@ -176,16 +211,34 @@ const dataValueTotal = DATA_VALUE.reduce((a, f) => a + (standalone.get(f) || 0),
 const residueFiles = [...standalone.keys()].filter((f) => f !== HOME && !DATA_VALUE.includes(f)).sort();
 const residueTotal = residueFiles.reduce((a, f) => a + standalone.get(f), 0);
 const reconciles = doorBody + dataValueTotal + residueTotal === totalStandalone;
-const expectedResidueFiles = [
-  "data/ai.ts", "data/intelligence.ts", "domain/scouting.ts",
-  "features/dashboard/Dashboard.tsx", "features/film/FilmRoom.tsx", "features/football/Details.tsx",
-  "features/load/LoadPage.tsx", "features/manager/ManagerOS.tsx", "features/onboarding/Onboarding.tsx",
-  "features/player/PlayerOS.tsx", "features/review/ReviewPage.tsx", "features/scouting/ScoutingPanel.tsx",
-  "features/settings/SettingsPage.tsx", "features/transfers/TransferCentre.tsx",
+// The folded shape gets its own bucket and its own floor: `{ABSENT}` as a whole JSX child. This is the
+// population that REPLACED the residue ledger, so the census still has something to lose. Five cells,
+// not four: Data Room's empty-form tile reached this shape in M394 and the other four in M395, which
+// is what this pin corrected from the tree rather than from the fold plan.
+// --- Two shapes the fold produced: `{ABSENT}` as an entire JSX child, and `ABSENT` as the fallback arm ---
+// --- of a ternary or a `??` sitting inside an expression slot. This bucket counts the FIRST shape only. ---
+// --- Arm F of dev/.m395-arms.mjs found why that has to be explicit: a plain brace scan also read a ---
+// --- template interpolation slot (the door spliced into a band joiner writes `${prev}${ABSENT}${upTo}`), ---
+// --- so a separator fold made this render bucket gain a carrier and reddened a clause whose whole job is ---
+// --- the render population. The scan now refuses a brace introduced by a `$`; `pJsxDoorInterp` is the ---
+// --- plant that proves the discriminator bites — it read 1 before the lookbehind and 0 after, while the ---
+// --- JSX child keeps reading 1 and the carrier set stays at four files. ---
+const jsxDoorTotal = carriers.reduce((a, f) => a + n(code[f], JSX_DOOR), 0);
+const jsxDoorFiles = carriers.filter((f) => n(code[f], JSX_DOOR) > 0).sort();
+const expectedJsxDoorFiles = [
+  "features/analytics/DataRoom.tsx", "features/football/Details.tsx",
+  "features/onboarding/Onboarding.tsx", "features/scouting/ScoutingPanel.tsx",
 ].sort().join(",");
-ok(`the standalone-dash census reconciles and its residue ledger is pinned by carrier (total ${totalStandalone} = door body ${doorBody} + generate-time ${dataValueTotal} + render residue ${residueTotal} over ${residueFiles.length} carriers; reconciles ${reconciles ? "yes" : "NO"}; JSX-node bucket ${emJsxTotal} with floor 4 — wiring that scan to the other glyph reads 0 and empties the ledger, which is how this clause caught its own first draft; ledger [${residueFiles.join(",")}]; residue floor 30 — the em dash already displays correctly at every one of these cells, so M395 spends the ledger without moving a figure)`,
-  reconciles && doorBody === 1 && dataValueTotal === 2 && residueTotal >= 30 && emJsxTotal >= 4 &&
-  residueFiles.join(",") === expectedResidueFiles);
+const pJsxDoor = n('<span className="muted">{ABSENT}</span>', JSX_DOOR);
+const pJsxDoorOld = n('<span className="muted">—</span>', JSX_DOOR);
+const pJsxDoorExprSlot = n("{ n: acwr?.toFixed(2) ?? ABSENT }", JSX_DOOR);
+const pJsxDoorInterp = n('band: `${prev}${ABSENT}${band.upTo}`', JSX_DOOR);
+ok(`the standalone-dash census reconciles on the spent ledger and both its buckets are pinned (total ${totalStandalone} = door body ${doorBody} + generate-time ${dataValueTotal} + render residue ${residueTotal}; reconciles ${reconciles ? "yes" : "NO"}; surviving floor 3, residue carriers [${residueFiles.join(",")}], quoted-em carriers [${emQuoted.map(([f, c]) => f + "=" + c).join(",")}], leftover JSX-em nodes ${emJsxTotal}; folded JSX bucket {ABSENT} ${jsxDoorTotal} over [${jsxDoorFiles.join(",")}] with floor 5, planted child 1 / pre-fold 0 / expression-slot 0 / template-interpolation ${pJsxDoorInterp})`,
+  reconciles && doorBody === 1 && dataValueTotal === 2 && residueTotal === 0 &&
+  residueFiles.length === 0 && totalStandalone >= 3 && emJsxTotal === 0 &&
+  pJsxDoor === 1 && pJsxDoorOld === 0 && pJsxDoorExprSlot === 0 && pJsxDoorInterp === 0 &&
+  jsxDoorTotal >= 5 &&
+  jsxDoorFiles.join(",") === expectedJsxDoorFiles);
 
 // --- 8. The generate-time values are charged by their EXACT shipped line, so a fold of either onto the ---
 // --- door (or a re-spelling inside the generator) reddens this clause rather than passing silently. The ---

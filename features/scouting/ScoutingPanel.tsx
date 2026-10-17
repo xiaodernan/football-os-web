@@ -21,7 +21,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
-import { cn, fmt1 } from "@/lib/utils";
+import {cn, fmt1, ABSENT } from "@/lib/utils";
 
 const BUCKETS: PosBucket[] = ["ALL", "GK", "DEF", "MID", "ATT"];
 // `labelKey`, not `label`: a row field named `label` is one of the positions the
@@ -84,7 +84,7 @@ export function ScoutingPanel() {
           <div className="mt-3 space-y-2">
             {profile.map((r) => (
               <div key={r.bucket}>
-                <div className="flex justify-between text-xs"><span className="font-medium">{bucketLabel(r.bucket, t)}</span><span className="text-muted-foreground">{t("scout.playersAvg", { count: r.count, avg: r.avg || "—" })}</span></div>
+                <div className="flex justify-between text-xs"><span className="font-medium">{bucketLabel(r.bucket, t)}</span><span className="text-muted-foreground">{t("scout.playersAvg", { count: r.count, avg: r.avg || ABSENT })}</span></div>
                 <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full rounded", r.count < 4 || r.avg < 74 ? "bg-warning" : "bg-success")} style={{ width: `${Math.min(100, (r.avg / 90) * 100)}%` }} /></div>
               </div>
             ))}
@@ -145,7 +145,7 @@ export function ScoutingPanel() {
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt1(valueIndex(p))}</td>
                   {(() => {
                     const edge = templateEdge(p);
-                    if (!edge) return <td className="px-2 py-1.5 text-right text-xs text-muted-foreground">—</td>;
+                    if (!edge) return <td className="px-2 py-1.5 text-right text-xs text-muted-foreground">{ABSENT}</td>;
                     return (
                       <td className="px-2 py-1.5 text-right font-mono text-xs whitespace-nowrap">
                         <span className={edge.bestDelta > 0 ? "text-success" : "text-muted-foreground"}>{t(`attr.${edge.bestCategory}`)} {edge.bestDelta > 0 ? `+${edge.bestDelta}` : edge.bestDelta}</span>

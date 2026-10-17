@@ -4,7 +4,7 @@ import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
 import type { RowText } from "./rowText";
-import { clamp, fmt2 } from "@/lib/utils";
+import {clamp, fmt2, ABSENT } from "@/lib/utils";
 
 // Scouting model (spec §28). Deliberately built only from fields the dataset
 // actually provides (overall, potential, value, age, archetype, foot) — it never
@@ -93,7 +93,7 @@ export function bestValueAt(bucket: Exclude<PosBucket, "ALL">, minOverall = 70):
   const pool = footballProvider.players().filter((p) => bucketOf(p.positionGroup) === bucket && p.overall >= minOverall);
   if (!pool.length) return null;
   const p = maxBy(pool, valueIndex);
-  return { player: p, clubName: getClub(p.clubId)?.name ?? "—" };
+  return { player: p, clubName: getClub(p.clubId)?.name ?? ABSENT };
 }
 
 export interface TemplateEdge {

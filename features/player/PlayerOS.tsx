@@ -31,7 +31,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cn, pct, pctOf, fmt2, fmt1 } from "@/lib/utils";
+import {cn, pct, pctOf, fmt2, fmt1, ABSENT } from "@/lib/utils";
 import { useLearnRecords } from "@/lib/hooks";
 import { summarizeLearn } from "@/domain/learn";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -269,7 +269,7 @@ function Coach() {
           >
             <span className="flex items-center gap-1.5">
               <span className="font-semibold uppercase tracking-widest">{rowLine(ZONE_LABEL[load.zone], t)}</span>
-              <span className="font-mono">{t("player.acwr")} {load.acwr == null ? "—" : fmt2(load.acwr)}</span>
+              <span className="font-mono">{t("player.acwr")} {load.acwr == null ? ABSENT : fmt2(load.acwr)}</span>
             </span>
             <span className="text-muted-foreground">{t("player.coachAdapts")}</span>
           </Link>
@@ -422,7 +422,7 @@ function Training() {
               <div key={sess.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                 <div className="min-w-0">
                   <div className="truncate">{rowLine(sess.title, t)}</div>
-                  <div className="text-xs text-muted-foreground">{t("player.completedDate", { date: sess.completedAt ? formatDate(locale, sess.completedAt) : "—", rating: sess.selfRating ?? "—" })}</div>
+                  <div className="text-xs text-muted-foreground">{t("player.completedDate", { date: sess.completedAt ? formatDate(locale, sess.completedAt) : ABSENT, rating: sess.selfRating ?? ABSENT })}</div>
                   {sess.growth && sess.growth.some((g) => g.delta > 0) && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {sess.growth.filter((g) => g.delta > 0).map((g) => (
@@ -598,7 +598,7 @@ function Workload() {
       <div className="grid grid-cols-2 gap-3 lg:col-span-1">
         <StatTile label={t("player.acuteLoad")} value={load.acute} sub={t("player.7dayAvg")} />
         <StatTile label={t("player.chronicLoad")} value={load.chronic} sub={t("player.28dayAvg")} />
-        <StatTile label={t("player.acwr")} value={acwr ?? "—"} tone={acwr && acwr > 1.5 ? "down" : acwr && acwr >= 0.8 ? "up" : "neutral"} sub={rowLine(ZONE_LABEL[load.zone], t)} />
+        <StatTile label={t("player.acwr")} value={acwr ?? ABSENT} tone={acwr && acwr > 1.5 ? "down" : acwr && acwr >= 0.8 ? "up" : "neutral"} sub={rowLine(ZONE_LABEL[load.zone], t)} />
         <StatTile label={t("player.sessionsCount")} value={completed.length} />
       </div>
       <Panel className="p-4 lg:col-span-2">
@@ -618,7 +618,7 @@ function Workload() {
         ) : (
           <EmptyState title={t("ld.emptyTitle")} hint={t("player.completeSessionsLoad")} icon="⚖" />
         )}
-        {load.zone === "high" && <p className="mt-3 text-xs text-warning">{t("player.acwrWarning", { ratio: acwr?.toFixed(2) ?? "—" })}</p>}
+        {load.zone === "high" && <p className="mt-3 text-xs text-warning">{t("player.acwrWarning", { ratio: acwr?.toFixed(2) ?? ABSENT })}</p>}
       </Panel>
     </div>
   );

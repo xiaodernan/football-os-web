@@ -9,7 +9,7 @@ import type { Mode } from "@/domain/types";
 import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { cn, fmt2, fmt1 } from "@/lib/utils";
+import {cn, fmt2, fmt1, ABSENT } from "@/lib/utils";
 
 const MODES: Mode[] = ["FAN", "PLAYER", "MANAGER"];
 
@@ -151,8 +151,8 @@ export function SettingsPage() {
                     <span className={cn(e.present ? "text-foreground" : "text-muted-foreground")}>{t(e.labelKey)}</span>
                     <span className="ml-2 font-mono text-[10px] text-muted-foreground">{e.key}</span>
                   </td>
-                  <td className="px-2 py-1.5 text-right font-mono text-xs tabular-nums">{e.present ? e.records : "—"}</td>
-                  <td className="px-2 py-1.5 text-right font-mono text-xs tabular-nums">{e.present ? formatBytes(e.bytes) : "—"}</td>
+                  <td className="px-2 py-1.5 text-right font-mono text-xs tabular-nums">{e.present ? e.records : ABSENT}</td>
+                  <td className="px-2 py-1.5 text-right font-mono text-xs tabular-nums">{e.present ? formatBytes(e.bytes) : ABSENT}</td>
                   <td className="px-2 py-1.5 text-[11px] text-muted-foreground">{t(e.kind === "activity" ? "set.kind.activity" : "set.kind.preference")}</td>
                 </tr>
               ))}

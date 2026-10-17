@@ -25,7 +25,7 @@ import {
   formatValue,
   type SearchResult,
 } from "@/data/footballService";
-import { fmt2 } from "@/lib/utils";
+import {fmt2, ABSENT } from "@/lib/utils";
 
 export interface EvidenceFact {
   /** Both halves are rows. A chip word the app chooses ("Standings") is a keyed row; the
@@ -180,7 +180,7 @@ function matchFacts(mid: string, locale: Locale): EvidenceFact[] {
       text:
         m.status === "SCHEDULED"
           ? { key: "ai.fact.fixtureScheduled", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, when: formatDate(locale, m.kickoff, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) } }
-          : { key: "ai.fact.fixtureResult", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, hg: String(m.homeGoals ?? "—"), ag: String(m.awayGoals ?? "—") } },
+          : { key: "ai.fact.fixtureResult", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, hg: String(m.homeGoals ?? ABSENT), ag: String(m.awayGoals ?? ABSENT) } },
       to: `/matches/${m.id}`,
     },
   ];

@@ -35,7 +35,7 @@ import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { clamp, cn, pctOf, fmt2, fmt1 } from "@/lib/utils";
+import {clamp, cn, pctOf, fmt2, fmt1, ABSENT } from "@/lib/utils";
 
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -369,9 +369,9 @@ export function ClubDetail({ id }: { id: string }) {
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatTile label={t("common.overall")} value={c.overall} />
-        <StatTile label={t("data.attack")} value={attack || "—"} />
-        <StatTile label={t("det.midfield")} value={midfield || "—"} />
-        <StatTile label={t("data.defence")} value={defense || "—"} />
+        <StatTile label={t("data.attack")} value={attack || ABSENT} />
+        <StatTile label={t("det.midfield")} value={midfield || ABSENT} />
+        <StatTile label={t("data.defence")} value={defense || ABSENT} />
         <StatTile label={t("det.squad.size")} value={squad.length} />
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
@@ -400,7 +400,7 @@ export function ClubDetail({ id }: { id: string }) {
                     {mine.form.map((f, i) => (
                       <span key={i} className={cn("grid h-5 w-5 place-items-center rounded text-[10px] font-bold", f === "W" ? "bg-success/20 text-success" : f === "D" ? "bg-muted text-muted-foreground" : "bg-destructive/20 text-destructive")}>{f}</span>
                     ))}
-                    {!mine.form.length && <span className="text-xs text-muted-foreground">—</span>}
+                    {!mine.form.length && <span className="text-xs text-muted-foreground">{ABSENT}</span>}
                   </span>
                 </div>
                 <Ratio label={t("data.attack")} value={mine.attack} goodHigh />

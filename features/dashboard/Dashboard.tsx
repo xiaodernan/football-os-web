@@ -235,7 +235,7 @@ export function Dashboard() {
                   <span className="font-medium uppercase tracking-wide">{t("dash.recovery")}</span>
                   <span className="flex items-center gap-2">
                     <span>{rowLine(ZONE_LABEL[growth.recovery.zone], t)}</span>
-                    <span className="font-mono tabular-nums">{t("dash.acwrN", { n: growth.recovery.acwr?.toFixed(2) ?? "—" })}</span>
+                    <span className="font-mono tabular-nums">{t("dash.acwrN", { n: growth.recovery.acwr?.toFixed(2) ?? ABSENT })}</span>
                     <span aria-hidden>→</span>
                   </span>
                 </Link>

@@ -33,7 +33,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
-import { cn, pctLabel, signed, fmt2 } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
+import {cn, pctLabel, signed, fmt2, ABSENT } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
 import { positionLabel, rowLine } from "@/domain/rowText";
 
@@ -127,11 +127,11 @@ function CareerHeader({ career, onChange, onPlay, onReset }: { career: CareerSta
         <Crest colors={club.colors} short={club.short} size={48} />
         <div className="min-w-[10rem] flex-1">
           <div className="flex items-center gap-2"><h1 className="text-lg font-bold">{club.name}</h1><DemoBadge /></div>
-          <p className="text-xs text-muted-foreground">{t("mgr.careerLine", { comp: comp?.name ?? "—", n: career.results.length })}</p>
+          <p className="text-xs text-muted-foreground">{t("mgr.careerLine", { comp: comp?.name ?? ABSENT, n: career.results.length })}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Metric label={t("mgr.budget")} value={formatValue(career.budget)} />
-          <Metric label={t("mgr.leaguePos")} value={pos ? `#${pos}` : "—"} />
+          <Metric label={t("mgr.leaguePos")} value={pos ? `#${pos}` : ABSENT} />
           <Metric label={t("mgr.morale")} value={pctLabel((career.morale + 1) / 2)} tone={career.morale >= 0 ? "good" : "bad"} />
           <Metric label={t("mgr.fatigue")} value={pctLabel(career.fatigue)} tone={career.fatigue > 0.6 ? "bad" : "good"} />
         </div>

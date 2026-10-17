@@ -9,7 +9,7 @@ import { sum } from "@/domain/attributes";
 import type { NewsArticle } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
-import { cn, pctLabel } from "@/lib/utils";
+import {cn, pctLabel, ABSENT } from "@/lib/utils";
 
 const KIND_TONE: Record<NewsArticle["kind"], string> = {
   Rumor: "border-warning/50 text-warning",
@@ -70,8 +70,8 @@ export function TransferCentre() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label={t("transfers.statLinks")} value={all.length} sub={t("transfers.statLinksSub")} />
         <StatTile label={t("transfers.confirmed")} value={confirmed} tone={confirmed ? "up" : "neutral"} />
-        <StatTile label={t("transfers.fitTargets")} value={viewerClub ? targets : "—"} sub={viewerClub ? t("transfers.fitTargetsSub") : t("transfers.setClub")} tone={targets ? "up" : "neutral"} />
-        <StatTile label={t("transfers.totalAsk")} value={rows.length ? formatValue(totalFee) : "—"} sub={t("transfers.totalAskSub")} />
+        <StatTile label={t("transfers.fitTargets")} value={viewerClub ? targets : ABSENT} sub={viewerClub ? t("transfers.fitTargetsSub") : t("transfers.setClub")} tone={targets ? "up" : "neutral"} />
+        <StatTile label={t("transfers.totalAsk")} value={rows.length ? formatValue(totalFee) : ABSENT} sub={t("transfers.totalAskSub")} />
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">

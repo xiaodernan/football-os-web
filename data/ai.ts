@@ -7,7 +7,7 @@ import { englishWord } from "@/i18n/format";
 import { buildLoad, zoneKey, type LoadZone } from "@/domain/load";
 import { makeRng, hashString } from "@/lib/rng";
 import { newId } from "@/lib/ids";
-import { fmt2, pct } from "@/lib/utils";
+import {fmt2, pct, ABSENT } from "@/lib/utils";
 
 // ---- Provider abstraction (spec §6, §50, §57) ----
 // The system is never hard-wired to one model. Today we ship a deterministic
@@ -128,7 +128,7 @@ class DeterministicCoachProvider implements CoachProvider {
           : { key: "coach.diag.targetedPartial", vars: { focus: effFocus.join(","), trained: trained.join(","), minutes: session.targetMinutes } },
       );
     if (load && load.zone === "high")
-      diagnosisParts.push({ key: "coach.diag.loadHigh", vars: { acwr: load.acwr?.toFixed(2) ?? "—" } });
+      diagnosisParts.push({ key: "coach.diag.loadHigh", vars: { acwr: load.acwr?.toFixed(2) ?? ABSENT } });
     else if (load && load.zone === "caution")
       // The caution band is reachable with no ratio at all: `classifyZone` answers "caution" when a
       // week carries load but the chronic window rounds to zero, so a sentence about a ratio
@@ -140,7 +140,7 @@ class DeterministicCoachProvider implements CoachProvider {
           : { key: "coach.diag.loadCaution", vars: { acwr: fmt2(load.acwr) } },
       );
     else if (load && load.zone === "under" && load.weekLoad > 0)
-      diagnosisParts.push({ key: "coach.diag.loadUnder", vars: { acwr: load.acwr?.toFixed(2) ?? "—" } });
+      diagnosisParts.push({ key: "coach.diag.loadUnder", vars: { acwr: load.acwr?.toFixed(2) ?? ABSENT } });
     if (requested.length)
       diagnosisParts.push({ key: "coach.diag.requestedFlagged", vars: { attrs: requested.join(",") } });
     diagnosisParts.push({ key: "coach.diag.lowestRated", vars: { attrs: weaknesses.join(",") } });
@@ -173,7 +173,7 @@ class DeterministicCoachProvider implements CoachProvider {
       { key: "coach.src.methodology" },
       { key: "coach.src.savedAttrs", vars: { rating: overallRating(input.profile.attributes) } },
       { key: "coach.src.positionBaseline" },
-      ...(load ? [{ key: "coach.src.loadLog", vars: { acwr: load.acwr?.toFixed(2) ?? "—", zone: zoneKey(load.zone) } }] : []),
+      ...(load ? [{ key: "coach.src.loadLog", vars: { acwr: load.acwr?.toFixed(2) ?? ABSENT, zone: zoneKey(load.zone) } }] : []),
       ...(lastFocus.length ? [{ key: "coach.src.coachMemory", vars: { focus: lastFocus.join(",") } }] : []),
     ];
 

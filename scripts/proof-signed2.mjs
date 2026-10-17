@@ -177,14 +177,17 @@ ok(`signed2(v) equals the inline \`\${v >= 0 ? "+" : ""}\${v.toFixed(2)}\` byte-
 
 // --- Reachability: the folded cell is a live render branch, not a name a comment or an import could ---
 // --- satisfy. The null guard and the door call sit in ONE expression, so a fold that only adds the ---
-// --- import, or one that drops the em-dash fallback, reddens this clause. ---
-const RENDER_CELL = /== null \? "—" : signed2\(/g;
-const pGuardedCell = count('{trend == null ? "—" : signed2(trend)}', RENDER_CELL);
+// --- import, or one that drops the fallback, reddens this clause. M395 moved the fallback itself onto ---
+// --- the ABSENT door, so the shipped guard now reads `? ABSENT :`; the pre-fold spelling is planted and ---
+// --- must read 0 — that is what makes this pin bind the FOLDED shape rather than any fallback token. ---
+const RENDER_CELL = /== null \? ABSENT : signed2\(/g;
+const pGuardedCell = count('{trend == null ? ABSENT : signed2(trend)}', RENDER_CELL);
 const pUnguardedCall = count('{signed2(trend)}', RENDER_CELL);
 const pImportOnly = count('import { cn, signed2 } from "@/lib/utils";', RENDER_CELL);
+const pOldSpelling = count('{trend == null ? "—" : signed2(trend)}', RENDER_CELL);
 const filmRoomCell = count(src["features/film/FilmRoom.tsx"], RENDER_CELL);
-ok(`the Film Room tile renders signed2 inside its own null guard (${filmRoomCell} live site; planted guarded cell ${pGuardedCell}, planted unguarded call ${pUnguardedCall}, planted import-only fold ${pImportOnly})`,
-  filmRoomCell === 1 && pGuardedCell === 1 && pUnguardedCall === 0 && pImportOnly === 0);
+ok(`the Film Room tile renders signed2 inside its own null guard with the fallback itself on the ABSENT door (${filmRoomCell} live site; planted guarded cell ${pGuardedCell}, planted unguarded call ${pUnguardedCall}, planted import-only fold ${pImportOnly}, planted pre-fold "—" spelling ${pOldSpelling})`,
+  filmRoomCell === 1 && pGuardedCell === 1 && pUnguardedCall === 0 && pImportOnly === 0 && pOldSpelling === 0);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
