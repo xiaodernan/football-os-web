@@ -4,7 +4,7 @@ import { useI18n } from "@/i18n";
 import { positionGroupLabel } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
 import { WORLD } from "@/data/footballSeed";
-import { POSITION_GROUPS } from "@/domain/attributes";
+import { POSITION_GROUPS, last } from "@/domain/attributes";
 import { AGE_GROUPS, GOAL_CODES } from "@/domain/onboarding";
 import { ageGroupLabel as ageOptionLabel, goalLabel } from "@/domain/rowText";
 import { MODES } from "@/domain/types";
@@ -167,7 +167,7 @@ export function Onboarding() {
               <div className="mt-2 flex flex-wrap gap-2">
                 {clubPlayers.map((p) => (
                   <button key={p.id} onClick={() => setPlayer(p.id)} className={cn("flex items-center gap-2 rounded-lg border px-2 py-1 text-xs", playerId === p.id ? "border-primary bg-primary/10" : "hover:border-primary/40")}>
-                    <Crest colors={WORLD.clubs.find((c) => c.id === clubId)?.colors} short={p.name.split(" ").slice(-1)[0]?.[0]} size={18} />
+                    <Crest colors={WORLD.clubs.find((c) => c.id === clubId)?.colors} short={last(p.name.split(" "))?.[0]} size={18} />
                     {p.name}
                   </button>
                 ))}

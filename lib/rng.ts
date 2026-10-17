@@ -1,7 +1,7 @@
 // Deterministic pseudo-random utilities so every Demo Mode result is reproducible
 // from a seed (required by the Football OS simulation contract).
 
-import { sum } from "@/domain/attributes";
+import { sum, last } from "@/domain/attributes";
 
 export function hashString(input: string): number {
   let h = 2166136261 >>> 0;
@@ -50,5 +50,5 @@ export function weightedPick<T>(rng: () => number, entries: readonly [T, number]
   for (const [value, w] of entries) {
     if ((r -= w) <= 0) return value;
   }
-  return entries[entries.length - 1][0];
+  return last(entries)![0];
 }

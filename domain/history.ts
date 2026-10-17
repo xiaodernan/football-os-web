@@ -11,7 +11,7 @@
 import type { AttributeDelta } from "./types";
 import { asRowText, type RowText } from "./rowText";
 import { fmt1 } from "@/lib/utils";
-import { byDateDesc } from "@/domain/attributes";
+import { byDateDesc, last } from "@/domain/attributes";
 
 export type TimelineKind = "session" | "plan" | "memory" | "learn" | "film";
 
@@ -194,8 +194,8 @@ export function groupByDay(events: TimelineEvent[]): { day: string; items: Timel
   const groups: { day: string; items: TimelineEvent[] }[] = [];
   for (const e of events) {
     const day = dayKey(e.at);
-    const last = groups[groups.length - 1];
-    if (last && last.day === day) last.items.push(e);
+    const lastDay = last(groups);
+    if (lastDay && lastDay.day === day) lastDay.items.push(e);
     else groups.push({ day, items: [e] });
   }
   return groups;

@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall, capRound, maxBy } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall, capRound, maxBy, last } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -164,7 +164,7 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
 
   const sorted = [...cats].sort(byDeltaDesc);
   const best = sorted[0];
-  const worst = sorted[sorted.length - 1];
+  const worst = last(sorted)!;
   const headline: RowText =
     best.delta > 0 && worst.delta < 0
       ? { key: "sc.out.head.mixed", vars: { group: p.positionGroup, cat: best.category, cat2: worst.category } }
@@ -220,7 +220,7 @@ export function templateEdge(p: PlayerRef): TemplateEdgeSummary | null {
   const deltas = own.map((c, i) => ({ category: c.category, delta: c.value - tmpl[i].value }));
   const sorted = [...deltas].sort(byDeltaDesc);
   const best = sorted[0];
-  const worst = sorted[sorted.length - 1];
+  const worst = last(sorted)!;
   // Carries the category id, not CATEGORY_LABEL: the two list rows that show
   // this render in every locale, and the dictionary owns attr.*.
   return { bestCategory: best.category, bestDelta: best.delta, worstCategory: worst.category, worstDelta: worst.delta };

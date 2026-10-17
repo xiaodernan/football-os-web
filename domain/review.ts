@@ -1,6 +1,6 @@
 import type { Attributes, Goal, TrainingSession } from "./types";
 import type { RowText } from "./rowText";
-import { weakestAttributes, byDeltaDescThenKey, byDateAsc, sum } from "./attributes";
+import { weakestAttributes, byDeltaDescThenKey, byDateAsc, sum, last } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions, plannedSessions } from "./training";
@@ -115,7 +115,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     .filter((p) => withinWindow(p.date, fromMs, nowMs))
     .sort((a, b) => byDateAsc(a.date, b.date));
   const overallStart = prog.length ? prog[0].overall : null;
-  const overallEnd = prog.length ? prog[prog.length - 1].overall : null;
+  const overallEnd = prog.length ? last(prog)!.overall : null;
   const overallDelta = overallStart != null && overallEnd != null ? overallEnd - overallStart : null;
 
   const focusMap = new Map<string, number>();

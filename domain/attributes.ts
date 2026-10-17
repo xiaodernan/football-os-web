@@ -269,3 +269,10 @@ export const unique = <T>(xs: readonly T[]): T[] => [...new Set(xs)];
  *  `peakPoint.age` read one line later). */
 export const maxBy = <T>(xs: readonly T[], f: (x: T) => number): T =>
   xs.reduce((best, x) => (f(x) > f(best) ? x : best));
+
+/** Read the final element of a list. The index form and the slice form were hand-written ten times across
+ *  history's day buckets, review's progress window, scouting's worst-edge picks (twice), rng's
+ *  weighted-pick fallback, the profile's last result and last session, the dynamic world's latest season
+ *  step, the details' final arc point and onboarding's surname initial — every one the same "final element,
+ *  undefined when empty" contract, so it is a door now. */
+export const last = <T>(xs: readonly T[]): T | undefined => xs[xs.length - 1];

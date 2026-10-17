@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
-import { byOverall, maxBy } from "@/domain/attributes";
+import { byOverall, maxBy, last } from "@/domain/attributes";
 import { favoriteLabel, footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine, type RowText } from "@/domain/rowText";
 import { FAVORITES, type FavoriteKind } from "@/domain/types";
 import { useOs } from "@/store/useFootballOS";
@@ -258,7 +258,7 @@ export function PlayerDetail({ id }: { id: string }) {
         <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
           <span>{arc.age}</span>
           <span>{t("det.arc.peakAt", { overall: arc.projectedPeak, age: maxBy(arc.points, (p) => p.overall).age })}</span>
-          <span>{arc.points[arc.points.length - 1].age}</span>
+          <span>{last(arc.points)!.age}</span>
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">

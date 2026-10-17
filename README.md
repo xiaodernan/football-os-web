@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M389 (a few numbers in that range
+Work ships one milestone per commit and is currently at M390 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M390 — "the final element of a list" was spelled ten times, in two forms, and two of them shadowed the door
+
+M389 retired the argmax fold. This unit closes the next duplication the census surfaced — reading the final element of a list. It was hand-written ten times in two forms: the index form (history's day buckets, review's progress window, scouting's worst-edge picks twice, rng's weighted-pick fallback, the profile's last result, the dynamic world's latest season step, the details' final arc point) and the slice form (the profile's last session, onboarding's surname initial). Same "final element, undefined when empty" contract, so it is a door now.
+
+`last(xs)` in `domain/attributes.ts` is the definition: `xs[xs.length - 1]`. Two readers named their local `last` and had to rename it (history's `lastDay`, the dynamic world's `latest`) so the door's name is not shadowed inside them — the same rename training's `sum` needed in M386. Guaranteed-non-empty sites keep a `!` (scouting's worst edge, rng's fallback, the details' peak age); guarded and optional sites drop straight in. footballSeed's surname split (the last word of a name) is another session's in-flight file and was left untouched — a documented survivor, like its localeCompare cousin.
+
+**The seam, charged both ways.** proof-last counts both spellings across the whole tree — the index form with dotted paths allowed on both sides, and the slice form — and asserts the only occurrences left are the door body and footballSeed's surname split, so a re-inline at any reader reddens it. The scan keys on the last-element shapes, not on indexing in general: a first read, a penultimate read and a `pop()` are left uncharged (the must-not-unify plants prove exactly that). The proof plants all three shapes and the converted call, asserts last is declared once, its body is the index read, all eight readers call it (ten call sites), the survivor is the documented split-word form, and the door equals both spellings on every sample without mutating its input and undefined on empty. An integration clause replays the guarded day-bucket append and the dynamic world's latest-season read. The file passes 9/9; tsc is clean.
+
+**Still outstanding.** The converged math now covers the comparators, nearest-100k rounding, market-value curve, average-overall primitive, round-then-bound pair, ISO-date ordering, league-table ranking, the list-sum fold, the list dedup, the argmax fold and the last-element read. The fmt/signed/epochMs/pct family is another session's active area and was left to them. A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M389 — "pick the element with the greatest figure" was spelled three times, in two dialects
 

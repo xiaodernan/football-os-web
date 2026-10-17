@@ -4,7 +4,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { runWorld, seasonLabel, formatMarket, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
-import { sum } from "@/domain/attributes";
+import { sum, last } from "@/domain/attributes";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge } from "@/ui/primitives";
@@ -63,9 +63,9 @@ export function DynamicWorld() {
     }, 450);
   }, []);
 
-  const last: SeasonStep | undefined = snapshot?.history[snapshot.history.length - 1];
-  const avgNow = last?.avgOverall ?? round1(sum(base.players, (p) => p.overall) / base.players.length);
-  const marketNow = last?.marketTotal ?? sum(base.players, (p) => p.value);
+  const latest: SeasonStep | undefined = snapshot ? last(snapshot.history) : undefined;
+  const avgNow = latest?.avgOverall ?? round1(sum(base.players, (p) => p.overall) / base.players.length);
+  const marketNow = latest?.marketTotal ?? sum(base.players, (p) => p.value);
 
   return (
     <div className="space-y-5">
@@ -90,7 +90,7 @@ export function DynamicWorld() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label={t("world.seasons")} value={elapsed} sub={seasonLabel(elapsed)} />
         <StatTile label={t("world.squad")} value={snapshot ? snapshot.players.length : base.players.length} sub={t("world.sub.tracked")} />
-        <StatTile label={t("world.avgOvr")} value={avgNow} tone={last && last.developments.length ? "up" : "neutral"} />
+        <StatTile label={t("world.avgOvr")} value={avgNow} tone={latest && latest.developments.length ? "up" : "neutral"} />
         <StatTile label={t("world.market")} value={formatMarket(marketNow)} sub={t("world.sub.market")} />
       </div>
 
@@ -105,9 +105,9 @@ export function DynamicWorld() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           <Panel className="p-4">
-            <SectionTitle title={t("world.champions")} hint={last?.label} />
+            <SectionTitle title={t("world.champions")} hint={latest?.label} />
             <div className="divide-y">
-              {last?.champions.map((c) => (
+              {latest?.champions.map((c) => (
                 <div key={c.compId} className="flex items-center gap-3 py-2.5">
                   <Crest colors={getClub(c.clubId)?.colors} short={getClub(c.clubId)?.short} size={30} />
                   <div className="min-w-0 flex-1">
@@ -122,20 +122,20 @@ export function DynamicWorld() {
 
           <Panel className="p-4">
             <SectionTitle title={t("world.developments")} hint={t("world.dev.hint")} />
-            {last && last.developments.length ? (
+            {latest && latest.developments.length ? (
               <div className="space-y-1.5">
-                {last.developments.map((d) => (
+                {latest.developments.map((d) => (
                   <PlayerDelta key={d.id} name={d.name} clubId={d.clubId} from={d.from} to={d.to} delta={d.delta} />
                 ))}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">{t("world.dev.empty")}</p>
             )}
-            {last && last.declines.length > 0 && (
+            {latest && latest.declines.length > 0 && (
               <>
                 <div className="mt-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">{t("world.declines")}</div>
                 <div className="mt-1.5 space-y-1.5">
-                  {last.declines.map((d) => <PlayerDelta key={d.id} name={d.name} clubId={d.clubId} from={d.from} to={d.to} delta={d.delta} />)}
+                  {latest.declines.map((d) => <PlayerDelta key={d.id} name={d.name} clubId={d.clubId} from={d.from} to={d.to} delta={d.delta} />)}
                 </div>
               </>
             )}
@@ -143,9 +143,9 @@ export function DynamicWorld() {
 
           <Panel className="p-4">
             <SectionTitle title={t("world.prospects")} hint={t("world.prospects.hint")} />
-            {last && last.prospects.length ? (
+            {latest && latest.prospects.length ? (
               <div className="space-y-1.5">
-                {last.prospects.slice(0, 10).map((p) => (
+                {latest.prospects.slice(0, 10).map((p) => (
                   <Link key={p.id} to={`/clubs/${p.clubId}`} className="flex items-center justify-between rounded-lg px-1 py-1.5 text-sm hover:bg-secondary/40">
                     <span className="truncate">{p.name} <span className="text-xs text-muted-foreground">· {positionLabel(p.position, t)} · {p.age}</span></span>
                     <span className="flex items-center gap-2 font-mono text-xs">
@@ -162,9 +162,9 @@ export function DynamicWorld() {
 
           <Panel className="p-4">
             <SectionTitle title={t("world.retired")} hint={t("world.retired.hint")} />
-            {last && last.retired.length ? (
+            {latest && latest.retired.length ? (
               <div className="space-y-1.5">
-                {last.retired.map((r) => (
+                {latest.retired.map((r) => (
                   <div key={r.id} className="flex items-center justify-between rounded-lg px-1 py-1.5 text-sm">
                     <span className="truncate">{r.name} <span className="text-xs text-muted-foreground">· {getClub(r.clubId)?.name ?? r.clubId}</span></span>
                     <span className="font-mono text-xs text-muted-foreground">{t("world.ageOvr", { age: r.age, ovr: r.to })}</span>

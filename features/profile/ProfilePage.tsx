@@ -7,7 +7,7 @@ import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
 import { goalProgressPct, goalUnitKey } from "@/domain/goals";
 import { positionLabel, rowLine } from "@/domain/rowText";
-import { overallRating, weakestAttributes, ATTRIBUTE_DEFS, byValueDesc, byDateDesc, sum } from "@/domain/attributes";
+import { overallRating, weakestAttributes, ATTRIBUTE_DEFS, byValueDesc, byDateDesc, sum, last } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { completedMinutes, completedSessions } from "@/domain/training";
 import { seasonSummary, type CareerState } from "@/domain/career";
@@ -54,7 +54,7 @@ export function ProfilePage() {
     if (heldCareer.present && heldCareer.value) {
       const cs = heldCareer.value;
       const s = seasonSummary(cs);
-      const lastResult = cs.results[cs.results.length - 1];
+      const lastResult = last(cs.results);
       manager = {
         active: true,
         clubName: getClub(cs.clubId)?.name,
@@ -108,7 +108,7 @@ export function ProfilePage() {
         goalsDone,
         lessonsCompleted: lessons.completed,
         lessonsMastered: lessons.mastered,
-        lastSessionAt: completed.map((x) => x.completedAt ?? x.date).sort().slice(-1)[0],
+        lastSessionAt: last(completed.map((x) => x.completedAt ?? x.date).sort()),
         lastLessonAt: lastLesson?.completedAt,
       },
       manager,
