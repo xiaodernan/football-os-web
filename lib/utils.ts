@@ -175,3 +175,15 @@ export const fmt1 = (v: number): string => v.toFixed(1);
 // picks 0 or 1 at runtime and stays out of both fixed-argument doors; proof-fmt0 counts the door
 // and those three sites.
 export const fmt0 = (v: number): string => v.toFixed(0);
+
+// The app's absence marker — what a reader sees where a figure or a name is missing. The em dash is
+// the glyph the display cells already print, so this door freezes the convention rather than inventing
+// one. The Data Room's leader tiles and the Dashboard's goals column were the outliers: they spelled the
+// SEPARATOR glyph as an absence fallback, so the same "no value" read as "–" there and "—" one screen
+// over. M394 folded those ten cells onto this door, which is the one place a reader-visible glyph moves
+// in this unit. NOTE this is NOT the range/score separator: a load band is `${prev}–${upTo}`, a
+// scoreline `${homeGoals}–${awayGoals}`, an XG duel `{a} – {b}` — those join two figures that are both
+// PRESENT and must stay an en dash (proof-absent-glyph charges the two families apart and plants both).
+// Nor is it the match engine's unattributed-scorer value, which is written into simulated data at
+// generate time instead of chosen at render time; that site is charged by name, not folded here.
+export const ABSENT = "—";

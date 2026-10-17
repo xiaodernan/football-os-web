@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { cn, clamp } from "@/lib/utils";
+import { cn, clamp, ABSENT } from "@/lib/utils";
 
 const RECOVERY_TONE: Record<LoadZone, string> = {
   none: "border-border text-muted-foreground",
@@ -393,7 +393,7 @@ function TeamLine({ name, goals }: { name?: string; goals: number | null }) {
   return (
     <div className="flex items-center justify-between text-sm">
       <span className="truncate">{name}</span>
-      <span className="font-mono font-semibold tabular-nums">{goals ?? "–"}</span>
+      <span className="font-mono font-semibold tabular-nums">{goals ?? ABSENT}</span>
     </div>
   );
 }

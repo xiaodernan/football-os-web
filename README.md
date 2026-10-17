@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M393 (a few numbers in that range
+Work ships one milestone per commit and is currently at M394 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,20 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M394 — the app had two dashes for "no value", and the one it used was the score separator
+
+A reader sees an **em dash** wherever a figure or a name is missing: 35 render cells across the app already spell it that way. Nine reads in the Data Room (seven lines) and the Dashboard's goals column spelled it with the **en dash**, and the en dash is the glyph this app also uses to JOIN two figures that are both present — a load band is `0.80–1.30`, a scoreline `2–1`, an XG duel `0.9 – 1.4`. One character therefore meant "there is no number here" and "here are two numbers", in the same card, on the screen whose whole job is showing figures. `ABSENT` in `lib/utils.ts` is the marker's door; those ten cells fold onto it, and no displayed absence changes shape beyond that one glyph.
+
+**What is NOT folded, and why.** Two families share the dash and not the meaning. The separator family — 18 code sites over 8 files, plus 36 dictionary copies in three locales — joins present figures and must stay an en dash; the refusal is measured, not asserted (`0.80–1.30` against the door's `0.80—1.30`, `2–1` against `2—1`), and an arm that splices the door into the live scoreline joiner reddens the separator census. And `domain/matchEngine.ts`'s unattributed VAR scorer and `domain/worldEngine.ts`'s unknown-nation value write `—` into **simulated data** at generate time. Those are record contents rather than render decisions, so a display door must not own them: both are pinned by exact line, and the census refuses either generator file reaching for `ABSENT` at all.
+
+**The seam, reconciled rather than counted.** `scripts/proof-absent-glyph.mjs` (new, 12/12) demands that every standalone dash literal or JSX dash node in shipped code equals door body 1 + generate-time 2 + render residue 35 across exactly 14 named carriers, with the three buckets scanned independently. Its own first red is the reason the clause is shaped like this: the JSX bucket was wired to `JSX_EN` where the ledger needed `JSX_EM`, the scan silently read nothing, and the arithmetic **still reconciled** (31 = 1 + 2 + 28) because a mis-wired scan empties a bucket and the residue total moves with it. Two devices now close that: the residue is pinned by carrier-set identity, not by a hand-carried number, and every bucket carries a floor read from the same scan (`emJsxTotal >= 4`). A fourth spelling cannot hide from either.
+
+**Witness arms.** Six mutations (`dev/.m394-arms.mjs`), each requiring the FAIL set to equal the prediction in clauses **and** count, then a byte-exact restore: re-inline a folded Data Room cell with the en dash → {5,6}; splice the door into the live scoreline joiner → {6,9}; fold Dashboard:238 without updating the residue ledger → {6,7}; hand-roll a private `ABSENT` next to the door → {3,6}; move the door's own glyph to the en dash → {4,5,7,10}; route the engine's unattributed-scorer value through the door → {6,7,8}. 6/6 MATCHED, 0 unexplained.
+
+Measured: `proof-absent-glyph` 12/12 after the battery, `proof-fmt2` 12/12, `proof-analytics` 77/77, `proof-clamp-feature` 11/11, `proof-pct-feature` 9/9, `proof-mini-tile` 9/9, `proof-signed` 13/13, `proof-signed2` 12/12, `tsc --noEmit` clean, `vite build` exit 0 (7.76s). `proof-i18n` 375/376: the one red is the repo-wide vacuity census accusing `scripts/proof-cn.mjs:167`, one of the only two lines another lane's uncommitted diff touches, and this unit's new script sits inside that same 74-script census without being accused.
+
+**The residue is named, not excused.** The 35 render cells across those 14 carriers stay inline in this commit — folding the marker's own population is the next unit, and it has to move the ledger pin and every sibling proof that quotes the literal inside a rendered cell (`proof-signed2`'s `== null ? "—" : signed2(` reachability regex first). Dashboard:238's `?? "—"` is the nearest of them, and arm C exists precisely so that folding it without settling the ledger is a red, not a quiet improvement.
 
 ### M393 — the padded `+` was glued out twice, and the raw-number door could not serve either one
 

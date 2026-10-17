@@ -5,7 +5,7 @@ import { footballProvider, getClub, getCompetition } from "@/data/footballServic
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
-import { cn, clamp, fmt2 } from "@/lib/utils";
+import { cn, clamp, fmt2, ABSENT } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
 // raw-UI scan reads every string literal there as a child text node — four hits on the
@@ -21,7 +21,7 @@ const KICKOFF_TIME: Intl.DateTimeFormatOptions = {
 };
 
 function FormPips({ form }: { form: FormLetter[] }) {
-  if (!form.length) return <span className="text-xs text-muted-foreground">–</span>;
+  if (!form.length) return <span className="text-xs text-muted-foreground">{ABSENT}</span>;
   return (
     <span className="flex gap-0.5">
       {form.map((r, i) => (
@@ -126,10 +126,10 @@ export function DataRoom() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile label={t("data.bestForm")} value={lead.bestForm ? getClub(lead.bestForm.clubId)?.short ?? "–" : "–"} sub={lead.bestForm ? t("data.sub.formPts", { n: formPoints(lead.bestForm) }) : undefined} tone="up" />
-        <StatTile label={t("data.topAttack")} value={lead.strongestAttack ? getClub(lead.strongestAttack.clubId)?.short ?? "–" : "–"} sub={lead.strongestAttack ? t("data.sub.ratingAvg", { n: fmt2(lead.strongestAttack.attack) }) : undefined} />
-        <StatTile label={t("data.topDefence")} value={lead.bestDefence ? getClub(lead.bestDefence.clubId)?.short ?? "–" : "–"} sub={lead.bestDefence ? t("data.sub.ratingAvg", { n: fmt2(lead.bestDefence.defence) }) : undefined} />
-        <StatTile label={t("data.topScoring")} value={lead.highestScoring ? `${fmt2(lead.highestScoring.gfAvg)}` : "–"} sub={lead.highestScoring ? t("data.sub.goalsPerGame", { club: getClub(lead.highestScoring.clubId)?.short ?? "" }) : undefined} />
+        <StatTile label={t("data.bestForm")} value={lead.bestForm ? getClub(lead.bestForm.clubId)?.short ?? ABSENT : ABSENT} sub={lead.bestForm ? t("data.sub.formPts", { n: formPoints(lead.bestForm) }) : undefined} tone="up" />
+        <StatTile label={t("data.topAttack")} value={lead.strongestAttack ? getClub(lead.strongestAttack.clubId)?.short ?? ABSENT : ABSENT} sub={lead.strongestAttack ? t("data.sub.ratingAvg", { n: fmt2(lead.strongestAttack.attack) }) : undefined} />
+        <StatTile label={t("data.topDefence")} value={lead.bestDefence ? getClub(lead.bestDefence.clubId)?.short ?? ABSENT : ABSENT} sub={lead.bestDefence ? t("data.sub.ratingAvg", { n: fmt2(lead.bestDefence.defence) }) : undefined} />
+        <StatTile label={t("data.topScoring")} value={lead.highestScoring ? `${fmt2(lead.highestScoring.gfAvg)}` : ABSENT} sub={lead.highestScoring ? t("data.sub.goalsPerGame", { club: getClub(lead.highestScoring.clubId)?.short ?? "" }) : undefined} />
       </div>
 
       {!metrics.length ? (
@@ -237,7 +237,7 @@ export function DataRoom() {
             title={t("data.forecastTitle")}
             hint={t("data.forecastHint", {
               n: forecast.length,
-              avg: metrics[0]?.leagueAvg.toFixed(2) ?? "–",
+              avg: metrics[0]?.leagueAvg.toFixed(2) ?? ABSENT,
             })}
           />
           <div className="mt-3 space-y-3">
