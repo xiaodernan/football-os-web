@@ -10,9 +10,11 @@
 // pass: `x?.toFixed(2)` optional cells keep their undefined short-circuit before a `?? "—"`
 // fallback (five); a receiver behind `?.` short-circuits the whole call to undefined and
 // fmt2(undefined) would throw (Data Room league average, one); the two `parseFloat((…).toFixed(2))`
-// seeds round back to a number; and the two padded sign cells — career form, FilmRoom scan trend —
-// glue a `+` in front of a fixed-width string in the exact form proof-signed pins by its literal,
-// so this proof re-measures that literal too rather than trusting the sibling.
+// seeds round back to a number; and the padded sign family — a `+` glued in front of a fixed-width
+// string. M393 gave that last family its own `signed2` door in lib/utils: the Film Room scan-trend
+// cell folded onto it, so the family now counts the door's own body plus the one cell that is still
+// inline (domain/career's season form, whose carrier is another lane's working copy). proof-signed
+// pins the literal form, so this proof re-measures it rather than trusting the sibling.
 // scripts/ is not walked, so the plants arm the scans instead of entering the census.
 // Run: node scripts/proof-fmt2.mjs
 import { createServer } from "vite";
@@ -47,6 +49,8 @@ const CONSUMERS = [
   "features/sim/SimulationLab.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
+// FilmRoom is NOT in this table any more: its padded cell folded onto the signed2 door at M393, and the
+// padded clause below charges every padded site in the tree by file, so its absence is measured, not assumed.
 const FAMILY_PINS = [
   ["data/ai.ts", 3, 0, 0, 0],
   ["features/dashboard/Dashboard.tsx", 1, 0, 0, 0],
@@ -54,7 +58,6 @@ const FAMILY_PINS = [
   ["features/analytics/DataRoom.tsx", 0, 1, 0, 0],
   ["data/footballSeed.ts", 0, 0, 2, 0],
   ["domain/career.ts", 0, 0, 0, 1],
-  ["features/film/FilmRoom.tsx", 0, 0, 0, 1],
 ];
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
@@ -248,8 +251,12 @@ ok(`every code-state plain .toFixed(2) survives only in the door body — no res
   plainByFile.length === 1 && plainByFile[0] === HOME && strayPlain.length === 0 && treeCensus.unparsed === 0);
 
 // --- The four residue families: exact counts across the tree, and exactly the files pinned above. ---
-ok(`the four declared families total the pinned 5+1+2+2 sites (optional-before ${treeCensus.optionalBefore}, optional-receiver ${treeCensus.optionalReceiver}, parseFloat ${treeCensus.parseFloat}, padded ${treeCensus.padded})`,
-  treeCensus.optionalBefore === 5 && treeCensus.optionalReceiver === 1 && treeCensus.parseFloat === 2 && treeCensus.padded === 2);
+// --- The padded total reads 2 before and after M393 for DIFFERENT reasons (career+FilmRoom cells, ---
+// --- then the signed2 body+career), so the number alone cannot be the pin — the carriers are. ---
+const paddedByFile = carriers.filter((f) => census(src[f]).padded > 0).sort();
+ok(`the four declared families total the pinned 5+1+2+2 sites (optional-before ${treeCensus.optionalBefore}, optional-receiver ${treeCensus.optionalReceiver}, parseFloat ${treeCensus.parseFloat}, padded ${treeCensus.padded} in ${paddedByFile.join(",")})`,
+  treeCensus.optionalBefore === 5 && treeCensus.optionalReceiver === 1 && treeCensus.parseFloat === 2 &&
+  treeCensus.padded === 2 && paddedByFile.join(",") === "domain/career.ts,lib/utils.ts");
 const familyExact = FAMILY_PINS.every(([f, ob, or, pf, pd]) => {
   const c = census(src[f]);
   return c.optionalBefore === ob && c.optionalReceiver === or && c.parseFloat === pf && c.padded === pd;
@@ -272,11 +279,17 @@ ok(`fmt2 is NOT round2 in type or in rounding path — the string keeps a pad St
 ok(`the unary-plus bridge is byte-for-byte the inline form the fold replaced (+fmt2(v) = +v.toFixed(2) on ${samples.filter((v) => +fmt2(v) === +v.toFixed(2)).length}/${samples.length} samples, measured)`,
   samples.every((v) => +fmt2(v) === +v.toFixed(2)));
 
-// --- Proof-signed cross-guard: the two padded sign cells still carry the literal the sibling proof
-// --- pins — this fold stepped around them rather than unifying them away. ---
-const paddedCarry = ["domain/career.ts", "features/film/FilmRoom.tsx"].map((f) => [f.split("/").pop(), count(src[f], PADDED_SIGN)]);
-ok(`the padded sign cells still satisfy proof-signed's literal, measured here rather than assumed (career ${paddedCarry[0][1]}, FilmRoom ${paddedCarry[1][1]}, floor 1 each)`,
-  paddedCarry.every(([, n]) => n >= 1));
+// --- Proof-signed cross-guard: the padded-sign literal proof-signed pins survives on exactly the ---
+// --- door's own body line and career's still-inline cell, and has LEFT FilmRoom — measured here ---
+// --- rather than trusted from the sibling. HOME is read by line because its docstring quotes the ---
+// --- shape it replaced, which the raw literal scan cannot tell apart from code. ---
+const signed2Line = (src[HOME].match(/export const signed2[^\n]*/) || [""])[0];
+const paddedCarry = [["signed2 body", count(signed2Line, PADDED_SIGN)],
+  ["domain/career.ts", count(src["domain/career.ts"], PADDED_SIGN)],
+  ["features/film/FilmRoom.tsx", count(src["features/film/FilmRoom.tsx"], PADDED_SIGN)]];
+const filmRoomImportsSigned2 = /import[^;]*\bsigned2\b[^;]*from ["']@\/lib\/utils["']/.test(src["features/film/FilmRoom.tsx"]);
+ok(`the padded sign literal now lives in the signed2 door and career's named residue, and FilmRoom left it (door body ${paddedCarry[0][1]}, career ${paddedCarry[1][1]}, FilmRoom ${paddedCarry[2][1]}, FilmRoom imports signed2 ${filmRoomImportsSigned2})`,
+  paddedCarry[0][1] === 1 && paddedCarry[1][1] === 1 && paddedCarry[2][1] === 0 && filmRoomImportsSigned2);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

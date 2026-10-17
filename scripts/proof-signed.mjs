@@ -14,7 +14,9 @@
 //   · the PADDED sibling (career.ts's form cell, FilmRoom's trend cell) signs a PRE-FORMATTED string
 //     `… >= 0 ? "+" : ""}${x.toFixed(2)}`. signed() coerces the RAW number and would drop the two
 //     decimals ("+1.50" -> "+1.5"), so these are a SEPARATE string-format concern (as M354 left the
-//     UI `${…}%` sites out of pct) and must not be routed through this door.
+//     UI `${…}%` sites out of pct). M393 gave them their OWN `signed2` door rather than routing them
+//     here, so this census expects the padded spelling in ZERO consumers and charges the one place it
+//     still appears — signed2's body, in the door file — as a door, never as a stray.
 //   · the BOOLEAN sibling (DynamicWorld's delta) is `up ? "+" : ""` — the sign comes from a boolean
 //     computed elsewhere, not a numeric comparison. The `>= 0` anchor deliberately reads 0 here.
 // M364 converged the last two raw residues (career.ts's goal-difference cell and the ManagerOS delta
@@ -24,7 +26,7 @@ import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { signed } = await server.ssrLoadModule("/lib/utils.ts");
+const { signed, signed2 } = await server.ssrLoadModule("/lib/utils.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -34,9 +36,11 @@ const HOME = "lib/utils.ts";
 const CONSUMERS = ["domain/review.ts", "domain/filmInsights.ts", "features/review/ReviewPage.tsx"];
 // Former raw writer residues, now converged: both read the door, so a re-inline reddens.
 const FORMER_RAW = ["domain/career.ts", "features/manager/ManagerOS.tsx"];
-// The padded sign+toFixed(2) family: FilmRoom is clean but deliberately NOT this door; career also
-// carries a padded site. Charged separately so a future "just use signed" there reddens.
-const PADDED = ["domain/career.ts", "features/film/FilmRoom.tsx"];
+// The padded-family cells, sent to the SIBLING `signed2` door at M393. FilmRoom reads it; career's
+// cell still spells the pad inline and is charged by name below. Both must read ZERO padded spellings
+// under this door's scans — a future "just use signed" at either site reddens this
+// census, because signed() would drop the two-decimal pad the reader is shown.
+const PADDED_SITES = ["domain/career.ts", "features/film/FilmRoom.tsx"];
 
 // Walk the shipped source roots. scripts/ is NOT walked, so the plants below are the reference the
 // scans are armed against, never a second charge in the census population.
@@ -54,7 +58,6 @@ const PADDED_SIGN = />= *0 *\? *"\+" *: *""\} *\$\{[^}]*\.toFixed\(2\)/g;
 const DECL_SIGNED = /\nexport const signed[ \t]*=/g;
 const PRIVATE_SIGNED = /\nconst signed[ \t]*=/g;
 const IMPORT_SIGNED = /import[^;]*\bsigned\b[^;]*from ["']@\/lib\/utils["']/g;
-
 // --- Plants: arm every scan so a "0 found" or "appears once" verdict is a measurement. ---------
 const plantInline = count(`  delta: \`\${x >= 0 ? "+" : ""}\${x}\`,`, INLINE_SIGN);
 // The door body must NOT read as an inline site (its true arm concatenates, false arm is String).
@@ -66,11 +69,18 @@ const plantPadded = count(`  {v >= 0 ? "+" : ""}\${v.toFixed(2)}`, PADDED_SIGN);
 const plantDecl = count(`\nexport const signed = (n: number): string => (n >= 0 ? "+" + n : String(n));\n`, DECL_SIGNED);
 const plantPrivate = count(`\nconst signed = (n: number) => (n >= 0 ? "+" + n : String(n));\n`, PRIVATE_SIGNED);
 const plantImport = count(`import { cn, signed } from "@/lib/utils";`, IMPORT_SIGNED);
-ok(`the six scans are armed and the two exclusions bite (inline ${plantInline}, door-body ${plantDoorBody}, boolean ${plantBoolean}, padded ${plantPadded}, decl ${plantDecl}, private ${plantPrivate}, import ${plantImport})`,
-  plantInline === 1 && plantDoorBody === 0 && plantBoolean === 0 && plantPadded === 1 && plantDecl === 1 && plantPrivate === 1 && plantImport === 1);
+// The SIBLING door must not be charged as this one: `signed2` declares a different name, so neither
+// the public nor the private declaration scan may read it, and an import list that names only the
+// sibling must not satisfy this door's import scan either.
+const plantSiblingDecl = count(`\nexport const signed2 = (v: number): string => \`\${v}\`;\n`, DECL_SIGNED);
+const plantSiblingPrivate = count(`\nconst signed2 = (v: number) => \`\${v}\`;\n`, PRIVATE_SIGNED);
+const plantSiblingImport = count(`import { cn, signed2 } from "@/lib/utils";`, IMPORT_SIGNED);
+ok(`the seven scans are armed and the three exclusions bite (inline ${plantInline}, door-body ${plantDoorBody}, boolean ${plantBoolean}, padded ${plantPadded}, decl ${plantDecl}, private ${plantPrivate}, import ${plantImport}) while the sibling door reads nothing (decl ${plantSiblingDecl}, private ${plantSiblingPrivate}, import ${plantSiblingImport})`,
+  plantInline === 1 && plantDoorBody === 0 && plantBoolean === 0 && plantPadded === 1 && plantDecl === 1 && plantPrivate === 1 && plantImport === 1 &&
+  plantSiblingDecl === 0 && plantSiblingPrivate === 0 && plantSiblingImport === 0);
 
 // --- Population floor + subject presence (a blind walk reads 0 and would pass a negative claim). --
-const subjects = CONSUMERS.concat([HOME, ...FORMER_RAW, ...PADDED, "features/world/DynamicWorld.tsx"]);
+const subjects = CONSUMERS.concat([HOME, ...FORMER_RAW, ...PADDED_SITES, "features/world/DynamicWorld.tsx"]);
 const present = subjects.every((p) => Object.prototype.hasOwnProperty.call(src, p));
 ok(`the census walks the real source tree and every subject is inside it (${carriers.length} .ts/.tsx)`,
   carriers.length >= 80 && present);
@@ -86,9 +96,16 @@ ok(`no module still declares a private \`const signed\` — review imports the d
   plantPrivate === 1 && count(src["domain/review.ts"], PRIVATE_SIGNED) === 0 && privateByFile.length === 0);
 
 // --- Door body: concatenates the number, false arm is String(n) — NOT the inline `"+" : ""`. -----
-const signedBody = (src[HOME].match(/export const signed[\s\S]*?;/) || [""])[0];
-ok(`the door body is \`n >= 0 ? "+" + n : String(n)\`, structurally distinct from an inline site so the census never charges the door`,
-  /\? *"\+" *\+ *n *: *String\(n\)/.test(signedBody) && !/\? *"\+" *: *""/.test(signedBody) && signedBody.length > 20);
+// The extraction anchors on `signed` FOLLOWED BY ITS ASSIGNMENT, so the `signed2` sibling declared
+// under the same prefix can never be the line this clause reads (a prefix-only match would grab the
+// sibling first if it were ever reordered above this door, and the pad it glues would read as a
+// `"+" : ""` arm — a false red this proof must not be able to produce).
+const bodyOf = (t) => (t.match(/export const signed[ \t]*=[\s\S]*?;/) || [""])[0];
+const signedBody = bodyOf(src[HOME]);
+const pBodyBoth = bodyOf(['export const signed2 = (v: number): string => `${v >= 0 ? "+" : ""}${v}`;', 'export const signed = (n: number): string => (n >= 0 ? "+" + n : String(n));'].join("\n"));
+ok(`the door body is \`n >= 0 ? "+" + n : String(n)\`, structurally distinct from an inline site, and the sibling declared above it is not the body read (sibling-first extraction grabbed ${/signed2/.test(pBodyBoth) ? "signed2" : "signed"}; planted body "${pBodyBoth.trim().slice(0, 46)}…")`,
+  /\? *"\+" *\+ *n *: *String\(n\)/.test(signedBody) && !/\? *"\+" *: *""/.test(signedBody) && signedBody.length > 20 &&
+  !/signed2/.test(pBodyBoth) && /\? *"\+" *\+ *n/.test(pBodyBoth));
 
 // --- Every consumer imports the door. ----------------------------------------------------------
 const importing = CONSUMERS.filter((f) => count(src[f], IMPORT_SIGNED) >= 1);
@@ -104,33 +121,44 @@ ok(`none of the three consumers still glues the numeric sign inline (read ${cons
 ok(`the DynamicWorld boolean delta (up ? "+" : "") reads 0 under the numeric sign scan so it is not silently charged (${count(src["features/world/DynamicWorld.tsx"], INLINE_SIGN)}; planted boolean reads ${plantBoolean})`,
   plantBoolean === 0 && count(src["features/world/DynamicWorld.tsx"], INLINE_SIGN) === 0);
 
-// --- Completeness: the ONLY files still carrying the numeric inline sign are the padded sibling
-// family (career's sign+toFixed(2) form line, FilmRoom's padded deltas). No raw site survives. ---
+// --- Completeness: the numeric sign ternary now survives in EXACTLY two files — the door (signed2's ---
+// --- body, plus the docstring that quotes the shape it replaced) and ONE named residue: career.ts's ---
+// --- form cell, whose carrier is mid-flight in another lane, so it is charged by identity rather ---
+// --- than excised here. FilmRoom, the other padded cell, left the list at M393; a third spelling ---
+// --- anywhere reddens this set, and so does career's own fold — which is the point of pinning it. ---
+const RESIDUE_PAIRED = ["domain/career.ts"];
 const inlineByFile = carriers.filter((f) => count(src[f], INLINE_SIGN) > 0).sort();
-const expectedInline = [...new Set(PADDED)].sort();
+const expectedInline = [HOME, ...RESIDUE_PAIRED].sort();
 const plantRawSurvivor = count(`  delta: \`\${x >= 0 ? "+" : ""}\${x}\`,`, INLINE_SIGN);
-ok(`the files still spelling the numeric sign inline are exactly the padded sibling family (${inlineByFile.join(",")}) and no raw site survives (planted raw reads ${plantRawSurvivor})`,
+ok(`the numeric sign ternary survives only in the door and its one named residue (carriers ${inlineByFile.join(",")}; expected ${expectedInline.join(",")}; planted raw reads ${plantRawSurvivor})`,
   plantRawSurvivor === 1 && inlineByFile.length === expectedInline.length && inlineByFile.every((f, i) => f === expectedInline[i]));
 
-// --- The former raw residues carry ZERO raw (non-padded) inline sign sites now — both read the
-// door. career's single surviving inline is the padded toFixed(2) form charged below, not a raw one.
+// --- The former raw residues carry ZERO raw (non-padded) inline sign sites — both read the door.
+// career's one surviving inline is its padded form cell, charged by name above, not a raw site.
 const rawOnly = (f) => count(src[f], INLINE_SIGN) - count(src[f], PADDED_SIGN);
 const formerRawInline = FORMER_RAW.map((f) => [f, rawOnly(f)]);
 const formerRawImports = FORMER_RAW.filter((f) => count(src[f], IMPORT_SIGNED) >= 1);
 ok(`both former raw residues re-inlined nothing raw and import signed instead (raw ${formerRawInline.map(([, n]) => n).join(",")}; importers ${formerRawImports.length}/${FORMER_RAW.length}: ${formerRawImports.join(", ")})`,
   formerRawInline.every(([, n]) => n === 0) && formerRawImports.length === FORMER_RAW.length);
 
-// --- Padded family: career AND FilmRoom each carry the sign+toFixed(2) sub-shape the door must not
-// absorb. The padded count charges ONLY the toFixed(2) sites, so a raw site would not satisfy it —
-// the padded clause proves the padded family survives on its own terms, distinct from the raw door.
-const paddedCount = PADDED.map((f) => [f, count(src[f], PADDED_SIGN)]);
-ok(`the padded sign+toFixed(2) family still stands in career and FilmRoom, charged separately from the raw door (${paddedCount.map(([, n]) => n).join(",")})`,
-  plantPadded === 1 && paddedCount.every(([, n]) => n >= 1));
+// --- Padded family, site by site: FilmRoom's trend cell now reads the door (0 spellings); career's ---
+// --- form cell is the one residue still spelling it by hand (1). HOME carries the idiom twice — ---
+// --- signed2's body and the docstring that quotes the shape it replaced — so the door is read BY ---
+// --- LINE, not by file: the door cannot be charged as its own stray. The exact body line is pinned ---
+// --- too, so renaming the pad or dropping it here reddens this census. ---
+const signed2Line = (src[HOME].match(/export const signed2[^\n]*/) || [""])[0];
+const docQuote = count(src[HOME].split("\n").filter((l) => /^\s*\/\//.test(l)).join("\n"), PADDED_SIGN);
+const paddedSites = PADDED_SITES.map((f) => [f, count(src[f], PADDED_SIGN)]);
+ok(`signed2's body IS the padded idiom, FilmRoom left it and career is the named residue (body line reads ${count(signed2Line, PADDED_SIGN)}; ${paddedSites.map(([f, n]) => `${f.split("/").pop()} ${n}`).join(", ")}; door docstring quotes it ${docQuote} and is excluded; planted padded reads ${plantPadded})`,
+  plantPadded === 1 && count(signed2Line, PADDED_SIGN) === 1 && docQuote === 1 &&
+  signed2Line.trim() === 'export const signed2 = (v: number): string => `${v >= 0 ? "+" : ""}${v.toFixed(2)}`;' &&
+  paddedSites[0][1] === 1 && paddedSites[1][0] === "features/film/FilmRoom.tsx" && paddedSites[1][1] === 0);
 
-// --- Must-not-unify, behavioural: signed() coerces the RAW number, so it cannot serve a padded site.
-const paddedForm = (n) => `${n >= 0 ? "+" : ""}${n.toFixed(2)}`;
-ok(`signed() and the padded sibling disagree on a shared value so they cannot be silently unified (signed(1.5)="${signed(1.5)}" vs padded="${paddedForm(1.5)}")`,
-  signed(1.5) === "+1.5" && paddedForm(1.5) === "+1.50" && signed(1.5) !== paddedForm(1.5));
+// --- Must-not-unify, behavioural: signed() coerces the RAW number, so it cannot serve a padded cell.
+// Both doors are the SHIPPED ones here, not a re-spelling of mine. -0 is measured, not assumed:
+// toFixed drops a negative zero's minus, so signed2 pads where signed already agrees on the sign.
+ok(`signed() and signed2() disagree on the value both sites pass, so neither can silently replace the other (signed(1.5)="` + signed(1.5) + `" vs signed2(1.5)="` + signed2(1.5) + `"; -0 → signed="` + signed(-0) + `", signed2="` + signed2(-0) + `")`,
+  signed(1.5) === "+1.5" && signed2(1.5) === "+1.50" && signed(1.5) !== signed2(1.5) && signed(-0) === "+0" && signed2(-0) === "+0.00");
 
 // --- Behavioural: the shipped door reproduces the inline formula on the raw values the sites pass.
 const VALUES = [0, 1, -1, 2.5, -2.5, 15, -8, -0, 0.75, 100, -0.001, 3];

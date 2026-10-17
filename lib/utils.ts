@@ -80,6 +80,19 @@ export const pctOf = (value: number, max: number): string => `${(value / max) * 
 // boolean — neither is this door's shape.
 export const signed = (n: number): string => (n >= 0 ? "+" + n : String(n));
 
+// The padded sibling of that door: a figure shown at a FIXED two decimals with a leading `+`.
+// domain/career's season-form cell and the Film Room's scan-trend cell both glued the sign in front of
+// a PRE-FORMATTED string — `… >= 0 ? "+" : ""}${v.toFixed(2)}` — where the pad ("1.50", not "1.5") is
+// part of the display, so signed()'s raw coercion could not serve them (proof-signed pins that split).
+// M393 put the two spellings behind this one door and folded the Film Room's cell onto it; the figure
+// a reader sees there does not move. career's cell still spells it inline — both proofs name it as that
+// file's residue rather than excusing it. NOTE this door is NOT `"+" + fmt2(v)`: that spelling glues a
+// `+` onto a negative's own sign and prints "+-1.00" where the cell it replaced prints "-1.00". It is
+// NOT DynamicWorld's delta cell either, whose `+` comes from a boolean computed elsewhere rather than
+// from the number it prints. And -0 prints "+0.00", not "+-0.00": toFixed drops the minus on a negative
+// zero, so the ternary's non-negative arm wins and the pad is all this door adds over signed().
+export const signed2 = (v: number): string => `${v >= 0 ? "+" : ""}${v.toFixed(2)}`;
+
 // The app's parse-a-timestamp door: an ISO-ish string to epoch milliseconds, with a missing or
 // unparseable string floored to 0. domain/footprint, domain/history and the Profile record each
 // spelled this as a private `ts` helper (identical modulo history's shorter signature — its single

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M391 (a few numbers in that range
+Work ships one milestone per commit and is currently at M393 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,20 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M393 — the padded `+` was glued out twice, and the raw-number door could not serve either one
+
+M356 put the sign-prefix in front of a **raw number** behind `signed()`. Two cells in that family sign a **pre-formatted string**: career's season-form tile and the Film Room's scan-trend tile both wrote `` `${v >= 0 ? "+" : ""}${v.toFixed(2)}` `` — the two-decimal pad ("+1.50", not "+1.5") is part of what the reader sees, so routing them through `signed()` would have moved a displayed figure. They are a door now: `signed2(v)` in `lib/utils.ts`, and the Film Room's cell folded onto it. The figure a reader sees there does not change; no copy and no display string moved.
+
+Career's cell still spells the pad inline. Its carrier is another lane's working copy, so this unit charges it **by identity** in both sibling gates instead of excising it — the residue is named, not excused, and folding it later has to move the pinned carrier set, which is the point of pinning carriers rather than a count.
+
+**The seam, charged both ways.** `scripts/proof-signed2.mjs` (new, 12/12) asserts the door is declared exactly once with the exact shipped body, then charges the padded spelling **by file**: it survives in exactly two carriers — the door body and career's named residue — with FilmRoom read at zero and importing the door instead. The reachability clause pins what the fold actually did at the call site: `signed2(` is called inside the tile's own `== null` guard, so a fold that drops the guard (and starts rendering "+0.00" for "—") reddens. Three must-not-unify legs are behavioural, not prose: `signed(1.5)` is "+1.5" where the door says "+1.50"; `"+" + fmt2(v)` prints "+-1.00" for a negative where the door prints "-1.00"; and DynamicWorld's delta `+` comes from a boolean, so the numeric scans read it zero and its own lane keeps the charge. The padded-family scans are planted both ways, and the sibling door `signed` reads 0 under every `signed2` scan so neither can silently replace the other.
+
+**What the siblings say.** `proof-signed` 13/13 — the raw door's census now expects the padded spelling in zero consumers and charges the one place it appears (the `signed2` body) as a door, and its career/FilmRoom rows were re-measured rather than relaxed. `proof-fmt2` 12/12 — the padded family's tree total is still 2 after the fold but for a **different** reason (career+FilmRoom cells, then door body+career), so the gate pins the carrier set and the per-site readings, not the number.
+
+**Witness arms.** Five mutations of clean files (`dev/.m393-arms.mjs`), each requiring the FAIL set to equal the prediction in clauses **and** count, then a byte-exact restore verified against the pristine bytes: re-inlining FilmRoom's cell → {6,7,12}; dropping the import while keeping the call → {6}; rewriting the door as `"+" + fmt2(v)` → {4,5,7,8,9,11}, and both sibling gates go red on the same mutation; planting a third padded spelling elsewhere → {7}; renaming the door's parameter → {4}. 5/5 MATCHED, proof green again after restore.
+
+Measured: `proof-signed2` 12/12, `proof-signed` 13/13, `proof-fmt2` 12/12, `tsc --noEmit` clean, `vite build` exit 0.
 
 ### M391 — the occurrence tally was hand-written five times, and one of them lived inside the simulation loop
 
