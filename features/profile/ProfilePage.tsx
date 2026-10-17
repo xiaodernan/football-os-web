@@ -7,7 +7,7 @@ import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
 import { goalProgressPct, goalUnitKey } from "@/domain/goals";
 import { positionLabel, rowLine } from "@/domain/rowText";
-import { overallRating, weakestAttributes, ATTRIBUTE_DEFS, byValueDesc, byDateDesc } from "@/domain/attributes";
+import { overallRating, weakestAttributes, ATTRIBUTE_DEFS, byValueDesc, byDateDesc, sum } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { completedMinutes, completedSessions } from "@/domain/training";
 import { seasonSummary, type CareerState } from "@/domain/career";
@@ -72,7 +72,7 @@ export function ProfilePage() {
       const fi = buildFilmInsights(toClipInputs(clips));
       film = {
         clips: fi.clips,
-        minutes: clips.reduce((n, c) => n + (c.report?.durationSec ?? 0), 0) / 60,
+        minutes: sum(clips, (c) => c.report?.durationSec ?? 0) / 60,
         lastClipAt: newestClipAt(clips),
         detections: fi.detections,
         scanPerMinute: fi.scanPerMinute,
@@ -94,7 +94,7 @@ export function ProfilePage() {
       posts = threads.length;
       lastPostAt = threads[0]?.at;
       const groups = st?.replies && typeof st.replies === "object" ? Object.values(st.replies as Record<string, unknown[]>) : [];
-      replies = groups.reduce((n, a) => n + (Array.isArray(a) ? a.length : 0), 0);
+      replies = sum(groups, (a) => (Array.isArray(a) ? a.length : 0));
     }
 
     return buildFootprint({

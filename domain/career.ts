@@ -267,7 +267,7 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
     .sort((a, b) => b.beatUsChance - a.beatUsChance);
 
   const titleChance = rivalRows.reduce((chance, r) => chance * (1 - r.beatUsChance), 1);
-  const expectedFinish = 1 + rivalRows.reduce((sum, r) => sum + (1 - r.beatUsChance), 0);
+  const expectedFinish = 1 + sum(rivalRows, (r) => 1 - r.beatUsChance);
 
   const position = rows.findIndex((r) => r.clubId === state.clubId) + 1;
   const pct = clubCount ? (position - 1) / clubCount : 1;

@@ -107,9 +107,9 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const missed = inWindow.filter((s) => s.status === "missed");
 
   const minutes = completedMinutes(inWindow);
-  const xpGained = completed.reduce((sum, s) => sum + (s.xpAwarded ?? 0), 0);
+  const xpGained = sum(completed, (s) => s.xpAwarded ?? 0);
   const ratings = completed.map((s) => s.selfRating).filter((r): r is number => typeof r === "number");
-  const avgRating = ratings.length ? round1(ratings.reduce((a, b) => a + b, 0) / ratings.length) : null;
+  const avgRating = ratings.length ? round1(sum(ratings, (r) => r) / ratings.length) : null;
 
   const prog = input.progress
     .filter((p) => withinWindow(p.date, fromMs, nowMs))

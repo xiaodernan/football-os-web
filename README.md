@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M386 (a few numbers in that range
+Work ships one milestone per commit and is currently at M387 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,14 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M387 — the sum census had a blind spot, and eight folds escaped through it by a different name
+
+M386 converged the sum fold, but its census charged only the accumulator named `s`. A fresh census keyed on any accumulator name found eight more folds that had escaped through exactly that hole: career's expected-finish sum (`rivalRows.reduce((sum, r) => …)`), load's exercise minutes and mean (`(sum, e)` and `(a, b)`), review's xp-gained and average rating (`(sum, s)` and `(a, b)`), CommunityHub's average rating (`(a, b)`), and ProfilePage's clip minutes and reply counts (`(n, c)` and `(n, a)`). Every one the same contract M386 retired — just a different name on the running total. The census was widened to be accumulator-agnostic (the accumulator is a backreference, so `a`, `n`, `sum` all count) and the eight escaped folds converted: nineteen readers, forty call sites.
+
+**The seam, charged both ways.** proof-sum now plants the three escape shapes (`a`, `sum`, `n` — one each) alongside the destructured and conditional shapes and the converted call, and refuses object-merge, product, max and nearest reduces while charging a count-reduce as the same fold. The widened census is itself the fix for the hole M386 shipped: a zero-leftover verdict is only as good as the scan behind it, and this scan no longer has a name-shaped hole. The file passes 8/8; tsc is clean. career.ts once again carried the other session's uncommitted signed2 work mid-file and went through the same revert-replay-restore dance as M385/M386.
+
+**Still outstanding.** The converged math now covers the comparators, nearest-100k rounding, market-value curve, average-overall primitive, round-then-bound pair, ISO-date ordering, league-table ranking and the list-sum fold (all accumulator names). The non-fold reduce contracts that survived on purpose — the product reduce in career's title chance, the max reduces in scouting and careerArc, the nearest reduce in ai — are candidates for their own doors if a fresh census surfaces more of any shape. The date/time family (epochMs conversions in footballSeed, footballService, load) is another session's active area and was left to them. A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M386 — the list-sum fold was hand-written thirty-four times, and one of them lived behind a ternary
 

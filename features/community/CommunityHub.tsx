@@ -146,7 +146,7 @@ export function CommunityHub() {
             minutes: completedMinutes(state.sessions),
             topFocusKey: top ? top[0] : undefined,
             topFocusSessions: top ? top[1] : undefined,
-            avgRating: ratings.length ? round1(ratings.reduce((a, b) => a + b, 0) / ratings.length) : null,
+            avgRating: ratings.length ? round1(sum(ratings, (r) => r) / ratings.length) : null,
           }
         : undefined,
       academy: lessons.completed

@@ -70,7 +70,7 @@ function dayKey(iso: string): string {
 // Duration × session-RPE. Completed sessions carry a self-rating (1..5); if a
 // record lacks one we fall back to the objective intensity of its exercises.
 function sessionLoad(s: TrainingSession): { minutes: number; load: number } {
-  const exMinutes = s.exercises.reduce((sum, e) => sum + e.minutes, 0);
+  const exMinutes = sum(s.exercises, (e) => e.minutes);
   const minutes = exMinutes || s.targetMinutes || 0;
   const rpe = s.selfRating ?? sessionIntensity(s);
   return { minutes, load: Math.round(minutes * rpe) };
@@ -182,7 +182,7 @@ function buildMonotony(weekly: WeeklyLoad[]): { monotony: number | null; strain:
   const loads = weekly.map((w) => w.load);
   const n = loads.length;
   if (n < 2) return { monotony: null, strain: null };
-  const mean = loads.reduce((a, b) => a + b, 0) / n;
+  const mean = sum(loads, (v) => v) / n;
   const variance = sum(loads, (v) => (v - mean) ** 2) / n;
   const sd = Math.sqrt(variance);
   if (mean <= 0) return { monotony: null, strain: null };
