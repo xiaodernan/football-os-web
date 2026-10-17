@@ -15,7 +15,7 @@ import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, epochMs } from "@/lib/utils";
-import { byDateDesc, sum } from "@/domain/attributes";
+import { byDateDesc, sum, tally } from "@/domain/attributes";
 import { toast } from "sonner";
 
 const KEY = COMMUNITY_KEY;
@@ -131,8 +131,7 @@ export function CommunityHub() {
       };
     }
 
-    const done = completedSessions(state.sessions);    const focus = new Map<string, number>();
-    for (const x of done) for (const k of x.focusAttributes) focus.set(k, (focus.get(k) ?? 0) + 1);
+    const done = completedSessions(state.sessions);    const focus = tally(done.flatMap((x) => x.focusAttributes), (k) => k);
     const top = [...focus.entries()].sort((a, b) => b[1] - a[1])[0];
     const ratings = done.map((x) => x.selfRating).filter((r): r is number => typeof r === "number");
     const lessons = summarizeLearn(learn);

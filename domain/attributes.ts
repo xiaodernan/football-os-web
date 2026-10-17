@@ -276,3 +276,12 @@ export const maxBy = <T>(xs: readonly T[], f: (x: T) => number): T =>
  *  step, the details' final arc point and onboarding's surname initial — every one the same "final element,
  *  undefined when empty" contract, so it is a door now. */
 export const last = <T>(xs: readonly T[]): T | undefined => xs[xs.length - 1];
+
+/** Count occurrences of a key into a Map. The tally idiom — set the key to its current count plus one,
+ *  defaulting the current count to zero — was hand-written five times across filmInsights' event-kind and
+ *  recurring-focus counts, matchProbability's scoreline counts, review's focus counts and CommunityHub's
+ *  focus counts. Same "occurrence tally, zero-initialised, first-occurrence insertion order" contract, so
+ *  it is a door now: one place the nullish default lives, and a reader that forgets it cannot silently
+ *  produce NaN. */
+export const tally = <T, K>(xs: readonly T[], f: (x: T) => K): Map<K, number> =>
+  xs.reduce((m, x) => m.set(f(x), (m.get(f(x)) ?? 0) + 1), new Map<K, number>());

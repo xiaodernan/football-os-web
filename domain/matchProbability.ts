@@ -1,5 +1,6 @@
 import { simulateMatch, type TeamInput } from "./matchEngine";
 import { clamp, round3 } from "@/lib/utils";
+import { tally } from "./attributes";
 
 // A fixture-level probabilistic outlook produced by running the SAME
 // deterministic Match Engine many times with varied seeds. Nothing is guessed
@@ -38,10 +39,10 @@ export interface MatchProbabilityInput {
 
 export function matchProbability(input: MatchProbabilityInput): MatchProbability {
   const runs = clamp(Math.floor(input.runs ?? 250), 1, 1000);
+  const results = Array.from({ length: runs }, (_, i) =>
+    simulateMatch({ seed: `${input.seedBase}:r${i}`, home: input.home, away: input.away }));
   let hw = 0, dr = 0, aw = 0, hg = 0, ag = 0, hx = 0, ax = 0, btts = 0, over = 0;
-  const scores = new Map<string, number>();
-  for (let i = 0; i < runs; i++) {
-    const r = simulateMatch({ seed: `${input.seedBase}:r${i}`, home: input.home, away: input.away });
+  for (const r of results) {
     if (r.homeGoals > r.awayGoals) hw++;
     else if (r.homeGoals === r.awayGoals) dr++;
     else aw++;
@@ -51,9 +52,8 @@ export function matchProbability(input: MatchProbabilityInput): MatchProbability
     ax += r.stats.away.xg;
     if (r.homeGoals > 0 && r.awayGoals > 0) btts++;
     if (r.homeGoals + r.awayGoals >= 3) over++;
-    const key = `${r.homeGoals}-${r.awayGoals}`;
-    scores.set(key, (scores.get(key) ?? 0) + 1);
   }
+  const scores = tally(results, (r) => `${r.homeGoals}-${r.awayGoals}`);
   const mostLikely: ScoreLikelihood[] = [...scores.entries()]
     .map(([score, n]) => ({ score, pct: n / runs }))
     .sort((a, b) => b.pct - a.pct || a.score.localeCompare(b.score))

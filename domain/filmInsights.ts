@@ -7,7 +7,7 @@
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
 import { round2, signed, fmt2 } from "@/lib/utils";
-import { byDateAsc, sum } from "@/domain/attributes";
+import { byDateAsc, sum, unique, tally } from "@/domain/attributes";
 
 export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
 
@@ -70,8 +70,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   const analysedSeconds = sum(valid, (c) => c.durationSec);
   const analysedMinutes = analysedSeconds / 60;
 
-  const counts = new Map<FilmEventKind, number>();
-  for (const c of valid) for (const e of c.events) counts.set(e.kind, (counts.get(e.kind) ?? 0) + 1);
+  const counts = tally(valid.flatMap((c) => c.events), (e) => e.kind);
 
   const perMin = (n: number) => (analysedMinutes > 0 ? n / analysedMinutes : 0);
   const byKind: KindRate[] = FILM_KINDS.map((kind) => ({
@@ -102,8 +101,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   }
   const scanTrend = olderScanRate != null && newerScanRate != null ? round2(newerScanRate - olderScanRate) : null;
 
-  const focusMap = new Map<string, number>();
-  for (const c of valid) for (const key of new Set(c.recommendedFocus)) focusMap.set(key, (focusMap.get(key) ?? 0) + 1);
+  const focusMap = tally(valid.flatMap((c) => unique(c.recommendedFocus)), (k) => k);
   const topFocus: FocusStat[] = [...focusMap.entries()]
     .map(([key, clipCount]) => ({ key, clips: clipCount }))
     .sort((a, b) => b.clips - a.clips || a.key.localeCompare(b.key))

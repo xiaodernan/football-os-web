@@ -1,6 +1,6 @@
 import type { Attributes, Goal, TrainingSession } from "./types";
 import type { RowText } from "./rowText";
-import { weakestAttributes, byDeltaDescThenKey, byDateAsc, sum, last } from "./attributes";
+import { weakestAttributes, byDeltaDescThenKey, byDateAsc, sum, last, tally } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions, plannedSessions } from "./training";
@@ -118,8 +118,7 @@ export function buildReview(input: ReviewInput): WeeklyReview {
   const overallEnd = prog.length ? last(prog)!.overall : null;
   const overallDelta = overallStart != null && overallEnd != null ? overallEnd - overallStart : null;
 
-  const focusMap = new Map<string, number>();
-  for (const s of completed) for (const f of s.focusAttributes) focusMap.set(f, (focusMap.get(f) ?? 0) + 1);
+  const focusMap = tally(completed.flatMap((s) => s.focusAttributes), (f) => f);
   const topFocus: FocusStat[] = [...focusMap.entries()]
     .map(([key, sessions]) => ({ key, sessions }))
     .sort((a, b) => b.sessions - a.sessions || a.key.localeCompare(b.key));

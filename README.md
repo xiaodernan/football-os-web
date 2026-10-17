@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M390 (a few numbers in that range
+Work ships one milestone per commit and is currently at M391 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M391 — the occurrence tally was hand-written five times, and one of them lived inside the simulation loop
+
+M390 retired the last-element read. This unit closes the next duplication the census surfaced — the occurrence tally: set a key in a Map to its current count plus one, defaulting the current count to zero. It was hand-written five times: filmInsights' event-kind counts and recurring-focus counts, matchProbability's scoreline counts, review's focus counts and CommunityHub's focus counts. Same contract — and a real drift risk, since a reader that forgets the zero default silently produces NaN — so it is a door now.
+
+`tally(xs, f)` in `domain/attributes.ts` is the definition: `xs.reduce((m, x) => m.set(f(x), (m.get(f(x)) ?? 0) + 1), new Map())`. Four of the five readers were standalone counting loops and converted directly (filmInsights' recurring-focus tally composes with the M388 `unique` door, keeping the per-clip dedup the loop did). matchProbability's tally was fused into its per-run simulation loop: the loop now materialises the run results once and makes two clean passes — the sums and the tally — same seeds in the same order, so every number the simulator produces is unchanged (its own proof, 38/38, still passes, as do the film and review proofs).
+
+**The seam, charged both ways.** proof-tally charges the idiom — a Map.set whose value is the same map's get of the same key, defaulted to zero by either `??` or `||`, plus one — across the whole tree and asserts the only occurrence left is the door body, so a re-inline at any reader reddens it. The scan keys on the set/get pair with the default, not on "a set happens": a plain set, an object-property count and a bare get are left uncharged (the must-not-unify plants prove exactly that). The proof plants both default spellings and the converted call, asserts tally is declared once, its body is the idiom, all four readers call it (five call sites), and the door equals the old loop on every sample — occurrences counted, first-occurrence insertion order kept, empty safe. An integration clause replays the event-kind, scoreline and focus shapes. The file passes 8/8; tsc is clean.
+
+**Still outstanding.** The converged math now covers the comparators, nearest-100k rounding, market-value curve, average-overall primitive, round-then-bound pair, ISO-date ordering, league-table ranking, the list-sum fold, the list dedup, the argmax fold, the last-element read and the occurrence tally. The fmt/signed/epochMs/pct family is another session's active area and was left to them. A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M390 — "the final element of a list" was spelled ten times, in two forms, and two of them shadowed the door
 
