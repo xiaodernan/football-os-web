@@ -2,7 +2,7 @@ import type { RowText } from "./rowText";
 import type { PlayerRef, PositionGroup } from "./types";
 import { round1 } from "./scouting";
 import { clamp } from "@/lib/utils";
-import { capRound } from "./attributes";
+import { capRound, maxBy } from "./attributes";
 
 // Career arc: how a squad player's level is expected to move with age.
 //
@@ -94,7 +94,7 @@ export function careerArc(p: PlayerRef): CareerArc {
     overall = clamp(overall + annualChange({ age, overall, potential, peakAge }), 35, 99);
   }
 
-  const peakPoint = points.reduce((best, pt) => (pt.overall > best.overall ? pt : best), points[0]);
+  const peakPoint = maxBy(points, (pt) => pt.overall);
   const yearsToPeak = Math.max(0, peakPoint.age - startAge);
   const declineFromAge = points.find((pt) => pt.phase === "decline")?.age ?? LAST_AGE;
   const remainingPrimeYears = Math.max(0, Math.min(LAST_AGE, peakAge + 2) - startAge);

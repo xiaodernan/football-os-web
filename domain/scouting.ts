@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall, capRound } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall, capRound, maxBy } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -92,7 +92,7 @@ export function scoutCandidates(filters: ScoutFilters, sort: ScoutSort, limit = 
 export function bestValueAt(bucket: Exclude<PosBucket, "ALL">, minOverall = 70): { player: PlayerRef; clubName: string } | null {
   const pool = footballProvider.players().filter((p) => bucketOf(p.positionGroup) === bucket && p.overall >= minOverall);
   if (!pool.length) return null;
-  const p = pool.reduce((best, cur) => (valueIndex(cur) > valueIndex(best) ? cur : best));
+  const p = maxBy(pool, valueIndex);
   return { player: p, clubName: getClub(p.clubId)?.name ?? "—" };
 }
 

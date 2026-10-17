@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M388 (a few numbers in that range
+Work ships one milestone per commit and is currently at M389 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,18 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M389 — "pick the element with the greatest figure" was spelled three times, in two dialects
+
+M388 retired the spread-set dedup. This unit closes the next duplication the census surfaced — the argmax fold: pick the element with the greatest figure under a selector, first max kept. It was spelled three times in two dialects: the scout report's best-value-at pick (`domain/scouting.ts`, call dialect), the career arc's peak point (`domain/careerArc.ts`, field dialect) and the player details' peak age (`features/football/Details.tsx`, field dialect inside a JSX interpolation). Same contract, so it is a door now.
+
+`maxBy(xs, f)` in `domain/attributes.ts` is the definition: `xs.reduce((best, x) => (f(x) > f(best) ? x : best))`. Empty input throws, exactly like the no-init fold the scout pick uses — career's and details' `points[0]` init only postponed the same crash to the next read. ai's nearest-to-target pick keeps a similar fold shape but breaks toward the SMALLEST distance — a different contract — and stays inline, as does career's season-summary best/worst tracking, which is fused into its aggregation pass (the argmax is incidental to the sums, not a repeated spelling).
+
+**The seam, charged both ways.** proof-maxby counts both dialects — accumulator-name-agnostic via backreferences, the M387 lesson — across the whole tree and asserts the only occurrence left is the door body, so a re-inline at any reader reddens it. The scan keys on the fold shape: a nearest-to-target pick, an argmin and the `Math.max(...xs.map(f))` maximum-of-values shape are left uncharged (the must-not-unify plants prove exactly that). The proof plants both dialects and a differently-named accumulator, asserts maxBy is declared once, its body is the argmax fold, all three readers call it, and the door equals both dialects on every sample — first max kept on ties, single-safe, empty throws. An integration clause replays the three converted sites' shapes. The file passes 8/8; tsc is clean.
+
+Worth recording how the third site was found: the initial search grepped for the accumulator name `best` and missed Details.tsx, whose accumulator is `b` — the same name-shaped hole M387 closed for the sum census. The census itself caught it (tree read 2 against an expected 1), which is the census doing exactly the job it exists for. The proof's own first run also had two assertion bugs — a body regex expecting a return type the declaration does not have, and a tie expectation written backwards (b and d tie on value index and the first max is b, not d).
+
+**Still outstanding.** The converged math now covers the comparators, nearest-100k rounding, market-value curve, average-overall primitive, round-then-bound pair, ISO-date ordering, league-table ranking, the list-sum fold (all accumulator names), the list dedup and the argmax fold. The remaining hand-written reduce contracts are single- or different-shape (career's fused best/worst pass, ai's nearest pick, the object-merge and max folds). The fmt/signed/epochMs/pct family is another session's active area and was left to them. A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M388 — the spread-set dedup was written seven times, in two spellings, and one of them was an Array.from
 

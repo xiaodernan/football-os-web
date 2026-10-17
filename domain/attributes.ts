@@ -259,3 +259,13 @@ export const sum = <T>(xs: readonly T[], f: (x: T) => number): number => xs.redu
  *  intelligence's phrase list, LearnHub's category tabs and PlayerOS's carried focus. Same
  *  "first-occurrence order preserved" contract, so it is a door now. */
 export const unique = <T>(xs: readonly T[]): T[] => [...new Set(xs)];
+
+/** Pick the element with the greatest figure under a selector. The argmax fold was written twice — the
+ *  scout report's best-value-at pick and the career arc's peak point — one spelling it as a call on the
+ *  selector, the other as a field access, same "greatest figure wins and the first max is kept" contract,
+ *  so it is a door now. ai's nearest-to-target pick keeps a similar fold shape but breaks toward the
+ *  SMALLEST distance — a different contract — and stays inline. Empty input throws, exactly like the
+ *  no-init fold the scout pick uses (career's `points[0]` init only postponed the same crash to the
+ *  `peakPoint.age` read one line later). */
+export const maxBy = <T>(xs: readonly T[], f: (x: T) => number): T =>
+  xs.reduce((best, x) => (f(x) > f(best) ? x : best));
