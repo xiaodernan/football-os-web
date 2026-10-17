@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { footballProvider, getClub, getCompetition, playersByClub, clubIdsByCompetition } from "@/data/footballService";
 import { useRouter } from "@/lib/router";
-import { byOverall } from "@/domain/attributes";
+import { byOverall, byTableStanding } from "@/domain/attributes";
 import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/domain/matchEngine";
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine } from "@/domain/rowText";
@@ -268,7 +268,7 @@ function simulateSeason(compId: string, nonce: number): SeasonRow[] {
       apply(ar, res.awayGoals, res.homeGoals, awayWin, false);
     }
   }
-  return [...table.values()].sort((a, b) => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf);
+  return [...table.values()].sort((a, b) => byTableStanding(a, b));
 }
 
 function SeasonTable({ rows, name }: { rows: SeasonRow[]; name: string }) {

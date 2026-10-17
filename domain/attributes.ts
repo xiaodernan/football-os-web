@@ -231,3 +231,15 @@ export const capRound = (value: number, lo: number, hi: number): number => clamp
  *  floor ever changes. */
 export const byDateDesc = (a: string | undefined, b: string | undefined): number => epochMs(b) - epochMs(a);
 export const byDateAsc = (a: string | undefined, b: string | undefined): number => epochMs(a) - epochMs(b);
+
+/** Rank two league-table rows the football way: points first, then goal difference (goals for minus goals
+ *  against), then goals for. The three-tiebreak chain was spelled three times — career's live standings,
+ *  analytics' team metrics and the season simulator's projected table — each one the same contract, so it is
+ *  a door now. It recomputes the difference from goals for / against rather than reading a `gd` field, so
+ *  rows without one (career, simulator) and rows with one (analytics, where that field IS the difference)
+ *  rank identically. footballSeed's seed ranking keeps the same first two tiebreaks but breaks a still-equal
+ *  pair on the club's overall rating — a different contract — and stays inline. */
+export const byTableStanding = (
+  a: { points: number; gf: number; ga: number },
+  b: { points: number; gf: number; ga: number },
+): number => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf;

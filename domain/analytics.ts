@@ -7,6 +7,7 @@
 
 import type { Club, Match } from "@/domain/types";
 import { clamp, round2, round3, indexById } from "@/lib/utils";
+import { byTableStanding } from "./attributes";
 
 export type FormLetter = "W" | "D" | "L";
 
@@ -162,7 +163,7 @@ export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): Te
       leagueAvg: round2(leagueAvg),
     });
   }
-  return out.sort((x, y) => y.points - x.points || y.gd - x.gd || y.gf - x.gf);
+  return out.sort((x, y) => byTableStanding(x, y));
 }
 
 // Attack/defence are ratios against THIS competition's average goals per team

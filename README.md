@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M384 (a few numbers in that range
+Work ships one milestone per commit and is currently at M385 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M385 — the league-table ranking was spelled three times, in two dialects, with a different-contract twin
+
+M384 retired the ISO-date ordering. This unit closes the next duplication the census surfaced — the league-table ranking chain: points first, then goal difference, then goals for. It was spelled three times: career's live standings (`domain/career.ts`), analytics' team metrics (`domain/analytics.ts`, via its precomputed `gd` field) and the season simulator's projected table (`features/sim/SimulationLab.tsx`), in two dialects (the `gd`-field subtraction and the computed goals-for-minus-goals-against). Same contract, so it is a door now.
+
+`byTableStanding(a, b)` in `domain/attributes.ts` is the definition: points descending, then `(b.gf - b.ga) - (a.gf - a.ga)`, then `b.gf - a.gf`. It recomputes the difference from goals for / against rather than reading a `gd` field, so rows without one (career, simulator) and rows with one (analytics, where the field IS `gf - ga`) rank identically — the proof welds that seam by asserting analytics' `gd` field is goals for minus goals against, so the door's recomputation moves no number there. `data/footballSeed.ts`'s seed ranking keeps the same first two tiebreaks but breaks a still-equal pair on the club's overall rating — a different contract — and stays inline (documented survivor, like worldEngine's round-then-nudge and footballService's localeCompare). career and the simulator already imported from attributes; analytics gained the import.
+
+**The seam, charged both ways.** proof-tablestanding counts the chain's opening — a sort comparator leading on `.points - X.points ||` — across the whole tree and asserts the only occurrences left are the door body and footballSeed's overall-tiebreak survivor, so a re-inline at any reader reddens it. The scan keys on the first tiebreak, not a literal: a count-desc sort and a pct-desc sort are left uncharged (the must-not-unify plants prove exactly that). The proof plants all three old spellings plus the seed shape and confirms the census charges each (1), refuses the converted call (0), and asserts byTableStanding is declared once, its body is the three-tiebreak chain with no `gd` field read, all three readers call it, footballSeed's survivor is the overall-tiebreak variant, and the door equals both old dialects (the computed spelling and analytics' gd-field spelling) on every sample pair — the conversions move no number. A final integration clause sorts a mixed table and asserts the order is points, then difference, then goals for. The file passes 10/10.
+
+**Still outstanding.** The converged math now covers the comparators, nearest-100k rounding, market-value curve, average-overall primitive, round-then-bound pair, ISO-date ordering and league-table ranking. tsc currently shows two errors in another session's in-flight file `data/footballSeed.ts` (an `epochMs` call added without its import); that file is not touched by this milestone and the errors post-date the M384 commit, under which tsc was clean. A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M384 — "order a list by an ISO date" was spelled eight times, in two dialects
 

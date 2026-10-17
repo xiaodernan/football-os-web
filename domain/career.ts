@@ -2,7 +2,7 @@ import { footballProvider, getClub, clubIdsByCompetition, formatValue } from "@/
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
-import { byOverall, meanOverall } from "./attributes";
+import { byOverall, meanOverall, byTableStanding } from "./attributes";
 import type { RowText } from "./rowText";
 import { clamp, pct, round2, safeDiv, signed, fmt2 } from "@/lib/utils";
 import { round1 } from "./scouting";
@@ -175,7 +175,7 @@ export function liveStandings(state: CareerState): StandingRow[] {
     if (table[home]) bump(table[home], hg, ag);
     if (table[away]) bump(table[away], ag, hg);
   }
-  return Object.values(table).sort((a, b) => b.points - a.points || b.gf - b.ga - (a.gf - a.ga) || b.gf - a.gf);
+  return Object.values(table).sort((a, b) => byTableStanding(a, b));
 }
 
 export function positionOf(state: CareerState): number {
