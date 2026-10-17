@@ -7,7 +7,7 @@ import {
   marketValue,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
-import { clamp, DAY_MS, indexById, round2, fmt2 } from "@/lib/utils";
+import { clamp, DAY_MS, indexById, round2, fmt2, epochMs } from "@/lib/utils";
 import { byKickoff } from "@/domain/analytics";
 import { byMinute } from "@/domain/matchEngine";
 import type {
@@ -333,7 +333,7 @@ function makeWorld() {
 function buildMatches(clubs: Club[], players: PlayerRef[], compMap: Map<string, Competition>, rng: () => number): Match[] {
   const matches: Match[] = [];
   const byId = indexById(clubs);
-  let anchor = new Date(DEMO_NOW).getTime();
+  let anchor = epochMs(DEMO_NOW);
   let idx = 0;
   for (const comp of compMap.values()) {
     const ids = comp.clubIds;
@@ -574,7 +574,7 @@ const NEWS_TEMPLATES: [NewsArticle["kind"], string, string][] = [
 
 function buildNews(clubs: Club[], players: PlayerRef[], rng: () => number): NewsArticle[] {
   const out: NewsArticle[] = [];
-  const anchor = new Date(DEMO_NOW).getTime();
+  const anchor = epochMs(DEMO_NOW);
   const sources = [
     { name: "Football OS Wire", cred: 0.9 },
     { name: "Touchline Report", cred: 0.72 },

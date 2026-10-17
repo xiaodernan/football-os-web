@@ -1,7 +1,7 @@
 import { DEMO_NOW, WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, byKickoff, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
-import { DAY_MS, fmt0, fmt1, indexById } from "@/lib/utils";
+import { DAY_MS, epochMs, fmt0, fmt1, indexById } from "@/lib/utils";
 import { byOverall, byValueDesc } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
 
@@ -80,7 +80,7 @@ export function upcomingMatchesForClub(clubId: string, limit = 5): Match[] {
 // on it — the reader's wall clock drifts away from the anchor (measured
 // 2026-10-06: 88 fixtures in the reader's ±2d window against the world's 45)
 // and empties the panel forever once it leaves the world's window.
-export const DEMO_ANCHOR_MS = new Date(DEMO_NOW).getTime();
+export const DEMO_ANCHOR_MS = epochMs(DEMO_NOW);
 
 export function todayMatches(limit = 5): Match[] {
   return WORLD.matches
