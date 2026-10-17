@@ -10,7 +10,8 @@
 
 import type { AttributeDelta } from "./types";
 import { asRowText, type RowText } from "./rowText";
-import { epochMs, fmt1 } from "@/lib/utils";
+import { fmt1 } from "@/lib/utils";
+import { byDateDesc } from "@/domain/attributes";
 
 export type TimelineKind = "session" | "plan" | "memory" | "learn" | "film";
 
@@ -185,7 +186,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
     });
   }
 
-  return events.sort((a, b) => epochMs(b.at) - epochMs(a.at));
+  return events.sort((a, b) => byDateDesc(a.at, b.at));
 }
 
 /** Group a sorted timeline into calendar-day buckets (newest day first). */

@@ -9,6 +9,7 @@ import type { Locale } from "@/i18n/dictionaries";
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
 import { epochMs, fmt2 } from "@/lib/utils";
+import { byDateDesc } from "@/domain/attributes";
 
 export interface PlayerInput {
   sessionsCompleted: number;
@@ -79,7 +80,7 @@ export interface Footprint {
 }
 
 const later = (...isos: (string | undefined)[]): string | undefined =>
-  isos.filter((i): i is string => !!i && epochMs(i) > 0).sort((a, b) => epochMs(b) - epochMs(a))[0];
+  isos.filter((i): i is string => !!i && epochMs(i) > 0).sort((a, b) => byDateDesc(a, b))[0];
 
 const mins = (v: number) => `${round1(v)}`;
 

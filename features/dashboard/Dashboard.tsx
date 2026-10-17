@@ -16,7 +16,7 @@ import {
 import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, ZONE_TONE, type LoadZone } from "@/domain/load";
 import { newsKindLabel, newsTitle, rowLine } from "@/domain/rowText";
-import { overallRating } from "@/domain/attributes";
+import { overallRating, byDateDesc } from "@/domain/attributes";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
 import { summarizeLearn } from "@/domain/learn";
 import { plannedSessions } from "@/domain/training";
@@ -69,7 +69,7 @@ export function Dashboard() {
     const next = nextBadges(list, 1)[0] ?? null;
     const last = completed
       .slice()
-      .sort((a, b) => new Date(b.completedAt ?? b.date).getTime() - new Date(a.completedAt ?? a.date).getTime())[0];
+      .sort((a, b) => byDateDesc(a.completedAt ?? a.date, b.completedAt ?? b.date))[0];
     const load = buildLoad({ nowMs: Date.now(), sessions: state.sessions });
     const focusGoals = state.goals
       .filter((g) => g.metric === "attribute" && g.key && !g.done)

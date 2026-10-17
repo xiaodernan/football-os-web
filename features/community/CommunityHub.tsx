@@ -14,7 +14,8 @@ import { round1 } from "@/domain/scouting";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, epochMs } from "@/lib/utils";
+import { byDateDesc } from "@/domain/attributes";
 import { toast } from "sonner";
 
 const KEY = COMMUNITY_KEY;
@@ -35,7 +36,7 @@ const EMPTY: CommunityStore = { userThreads: [], replies: {}, likes: [] };
 // check 26 reads the keys this module names and the variables each one fills, and the
 // date branch is a value out of the record rather than a sentence anyone typed.
 function timeAgo(locale: Locale, iso: string): RowText {
-  const ms = Date.now() - new Date(iso).getTime();
+  const ms = Date.now() - epochMs(iso);
   const m = Math.floor(ms / 60000);
   if (m < 1) return { key: "comm.agoNow" };
   if (m < 60) return { key: "comm.agoMin", vars: { n: m } };
@@ -92,7 +93,7 @@ export function CommunityHub() {
 
   const merged = useMemo<Thread[]>(() => {
     const base = [...store.userThreads, ...seedThreads()];
-    return base.map((th) => ({ ...th, comments: [...(store.replies[th.id] ?? []), ...th.comments].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()) }));
+    return base.map((th) => ({ ...th, comments: [...(store.replies[th.id] ?? []), ...th.comments].sort((a, b) => byDateDesc(a.at, b.at)) }));
   }, [store.userThreads, store.replies]);
 
   const likeCount = (id: string, base: number) => base + (store.likes.includes(id) ? 1 : 0);
@@ -135,7 +136,7 @@ export function CommunityHub() {
     const top = [...focus.entries()].sort((a, b) => b[1] - a[1])[0];
     const ratings = done.map((x) => x.selfRating).filter((r): r is number => typeof r === "number");
     const lessons = summarizeLearn(learn);
-    const latest = learn.filter((r) => isCompleted(r)).sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())[0];
+    const latest = learn.filter((r) => isCompleted(r)).sort((a, b) => byDateDesc(a.completedAt, b.completedAt))[0];
 
     return buildStarters({
       career,

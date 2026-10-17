@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M383 (a few numbers in that range
+Work ships one milestone per commit and is currently at M384 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M384 — "order a list by an ISO date" was spelled eight times, in two dialects
+
+M376–M383 retired the comparators, the nearest-100k rounding, the market-value curve, the average-overall primitive and the round-then-bound pair. This unit closes the next duplication the census surfaced — ordering a list by an ISO date field: `epochMs(b) - epochMs(a)` (footprint, history, profile page) or its `new Date(x).getTime() - new Date(y).getTime()` twin (review, filmInsights, community ×2, dashboard). The two spellings compute the same number and the same contract the comparator doors already unified in another form, so they are one door now.
+
+`byDateDesc(a, b)` and `byDateAsc(a, b)` in `domain/attributes.ts` are the definitions: `epochMs(b) - epochMs(a)` and `epochMs(a) - epochMs(b)`. They ride the single epochMs door (loaded from `lib/utils.ts`, another session's in-flight file — left untouched) — they do NOT reimplement the parse. The eight readers were converted: `domain/footprint.ts` (sort an ISO list, keeping its `epochMs(i) > 0` filter), `domain/history.ts` (events by `at`), `domain/review.ts` (progress by `date`, ascending), `domain/filmInsights.ts` (clips by `at`, ascending), `features/community/CommunityHub.tsx` (thread replies by `at` and completed learnings by `completedAt`), `features/dashboard/Dashboard.tsx` (latest completed via `completedAt ?? date`), `features/profile/ProfilePage.tsx` (last lesson by `completedAt`). history dropped its now-dead `epochMs` import; the others import the door. The other session's in-flight files were again left untouched.
+
+**The seam, charged both ways.** proof-datesort counts the inline date-sort form across the whole tree — both the `epochMs(x) - epochMs(y)` and the `new Date(x).getTime() - new Date(y).getTime()` spellings — and asserts the only occurrences are the two door bodies, so a re-inline at any reader reddens it. The scan keys on the subtraction shape, not a literal: a lone `epochMs(x)` (footprint's filter), a `new Date(x).getTime()` that is not subtracted, and the converted `byDateDesc(...)` call are all left uncharged. The proof plants each shape and confirms the census charges the two subtractions (1 each), refuses a `localeCompare` on a date string and a lone epochMs (0 each), and does not charge the converted call (0) — a "zero leftover" verdict is therefore a measurement, not a vacancy. It also asserts byDateDesc/byDateAsc are each declared once in the door, their bodies ride epochMs, all seven readers call them (eight call sites), footballService keeps `kickoff.localeCompare(a.kickoff)` inline (the census charges the subtraction shape, not a date in a comparator), and `byDateDesc/byDateAsc === epochMs(b)-epochMs(a) / epochMs(a)-epochMs(b) === new Date(b).getTime() - new Date(a).getTime()` on every sample — the conversions move no number. The file passes 9/9.
+
+**Still outstanding.** The converged math now covers the comparators, nearest-100k rounding, market-value curve, average-overall primitive, round-then-bound pair and the date ordering. What remains hand-written is single-occurrence or genuinely different contracts (worldEngine's round-then-nudge-then-bound; footballService's localeCompare date ordering by locale, not by epoch). A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M383 — the round-then-bound pair was spelled ten times, and "round then clamp" could mean ten things
 

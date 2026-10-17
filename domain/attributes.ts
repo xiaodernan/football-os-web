@@ -1,6 +1,6 @@
 import type { AttributeDef, Attributes, PositionCode, PositionGroup } from "./types";
 import { ATTRIBUTE_LABELS, POSITION_GROUP_LABELS, CATEGORY_LABELS, POSITION_BY_GROUP_LABELS } from "../data/attributesLabels";
-import { clamp } from "@/lib/utils";
+import { clamp, epochMs } from "@/lib/utils";
 
 const L = (key: string) => ATTRIBUTE_LABELS[key] ?? key;
 const PG = (id: PositionGroup) => POSITION_GROUP_LABELS[id];
@@ -221,3 +221,13 @@ export function meanOverall(players: { overall: number }[], fallback: number): n
  *  rounds, then adds a random nudge, then bounds: a different contract, and it stays inline. worldEngine's
  *  line 102 has no nudge and rides this door instead.) This is the definition now. */
 export const capRound = (value: number, lo: number, hi: number): number => clamp(Math.round(value), lo, hi);
+
+/** Sort two ISO-date values so the newer one comes first (descending). The comparison — the epochMs of one
+ *  argument minus the epochMs of the other, and the equivalent new-Date-getTime subtraction — was spelled
+ *  eight times across footprint, history, review, filmInsights, community, dashboard and the profile page:
+ *  every one orders a list by an ISO date field. Both ride the one epochMs door; neither reimplements it.
+ *  `byDateAsc` is the oldest-first twin. The contracts are genuine (a date comparison), so the door unifies
+ *  them rather than leaving eight hand-rolled subtractions that could each drift if epochMs's bad-input
+ *  floor ever changes. */
+export const byDateDesc = (a: string | undefined, b: string | undefined): number => epochMs(b) - epochMs(a);
+export const byDateAsc = (a: string | undefined, b: string | undefined): number => epochMs(a) - epochMs(b);

@@ -7,6 +7,7 @@
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
 import { round2, signed, fmt2 } from "@/lib/utils";
+import { byDateAsc } from "@/domain/attributes";
 
 export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
 
@@ -87,7 +88,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   let olderScanRate: number | null = null;
   let newerScanRate: number | null = null;
   if (valid.length >= 2) {
-    const sorted = [...valid].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+    const sorted = [...valid].sort((a, b) => byDateAsc(a.at, b.at));
     const half = Math.floor(sorted.length / 2);
     const rate = (group: FilmClipInput[]) => {
       const secs = group.reduce((s, c) => s + c.durationSec, 0);

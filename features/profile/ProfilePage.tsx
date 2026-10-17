@@ -7,7 +7,7 @@ import { useLearnRecords } from "@/lib/hooks";
 import { levelInfo } from "@/domain/xp";
 import { goalProgressPct, goalUnitKey } from "@/domain/goals";
 import { positionLabel, rowLine } from "@/domain/rowText";
-import { overallRating, weakestAttributes, ATTRIBUTE_DEFS, byValueDesc } from "@/domain/attributes";
+import { overallRating, weakestAttributes, ATTRIBUTE_DEFS, byValueDesc, byDateDesc } from "@/domain/attributes";
 import { isCompleted, summarizeLearn } from "@/domain/learn";
 import { completedMinutes, completedSessions } from "@/domain/training";
 import { seasonSummary, type CareerState } from "@/domain/career";
@@ -45,7 +45,7 @@ export function ProfilePage() {
   // One record across every pillar, read from what this device actually holds.
   const footprint = useMemo(() => {
     const lessons = summarizeLearn(learn);
-    const lastLesson = learn.filter((r) => isCompleted(r)).sort((a, b) => epochMs(b.completedAt) - epochMs(a.completedAt))[0];
+    const lastLesson = learn.filter((r) => isCompleted(r)).sort((a, b) => byDateDesc(a.completedAt, b.completedAt))[0];
 
     let manager = { active: false, matches: 0 } as Parameters<typeof buildFootprint>[0]["manager"];
     // M331: through the door, like every other read of this key. `present` is what makes the
