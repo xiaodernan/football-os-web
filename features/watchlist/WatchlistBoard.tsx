@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n";
 import { getPlayer, getClub, formatValue } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { headroom, valueIndex, primeYearsLabel, templateEdge, scoutComparators } from "@/domain/scouting";
+import { sum } from "@/domain/attributes";
 import type { ScoutSort } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
@@ -54,7 +55,7 @@ export function WatchlistBoard() {
     );
   }
 
-  const avgValue = Math.round(players.reduce((s, p) => s + p.value, 0) / players.length);
+  const avgValue = Math.round(sum(players, (p) => p.value) / players.length);
 
   return (
     <div className="space-y-5">

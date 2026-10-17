@@ -1,6 +1,8 @@
 // Deterministic pseudo-random utilities so every Demo Mode result is reproducible
 // from a seed (required by the Football OS simulation contract).
 
+import { sum } from "@/domain/attributes";
+
 export function hashString(input: string): number {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < input.length; i++) {
@@ -43,7 +45,7 @@ export function weightedPick<T>(rng: () => number, entries: readonly [T, number]
   // Same contract as ./pick: an empty pool throws at the cause rather than falling off
   // the loop into `entries[-1][0]` — a TypeError that named nothing.
   if (entries.length === 0) throw new Error("weightedPick: empty pool");
-  const total = entries.reduce((s, [, w]) => s + w, 0);
+  const total = sum(entries, ([, w]) => w);
   let r = rng() * total;
   for (const [value, w] of entries) {
     if ((r -= w) <= 0) return value;

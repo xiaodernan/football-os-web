@@ -1,6 +1,7 @@
 import type { Attributes } from "./types";
 import { englishWord } from "@/i18n/format";
 import { safeDiv } from "@/lib/utils";
+import { sum } from "./attributes";
 import type { RowText } from "./rowText";
 
 // Football DNA: archetypes computed dynamically from the attribute profile, not
@@ -21,7 +22,7 @@ export interface Archetype {
 }
 
 const g = (a: Attributes, k: string) => a[k] ?? 0;
-const avg = (a: Attributes, ks: string[]) => safeDiv(ks.reduce((s, k) => s + g(a, k), 0), ks.length);
+const avg = (a: Attributes, ks: string[]) => safeDiv(sum(ks, (k) => g(a, k)), ks.length);
 
 export const ARCHETYPES: Archetype[] = [
   {

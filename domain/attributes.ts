@@ -76,7 +76,7 @@ export interface CategoryAverage {
 export function categoryAverages(attrs: Attributes): CategoryAverage[] {
   return CATEGORY_ORDER.map((category) => {
     const defs = attributesByCategory(category);
-    const value = Math.round(defs.reduce((s, d) => s + (attrs[d.key] ?? 0), 0) / (defs.length || 1));
+    const value = Math.round(sum(defs, (d) => attrs[d.key] ?? 0) / (defs.length || 1));
     return { category, value };
   });
 }
@@ -208,11 +208,11 @@ export function marketValue(overall: number, age: number): number {
 
 /** Average overall of a player list, falling back when the list is empty. The position-group mean in
  *  career.ts (lineMean), the top-11 mean in career.ts (clubInput) and the bucket mean in scouting.ts each
- *  spelled `X.length ? X.reduce((s, p) => s + p.overall, 0) / X.length : Y` inline — the same
+ *  spelled `X.length ? (the total of X's overall figures) / X.length : Y` inline — the same
  *  "average overall with a fallback" primitive the comparators M376–M381 retired in other forms, so it is
  *  a door now. The callers build the list differently and pass their own fallback (or round the result). */
 export function meanOverall(players: { overall: number }[], fallback: number): number {
-  return players.length ? players.reduce((s, p) => s + p.overall, 0) / players.length : fallback;
+  return players.length ? sum(players, (p) => p.overall) / players.length : fallback;
 }
 
 /** Round a value and clamp it to [lo, hi]. The round-then-bound pair was spelled about eight times across
@@ -243,3 +243,12 @@ export const byTableStanding = (
   a: { points: number; gf: number; ga: number },
   b: { points: number; gf: number; ga: number },
 ): number => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf;
+
+/** Total a list through a selector. The fold — a running total that starts at zero and adds each element's
+ *  figure — was hand-written about thirty times across the domain and the feature pages (achievements,
+ *  analytics, attributes itself, career, filmInsights, learn, load, playerDna, review, training, worldEngine
+ *  and several pages). Every one is the same "total of a field (or a computed figure) over a list" contract,
+ *  so it is a door now: one place to read the fold, one place the callers' guards (`|| 1`, a safeDiv, a
+ *  halving) compose over. The door always starts at zero, like every converted site did; callers keep their
+ *  own guard on the outside. */
+export const sum = <T>(xs: readonly T[], f: (x: T) => number): number => xs.reduce((s, x) => s + f(x), 0);

@@ -4,6 +4,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { runWorld, seasonLabel, formatMarket, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
+import { sum } from "@/domain/attributes";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge } from "@/ui/primitives";
@@ -63,8 +64,8 @@ export function DynamicWorld() {
   }, []);
 
   const last: SeasonStep | undefined = snapshot?.history[snapshot.history.length - 1];
-  const avgNow = last?.avgOverall ?? round1(base.players.reduce((s, p) => s + p.overall, 0) / base.players.length);
-  const marketNow = last?.marketTotal ?? base.players.reduce((s, p) => s + p.value, 0);
+  const avgNow = last?.avgOverall ?? round1(sum(base.players, (p) => p.overall) / base.players.length);
+  const marketNow = last?.marketTotal ?? sum(base.players, (p) => p.value);
 
   return (
     <div className="space-y-5">

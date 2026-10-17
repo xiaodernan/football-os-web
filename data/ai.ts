@@ -1,6 +1,6 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
 import { asRowText, rowLine, type RowText } from "@/domain/rowText";
-import { weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating } from "@/domain/attributes";
+import { weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating, sum } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna } from "@/domain/playerDna";
 import { englishWord } from "@/i18n/format";
@@ -105,9 +105,10 @@ class DeterministicCoachProvider implements CoachProvider {
       roleGameFocus: dna.primary.gameFocus,
     });
 
-    const trainedRecently = input.history
-      .filter((h) => effFocus.includes(h.focus))
-      .reduce((s, h) => s + h.completed, 0);
+    const trainedRecently = sum(
+      input.history.filter((h) => effFocus.includes(h.focus)),
+      (h) => h.completed,
+    );
     // What the session really contains. The player may have asked for two
     // attributes and a decision block, but a short session cannot carry all of
     // them, and the words below may not claim a block that was never built.

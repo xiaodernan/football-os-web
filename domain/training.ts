@@ -2,7 +2,7 @@ import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, Train
 import { asRowText, type RowText } from "./rowText";
 import { makeRng, pick, rngInt } from "@/lib/rng";
 import { clamp } from "@/lib/utils";
-import { capRound } from "./attributes";
+import { capRound, sum } from "./attributes";
 import { round1 } from "./scouting";
 
 // Training database: exercises keyed to the attributes they develop, organised by
@@ -52,10 +52,10 @@ const PHASE_WEIGHTS = [5, 2, 3]; // Technique / Decision / Game, over what is le
 
 /** Split `total` whole minutes over `weights` so the parts sum exactly to `total`. */
 function splitMinutes(total: number, weights: number[]): number[] {
-  const sum = weights.reduce((s, w) => s + w, 0) || 1;
-  const raw = weights.map((w) => (total * w) / sum);
+  const weightTotal = sum(weights, (w) => w) || 1;
+  const raw = weights.map((w) => (total * w) / weightTotal);
   const parts = raw.map((v) => Math.floor(v));
-  let rest = total - parts.reduce((s, p) => s + p, 0);
+  let rest = total - sum(parts, (p) => p);
   const byRemainder = raw
     .map((v, i) => i)
     .sort((a, b) => raw[b] - parts[b] - (raw[a] - parts[a]) || a - b);
@@ -218,8 +218,8 @@ export function plannedSessions(sessions: TrainingSession[]): TrainingSession[] 
 }
 
 export function sessionIntensity(session: TrainingSession): number {
-  const load = session.exercises.reduce((s, e) => s + e.intensity * e.minutes, 0);
-  const mins = session.exercises.reduce((s, e) => s + e.minutes, 0) || 1;
+  const load = sum(session.exercises, (e) => e.intensity * e.minutes);
+  const mins = sum(session.exercises, (e) => e.minutes) || 1;
   return capRound(load / mins, 1, 5);
 }
 

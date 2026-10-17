@@ -68,10 +68,9 @@ export function DataRoom() {
 
   const metrics = useMemo(() => teamMetrics(compId, matches, clubs), [compId, matches, clubs]);
   // M336: the competition's finished-match count comes from the domain, which already counts
-  // the list its own figures are measured over. This used to be
-  // metrics.reduce((s, m) => s + m.played, 0) / 2 | 0 — a sum the page had to halve, which is
-  // only right while the sum is even, and floors to one short of the truth for a competition
-  // sitting mid-round.
+  // the list its own figures are measured over. This used to halve a sum of the metrics'
+  // played figures, which is only right while the sum is even, and floors to one short of the
+  // truth for a competition sitting mid-round.
   const playedCount = useMemo(() => finishedCount(compId, matches), [compId, matches]);
   const lead = useMemo(() => leaders(metrics), [metrics]);
   const comp = getCompetition(compId);

@@ -7,7 +7,7 @@
 import type { RowText } from "./rowText";
 import { round1 } from "./scouting";
 import { round2, signed, fmt2 } from "@/lib/utils";
-import { byDateAsc } from "@/domain/attributes";
+import { byDateAsc, sum } from "@/domain/attributes";
 
 export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
 
@@ -67,7 +67,7 @@ export interface FilmInsights {
 
 export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
   const valid = clips.filter((c) => c && c.durationSec > 0);
-  const analysedSeconds = valid.reduce((s, c) => s + c.durationSec, 0);
+  const analysedSeconds = sum(valid, (c) => c.durationSec);
   const analysedMinutes = analysedSeconds / 60;
 
   const counts = new Map<FilmEventKind, number>();
@@ -80,7 +80,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
     perMinute: round2(perMin(counts.get(kind) ?? 0)),
   })).sort((a, b) => b.count - a.count || a.kind.localeCompare(b.kind));
 
-  const totalEvents = valid.reduce((s, c) => s + c.events.length, 0);
+  const totalEvents = sum(valid, (c) => c.events.length);
   const scans = counts.get("scan") ?? 0;
 
   // Split the library into older / newer halves by analysis time and compare
@@ -91,8 +91,8 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
     const sorted = [...valid].sort((a, b) => byDateAsc(a.at, b.at));
     const half = Math.floor(sorted.length / 2);
     const rate = (group: FilmClipInput[]) => {
-      const secs = group.reduce((s, c) => s + c.durationSec, 0);
-      const sc = group.reduce((s, c) => s + c.events.filter((e) => e.kind === "scan").length, 0);
+      const secs = sum(group, (c) => c.durationSec);
+      const sc = sum(group, (c) => c.events.filter((e) => e.kind === "scan").length);
       return secs > 0 ? (sc / (secs / 60)) : 0;
     };
     const older = sorted.slice(0, half);
@@ -109,7 +109,7 @@ export function buildFilmInsights(clips: FilmClipInput[]): FilmInsights {
     .sort((a, b) => b.clips - a.clips || a.key.localeCompare(b.key))
     .slice(0, 5);
 
-  const avgConfidence = valid.length ? Math.round(valid.reduce((s, c) => s + c.confidence, 0) / valid.length) : 0;
+  const avgConfidence = valid.length ? Math.round(sum(valid, (c) => c.confidence) / valid.length) : 0;
 
   const busiest = byKind[0]?.count ? byKind[0] : null;
   // Four evidence lines and three provenance sources, all rows. The first three used to be

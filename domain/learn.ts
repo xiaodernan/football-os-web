@@ -1,5 +1,6 @@
 import type { RowText } from "./rowText";
 import { indexById, pct } from "@/lib/utils";
+import { sum } from "./attributes";
 
 // Knowledge Academy domain (spec §8). The lesson text is editorial content
 // authored for this product; everything in this module is *accounting* — it turns
@@ -208,7 +209,7 @@ export function summarizeLearn(records: LearnRecord[]): LearnSummary {
   const completed = LESSONS.filter((l) => isCompleted(byId.get(l.id))).length;
   const mastered = LESSONS.filter((l) => byId.get(l.id)?.quizCorrect && isCompleted(byId.get(l.id))).length;
   const attemptedOnly = records.filter((r) => r.attempts > 0 && !isCompleted(r)).length;
-  const attempts = records.reduce((s, r) => s + r.attempts, 0);
+  const attempts = sum(records, (r) => r.attempts);
 
   const cats = new Map<string, CategoryProgress>();
   for (const l of LESSONS) {

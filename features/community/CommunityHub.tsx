@@ -15,7 +15,7 @@ import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, epochMs } from "@/lib/utils";
-import { byDateDesc } from "@/domain/attributes";
+import { byDateDesc, sum } from "@/domain/attributes";
 import { toast } from "sonner";
 
 const KEY = COMMUNITY_KEY;
@@ -103,7 +103,7 @@ export function CommunityHub() {
   const activity = useMemo(
     () => ({
       threads: store.userThreads.length,
-      replies: Object.values(store.replies).reduce((s, a) => s + a.length, 0),
+      replies: sum(Object.values(store.replies), (a) => a.length),
       likes: store.likes.length,
     }),
     [store],

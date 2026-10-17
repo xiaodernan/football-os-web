@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M385 (a few numbers in that range
+Work ships one milestone per commit and is currently at M386 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M386 — the list-sum fold was hand-written thirty-four times, and one of them lived behind a ternary
+
+M385 retired the league-table ranking. This unit closes the largest duplication the census surfaced — the sum fold: a running total that starts at zero and adds each element's figure. It was hand-written thirty-four times across the domain, lib, data and the feature pages: `domain/achievements.ts` (tier points), `domain/analytics.ts` (form points, twice), `domain/attributes.ts` itself (the category average and meanOverall's own body), `domain/career.ts` (recent and career points), `domain/filmInsights.ts` (analysed seconds, event totals, per-half rates, average confidence — five sites), `domain/learn.ts` (quiz attempts), `domain/load.ts` (session totals, the in-window load through a conditional accumulate, the variance sum of squares — three sites), `domain/playerDna.ts` (archetype scoring), `domain/review.ts` (focus sessions), `domain/training.ts` (weight split, remainder, session load and minutes — four sites), `domain/worldEngine.ts` (average overall and market total), `lib/rng.ts` (weighted pick's total), `data/ai.ts` (trained-recently history) and six feature pages (CommunityHub's reply count, PlayerOS's category mean, TacticalStudio's centroid y and spread, TransferCentre's fee total, WatchlistBoard's average value, DynamicWorld's averages and market total). Same "total of a field (or a computed figure) over a list" contract everywhere, so it is a door now.
+
+`sum(xs, f)` in `domain/attributes.ts` is the definition: `xs.reduce((s, x) => s + f(x), 0)`. It always starts at zero, like every converted site did; callers keep their own guards on the outside (`|| 1`, a safeDiv, a halving, a rounding). Two spellings beyond the plain fold were converted with it: rng's destructured accumulator (`([, w]) => w`) and load's conditional accumulate (`(… ? s + d.load : s)` became a selector that returns `d.load : 0` — the same number). training's local variable named `sum` was renamed `weightTotal` so the door's name is free; DataRoom's M336 comment was reworded because it quoted the fold's literal text, which the census would have charged. The other session's in-flight career.ts (their uncommitted signed2 work mid-file) was reverted to HEAD, only this milestone's three edits replayed, and their full version restored after the commit — the same dance M385 used.
+
+**The seam, charged both ways.** proof-sum counts three fold shapes across the whole tree — the plain `(s, x) => s + …`, the destructured `(s, [, w]) => s + w` and the conditional accumulate `(s, d) => (… ? s + d.load : s)` — and asserts the only occurrence left is the door body, so a re-inline at any reader reddens it. The scan keys on the fold shape, not a literal: an object-merge reduce and a max-reduce are left uncharged (the must-not-unify plants prove exactly that), while a count-reduce IS charged (same fold, constant selector). The proof plants all three shapes plus the converted calls and the two look-alikes, asserts sum is declared once, its body is the fold through the caller's selector starting at zero, all eighteen readers call it (thirty-two reader sites plus the door's own two, thirty-four in total), and the door equals the fold on every converted shape — plain, empty, computed, destructured and conditional accumulate — so the conversions move no number. An integration clause replays splitMinutes' allocation and the form sum to show the door composes with the callers' guards. The file passes 8/8; tsc is clean.
+
+**Still outstanding.** The converged math now covers the comparators, nearest-100k rounding, market-value curve, average-overall primitive, round-then-bound pair, ISO-date ordering, league-table ranking and the list-sum fold. The date/time family (epochMs conversions in footballSeed, footballService, load) is another session's active area and was left to them. A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M385 — the league-table ranking was spelled three times, in two dialects, with a different-contract twin
 

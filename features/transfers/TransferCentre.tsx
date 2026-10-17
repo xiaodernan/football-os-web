@@ -5,6 +5,7 @@ import { getClub, formatValue } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { transferRumours, clubOf, availableKinds, type RumourLink } from "@/domain/transfers";
 import { newsKindLabel, rowLine } from "@/domain/rowText";
+import { sum } from "@/domain/attributes";
 import type { NewsArticle } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +40,7 @@ export function TransferCentre() {
 
   const confirmed = all.filter((r) => r.kind === "Confirmed").length;
   const targets = all.filter((r) => r.isTarget).length;
-  const totalFee = rows.reduce((s, r) => s + r.askingFee, 0);
+  const totalFee = sum(rows, (r) => r.askingFee);
 
   return (
     <div className="space-y-5">

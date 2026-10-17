@@ -7,7 +7,7 @@
 
 import type { Club, Match } from "@/domain/types";
 import { clamp, round2, round3, indexById } from "@/lib/utils";
-import { byTableStanding } from "./attributes";
+import { byTableStanding, sum } from "./attributes";
 
 export type FormLetter = "W" | "D" | "L";
 
@@ -283,7 +283,7 @@ export function leaders(metrics: TeamMetrics[]): Leaders {
   const withGames = metrics.filter((m) => m.played >= 2);
   const by = (arr: TeamMetrics[], f: (m: TeamMetrics) => number, dir: 1 | -1) =>
     arr.length ? [...arr].sort((a, b) => dir * (f(b) - f(a)))[0] : null;
-  const formPts = (m: TeamMetrics) => m.form.reduce((s, r) => s + (r === "W" ? 3 : r === "D" ? 1 : 0), 0);
+  const formPts = (m: TeamMetrics) => sum(m.form, (r) => (r === "W" ? 3 : r === "D" ? 1 : 0));
   return {
     bestForm: by(withGames, formPts, 1),
     strongestAttack: by(withGames, (m) => m.attack, 1),
@@ -293,5 +293,5 @@ export function leaders(metrics: TeamMetrics[]): Leaders {
 }
 
 export function formPoints(m: TeamMetrics): number {
-  return m.form.reduce((s, r) => s + (r === "W" ? 3 : r === "D" ? 1 : 0), 0);
+  return sum(m.form, (r) => (r === "W" ? 3 : r === "D" ? 1 : 0));
 }

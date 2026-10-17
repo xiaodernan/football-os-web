@@ -4,6 +4,7 @@
 // requested, level reached, academy lessons completed, film clips analysed) so
 // an unlocked badge always has an evidential basis. Pure module: no React, no IO.
 import { levelInfo } from "./xp";
+import { sum } from "./attributes";
 import type { Goal, TrainingSession } from "./types";
 
 export interface AchievementInput {
@@ -118,7 +119,7 @@ export function evaluateAchievements(input: AchievementInput): AchievementStatus
 
 export function summary(list: AchievementStatus[]) {
   const unlocked = list.filter((a) => a.unlocked).length;
-  const points = list.reduce((s, a) => s + (a.unlocked ? tierPoints(a.tier) : 0), 0);
+  const points = sum(list, (a) => (a.unlocked ? tierPoints(a.tier) : 0));
   const byGroup = new Map<string, { unlocked: number; total: number }>();
   for (const a of list) {
     const g = byGroup.get(a.group) ?? { unlocked: 0, total: 0 };

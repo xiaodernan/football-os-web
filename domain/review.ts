@@ -1,6 +1,6 @@
 import type { Attributes, Goal, TrainingSession } from "./types";
 import type { RowText } from "./rowText";
-import { weakestAttributes, byDeltaDescThenKey, byDateAsc } from "./attributes";
+import { weakestAttributes, byDeltaDescThenKey, byDateAsc, sum } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions, plannedSessions } from "./training";
@@ -468,7 +468,7 @@ function buildEvidence(a: {
   if (a.topFocus.length)
     e.push({
       key: "rv.ev.focus",
-      vars: { focus: a.topFocus.map((f) => f.key).join(","), n: a.topFocus.reduce((s, f) => s + f.sessions, 0) },
+      vars: { focus: a.topFocus.map((f) => f.key).join(","), n: sum(a.topFocus, (f) => f.sessions) },
     });
   if (a.goalsTotal) e.push({ key: "rv.ev.goals", vars: { done: a.goalsDone, total: a.goalsTotal } });
   if (a.lessonsCompleted) e.push({ key: "rv.ev.academy", vars: { n: a.lessonsCompleted, m: a.lessonsMastered } });

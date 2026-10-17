@@ -9,6 +9,7 @@ import {
   attributesByCategory,
   overallRating,
   weakestAttributes,
+  sum,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
 import { SUPPORTED_MINUTES, sessionIntensity, plannedSessions, type GrowthDelta } from "@/domain/training";
@@ -349,7 +350,7 @@ function Skills() {
         <Panel key={cat} className="p-4">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold">{t(`attr.${cat}`)}</h3>
-            <span className="font-mono text-xs text-muted-foreground">{Math.round(attributesByCategory(cat).reduce((s, d) => s + p.attributes[d.key], 0) / attributesByCategory(cat).length)}</span>
+            <span className="font-mono text-xs text-muted-foreground">{Math.round(sum(attributesByCategory(cat), (d) => p.attributes[d.key]) / attributesByCategory(cat).length)}</span>
           </div>
           <div className="space-y-2.5">
             {attributesByCategory(cat).map((d) => {

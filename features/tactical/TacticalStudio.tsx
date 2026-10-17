@@ -8,7 +8,7 @@ import { TACTICS_KEY } from "@/domain/localData";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn, clamp, pct, safeDiv } from "@/lib/utils";
-import { capRound } from "@/domain/attributes";
+import { capRound, sum } from "@/domain/attributes";
 import { toast } from "sonner";
 
 interface Token { id: string; label: string; x: number; y: number; role: "GK" | "DEF" | "MID" | "ATT" }
@@ -66,8 +66,8 @@ export function TacticalStudio() {
     const backs = tokens.filter((t) => t.role === "DEF").length;
     const mids = tokens.filter((t) => t.role === "MID").length;
     const atts = tokens.filter((t) => t.role === "ATT").length;
-    const avgY = safeDiv(tokens.filter((t) => t.role !== "GK").reduce((s, t) => s + t.y, 0), tokens.length - 1);
-    const spread = safeDiv(tokens.filter((t) => t.role !== "GK").reduce((s, t) => s + Math.abs(t.x - 0.5), 0), tokens.length - 1);
+    const avgY = safeDiv(sum(tokens.filter((t) => t.role !== "GK"), (t) => t.y), tokens.length - 1);
+    const spread = safeDiv(sum(tokens.filter((t) => t.role !== "GK"), (t) => Math.abs(t.x - 0.5)), tokens.length - 1);
     return { backs, mids, atts, line: avgY, spread };
   }, [tokens]);
 

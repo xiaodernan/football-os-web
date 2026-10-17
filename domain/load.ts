@@ -2,6 +2,7 @@ import type { RowText } from "./rowText";
 import type { TrainingSession } from "./types";
 import { sessionIntensity } from "./training";
 import { clamp, round2, DAY_MS, fmt2 } from "@/lib/utils";
+import { sum } from "./attributes";
 
 // Training-load management built on the same monotony/strain + acute:chronic
 // ratio (ACWR) ideas used in strength & conditioning. Every number is derived
@@ -103,12 +104,12 @@ export function buildLoad(input: LoadInput): LoadSummary {
     .sort((a, b) => a.date.localeCompare(b.date));
 
   const hasData = daily.length > 0;
-  const totalSessions = daily.reduce((s, d) => s + d.sessions, 0);
+  const totalSessions = sum(daily, (d) => d.sessions);
 
   // Acute (7d) and chronic (28d) are *average daily* load across the full
   // window, so rest days correctly pull the mean down.
   const sumLoad = (fromMs: number) =>
-    daily.reduce((s, d) => (new Date(d.date + "T00:00:00Z").getTime() >= fromMs ? s + d.load : s), 0);
+    sum(daily, (d) => (new Date(d.date + "T00:00:00Z").getTime() >= fromMs ? d.load : 0));
   const acuteTotal = sumLoad(nowMs - ACUTE_DAYS * DAY_MS);
   const chronicTotal = sumLoad(chronicFrom);
   const acute = Math.round(acuteTotal / ACUTE_DAYS);
@@ -182,7 +183,7 @@ function buildMonotony(weekly: WeeklyLoad[]): { monotony: number | null; strain:
   const n = loads.length;
   if (n < 2) return { monotony: null, strain: null };
   const mean = loads.reduce((a, b) => a + b, 0) / n;
-  const variance = loads.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
+  const variance = sum(loads, (v) => (v - mean) ** 2) / n;
   const sd = Math.sqrt(variance);
   if (mean <= 0) return { monotony: null, strain: null };
   const monotony = sd > 0 ? round2(mean / sd) : null;
