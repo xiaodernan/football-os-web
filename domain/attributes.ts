@@ -252,3 +252,10 @@ export const byTableStanding = (
  *  halving) compose over. The door always starts at zero, like every converted site did; callers keep their
  *  own guard on the outside. */
 export const sum = <T>(xs: readonly T[], f: (x: T) => number): number => xs.reduce((s, x) => s + f(x), 0);
+
+/** Deduplicate a list, keeping the first occurrence of each value. The spread-over-a-fresh-Set dedup was
+ *  written seven times in two spellings — the spread itself and the Array.from spelling — across
+ *  attributes' category list, training's focus attributes, ai's focus/target/last-focus keys,
+ *  intelligence's phrase list, LearnHub's category tabs and PlayerOS's carried focus. Same
+ *  "first-occurrence order preserved" contract, so it is a door now. */
+export const unique = <T>(xs: readonly T[]): T[] => [...new Set(xs)];

@@ -10,6 +10,7 @@ import {
   overallRating,
   weakestAttributes,
   sum,
+  unique,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
 import { SUPPORTED_MINUTES, sessionIntensity, plannedSessions, type GrowthDelta } from "@/domain/training";
@@ -191,7 +192,7 @@ function Coach() {
   const carriedFocus = useMemo(() => {
     const raw = query.get("f");
     if (!raw) return [] as string[];
-    return [...new Set(raw.split(",").map((k) => k.trim()).filter((k) => ATTRIBUTE_KEYS.includes(k)))].slice(0, 2);
+    return unique(raw.split(",").map((k) => k.trim()).filter((k) => ATTRIBUTE_KEYS.includes(k))).slice(0, 2);
   }, [query]);
   const [carryKeys, setCarryKeys] = useState<string[]>(carriedFocus);
   // `brief` rather than `prompt`: the plan's prompt is a ROW now, and a local string under

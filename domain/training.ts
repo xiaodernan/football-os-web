@@ -2,7 +2,7 @@ import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, Train
 import { asRowText, type RowText } from "./rowText";
 import { makeRng, pick, rngInt } from "@/lib/rng";
 import { clamp } from "@/lib/utils";
-import { capRound, sum } from "./attributes";
+import { capRound, sum, unique } from "./attributes";
 import { round1 } from "./scouting";
 
 // Training database: exercises keyed to the attributes they develop, organised by
@@ -97,7 +97,7 @@ export interface BuildSessionInput {
  *  least 1), keeping the Warm-up → Technique → Decision → Game → Cool-down order. */
 export function buildSession(input: BuildSessionInput): TrainingSession {
   const rng = makeRng(input.seed ?? `${input.id}-${input.targetMinutes}`);
-  const wanted = [...new Set(input.focusAttributes.length ? input.focusAttributes : ["first_touch"])];
+  const wanted = unique(input.focusAttributes.length ? input.focusAttributes : ["first_touch"]);
   const target = Math.max(0, Math.floor(input.targetMinutes));
 
   // The bookends never eat the work in between: a 1-minute session gets its minute,

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M387 (a few numbers in that range
+Work ships one milestone per commit and is currently at M388 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M388 — the spread-set dedup was written seven times, in two spellings, and one of them was an Array.from
+
+M387 widened the sum census. This unit closes the next duplication the census surfaced — deduplicating a list while keeping the first occurrence of each value. It was written seven times in two spellings: the spread `[...new Set(xs)]` (training's focus attributes, ai's focus/target/last-focus keys, intelligence's phrase list, PlayerOS's carried focus) and `Array.from(new Set(xs))` (LearnHub's category tabs), plus attributes' own category list. Same "first-occurrence order preserved" contract everywhere, so it is a door now.
+
+`unique(xs)` in `domain/attributes.ts` is the definition: `[...new Set(xs)]`. The seven readers were converted (five files, seven call sites); ai's three sites, intelligence's phrase list, LearnHub's tabs, PlayerOS's carried focus and training's focus attributes all keep their `.slice(0, 2)` and fallback logic on the outside.
+
+**The seam, charged both ways.** proof-unique counts both materializing spellings across the whole tree and asserts the only occurrence left is the door body, so a re-inline at any reader reddens it. The scan keys on the materializing spellings, not on "a Set appears": a membership test (`new Set(ids).has(id)`) and an iteration (`for (const k of new Set(keys))`) are left uncharged — the must-not-unify plants prove exactly that. The proof plants both spellings and the converted call, asserts unique is declared once, its body is the spread over a fresh Set, all five readers call it (seven call sites), and the door equals both spellings on every sample with first-occurrence order preserved and empty input safe. An integration clause replays the converted sites' shapes (carried focus, merged focus, category tabs). The file passes 8/8; tsc is clean.
+
+**Still outstanding.** The converged math now covers the comparators, nearest-100k rounding, market-value curve, average-overall primitive, round-then-bound pair, ISO-date ordering, league-table ranking, the list-sum fold (all accumulator names) and the list dedup. The max-by-selector reduce (scouting's pool pick and careerArc's peak point) and the nearest-to-target reduce (ai) are two- and one-site families that could become doors if a fresh census surfaces more of any shape. The fmt/signed/epochMs/pct family is another session's active area (their proof-signed work is in flight) and was left to them. A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M387 — the sum census had a blind spot, and eight folds escaped through it by a different name
 

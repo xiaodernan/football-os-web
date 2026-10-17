@@ -9,7 +9,7 @@ import { formatDate } from "@/i18n/format";
 import type { Locale } from "@/i18n/dictionaries";
 import { scoutReport } from "@/domain/scouting";
 import { byKickoff } from "@/domain/analytics";
-import { byOverall } from "@/domain/attributes";
+import { byOverall, unique } from "@/domain/attributes";
 import { careerArc } from "@/domain/careerArc";
 import {
   globalSearch,
@@ -263,7 +263,7 @@ function phrases(question: string): string[] {
     if (!STOPWORDS.has(words[i]) && !STOPWORDS.has(words[i + 1])) out.push(`${words[i]} ${words[i + 1]}`);
   }
   for (const w of words) if (w.length >= 3 && !STOPWORDS.has(w)) out.push(w);
-  return [...new Set(out)];
+  return unique(out);
 }
 
 /** Retrieve, ground and answer one question.

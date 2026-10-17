@@ -1,6 +1,6 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
 import { asRowText, rowLine, type RowText } from "@/domain/rowText";
-import { weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating, sum } from "@/domain/attributes";
+import { weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating, sum, unique } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna } from "@/domain/playerDna";
 import { englishWord } from "@/i18n/format";
@@ -61,7 +61,7 @@ function analyze(prompt: string, attrs: Attributes) {
   const weaknesses = weakestAttributes(attrs, 3).map((w) => w.key);
   const strengths = strongestAttributes(attrs, 3).map((w) => w.key);
   // Focus = explicit request first, else the biggest gap for the profile.
-  const focus = [...new Set([...requested, ...weaknesses])].slice(0, 2);
+  const focus = unique([...requested, ...weaknesses]).slice(0, 2);
   const minutesMatch = prompt.match(/(\d{1,3})\s*(min|minute|分钟|mins)/i);
   const available = minutesMatch ? parseInt(minutesMatch[1], 10) : null;
   return { requested, weaknesses, strengths, focus, available };
@@ -82,7 +82,7 @@ class DeterministicCoachProvider implements CoachProvider {
       input.profile.attributes,
     );
     // Explicit target attributes (role-gap priorities) win over inferred focus.
-    const targeted = [...new Set((input.focusKeys ?? []).filter((k) => ATTRIBUTE_KEYS.includes(k)))].slice(0, 2);
+    const targeted = unique((input.focusKeys ?? []).filter((k) => ATTRIBUTE_KEYS.includes(k))).slice(0, 2);
     const effFocus = targeted.length ? targeted : focus;
     const isTargeted = targeted.length > 0;
     let targetMinutes = clampMinutes(available ?? input.availableMinutes);
@@ -117,7 +117,7 @@ class DeterministicCoachProvider implements CoachProvider {
     // Session-to-session continuity: the coach remembers the focus of the last
     // plan it wrote (from real stored history) and either continues progressive
     // overload on an overlapping attribute or rotates to a different gap.
-    const lastFocus = [...new Set((input.lastFocus ?? []).filter((k) => ATTRIBUTE_KEYS.includes(k)))];
+    const lastFocus = unique((input.lastFocus ?? []).filter((k) => ATTRIBUTE_KEYS.includes(k)));
     const continuing = lastFocus.filter((k) => trained.includes(k));
 
     const diagnosisParts: RowText[] = [];

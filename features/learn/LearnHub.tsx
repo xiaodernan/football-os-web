@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useLocalStorage } from "@/lib/hooks";
 import { CAREER_KEY, browserStore, readJson, removeJson, type WriteVerdict } from "@/domain/localData";
 import { useOs } from "@/store/useFootballOS";
-import { weakestAttributes } from "@/domain/attributes";
+import { weakestAttributes, unique } from "@/domain/attributes";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import {
   LESSONS,
@@ -74,7 +74,7 @@ export function LearnHub() {
   );
   const picks = useMemo(() => recommendLessons(records, signals, 3), [records, signals]);
 
-  const categories = useMemo(() => ["All", ...Array.from(new Set(LESSONS.map((l) => l.category)))], []);
+  const categories = useMemo(() => ["All", ...unique(LESSONS.map((l) => l.category))], []);
   const list = LESSONS.filter((l) => category === "All" || l.category === category);
   const open = openId ? lessonById(openId) : null;
 
