@@ -57,14 +57,14 @@ ok(`the argmax census is armed on both dialects and a differently-named accumula
   plantArgmin === 0 && plantMathMax === 0);
 
 // --- Door declaration: maxBy declared exactly once, in attributes.ts. -----------------------------------
-const DECL = /\nexport const maxBy\s*=/g;
-const plantDecl = count(`\nexport const maxBy = (xs, f) => 0;`, DECL);
+const DECL = /\nexport function maxBy\b/g;
+const plantDecl = count(`\nexport function maxBy(xs, f) { return 0; }`, DECL);
 const declFiles = carriers.filter((f) => count(src[f], DECL) > 0);
 ok(`maxBy is declared exactly once, in the door (planted ${plantDecl}, ${declFiles.join(",") || "none"})`,
   plantDecl === 1 && declFiles.length === 1 && declFiles[0] === HOME);
 
 // --- The door body is the argmax fold, greatest figure wins, first max kept. ----------------------------
-const body = (src[HOME].match(/export const maxBy[\s\S]*?:\s*best\)\)/) || [""])[0];
+const body = (src[HOME].match(/export function maxBy[\s\S]*?return xs\.reduce[^\n]*/) || [""])[0];
 ok(`the door's body is the argmax fold — greatest figure wins, first max kept ("${body.replace(/\s+/g, " ").trim()}")`,
   /xs\.reduce\(\(best,\s*x\)\s*=>\s*\(f\(x\)\s*>\s*f\(best\)\s*\?\s*x\s*:\s*best\)\)/.test(body));
 

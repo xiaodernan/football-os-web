@@ -1141,6 +1141,10 @@ ok("every club's neutral clubInput is the same TeamInput the match preview now b
 // (scouting.ts). Each wrote `X.length ? X.reduce((s, p) => s + p.overall, 0) / X.length : Y`. Same
 // primitive the comparators M376–M381 retired in other forms, so it is a door (`meanOverall`) in the
 // attributes domain now. Charged both ways.
+// M386 moved the door's own body onto the M386 sum door (`sum(players, (p) => p.overall) / players.length`),
+// so the census below charges BOTH spellings — the old reduce and the sum-riding one — or it would read
+// zero sites and the "exactly one place" clause would fail on a door that merely changed its clothes
+// (the M309 lesson: a literal-matching gate must migrate with the literal in the same change).
 {
   const { meanOverall: meanOverallOf } = await server.ssrLoadModule("/domain/attributes.ts");
   const walkApp = (dir) => {
@@ -1154,7 +1158,7 @@ ok("every club's neutral clubInput is the same TeamInput the match preview now b
     return out;
   };
   const APP_SRC = ["domain", "features", "lib", "store", "data", "src", "components"].flatMap(walkApp);
-  const AVG_OVERALL = /\.reduce\(\(s, p\) => s \+ p\.overall, 0\) \/ \w+\.length/;
+  const AVG_OVERALL = /\.reduce\(\(s, p\) => s \+ p\.overall, 0\) \/ \w+\.length|sum\(\w+, \(p\) => p\.overall\) \/ \w+\.length/;
   const avgSites = APP_SRC.filter((f) => AVG_OVERALL.test(readFileSync(f, "utf8")));
   ok(`the average-overall-with-fallback primitive is written in exactly one place, and it is the attributes domain's door (${APP_SRC.length} app files walked, ${avgSites.length} site(s): ${avgSites.join(", ") || "none"})`,
     APP_SRC.length >= 90 && avgSites.length === 1 && avgSites[0] === "domain/attributes.ts");

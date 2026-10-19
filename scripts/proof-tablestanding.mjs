@@ -111,7 +111,7 @@ const computedOk = SAMPLES.every(([a, b]) =>
 const gdOk = SAMPLES.every(([a, b]) =>
   byTableStanding(withGd(a), withGd(b)) === oldGdField(withGd(a), withGd(b)) &&
   byTableStanding(withGd(b), withGd(a)) === oldGdField(withGd(b), withGd(a)));
-ok(`the door equals both old dialects — the computed difference spelling and analytics' gd-field spelling — on every sample pair, so the conversions move no number`, computedOk && gdOk);
+ok(`the door equals both old dialects — the computed difference spelling and analytics' gd-field spelling — on every sample pair, so the conversions move no number`, computedOk && gdOk && SAMPLES.length >= 5);
 
 // --- Integration: sorting a mixed table orders points desc, then difference desc, then goals for. ------
 const TABLE = [row(60, 1, 9), row(50, 99, 0), row(60, 40, 20), row(60, 40, 40), row(60, 30, 30)];

@@ -109,7 +109,7 @@ const ascOk = SAMPLES.every(([a, b]) => byDateAsc(a, b) === epochMs(a) - epochMs
 const oldOk = SAMPLES.every(([a, b]) =>
   byDateDesc(a, b) === new Date(b).getTime() - new Date(a).getTime() &&
   byDateAsc(a, b) === new Date(a).getTime() - new Date(b).getTime());
-ok(`byDateDesc/byDateAsc equal the epochMs subtraction and the old new-Date subtraction on every sample, so the conversions move no number`, descOk && ascOk && oldOk);
+ok(`byDateDesc/byDateAsc equal the epochMs subtraction and the old new-Date subtraction on every sample, so the conversions move no number`, descOk && ascOk && oldOk && SAMPLES.length >= 3);
 
 // --- Behavioural, on the converted sites' own shapes: descending for footprint/history/community/profile,
 // --- ascending for review/filmInsights — each door call reproduces the old inline number. --------------

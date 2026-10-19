@@ -59,14 +59,14 @@ ok(`the tally census is armed on both default spellings and the converted call, 
   plantObjectCount === 0 && plantGetOnly === 0);
 
 // --- Door declaration: tally declared exactly once, in attributes.ts. -----------------------------------
-const DECL = /\nexport const tally\s*=/g;
-const plantDecl = count(`\nexport const tally = (xs, f) => new Map();`, DECL);
+const DECL = /\nexport function tally\b/g;
+const plantDecl = count(`\nexport function tally(xs, f) { return new Map(); }`, DECL);
 const declFiles = carriers.filter((f) => count(src[f], DECL) > 0);
 ok(`tally is declared exactly once, in the door (planted ${plantDecl}, ${declFiles.join(",") || "none"})`,
   plantDecl === 1 && declFiles.length === 1 && declFiles[0] === HOME);
 
 // --- The door body is the tally idiom, zero-initialised. --------------------------------------------------
-const bodyLine = (src[HOME].match(/export const tally[\s\S]*?new Map<K, number>\(\)\)/) || [""])[0];
+const bodyLine = (src[HOME].match(/export function tally[\s\S]*?return xs\.reduce[^\n]*/) || [""])[0];
 ok(`the door's body is the tally idiom — set the key to its current count plus one, defaulted to zero ("${bodyLine.replace(/\s+/g, " ").trim()}")`,
   /m\.set\(f\(x\),\s*\(m\.get\(f\(x\)\)\s*\?\?\s*0\)\s*\+\s*1\)/.test(bodyLine));
 

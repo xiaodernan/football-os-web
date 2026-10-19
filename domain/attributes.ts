@@ -250,15 +250,21 @@ export const byTableStanding = (
  *  and several pages). Every one is the same "total of a field (or a computed figure) over a list" contract,
  *  so it is a door now: one place to read the fold, one place the callers' guards (`|| 1`, a safeDiv, a
  *  halving) compose over. The door always starts at zero, like every converted site did; callers keep their
- *  own guard on the outside. */
-export const sum = <T>(xs: readonly T[], f: (x: T) => number): number => xs.reduce((s, x) => s + f(x), 0);
+ *  own guard on the outside. rng's weighted-pick total keeps the fold inline on purpose: lib/rng.ts must
+ *  stay dependency-free (proof-rng's cross-process fingerprint loads it through a bare Node), so it does
+ *  not import this door. */
+export function sum<T>(xs: readonly T[], f: (x: T) => number): number {
+  return xs.reduce((s, x) => s + f(x), 0);
+}
 
 /** Deduplicate a list, keeping the first occurrence of each value. The spread-over-a-fresh-Set dedup was
  *  written seven times in two spellings — the spread itself and the Array.from spelling — across
  *  attributes' category list, training's focus attributes, ai's focus/target/last-focus keys,
  *  intelligence's phrase list, LearnHub's category tabs and PlayerOS's carried focus. Same
  *  "first-occurrence order preserved" contract, so it is a door now. */
-export const unique = <T>(xs: readonly T[]): T[] => [...new Set(xs)];
+export function unique<T>(xs: readonly T[]): T[] {
+  return [...new Set(xs)];
+}
 
 /** Pick the element with the greatest figure under a selector. The argmax fold was written twice — the
  *  scout report's best-value-at pick and the career arc's peak point — one spelling it as a call on the
@@ -267,15 +273,20 @@ export const unique = <T>(xs: readonly T[]): T[] => [...new Set(xs)];
  *  SMALLEST distance — a different contract — and stays inline. Empty input throws, exactly like the
  *  no-init fold the scout pick uses (career's `points[0]` init only postponed the same crash to the
  *  `peakPoint.age` read one line later). */
-export const maxBy = <T>(xs: readonly T[], f: (x: T) => number): T =>
-  xs.reduce((best, x) => (f(x) > f(best) ? x : best));
+export function maxBy<T>(xs: readonly T[], f: (x: T) => number): T {
+  return xs.reduce((best, x) => (f(x) > f(best) ? x : best));
+}
 
 /** Read the final element of a list. The index form and the slice form were hand-written ten times across
- *  history's day buckets, review's progress window, scouting's worst-edge picks (twice), rng's
- *  weighted-pick fallback, the profile's last result and last session, the dynamic world's latest season
- *  step, the details' final arc point and onboarding's surname initial — every one the same "final element,
- *  undefined when empty" contract, so it is a door now. */
-export const last = <T>(xs: readonly T[]): T | undefined => xs[xs.length - 1];
+ *  history's day buckets, review's progress window, scouting's worst-edge picks (twice), the profile's last
+ *  result and last session, the dynamic world's latest season step, the details' final arc point and
+ *  onboarding's surname initial — every one the same "final element, undefined when empty" contract, so it
+ *  is a door now. rng's weighted-pick fallback keeps the index form inline on purpose: lib/rng.ts must
+ *  stay dependency-free (proof-rng's cross-process fingerprint loads it through a bare Node), so it does
+ *  not import this door. */
+export function last<T>(xs: readonly T[]): T | undefined {
+  return xs[xs.length - 1];
+}
 
 /** Count occurrences of a key into a Map. The tally idiom — set the key to its current count plus one,
  *  defaulting the current count to zero — was hand-written five times across filmInsights' event-kind and
@@ -283,5 +294,6 @@ export const last = <T>(xs: readonly T[]): T | undefined => xs[xs.length - 1];
  *  focus counts. Same "occurrence tally, zero-initialised, first-occurrence insertion order" contract, so
  *  it is a door now: one place the nullish default lives, and a reader that forgets it cannot silently
  *  produce NaN. */
-export const tally = <T, K>(xs: readonly T[], f: (x: T) => K): Map<K, number> =>
-  xs.reduce((m, x) => m.set(f(x), (m.get(f(x)) ?? 0) + 1), new Map<K, number>());
+export function tally<T, K>(xs: readonly T[], f: (x: T) => K): Map<K, number> {
+  return xs.reduce((m, x) => m.set(f(x), (m.get(f(x)) ?? 0) + 1), new Map<K, number>());
+}

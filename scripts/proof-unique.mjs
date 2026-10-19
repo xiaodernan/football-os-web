@@ -56,14 +56,14 @@ ok(`the dedup census is armed on both spellings and the converted call, and refu
   plantSpread === 1 && plantFrom === 1 && plantConverted === 0 && plantMembership === 0 && plantIteration === 0);
 
 // --- Door declaration: unique declared exactly once, in attributes.ts. ----------------------------------
-const DECL = /\nexport const unique\s*=/g;
-const plantDecl = count(`\nexport const unique = (xs) => [...new Set(xs)];`, DECL);
+const DECL = /\nexport function unique\b/g;
+const plantDecl = count(`\nexport function unique(xs) { return [...new Set(xs)]; }`, DECL);
 const declFiles = carriers.filter((f) => count(src[f], DECL) > 0);
 ok(`unique is declared exactly once, in the door (planted ${plantDecl}, ${declFiles.join(",") || "none"})`,
   plantDecl === 1 && declFiles.length === 1 && declFiles[0] === HOME);
 
 // --- The door body is the spread over a fresh Set. ------------------------------------------------------
-const bodyLine = (src[HOME].match(/export const unique[^\n]*/) || [""])[0];
+const bodyLine = (src[HOME].match(/export function unique[\s\S]*?return \[\.\.\.new Set\(xs\)\];/) || [""])[0];
 ok(`the door's body is the spread over a fresh Set, first-occurrence order preserved ("${bodyLine.replace(/\s+/g, " ").trim()}")`,
   /\[\.\.\.new Set\(xs\)\]/.test(bodyLine));
 

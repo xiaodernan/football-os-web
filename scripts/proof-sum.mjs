@@ -31,11 +31,15 @@ const HOME = "domain/attributes.ts";
 const READERS = [
   "domain/achievements.ts", "domain/analytics.ts", "domain/career.ts", "domain/filmInsights.ts",
   "domain/learn.ts", "domain/load.ts", "domain/playerDna.ts", "domain/review.ts", "domain/training.ts",
-  "domain/worldEngine.ts", "lib/rng.ts", "data/ai.ts", "features/community/CommunityHub.tsx",
+  "domain/worldEngine.ts", "data/ai.ts", "features/community/CommunityHub.tsx",
   "features/player/PlayerOS.tsx", "features/profile/ProfilePage.tsx",
   "features/tactical/TacticalStudio.tsx", "features/transfers/TransferCentre.tsx",
   "features/watchlist/WatchlistBoard.tsx", "features/world/DynamicWorld.tsx",
 ];
+// rng's weighted-pick total keeps the fold inline on purpose: lib/rng.ts must stay dependency-free
+// (proof-rng's cross-process fingerprint loads it through a bare Node with its own TS stripper, which
+// cannot resolve the @/domain alias), so it does not import this door.
+const RNG_SURVIVOR = "lib/rng.ts";
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
   e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);
@@ -72,14 +76,14 @@ ok(`the fold census is armed on every accumulator name (the M386 escape shapes a
   plantNearest === 0 && plantCount === 1);
 
 // --- Door declaration: sum declared exactly once, in attributes.ts. ------------------------------------
-const DECL = /\nexport const sum\s*=/g;
-const plantDecl = count(`\nexport const sum = (xs, f) => xs.reduce((s, x) => s + f(x), 0);`, DECL);
+const DECL = /\nexport function sum\b/g;
+const plantDecl = count(`\nexport function sum(xs, f) { return xs.reduce((s, x) => s + f(x), 0); }`, DECL);
 const declFiles = carriers.filter((f) => count(src[f], DECL) > 0);
 ok(`sum is declared exactly once, in the door (planted ${plantDecl}, ${declFiles.join(",") || "none"})`,
   plantDecl === 1 && declFiles.length === 1 && declFiles[0] === HOME);
 
 // --- The door body is the fold, starting at zero, through the caller's selector. ------------------------
-const bodyLine = (src[HOME].match(/export const sum[\s\S]*?number => [^\n]*/) || [""])[0];
+const bodyLine = (src[HOME].match(/export function sum[\s\S]*?return xs\.reduce[^\n]*/) || [""])[0];
 ok(`the door's body is the fold through the caller's selector, starting at zero ("${bodyLine.replace(/\s+/g, " ").trim()}")`,
   /xs\.reduce\(\(s,\s*x\)\s*=>\s*s\s*\+\s*f\(x\),\s*0\)/.test(bodyLine));
 
@@ -88,18 +92,24 @@ const present = READERS.concat([HOME]).every((p) => Object.prototype.hasOwnPrope
 ok(`the census walks the real source tree and every reader is inside it (${carriers.length} .ts/.tsx files, ${READERS.length} readers present)`,
   carriers.length >= 80 && present);
 
-// --- Convergence completeness: the only fold in the whole tree is the door body. ------------------------
+// --- Convergence completeness: the only fold in the whole tree is the door body and rng's survivor. -------
 const treeCount = carriers.reduce((s, f) => s + foldCount(src[f]), 0);
 const homeCount = foldCount(src[HOME]);
-ok(`the only fold in the whole tree is the door body — every reader was converted (tree ${treeCount}, home ${homeCount}; a planted inline would read ${plantA})`,
-  plantA === 1 && treeCount === 1 && homeCount === 1);
+const rngCount = foldCount(src[RNG_SURVIVOR]);
+ok(`the only folds left in the whole tree are the door body and rng's weighted-pick total — every reader was converted (tree ${treeCount} = home ${homeCount} + rng ${rngCount}; a planted inline would read ${plantA})`,
+  plantA === 1 && treeCount === 2 && homeCount === 1 && rngCount === 1);
+
+// --- rng's survivor is the documented dependency-free fold, not a stray re-inline. ----------------------
+const rngLine = (src[RNG_SURVIVOR].match(/[^\n]*entries\.reduce[^\n]*/) || [""])[0];
+ok(`rng's survivor is the weighted-pick total inside lib/rng.ts, which stays dependency-free on purpose ("${rngLine.trim()}")`,
+  rngLine.includes("entries.reduce") && rngCount === 1);
 
 // --- Every reader calls the door and inlines no fold. ---------------------------------------------------
 const CALL = /\bsum\(/g;
 const perCall = READERS.map((f) => [f, count(src[f], CALL)]);
 const totalCalls = perCall.reduce((s, [, n]) => s + n, 0);
 ok(`all ${READERS.length} readers call sum and inline no fold (per-file ${perCall.map(([f, n]) => `${f.split("/").pop()}=${n}`).join(",")}, total ${totalCalls})`,
-  perCall.every(([, n]) => n >= 1) && totalCalls >= 40 && READERS.every((f) => foldCount(src[f]) === 0));
+  perCall.every(([, n]) => n >= 1) && totalCalls >= 39 && READERS.every((f) => foldCount(src[f]) === 0));
 
 // --- Behavioural: the door equals the fold on every shape — plain, destructured, conditional, empty. ---
 const NESTED = [[["a", 3], ["b", 4]], [["c", 0]]];

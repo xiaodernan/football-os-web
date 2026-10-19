@@ -152,7 +152,7 @@ ok(`the conditional selectors and the prose/sparkline .join(" ") sites are real 
 // --- last one written wins in the output. A hand join keeps both and leaves it to CSS source order. ---
 const merged = cn("px-2", "px-4");
 const handJoined = ["px-2", "px-4"].join(" ");
-ok(`cn resolves conflicting utilities the way no hand join can (cn("px-2","px-4")="${merged}" keeps 1 utility; a hand join="${handJoined}" keeps ${handJoined.split(" ").length} and lets CSS order decide)`,
+ok(`cn resolves conflicting utilities the way a hand join cannot (cn("px-2","px-4")="${merged}" keeps 1 utility; a hand join="${handJoined}" keeps ${handJoined.split(" ").length} and lets CSS order decide)`,
   merged === "px-4" && !merged.includes("px-2") && handJoined === "px-2 px-4");
 
 // --- Behavioural: clsx drops EVERY falsy operand and flattens arrays/objects, so `cn(a, cond && b)`
@@ -164,9 +164,17 @@ const falsyOut = cn("card", false, undefined, null, 0, "");
 const falsyHand = ["card", false, undefined, null, 0, ""].join(" ");
 const handTokens = falsyHand.split(" ").filter(Boolean);
 const nestedOut = cn(["a", ["b"]], { c: true });
-ok(`cn drops every falsy operand and flattens arrays/objects, while a hand join leaks only some of them (cn("card",false,undefined,null,0,"")="${falsyOut}" tokens ${falsyOut.split(" ").filter(Boolean).length}; hand join="${falsyHand}" tokens [${handTokens.join(",")}] — keeps false/0 as class names, blanks undefined/null; cn(["a",["b"],{c:true}])="${nestedOut}")`,
+ok(`cn drops every falsy operand and flattens arrays/objects, while a hand join leaks only some of them (cn("card",false,undefined,null,0,"")="${falsyOut}" tokens ${falsyOut.split(" ").filter(Boolean).length}; hand join="${falsyHand}" tokens [${handTokens.join(",")}] — keeps false and zero as class names, blanks undefined/null; cn(["a",["b"],{c:true}])="${nestedOut}")`,
   falsyOut === "card" && handTokens.join(",") === "card,false,0" &&
   /\ba\b/.test(nestedOut) && /\bb\b/.test(nestedOut) && /\bc\b/.test(nestedOut));
+
+// --- Companion to the clause above: it pins a token COUNT, so this measures the fixture it is ---
+// --- counted against. Five falsy spellings in, exactly the two that join stringifies survive, and ---
+// --- cn's own answer is one token — an empty cn output would drop that to zero and fail here, so ---
+// --- the reading above is not a count taken over a population that could quietly go empty. ---
+ok(`the fixture carries all five falsy spellings the contract names, and the two readings differ by exactly the two a hand join leaks (hand join ${handTokens.length} tokens, cn ${falsyOut.split(" ").filter(Boolean).length}; undefined and null blank out, false and zero do not)`,
+  [false, undefined, null, 0, ""].length === 5 &&
+  handTokens.length === 3 && falsyOut.split(" ").filter(Boolean).length === 1);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
