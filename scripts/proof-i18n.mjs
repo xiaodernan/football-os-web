@@ -2320,7 +2320,11 @@ const allSrc = files.map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]);
 // see either, which the M303 probe measured as 2 operand-shaped candidates beside 2 invisible
 // wrapped ones. The wrapped content is bounded to one statement and one paren depth beyond the
 // receiver's own call (`[^;()\n]*`), the depth the live shapes actually wear.
-const REL_INSTANT = "new Date\\([^)]*\\)";
+// M384 note: the instant is matched in both spellings the tree uses — the `new Date(…)` constructor and
+// the epochMs door. CommunityHub's timeAgo moved from `Date.now() - new Date(iso).getTime()` to
+// `Date.now() - epochMs(iso)` in M384; charging only the constructor form would drop it out of the
+// population and the row-typed floor below would read one candidate instead of two (the M309 lesson).
+const REL_INSTANT = "(?:new Date\\([^)]*\\)|epochMs\\([^)]*\\))";
 const aliasNames = (code) => [
   ...[...code.matchAll(/(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*Date\.now\(\)/g)].map((m) => m[1]),
   ...[...code.matchAll(/([A-Za-z_$][\w$]*)\s*\??:\s*[^=,)]*=\s*Date\.now\(\)/g)].map((m) => m[1]),

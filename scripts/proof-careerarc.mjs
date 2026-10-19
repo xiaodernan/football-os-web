@@ -1,5 +1,5 @@
 import { createServer } from "vite";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 
 // Pins domain/careerArc.ts — the modelled career arc rendered on EVERY player
 // detail page (Details.tsx "Career arc" panel, README-prominent as "a modelled
@@ -153,29 +153,50 @@ ok("careerArc is deterministic (same player → identical arc)", JSON.stringify(
 // result today, so nothing a reader sees changes, but five definitions that part company the
 // moment one gains a NaN guard. All five now import the one exported clamp from lib/utils.
 // domain/career.ts was the last private residue; M361 converged it, so the seam is now fully
-// closed: no domain module declares its own clamp. These clauses bind the seam
-// three ways (the one declaration, the five imports, the absence of any private residue), and arm each scan
-// with a planted witness of the exact shape it charges, so "no consumer declares one" is a
-// measurement rather than a regex that matches nothing.
+// closed: no domain module declares its own clamp.
+//
+// M396: the consumer set is DERIVED, not typed. The clause below hand-carried a five-name list
+// (then four, after M383's convergence dropped transfers.ts's last call) and required exactly
+// that many imports — so a legitimate convergence reddened it forever, and a NEW consumer that
+// spelled its own clamp in a file the list never named was invisible to it. A symbol moved
+// behind a door while the list beside it was never re-derived is one defect class (M395 named
+// it; proof-world's destructure was the other half). So the list is now read off the tree:
+// every caller of `clamp(` anywhere in the app, and the single definer. The clause charges
+// set equality between callers and importers, which is strictly stronger than the old pin — it
+// refuses a caller with no import (the shape the old list could not see) AND an import with no
+// caller (a stale import left behind by a convergence, which is exactly what reddened the old
+// one). The population floor refuses an empty scan, so a walker that finds nothing cannot pass.
 const CLAMP_HOME = "lib/utils.ts";
-const CLAMP_CONSUMERS = ["domain/careerArc.ts", "domain/transfers.ts", "domain/worldEngine.ts", "domain/projection.ts", "domain/training.ts"];
 const CLAMP_DEF = /\n[ \t]*(?:export[ \t]+)?(?:const|function)[ \t]+clamp[ \t]*[(=]/g;
 const IMPORTS_CLAMP = /import[^;]*\bclamp\b[^;]*from "@\/lib\/utils"/g;
+const CALLS_CLAMP = /\bclamp\s*\(/g;
 const nDef = (p) => (readFileSync(p, "utf8").match(CLAMP_DEF) || []).length;
 const nImp = (p) => (readFileSync(p, "utf8").match(IMPORTS_CLAMP) || []).length;
+const nCall = (p) => (readFileSync(p, "utf8").match(CALLS_CLAMP) || []).length;
 const plantArrow = ("\nconst clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));".match(CLAMP_DEF) || []).length;
 const plantFn = ("\nfunction clamp(v: number, min: number, max: number): number {\n  return Math.max(min, Math.min(max, v));\n}".match(CLAMP_DEF) || []).length;
 const plantImp = ('import { clamp } from "@/lib/utils";'.match(IMPORTS_CLAMP) || []).length;
-const domainWithDef = readdirSync("domain").filter((f) => f.endsWith(".ts")).map((f) => `domain/${f}`).filter((f) => nDef(f) > 0);
-const consumerDefs = CLAMP_CONSUMERS.filter((f) => nDef(f) > 0).map((f) => `${f}(${nDef(f)})`);
-const clampImporters = CLAMP_CONSUMERS.filter((f) => nImp(f) > 0);
+const plantCall = ("export const band = (v: number) => clamp(v, 0, 1);".match(CALLS_CLAMP) || []).length;
+// The consumer set is every file in the app that calls clamp; the importer set is every file that
+// imports it from the door. Both are read off the tree, so neither can go stale.
+const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
+  e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);
+const APP_SRC = ["domain", "features", "lib", "store", "data", "src", "components"]
+  .filter((d) => existsSync(d)).flatMap(walk).filter((f) => /\.(ts|tsx)$/.test(f));
+const callers = APP_SRC.filter((f) => nCall(f) > 0);
+const importers = APP_SRC.filter((f) => nImp(f) > 0);
+const definers = APP_SRC.filter((f) => nDef(f) > 0);
+const callerNoImport = callers.filter((f) => nImp(f) === 0);
+const importNoCall = importers.filter((f) => nCall(f) === 0);
 
-ok(`lib/utils exports the one clamp and none of the five converged consumers re-declares it (${consumerDefs.join(", ") || "none"}; plants armed: ${plantArrow}${plantFn})`,
-  plantArrow === 1 && plantFn === 1 && nDef(CLAMP_HOME) === 1 && consumerDefs.length === 0);
-ok(`no private clamp remains anywhere in domain — the seam is fully closed (${domainWithDef.join(", ") || "none"})`,
-  plantFn === 1 && domainWithDef.length === 0);
-ok(`each of the five converged consumers imports clamp from @/lib/utils (${clampImporters.length} of ${CLAMP_CONSUMERS.length})`,
-  plantImp === 1 && clampImporters.length === 5);
+ok(`the census walks the real app tree and finds a real clamp population (${APP_SRC.length} .ts/.tsx files, ${callers.length} callers, ${importers.length} importers, ${definers.length} definer; a planted call reads ${plantCall}, a planted import reads ${plantImp})`,
+  APP_SRC.length >= 80 && plantCall === 1 && plantImp === 1 && callers.length >= 10);
+ok(`lib/utils exports the one clamp and no other file in the app re-declares it (definers: ${definers.join(", ") || "none"}; plants armed: ${plantArrow}${plantFn})`,
+  plantArrow === 1 && plantFn === 1 && nDef(CLAMP_HOME) === 1 && definers.length === 1 && definers[0] === CLAMP_HOME);
+ok(`no private clamp remains anywhere in domain — the seam is fully closed (${definers.filter((f) => f.startsWith("domain/")).join(", ") || "none"})`,
+  plantFn === 1 && definers.filter((f) => f.startsWith("domain/")).length === 0);
+ok(`every file that calls clamp imports it from @/lib/utils, and no import is left behind without a caller (${callers.length} callers, ${importers.length} importers; caller-without-import: ${callerNoImport.join(", ") || "none"}; import-without-caller: ${importNoCall.join(", ") || "none"})`,
+  callerNoImport.length === 0 && importNoCall.length === 0 && callers.length === importers.length);
 ok("the shared clamp holds a value to a range from below, above and inside alike",
   sharedClamp(-5, 0, 10) === 0 && sharedClamp(20, 0, 10) === 10 && sharedClamp(5, 0, 10) === 5 && sharedClamp(10, 0, 10) === 10 && sharedClamp(0, 0, 10) === 0);
 

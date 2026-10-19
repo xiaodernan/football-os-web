@@ -2,7 +2,7 @@ import { footballProvider, getClub, clubIdsByCompetition, formatValue } from "@/
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
-import { byOverall, meanOverall, byTableStanding, sum } from "./attributes";
+import { byOverall, meanOverall, byTableStanding, sum, resultPoints } from "./attributes";
 import type { RowText } from "./rowText";
 import { clamp, pct, round2, safeDiv, signed, fmt2 } from "@/lib/utils";
 import { round1 } from "./scouting";
@@ -122,7 +122,7 @@ export function clubInput(clubId: string, moved: Record<string, string>, tac: Ta
 export function careerForm(state: CareerState): number {
   const last = state.results.slice(-5);
   if (!last.length) return 0;
-  const pts = sum(last, (r) => (r.ourGoals > r.oppGoals ? 3 : r.ourGoals === r.oppGoals ? 1 : 0));
+  const pts = sum(last, (r) => resultPoints(r.ourGoals, r.oppGoals));
   return (pts / (last.length * 3)) * 2 - 1;
 }
 
@@ -280,7 +280,7 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
 
   // Points the CAREER itself earned. `ours.points` is the live-table total, which
   // starts from the seeded standings, so the two must never be conflated in prose.
-  const careerPts = sum(state.results, (r) => (r.ourGoals > r.oppGoals ? 3 : r.ourGoals === r.oppGoals ? 1 : 0));
+  const careerPts = sum(state.results, (r) => resultPoints(r.ourGoals, r.oppGoals));
   // The projected leader's name is the dataset's own word, so it travels as a variable; the
   // two arms of the projection sentence differ in a whole clause ("level with or ahead of" vs
   // "{n} pts behind"), which no `{n}` can choose between.

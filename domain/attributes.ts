@@ -297,3 +297,16 @@ export function last<T>(xs: readonly T[]): T | undefined {
 export function tally<T, K>(xs: readonly T[], f: (x: T) => K): Map<K, number> {
   return xs.reduce((m, x) => m.set(f(x), (m.get(f(x)) ?? 0) + 1), new Map<K, number>());
 }
+
+/** League points for an outcome: three for a win, one for a draw, none for a loss. The rule was spelled
+ *  four times — analytics' form points (twice, straight from W/D/L letters) and career's recent and
+ *  career points (twice, from goal comparisons) — same football contract, so it is a door now: one place
+ *  the 3/1/0 ladder lives, and a league-format change (or a typo) cannot make two subsystems disagree.
+ *  The letter form is the definition; `resultPoints` maps a goal comparison to its letter first. */
+export const leaguePoints = (letter: "W" | "D" | "L"): number =>
+  letter === "W" ? 3 : letter === "D" ? 1 : 0;
+
+/** League points straight from a result's goals: the goal comparison mapped to its letter, then the
+ *  league-points door. Same contract as `leaguePoints`, goal-comparison dialect. */
+export const resultPoints = (ourGoals: number, oppGoals: number): number =>
+  leaguePoints(ourGoals > oppGoals ? "W" : ourGoals === oppGoals ? "D" : "L");

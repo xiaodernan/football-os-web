@@ -7,7 +7,29 @@ import { createServer } from "vite";
 // invariants of the aging/development/market curves. Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { runWorld, seasonLabel, marketValue, formatMarket } = await server.ssrLoadModule("/domain/worldEngine.ts");
+const engine = await server.ssrLoadModule("/domain/worldEngine.ts");
+const attributes = await server.ssrLoadModule("/domain/attributes.ts");
+
+// M396: a symbol moved behind a door and the hand-typed destructure beside it was never re-derived —
+// `marketValue` came to the attributes domain in M381 while line 10 here still pulled it out of
+// worldEngine, so this script destructured `undefined` and died before its tally. A crashing proof is
+// UNVERIFIED, not FAIL, which is why nothing but a full-suite run ever said so. The names this script
+// uses are therefore looked UP on the module that owns them, and the lookup is charged: every name must
+// be a live export of the module it is taken from, and `marketValue` must ride the attributes door —
+// worldEngine only IMPORTS it, so a destructure that still asks worldEngine for it reddens here with a
+// message naming the module, instead of reddening nowhere at all.
+const fromEngine = ["runWorld", "seasonLabel", "formatMarket"];
+const fromAttributes = ["marketValue"];
+const take = (ns, mod, names) => {
+  const missing = names.filter((n) => typeof ns[n] !== "function");
+  if (missing.length) throw new Error(`${mod} no longer exports ${missing.join(", ")} — re-derive the door it moved behind`);
+  return Object.fromEntries(names.map((n) => [n, ns[n]]));
+};
+const { runWorld, seasonLabel, formatMarket } = take(engine, "domain/worldEngine.ts", fromEngine);
+const { marketValue } = take(attributes, "domain/attributes.ts", fromAttributes);
+// worldEngine must still CONSUME the door rather than own a second copy of the curve (M381's contract),
+// and it must not re-export one — a re-export would let the stale spelling above silently come back.
+if (engine.marketValue !== undefined) throw new Error("worldEngine re-exports marketValue — M381 moved the curve to the attributes door");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
