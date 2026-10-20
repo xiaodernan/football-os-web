@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall, capRound, maxBy, last } from "./attributes";
+import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall, capRound, maxBy, last, headroomOf } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -20,8 +20,11 @@ export function bucketOf(g: PositionGroup): Exclude<PosBucket, "ALL"> {
   return "ATT"; // AM, W, ST
 }
 
-// Growth still available before the ceiling.
-export const headroom = (p: PlayerRef) => Math.max(0, p.potential - p.overall);
+// Growth still available before the ceiling. The figure itself is the attributes door's
+// `headroomOf` (M404): the world engine's development step and the career arc's annual change each
+// kept a private copy of this line, and this is the same door with the player's own fields read
+// off it.
+export const headroom = (p: PlayerRef) => headroomOf(p.potential, p.overall);
 
 // Overall rating purchased per €1M — higher is better value.
 export const valueIndex = (p: PlayerRef) => (p.value > 0 ? p.overall / (p.value / 1_000_000) : p.overall);

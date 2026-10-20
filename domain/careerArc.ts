@@ -2,7 +2,7 @@ import type { RowText } from "./rowText";
 import type { PlayerRef, PositionGroup } from "./types";
 import { round1 } from "./scouting";
 import { clamp } from "@/lib/utils";
-import { capRound, maxBy } from "./attributes";
+import { capRound, maxBy, headroomOf } from "./attributes";
 
 // Career arc: how a squad player's level is expected to move with age.
 //
@@ -70,7 +70,7 @@ export function annualChange(input: { age: number; overall: number; potential: n
   if (age < peakAge) {
     const youth = clamp((peakAge - age) / (peakAge - 17), 0, 1);
     const share = 0.08 + 0.34 * youth; // 8% of headroom near the peak, 42% at 17
-    const headroom = Math.max(0, potential - overall);
+    const headroom = headroomOf(potential, overall);
     return round1(headroom * share);
   }
   const past = age - peakAge;

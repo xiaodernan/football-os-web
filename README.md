@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M403
+Work ships one milestone per commit and is currently at M404
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,32 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M404 — "the growth still available before the ceiling" was written three times, and one of the three was exported
+
+M403 closed the reach of the doors the app has. This unit asks the other half of the question: **which of the idioms the app still spells by hand deserve a door?** The answer the scout found is a domain concept, not a utility.
+
+**The family.** "The growth still available before the ceiling" — how many overall points a player could still gain — was computed in three places:
+
+```
+domain/scouting.ts:24     export const headroom = (p: PlayerRef) => Math.max(0, p.potential - p.overall);
+domain/worldEngine.ts:94  const headroom = Math.max(0, p.potential - p.overall);
+domain/careerArc.ts:73    const headroom = Math.max(0, potential - overall);
+```
+
+Byte-identical, so the three agreed today. That is exactly the drift risk the comparators (M376–M381) and the pricing curve (M385) retired: a change to what "headroom" means would have had to be *found* in three places, and would have been *made* in one. The scouting module's copy is the one that got exported; the other two were private, and **no census anywhere charged them** — the per-door proofs each charged their own door's body, and neither worldEngine nor careerArc had a door of its own to be charged against.
+
+**The door, and why it is scalar-shaped.** `headroomOf(potential, overall)` lives in `domain/attributes.ts`, beside the other numeric domain doors (`marketValue`, `capRound`, `roundTo100k`). It takes the two **numbers** rather than the player, because the career arc's `annualChange` works on a record of `{ age, overall, potential, peakAge }` and has no player to hand — a player-shaped door could not have reached it without a fabricated record. The scouting module's `headroom(player)` is now the same door with the player's own fields read off it, and the two private copies are gone.
+
+All three modules already imported from `./attributes`, so the fold added **no new module edge**.
+
+**The census.** `scripts/proof-headroom.mjs` (8 checks): the scans are armed and the headroom *shape* is what draws the line; the tree is real and every subject is inside it; **the headroom family is closed** — the inline form survives nowhere outside the door's own body, and the door's own body IS the formula; the door is declared exactly once, in the attributes home, and no module re-declared a private copy; all three readers reach the door and each imports it from the home; the player-shaped door *is* the scalar door on every case, and neither can go negative; the door's body is the formula it replaced, byte for byte; and a **planted companion** — the door answers a positive headroom where there is one, and the floor is load-bearing (at `headroomOf(40, 90)` the unfloored difference would be −50 and the door reads 0) — so the "never negative" claim is not true of a door that answered zero every time.
+
+**The false positive worth naming.** The first shape the census used was `Math.max(0, X - Y)` — and it found **seven** survivors outside the door: `career.ts`'s remaining fixtures (5), `careerArc.ts`'s years to peak (1), and `gap.ts`'s criticality above the role floor (1). None of them is a headroom. A census that charged them would have been crying wolf, and one that excused them by widening the shape would have lost the ability to see a new headroom. So the census carries **both** scans: the narrow one (the operands are a potential and an overall) must read zero, and the broad one is **pinned** at 8 sites over 4 files — the door's own body plus the seven survivors — so a *new* floored difference is measured rather than excused, and the family the door belongs to is still visible in the ledger.
+
+**Nothing a reader sees moved.** The three copies were byte-identical, so the fold is arithmetically the same figure. The only change a reader could see is in the code, not in the screen: one place now says what "headroom" means.
+
+**Next.** The scout that found this one looked for *repeated shapes* rather than for a named concept, and it is worth running again now that the headroom family is closed — the next one may be a different concept, or it may be nothing, and a scout's honest answer of "nothing left" is itself worth recording.
 
 ### M403 — one census for every door's reach, because M402 had to learn the same lesson twice
 

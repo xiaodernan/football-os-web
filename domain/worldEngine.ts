@@ -13,7 +13,7 @@
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
 import { clamp, indexById, safeDiv } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
-import { POSITION_BY_GROUP, POSITION_GROUPS, marketValue, capRound, sum } from "@/domain/attributes";
+import { POSITION_BY_GROUP, POSITION_GROUPS, marketValue, capRound, sum, headroomOf } from "@/domain/attributes";
 import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
 
 const BASE_START_YEAR = 2026; // base season is 2026/27
@@ -91,7 +91,7 @@ export interface WorldInput {
 
 function develop(p: PlayerRef, rng: () => number): { player: PlayerRef; retired: boolean } {
   const age = p.age + 1;
-  const headroom = Math.max(0, p.potential - p.overall);
+  const headroom = headroomOf(p.potential, p.overall);
   // Slight potential unlock for still-developing players.
   let potential = p.potential;
   if (age <= 23 && rng() < 0.3) potential = clamp(potential + rngInt(rng, 1, 3), p.overall, 99);

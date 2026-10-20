@@ -215,6 +215,19 @@ export function meanOverall(players: { overall: number }[], fallback: number): n
   return players.length ? sum(players, (p) => p.overall) / players.length : fallback;
 }
 
+/** The growth still available before the ceiling: how many overall points a player could still gain.
+ *  The scouting module's own `headroom(player)` read it, and the world engine's development step and
+ *  the career arc's annual change each kept a private copy of the same line — byte-identical, so the
+ *  three agreed today, and the same drift risk the comparators and the pricing curve retired: a
+ *  change to what "headroom" means would have to be found in three places and would have been made
+ *  in one.
+ *
+ *  The shape is the two NUMBERS, not the player, because the career arc works on a record of
+ *  `{ age, overall, potential, peakAge }` and has no player to hand. So the door takes the two
+ *  figures, and the scouting module's player-shaped `headroom` is the same door with the player's own
+ *  fields read off it. */
+export const headroomOf = (potential: number, overall: number): number => Math.max(0, potential - overall);
+
 /** Round a value and clamp it to [lo, hi]. The round-then-bound pair was spelled about eight times across
  *  career, scouting, transfers, training, worldEngine and careerArc — the same "round then bound" policy the
  *  comparators and other doors retired. (worldEngine's `clamp(Math.round(a) + rng, lo, hi)` — lines 100–101 —
