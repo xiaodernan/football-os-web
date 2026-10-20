@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M396 (a few numbers in that range
+Work ships one milestone per commit and is currently at M398 (a few numbers in that range
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7079,6 +7079,76 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M398 — the ledger lost a heading while its own gate stayed green, so the gate learned to read paragraphs
+
+**The defect.** `README.md` is this project's ledger and `scripts/proof-record.mjs` is its only
+accountant. The accountant read headings the way a line reader does — `/^### (M\d+)\b/` — and M396's
+landing script exploited exactly that blindness. It joined the new section onto the file without
+separating the paragraph before it, so line 7107 read:
+
+```
+…**Next.** The separator family … are the highest-profile readers.### M395 — the marker's own
+population went behind the door, and the census had to keep a population it could still lose
+```
+
+CommonMark renders that as one paragraph of prose. `### M395` was not a heading; it was the tail of
+M396's sentence. And every check the gate owns reported success: **188 headings found, 188 distinct,
+0 duplicated, 0 empty bodies, pointer matched newest** — 4/4 green while the ledger had silently
+dropped a milestone. The damaged section was counted as *body text* of the section above it, which is
+the one reading that makes an absent heading look like a present body.
+
+**The fix.** A fourth reading, `gluedHeadings()`, scans for `### M\d+\b` anywhere in a line and
+charges it when something other than whitespace precedes it. It exists only as a **pair** with the
+blind reading: the clause requires `glued === 1` on a planted glued heading *while `milestoneSections`
+counts 0 headings of that same fixture*. That pairing is what makes a self-narrowing scan impossible —
+a reader that stopped matching anything would report no damage and keep its green clause, but it could
+not keep the plant, and the plant is asserted inside the same expression the clause uses (M313).
+
+**Two shields, because the ledger talks about itself.** README quotes milestone headings as prose in
+**three** inline code spans (lines 4905, 6713, 6750 carry `` `### M225` `` and `` `### M336 —` ``) and
+**42** fence markers elsewhere. An unshielded scan charges all three quotations as damage, so the next
+honest append would be refused for a reason nobody could act on. Inline code is blanked before the
+match and fenced regions are skipped — and both shields are planted, not assumed: a backticked quote
+fixture and a fenced-block fixture must read 0. A three-space-indented heading reads 0 too, because
+that is a code block in CommonMark, not a lost section.
+
+**The repair.** `dev/.m397-repair.mjs` split line 7107 back into paragraph, blank line, heading — one
+splice, +2 lines, asserted against the newline count its own replacement string carries rather than a
+hand-typed number. The preflight refuses a mixed-EOL README and requires the damage it is about to fix
+to be exactly `7107:### M395`; the post-check asks **the shipped judge**, not a copy of its predicate,
+for 5/5. Headings went **188 → 189**, distinct stayed equal, pointer stayed green.
+
+**Witnesses.** `dev/.m397-arms.mjs` mutates one file per arm, spawns the shipped script, and requires
+the FAIL-clause *set and count* to equal the prediction (every arm restored byte-exactly; `unexplained
+FAIL lines === 0` is asserted, so a red I did not predict is a hole rather than a number to widen):
+
+| arm | mutation | reds | what it proves |
+| --- | --- | --- | --- |
+| A | re-glue the repaired README | `{4}` | the clause names the real damage, and only it — clauses 1–3 stay green on the same bytes, which is how the defect hid |
+| B | `GLUED_MARK` matched nothing | `{4,5}` | a blinded reader loses its plant *and* the damaged fixture verdicts true — the pairing and the battery both bite |
+| C | code-span shield removed | `{4}` | the three quotations become damage; the shield is load-bearing |
+| D | fence tracking removed | `{4}` | README has 0 heading-looking lines inside a fence (measured), so only the plant reddens — the plant is load-bearing |
+
+The at-rest control runs the shipped judge with nothing mutated and requires 5/5 with no FAIL line to
+attribute; without it, all four arms would be measuring a tree that was already broken.
+
+**Named, not fixed.** The gate still cannot tell whether a section describes the work its number
+belongs to — M339's third copy had a correct heading and M396's body, and only a reader caught that.
+What it can now refuse is the *shape* the damage actually took: a heading welded to a sentence.
+`gluedHeadings()` also does not read a heading inside a fence, which is right for prose and wrong for a
+fixture — if a future section documents heading shapes inside a fenced block, that block is invisible
+to the census by design.
+
+**Measured on the plane at this commit.** `proof-record` **5/5** (was 4/5 on the damaged bytes), the
+arm battery **5/5** checks (baseline + 4 arms, every predicted red set matched exactly), README
+**9,869 lines / 190 headings / 190 distinct**, pure CRLF before and after (CR = LF count on both
+reads). No source file changed: this unit touches `README.md` and `scripts/proof-record.mjs`, neither
+of which enters the bundle — the app's behavior is unchanged by construction.
+
+**Next.** The convergence lane's census debt is now the queue again: doors that exist but are counted
+by another script's arithmetic rather than their own. `M397` belongs to the separator door, taken by
+the lane that found it.
+
 ### M396 — the ladder and the stale pins went behind their doors
 
 M395 named one defect class: a symbol moved behind a door and the hand-written list beside it was never re-derived. Two scripts carried stale lists:
@@ -7104,7 +7174,9 @@ Measured: the whole `scripts/` suite 74 PASS / 0 FAIL / 0 UNVERIFIED, `tsc --noE
 
 The ladder (`leaguePoints` / `resultPoints`) is also a door now. Its body lives in `domain/attributes.ts`; `proof-leaguepoints.mjs` pins it. `domain/analytics.ts` and `domain/career.ts` were converted to call the door; the ladder itself is gone from every caller.
 
-**Next.** The separator family (18 code joiners over 8 files, 36 dictionary copies across 3 locales) remains charged apart from the absence marker — M394/M395 pinned it by name. The next unit is the **separator door**: one constant for the en dash that joins two present figures, with a census that proves no absence marker rides it and no code joiner goes elsewhere. The Data Room's XG duel tile and the match-line XG line are the highest-profile readers.### M395 — the marker's own population went behind the door, and the census had to keep a population it could still lose
+**Next.** The separator family (18 code joiners over 8 files, 36 dictionary copies across 3 locales) remains charged apart from the absence marker — M394/M395 pinned it by name. The next unit is the **separator door**: one constant for the en dash that joins two present figures, with a census that proves no absence marker rides it and no code joiner goes elsewhere. The Data Room's XG duel tile and the match-line XG line are the highest-profile readers.
+
+### M395 — the marker's own population went behind the door, and the census had to keep a population it could still lose
 
 M394 opened the `ABSENT` door and folded the ten cells that displayed the WRONG glyph. The other thirty-five spelled the em dash inline — the reader already saw the right character at every one of them, so this unit moves no figure and no copy. It removes thirty-five ways of spelling one convention: `scripts/proof-absent-glyph.mjs` counted 38 standalone-dash reads across 17 carriers before the fold and 3 after, and those 3 are the door's own body plus the two generate-time values M394 deliberately left with the engines. 34 cells folded by `dev/.m395-fold.mjs` (30 quoted literals, 4 whole-JSX-child nodes) across 14 files, plus Dashboard:238's `?? "—"` folded by hand because that file had carried the door's import since M394 and the fold script refuses a file already naming it. The door now has 45 uses over 15 carriers, each of them pinned in a per-file ledger.
 

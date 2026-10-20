@@ -12,7 +12,7 @@
 //   · One of the `M339` headings had **no body at all** — a heading immediately followed by the
 //     next heading, which reads as a section and is not one.
 //
-// Three readings, each a named function so the clauses and their witnesses run the SAME code (M313:
+// Four readings, each a named function so the clauses and their witnesses run the SAME code (M313:
 // a witness that re-implements the predicate it guards proves nothing).
 //
 // The honest limit: this checks the record against itself, not against the commits. It cannot tell
@@ -68,6 +68,34 @@ const pointerMilestone = (src) => {
 const newestMilestone = (sections) =>
   sections.reduce((best, s) => (Number(s.ms.slice(1)) > Number(best.slice(1)) ? s.ms : best), "M0");
 
+/**
+ * A `### M###` that does NOT start its line: the section was inserted onto the end of a paragraph, so
+ * CommonMark renders the heading as prose and `milestoneSections` above never sees it. M396 did exactly
+ * this to M395 — its landing script joined a section that carried no trailing newline — and the gate
+ * stayed green while the ledger lost a heading: 188 found, 188 distinct, because the damaged section was
+ * counted as body text of the section above it. So this reading exists only as a PAIR with the blind one:
+ * `glued === 1 && sections === 0` on the same fixture is what proves the file is being read, not ignored.
+ *
+ * Two shielded shapes must NOT be charged, because the README quotes headings as prose about itself:
+ * inline code spans (lines 6713 and 6750 carry `` `### M336 — …` `` inside backticks) and fenced blocks
+ * (42 fence markers). A scan that charged either would report three false damages and the next insert
+ * would be refused for a reason nobody could act on.
+ */
+const GLUED_MARK = /### M\d+\b/g;
+const gluedHeadings = (src) => {
+  const out = [];
+  let inFence = false;
+  src.split(/\r?\n/).forEach((raw, i) => {
+    if (/^\s*(```|~~~)/.test(raw)) { inFence = !inFence; return; }
+    if (inFence) return;
+    const line = raw.replace(/`[^`]*`/g, "``"); // inline code is prose, not markup
+    for (const m of line.matchAll(GLUED_MARK)) {
+      if (m.index > 0 && line.slice(0, m.index).trim() !== "") out.push({ line: i + 1, at: m[0] });
+    }
+  });
+  return out;
+};
+
 const readme = readFileSync(README, "utf8");
 const sections = milestoneSections(readme);
 const dupes = duplicatedMilestones(sections);
@@ -81,6 +109,24 @@ ok(`every milestone heading carries a body (${sections.length - empty.length} of
   sections.length >= 150 && empty.length === 0);
 ok(`the roadmap pointer names the newest milestone the file records (pointer ${pointer ?? "absent"}, newest heading ${newest})`,
   pointer !== null && pointer === newest);
+
+// Clause 4. The glue reading, armed both ways in the same expression the clause uses: a glued heading must
+// be seen BY THIS READING and missed by `milestoneSections` (that blindness is the damage), a line-start
+// heading must be seen by the reader and not charged here, and the two shielded prose shapes — inline code
+// and a fenced block — must read 0 so the census cannot be satisfied by charging the ledger's own quotes.
+const glued = gluedHeadings(readme);
+const gGlued = gluedHeadings("para ends.### M2 — the second\n\nbody two\n");
+const gGluedSections = milestoneSections("para ends.### M2 — the second\n\nbody two\n");
+const gClean = gluedHeadings("### M2 — the second\n\nbody two\n");
+const gCleanSections = milestoneSections("### M2 — the second\n\nbody two\n");
+const gCodeSpan = gluedHeadings("renamed `### M336 — the data room's count` by `a5f17ea` — a docs sync\n");
+const gFenced = gluedHeadings("```txt\nprose.### M2 — inside a fence\n```\n");
+const gIndented = gluedHeadings("### M2 — a\n\n   ### M1 — b\n\nbody one\n");
+const gTwo = gluedHeadings("para ends.### M2 — second\n\nbody\n\nmore text.### M1 — first\n\nbody\n");
+ok(`no milestone heading is glued to the end of a paragraph (${glued.length ? `${glued.length} damaged: ${glued.map((g) => `line ${g.line} "${g.at}"`).join(", ")}` : "none"}; ${sections.length} headings the line-anchored reader can see; planted glued ${gGlued.length} while the blind reader counted ${gGluedSections.length} heading(s) of it, planted clean ${gClean.length} with ${gCleanSections.length} read, planted inline-code quote ${gCodeSpan.length}, planted fenced ${gFenced.length}, planted 3-space indent ${gIndented.length}, planted two ${gTwo.length})`,
+  glued.length === 0 && gGlued.length === 1 && gGluedSections.length === 0 && gClean.length === 0 &&
+  gCleanSections.length === 1 && gCodeSpan.length === 0 && gFenced.length === 0 &&
+  gIndented.length === 0 && gTwo.length === 2 && sections.length >= 150);
 
 // The witnesses. Each fixture is a small README, and each declares the verdict it must get from
 // the same three readings the clauses above use. A reader that stopped finding headings would
@@ -97,6 +143,12 @@ const RECORD_FIXTURES = [
     "currently at M1 (x)\n\n### M2 — the second\n\nbody two\n\n### M1 — the first\n\nbody one\n", false],
   ["no pointer at all",
     "### M2 — the second\n\nbody two\n", false],
+  // The M396 damage as a fixture: two headings the line-anchored reader can see, a pointer that names the
+  // newest of THOSE, non-empty bodies everywhere — and a third milestone welded onto the end of a
+  // paragraph. Without the glue reading this file verdicts true; the damaged heading is present in the
+  // bytes and absent from the record.
+  ["a heading glued to the end of a paragraph, which the line-anchored reader cannot see",
+    "currently at M3 (x)\n\n### M3 — third\n\nbody three\n\n### M2 — second\n\nbody two.**Next.** text.### M1 — the first\n\nbody one\n", false],
 ];
 const recordVerdict = (src) => {
   const s = milestoneSections(src);
@@ -104,12 +156,13 @@ const recordVerdict = (src) => {
     s.length >= 2 &&
     duplicatedMilestones(s).length === 0 &&
     s.every((x) => x.body !== "") &&
+    gluedHeadings(src).length === 0 &&
     pointerMilestone(src) !== null &&
     pointerMilestone(src) === newestMilestone(s)
   );
 };
 const recordVerdicts = RECORD_FIXTURES.map(([name, src, want]) => [name, recordVerdict(src) === want]);
-ok(`the record reader, planted both ways, refuses a repeated heading, an empty heading and a stale pointer, and accepts a clean file (${recordVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
+ok(`the record reader, planted both ways, refuses a repeated heading, an empty heading, a stale pointer and a heading glued into a paragraph, and accepts a clean file (${recordVerdicts.map(([n, v]) => `${n}: ${v}`).join("; ")})`,
   recordVerdicts.every(([, v]) => v));
 
 console.log(`\n${sections.length} milestone headings · ${new Set(sections.map((s) => s.ms)).size} distinct`);
