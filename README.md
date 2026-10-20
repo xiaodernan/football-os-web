@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M398 (a few numbers in that range
+Work ships one milestone per commit and is currently at M397
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,75 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M399 — the last hand-spelled `+1.50` went behind its door, and three censuses had to be re-derived
+
+**The residue.** M393 built the `signed2` door (`lib/utils.ts`) for numbers shown at a fixed two
+decimals with a leading `+`, folded the Film Room's scan-trend tile onto it, and left the Manager
+career's season-form cell spelled by hand:
+
+```
+{ key: "mgr.outlook.form", vars: { form: `${form >= 0 ? "+" : ""}${form.toFixed(2)}`, … } }
+```
+
+That cell was *charged by name* in three proofs — pinned as an exception whose excuse was that its
+carrier was mid-flight in another lane. A named residue is a promise to come back; this is the
+coming back. `domain/career.ts` is the only source file this unit touches.
+
+**Why the fold could not move a figure.** The door's body is the inline formula verbatim, so the two
+spellings agree by construction; `scripts/proof-signed2.mjs` measures that on 14 values including the
+two edges a rewrite would break (`-0` pads to `+0.00`, `-0.001` keeps its own minus and `toFixed`'s
+rounding, `-0.00`). The Film Room's tile needed a null guard because its trend can be absent; career's
+`careerForm()` is typed `number` and always returns one, so the fold adds a branch it does not need —
+which is why the cell's reachability clause is pinned on the row itself (`key: "mgr.outlook.form",
+vars: { form: signed2(form)`) and not on a `? ABSENT :` guard.
+
+**The census debt is not one script, it is three.** The same two bytes are read by three doors'
+censuses, and each of them had to be re-derived rather than decremented:
+
+- `proof-signed2` — its residue list is now empty, both cells are folded, the caller set is pinned by
+  *identity* (`callers.join(",") === FOLDED.sort().join(",")`) rather than by a count, the padded
+  spelling's carrier set is pinned to the door alone, and the pre-fold spelling is planted so the
+  reachability clause binds the folded shape instead of any fallback token.
+- `proof-fmt2` — the padded family is one of `.toFixed(2)`'s four classified lanes, so folding career
+  moves a site out of it. The lane's total went 2 → 1 and **the total was never the pin**: it read 2
+  before M393 (career + FilmRoom) and 2 *after* M393 (door body + career) for different reasons. The
+  carriers are pinned, and each carrier is now separately required to import the door.
+- `proof-signed` — the raw-number sibling charges the padded spelling to a *different* door, so its
+  clause said "FilmRoom left it, career is the named residue" with `paddedSites[0][1] === 1`. After
+  the fold the numeric-sign survivor set shrinks from two files to one, and the padded clause requires
+  both cells at zero plus a derived carrier set equal to the door alone.
+
+**Witnesses.** `dev/.m399-arms.mjs` mutates one region, spawns the shipped proofs, and requires the
+FAIL-clause *set* to equal a prediction derived from each clause's own claim; every arm restores the
+pristine buffer and verifies `Buffer.compare === 0`. A red outside the prediction throws as
+`UNPREDICTED` — an unexplained red is a hole in my model of the census, never a number to widen:
+
+| arm | mutation | reds | what it proves |
+| --- | --- | --- | --- |
+| A | re-inline career's padded cell | signed2 `{6,7,13}` · signed `{9,11}` · fmt2 `{7,12}` | the spelling and the caller are both census-visible; a fold that only edits the import would not survive |
+| B | delete career's call, pad nothing | signed2 `{6,13}`; signed and fmt2 **stay green** | the caller-set and row clauses read the **call**; the padded census reads the **spelling** — two claims, not one restated |
+| C | drop career's import, keep the call | signed2 `{6}` · fmt2 `{12}` | the reachability clauses bind the call site, so an import-only fold is refused by the import clause alone |
+| D | re-inline FilmRoom's cell | signed2 `{6,7,12}` · signed `{9,11}` · fmt2 `{7,12}` | the pins are not career-specific: the M393 member of the family is guarded by the same censuses |
+
+The at-rest control runs all three proofs with nothing mutated and requires 13/13, 13/13, 12/12 with
+no FAIL line to attribute; without it, the four arms would be measuring a tree that was already red.
+
+**Named, not fixed.** The door still quotes the shape it replaced in its own docstring, so `lib/utils`
+is read **by line** in three places across the three proofs — a raw file scan there reads 2 and would
+hide the quotation as a stray. That exclusion is itself a pin (`docQuote === 1`), but it means the
+census is line-aware for exactly one file: if a consumer ever puts the padded spelling inside a comment
+of its own, it is charged as a stray, and that is the right verdict for a spelling a reader may copy.
+
+**Measured on the plane at this commit.** `proof-signed2` **13/13**, `proof-signed` **13/13**,
+`proof-fmt2` **12/12**, arm battery **4/4** predicted red sets matched exactly (0 unexplained), `npx
+tsc --noEmit` exits 0, career's padded spellings **1 → 0**, tree-wide padded spellings **2 → 1** (the
+door body). The displayed string for the season-form row is byte-identical before and after.
+
+**Next.** The lib/utils doors are all census-paid under their own names now. The scout for the next
+unit is a duplicated idiom that has no door yet — the empty-string club-name fallback in
+`data/intelligence.ts` is the one already named, and it changes what a reader sees, so it needs its own
+decision rather than a fold.
 
 ### M398 — the ledger lost a heading while its own gate stayed green, so the gate learned to read paragraphs
 
