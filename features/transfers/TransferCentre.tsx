@@ -7,7 +7,7 @@ import { transferRumours, clubOf, availableKinds, type RumourLink } from "@/doma
 import { newsKindLabel, rowLine } from "@/domain/rowText";
 import { sum } from "@/domain/attributes";
 import type { NewsArticle } from "@/domain/types";
-import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
+import { Panel, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn, pctLabel, ABSENT, fmtMoney } from "@/lib/utils";
 

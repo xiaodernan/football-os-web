@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { footballProvider, getClub, getCompetition, playersByClub, clubIdsByCompetition } from "@/data/footballService";
+import { footballProvider, getClub, getCompetition, clubIdsByCompetition } from "@/data/footballService";
 import { useRouter } from "@/lib/router";
 import { byOverall, byTableStanding } from "@/domain/attributes";
 import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/domain/matchEngine";

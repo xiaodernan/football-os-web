@@ -4,7 +4,7 @@ import { weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating, 
 import { buildSession } from "@/domain/training";
 import { computeDna } from "@/domain/playerDna";
 import { englishWord } from "@/i18n/format";
-import { buildLoad, zoneKey, type LoadZone } from "@/domain/load";
+import { zoneKey, type LoadZone } from "@/domain/load";
 import { makeRng, hashString } from "@/lib/rng";
 import { newId } from "@/lib/ids";
 import {fmt2, pct, ABSENT } from "@/lib/utils";

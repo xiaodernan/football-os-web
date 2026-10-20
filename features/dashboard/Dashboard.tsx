@@ -21,7 +21,7 @@ import { summarizeLearn } from "@/domain/learn";
 import { plannedSessions } from "@/domain/training";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords, usePersonalNews } from "@/lib/hooks";
-import { Panel, SectionTitle, StatTile, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

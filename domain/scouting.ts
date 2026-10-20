@@ -1,5 +1,5 @@
 import { footballProvider, getClub } from "@/data/footballService";
-import { baselineAttributes, strongestAttributes, attributeLabel, categoryAverages, CATEGORY_LABEL, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall, capRound, maxBy, last, headroomOf } from "./attributes";
+import { baselineAttributes, strongestAttributes, categoryAverages, byOverall, byDeltaDescThenKey, byDeltaDesc, meanOverall, capRound, maxBy, last, headroomOf } from "./attributes";
 import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
@@ -121,8 +121,8 @@ export interface ScoutReport {
   concerns: TemplateEdge[];
   /** The verdict, the ledger lines and the provenance are rows: this module computes
    *  them from two real vectors, but the words it publishes are the app's, and the app
-   *  has three locales. `attributeLabel`/`CATEGORY_LABEL` stay in the file only as the
-   *  English fallbacks the prose layer uses. */
+   *  has three locales, so the category labels live with the dictionary, not here.
+   */
   headline: RowText;
   evidence: RowText[];
   confidence: number;
@@ -224,7 +224,7 @@ export function templateEdge(p: PlayerRef): TemplateEdgeSummary | null {
   const sorted = [...deltas].sort(byDeltaDesc);
   const best = sorted[0];
   const worst = last(sorted)!;
-  // Carries the category id, not CATEGORY_LABEL: the two list rows that show
+  // Carries the category id, not its label: the two list rows that show
   // this render in every locale, and the dictionary owns attr.*.
   return { bestCategory: best.category, bestDelta: best.delta, worstCategory: worst.category, worstDelta: worst.delta };
 }
