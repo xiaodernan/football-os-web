@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M411
+Work ships one milestone per commit and is currently at M413
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,101 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M413 — six files imported eight names their own bodies never read, and one comment defending them was false
+
+**What the gauge says.** `scripts/proof-dead-imports.mjs` **4/4** on the folded tree — the same gate
+on the pre-fold bytes names exactly **8 dead bindings over 6 files**, which is the reading this unit
+closes. The census walks **97 files and 1,562 named bindings**; the arms battery is **6/6** (restore
+all six files, restore one, break the spread rule, break the comment stripper, drop `features/` from
+the walk, move `domain/` into the non-app list), each arm's red set predicted from its clause's own
+sentence. `tsc --noEmit` exit 0, `npm run build` exit 0, and `proof-i18n` reads **376/376 with 0
+vacuity owing across 87 proof scripts**, so the new gate's 4 clauses each carry a plant.
+The whole suite came back **87/87 proof scripts, 2956/2956 checks**, zero FAIL.
+
+**The defect.** `attributeLabel` and `CATEGORY_LABEL` in `domain/scouting.ts`, `buildLoad` in
+`data/ai.ts`, `StatTile` in `Dashboard.tsx`, `getPlayer` and `Crest` in `PlayerOS.tsx`,
+`playersByClub` in `SimulationLab.tsx`, `SectionTitle` in `TransferCentre.tsx`. Eight names a file
+brought into scope and then never spelled again. `tsc` cannot see them: `noUnusedLocals` is off, and
+a named import is a legal statement whether or not anything reads it. They cost a reader, not a
+byte — M405's measurement of the same shape found the main chunk byte-identical with the dead
+import dropped — but they cost the reader who trusts the file: the name sits in the import
+list, the editor offers it in completion, and a search finds the import and concludes the file uses
+it.
+
+**One of them was defended by a comment that had stopped being true.** The type comment above
+`ScoutEdgeTemplate` said `attributeLabel`/`CATEGORY_LABEL` "stay in the file only as the English
+fallbacks the prose layer uses." The prose layer had moved to the dictionary in an earlier
+milestone; the sentence describing the dependency outlived it, and that sentence is why a plain-text
+census would have called both names live. The fold removes the two bindings and the sentence, and
+the second comment that named `CATEGORY_LABEL` by way of explaining why the category id is carried
+now says "not its label." A comment is not a use, which is the whole reason the reader below strips
+comments before it counts.
+
+**The reader, and the three shapes it got wrong first.** The census parses every named import list
+in the walked tree, blanks the import statements, strips comments with a character scanner that
+tracks strings, template literals and both comment forms, and then asks whether the local name is
+spelled again. Three shapes decide the answer: a **spread** (`...ZONE_TONE`) is a use even though a
+dot precedes it — the first census read it as member access and reported three live bindings dead;
+**member access** (`obj.ZONE_TONE`, `obj?.ZONE_TONE`) is not a use; a **comment** never is. JSX
+tags, type positions, aliases and multi-line import lists are all charged in clause 1, with the
+readings printed beside the claim, and arm E/F prove the spread and comment rules carry weight on
+the real tree: break either and the gate reds.
+
+**Why a census and not `noUnusedLocals`.** The flag is one line in `tsconfig.json` and would have
+caught all eight. It is also a build failure under another session's hands: in a shared worktree it
+reds the moment someone saves a file mid-edit, it cannot name which binding in a 400-line file is
+the one, and turning it on is an edit to the compiler contract every other lane inherits. The census
+costs one file, names the binding, runs only when the suite runs, and charges the tree the commit
+actually ships. The trade is stated rather than hidden: `noUnusedLocals` stays off.
+
+**The root set is derived, and this is the clause that keeps it honest.** Every top-level directory
+carrying `.ts`/`.tsx` must be either walked or named in `NON_APP` (`scripts`, `dev`, `dist`,
+`node_modules`, `test-results`, `vendor`). A directory that appears and is added to neither reddens;
+the floors (90 files, 1,400 bindings) catch the other direction, where someone moves a real app
+directory into `NON_APP` to quiet the gate — arm H does exactly that with `domain/` and the file
+floor reds, and arm G drops `features/` from `ROOTS` and the reach guard reds. One population
+coupling is worth recording: the anti-exemption plant names a real `features/` file, so cutting
+`features/` from the walk reds that clause too — the plant is a reading of the population, and it
+says so.
+
+**What is NOT claimed.** A binding mentioned only inside a string literal is credited as a use; a
+default import or a namespace import (`import * as X`) is not charged at all; and the gate says
+nothing about whether an imported name is used WELL. It closes the one shape it names — a named
+binding nothing reads — and no other.
+
+**Next.** The same reader pointed the other way: exported symbols that no other module imports. The
+suite has censuses for doors and idioms; nothing yet reads the module boundary itself, and the fold
+above shows that a name can be dead on either side of it.
+
+### M412 — the threshold a door's own docstring promised would live in one place had two readers re-testing it
+
+M411 (the other session's unit) was about the ledger's measurement paragraph. This one is in the app, and it is the same shape as M404's `headroomOf`: **a door exists, its own docstring says what the door is for, and two callers re-test the number anyway.**
+
+**The door and its promise.** `domain/playerDna.ts` owns the question *"does this player have a full attribute vector, or only a rating?"* — `VECTOR_MIN_KEYS` is the threshold and `playerVector` is the door — and its docstring says exactly why it is one place:
+
+> *"One threshold, one place, so every consumer agrees on what 'has a vector' means."*
+> *"Callers use this to decide measured vs modelled rather than each re-testing the threshold."*
+
+**The two that re-tested it.**
+
+```
+domain/compare.ts:57
+  const hasVector = (p: PlayerRef) => !!p.attributes && Object.keys(p.attributes).length >= 8;
+
+scripts/proof-m99.mjs:112
+  const measured = modelPlayerProfile(players.find((p) => (p.attributes ? Object.keys(p.attributes).length : 0) >= 8));
+```
+
+The second one is the worse of the two, and it is worth naming: **a proof that was supposed to be measuring the code was measuring a copy of its number.** If `VECTOR_MIN_KEYS` had moved from 8 to 10, `proof-m99` would have kept passing while testing a threshold the app no longer used — the gate would have gone quiet exactly when it was needed.
+
+**The fold.** `domain/compare.ts` now asks the door: `const hasVector = (p: PlayerRef) => playerVector(p.attributes) !== null;` — the same pattern `domain/playerDna.ts`'s own `playerDna` uses. And `proof-m99` asks the same door, so the proof measures the code rather than a copy of it.
+
+**The census.** `scripts/proof-vector.mjs` (7 checks): the scans are armed and a bare numeric threshold is what they draw — with an **emptiness check** (`Object.keys(x).length > 0`) explicitly *not* charged, because "is this record empty?" is a different question from "is this vector long enough?"; the census walks the app **and the proofs** (93 app files + 92 proof scripts), because the second bypass was in a proof and a census that read only the app would have found the first and called the family closed; **the family is closed** — no bare threshold on an attribute vector survives in the app or in a proof; the door and its constant are declared exactly once, in their home; all three readers reach the door and each imports it; the door keeps the threshold's edges (exactly 8 keys is kept, 7 is null, an absent vector is null, an empty one is null); and the reader the fold moved **agrees with the door on every player the world has** — 610 players, 610 with a vector either way, 0 disagreements.
+
+**A counting bug the census caught in itself.** The first version of the helper counted matches with `text.match(re)`, and one of the patterns was a **non-global** regex — whose `match` returns the capture groups alongside the match, so `length` counted the *groups* and a one-group pattern read as 2. The helper now builds a fresh, always-global regex for every count, and says why in a comment: a global regex carries `lastIndex` between uses, and a census whose counts depend on which scan ran first is not measuring anything.
+
+**Next.** The app's duplicated *concepts* are converging one at a time — `headroomOf` (M404), the money door (M401–M402), the vector threshold (this unit), the URL parameters (M409), the instant validity (M408). The next one worth measuring is the one the same scout keeps pointing at: **`domain/career.ts` computes "the fixtures still to play" three times**, twice of them in the *same expression* — so a reader has to check that two copies of the same arithmetic agree.
 
 ### M411 — the ledger shipped a measurement paragraph that measured nothing, and its own gate ran red behind the worktree
 

@@ -10,6 +10,7 @@ import { fmt1, fmtMoney } from "@/lib/utils";
 import type { PlayerRef } from "./types";
 import { categoryAverages } from "./attributes";
 import { headroom, valueIndex, primeHold, bucketOf, round1 } from "./scouting";
+import { playerVector } from "./playerDna";
 
 export type MetricDir = "high" | "low" | "info";
 
@@ -54,7 +55,12 @@ export interface CategoryEdge {
   favor: "a" | "b" | "even";
 }
 
-const hasVector = (p: PlayerRef) => !!p.attributes && Object.keys(p.attributes).length >= 8;
+// "Has this player a full attribute vector?" is the playerDna module's question, and its
+// `playerVector` door is the answer -- the threshold lives in one place (`VECTOR_MIN_KEYS`) so
+// every consumer agrees on what "has a vector" means. This used to re-test the threshold
+// against a bare 8, which meant a change to the threshold would have moved this screen
+// silently and left the comparison page disagreeing with the scouting board beside it.
+const hasVector = (p: PlayerRef) => playerVector(p.attributes) !== null;
 
 // A player "advantage" score for the headline verdict: quality + upside − cost
 // pressure, all normalised. Transparent, not a black box.

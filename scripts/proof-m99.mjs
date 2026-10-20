@@ -109,7 +109,7 @@ ok("and it reads the same in every locale on re-derivation",
   const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
   const isRow = (x) => !!x && typeof x === "object" && ("key" in x || "value" in x);
   const players = footballProvider.players();
-  const measured = modelPlayerProfile(players.find((p) => (p.attributes ? Object.keys(p.attributes).length : 0) >= 8));
+  const measured = modelPlayerProfile(players.find((p) => playerVector(p.attributes) !== null));
   const modelled = modelPlayerProfile({ ...players[0], attributes: undefined });
   ok("both branches of the profile note are rows", isRow(measured.note) && isRow(modelled.note) && measured.note.key !== modelled.note.key);
   ok("and each provenance list is rows, reusing the vector chip rather than minting a second one for it",
