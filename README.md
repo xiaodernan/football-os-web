@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M405
+Work ships one milestone per commit and is currently at M406
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7089,6 +7089,26 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M406 — the ledger's own record has forty-one gaps, and the pointer paragraph named three of them
+
+M405 gave the ledger a gate for the claims it makes about the *app*. This unit applies the same idea to the claims it makes about *itself*.
+
+**The shape of the record.** The ledger records the early milestones as prose (the "Roadmap status" section) and the later ones as `### M<n>` sections. Between the two forms there are **forty-one milestone numbers with no section at all** — the work shipped, the commits are in the history, and the record does not have them. The pointer paragraph names a few by hand:
+
+> *"M238, M239 and M241 had no sections when M240's was written, and this sync added all three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the first unit to land with one since M316"*
+
+Three numbers, named, out of forty-one. The rest were never named at all, and a hand-typed list beside a tree is exactly what goes stale — M396's lesson, pointed at the ledger one last time.
+
+**What the work was.** The commits are there. M359 folded the best-overall ordering onto a door ("sixteen copies, and one of them was already named"); M360 folded a percent label ("seven places, and two of them were already named"); M361 folded "one day in milliseconds" ("spelled four ways, two of them only by an underscore"); M362 converged the byte-identical Mini tile; M365 closed the last bare percent-fills; M370 folded the data lane's last writer residues; M372 gave `round3` its own census; M373 gave `fmt0` its door. The ledger simply does not have them.
+
+**The gate.** `scripts/proof-ledger-run.mjs` (4 checks): the gap reader is armed (a planted list reads, a malformed entry is caught, a ledger with no block reads null rather than an empty set); the tree's gap set is read off the sections themselves (198 sections, M167..M405, 41 gaps); **the ledger names every gap the tree has, and names no gap that has been filled** — the two sets must be EQUAL, in both directions, because a gap the list does not name is an unrecorded milestone and a gap the list names that now has a section is a stale list; and the gate is armed both ways (a planted ledger that misses a gap is rejected, and a planted ledger that names a *filled* gap is rejected too).
+
+**The fix.** The ledger now carries the full list of forty-one, in a marked block beside the Outstanding work section, with the numbers a reader can check against the history. The gate compares it to the tree, so a milestone that later gets its section must come out of the list, and a gap that is not on the list cannot hide.
+
+**What this does not do.** It does not recover the forty-one sections. That would mean writing a section for each from its commit message — a large, mostly mechanical job, and a section that restates a commit message is worth less than one that records what the unit *proved*. The honest thing is to say the record is incomplete and say exactly where, so a reader knows that a number between M167 and M405 may have no section and can go to the history for it. M407's work, if the ledger is to be whole, is that recovery — and the gate will tell it when it is done, because a filled gap is a stale list entry.
+
+**Next.** The ledger's claims about the app are charged (M405) and its claims about itself are charged (this unit). What is still uncharged is the ledger's *file references* — 705 of them across the sections, and 18 of them name a file the tree no longer has. Most are true statements about a deletion, but a section that says "these two sites are still outstanding" about a file that was later deleted is the M405 shape again, in a different place.
+
 ### M405 — a badge that names a key must open the thing the key opens
 
 **The defect, measured before anything was written down.** The topbar's search button
@@ -10184,6 +10204,59 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
   the tree, not the running app.
 
 <!-- /outstanding -->
+
+The ledger's own record has gaps too. The early milestones are recorded as prose above and the
+later ones as sections, and between the two **forty-one milestone numbers have no section at
+all** — the work shipped (the commits are in the history) but the record did not. The gate
+`scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
+themselves leave out, and the two sets must be equal: a gap this list does not name is an
+unrecorded milestone, and a gap this list names that has since been filled is a stale list.
+
+<!-- gaps -->
+
+- M188
+- M190
+- M191
+- M192
+- M276
+- M278
+- M314
+- M317
+- M318
+- M319
+- M320
+- M321
+- M322
+- M325
+- M331
+- M341
+- M342
+- M343
+- M344
+- M345
+- M353
+- M354
+- M355
+- M356
+- M357
+- M358
+- M359
+- M360
+- M361
+- M362
+- M363
+- M364
+- M365
+- M366
+- M367
+- M369
+- M370
+- M371
+- M372
+- M373
+- M392
+
+<!-- /gaps -->
 
 ## Deploying
 
