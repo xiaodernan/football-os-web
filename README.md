@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M406
+Work ships one milestone per commit and is currently at M407
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -2430,7 +2430,9 @@ immovable. Two exemptions are declared with a proof under each: `components/ui/c
 `toLocaleString()` really is a series *number* (the clause turns red if that receiver is
 `new Date(...)` or is named like an instant, so the list cannot be used to park a date), and
 `components/ui/calendar.tsx`'s two sites are permitted only while nothing imports the primitive
-— the scan counts importers, so whoever mounts the calendar pays for it.
+— the scan counts importers, so whoever mounts the calendar pays for it. Both exemptions were
+removed from the disk at M248, so the rule they were carved out of no longer applies and the
+queue items naming them are retired.
 
 Check 33 ships 23 clauses, and the last is the reason the other 22 mean something: it loads
 `formatDate` through Vite's SSR module graph — the production function, not a copy — and
@@ -2976,7 +2978,7 @@ choice, not a bug, and making it symmetric would add prose the ratchet has to ca
 `died-after-green` flake on `proof:projection` is named by the runner but not prevented; and the
 older queue is unchanged — the Football AI's composed sentences (#184+), the demo coach's prose
 (#160), the populated-state browser walk (#142), the two `components/ui/calendar.tsx` sites the day
-anything mounts them, and `community.ts` / `filmLibrary.ts`, which still have no proof of their own.
+anything mounts them (that component was removed from the disk at M248, so the item is retired), and `community.ts` / `filmLibrary.ts`, which still have no proof of their own.
 
 ### M201 — a rendered date was being edited on the way to the screen
 
@@ -3028,7 +3030,8 @@ The dep-scan `died-after-green` flake is named, not prevented. Browser verificat
 width in `en` was not possible (the in-app window still cannot render a tree here), so the change is
 verified at the string level through the door and at the source level by the census, not visually.
 The older queue is unchanged — #142 populated-state walk, #160 demo-coach prose, #184+ AI composed
-sentences, the two `components/ui/calendar.tsx` sites, and `community.ts` / `filmLibrary.ts`, which
+sentences, the two `components/ui/calendar.tsx` sites (that component was removed from the disk
+at M248, so the item is retired), and `community.ts` / `filmLibrary.ts`, which
 still have no proof of their own.
 
 ### M202 — the clip library's "never crashes a page" promise, tested for the first time
@@ -3088,7 +3091,8 @@ prevented, and a run of the suite may need a second attempt to print 31/31 — t
 `checks counted` plus the `unverified` line, not the exit code alone. `domain/community.ts` (205
 lines) was the last substantial module without a proof, and `proof-community` loads it now. The rest of the queue is unchanged — #142
 populated-state walk, #160 demo-coach prose, #184+ AI composed sentences, the two
-`components/ui/calendar.tsx` sites, PlayerOS/DataRoom browser dates held by the concurrent session.
+`components/ui/calendar.tsx` sites (that component was removed from the disk at M248, so the
+item is retired), PlayerOS/DataRoom browser dates held by the concurrent session.
 
 ### M203 — one more attempt, but only where there was no evidence
 
@@ -7088,6 +7092,27 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M407 — the ledger's file references, and the five that pointed at a file the tree had already deleted
+
+M405 gave the ledger a gate for its claims about the app, and M406 for its claims about itself. This unit is the third of the family: **the ledger's file references** — 708 of them across the sections, and a name that points at a file the tree no longer has is a claim a reader cannot check.
+
+**The shape of the defect.** Most of the 18 dead references are fine. A section that says *"the escape defect in `components/ui/chart.tsx`"* is a true statement about a file that was later deleted — the defect was real, the file is gone, and both are true. But five references put a deleted file in a list of work **still to do**, and those are false:
+
+> *"the older queue is unchanged — … the two `components/ui/calendar.tsx` sites the day anything mounts them …"*
+(that component was removed from the disk at M248, so the item is retired)
+
+The component was removed from the disk at **M248** — "the two live-browser exemptions (`chart`, `calendar`)" — and M200, M201, M202 and M213 each still listed its sites as open. A reader who went looking for them would find nothing, four sections apart.
+
+**The gate is sentence-scoped, and that is the whole trick.** A **live-item** sentence ("the older queue is unchanged", "exemptions are declared", "is permitted only while nothing imports the primitive") that names a file must have that file resolve, **or the paragraph must say the file is gone.** A descriptive sentence that merely mentions a deleted file is left alone, because a file that no longer exists can still be the subject of a true past statement. Paragraph-scoped detection would have been too coarse in both directions: a paragraph that says the raw-UI debt "still **46**" is not a queue, and a paragraph whose *next* sentence says "both exemptions were removed at M248" is excused by the paragraph it belongs to.
+
+**What changed in the ledger.** Four sentences now carry the removal note, so each queue item says the component is gone and retires itself: M200's exemption sentence gains "Both exemptions were removed from the disk at M248, so the rule they were carved out of no longer applies and the queue items naming them are retired", and the three queue sentences gain "(that component was removed from the disk at M248, so the item is retired)".
+
+**The census.** `scripts/proof-ledger-refs.mjs` (4 checks): the reader is armed both ways (a live-item sentence is recognised, a descriptive one is not, a removal note is recognised and a queue sentence without one is not); the resolver reads the real tree (12 roots, 1664 distinct file names); **every live-item reference to a file resolves, or the paragraph says the file is gone** (708 references scanned, 5 live-item references to a deleted file, 0 unexplained); and the gate is armed both ways (a planted live-item sentence naming a deleted file is reported, the same sentence with a removal note is not).
+
+**The honest limit.** The gate cannot tell a *descriptive* reference to a deleted file from a *live* one when the sentence is ambiguous, and it leaves 12 dead references entirely alone because they are descriptions of things that happened. That is the right default — a ledger that recorded the removal of a file is not lying about it — but it does mean the gate is a floor and not a ceiling: it catches the shape it was written for (a queue item), and a claim in some other shape would need a new arm.
+
+**Next.** The ledger's three claim families are now charged: about the app (M405), about itself (M406), and about the files it names (this unit). What remains uncharged is the ledger's *numbers* — the counts and check totals each section states ("45/45 checks", "1,492,456 → 1,492,510 bytes", "82 file references"). A number in a historical section was true then; a number in a section that claims to describe the present is a claim the tree can check.
 
 ### M406 — the ledger's own record has forty-one gaps, and the pointer paragraph named three of them
 
