@@ -39,21 +39,23 @@ const HOME = "lib/utils.ts";
 // Every file that reads the door after M372's fold. M402 moved the MONEY door into lib/utils.ts
 // beside the fmt0/fmt1 it is built from, and the money door's B line calls fmt1 -- so the door's
 // own home became an INTERNAL reader of it, and the data provider that used to hold the money
-// door left the list. The home is charged apart below: it CALLS the door without IMPORTING it,
-// which is a different relation, and a census that could not tell the two apart would either
-// miss the home or double-count it.
+// door left the list. M413 (the other session's unit) removed eight names six files imported
+// but never read, and `ui/primitives.tsx` was one of them -- it did not CALL fmt1 either, so it
+// was a listed consumer that read nothing, and it leaves the list. The home is charged apart
+// below: it CALLS the door without IMPORTING it, which is a different relation, and a census
+// that could not tell the two apart would either miss the home or double-count it.
 const CONSUMERS = [
   "domain/compare.ts", "domain/history.ts", "domain/review.ts",
   "features/film/FilmRoom.tsx", "features/football/Details.tsx", "features/player/PlayerOS.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/settings/SettingsPage.tsx",
-  "features/watchlist/WatchlistBoard.tsx", "ui/primitives.tsx",
+  "features/watchlist/WatchlistBoard.tsx",
 ];
 // Exact per-file call pins — a call that moves files, not just a total that drifts, reddens below.
 const CALL_PINS = {
   "domain/compare.ts": 1, "domain/history.ts": 2, "domain/review.ts": 3,
   "features/film/FilmRoom.tsx": 1, "features/football/Details.tsx": 1, "features/player/PlayerOS.tsx": 1,
   "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,
-  "features/watchlist/WatchlistBoard.tsx": 1, "ui/primitives.tsx": 2,
+  "features/watchlist/WatchlistBoard.tsx": 1,
 };
 // The home's own internal call: the money door's B line, one call, no import.
 const HOME_CALLS = 1;
@@ -249,7 +251,7 @@ const homeCalls = count(codeOf(HOME), CALL_FMT1);
 const homeImports = count(src[HOME], IMPORT_FMT1);
 const orphanCallers = treeCallers.filter((f) => f !== HOME && !CONSUMERS.includes(f));
 ok(`every consumer reads the door at their exact pinned counts, and the door's own HOME is a reader too (imports ${importing.length}/${CONSUMERS.length}, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned ${totalCalls}; the home calls it ${homeCalls}x and imports it ${homeImports}x; tree callers ${treeCallers.length}, orphans ${orphanCallers.length} [${orphanCallers.join(",")}])`,
-  importing.length === CONSUMERS.length && pinsHold && totalCalls === 18 &&
+  importing.length === CONSUMERS.length && pinsHold && totalCalls === 16 &&
   homeCalls === HOME_CALLS && homeImports === 0 && orphanCallers.length === 0 &&
   treeCallers.length === CONSUMERS.length + 1);
 

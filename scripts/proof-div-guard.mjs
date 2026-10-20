@@ -143,14 +143,22 @@ ok(`the loaded door equals the hand-stitched quotient across every below/inside/
 ok(`the floor is 1, not epsilon: safeDiv(10, 0.5) is 10 where the raw quotient is 20, safeDiv(6, 0) is 6, safeDiv(-6, -1) is -6 (blind spot a nonzero-guard merge would swallow)`,
   safeDiv(10, 0.5) === 10 && 10 / 0.5 === 20 && safeDiv(6, 0) === 6 && safeDiv(-6, -1) === -6);
 
-// --- Blind spots: the three non-quotient `Math.max(1, …)` floors stay hand-stitched, counted. ----
+// --- Blind spots: the non-quotient `Math.max(1, …)` floors, counted. Two of the three stay ---
+// --- hand-stitched; the third -- career's SEASON floor -- now lives in a door of its own. --------
 const careerSrc = src["domain/career.ts"];
 const playerSrc = src["features/player/PlayerOS.tsx"];
 const moduloFloor = count(careerSrc, /Math\.max\(1, opponents\.length\)/g);
 const seasonFloor = count(careerSrc, /Math\.max\(1, \(clubCount - 1\) \* 2\)/g);
 const postDivFloor = count(playerSrc, /Math\.max\(1, Math\.floor\(v \/ 12\)\)/g);
-ok(`the modulo floor, the season floor and the floor-after-divide stay hand-stitched (blind spots a naive fold would swallow: modulo ${moduloFloor}, season ${seasonFloor}, node-level ${postDivFloor})`,
-  moduloFloor === 1 && seasonFloor === 2 && postDivFloor === 1 && /% n/.test(careerSrc));
+// M414: the season's fixture count is no longer spelled twice in career.ts -- it rides the
+// `seasonFixtures` door, whose BODY is the one remaining copy of the shape. The point of the
+// blind-spot family was that a naive `safeDiv` fold would swallow a floor that is not a
+// denominator guard, and that is still true: the season floor is still not in safeDiv, and this
+// clause now charges WHERE it lives rather than counting a spelling that is gone.
+const seasonDoor = /export const seasonFixtures = \(clubCount: number\): number => Math\.max\(1, \(clubCount - 1\) \* 2\);/;
+const seasonInSafeDiv = /safeDiv\([^)]*totalFixtures/.test(careerSrc);
+ok(`the modulo floor and the floor-after-divide stay hand-stitched, and the season floor is in a door of its own (blind spots a naive fold would swallow: modulo ${moduloFloor}, node-level ${postDivFloor}; the season floor's one remaining copy is the seasonFixtures door's body: ${seasonFloor}, the door declared: ${seasonDoor.test(careerSrc) ? "yes" : "NO"}, and it is NOT in safeDiv: ${seasonInSafeDiv ? "IT IS" : "no"})`,
+  moduloFloor === 1 && seasonFloor === 1 && postDivFloor === 1 && seasonDoor.test(careerSrc) && !seasonInSafeDiv && /% n/.test(careerSrc));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
