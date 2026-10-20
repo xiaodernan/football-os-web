@@ -1,7 +1,7 @@
 import type { RowText } from "./rowText";
 import type { TrainingSession } from "./types";
 import { sessionIntensity } from "./training";
-import { clamp, round2, DAY_MS, fmt2 } from "@/lib/utils";
+import { clamp, round2, DAY_MS, fmt2, SEPARATOR } from "@/lib/utils";
 import { sum } from "./attributes";
 
 // Training-load management built on the same monotony/strain + acute:chronic
@@ -350,7 +350,7 @@ export const ZONE_LEGEND: { zone: Exclude<LoadZone, "none">; band: string }[] = 
     const prev = i > 0 ? ACWR_BANDS[i - 1].upTo : null;
     if (band.upTo == null) return { zone: band.zone, band: `>${prev}` };
     if (prev == null) return { zone: band.zone, band: `<${band.upTo}` };
-    return { zone: band.zone, band: `${prev}–${band.upTo}` };
+    return { zone: band.zone, band: `${prev}${SEPARATOR}${band.upTo}` };
   },
 );
 

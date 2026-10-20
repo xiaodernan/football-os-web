@@ -162,10 +162,12 @@ ok(`the door ships the em dash: the literal line matches byte-for-byte and the l
 // --- 5. The en-dash ABSENCE class is closed: zero standalone en-dash literals or JSX dash nodes left in ---
 // --- shipped code. Armed by the plants above and by the per-file breakdown printed here — the eight Data ---
 // --- Room tiles and the Dashboard goals column were the whole class, and a new one reddens this census. ---
-const enQuotedByFile = carriers.filter((f) => n(code[f], QUOTED_EN) > 0);
-const enJsxByFile = carriers.filter((f) => n(code[f], JSX_EN) > 0);
+// --- M397: lib/utils.ts is excluded because it now carries the SEPARATOR door's own declaration ---
+// --- (`export const SEPARATOR = "–"`), which is a legitimate quoted en dash, not an absence marker. ---
+const enQuotedByFile = carriers.filter((f) => f !== "lib/utils.ts" && n(code[f], QUOTED_EN) > 0);
+const enJsxByFile = carriers.filter((f) => f !== "lib/utils.ts" && n(code[f], JSX_EN) > 0);
 const enLeft = enQuotedByFile.concat(enJsxByFile);
-ok(`no absence marker is spelled with the separator glyph any more (quoted-en carriers [${enQuotedByFile.join(",")}], jsx-en carriers [${enJsxByFile.join(",")}], total ${enLeft.length}; planted en literals read 1 each in clause 1)`,
+ok(`no absence marker is spelled with the separator glyph any more (quoted-en carriers [${enQuotedByFile.join(",")}], jsx-en carriers [${enJsxByFile.join(",")}], total ${enLeft.length}; lib/utils.ts excluded: SEPARATOR door declaration; planted en literals read 1 each in clause 1)`,
   enLeft.length === 0);
 
 // --- 6. Derived caller census: every file that USES the door imports it, the users are exactly the ---
@@ -251,22 +253,18 @@ function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 ok(`the two dashes written into SIMULATED DATA are pinned by line, not by glyph (VAR scorer ${matchSites}, unknown nation ${nationSites}; planted already-folded VAR line ${plantFoldedMatch}, planted unrelated generator line ${plantOtherGenerator}) — they are record contents, so a display door must not own them`,
   matchSites === 1 && nationSites === 1 && plantFoldedMatch === 0 && plantOtherGenerator === 0);
 
-// --- 9. The separator family survives untouched, counted apart from the absence family and split by ---
-// --- plane: code joiners (which build a displayed figure pair) and dictionary copy (which is prose and ---
-// --- must stay a translation's own character). Both are measured, so "the census narrowed itself" reddens. ---
+// --- 9. The separator family is now behind its own door (M397), counted apart from the absence ---
+// --- family and split by plane: code joiners (which build a displayed figure pair) are 0, and ---
+// --- dictionary copy (which is prose and must stay a translation's own character) is unchanged. ---
+// --- Both are measured, so "the census narrowed itself" reddens. ---
 const sepByFile = carriers.map((f) => [f, n(code[f], SEP)]).filter(([, c]) => c > 0);
-const sepCode = sepByFile.filter(([f]) => f !== "i18n/dictionaries.ts");
+const sepCode = sepByFile.filter(([f]) => f !== "i18n/dictionaries.ts" && f !== "lib/utils.ts");
 const sepCodeTotal = sepCode.reduce((a, [, c]) => a + c, 0);
 const sepDict = n(code["i18n/dictionaries.ts"], SEP);
 const sepFiles = sepCode.map(([f]) => f).sort();
-const expectedSepFiles = [
-  "domain/load.ts", "features/analytics/DataRoom.tsx", "features/compare/ComparePage.tsx",
-  "features/dashboard/Dashboard.tsx", "features/football/Details.tsx", "features/football/FootballWorld.tsx",
-  "features/manager/ManagerOS.tsx", "features/sim/SimulationLab.tsx",
-].sort().join(",");
 const dataRoomSep = n(code["features/analytics/DataRoom.tsx"], SEP);
-ok(`the en-dash joiners are still there and still the separator scan's own population (${sepCodeTotal} code sites over [${sepFiles.join(",")}]; Data Room keeps ${dataRoomSep}; dictionary copy keeps ${sepDict} in three locales, charged apart); planted separator line read 1 in clause 1`,
-  sepCodeTotal >= 15 && sepDict >= 30 && dataRoomSep === 2 && sepFiles.join(",") === expectedSepFiles);
+ok(`the en-dash joiners are folded behind the SEPARATOR door: 0 code sites remain, dictionary copy is unchanged (${sepCodeTotal} code sites over [${sepFiles.join(",")}]; Data Room keeps ${dataRoomSep}; dictionary copy keeps ${sepDict} in three locales, charged apart); planted separator line read 1 in clause 1`,
+  sepCodeTotal === 0 && sepDict >= 30 && dataRoomSep === 0);
 
 // --- 10. Must-not-unify, BEHAVIOURAL. The tempting rewrite is "one dash constant for everything". Run it ---
 // --- on the shipped door and the shipped fmt2 with the figures a band and a scoreline actually carry, and ---

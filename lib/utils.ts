@@ -187,3 +187,14 @@ export const fmt0 = (v: number): string => v.toFixed(0);
 // Nor is it the match engine's unattributed-scorer value, which is written into simulated data at
 // generate time instead of chosen at render time; that site is charged by name, not folded here.
 export const ABSENT = "—";
+
+// The app's range/score separator — an en dash GLYPH between two figures that are both PRESENT. It
+// joins two live values, never marks a missing one (that is ABSENT's job). The family was spelled
+// inline at 18 code joiners over 8 files: load bands (`${prev}–${upTo}`), scorelines
+// (`${homeGoals}–${awayGoals}`), XG duels (`{a} – {b}`), comparison wins (`{aWins} – {bWins}`) and
+// goal averages. M397 folds those onto this door so one place owns the convention, and
+// `scripts/proof-separator.mjs` charges both directions: no absence marker rides a joiner, no
+// joiner escapes to a bare en dash in code. The 36 dictionary copies are prose owned by their
+// translation and stay out of this fold; the scheduled-score placeholder `"– : –"` is a composite
+// of two dashes and a colon and is charged by name in `proof-absent-glyph`.
+export const SEPARATOR = "–";

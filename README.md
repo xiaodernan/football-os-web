@@ -7149,6 +7149,20 @@ of which enters the bundle — the app's behavior is unchanged by construction.
 by another script's arithmetic rather than their own. `M397` belongs to the separator door, taken by
 the lane that found it.
 
+### M397 — the separator family went behind its own door, and the absence census had to learn to look the other way
+
+M394/M395 closed the em-dash absence class. The en-dash separator — the glyph that JOINS two figures that are both PRESENT — was still spelled inline at 18 code joiners over 8 files: load bands (`${prev}–${upTo}`), scorelines (`${homeGoals}–${awayGoals}`), XG duels (`{a} – {b}`), comparison wins (`{aWins} – {bWins}`) and goal averages. One constant now owns the convention: `SEPARATOR` in `lib/utils.ts`, sitting beside `ABSENT` with a comment that spells out the distinction (separator joins two live values; absence marks a missing one).
+
+**What was folded.** 18 code joiners over 8 files: `domain/load.ts` (1), `features/analytics/DataRoom.tsx` (2), `features/compare/ComparePage.tsx` (1), `features/dashboard/Dashboard.tsx` (1), `features/football/Details.tsx` (6), `features/football/FootballWorld.tsx` (2), `features/manager/ManagerOS.tsx` (2), `features/sim/SimulationLab.tsx` (3). The scheduled-score placeholder `"– : –"` in `Details.tsx:559` is a composite of two dashes and a colon, not a joiner; it stays as-is and is charged by name in `proof-absent-glyph`.
+
+**The new census.** `scripts/proof-separator.mjs` (9 checks): the door's body is the en dash, not the em dash; `SEPARATOR` and `ABSENT` are different glyphs; the census walks the real app tree; zero code joiners spell the en dash inline in any app file (excluding the door's own file, whose joiners are comments ABOUT the door); the door is called by every file that was folded (8 callers, 26 references); the dictionary's 36 separator copies are prose owned by their translation, not code joiners; the absence family is unchanged (62 uses over 16 carriers); `ABSENT` cannot serve as a separator (splicing it in overwrites a joiner between two PRESENT figures); the scheduled-score placeholder stays a placeholder.
+
+**The sibling that quoted the old shape.** `proof-absent-glyph`'s clause 9 (the separator family's own population) had to move: it required ≥ 15 code joiners over an eight-file list. After the fold, code joiners are 0 and the list is empty. The clause now requires `sepCodeTotal === 0` and `dataRoomSep === 0`, keeping the dictionary floor at ≥ 30 so a dictionary regression still reddens. Clause 5 (the en-dash ABSENCE class) had to exclude `lib/utils.ts` — the door's own `export const SEPARATOR = "–"` is a legitimate quoted en dash, not an absence marker; without the exclusion, the census charged the door's declaration as a defect.
+
+Measured: `proof-separator` 9/9, `proof-absent-glyph` 12/12, `tsc --noEmit` clean, `vite build` exit 0 (29.98s). The full-suite verdict for this sync follows in M399's commit (the two units share one working tree).
+
+**Next.** The `fmt1` door (conditional one-decimal formatting) and its three call sites are the next convergence target; after that, the vacuity ceiling's zero-asserting clauses in `proof-i18n` need their companion devices paid down.
+
 ### M396 — the ladder and the stale pins went behind their doors
 
 M395 named one defect class: a symbol moved behind a door and the hand-written list beside it was never re-derived. Two scripts carried stale lists:

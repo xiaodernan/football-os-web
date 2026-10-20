@@ -5,7 +5,7 @@ import { footballProvider, getClub, getCompetition } from "@/data/footballServic
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
-import { cn, clamp, fmt2, ABSENT } from "@/lib/utils";
+import { cn, clamp, fmt2, ABSENT, SEPARATOR } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
 // raw-UI scan reads every string literal there as a child text node — four hits on the
@@ -221,7 +221,7 @@ export function DataRoom() {
                 <SectionTitle title={t("data.modelClash")} hint={t("data.modelClashHint")} />
                 <div className="flex items-center justify-between gap-2 text-sm">
                   <span className="flex items-center gap-2"><Crest colors={getClub(clash.top.clubId)?.colors} short={getClub(clash.top.clubId)?.short} size={24} /><span className="truncate">{getClub(clash.top.clubId)?.short}</span></span>
-                  <span className="font-mono text-base font-semibold tabular-nums">{clash.xg.home} – {clash.xg.away}</span>
+                  <span className="font-mono text-base font-semibold tabular-nums">{clash.xg.home}{SEPARATOR}{clash.xg.away}</span>
                   <span className="flex items-center gap-2"><span className="truncate text-right">{getClub(clash.second.clubId)?.short}</span><Crest colors={getClub(clash.second.clubId)?.colors} short={getClub(clash.second.clubId)?.short} size={24} /></span>
                 </div>
                 <p className="mt-2 text-[11px] text-muted-foreground">{t("data.clashLine", { home: getClub(clash.top.clubId)?.name ?? "", away: getClub(clash.second.clubId)?.name ?? "" })}</p>
@@ -267,7 +267,7 @@ export function DataRoom() {
                     <span><span className="font-mono text-foreground">{pct.home}%</span> {h?.short}</span>
                     <span><span className="font-mono text-foreground">{pct.draw}%</span> {t("data.draw")}</span>
                     <span><span className="font-mono text-foreground">{pct.away}%</span> {a?.short}</span>
-                    <span>{t("common.xg")} {fmt2(odds.lambdaHome)}–{fmt2(odds.lambdaAway)}</span>
+                    <span>{t("common.xg")} {fmt2(odds.lambdaHome)}{SEPARATOR}{fmt2(odds.lambdaAway)}</span>
                     <span>{t("data.totalGoals", { n: fmt2(odds.expectedTotalGoals) })}</span>
                     <span>{t("data.mostLikely", { score: odds.mostLikelyScore, pct: Math.round(odds.mostLikelyPct * 100) })}</span>
                     <span>{t(sample === 1 ? "data.sampleOne" : "data.sampleMany", { n: sample })}</span>

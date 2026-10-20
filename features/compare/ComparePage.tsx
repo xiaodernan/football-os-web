@@ -9,7 +9,7 @@ import { playerDna } from "@/domain/playerDna";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, DemoBadge, DnaCard } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
-import { cn, pctOf } from "@/lib/utils";
+import { cn, pctOf, SEPARATOR } from "@/lib/utils";
 
 export function ComparePage() {
   const { t } = useI18n();
@@ -62,7 +62,7 @@ export function ComparePage() {
                 <div className="mt-0.5 text-sm font-semibold">
                   {result.verdict === "even" ? t("compare.even") : result.verdict === "a" ? result.a.name : result.b.name}
                 </div>
-                <div className="mt-1 font-mono text-xs text-muted-foreground tabular-nums">{result.aWins} – {result.bWins}</div>
+                <div className="mt-1 font-mono text-xs text-muted-foreground tabular-nums">{result.aWins}{SEPARATOR}{result.bWins}</div>
               </div>
               <SideHead p={result.b} club={result.bClub} win={result.verdict === "b"} align="right" />
             </div>

@@ -35,7 +35,7 @@ import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {clamp, cn, pctOf, fmt2, fmt1, ABSENT } from "@/lib/utils";
+import {clamp, cn, pctOf, fmt2, fmt1, ABSENT, SEPARATOR } from "@/lib/utils";
 
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -416,7 +416,7 @@ export function ClubDetail({ id }: { id: string }) {
                 {preview && (
                   <div className="rounded-md border bg-card/40 px-3 py-2 text-xs">
                     <span className="text-muted-foreground">{t("det.analytics.nextUp", { club: preview.oppName })} </span>
-                    <span className="font-mono">{fmt2(preview.us)}–{fmt2(preview.them)}</span>
+                    <span className="font-mono">{fmt2(preview.us)}{SEPARATOR}{fmt2(preview.them)}</span>
                   </div>
                 )}
                 <p className="text-[11px] text-muted-foreground">{t("det.analytics.ratioNote")}</p>
@@ -476,7 +476,7 @@ function MiniMatches({ title, matches }: { title: string; matches: ReturnType<ty
               <Link key={mm.id} to={`/matches/${mm.id}`} className="flex items-center justify-between rounded-md border px-2.5 py-1.5 text-sm hover:border-primary/40">
                 <span className="truncate">{h?.short} v {a?.short}</span>
                 <span className={cn("font-mono text-xs", mm.status === "LIVE" ? "text-destructive" : "text-muted-foreground")}>
-                  {mm.status === "SCHEDULED" ? fmtDateTime(locale, mm.kickoff) : `${mm.homeGoals}–${mm.awayGoals}`}
+                  {mm.status === "SCHEDULED" ? fmtDateTime(locale, mm.kickoff) : `${mm.homeGoals}${SEPARATOR}${mm.awayGoals}`}
                 </span>
               </Link>
             );
@@ -533,11 +533,11 @@ export function MatchDetail({ id }: { id: string }) {
       const facts: RowText[] = [
         { key: "ai.qf.matchup", vars: { home: home.name, away: away.name, comp: comp?.name ?? "" } },
         sim
-          ? { key: "ai.qf.projection", vars: { score: `${sim.homeGoals}–${sim.awayGoals}`, xgH: fmt2(sim.stats.home.xg), xgA: fmt2(sim.stats.away.xg) } }
+          ? { key: "ai.qf.projection", vars: { score: `${sim.homeGoals}${SEPARATOR}${sim.awayGoals}`, xgH: fmt2(sim.stats.home.xg), xgA: fmt2(sim.stats.away.xg) } }
           : { key: "ai.qf.noSim" },
         m.status === "SCHEDULED"
           ? { key: "ai.qf.kickoff", vars: { when: fmtDateTime(locale, m.kickoff) } }
-          : { key: "ai.qf.scoreline", vars: { score: `${m.homeGoals}–${m.awayGoals}` } },
+          : { key: "ai.qf.scoreline", vars: { score: `${m.homeGoals}${SEPARATOR}${m.awayGoals}` } },
         { key: "ai.qf.possession", vars: { n: String(Math.round(sim?.stats.home.possession ?? m.stats?.home.possession ?? 50)) } },
       ];
       const ans = await askFootballAI(q, { label: { key: "ai.matchLabel", vars: { home: home.short, away: away.short } }, facts });
@@ -556,7 +556,7 @@ export function MatchDetail({ id }: { id: string }) {
           <Link to={`/clubs/${home.id}`} className="flex flex-col items-center gap-2 hover:text-primary"><Crest colors={home.colors} short={home.short} size={56} /><span className="text-center text-sm font-medium">{home.name}</span></Link>
           <div className="text-center">
             <div className="font-mono text-4xl font-bold">
-              {m.status === "SCHEDULED" ? (sim ? `${sim.homeGoals}–${sim.awayGoals}` : "– : –") : `${m.homeGoals}–${m.awayGoals}`}
+              {m.status === "SCHEDULED" ? (sim ? `${sim.homeGoals}${SEPARATOR}${sim.awayGoals}` : "– : –") : `${m.homeGoals}${SEPARATOR}${m.awayGoals}`}
             </div>
             {m.status === "SCHEDULED" && <div className="mt-1 text-[11px] uppercase tracking-widest text-muted-foreground">{sim ? t("det.engine.projected") : t("det.engine.notPlayed")}</div>}
           </div>

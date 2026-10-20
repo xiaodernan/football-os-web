@@ -10,7 +10,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
-import { clamp, cn, pctLabel, pctOf, fmt2 } from "@/lib/utils";
+import { clamp, cn, pctLabel, pctOf, fmt2, SEPARATOR } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 
 interface Tactics {
@@ -184,7 +184,7 @@ const rows = [
     <div className="mt-4 space-y-4">
       <div className="grid grid-cols-3 items_center">
         <div className="text-center"><div className="truncate text-sm font-medium">{home}</div></div>
-        <div className="text-center font-mono text-4xl font-bold">{result.homeGoals}–{result.awayGoals}</div>
+        <div className="text-center font-mono text-4xl font-bold">{result.homeGoals}{SEPARATOR}{result.awayGoals}</div>
         <div className="text-center"><div className="truncate text-sm font-medium">{away}</div></div>
       </div>
       <div className="space-y-2">
@@ -228,8 +228,8 @@ function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgGoals")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeGoals)}–{fmt2(prob.avgAwayGoals)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgXg")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeXg)}–{fmt2(prob.avgAwayXg)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgGoals")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeGoals)}{SEPARATOR}{fmt2(prob.avgAwayGoals)}</div></div>
+        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgXg")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeXg)}{SEPARATOR}{fmt2(prob.avgAwayXg)}</div></div>
         <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.bothScore")}</div><div className="font-mono text-sm">{pctLabel(prob.bttsPct)}</div></div>
         <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.over25")}</div><div className="font-mono text-sm">{pctLabel(prob.over25Pct)}</div></div>
       </div>

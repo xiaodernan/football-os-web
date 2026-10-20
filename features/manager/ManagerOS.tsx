@@ -33,7 +33,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
-import {cn, pctLabel, signed, fmt2, ABSENT } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
+import {cn, pctLabel, signed, fmt2, ABSENT, SEPARATOR } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
 import { positionLabel, rowLine } from "@/domain/rowText";
 
@@ -162,7 +162,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
           <div className="mt-2">
             <div className="flex items-center justify-center gap-6 py-2">
               <div className="text-right text-sm">{getClub(career.clubId)?.name}</div>
-              <div className="font-mono text-3xl font-bold">{last.ourGoals}–{last.oppGoals}</div>
+              <div className="font-mono text-3xl font-bold">{last.ourGoals}{SEPARATOR}{last.oppGoals}</div>
               <div className="text-sm">{last.opponentName}</div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
@@ -518,7 +518,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
               <div><div className="text-xs text-muted-foreground">{t("mgr.draw")}</div><div className="font-mono font-semibold">{pctLabel(odds.drawPct)}</div></div>
               <div><div className="truncate text-xs text-muted-foreground">{p.opponentName} {t("mgr.winWord")}</div><div className="font-mono font-semibold text-info">{pctLabel(theirWin)}</div></div>
             </div>
-            <p className="mt-2 text-[11px] text-muted-foreground">{t("mgr.oddsNote")} {t("mgr.avgGoals")} {fmt2(odds.avgHomeGoals)}–{fmt2(odds.avgAwayGoals)} · {t("mgr.overWord", { n: 2.5 })} {pctLabel(odds.over25Pct)}.</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">{t("mgr.oddsNote")} {t("mgr.avgGoals")} {fmt2(odds.avgHomeGoals)}{SEPARATOR}{fmt2(odds.avgAwayGoals)} · {t("mgr.overWord", { n: 2.5 })} {pctLabel(odds.over25Pct)}.</p>
           </Panel>
         )}
       </div>
