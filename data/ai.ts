@@ -1,5 +1,5 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
-import { asRowText, rowLine, repairTextField, type RowText } from "@/domain/rowText";
+import { rowLine, repairTextField, type RowText } from "@/domain/rowText";
 import { weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating, sum, unique } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna } from "@/domain/playerDna";
