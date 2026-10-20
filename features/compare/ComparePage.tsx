@@ -9,7 +9,7 @@ import { playerDna } from "@/domain/playerDna";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, DemoBadge, DnaCard } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
-import { cn, pctOf, SEPARATOR } from "@/lib/utils";
+import { cn, pctOf, SEPARATOR, paramText } from "@/lib/utils";
 
 export function ComparePage() {
   const { t } = useI18n();
@@ -21,12 +21,12 @@ export function ComparePage() {
     [players],
   );
   const [aId, setAId] = useState(() => {
-    const q = query.get("a") ?? "";
+    const q = paramText(query, "a");
     return ids.has(q) ? q : defaults[0] ?? "";
   });
   const [bId, setBId] = useState(() => {
-    const q = query.get("b") ?? "";
-    return ids.has(q) && q !== (query.get("a") ?? "") ? q : defaults[1] ?? "";
+    const q = paramText(query, "b");
+    return ids.has(q) && q !== paramText(query, "a") ? q : defaults[1] ?? "";
   });
 
   const result = useMemo(() => (aId && bId ? compare(aId, bId) : null), [aId, bId]);

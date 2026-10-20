@@ -131,6 +131,34 @@ export const isRealInstant = (value: string | number | Date | null | undefined):
   return !Number.isNaN(t);
 };
 
+// The app's URL-PARAMETER doors. A value in the URL is READER-SUPPLIED and the reader can type
+// anything: the strings a reader may send are not the strings the app expects.
+//
+// `paramText` is the plain read — a parameter that is text, defaulting to the empty string.
+//
+// `paramOneOf` is the read that TRUSTS NOTHING: it answers one of the allowed values or the
+// caller's fallback, and it is the answer to a cast that lied. `query.get("status") as "LIVE"`
+// told the type system the value was the literal "LIVE" when it could be any string at all, so
+// a reader who typed `?status=bogus` reached the Matches tab with "bogus" in the state: the
+// status filter matched nothing, the list came up empty, and no tab was highlighted. A cast
+// cannot check a value; a door can — and a door that answers the fallback leaves the reader on
+// the tab the app would have chosen.
+//
+// NOTE the app also reads parameters whose PRESENCE matters (a carried mentality, a carried
+// formation shape), and those stay on the raw `query.get`, which answers null for an absent
+// parameter. A door that folded the empty string into them would have taken away the answer
+// those sites are asking for.
+export const paramText = (query: URLSearchParams, name: string): string => query.get(name) ?? "";
+export const paramOneOf = <T extends string>(
+  query: URLSearchParams,
+  name: string,
+  allowed: readonly T[],
+  fallback: T,
+): T => {
+  const raw = query.get(name);
+  return raw !== null && (allowed as readonly string[]).includes(raw) ? (raw as T) : fallback;
+};
+
 // The app's one "how many milliseconds is a day" figure. domain/load named it `const DAY = 86400000`,
 // domain/review and the Review page's points window multiplied a raw `* 86400000`, the History page
 // subtracted a bare `- 86400000` for yesterday, and i18n/format divided a `86_400_000` — four

@@ -23,7 +23,7 @@ import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadg
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn, pctLabel, fmt2, SEPARATOR, ABSENT } from "@/lib/utils";
+import { cn, pctLabel, fmt2, SEPARATOR, ABSENT, paramText, paramOneOf } from "@/lib/utils";
 import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
@@ -237,8 +237,8 @@ function SearchBox({ value, onChange, placeholder }: { value: string; onChange: 
 function PlayersList() {
   const { t } = useI18n();
   const { query } = useRouter();
-  const clubFilter = query.get("club") ?? "";
-  const [term, setTerm] = useState(clubFilter ? "" : (query.get("q") ?? ""));
+  const clubFilter = paramText(query, "club");
+  const [term, setTerm] = useState(clubFilter ? "" : paramText(query, "q"));
   const q = term.toLowerCase();
   const all = footballProvider.players();
   const rows = useMemo(() => {
@@ -317,7 +317,7 @@ function MatchesList() {
   const { t } = useI18n();
   const { query } = useRouter();
   const [tab, setTab] = useState<"LIVE" | "SCHEDULED" | "FINISHED">(
-    (query.get("status") as "LIVE") || "SCHEDULED",
+    paramOneOf(query, "status", MATCH_STATUSES, "SCHEDULED"),
   );
   // M295: the header's counter describes the world's family, not this page's
   // rows — the list keeps 60, the family holds hundreds, and the counter used
@@ -526,7 +526,7 @@ function StandingsTable({ table }: { table: Standing[] }) {
 function SearchPage() {
   const { t } = useI18n();
   const { query, navigate, path } = useRouter();
-  const [term, setTerm] = useState(query.get("q") ?? "");
+  const [term, setTerm] = useState(paramText(query, "q"));
   const results = useMemo(() => globalSearch(term, 60), [term]);
   // M296 — the group counters count the world's uncut totals, not what survived the 60-slot
   // cut: q="a" once printed player 48 / club 12 while the world holds 591 and 55, and whole

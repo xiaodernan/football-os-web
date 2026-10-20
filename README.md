@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M408
+Work ships one milestone per commit and is currently at M409
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,34 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M409 — a reader-supplied parameter stopped being trusted: the `?status=` cast was a lie the type system could not catch
+
+M408 converged the app's date idioms. This unit is the family its own shape pointed at: **the eleven `query.get("…")` sites over five files** — a value in the URL is reader-supplied, and the reader can type anything.
+
+**The defect.** The Matches tab read its tab out of the URL with a cast that lied to the compiler:
+
+```
+features/football/FootballWorld.tsx:319
+  const [tab, setTab] = useState<"LIVE" | "SCHEDULED" | "FINISHED">(
+    (query.get("status") as "LIVE") || "SCHEDULED",
+  );
+```
+
+`as "LIVE"` told the type system the value was the literal `"LIVE"` when it could be any string at all. The tab state is typed as the union of the three tabs, and the cast made the compiler agree — so a reader who typed **`#/matches?status=bogus`** reached the tab with `"bogus"` in the state. `matchesByStatus` filters `m.status === status`, so the filter matched **nothing**: the list came up empty and, because no tab equalled `"bogus"`, **no tab was highlighted either**. A page that looks broken, from a URL a reader can type.
+
+**A cast cannot check a value; a door can.** The unit added two doors to `lib/utils.ts`:
+
+- **`paramText(query, name)`** — a parameter that is text, defaulting to the empty string. It folds the six `query.get("…") ?? ""` sites (ComparePage's `a` and `b`, FootballWorld's `club` and its two `q`).
+- **`paramOneOf(query, name, allowed, fallback)`** — the read that **trusts nothing**: it answers one of the allowed values or the caller's fallback. The Matches tab now reads `paramOneOf(query, "status", MATCH_STATUSES, "SCHEDULED")`, and the `as "LIVE"` cast is gone — so a reader who types a status the app does not expect lands on **the tab the app would have chosen**, with the list populated and the tab highlighted.
+
+**What stayed on the raw read, and why.** The app also reads parameters whose **presence** matters — a carried mentality, a carried formation shape, a filter value — and those answer `null` for an absent parameter, which is the answer those sites are asking for. Four sites over three files stay on `query.get`, and the census charges that they stay: a door that folded the empty string into them would have taken away the answer.
+
+**The census.** `scripts/proof-param.mjs` (8 checks): the scans are armed and the old spellings are what they draw; the tree is real and every subject is inside it; **the old spellings are gone** — no parameter read defaults to the empty string and no parameter read is cast to a literal type; the presence family stayed on the raw read (4 sites over 3 files); the doors are declared exactly once each, in their home, and both readers reach them and import them; the doors answer what they promise (the text door gives `""` for an absent parameter and the value otherwise; the validating door gives one of the allowed values or the fallback); **the defect is closed** — `bogus → SCHEDULED`, `LIVE → LIVE`, `FINISHED → FINISHED`, absent → `SCHEDULED`, and the chosen value is always one of the three the tab strip draws; and the validating door is not the text door (it refuses a value outside the allowed set while the text door passes it through).
+
+**What a reader sees changed — and it is the point.** Before, a reader-supplied status the app did not expect produced an empty list and an unlit tab strip. Now it produces the tab the app would have chosen. That is the first unit in this run that changes what a reader sees in a case a reader can actually reach.
+
+**Next.** The URL-parameter family is closed. The app's remaining hand-spelled idioms are the generic ones — `Math.max(0, …)`'s floored differences (twenty sites over ten files, eight of them named as a different concept), `Object.keys(…)`, `Number.isNaN` on a **number** rather than an instant. The next unit worth measuring is the one the floored-difference family keeps pointing at: a "difference that cannot be negative" is a concept the app uses twenty times, and eight of those twenty are a different concept wearing the same shape.
 
 ### M408 — "can this stored instant be read as a time at all" was asked nine ways over seven files
 
