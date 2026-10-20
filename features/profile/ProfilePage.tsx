@@ -20,7 +20,7 @@ import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { cn, epochMs, pctLabel } from "@/lib/utils";
+import { cn, epochMs, pctLabel, isRealInstant } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
 // raw-UI scan reads every string literal there as a child text node — three hits on one
@@ -350,6 +350,6 @@ function LinkCard({ to, icon, title, hint }: { to: string; icon: string; title: 
 
 function fmtDate(locale: Locale, iso: string): string {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
+  if (!isRealInstant(d)) return "";
   return formatDate(locale, d, { month: "numeric", day: "numeric" });
 }

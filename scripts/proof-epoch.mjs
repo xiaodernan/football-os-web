@@ -79,12 +79,16 @@ const DAYKEY_SINK = /Number\.isNaN\(t\)\) *return ""/g;
 const WINDOW_INLINE = /new Date\([^)]*\)\.getTime\(\)[^;\n]{0,60}?(?:>=|<=|>|<) *(?:start|fromMs|from|end|2 \* DAY_MS)\b/g;
 const LATEST_MAX = /Math\.max\(new Date\([^)]*\)\.getTime\(\)/g;
 const LATEST_SIDE = /Math\.max\(new Date\([^)]*\)\.getTime\(\)/g;
+// M408: the door that took the validity family's place, and the lane its readers' parses fall into.
+const CALL_ISREAL = /\bisRealInstant\s*\(/g;
 // The one bare parse no lane pattern can see inline: load's daily loop assigns `t` on one line and
 // compares it on the next, so it is pinned by file (load's fourth raw site) rather than by shape.
 // [file, raw occurrences] — the whole surviving population, which must sum to the measured total.
+// M408: history's two sites rode the validity DOOR (their parse moved into it), and the door's own
+// body and docstring add two to lib/utils, so the pins move with the work.
 const RAW_PINS = [
-  ["domain/history.ts", 2], ["domain/load.ts", 4], ["domain/review.ts", 1], ["domain/training.ts", 1],
-  ["data/footballService.ts", 1], ["lib/utils.ts", 2], ["features/community/CommunityHub.tsx", 4],
+  ["domain/load.ts", 4], ["domain/review.ts", 1], ["domain/training.ts", 1],
+  ["data/footballService.ts", 1], ["lib/utils.ts", 4], ["features/community/CommunityHub.tsx", 4],
   ["features/review/ReviewPage.tsx", 1],
 ];
 
@@ -140,9 +144,16 @@ ok(`each consumer calls epochMs at its exact pinned count — attributes' four a
 // --- Must-not-unify, lane census: every surviving bare parse is charged to a named lane, and the four
 // --- lanes plus the door's own body/comment sum to the measured raw population, which the per-file
 // --- pins also close — so a new bare parse has to land in a lane or redden this proof. ---------------
-const validityInline = treeCount(VALIDITY_INLINE);
-const validityT = treeCount(VALIDITY_T);
+const validityInline = treeCount(VALIDITY_INLINE) - count(src[HOME], VALIDITY_INLINE);
+const validityT = treeCount(VALIDITY_T) - count(src[HOME], VALIDITY_T);
 const dayKeyTotal = treeCount(DAYKEY_SINK);
+// M408: the lane the validity family's parses fell into before they rode a door. A file that
+// READS the validity door, whose raw parses no other lane claims, is charged here.
+const validityDoorFiles = carriers.filter((f) => count(src[f], CALL_ISREAL) > 0);
+const validityDoor = validityDoorFiles.reduce((s, f) => {
+  if (f === "domain/load.ts") return s; // load's parses are charged by the window lane and the bound
+  return s + count(src[f], RAW_GETTIME) - count(src[f], WINDOW_INLINE);
+}, 0);
 const windowTotal = treeCount(WINDOW_INLINE);
 const latestOpeners = treeCount(LATEST_MAX);
 // That one statement spans two lines (its `- Math` / `Math.max` split across the break), so the four
@@ -155,18 +166,20 @@ const loadRaw = count(loadSrc, RAW_GETTIME);
 // Load holds one site of each inline lane; whatever its raw count is left after those three is the
 // bound-variable read (the daily loop assigns `t`, then compares it on the next line).
 const loadBound = loadRaw - count(loadSrc, DAYKEY_SINK) - count(loadSrc, VALIDITY_T) - count(loadSrc, WINDOW_INLINE);
-const accounted = validityInline + validityT + dayKeyTotal + windowTotal + latestTotal + doorSites + loadBound;
+const accounted = validityInline + validityT + dayKeyTotal + windowTotal + latestTotal + doorSites + loadBound + validityDoor;
 const rawPinTotal = RAW_PINS.reduce((s, [, n]) => s + n, 0);
 const rawPinHolds = RAW_PINS.every(([f, n]) => count(src[f], RAW_GETTIME) === n);
-ok(`every bare parse is charged to a lane — validity ${validityInline} inline (history) + ${validityT} t-bound (load, review, training), day-key ${dayKeyTotal} (load), window-predicate ${windowTotal} inline + 1 bound (load), latest-activity ${latestTotal} (CommunityHub), door body+comment ${doorSites} — and they sum to the measured raw ${rawTotal} (per-file pins ${rawPinTotal})`,
-  validityInline === 2 && validityT === 3 && dayKeyTotal === 1 && windowTotal === 3 && latestTotal === 4 && latestOpeners === 2
-  && doorSites === 2 && loadRaw === 4 && loadBound === 1 && accounted === rawTotal && rawTotal === 16 && rawPinHolds && rawPinTotal === 16
+ok(`every bare parse is charged to a lane — validity ${validityInline} inline + ${validityT} t-bound (both now EMPTY: the family rode the isRealInstant door) + ${dayKeyTotal} day-key (also folded), validity-door ${validityDoor} (review, training — a raw parse whose NaN question the door now answers), window-predicate ${windowTotal} inline + ${loadBound} bound (load), latest-activity ${latestTotal} (CommunityHub), door body+comment ${doorSites} — and they sum to the measured raw ${rawTotal} (per-file pins ${rawPinTotal})`,
+  validityInline === 0 && validityT === 0 && dayKeyTotal === 0 && validityDoor === 2 && windowTotal === 3 && latestTotal === 4 && latestOpeners === 2
+  && doorSites === 4 && loadRaw === 4 && loadBound === 3 && accounted === rawTotal && rawTotal === 16 && rawPinHolds && rawPinTotal === 16
   && plantValidityLane === 1 && plantValidityT === 1 && plantDayKey === 1 && plantWindow === 1 && plantLatest === 1);
 
 // --- Must-not-unify, the day-key sibling (load.ts, M353) floors to an empty key, not a numeric zero.
+// --- M408: the day-key's NaN CHECK rode the validity door, so the shape changed but the sink did
+// --- not: it still floors to an empty string, and it still is not this door's numeric zero. ------
 const loadKey = src["domain/load.ts"];
 ok(`the day-key door floors an unparseable date to an empty string, a different sink this door does not claim`,
-  /Number\.isNaN\(t\)\) *return ""/.test(loadKey) && count(loadKey, FLOORED_PARSE) === 0);
+  /!isRealInstant\(t\)\) *return ""/.test(loadKey) && count(loadKey, CALL_ISREAL) === 2 && count(loadKey, FLOORED_PARSE) === 0);
 
 // --- Behavioural, valid: the door reproduces the raw parse exactly on every timestamp a caller passes.
 const VALID = ["2020-06-15T12:00:00.000Z", "2020-06-15", "2024-01-01T00:00:00Z", "2019-12-31T23:59:59.000Z", "2020-02-29T08:30:00Z"];

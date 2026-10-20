@@ -1,7 +1,7 @@
 import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, TrainingSession } from "./types";
 import { asRowText, type RowText } from "./rowText";
 import { makeRng, pick, rngInt } from "@/lib/rng";
-import { clamp } from "@/lib/utils";
+import { clamp, isRealInstant } from "@/lib/utils";
 import { capRound, sum, unique } from "./attributes";
 import { round1 } from "./scouting";
 
@@ -162,7 +162,7 @@ export function sweepOverdueSessions(sessions: TrainingSession[], nowMs: number 
   return sessions.map((s) => {
     if (s.status !== "planned") return s;
     const t = new Date(s.date).getTime();
-    if (Number.isNaN(t) || t >= startOfToday) return s;
+    if (!isRealInstant(t) || t >= startOfToday) return s;
     return { ...s, status: "missed" };
   });
 }

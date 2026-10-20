@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M407
+Work ships one milestone per commit and is currently at M408
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,38 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M408 — "can this stored instant be read as a time at all" was asked nine ways over seven files
+
+The ledger's three claim families are now charged (M405 about the app, M406 about itself, M407 about the files it names). This unit goes back to the **app**, to the last hand-spelled idiom the scout found worth a door.
+
+**The family.** The question "is this stored instant a real time?" was asked in three dialects across seven files:
+
+```
+domain/history.ts:143        if (!l.completedAt || Number.isNaN(new Date(l.completedAt).getTime())) continue;
+domain/history.ts:169        if (!c.at || Number.isNaN(new Date(c.at).getTime())) continue;
+domain/history.ts:210        if (Number.isNaN(d.getTime())) return "invalid";
+domain/load.ts:66            if (Number.isNaN(t)) return "";
+domain/load.ts:90            if (Number.isNaN(t) || t < chronicFrom || t > nowMs) continue;
+domain/review.ts:90          return !Number.isNaN(t) && t >= fromMs && t <= nowMs;
+domain/training.ts:165        if (Number.isNaN(t) || t >= startOfToday) return s;
+features/history/HistoryPage.tsx:179    if (Number.isNaN(d.getTime())) return "";
+features/profile/ProfilePage.tsx:353    if (Number.isNaN(d.getTime())) return "";
+```
+
+Three spellings — a parsed string, a `Date`, an already-computed number — of one question. And the empty-string guard that went with the parse (`!l.completedAt ||`) was carrying its own copy of the same truth: `new Date("")` does not parse either, so a blank instant was caught twice.
+
+**The door, and the sibling it must not be confused with.** `isRealInstant(value)` lives in `lib/utils.ts` beside `epochMs`, and the two answer **opposite questions**. `epochMs` asks *"how many milliseconds is this"* and floors a value it cannot parse to `0`; `isRealInstant` asks *"can this be read as a time at all"*, which is what a guard on a reader-facing date needs — an unparseable stored instant is a record to skip, not a date at the epoch. A 0 floor would answer *"yes, that is a real time"* for a value that is not one, and the two are used in opposite places.
+
+**The door keeps the guard's own leniency.** `new Date("42")` parses, and the guard said yes to it too, so the door says yes. That is deliberate: the door is faithful to what it replaced, and a rewrite that "tightened" it would have moved a figure a reader sees. The census measures it rather than asserting it.
+
+**What stayed inline, and why.** `features/sim/SimulationLab.tsx:52` reads `!Number.isNaN(Number(carriedMt))` — that asks whether a string is a **number**, not whether it is a time, and folding it would have put a number into a time. The census charges that it stays.
+
+**The census.** `scripts/proof-real-instant.mjs` (7 checks): the scans are armed and the guard *shape* is what draws the line (a planted parsed form, a planted Date form and a planted number form each read 1, and a planted numeric-string check reads **0** for the guard scan and 1 for the numeric one); the tree is real and every subject is inside it; **the family is closed** — the guard form survives nowhere outside the doors' own bodies, and the home now carries **two** of them, because `epochMs` asks the same NaN question and the exclusion is charged rather than assumed; the numeric-string check is a different question and stays inline (1 site, in one file); the door is declared exactly once, in the `lib/utils` home, and all six readers reach it and import it; the door answers what the guard did on every shape and every edge (5 strings, 5 numbers, 2 dates, plus `null` and `undefined`); and the door is not `epochMs` — a value it cannot parse is `false` here and `0` there.
+
+**Nothing a reader sees moved.** The fold is the same predicate, spelled once. The two edges a rewrite would break — a stored instant that does not parse, and the blank string — are the two the census measures.
+
+**Next.** The app's numeric and date idioms are converged. The next thing worth measuring is the family the scout found and this unit's own shape points at: **the "read a parameter out of the URL" idiom** — eleven `query.get("…")` sites over five files, each with its own `?? ""`, each with its own "is this value one of the allowed ones" check, and a reader-supplied id that can miss.
 
 ### M407 — the ledger's file references, and the five that pointed at a file the tree had already deleted
 

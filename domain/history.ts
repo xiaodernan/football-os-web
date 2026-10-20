@@ -10,7 +10,7 @@
 
 import type { AttributeDelta } from "./types";
 import { asRowText, type RowText } from "./rowText";
-import { fmt1 } from "@/lib/utils";
+import { fmt1, isRealInstant } from "@/lib/utils";
 import { byDateDesc, last } from "@/domain/attributes";
 
 export type TimelineKind = "session" | "plan" | "memory" | "learn" | "film";
@@ -140,7 +140,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
     // Only records with a real completion timestamp are history; progress migrated
     // from the old store has no time attached, so it is left off the timeline
     // rather than shown under a made-up date.
-    if (!l.completedAt || Number.isNaN(new Date(l.completedAt).getTime())) continue;
+    if (!isRealInstant(l.completedAt)) continue;
     events.push({
       id: `learn-${l.id}`,
       kind: "learn",
@@ -166,7 +166,7 @@ export function buildTimeline(input: HistoryInput): TimelineEvent[] {
   for (const c of input.film ?? []) {
     // A clip is history only once it has actually been analysed, so the entry
     // carries the detections the provider returned rather than a vague "reviewed".
-    if (!c.at || Number.isNaN(new Date(c.at).getTime())) continue;
+    if (!isRealInstant(c.at)) continue;
     const perMin = c.durationSec > 0 ? fmt1(c.detections / (c.durationSec / 60)) : "0";
     events.push({
       id: `film-${c.id}`,
@@ -207,6 +207,6 @@ export function groupByDay(events: TimelineEvent[]): { day: string; items: Timel
 // the relative-time census.
 export function dayKey(iso: string): string {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "invalid";
+  if (!isRealInstant(d)) return "invalid";
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }

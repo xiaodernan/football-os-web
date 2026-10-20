@@ -8,7 +8,7 @@ import { lessonById } from "@/domain/learn";
 import { useLearnRecords, useFilmRecords } from "@/lib/hooks";
 import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
-import { cn, DAY_MS } from "@/lib/utils";
+import { cn, DAY_MS, isRealInstant } from "@/lib/utils";
 
 const KINDS: { id: TimelineKind | "all"; icon: string; labelKey: string }[] = [
   { id: "all", icon: "≡", labelKey: "hist.all" },
@@ -176,6 +176,6 @@ function dayLabel(key: string, t: (k: string) => string, locale: Locale): string
 
 function fmtTime(locale: Locale, iso: string): string {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
+  if (!isRealInstant(d)) return "";
   return formatDate(locale, d, { hour: "2-digit", minute: "2-digit" });
 }

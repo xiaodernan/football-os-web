@@ -1,7 +1,7 @@
 import type { RowText } from "./rowText";
 import type { TrainingSession } from "./types";
 import { sessionIntensity } from "./training";
-import { clamp, round2, DAY_MS, fmt2, SEPARATOR } from "@/lib/utils";
+import { clamp, round2, DAY_MS, fmt2, SEPARATOR, isRealInstant } from "@/lib/utils";
 import { sum } from "./attributes";
 
 // Training-load management built on the same monotony/strain + acute:chronic
@@ -63,7 +63,7 @@ export interface LoadSummary {
 // `toISOString().slice(0, 10)`, and must NOT import the local door.
 function dayKey(iso: string): string {
   const t = new Date(iso).getTime();
-  if (Number.isNaN(t)) return "";
+  if (!isRealInstant(t)) return "";
   return new Date(t).toISOString().slice(0, 10);
 }
 
@@ -87,7 +87,7 @@ export function buildLoad(input: LoadInput): LoadSummary {
   for (const s of completed) {
     const stamp = s.completedAt ?? s.date;
     const t = new Date(stamp).getTime();
-    if (Number.isNaN(t) || t < chronicFrom || t > nowMs) continue;
+    if (!isRealInstant(t) || t < chronicFrom || t > nowMs) continue;
     const { minutes, load } = sessionLoad(s);
     const k = dayKey(stamp);
     const cur = dayMap.get(k) ?? { load: 0, minutes: 0, sessions: 0 };

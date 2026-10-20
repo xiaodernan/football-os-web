@@ -107,6 +107,30 @@ export const epochMs = (iso?: string): number => {
   return Number.isNaN(t) ? 0 : t;
 };
 
+// The app's "is this stored instant a real time?" door — the sibling of `epochMs` above, and
+// the opposite QUESTION to it. `epochMs` answers "how many milliseconds is this", and floors a
+// value it cannot parse to 0; this one answers "can this be read as a time at all", which is
+// what a guard on a reader-facing date needs: an unparseable stored instant is a record to skip,
+// not a date at the epoch.
+//
+// The family was spelled nine ways over seven files — `Number.isNaN(new Date(x).getTime())`,
+// `Number.isNaN(d.getTime())`, `Number.isNaN(t)` — and the three shapes are one question asked
+// in three dialects. The empty-string guard that went with the parse (`!l.completedAt ||`) is
+// redundant once it does: `new Date("")` does not parse either, so a blank instant is caught by
+// the same door.
+//
+// NOTE this door is NOT `epochMs` and must never be swapped for it: a 0 floor would answer "yes,
+// that is a real time" for a value that is not one, and the two are used in opposite places —
+// `epochMs` where a number is wanted, this where a truth is.
+//
+// It is also NOT the numeric-string check (`!Number.isNaN(Number(x))`), which asks whether a
+// string is a NUMBER — a different question, and the app's one such site stays inline.
+export const isRealInstant = (value: string | number | Date | null | undefined): boolean => {
+  if (value === null || value === undefined || value === "") return false;
+  const t = value instanceof Date ? value.getTime() : typeof value === "number" ? value : new Date(value).getTime();
+  return !Number.isNaN(t);
+};
+
 // The app's one "how many milliseconds is a day" figure. domain/load named it `const DAY = 86400000`,
 // domain/review and the Review page's points window multiplied a raw `* 86400000`, the History page
 // subtracted a bare `- 86400000` for yesterday, and i18n/format divided a `86_400_000` — four

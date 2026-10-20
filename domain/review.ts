@@ -4,7 +4,7 @@ import { weakestAttributes, byDeltaDescThenKey, byDateAsc, sum, last, tally } fr
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions, plannedSessions } from "./training";
-import { signed, DAY_MS, fmt2, fmt1 } from "@/lib/utils";
+import { signed, DAY_MS, fmt2, fmt1, isRealInstant } from "@/lib/utils";
 
 // A period digest compiled purely from the user's local training log, goals,
 // progress history, academy records and analysed film. Nothing here is invented —
@@ -87,7 +87,7 @@ export interface WeeklyReview {
 function withinWindow(iso: string | undefined, fromMs: number, nowMs: number): boolean {
   if (!iso) return false;
   const t = new Date(iso).getTime();
-  return !Number.isNaN(t) && t >= fromMs && t <= nowMs;
+  return isRealInstant(t) && t >= fromMs && t <= nowMs;
 }
 
 // Sessions are attributed to the window by their completion time when present,
