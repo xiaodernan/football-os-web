@@ -10,7 +10,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
-import { clamp, cn, pctLabel, pctOf, fmt2, SEPARATOR } from "@/lib/utils";
+import { clamp, cn, pctLabel, pctOf, fmt2, SEPARATOR, ABSENT } from "@/lib/utils";
 import { useI18n } from "@/i18n";
 
 interface Tactics {
@@ -139,7 +139,7 @@ export function SimulationLab() {
             <Button key={c.id} size="sm" variant={season?.compId === c.id ? "default" : "outline"} onClick={() => runSeason(c.id)}>{c.name}</Button>
           ))}
         </div>
-        {season && <SeasonTable rows={season.table} name={getCompetition(season.compId)?.name ?? ""} />}
+        {season && <SeasonTable rows={season.table} name={getCompetition(season.compId)?.name ?? ABSENT} />}
       </Panel>
     </div>
   );

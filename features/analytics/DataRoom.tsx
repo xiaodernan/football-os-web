@@ -129,7 +129,7 @@ export function DataRoom() {
         <StatTile label={t("data.bestForm")} value={lead.bestForm ? getClub(lead.bestForm.clubId)?.short ?? ABSENT : ABSENT} sub={lead.bestForm ? t("data.sub.formPts", { n: formPoints(lead.bestForm) }) : undefined} tone="up" />
         <StatTile label={t("data.topAttack")} value={lead.strongestAttack ? getClub(lead.strongestAttack.clubId)?.short ?? ABSENT : ABSENT} sub={lead.strongestAttack ? t("data.sub.ratingAvg", { n: fmt2(lead.strongestAttack.attack) }) : undefined} />
         <StatTile label={t("data.topDefence")} value={lead.bestDefence ? getClub(lead.bestDefence.clubId)?.short ?? ABSENT : ABSENT} sub={lead.bestDefence ? t("data.sub.ratingAvg", { n: fmt2(lead.bestDefence.defence) }) : undefined} />
-        <StatTile label={t("data.topScoring")} value={lead.highestScoring ? `${fmt2(lead.highestScoring.gfAvg)}` : ABSENT} sub={lead.highestScoring ? t("data.sub.goalsPerGame", { club: getClub(lead.highestScoring.clubId)?.short ?? "" }) : undefined} />
+        <StatTile label={t("data.topScoring")} value={lead.highestScoring ? `${fmt2(lead.highestScoring.gfAvg)}` : ABSENT} sub={lead.highestScoring ? t("data.sub.goalsPerGame", { club: getClub(lead.highestScoring.clubId)?.short ?? ABSENT }) : undefined} />
       </div>
 
       {!metrics.length ? (
@@ -138,7 +138,7 @@ export function DataRoom() {
         <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
           <Panel className="p-0">
             <div className="flex items-center justify-between px-4 pt-4">
-              <SectionTitle title={comp?.name ?? ""} hint={t("data.matchesPlayed", { n: playedCount })} />
+              <SectionTitle title={comp?.name ?? ABSENT} hint={t("data.matchesPlayed", { n: playedCount })} />
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -224,7 +224,7 @@ export function DataRoom() {
                   <span className="font-mono text-base font-semibold tabular-nums">{clash.xg.home}{SEPARATOR}{clash.xg.away}</span>
                   <span className="flex items-center gap-2"><span className="truncate text-right">{getClub(clash.second.clubId)?.short}</span><Crest colors={getClub(clash.second.clubId)?.colors} short={getClub(clash.second.clubId)?.short} size={24} /></span>
                 </div>
-                <p className="mt-2 text-[11px] text-muted-foreground">{t("data.clashLine", { home: getClub(clash.top.clubId)?.name ?? "", away: getClub(clash.second.clubId)?.name ?? "" })}</p>
+                <p className="mt-2 text-[11px] text-muted-foreground">{t("data.clashLine", { home: getClub(clash.top.clubId)?.name ?? ABSENT, away: getClub(clash.second.clubId)?.name ?? ABSENT })}</p>
               </Panel>
             )}
           </div>

@@ -23,7 +23,7 @@ import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadg
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn, pctLabel, fmt2, SEPARATOR } from "@/lib/utils";
+import { cn, pctLabel, fmt2, SEPARATOR, ABSENT } from "@/lib/utils";
 import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
 import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
@@ -252,7 +252,7 @@ function PlayersList() {
       <PageHeader title={t("fw.players.title")} hint={t("fw.players.hint", { shown: rows.length, total: all.length })} back="/football" />
       <div className="flex flex-wrap items-center gap-3">
         <SearchBox value={term} onChange={setTerm} placeholder={t("fw.players.filter")} />
-        {clubFilter && <Badge variant="outline" className="text-primary">{t("fw.players.club", { name: getClub(clubFilter)?.name ?? "" })} <Link to="/players" className="ml-1 text-muted-foreground">✕</Link></Badge>}
+        {clubFilter && <Badge variant="outline" className="text-primary">{t("fw.players.club", { name: getClub(clubFilter)?.name ?? ABSENT })} <Link to="/players" className="ml-1 text-muted-foreground">✕</Link></Badge>}
       </div>
       <Panel className="divide-y p-1">
         {rows.length ? rows.map((p) => <PlayerRow key={p.id} p={p} />) : <div className="p-4"><EmptyState title={t("fw.players.empty")} /></div>}

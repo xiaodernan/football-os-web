@@ -175,21 +175,38 @@ ok(`no absence marker is spelled with the separator glyph any more (quoted-en ca
 // --- count is the number of cells it renders through the door. Users come from the tree, never from a ---
 // --- hand-typed list, so a fold in a fifth file shows up here without editing this proof — and so does ---
 // --- a fold that forgot its import. ---
+// --- M400 widened the door's user set: the NAME lane (a club or competition name the app looked up
+// --- and did not find) now rides the door too, which added three new user files (the service's search
+// --- subtitles, the Football World's club badge, the Simulation Lab's season caption) and grew four
+// --- existing ones. The pin below is the tree's own per-user counts, re-derived after that fold —
+// --- a stale count here is exactly the defect M396 was about, so the counts are checked per file.
+// --- The lane's own claims (the name lane is closed, the control lane survived) live in
+// --- proof-absent-name.mjs; this clause charges the door's TOTAL user set, not the name lane's. ---
 const users = carriers.filter((f) => n(useText(f), USE_ABSENT) > 0).sort();
 const userImports = users.filter((f) => n(code[f], IMPORT_ABSENT) >= 1);
 const dataValueUsers = DATA_VALUE.filter((f) => n(useText(f), USE_ABSENT) > 0);
 const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
-// The ledger by carrier: 45 renders, 9 of them the Data Room's outlier cells (M394) and 36 the spent
-// residue (M395, including Dashboard's second cell). Order is the sorted carrier list.
-const expectedUsers = [...FOLDED, ...SPENT].sort();
+// The ledger by carrier: the door's whole reader-facing population, by the file that renders it.
+// M394 folded two outlier cells, M395 spent a 13-file ledger, and M400 added the name lane.
+const expectedUsers = [
+  "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
+  "features/analytics/DataRoom.tsx", "features/dashboard/Dashboard.tsx",
+  "features/film/FilmRoom.tsx", "features/football/Details.tsx",
+  "features/football/FootballWorld.tsx", "features/load/LoadPage.tsx",
+  "features/manager/ManagerOS.tsx", "features/onboarding/Onboarding.tsx",
+  "features/player/PlayerOS.tsx", "features/review/ReviewPage.tsx",
+  "features/scouting/ScoutingPanel.tsx", "features/settings/SettingsPage.tsx",
+  "features/sim/SimulationLab.tsx", "features/transfers/TransferCentre.tsx",
+];
 const expectedPerUser = [
-  ["data/ai.ts", 3], ["data/intelligence.ts", 2], ["domain/scouting.ts", 1],
-  ["features/analytics/DataRoom.tsx", 9], ["features/dashboard/Dashboard.tsx", 2],
-  ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 4],
-  ["features/load/LoadPage.tsx", 3], ["features/manager/ManagerOS.tsx", 2],
-  ["features/onboarding/Onboarding.tsx", 2], ["features/player/PlayerOS.tsx", 5],
-  ["features/review/ReviewPage.tsx", 5], ["features/scouting/ScoutingPanel.tsx", 2],
-  ["features/settings/SettingsPage.tsx", 2], ["features/transfers/TransferCentre.tsx", 2],
+  ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
+  ["features/analytics/DataRoom.tsx", 13], ["features/dashboard/Dashboard.tsx", 2],
+  ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 5],
+  ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],
+  ["features/manager/ManagerOS.tsx", 2], ["features/onboarding/Onboarding.tsx", 2],
+  ["features/player/PlayerOS.tsx", 5], ["features/review/ReviewPage.tsx", 5],
+  ["features/scouting/ScoutingPanel.tsx", 3], ["features/settings/SettingsPage.tsx", 2],
+  ["features/sim/SimulationLab.tsx", 1], ["features/transfers/TransferCentre.tsx", 2],
 ].map(([f, c]) => `${f}=${c}`).join(",");
 ok(`the door is used by exactly the screens that render an absence, each importing it, and neither generate-time data file reaches for it (users ${users.length}/${expectedUsers.length} [${users.join(",")}] with uses ${perUser}; importers ${userImports.length}/${users.length}; generate-time users ${dataValueUsers.length})`,
   users.length === expectedUsers.length && users.join(",") === expectedUsers.join(",") &&

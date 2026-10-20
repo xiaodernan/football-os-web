@@ -68,7 +68,7 @@ function clubFacts(clubId: string): EvidenceFact[] {
   const out: EvidenceFact[] = [
     {
       label: { value: c.name },
-      text: { key: "ai.fact.club", vars: { name: c.name, short: c.short, comp: getCompetition(c.competitionId)?.name ?? "", overall: c.overall, stadium: c.stadium } },
+      text: { key: "ai.fact.club", vars: { name: c.name, short: c.short, comp: getCompetition(c.competitionId)?.name ?? ABSENT, overall: c.overall, stadium: c.stadium } },
       to: `/clubs/${c.id}`,
     },
   ];
@@ -93,7 +93,7 @@ function clubFacts(clubId: string): EvidenceFact[] {
     const opp = fixture.homeClubId === clubId ? getClub(fixture.awayClubId) : getClub(fixture.homeClubId);
     out.push({
       label: { key: "ai.lab.nextFixture" },
-      text: { key: "ai.fact.nextFixture", vars: { opponent: opp?.name ?? "", comp: getCompetition(fixture.competitionId)?.name ?? "" } },
+      text: { key: "ai.fact.nextFixture", vars: { opponent: opp?.name ?? ABSENT, comp: getCompetition(fixture.competitionId)?.name ?? ABSENT } },
       to: `/matches/${fixture.id}`,
     });
     const fc = fixtureForecast(fixture.id);
@@ -104,8 +104,8 @@ function clubFacts(clubId: string): EvidenceFact[] {
         label: { key: "ai.lab.nextFixtureModel" },
         text:
           fc.sample === 1
-            ? { key: "ai.fact.poissonClubOne", vars: { home: home?.name ?? "", away: away?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } }
-            : { key: "ai.fact.poissonClubMany", vars: { n: fc.sample, home: home?.name ?? "", away: away?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } },
+            ? { key: "ai.fact.poissonClubOne", vars: { home: home?.name ?? ABSENT, away: away?.name ?? ABSENT, hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } }
+            : { key: "ai.fact.poissonClubMany", vars: { n: fc.sample, home: home?.name ?? ABSENT, away: away?.name ?? ABSENT, hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } },
         to: `/matches/${fixture.id}`,
       });
     }
@@ -120,7 +120,7 @@ function playerFacts(pid: string): EvidenceFact[] {
   const out: EvidenceFact[] = [
     {
       label: { value: p.name },
-      text: { key: "ai.fact.player", vars: { name: p.name, position: p.position, age: p.age, nation: p.nation, club: c?.name ?? "", overall: p.overall, potential: p.potential, value: formatValue(p.value), foot: p.foot } },
+      text: { key: "ai.fact.player", vars: { name: p.name, position: p.position, age: p.age, nation: p.nation, club: c?.name ?? ABSENT, overall: p.overall, potential: p.potential, value: formatValue(p.value), foot: p.foot } },
       to: `/players/${p.id}`,
     },
     { label: { key: "ai.lab.profile" }, text: { key: "ai.fact.archetype", vars: { arch: p.archetype } }, to: `/players/${p.id}` },
@@ -179,8 +179,8 @@ function matchFacts(mid: string, locale: Locale): EvidenceFact[] {
       label: { key: "ai.lab.fixture" },
       text:
         m.status === "SCHEDULED"
-          ? { key: "ai.fact.fixtureScheduled", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, when: formatDate(locale, m.kickoff, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) } }
-          : { key: "ai.fact.fixtureResult", vars: { home: h?.name ?? "", away: a?.name ?? "", comp: getCompetition(m.competitionId)?.name ?? "", round: m.round, hg: String(m.homeGoals ?? ABSENT), ag: String(m.awayGoals ?? ABSENT) } },
+          ? { key: "ai.fact.fixtureScheduled", vars: { home: h?.name ?? ABSENT, away: a?.name ?? ABSENT, comp: getCompetition(m.competitionId)?.name ?? ABSENT, round: m.round, when: formatDate(locale, m.kickoff, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) } }
+          : { key: "ai.fact.fixtureResult", vars: { home: h?.name ?? ABSENT, away: a?.name ?? ABSENT, comp: getCompetition(m.competitionId)?.name ?? ABSENT, round: m.round, hg: String(m.homeGoals ?? ABSENT), ag: String(m.awayGoals ?? ABSENT) } },
       to: `/matches/${m.id}`,
     },
   ];
@@ -190,8 +190,8 @@ function matchFacts(mid: string, locale: Locale): EvidenceFact[] {
       label: { key: "ai.lab.model" },
       text:
         fc.sample === 1
-          ? { key: "ai.fact.poissonMatchOne", vars: { home: h?.name ?? "", away: a?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } }
-          : { key: "ai.fact.poissonMatchMany", vars: { n: fc.sample, home: h?.name ?? "", away: a?.name ?? "", hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } },
+          ? { key: "ai.fact.poissonMatchOne", vars: { home: h?.name ?? ABSENT, away: a?.name ?? ABSENT, hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } }
+          : { key: "ai.fact.poissonMatchMany", vars: { n: fc.sample, home: h?.name ?? ABSENT, away: a?.name ?? ABSENT, hp: fc.homePct, dp: fc.drawPct, ap: fc.awayPct, lh: fmt2(fc.lambdaHome), la: fmt2(fc.lambdaAway), score: fc.mostLikelyScore } },
       to: `/matches/${m.id}`,
     });
   }

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M399
+Work ships one milestone per commit and is currently at M400
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,34 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M400 — the empty-string name fallback read as a hole, and the decision was to make it read as the app's own marker
+
+M399's "Next" named this one and said it was not a fold: *"the empty-string club-name fallback in `data/intelligence.ts` is the one already named, and it changes what a reader sees, so it needs its own decision rather than a fold."* This unit is that decision, and the fold that followed from it.
+
+**The defect.** A club or competition name the app looked up and did not find read as `""` — the empty string. In a sentence slot that is a hole with no convention behind it:
+
+```
+"Arsenal (ARS) play in , overall 88, at Emirates."     ← the hole
+"Next up vs Chelsea in ."                                ← the hole
+"Arsenal vs Chelsea ()"                                  ← the hole
+```
+
+The app already owned an absence marker. `lib/utils.ts`'s own docstring says ABSENT is *"what a reader sees where a figure **or a name** is missing"* — the name was in the door's contract from the start, and the code never honoured it. So the app carried **two** conventions for absence: the em dash, and the hole. `DataRoom.tsx` contradicted itself in three lines: `:130` and `:131` read `getClub(...)?.short ?? ABSENT` while `:132` read the identical shape as `?? ""`.
+
+**The decision.** A missing name now reads the em dash. That is a real change to the reader's text, and it is the first in this lane — every fold before it moved no figure. The census therefore charges the *other* side too: the hole it removes is measured, and the marker is shown to be the absence door's own glyph rather than a new character.
+
+**What was folded.** 28 sites over 7 files: `data/footballService.ts` (2), `data/intelligence.ts` (18), `features/analytics/DataRoom.tsx` (4), `features/football/Details.tsx` (1), `features/football/FootballWorld.tsx` (1), `features/scouting/ScoutingPanel.tsx` (1), `features/sim/SimulationLab.tsx` (1).
+
+**The lane is drawn by shape, not by a file list.** The name lane is an optional chain on a name field (`.name` / `.short`) falling back to the empty string. The **control lane** keeps its `""`: a query parameter, an id default, a form's select value, a record's own optional text, a `rowLine` result — 22 sites over 13 files, counted and floored. The em dash is a *display* glyph; a control value of `"—"` would be a broken id, not an absence. `proof-absent-name.mjs` charges the control lane's survival in the other direction, because a census that had swept every `""` onto the door would have made that lane 0 — and the lane going to 0 is a regression, not a win.
+
+**The new census.** `scripts/proof-absent-name.mjs` (10 checks): the scans are armed and the lane's *shape* is what draws it (a control lane reads 0 name-empty); the tree is real and every subject is inside it; **the name lane is closed** (0 name lookups fall back to the empty string); every name fallback now reads the door (33 sites over 9 files — the 28 folded plus the 5 that already rode it); all seven folded files import the door exactly once; the control lane survived (22 sites over 13 files, floor 20/12); the marker *is* the absence door's own glyph (one em dash, not the empty string, not a second dash — the planted hole and the planted second dash both fail); every row the lane feeds reads the marker and no row is left with a hole (11 rows, 0 holes, where the same rows had 11 before the fold); the change is **latent** (0 unresolvable names over 73 clubs / 610 players / 1566 matches, so no reader sees the marker today); and every name-lane var is plain, so the marker prints itself instead of being routed through a translator (26 vars in a `vars:` object plus 2 JSX props — a `KEY` var routes through `t()` and a `CODE` var through `codeWord()`).
+
+**The sibling that had to move.** `proof-absent-glyph`'s clause 6 pins the door's *total* user set and each user's use count. The fold added three new user files (the service's search subtitles, the Football World's club badge, the Simulation Lab's season caption) and grew four existing ones — `data/intelligence.ts` 2 → 20, `DataRoom.tsx` 9 → 13, `Details.tsx` 4 → 5, `ScoutingPanel.tsx` 2 → 3. The pin was re-derived from the tree, per file, rather than decremented; a stale count here is exactly the defect M396 was about.
+
+**Reachability, measured.** On the shipped world every club, competition, player and match resolves — 0 unresolvable names — so the hole never appears on today's data and the change is latent. The reader-supplied id is the live case: `FootballWorld.tsx` reads `?club=` straight from the URL, and `getClub(<a name that misses>)?.name` is exactly the branch this unit closed.
+
+**Next.** The `fmt1` door's remaining sibling — the one conditional-decimal line in the value formatter (`.toFixed(v >= 10_000_000 ? 0 : 1)`), which picks 0 or 1 at runtime and so cannot ride a fixed-argument door — is the last display convention in `lib/utils` with no door of its own. After that, the vacuity ceiling's zero-asserting clauses in `proof-i18n` need their companion devices paid down.
 
 ### M399 — the last hand-spelled `+1.50` went behind its door, and three censuses had to be re-derived
 

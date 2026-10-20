@@ -80,7 +80,7 @@ export function ScoutingPanel() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Panel className="p-4">
           <SectionTitle title={t("scout.needs")} />
-          <p className="text-xs text-muted-foreground">{t("scout.squadOf", { club: getClub(clubId)?.name ?? "" })}</p>
+          <p className="text-xs text-muted-foreground">{t("scout.squadOf", { club: getClub(clubId)?.name ?? ABSENT })}</p>
           <div className="mt-3 space-y-2">
             {profile.map((r) => (
               <div key={r.bucket}>

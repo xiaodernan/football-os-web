@@ -1,7 +1,7 @@
 import { DEMO_NOW, WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, byKickoff, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
-import { DAY_MS, epochMs, fmt0, fmt1, indexById } from "@/lib/utils";
+import { DAY_MS, epochMs, fmt0, fmt1, indexById, ABSENT } from "@/lib/utils";
 import { byOverall, byValueDesc } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
 
@@ -214,11 +214,11 @@ function searchAll(query: string): (SearchResult & { s: number })[] {
   const out: (SearchResult & { s: number })[] = [];
   for (const c of WORLD.clubs) {
     const s = Math.max(score(c.name, q), score(c.short, q));
-    if (s > 0) out.push({ type: "club", id: c.id, title: c.name, subtitle: { key: "sr.clubLine", vars: { nation: c.nation, competition: getCompetition(c.competitionId)?.name ?? "" } }, to: `/clubs/${c.id}`, s });
+    if (s > 0) out.push({ type: "club", id: c.id, title: c.name, subtitle: { key: "sr.clubLine", vars: { nation: c.nation, competition: getCompetition(c.competitionId)?.name ?? ABSENT } }, to: `/clubs/${c.id}`, s });
   }
   for (const p of WORLD.players) {
     const s = Math.max(score(p.name, q), score(p.nation, q), score(p.position, q) * 0.6);
-    if (s > 0) out.push({ type: "player", id: p.id, title: p.name, subtitle: { key: "sr.playerLine", vars: { group: p.positionGroup, club: getClub(p.clubId)?.name ?? "", overall: p.overall } }, to: `/players/${p.id}`, s });
+    if (s > 0) out.push({ type: "player", id: p.id, title: p.name, subtitle: { key: "sr.playerLine", vars: { group: p.positionGroup, club: getClub(p.clubId)?.name ?? ABSENT, overall: p.overall } }, to: `/players/${p.id}`, s });
   }
   for (const c of WORLD.competitions) {
     const s = score(c.name, q);

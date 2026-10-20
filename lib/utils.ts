@@ -186,6 +186,16 @@ export const fmt0 = (v: number): string => v.toFixed(0);
 // PRESENT and must stay an en dash (proof-absent-glyph charges the two families apart and plants both).
 // Nor is it the match engine's unattributed-scorer value, which is written into simulated data at
 // generate time instead of chosen at render time; that site is charged by name, not folded here.
+// M400: the sentence above already claimed NAMES, and the code did not honour it — a club or
+// competition name the app looked up and did not find read as "" (the empty string), so the
+// reader saw a hole with no convention behind it ("Arsenal (ARS) play in , overall 88"). The
+// name family now rides this door too: 28 sites over 7 files, folded by `dev/.m400-fold.mjs` and
+// charged by `scripts/proof-absent-name.mjs`, which draws the lane by SHAPE (an optional chain
+// on `.name`/`.short` falling back to the empty string) and keeps the CONTROL lane apart — a
+// query parameter, an id default and a record's own optional text still read "", because the
+// em dash is a DISPLAY glyph and a control value of "—" would be a broken id. This was the one
+// fold in this lane that MOVES a reader-visible glyph, and it is latent: on the shipped world
+// every name resolves, so no reader sees the marker today.
 export const ABSENT = "—";
 
 // The app's range/score separator — an en dash GLYPH between two figures that are both PRESENT. It

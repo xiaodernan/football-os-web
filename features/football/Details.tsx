@@ -531,7 +531,7 @@ export function MatchDetail({ id }: { id: string }) {
       // M269: the facts are rows, not English strings — the provider picks one by seed and
       // the reader sees it in their own language, wherever it lands (answer, evidence).
       const facts: RowText[] = [
-        { key: "ai.qf.matchup", vars: { home: home.name, away: away.name, comp: comp?.name ?? "" } },
+        { key: "ai.qf.matchup", vars: { home: home.name, away: away.name, comp: comp?.name ?? ABSENT } },
         sim
           ? { key: "ai.qf.projection", vars: { score: `${sim.homeGoals}${SEPARATOR}${sim.awayGoals}`, xgH: fmt2(sim.stats.home.xg), xgA: fmt2(sim.stats.away.xg) } }
           : { key: "ai.qf.noSim" },
