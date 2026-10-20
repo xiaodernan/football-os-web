@@ -126,11 +126,14 @@ ok(`all seven folded files import the door exactly once, and no file outside the
 // --- 6. The CONTROL LANE survived: a control value is still "", and the fold did not sweep it.
 // --- This is the clause that keeps the census honest in the other direction: a census that
 // --- had folded every "" onto the door would have made the control lane 0, and the control
-// --- lane going to 0 is a REGRESSION (a control value of "—" is a broken id, not an absence). ---
+// --- lane going to 0 is a REGRESSION (a control value of "—" is a broken id, not an absence).
+// --- M409 moved the URL-PARAMETER sites of this lane onto their own door (`paramText`), so the
+// --- lane is five sites smaller than it was -- legitimately, and the floor moves with the work
+// --- rather than staying at a number the tree no longer has. --------------------------------
 const controlByFile = carriers.map((f) => [f, n(raw[f], CONTROL_EMPTY) - n(raw[f], NAME_EMPTY)]).filter(([, c]) => c > 0).sort();
 const controlTotal = controlByFile.reduce((a, [, c]) => a + c, 0);
-ok(`the control lane survived the fold: a query parameter, an id default and a record field still read "" (${controlTotal} sites over ${controlByFile.length} files [${controlByFile.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")}]; floor 20 sites / 12 files)`,
-  controlTotal >= 20 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx"));
+ok(`the control lane survived the fold: an id default, a record field and a filter value still read "" (${controlTotal} sites over ${controlByFile.length} files [${controlByFile.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")}]; floor 15 sites / 12 files — the URL parameters left this lane at M409 for their own door)`,
+  controlTotal >= 15 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx"));
 
 // --- 7. The marker is the ABSENCE DOOR's own glyph, not a new character and not a hole. ------
 // --- The lane's whole claim is that a missing name now reads the em dash. If the door's value
