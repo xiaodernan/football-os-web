@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M410
+Work ships one milestone per commit and is currently at M411
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7093,6 +7093,72 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M411 — the ledger shipped a measurement paragraph that measured nothing, and its own gate ran red behind the worktree
+
+**What the gauge says.** The gates this unit turns: `scripts/proof-gauge-hole.mjs` **6/6** on the
+landed ledger — the same file read 2/6 before the splice, its four reds being the hole, the gauge
+lead left empty, the tally that proves the readers count rather than detect, and the section
+that states this gate's clause count, absent — `proof:record`
+**5/5** with the pointer below at the newest heading, and `proof:command-entry` **11/11**, the report
+whose measurement slot was empty. `tsc --noEmit` exit 0. The whole suite on this worktree, read
+while the hole was still open, came back **82 of 85 scripts, 2935 of 2942 checks** — one red was
+this unit's own gate and two were a concurrent session's in-flight files (`proof-epoch`, and
+`proof-i18n` owing `proof-real-instant.mjs:125`), which this commit does not claim to repair. That
+number is recorded as a reading of a shared worktree, not as this unit's green.
+
+**What HEAD carried, measured before anything was changed.** Two damages, one shape. First the
+artifact: `scripts/proof-command-entry.mjs` landed in `d7312c5` and the section that describes its
+fix landed with it, but the two SOURCE files that section names were still uncommitted in this
+shared worktree — so HEAD's own gate, run against HEAD's own bytes, came back **5/11 with six
+clauses red**: the badge's button, the shell's single open state, the one `⌘K` binding, `/search`'s
+readers, the loaded component's arity, and the command primitives' importer count. That half is
+already closed, by `1b5b30e`, and the replay of the same probe on the committed bytes reads 11/11
+with nothing unattributed.
+
+**The half this unit closes is the record.** M405's section had been spliced from a draft with a
+placeholder still in the slot where its measurement goes. The paragraph kept its bold lead and its
+wrapping and lost its contents: after the lead there was exactly one thing, the token `__GAUGE__`.
+One unsubstituted marker, the only one in the file, in the slot where the reading should be.
+A hole in a record is worse than a missing paragraph: the paragraph is present, formatted
+like every other measurement, and says nothing — the reader who skims the bold lead takes it as a
+reading. It is also M399/M400's own defect class wearing a different costume. In a sentence a
+missing figure is the em dash, a convention a reader can see through; in the ledger the convention
+was a scratch marker that had simply never been replaced, and no gate read it back.
+
+**The gate.** `scripts/proof-gauge-hole.mjs`, 6 clauses, reading `README.md` off disk. It charges
+two shapes and reconciles a third. An unsubstituted placeholder — `__` plus an uppercase run plus
+`__` — must appear zero times in the ledger's PROSE: a marker inside a code span or a fence is the
+file talking about a hole, not a hole, which is the same shielding `proof-record` needs for the
+headings it quotes, and `__dirname`-style lowercase dunders are exempt because they are the ledger
+quoting code. Every paragraph that opens with the ledger's measurement promise — the bold
+"What the gauge says." lead — must be followed by a figure, because confident prose in a
+measurement slot is the same hole dressed up (the gate counted 3 such leads on the ledger before
+this splice and found 1 of them empty — the paragraph this unit fills; the landed file reads one
+more, this section's own measurement paragraph being it). And where a section names a gate and states
+how many clauses it has, the count is taken from that file's `ok(` calls — the only clause here
+that could catch the record claiming an artifact it does not carry — and a section of that pair
+whose claim is missing reads red rather than passing quietly, because a clause that is green while
+the thing it charges is absent witnesses nothing, which is exactly how this clause read on its own
+first draft. The population floor rides with
+it (lines at least 9,000, milestone headings at least 150, gauge leads at least 2), because "0
+tokens" is also what an empty read says, and clause 5 proves the readers sum rather than merely
+detect.
+
+**What is NOT claimed.** No word of M405's narrative was rewritten to make a gate pass — its
+repair paragraph describes bytes that exist now, which is the fix, and editing a landed section is
+the same trick from the other side. This census runs on the file as it sits on disk, so it cannot
+tell a section spliced into the wrong revision from one spliced correctly; it charges the uppercase
+placeholder spelling and the gauge lead only, so `TBD`, `FIXME`, or a measurement paragraph written
+in some other phrasing walks free. And the HEAD reading above is a fact about a revision, not a
+pin: a gate that asserted it would rot at the next commit, so the gate plants the shape instead.
+
+**Next.** The reason a red gate could sit on `master` unnoticed is that every measurement in this
+repository is taken on the shared worktree, which is routinely in a better state than `HEAD`. The
+structural version of that gap, and the one this unit stumbled into while writing clause 6: charge
+the shipped gates on a plane built from `git archive HEAD` for the files a commit touches, so a
+commit that lands a gate without its source — or a source without its gate — reddens at the commit
+rather than at the next stranger's tidy tree.
+
 ### M410 — the gap list grew from forty-one bare numbers into forty-one named units
 
 M406's gate held the ledger honest about **which** milestone numbers have no section. This unit makes the list *useful*: each entry now names the work that shipped under that number, taken from the commit that shipped it.
@@ -7277,7 +7343,18 @@ moving the state back inside the palette (two coordinated edits), dropping the s
 entry, planting a second badge, swapping the ⌘K glyph, unbinding the input, and handing the
 shell back its dead import.
 
-**What the gauge says.** __GAUGE__
+**What the gauge says.** This unit's own gate, `node scripts/proof-command-entry.mjs`,
+reads **11/11**, and replayed against `HEAD`'s bytes before the two source files were committed it
+read **5/11 with six clauses red** — which is why the source landed as `1b5b30e` instead of riding
+behind the section that described it. `tsc --noEmit` clean; `npm run build` exit 0, and the main
+chunk is the same file before and after the dead import was dropped (`index-CtrZcjFI.js`, 776.32 kB
+/ gzip 257.61 kB), because the palette already pulled that module in — a dead import costs a reader,
+not a byte. The live leg ran against that build on a fresh port and returned **7/7 with zero console
+or page errors**: the badge opens the dialog, `Ctrl+K` opens and then closes it, `Arsenal` returns
+12 rows, Escape closes, the sidebar still reaches `#/search`, and the same dialog searches over
+`/clubs`. This paragraph was filled by a later milestone; the whole-suite tally for the tree at
+that moment is recorded there, not here, because the same worktree was carrying another session's
+gates by then.
 
 **Next.** Clause 11 closes one dead import by naming the module it reaches into. The same
 rot measured tree-wide: **6 named imports over 5 files whose binding appears nowhere else in
