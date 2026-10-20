@@ -589,4 +589,3 @@ function Fact({ label, value }: { label: string; value: string | number }) {
   return <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-[10px] text-muted-foreground">{label}</div><div className="font-mono text-sm">{value}</div></div>;
 }
 
-export { ManagerOS as default };

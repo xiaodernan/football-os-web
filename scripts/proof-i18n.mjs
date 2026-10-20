@@ -278,13 +278,16 @@ ok(`no primitive still hardcodes the English M144 replaced (${backslid.join(" | 
 //     open on routes a visitor reaches without touching any screen this gate otherwise walks,
 //     and their close label is the copy someone who cannot see the button depends on. The
 //     position count is the file's own claim about itself — a row that wants 2 call sites and
-//     finds 1 is the label silently dropping back to a hard-coded string.
+//     finds 1 is the label silently dropping back to a hard-coded string. M415 folded
+//     DialogFooter, the dead part that carried the dialog's second close label, so the live
+//     wiring is now one close label in the dialog's surviving DialogContent and one in the
+//     sheet; the positions pin follows the fold from 3 to 2.
 const CHROME_WIRING = [
-  ["components/ui/dialog.tsx", "ui.close", 2],
+  ["components/ui/dialog.tsx", "ui.close", 1],
   ["components/ui/sheet.tsx", "ui.close", 1],
 ];
 const CHROME_FILES_PIN = 2;
-const CHROME_POSITIONS_PIN = 3;
+const CHROME_POSITIONS_PIN = 2;
 const chromeFiles = [...new Set(CHROME_WIRING.map(([p]) => p))];
 const chromeSrc = new Map(chromeFiles.map((p) => [p, readFileSync(join(root, ...p.split("/")), "utf8")]));
 const chromeBad = CHROME_WIRING.filter(([p, k, n]) => chromeSrc.get(p).split(`t("${k}")`).length - 1 !== n)
@@ -1252,17 +1255,18 @@ ok(`no literal-key call throws a variable away — every name it supplies is int
   varSites >= 60 && droppedVars.length === 0);
 for (const d of droppedVars.slice(0, 8)) console.log("       dropped: " + d);
 // M262: the five-directory walk is over. Check 24's fill scan used to skip everything
-// outside features|ui|store|domain|lib — components/ui and src/App.tsx held six literal
-// sites no fill contract ever read (varless as measured since M252, which is why the
-// numbers below do not move: a varless site is skipped before its arguments are parsed).
+// outside features|ui|store|domain|lib — components/ui and src/App.tsx held five literal
+// sites no fill contract ever read (six before M415 folded DialogFooter's close label;
+// varless as measured since M252, which is why the numbers below do not move: a varless
+// site is skipped before its arguments are parsed).
 // Section 37 covered the whole tree with its own supply contract instead of touching this
 // loop; this milestone removes the filter at the source and pins the population — every
-// app module walked, the three outside files named, their six sites seen by the regex —
+// app module walked, the three outside files named, their five sites seen by the regex —
 // so a reintroduced filter reddens here rather than silently narrowing the scan. The two
 // supply implementations stay: different parsers, same contract, each blind to the
 // other's bugs by construction.
 ok(`check 24's fill scan walks the whole tree, not five directories (${fillFiles.size} modules walked; outside the old walk: ${FILL_OUTSIDE.filter((f) => fillFiles.has(f)).join(", ") || "none"}; outside sites seen: ${fillOutsideSites})`,
-  fillFiles.size === APP_SRC_PIN && FILL_OUTSIDE.every((f) => fillFiles.has(f)) && fillOutsideSites === 6);
+  fillFiles.size === APP_SRC_PIN && FILL_OUTSIDE.every((f) => fillFiles.has(f)) && fillOutsideSites === 5);
 
 // 24b. The same contract at a *template* site, which the loop above cannot see because its
 //      first argument is not a literal. Nothing in the repo passes variables at a dynamic
@@ -4161,8 +4165,10 @@ const plantUnknown = classifyCall("t(getKey())", "t(getKey())".indexOf("(")).sha
 const plantShort = supplyOf(["comm.nReplies"], callArgsOf('t(odd ? "comm.nRepliesOne" : "comm.nReplies")', 1)).missing.length > 0;
 const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nRepliesOne", { n, m })', 1)).unused.includes("m");
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
+// M415 folded DialogFooter, a dead part whose one `t("ui.close")` was a literal site; the
+// literal pin follows the fold from 1301 to 1300. The other three shape counts are unchanged.
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1301 && shapeCounts.template === 98 && shapeCounts.expression === 29
+  shapeCounts.literal === 1300 && shapeCounts.template === 98 && shapeCounts.expression === 29
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

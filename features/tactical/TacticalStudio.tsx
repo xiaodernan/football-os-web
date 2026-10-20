@@ -174,4 +174,3 @@ function PitchLines() {
   );
 }
 
-export { TacticalStudio as default };

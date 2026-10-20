@@ -64,12 +64,6 @@ export type PositionCode = "GK" | "CB" | "LB / RB" | "DM" | "CM" | "AMC" | "LW /
 export type Foot = "L" | "R";
 export const FOOTS: readonly Foot[] = ["L", "R"];
 
-export interface NamedValue {
-  key: string;
-  label: string;
-  value: number;
-}
-
 export type Attributes = Record<string, number>;
 
 // One row of the capability model. The interface lives here rather than in
@@ -260,11 +254,10 @@ export interface TrainingExercise {
   phase: DrillPhase;
 }
 
-// A drill's session phase. Five codes, and the composer that words them reads the runtime
-// list below — the same arrangement foot and bucket got in M259/M260 — so a sixth phase
-// is a missing key rather than a word on screen.
+// A drill's session phase. Five codes, and the composer's switch in domain/rowText.ts carries
+// them; the i18n gate reads this union against that switch, so a sixth phase is a missing case
+// rather than a word on screen.
 export type DrillPhase = "warmup" | "technique" | "decision" | "game" | "cooldown";
-export const DRILL_PHASES: readonly DrillPhase[] = ["warmup", "technique", "decision", "game", "cooldown"];
 
 export interface AttributeDelta {
   key: string;

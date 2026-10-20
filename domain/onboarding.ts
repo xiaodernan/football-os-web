@@ -20,7 +20,6 @@ import type { AgeGroupWord, OnboardingGoalCode } from "./types";
 import { LEGACY_GOAL_TEXT } from "@/data/onboardingLegacy";
 
 export const AGE_GROUPS = ["U15", "U17", "U19", "Amateur", "Semi-pro", "Pro", "Veteran"] as const;
-export type AgeGroup = (typeof AGE_GROUPS)[number];
 
 export const TRANSLATED_AGE_GROUPS: readonly AgeGroupWord[] = ["Amateur", "Semi-pro", "Pro", "Veteran"];
 

@@ -1,10 +1,10 @@
 // English labels for attributes, position groups, and categories.
 // Moved out of domain/attributes.ts to clear its prose debt (M238).
 // These are used by the prose layer (coach answers, scout headlines, review reasons)
-// via attributeLabel(), POSITION_GROUPS, CATEGORY_LABEL. UIs read attr.name.* / group.*
-// from the dictionary instead.
+// via attributeLabel() and POSITION_GROUPS. UIs read attr.name.* / group.* from the
+// dictionary instead.
 
-import type { AttributeDef, PositionCode, PositionGroup } from "../domain/types";
+import type { PositionCode, PositionGroup } from "../domain/types";
 
 export const ATTRIBUTE_LABELS: Record<string, string> = {
   ball_control: "Ball Control",
@@ -50,13 +50,6 @@ export const POSITION_GROUP_LABELS: Record<PositionGroup, string> = {
   AM: "Attacking Mid",
   W: "Winger",
   ST: "Striker",
-};
-
-export const CATEGORY_LABELS: Record<AttributeDef["category"], string> = {
-  technical: "Technical",
-  physical: "Physical",
-  tactical: "Tactical",
-  mental: "Mental",
 };
 
 export const POSITION_BY_GROUP_LABELS: Record<PositionGroup, PositionCode> = {

@@ -289,4 +289,3 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
   );
 }
 
-export { LearnHub as default };

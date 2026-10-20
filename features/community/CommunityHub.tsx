@@ -394,4 +394,3 @@ function load(): CommunityStore {
   return repairCommunityTexts({ ...EMPTY, ...value });
 }
 
-export { CommunityHub as default };

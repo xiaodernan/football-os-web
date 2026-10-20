@@ -241,4 +241,3 @@ function Side({ p }: { p: PlayerRef }) {
   );
 }
 
-export { ScoutingPanel as default };

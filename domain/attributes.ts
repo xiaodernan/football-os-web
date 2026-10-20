@@ -1,5 +1,5 @@
 import type { AttributeDef, Attributes, PositionCode, PositionGroup } from "./types";
-import { ATTRIBUTE_LABELS, POSITION_GROUP_LABELS, CATEGORY_LABELS, POSITION_BY_GROUP_LABELS } from "../data/attributesLabels";
+import { ATTRIBUTE_LABELS, POSITION_GROUP_LABELS, POSITION_BY_GROUP_LABELS } from "../data/attributesLabels";
 import { clamp, epochMs } from "@/lib/utils";
 
 const L = (key: string) => ATTRIBUTE_LABELS[key] ?? key;
@@ -58,13 +58,10 @@ export function attributesByCategory(category: AttributeDef["category"]): Attrib
 // `attr.name.*` / `attr.*` from the dictionary instead, so a row handed to the
 // interface carries a key and cannot smuggle an untranslated noun onto a screen.
 /** Every attribute category, in table order. `attr.*` holds the display words; a row
- *  names a category by one of these codes. CATEGORY_LABEL below is the English
- *  fallback for prose-layer callers only — the i18n gate audits that the two agree. */
+ *  names a category by one of these codes. */
 export const CATEGORIES: readonly AttributeDef["category"][] = [
   ...new Set(ATTRIBUTE_DEFS.map((d) => d.category)),
 ];
-
-export const CATEGORY_LABEL: Record<AttributeDef["category"], string> = CATEGORY_LABELS;
 
 export interface CategoryAverage {
   category: AttributeDef["category"];

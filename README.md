@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M414
+Work ships one milestone per commit and is currently at M415
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,92 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M415 — twenty-four exports promised a consumer that did not exist, and the gate now reads the promise back
+
+**What the gauge says.** `scripts/proof-dead-exports.mjs` **4/4** on the folded tree. Run against the
+pre-fold bytes it names **24 dead exports over 13 files** — arm R restores all fourteen folded files
+from `HEAD` and the clause prints every name. The census walks **97 files and 587 exports**, measures
+and declines to charge **142 exports read only inside their own module**, and its arms battery comes
+back **11/11**: at-rest readings before and after plus nine mutations, each arm's red set predicted
+from its clause's own sentence, and zero foreign writes during any arm. `tsc --noEmit` exit 0 and
+`npm run build` exit 0. The full suite reads **90/90** proof scripts proven (**2974/2974** checks counted) on the folded tree.
+
+**The defect.** An export is a promise that another module takes the name. Twenty-four names had no
+taker anywhere:
+
+- five page components (`CommunityHub`, `LearnHub`, `ManagerOS`, `ScoutingPanel`, `TacticalStudio`)
+  exported a `default` alias while the router read the named component through
+  `lazy(() => import(...).then((m) => ({ default: m.X })))`;
+- fourteen copied-in UI kit parts: the six non-`Card` parts of `card.tsx`, `CommandShortcut`, three
+  `Dialog` parts and four `Sheet` parts;
+- `Sparkline` in `ui/primitives.tsx`;
+- four domain symbols: `CATEGORY_LABEL`, `AgeGroup`, `NamedValue`, `DRILL_PHASES`.
+
+Removing `CATEGORY_LABEL` exposed a second, one step down: its only reader was the import feeding
+it, so the English table `CATEGORY_LABELS` in `data/attributesLabels.ts` lost every reader too. The
+fold removes **25 exports across 14 files** — the 24 the gate charges on the old bytes plus that
+cascade. `tsc` cannot see any of them: a named export is legal whether or not an importer exists, and
+`noUnusedLocals` is off for the reasons M413 recorded. The cost is the reader — an export list offers
+completion and search a name no consumer calls.
+
+**The reader, and the four shapes it got wrong first.**
+
+*Dynamic imports.* The first census charged every page component dead because it did not read
+`import("./x").then((m) => m.Name)`. Reading the `.then` parameter as a namespace binding dropped
+the count from 55 to 27; the list-export fix below took it to 24. Clause 1 now pins named, default,
+namespace, dynamic and re-export consumers, each with its own fixture.
+
+*A list entry's local binding.* `export { badgeVariants }` where the same file declares
+`const badgeVariants = ...` was charged until imports and the local declaration were blanked before
+the internal-use test; only real occurrences count.
+
+*Script consumers.* A proof script may load a production module through Vite's SSR loader, so a
+whole-word mention in script code keeps an export alive. The first version also counted mentions
+inside strings, and arm D stayed green: the path arrays and report templates that name every page
+made the dynamic-import reader look sufficient on the real tree. The script reader is now one
+stack-based pass that blanks comments and quoted text and keeps code and regex literals — a census
+rule written as `/CATEGORY_CODES[^;]+;/` really does read that name, while
+`["features/dashboard/Dashboard.tsx"]` does not. One pass, because a template's `${...}` can hold
+another template: the two-pass stripper closed the outer template at the first backtick, and the
+rest of the report text looked like code. With strings blanked, arm D reds with **23 dead page
+components**, which is the real-tree witness the clause needed.
+
+*A comment in the exporting module.* A comment never keeps an export alive, even in its own module.
+Clause 1's internal-only fixture carries a `ghost` export whose only other mention is the sentence
+above it; with comment stripping disabled (arm E) the ghost leaves the dead list and the gate reds,
+alongside clause 4 because the header quotes a repaired path.
+
+**No exemption list.** Clause 4 strips the gate's own comments with the same reader and fails if its
+code quotes an app path — a per-file skip list is exactly the exemption this census exists to refuse.
+The plant is assembled from fragments (`["features", "dashboard", "Dashboard.tsx"].join("/")`), so
+the gate does not quote a real path and trip itself, and the planted list names 2 real files. Clause 2
+derives the roots: every top-level directory carrying TypeScript must be walked or named in
+`NON_APP`, with floors of 95 files, 550 exports and 100 self-only exports catching the other
+direction. Moving `features/` into `NON_APP` (arm G) reds the floor, charges
+`ui/primitives.tsx:SectionTitle` dead — its only readers are feature screens — and breaks the
+planted skip-list count.
+
+**What is NOT claimed.** The 142 exports read only inside their own module are measured, not charged:
+`export` on a helper the file uses itself is redundancy, not a lie, and arm F's disabled internal
+credit reds three clauses. A name mentioned only in a script string or comment is not a reader; a
+script that assembles an export's name at runtime is not seen, and a dynamic import bound to a
+variable and read later is not seen. The gate says nothing about whether an export is used well —
+only that something outside its module takes it.
+
+**Two stale pins the suite found.** The first full-suite run on this fold surfaced two
+readings that no longer matched the tree, and neither was in the new gate. `proof-headroom` was
+already red from M414's fixture doors, which left `domain/career.ts` with two floored differences
+where the gate pinned five; its family pin follows the fold from 8 to 5. `proof-i18n` pinned the
+chrome wiring this fold changed: `DialogFooter` carried the dialog's second `ui.close` label, so
+folding that dead part leaves one live close label per chrome file (3 → 2 positions), the
+outside fill scan reads five sites (six before), and the literal `t()` census reads 1,300
+(1,301 before). Both proofs say in their own comments what moved and why the surviving claim is
+the right one.
+
+**Next.** The same boundary has a third direction: modules no one imports at all. The walk already
+resolves every specifier; a file that no import reaches and that is not an entry point is invisible
+to both the import and the export censuses. That is the next unit.
 
 ### M413 — six files imported eight names their own bodies never read, and one comment defending them was false
 

@@ -48,10 +48,12 @@ const INLINE = /Math\.max\(\s*0\s*,\s*((?:[A-Za-z_$][\w$]*\.)?potential)\s*-\s*(
 // measured rather than excused.
 const FLOORED = /Math\.max\(\s*0\s*,\s*([A-Za-z_$][\w$.]*)\s*-\s*([A-Za-z_$][\w$.]*)\s*\)/g;
 // The floored-difference family that is NOT headroom, pinned by file. Each is a different
-// concept: the door's own body, career.ts's remaining fixtures and its gap to the projected
-// leader, careerArc.ts's years to peak, gap.ts's criticality above the role floor.
+// concept: the door's own body, career.ts's fixtures-left door and its gap to the projected
+// leader, careerArc.ts's years to peak, gap.ts's criticality above the role floor. M414 folded
+// career.ts's four remaining-fixture spellings into `fixturesLeft`, so that file now carries two
+// matching shapes, not five; the pin follows the fold instead of the file it used to be.
 const FLOORED_PINS = {
-  "domain/attributes.ts": 1, "domain/career.ts": 5, "domain/careerArc.ts": 1, "domain/gap.ts": 1,
+  "domain/attributes.ts": 1, "domain/career.ts": 2, "domain/careerArc.ts": 1, "domain/gap.ts": 1,
 };
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
@@ -85,7 +87,7 @@ ok(`the census walks the real source tree and every subject is inside it (${carr
 
 // --- 3. THE HEADROOM FAMILY IS CLOSED: the inline form survives nowhere in the app. The door's
 // --- own body IS the inline form, so the home is excluded -- and the exclusion is charged, not
-// --- assumed. The BROADER floored-difference family is charged beside it, because it has seven
+// --- assumed. The BROADER floored-difference family is charged beside it, because it has four
 // --- survivors that are different concepts and a census that could not tell them apart would
 // --- either charge them as headroom or lose the ability to see a new one. ---------------------
 const inlineByFile = carriers.filter((f) => f !== HOME && n(code[f], INLINE) > 0);
@@ -98,7 +100,7 @@ const flooredPinsHold = flooredByFile.every(([f, c]) => (FLOORED_PINS[f] ?? 0) =
 const flooredStrays = flooredByFile.filter(([f]) => !(f in FLOORED_PINS) || FLOORED_PINS[f] !== flooredByFile.find(([g]) => g === f)[1]);
 ok(`the headroom family is closed: the inline form survives nowhere outside the door's own body (${inlineTotal} site(s) outside [${inlineByFile.join(",")}]; the home carries ${homeInline} — the door's body IS the formula), and the broader floored-difference family is pinned beside it (${flooredTotal} site(s) over ${flooredByFile.length} file(s) [${flooredByFile.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")}]; pins hold ${flooredPinsHold}, strays ${flooredStrays.length} [${flooredStrays.map(([f]) => f).join(",")}])`,
   inlineTotal === 0 && inlineByFile.length === 0 && homeInline === 1 &&
-  flooredTotal === 8 && flooredPinsHold && flooredStrays.length === 0);
+  flooredTotal === 5 && flooredPinsHold && flooredStrays.length === 0);
 
 // --- 4. The door is declared exactly once, and only in the home. ------------------------------
 const declByFile = carriers.filter((f) => n(raw[f], DECL) > 0);
