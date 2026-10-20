@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M402
+Work ships one milestone per commit and is currently at M403
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,38 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M403 — one census for every door's reach, because M402 had to learn the same lesson twice
+
+M402's money-door move taught the fmt0 and fmt1 censuses a relation they had never expressed: **a file that calls a door either imports it, or is the door's home.** The door's own home calls `fmt0` and `fmt1` without importing them — it *defines* them — and the data provider that used to hold the money door left their consumer lists entirely. Both clauses had to learn that relation the hard way, one fault at a time.
+
+But the relation is general. Every door the app has has it, and only **two** scripts were checking it. This unit charges it for all of them at once.
+
+**The three ways the reach can be wrong.**
+
+1. **A caller that does not import the door from the door's home.** In TypeScript that is usually a compile error, but it is a *runtime* error in the one shape a scan can see: a module that calls a name it never brought in, which works only if the name is a global.
+2. **An import of a name the home no longer exports.** This is the M396/M401 failure exactly: a door that moved behind another door left a stale import behind. The compiler catches it; the census's job is to say *which* door and *which* file.
+3. **A second name for one door** — a file outside the homes that exports a name a door already exports. Two doors with one name is a second convention waiting to drift.
+
+**The census.** `scripts/proof-doors.mjs` (6 checks): the import reader and the resolver are armed; the tree is real and both homes are inside it; the door list is **derived** from the two homes (51 doors — 19 in `lib/utils.ts`, 32 in `domain/attributes.ts`) and no door has a second name; **every door a file calls is imported by that file from the door's home** (243 caller files, 565 call sites, 0 mis-reached); no file imports a name a home no longer exports (310 import edges, 0 stale); and the reach check is armed both ways.
+
+**The reader had to be right, or the census is noise.** A naive `import[^;]*from` spans several statements in the files that do not use semicolons, and the tree has both styles — so a scan that read it that way reported 243 mis-reached callers that were all fine. The reader instead takes one statement at a time, from the `import` keyword to *its own* `from "..."`, and a statement's `from` is never stolen by a later one. The resolver turns a specifier into a **path**: `@/lib/utils`, `./attributes` and `../lib/utils` must all land on the same string, or the home check would be a coin toss.
+
+**The type import was the false positive worth naming.** The home's export list has to include its *types* and interfaces, not only its values: `domain/scouting.ts` carries `import type { CategoryAverage } from "./attributes"`, and a scan that counted only `export const` called it a stale import of a name that is very much there. A census that cries wolf is worse than no census.
+
+**The census has teeth.** `dev/.m403-arms.mjs` mutates one file per arm, spawns the shipped script, and requires the FAIL clause to be the *predicted* one — an unexplained red is a hole in the model, never a number to widen. Every arm restores the pristine buffer and verifies `Buffer.compare === 0`:
+
+| arm | mutation | red | what it proves |
+| --- | --- | --- | --- |
+| A | a caller drops the import of the door it calls | the reach clause | a call with no path is caught |
+| B | a caller imports the door from the **wrong** module | the reach clause | the check compares the resolved PATH, not the name |
+| C | a file outside the homes exports a door's name | the duplicate-export clause | two doors with one name is caught |
+
+and an at-rest control that requires 6/6 with nothing mutated. Measured: 3/3 arms red as predicted, 0 unexplained, control green, files restored byte-exactly.
+
+**What the census found: nothing.** The app's reach was already sound — 0 mis-reached callers, 0 stale imports, 0 duplicate names. That is the honest result, and it is the point of the unit: a shape that two scripts had to learn by accident is now checked everywhere, so the next door that moves does not have to teach it again.
+
+**Next.** The reach is now charged for the doors the app has. The next thing worth measuring is the reach of the doors it does *not* have — the idioms that are still spelled by hand where a door could be, and the ones where a fold would move a figure. That is a scout, not a fold, and a scout's honest answer is sometimes "nothing left", which is itself worth recording.
 
 ### M402 — the money door moved out of the data provider and into the house with the other display doors
 
