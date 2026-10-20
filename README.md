@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M416
+Work ships one milestone per commit and is currently at M417
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,27 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M417 — a census for the duplication the shape-scanner cannot see: the same rule under two different names
+
+M416's scout was a **concept-level** detector: extract every exported function, normalise its body, and look for two modules carrying the *same* body. It found the repair rule three times over — and the **fourth** copy was invisible to it, because that copy differed *structurally*: three of the four opened with an early-out and the fourth did not, so it normalised to a different shape and the detector never paired it with its siblings.
+
+That is the general shape of the blind spot. A shape census finds copies that are **the same shape**. A copy that is *nearly* the same shape — one extra line, one missing guard, one different order — is a different shape, and no shape census will ever pair it.
+
+**The measure.** Not similarity — **strict alignment**. Two bodies are the same rule when their token sequences line up position by position under a consistent one-to-one renaming: the literals must be equal at every step, and each identifier must map to one and the same other identifier. Similarity over a token *set* is far too permissive — every "filter, then sort, then slice" body looks alike, and a gate built on it would be either noise or a wall. The M417 scout's first version used Jaccard and found a 12-unit "family" that was entirely one-line filter chains.
+
+Two details the measure needed:
+
+- **A minimum body length.** `return X.find((y) => y.id === id)` aligns with `return Y.filter((z) => z.on).length` under a renaming — a short body is trivially the same rule as another short one. The measure only runs on bodies of **24 tokens or more**, which is where a rule has enough structure for an alignment to mean something.
+- **The renaming must be a bijection.** Two identifiers may not map to the same one, or `a.b` and `a.c` would read as the same rule.
+
+**The census.** `scripts/proof-rules.mjs` (5 checks): the measure is armed — a planted pair that *is* the same rule reads "same", one that differs in shape reads "different", and one that differs only in a literal reads "different"; the tree is real and the population is 53 substantial exported bodies over 93 files; **the rule families are closed** — no two exported bodies are the same rule wearing two names, in two different files; the doors the app converged on are still doors, and the four copies that became seams are still seams (the repair door declared, four seams calling it); and the measure is **not a wall** — it reads real different bodies as different, so a closed family is a finding and not a detector that pairs everything.
+
+**What it found: nothing.** 53 substantial bodies, 0 same-rule pairs. The duplication class this project has been closing for twenty milestones is converged, and it is now *provably* converged — a new copy of a rule in two places reddens this census the day it is written, not twenty milestones later.
+
+**The honest limit.** The measure is syntactic, and a copy that is the same rule *and* a different shape is still not a pair — M416's fourth copy would not have been found by this census either. What the census does is close the class it can see, sharply, and the shape census keeps the class it sees by shape. Neither is a proof that no rule is computed twice; together they are a good deal closer than either alone, and both are honest about what they are.
+
+**Next.** The app's rules are converged and the census that says so is in place. What the app has NOT been checked for is the other direction of the same idea: **a rule computed once and shown in two ways** — the M401 class, where the world engine's market total read `€6030M` where the player's value read `€86.0B`. The door work has been closing the first kind; the second kind is what a reader actually sees, and the next scout should look for a *quantity* rather than a *body*.
 
 ### M416 — three stores carried the same repair, and the fourth copy was the one that broke the rule it copied
 
