@@ -38,7 +38,7 @@ const LIE_CAST = /query\.get\(\s*"[^"]*"\s*\)\s*as\s*"/g;
 // The presence family: a parameter read whose null is the answer.
 const PRESENCE = /query\.get\(\s*"/g;
 const DECL_TEXT = /export const paramText = \(query: URLSearchParams, name: string\): string =>/;
-const DECL_ONE = /export const paramOneOf = <T extends string>\(/;
+const DECL_ONE = /export function paramOneOf<T extends string>\(/;
 const CALL_TEXT = /\bparamText\s*\(/g;
 const CALL_ONE = /\bparamOneOf\s*\(/g;
 
@@ -58,7 +58,7 @@ const pPresence = n('const raw = query.get("f");', PRESENCE);
 const pTextDoor = n('const q = paramText(query, "a");', CALL_TEXT);
 const pOneDoor = n('paramOneOf(query, "status", MATCH_STATUSES, "SCHEDULED")', CALL_ONE);
 const pDeclText = n("export const paramText = (query: URLSearchParams, name: string): string => x;", DECL_TEXT);
-const pDeclOne = n("export const paramOneOf = <T extends string>(", DECL_ONE);
+const pDeclOne = n("export function paramOneOf<T extends string>(", DECL_ONE);
 ok(`the scans are armed and the old spellings are what they draw (a text default ${pText}, a lying cast ${pLie}, a presence read ${pPresence}; the doors: paramText ${pTextDoor}, paramOneOf ${pOneDoor}, declarations ${pDeclText}/${pDeclOne})`,
   pText === 1 && pLie === 1 && pPresence === 1 && pTextDoor === 1 && pOneDoor === 1 &&
   pDeclText === 1 && pDeclOne === 1);

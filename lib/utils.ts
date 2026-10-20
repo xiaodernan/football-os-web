@@ -149,15 +149,18 @@ export const isRealInstant = (value: string | number | Date | null | undefined):
 // parameter. A door that folded the empty string into them would have taken away the answer
 // those sites are asking for.
 export const paramText = (query: URLSearchParams, name: string): string => query.get(name) ?? "";
-export const paramOneOf = <T extends string>(
+// A function DECLARATION, not an arrow: the generic's `<T extends string>` after an `=` opens
+// a tag to the app's raw-UI scanner (a `<` only opens a tag where JSX can start, and an
+// opening element never follows an identifier character), and after a name it does not.
+export function paramOneOf<T extends string>(
   query: URLSearchParams,
   name: string,
   allowed: readonly T[],
   fallback: T,
-): T => {
+): T {
   const raw = query.get(name);
   return raw !== null && (allowed as readonly string[]).includes(raw) ? (raw as T) : fallback;
-};
+}
 
 // The app's one "how many milliseconds is a day" figure. domain/load named it `const DAY = 86400000`,
 // domain/review and the Review page's points window multiplied a raw `* 86400000`, the History page

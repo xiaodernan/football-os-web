@@ -126,6 +126,13 @@ ok(`the door is NOT epochMs: a value it cannot parse is FALSE here and 0 there, 
   isRealInstant("not a date") === false && epoch.epochMs("not a date") === 0 && epoch.epochMs("") === 0 &&
   isRealInstant("") === false && isRealInstant("42") === true);
 
+// --- 8. Planted companion for the FALSE above: a real instant must answer TRUE here and a
+// --- POSITIVE number there, so the "false" is a measured verdict and not a door that always
+// --- says no. A door that answered false for everything would pass clause 7. -------------------
+const real = epoch.epochMs("2026-01-02T03:04:05.000Z");
+ok(`planted companion: a real instant answers TRUE here and a POSITIVE number there, so the false above is a verdict and not a door that always says no (isRealInstant("2026-01-02T03:04:05.000Z") = ${isRealInstant("2026-01-02T03:04:05.000Z")}, epochMs of the same = ${real}, and the door on that timestamp = ${isRealInstant(real)})`,
+  isRealInstant("2026-01-02T03:04:05.000Z") === true && real > 0 && isRealInstant(real) === true);
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);
