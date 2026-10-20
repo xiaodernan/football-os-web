@@ -16,7 +16,6 @@ import {
   upcomingMatchesForClub,
   trendingPlayers,
   comparePlayers,
-  formatValue,
   DEMO_MODE,
 } from "@/data/footballService";
 import { simulateMatch, EVENT_GLYPH, type SimResult, type TeamInput } from "@/domain/matchEngine";
@@ -35,7 +34,7 @@ import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {clamp, cn, pctOf, fmt2, fmt1, ABSENT, SEPARATOR } from "@/lib/utils";
+import { clamp, cn, pctOf, fmt2, fmt1, ABSENT, SEPARATOR, fmtMoney } from "@/lib/utils";
 
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -116,7 +115,7 @@ export function PlayerDetail({ id }: { id: string }) {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatTile label={t("common.overall")} value={p.overall} tone="up" />
         <StatTile label={t("compare.m.potential")} value={p.potential} sub={p.potential > p.overall ? `+${p.potential - p.overall}` : t("det.peak")} />
-        <StatTile label={t("compare.m.value")} value={formatValue(p.value)} />
+        <StatTile label={t("compare.m.value")} value={fmtMoney(p.value)} />
         <StatTile label={t("det.archetype")} value={<span className="text-base">{t(`dna.arch.${p.archetype}`)}</span>} sub={comp?.name} />
       </div>
 
@@ -383,7 +382,7 @@ export function ClubDetail({ id }: { id: string }) {
                 <span className="w-6 text-right font-mono text-xs text-muted-foreground">{p.age}</span>
                 <span className="flex-1 truncate text-sm">{p.name}</span>
                 <PositionTag position={p.position} />
-                <span className="font-mono text-xs text-muted-foreground">{formatValue(p.value)}</span>
+                <span className="font-mono text-xs text-muted-foreground">{fmtMoney(p.value)}</span>
                 <span className="w-8 text-right font-mono text-sm text-primary">{p.overall}</span>
               </Link>
             ))}

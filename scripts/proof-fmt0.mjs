@@ -34,13 +34,22 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const HOME = "lib/utils.ts";
-// The three files whose inline integers M373 folded onto the door, with exact per-file call pins.
+// The files whose inline integers M373 folded onto the door, with exact per-file call pins.
+// M402 moved the MONEY door into lib/utils.ts beside the fmt0/fmt1 it is built from, and the
+// money door's K line calls fmt0 -- so the door's own home became an INTERNAL reader of it, and
+// the data provider that used to hold the money door left the list. The home is charged apart
+// below: it CALLS the door without IMPORTING it, which is a different relation, and a census
+// that could not tell the two apart would either miss the home or double-count it.
 const CONSUMERS = [
-  "data/footballService.ts", "domain/community.ts", "domain/gap.ts",
+  "domain/community.ts", "domain/gap.ts",
 ];
-const CALL_PINS = { "data/footballService.ts": 1, "domain/community.ts": 1, "domain/gap.ts": 1 };
+const CALL_PINS = { "domain/community.ts": 1, "domain/gap.ts": 1 };
+// The home's own internal call: the money door's K line, one call, no import.
+const HOME_CALLS = 1;
 // The pinned conditional-decimal line's home, and the advisor file that must stay Math.round's.
-const CONDITIONAL_FILE = "data/footballService.ts";
+// M402: the conditional-decimal line moved with the money door into lib/utils.ts -- it is now
+// literally "next door" to the fmt0/fmt1 doors, which is what their docstrings always said.
+const CONDITIONAL_FILE = "lib/utils.ts";
 const CAREER_FILE = "domain/career.ts";
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
@@ -204,13 +213,28 @@ const doorBody = (src[HOME].match(/export const fmt0 = [^\n]*/) || [""])[0];
 ok(`the door body IS the toFixed call and it is the sole code-state plain site in lib/utils (home plain ${homeCensus.plain}, body "${doorBody.trim()}")`,
   homeCensus.plain === 1 && doorBody.trim() === "export const fmt0 = (v: number): string => v.toFixed(0);");
 
-// --- All three consumers read the door, at exactly their pinned call counts. ---------------------
+// --- Every consumer reads the door, at exactly their pinned call counts, and the door's own
+// --- HOME is charged as a separate relation: it CALLS the door (the money door's K line) but
+// --- does not IMPORT it, because it defines it. A file that called the door without importing
+// --- it, and was not the home, would be a reach-guard failure. -------------------------------
 const importing = CONSUMERS.filter((f) => count(src[f], IMPORT_FMT0) >= 1);
 const actualCalls = Object.fromEntries(CONSUMERS.map((f) => [f, count(src[f], CALL_FMT0)]));
 const totalCalls = Object.values(actualCalls).reduce((s, n) => s + n, 0);
 const pinsHold = CONSUMERS.every((f) => actualCalls[f] === CALL_PINS[f]);
-ok(`all three consumers read the door at their exact pinned counts (imports ${importing.length}/3, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned 3)`,
-  importing.length === CONSUMERS.length && pinsHold && totalCalls === 3);
+// Every file in the tree that calls the door, and how it got to it. The HOME's own call is
+// counted in CODE: the fmt1 door's docstring quotes `fmt1(2.04)` while explaining the pad, and
+// a raw scan would read that as a second call and red a census that is measuring the money
+// door's K line.
+const codeOf = (f) => src[f].split(/\r?\n/).filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+const treeCallers = carriers.filter((f) => count(src[f], CALL_FMT0) > 0).sort();
+const homeCalls = count(codeOf(HOME), CALL_FMT0);
+const homeImports = count(src[HOME], IMPORT_FMT0);
+// A caller that is neither a listed consumer nor the door's own home is a call with no path.
+const orphanCallers = treeCallers.filter((f) => f !== HOME && !CONSUMERS.includes(f));
+ok(`every consumer reads the door at their exact pinned counts, and the door's own HOME is a reader too (imports ${importing.length}/${CONSUMERS.length}, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned ${CONSUMERS.length}; the home calls it ${homeCalls}x and imports it ${homeImports}x; tree callers ${treeCallers.length} [${treeCallers.join(",")}], orphans ${orphanCallers.length} [${orphanCallers.join(",")}])`,
+  importing.length === CONSUMERS.length && pinsHold && totalCalls === CONSUMERS.length &&
+  homeCalls === HOME_CALLS && homeImports === 0 && orphanCallers.length === 0 &&
+  treeCallers.length === CONSUMERS.length + 1);
 
 // --- Convergence completeness: across the whole tree, a code-state plain .toFixed(0) survives only ---
 // --- in the door's own body — no residue of the hand-spelled integer form remains anywhere. --------

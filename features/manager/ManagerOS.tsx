@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { byOverall } from "@/domain/attributes";
-import { footballProvider, getClub, getCompetition, formatValue } from "@/data/footballService";
+import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { useLocalStorage } from "@/lib/hooks";
 import {
   createCareer,
@@ -33,7 +33,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
-import {cn, pctLabel, signed, fmt2, ABSENT, SEPARATOR } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
+import { cn, pctLabel, signed, fmt2, ABSENT, SEPARATOR, fmtMoney } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
 import { positionLabel, rowLine } from "@/domain/rowText";
 
@@ -130,7 +130,7 @@ function CareerHeader({ career, onChange, onPlay, onReset }: { career: CareerSta
           <p className="text-xs text-muted-foreground">{t("mgr.careerLine", { comp: comp?.name ?? ABSENT, n: career.results.length })}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Metric label={t("mgr.budget")} value={formatValue(career.budget)} />
+          <Metric label={t("mgr.budget")} value={fmtMoney(career.budget)} />
           <Metric label={t("mgr.leaguePos")} value={pos ? `#${pos}` : ABSENT} />
           <Metric label={t("mgr.morale")} value={pctLabel((career.morale + 1) / 2)} tone={career.morale >= 0 ? "good" : "bad"} />
           <Metric label={t("mgr.fatigue")} value={pctLabel(career.fatigue)} tone={career.fatigue > 0.6 ? "bad" : "good"} />
@@ -168,7 +168,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <Fact label={t("mgr.xgUs")} value={fmt2(last.ourXg)} />
               <Fact label={t("mgr.xgThem")} value={fmt2(last.oppXg)} />
-              <Fact label={t("mgr.prizeMoney")} value={formatValue(last.prize)} />
+              <Fact label={t("mgr.prizeMoney")} value={fmtMoney(last.prize)} />
             </div>
             <div className="mt-3 text-[11px] uppercase tracking-widest text-muted-foreground">{t("mgr.keyMoments")}</div>
             <ul className="mt-1 max-h-40 space-y-1 overflow-y-auto text-xs">
@@ -231,7 +231,7 @@ function SeasonSummaryPanel({ career }: { career: CareerState }) {
         <Fact label={t("mgr.ppg")} value={fmt2(s.ppg)} />
         <Fact label={t("mgr.cleanSheets")} value={s.cleanSheets} />
         <Fact label={t("onb.position")} value={`#${s.position}`} />
-        <Fact label={t("mgr.prizeWon")} value={formatValue(s.prizeTotal)} />
+        <Fact label={t("mgr.prizeWon")} value={fmtMoney(s.prizeTotal)} />
       </div>
       {(s.bestWin || s.worstLoss) && (
         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
@@ -260,8 +260,8 @@ function Squad({ career, onSell }: { career: CareerState; onSell: (id: string) =
                 <td className="px-2 py-1.5"><Link to={`/players/${p.id}`} className="hover:text-primary hover:underline">{p.name}</Link><span className="ml-2 text-xs text-muted-foreground">{p.nation}</span></td>
                 <td className="px-2 py-1.5 text-right font-mono text-xs">{p.age}</td>
                 <td className="px-2 py-1.5 text-right font-mono text-xs font-semibold">{p.overall}</td>
-                <td className="px-2 py-1.5 text-right font-mono text-xs">{formatValue(p.value)}</td>
-                <td className="px-2 py-1.5 text-right"><Button size="sm" variant="outline" onClick={() => onSell(p.id)}>{formatValue(sellFee(p))}</Button></td>
+                <td className="px-2 py-1.5 text-right font-mono text-xs">{fmtMoney(p.value)}</td>
+                <td className="px-2 py-1.5 text-right"><Button size="sm" variant="outline" onClick={() => onSell(p.id)}>{fmtMoney(sellFee(p))}</Button></td>
               </tr>
             ))}
           </tbody>
@@ -281,7 +281,7 @@ function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string)
     <Panel className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <SectionTitle title={t("mgr.market")} hint={t("mgr.marketHint")} />
-        <div className="text-sm">{t("mgr.budget")} <span className="font-mono font-semibold text-primary">{formatValue(career.budget)}</span></div>
+        <div className="text-sm">{t("mgr.budget")} <span className="font-mono font-semibold text-primary">{fmtMoney(career.budget)}</span></div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {BUCKETS.map((g) => (
@@ -296,7 +296,7 @@ function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string)
           return (
             <div key={p.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
               <div className="min-w-0"><Link to={`/players/${p.id}`} className="truncate hover:text-primary hover:underline">{p.name}</Link> <span className="text-xs text-muted-foreground">{positionLabel(p.position, t)} · {p.age} · {t("mgr.thOvr")} {p.overall} · {from?.name ?? t("mgr.freeAgent")}</span></div>
-              <Button size="sm" disabled={!afford} onClick={() => onBuy(p.id)} title={afford ? t("mgr.sign") : t("mgr.noBudget")}>{afford ? t("mgr.signFee", { fee: formatValue(fee) }) : t("mgr.needFee", { fee: formatValue(fee) })}</Button>
+              <Button size="sm" disabled={!afford} onClick={() => onBuy(p.id)} title={afford ? t("mgr.sign") : t("mgr.noBudget")}>{afford ? t("mgr.signFee", { fee: fmtMoney(fee) }) : t("mgr.needFee", { fee: fmtMoney(fee) })}</Button>
             </div>
           );
         })}

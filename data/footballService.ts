@@ -1,7 +1,7 @@
 import { DEMO_NOW, WORLD } from "./footballSeed";
 import { oddsPercents, outcomeOdds, teamMetrics, byKickoff, type TeamMetrics } from "@/domain/analytics";
 import type { Club, Competition, Match, NewsArticle, PlayerRef, SearchKind, Standing } from "@/domain/types";
-import { DAY_MS, epochMs, fmt0, fmt1, indexById, ABSENT } from "@/lib/utils";
+import { DAY_MS, epochMs, indexById, ABSENT } from "@/lib/utils";
 import { byOverall, byValueDesc } from "@/domain/attributes";
 import type { RowText } from "@/domain/rowText";
 
@@ -256,9 +256,9 @@ export function comparePlayers(aId: string, bId: string) {
   return [getPlayer(aId), getPlayer(bId)].filter(Boolean) as PlayerRef[];
 }
 
-export function formatValue(v: number): string {
-  if (v >= 1_000_000_000) return `€${fmt1(v / 1_000_000_000)}B`;
-  if (v >= 1_000_000) return `€${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`;
-  if (v >= 1_000) return `€${fmt0(v / 1_000)}K`;
-  return `€${v}`;
-}
+// M402: the euro rule used to live here, in a DATA provider, while every other display door
+// lived in lib/utils.ts beside the fmt0/fmt1 it is built from — and so a simulation module
+// could not read money without pulling this provider in with it. The door moved to
+// `fmtMoney` in lib/utils.ts and the ten readers followed it there. This module keeps the
+// provider's own exports and nothing else: a display convention has one home, and a second
+// name for it would be a second convention.

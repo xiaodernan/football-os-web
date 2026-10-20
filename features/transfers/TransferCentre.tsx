@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
-import { getClub, formatValue } from "@/data/footballService";
+import { getClub } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { transferRumours, clubOf, availableKinds, type RumourLink } from "@/domain/transfers";
 import { newsKindLabel, rowLine } from "@/domain/rowText";
@@ -9,7 +9,7 @@ import { sum } from "@/domain/attributes";
 import type { NewsArticle } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
-import {cn, pctLabel, ABSENT } from "@/lib/utils";
+import { cn, pctLabel, ABSENT, fmtMoney } from "@/lib/utils";
 
 const KIND_TONE: Record<NewsArticle["kind"], string> = {
   Rumor: "border-warning/50 text-warning",
@@ -71,7 +71,7 @@ export function TransferCentre() {
         <StatTile label={t("transfers.statLinks")} value={all.length} sub={t("transfers.statLinksSub")} />
         <StatTile label={t("transfers.confirmed")} value={confirmed} tone={confirmed ? "up" : "neutral"} />
         <StatTile label={t("transfers.fitTargets")} value={viewerClub ? targets : ABSENT} sub={viewerClub ? t("transfers.fitTargetsSub") : t("transfers.setClub")} tone={targets ? "up" : "neutral"} />
-        <StatTile label={t("transfers.totalAsk")} value={rows.length ? formatValue(totalFee) : ABSENT} sub={t("transfers.totalAskSub")} />
+        <StatTile label={t("transfers.totalAsk")} value={rows.length ? fmtMoney(totalFee) : ABSENT} sub={t("transfers.totalAskSub")} />
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
@@ -129,7 +129,7 @@ function RumourCard({ r, showFit }: { r: RumourLink; showFit: boolean }) {
       <p className="mt-3 line-clamp-2 text-sm">{rowLine(r.title, t)}</p>
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        <Cell label={t("transfers.askingFee")} value={formatValue(r.askingFee)} />
+        <Cell label={t("transfers.askingFee")} value={fmtMoney(r.askingFee)} />
         <Cell label={t("transfers.valueIndex")} value={`${r.valueIndex}`} sub={t("transfers.valueIndexSub")} />
         <Cell label={t("transfers.headroom")} value={`+${r.headroom}`} sub={t("transfers.potential")} />
       </div>

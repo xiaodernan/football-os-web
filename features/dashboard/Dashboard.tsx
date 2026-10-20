@@ -11,7 +11,6 @@ import {
   upcomingMatchesForClub,
   todayMatches,
   DEMO_ANCHOR_MS,
-  formatValue,
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, ZONE_TONE, type LoadZone } from "@/domain/load";
@@ -29,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { cn, clamp, ABSENT, SEPARATOR } from "@/lib/utils";
+import { cn, clamp, ABSENT, SEPARATOR, fmtMoney } from "@/lib/utils";
 
 const RECOVERY_TONE: Record<LoadZone, string> = {
   none: "border-border text-muted-foreground",
@@ -288,7 +287,7 @@ export function Dashboard() {
                     <Crest colors={club?.colors} short={club?.short} size={30} />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium">{p.name}</div>
-                      <div className="text-xs text-muted-foreground"><PositionTag position={p.position} /> {formatValue(p.value)}</div>
+                      <div className="text-xs text-muted-foreground"><PositionTag position={p.position} /> {fmtMoney(p.value)}</div>
                     </div>
                     <div className="font-mono text-sm font-semibold">{p.overall}</div>
                   </Link>

@@ -12,7 +12,8 @@ import { readFileSync } from "node:fs";
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { askIntelligence } = await server.ssrLoadModule("/data/intelligence.ts");
 const { scoutReport } = await server.ssrLoadModule("/domain/scouting.ts");
-const { footballProvider, formatValue, trendingPlayers } = await server.ssrLoadModule("/data/footballService.ts");
+const { footballProvider, trendingPlayers } = await server.ssrLoadModule("/data/footballService.ts");
+const { fmtMoney } = await server.ssrLoadModule("/lib/utils.ts");
 const { SEARCH_KINDS } = await server.ssrLoadModule("/domain/types.ts");
 const { makeSay } = await import("./lib/rows.mjs");
 const { asRowText, rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
@@ -47,7 +48,7 @@ function valueFixture() {
   for (const p of trendingPlayers(40)) {
     const q = `How much is ${p.name} worth?`;
     const ans = askIntelligence(q, EN);
-    if (sourceIs(ans, "player", p.name) && AT(ans).includes(formatValue(p.value))) return { p, q, ans };
+    if (sourceIs(ans, "player", p.name) && AT(ans).includes(fmtMoney(p.value))) return { p, q, ans };
   }
   return null;
 }
@@ -65,7 +66,7 @@ const vf = valueFixture();
 ok("a high-value player resolves to a value answer", !!vf);
 if (vf) {
   ok("value answer states the market-value lead", /current market value is/.test(AT(vf.ans)));
-  ok("value answer embeds the exact listed figure", AT(vf.ans).includes(formatValue(vf.p.value)));
+  ok("value answer embeds the exact listed figure", AT(vf.ans).includes(fmtMoney(vf.p.value)));
   ok("value answer carries a real € token", /€[\d.]+[MBK]?/.test(AT(vf.ans)));
   // Predicted from the records, not from whatever the answer happened to contain: the
   // three priciest players in the dataset, each asked by name, must each be answered with
@@ -75,7 +76,7 @@ if (vf) {
   const wrongLead = rich.filter((x) => {
     const a = askIntelligence(`How much is ${x.name} worth?`, EN);
     const lead = a.answer[0];
-    return !lead || !("key" in lead) || lead.key !== "ai.answer.value" || lead.vars.v !== formatValue(x.value);
+    return !lead || !("key" in lead) || lead.key !== "ai.answer.value" || lead.vars.v !== fmtMoney(x.value);
   });
   ok("each of the three most valuable players gets a value lead carrying that player's own listed figure (" + wrongLead.length + " wrong)",
     wrongLead.length === 0);

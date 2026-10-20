@@ -1,10 +1,10 @@
-import { footballProvider, getClub, clubIdsByCompetition, formatValue } from "@/data/footballService";
+import { footballProvider, getClub, clubIdsByCompetition } from "@/data/footballService";
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
 import { byOverall, meanOverall, byTableStanding, sum, resultPoints } from "./attributes";
 import type { RowText } from "./rowText";
-import { clamp, pct, round2, safeDiv, signed, signed2, fmt2 } from "@/lib/utils";
+import { clamp, pct, round2, safeDiv, signed, signed2, fmt2, fmtMoney } from "@/lib/utils";
 import { round1 } from "./scouting";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
@@ -592,7 +592,7 @@ export function seasonSummary(state: CareerState): SeasonSummary {
       ? [
           { key: played === 1 ? "mgr.summary.recordOne" : "mgr.summary.record", vars: recordVars },
           { key: cleanSheets === 1 ? "mgr.summary.statsOne" : "mgr.summary.stats", vars: { points, ppg: fmt2((points / played)), clean: cleanSheets } },
-          { key: played === 1 ? "mgr.summary.prizeOne" : "mgr.summary.prize", vars: { money: formatValue(prizeTotal), played } },
+          { key: played === 1 ? "mgr.summary.prizeOne" : "mgr.summary.prize", vars: { money: fmtMoney(prizeTotal), played } },
         ]
       : [{ key: "mgr.summary.noFixtures" }]),
     ...(best && best.diff > 0 ? [{ key: "mgr.summary.bestWin", vars: { score: best.score, opponent: best.opponent } }] : []),
@@ -614,7 +614,7 @@ export function seasonSummary(state: CareerState): SeasonSummary {
   };
 }
 
-// The season prize total prints through the app's one `formatValue`, not a private copy: this
+// The season prize total prints through the app's one `fmtMoney`, not a private copy: this
 // module kept its own euro rule (drop the decimals on a whole million, a lowercase 'k' below one)
 // while the Manager OS panel beside it already rounded the same currency the shared way (one
 // decimal up to ten million, none beyond), so a single screen could quote a manager's earnings

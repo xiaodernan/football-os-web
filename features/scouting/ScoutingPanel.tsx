@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { getClub, getPlayer, comparePlayers, formatValue } from "@/data/footballService";
+import { getClub, getPlayer, comparePlayers } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import {
   scoutCandidates,
@@ -21,7 +21,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
-import {cn, fmt1, ABSENT } from "@/lib/utils";
+import { cn, fmt1, ABSENT, fmtMoney } from "@/lib/utils";
 
 const BUCKETS: PosBucket[] = ["ALL", "GK", "DEF", "MID", "ATT"];
 // `labelKey`, not `label`: a row field named `label` is one of the positions the
@@ -98,7 +98,7 @@ export function ScoutingPanel() {
             {picks.map((p) => (
               <div key={p.b} className="flex items-center gap-3 rounded-md border bg-card/40 px-3 py-2">
                 <Badge variant="outline" className="text-[10px]">{bucketLabel(p.b, t)}</Badge>
-                <div className="min-w-0 flex-1"><Link to={`/players/${p.player.id}`} className="truncate text-sm hover:text-primary hover:underline">{p.player.name}</Link><div className="text-[11px] text-muted-foreground">{p.clubName} · {t("scout.ovr")} {p.player.overall} · {formatValue(p.player.value)}</div></div>
+                <div className="min-w-0 flex-1"><Link to={`/players/${p.player.id}`} className="truncate text-sm hover:text-primary hover:underline">{p.player.name}</Link><div className="text-[11px] text-muted-foreground">{p.clubName} · {t("scout.ovr")} {p.player.overall} · {fmtMoney(p.player.value)}</div></div>
                 <Button size="sm" variant={state.watchlist.includes(p.player.id) ? "secondary" : "outline"} onClick={() => toggleWatch(p.player.id)}>{state.watchlist.includes(p.player.id) ? "★" : "☆"}</Button>
               </div>
             ))}
@@ -141,7 +141,7 @@ export function ScoutingPanel() {
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{p.age}</td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs font-semibold">{p.overall}</td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{p.potential}<span className="text-success"> +{headroom(p)}</span></td>
-                  <td className="px-2 py-1.5 text-right font-mono text-xs">{formatValue(p.value)}</td>
+                  <td className="px-2 py-1.5 text-right font-mono text-xs">{fmtMoney(p.value)}</td>
                   <td className="px-2 py-1.5 text-right font-mono text-xs">{fmt1(valueIndex(p))}</td>
                   {(() => {
                     const edge = templateEdge(p);

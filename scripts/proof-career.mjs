@@ -62,7 +62,8 @@ const {
   transferOut, setTactics, restSquad, matchPrep, projectFixture, seasonSummary, marketTargets, lineMean, meanOverall,
 } = CAREER;
 const SVC = await server.ssrLoadModule("/data/footballService.ts");
-const { footballProvider, getClub, clubIdsByCompetition, formatValue } = SVC;
+const { footballProvider, getClub, clubIdsByCompetition } = SVC;
+const { fmtMoney } = await server.ssrLoadModule("/lib/utils.ts");
 const { simulateMatch } = await server.ssrLoadModule("/domain/matchEngine.ts");
 const { matchProbability } = await server.ssrLoadModule("/domain/matchProbability.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
@@ -992,23 +993,23 @@ ok("the retrospective's prize total is the same ladder the matches credited (bud
   played6.budget - 200_000_000 === SUM.prizeTotal && SUM.prizeTotal === played6.results.reduce((s, r) => s + handPrize(r.ourGoals, r.oppGoals), 0));
 // M332: the season prize figure now reads through the app's single money door. This module and
 // the Manager OS panel each carried a byte-for-byte copy of a euro formatter — "€7M", and a
-// lowercase 'k' below a million — that disagreed with `formatValue` ("€7.0M", and "€12M" past ten
+// lowercase 'k' below a million — that disagreed with `fmtMoney` ("€7.0M", and "€12M" past ten
 // million) on the SAME panel, right beside the per-match prize that already used the door. Four
 // pins close it: the printed number reconciles to prizeTotal within the precision it displays; the
 // money token is exactly the door's own reading; and neither file quotes a currency of its own —
 // each seam clause carries a planted euro so the 0 it reports is a measurement, not a blind spot.
 ok("the money printed in the evidence line reconciles to prizeTotal within the precision it displays",
   (() => { const line = SUM.evidence.find((l) => /Prize money earned/.test(say(l))); const m = /€([\d.]+)([BMK])/.exec(say(line)); if (!m) return false; const unit = { B: 1e9, M: 1e6, K: 1e3 }[m[2]]; const decimals = (m[1].split(".")[1] || "").length; return Math.abs(Number(m[1]) * unit - SUM.prizeTotal) <= unit / 10 ** decimals / 2; })());
-ok("the money token in the evidence line is exactly the shared formatValue's reading of the total",
-  (() => { const line = SUM.evidence.find((l) => /Prize money earned/.test(say(l))); const m = /€[\d.]+[BMK]/.exec(say(line)); return !!m && m[0] === formatValue(SUM.prizeTotal); })());
+ok("the money token in the evidence line is exactly the shared fmtMoney's reading of the total",
+  (() => { const line = SUM.evidence.find((l) => /Prize money earned/.test(say(l))); const m = /€[\d.]+[BMK]/.exec(say(line)); return !!m && m[0] === fmtMoney(SUM.prizeTotal); })());
 const plantEuro = [...`€`.matchAll(/€/g)].length;
 const careerEurs = (SRC.match(/€/g) || []).length;
-ok(`career.ts routes money through the formatValue it imports and quotes no currency of its own (planted euro reads ${plantEuro}; career.ts reads ${careerEurs}, formatMoney present: ${/\bformatMoney\b/.test(SRC)})`,
-  /import[^;]*\bformatValue\b[^;]*from "@\/data\/footballService"/.test(SRC) && plantEuro === 1 && careerEurs === 0 && !/\bformatMoney\b/.test(SRC));
+ok(`career.ts routes money through the fmtMoney it imports and quotes no currency of its own (planted euro reads ${plantEuro}; career.ts reads ${careerEurs}, formatMoney present: ${/\bformatMoney\b/.test(SRC)})`,
+  /import[^;]*\bfmtMoney\b[^;]*from "@\/lib\/utils"/.test(SRC) && plantEuro === 1 && careerEurs === 0 && !/\bformatMoney\b/.test(SRC));
 const MGR_SRC = readFileSync(new URL("../features/manager/ManagerOS.tsx", import.meta.url), "utf8");
 const mgrEurs = (MGR_SRC.match(/€/g) || []).length;
-ok(`the Manager OS panel prints its season prize through the same formatValue and defines no local euro formatter (planted euro reads ${plantEuro}; panel reads ${mgrEurs}, const money present: ${/const money =/.test(MGR_SRC)})`,
-  /formatValue\(s\.prizeTotal\)/.test(MGR_SRC) && plantEuro === 1 && mgrEurs === 0 && !/const money =/.test(MGR_SRC));
+ok(`the Manager OS panel prints its season prize through the same fmtMoney and defines no local euro formatter (planted euro reads ${plantEuro}; panel reads ${mgrEurs}, const money present: ${/const money =/.test(MGR_SRC)})`,
+  /fmtMoney\(s\.prizeTotal\)/.test(MGR_SRC) && plantEuro === 1 && mgrEurs === 0 && !/const money =/.test(MGR_SRC));
 ok("the summary prints the career's own points, never the live table's total",
   SUM.points === handPts(played6.results) && liveStandings(played6).find((r) => r.clubId === US).points !== SUM.points);
 ok("ppg is round2(points/played) and exactly 0 before the first fixture",

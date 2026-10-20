@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { positionLabel } from "@/domain/rowText";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
-import { footballProvider, getClub, formatValue } from "@/data/footballService";
+import { footballProvider, getClub } from "@/data/footballService";
+import { fmtMoney } from "@/lib/utils";
 import { runWorld, seasonLabel, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
 import { sum, last } from "@/domain/attributes";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
@@ -91,7 +92,7 @@ export function DynamicWorld() {
         <StatTile label={t("world.seasons")} value={elapsed} sub={seasonLabel(elapsed)} />
         <StatTile label={t("world.squad")} value={snapshot ? snapshot.players.length : base.players.length} sub={t("world.sub.tracked")} />
         <StatTile label={t("world.avgOvr")} value={avgNow} tone={latest && latest.developments.length ? "up" : "neutral"} />
-        <StatTile label={t("world.market")} value={formatValue(marketNow)} sub={t("world.sub.market")} />
+        <StatTile label={t("world.market")} value={fmtMoney(marketNow)} sub={t("world.sub.market")} />
       </div>
 
       {!snapshot ? (

@@ -5,8 +5,8 @@
 // than inventing a profile. Every winner is chosen by a stated direction, so a
 // verdict stays explainable.
 
-import { getPlayer, getClub, formatValue } from "@/data/footballService";
-import { fmt1 } from "@/lib/utils";
+import { getPlayer, getClub } from "@/data/footballService";
+import { fmt1, fmtMoney } from "@/lib/utils";
 import type { PlayerRef } from "./types";
 import { categoryAverages } from "./attributes";
 import { headroom, valueIndex, primeHold, bucketOf, round1 } from "./scouting";
@@ -78,7 +78,7 @@ export function compare(aId: string, bId: string): CompareResult | null {
     { key: "headroom", dir: "high", a: headroom(a), b: headroom(b), display: (v) => `+${v}` },
     { key: "age", dir: "low", a: a.age, b: b.age, display: (v) => `${v}` },
     { key: "prime", dir: "high", a: Math.round(primeHold(a)), b: Math.round(primeHold(b)), display: (v) => `${v}` },
-    { key: "value", dir: "info", a: a.value, b: b.value, display: formatValue },
+    { key: "value", dir: "info", a: a.value, b: b.value, display: fmtMoney },
     { key: "valueIndex", dir: "high", a: round1(valueIndex(a)), b: round1(valueIndex(b)), display: (v) => `${fmt1(v)}` },
   ];
 
@@ -143,7 +143,7 @@ export function compare(aId: string, bId: string): CompareResult | null {
 
 // `round1` rides in from the scouting module above rather than being re-declared here: three
 // domain modules each kept a byte-identical copy of this one-line rounder. And the value row
-// prints money through the app's one `formatValue`, not a local copy: this
+// prints money through the app's one `fmtMoney`, not a local copy: this
 // module once carried its own euro formatter, so a future rounding tweak to the shared one
 // would silently leave the comparison page quoting the same transfer fee a different way
 // than the player page, dashboard and manager all already do.

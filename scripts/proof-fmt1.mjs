@@ -36,25 +36,33 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const HOME = "lib/utils.ts";
-// Every file that reads the door after M372's fold: all eleven, none left out of the census.
+// Every file that reads the door after M372's fold. M402 moved the MONEY door into lib/utils.ts
+// beside the fmt0/fmt1 it is built from, and the money door's B line calls fmt1 -- so the door's
+// own home became an INTERNAL reader of it, and the data provider that used to hold the money
+// door left the list. The home is charged apart below: it CALLS the door without IMPORTING it,
+// which is a different relation, and a census that could not tell the two apart would either
+// miss the home or double-count it.
 const CONSUMERS = [
-  "data/footballService.ts", "domain/compare.ts", "domain/history.ts", "domain/review.ts",
+  "domain/compare.ts", "domain/history.ts", "domain/review.ts",
   "features/film/FilmRoom.tsx", "features/football/Details.tsx", "features/player/PlayerOS.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/settings/SettingsPage.tsx",
   "features/watchlist/WatchlistBoard.tsx", "ui/primitives.tsx",
 ];
 // Exact per-file call pins — a call that moves files, not just a total that drifts, reddens below.
 const CALL_PINS = {
-  "data/footballService.ts": 1, "domain/compare.ts": 1, "domain/history.ts": 2, "domain/review.ts": 3,
+  "domain/compare.ts": 1, "domain/history.ts": 2, "domain/review.ts": 3,
   "features/film/FilmRoom.tsx": 1, "features/football/Details.tsx": 1, "features/player/PlayerOS.tsx": 1,
   "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,
   "features/watchlist/WatchlistBoard.tsx": 1, "ui/primitives.tsx": 2,
 };
-// The pinned families' homes: seed's parseFloat wraps, service's conditional decimal, and the three
-// former fmt0 sites (folded onto the fmt0 door at M373).
+// The home's own internal call: the money door's B line, one call, no import.
+const HOME_CALLS = 1;
+// The pinned families' homes: seed's parseFloat wraps, the conditional decimal (which moved with
+// the money door into lib/utils.ts at M402 -- it is now literally "next door" to the fmt1 door,
+// which is what its docstring always said), and the three former fmt0 sites.
 const PARSE_FLOAT_FILE = "data/footballSeed.ts";
-const CONDITIONAL_FILE = "data/footballService.ts";
-const FMT0_FILES = ["data/footballService.ts", "domain/community.ts", "domain/gap.ts"];
+const CONDITIONAL_FILE = "lib/utils.ts";
+const FMT0_FILES = ["domain/community.ts", "domain/gap.ts"];
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
   e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);
@@ -223,13 +231,27 @@ const doorBody = (src[HOME].match(/export const fmt1 = [^\n]*/) || [""])[0];
 ok(`the door body IS the toFixed call and it is the sole code-state plain site in lib/utils (home plain ${homeCensus.plain}, body "${doorBody.trim()}")`,
   homeCensus.plain === 1 && doorBody.trim() === "export const fmt1 = (v: number): string => v.toFixed(1);");
 
-// --- All eleven consumers read the door, at exactly their pinned call counts. --------------------
+// --- Every consumer reads the door, at exactly their pinned call counts, and the door's own
+// --- HOME is a reader too: it CALLS the door (the money door's B line) but does not IMPORT it,
+// --- because it defines it. A file that called the door without importing it, and was not the
+// --- home, would be a reach-guard failure. ---------------------------------------------------
 const importing = CONSUMERS.filter((f) => count(src[f], IMPORT_FMT1) >= 1);
 const actualCalls = Object.fromEntries(CONSUMERS.map((f) => [f, count(src[f], CALL_FMT1)]));
 const totalCalls = Object.values(actualCalls).reduce((s, n) => s + n, 0);
 const pinsHold = CONSUMERS.every((f) => actualCalls[f] === CALL_PINS[f]);
-ok(`all eleven consumers read the door at their exact pinned counts (imports ${importing.length}/11, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned 19)`,
-  importing.length === CONSUMERS.length && pinsHold && totalCalls === 19);
+// Every file in the tree that calls the door, and how it got to it. The HOME's own call is
+// counted in CODE: the fmt1 door's docstring quotes `fmt1(2.04)` while explaining the pad, and
+// a raw scan would read that as a second call and red a census that is measuring the money
+// door's B line.
+const codeOf = (f) => src[f].split(/\r?\n/).filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+const treeCallers = carriers.filter((f) => count(src[f], CALL_FMT1) > 0).sort();
+const homeCalls = count(codeOf(HOME), CALL_FMT1);
+const homeImports = count(src[HOME], IMPORT_FMT1);
+const orphanCallers = treeCallers.filter((f) => f !== HOME && !CONSUMERS.includes(f));
+ok(`every consumer reads the door at their exact pinned counts, and the door's own HOME is a reader too (imports ${importing.length}/${CONSUMERS.length}, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned ${totalCalls}; the home calls it ${homeCalls}x and imports it ${homeImports}x; tree callers ${treeCallers.length}, orphans ${orphanCallers.length} [${orphanCallers.join(",")}])`,
+  importing.length === CONSUMERS.length && pinsHold && totalCalls === 18 &&
+  homeCalls === HOME_CALLS && homeImports === 0 && orphanCallers.length === 0 &&
+  treeCallers.length === CONSUMERS.length + 1);
 
 // --- Convergence completeness: across the whole tree, a code-state plain .toFixed(1) survives only ---
 // --- in the door's own body — no residue of the hand-spelled display form remains anywhere. --------
@@ -252,14 +274,17 @@ const condTotal = carriers.reduce((s, f) => s + count(src[f], CONDITIONAL), 0);
 ok(`the conditional-decimal formatter line survives unpooled, exactly once (files ${condByFile.join(",")}; total ${condTotal})`,
   condTotal === 1 && condByFile.length === 1 && condByFile[0] === CONDITIONAL_FILE);
 
-// --- Former fmt0 sites: M373 folded them onto the fmt0 door next door, so the three files are ------
-// --- charged zero-and-imports rather than pinned as a blind spot a fold may not cross. -------------
+// --- Former fmt0 sites: M373 folded them onto the fmt0 door next door, so the files are ----------
+// --- charged zero-and-imports rather than pinned as a blind spot a fold may not cross. M402 took
+// --- the value formatter's K line out of data/footballService.ts with the money door, so that
+// --- file is no longer a fmt0 site: the list is now the two that remain, and the count is
+// --- derived from the list rather than typed beside it. ---------------------------------------
 const fmt0ByFile = FMT0_FILES.map((f) => [f.split("/").pop(),
   census(src[f], ".toFixed(0)").plain, count(src[f], IMPORT_FMT0), count(src[f], CALL_FMT0)]);
 const fmt0PlainTotal = fmt0ByFile.reduce((s, [, p]) => s + p, 0);
 const fmt0Importers = fmt0ByFile.filter(([, , imp]) => imp >= 1).length;
-ok(`the three former fmt0 sites re-inlined nothing and read the fmt0 door next door (fmt0 plain ${fmt0ByFile.map(([f, p]) => `${f}=${p}`).join(", ")}, total ${fmt0PlainTotal}; importers ${fmt0Importers}/3; calls ${fmt0ByFile.map(([, , , c]) => c).join(",")})`,
-  fmt0PlainTotal === 0 && fmt0Importers === 3 && fmt0ByFile.every(([, , , c]) => c >= 1) && pFmt0 === 1);
+ok(`the former fmt0 sites re-inlined nothing and read the fmt0 door next door (fmt0 plain ${fmt0ByFile.map(([f, p]) => `${f}=${p}`).join(", ")}, total ${fmt0PlainTotal}; importers ${fmt0Importers}/${FMT0_FILES.length}; calls ${fmt0ByFile.map(([, , , c]) => c).join(",")})`,
+  fmt0PlainTotal === 0 && fmt0Importers === FMT0_FILES.length && fmt0ByFile.every(([, , , c]) => c >= 1) && pFmt0 === 1);
 
 // --- Behavioural: fmt1 reproduces the removed inline call byte-for-byte and keeps the pad. --------
 const samples = [0, 0.04, 0.05, 1, 2.04, 2.5, -3.45, 9.99, 99.995, 1234.567, 1e6 / 3, -0.05];

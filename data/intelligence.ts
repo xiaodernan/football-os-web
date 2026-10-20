@@ -22,10 +22,9 @@ import {
   playersByClub,
   matchesByStatus,
   fixtureForecast,
-  formatValue,
   type SearchResult,
 } from "@/data/footballService";
-import {fmt2, ABSENT } from "@/lib/utils";
+import { fmt2, ABSENT, fmtMoney } from "@/lib/utils";
 
 export interface EvidenceFact {
   /** Both halves are rows. A chip word the app chooses ("Standings") is a keyed row; the
@@ -85,7 +84,7 @@ function clubFacts(clubId: string): EvidenceFact[] {
   if (squad[0])
     out.push({
       label: { key: "ai.lab.keyMan" },
-      text: { key: "ai.fact.keyMan", vars: { name: squad[0].name, position: squad[0].position, overall: squad[0].overall, value: formatValue(squad[0].value) } },
+      text: { key: "ai.fact.keyMan", vars: { name: squad[0].name, position: squad[0].position, overall: squad[0].overall, value: fmtMoney(squad[0].value) } },
       to: `/players/${squad[0].id}`,
     });
   const fixture = [...matchesByStatus("SCHEDULED").filter((m) => m.homeClubId === clubId || m.awayClubId === clubId)].sort(byKickoff)[0];
@@ -120,7 +119,7 @@ function playerFacts(pid: string): EvidenceFact[] {
   const out: EvidenceFact[] = [
     {
       label: { value: p.name },
-      text: { key: "ai.fact.player", vars: { name: p.name, position: p.position, age: p.age, nation: p.nation, club: c?.name ?? ABSENT, overall: p.overall, potential: p.potential, value: formatValue(p.value), foot: p.foot } },
+      text: { key: "ai.fact.player", vars: { name: p.name, position: p.position, age: p.age, nation: p.nation, club: c?.name ?? ABSENT, overall: p.overall, potential: p.potential, value: fmtMoney(p.value), foot: p.foot } },
       to: `/players/${p.id}`,
     },
     { label: { key: "ai.lab.profile" }, text: { key: "ai.fact.archetype", vars: { arch: p.archetype } }, to: `/players/${p.id}` },
@@ -347,7 +346,7 @@ function composeAnswer(question: string, ctx: RagContext): RowText[] {
   // story (M275) and the proper nouns as plain values otherwise — fillRowVars words
   // either against the reader's dictionary.
   const titleVar: string | RowText = top.titleRow ?? top.title;
-  if (askingValue && player) lead = { key: "ai.answer.value", vars: { title: titleVar, v: formatValue(player.value) } };
+  if (askingValue && player) lead = { key: "ai.answer.value", vars: { title: titleVar, v: fmtMoney(player.value) } };
   else if (askingValue) lead = { key: "ai.answer.valueUnknown", vars: { title: titleVar } };
   else if (/who|which|best|top|key|star|核心|谁/.test(q)) lead = { key: "ai.answer.given", vars: { title: titleVar } };
   else if (/stand|position|table|排名|榜首|第几/.test(q)) lead = { key: "ai.answer.standing", vars: { title: titleVar } };

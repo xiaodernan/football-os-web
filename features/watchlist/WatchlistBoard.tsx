@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
-import { getPlayer, getClub, formatValue } from "@/data/footballService";
+import { getPlayer, getClub } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { headroom, valueIndex, primeYearsLabel, templateEdge, scoutComparators } from "@/domain/scouting";
 import { sum } from "@/domain/attributes";
@@ -9,7 +9,7 @@ import type { ScoutSort } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
-import { cn, fmt1 } from "@/lib/utils";
+import { cn, fmt1, fmtMoney } from "@/lib/utils";
 
 type Sort = ScoutSort;
 
@@ -88,7 +88,7 @@ export function WatchlistBoard() {
 
       <div className="grid grid-cols-3 gap-3">
         <StatTile label={t("watch.count")} value={players.length} />
-        <StatTile label={t("watch.avgValue")} value={formatValue(avgValue)} />
+        <StatTile label={t("watch.avgValue")} value={fmtMoney(avgValue)} />
         <StatTile label={t("watch.picked")} value={picked.length} sub={`${picked.length}/2`} tone={canCompare ? "up" : "neutral"} />
       </div>
 
@@ -123,8 +123,8 @@ export function WatchlistBoard() {
                   </div>
                 </div>
                 <div className="hidden text-right sm:block">
-                  <div className="font-mono text-sm tabular-nums">{formatValue(p.value)}</div>
-                  <div className="text-[11px] text-muted-foreground">{t("watch.asking")} {formatValue(Math.round(p.value * 1.1))}</div>
+                  <div className="font-mono text-sm tabular-nums">{fmtMoney(p.value)}</div>
+                  <div className="text-[11px] text-muted-foreground">{t("watch.asking")} {fmtMoney(Math.round(p.value * 1.1))}</div>
                 </div>
                 <div className="w-14 text-right">
                   <div className="font-mono text-sm font-semibold tabular-nums">{p.overall}</div>

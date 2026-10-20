@@ -10,6 +10,7 @@ const server = await createServer({ server: { middlewareMode: true }, appType: "
 const engine = await server.ssrLoadModule("/domain/worldEngine.ts");
 const attributes = await server.ssrLoadModule("/domain/attributes.ts");
 const service = await server.ssrLoadModule("/data/footballService.ts");
+const utils = await server.ssrLoadModule("/lib/utils.ts");
 
 // M396: a symbol moved behind a door and the hand-typed destructure beside it was never re-derived —
 // `marketValue` came to the attributes domain in M381 while line 10 here still pulled it out of
@@ -22,12 +23,14 @@ const service = await server.ssrLoadModule("/data/footballService.ts");
 // M401: `formatMarket` used to be one of the three names this script took off the engine —
 // the engine carried its own euro formatter, and it was the one with no K branch, so a total
 // worth €400K read "€0M". The app states its money convention in two places' prose ("the app's
-// one `formatValue`"), so the copy went behind that door. The lookup below is what caught it:
+// one `fmtMoney`"), so the copy went behind that door. The lookup below is what caught it:
 // the destructure names are looked up and the lookup is charged, so a name that moved behind a
 // door reds with a message naming the module it moved to — which is exactly what happened.
+// M402 moved the door again — out of data/footballService.ts and into lib/utils.ts, beside the
+// fmt0/fmt1 it is built from — so the lookup moved with it.
 const fromEngine = ["runWorld", "seasonLabel"];
 const fromAttributes = ["marketValue"];
-const fromService = ["formatValue"];
+const fromUtils = ["fmtMoney"];
 const take = (ns, mod, names) => {
   const missing = names.filter((n) => typeof ns[n] !== "function");
   if (missing.length) throw new Error(`${mod} no longer exports ${missing.join(", ")} — re-derive the door it moved behind`);
@@ -35,7 +38,7 @@ const take = (ns, mod, names) => {
 };
 const { runWorld, seasonLabel } = take(engine, "domain/worldEngine.ts", fromEngine);
 const { marketValue } = take(attributes, "domain/attributes.ts", fromAttributes);
-const { formatValue } = take(service, "data/footballService.ts", fromService);
+const { fmtMoney } = take(utils, "lib/utils.ts", fromUtils);
 // worldEngine must still CONSUME the door rather than own a second copy of the curve (M381's contract),
 // and it must not re-export one — a re-export would let the stale spelling above silently come back.
 if (engine.marketValue !== undefined) throw new Error("worldEngine re-exports marketValue — M381 moved the curve to the attributes door");
@@ -82,8 +85,8 @@ ok("market value is non-negative and rounded to €100k", marketValue(50, 25) > 
 // M401: the euro rule is no longer this module's. The clause still pins the units the engine
 // used to spell by hand, but it reads them off the app's ONE money door, and it charges that
 // the engine no longer declares a formatter of its own.
-ok(`the euro rule is the app's one door's, not the engine's: the shared door renders the engine's units (formatValue(12_400_000) = "${formatValue(12_400_000)}", formatValue(1_500_000_000) = "${formatValue(1_500_000_000)}") and the engine declares no money formatter (formatMarket on the engine: ${engine.formatMarket === undefined ? "absent" : "PRESENT"})`,
-  formatValue(12_400_000) === "€12M" && formatValue(1_500_000_000) === "€1.5B" && engine.formatMarket === undefined);
+ok(`the euro rule is the app's one door's, not the engine's: the shared door renders the engine's units (fmtMoney(12_400_000) = "${fmtMoney(12_400_000)}", fmtMoney(1_500_000_000) = "${fmtMoney(1_500_000_000)}") and the engine declares no money formatter (formatMarket on the engine: ${engine.formatMarket === undefined ? "absent" : "PRESENT"})`,
+  fmtMoney(12_400_000) === "€12M" && fmtMoney(1_500_000_000) === "€1.5B" && engine.formatMarket === undefined);
 
 // --- seasons=0 is a faithful, copied identity -----------------------------
 const zero = runWorld(base, 0);

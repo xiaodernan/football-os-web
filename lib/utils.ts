@@ -156,25 +156,52 @@ export const safeDiv = (num: number, den: number): number => num / Math.max(1, d
 // Identical today, so no figure a reader sees moves. NOTE this door is NOT round1 above-ish (the
 // one-decimal NUMBER re-rounded in domain/scouting for arithmetic): fmt1(2.04) is the string "2.0"
 // where String(round1(2.04)) is "2" — the pad is the point of a one-decimal cell — and it is NOT
-// fmt0 either, whose sites (community credibility, gap tier, the K/M/B formatter's K line) stay
-// inline until their own door, as does the one conditional-decimal line that picks 0 or 1 at
-// runtime and so cannot be a fixed-argument call. The seed's two parseFloat((…).toFixed(1)) sites
-// round straight back to a number — a rounding step, not a display — and proof-fmt1 counts exactly
-// those families plus the door.
+// fmt0 either, whose sites (community credibility, gap tier) stay inline until their own door.
+// The MONEY door next door builds on both of these — its billions line reads fmt1 and its
+// thousands line reads fmt0 — and it also holds the one conditional-decimal line, which picks
+// 0 or 1 at runtime and so cannot be a fixed-argument call of this door. The seed's two
+// parseFloat((…).toFixed(1)) sites round straight back to a number — a rounding step, not a
+// display — and proof-fmt1 counts exactly those families plus the door.
 export const fmt1 = (v: number): string => v.toFixed(1);
 
-// The app's integer display-string door: a caller's number rendered `.toFixed(0)` — the three
-// unsigned sites that show whole percents and compact byte figures (community credibility, gap
-// evidence tier, the K line of the value formatter). Identical today, so no figure moves. NOTE this
+// The app's integer display-string door: a caller's number rendered `.toFixed(0)` — the two
+// unsigned sites that show whole percents (community credibility, gap evidence tier) and the
+// money door's thousands line beside it. Identical today, so no figure moves. NOTE this
 // door keeps toFixed's away-from-zero half-step and is NOT String(Math.round()): at a negative
 // half-step the two part company — `(-4.5).toFixed(0)` is "-5" while Math.round(-4.5) is -4 — which
 // is exactly why career's advisor quotes moved to Math.round when that trap was found (proof-career
 // pins the choice on its 41 half-step states) and why this door must never be swapped in there; all
-// three sites here feed unsigned magnitudes where the two spellings agree. It is also NOT fmt1's
+// the sites here feed unsigned magnitudes where the two spellings agree. It is also NOT fmt1's
 // padded cell — "2" and "2.0" are different displays. The one conditional-decimal line next door
 // picks 0 or 1 at runtime and stays out of both fixed-argument doors; proof-fmt0 counts the door
 // and those three sites.
 export const fmt0 = (v: number): string => v.toFixed(0);
+
+// The app's MONEY door — a euro amount rendered at a magnitude a reader can hold in their head.
+// It lives here, beside the fmt0 and fmt1 it is built from, because a display convention belongs
+// with the display doors: the rule used to live in data/footballService.ts, a DATA provider, so a
+// simulation module could not read money without pulling the provider in with it.
+//
+// M401 closed the app's private copies of this rule one at a time — domain/career.ts's own euro
+// rule and domain/compare.ts's — and then found a third in domain/worldEngine.ts that had no K
+// branch at all, so a total worth €400K read "€0M" and one worth €500K read "€1M": a figure that
+// says ZERO where the value is not zero. That copy is gone, and the two modules above say in
+// their own comments that they print money "through the app's one" door.
+//
+// The rules, in one place: billions at ONE decimal, millions at one decimal below €10M and none
+// at or above it, thousands at zero decimals, and the raw euro below a thousand. The currency
+// glyph is the euro sign the app has always used, and the rule is the same in all three locales —
+// a figure that means the same thing must read the same way wherever a reader meets it.
+//
+// The name `formatMoney` is deliberately NOT this door's: proof-career charges that no module
+// declares a private money formatter under that name, and a local copy would take it. This door
+// is `fmtMoney`, beside `fmt0`/`fmt1`/`fmt2`, and a module that wants money asks for it.
+export const fmtMoney = (v: number): string => {
+  if (v >= 1_000_000_000) return `€${fmt1(v / 1_000_000_000)}B`;
+  if (v >= 1_000_000) return `€${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`;
+  if (v >= 1_000) return `€${fmt0(v / 1_000)}K`;
+  return `€${v}`;
+};
 
 // The app's absence marker — what a reader sees where a figure or a name is missing. The em dash is
 // the glyph the display cells already print, so this door freezes the convention rather than inventing

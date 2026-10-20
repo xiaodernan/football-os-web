@@ -244,11 +244,13 @@ export function runWorld(base: WorldInput, seasonsElapsed: number): WorldSnapsho
 
 // M401: this module used to carry its own euro formatter (`formatMarket`), and the app has
 // said in two places that there is ONE money door -- domain/career.ts:617 ("the season prize
-// total prints through the app's one `formatValue`, not a private copy") and
-// domain/compare.ts:146 ("the value row prints money through the app's one `formatValue`, not
-// a local copy"). This copy was the survivor, and it was the one with the reader-visible
+// total prints through the app's one `fmtMoney`, not a private copy") and
+// domain/compare.ts:146 ("the value row prints money through the app's one `fmtMoney`, not a
+// local copy"). This copy was the survivor, and it was the one with the reader-visible
 // defect: it had NO K branch, so a squad worth €400K read "€0M" and one worth €500K read
 // "€1M" -- a figure that says zero where the value is not zero. It also quoted the billions
 // at two decimals and the millions at none, so the same currency read three ways on one
 // screen. The world screen now reads the shared door, like the player page, the dashboard,
 // the manager and the transfer centre already do (features/world/DynamicWorld.tsx).
+// M402 moved that door into lib/utils.ts, beside the fmt0/fmt1 it is built from, and renamed
+// it `fmtMoney`; the world screen followed it there.

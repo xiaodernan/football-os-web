@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M401
+Work ships one milestone per commit and is currently at M402
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,38 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M402 — the money door moved out of the data provider and into the house with the other display doors
+
+M401 closed the app's last private copy of the euro rule. What it left behind was a door in the wrong house: `formatValue` lived in `data/footballService.ts` — a **data provider** — while every other display door lives in `lib/utils.ts` beside the primitives it is built from. A simulation module could not read money without pulling the whole provider in with it, and the app's door list read in two files instead of one.
+
+**The move.** The door is now `fmtMoney` in `lib/utils.ts`, next to `fmt0` and `fmt1` — which it is built from, and which it now *calls*:
+
+```
+export const fmtMoney = (v: number): string => {
+  if (v >= 1_000_000_000) return `€${fmt1(v / 1_000_000_000)}B`;
+  if (v >= 1_000_000) return `€${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`;
+  if (v >= 1_000) return `€${fmt0(v / 1_000)}K`;
+  return `€${v}`;
+};
+```
+
+**Why the name changed.** `formatValue` says "format a value" and could mean anything; `fmtMoney` cannot be mistaken for anything else, and it sits in a file whose other names are `fmt0`, `fmt1`, `fmt2`, `signed`, `signed2`, `ABSENT`, `SEPARATOR`. The name `formatMoney` stays **free** on purpose: `proof-career` already charges that no module declares a private money formatter under it, and a local copy would take that name. So the door took `fmtMoney` and the copy-shape kept `formatMoney` — the census and the reserved name still mean what they meant.
+
+**The ten readers followed it.** `domain/career.ts`, `domain/compare.ts`, `data/intelligence.ts`, and seven screens (Dashboard, Details, ManagerOS, ScoutingPanel, TransferCentre, WatchlistBoard, DynamicWorld) now import `fmtMoney` from `@/lib/utils`. `domain/compare.ts` was the interesting one: it does not *call* the door, it **hands it as a value** (`display: fmtMoney`), and a census that only counted call parentheses would have missed it. The two prose claims that name the door were re-pointed at the new symbol, so the app's words and the code still agree.
+
+**The census debt was five scripts, not one.** Each had to be re-derived rather than decremented:
+
+- `proof-money` — the door's home moved, the symbol changed, and the reader set moved with it. Its uniqueness clause had to learn a new body shape: the door is now an arrow with a **block** body, and the parser that found function bodies was matching `const fmt2 = (v: number): string => v.toFixed(2);` and handing it the *next* function's body, so the door's own three branches were attributed to `fmt2` and the uniqueness clause read an empty set. The arrow form is now matched only when `{` follows `=>`, and a concise-body arrow is not matched at all.
+- `proof-world` — its charged lookup followed the door to its new home.
+- `proof-career`, `proof-compare`, `proof-ai-grounding` — three scripts took `formatValue` off the service module; all three now take `fmtMoney` off `lib/utils.ts`, and the two reach-guard clauses ("career.ts routes money through the door it imports", "compare.ts imports the money door") were re-pointed at the new import site.
+- `proof-fmt0` and `proof-fmt1` — the money door's K and B lines call `fmt0` and `fmt1`, so **the door's own home became an internal reader of them** and the data provider that used to hold the money door left their consumer lists. Both clauses now charge a relation the old one could not express: a file that calls the door either **imports** it, or **is** the door's home. The home calls it once and imports it zero times; a caller that is neither is an orphan and reddens. The home's call is counted in **code** — `fmt1`'s own docstring quotes `fmt1(2.04)` while explaining the pad, and a raw scan read that as a second call.
+
+**The conditional-decimal line moved too.** It was the one line that picked 0 or 1 at runtime and so could not ride a fixed-argument door. Its two censuses (`proof-fmt0`, `proof-fmt1`) pinned it in `data/footballService.ts`; it is now literally *next door* to the `fmt0`/`fmt1` doors, which is what their docstrings had always said. The pin moved with it, and the docstrings were corrected to match.
+
+**Nothing a reader sees moved.** The door's body is the same formula; only its address and its name changed. The 48 squad totals that M401 re-read at the shared convention read exactly as they did there.
+
+**Next.** The app's display doors now all live in one file, and every one of them is paid for by its own census. The next thing worth looking at is not another door but the *reach* of the ones that exist: a door that a module calls without importing is the failure shape the fmt0/fmt1 clauses just learned to see, and it is worth charging that shape everywhere rather than only where a move happened to expose it.
 
 ### M401 — the third euro formatter was still private, and it was the one that said `€0M` for a squad worth €400K
 
