@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import {
   Command,
   CommandDialog,
@@ -33,8 +34,9 @@ interface ActionCmd {
 const GROUPS = ["goto", "modes", "actions"] as const;
 type Group = (typeof GROUPS)[number];
 
-export function CommandPalette() {
-  const [open, setOpen] = useState(false);
+// The shell owns `open`: the header carries a ⌘K badge on a button, and the badge and the
+// shortcut have to drive the same control.
+export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: Dispatch<SetStateAction<boolean>> }) {
   const { navigate, path } = useRouter();
   const { t } = useI18n();
   const { theme, toggle } = useTheme();
@@ -46,7 +48,7 @@ export function CommandPalette() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setOpen((o) => !o);
+        onOpenChange((o) => !o);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -56,7 +58,7 @@ export function CommandPalette() {
   const actions: ActionCmd[] = useMemo(() => {
     const nav = (to: string) => () => {
       navigate(to);
-      setOpen(false);
+      onOpenChange(false);
     };
     const base: ActionCmd[] = [
       { id: "home", label: t("nav.home"), group: "goto", run: nav("/") },
@@ -98,7 +100,7 @@ export function CommandPalette() {
     );
     if (state.onboarded) {
       (["FAN", "PLAYER", "MANAGER"] as const).forEach((m) =>
-        base.push({ id: `mode-${m}`, label: t("cmd.mode", { mode: t(`prof.mode.${m}`) }), group: "actions", run: () => { setMode(m); setOpen(false); } }),
+        base.push({ id: `mode-${m}`, label: t("cmd.mode", { mode: t(`prof.mode.${m}`) }), group: "actions", run: () => { setMode(m); onOpenChange(false); } }),
       );
     }
     return base;
@@ -117,7 +119,7 @@ export function CommandPalette() {
   }, [filteredActions]);
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen} title={t("cmd.title")} description={t("cmd.description")}>
+    <CommandDialog open={open} onOpenChange={onOpenChange} title={t("cmd.title")} description={t("cmd.description")}>
       <Command shouldFilter={false}>
         <CommandInput placeholder={t("cmd.placeholder")} value={query} onValueChange={setQuery} />
         <CommandList>
@@ -132,7 +134,7 @@ export function CommandPalette() {
                     value={`${r.type}-${r.id}`}
                     onSelect={() => {
                       navigate(r.to);
-                      setOpen(false);
+                      onOpenChange(false);
                     }}
                   >
                     {/* The kind chip used to print the stored code, so a reader in 简体中文 saw

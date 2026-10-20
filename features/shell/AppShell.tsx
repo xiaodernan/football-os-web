@@ -6,7 +6,6 @@ import { useOs } from "@/store/useFootballOS";
 import { LOCALES, type Locale } from "@/i18n/dictionaries";
 import { levelInfo } from "@/store/useFootballOS";
 import { Button } from "@/components/ui/button";
-import { Command } from "@/components/ui/command";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { cn, pctLabel } from "@/lib/utils";
 import { DemoBadge } from "@/ui/primitives";
@@ -50,9 +49,10 @@ const I = {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
-  const { path, navigate } = useRouter();
+  const { path } = useRouter();
   const { state } = useOs();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const primary: NavItem[] = [
     { to: "/", label: t("nav.home"), icon: I.grid, match: ["/"] },
@@ -149,7 +149,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-dvh">
-      <CommandPalette />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       {/* desktop rail */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-sidebar-border lg:block">{sidebar}</aside>
 
@@ -172,7 +172,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             variant="outline"
             size="sm"
             className="ml-auto flex h-9 w-full max-w-xs items-center justify-start gap-2 text-muted-foreground sm:w-64"
-            onClick={() => navigate("/search")}
+            onClick={() => setPaletteOpen(true)}
           >
             <span>{I.search}</span>
             <span className="text-xs">{t("nav.searchCta")}</span>
