@@ -1,5 +1,5 @@
 import type { AttributeDelta, Attributes, PositionGroup, TrainingExercise, TrainingSession } from "./types";
-import { asRowText, type RowText } from "./rowText";
+import { type RowText, repairTextField } from "./rowText";
 import { makeRng, pick, rngInt } from "@/lib/rng";
 import { clamp, isRealInstant } from "@/lib/utils";
 import { capRound, sum, unique } from "./attributes";
@@ -175,10 +175,7 @@ export function sweepOverdueSessions(sessions: TrainingSession[], nowMs: number 
  *  hydration runs on every load and rebuilding unchanged sessions would make every one of
  *  them look edited. */
 export function repairSessionTitles(sessions: TrainingSession[]): TrainingSession[] {
-  if (!sessions.some((s) => typeof (s.title as unknown) === "string")) return sessions;
-  return sessions.map((s) =>
-    typeof (s.title as unknown) === "string" ? { ...s, title: asRowText(s.title as unknown as string) } : s,
-  );
+  return repairTextField(sessions, "title");
 }
 
 // ---- "Completed" is decided once, and its minutes are counted once ----

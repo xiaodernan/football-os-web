@@ -10,7 +10,7 @@
 
 import type { AiMemoryEntry } from "./types";
 import type { RowText } from "./rowText";
-import { asRowText } from "./rowText";
+import { repairTextField } from "./rowText";
 
 // `{goal}` is the visitor's own onboarding text and `{title}` a session name the coach
 // provider produced — both are values, carried in as copy, not as codes to look up.
@@ -35,8 +35,5 @@ export function trainingMemory(title: RowText, xp: number, rating: number, level
 // nothing to repair is the same array: hydration runs on every load, and rebuilding
 // rows that did not change would make every memory row look edited.
 export function repairMemoryTexts(memory: AiMemoryEntry[]): AiMemoryEntry[] {
-  if (!memory.some((m) => typeof (m.text as unknown) === "string")) return memory;
-  return memory.map((m) =>
-    typeof (m.text as unknown) === "string" ? { ...m, text: asRowText(m.text) } : m,
-  );
+  return repairTextField(memory, "text");
 }

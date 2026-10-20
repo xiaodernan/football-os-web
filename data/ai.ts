@@ -1,5 +1,5 @@
 import type { Attributes, CoachPlan, UserProfile } from "@/domain/types";
-import { asRowText, rowLine, type RowText } from "@/domain/rowText";
+import { asRowText, rowLine, repairTextField, type RowText } from "@/domain/rowText";
 import { weakestAttributes, strongestAttributes, ATTRIBUTE_KEYS, overallRating, sum, unique } from "@/domain/attributes";
 import { buildSession } from "@/domain/training";
 import { computeDna } from "@/domain/playerDna";
@@ -267,11 +267,12 @@ export function englishRow(row: RowText): string {
 
 /** Plans stored before a prompt was a row hold a plain string. Those words are the writer's, so
  *  they are kept verbatim as a value and never guessed at as a key — the same repair a goal title
- *  and a remembered line get, called from the store's hydration boundary. */
+ *  and a remembered line get, called from the store's hydration boundary.
+ *
+ *  M416: this copy was also the one that BROKE the identity property the other three keep — it
+ *  always rebuilt the array, so a plan library with nothing to repair came back as a NEW array
+ *  and every plan row looked edited. The rule is now the `repairTextField` door in
+ *  domain/rowText.ts, and this seam calls it like its three siblings. */
 export function repairPlanPrompts(plans: CoachPlan[]): CoachPlan[] {
-  return plans.map((p) =>
-    typeof (p.prompt as unknown) === "string"
-      ? { ...p, prompt: asRowText(p.prompt as unknown as string) }
-      : p,
-  );
+  return repairTextField(plans, "prompt");
 }

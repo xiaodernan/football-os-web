@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M415
+Work ships one milestone per commit and is currently at M416
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,50 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M416 — three stores carried the same repair, and the fourth copy was the one that broke the rule it copied
+
+The scout that found `headroomOf` (M404), the money door (M401–M402) and the vector threshold (M412) was a **concept-level** detector: extract every exported function in the domain and data layers, normalise its body, and look for two modules carrying the *same* body. It found one shape, in four places.
+
+**The rule.** *"A row written before the union existed holds a plain string. Those words are the writer's, so they are kept verbatim as a value and never guessed at as a key."* Four stores needed it:
+
+```
+domain/goals.ts:48     repairGoalTitles(goals)     — the field is title
+domain/memory.ts:37    repairMemoryTexts(memory)  — the field is text
+domain/training.ts:177 repairSessionTitles(sessions) — the field is title
+data/ai.ts:271         repairPlanPrompts(plans)   — the field is prompt
+```
+
+Three of the four bodies were byte-identical. The fourth was not — and that is the interesting part.
+
+**The fourth copy was the one that broke the rule it copied.** `data/ai.ts`'s own docstring says *"the same repair a goal title and a remembered line get"*, so the author knew the rule — and then spelled it without the property that makes it safe. The other three open with an early-out:
+
+```ts
+if (!goals.some((g) => typeof (g.title as unknown) === "string")) return goals;   // the SAME array
+```
+
+`repairPlanPrompts` had no early-out. It went straight to `plans.map(...)`, so **a plan library with nothing to repair came back as a NEW array** — and a plan library is rebuilt on every hydration, so every plan row looked edited. The property the other three went to the trouble of keeping was the one thing this copy lost, and no census could see it: the three copies' identity clauses were in `proof-timeline`, and the fourth copy's had never been written.
+
+**The door.** `repairTextField(rows, field)` now lives in `domain/rowText.ts`, beside the `asRowText` it uses:
+
+```ts
+export function repairTextField<T extends object>(rows: T[], field: keyof T & string): T[] {
+  const read = (r: T) => (r as Record<string, unknown>)[field];
+  if (!rows.some((r) => typeof read(r) === "string")) return rows;
+  return rows.map((r) => {
+    const v = read(r);
+    return typeof v === "string" ? ({ ...r, [field]: asRowText(v) } as T) : r;
+  });
+}
+```
+
+The four store-named functions keep their names and their docstrings and become the seam into it — the M404 shape, where `headroomOf` is the primitive and `scouting.headroom(player)` is the shaped convenience.
+
+**The census.** `scripts/proof-repair.mjs` (7 checks): the scans are armed and the old per-store sweep is what they draw; the tree is real; **the rule is in one place** — the per-store sweep survives nowhere outside the door's own body, the door's body holds the two string checks, and all four seams are reduced to a call into it; the store still reaches all four seams at the hydration boundary, in the shape `proof-timeline` charges; the door is declared exactly once, in its home; **the identity properties are charged once, for all four stores** — a library with nothing to repair is the same array, a keyed row is the same object, a row that is not a string is untouched, a plain string becomes a RowText value, and an empty list is safe; and the door is a repair and not a rebuild.
+
+**What a reader sees.** Nothing, today: the repair only changes how a stored row is *read*, and every row in the world is already keyed or already a plain string. But the plan library's identity property was wrong — a rebuild on every hydration — and that is the kind of thing that turns into "why did my plan look edited?" later.
+
+**Next.** The concept-level detector is now the app's sharpest scout, and it has one shape left to look at: `domain/goals.ts`, `domain/memory.ts` and `domain/training.ts` all carry a "the same rule, different field" family, and the detector finds *identical* bodies — but a family of three near-identical bodies that differ by a field name is a family the detector cannot see, because normalising identifiers makes them equal only when the whole shape matches. The next unit is a detector for **near**-shapes: bodies that differ only in a name, which is where the remaining duplication hides.
 
 ### M415 — twenty-four exports promised a consumer that did not exist, and the gate now reads the promise back
 

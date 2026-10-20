@@ -6,7 +6,7 @@
 // RowText for the same reason.
 import type { Goal, GoalMetric } from "./types";
 import type { RowText } from "./rowText";
-import { asRowText } from "./rowText";
+import { repairTextField } from "./rowText";
 import { clamp, pct } from "@/lib/utils";
 
 // Mirrors the `GoalMetric` union in ./types; proof-timeline fails if the two drift,
@@ -46,10 +46,7 @@ export function attributeGoalTitle(attributeKey: string): RowText {
  *  visitor's own words, so it becomes a value rather than a guess at a key. A keyed
  *  title is read with rowLine, the one interpreter every keyed row in the app shares. */
 export function repairGoalTitles(goals: Goal[]): Goal[] {
-  if (!goals.some((g) => typeof (g.title as unknown) === "string")) return goals;
-  return goals.map((g) =>
-    typeof (g.title as unknown) === "string" ? { ...g, title: asRowText(g.title) } : g,
-  );
+  return repairTextField(goals, "title");
 }
 
 // A goal counts something, so zero is not a target: the completion rule

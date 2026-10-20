@@ -292,6 +292,33 @@ export function rowLine(row: RowText | undefined, t: Translate): string | undefi
  *  writer's, so they are kept verbatim as a value and never guessed at as a key.
  *  Called from the hydration boundary, like `sweepOverdueSessions`, so no read site
  *  has to defend itself. */
+/** Repair the plain strings a store wrote before its rows were keyed.
+ *
+ *  A row written before the union existed holds a plain string. Those words are the writer's,
+ *  so they are kept verbatim as a value and never guessed at as a key -- `asRowText` is the
+ *  conversion, and this is the sweep that finds the rows that need it.
+ *
+ *  THREE stores held this rule -- the goals library, the coach's memory and the training
+ *  sessions -- and each carried its own byte-identical copy, so a change to what "repair"
+ *  means would have had to be made in three places and would have been made in one. The
+ *  identity properties are the load-bearing part and they are charged once, here:
+ *
+ *    · a library with nothing to repair is the SAME ARRAY -- hydration runs on every load, and
+ *      rebuilding rows that did not change would make every one of them look edited;
+ *    · a row that is already keyed is the SAME OBJECT, for the same reason;
+ *    · a row whose field is not a string is returned untouched.
+ *
+ *  Called from the hydration boundary, like `sweepOverdueSessions`, so no read site has to
+ *  defend itself. */
+export function repairTextField<T extends object>(rows: T[], field: keyof T & string): T[] {
+  const read = (r: T) => (r as Record<string, unknown>)[field];
+  if (!rows.some((r) => typeof read(r) === "string")) return rows;
+  return rows.map((r) => {
+    const v = read(r);
+    return typeof v === "string" ? ({ ...r, [field]: asRowText(v) } as T) : r;
+  });
+}
+
 export function asRowText(text: string | RowText): RowText {
   return typeof text === "string" ? { value: text } : text;
 }
