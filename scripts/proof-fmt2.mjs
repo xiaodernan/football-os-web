@@ -38,11 +38,15 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const HOME = "lib/utils.ts";
-// Every file that reads the door after M369's fold: all twenty-two, none left out of the census.
+// Every file that reads the door after M369's fold. M401 removed one: domain/worldEngine.ts
+// read fmt2 ONLY inside the private euro formatter this unit deleted, so with the copy gone
+// the file reads the door zero times and leaves the census. The clause below compares the set
+// for EQUALITY against the tree, so a file that stops reading the door reddens as a stale row
+// and a file that starts reading it without being listed reddens as an unlisted reader.
 const CONSUMERS = [
   "domain/career.ts", "domain/community.ts", "domain/filmInsights.ts", "domain/footprint.ts",
   "domain/load.ts", "domain/matchEngine.ts", "domain/review.ts", "domain/scouting.ts",
-  "domain/worldEngine.ts", "data/ai.ts", "data/footballSeed.ts", "data/intelligence.ts",
+  "data/ai.ts", "data/footballSeed.ts", "data/intelligence.ts",
   "features/analytics/DataRoom.tsx", "features/film/FilmRoom.tsx", "features/football/Details.tsx",
   "features/football/FootballWorld.tsx", "features/load/LoadPage.tsx", "features/manager/ManagerOS.tsx",
   "features/player/PlayerOS.tsx", "features/review/ReviewPage.tsx", "features/settings/SettingsPage.tsx",
@@ -232,12 +236,28 @@ const doorBody = (src[HOME].match(/export const fmt2 = [^\n]*/) || [""])[0];
 ok(`the door body IS the toFixed call and it is the sole code-state plain site in lib/utils (home plain ${homeCensus.plain}, body "${doorBody.trim()}")`,
   homeCensus.plain === 1 && doorBody.trim() === "export const fmt2 = (v: number): string => v.toFixed(2);");
 
-// --- All twenty-two consumers read the door. ---
+// --- All twenty-one consumers read the door, and the USER SET is derived from the tree in BOTH
+// --- directions. M401 removed worldEngine's only fmt2 call (its private euro formatter quoted
+// --- the billions at two decimals), so the file stopped reading the door entirely and left the
+// --- consumer list. The old clause could only see that direction -- it checked that every
+// --- listed consumer still used the door, and said nothing about a file that used the door
+// --- without being listed -- so the M396 lesson applies here too: the set is compared for
+// --- EQUALITY against the tree, which refuses a stale row and an unlisted reader alike.
 const importing = CONSUMERS.filter((f) => count(src[f], IMPORT_FMT2) >= 1);
 const perCall = CONSUMERS.map((f) => [f.split("/").pop(), count(src[f], CALL_FMT2)]);
 const totalCalls = perCall.reduce((s, [, n]) => s + n, 0);
-ok(`all twenty-two consumers read the door (imports ${importing.length}/22, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70)`,
-  importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 70);
+// The tree's own reader set: every file that calls the door, read off the source. The door's
+// own home is not a consumer — its docstring quotes `+fmt2(x)` while explaining the unary-plus
+// bridge, so a raw scan reads it as a reader, and the OLD clause never saw that because it
+// only ever looked at the listed files.
+const treeReaders = carriers.filter((f) => f !== HOME && count(src[f], CALL_FMT2) > 0).sort();
+const listedReaders = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) > 0).sort();
+const unlisted = treeReaders.filter((f) => !CONSUMERS.includes(f));
+const stale = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) === 0);
+ok(`all twenty-one consumers read the door, and the user set is EQUAL to the tree's own (imports ${importing.length}/21, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70; tree readers ${treeReaders.length}, unlisted ${unlisted.length} [${unlisted.join(",")}], stale rows ${stale.length} [${stale.join(",")}])`,
+  importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 70 &&
+  treeReaders.length === CONSUMERS.length && treeReaders.join(",") === listedReaders.join(",") &&
+  unlisted.length === 0 && stale.length === 0);
 
 // --- Convergence completeness: across the whole tree, a code-state plain .toFixed(2) survives only ---
 // --- in the door's own body — no residue of the hand-spelled display form remains anywhere. ---

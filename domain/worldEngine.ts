@@ -11,7 +11,7 @@
 // regeneration and a simulated league champion.
 
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
-import { clamp, indexById, fmt2, safeDiv } from "@/lib/utils";
+import { clamp, indexById, safeDiv } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
 import { POSITION_BY_GROUP, POSITION_GROUPS, marketValue, capRound, sum } from "@/domain/attributes";
 import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
@@ -242,7 +242,13 @@ export function runWorld(base: WorldInput, seasonsElapsed: number): WorldSnapsho
   return { players, seasonsElapsed, history };
 }
 
-export function formatMarket(v: number): string {
-  if (v >= 1_000_000_000) return `€${fmt2((v / 1_000_000_000))}B`;
-  return `€${Math.round(v / 1_000_000)}M`;
-}
+// M401: this module used to carry its own euro formatter (`formatMarket`), and the app has
+// said in two places that there is ONE money door -- domain/career.ts:617 ("the season prize
+// total prints through the app's one `formatValue`, not a private copy") and
+// domain/compare.ts:146 ("the value row prints money through the app's one `formatValue`, not
+// a local copy"). This copy was the survivor, and it was the one with the reader-visible
+// defect: it had NO K branch, so a squad worth €400K read "€0M" and one worth €500K read
+// "€1M" -- a figure that says zero where the value is not zero. It also quoted the billions
+// at two decimals and the millions at none, so the same currency read three ways on one
+// screen. The world screen now reads the shared door, like the player page, the dashboard,
+// the manager and the transfer centre already do (features/world/DynamicWorld.tsx).

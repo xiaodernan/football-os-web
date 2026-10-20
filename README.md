@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M400
+Work ships one milestone per commit and is currently at M401
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7078,6 +7078,40 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M401 — the third euro formatter was still private, and it was the one that said `€0M` for a squad worth €400K
+
+The app states its money convention in two places' prose, and both statements are still true today:
+
+- `domain/career.ts:617` — *"The season prize total prints through the app's one `formatValue`, not a private copy: this module kept its own euro rule (drop the decimals on a whole million, a lowercase 'k' below one) while the Manager OS panel beside it already rounded the same currency the shared way (one decimal up to ten million, none beyond)"*
+- `domain/compare.ts:146` — *"the value row prints money through the app's one `formatValue`, not a local copy: this module once carried its own euro formatter, so a future rounding tweak to the shared one would silently leave the comparison page quoting the same transfer fee a different way than the player page, dashboard and manager all already do"*
+
+Two private copies were fixed by those sentences. A **third** survived, and nobody noticed: `domain/worldEngine.ts`'s `formatMarket`.
+
+**What it did.** It had no **K branch** at all:
+
+```
+formatMarket(400_000)  ->  "€0M"      ← a figure that says ZERO where the value is not zero
+formatMarket(500_000)  ->  "€1M"      ← rounded UP across a whole million
+formatMarket(999)      ->  "€0M"
+formatValue(400_000)   ->  "€400K"    ← what the shared door says
+```
+
+It also quoted the billions at **two** decimals and the millions at **none**, so the same currency read three different ways on one screen: the Dynamic World's market tile said `€2.25B` where the player page said `€2.3B` for the same magnitude family.
+
+**What it is now.** The copy is gone. `features/world/DynamicWorld.tsx` reads the app's one money door — and it already imported from `@/data/footballService`, so the fold added no new dependency edge. The world screen's market tile changed from `€86030M` to `€86.0B`: the shared door's magnitude ladder is right, and a ten-digit number in a compact tile was not.
+
+**The new census.** `scripts/proof-money.mjs` (9 checks): the scans are armed and the *compact-magnitude* shape is what draws the line (a planted private copy reads 1, a plain euro `€${v}` reads 0, a euro caption without a division `€{maxValue}M` reads 0); the tree is real and every subject is inside it; **the money door is UNIQUE** — exactly one function in the whole tree carries a compact-magnitude euro, and it is the shared door; the private copy is gone by name as well as by shape (looked for in *code*, so the module that carried it can record the removal in a comment); **the K branch is there** — the door reads a small total as a small total, and the plant (a door without the branch) reads `€0M` exactly as the old copy did; the door's per-branch conventions are pinned by exact reading (billions at one decimal, millions conditional on €10M, thousands at zero, the raw euro below a thousand — 9 pins); the world screen reads the shared door and its market tile prints the door's reading of the world's own total (610 players → 86,030,200,000 → `€86.0B`, computed the way the screen computes it); every money reader reads the one door, **including the one that hands it as a value** (`domain/compare.ts`'s `display: formatValue`, which a call-parenthesis scan would have missed); and the app's words and the code agree — both prose claims still name the one door, and the engine declares no money formatter and records the removal in a comment.
+
+**The siblings that had to move.** Two, and both are the same shape of lesson.
+
+`proof-world.mjs` took three names off the engine, and one of them was `formatMarket`. Its `take()` helper is the M396 mechanism: the names are looked up and the lookup is charged, so a name that moved behind a door reds with a message naming the module it moved to — which is exactly what happened, and the message was right. The engine's list is now `["runWorld", "seasonLabel"]`, the money door is taken off `data/footballService.ts` instead, the clause that pinned the old readings now pins the shared door's (`€12M`, `€1.5B` — the billions lost a decimal, which is the shared convention), and a new guard refuses the engine re-exporting a formatter of its own.
+
+`proof-fmt2.mjs` was the other one, and it is the M396 lesson applied to a census that had never needed it. `domain/worldEngine.ts` read the `fmt2` door in exactly one place — the private formatter this unit deleted — so with the copy gone the file reads the door **zero** times and had to leave the consumer list. The old clause could only see that one direction: it checked that every *listed* consumer still used the door, and said nothing about a file that used the door *without being listed*. The clause now compares the set for **equality** against the tree, which refuses a stale row and an unlisted reader alike. The door's own home is excluded from the derived set — its docstring quotes `+fmt2(x)` while explaining the unary-plus bridge, and the old clause never saw that because it only ever looked at the listed files.
+
+**The honest limit.** This unit changed reader-visible text, and more of it than any fold before it: 48 of the 73 shipped squad totals read differently, because the billions lose their second decimal. That is the cost of one convention, and the census charges the number rather than claiming nothing moved. The magnitudes themselves never changed — a `€2.25B` still means 2.25 billion — only the precision the app shows everywhere else.
+
+**Next.** The money door itself lives in `data/footballService.ts`, a data provider, while every other display door lives in `lib/utils.ts` beside the primitives it is built from. Moving it there is the next unit: a simulation module could then read money without pulling the data provider, and the door list would read in one place.
 
 ### M400 — the empty-string name fallback read as a hole, and the decision was to make it read as the app's own marker
 

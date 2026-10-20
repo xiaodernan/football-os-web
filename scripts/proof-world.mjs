@@ -9,6 +9,7 @@ import { createServer } from "vite";
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const engine = await server.ssrLoadModule("/domain/worldEngine.ts");
 const attributes = await server.ssrLoadModule("/domain/attributes.ts");
+const service = await server.ssrLoadModule("/data/footballService.ts");
 
 // M396: a symbol moved behind a door and the hand-typed destructure beside it was never re-derived —
 // `marketValue` came to the attributes domain in M381 while line 10 here still pulled it out of
@@ -18,18 +19,28 @@ const attributes = await server.ssrLoadModule("/domain/attributes.ts");
 // be a live export of the module it is taken from, and `marketValue` must ride the attributes door —
 // worldEngine only IMPORTS it, so a destructure that still asks worldEngine for it reddens here with a
 // message naming the module, instead of reddening nowhere at all.
-const fromEngine = ["runWorld", "seasonLabel", "formatMarket"];
+// M401: `formatMarket` used to be one of the three names this script took off the engine —
+// the engine carried its own euro formatter, and it was the one with no K branch, so a total
+// worth €400K read "€0M". The app states its money convention in two places' prose ("the app's
+// one `formatValue`"), so the copy went behind that door. The lookup below is what caught it:
+// the destructure names are looked up and the lookup is charged, so a name that moved behind a
+// door reds with a message naming the module it moved to — which is exactly what happened.
+const fromEngine = ["runWorld", "seasonLabel"];
 const fromAttributes = ["marketValue"];
+const fromService = ["formatValue"];
 const take = (ns, mod, names) => {
   const missing = names.filter((n) => typeof ns[n] !== "function");
   if (missing.length) throw new Error(`${mod} no longer exports ${missing.join(", ")} — re-derive the door it moved behind`);
   return Object.fromEntries(names.map((n) => [n, ns[n]]));
 };
-const { runWorld, seasonLabel, formatMarket } = take(engine, "domain/worldEngine.ts", fromEngine);
+const { runWorld, seasonLabel } = take(engine, "domain/worldEngine.ts", fromEngine);
 const { marketValue } = take(attributes, "domain/attributes.ts", fromAttributes);
+const { formatValue } = take(service, "data/footballService.ts", fromService);
 // worldEngine must still CONSUME the door rather than own a second copy of the curve (M381's contract),
 // and it must not re-export one — a re-export would let the stale spelling above silently come back.
 if (engine.marketValue !== undefined) throw new Error("worldEngine re-exports marketValue — M381 moved the curve to the attributes door");
+// M401: and the engine must not own a money formatter either — the euro rule belongs to the one door.
+if (engine.formatMarket !== undefined) throw new Error("worldEngine still exports formatMarket — M401 moved the euro rule behind the one money door");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -68,7 +79,11 @@ ok(`…and the elapsed values the screen hands it produce ${new Set([0, 1, 2, 3,
 ok("market value rises with ability at fixed age", marketValue(80, 25) > marketValue(70, 25));
 ok("market value carries a youth premium at fixed ability", marketValue(75, 22) > marketValue(75, 32) && marketValue(75, 26) > marketValue(75, 35));
 ok("market value is non-negative and rounded to €100k", marketValue(50, 25) > 0 && marketValue(50, 25) % 100000 === 0 && marketValue(45, 40) === 0);
-ok("formatMarket renders M and B units", formatMarket(12_400_000) === "€12M" && formatMarket(1_500_000_000) === "€1.50B");
+// M401: the euro rule is no longer this module's. The clause still pins the units the engine
+// used to spell by hand, but it reads them off the app's ONE money door, and it charges that
+// the engine no longer declares a formatter of its own.
+ok(`the euro rule is the app's one door's, not the engine's: the shared door renders the engine's units (formatValue(12_400_000) = "${formatValue(12_400_000)}", formatValue(1_500_000_000) = "${formatValue(1_500_000_000)}") and the engine declares no money formatter (formatMarket on the engine: ${engine.formatMarket === undefined ? "absent" : "PRESENT"})`,
+  formatValue(12_400_000) === "€12M" && formatValue(1_500_000_000) === "€1.5B" && engine.formatMarket === undefined);
 
 // --- seasons=0 is a faithful, copied identity -----------------------------
 const zero = runWorld(base, 0);
