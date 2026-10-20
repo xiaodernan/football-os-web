@@ -3,8 +3,9 @@
 // the app spelled that by hand — the Manager career's season-form var and the Film Room's scan-trend
 // tile — and the sibling `signed` door cannot serve either of them, because it coerces the RAW number
 // and would show "+1.5" where the reader is shown "+1.50". M393 put the two spellings behind one door
-// and folded the Film Room's tile onto it; career's cell is still inline and is charged here BY NAME
-// (its carrier is mid-flight in another lane), so a fold of it has to come back and update this census.
+// and folded the Film Room's tile onto it; M399 folded career's cell too, which is what this file
+// predicted would have to come back and edit the census — the residue was charged BY NAME, so its
+// disappearance is a measured event here, not a silent one. Nothing is a named residue now.
 //
 // Three shapes sit next to each other and must NOT be unified, which is why each scan is planted both
 // ways:
@@ -39,9 +40,11 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const HOME = "lib/utils.ts";
-// The padded family, cell by cell: FilmRoom folded at M393, career still a named residue.
-const RESIDUE = ["domain/career.ts"];
-const FOLDED = ["features/film/FilmRoom.tsx"];
+// The padded family, cell by cell: FilmRoom folded at M393, career at M399. RESIDUE is what a future
+// hand-spelled cell has to be added to, and it is empty on purpose — every carrier below is required
+// to be a CALLER of the door, so a cell that vanished instead of folding cannot satisfy this census.
+const RESIDUE = [];
+const FOLDED = ["features/film/FilmRoom.tsx", "domain/career.ts"];
 // The boolean sibling, deliberately outside this door's population.
 const BOOLEAN_SITE = "features/world/DynamicWorld.tsx";
 
@@ -125,23 +128,25 @@ ok(`the door body is the padded idiom itself, read by line so the docstring that
 const callers = carriers.filter((f) => count(src[f], CALL_SIGNED2) > 0).sort();
 const callerImports = callers.filter((f) => count(src[f], IMPORT_SIGNED2) >= 1);
 const callerSpelling = callers.filter((f) => f !== HOME && count(src[f], PADDED_SIGN) > 0);
-const filmRoomCalls = count(src["features/film/FilmRoom.tsx"], CALL_SIGNED2);
-ok(`every caller of signed2 imports it and none still glues the pad by hand (callers ${callers.join(",")}, importers ${callerImports.length}/${callers.length}, callers-with-inline ${callerSpelling.length}, FilmRoom calls ${filmRoomCalls}, floor 1)`,
+// The caller set is DERIVED and pinned to the folded carriers, so the two claims cannot drift: a cell
+// that was deleted instead of folded leaves no caller, and a new hand-spelled cell is a caller-with-inline.
+const foldedCalls = FOLDED.map((f) => [f, count(src[f], CALL_SIGNED2)]);
+ok(`signed2's callers are exactly its two folded cells and every one imports the door and spells nothing by hand (callers ${callers.join(",")}, importers ${callerImports.length}/${callers.length}, callers-with-inline ${callerSpelling.length}, ${foldedCalls.map(([f, c]) => `${f.split("/").pop()} calls ${c}`).join(", ")}, floor 1)`,
   callers.length >= 1 && callerImports.length === callers.length && callerSpelling.length === 0 &&
-  callers.includes("features/film/FilmRoom.tsx") && filmRoomCalls >= 1);
+  callers.join(",") === FOLDED.slice().sort().join(",") && foldedCalls.every(([, c]) => c >= 1));
 
-// --- Completeness: across the tree the padded spelling survives in exactly two places — the door's ---
-// --- own body line and career's named residue. HOME is read BY LINE because its docstring quotes the ---
-// --- shape it replaced (a raw file scan there reads 2 and would hide the quote as a stray). Any third ---
-// --- spelling reddens this set — and so does career's own fold, which is the point of pinning it. ---
+// --- Completeness: across the tree the padded spelling survives in ONE place — the door's own body ---
+// --- line. HOME is read BY LINE because its docstring quotes the shape it replaced (a raw file scan ---
+// --- there reads 2 and would hide the quote as a stray). Both carriers were required to be CALLERS of ---
+// --- the door in the clause above, so this zero is not a blind scan: the cells are present and folded. ---
 const paddedByFile = carriers.filter((f) => (f === HOME ? count(signed2Line, PADDED_SIGN) : count(src[f], PADDED_SIGN)) > 0).sort();
 const expectedPadded = [HOME, ...RESIDUE].sort();
 const docQuote = count(src[HOME].split("\n").filter((l) => /^\s*\/\//.test(l)).join("\n"), PADDED_SIGN);
-const residueSites = RESIDUE.map((f) => [f, count(src[f], PADDED_SIGN)]);
 const foldedSites = FOLDED.map((f) => [f, count(src[f], PADDED_SIGN)]);
-ok(`the padded sign spelling survives only in the door body and career's named residue (carriers ${paddedByFile.join(",")}; expected ${expectedPadded.join(",")}; career ${residueSites.map(([, n]) => n).join(",")}, FilmRoom ${foldedSites.map(([, n]) => n).join(",")}; door docstring quotes it ${docQuote} and is read by line; planted padded ${plantPadded})`,
+const residueSites = RESIDUE.map((f) => [f, count(src[f], PADDED_SIGN)]);
+ok(`the padded sign spelling survives only in the door body — both cells folded (${paddedByFile.join(",")}; expected ${expectedPadded.join(",")}; ${foldedSites.map(([f, c]) => `${f.split("/").pop()} ${c}`).join(", ")}; named residues ${residueSites.length}; door docstring quotes it ${docQuote} and is read by line; planted padded ${plantPadded})`,
   plantPadded === 1 && paddedByFile.length === expectedPadded.length && paddedByFile.every((f, i) => f === expectedPadded[i]) &&
-  residueSites[0][1] === 1 && foldedSites[0][1] === 0 && docQuote === 1);
+  foldedSites.length === 2 && foldedSites.every(([, c]) => c === 0) && residueSites.length === 0 && docQuote === 1);
 
 // --- Must-not-unify, behavioural, against the RAW sibling: both doors are the SHIPPED ones here, not ---
 // --- a re-spelling of mine. A fold onto `signed` would move the figure the reader sees. ---
@@ -188,6 +193,19 @@ const pOldSpelling = count('{trend == null ? "—" : signed2(trend)}', RENDER_CE
 const filmRoomCell = count(src["features/film/FilmRoom.tsx"], RENDER_CELL);
 ok(`the Film Room tile renders signed2 inside its own null guard with the fallback itself on the ABSENT door (${filmRoomCell} live site; planted guarded cell ${pGuardedCell}, planted unguarded call ${pUnguardedCall}, planted import-only fold ${pImportOnly}, planted pre-fold "—" spelling ${pOldSpelling})`,
   filmRoomCell === 1 && pGuardedCell === 1 && pUnguardedCall === 0 && pImportOnly === 0 && pOldSpelling === 0);
+
+// --- Reachability, the career half: the folded call sits INSIDE the vars object of the ---
+// --- `mgr.outlook.form` row, so the door's output is what that dictionary string interpolates. The ---
+// --- pre-fold spelling is planted and must read 0 — that pairing is what makes this pin bind the FOLD ---
+// --- rather than any `form:` property. careerForm is typed `: number` and returns a number on every ---
+// --- path, which is why this row needs no null guard of its own (FilmRoom's did). ---
+const CAREER_ROW = /key: "mgr\.outlook\.form", vars: \{ form: signed2\(form\)/g;
+const careerRow = count(src["domain/career.ts"], CAREER_ROW);
+const pCareerFolded = count('  { key: "mgr.outlook.form", vars: { form: signed2(form), ppg: fmt2(ourPpg) } },', CAREER_ROW);
+const pCareerOldSpelling = count('  { key: "mgr.outlook.form", vars: { form: `${form >= 0 ? "+" : ""}${form.toFixed(2)}`, ppg: fmt2(ourPpg) } },', CAREER_ROW);
+const pCareerImportOnly = count('import { signed2 } from "@/lib/utils";', CAREER_ROW);
+ok(`the career row interpolates the DOOR, not a hand-glued pad (career ${careerRow} live row; planted folded row ${pCareerFolded}, planted pre-fold inline cell ${pCareerOldSpelling}, planted import-only fold ${pCareerImportOnly})`,
+  careerRow === 1 && pCareerFolded === 1 && pCareerOldSpelling === 0 && pCareerImportOnly === 0);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

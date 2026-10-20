@@ -11,12 +11,12 @@
 //     false arm is String(n). An INLINE caller is `>= 0 ? "+" : ""}` where the number is glued
 //     OUTSIDE by the surrounding template. The census charges `"+" : ""` (empty false arm), never the
 //     door's `"+" + n :`, so the door body reads 0 sites while real inline callers read 1.
-//   · the PADDED sibling (career.ts's form cell, FilmRoom's trend cell) signs a PRE-FORMATTED string
-//     `… >= 0 ? "+" : ""}${x.toFixed(2)}`. signed() coerces the RAW number and would drop the two
-//     decimals ("+1.50" -> "+1.5"), so these are a SEPARATE string-format concern (as M354 left the
-//     UI `${…}%` sites out of pct). M393 gave them their OWN `signed2` door rather than routing them
-//     here, so this census expects the padded spelling in ZERO consumers and charges the one place it
-//     still appears — signed2's body, in the door file — as a door, never as a stray.
+//   · the PADDED sibling signs a PRE-FORMATTED string `… >= 0 ? "+" : ""}${x.toFixed(2)}`. signed()
+//     coerces the RAW number and would drop the two decimals ("+1.50" -> "+1.5"), so these are a
+//     SEPARATE string-format concern (as M354 left the UI `${…}%` sites out of pct). M393 gave them
+//     their OWN `signed2` door and folded FilmRoom's trend cell onto it; M399 folded the last hand-
+//     spelled cell (career.ts's form var), so the padded spelling now survives in exactly ONE place —
+//     signed2's own body line — which this census charges as a door, never as a stray.
 //   · the BOOLEAN sibling (DynamicWorld's delta) is `up ? "+" : ""` — the sign comes from a boolean
 //     computed elsewhere, not a numeric comparison. The `>= 0` anchor deliberately reads 0 here.
 // M364 converged the last two raw residues (career.ts's goal-difference cell and the ManagerOS delta
@@ -36,10 +36,9 @@ const HOME = "lib/utils.ts";
 const CONSUMERS = ["domain/review.ts", "domain/filmInsights.ts", "features/review/ReviewPage.tsx"];
 // Former raw writer residues, now converged: both read the door, so a re-inline reddens.
 const FORMER_RAW = ["domain/career.ts", "features/manager/ManagerOS.tsx"];
-// The padded-family cells, sent to the SIBLING `signed2` door at M393. FilmRoom reads it; career's
-// cell still spells the pad inline and is charged by name below. Both must read ZERO padded spellings
-// under this door's scans — a future "just use signed" at either site reddens this
-// census, because signed() would drop the two-decimal pad the reader is shown.
+// The padded-family cells, both sent to the SIBLING `signed2` door (FilmRoom at M393, career at M399).
+// Both must read ZERO padded spellings under this door's scans — a future "just use signed" at either
+// site reddens this census, because signed() would drop the two-decimal pad the reader is shown.
 const PADDED_SITES = ["domain/career.ts", "features/film/FilmRoom.tsx"];
 
 // Walk the shipped source roots. scripts/ is NOT walked, so the plants below are the reference the
@@ -121,38 +120,40 @@ ok(`none of the three consumers still glues the numeric sign inline (read ${cons
 ok(`the DynamicWorld boolean delta (up ? "+" : "") reads 0 under the numeric sign scan so it is not silently charged (${count(src["features/world/DynamicWorld.tsx"], INLINE_SIGN)}; planted boolean reads ${plantBoolean})`,
   plantBoolean === 0 && count(src["features/world/DynamicWorld.tsx"], INLINE_SIGN) === 0);
 
-// --- Completeness: the numeric sign ternary now survives in EXACTLY two files — the door (signed2's ---
-// --- body, plus the docstring that quotes the shape it replaced) and ONE named residue: career.ts's ---
-// --- form cell, whose carrier is mid-flight in another lane, so it is charged by identity rather ---
-// --- than excised here. FilmRoom, the other padded cell, left the list at M393; a third spelling ---
-// --- anywhere reddens this set, and so does career's own fold — which is the point of pinning it. ---
-const RESIDUE_PAIRED = ["domain/career.ts"];
+// --- Completeness: the numeric sign ternary now survives in EXACTLY ONE file — the door. Before ---
+// --- M399 it survived in two: the door plus career.ts's hand-spelled padded cell, which was charged ---
+// --- by identity because its carrier was mid-flight in another lane. That excuse is spent: the cell ---
+// --- reads the door, so the set is pinned to lib/utils alone. A third spelling anywhere, OR a ---
+// --- re-inline of career's cell, reddens this set. ---
 const inlineByFile = carriers.filter((f) => count(src[f], INLINE_SIGN) > 0).sort();
-const expectedInline = [HOME, ...RESIDUE_PAIRED].sort();
+const expectedInline = [HOME];
 const plantRawSurvivor = count(`  delta: \`\${x >= 0 ? "+" : ""}\${x}\`,`, INLINE_SIGN);
-ok(`the numeric sign ternary survives only in the door and its one named residue (carriers ${inlineByFile.join(",")}; expected ${expectedInline.join(",")}; planted raw reads ${plantRawSurvivor})`,
+ok(`the numeric sign ternary survives only in the door — no consumer spells it by hand (carriers ${inlineByFile.join(",")}; expected ${expectedInline.join(",")}; planted raw reads ${plantRawSurvivor})`,
   plantRawSurvivor === 1 && inlineByFile.length === expectedInline.length && inlineByFile.every((f, i) => f === expectedInline[i]));
 
 // --- The former raw residues carry ZERO raw (non-padded) inline sign sites — both read the door.
-// career's one surviving inline is its padded form cell, charged by name above, not a raw site.
+// After M399 they carry ZERO inline sites at all; rawOnly staying 0 with the padded count also 0 is
+// what keeps this clause a raw-sign claim rather than a restatement of the padded census below.
 const rawOnly = (f) => count(src[f], INLINE_SIGN) - count(src[f], PADDED_SIGN);
 const formerRawInline = FORMER_RAW.map((f) => [f, rawOnly(f)]);
 const formerRawImports = FORMER_RAW.filter((f) => count(src[f], IMPORT_SIGNED) >= 1);
 ok(`both former raw residues re-inlined nothing raw and import signed instead (raw ${formerRawInline.map(([, n]) => n).join(",")}; importers ${formerRawImports.length}/${FORMER_RAW.length}: ${formerRawImports.join(", ")})`,
   formerRawInline.every(([, n]) => n === 0) && formerRawImports.length === FORMER_RAW.length);
 
-// --- Padded family, site by site: FilmRoom's trend cell now reads the door (0 spellings); career's ---
-// --- form cell is the one residue still spelling it by hand (1). HOME carries the idiom twice — ---
-// --- signed2's body and the docstring that quotes the shape it replaced — so the door is read BY ---
-// --- LINE, not by file: the door cannot be charged as its own stray. The exact body line is pinned ---
-// --- too, so renaming the pad or dropping it here reddens this census. ---
+// --- Padded family, site by site: BOTH cells read the door, so both spell the pad ZERO times. HOME ---
+// --- carries the idiom twice — signed2's body and the docstring that quotes the shape it replaced — ---
+// --- so the door is read BY LINE, not by file: the door cannot be charged as its own stray. The exact ---
+// --- body line is pinned too, so renaming the pad or dropping it here reddens this census, and the ---
+// --- derived padded-carrier set makes "only the door spells it" a measurement rather than a hope. ---
 const signed2Line = (src[HOME].match(/export const signed2[^\n]*/) || [""])[0];
 const docQuote = count(src[HOME].split("\n").filter((l) => /^\s*\/\//.test(l)).join("\n"), PADDED_SIGN);
 const paddedSites = PADDED_SITES.map((f) => [f, count(src[f], PADDED_SIGN)]);
-ok(`signed2's body IS the padded idiom, FilmRoom left it and career is the named residue (body line reads ${count(signed2Line, PADDED_SIGN)}; ${paddedSites.map(([f, n]) => `${f.split("/").pop()} ${n}`).join(", ")}; door docstring quotes it ${docQuote} and is excluded; planted padded reads ${plantPadded})`,
+const paddedByFile = carriers.filter((f) => (f === HOME ? count(signed2Line, PADDED_SIGN) : count(src[f], PADDED_SIGN)) > 0).sort();
+ok(`signed2's body IS the padded idiom and both cells left it (body line reads ${count(signed2Line, PADDED_SIGN)}; ${paddedSites.map(([f, n]) => `${f.split("/").pop()} ${n}`).join(", ")}; padded carriers ${paddedByFile.join(",")}; door docstring quotes it ${docQuote} and is excluded; planted padded reads ${plantPadded})`,
   plantPadded === 1 && count(signed2Line, PADDED_SIGN) === 1 && docQuote === 1 &&
   signed2Line.trim() === 'export const signed2 = (v: number): string => `${v >= 0 ? "+" : ""}${v.toFixed(2)}`;' &&
-  paddedSites[0][1] === 1 && paddedSites[1][0] === "features/film/FilmRoom.tsx" && paddedSites[1][1] === 0);
+  paddedSites.every(([, n]) => n === 0) && paddedSites.length === 2 &&
+  paddedByFile.length === 1 && paddedByFile[0] === HOME);
 
 // --- Must-not-unify, behavioural: signed() coerces the RAW number, so it cannot serve a padded cell.
 // Both doors are the SHIPPED ones here, not a re-spelling of mine. -0 is measured, not assumed:

@@ -11,10 +11,10 @@
 // fallback (five); a receiver behind `?.` short-circuits the whole call to undefined and
 // fmt2(undefined) would throw (Data Room league average, one); the two `parseFloat((…).toFixed(2))`
 // seeds round back to a number; and the padded sign family — a `+` glued in front of a fixed-width
-// string. M393 gave that last family its own `signed2` door in lib/utils: the Film Room scan-trend
-// cell folded onto it, so the family now counts the door's own body plus the one cell that is still
-// inline (domain/career's season form, whose carrier is another lane's working copy). proof-signed
-// pins the literal form, so this proof re-measures it rather than trusting the sibling.
+// string. M393 gave that last family its own `signed2` door in lib/utils and folded the Film Room's
+// scan-trend cell onto it; M399 folded the career form cell too, so the family is now the door's own
+// body alone. proof-signed2 pins the literal form, so this proof re-measures it rather than trusting
+// the sibling.
 // scripts/ is not walked, so the plants arm the scans instead of entering the census.
 // Run: node scripts/proof-fmt2.mjs
 import { createServer } from "vite";
@@ -49,15 +49,16 @@ const CONSUMERS = [
   "features/sim/SimulationLab.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
-// FilmRoom is NOT in this table any more: its padded cell folded onto the signed2 door at M393, and the
-// padded clause below charges every padded site in the tree by file, so its absence is measured, not assumed.
+// FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the
+// signed2 door. The padded clause below charges every padded site in the tree by file, so a carrier's
+// absence from the table is measured, not assumed; and career is still present in CONSUMERS above, so
+// removing its row here cannot hide the file from the census altogether.
 const FAMILY_PINS = [
   ["data/ai.ts", 3, 0, 0, 0],
   ["features/dashboard/Dashboard.tsx", 1, 0, 0, 0],
   ["features/player/PlayerOS.tsx", 1, 0, 0, 0],
   ["features/analytics/DataRoom.tsx", 0, 1, 0, 0],
   ["data/footballSeed.ts", 0, 0, 2, 0],
-  ["domain/career.ts", 0, 0, 0, 1],
 ];
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
@@ -251,12 +252,13 @@ ok(`every code-state plain .toFixed(2) survives only in the door body — no res
   plainByFile.length === 1 && plainByFile[0] === HOME && strayPlain.length === 0 && treeCensus.unparsed === 0);
 
 // --- The four residue families: exact counts across the tree, and exactly the files pinned above. ---
-// --- The padded total reads 2 before and after M393 for DIFFERENT reasons (career+FilmRoom cells, ---
-// --- then the signed2 body+career), so the number alone cannot be the pin — the carriers are. ---
+// --- The padded total read 2 before M393 (career + FilmRoom cells) and 2 after it (door body + ---
+// --- career) for DIFFERENT reasons, and 1 now that both folded — so the number alone cannot be the ---
+// --- pin, and never was: the carriers are, and each carrier is separately required to import the door. ---
 const paddedByFile = carriers.filter((f) => census(src[f]).padded > 0).sort();
-ok(`the four declared families total the pinned 5+1+2+2 sites (optional-before ${treeCensus.optionalBefore}, optional-receiver ${treeCensus.optionalReceiver}, parseFloat ${treeCensus.parseFloat}, padded ${treeCensus.padded} in ${paddedByFile.join(",")})`,
+ok(`the four declared families total the pinned 5+1+2+1 sites (optional-before ${treeCensus.optionalBefore}, optional-receiver ${treeCensus.optionalReceiver}, parseFloat ${treeCensus.parseFloat}, padded ${treeCensus.padded} in ${paddedByFile.join(",")})`,
   treeCensus.optionalBefore === 5 && treeCensus.optionalReceiver === 1 && treeCensus.parseFloat === 2 &&
-  treeCensus.padded === 2 && paddedByFile.join(",") === "domain/career.ts,lib/utils.ts");
+  treeCensus.padded === 1 && paddedByFile.join(",") === "lib/utils.ts");
 const familyExact = FAMILY_PINS.every(([f, ob, or, pf, pd]) => {
   const c = census(src[f]);
   return c.optionalBefore === ob && c.optionalReceiver === or && c.parseFloat === pf && c.padded === pd;
@@ -279,17 +281,19 @@ ok(`fmt2 is NOT round2 in type or in rounding path — the string keeps a pad St
 ok(`the unary-plus bridge is byte-for-byte the inline form the fold replaced (+fmt2(v) = +v.toFixed(2) on ${samples.filter((v) => +fmt2(v) === +v.toFixed(2)).length}/${samples.length} samples, measured)`,
   samples.every((v) => +fmt2(v) === +v.toFixed(2)));
 
-// --- Proof-signed cross-guard: the padded-sign literal proof-signed pins survives on exactly the ---
-// --- door's own body line and career's still-inline cell, and has LEFT FilmRoom — measured here ---
-// --- rather than trusted from the sibling. HOME is read by line because its docstring quotes the ---
-// --- shape it replaced, which the raw literal scan cannot tell apart from code. ---
+// --- Proof-signed2 cross-guard: the padded-sign literal proof-signed2 pins now survives on the door's ---
+// --- own body line ALONE, and has LEFT both carriers — measured here rather than trusted from the ---
+// --- sibling. HOME is read by line because its docstring quotes the shape it replaced, which the raw ---
+// --- literal scan cannot tell apart from code. Each former carrier is required to IMPORT the door, so ---
+// --- a cell deleted rather than folded cannot satisfy this clause. ---
 const signed2Line = (src[HOME].match(/export const signed2[^\n]*/) || [""])[0];
 const paddedCarry = [["signed2 body", count(signed2Line, PADDED_SIGN)],
   ["domain/career.ts", count(src["domain/career.ts"], PADDED_SIGN)],
   ["features/film/FilmRoom.tsx", count(src["features/film/FilmRoom.tsx"], PADDED_SIGN)]];
-const filmRoomImportsSigned2 = /import[^;]*\bsigned2\b[^;]*from ["']@\/lib\/utils["']/.test(src["features/film/FilmRoom.tsx"]);
-ok(`the padded sign literal now lives in the signed2 door and career's named residue, and FilmRoom left it (door body ${paddedCarry[0][1]}, career ${paddedCarry[1][1]}, FilmRoom ${paddedCarry[2][1]}, FilmRoom imports signed2 ${filmRoomImportsSigned2})`,
-  paddedCarry[0][1] === 1 && paddedCarry[1][1] === 1 && paddedCarry[2][1] === 0 && filmRoomImportsSigned2);
+const importsSigned2 = (f) => /import[^;]*\bsigned2\b[^;]*from ["']@\/lib\/utils["']/.test(src[f]);
+const carrierImports = ["domain/career.ts", "features/film/FilmRoom.tsx"].filter(importsSigned2);
+ok(`the padded sign literal lives only in the signed2 door now — both cells left it and both import the door (door body ${paddedCarry[0][1]}, career ${paddedCarry[1][1]}, FilmRoom ${paddedCarry[2][1]}, importers ${carrierImports.length}/2)`,
+  paddedCarry[0][1] === 1 && paddedCarry[1][1] === 0 && paddedCarry[2][1] === 0 && carrierImports.length === 2);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

@@ -4,7 +4,7 @@ import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
 import { byOverall, meanOverall, byTableStanding, sum, resultPoints } from "./attributes";
 import type { RowText } from "./rowText";
-import { clamp, pct, round2, safeDiv, signed, fmt2 } from "@/lib/utils";
+import { clamp, pct, round2, safeDiv, signed, signed2, fmt2 } from "@/lib/utils";
 import { round1 } from "./scouting";
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
@@ -291,7 +291,7 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
     gapToProjectedLeader === 0
       ? { key: "mgr.outlook.projectedLevel", vars: { points: projPts, leader } }
       : { key: "mgr.outlook.projectedBehind", vars: { points: projPts, gap: round1(gapToProjectedLeader), leader } },
-    { key: "mgr.outlook.form", vars: { form: `${form >= 0 ? "+" : ""}${form.toFixed(2)}`, ppg: fmt2(ourPpg) } },
+    { key: "mgr.outlook.form", vars: { form: signed2(form), ppg: fmt2(ourPpg) } },
     { key: "mgr.outlook.method", vars: { remaining } },
   ];
   const confidence = Math.min(85, 12 + played * 9);
