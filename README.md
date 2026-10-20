@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M404
+Work ships one milestone per commit and is currently at M405
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -325,10 +325,15 @@ the assembled object always contained every key; deleting a zh-TW line left the 
 green. The block is now self-contained and the proof detects both a reintroduced spread
 and a reintroduced Simplified character, each mutation-tested. Two characters the audit
 flagged and left alone — 峰, in three strings, and 群 — are ordinary Traditional variant
-forms, not Simplified. A sweep of the remaining panels still owes a few untranslated UI
-strings — the Dashboard's "% confidence" suffix and its "News →" link are two known ones,
-and Manager OS's whole tab strip is hardcoded English — so they are listed here as
-outstanding rather than described as finished.
+forms, not Simplified. A sweep of the remaining panels still owed a few untranslated UI
+strings — the Dashboard's "% confidence" suffix and its "News →" link were two of them,
+and Manager OS's whole tab strip was hardcoded English. **All three were resolved by
+later milestones, and this note outlived them** — M405 withdrew it, and the evidence is
+in `scripts/proof-ledger.mjs`: `dash.confidence` now reads "可信度 {n}%" in both Chinese
+locales, the Dashboard holds no "News" literal at all (the link reads `dash.allBadges`),
+and the Manager OS tab strip reads its seven labels through `t()` — a clause
+proof-i18n has carried since M143. The note had been a live claim for two hundred
+milestones, and nothing in the suite could have told.
 
 M144 asked the dictionary a different question: not whether a locale is complete, but
 whether a key can reach the screen at all. An audit that resolves keys held in variables
@@ -341,10 +346,15 @@ primitive reads its own label through `t()`, and that the English literals it re
 not come back. Two halves of this are verified from source rather than seen on screen, and
 are claimed as such: `EmptyState`'s default title is a fallback no current call site takes,
 and the loading block's new accessible label was read, not observed during a live loading
-pass. 17 unreachable labels remain, each with a disposition — six are dead duplicates of a
-`set.key.*` family Settings already renders, the rest get wired to the control they describe
-or deleted — and the audit itself still owes a permanent gate, so a label cannot be added
-again without naming a place that renders it.
+pass. 17 unreachable labels were outstanding at this point, each with a disposition — six were
+dead duplicates of a `set.key.*` family Settings already renders, the rest were wired to the
+control they describe or deleted — and the audit itself owed a permanent gate, so a label
+could not be added again without naming a place that renders it. **Both of those were
+delivered**: M145 took the count from 17 to 15, later milestones took it to 0, and
+proof-i18n now carries the permanent gate ("every dictionary key is reachable — static,
+quoted, or a value a dynamic site can build", reading 0 unreachable over 99 reader files
+and 1778 static/quoted plus 256 dynamic claims). M405 withdrew the note and
+`scripts/proof-ledger.mjs` charges the withdrawal.
 
 M145 localised the scouting board, which was 236 lines with no `t()` call in them at all:
 34 new `scout.*` keys per locale (733 keys in total now), and two keys that had been
@@ -7079,6 +7089,69 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M405 — a badge that names a key must open the thing the key opens
+
+**The defect, measured before anything was written down.** The topbar's search button
+carried a literal `<kbd>⌘K</kbd>` chip and an `onClick` of `navigate("/search")`. The ⌘K
+chord itself was bound inside `CommandPalette` to a dialog that owns a `CommandInput` over
+`globalSearch`. So the machine said one thing and the mouse another: press the key the
+badge names and the palette opens; click the badge that names that very key and a
+different surface appears. Neither surface is wrong — the palette searches and `/search`
+searches — but the badge was a promise about a control it did not drive. This unit moves
+no page; it moves the promise.
+
+**The repair: one owner for the open state.** `AppShell` holds
+`const [paletteOpen, setPaletteOpen] = useState(false)` and hands both halves to
+`<CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />`, whose signature
+became `({ open, onOpenChange })`; the keydown handler toggles the owner's state
+(`onOpenChange((o) => !o)`) instead of a private one, so the badge, the chord and Escape
+all drive the same control. The badge's button now calls `setPaletteOpen(true)`, and the
+shell's `useRouter()` destructure lost the `navigate` it no longer uses.
+
+**A dead import went with it, and it was charged rather than swept.** `AppShell` imported
+`Command` from `@/components/ui/command` at HEAD while rendering no command surface at all
+— `tsc --noEmit` stayed green over it because the build does not enable `noUnusedLocals`,
+so the only thing that would ever have complained was a reader that looks. The gate reads
+that as a census (clause 11: the command primitives have exactly one importer, the palette)
+rather than as a cleanup, because a second file reaching into a dialog's parts is the same
+split this unit exists to close.
+
+**What is NOT claimed.** `/search` did not lose its readers — the sidebar's nav item and
+the route both still reach it, and clause 6 charges those two doors rather than the one
+that moved, because a fix that orphaned a screen would be a second defect wearing the
+first one's clothes. No copy changed: the two touched files read 51 literal keys and all
+three locales hold every one (clause 10), so no reader sees a new sentence here. And the
+palette's search behaviour is untouched — it was already debounced over `globalSearch`, and
+the census pins that it still is (clause 8), so the badge cannot be accused of having
+opened a launcher.
+
+**The gate, and how it was proven to bite.** `scripts/proof-command-entry.mjs` is new: 11
+clauses, every zero carrying its plant. Clause 3 is structural, not textual — it walks the
+`<kbd>` line up to the `<Button` that carries it and down to its `</Button>`, then runs the
+same reader over the pre-fix block byte for byte (0 openers, 1 navigation) so the clause is
+proved to be reading the shape rather than noticing that the file changed. Clause 7 loads
+both components through the shipped resolver and asserts `CommandPalette` takes one
+argument; the props-less form it replaced takes zero, which is the defect in the compiled
+world. The eight-arm battery mutated regions (never single lines that break compilation,
+since a crash yields no tally): re-pointing the badge at `/search`, un-mouting the props,
+moving the state back inside the palette (two coordinated edits), dropping the sidebar
+entry, planting a second badge, swapping the ⌘K glyph, unbinding the input, and handing the
+shell back its dead import.
+
+**What the gauge says.** __GAUGE__
+
+**Next.** Clause 11 closes one dead import by naming the module it reaches into. The same
+rot measured tree-wide: **6 named imports over 5 files whose binding appears nowhere else in
+its own file** (`data/ai.ts buildLoad`, `Dashboard StatTile`, `PlayerOS getPlayer` + `Crest`,
+`SimulationLab playersByClub`, `TransferCentre SectionTitle` — each grepped to exactly one
+occurrence, the import line). Nothing would ever complain about them: `noUnusedLocals` is
+off, and a bundler drops the specifier silently, so the cost is a reader who thinks a screen
+uses `Crest` and does not. The scout that produced this count was itself wrong first —
+version 1 reported 12, because its classifier excluded any name preceded by `.`, which made
+the spread idiom `...ZONE_TONE` at `Dashboard.tsx:35` look like a member access. The number
+above comes from version 2, which shields only a real `a.Name` and splices the import out by
+index. That is the unit to build next: one census for unused named imports, planted both ways.
+
 ### M404 — "the growth still available before the ceiling" was written three times, and one of the three was exported
 
 M403 closed the reach of the doors the app has. This unit asks the other half of the question: **which of the idioms the app still spells by hand deserve a door?** The answer the scout found is a domain concept, not a utility.
@@ -10095,6 +10168,22 @@ across the same 35 chunks** (1,492,456 → 1,492,510) and CSS unchanged, suite *
 2188/2188 checks · exit 0** against **2180/2180** measured on the same plane with HEAD's five files,
 `proof-i18n` **279/279** against its own **271/271**. The dictionary is unchanged at 1,955 keys,
 which is the point: the reader's word was already there.
+
+## Outstanding work
+
+The app's known outstanding work, in the order it should be taken. Every `defect` entry names the
+file and the pattern that would still show the defect, and `scripts/proof-ledger.mjs` resolves
+each one against the tree — so a claim that a later milestone fixed cannot sit here, and the
+ledger cannot name a defect that is not there. A `task` entry names work no scan can see.
+
+<!-- outstanding -->
+
+- `task` — **the live-browser pass (#142)**: the same 26-screen walk, with screenshots, in a real
+  viewport. `renderToStaticMarkup` never runs an effect, so the app root's hydration skeleton and
+  the Player OS's training counters cannot be gated from the harness — the proof suite measures
+  the tree, not the running app.
+
+<!-- /outstanding -->
 
 ## Deploying
 
