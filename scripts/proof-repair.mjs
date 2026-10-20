@@ -109,6 +109,20 @@ const plainBecame = repairTextField(list, "title")[1].title.value === "Earn 500 
 ok(`the door keeps the identity properties, once for all four stores: a library with nothing to repair is the SAME ARRAY (${sameArray === repaired ? "NO" : "yes"}), a keyed row is the SAME OBJECT (${sameObject ? "yes" : "NO"}), a row that is not a string is untouched (${untouched ? "yes" : "NO"}), a plain string became a RowText value (${plainBecame ? "yes" : "NO"}), and an empty list is safe (${repairTextField([], "title").length === 0 ? "yes" : "NO"})`,
   sameArray !== repaired && sameObject && untouched && plainBecame && repairTextField([], "title").length === 0);
 
+// --- 6b. Planted companion for the identity claim above: a door that REBUILT every row -- the
+// --- shape the fourth copy had before this unit -- must FAIL the same-array property, or the
+// --- claim above is a door that happens to answer right for the wrong reason. -------------------
+const rebuild = (rows, field) => rows.map((r) => {
+  const v = r[field];
+  return typeof v === "string" ? { ...r, [field]: { value: v } } : r;
+});
+const rebuildArray = rebuild([keyed, other], "title");
+const rebuildMisses = rebuildArray === repairTextField([keyed, other], "title") ? 0 : 1;
+const rebuildRow = rebuild([plain], "title")[0];
+const doorRow = repairTextField([plain], "title")[0];
+ok(`planted companion: a door that REBUILT every row -- the shape the fourth copy had before this unit -- is caught by the same-array claim (the rebuild returns a different array where the door returns the same one: ${rebuildMisses === 1 ? "yes" : "NO"}), and the two agree on the CONVERSION so the difference is exactly the identity property (rebuilt: ${JSON.stringify(rebuildRow)}, door: ${JSON.stringify(doorRow)})`,
+  rebuildMisses === 1 && JSON.stringify(rebuildRow) === JSON.stringify(doorRow));
+
 // --- 7. The door is a repair and not a rebuild: a row that is already keyed is returned UNCHANGED,
 // --- so a hydration pass cannot make every row look edited. ------------------------------------
 const oneKeyed = repairTextField([keyed], "title");
