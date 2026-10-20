@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M413
+Work ships one milestone per commit and is currently at M414
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7158,6 +7158,37 @@ binding nothing reads — and no other.
 **Next.** The same reader pointed the other way: exported symbols that no other module imports. The
 suite has censuses for doors and idioms; nothing yet reads the module boundary itself, and the fold
 above shows that a name can be dead on either side of it.
+
+### M414 — "the fixtures still to play" was spelled four times, twice of them in the same expression
+
+The same shape as M412, one file over: a figure the app computes in two places, spelled more than once in each.
+
+**The family.** `domain/career.ts` has two functions that both need *how many fixtures a club's season has* and *how many are still to play*:
+
+```
+career.ts:227   const totalFixtures = Math.max(1, (clubCount - 1) * 2); // home + away round robin
+career.ts:229   const remaining = Math.max(0, totalFixtures - played);
+career.ts:238         : r.points + ppg(r) * Math.max(0, totalFixtures - r.played);
+career.ts:549   const totalFixtures = Math.max(1, (clubCount - 1) * 2);
+career.ts:604   { key: Math.max(0, totalFixtures - played) === 1 ? "mgr.summary.remainingOne" : "mgr.fixturesLeft", vars: { n: Math.max(0, totalFixtures - played) } },
+```
+
+**The season's total was spelled twice** — once in the outlook and once in the summary — and **the count still to play four times**: once per row, once as a local, and **twice in the same expression** on line 604. That last one is the sharpest: a reader of that line has to check that the copy deciding *which* sentence to use and the copy filling in the number agree — and they do today, because they are the same arithmetic, but nothing held them to it.
+
+**The doors.** Two, both in `domain/career.ts` where the two functions live:
+
+```
+export const seasonFixtures = (clubCount: number): number => Math.max(1, (clubCount - 1) * 2);
+export const fixturesLeft = (total: number, played: number): number => Math.max(0, total - played);
+```
+
+The summary function now computes `remaining` once and uses it for both the key and the variable — the double spelling in one expression is gone, and the two functions read the same door.
+
+**The census.** `scripts/proof-fixtures.mjs` (7 checks): the scans are armed, and the "fixtures still to play" shape requires the *season's* figure, so an unrelated floored difference is not charged; the tree is real; **the families are closed** — neither spelling survives outside the doors' own bodies, and the home carries one of each because the doors' bodies *are* the spellings; the doors are declared exactly once each, in their home; the career module reaches both (2 calls and 3 calls); the doors keep the edges their spellings had (a club's season has at least one fixture — the floor of 1 — and the count still to play never goes negative — the floor of 0); and the doors agree with the arithmetic they replaced **over the whole space**: 40 club counts and 3,240 (season, played) combinations, 0 disagreements.
+
+**A note on the shape.** The "fixtures left" scan deliberately names the *season's* figure (`totalFixtures`) rather than any floored difference, because the app has twenty other floored differences that are **different concepts** — the fixtures still to play, the gap to the projected leader, the years to peak, the criticality above the role floor. `proof-clamp` and `proof-clamp-feature` both name the single-sided floor as a *documented survivor* of the two-sided `clamp` door, because a floor and a bound are different contracts. A census that swept all twenty would have charged a decision the app had already made.
+
+**Next.** The app's duplicated *concepts* keep converging one at a time. The remaining candidates the same scout surfaces are smaller: `domain/learn.ts` counts a completed lesson by re-testing the same record three times in one function, and `domain/career.ts`'s `totalFixtures` is still spelled once in the *summary*'s sibling shape. The next unit is worth choosing by what a READER can see, not by what a scanner can count.
 
 ### M412 — the threshold a door's own docstring promised would live in one place had two readers re-testing it
 

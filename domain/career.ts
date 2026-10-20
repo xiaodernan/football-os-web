@@ -7,6 +7,14 @@ import type { RowText } from "./rowText";
 import { clamp, pct, round2, safeDiv, signed, signed2, fmt2, fmtMoney } from "@/lib/utils";
 import { round1 } from "./scouting";
 
+// The fixtures a club's season has, and the ones still to play. The season's fixture count was
+// spelled twice in this file (once in the outlook, once in the summary) and the count still to
+// play four times -- once per row, once as a local, and twice in the SAME expression, so a reader
+// had to check that two copies of the same arithmetic agreed. Both are doors now, so a change to
+// the round-robin shape or to the floor moves the outlook and the summary together.
+export const seasonFixtures = (clubCount: number): number => Math.max(1, (clubCount - 1) * 2);
+export const fixturesLeft = (total: number, played: number): number => Math.max(0, total - played);
+
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
 // runs entirely in Demo Mode with no backend, yet a real save/load contract could
 // swap localStorage for a database without touching the UI.
@@ -224,9 +232,9 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
     clubId: state.clubId, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0,
   };
   const clubCount = clubIdsByCompetition(state.competitionId).length;
-  const totalFixtures = Math.max(1, (clubCount - 1) * 2); // home + away round robin
+  const totalFixtures = seasonFixtures(clubCount); // home + away round robin
   const played = state.results.length;
-  const remaining = Math.max(0, totalFixtures - played);
+  const remaining = fixturesLeft(totalFixtures, played);
 
   const ppg = (r: StandingRow) => safeDiv(r.points, r.played);
   // Blend season ppg with recent career form (-1..1 -> -0.30..+0.30 pts/game).
@@ -235,7 +243,7 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
   const projectedOf = (r: StandingRow) =>
     r.clubId === state.clubId
       ? ours.points + ourPpg * remaining
-      : r.points + ppg(r) * Math.max(0, totalFixtures - r.played);
+      : r.points + ppg(r) * fixturesLeft(totalFixtures, r.played);
 
   const projected = rows.map((r) => ({ row: r, pts: projectedOf(r) }));
   const byProjected = [...projected].sort((a, b) => b.pts - a.pts);
@@ -546,7 +554,7 @@ export interface SeasonSummary {
 export function seasonSummary(state: CareerState): SeasonSummary {
   const rs = state.results;
   const clubCount = clubIdsByCompetition(state.competitionId).length;
-  const totalFixtures = Math.max(1, (clubCount - 1) * 2);
+  const totalFixtures = seasonFixtures(clubCount);
   let won = 0, drawn = 0, lost = 0, gf = 0, ga = 0, cleanSheets = 0, prizeTotal = 0;
   let best: { opponent: string; score: string; diff: number } | null = null;
   let worst: { opponent: string; score: string; diff: number } | null = null;
@@ -569,6 +577,7 @@ export function seasonSummary(state: CareerState): SeasonSummary {
   const played = rs.length;
   const position = positionOf(state);
   const complete = played >= totalFixtures;
+  const remaining = fixturesLeft(totalFixtures, played);
   const pct = clubCount ? (position - 1) / clubCount : 1;
   const honour: SeasonSummary["honour"] = !played
     ? null
@@ -601,7 +610,7 @@ export function seasonSummary(state: CareerState): SeasonSummary {
       ? { key: "mgr.summary.complete" }
       : // `mgr.fixturesLeft` already carries this sentence — the profile screen says it too, and one
       // sentence may not live under two keys.
-      { key: Math.max(0, totalFixtures - played) === 1 ? "mgr.summary.remainingOne" : "mgr.fixturesLeft", vars: { n: Math.max(0, totalFixtures - played) } },
+      { key: remaining === 1 ? "mgr.summary.remainingOne" : "mgr.fixturesLeft", vars: { n: remaining } },
   ];
 
   return {
