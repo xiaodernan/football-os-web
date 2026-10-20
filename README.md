@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M409
+Work ships one milestone per commit and is currently at M410
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7093,6 +7093,40 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M410 — the gap list grew from forty-one bare numbers into forty-one named units
+
+M406's gate held the ledger honest about **which** milestone numbers have no section. This unit makes the list *useful*: each entry now names the work that shipped under that number, taken from the commit that shipped it.
+
+**What the list said, and what it said nothing about.** Before, the list was:
+
+```
+- M188
+- M190
+- M191
+…
+```
+
+which answers "which numbers are missing" and nothing else. A reader who asked *"what was M341?"* had to go and dig for it, and the ledger's own pointer paragraph already admitted the shape of the problem — *"the proof scripts advanced to M322 in commits that carried no README section"*. Now it says:
+
+```
+- M341 — fold six duplicate domain clamp definitions onto one lib/utils export
+- M342 — converge the last seven inline domain round1 onto scouting's shared export
+- M354 — a ratio shown as a percent was divided by hand in six domain modules
+- M372 — nineteen one-decimal display strings across eleven files ride the new fmt1 door
+```
+
+**Thirty-nine of the forty-one shipped.** The history has a commit for each: M358's duplicate-value ratchet, M359's best-overall ordering (sixteen copies), M360's percent label (seven places, two of them already named), M361's three hand-nested clamps, M365's last bare percent-fills, M372's nineteen one-decimal display strings, M373's three integer display strings. The work was in the tree all along; the ledger was not.
+
+**Two did not name their number.** M322 and M392 are in the history as commits that *carried* the number without naming it: M322's is the roadmap sync that carried the number on its way to M323, and M392's is the green-restore fix for the M384–M391 conversions. The script is told which commit by hash and **verifies the hash is in the history** before it writes the entry, and the entry says so in words — *"the commit that carried this number without naming it"*. A list that named a commit the history did not have would be a claim the reader could not check.
+
+**The gate.** `scripts/proof-ledger-run.mjs` grew a fourth clause: the reader now takes the description as well as the number, and the clause charges that **every entry names the work that shipped under it** (41/41 described, 0 bare) and that **no two entries name the same work** — a copy-paste list wearing the shape of a ledger is not a ledger. The list's numbers are still held against the tree by M406's clause, so a section that later appears for one of these numbers makes its entry stale and the gate says so.
+
+**One thing the writing script had to learn.** It was not idempotent: it appended its body to the block, so every run left another copy of the list behind — and three runs left the gate reading 287 entries where there are 41. The script now **replaces** the block, and the gate's reader is the thing that would have caught it if the list had shipped in that state. That is the M396 lesson once more, in the smallest possible shape: a list beside a tree, written by a script, has to be replaceable rather than additive.
+
+**Next.** The ledger now names every gap and what filled it, so the remaining question is the one the M406 section named: **should those forty-one have sections at all?** A section is the app's record of *what a unit proved*, and a commit subject is a record of *what it did* — and the project's own sections are the richer form. Recovering them is the next unit, and the gate will tell us when it is done: a filled gap is a stale list entry, so the list shrinks as the sections arrive.
+
+**And the app lane, for the record.** The scout for M410 first went looking for a floor-at-zero door — `Math.max(0, …)` in twenty places over twelve files — and found the app had **already answered that question**: `proof-clamp` and `proof-clamp-feature` both name the single-sided floor as a *documented survivor* of the two-sided `clamp` door, because a floor and a bound are different contracts. A unit that folded the twenty would have contradicted a decision the app had already made, with proofs. The scout's own honest answer is worth recording: **the idiom is converged, and the right move was to read the proofs before writing the fold.**
+
 ### M409 — a reader-supplied parameter stopped being trusted: the `?status=` cast was a lie the type system could not catch
 
 M408 converged the app's date idioms. This unit is the family its own shape pointed at: **the eleven `query.get("…")` sites over five files** — a value in the URL is reader-supplied, and the reader can type anything.
@@ -10299,47 +10333,47 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 
 <!-- gaps -->
 
-- M188
-- M190
-- M191
-- M192
-- M276
-- M278
-- M314
-- M317
-- M318
-- M319
-- M320
-- M321
-- M322
-- M325
-- M331
-- M341
-- M342
-- M343
-- M344
-- M345
-- M353
-- M354
-- M355
-- M356
-- M357
-- M358
-- M359
-- M360
-- M361
-- M362
-- M363
-- M364
-- M365
-- M366
-- M367
-- M369
-- M370
-- M371
-- M372
-- M373
-- M392
+- M188 — the prose ratchet prints its per-module inventory, so a re-base reads it instead of recalling it
+- M190 — the role-gap model publishes rows: domain/gap.ts joins the zero list
+- M191 — the onboarding position picker was printing English at Chinese readers
+- M192 — a session's drills were printing English at Chinese readers
+- M276 — fix three plant checks in proof-i18n that required strings to exist
+- M278 — add continental competitions and update graph proof
+- M314 — the empty answer's floors, held from both sides
+- M317 — add population pin block for timeline family (parked: companions need repositioning)
+- M318 — begin career family companions (2 of 17 zero-assertions pinned)
+- M319 — complete career-arc family companions (6 of 6 zero-assertions pinned)
+- M320 — begin community family companions (1 of 6 zero-assertions pinned)
+- M321 — test: proof-analytics M321 companions for drawn and cleanSheets pins
+- M322 — docs: sync roadmap to M323 (the ceiling follows the census) (the commit that carried this number without naming it)
+- M325 — pay down proof-film and proof-learn: populated samples beside the empty ones
+- M331 — route /compare's value row through the shared formatValue
+- M341 — fold six duplicate domain clamp definitions onto one lib/utils export
+- M342 — converge the last seven inline domain round1 onto scouting's shared export
+- M343 — converge the two private round-to-3 helpers onto lib/utils
+- M344 — converge the inline round-to-2 family onto lib/utils's shared round2
+- M345 — the four scout orderings were written twice, so one screen could disagree
+- M353 — the local and UTC day keys are two different answers, so the census pins the split
+- M354 — a ratio shown as a percent was divided by hand in six domain modules
+- M355 — a value pinned between two bounds was hand-clamped in eight domain modules
+- M356 — a rising figure's leading "+" was hand-stitched in four places
+- M357 — an ISO string's parse-to-epoch was hand-rolled in three private helpers
+- M358 — English duplicate-value count is ratcheted at 107 with locale coverage and bare-copy checks
+- M359 — the best-overall ordering had sixteen copies, and one of them was already named
+- M360 — a percent label was hand-stitched in seven places, and two of them were already named
+- M361 — one day in milliseconds was spelled four ways, two of them only by an underscore
+- M362 — converge the byte-identical Mini tile onto shared ui/primitives
+- M363 — fold 2 clean inline round1 sites onto the shared door
+- M364 — converge the last clean feature/UI inline clamps onto the lib/utils clamp door
+- M365 — the last bare percent-fills and career's round2 copies ride the doors, no residue remains
+- M366 — the last two feature double-clamps ride the door, only the writer data lane keeps one
+- M367 — six proof headers still described residues their clauses no longer allow: the prose now tells the truth
+- M369 — seventy-seven inline two-decimal display strings across twenty-two files ride the new fmt2 door, four residue families stay pinned
+- M370 — the data lane's last writer residues ride the doors: seed's five clamp nests and both day-ms literals are converged, the proofs charge them former
+- M371 — five hand-stitched denominator guards across four files ride the new safeDiv door, three non-quotient Math.max floors stay counted as blind spots
+- M372 — nineteen one-decimal display strings across eleven files ride the new fmt1 door, parseFloat and conditional decimals stay pinned, fmt0 counted as blind spot
+- M373 — three integer display strings ride the new fmt0 door, and proof-fmt1 charges them former
+- M392 — fix: the censuses my M384-M391 conversions blinded: restored green, with the walker, the rng invariant and two vacuity plants (the commit that carried this number without naming it)
 
 <!-- /gaps -->
 
