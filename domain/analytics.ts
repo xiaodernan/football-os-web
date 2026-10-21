@@ -7,18 +7,11 @@
 
 import type { Club, Match } from "@/domain/types";
 import { clamp, round2, round3, indexById } from "@/lib/utils";
-import { byTableStanding, sum, leaguePoints, recentResults, formLetter } from "./attributes";
+import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally } from "./attributes";
 
 export type FormLetter = "W" | "D" | "L";
 
-export interface Split {
-  played: number;
-  won: number;
-  drawn: number;
-  lost: number;
-  gf: number;
-  ga: number;
-}
+export interface Split extends ResultTally {}
 
 export interface TeamMetrics {
   clubId: string;
@@ -46,15 +39,6 @@ export interface TeamMetrics {
 
 function emptySplit(): Split {
   return { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0 };
-}
-
-function finish(s: Split, g: number, c: number) {
-  s.played++;
-  s.gf += g;
-  s.ga += c;
-  if (g > c) s.won++;
-  else if (g < c) s.lost++;
-  else s.drawn++;
 }
 
 const isFinished = (m: Match): m is Match & { homeGoals: number; awayGoals: number } =>
@@ -122,8 +106,8 @@ export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): Te
   for (const m of fixtures) {
     const h = ensure(m.homeClubId);
     const a = ensure(m.awayClubId);
-    finish(h.home, m.homeGoals, m.awayGoals);
-    finish(a.away, m.awayGoals, m.homeGoals);
+    creditRecord(h.home, m.homeGoals, m.awayGoals);
+    creditRecord(a.away, m.awayGoals, m.homeGoals);
     h.results.push({ kickoff: m.kickoff, g: m.homeGoals, c: m.awayGoals });
     a.results.push({ kickoff: m.kickoff, g: m.awayGoals, c: m.homeGoals });
   }

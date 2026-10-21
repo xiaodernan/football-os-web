@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M421
+Work ships one milestone per commit and is currently at M422
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M422 — "one result credits one row" was hand-written four times, and three of them were local helpers
+
+M421 completed the form-letter family. This unit closes the rule that had been hiding in plain sight: crediting a season row with one result — played, won, drawn, lost, goals for and against, plus points — hand-written four times: analytics' `finish` (split tally, loss tested first, no points), career's `bump` (standing rows, points), footballSeed's double-sided table build (home and away in one statement) and the sim lab's `apply` (flag-test, `void home`). Three of the four were local helpers or inline code, which is exactly the class M417's exported-body census cannot see — the alignment measure reads exported functions only.
+
+`creditRecord(row, ourGoals, oppGoals)` and `creditResult(…)` in `domain/attributes.ts` are the doors, decomposed the way the project now composes: the record bookkeeping once, and the points a ride over it (`creditRecord` + the M420 ladder). `ResultTally` and `SeasonRowFields` are the shapes; career's `StandingRow` and the sim lab's `SeasonRow` now extend them, so the structural sameness of the three row types is written down instead of implied. The sim lab's win/home flags died with the branch they fed — the door counts the outcome from the goals. career's `bump` is gone entirely; its two call sites credit directly.
+
+**The seam, charged both ways.** proof-creditresult charges the rule's spine — a `.played` increment plus the `.won`/`.drawn`/`.lost` outcome increments, either `++` or `+= 1` — across the whole tree and asserts it appears only in the door: four hits, all in `attributes.ts`, zero in every reader. The scan keys on the credited-row idioms, not on counting in general: a bare counter (`games++`) and career's season-summary outcome counts (plain locals inside its fused aggregation pass — no row is credited) stay uncharged, the latter pinned as the documented survivor. The proof plants both increment spellings, asserts both doors are declared once, the record body is the bookkeeping and the result body rides it, all four readers call a door, and both doors equal all four old spellings on every sample (loss-first, flag, points via the ladder) with the double-sided match conserving three points to the winner or one to each. It passes 9/9; proof-leaguepoints's reader set moved to the direct readers (its census still covers the indirect ones through the spine) and passes 8/8, proof-career 205/205, proof-analytics 77/77 and tsc is clean.
+
+**Still outstanding.** The converged math now covers the comparators, the rounding family, the league-table ranking, the list folds, the last-element read, the occurrence tally, the league-points ladder, the outcome letter, the season-row credit, the formatted families and the form window. The class this unit found — **rules spelled inside local helpers, which the exported-body rule census cannot pair** — is worth a systematic scout of its own: M417 measured exported bodies, this unit found its first family by hand. A fresh tree census remains the next step if any remaining repeated predicate surfaces.
 
 ### M421 — the outcome letter was spelled twice, in two test orders, and one of them was inside another door
 

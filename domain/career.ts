@@ -2,7 +2,7 @@ import { footballProvider, getClub, clubIdsByCompetition } from "@/data/football
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
-import { byOverall, meanOverall, byTableStanding, sum, resultPoints, recentResults } from "./attributes";
+import { byOverall, meanOverall, byTableStanding, sum, resultPoints, recentResults, creditResult, SeasonRowFields } from "./attributes";
 import type { RowText } from "./rowText";
 import { clamp, pct, round2, safeDiv, signed, signed2, fmt2, fmtMoney } from "@/lib/utils";
 import { round1 } from "./scouting";
@@ -48,15 +48,8 @@ export interface CareerState {
   results: CareerResult[];
 }
 
-export interface StandingRow {
+export interface StandingRow extends SeasonRowFields {
   clubId: string;
-  played: number;
-  won: number;
-  drawn: number;
-  lost: number;
-  gf: number;
-  ga: number;
-  points: number;
 }
 
 export const roundFee = (v: number) => Math.round(v / 500_000) * 500_000;
@@ -160,16 +153,6 @@ export function seedStandings(compId: string): Record<string, StandingRow> {
   return table;
 }
 
-function bump(row: StandingRow, gf: number, ga: number) {
-  row.played++;
-  row.gf += gf;
-  row.ga += ga;
-  if (gf > ga) row.won++;
-  else if (gf === ga) row.drawn++;
-  else row.lost++;
-  row.points += resultPoints(gf, ga);
-}
-
 export function liveStandings(state: CareerState): StandingRow[] {
   const table = seedStandings(state.competitionId);
   for (const r of state.results) {
@@ -177,8 +160,8 @@ export function liveStandings(state: CareerState): StandingRow[] {
     const away = r.weHome ? r.opponent : state.clubId;
     const hg = r.weHome ? r.ourGoals : r.oppGoals;
     const ag = r.weHome ? r.oppGoals : r.ourGoals;
-    if (table[home]) bump(table[home], hg, ag);
-    if (table[away]) bump(table[away], ag, hg);
+    if (table[home]) creditResult(table[home], hg, ag);
+    if (table[away]) creditResult(table[away], ag, hg);
   }
   return Object.values(table).sort((a, b) => byTableStanding(a, b));
 }

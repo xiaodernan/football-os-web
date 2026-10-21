@@ -332,6 +332,43 @@ export function formLetter(ourGoals: number, oppGoals: number): "W" | "D" | "L" 
   return ourGoals > oppGoals ? "W" : ourGoals === oppGoals ? "D" : "L";
 }
 
+/** The running record of a team's results: played, won, drawn, lost, goals for and against. The record
+ *  bookkeeping was hand-written four times — analytics' split tally, career's standing-row bump,
+ *  footballSeed's double-sided table build and the sim lab's round-robin apply — every one the same
+ *  "one result credits one row" contract, so it is a door now. */
+export interface ResultTally {
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+}
+
+/** A season-table row: a result tally plus the points the league awards. career's `StandingRow`, the sim
+ *  lab's `SeasonRow` and footballSeed's inline rows are all this shape. */
+export interface SeasonRowFields extends ResultTally {
+  points: number;
+}
+
+/** Credit a result tally with one result: count the outcome, add the goals. The bookkeeping was
+ *  hand-written four times in two test orders; the door writes it once. */
+export function creditRecord<R extends ResultTally>(row: R, ourGoals: number, oppGoals: number): void {
+  row.played++;
+  row.gf += ourGoals;
+  row.ga += oppGoals;
+  if (ourGoals > oppGoals) row.won++;
+  else if (ourGoals === oppGoals) row.drawn++;
+  else row.lost++;
+}
+
+/** Credit a season-table row with one result, points included: the record bookkeeping, then the
+ *  league-points door. */
+export function creditResult<R extends SeasonRowFields>(row: R, ourGoals: number, oppGoals: number): void {
+  creditRecord(row, ourGoals, oppGoals);
+  row.points += resultPoints(ourGoals, oppGoals);
+}
+
 /** The five most recent results every form reading looks at. The window was hand-written as a bare
  *  `slice(-5)` in three places — analytics' team form, career's recent points and Manager OS's
  *  latest-results list — same "last five" contract, so it is a door now: one place the window lives,

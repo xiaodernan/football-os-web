@@ -32,10 +32,10 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const HOME = "domain/attributes.ts";
-const READERS = [
-  "domain/analytics.ts", "domain/career.ts", "data/footballSeed.ts",
-  "features/sim/SimulationLab.tsx",
-];
+// M422 note: footballSeed.ts and features/sim/SimulationLab.tsx left this reader set when their table
+// builds folded onto creditResult — they credit through the record door now, and their inline-ladder
+// freedom is guaranteed by proof-creditresult's spine census instead. These are the DIRECT readers.
+const READERS = ["domain/analytics.ts", "domain/career.ts"];
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
   e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { footballProvider, getClub, getCompetition, clubIdsByCompetition } from "@/data/footballService";
 import { useRouter } from "@/lib/router";
-import { byOverall, byTableStanding, resultPoints } from "@/domain/attributes";
+import { byOverall, byTableStanding, creditResult, SeasonRowFields } from "@/domain/attributes";
 import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/domain/matchEngine";
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine } from "@/domain/rowText";
@@ -246,31 +246,22 @@ function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
   );
 }
 
-interface SeasonRow { clubId: string; played: number; won: number; drawn: number; lost: number; gf: number; ga: number; points: number }
+interface SeasonRow extends SeasonRowFields { clubId: string }
 
 function simulateSeason(compId: string, nonce: number): SeasonRow[] {
   const ids = clubIdsByCompetition(compId);
   const table = new Map<string, SeasonRow>();
   for (const id of ids) table.set(id, { clubId: id, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0 });
-  const apply = (a: SeasonRow, hg: number, ag: number, win: boolean, home: boolean) => {
-    a.played++; a.gf += hg; a.ga += ag;
-    if (win) a.won++;
-    else if (hg === ag) a.drawn++;
-    else a.lost++;
-    // The flag counts the outcome; the points ride the ladder door (win/hg>ag are the same
-    // comparison at this file's only call site, and the draw branch tests hg === ag directly).
-    a.points += resultPoints(hg, ag);
-    void home;
-  };
   for (let i = 0; i < ids.length; i++) {
     for (let j = 0; j < ids.length; j++) {
       if (i === j) continue;
       const home = ids[i], away = ids[j];
       const res = simulateMatch({ seed: `season:${compId}:${home}:${away}:${nonce}`, home: baseInput(home, DEFAULT_TACTICS), away: baseInput(away, { ...DEFAULT_TACTICS, mentality: -1 }) });
       const hr = table.get(home)!, ar = table.get(away)!;
-      const homeWin = res.homeGoals > res.awayGoals, awayWin = res.awayGoals > res.homeGoals;
-      apply(hr, res.homeGoals, res.awayGoals, homeWin, true);
-      apply(ar, res.awayGoals, res.homeGoals, awayWin, false);
+      // The season-row credit door counts the outcome and the points from the goals themselves,
+      // so the old win/home flags (which only fed the branch) are gone.
+      creditResult(hr, res.homeGoals, res.awayGoals);
+      creditResult(ar, res.awayGoals, res.homeGoals);
     }
   }
   return [...table.values()].sort((a, b) => byTableStanding(a, b));
