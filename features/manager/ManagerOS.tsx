@@ -30,7 +30,7 @@ import {
 } from "@/domain/career";
 import type { MatchProbability } from "@/domain/matchProbability";
 import { CAREER_KEY } from "@/domain/localData";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, TONE_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
@@ -220,7 +220,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
 function SeasonSummaryPanel({ career }: { career: CareerState }) {
   const { t } = useI18n();
   const s = seasonSummary(career);
-  const tone = s.honour?.tone === "good" ? "text-success" : s.honour?.tone === "bad" ? "text-destructive" : "text-info";
+  const tone = TONE_CLASS[s.honour?.tone ?? "mixed"];
   return (
     <Panel className="p-4">
       <div className="flex items-center justify-between">
@@ -372,7 +372,7 @@ function Table({ career }: { career: CareerState }) {
 function Outlook({ career }: { career: CareerState }) {
   const { t } = useI18n();
   const o = seasonOutlook(career);
-  const zoneTone = o.zone.tone === "good" ? "text-success" : o.zone.tone === "bad" ? "text-destructive" : "text-info";
+  const zoneTone = TONE_CLASS[o.zone.tone];
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
@@ -588,7 +588,7 @@ function Metric({ label, value, tone }: { label: string; value: string | undefin
   return (
     <div className="rounded-md border bg-card/40 px-3 py-2">
       <div className="text-[11px] text-muted-foreground">{label}</div>
-      <div className={cn("font-mono text-sm font-semibold", tone === "good" && "text-success", tone === "bad" && "text-destructive")}>{value}</div>
+      <div className={cn("font-mono text-sm font-semibold", tone && TONE_CLASS[tone])}>{value}</div>
     </div>
   );
 }

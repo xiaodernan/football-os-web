@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M429
+Work ships one milestone per commit and is currently at M430
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,18 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M430 — the colours for a tone: one mapping, and the screen that spelled it twice
+
+**The defect.** M427 closed the app's colours for a **difference**. This unit closes the colours for a **tone** — and the app has two of those, because they are two different questions: a *sign* says which way a figure moved, a *tone* says how well a thing sits. The domain's judgement of a league position is a tone — `"good" | "mixed" | "bad"` — and the app has three classes for it: green for good, blue for mixed, red for bad. That mapping was spelled **twice** in `features/manager/ManagerOS.tsx`, with the same three words in the same order: once for the season summary's honour and once for the outlook's zone. A third, two-armed copy sat in the screen's own metric component.
+
+So the app could have shown a mid-table club in blue on one card and in red on another, and a change to the palette would have had to be made in two places.
+
+**The fold.** `TONE_CLASS` — the three classes, keyed by the tone — lives in `ui/primitives.tsx` with the rest of the shared UI vocabulary, and the manager screen reads it: the honour's tone (with no honour at all reading as the middle blue, as it did), the zone's tone, and the metric component's two arms (a metric with no tone stays uncoloured, as it did). **Nothing a reader sees moves**: the proof replays the mapping against the inline forms it replaced, for all three tones.
+
+**The seam, charged both ways.** `proof-toneclass` charges a **colour chosen by a tone** — a comparison against one of the domain's tone words whose arms name a colour class — and there are none outside the shared mapping. Two near shapes are refused, each for a reason: a comparison against some **other** string is not a tone, and the tile's own `"up" | "down" | "neutral"` vocabulary is the **tile's**, not the domain's — the tile's mapping lives inside the component, which is where a component's contract belongs, and this census does not reach into it. The reader is armed by a plant for each shape, the mapping is checked to be declared once, the manager screen is checked to read it, and the three tones are replayed against the inline forms.
+
+**Still outstanding.** The app still has **three** ways to say "how good is this" — the domain's tone, the tile's direction, and the difference's sign — and that is now a design question rather than a duplication: the domain's tone is a *judgement* (how well a club sits), the tile's is a *direction* (which way a number moved), and merging them would lose the difference. What the tree can still answer is whether each vocabulary is spelled once, and after this unit it is: the tone is one mapping, the sign is one table, and the tile's is one component. The remaining risk is a fourth vocabulary appearing with no door behind it, and that is the class a census of *vocabularies* would charge — a bigger measurement, and the one the next unit should attempt.
 
 ### M429 — the fourth direction of the dead-code boundary: a declaration nothing reads
 

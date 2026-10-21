@@ -80,6 +80,21 @@ export const bestEdgeTone = (d: number): string =>
 export const worstEdgeTone = (d: number): string =>
   deltaSign(d) === "down" ? DELTA_CLASS.down : DELTA_CLASS.flat;
 
+// The app's colours for a TONE. The domain's judgement of how a table position sits is a tone —
+// "good", "mixed" or "bad" — and the app has three classes for it: green for good, blue for
+// mixed, red for bad. The mapping was spelled twice in the manager screen, once for the season
+// summary's honour and once for the outlook's zone, with the same three words in the same order,
+// and the manager's own metric component spelled two arms of it a third time.
+//
+// The TONE is the domain's (career.ts's zone and honour tables); the colour it wears is the
+// app's, and it lives here with the rest of the shared vocabulary.
+export type Tone = "good" | "mixed" | "bad";
+export const TONE_CLASS: Record<Tone, string> = {
+  good: "text-success",
+  mixed: "text-info",
+  bad: "text-destructive",
+};
+
 // The compact stat tile: a bold figure ABOVE a small uppercase label, in a tighter px-2 py-1.5 box than
 // StatTile's label-first px-4 py-3 card. DataRoom's per-team tiles and ProfilePage's progress tiles each
 // carried a byte-identical private `Mini` — only the `value` prop's declared type differed (number vs
