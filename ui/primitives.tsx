@@ -7,6 +7,8 @@ import { cn, clamp } from "@/lib/utils";
 import { DEMO_MODE } from "@/data/footballService";
 import { useI18n } from "@/i18n";
 import { positionLabel, rowLine } from "@/domain/rowText";
+import { deltaSign } from "@/domain/attributes";
+import type { DeltaSign } from "@/domain/attributes";
 import type { Dna } from "@/domain/playerDna";
 
 export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
@@ -52,6 +54,31 @@ export function StatTile({ label, value, sub, tone }: { label: string; value: Re
     </div>
   );
 }
+
+// The app's colours for a DIFFERENCE — the green a gain wears, the red a loss wears and the grey a
+// figure that did not move. The three classes were spelled in three files: the entity detail's
+// category difference, the scouting panel's best and worst edge, and the watchlist board's two
+// copies of the same two edges. So the app could have shown the same figure in green on one screen
+// and in grey on another, and a change to the palette would have had to be made in three places.
+//
+// The QUESTION — which way does the difference point — is the domain's (attributes.ts's
+// deltaSign); the classes are the app's, and they live here with the other shared UI vocabulary.
+export const DELTA_CLASS: Record<DeltaSign, string> = {
+  up: "text-success",
+  down: "text-destructive",
+  flat: "text-muted-foreground",
+};
+
+// The BEST edge of a player is an advantage or nothing: it is green when it is an advantage and
+// grey when it is not, and it is never red — a red "best" would be a lie about the best thing a
+// player has going for them.
+export const bestEdgeTone = (d: number): string =>
+  deltaSign(d) === "up" ? DELTA_CLASS.up : DELTA_CLASS.flat;
+
+// The WORST edge is a disadvantage or nothing: red when it is a disadvantage, grey when it is not,
+// and never green.
+export const worstEdgeTone = (d: number): string =>
+  deltaSign(d) === "down" ? DELTA_CLASS.down : DELTA_CLASS.flat;
 
 // The compact stat tile: a bold figure ABOVE a small uppercase label, in a tighter px-2 py-1.5 box than
 // StatTile's label-first px-4 py-3 card. DataRoom's per-team tiles and ProfilePage's progress tiles each

@@ -17,7 +17,7 @@ import type { PlayerRef } from "@/domain/types";
 
 import { useI18n } from "@/i18n";
 import { bucketLabel, footLabel, positionLabel } from "@/domain/rowText";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, bestEdgeTone, worstEdgeTone } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
@@ -148,8 +148,8 @@ export function ScoutingPanel() {
                     if (!edge) return <td className="px-2 py-1.5 text-right text-xs text-muted-foreground">{ABSENT}</td>;
                     return (
                       <td className="px-2 py-1.5 text-right font-mono text-xs whitespace-nowrap">
-                        <span className={edge.bestDelta > 0 ? "text-success" : "text-muted-foreground"}>{t(`attr.${edge.bestCategory}`)} {signed(edge.bestDelta)}</span>
-                        <span className={cn("ml-2", edge.worstDelta < 0 ? "text-destructive" : "text-muted-foreground")}>{t(`attr.${edge.worstCategory}`)} {signed(edge.worstDelta)}</span>
+                        <span className={bestEdgeTone(edge.bestDelta)}>{t(`attr.${edge.bestCategory}`)} {signed(edge.bestDelta)}</span>
+                        <span className={cn("ml-2", worstEdgeTone(edge.worstDelta))}>{t(`attr.${edge.worstCategory}`)} {signed(edge.worstDelta)}</span>
                       </td>
                     );
                   })()}

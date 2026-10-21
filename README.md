@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M426
+Work ships one milestone per commit and is currently at M427
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,22 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M427 — the colours for a difference: one table, and the three files that spelled them
+
+**The defect.** M426 closed the door that says *which way* a difference points. This unit closes the one that says **what colour that is** — and the app had three classes for it (green for a gain, red for a loss, grey for a figure that did not move), spelled in three files:
+
+- `features/football/Details.tsx`, for a **category difference**;
+- `features/scouting/ScoutingPanel.tsx`, for a player's **best edge** and **worst edge**;
+- `features/watchlist/WatchlistBoard.tsx`, for the **same two edges**, in the same words.
+
+So the app could have shown the same figure in green on one screen and in grey on another, and a change to the palette would have had to be made in three places. It is the third door in the family M424 and M425 opened: the sign is the question, this is what the app does with the answer.
+
+**The fold.** `DELTA_CLASS` — the three classes, keyed by the sign — and `bestEdgeTone` / `worstEdgeTone` live in `ui/primitives.tsx`, beside the other shared UI vocabulary, and they ride M426's `deltaSign` for the question. The two edge tones are **deliberately two-armed**: a best edge is green when it is an advantage and grey when it is not, and it is never red — a red "best" would be a lie about the best thing a player has going for them; a worst edge is red when it is a disadvantage and grey when it is not, and never green. **Nothing a reader sees moves**: the proof replays both doors against the inline forms they replaced, over ten figures including zero and negative zero.
+
+**The seam, charged both ways.** `proof-deltacolor` charges a **colour chosen by a comparison** — a comparison against zero whose arms name a colour class — and there are none outside the shared vocabulary. Two near shapes are refused, each for a reason: a comparison against a **variable** is some other decision (`a >= b ? "text-success" : "text-destructive"` is the manager's head-to-head, not a difference's sign), and a comparison against a **string** is a different question again (the manager's `"good" | "mixed" | "bad"` tone, which is a *tone* and not a sign — that vocabulary is the next class, and it is still spelled twice in one file). The reader is armed by a plant for each shape, the table and the two tones are checked to be declared once in the shared module, the three former sites are checked to import them, and the doors are replayed against the inline forms.
+
+**Still outstanding.** The **tone** vocabulary — the domain's `"good" | "mixed" | "bad"` and the app's green/blue/red — is still spelled twice in `features/manager/ManagerOS.tsx` (the season summary's honour and the outlook's zone, plus the metric component's two-arm version), and the app's other tone vocabulary — the tile's `"up" | "down" | "neutral"` — is a third. So the app has three ways to say "how good is this" and two of them are spelled more than once. Whether they should become one vocabulary is a design question the tree cannot answer: the domain's tone is a *judgement* and the tile's is a *direction*, and merging them would lose that. What the tree CAN answer is the duplication inside each, and that is what the next unit should charge.
 
 ### M426 — the sign of a difference: one question, four copies, and the words each copy chose
 

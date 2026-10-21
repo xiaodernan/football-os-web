@@ -2,7 +2,6 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n, type Locale } from "@/i18n";
 import { byOverall, maxBy, last, deltaSign } from "@/domain/attributes";
-import type { DeltaSign } from "@/domain/attributes";
 import { favoriteLabel, footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine, type RowText } from "@/domain/rowText";
 import { FAVORITES, type FavoriteKind } from "@/domain/types";
 import { useOs } from "@/store/useFootballOS";
@@ -30,7 +29,7 @@ import { playerDna } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
-import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS } from "@/ui/primitives";
 import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,15 +38,6 @@ import { clamp, cn, pctOf, fmt2, fmt1, ABSENT, SEPARATOR, fmtMoney, signed } fro
 
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-
-// The colour a category difference is shown in. The QUESTION — which way does the difference point
-// — is the domain's (attributes.ts's deltaSign, which the comparison page and the Weekly Review
-// ask too); the colours are this screen's own.
-const DELTA_TONE: Record<DeltaSign, string> = {
-  up: "text-success",
-  down: "text-destructive",
-  flat: "text-muted-foreground",
-};
 
 function EntityHeader({ title, sub, back, crest }: { title: string; sub?: ReactNode; back?: string; crest?: ReactNode }) {
   const { t } = useI18n();
@@ -213,7 +203,7 @@ export function PlayerDetail({ id }: { id: string }) {
                   <li key={c.category} className="flex items-center justify-between gap-2">
                     <span className="text-muted-foreground">{t(`attr.${c.category}`)}</span>
                     <span className="font-mono tabular-nums">{c.value}</span>
-                    <span className={cn("w-10 text-right font-mono tabular-nums", DELTA_TONE[deltaSign(c.delta)])}>
+                    <span className={cn("w-10 text-right font-mono tabular-nums", DELTA_CLASS[deltaSign(c.delta)])}>
                       {signed(c.delta)}
                     </span>
                   </li>
