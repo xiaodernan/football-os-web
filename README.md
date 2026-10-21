@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M427
+Work ships one milestone per commit and is currently at M428
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7093,6 +7093,57 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M428 — the third direction of the dead-code boundary: a module no entry reaches
+
+**What the gauge says.** `scripts/proof-orphans.mjs` **5/5**. The census walks **97 shipped
+modules** and **634 resolved import edges** from two entry points derived from the artifacts that
+declare them: `index.html`'s module script and the `Deno.serve` module under `functions/`. **97 of
+97** modules are reachable, **0** are named only by a proof script, and **0** are orphans. The gate
+quotes no shipped path in its code, so it has no list to maintain and no per-file exemption to hide
+behind.
+
+**Why a zero reading is still a unit.** The last two censuses charge names inside modules: a binding
+imported and never read (M413), an export no other module takes (M415). A module that no entry
+reaches is invisible to both — its imports can all be read and its exports can all be taken by each
+other, so neither clause reds. The reachability walk is the missing direction: it starts at the
+app's real entry points and follows every `from "x"`, side-effect import, dynamic import and
+re-export, resolving `@/` and relative specifiers to files. The reading is zero today, and the gate
+exists so that it stays zero rather than being discovered by a reader years later.
+
+**The reader, witnessed both ways.** Resolver fixtures cover `@/`, relative, extensionless and
+`index` specifiers, a package name, a `.css` asset and a missing module; the spec reader covers
+named/default/side-effect/dynamic/re-export forms and ignores a commented import. Graph fixtures
+cover a chain, a cycle and a file no entry reaches, and the entry readers are fed a synthetic HTML
+module script and a synthetic `Deno.serve` module. Clause 3 charges every local specifier that does
+not resolve (0 on the tree; 1 asset and 10 packages are counted apart), because a silent resolution
+miss would make the graph lie while leaving the orphan reading green. Clause 5 strips the gate's own
+comments and refuses a shipped path quoted in its code; the plant is assembled from fragments so the
+gate does not quote a real path and trip itself.
+
+**The arms.** At rest the gate is 5/5 before and after. Ten mutations follow, each applied once to
+the gate or the tree, restored byte-exactly, with the plane's `git status` compared to its baseline
+after every arm: removing FilmRoom's only import (A), a module nothing imports (B), a ghost html
+entry (C), resolving `@/` as a package (D), dropping dynamic imports from the spec reader (E), a
+skip-list literal in the gate's code (F), a new top-level TypeScript directory (G), removing `index`
+resolution (H), blinding the `Deno.serve` entry reader (I), and a module only a proof names (J).
+Their red sets are predicted from each clause's own sentence: A[4] B[4] C[2,4] D[1,3,4] E[1,4]
+F[5] G[2] H[1,3,4] I[1,4] J[4]. All ten matched, and no arm wrote outside its declared site.
+
+Four of those arms (D, E, H, I) red clause 1 as well as the downstream census clauses, because the
+reader clause's own sentence names the exact reading each arm breaks: the `@/` resolver, the
+dynamic-import spec, the `index` target and the `Deno.serve` entry. A battery that predicted only
+the orphan reading would have called half of each guard unmeasured.
+
+**What is NOT claimed.** A specifier assembled at runtime, or a dynamic import bound to a variable
+and read later, is not followed. `.css` imports are not modules this walk ships. A module named only
+by a proof script is measured as proof-only rather than charged; there are 0 today. Reachability
+proves that an entry's import graph can arrive at a module, not that any route renders or executes
+it.
+
+**Next.** The declarations inside a module are the fourth direction: `tsc` with `--noUnusedLocals`
+names four today, and the build's compiler never asks because the flag is off. That is the next
+unit.
+
 ### M427 — the colours for a difference: one table, and the three files that spelled them
 
 **The defect.** M426 closed the door that says *which way* a difference points. This unit closes the one that says **what colour that is** — and the app had three classes for it (green for a gain, red for a loss, grey for a figure that did not move), spelled in three files:
@@ -7447,9 +7498,9 @@ default import or a namespace import (`import * as X`) is not charged at all; an
 nothing about whether an imported name is used WELL. It closes the one shape it names — a named
 binding nothing reads — and no other.
 
-**Next.** The same reader pointed the other way: exported symbols that no other module imports. The
-suite has censuses for doors and idioms; nothing yet reads the module boundary itself, and the fold
-above shows that a name can be dead on either side of it.
+**Next.** The other direction of the module boundary: a shipped module that no entry's import graph
+reaches. An export can be dead inside a module someone loads; a module can be dead with every
+import and export in it alive to each other, and no census read that direction yet.
 
 ### M414 — "the fixtures still to play" was spelled four times, twice of them in the same expression
 
