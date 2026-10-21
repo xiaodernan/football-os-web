@@ -20,10 +20,12 @@ export interface ArcPoint {
   phase: ArcPhase;
 }
 
-export type Trajectory = "rising" | "peak" | "declining";
 /** The three shapes an arc can be in, as codes: `det.arc.*` holds the words, so a row that
- *  names a trajectory interpolates one of these instead of an English word. */
-export const TRAJECTORIES: readonly Trajectory[] = ["rising", "peak", "declining"];
+ *  names a trajectory interpolates one of these instead of an English word. M435: the type is
+ *  derived from the list, so the two cannot drift. */
+export const TRAJECTORIES = ["rising", "peak", "declining"] as const;
+
+export type Trajectory = (typeof TRAJECTORIES)[number];
 
 export interface CareerArc {
   playerId: string;

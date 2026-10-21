@@ -10,7 +10,10 @@ import {
   primeYearsLabel,
   bucketOf,
   templateEdge,
+  POS_BUCKETS,
+  POSITION_BUCKETS,
   type PosBucket,
+  type PositionBucket,
   type ScoutSort,
 } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
@@ -23,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
 import { cn, fmt1, ABSENT, fmtMoney, signed } from "@/lib/utils";
 
-const BUCKETS: PosBucket[] = ["ALL", "GK", "DEF", "MID", "ATT"];
+const BUCKETS: PosBucket[] = [...POS_BUCKETS];
 // `labelKey`, not `label`: a row field named `label` is one of the positions the
 // raw-UI scan reads as a display string, so a key parked in one is counted as copy
 // even though the render site below resolves it through t().
@@ -53,8 +56,8 @@ export function ScoutingPanel() {
   );
   const profile = useMemo(() => squadProfile(clubId), [clubId]);
   const picks = useMemo(() => {
-    const out: { b: Exclude<PosBucket, "ALL">; player: PlayerRef; clubName: string }[] = [];
-    for (const b of ["GK", "DEF", "MID", "ATT"] as const) {
+    const out: { b: PositionBucket; player: PlayerRef; clubName: string }[] = [];
+    for (const b of POSITION_BUCKETS) {
       const best = bestValueAt(b, 68);
       if (best) out.push({ b, player: best.player, clubName: best.clubName });
     }

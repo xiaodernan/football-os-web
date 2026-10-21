@@ -31,8 +31,11 @@ type ChatMsg =
 // where the raw-UI scan reads them as display copy: they are keys into `ai.tab.*`,
 // and the buttons below render t()-ed labels.
 const TABS = ["chat", "graph"] as const;
+// M435: the type is derived from the list, so the two tabs and the type that names them cannot
+// drift — the same shape the domain's own vocabularies use.
+type AiTab = (typeof TABS)[number];
 
-export function AiStudio({ initialTab = "chat" }: { initialTab?: "chat" | "graph" }) {
+export function AiStudio({ initialTab = "chat" }: { initialTab?: AiTab }) {
   const { t } = useI18n();
   const { navigate } = useRouter();
   const [tab, setTab] = useState(initialTab);

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M434
+Work ships one milestone per commit and is currently at M435
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,23 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M435 — a vocabulary's list and its type are one declaration
+
+**The defect.** M433's census read a **union** of string literals — but a vocabulary is also written as a **list**, and the census could not see it. The scout found the drift in nine places:
+
+- three screens spelled the app's three **modes** out by hand — the command palette, the settings page and the app shell — while `domain/types.ts` held the list;
+- the three **line groups** (`["ST","W","AM"]`, `["CM","DM"]`, `["CB","FB","GK"]`) were written twice: in the domain's club ratings and in the club page's panel;
+- the scout's four **position buckets** and the watch list's four **orderings** were each written twice as well;
+- and in `domain/types.ts` itself, **five** vocabularies spelled their words out twice — once as the type, once as the runtime list.
+
+**The fold.** The type is now **derived from the list** — the shape `SEARCH_KINDS` and `FAVORITE_KINDS` already used — for twelve vocabularies, so the copy the compiler checks and the copy the runtime walks are the same fact and cannot drift. The screens' copies now read the domain's list: the modes, the line groups (`LINE_GROUPS` in `domain/career.ts`), the buckets (`POS_BUCKETS`) and the scout sorts (`SCOUT_SORTS`).
+
+**The seam, charged both ways.** `proof-vocab` now reads **lists** as well as unions: 46 vocabularies, each spelled once, and 74 lists, each written once. Two lists are written twice on purpose and are **declared** as such: the search page's section order (players before clubs) and the matches strip's button order (LIVE first) — the same words in the screen's own order, which is a different decision from which words exist. The list reader is armed by plants for the two shapes it refuses: a one-word array (a key, not a vocabulary) and a list of **colours** (two clubs whose kits share a shade are a coincidence, not a vocabulary). The file passes 6/6.
+
+**The i18n gate's anchors followed.** The fold moved a vocabulary's definition, and the i18n gate reads those definitions **out of the source** — on purpose ("the space is still read out of the source rather than written down here"), so a new tag fails until it has a key. Four of its anchors read the *unions* this unit removed, and it went red with fourteen failures before they were moved to the lists the types are derived from; the foot's clause, which compared the union against the list, became a check that the type **is** derived from the list — a stronger claim than the one it replaced, because a hand-typed union is the one thing that could drift again.
+
+**Still outstanding.** Three vocabularies are still written as **both** a type and a list — the attribute categories, the goal metrics and the age groups — because the type lives in `domain/types.ts` and the list in a module that imports it, and a runtime list cannot cross that direction without a cycle. The fix is to move the **list** to the type home (`domain/types.ts` has no runtime imports, so nothing would cycle) and let the module import it back; the next unit should decide that, and the census should then charge a vocabulary written both ways without exemption.
 
 ### M434 — the rule has to be read, not remembered: two gates were written after it landed
 

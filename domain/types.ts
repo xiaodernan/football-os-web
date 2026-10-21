@@ -2,12 +2,15 @@
 
 import type { RowText } from "./rowText";
 
-export type Mode = "FAN" | "PLAYER" | "MANAGER";
+// The three modes, spelled once at runtime so a reader that has to recognise a stored mode
+// (domain/rowText.ts) can be checked against this list rather than keeping a second copy that
+// nothing audits. proof-i18n fails if the two drift.
+// M435: the TYPE is derived from the list now, the way SEARCH_KINDS and FAVORITE_KINDS already
+// were, so the two cannot drift at all — the copy the compiler checks and the copy the runtime
+// walks are the same fact.
+export const MODES = ["FAN", "PLAYER", "MANAGER"] as const;
 
-// The same three codes as the union, spelled once at runtime so a reader that has to
-// recognise a stored mode (domain/rowText.ts) can be checked against this list rather
-// than keeping a second copy that nothing audits. proof-i18n fails if the two drift.
-export const MODES: readonly Mode[] = ["FAN", "PLAYER", "MANAGER"];
+export type Mode = (typeof MODES)[number];
 
 // The entity kinds the Football AI can retrieve and the knowledge graph can draw. One
 // list, so a row that names a kind (`ai.src.entity`) and the legend chips cannot drift:
@@ -40,8 +43,9 @@ export type FavoriteKind = (typeof FAVORITE_KINDS)[number];
 // an entity *is* (`club`, `player`) and resolves through `ai.legend.…`, while this names
 // what a story *claims*, and rowText keeps them in separate branches so a stored value can
 // never be read as the wrong family.
-export type NewsKind = "Confirmed" | "Reported" | "Rumor" | "Opinion" | "Analysis";
-export const NEWS_KINDS: readonly NewsKind[] = ["Confirmed", "Reported", "Rumor", "Opinion", "Analysis"];
+export const NEWS_KINDS = ["Confirmed", "Reported", "Rumor", "Opinion", "Analysis"] as const;
+
+export type NewsKind = (typeof NEWS_KINDS)[number];
 
 // How a record's underlying performances sit against its points, as the community board's
 // career draft words it. Three codes rather than three copies of the sentence: the draft is
@@ -61,8 +65,9 @@ export type PositionGroup = "GK" | "CB" | "FB" | "DM" | "CM" | "AM" | "W" | "ST"
 // which is why the row door dispatches `position` to its own composer instead of joining
 // codeWord's name-blind table.
 export type PositionCode = "GK" | "CB" | "LB / RB" | "DM" | "CM" | "AMC" | "LW / RW" | "ST";
-export type Foot = "L" | "R";
-export const FOOTS: readonly Foot[] = ["L", "R"];
+export const FOOTS = ["L", "R"] as const;
+
+export type Foot = (typeof FOOTS)[number];
 
 export type Attributes = Record<string, number>;
 
@@ -133,12 +138,13 @@ export interface Standing {
   points: number;
 }
 
-export type MatchStatus = "SCHEDULED" | "LIVE" | "FINISHED";
-// The same three codes as a runtime list, because the door that words them (domain/rowText.ts)
-// is a lookup, not a type. The matches filter strip keeps its own hoisted array for its button
-// ORDER, and proof-i18n cross-checks the two so a fourth status cannot exist in one and not the
-// other.
-export const MATCH_STATUSES: readonly MatchStatus[] = ["SCHEDULED", "LIVE", "FINISHED"];
+// The three codes as a runtime list, because the door that words them (domain/rowText.ts) is a
+// lookup, not a type. The matches filter strip keeps its own hoisted array for its button ORDER,
+// and proof-i18n cross-checks the two so a fourth status cannot exist in one and not the other.
+// M435: the TYPE is derived from the list, so the cross-check has nothing left to check.
+export const MATCH_STATUSES = ["SCHEDULED", "LIVE", "FINISHED"] as const;
+
+export type MatchStatus = (typeof MATCH_STATUSES)[number];
 
 export interface Match {
   id: string;
@@ -182,8 +188,9 @@ export type MatchEventType =
 // than a word typed into the engine — and `tsc` refuses a code the union does not carry. The
 // list is runtime data as well as a type because the i18n gate reads the value space off it,
 // which is what makes a seventh table entry fail until all three locales have its words.
-export type ShotType = "tap_in" | "close_range" | "header" | "left_foot" | "right_foot" | "volley" | "penalty";
-export const SHOT_TYPES: readonly ShotType[] = ["tap_in", "close_range", "header", "left_foot", "right_foot", "volley", "penalty"];
+export const SHOT_TYPES = ["tap_in", "close_range", "header", "left_foot", "right_foot", "volley", "penalty"] as const;
+
+export type ShotType = (typeof SHOT_TYPES)[number];
 
 export interface MatchEvent {
   minute: number;

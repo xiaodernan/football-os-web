@@ -13,8 +13,9 @@ export type Level = "Beginner" | "Intermediate" | "Advanced";
 
 /** The subject a lesson belongs to. A code, not a word: the Academy badge prints it, so it
  *  resolves through `learn.cat.*` like every other code the interface shows. */
-export type CategoryCode = "analytics" | "tactics" | "scouting" | "development";
-export const CATEGORY_CODES: readonly CategoryCode[] = ["analytics", "tactics", "scouting", "development"];
+export const CATEGORY_CODES = ["analytics", "tactics", "scouting", "development"] as const;
+
+export type CategoryCode = (typeof CATEGORY_CODES)[number];
 
 export interface Lesson {
   id: string;

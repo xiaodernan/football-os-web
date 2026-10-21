@@ -9,14 +9,15 @@ import { round1 } from "./scouting";
 import { round2, signed, fmt2 } from "@/lib/utils";
 import { byDateAsc, sum, unique, tally } from "@/domain/attributes";
 
-export type FilmEventKind = "scan" | "touch" | "pass" | "dribble" | "shot" | "turn" | "press";
-
 /** The seven detections, and the row each one is named by. The dictionary's kind rows,
  *  the badge the Film Room prints, the Weekly Review's bar labels and the evidence line
  *  below are four reads of this one list, so a detection cannot ship without a word and
  *  a word cannot ship no kind can reach. This is the single home of that map: `data/video`
- *  re-exports it, because a domain module may not reach up into `data/`. */
-export const FILM_KINDS: readonly FilmEventKind[] = ["scan", "touch", "pass", "dribble", "shot", "turn", "press"];
+ *  re-exports it, because a domain module may not reach up into `data/`. M435: the type is
+ *  derived from the list, so the two cannot drift. */
+export const FILM_KINDS = ["scan", "touch", "pass", "dribble", "shot", "turn", "press"] as const;
+
+export type FilmEventKind = (typeof FILM_KINDS)[number];
 
 export const FILM_KIND_KEY: Record<FilmEventKind, string> = {
   scan: "vid.kind.scan",

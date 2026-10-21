@@ -5,13 +5,11 @@ import { useTheme } from "@/lib/theme";
 import { useOs, STORAGE_KEY } from "@/store/useFootballOS";
 import { applyImport, browserStore, buildExport, clearActivity, inventory, readImport } from "@/domain/localData";
 import { DEMO_MODE, footballProvider } from "@/data/footballService";
-import type { Mode } from "@/domain/types";
+import { MODES } from "@/domain/types";
 import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {cn, fmt2, fmt1, ABSENT } from "@/lib/utils";
-
-const MODES: Mode[] = ["FAN", "PLAYER", "MANAGER"];
 
 export function SettingsPage() {
   const { t, locale, setLocale } = useI18n();

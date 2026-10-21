@@ -9,9 +9,10 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { cn, clamp, pct, safeDiv } from "@/lib/utils";
 import { capRound, sum } from "@/domain/attributes";
+import { type PositionBucket } from "@/domain/scouting";
 import { toast } from "sonner";
 
-interface Token { id: string; label: string; x: number; y: number; role: "GK" | "DEF" | "MID" | "ATT" }
+interface Token { id: string; label: string; x: number; y: number; role: PositionBucket }
 interface Saved { name: string; mentality: number; tokens: Token[] }
 
 const FORMATIONS: Record<string, Array<[number, number, Token["role"], string]>> = {

@@ -24,7 +24,7 @@ import { careerArc } from "@/domain/careerArc";
 // M333: the three line means come from the domain now. They used to be `avgBy` below — this
 // file's own copy of the formula `domain/career.ts`'s `clubInput` already had, answering 0 for
 // an empty group where the domain answers the club's own rating.
-import { clubInput, lineMean } from "@/domain/career";
+import { clubInput, lineMean, LINE_GROUPS } from "@/domain/career";
 import { playerDna } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
@@ -352,9 +352,9 @@ export function ClubDetail({ id }: { id: string }) {
   // M333: the domain's own line mean, over the club's effective squad. An empty group answers
   // the club's rating, which is what the `|| club.overall` at the two call sites below used to
   // paper over.
-  const attack = lineMean(playersByClub(id), ["ST", "W", "AM"], 0);
-  const midfield = lineMean(playersByClub(id), ["CM", "DM"], 0);
-  const defense = lineMean(playersByClub(id), ["CB", "FB", "GK"], 0);
+  const attack = lineMean(playersByClub(id), LINE_GROUPS.attack, 0);
+  const midfield = lineMean(playersByClub(id), LINE_GROUPS.midfield, 0);
+  const defense = lineMean(playersByClub(id), LINE_GROUPS.defense, 0);
   return (
     <div className="space-y-6">
       <EntityHeader

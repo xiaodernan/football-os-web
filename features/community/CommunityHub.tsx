@@ -59,6 +59,9 @@ function timeAgo(locale: Locale, iso: string): RowText {
 // `["recent", "top"]` sitting in the markup counts as two untranslated words even
 // though every one is only ever resolved through `comm.sort.`.
 const SORTS = ["recent", "top"] as const;
+// M435: the type is derived from the list, so the two sorts and the type that names them cannot
+// drift.
+type CommunitySort = (typeof SORTS)[number];
 
 /** Tags are dataset words used as filter and stored values, so only their display is
  *  translated — the raw string stays what is compared and written. */
@@ -81,7 +84,7 @@ export function CommunityHub() {
   const learn = useLearnRecords();
   const [store, setStore] = useState<CommunityStore>(load);
   const [tag, setTag] = useState("All");
-  const [sort, setSort] = useState<"recent" | "top">("recent");
+  const [sort, setSort] = useState<CommunitySort>("recent");
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);

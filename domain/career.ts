@@ -107,10 +107,20 @@ export function effectiveSquad(clubId: string, moved: Record<string, string>): P
  *  copy differed already: it answered 0 for an empty group where the domain answers the club's
  *  own rating, which is the difference between "this club fields no attackers" and a rating the
  *  page then substituted at the call site. It is exported now, and the page calls it. */
-export function lineMean(squad: PlayerRef[], groups: string[], fallback: number): number {
+export function lineMean(squad: PlayerRef[], groups: readonly string[], fallback: number): number {
   const g = squad.filter((p) => groups.includes(p.positionGroup));
   return meanOverall(g, fallback);
 }
+
+/** The three lines of a squad, as the position groups that make each of them up. The groups were
+ *  written out twice — here, where the club's own ratings are computed, and in the club page's
+ *  panel, which called the same door with the same three lists — so the lists live here now and
+ *  the page reads them. A position added to a line is a change to the line, not to two files. */
+export const LINE_GROUPS = {
+  attack: ["ST", "W", "AM"],
+  midfield: ["CM", "DM"],
+  defense: ["CB", "FB", "GK"],
+} as const;
 
 // Team strength comes from the *effective* squad, so transfers change how a side
 // performs. When a position group is empty the line falls back to the club's own
@@ -125,9 +135,9 @@ export function clubInput(clubId: string, moved: Record<string, string>, tac: Ta
   const squad = effectiveSquad(clubId, moved);
   const best = squad.slice(0, 11);
   const overall = meanOverall(best, c.overall);
-  const attack = lineMean(squad, ["ST", "W", "AM"], c.overall);
-  const midfield = lineMean(squad, ["CM", "DM"], c.overall);
-  const defense = lineMean(squad, ["CB", "FB", "GK"], c.overall);
+  const attack = lineMean(squad, LINE_GROUPS.attack, c.overall);
+  const midfield = lineMean(squad, LINE_GROUPS.midfield, c.overall);
+  const defense = lineMean(squad, LINE_GROUPS.defense, c.overall);
   const m = tac.mentality;
   return {
     name: c.name,

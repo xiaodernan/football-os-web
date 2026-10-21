@@ -16,6 +16,7 @@ import { useTheme } from "@/lib/theme";
 import { useOs } from "@/store/useFootballOS";
 import { globalSearch } from "@/data/footballService";
 import { rowLine, searchKindLabel } from "@/domain/rowText";
+import { MODES } from "@/domain/types";
 import { useDebounced } from "@/lib/hooks";
 
 interface ActionCmd {
@@ -99,7 +100,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       { id: "ask", label: t("cmd.ask"), hint: t("cmd.from", { path }), group: "actions", run: nav("/ai") },
     );
     if (state.onboarded) {
-      (["FAN", "PLAYER", "MANAGER"] as const).forEach((m) =>
+      MODES.forEach((m) =>
         base.push({ id: `mode-${m}`, label: t("cmd.mode", { mode: t(`prof.mode.${m}`) }), group: "actions", run: () => { setMode(m); onOpenChange(false); } }),
       );
     }

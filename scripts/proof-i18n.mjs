@@ -505,7 +505,10 @@ const spaceOf = (path, anchor, field) => {
   if (!hit) { ok(`the ${path} anchor for a dynamic value space is locatable`, false); return []; }
   return [...hit[0].matchAll(field)].map((m) => m[1]);
 };
-const MODES_UPPER = spaceOf("domain/types.ts", /export type Mode = [^;]+;/, quoted);
+// M435: the modes' value space is read off the LIST now, not off the type — the type is derived
+// from the list (the shape FAVORITE_KINDS already used), so the union this used to read is
+// gone. A space read out of a definition cannot drift from it; that is the point of the anchor.
+const MODES_UPPER = spaceOf("domain/types.ts", /export const MODES[^=]*=[^\]]*\]/, quoted);
 const ACH_IDS = ACHIEVEMENTS.map((a) => a.id);
 const ACH_TIERS = [...new Set(ACHIEVEMENTS.map((a) => a.tier))];
 const lower = (xs) => xs.map((x) => x.toLowerCase());
@@ -712,7 +715,8 @@ const SPACES = new Map([
   }],
   ["det.arc.|arc.trajectory", {
     name: "career trajectories",
-    values: spaceOf("domain/careerArc.ts", /export type Trajectory = [^;]+;/, quoted),
+    // M435: read the list the type is derived from, not the type.
+    values: spaceOf("domain/careerArc.ts", /export const TRAJECTORIES[^=]*=[^\]]*\]/, quoted),
   }],
   ["fav.|kind", {
     // M266: the space is now the runtime list the type derives from, not one caller's signature.
@@ -766,7 +770,9 @@ const SPACES = new Map([
     // module-scope SORTS the board now maps over — which is precisely the anchor
     // relocation check 16 is built to notice: it went red on the hoist, and the value
     // space is still read out of the source rather than written down here.
-    values: spaceOf("features/watchlist/WatchlistBoard.tsx", /const SORTS: Sort\[\] = \[[\s\S]*?\]/, quoted),
+    // M435: the board no longer spells the four codes out - it reads the domain's list - so the
+    // space is read there, from the definition rather than from a copy of it.
+    values: spaceOf("domain/scouting.ts", /export const SCOUT_SORTS[^=]*=[^\]]*\]/, quoted),
   }],
   ["comm.tag.|tag", {
     // The tag words the board filters and stores, straight from the only place
@@ -973,15 +979,15 @@ const DOMAIN_SPACES = [
     union: ["domain/types.ts", /export type GoalMetric = [^;]+;/],
   },
   {
-    // The three modes a remembered row can name. types.ts holds both the union and the
-    // runtime list it mirrors, so this is the only thing that stops the two from
-    // drifting apart and a stored `mode` silently falling back to printing its code.
+    // The three modes a remembered row can name. types.ts holds the runtime list and the type
+    // is DERIVED from it (M435), so the two cannot drift apart and a stored `mode` cannot
+    // silently fall back to printing its code.
     name: "modes",
     values: MODES,
     prefix: "prof.mode.",
     path: "domain/rowText.ts",
     compose: /`prof\.mode\.\$\{code\}`/,
-    union: ["domain/types.ts", /export type Mode = [^;]+;/],
+    union: ["domain/types.ts", /export const MODES[^=]*=[^\]]*\]/],
   },
 ];
 const claimed = new Set();
@@ -4412,7 +4418,9 @@ ok(`the ${stFiles.length} screens that show what state a fixture is in read it t
 // typed against), and the filter strip's hoisted array (which decides only the button ORDER but
 // must carry the same set or a status ships with no way to reach its list). An empty list would
 // satisfy a sorted-equality, so each is floored at its own pinned length.
-const ST_CODES = spaceOf("domain/types.ts", /export type MatchStatus = [^;]+;/, quoted);
+// M435: the statuses' codes are read off the LIST the type is derived from, not off a union
+// that no longer exists.
+const ST_CODES = spaceOf("domain/types.ts", /export const MATCH_STATUSES[^=]*=[^\]]*\]/, quoted);
 const ST_LIST = spaceOf("domain/types.ts", /export const MATCH_STATUSES[^=]*=[^\]]*\]/, quoted);
 const ST_STRIP = spaceOf("features/football/FootballWorld.tsx", /\["LIVE"[\s\S]*?\] as const/, quoted);
 const stWords = ST_CODES.map((c) => `>${c}<`);
@@ -4572,10 +4580,13 @@ ok(`the ${ftFiles.length} screens that show a preferred foot read it through the
 // record field is typed against). There is no third producer — no screen keeps its own
 // array — so the pair is the whole space, and each side is pinned at 2 because a
 // sorted-equality over two empty lists would pass.
-const FT_CODES = spaceOf("domain/types.ts", /export type Foot = [^;]+;/, quoted);
 const FT_LIST = spaceOf("domain/types.ts", /export const FOOTS[^=]*=[^\]]*\]/, quoted);
-ok(`the foot union's runtime list and its type carry the same codes (${FT_LIST.join(",")} vs ${FT_CODES.join(",")})`,
-  FT_CODES.length === 2 && FT_LIST.length === 2 && [...FT_CODES].sort().join() === [...FT_LIST].sort().join());
+// M435: the foot's type is DERIVED from its list, so the two cannot carry different codes — and
+// the check that says so reads the derivation itself, because a hand-typed union would be the one
+// thing that could drift again.
+const FT_DERIVED = /export type Foot = \(typeof FOOTS\)\[number\];/.test(appSrc.get("domain/types.ts") ?? "");
+ok(`the foot's type is derived from its runtime list, so the two cannot carry different codes (${FT_LIST.join(",")})`,
+  FT_LIST.length === 2 && FT_DERIVED);
 // Every .foot read in a component goes through the composer — the seed's write is a .ts
 // file and the intelligence row rides the vars door below, so a component is the only
 // place a bare code can reach the glass. Two things the extractor has to get right, both
@@ -4712,7 +4723,9 @@ ok(`no module prints a stored bucket straight into a display slot beyond the chi
 // the scouting module against the composer's switch cases. Each side is pinned at 5, and
 // the plant feeds the extractor a two-case switch, so a dropped case reddens the pin
 // rather than sliding a floor.
-const BK_CODES = spaceOf("domain/scouting.ts", /export type PosBucket = [^;]+;/, quoted);
+// M435: the bucket codes are read off the LIST the type is derived from, so the space the
+// composer is checked against is the definition itself.
+const BK_CODES = spaceOf("domain/scouting.ts", /export const POS_BUCKETS[^=]*=[^\]]*\]/, quoted);
 // Both composers in domain/rowText.ts are switches over a fixed code space, and until M263
 // the extractor that read one of them read the WHOLE FILE — which was safe only while no
 // other family happened to spell one of its codes. `positionLabel`'s `case "GK":` is a

@@ -5,7 +5,7 @@ import { getPlayer, getClub } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { headroom, valueIndex, primeYearsLabel, templateEdge, scoutComparators } from "@/domain/scouting";
 import { sum } from "@/domain/attributes";
-import type { ScoutSort } from "@/domain/scouting";
+import { SCOUT_SORTS, type ScoutSort } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge, bestEdgeTone, worstEdgeTone } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ type Sort = ScoutSort;
 // `watch.sort.*` dictionary key; the board renders t()-ed labels, never these.
 // The comparator is scouting's (see scoutComparators): the same four orderings shape
 // the scout board's list, and a rule typed twice is a rule that drifts between screens.
-const SORTS: Sort[] = ["value", "potential", "overall", "age"];
+const SORTS: Sort[] = [...SCOUT_SORTS];
 
 export function WatchlistBoard() {
   const { t } = useI18n();

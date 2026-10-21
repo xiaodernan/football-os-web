@@ -43,6 +43,13 @@ const ok = (name, cond, detail) => {
 // --- 1 · the reader -------------------------------------------------------------------------------
 // Two or more quoted words joined by `|`, with whitespace (and a newline) allowed between them.
 const UNION = /"[^"\n]+"(?:\s*\|\s*"[^"\n]+")+/g;
+// A LIST of two or more quoted words: `["a", "b"]`. M435: a vocabulary is also written as a list
+// (the app's modes, its match statuses, its line groups), and a list written twice is the same
+// drift risk as a union written twice.
+const LIST = /\[\s*"[^"\n]+"(?:\s*,\s*"[^"\n]+")+\s*\]/g;
+// A NAME is a word the app uses as a code: letters, digits, underscore, dash. A colour ("#000000")
+// is a value, not a name, so two clubs whose kits share a shade are not a vocabulary.
+const isName = (s) => /^[A-Za-z][\w.-]*$/.test(s);
 // Comments are prose about the code: a union quoted in a docstring is not a second spelling.
 const stripComments = (text) =>
   text
@@ -80,6 +87,23 @@ for (const f of appFiles) {
 }
 const multi = [...groups.entries()].filter(([, rows]) => rows.length > 1);
 
+// The same census over the LISTS: a vocabulary written as an array of names.
+const listGroups = new Map();
+for (const f of appFiles) {
+  const rel = f.slice(root.length + 1).replace(/\\/g, "/");
+  const src = stripComments(readFileSync(f, "utf8"));
+  src.split(/\r?\n/).forEach((line, i) => {
+    for (const m of line.matchAll(LIST)) {
+      const lits = (m[0].match(/"[^"\n]+"/g) || []).map((s) => s.slice(1, -1));
+      if (!lits.every(isName)) continue;
+      const key = lits.slice().sort().join("|");
+      if (!listGroups.has(key)) listGroups.set(key, []);
+      listGroups.get(key).push({ line: i + 1, text: m[0].slice(0, 120), file: rel });
+    }
+  });
+}
+const multiLists = [...listGroups.entries()].filter(([, rows]) => rows.length > 1);
+
 // The reader is armed: a planted union is charged, and the near shapes are not.
 const pUnion = readUnions(`type Tone = "good" | "mixed" | "bad";`).length;
 const pComment = readUnions(`// the record stores "L" | "R"`).length;
@@ -88,11 +112,40 @@ const pNumbers = readUnions(`type N = 1 | 2 | 3;`).length;
 ok(`the reader is armed (a planted union reads ${pUnion}, a union quoted in a comment reads ${pComment}, a single quoted word reads ${pSingle}, and a union of numbers reads ${pNumbers})`,
   pUnion === 1 && pComment === 0 && pSingle === 0 && pNumbers === 0);
 
+// The list reader is armed too: a planted list of names is charged, and a one-word array and a
+// list of colours are not.
+const listIn = (text) => {
+  const out = [];
+  for (const m of stripComments(text).matchAll(LIST)) {
+    const lits = (m[0].match(/"[^"\n]+"/g) || []).map((s) => s.slice(1, -1));
+    if (lits.length >= 2 && lits.every(isName)) out.push(m[0]);
+  }
+  return out;
+};
+const pList = listIn(`const MODES = ["FAN", "PLAYER", "MANAGER"];`).length;
+const pOne = listIn(`const k = ["category"];`).length;
+const pColours = listIn(`const kit = ["#000000", "#FFFFFF"];`).length;
+ok(`the list reader is armed (a planted list of names reads ${pList}, a one-word array reads ${pOne}, and a list of colours reads ${pColours})`,
+  pList === 1 && pOne === 0 && pColours === 0);
+
 // --- 2 · the census: a vocabulary is spelled once ----------------------------------------------------
 const total = [...groups.values()].reduce((s, rows) => s + rows.length, 0);
 ok(`every union of string literals is spelled in ONE place (${groups.size} vocabularies, ${total} spellings, ${multi.length} spelled more than once${multi.length ? `: ${multi.map(([k, rows]) => `[${k}] × ${rows.length}`).join(", ")}` : ""})`,
   multi.length === 0,
   `duplicated: ${multi.map(([k, rows]) => `${k} (${rows.map((r) => `${r.file}:${r.line}`).join(", ")})`).join("; ")}`);
+
+// The LISTS: a vocabulary written as an array of names. Two of them are written twice, and both
+// times the second copy is a screen's own ORDER of the same words (the search page lists players
+// before clubs; the matches strip lists LIVE first) — a documented split, not a drift.
+const LIST_SPLITS = {
+  "club|competition|match|news|player": "the search page's section ORDER is its own (players before clubs); which kinds exist is not",
+  "FINISHED|LIVE|SCHEDULED": "the matches strip's button ORDER is its own (LIVE first); which statuses exist is not",
+};
+const undeclaredLists = multiLists.map(([k]) => k).filter((k) => !(k in LIST_SPLITS));
+const staleLists = Object.keys(LIST_SPLITS).filter((k) => !listGroups.has(k) || (listGroups.get(k) ?? []).length < 2);
+ok(`every list of names is written in one place, except the declared orders (${listGroups.size} lists, ${multiLists.length} written more than once, ${undeclaredLists.length} undeclared [${undeclaredLists.join(", ")}], ${staleLists.length} stale [${staleLists.join(", ")}])`,
+  undeclaredLists.length === 0 && staleLists.length === 0,
+  `undeclared: ${undeclaredLists.join(", ")}; stale: ${staleLists.join(", ")}`);
 
 // --- 3 · the nine vocabularies are named types ------------------------------------------------------
 // Each entry names the type and the file that declares it. A vocabulary that is shared is a type

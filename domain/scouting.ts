@@ -11,7 +11,17 @@ import {clamp, fmt2, ABSENT } from "@/lib/utils";
 // invents attribute vectors it does not have. All metrics are transparent formulas
 // over real data, so a recommendation is explainable end to end.
 
-export type PosBucket = "ALL" | "GK" | "DEF" | "MID" | "ATT";
+// The filter buckets the scout screen offers, and the four that name a real position. The words
+// were written out in two files — the union here and the screen's own arrays — so the list is the
+// one fact now and the type is derived from it, the way SEARCH_KINDS already was.
+export const POS_BUCKETS = ["ALL", "GK", "DEF", "MID", "ATT"] as const;
+
+export type PosBucket = (typeof POS_BUCKETS)[number];
+
+// The four buckets that name a position — the same set, without the "everything" arm.
+export const POSITION_BUCKETS = ["GK", "DEF", "MID", "ATT"] as const;
+
+export type PositionBucket = (typeof POSITION_BUCKETS)[number];
 
 export function bucketOf(g: PositionGroup): Exclude<PosBucket, "ALL"> {
   if (g === "GK") return "GK";
@@ -64,7 +74,11 @@ export interface ScoutFilters {
   clubId?: string; // exclude this club's own players
 }
 
-export type ScoutSort = "value" | "potential" | "overall" | "age";
+// The four orderings a scout list can be read in. M435: the type is derived from the list, so the
+// comparator table below and the screen's own sort list cannot name different sets.
+export const SCOUT_SORTS = ["value", "potential", "overall", "age"] as const;
+
+export type ScoutSort = (typeof SCOUT_SORTS)[number];
 
 // The four scout orderings, one door. The watchlist board used to retype this object
 // verbatim beside its own SORTS array, so an edit to the scout rule (tie-break by
@@ -232,7 +246,7 @@ export function templateEdge(p: PlayerRef): TemplateEdgeSummary | null {
 // Squad profile of a club by position bucket — where it is thin vs. deep.
 export function squadProfile(clubId: string): { bucket: Exclude<PosBucket, "ALL">; count: number; avg: number }[] {
   const squad = footballProvider.players().filter((p) => p.clubId === clubId);
-  const buckets: Exclude<PosBucket, "ALL">[] = ["GK", "DEF", "MID", "ATT"];
+  const buckets: PositionBucket[] = [...POSITION_BUCKETS];
   return buckets.map((b) => {
     const g = squad.filter((p) => bucketOf(p.positionGroup) === b);
     return { bucket: b, count: g.length, avg: Math.round(meanOverall(g, 0)) };
