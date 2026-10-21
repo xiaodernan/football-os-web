@@ -79,21 +79,10 @@ export const EVENT_GLYPH: Record<MatchEventType, string> = {
   VAR: "📺",
 };
 
-function effStrength(t: TeamInput): number {
-  return (
-    t.overall * (1 - t.fatigue * 0.15) +
-    t.form * 3 +
-    t.morale * 2
-  );
-}
-
 export function simulateMatch(input: SimInput): SimResult {
   const rng = makeRng(`${input.seed}|${hashString(input.seed)}`);
   const mins = input.minutes ?? 90;
   const { home, away } = input;
-  const homeEdge = 2.5;
-  const hs = effStrength(home) + homeEdge;
-  const as = effStrength(away);
   const mid = home.midfield - away.midfield;
 
   // Possession from midfield + press + bias.

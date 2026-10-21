@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M428
+Work ships one milestone per commit and is currently at M429
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,54 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M429 — the fourth direction of the dead-code boundary: a declaration nothing reads
+
+**What the gauge says.** `scripts/proof-unused-locals.mjs` **5/5**. The build compiles with
+`tsc --noEmit` and never asks for `noUnusedLocals`; the gate builds the same program from the
+repository's own `tsconfig.json` and arms that one flag through the compiler API. Across **95
+shipped modules** in the nine app roots it charges **0** declarations (TS6133/6192/6196), reads
+**95 of 95** modules, and finds **0** top-level TypeScript directories outside its roots, **0**
+compiler suppressions and **0** shipped paths quoted in its own code.
+
+**Why a zero reading is still a unit.** M428's Next named four declarations; this unit is the census
+that names them and the fold that removes them. The compiler reported **4** on `83e6acf` —
+`React` in simple-slider, `hs` and `as` in matchEngine, `locale` in Dashboard — and the fold removed
+**six**, because `hs` and `as` were the only readers of `effStrength` and `homeEdge`. A read of a
+dead name is still a read: the flag reports a frontier, not the transitive dead set. Removing the
+frontier exposed the second ring, and the tree now reads zero: **13 lines across three files**.
+
+**The reader, witnessed both ways.** A virtual module holds one unread local and one read local: the
+compiler charges exactly the first (1 diagnostic, TS6133) and nothing in the second, on the same
+options the real tree uses. Coverage is part of the claim, not a nicety: a file the program never
+sees cannot be charged, so the gate walks the nine roots and compares every module against
+`program.getSourceFiles()`. Suppression is charged structurally: `// @ts-nocheck`, `@ts-ignore` and
+`@ts-expect-error` are scanned across the same walk (**0** today), because a directive above an
+unread local would hide it from the program the gate reads. Clause 5 strips the gate's own comments
+and refuses a quoted shipped path; the plant is assembled from fragments so the gate does not quote
+a real path and trip itself.
+
+**The arms.** `dev/.m429-arms.mjs` runs **9/9** on an isolated plane, each arm restored byte-exactly
+and the plane's `git status` compared to its baseline. Two clauses are probed from both sides: the
+arming clause loses its flag (B), its unread half (C) and its read half (D); coverage loses a module
+outside the program (G) and a module inside the program that the reader hides (H). A planted unused
+local (A) and an unused named import (I) both red the real-tree clause; a `// @ts-nocheck` (E) and
+a quoted skip list (F) red their own clauses. Predicted from each clause's own sentence: A[2] B[1]
+C[1] D[1] E[4] F[5] G[3] H[3] I[2]. All nine matched, and at rest and after every arm the plane's
+status equalled its baseline.
+
+**What is NOT claimed.** Unused parameters (`noUnusedParameters` stays off: a callback's second
+parameter can be a signature, not a choice, so that is a separate reading with its own judgement).
+`.d.ts` files are declarations, not shipped modules. `functions/` is Deno code outside this
+tsconfig, walked by the orphan census instead. The flag only sees names the program contains, so
+coverage is asserted beside it rather than assumed; and the suppression scanner is textual, not a
+parse.
+
+**Next.** Unused parameters, measured before they are charged: if the reading is dominated by
+callback signatures, the unit is a judgement table, not a fold.
+
+`tsc --noEmit` exit 0, `npm run build` exit 0, and the full suite is green (102/102 proof
+scripts proven, 3058/3058 checks counted).
 
 ### M428 — the third direction of the dead-code boundary: a module no entry reaches
 

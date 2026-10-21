@@ -374,7 +374,7 @@ const MODULE_LINKS = [
 ];
 
 function LiveCell({ m }: { m: Match }) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const h = getClub(m.homeClubId);
   const a = getClub(m.awayClubId);
   return (
