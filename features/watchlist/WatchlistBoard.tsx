@@ -9,7 +9,7 @@ import type { ScoutSort } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
-import { cn, fmt1, fmtMoney } from "@/lib/utils";
+import { cn, fmt1, fmtMoney, signed } from "@/lib/utils";
 
 type Sort = ScoutSort;
 
@@ -144,10 +144,10 @@ export function WatchlistBoard() {
                   return (
                     <div className="hidden w-28 text-right xl:block" title={t("watch.templateHint")}>
                       <div className={cn("font-mono text-sm tabular-nums", edge.bestDelta > 0 ? "text-success" : "text-muted-foreground")}>
-                        {t(`attr.${edge.bestCategory}`)} {edge.bestDelta > 0 ? `+${edge.bestDelta}` : edge.bestDelta}
+                        {t(`attr.${edge.bestCategory}`)} {signed(edge.bestDelta)}
                       </div>
                       <div className={cn("text-[11px] tabular-nums", edge.worstDelta < 0 ? "text-destructive" : "text-muted-foreground")}>
-                        {t(`attr.${edge.worstCategory}`)} {edge.worstDelta > 0 ? `+${edge.worstDelta}` : edge.worstDelta}
+                        {t(`attr.${edge.worstCategory}`)} {signed(edge.worstDelta)}
                       </div>
                     </div>
                   );

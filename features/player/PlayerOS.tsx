@@ -31,7 +31,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import {cn, pct, pctOf, fmt2, fmt1, ABSENT } from "@/lib/utils";
+import {cn, pct, pctOf, fmt2, fmt1, ABSENT, signed } from "@/lib/utils";
 import { useLearnRecords } from "@/lib/hooks";
 import { summarizeLearn } from "@/domain/learn";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -481,7 +481,7 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
         </div>
         <Button size="sm" onClick={() => {
           const deltas = onComplete(session.id, Number(rating), notes || undefined);
-          const grew = deltas.filter((d) => d.delta > 0).map((d) => `${t(`attr.name.${d.key}`)} +${d.delta}`).join(" · ");
+          const grew = deltas.filter((d) => d.delta > 0).map((d) => `${t(`attr.name.${d.key}`)} ${signed(d.delta)}`).join(" · ");
           toast.success(grew ? t("player.sessionCompleteGrowth", { growth: grew }) : t("player.sessionCompleteXp"));
         }}>{t("player.complete")}</Button>
       </div>

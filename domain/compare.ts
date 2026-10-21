@@ -6,7 +6,7 @@
 // verdict stays explainable.
 
 import { getPlayer, getClub } from "@/data/footballService";
-import { fmt1, fmtMoney } from "@/lib/utils";
+import { fmt1, fmtMoney, signed } from "@/lib/utils";
 import type { PlayerRef } from "./types";
 import { categoryAverages } from "./attributes";
 import { headroom, valueIndex, primeHold, bucketOf, round1 } from "./scouting";
@@ -81,7 +81,7 @@ export function compare(aId: string, bId: string): CompareResult | null {
   const metrics: CompareMetric[] = [
     { key: "overall", dir: "high", a: a.overall, b: b.overall, display: (v) => `${v}` },
     { key: "potential", dir: "high", a: a.potential, b: b.potential, display: (v) => `${v}` },
-    { key: "headroom", dir: "high", a: headroom(a), b: headroom(b), display: (v) => `+${v}` },
+    { key: "headroom", dir: "high", a: headroom(a), b: headroom(b), display: signed },
     { key: "age", dir: "low", a: a.age, b: b.age, display: (v) => `${v}` },
     { key: "prime", dir: "high", a: Math.round(primeHold(a)), b: Math.round(primeHold(b)), display: (v) => `${v}` },
     { key: "value", dir: "info", a: a.value, b: b.value, display: fmtMoney },

@@ -9,7 +9,7 @@ import { playerDna } from "@/domain/playerDna";
 import type { PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, Crest, PositionTag, EmptyState, DemoBadge, DnaCard } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
-import { cn, pctOf, SEPARATOR, paramText } from "@/lib/utils";
+import { cn, pctOf, SEPARATOR, paramText, signed } from "@/lib/utils";
 
 export function ComparePage() {
   const { t } = useI18n();
@@ -134,7 +134,7 @@ export function ComparePage() {
                     <div key={e.key} className="flex items-center justify-between gap-2 text-xs">
                       <span className="min-w-0 flex-1 truncate text-muted-foreground">{t(`attr.name.${e.key}`)}</span>
                       <span className={cn("font-mono tabular-nums", e.favor === "a" ? "text-success" : "text-muted-foreground")}>{e.a}</span>
-                      <span className="w-10 text-center font-mono tabular-nums text-muted-foreground">{e.delta > 0 ? `+${e.delta}` : e.delta}</span>
+                      <span className="w-10 text-center font-mono tabular-nums text-muted-foreground">{signed(e.delta)}</span>
                       <span className={cn("font-mono tabular-nums", e.favor === "b" ? "text-success" : "text-muted-foreground")}>{e.b}</span>
                     </div>
                   ))}

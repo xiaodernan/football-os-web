@@ -9,7 +9,7 @@ import { sum } from "@/domain/attributes";
 import type { NewsArticle } from "@/domain/types";
 import { Panel, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
-import { cn, pctLabel, ABSENT, fmtMoney } from "@/lib/utils";
+import { cn, pctLabel, ABSENT, fmtMoney, signed } from "@/lib/utils";
 
 const KIND_TONE: Record<NewsArticle["kind"], string> = {
   Rumor: "border-warning/50 text-warning",
@@ -131,7 +131,7 @@ function RumourCard({ r, showFit }: { r: RumourLink; showFit: boolean }) {
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <Cell label={t("transfers.askingFee")} value={fmtMoney(r.askingFee)} />
         <Cell label={t("transfers.valueIndex")} value={`${r.valueIndex}`} sub={t("transfers.valueIndexSub")} />
-        <Cell label={t("transfers.headroom")} value={`+${r.headroom}`} sub={t("transfers.potential")} />
+        <Cell label={t("transfers.headroom")} value={signed(r.headroom)} sub={t("transfers.potential")} />
       </div>
 
       {showFit && r.fitScore != null && (

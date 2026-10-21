@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M423
+Work ships one milestone per commit and is currently at M424
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,18 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M424 — the sign convention had a census, and the census charged one spelling of it
+
+**The defect.** `proof-signed` is the gate for the app's signed-number door: a figure that can be negative prints with a literal `+` when it is non-negative. Its census keys on **one** spelling of that convention — `>= 0 ? "+" : ""`, a plus glued in front of a *pre-formatted* number — and it reported, for the whole tree, that "the numeric sign ternary survives only in the door". The app had **twelve** more spellings, in a shape that anchor cannot see: a plus glued to the number **inside** a template (`+${x}`), and a comparison whose true arm is such a template (`x > 0 ? `+${x}` : x`). The Data Room's goal difference, the Compare page's edge, the Entity Detail's category delta, the Scouting Panel's two edge deltas, the Watchlist Board's two, the comparison's headroom metric, the potential headroom, the session-growth toast, the XP tile and the transfer headroom.
+
+**And the two spellings disagreed.** The door signs a **non-negative** figure ("+0"); the residue signed only a **positive** one ("0"). So the same goal difference read **"+0"** in the Manager OS season summary and **"0"** in the Data Room — one quantity in two forms, on two screens a reader could compare, which is M401's class four hundred commits later. This is M420's lesson, third sighting: **a census charges the shapes its author could think of**, and this census's author had thought of one.
+
+**The fold.** All twelve now ride `signed` — the door whose docstring states the convention — and the comparison page hands the door itself to its headroom metric rather than wrapping it in a local formatter. A zero difference reads **"+0"** everywhere, the word the app already gave a zero headroom (the Transfer Centre) and a zero XP gain (the Review tile), so the app now agrees with itself. That is the one thing a reader sees move, and it is the point.
+
+**The seam, charged both ways.** `proof-signed` gains three scans — a plus glued to a number in a template, a comparison whose true arm is such a template, and a private copy of the door's body — each armed by a plant, with the door and its padded sibling shown *not* to be charged by them. The plus-template scan finds exactly **one** carrier, and the proof names it: the Development page's gap badge, whose quantity is a **shortfall** (`target - actual`) and whose sign is inverted on purpose, so a room to develop reads "−3" and an exceeded target reads "+2". The residue's own shape survives nowhere, the door's body survives only in the door, and all nine modules that used to spell the sign by hand now import the door and use it — the scan counts a *use*, not a call, because the comparison page passes the door as a value. The file passes 19/19; proof-quantities 5/5, proof-i18n 376/376 and the rest of the suite are unaffected, and tsc is clean.
+
+**Still outstanding.** This family was found by reading the tree, not by a census: the scout that found it groups *ladders* by the numbers they compare against, and the sign convention is not a ladder — it is a "plus glued to a number" shape, so the scout could not have seen it. The class it belongs to is larger than ladders: a number printed with a sign, a delta toned as up/down, a threshold compared in two places, a band spelled with its own bounds. Each is a decision the app either makes once or makes per screen, and the tree currently answers that question in the code rather than in a door. The next unit should decide which of those are decisions and which are words a screen owns — and then charge the ones that are decisions, because a census that only knows the shape its author imagined will find them one at a time.
 
 ### M423 — the app is the app: six proofs walked the tree, and one of them walked a clone of it
 

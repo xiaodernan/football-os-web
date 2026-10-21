@@ -5,7 +5,7 @@ import { footballProvider, getClub, getCompetition } from "@/data/footballServic
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
-import { cn, clamp, fmt2, ABSENT, SEPARATOR } from "@/lib/utils";
+import { cn, clamp, fmt2, ABSENT, SEPARATOR, signed } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
 // raw-UI scan reads every string literal there as a child text node — four hits on the
@@ -175,7 +175,7 @@ export function DataRoom() {
                         <td className="px-2 py-2 text-center font-mono text-xs tabular-nums">{m.won}</td>
                         <td className="px-2 py-2 text-center font-mono text-xs tabular-nums">{m.drawn}</td>
                         <td className="px-2 py-2 text-center font-mono text-xs tabular-nums">{m.lost}</td>
-                        <td className="px-2 py-2 text-center font-mono text-xs tabular-nums">{m.gd > 0 ? `+${m.gd}` : m.gd}</td>
+                        <td className="px-2 py-2 text-center font-mono text-xs tabular-nums">{signed(m.gd)}</td>
                         <td className="px-2 py-2 text-center font-mono text-xs font-semibold tabular-nums">{m.points}</td>
                         <td className="px-2 py-2"><FormPips form={m.form} /></td>
                       </tr>

@@ -21,7 +21,7 @@ import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitiv
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
-import { cn, fmt1, ABSENT, fmtMoney } from "@/lib/utils";
+import { cn, fmt1, ABSENT, fmtMoney, signed } from "@/lib/utils";
 
 const BUCKETS: PosBucket[] = ["ALL", "GK", "DEF", "MID", "ATT"];
 // `labelKey`, not `label`: a row field named `label` is one of the positions the
@@ -148,8 +148,8 @@ export function ScoutingPanel() {
                     if (!edge) return <td className="px-2 py-1.5 text-right text-xs text-muted-foreground">{ABSENT}</td>;
                     return (
                       <td className="px-2 py-1.5 text-right font-mono text-xs whitespace-nowrap">
-                        <span className={edge.bestDelta > 0 ? "text-success" : "text-muted-foreground"}>{t(`attr.${edge.bestCategory}`)} {edge.bestDelta > 0 ? `+${edge.bestDelta}` : edge.bestDelta}</span>
-                        <span className={cn("ml-2", edge.worstDelta < 0 ? "text-destructive" : "text-muted-foreground")}>{t(`attr.${edge.worstCategory}`)} {edge.worstDelta > 0 ? `+${edge.worstDelta}` : edge.worstDelta}</span>
+                        <span className={edge.bestDelta > 0 ? "text-success" : "text-muted-foreground"}>{t(`attr.${edge.bestCategory}`)} {signed(edge.bestDelta)}</span>
+                        <span className={cn("ml-2", edge.worstDelta < 0 ? "text-destructive" : "text-muted-foreground")}>{t(`attr.${edge.worstCategory}`)} {signed(edge.worstDelta)}</span>
                       </td>
                     );
                   })()}

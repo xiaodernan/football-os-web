@@ -34,7 +34,7 @@ import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { clamp, cn, pctOf, fmt2, fmt1, ABSENT, SEPARATOR, fmtMoney } from "@/lib/utils";
+import { clamp, cn, pctOf, fmt2, fmt1, ABSENT, SEPARATOR, fmtMoney, signed } from "@/lib/utils";
 
 const fmtDateTime = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -114,7 +114,7 @@ export function PlayerDetail({ id }: { id: string }) {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatTile label={t("common.overall")} value={p.overall} tone="up" />
-        <StatTile label={t("compare.m.potential")} value={p.potential} sub={p.potential > p.overall ? `+${p.potential - p.overall}` : t("det.peak")} />
+        <StatTile label={t("compare.m.potential")} value={p.potential} sub={p.potential > p.overall ? signed(p.potential - p.overall) : t("det.peak")} />
         <StatTile label={t("compare.m.value")} value={fmtMoney(p.value)} />
         <StatTile label={t("det.archetype")} value={<span className="text-base">{t(`dna.arch.${p.archetype}`)}</span>} sub={comp?.name} />
       </div>
@@ -204,7 +204,7 @@ export function PlayerDetail({ id }: { id: string }) {
                     <span className="text-muted-foreground">{t(`attr.${c.category}`)}</span>
                     <span className="font-mono tabular-nums">{c.value}</span>
                     <span className={cn("w-10 text-right font-mono tabular-nums", c.delta > 0 ? "text-success" : c.delta < 0 ? "text-destructive" : "text-muted-foreground")}>
-                      {c.delta > 0 ? `+${c.delta}` : c.delta}
+                      {signed(c.delta)}
                     </span>
                   </li>
                 ))}

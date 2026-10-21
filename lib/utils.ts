@@ -73,7 +73,20 @@ export const pctOf = (value: number, max: number): string => `${(value / max) * 
 // spelled this as a private `signed` helper (3 call sites); film Insights, the Manager record and
 // the ManagerOS delta each stitched the same sign-or-nothing ternary inline. Identical today, so
 // nothing a reader sees moves — but a sign convention spelled four ways that part company the moment
-// one gains a locale or a zero-width space. NOTE this door takes the RAW number and coerces it, so
+// one gains a locale or a zero-width space.
+//
+// M424: twelve more spellings were here, in a shape the census could not see — a plus glued to the
+// number INSIDE a template rather than in front of a pre-formatted one. The Data Room's
+// goal difference, the Compare page's edge, the Entity Detail's category delta, the Scouting
+// Panel's two edge deltas, the Watchlist Board's two, the comparison's headroom metric, the
+// potential headroom, the session-growth toast, the XP tile and the transfer headroom. They did NOT
+// all agree with this door: it signs a NON-NEGATIVE figure ("+0") and they signed only a POSITIVE
+// one ("0"), so the same goal difference read "+0" in the Manager OS season summary and "0" in the
+// Data Room. All twelve now ride this door, so a zero difference reads "+0" everywhere — the word
+// the app already gave a zero headroom and a zero XP gain. The one survivor is the Development
+// page's gap badge, whose quantity is a SHORTFALL and whose sign is inverted on purpose.
+//
+// NOTE this door takes the RAW number and coerces it, so
 // it is NOT the sibling that signs a PRE-FORMATTED fixed-width figure (a `+` glued in front of a
 // two-decimal string): that one keeps padding a caller here would drop, so FilmRoom's trend cell and
 // the Manager career's form stay on the padded form and the DynamicWorld delta stays sign-driven by a

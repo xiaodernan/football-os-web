@@ -21,6 +21,20 @@
 //     computed elsewhere, not a numeric comparison. The `>= 0` anchor deliberately reads 0 here.
 // M364 converged the last two raw residues (career.ts's goal-difference cell and the ManagerOS delta
 // readout), so no raw inline site survives anywhere; a clause charges both former lanes zero-and-imports.
+//
+// M424 found the census's own blind spot: the anchor above charges ONE spelling of the sign
+// convention, and the app had twelve more in a shape the anchor cannot see — a plus glued to the
+// number INSIDE a template (`+${x}`), and a comparison whose true arm is such a template
+// (`x > 0 ? `+${x}` : x`). The Data Room's goal difference, the Compare page's edge, the Entity
+// Detail's category delta, the Scouting Panel's two edge deltas, the Watchlist Board's two, the
+// comparison's headroom metric, the potential headroom, the session-growth toast, the XP tile and
+// the transfer headroom all spelled the door's convention by hand, and the two spellings disagree
+// at zero — the door signs a non-negative figure ("+0"), the residue signed only a positive one
+// ("0") — so the same goal difference read "+0" in the Manager OS season summary and "0" in the
+// Data Room. M420's lesson, third sighting: a census charges the shapes its author could think of.
+// The three new scans at the bottom of this file close that hole, and the ONE survivor they name
+// (the Development page's gap badge, whose quantity is a shortfall and whose sign is inverted on
+// purpose) is a different convention, not a residue.
 // Run: node scripts/proof-signed.mjs
 import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";
@@ -48,6 +62,9 @@ const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
 const carriers = ["domain", "data", "lib", "features", "components", "i18n"].flatMap(walk).filter((f) => /\.(ts|tsx)$/.test(f));
 const src = Object.fromEntries(carriers.map((f) => [f, readFileSync(f, "utf8")]));
 const count = (text, re) => (text.match(re) || []).length;
+// The code of a file, with its comments removed — a comment that names the door is prose about the
+// door, not a use of it.
+const codeOnly = (text) => text.replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
 
 // The inline numeric sign-prefix: a `>= 0` comparison whose true arm is "+" and false arm is "".
 // The `>= 0` anchor excludes the boolean sibling; the `: ""` arm excludes the door body (`"+" + n`).
@@ -154,6 +171,75 @@ ok(`signed2's body IS the padded idiom and both cells left it (body line reads $
   signed2Line.trim() === 'export const signed2 = (v: number): string => `${v >= 0 ? "+" : ""}${v.toFixed(2)}`;' &&
   paddedSites.every(([, n]) => n === 0) && paddedSites.length === 2 &&
   paddedByFile.length === 1 && paddedByFile[0] === HOME);
+
+// --- M424: the census above charges ONE spelling of the sign convention, and the app had twelve
+// --- more. The anchor is `>= 0 ? "+" : ""` — a plus glued in front of a PRE-FORMATTED number. The
+// --- residues spelled the SAME convention in a shape that anchor cannot see: a plus glued to the
+// --- number INSIDE a template (`+${x}`), and a comparison whose true arm is such a template
+// --- (`x > 0 ? `+${x}` : x`). The census reported "the numeric sign ternary survives only in the
+// --- door" while twelve sites spelled it by hand — and the two spellings DISAGREE at zero (the
+// --- door signs a non-negative figure, the residue signs only a positive one), so a goal
+// --- difference of zero read "+0" in the Manager OS season summary and "0" in the Data Room.
+// --- M420's lesson, third sighting: a census charges the shapes its author could think of.
+// The three shapes this section reads, none of which the old anchor can see:
+const PLUS_TEMPLATE = /\+\$\{/g;                                   // a plus glued to a number in a template
+const RESIDUE_TERNARY = /\? *`\+/g;                                // a comparison whose true arm is one
+const DOOR_BODY_COPY = /[<>]=? *0 *\? *"\+" *\+ *[A-Za-z_$][\w$]* *: *String\(/g; // a private copy of the door's body
+// The Development page's gap badge is the ONE survivor, and it is not this convention: its quantity
+// is a shortfall (target - actual) and its sign is inverted on purpose — a room to develop reads
+// "−3" and an exceeded target reads "+2". It keeps its shape, and the census says so by name
+// rather than by an exemption list nobody can check.
+const SURVIVOR = "features/development/DevelopmentPage.tsx";
+const pPlus = count("  {x > 0 ? `+${x}` : x}", PLUS_TEMPLATE);
+const pResidue = count("  {x > 0 ? `+${x}` : x}", RESIDUE_TERNARY);
+const pCopy = count("  const s = (n: number): string => (n >= 0 ? \"+\" + n : String(n));", DOOR_BODY_COPY);
+const pDoorPlus = count("export const signed = (n: number): string => (n >= 0 ? \"+\" + n : String(n));", PLUS_TEMPLATE);
+const pSibPlus = count("export const signed2 = (v: number): string => `${v >= 0 ? \"+\" : \"\"}${v.toFixed(2)}`;", PLUS_TEMPLATE);
+ok(`the three new scans are armed and the door and its sibling are not charged by them (planted plus-template ${pPlus}, planted residue ${pResidue}, planted private copy of the door's body ${pCopy}; the door's own body ${pDoorPlus}, the padded sibling ${pSibPlus})`,
+  pPlus === 1 && pResidue === 1 && pCopy === 1 && pDoorPlus === 0 && pSibPlus === 0);
+
+const plusByFile = carriers.map((f) => [f, count(src[f], PLUS_TEMPLATE)]).filter(([, n]) => n > 0);
+const residueByFile = carriers.map((f) => [f, count(src[f], RESIDUE_TERNARY)]).filter(([, n]) => n > 0);
+const copyByFile = carriers.filter((f) => f !== HOME && count(src[f], DOOR_BODY_COPY) > 0);
+ok(`a plus glued to a number in a template survives in ONE place, and that place is the documented survivor (${plusByFile.length} carrier(s): ${plusByFile.map(([f, n]) => `${f.split("/").pop()} ${n}`).join(", ")})`,
+  plusByFile.length === 1 && plusByFile[0][0] === SURVIVOR,
+  `carriers: ${plusByFile.map(([f]) => f).join(", ")}`);
+ok(`the residue's own shape — a comparison whose true arm glues the plus to the number — survives nowhere, and the planted one reads ${pResidue}`,
+  residueByFile.length === 0 && pResidue === 1,
+  `survivors: ${residueByFile.map(([f]) => f).join(", ")}`);
+ok(`the door's body survives only in the door: no module re-spells it privately (copies in ${copyByFile.length ? copyByFile.join(", ") : "none"}; the planted copy reads ${pCopy})`,
+  copyByFile.length === 0 && pCopy === 1,
+  `copies: ${copyByFile.join(", ")}`);
+
+// Every place that used to spell the convention by hand now calls the door, file by file.
+const FORMER_SPELLINGS = [
+  "domain/compare.ts",
+  "features/analytics/DataRoom.tsx",
+  "features/compare/ComparePage.tsx",
+  "features/football/Details.tsx",
+  "features/player/PlayerOS.tsx",
+  "features/review/ReviewPage.tsx",
+  "features/scouting/ScoutingPanel.tsx",
+  "features/transfers/TransferCentre.tsx",
+  "features/watchlist/WatchlistBoard.tsx",
+];
+// A reader of the door: a CALL (`signed(x)`) or the door used as a VALUE (`display: signed`). The
+// import line and the comments are removed first, so the count is the code's use and not the
+// word's. The comparison page's headroom metric passes the door itself as its formatter, which is
+// why a call-only scan would have reported it as a residue.
+const signedRefs = (f) =>
+  count(codeOnly(src[f]).replace(/import[^;]*;/g, ""), /\bsigned\b(?![\w$])/g);
+const formerCalls = FORMER_SPELLINGS.map((f) => [f, signedRefs(f)]);
+const formerImporters = FORMER_SPELLINGS.filter((f) => count(src[f], IMPORT_SIGNED) >= 1);
+ok(`every module that used to spell the sign by hand now calls the door (${formerImporters.length}/${FORMER_SPELLINGS.length} import it; calls ${formerCalls.map(([, n]) => n).join(",")})`,
+  formerImporters.length === FORMER_SPELLINGS.length && formerCalls.every(([, n]) => n >= 1),
+  `missing the import: ${FORMER_SPELLINGS.filter((f) => !formerImporters.includes(f)).join(", ")}`);
+
+// The door's own contract, stated where the residue can see it: a non-negative figure carries the
+// sign, so a zero difference reads "+0" — the same word the app already gave a zero headroom and a
+// zero XP gain. The residue's "0" is the form that is gone, and this clause is what says so.
+ok(`the door signs a non-negative figure, so a zero difference reads the same word everywhere (signed(0)="${signed(0)}", signed(-1)="${signed(-1)}", signed(3)="${signed(3)}")`,
+  signed(0) === "+0" && signed(-1) === "-1" && signed(3) === "+3");
 
 // --- Must-not-unify, behavioural: signed() coerces the RAW number, so it cannot serve a padded cell.
 // Both doors are the SHIPPED ones here, not a re-spelling of mine. -0 is measured, not assumed:
