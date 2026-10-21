@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M417
+Work ships one milestone per commit and is currently at M418
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,32 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M418 — the quantity census: a field is formatted one way, so the same number cannot reach a reader in two forms
+
+M417 closed the duplication the **shape**-scanner could not see. This unit is the other direction of the same idea, and it is the direction a reader actually sees.
+
+**The class.** M401 was its reader-visible member: the world engine's market total read **`€6030M`** where a player's value read **`€86.0B`** — one quantity, two readings, on two screens the reader could compare. `proof-money` closed the *cause* (a second money formatter existed) but not the *class*: nothing stopped a domain field from being formatted one way here and another way there.
+
+**The scout.** Not a body — a **quantity**. For every display door call and every hand-rolled unit template in the tree, read the **field** the argument names, and group the treatments by that field. A field with two treatments is a number the reader can meet in two forms.
+
+**What it found: five fields, and every one of them is a split the app had already decided.**
+
+| field | the two treatments | why they are not a defect |
+| --- | --- | --- |
+| `value` | `fmtMoney` + `fmt2` | a player's value is money; the Data Room's bar label is a metric — two quantities that share a field name |
+| `credibility` | `pct` + `pctLabel` | a bare integer that goes *into a translated sentence* beside a labelled one that stands alone |
+| `fatigue` | `pct` + `pctLabel` | the same shape: a rationale row's var beside a metric's label |
+| `scanTrend` | `signed` + `signed2` | a raw sign that follows the number beside the padded fixed-two-decimal cell |
+| `skill` | `fmt2` + `pct` | a fraction shown as a decimal beside the same scale as a percentage |
+
+Each is a different **slot**, not a different answer — and the app's own doors say so in their docstrings (`signed`'s: *"the pad ('1.50', not '1.5') is part of the display"*). A reader can meet the same field in two forms, and each form is right for where it is.
+
+**The census.** `scripts/proof-quantities.mjs` (5 checks): the reader is armed (a planted field formatted two ways reads two treatments, one way reads one, and the field of an argument is read from the field access); the tree is real — 218 treatment sites over 93 files; **every field with more than one treatment is on the named list** (5 fields, 0 unlisted, 0 named-but-no-longer-split — so the list cannot rot in either direction); each named split is charged with the pair of doors that explains it, and both are the app's own doors; and the M401 class is closed **from the quantity's side too** — every money treatment in the tree goes through one door, so a money quantity cannot reach a reader in two forms.
+
+**What the class is worth.** The door work has been closing "a rule computed in two places" for twenty milestones. This closes the other half: **a quantity computed once and shown in two ways** — the failure a reader can actually see, and the one the world engine's `€6030M` was. A new field formatted two ways now reddens this census the day it is written.
+
+**Next.** The app's rules are converged (M417) and its quantities are converged (this unit). What is left is the app's **copy** — the sentences a reader reads. `proof-i18n` charges that every key is translated and that no English literal reaches the screen, but it does not charge that the *same* statement is not said two ways in two places. That is the next class.
 
 ### M417 — a census for the duplication the shape-scanner cannot see: the same rule under two different names
 
