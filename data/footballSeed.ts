@@ -5,6 +5,7 @@ import {
   POSITION_BY_GROUP,
   byOverall,
   marketValue,
+  resultPoints,
 } from "@/domain/attributes";
 import { computeDna } from "@/domain/playerDna";
 import { clamp, DAY_MS, indexById, round2, fmt2, epochMs } from "@/lib/utils";
@@ -548,9 +549,11 @@ function buildStandings(clubs: Club[], matches: Match[]): Record<string, Standin
     h.played++; a.played++;
     h.gf += m.homeGoals; h.ga += m.awayGoals;
     a.gf += m.awayGoals; a.ga += m.homeGoals;
-    if (m.homeGoals > m.awayGoals) { h.won++; a.lost++; h.points += 3; }
-    else if (m.homeGoals < m.awayGoals) { a.won++; h.lost++; a.points += 3; }
-    else { h.drawn++; a.drawn++; h.points++; a.points++; }
+    if (m.homeGoals > m.awayGoals) { h.won++; a.lost++; }
+    else if (m.homeGoals < m.awayGoals) { a.won++; h.lost++; }
+    else { h.drawn++; a.drawn++; }
+    h.points += resultPoints(m.homeGoals, m.awayGoals);
+    a.points += resultPoints(m.awayGoals, m.homeGoals);
   }
   for (const compId of Object.keys(table)) {
     table[compId].sort(

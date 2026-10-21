@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { footballProvider, getClub, getCompetition, clubIdsByCompetition } from "@/data/footballService";
 import { useRouter } from "@/lib/router";
-import { byOverall, byTableStanding } from "@/domain/attributes";
+import { byOverall, byTableStanding, resultPoints } from "@/domain/attributes";
 import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/domain/matchEngine";
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine } from "@/domain/rowText";
@@ -254,7 +254,12 @@ function simulateSeason(compId: string, nonce: number): SeasonRow[] {
   for (const id of ids) table.set(id, { clubId: id, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0 });
   const apply = (a: SeasonRow, hg: number, ag: number, win: boolean, home: boolean) => {
     a.played++; a.gf += hg; a.ga += ag;
-    if (win) { a.won++; a.points += 3; } else if (hg === ag) { a.drawn++; a.points += 1; } else a.lost++;
+    if (win) a.won++;
+    else if (hg === ag) a.drawn++;
+    else a.lost++;
+    // The flag counts the outcome; the points ride the ladder door (win/hg>ag are the same
+    // comparison at this file's only call site, and the draw branch tests hg === ag directly).
+    a.points += resultPoints(hg, ag);
     void home;
   };
   for (let i = 0; i < ids.length; i++) {

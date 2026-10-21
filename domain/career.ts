@@ -164,13 +164,10 @@ function bump(row: StandingRow, gf: number, ga: number) {
   row.played++;
   row.gf += gf;
   row.ga += ga;
-  if (gf > ga) {
-    row.won++;
-    row.points += 3;
-  } else if (gf === ga) {
-    row.drawn++;
-    row.points += 1;
-  } else row.lost++;
+  if (gf > ga) row.won++;
+  else if (gf === ga) row.drawn++;
+  else row.lost++;
+  row.points += resultPoints(gf, ga);
 }
 
 export function liveStandings(state: CareerState): StandingRow[] {

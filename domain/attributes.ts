@@ -317,7 +317,9 @@ export const leaguePoints = (letter: "W" | "D" | "L"): number =>
   letter === "W" ? 3 : letter === "D" ? 1 : 0;
 
 /** League points straight from a result's goals: the goal comparison mapped to its letter, then the
- *  league-points door. Same contract as `leaguePoints`, goal-comparison dialect. */
+ *  league-points door. Same contract as `leaguePoints`, goal-comparison dialect. M420 folded in the third
+ *  dialect — the if-branch credit (`points += 3` / `+= 1` / `points++`) that career's table bump,
+ *  footballSeed's double-sided standings build and the sim lab's round robin all hand-spelled. */
 export const resultPoints = (ourGoals: number, oppGoals: number): number =>
   leaguePoints(ourGoals > oppGoals ? "W" : ourGoals === oppGoals ? "D" : "L");
 

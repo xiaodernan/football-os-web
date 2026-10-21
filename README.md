@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M419
+Work ships one milestone per commit and is currently at M420
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M420 — the ladder's third spelling hid behind an `if`, and the census that missed it was my own
+
+M419 closed the form window. This unit found a hole in a door I shipped: M396's `resultPoints` census charged the two **ternary** spellings of the 3/1/0 ladder, and the if-branch credit (`row.points += 3`, `+= 1`, `points++`) walked straight through. It was live in three places — career's `bump` (league-table rows), footballSeed's double-sided standings build (home and away credited in the same statement) and the sim lab's round-robin `apply` — six hand-spelled credits of one rule, behind a gate whose own label promised the ladder was written in exactly one place. The M387 lesson, third sighting, and this time the blind census was the one I wrote.
+
+The three fold onto `resultPoints`: the branches now count the outcome only, and a single credit line after them rides the door (points do not depend on the branch — they are computed from the goals). The sim lab's `win` flag still counts the outcome; it is the same comparison as `hg > ag` at that file's only call site, which the header now says in a comment. footballSeed's build credits both sides (`resultPoints(home, away)` and `resultPoints(away, home)`), so a match contributes three points to the winner and none to the loser, one to each on a draw — the conservation an integration clause now pins.
+
+**The seam, charged both ways.** proof-leaguepoints charges all three dialects — letter ladder, goal-comparison ladder, if-branch credit — across the whole tree and asserts the only occurrence left is the letter door body; the branch plants (`+= 3`, `+= 1`, double `points++`) prove the new arm is armed, and an xp credit (`xp += 3`) is refused as a different contract. The behavioural clause checks the door against all three old spellings on every sample, and the integration clause replays all four converted sites' shapes including the double-sided table credit (3 total for a win, 2 for a draw). The file passes 8/8; proof-career 205/205 and proof-tablestanding 10/10 still pass and tsc is clean.
+
+**Still outstanding.** The converged math now covers the comparators, the rounding family, the league-table ranking, the list folds, the last-element read, the occurrence tally, the league-points ladder (all three spellings), the formatted families and the form window. The lesson generalises past this door: **every census charges the shapes its author could think of**, so each new dialect found in the tree is a reason to re-read the neighbouring censuses for the same class of hole — the sum fold needed its accumulator names (M387), the ladder needed its branch spelling (M420). A fresh tree census remains the next step if any remaining repeated predicate surfaces.
 
 ### M419 — the form window was a bare `slice(-5)` in three places, and one of them was inside a sentence in ids.ts
 
