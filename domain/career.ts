@@ -4,6 +4,7 @@ import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
 import { byOverall, meanOverall, byTableStanding, sum, resultPoints, recentResults, creditResult, positionBand, SeasonRowFields } from "./attributes";
 import type { PositionBand } from "./attributes";
+import type { Tone } from "./types";
 import type { RowText } from "./rowText";
 import { clamp, pct, round2, safeDiv, signed, signed2, fmt2, fmtMoney } from "@/lib/utils";
 import { round1 } from "./scouting";
@@ -27,12 +28,12 @@ export const fatigueIsHigh = (fatigue: number): boolean => fatigue > 0.6;
 // BANDS are the domain's (attributes.ts's positionBand, which owns the two bounds); the words are
 // the screen's own, so the outlook's zone and the summary's honour can say different things about
 // the same band without either of them re-deciding where the band ends.
-const ZONE_BY_BAND: Record<PositionBand, { label: RowText; tone: "good" | "mixed" | "bad" }> = {
+const ZONE_BY_BAND: Record<PositionBand, { label: RowText; tone: Tone }> = {
   top: { label: { key: "mgr.zoneTitle" }, tone: "good" },
   upperMid: { label: { key: "mgr.zoneUpperMid" }, tone: "mixed" },
   drop: { label: { key: "mgr.zoneDrop" }, tone: "bad" },
 };
-const HONOUR_BY_BAND: Record<PositionBand, { label: RowText; tone: "good" | "mixed" | "bad" }> = {
+const HONOUR_BY_BAND: Record<PositionBand, { label: RowText; tone: Tone }> = {
   top: { label: { key: "mgr.honourContenders" }, tone: "good" },
   upperMid: { label: { key: "mgr.honourMidtable" }, tone: "mixed" },
   drop: { label: { key: "mgr.honourRelegation" }, tone: "bad" },
@@ -215,7 +216,7 @@ export interface SeasonOutlook {
   leaderName: string;
   titleChance: number; // 0..1
   expectedFinish: number; // modelled expected league position
-  zone: { label: RowText; tone: "good" | "mixed" | "bad" };
+  zone: { label: RowText; tone: Tone };
   rivalRows: OutlookRow[]; // the clubs closest to us in the projected table
   evidence: RowText[];
   confidence: number; // 0..100
@@ -539,7 +540,7 @@ export interface SeasonSummary {
   position: number;
   clubCount: number;
   complete: boolean;
-  honour: { label: RowText; tone: "good" | "mixed" | "bad" } | null;
+  honour: { label: RowText; tone: Tone } | null;
   evidence: RowText[];
 }
 

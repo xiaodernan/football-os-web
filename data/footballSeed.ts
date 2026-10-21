@@ -21,6 +21,8 @@ import type {
   PlayerRef,
   PositionGroup,
   Standing,
+  Foot,
+  Side,
 } from "@/domain/types";
 
 // Fixed anchor so all demo fixtures/time states are reproducible.
@@ -163,7 +165,7 @@ const NATIONS = ["England", "Spain", "Italy", "Germany", "France", "Brazil", "Ar
 
 // Curated stars (recognisable names used by the spec's examples); their numeric
 // attributes are synthetic demo values, never presented as authoritative.
-const STARS: { name: string; club: string; group: PositionGroup; age: number; nation: string; skill: number; foot: "L" | "R" }[] = [
+const STARS: { name: string; club: string; group: PositionGroup; age: number; nation: string; skill: number; foot: Foot }[] = [
   { name: "Kylian Mbappé", club: "RMA", group: "ST", age: 27, nation: "France", skill: 0.96, foot: "R" },
   { name: "Erling Haaland", club: "MCI", group: "ST", age: 25, nation: "Norway", skill: 0.95, foot: "L" },
   { name: "Jude Bellingham", club: "RMA", group: "AM", age: 22, nation: "England", skill: 0.9, foot: "R" },
@@ -260,7 +262,7 @@ function makeWorld() {
     nation: string,
     club: Club,
     skill: number,
-    foot: "L" | "R",
+    foot: Foot,
   ) {
     const attrs = baselineAttributes(group, clamp(skill, 0.05, 1));
     const prng = makeRng(`${club.id}-${name}`);
@@ -465,7 +467,7 @@ function generateMatchStats(home: Club, away: Club, score: { h: number; a: numbe
   
   // The countable board figures are the timeline's own counts (M287): the seed's
   // stats pair describes the events printed beside it, not an independent model.
-  const count = (type: string, side: "home" | "away") =>
+  const count = (type: string, side: Side) =>
     events.filter((e) => e.type === type && e.side === side).length;
   const homeShots = count("SHOT", "home") + count("SAVE", "home") + count("GOAL", "home");
   const awayShots = count("SHOT", "away") + count("SAVE", "away") + count("GOAL", "away");

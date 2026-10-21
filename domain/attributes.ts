@@ -338,7 +338,7 @@ export function tally<T, K>(xs: readonly T[], f: (x: T) => K): Map<K, number> {
  *  career points (twice, from goal comparisons) — same football contract, so it is a door now: one place
  *  the 3/1/0 ladder lives, and a league-format change (or a typo) cannot make two subsystems disagree.
  *  The letter form is the definition; `resultPoints` maps a goal comparison to its letter first. */
-export const leaguePoints = (letter: "W" | "D" | "L"): number =>
+export const leaguePoints = (letter: FormLetter): number =>
   letter === "W" ? 3 : letter === "D" ? 1 : 0;
 
 /** League points straight from a result's goals: the goal comparison mapped to its letter, then the
@@ -353,9 +353,14 @@ export const resultPoints = (ourGoals: number, oppGoals: number): number =>
  *  tests the draw first — same football contract, so it is a door now: one place the comparison's shape
  *  lives, and the two readings cannot drift. The flag spelling (Manager OS's `w ? "W" : d ? "D" : "L"`)
  *  breaks toward already-computed booleans — a different contract — and stays inline. */
-export function formLetter(ourGoals: number, oppGoals: number): "W" | "D" | "L" {
+export function formLetter(ourGoals: number, oppGoals: number): FormLetter {
   return ourGoals > oppGoals ? "W" : ourGoals === oppGoals ? "D" : "L";
 }
+
+/** The outcome letter for a result: W for a win, D for a draw, L for a loss. The three words were
+ *  written out at three places — the ladder's own signature, the letter door's return type and
+ *  analytics' form type — so the set is named once, here, where the ladder lives. */
+export type FormLetter = "W" | "D" | "L";
 
 /** The running record of a team's results: played, won, drawn, lost, goals for and against. The record
  *  bookkeeping was hand-written four times — analytics' split tally, career's standing-row bump,

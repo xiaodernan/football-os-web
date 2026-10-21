@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M432
+Work ships one milestone per commit and is currently at M433
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,28 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M433 — a set of words that means one thing is spelled in one place: the vocabulary census
+
+**The defect.** M427 and M428 closed the app's two colour vocabularies, and M430 said what remained: "the remaining risk is a fourth vocabulary appearing with no door behind it, and that is the class a census of *vocabularies* would charge". This unit writes that census — and it found **nine** vocabularies spelled more than once, **four** of them in a file that already had a name for them:
+
+- the career's **tone**, `"good" | "mixed" | "bad"` — **five** times: the zone table, the honour table, the two interfaces that carry them, and the interface the app's colours are keyed by;
+- the comparison page's **favour**, `"a" | "b" | "even"` — **four** times in one file;
+- the **foot**, `"L" | "R"` — the type was named in `domain/types.ts`, and the seed spelled it out twice anyway;
+- the **form letter**, `"W" | "D" | "L"` — named in analytics, spelled out twice in attributes, where the ladder lives;
+- the **side**, `"home" | "away"` — in the engine, in the types and in the seed;
+- the **tile's direction**, `"up" | "down" | "neutral"` — the tile's prop, the review's table and the load page's own;
+- the engine's **event side**, `"H" | "A"` — twice in the engine;
+- the **mode**, `"FAN" | "PLAYER" | "MANAGER"` — named in the types, spelled out in the shell;
+- the **match status**, `"SCHEDULED" | "LIVE" | "FINISHED"` — named in the types, spelled out in the world screen.
+
+A vocabulary spelled twice is a vocabulary that can drift: a word added to one copy leaves the other copy out of it, and **the compiler cannot see it**, because a union of literals is a type, not a value.
+
+**The fold.** Each of the nine is a **named type** now, declared once and exported: `Tone`, `Side`, `Foot`, `Mode` and `MatchStatus` in `domain/types.ts` (the app's type home — the words live with the types, and a type import costs no bundle), `FormLetter` in `domain/attributes.ts` (where the ladder and the letter door already live, re-exported by analytics for the callers that already import its types), `Favor` in `domain/compare.ts`, `EventSide` in `domain/matchEngine.ts` and `TileTone` in `ui/primitives.tsx` (the tile's own vocabulary, named so the screens that hand a tile a tone write the three words once).
+
+**The seam, charged both ways.** `proof-vocab` reads every **union of string literals** in the app and requires it to be spelled in exactly **one** place: 59 vocabularies, 59 spellings, none twice. Comments are prose about the code, not code, so the reader strips them first — the dictionary's own note about the foot's two words is not a second spelling — and it is armed by a plant for each shape it refuses (a single quoted word, a union of numbers, a union quoted in a comment). The nine vocabularies are then checked to be named types, each declared once and **exported**, and the thirteen places that used to spell the words out are checked to **name** them instead. The file passes 4/4; the suite is green and tsc is clean.
+
+**Still outstanding.** The census measures a union of string literals, so a vocabulary spelled as an **array** of words — `const MODES = ["FAN", "PLAYER", "MANAGER"]` — is invisible to it, and so is a vocabulary spelled as a **lookup object** whose keys are the words. The app has both (the modes list, the news stances' map, the transfer stances' map), and each is the same drift risk with the same blindness. The next unit should widen the reader to the *other* ways a set of words is written, and decide whether a vocabulary is better carried by a type, by a list, or by both — which is a question about the app's shape, not about one file.
 
 ### M432 — the fifth direction: a package the manifest declares that nothing reads
 

@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { cn, pctLabel } from "@/lib/utils";
 import { DemoBadge } from "@/ui/primitives";
 import { CommandPalette } from "@/features/command/CommandPalette";
+import type { Mode } from "@/domain/types";
 
 interface NavItem {
   to: string;
@@ -207,7 +208,7 @@ function ModeSwitch() {
   const { state, setMode } = useOs();
   const { t } = useI18n();
   if (!state.onboarded) return null;
-  const modes: ("FAN" | "PLAYER" | "MANAGER")[] = ["FAN", "PLAYER", "MANAGER"];
+  const modes: Mode[] = ["FAN", "PLAYER", "MANAGER"];
   return (
     <div className="flex items-center gap-1" role="group" aria-label={t("nav.mode")}>
       {modes.map((m) => (

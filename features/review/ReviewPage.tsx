@@ -12,6 +12,7 @@ import { attributeGoalTitle } from "@/domain/goals";
 import { useLearnRecords, useFilmClips } from "@/lib/hooks";
 import { DEMO_MODE } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
+import type { TileTone } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ const WINDOWS = [7, 30, 90];
 // The tone a change in a player's overall is shown in. The QUESTION — which way does the change
 // point — is the domain's (attributes.ts's deltaSign, which the comparison page and the entity
 // detail ask too); the tile's tones are this screen's own.
-const DELTA_TILE: Record<DeltaSign, "up" | "down" | "neutral"> = {
+const DELTA_TILE: Record<DeltaSign, TileTone> = {
   up: "up",
   down: "down",
   flat: "neutral",

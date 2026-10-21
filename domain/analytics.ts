@@ -9,7 +9,11 @@ import type { Club, Match } from "@/domain/types";
 import { clamp, round2, round3, indexById } from "@/lib/utils";
 import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally } from "./attributes";
 
-export type FormLetter = "W" | "D" | "L";
+// The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
+// domain/attributes.ts (where the letter door and the points ladder live) and re-exported here
+// for the callers that already import this module's types.
+export type { FormLetter } from "./attributes";
+import type { FormLetter } from "./attributes";
 
 export interface Split extends ResultTally {}
 

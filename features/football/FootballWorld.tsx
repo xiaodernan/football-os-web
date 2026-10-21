@@ -18,7 +18,7 @@ import {
   searchTotalsByType,
   DEMO_MODE,
 } from "@/data/footballService";
-import type { Club, Match, PlayerRef, SearchKind, Standing } from "@/domain/types";
+import type { Club, Match, MatchStatus, PlayerRef, SearchKind, Standing } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -316,7 +316,7 @@ const SEARCH_TYPES: readonly SearchKind[] = ["player", "club", "competition", "m
 function MatchesList() {
   const { t } = useI18n();
   const { query } = useRouter();
-  const [tab, setTab] = useState<"LIVE" | "SCHEDULED" | "FINISHED">(
+  const [tab, setTab] = useState<MatchStatus>(
     paramOneOf(query, "status", MATCH_STATUSES, "SCHEDULED"),
   );
   // M295: the header's counter describes the world's family, not this page's

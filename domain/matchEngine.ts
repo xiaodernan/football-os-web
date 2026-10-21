@@ -1,7 +1,11 @@
 import { makeRng, rngInt, rngFloat, weightedPick, hashString } from "@/lib/rng";
 import { clamp, fmt2 } from "@/lib/utils";
-import type { MatchEvent, MatchEventType, ShotType } from "./types";
+import type { MatchEvent, MatchEventType, ShotType, Side } from "./types";
 import type { RowText } from "./rowText";
+
+/** Which side of a fixture a goal belongs to, as the engine's own two letters. The timeline's
+ *  entries carry it and the weighted pick returns it, so the pair is named once. */
+export type EventSide = "H" | "A";
 
 // Ascending by minute. Two readers hand-wrote the identical `(a, b) => a.minute - b.minute` —
 // this simulator's timeline and the seed generator's event list — and the same drift risk as the
@@ -101,10 +105,10 @@ export function simulateMatch(input: SimInput): SimResult {
   const homeNames = squad(input.seed + "H");
   const awayNames = squad(input.seed + "A");
 
-  const timeline: { minute: number; kind: "H" | "A" }[] = [];
+  const timeline: { minute: number; kind: EventSide }[] = [];
   let t = rngInt(rng, 2, 8);
   while (t < mins) {
-    const side = weightedPick<"H" | "A">(rng, [
+    const side = weightedPick<EventSide>(rng, [
       ["H", Math.max(0.2, chanceRateH) * (possH / 50)],
       ["A", Math.max(0.2, chanceRateA) * ((100 - possH) / 50)],
     ]);
@@ -218,7 +222,7 @@ function shotType(rng: () => number, xg: number): ShotType {
   return weightedPick(rng, xg > 0.24 ? SHOT_HIGH_XG : SHOT_LOW_XG);
 }
 
-function addCards(events: MatchEvent[], rng: () => number, side: "home" | "away", fouls: number, names: string[]) {
+function addCards(events: MatchEvent[], rng: () => number, side: Side, fouls: number, names: string[]) {
   const yellows = fouls > 11 ? rngInt(rng, 1, 3) : rngInt(rng, 0, 2);
   for (let i = 0; i < yellows; i++) {
     events.push({ minute: rngInt(rng, 8, 88), type: "YELLOW", side, player: names[rngInt(rng, 0, names.length - 1)] });

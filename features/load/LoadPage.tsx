@@ -7,6 +7,7 @@ import { buildLoad, ZONE_LABEL, ZONE_LEGEND, ZONE_TONE, type LoadZone } from "@/
 import { rowLine } from "@/domain/rowText";
 import { DEMO_MODE } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
+import type { TileTone } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import {cn, fmt2, ABSENT } from "@/lib/utils";
@@ -16,7 +17,7 @@ const ZONE_BANNER_TONE: Record<LoadZone, string> = {
   ...ZONE_TONE,
 };
 
-const ACWR_TONE = (z: LoadZone): "up" | "down" | "neutral" =>
+const ACWR_TONE = (z: LoadZone): TileTone =>
   z === "high" || z === "caution" ? "down" : z === "optimal" ? "up" : "neutral";
 
 export function LoadPage() {

@@ -9,6 +9,7 @@ import { useI18n } from "@/i18n";
 import { positionLabel, rowLine } from "@/domain/rowText";
 import { deltaSign } from "@/domain/attributes";
 import type { DeltaSign } from "@/domain/attributes";
+import type { Tone } from "@/domain/types";
 import type { Dna } from "@/domain/playerDna";
 
 export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
@@ -41,7 +42,12 @@ export function DemoBadge() {
   );
 }
 
-export function StatTile({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "up" | "down" | "neutral" }) {
+/** The TILE's own direction: which way a figure moved, as the stat tile shows it. It is the tile's
+ *  vocabulary and the tile's contract, so it is named here — but named, so the screens that hand a
+ *  tone to a tile write the three words once rather than at each call. */
+export type TileTone = "up" | "down" | "neutral";
+
+export function StatTile({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: TileTone }) {
   return (
     <div className="rounded-lg border bg-card/50 px-4 py-3">
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
@@ -86,9 +92,9 @@ export const worstEdgeTone = (d: number): string =>
 // summary's honour and once for the outlook's zone, with the same three words in the same order,
 // and the manager's own metric component spelled two arms of it a third time.
 //
-// The TONE is the domain's (career.ts's zone and honour tables); the colour it wears is the
-// app's, and it lives here with the rest of the shared vocabulary.
-export type Tone = "good" | "mixed" | "bad";
+// The TONE is the domain's (career.ts's zone and honour tables, and the type lives in
+// domain/types.ts so the words are written once); the colour it wears is the app's, and it lives
+// here with the rest of the shared vocabulary.
 export const TONE_CLASS: Record<Tone, string> = {
   good: "text-success",
   mixed: "text-info",

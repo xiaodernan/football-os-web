@@ -32,7 +32,7 @@ export interface CompareResult {
   metrics: CompareMetric[];
   aWins: number;
   bWins: number;
-  verdict: "a" | "b" | "even";
+  verdict: Favor;
   /** true when BOTH players ship a real attribute vector */
   hasAttributes: boolean;
   attributeEdges: AttributeEdge[];
@@ -45,7 +45,7 @@ export interface AttributeEdge {
   b: number;
   /** a − b; positive favours player A */
   delta: number;
-  favor: "a" | "b" | "even";
+  favor: Favor;
 }
 
 export interface CategoryEdge {
@@ -53,13 +53,18 @@ export interface CategoryEdge {
   a: number;
   b: number;
   delta: number;
-  favor: "a" | "b" | "even";
+  favor: Favor;
 }
+
+// Which player a difference favours: player A, player B, or neither. The three words were written
+// out at four places in this file — the verdict, both edge lists and the table that answers the
+// sign — so the set is named once here.
+export type Favor = "a" | "b" | "even";
 
 // Which player a difference favours. The QUESTION — which way does the difference point — is the
 // domain's (attributes.ts's deltaSign); the answer's words are this page's, and both edge lists
 // read the same table so an attribute edge and a category edge can never disagree.
-const FAVOR_OF: Record<DeltaSign, "a" | "b" | "even"> = {
+const FAVOR_OF: Record<DeltaSign, Favor> = {
   up: "a",
   down: "b",
   flat: "even",

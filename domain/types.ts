@@ -66,6 +66,16 @@ export const FOOTS: readonly Foot[] = ["L", "R"];
 
 export type Attributes = Record<string, number>;
 
+// The app's TONE: how well a thing sits, as a judgement rather than a direction. The career
+// module's zone and honour tables produce it, and the interface shows it in the app's colours, so
+// the three words live here — the type home — rather than in a union spelled at each of the four
+// places that used to write it out.
+export type Tone = "good" | "mixed" | "bad";
+
+// Which side of a fixture a thing belongs to. The match event carries it, the engine picks it and
+// the seed counts it, so the two words are named once.
+export type Side = "home" | "away";
+
 // One row of the capability model. The interface lives here rather than in
 // domain/attributes.ts because the English label table it is paired with now sits in
 // `data/attributesLabels.ts`, and that file cannot import from the module that imports it.
@@ -178,7 +188,7 @@ export const SHOT_TYPES: readonly ShotType[] = ["tap_in", "close_range", "header
 export interface MatchEvent {
   minute: number;
   type: MatchEventType;
-  side: "home" | "away";
+  side: Side;
   player: string;
   // M225. The goal line read `xG 0.31 · Right-foot curl` in every locale: a sentence the engine
   // wrote, printed raw by the match page. It is a row now, like every other sentence the model
