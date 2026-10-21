@@ -4,6 +4,8 @@ import { Link, useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import { buildReview, type WeeklyReview } from "@/domain/review";
+import { deltaSign } from "@/domain/attributes";
+import type { DeltaSign } from "@/domain/attributes";
 import { rowLine } from "@/domain/rowText";
 import { VIDEO_KIND_KEY } from "@/data/video";
 import { attributeGoalTitle } from "@/domain/goals";
@@ -16,6 +18,15 @@ import { Button } from "@/components/ui/button";
 import {cn, signed, DAY_MS, pctOf, fmt2, ABSENT } from "@/lib/utils";
 
 const WINDOWS = [7, 30, 90];
+
+// The tone a change in a player's overall is shown in. The QUESTION — which way does the change
+// point — is the domain's (attributes.ts's deltaSign, which the comparison page and the entity
+// detail ask too); the tile's tones are this screen's own.
+const DELTA_TILE: Record<DeltaSign, "up" | "down" | "neutral"> = {
+  up: "up",
+  down: "down",
+  flat: "neutral",
+};
 
 const TONE: Record<WeeklyReview["insights"][number]["kind"], string> = {
   positive: "border-success/40 bg-success/10 text-success",
@@ -167,7 +178,7 @@ export function ReviewPage() {
             <StatTile
               label={t("rv.overall")}
               value={review.overallEnd ?? ABSENT}
-              tone={review.overallDelta && review.overallDelta > 0 ? "up" : review.overallDelta && review.overallDelta < 0 ? "down" : "neutral"}
+              tone={DELTA_TILE[deltaSign(review.overallDelta ?? 0)]}
               sub={review.overallDelta != null ? `${review.overallStart ?? ABSENT} → ${review.overallEnd ?? ABSENT}` : t("rv.noChange")}
             />
             <StatTile label={t("rv.quality")} value={review.avgRating ?? ABSENT} sub={review.avgRating != null ? t("rv.outOf5") : t("rv.noRating")} />

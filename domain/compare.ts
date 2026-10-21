@@ -8,7 +8,8 @@
 import { getPlayer, getClub } from "@/data/footballService";
 import { fmt1, fmtMoney, signed } from "@/lib/utils";
 import type { PlayerRef } from "./types";
-import { categoryAverages } from "./attributes";
+import { categoryAverages, deltaSign } from "./attributes";
+import type { DeltaSign } from "./attributes";
 import { headroom, valueIndex, primeHold, bucketOf, round1 } from "./scouting";
 import { playerVector } from "./playerDna";
 
@@ -54,6 +55,15 @@ export interface CategoryEdge {
   delta: number;
   favor: "a" | "b" | "even";
 }
+
+// Which player a difference favours. The QUESTION — which way does the difference point — is the
+// domain's (attributes.ts's deltaSign); the answer's words are this page's, and both edge lists
+// read the same table so an attribute edge and a category edge can never disagree.
+const FAVOR_OF: Record<DeltaSign, "a" | "b" | "even"> = {
+  up: "a",
+  down: "b",
+  flat: "even",
+};
 
 // "Has this player a full attribute vector?" is the playerDna module's question, and its
 // `playerVector` door is the answer -- the threshold lives in one place (`VECTOR_MIN_KEYS`) so
@@ -113,7 +123,7 @@ export function compare(aId: string, bId: string): CompareResult | null {
         const av = aAttrs[k];
         const bv = bAttrs[k];
         const delta = av - bv;
-        return { key: k, a: av, b: bv, delta, favor: delta > 0 ? "a" as const : delta < 0 ? "b" as const : "even" as const };
+        return { key: k, a: av, b: bv, delta, favor: FAVOR_OF[deltaSign(delta)] };
       })
       .sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta) || x.key.localeCompare(y.key))
       .slice(0, 8);
@@ -126,7 +136,7 @@ export function compare(aId: string, bId: string): CompareResult | null {
         a: ca.value,
         b: cb.value,
         delta,
-        favor: delta > 0 ? ("a" as const) : delta < 0 ? ("b" as const) : ("even" as const),
+        favor: FAVOR_OF[deltaSign(delta)],
       };
     });
   }

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M425
+Work ships one milestone per commit and is currently at M426
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,23 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M426 — the sign of a difference: one question, four copies, and the words each copy chose
+
+**The defect.** M424 closed the door that prints a figure *with its sign*. This unit closes the door that says *which way the figure points* — the three-arm ladder: compare the difference with zero, and with zero the other way round, and call the result up, down or flat. The app asked that question in **four** places, and each copy answered in its own vocabulary:
+
+- `domain/compare.ts`, for an **attribute edge** — `delta > 0 ? "a" : delta < 0 ? "b" : "even"`;
+- `domain/compare.ts` again, for a **category edge** — the same ladder, in the same file, thirteen lines apart;
+- `features/football/Details.tsx`, for a category difference's **colour** — `"text-success"`, `"text-destructive"`, `"text-muted-foreground"`;
+- `features/review/ReviewPage.tsx`, for the change in a player's **overall** — `"up"`, `"down"`, `"neutral"`.
+
+So a change to what counts as "no difference" — a zero that counts as a hair, a tolerance — would have moved one screen and left the other three reading the same figure differently. It is the same shape of defect as M424's, one door over: a question the app asks, asked again.
+
+**The fold.** `deltaSign(d)` in `domain/attributes.ts` answers it once and returns `"up" | "down" | "flat"`. The **words** stay where they belong — each reader keeps its own table, keyed by the sign so no arm can be swapped by accident: `FAVOR_OF` in the comparison page (which player is ahead), `DELTA_TONE` in the entity detail (the colour), `DELTA_TILE` in the Weekly Review (the tile's tone). The question is the domain's; the vocabulary is the screen's. **Nothing a reader sees moves**: the door answers exactly what the ladder answered on every figure a reader could meet, zero and negative zero included.
+
+**The seam, charged both ways.** `proof-deltasign` is the new gate, and it is careful about what it charges. A **three-arm sign ladder** — one expression that asks "is this above zero?" and then "is this below zero?" — is the shape the door owns, and it survives in exactly one place: the door. Two near shapes are **refused**, each because it is a different contract: a **two-armed sign** (`x > 0 ? a : b`) asks whether a figure is positive, not which way it points, and the app has five of those for a different reason; an **even band over a tolerance** (`Math.abs(v) < 1.5 ? "even" : …`) is a third decision again — the comparison page's own verdict, where a small advantage is a draw. The reader is armed by a plant for each of the three, the door is checked to be declared once, and every module that used to spell the ladder is checked to ask it. The file passes 4/4; the suite is 99/99 scripts and 3044/3044 checks, and tsc is clean.
+
+**Still outstanding.** The two-armed signs are the next class, and they are not one class: the scouting panel's "is this edge positive?" and the manager's "is this morale non-negative?" and the review's "is this scan trend non-negative?" ask three different questions of three different quantities, and only the first two share a vocabulary. A census that charged every two-armed sign would either be a wall or a false red, so it has to know which is which — and the honest measure there is the **field** the sign is about, not the shape. M425's field-aware scout showed how noisy that is: fifteen sites of "age" and fifteen of "length" carry thirteen and nine different bounds between them, because a generic name is not a field. A census of decisions therefore needs the app's own vocabulary — the named fields — and that is a bigger measurement than a shape.
 
 ### M425 — a number that decides is written in one place: the threshold census, and four decisions it found
 

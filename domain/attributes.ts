@@ -312,6 +312,17 @@ export function last<T>(xs: readonly T[]): T | undefined {
   return xs[xs.length - 1];
 }
 
+/** Which way a difference points: up, down, or flat. The three-arm ladder — compare the figure with
+ *  zero, and with zero the other way round — was hand-written four times: the comparison page's
+ *  "which player is ahead" for its attribute edges and again for its category edges, the entity
+ *  detail's tone for a category difference, and the Weekly Review's tone for the change in a
+ *  player's overall. Each copy asked the same question of a number and answered it in its own
+ *  vocabulary, so a change to what counts as "no difference" would have moved one screen and left
+ *  the other three reading the same figure differently. The QUESTION is the door's; the words each
+ *  screen gives the answer stay that screen's. */
+export type DeltaSign = "up" | "down" | "flat";
+export const deltaSign = (d: number): DeltaSign => (d > 0 ? "up" : d < 0 ? "down" : "flat");
+
 /** Count occurrences of a key into a Map. The tally idiom — set the key to its current count plus one,
  *  defaulting the current count to zero — was hand-written five times across filmInsights' event-kind and
  *  recurring-focus counts, matchProbability's scoreline counts, review's focus counts and CommunityHub's
