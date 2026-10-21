@@ -29,6 +29,7 @@
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve, posix } from "node:path";
+import { skipReason } from "./lib/appTree.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -206,13 +207,18 @@ ok(`…so @/i18n resolves to the index that holds it, not to the directory (${re
 // the walked population still contains the directories the app is made of, and the entry
 // census below re-reads every module it finds.
 const POP_SKIP = new Set(["node_modules", "dist", "scripts", "dev", "vendor", "public", "coverage", "test-results"]);
+// M423: a directory carrying its own `.git` is another repository, not a directory of this one.
+// `football-os/` was a local clone of this very repository, so the population this gate measured
+// was the app's 98 modules plus the clone's 79 — 177 modules the gate could not tell apart, and
+// five gates that went red with numbers nobody could act on. The rule lives in
+// scripts/lib/appTree.mjs so no proof has to remember it on its own.
 const walk = (d) => readdirSync(resolve(root, d), { withFileTypes: true }).flatMap((e) => {
   const rel = `${d}/${e.name}`;
-  if (e.isDirectory()) return POP_SKIP.has(e.name) ? [] : walk(rel);
+  if (e.isDirectory()) return POP_SKIP.has(e.name) || skipReason(e.name, resolve(root, rel)) ? [] : walk(rel);
   return /\.(ts|tsx)$/.test(e.name) ? [rel] : [];
 });
 const popDirs = readdirSync(root, { withFileTypes: true })
-  .filter((e) => e.isDirectory() && !POP_SKIP.has(e.name) && !e.name.startsWith("."))
+  .filter((e) => e.isDirectory() && !POP_SKIP.has(e.name) && !skipReason(e.name, join(root, e.name)))
   .map((e) => e.name)
   .filter((d) => d !== "test-results");
 const APP_ENTRY = "src/main.tsx";

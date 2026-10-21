@@ -37,6 +37,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { skipReason } from "./lib/appTree.mjs";
 import { createServer } from "vite";
 import { normalize } from "./lib/rawUiScan.mjs";
 
@@ -116,13 +117,21 @@ ok("two plans by one player build two timeline rows under two keys",
 
 // ---- 13-14. The census: the door is the only way an id is minted anywhere in the tree.
 Date.now = realNow;
-const SKIP_DIRS = ["node_modules", "dist", ".git", ".workbuddy-ai", "dev"];
+// M423: the rule that says which tree this is lives in scripts/lib/appTree.mjs now, because
+// five proofs kept five private skip lists and they disagreed. A hidden directory is not shipped
+// and a directory carrying its own `.git` is another repository — the second one was not
+// hypothetical: `football-os/` was a local clone of this repository, so this census read the
+// app's copy of a screen and the clone's copy of the same screen, and charged the clone's
+// clock-derived id against the app.
+const SKIP_DIRS = ["node_modules", "dist", "dev"];
 const walk = (dir, acc = []) => {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (SKIP_DIRS.includes(e.name)) continue;
     const p = join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (/\.tsx?$/.test(e.name)) acc.push(p);
+    if (e.isDirectory()) {
+      if (!skipReason(e.name, p, SKIP_DIRS)) walk(p, acc);
+      continue;
+    }
+    if (/\.tsx?$/.test(e.name)) acc.push(p);
   }
   return acc;
 };

@@ -9,3 +9,9 @@ dist/
 .qoder-sites.json
 
 *.log
+
+# A clone of this repository is a neighbour, not a directory of this one (M423). It was
+# committed once as a submodule pointer with no .gitmodules file, and every proof that walks
+# the tree then read the app twice. The rule lives in scripts/lib/appTree.mjs; this line is
+# the belt to that pair of braces.
+football-os/

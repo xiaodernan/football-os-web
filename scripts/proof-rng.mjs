@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, relative } from "node:path";
 import { execFileSync } from "node:child_process";
 import { normalize } from "./lib/rawUiScan.mjs";
+import { skipReason } from "./lib/appTree.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -266,14 +267,22 @@ const at = (v) => () => v;
 // 6 · the module's own surface: no export without a call site
 // ---------------------------------------------------------------------------
 const APP_DIRS = ["data", "domain", "features", "components", "i18n", "lib", "store", "hooks", "src", "functions", "ui"];
+// M423: the rule that says a directory is a NEIGHBOUR rather than a kind of file lives in one place
+// now (scripts/lib/appTree.mjs). A hidden directory is not shipped, and a directory carrying its
+// own `.git` is another repository: `football-os/` was a local clone of this repository, so this
+// walk read the app's copy of `lib/ids.ts` AND the clone's, and charged the clone's draw against
+// the app.
 function appFiles(dir = "", out = []) {
   const abs = join(root, dir);
   if (!existsSync(abs)) return out;
   for (const e of readdirSync(abs, { withFileTypes: true })) {
-    if (e.name === "node_modules" || e.name.startsWith(".")) continue;
     const rel = dir ? `${dir}/${e.name}` : e.name;
-    if (e.isDirectory()) appFiles(rel, out);
-    else if (/\.tsx?$/.test(e.name)) out.push(rel);
+    if (e.isDirectory()) {
+      if (skipReason(e.name, join(root, rel), ["node_modules"])) continue;
+      appFiles(rel, out);
+      continue;
+    }
+    if (/\.tsx?$/.test(e.name)) out.push(rel);
   }
   return out;
 }

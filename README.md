@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M422
+Work ships one milestone per commit and is currently at M423
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,18 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M423 — the app is the app: six proofs walked the tree, and one of them walked a clone of it
+
+**The defect, measured before it was fixed.** Six proofs walk the repository's tree and print numbers about it: the coverage ratchet, the i18n gate, the id gate, the dead-import census, the dead-export census and the rng gate. Each kept its own private list of directories to leave alone, and the lists disagreed, so two *neighbours* of the repository came to be read as if they were the app.
+
+`football-os/` was a local clone of **this** repository — its `origin` pointed at the same GitHub remote and its `HEAD` was M422 — and M419 committed it as a submodule pointer with no `.gitmodules` file, so the pointer resolved for nobody and the directory carried 79 modules of the same code. The coverage census measured **197** modules where the app has **98**: its dead list, its exemption surface, its per-directory pin and its recursion pin all stopped describing the app. Six gates went red with numbers nobody could act on — 59 of 376 i18n checks, 2 of 15 id checks, 1 of 4 in each dead census, 1 of 55 in the rng gate — and every one of them was a measurement of a *copy*. The thirteen scratch planes that experiments left in the root (`.m225-plane` … `.m326-plane`, untracked, dated between 28 September and 9 October) were read the same way: the id gate charged a clock-derived id in a copy of `data/ai.ts` that the app had already fixed.
+
+**The rule, in one sentence and in one place.** *A neighbour is a neighbour.* A hidden name is not shipped — the build would not find it and git would not show it — and a directory carrying its own `.git` is another repository, with its own package.json, its own tests and its own history. `scripts/lib/appTree.mjs` holds that rule, and the six gates read it rather than keeping a list of their own. The broken pointer leaves the index (the repository now points at no other repository), and `football-os/` is in `.gitignore`, so a clone of the app can never be committed into it again.
+
+**The seam, charged both ways.** `proof-app-tree` builds a real tree on disk with the three cases in it and reads it through the same `skipReason` the gates call: a hidden directory is reported as hidden, a directory with its own `.git` as another repository, an ordinary directory as the app's. The walk clause then measures the consequence — the neighbour's file is not read, the ordinary one is — and the id census's own shape charges the app's copy and the ordinary one while charging neither neighbour's, so "skip the neighbours" cannot become "skip what you did not expect". The population clause pins the app's own ten directories and their 98 modules and shows that a clone of the app sitting beside the app joins none of them. The one-rule clause reads the six gate sources and requires each to import the shared module and none to keep a private hidden-directory test of its own. The last two clauses read the repository's index: it carries no pointer, and the reader that reports that is witnessed on a fresh index with a real gitlink planted in it. The file passes 10/10; the six gates it governs pass 26/26, 376/376, 15/15, 4/4, 4/4 and 55/55 with the clone still sitting in the tree, and the suite is 97/97 scripts and 3027/3027 checks.
+
+**Still outstanding.** The rule is one sentence in one place and the six gates that walk the tree read it; the gates that walk a *named* directory rather than the root are unaffected by it and are held by their own floors, which is right. What this unit did **not** do is delete the neighbours: thirteen scratch planes and a clone of the repository are still in the working tree, untracked and ignored, and a tree that carries a copy of itself is a tree where a reader can be misled twice. The next unit should decide what the working tree is *for* — the app, the clone, or the historical planes — and remove the ones that are not it, and the `.gitignore` line is a promise the tree has not yet kept.
 
 ### M422 — "one result credits one row" was hand-written four times, and three of them were local helpers
 

@@ -79,6 +79,7 @@
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync } from "node:fs";
 import { normalize, scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
+import { skipReason } from "./lib/appTree.mjs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -143,13 +144,21 @@ if (varMismatch.length) console.log("       mismatch: " + varMismatch.slice(0, 1
 // the gate report 60 hits across 3 files when the app carried 46 across 2. That is a safe
 // exclusion only while nothing shipped imports out of the skipped directory, and the clause
 // after the raw-UI census measures that rather than assuming it.
-const SKIP_DIRS = ["node_modules", "dist", ".git", ".workbuddy-ai", "dev"];
+//
+// M423: the two rules that name a NEIGHBOUR rather than a kind of file now live in one place
+// (scripts/lib/appTree.mjs) instead of in five private lists. A hidden directory is not shipped
+// and a directory carrying its own `.git` is another repository — and the second one is not
+// hypothetical: `football-os/` was a local clone of this repository, so this walk read the app
+// twice and charged the clone's copy of every screen against the app's dictionary.
+const SKIP_DIRS = ["node_modules", "dist", "dev"];
 const walk = (dir, acc = []) => {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (SKIP_DIRS.includes(e.name)) continue;
     const p = join(dir, e.name);
-    if (e.isDirectory()) walk(p, acc);
-    else if (/\.tsx?$/.test(e.name)) acc.push(p);
+    if (e.isDirectory()) {
+      if (!skipReason(e.name, p, SKIP_DIRS)) walk(p, acc);
+      continue;
+    }
+    if (/\.tsx?$/.test(e.name)) acc.push(p);
   }
   return acc;
 };

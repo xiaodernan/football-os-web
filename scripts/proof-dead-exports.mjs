@@ -34,6 +34,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { skipReason } from "./lib/appTree.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -282,9 +283,16 @@ ok(`the reader counts named, default, namespace, dynamic and re-export consumers
 // --- 2. The walk covers the app, derives its roots, and measures the population it declines ---
 // --- to charge (exports read only by their own module). ---
 const ROOTS = ["domain", "data", "lib", "features", "components", "ui", "src", "store", "i18n", "functions"];
-const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor"];
-const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
-  e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);
+// M423: the rule that says a directory is a NEIGHBOUR rather than a kind of file lives in one place
+// now (scripts/lib/appTree.mjs) — a hidden directory is not shipped, and a directory carrying its
+// own `.git` is another repository. `football-os/` was a local clone of this repository, so this
+// census read the app's exports and the clone's copy of the same exports.
+const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor", "Python"];
+const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+  const p = `${d}/${e.name}`;
+  if (e.isDirectory()) return skipReason(e.name, p) ? [] : walk(p);
+  return [p];
+});
 const topDirs = readdirSync(root, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
 const carriesTs = (d) => {
   try {
@@ -293,7 +301,7 @@ const carriesTs = (d) => {
     return entries.some((e) => e.isDirectory() && e.name !== "node_modules" && carriesTs(`${d}/${e.name}`));
   } catch { return false; }
 };
-const uncovered = topDirs.filter((d) => !ROOTS.includes(d) && !NON_APP.includes(d) && carriesTs(d));
+const uncovered = topDirs.filter((d) => !ROOTS.includes(d) && !skipReason(d, join(root, d), NON_APP) && carriesTs(d));
 const files = ROOTS.filter((d) => { try { statSync(join(root, d)); return true; } catch { return false; } })
   .flatMap((d) => walk(join(root, d))).filter((f) => /\.(ts|tsx)$/.test(f) && !f.endsWith(".d.ts"))
   .map((f) => f.slice(root.length + 1).split("\\").join("/"));
