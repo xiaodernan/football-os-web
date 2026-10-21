@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M420
+Work ships one milestone per commit and is currently at M421
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M421 — the outcome letter was spelled twice, in two test orders, and one of them was inside another door
+
+M420 folded the ladder's branch spelling onto `resultPoints`. That left the letter rule itself spelled twice: analytics' team form tests the loss first (`g > c ? "W" : g < c ? "L" : "D"`) and `resultPoints`' own body tests the draw first — same football rule, no shared syntax, so the shape censuses never saw it. One of the two copies was inside another door, which is exactly where duplicated rules hide best.
+
+`formLetter(ourGoals, oppGoals)` in `domain/attributes.ts` is the definition: `ourGoals > oppGoals ? "W" : ourGoals === oppGoals ? "D" : "L"`. `resultPoints` rides it (`leaguePoints(formLetter(…))`), and analytics' form reads it. Manager OS's flag spelling (`w ? "W" : d ? "D" : "L"`) breaks toward already-computed booleans — a different contract — and stays inline, pinned by the proof as the documented survivor.
+
+**The seam, charged both ways.** proof-formletter charges the goals-to-letter ternary — either test order, any (dotted) field names — across the whole tree and asserts the only occurrence left is the door body. The scan keys on a goal comparison producing a letter, not on ternaries in general: the flag spelling, the form-letter tone mappings (`r === "W" ? "bg-success" : …`) and the 3/1/0 ladder itself (`letter === "W" ? 3 : …`, a points rule, not a letter rule) stay uncharged — the must-not-unify plants prove exactly that. The proof plants both test orders and the converted calls, asserts formLetter is declared once, its body is the rule and resultPoints rides it, and the door equals both old test orders on every sample, exhaustively over a 7×7 scoreline grid. An integration clause replays analytics' form letters over the recent window (which is now the M419 door composed with this one). The file passes 8/8; proof-leaguepoints 8/8 and proof-analytics 77/77 still pass and tsc is clean.
+
+**Still outstanding.** The form-letter family is now one rule in one place, readable from both the letter dialect (analytics) and the flag dialect (Manager OS, documented). The converged math now covers the comparators, the rounding family, the league-table ranking, the list folds, the last-element read, the occurrence tally, the league-points ladder (all three spellings), the outcome letter, the formatted families and the form window. The M420 generalisation stands: every census charges the shapes its author could think of, so each new dialect is a reason to re-read the neighbouring censuses. A fresh tree census remains the next step if any remaining repeated predicate surfaces.
 
 ### M420 — the ladder's third spelling hid behind an `if`, and the census that missed it was my own
 

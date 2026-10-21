@@ -321,7 +321,16 @@ export const leaguePoints = (letter: "W" | "D" | "L"): number =>
  *  dialect — the if-branch credit (`points += 3` / `+= 1` / `points++`) that career's table bump,
  *  footballSeed's double-sided standings build and the sim lab's round robin all hand-spelled. */
 export const resultPoints = (ourGoals: number, oppGoals: number): number =>
-  leaguePoints(ourGoals > oppGoals ? "W" : ourGoals === oppGoals ? "D" : "L");
+  leaguePoints(formLetter(ourGoals, oppGoals));
+
+/** The outcome letter for a result: W for a win, D for a draw, L for a loss. The rule was spelled twice
+ *  in two dialects — analytics' team form, which tests the loss first, and `resultPoints`' own body, which
+ *  tests the draw first — same football contract, so it is a door now: one place the comparison's shape
+ *  lives, and the two readings cannot drift. The flag spelling (Manager OS's `w ? "W" : d ? "D" : "L"`)
+ *  breaks toward already-computed booleans — a different contract — and stays inline. */
+export function formLetter(ourGoals: number, oppGoals: number): "W" | "D" | "L" {
+  return ourGoals > oppGoals ? "W" : ourGoals === oppGoals ? "D" : "L";
+}
 
 /** The five most recent results every form reading looks at. The window was hand-written as a bare
  *  `slice(-5)` in three places — analytics' team form, career's recent points and Manager OS's
