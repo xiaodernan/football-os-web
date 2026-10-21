@@ -57,7 +57,7 @@ function splitMinutes(total: number, weights: number[]): number[] {
   const parts = raw.map((v) => Math.floor(v));
   let rest = total - sum(parts, (p) => p);
   const byRemainder = raw
-    .map((v, i) => i)
+    .map((_, i) => i)
     .sort((a, b) => raw[b] - parts[b] - (raw[a] - parts[a]) || a - b);
   for (const i of byRemainder) {
     if (rest <= 0) break;

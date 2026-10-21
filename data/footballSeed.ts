@@ -236,7 +236,7 @@ function makeWorld() {
     const clubStars = STARS.filter((s) => s.club === club.short);
     for (const star of clubStars) {
       usedNames.add(star.name);
-      pushPlayer(star.name, star.group, star.age, star.nation, club, star.skill, star.foot, def.strength);
+      pushPlayer(star.name, star.group, star.age, star.nation, club, star.skill, star.foot);
     }
     for (let i = 0; i < squadSize; i++) {
       const group = GROUP_PLAN[i];
@@ -249,7 +249,7 @@ function makeWorld() {
       usedNames.add(name);
       const skill = Math.max(0.2, def.strength + rngFloat(rng, -0.22, 0.12));
       const age = rngInt(rng, 18, 34);
-      pushPlayer(name, group, age, pick(rng, NATIONS), club, skill, rng() > 0.18 ? "R" : "L", def.strength);
+      pushPlayer(name, group, age, pick(rng, NATIONS), club, skill, rng() > 0.18 ? "R" : "L");
     }
   }
 
@@ -261,7 +261,6 @@ function makeWorld() {
     club: Club,
     skill: number,
     foot: "L" | "R",
-    clubStrength: number,
   ) {
     const attrs = baselineAttributes(group, clamp(skill, 0.05, 1));
     const prng = makeRng(`${club.id}-${name}`);
@@ -367,7 +366,7 @@ function buildMatches(clubs: Club[], players: PlayerRef[], compMap: Map<string, 
             // Generate detailed match events and stats
             const homePool = players.filter((p) => p.clubId === home.id);
             const awayPool = players.filter((p) => p.clubId === away.id);
-            const evs = generateMatchEvents(home, away, s, homePool, awayPool, rng);
+            const evs = generateMatchEvents(s, homePool, awayPool, rng);
             m.events = evs;
             m.stats = generateMatchStats(home, away, s, evs, rng);
           }
@@ -386,7 +385,7 @@ function scoreFromStrength(h: number, a: number, rng: () => number): { h: number
   return { h: Math.min(6, Math.round(lh * 1.4)), a: Math.min(6, Math.round(la * 1.4)) };
 }
 
-function generateMatchEvents(home: Club, away: Club, score: { h: number; a: number }, homePool: PlayerRef[], awayPool: PlayerRef[], rng: () => number): MatchEvent[] {
+function generateMatchEvents(score: { h: number; a: number }, homePool: PlayerRef[], awayPool: PlayerRef[], rng: () => number): MatchEvent[] {
   const events: MatchEvent[] = [];
   const shotTypes = ["tap_in", "close_range", "header", "left_foot", "right_foot", "volley"];
   const named = (pool: PlayerRef[]): string =>

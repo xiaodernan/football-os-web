@@ -100,7 +100,7 @@ export function ManagerOS() {
 
   return (
     <div className="space-y-5">
-      <CareerHeader career={career} onChange={update} onPlay={play} onReset={() => { setCareer(null); setLast(null); }} />
+      <CareerHeader career={career} onPlay={play} onReset={() => { setCareer(null); setLast(null); }} />
       <div className="flex flex-wrap gap-1.5">
         {TABS.map((entry) => (
           <button key={entry.id} onClick={() => setTab(entry.id)} className={cn("rounded-md border px-3 py-1.5 text-sm", tab === entry.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(entry.labelKey)}</button>
@@ -118,7 +118,7 @@ export function ManagerOS() {
   );
 }
 
-function CareerHeader({ career, onChange, onPlay, onReset }: { career: CareerState; onChange: (fn: (s: CareerState) => CareerState) => void; onPlay: () => void; onReset: () => void }) {
+function CareerHeader({ career, onPlay, onReset }: { career: CareerState; onPlay: () => void; onReset: () => void }) {
   const { t } = useI18n();
   const club = getClub(career.clubId)!;
   const comp = getCompetition(career.competitionId);

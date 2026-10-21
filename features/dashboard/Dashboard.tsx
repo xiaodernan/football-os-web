@@ -135,7 +135,7 @@ export function Dashboard() {
                 <div>
                   <div className="text-sm font-medium">{rowLine(nextSession.title, t)}</div>
                   <div className="mt-0.5 text-xs text-muted-foreground">{nextSession.targetMinutes}′ · {t("dash.blocks", { n: nextSession.exercises.length })}</div>
-                  <CompleteQuick sessionId={nextSession.id} onDone={(r) => completeSession(nextSession.id, r)} />
+                  <CompleteQuick onDone={(r) => completeSession(nextSession.id, r)} />
                 </div>
               ) : (
                 <div>
@@ -421,7 +421,7 @@ function FixtureRow({ m }: { m: Match }) {
   );
 }
 
-function CompleteQuick({ sessionId, onDone }: { sessionId: string; onDone: (rating: number) => void }) {
+function CompleteQuick({ onDone }: { onDone: (rating: number) => void }) {
   const { t } = useI18n();
   const [rating, setRating] = useState("4");
   const [done, setDone] = useState(false);

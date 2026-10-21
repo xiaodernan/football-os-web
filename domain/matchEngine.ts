@@ -98,8 +98,8 @@ export function simulateMatch(input: SimInput): SimResult {
   const chanceRateH = (home.attack - away.defense) / 22 + 1.2 + home.tempo * 0.5;
   const chanceRateA = (away.attack - home.defense) / 22 + 1.0 + away.tempo * 0.5;
 
-  const homeNames = squad(input.seed + "H", home);
-  const awayNames = squad(input.seed + "A", away);
+  const homeNames = squad(input.seed + "H");
+  const awayNames = squad(input.seed + "A");
 
   const timeline: { minute: number; kind: "H" | "A" }[] = [];
   let t = rngInt(rng, 2, 8);
@@ -228,7 +228,7 @@ function addCards(events: MatchEvent[], rng: () => number, side: "home" | "away"
   }
 }
 
-function squad(seed: string, team: TeamInput): string[] {
+function squad(seed: string): string[] {
   const rng = makeRng(seed);
   const first = ["M.", "L.", "R.", "K.", "T.", "J.", "A.", "D.", "S.", "N.", "P."];
   const last = ["Silva", "Kane", "Rossi", "Müller", "Dubois", "Novaes", "Costa", "Berg", "Yilmaz", "Petrov", "Adams", "Lopez", "Ferrari", "Traoré", "Kaya", "Santos", "Nagy", "Blom", "Vidal", "Ito", "Park", "Rooney", "Flores", "Adeyemi"];

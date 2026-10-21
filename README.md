@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M430
+Work ships one milestone per commit and is currently at M431
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,62 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M431 — the fourth direction's other half: a parameter a function never reads
+
+**What the gauge says.** `scripts/proof-unused-params.mjs` **5/5**. The build compiles with
+`tsc --noEmit` and never asks for `noUnusedParameters`; the gate builds the same program from the
+repository's own `tsconfig.json` and arms that one flag through the compiler API. Across **95
+shipped modules** in the nine app roots it charges **0** parameters (TS6133/6192/6196), reads
+**95 of 95** modules, and finds **0** top-level TypeScript directories outside its roots, **0**
+compiler suppressions and **0** shipped paths quoted in its own code.
+
+**The measurement came before the fold.** On `f057326` the flag charged **8** names in **6 files**:
+`clubStrength` in `pushPlayer`, `home` and `away` in `generateMatchEvents`, `team` in matchEngine's
+`squad`, `v` in training's remainder map, `sessionId` on Dashboard's `CompleteQuick`, `onChange` on
+ManagerOS's `CareerHeader`, and `club` on SimulationLab's `TeamPanel`. The reading is a judgement
+before it is a fold: a callback's unused slot can become the language's underscore, and a prop no
+render reads is a prop the caller need not pass, so none of the eight is a signature the language
+requires. Seven were removed with their call sites; `v` became `_`, which the compiler already
+exempts. The gate read **4/5** on `f057326` with exactly those eight diagnostics and **5/5** after
+the fold, and `tsc --noEmit --noUnusedParameters` exits 0.
+
+**The reader, witnessed both ways.** Virtual modules hold one unread parameter, one read parameter
+and one underscore-prefixed parameter: on the same options the real tree uses, the compiler charges
+exactly the first (1 diagnostic, TS6133) and leaves the other two alone. Coverage is part of the
+claim, not a nicety: a file the program never sees cannot be charged, so the gate walks the nine
+roots and compares every module against `program.getSourceFiles()`. Suppression is charged
+structurally: `// @ts-nocheck`, `@ts-ignore` and `@ts-expect-error` are scanned across the same walk
+(**0** today), because a directive above an unread parameter would hide it from the program the gate
+reads. Clause 5 strips the gate's own comments and refuses a quoted shipped path; the plant is
+assembled from fragments so the gate does not quote a real path and trip itself.
+
+**The arms.** `dev/.m430-arms.mjs` runs **10/10** on an isolated plane, each arm restored
+byte-exactly and the plane's `git status` compared to its baseline. The arming clause is probed from
+three sides — flag off (B), its unread half made read (C), its read half made unread (D) — and
+coverage loses a module outside the program (G) and a directory the reader hides (H). A planted
+unread parameter (A) reds the real-tree clause; a `// @ts-nocheck` (E) and a quoted skip list (F)
+red their own clauses. Two arms must stay green, and they are the point of this unit: an
+underscore-prefixed parameter (I) is exempt by the language's own rule, not by the gate, and an
+unused local (J) belongs to the other gate — arming parameters must not silently answer it.
+Predicted from each clause's own sentence: A[2] B[1] C[1] D[1] E[4] F[5] G[3] H[3] I[] J[]. All
+ten matched, and at rest and after every arm the plane's status equalled its baseline.
+
+**What is NOT claimed.** The underscore convention is the compiler's exemption, not evidence that
+such a parameter is read. The build still does not set the flag; the gate arms it out of band, which
+is the whole reason the gate exists. A callback signature whose unused slot names a real protocol is
+not distinguished from a dead slot — here the reading was small enough to judge by hand, and every
+site was inspected before removal. `.d.ts` files are declarations, not shipped modules. `functions/`
+is Deno code outside this tsconfig, walked by the orphan census instead. The suppression scanner is
+textual, not a parse.
+
+**Next.** Dead translation keys was this unit's candidate; measuring it showed `proof-i18n`
+already owns that direction — its check 18 refuses a key nothing can reach — so the next ungated
+declaration is `package.json`: eleven runtime dependencies have no reader anywhere in the shipped
+tree. That is the next census.
+
+`tsc --noEmit` exit 0, `npm run build` exit 0, and the full suite is green (104/104 proof
+scripts proven, 3067/3067 checks counted).
 
 ### M430 — the colours for a tone: one mapping, and the screen that spelled it twice
 

@@ -113,8 +113,8 @@ export function SimulationLab() {
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <TeamPanel title={t("data.home")} club={home.id} colors={home.colors} short={home.short} value={homeTac} onChange={setHomeTac} clubs={clubs} selected={homeId} onSelect={setHomeId} />
-        <TeamPanel title={t("data.away")} club={away.id} colors={away.colors} short={away.short} value={awayTac} onChange={setAwayTac} clubs={clubs} selected={awayId} onSelect={setAwayId} />
+        <TeamPanel title={t("data.home")} colors={home.colors} short={home.short} value={homeTac} onChange={setHomeTac} clubs={clubs} selected={homeId} onSelect={setHomeId} />
+        <TeamPanel title={t("data.away")} colors={away.colors} short={away.short} value={awayTac} onChange={setAwayTac} clubs={clubs} selected={awayId} onSelect={setAwayId} />
       </div>
 
       <Panel className="p-4">
@@ -145,8 +145,8 @@ export function SimulationLab() {
   );
 }
 
-function TeamPanel({ title, club, colors, short, value, onChange, clubs, selected, onSelect }: {
-  title: string; club: string; colors: [string, string]; short: string; value: Tactics; onChange: (t: Tactics) => void;
+function TeamPanel({ title, colors, short, value, onChange, clubs, selected, onSelect }: {
+  title: string; colors: [string, string]; short: string; value: Tactics; onChange: (t: Tactics) => void;
   clubs: ReturnType<typeof footballProvider.clubs>; selected: string; onSelect: (id: string) => void;
 }) {
   const { t } = useI18n();
