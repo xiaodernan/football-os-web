@@ -16,10 +16,11 @@
 // siblings must NOT be folded, and this proof charges them as a deliberate blind spot:
 //   · a `* 200` interpolation (TacticalStudio's spread width) uses a DIFFERENT denominator, so it is a
 //     different whole; PERCENT (which anchors on `* 100`) leaves it uncharged and the door must not claim it.
-//   · an integer-percent whose scope has ALREADY bound the identifier `pct` to a non-function value
-//     (DataRoom's forecast row destructures `{ match, odds, pct, sample }`, and `pct` is then read as
-//     `pct.home`/`pct.draw`/`pct.away`). Calling the door there would invoke that object — a TypeError —
-//     so the hand-spelled `Math.round(odds.mostLikelyPct * 100)` is a permanent, identity-keyed residue.
+//   · an integer-percent whose scope has ALREADY bound the identifier `pct` to a non-function value.
+//     DataRoom was that case: its forecast row destructured `{ match, odds, pct, sample }`, and `pct`
+//     was then read as `pct.home`/`pct.draw`/`pct.away`, so calling the door there would have invoked
+//     that object. M425 took the collision away — the screen reads the domain's flat forecast now —
+//     so the site is folded and the Data Room is a consumer rather than a residue.
 // A `${Math.round(… * 100)}%` string label (AppShell's progress bar) is the pctLabel shape, NOT this
 // door, and is already pinned inline by sibling proof-pct-of; it is out of scope here so a fold of THAT
 // door cannot double-redden. M367 folded FilmRoom's stage-progress site onto the door (a fourth
@@ -60,10 +61,14 @@ const CONSUMERS = [
   "features/player/PlayerOS.tsx",
   "features/film/FilmRoom.tsx",
   "data/ai.ts",
+  "features/analytics/DataRoom.tsx",
 ];
 // Identity-keyed must-not-unify residues, charged by identity rather than excused by a blanket skip.
 const DENOM200 = "features/tactical/TacticalStudio.tsx"; // same file: its *200 site must stay inline
-const SHADOWED = "features/analytics/DataRoom.tsx"; // its *100 site stays inline: `pct` is a bound object there
+// M425: DataRoom was the second identity-keyed residue — its forecast scope bound `pct` to an
+// object, so the door could not be called there. The screen now reads the domain's flat forecast
+// and the site is folded, so the file is a CONSUMER now rather than a residue.
+const SHADOWED = "features/analytics/DataRoom.tsx";
 
 // Walk the shipped source roots. scripts/ and dev/ are NOT walked, so plants below arm the scans, never a
 // second charge in the census population.
@@ -126,7 +131,7 @@ const declByFile = carriers.filter((f) => count(src[f], DECL_PCT) > 0);
 ok(`pct is declared exactly once, in the door (home ${count(src[HOME], DECL_PCT)}, tree ${declByFile.join(",")})`,
   count(src[HOME], DECL_PCT) === 1 && declByFile.length === 1 && declByFile[0] === HOME);
 
-// --- Every consumer (four feature files + data/ai.ts) reads the door: imports it and calls it. ---------
+// --- Every consumer (five feature files + data/ai.ts) reads the door: imports it and calls it. ---------
 const importing = CONSUMERS.filter((f) => count(src[f], IMPORT_PCT) >= 1);
 const perCall = CONSUMERS.map((f) => count(src[f], CALL_PCT));
 ok(`all ${CONSUMERS.length} consumers import pct from @/lib/utils and call it (importers ${importing.length}/${CONSUMERS.length}, per-file calls ${perCall.join(",")})`,
@@ -148,13 +153,15 @@ const t200IsCall = /\bpct\([^)]*\* *200\)/.test(spreadLine);
 ok(`TacticalStudio's *200 spread line stays hand-spelled inline — PERCENT charges that line 0 while DENOM200 charges it 1, and the door is never called over a *200 (percent-on-line ${t200PctCharged}, *200-on-line ${t200}, door-over-*200 ${t200IsCall ? 1 : 0})`,
   t200PctCharged === 0 && t200 === 1 && t200IsCall === false);
 
-// --- must-not-unify (identifier collision): DataRoom's forecast scope binds `pct` to a non-function ---
-// --- object, so its `* 100` integer-percent is a permanent residue that a naive fold would break. ------
+// --- M425: the identifier collision that pinned DataRoom's integer-percent inline is GONE. The ---
+// --- forecast row used to destructure `{ match, odds, pct, sample }`, and `pct` was then a bound ---
+// --- OBJECT, so calling the door there would have invoked that object. The screen now takes the ---
+// --- domain's forecast (whose fields are flat), so nothing shadows the door and the site folds. ---
 const drPercent = count(src[SHADOWED], PERCENT);
 const drBindings = count(src[SHADOWED], PCT_BINDING);
 const drCallsDoor = count(src[SHADOWED], CALL_PCT);
-ok(`DataRoom's integer-percent stays inline because the forecast row destructures a \`pct\` object that shadows the door (inline *100 ${drPercent}, \`pct\`-binding ${drBindings}, door calls there ${drCallsDoor})`,
-  drPercent === 1 && drBindings === 1 && drCallsDoor === 0);
+ok(`DataRoom's integer-percent now rides the door, because nothing shadows it any more (inline *100 ${drPercent}, \`pct\`-binding ${drBindings}, door calls there ${drCallsDoor})`,
+  drPercent === 0 && drBindings === 0 && drCallsDoor === 1);
 
 // --- Behavioural: the shipped door reproduces the formula each folded site removed, equality to the ---
 // --- formula it replaced (not a hand-typed number), across the operands those four screens pass. -----

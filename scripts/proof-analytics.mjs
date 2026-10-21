@@ -177,10 +177,11 @@ ok("expectedTotalGoals equals the on-screen λ pair summed to 2dp, for every rea
   }));
 ok("the total never exceeds the λ ceiling the model clamps to",
   pairs.every(([h, a]) => outcomeOdds(h, a).expectedTotalGoals <= 7));
-ok("both forecast surfaces render the figure (a write-only field again would fail this)", (() => {
+ok("both forecast surfaces render the figure, and both read it from the data layer's own forecast (a write-only field again would fail this)", (() => {
   const dataRoom = readFileSync(resolve(root, "features/analytics/DataRoom.tsx"), "utf8");
   const world = readFileSync(resolve(root, "features/football/FootballWorld.tsx"), "utf8");
-  return dataRoom.includes("odds.expectedTotalGoals") && world.includes("fc.expectedTotalGoals");
+  return dataRoom.includes("expectedTotalGoals") && dataRoom.includes("fixtureForecast(")
+    && world.includes("fc.expectedTotalGoals");
 })());
 const { DICTIONARIES: DICTS, LOCALES: LOCS } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 ok("the three locales are the ones the picker offers", LOCS.length === 3);

@@ -107,15 +107,16 @@ ok(`the door body IS the index-by-id idiom (body "${doorReturn.trim()}")`,
   BODY_EXACT.test(doorReturn.trim()) && count(doorReturn, ID_IDIOM) === 1);
 
 // --- Convergence completeness: OUTSIDE the door's home (whose docstring also spells the idiom), no shipped ---
-// --- file re-inlines it. Even though five other files build a `new Map(`, NONE of them re-spells the index ---
+// --- file re-inlines it. Even though four other files build a `new Map(`, NONE of them re-spells the index ---
 // --- door — the blind spot a naive "any new Map(" census would swallow. HOME excluded because the door cannot ---
-// --- be charged as its own stray. ---
+// --- be charged as its own stray. (M425 took the Data Room's map away with it: the screen reads the domain's ---
+// --- forecast now, so it no longer indexes the metrics itself.) ---
 const idiomFiles = carriers.filter((f) => count(src[f], ID_IDIOM) > 0);
 const strays = idiomFiles.filter((f) => f !== HOME);
 const otherNewMapFiles = carriers.filter((f) => f !== HOME && count(src[f], NEW_MAP) >= 1);
 const plantStray = count(`const m = new Map(list.map((x) => [x.id, x]));`, ID_IDIOM);
 ok(`the index-by-id idiom survives only in the door's home (idiom carriers ${idiomFiles.join(",")}; non-home strays ${strays.length}; ${otherNewMapFiles.length} other files build a new Map yet NONE re-spell the door; a planted stray would read ${plantStray})`,
-  plantStray === 1 && idiomFiles.length === 1 && idiomFiles[0] === HOME && strays.length === 0 && otherNewMapFiles.length >= 5);
+  plantStray === 1 && idiomFiles.length === 1 && idiomFiles[0] === HOME && strays.length === 0 && otherNewMapFiles.length >= 4);
 
 // --- Derived consumer census: every shipped file that CALLS indexById IMPORTS it (HOME's declaration line ---
 // --- spells `indexById<` not `indexById(`, so it is not its own caller). The set is derived from the bytes. ---
@@ -125,12 +126,12 @@ const totalCalls = callers.reduce((s, f) => s + count(src[f], CALL_INDEXBYID), 0
 ok(`every external caller of indexById imports it and the door has wide reach (${callers.length} files, ${callers.map((f) => f.split("/").pop()).join(",")}; orphans ${orphanCallers.length}; total external calls ${totalCalls})`,
   callers.length >= 4 && orphanCallers.length === 0 && totalCalls >= 10);
 
-// --- Must-not-unify in the tree: the five real map-builders OUTSIDE the door are each a different indexing ---
+// --- Must-not-unify in the tree: the four real map-builders OUTSIDE the door are each a different indexing ---
 // --- contract, charged zero by ID_IDIOM, so no "all maps are the same" merge would fold them onto indexById. ---
-const mapSites = ["domain/review.ts", "domain/transfers.ts", "data/footballSeed.ts", "data/footballService.ts", "features/analytics/DataRoom.tsx"];
+const mapSites = ["domain/review.ts", "domain/transfers.ts", "data/footballSeed.ts", "data/footballService.ts"];
 const siblingUncharged = mapSites.every((f) => !Object.prototype.hasOwnProperty.call(src, f) || count(src[f], ID_IDIOM) === 0);
-ok(`the five non-index Map spellings are real map-builders the door leaves uncharged (review/transfers/footballSeed/footballService/DataRoom each new Map(...) yet ID_IDIOM reads them ${mapSites.map((f) => (src[f] ? count(src[f], ID_IDIOM) : "absent")).join(",")})`,
-  siblingUncharged && otherNewMapFiles.length >= 5);
+ok(`the four non-index Map spellings are real map-builders the door leaves uncharged (review/transfers/footballSeed/footballService each new Map(...) yet ID_IDIOM reads them ${mapSites.map((f) => (src[f] ? count(src[f], ID_IDIOM) : "absent")).join(",")})`,
+  siblingUncharged && otherNewMapFiles.length >= 4);
 
 // --- Must-not-unify return type: indexById returns a Map (.get/.size); the same indexing via ---
 // --- Object.fromEntries returns a plain Object — a caller that swapped them would call .get on an Object. ---

@@ -126,6 +126,8 @@ export interface FixtureForecast {
   /** Always lambdaHome + lambdaAway — the two figures a reader sees beside it. */
   expectedTotalGoals: number;
   mostLikelyScore: string;
+  /** How likely that score is — the share, not the percentage. */
+  mostLikelyPct: number;
   sample: number; // matches of form data behind the quieter side
 }
 
@@ -152,6 +154,7 @@ export function fixtureForecast(matchId: string): FixtureForecast | null {
     lambdaAway: odds.lambdaAway,
     expectedTotalGoals: odds.expectedTotalGoals,
     mostLikelyScore: odds.mostLikelyScore,
+    mostLikelyPct: odds.mostLikelyPct,
     sample: Math.min(h.played, a.played),
   };
 }

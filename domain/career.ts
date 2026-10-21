@@ -2,7 +2,8 @@ import { footballProvider, getClub, clubIdsByCompetition } from "@/data/football
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
-import { byOverall, meanOverall, byTableStanding, sum, resultPoints, recentResults, creditResult, SeasonRowFields } from "./attributes";
+import { byOverall, meanOverall, byTableStanding, sum, resultPoints, recentResults, creditResult, positionBand, SeasonRowFields } from "./attributes";
+import type { PositionBand } from "./attributes";
 import type { RowText } from "./rowText";
 import { clamp, pct, round2, safeDiv, signed, signed2, fmt2, fmtMoney } from "@/lib/utils";
 import { round1 } from "./scouting";
@@ -14,6 +15,28 @@ import { round1 } from "./scouting";
 // the round-robin shape or to the floor moves the outlook and the summary together.
 export const seasonFixtures = (clubCount: number): number => Math.max(1, (clubCount - 1) * 2);
 export const fixturesLeft = (total: number, played: number): number => Math.max(0, total - played);
+
+/** The line above which a squad is exhausted. The match prep slows a tired side and the Manager
+ *  OS's fatigue tile turns red at the same line, and each of them spelled 0.6 on its own — so a
+ *  change to the line would have moved the app's BEHAVIOUR without moving the tile that reports
+ *  it, and a reader could have been shown a "good" fatigue beside a team that was playing slow.
+ *  The line is the domain's; the tile's colour is the screen's. */
+export const fatigueIsHigh = (fatigue: number): boolean => fatigue > 0.6;
+
+// The words each of the Manager OS's two screens gives the three bands of a league table. The
+// BANDS are the domain's (attributes.ts's positionBand, which owns the two bounds); the words are
+// the screen's own, so the outlook's zone and the summary's honour can say different things about
+// the same band without either of them re-deciding where the band ends.
+const ZONE_BY_BAND: Record<PositionBand, { label: RowText; tone: "good" | "mixed" | "bad" }> = {
+  top: { label: { key: "mgr.zoneTitle" }, tone: "good" },
+  upperMid: { label: { key: "mgr.zoneUpperMid" }, tone: "mixed" },
+  drop: { label: { key: "mgr.zoneDrop" }, tone: "bad" },
+};
+const HONOUR_BY_BAND: Record<PositionBand, { label: RowText; tone: "good" | "mixed" | "bad" }> = {
+  top: { label: { key: "mgr.honourContenders" }, tone: "good" },
+  upperMid: { label: { key: "mgr.honourMidtable" }, tone: "mixed" },
+  drop: { label: { key: "mgr.honourRelegation" }, tone: "bad" },
+};
 
 // Manager OS career model (spec §30-33). All logic is pure + deterministic so it
 // runs entirely in Demo Mode with no backend, yet a real save/load contract could
@@ -258,13 +281,7 @@ export function seasonOutlook(state: CareerState): SeasonOutlook {
   const expectedFinish = 1 + sum(rivalRows, (r) => 1 - r.beatUsChance);
 
   const position = rows.findIndex((r) => r.clubId === state.clubId) + 1;
-  const pct = clubCount ? (position - 1) / clubCount : 1;
-  const zone =
-    pct <= 0.25
-      ? { label: { key: "mgr.zoneTitle" }, tone: "good" as const }
-      : pct <= 0.6
-        ? { label: { key: "mgr.zoneUpperMid" }, tone: "mixed" as const }
-        : { label: { key: "mgr.zoneDrop" }, tone: "bad" as const };
+  const zone = ZONE_BY_BAND[positionBand(position, clubCount)];
 
   // Points the CAREER itself earned. `ours.points` is the live-table total, which
   // starts from the seeded standings, so the two must never be conflated in prose.
@@ -462,7 +479,7 @@ export function matchPrep(state: CareerState): MatchPrep {
   } else rationale.push({ key: "mgr.prep.pressMedium" });
 
   let tempo = 0.5;
-  if (state.fatigue > 0.6) {
+  if (fatigueIsHigh(state.fatigue)) {
     tempo = 0.35;
     rationale.push({ key: "mgr.prep.tempoSlow", vars: { n: pct(state.fatigue) } });
   } else if (attackEdge >= 6) {
@@ -558,18 +575,13 @@ export function seasonSummary(state: CareerState): SeasonSummary {
   const position = positionOf(state);
   const complete = played >= totalFixtures;
   const remaining = fixturesLeft(totalFixtures, played);
-  const pct = clubCount ? (position - 1) / clubCount : 1;
   const honour: SeasonSummary["honour"] = !played
     ? null
     : position === 1 && complete
       ? { label: { key: "mgr.honourChampions" }, tone: "good" }
       : position === 1
         ? { label: { key: "mgr.honourTop" }, tone: "good" }
-        : pct <= 0.25
-          ? { label: { key: "mgr.honourContenders" }, tone: "good" }
-          : pct <= 0.6
-            ? { label: { key: "mgr.honourMidtable" }, tone: "mixed" }
-            : { label: { key: "mgr.honourRelegation" }, tone: "bad" };
+        : HONOUR_BY_BAND[positionBand(position, clubCount)];
 
   // Every count word is an arm rather than an "-s" glued on here: the record line, the clean
   // sheet, the match count and the remaining-fixture line all read a number a reader can set to

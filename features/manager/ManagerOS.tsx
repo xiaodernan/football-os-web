@@ -18,6 +18,7 @@ import {
   seasonOutlook,
   seasonSummary,
   matchPrep,
+  fatigueIsHigh,
   projectFixture,
   askingFee,
   sellFee,
@@ -35,7 +36,7 @@ import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
 import { cn, pctLabel, signed, fmt2, ABSENT, SEPARATOR, fmtMoney } from "@/lib/utils";import { EVENT_GLYPH } from "@/domain/matchEngine";import type { PosBucket } from "@/domain/scouting";
 import { toast } from "sonner";
-import { positionLabel, rowLine } from "@/domain/rowText";
+import { positionLabel, rowLine, tempoLevel, pressLevel } from "@/domain/rowText";
 
 const KEY = CAREER_KEY;
 type Tab = "overview" | "squad" | "transfers" | "tactics" | "table" | "outlook" | "prep";
@@ -60,13 +61,14 @@ const BUCKETS: { code: PosBucket; labelKey: string }[] = [
 ];
 
 // M224. The engine's own scale, read from the keys the Tactical Studio and the Simulation Lab
-// already print for these values: this slider is the studio's 0..4 index shifted by -2, and the
-// tempo/press bands are the lab's bands, so one value has one name instead of this screen's
-// second English list. The helper takes the translator by name, which is how check 16 reads a
-// site.
+// already print for these values: this slider is the studio's 0..4 index shifted by -2. The
+// tempo/press BANDS are the lab's bands, so one value has one name instead of this screen's
+// second English list — and M425 moved the bands themselves into the shared door, so the four
+// sites that spelled them (these two and the lab's two slider captions) now share one decision.
+// The helper takes the translator by name, which is how check 16 reads a site.
 const mentalityWord = (t: (key: string) => string, i: number) => t(`tac.mentality.${i}`);
-const tempoWord = (t: (key: string) => string, v: number) => (v < 0.35 ? t("sim.low") : v < 0.7 ? t("sim.medium") : t("sim.high"));
-const pressWord = (t: (key: string) => string, v: number) => (v < 0.35 ? t("sim.pressDeep") : v < 0.7 ? t("sim.medium") : t("sim.highPress"));
+const tempoWord = (t: (key: string) => string, v: number) => tempoLevel(v, t);
+const pressWord = (t: (key: string) => string, v: number) => pressLevel(v, t);
 
 export function ManagerOS() {
   const { t } = useI18n();
@@ -133,7 +135,7 @@ function CareerHeader({ career, onChange, onPlay, onReset }: { career: CareerSta
           <Metric label={t("mgr.budget")} value={fmtMoney(career.budget)} />
           <Metric label={t("mgr.leaguePos")} value={pos ? `#${pos}` : ABSENT} />
           <Metric label={t("mgr.morale")} value={pctLabel((career.morale + 1) / 2)} tone={career.morale >= 0 ? "good" : "bad"} />
-          <Metric label={t("mgr.fatigue")} value={pctLabel(career.fatigue)} tone={career.fatigue > 0.6 ? "bad" : "good"} />
+          <Metric label={t("mgr.fatigue")} value={pctLabel(career.fatigue)} tone={fatigueIsHigh(career.fatigue) ? "bad" : "good"} />
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={onPlay}>▶ {t("mgr.playNext")}</Button>
@@ -407,18 +409,24 @@ function Outlook({ career }: { career: CareerState }) {
         <Panel className="p-4">
           <SectionTitle title={t("mgr.closestRivals")} hint={t("mgr.rivalNote")} />
           <div className="mt-2 space-y-2">
-            {o.rivalRows.map((r) => (
-              <div key={r.clubId}>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span>{r.clubName}</span>
-                    <span className="text-[11px] text-muted-foreground">{t("mgr.ppg")} {fmt2(r.currentPpg)} · {t("mgr.projWord")} {r.projectedPoints}</span>
-                  </span>
-                  <span className={cn("font-mono text-xs", r.beatUsChance >= 0.5 ? "text-destructive" : "text-muted-foreground")}>{pctLabel(r.beatUsChance)}</span>
+            {o.rivalRows.map((r) => {
+              // M425: the coin-flip line was written twice in this card — once for the figure's
+              // tone and once for the bar's colour — so the two could have said different things
+              // about the same chance. The decision is read once now.
+              const likely = r.beatUsChance >= 0.5;
+              return (
+                <div key={r.clubId}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <span>{r.clubName}</span>
+                      <span className="text-[11px] text-muted-foreground">{t("mgr.ppg")} {fmt2(r.currentPpg)} · {t("mgr.projWord")} {r.projectedPoints}</span>
+                    </span>
+                    <span className={cn("font-mono text-xs", likely ? "text-destructive" : "text-muted-foreground")}>{pctLabel(r.beatUsChance)}</span>
+                  </div>
+                  <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full", likely ? "bg-destructive" : "bg-primary/60")} style={{ width: `${Math.max(2, r.beatUsChance * 100)}%` }} /></div>
                 </div>
-                <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full", r.beatUsChance >= 0.5 ? "bg-destructive" : "bg-primary/60")} style={{ width: `${Math.max(2, r.beatUsChance * 100)}%` }} /></div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Panel>
       </div>

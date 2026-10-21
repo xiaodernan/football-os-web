@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M424
+Work ships one milestone per commit and is currently at M425
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,24 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M425 — a number that decides is written in one place: the threshold census, and four decisions it found
+
+**The class.** M418 closed the *quantity* class (a field formatted two ways). M424 closed the *sign* class (a convention spelled thirteen ways). This unit is the third of the family, and the one the earlier units were reaching for: **a THRESHOLD** — a number the app compares a value against to decide something. A threshold is a decision, and a decision written twice is a decision the two copies can disagree about.
+
+**What the scout found, read by hand, in one pass over the tree.**
+
+- The **league position band** — the top quarter and the upper middle of a table, over the club's share of the field — was written twice in `domain/career.ts`, three hundred lines apart: the outlook's zone and the season summary's honour each spelled the same two bounds (0.25 and 0.6) over the same share. A change to where the middle band ends would have moved one screen and left the other telling the reader a different thing about the same table.
+- The **exhausted line** — the fatigue above which a squad counts as spent — was written twice: the match prep's "play slow" and the Manager OS's fatigue tile, in a domain module and a screen. A change to the line would have moved the app's *behaviour* without moving the tile that reports it, so a reader could have been shown a "good" fatigue beside a team playing slow.
+- The **level bands** — the three bands of a 0..1 level, 0.35 and 0.7 — were written four times: the Manager OS's tempo and press words and the Simulation Lab's two slider captions. The Manager OS's own comment said the bands were "the lab's bands", and the code next to it spelled them again.
+- The **Data Room re-derived the fixture forecast** the data layer already owns — its own metrics map, its own "too little form data" guard, its own odds and percentages — while the Football World beside it called the domain's `fixtureForecast` door. Two surfaces, two copies of one rule, and the copy was the screen's.
+- Two **local** copies: the review's four-stars line, written twice in one block, and the Manager OS's coin-flip line, written twice in one card.
+
+**The fold.** `positionBand(position, clubCount)` in `domain/attributes.ts` owns the three bands; `fatigueIsHigh(fatigue)` in `domain/career.ts` owns the line; `tempoLevel`/`pressLevel` in `domain/rowText.ts` own the level bands *and* the two vocabularies (a tempo is "low" and a press is "deep" — the band is one decision, the word is the quantity's). The Data Room now asks the data layer for its forecast, like the Football World already did, and the two local copies are read once each. **Nothing a reader sees moves**: every door answers exactly what the inline form answered, over every sample the proof replays (every place in every league up to twenty clubs, seven fatigue values, seven level values).
+
+**The seam, charged both ways.** `proof-thresholds` is the new gate. It reads every comparison of a value against a **numeric literal above one** — zero and one are presence ("is there anything", "is there exactly one"), not magnitude — and skips two more shapes with a reason each: a **loop's header** is a count of repetitions, and a comparison against a **random draw** is a probability, not a bound. What is left is grouped by the number it compares against: 93 thresholds over 64 numbers, 13 of them compared in more than one place. Every such group must be **declared** — as a decision that lives in a door (exactly one site, in that door's home) or as a **split** (different decisions that happen to share a number, with the site count, the file count and the reason pinned). The reader is armed by plants for each exclusion, the door groups are checked against their own homes, the splits against their pinned shapes, and the doors are replayed against the inline forms they replaced. The file passes 7/7; the suite is 98/98 scripts and 3040/3040 checks, and tsc is clean.
+
+**Still outstanding.** The census polices the thresholds it can *see* — the ones written as a comparison against a literal. A decision written as a comparison against a **variable** (`if (v > limit)`) is invisible to it, and so is one written as a **lookup** (`band[v]`) or as a **call** that decides (`isReady(x)`). The two local copies this unit found were not thresholds at all in the strict sense — they were one decision written twice in one block — and the census found them only because their number happened to be shared; a decision written twice with two different numbers would still hide. The honest next step is a census of the decision itself rather than of the number: read the tree for a comparison that answers the same question twice, whatever it is compared against. That is a harder measurement, and the M424 and M425 sections both say so.
 
 ### M424 — the sign convention had a census, and the census charged one spelling of it
 

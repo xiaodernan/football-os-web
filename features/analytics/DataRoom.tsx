@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { useI18n, formatDate } from "@/i18n";
-import { footballProvider, getClub, getCompetition } from "@/data/footballService";
+import { footballProvider, getClub, getCompetition, fixtureForecast } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
-import { teamMetrics, leaders, expectedGoals, oddsPercents, outcomeOdds, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
+import { teamMetrics, leaders, expectedGoals, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
 import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
-import { cn, clamp, fmt2, ABSENT, SEPARATOR, signed } from "@/lib/utils";
+import { cn, clamp, fmt2, ABSENT, SEPARATOR, signed, pct } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
 // raw-UI scan reads every string literal there as a child text node — four hits on the
@@ -79,21 +79,21 @@ export function DataRoom() {
 
   // Closed-form Poisson forecast over the competition's own scheduled fixtures,
   // using attack/defence ratings computed from the matches actually played.
-  const forecast = useMemo(() => {
-    const byId = new Map(metrics.map((m) => [m.clubId, m]));
-    return matches
+  // M425: this screen used to re-derive the forecast the data layer already owns — its own
+  // metrics map, its own "too little form data" guard, its own odds and percentages — so the
+  // Data Room and the fixture page computed the same numbers from two copies of the same rule.
+  // The domain's door answers now, and the screen keeps the list and the sample note.
+  const forecast = useMemo(() =>
+    matches
       .filter((m) => m.competitionId === compId && m.status === "SCHEDULED")
       .sort(byKickoff)
       .map((m) => {
-        const h = byId.get(m.homeClubId);
-        const a = byId.get(m.awayClubId);
-        if (!h || !a || h.played < 2 || a.played < 2) return null;
-        const odds = outcomeOdds(h, a);
-        return { match: m, odds, pct: oddsPercents(odds), sample: Math.min(h.played, a.played) };
+        const f = fixtureForecast(m.id);
+        return f ? { match: m, f } : null;
       })
       .filter((x): x is NonNullable<typeof x> => x !== null)
-      .slice(0, 4);
-  }, [matches, metrics, compId]);
+      .slice(0, 4),
+  [matches, compId]);
 
   return (
     <div className="space-y-5">
@@ -241,7 +241,7 @@ export function DataRoom() {
             })}
           />
           <div className="mt-3 space-y-3">
-            {forecast.map(({ match, odds, pct, sample }) => {
+            {forecast.map(({ match, f }) => {
               const h = getClub(match.homeClubId);
               const a = getClub(match.awayClubId);
               return (
@@ -259,18 +259,18 @@ export function DataRoom() {
                     </span>
                   </div>
                   <div className="mt-2 flex h-2 w-full overflow-hidden rounded">
-                    <div className="bg-primary" style={{ width: `${pct.home}%` }} />
-                    <div className="bg-muted-foreground/40" style={{ width: `${pct.draw}%` }} />
-                    <div className="bg-info" style={{ width: `${pct.away}%` }} />
+                    <div className="bg-primary" style={{ width: `${f.homePct}%` }} />
+                    <div className="bg-muted-foreground/40" style={{ width: `${f.drawPct}%` }} />
+                    <div className="bg-info" style={{ width: `${f.awayPct}%` }} />
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                    <span><span className="font-mono text-foreground">{pct.home}%</span> {h?.short}</span>
-                    <span><span className="font-mono text-foreground">{pct.draw}%</span> {t("data.draw")}</span>
-                    <span><span className="font-mono text-foreground">{pct.away}%</span> {a?.short}</span>
-                    <span>{t("common.xg")} {fmt2(odds.lambdaHome)}{SEPARATOR}{fmt2(odds.lambdaAway)}</span>
-                    <span>{t("data.totalGoals", { n: fmt2(odds.expectedTotalGoals) })}</span>
-                    <span>{t("data.mostLikely", { score: odds.mostLikelyScore, pct: Math.round(odds.mostLikelyPct * 100) })}</span>
-                    <span>{t(sample === 1 ? "data.sampleOne" : "data.sampleMany", { n: sample })}</span>
+                    <span><span className="font-mono text-foreground">{f.homePct}%</span> {h?.short}</span>
+                    <span><span className="font-mono text-foreground">{f.drawPct}%</span> {t("data.draw")}</span>
+                    <span><span className="font-mono text-foreground">{f.awayPct}%</span> {a?.short}</span>
+                    <span>{t("common.xg")} {fmt2(f.lambdaHome)}{SEPARATOR}{fmt2(f.lambdaAway)}</span>
+                    <span>{t("data.totalGoals", { n: fmt2(f.expectedTotalGoals) })}</span>
+                    <span>{t("data.mostLikely", { score: f.mostLikelyScore, pct: pct(f.mostLikelyPct) })}</span>
+                    <span>{t(f.sample === 1 ? "data.sampleOne" : "data.sampleMany", { n: f.sample })}</span>
                   </div>
                 </div>
               );

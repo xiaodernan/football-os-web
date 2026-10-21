@@ -4176,8 +4176,12 @@ const plantDropped = supplyOf(["comm.nRepliesOne"], callArgsOf('t("comm.nReplies
 const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n: 1 })".indexOf("("));
 // M415 folded DialogFooter, a dead part whose one `t("ui.close")` was a literal site; the
 // literal pin follows the fold from 1301 to 1300. The other three shape counts are unchanged.
+// M425 moved the level bands behind the rowText door: the twelve literal calls the Manager OS's
+// two words and the Simulation Lab's two slider captions spelled became three calls whose key is
+// an EXPRESSION (the door's own `t(words.low)`), so the literal pin follows the fold from 1300 to
+// 1288 and the expression pin from 29 to 32. The template and computed counts are unchanged.
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1300 && shapeCounts.template === 98 && shapeCounts.expression === 29
+  shapeCounts.literal === 1288 && shapeCounts.template === 98 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4192,7 +4196,7 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   litVarSites === 137 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
-  exprWithObj.length === 0 && shapeCounts.expression === 29 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three

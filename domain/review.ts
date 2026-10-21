@@ -282,12 +282,16 @@ function buildInsights(a: {
   }
 
   if (a.avgRating != null) {
+    // M425: the four-out-of-five line was written twice in this block — once for the row's kind
+    // and once for the row's text — so a change to where a good rating starts would have moved
+    // one and left the other. The decision is read once now, the way the overall-delta line
+    // below already reads its own.
+    const high = a.avgRating >= 4;
     out.push({
-      kind: a.avgRating >= 4 ? "positive" : "watch",
-      text:
-        a.avgRating >= 4
-          ? { key: "rv.ins.qualityHigh", vars: { r: a.avgRating } }
-          : { key: "rv.ins.qualityLow", vars: { r: a.avgRating } },
+      kind: high ? "positive" : "watch",
+      text: high
+        ? { key: "rv.ins.qualityHigh", vars: { r: a.avgRating } }
+        : { key: "rv.ins.qualityLow", vars: { r: a.avgRating } },
     });
   }
 

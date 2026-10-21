@@ -4,7 +4,7 @@ import { useRouter } from "@/lib/router";
 import { byOverall, byTableStanding, creditResult, SeasonRowFields } from "@/domain/attributes";
 import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/domain/matchEngine";
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
-import { rowLine } from "@/domain/rowText";
+import { rowLine, tempoLevel, pressLevel } from "@/domain/rowText";
 import { clubInput } from "@/domain/career";
 import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -161,8 +161,8 @@ function TeamPanel({ title, club, colors, short, value, onChange, clubs, selecte
       </div>
       <div className="mt-3 space-y-3">
         <SimpleSlider label={t("tac.mentality")} min={-2} max={2} step={1} value={value.mentality} onChange={(v) => onChange({ ...value, mentality: v })} format={(v) => mentalityWord(t, v + 2)} />
-        <SimpleSlider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={value.tempo} onChange={(v) => onChange({ ...value, tempo: v })} format={(v) => (v < 0.35 ? t("sim.low") : v < 0.7 ? t("sim.medium") : t("sim.high"))} />
-        <SimpleSlider label={t("mgr.press")} min={0} max={1} step={0.05} value={value.press} onChange={(v) => onChange({ ...value, press: v })} format={(v) => (v < 0.35 ? t("sim.pressDeep") : v < 0.7 ? t("sim.medium") : t("sim.highPress"))} />
+        <SimpleSlider label={t("mgr.tempo")} min={0} max={1} step={0.05} value={value.tempo} onChange={(v) => onChange({ ...value, tempo: v })} format={(v) => tempoLevel(v, t)} />
+        <SimpleSlider label={t("mgr.press")} min={0} max={1} step={0.05} value={value.press} onChange={(v) => onChange({ ...value, press: v })} format={(v) => pressLevel(v, t)} />
         <SimpleSlider label={t("mgr.fatigue")} min={0} max={1} step={0.1} value={value.fatigue} onChange={(v) => onChange({ ...value, fatigue: v })} format={pctLabel} />
       </div>
     </Panel>

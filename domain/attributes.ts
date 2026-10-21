@@ -254,6 +254,20 @@ export const byTableStanding = (
   b: { points: number; gf: number; ga: number },
 ): number => b.points - a.points || (b.gf - b.ga) - (a.gf - a.ga) || b.gf - a.gf;
 
+/** Which band of a league table a club sits in: the top quarter, the upper middle, or the drop zone.
+ *  The share is the club's place in the league as a fraction of the field — the first of twenty is
+ *  0, the last is 19/20 — and the two bounds are the app's: a quarter of the table and three fifths
+ *  of it. The Manager OS's outlook zone and the season summary's honour each spelled this ladder
+ *  over the same share, with the same two bounds, in the same file and three hundred lines apart —
+ *  so a change to where the upper-middle band ends would have moved one screen and left the other
+ *  telling the reader a different thing about the same table. The bands are the domain's; the WORDS
+ *  each screen gives them are its own. */
+export type PositionBand = "top" | "upperMid" | "drop";
+export const positionBand = (position: number, clubCount: number): PositionBand => {
+  const share = clubCount ? (position - 1) / clubCount : 1;
+  return share <= 0.25 ? "top" : share <= 0.6 ? "upperMid" : "drop";
+};
+
 /** Total a list through a selector. The fold — a running total that starts at zero and adds each element's
  *  figure — was hand-written about thirty times across the domain and the feature pages (achievements,
  *  analytics, attributes itself, career, filmInsights, learn, load, playerDna, review, training, worldEngine

@@ -222,6 +222,24 @@ export const bucketLabel = (bucket: string, t: Translate): string => {
     default: return bucket;
   }
 };
+
+/** The word for a 0..1 level — a tempo, a press — in the app's three bands: low, medium, high.
+ *  The bands were spelled four times: the Manager OS's own tempo and press words, and the
+ *  Simulation Lab's two slider captions, each with the same two bounds (0.35 and 0.7) over the
+ *  same 0..1 scale. So a change to where the middle band ends would have moved one screen's
+ *  caption and left the other two saying a different thing about the same number — and the two
+ *  quantities carry DIFFERENT words for the same band, which is why the bands and the words are
+ *  held together here: the band is one decision, the word is the quantity's. The two doors below
+ *  take no name at the call site, because a name spelled as a string inside a slider's caption
+ *  function reads as interface copy to the raw-UI scan (M224) and a level's name is not copy. */
+const LEVEL_WORDS: Record<"tempo" | "press", { low: string; medium: string; high: string }> = {
+  tempo: { low: "sim.low", medium: "sim.medium", high: "sim.high" },
+  press: { low: "sim.pressDeep", medium: "sim.medium", high: "sim.highPress" },
+};
+const levelWord = (v: number, t: Translate, words: { low: string; medium: string; high: string }): string =>
+  v < 0.35 ? t(words.low) : v < 0.7 ? t(words.medium) : t(words.high);
+export const tempoLevel = (v: number, t: Translate): string => levelWord(v, t, LEVEL_WORDS.tempo);
+export const pressLevel = (v: number, t: Translate): string => levelWord(v, t, LEVEL_WORDS.press);
 /** The word for a drill's session phase — `technique` on the model, 「技术」 to a reader in
  *  简体中文. The sixth family of the class M249 charged: the session screen tagged each
  *  exercise with its phase code (upper-cased by CSS, so every locale shouted English), the
