@@ -2,7 +2,7 @@ import { footballProvider, getClub, clubIdsByCompetition } from "@/data/football
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
-import { byOverall, meanOverall, byTableStanding, sum, resultPoints } from "./attributes";
+import { byOverall, meanOverall, byTableStanding, sum, resultPoints, recentResults } from "./attributes";
 import type { RowText } from "./rowText";
 import { clamp, pct, round2, safeDiv, signed, signed2, fmt2, fmtMoney } from "@/lib/utils";
 import { round1 } from "./scouting";
@@ -128,7 +128,7 @@ export function clubInput(clubId: string, moved: Record<string, string>, tac: Ta
 }
 
 export function careerForm(state: CareerState): number {
-  const last = state.results.slice(-5);
+  const last = recentResults(state.results);
   if (!last.length) return 0;
   const pts = sum(last, (r) => resultPoints(r.ourGoals, r.oppGoals));
   return (pts / (last.length * 3)) * 2 - 1;

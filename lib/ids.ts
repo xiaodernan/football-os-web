@@ -2,8 +2,8 @@
 // from when it happened or from what it says. Both of those derivations were live bugs
 // in this tree, and each one handed two different events a single handle.
 //
-//   * `S${Date.now().toString(36).slice(-5)}` read the clock and kept its last five
-//     base-36 digits, so the handle came back around every 36^5 ms ≈ 16.8 hours. Two
+//   * `S${...last five base-36 digits of the clock}` read the clock and kept its final
+//     five digits, so the handle came back around every 36^5 ms ≈ 16.8 hours. Two
 //     plans minted a day apart gave the store the same session id, and the store reads a
 //     matching session id as the same session (`sessions.filter((s) => s.id !== ...)`),
 //     so the newer plan deleted the older one — including a *completed* session, whose

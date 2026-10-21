@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M418
+Work ships one milestone per commit and is currently at M419
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M419 — the form window was a bare `slice(-5)` in three places, and one of them was inside a sentence in ids.ts
+
+M418 closed the quantity-formatting class. This unit is the other side of the same coin — a duplication so small the shape census reported it and kept walking: `slice(-5)`, four characters, no computation. But a window is not syntax, it is a **decision**: how much form the app reads. It was spelled in three places — analytics' team form (`a.results.slice(-5).map(…)`), career's recent points (`state.results.slice(-5)`) and Manager OS's latest-results list (`[...career.results].slice(-5).reverse()`) — and a window changed in one of them makes three screens disagree about how much form they show.
+
+`FORM_WINDOW = 5` and `recentResults(xs)` in `domain/attributes.ts` are the door: `xs.slice(-FORM_WINDOW)`, a non-mutating read, so Manager OS may still reverse the result for its newest-first display list. The door body rides the constant rather than re-spelling the literal, so the census can assert the tree is empty of the bare window. `lib/ids.ts` carried the literal inside a **sentence** — its header documents the historical session-id bug as `` `S${Date.now().toString(36).slice(-5)}` `` — and the census read it; the sentence now describes the shape without the literal (the M309 lesson, third sighting: first a dictionary unit, then a Data Room comment, now an ids.ts header).
+
+**The seam, charged both ways.** proof-recentresults charges the bare last-five window across the whole tree and asserts nothing is left, so a re-inline at any reader reddens it. The scan keys on the last-five window, not on slicing in general: a first-five display list (`slice(0, 5)` — eight of them) and other windows (`slice(-3)`) are different contracts, and the must-not-unify plants prove exactly that. The proof plants the window and both look-alikes, asserts recentResults and FORM_WINDOW are each declared once, the constant reads five and the body rides it, all three readers call it, and the door equals the inline slice on every sample while never mutating its input (the reversed-display reader stays safe). An integration clause replays the three converted sites' shapes. The file passes 8/8; the affected proofs (career 205/205, analytics 77/77) still pass and tsc is clean.
+
+**Still outstanding.** The converged math now covers the comparators, nearest-100k rounding, market-value curve, average-overall primitive, round-then-bound pair, ISO-date ordering, league-table ranking, the list-sum fold, the list dedup, the argmax fold, the last-element read, the occurrence tally, the league-points ladder, the formatted families and the form window. The window's *use* differs per screen (five letters, five matches, five lines) and that is correct; the door covers the decision, not the display. The remaining hand-written `slice(-N)` windows are each their own size and contract. A fresh tree census is the next step if any remaining repeated predicate surfaces.
 
 ### M418 — the quantity census: a field is formatted one way, so the same number cannot reach a reader in two forms
 

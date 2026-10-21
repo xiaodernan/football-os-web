@@ -320,3 +320,13 @@ export const leaguePoints = (letter: "W" | "D" | "L"): number =>
  *  league-points door. Same contract as `leaguePoints`, goal-comparison dialect. */
 export const resultPoints = (ourGoals: number, oppGoals: number): number =>
   leaguePoints(ourGoals > oppGoals ? "W" : ourGoals === oppGoals ? "D" : "L");
+
+/** The five most recent results every form reading looks at. The window was hand-written as a bare
+ *  `slice(-5)` in three places — analytics' team form, career's recent points and Manager OS's
+ *  latest-results list — same "last five" contract, so it is a door now: one place the window lives,
+ *  and the three screens cannot disagree about how much form they read. The read is non-mutating, so
+ *  callers may still map or reverse the result. */
+export const FORM_WINDOW = 5;
+export function recentResults<T>(xs: readonly T[]): T[] {
+  return xs.slice(-FORM_WINDOW);
+}

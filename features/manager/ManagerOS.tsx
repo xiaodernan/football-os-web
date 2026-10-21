@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
-import { byOverall } from "@/domain/attributes";
+import { byOverall, recentResults } from "@/domain/attributes";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { useLocalStorage } from "@/lib/hooks";
 import {
@@ -153,7 +153,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
   const { t } = useI18n();
   const squad = effectiveSquad(career.clubId, career.moved);
   const inp = clubInput(career.clubId, career.moved, career.tactics, careerForm(career), career.morale, career.fatigue);
-  const recent = [...career.results].slice(-5).reverse();
+  const recent = recentResults(career.results).reverse();
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <Panel className="p-4 lg:col-span-2">

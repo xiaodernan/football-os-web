@@ -7,7 +7,7 @@
 
 import type { Club, Match } from "@/domain/types";
 import { clamp, round2, round3, indexById } from "@/lib/utils";
-import { byTableStanding, sum, leaguePoints } from "./attributes";
+import { byTableStanding, sum, leaguePoints, recentResults } from "./attributes";
 
 export type FormLetter = "W" | "D" | "L";
 
@@ -137,7 +137,7 @@ export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): Te
     const lost = a.home.lost + a.away.lost;
     const gf = a.home.gf + a.away.gf;
     const ga = a.home.ga + a.away.ga;
-    const form: FormLetter[] = a.results.slice(-5).map((r) => (r.g > r.c ? "W" : r.g < r.c ? "L" : "D"));
+    const form: FormLetter[] = recentResults(a.results).map((r) => (r.g > r.c ? "W" : r.g < r.c ? "L" : "D"));
     const cleanSheets = a.results.filter((r) => r.c === 0).length;
     const gfAvg = played ? gf / played : 0;
     const gaAvg = played ? ga / played : 0;
