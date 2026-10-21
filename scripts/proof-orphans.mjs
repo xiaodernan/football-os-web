@@ -5,6 +5,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { skipReason } from "./lib/appTree.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 let pass = 0, fail = 0;
@@ -120,8 +121,14 @@ ok(`the reader resolves @/, relative, extensionless and index specifiers, ignore
 // --- 2. The walk is the real tree, the roots are derived, and both entries are inside it. -----
 const ROOTS = ["domain", "data", "lib", "features", "components", "ui", "src", "store", "i18n", "functions"];
 const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor"];
-const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
-  e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);
+// M423: the rule that says which tree this is lives in scripts/lib/appTree.mjs now — a hidden
+// directory is not shipped and a directory carrying its own `.git` is another repository. Without
+// it the scratch planes left in the root by old experiments each read as an uncovered directory.
+const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+  const p = `${d}/${e.name}`;
+  if (e.isDirectory()) return skipReason(e.name, p) ? [] : walk(p);
+  return [p];
+});
 const topDirs = readdirSync(root, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
 const carriesTs = (d) => {
   try {
@@ -130,7 +137,7 @@ const carriesTs = (d) => {
     return entries.some((e) => e.isDirectory() && e.name !== "node_modules" && carriesTs(`${d}/${e.name}`));
   } catch { return false; }
 };
-const uncovered = topDirs.filter((d) => !ROOTS.includes(d) && !NON_APP.includes(d) && carriesTs(d));
+const uncovered = topDirs.filter((d) => !ROOTS.includes(d) && !skipReason(d, join(root, d), NON_APP) && carriesTs(d));
 const files = ROOTS.filter((d) => { try { statSync(join(root, d)); return true; } catch { return false; } })
   .flatMap((d) => walk(join(root, d))).filter((f) => /\.(ts|tsx)$/.test(f) && !f.endsWith(".d.ts"))
   .map((f) => f.slice(root.length + 1).split("\\").join("/"));

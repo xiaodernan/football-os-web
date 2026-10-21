@@ -25,6 +25,7 @@ import React from "react";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { appDirsIn, skipReason } from "./lib/appTree.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -195,12 +196,14 @@ ok(`every name the route table reaches for is a component that file declares and
 // every screen this file renders IS inside the ratchet's population, so if coverage ever narrows
 // back to a flat directory list, or a screen stops being found on disk, this goes red.
 const COV_SKIP = ((read("scripts/proof-coverage.mjs").match(/const POP_SKIP = new Set\(\[([^\]]*)\]/) || [, ""])[1].match(/"([^"]+)"/g) || []).map((s) => s.slice(1, -1));
-const POP_DIRS = readdirSync(root, { withFileTypes: true })
-  .filter((e) => e.isDirectory() && !COV_SKIP.includes(e.name) && !e.name.startsWith("."))
-  .map((e) => e.name);
+// M432: the rule that says which directories are the app's lives in scripts/lib/appTree.mjs, and
+// this file was keeping a private copy of half of it (its own hidden-directory test) while parsing
+// another proof's source for the rest. The shared rule skips a hidden directory and a directory
+// carrying its own `.git`, and the caller keeps the names that are not the app.
+const POP_DIRS = appDirsIn(root, { notApp: COV_SKIP });
 const walk = (d) => readdirSync(join(root, d), { withFileTypes: true }).flatMap((e) => {
   const p = d ? `${d}/${e.name}` : e.name;
-  if (e.isDirectory()) return e.name === "node_modules" ? [] : walk(p);
+  if (e.isDirectory()) return skipReason(e.name, join(root, p), COV_SKIP) ? [] : walk(p);
   return /\.(ts|tsx)$/.test(e.name) ? [p] : [];
 });
 const APP_MODULES = walk("").filter((p) => !p.startsWith("scripts/"));

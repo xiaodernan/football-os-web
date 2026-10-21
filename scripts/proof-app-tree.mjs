@@ -122,7 +122,7 @@ ok(`a clone of the app sitting beside the app does not join its population (${cl
 // ---------------------------------------------------------------------------
 // 3 · the gates read ONE rule
 // ---------------------------------------------------------------------------
-const TREE_PROOFS = ["proof-coverage.mjs", "proof-dead-exports.mjs", "proof-dead-imports.mjs", "proof-i18n.mjs", "proof-ids.mjs", "proof-rng.mjs"];
+const TREE_PROOFS = ["proof-coverage.mjs", "proof-dead-exports.mjs", "proof-dead-imports.mjs", "proof-i18n.mjs", "proof-ids.mjs", "proof-rng.mjs", "proof-orphans.mjs", "proof-unused-locals.mjs", "proof-unused-params.mjs"];
 const importLine = /from "\.\/lib\/appTree\.mjs"/;
 const imported = [], forked = [];
 for (const f of TREE_PROOFS) {
@@ -135,6 +135,27 @@ for (const f of TREE_PROOFS) {
 }
 ok(`every proof that walks the tree reads the one rule (${imported.length} of ${TREE_PROOFS.length} import scripts/lib/appTree.mjs${forked.length ? `; forked: ${forked.join(", ")}` : ""})`,
   imported.length === TREE_PROOFS.length && forked.length === 0, `missing: ${TREE_PROOFS.filter((f) => !imported.includes(f)).join(", ")}`);
+
+// M432: the rule has to be READ, not remembered. Two gates were written AFTER this rule landed —
+// the dead-code boundary's first direction (proof-orphans) and its fourth (proof-unused-locals) —
+// and each read the repository's TOP-LEVEL directories to ask whether every one of them is
+// covered. Without the rule, each of the eleven scratch planes an old experiment left in the root
+// read as an uncovered directory, and the suite was red with two failures that had nothing to do
+// with the app. So the rule is now checked against the WHOLE suite rather than against a list
+// this file remembers: a proof script that reads the root's directories must import the rule.
+const scriptFiles = readdirSync(join(root, "scripts")).filter((f) => /^proof-.*\.mjs$/.test(f)).sort();
+// A script that reads the ROOT's own directory list — the top-level directories — as opposed to a
+// NAMED directory under the root, which is the app's business and needs no rule. The shared rule's
+// own readers count too: appDirsIn(root, …) and walkApp(root, …) are the same question asked
+// through the rule rather than beside it.
+const readsRoot = (src) => /readdirSync\(\s*(?:root|resolve\(root\))\s*,/.test(src)
+  || /readdirSync\(\s*join\(root,\s*""\s*\)\s*,/.test(src)
+  || /\b(?:appDirsIn|walkApp)\(\s*root\b/.test(src);
+const rootReaders = scriptFiles.filter((f) => readsRoot(readFileSync(join(root, "scripts", f), "utf8")));
+const rootReadersMissing = rootReaders.filter((f) => !importLine.test(readFileSync(join(root, "scripts", f), "utf8")));
+ok(`every proof that reads the repository's top-level directories imports the rule, so a new gate cannot forget it (${rootReaders.length} such script(s): ${rootReaders.join(", ")}; ${rootReadersMissing.length} without it [${rootReadersMissing.join(", ")}])`,
+  rootReadersMissing.length === 0 && rootReaders.length === 8,
+  `without the rule: ${rootReadersMissing.join(", ")}`);
 
 // ---------------------------------------------------------------------------
 // 4 · the repository points at no other repository

@@ -6,6 +6,7 @@ import ts from "typescript";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { skipReason } from "./lib/appTree.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 let pass = 0, fail = 0;
@@ -82,8 +83,11 @@ ok(`the real tree has no unread parameter (${realDiags.length} diagnostic(s)${re
 // --- so coverage is part of the claim. functions/ is Deno code, outside the app's tsconfig. ----
 const ROOTS = ["domain", "data", "lib", "features", "components", "ui", "src", "store", "i18n"];
 const NON_APP = ["functions", "scripts", "dev", "dist", "node_modules", "test-results", "vendor"];
-const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
-  e.isDirectory() ? walk(`${d}/${e.name}`) : [`${d}/${e.name}`]);
+const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+  const p = `${d}/${e.name}`;
+  if (e.isDirectory()) return skipReason(e.name, p) ? [] : walk(p);
+  return [p];
+});
 const files = ROOTS.filter((d) => { try { statSync(join(root, d)); return true; } catch { return false; } })
   .flatMap((d) => walk(join(root, d))).filter((f) => /\.(ts|tsx)$/.test(f) && !f.endsWith(".d.ts"))
   .map((f) => f.slice(root.length + 1).split("\\").join("/"));
@@ -95,7 +99,7 @@ const carriesTs = (d) => {
     return entries.some((e) => e.isDirectory() && e.name !== "node_modules" && carriesTs(`${d}/${e.name}`));
   } catch { return false; }
 };
-const uncovered = topDirs.filter((d) => !ROOTS.includes(d) && !NON_APP.includes(d) && carriesTs(d));
+const uncovered = topDirs.filter((d) => !ROOTS.includes(d) && !skipReason(d, join(root, d), NON_APP) && carriesTs(d));
 const lower = (p) => resolve(p).toLowerCase();
 const inProgram = new Set(program.getSourceFiles().filter((f) => !f.isDeclarationFile).map((f) => lower(f.fileName)));
 const missing = files.filter((rel) => !inProgram.has(lower(join(root, rel))));

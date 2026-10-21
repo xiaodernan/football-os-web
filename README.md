@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M433
+Work ships one milestone per commit and is currently at M434
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,20 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M434 — the rule has to be read, not remembered: two gates were written after it landed
+
+**The defect.** M423 gave the tree-walking proofs **one rule** — a hidden directory is not shipped, and a directory carrying its own `.git` is another repository — and applied it to six of them. Two gates were written **after** it landed: the dead-code boundary's first direction (`proof-orphans`) and its fourth (`proof-unused-locals`). Each reads the repository's **top-level directories** to ask whether every one of them is covered by the app's roots, and neither read the rule — so each of the eleven scratch planes an old experiment left in the root (`.m225-plane` … `.m326-plane`, untracked, dated between 28 September and 9 October) read as an **uncovered directory**, and the suite was red with two failures that had nothing to do with the app.
+
+A third gate kept a private copy of half the rule: `proof-screens` filtered the root's directories with **its own** hidden-directory test while parsing *another proof's source* for the rest of the skip list.
+
+**The fix.** All three read the shared rule now, and the private copy is gone.
+
+**The seam, charged both ways.** The durable half of this unit is that the rule is now checked against the **whole suite** rather than against a list `proof-app-tree` remembers: a proof script that reads the root's directories — directly, or through the rule — must import it. Eight scripts do today (the census names them), the number is pinned, and a **new** gate that forgets the rule is caught the day it is written rather than the day a scratch directory reappears in the root. The nine gates that walk the tree are checked by name as well, so a fork — a proof keeping a private hidden-directory test of its own — is still refused.
+
+**The census earned its place the day it landed.** The fourth direction's other half — `proof-unused-params`, written alongside this unit — read the root's directories without the rule, and the new clause **named it** (eight such scripts, one without the rule) before the suite did. That is the whole argument for checking a rule against the suite instead of against a list: the list was written before the gate existed, and a gate that arrives later is exactly the one the list has never heard of.
+
+**Still outstanding.** The rule settles which tree a proof measures, and it says nothing about the **other** half of the same question: the root also carries files that are not the app's (the ledger's own scratch notes, the old `.m226-*.md` files), and a proof that reads the root's *files* rather than its directories would charge them. The census reads directories today; a file-reading gate is the next shape it has to refuse, and the root's own clutter is the test case.
 
 ### M433 — a set of words that means one thing is spelled in one place: the vocabulary census
 
