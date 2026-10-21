@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M431
+Work ships one milestone per commit and is currently at M432
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,66 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M432 — the fifth direction: a package the manifest declares that nothing reads
+
+**What the gauge says.** `scripts/proof-dependencies.mjs` **6/6**. The build never opens
+`package.json`; the gate derives every reader carrier from the tree itself, charges a declaration
+that no carrier names, and checks that the lock's root maps say the same thing as the manifest.
+The manifest now declares **10 runtime and 10 dev** packages, **0** of either has no reader, and
+both root maps agree. The census walks **221 files** with a floor of 150, and its six named
+carriers — `vite.config.ts`, `postcss.config.mjs`, `index.html`, `scripts/browser-walk.spec.ts`,
+`functions/index.ts`, `src/globals.css` — are all present, so a green is not a scan of nothing.
+
+**The measurement came before the fold.** On `629c93f` the gate read **4/6**, and its two red
+clauses named exactly twelve declarations: the eleven runtime packages `@base-ui/react`,
+`@hookform/resolvers`, `@shadcn/react`, `date-fns`, `embla-carousel-react`, `input-otp`,
+`react-day-picker`, `react-hook-form`, `react-resizable-panels`, `vaul` and `zod` (**21** declared,
+**11** unread), and the dev package `playwright` (**11** declared, **1** unread). The fold removed
+those twelve declarations; the manifest now reads 10 + 10. The lock was regenerated offline
+(`npm install --package-lock-only --ignore-scripts --no-audit --no-fund --offline`), and the diff
+is **−351/+2** across the two files. What was dead is the **declaration**, not the bytes:
+`playwright` is still installed as a transitive dev dependency of `@playwright/test`, and the gate
+does not claim otherwise.
+
+**The reader.** A package is claimed by a real import — static, dynamic, side-effect or `require` —
+by a CSS `@import`, `@plugin` or `@reference`, by an HTML `<script src>` or `<link href>`, by its
+quoted name in a toolchain config (`postcss.config.mjs` names `@tailwindcss/postcss`), by
+`tsconfig`'s own `types` list, or by a `node:` builtin, which reads `@types/node`. An `@types/`
+package is read through its base package, because that is how the compiler reads it: `@types/react`
+is claimed by an import of `react`, not by a declaration in the tree. Comments are stripped before
+the scan, and a bare string is not a reader: the fixture proves an import claims, a commented
+import does not, a CSS import claims, a config's quoted name claims, and a `node:` import claims the
+Node types.
+
+**What is NOT claimed.** The gate is a text census, not a resolver: it does not ask whether an
+import the bundler cannot resolve would fail the build, and it does not charge the **reverse**
+direction — an import no manifest declares, which today would resolve through a transitive package.
+A proof script's embedded source sample is scanned as text, so a `from "pkg"` inside a string could
+claim a package the script never imports; the error is toward green, and no such sample names any of
+the twelve removed packages today, but the scanner cannot tell a sample from a statement. Transitive
+packages are not declarations, and removing a declaration is not a promise that the bytes left
+`node_modules`.
+
+**The arms.** `dev/.m432-arms.mjs` runs **10/10** on the isolated plane, each arm restored
+byte-exactly and the plane's `git status` compared to its baseline. A dead runtime package in the
+manifest and the lock (A) reds the runtime clause; the same for dev (B). The fixture is probed from
+both sides: its only import becomes a comment (C) and its only CSS import becomes a comment (D).
+One named carrier is made absent (E). A manifest-only declaration reds the reader **and** the lock
+parity clause (F), and dropping a package from the lock's root only reds parity alone (G). The
+gate quoting a declared package name (H) reds the exemption clause. Two controls must stay green,
+and they are the point: a real import of an already-read package (I) changes nothing, and a comment
+naming a removed package (J) is not a reader. Predicted from each clause's own sentence:
+A[2] B[3] C[1] D[1] E[4] F[2,5] G[5] H[6] I[] J[]. All ten matched.
+
+**Next.** The reverse direction is the open question: a bare import that no manifest declares and
+that resolves only through a transitive package — `playwright` is the live specimen, still under
+`@playwright/test` after its direct declaration was removed. Measuring it first is the work, not
+the gate: proof sources embed code samples and regex fragments, and a naive scan charges `pkg-a`
+and `the` before it ever reaches a real import.
+
+`tsc --noEmit` exit 0, `npm run build` exit 0, and the full suite is green (105/105 proof
+scripts proven, 3073/3073 checks counted).
 
 ### M431 — the fourth direction's other half: a parameter a function never reads
 
