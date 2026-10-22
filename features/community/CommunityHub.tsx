@@ -200,7 +200,7 @@ export function CommunityHub() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">☍</div>
+        <div className={cn("grid h-10 w-10 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>☍</div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("comm.title")}</h1><DemoBadge /></div>
           <p className="text-xs text-muted-foreground">{t("comm.subtitle")}</p>
@@ -256,7 +256,7 @@ export function CommunityHub() {
                 {th.seeded ? (
                   <Badge variant="outline" className={cn("text-[10px]", CHIP_CLASS.badgeWarning)}>{t("comm.sample")}</Badge>
                 ) : (
-                  <Badge className="bg-primary/15 text-primary text-[10px]">{t("comm.yours")}</Badge>
+                  <Badge className={cn("text-[10px]", CHIP_CLASS.labelPrimary)}>{t("comm.yours")}</Badge>
                 )}
                 <span className="text-xs text-muted-foreground">{authorName(t, th.author)} · {rowLine(timeAgo(locale, th.at), t)}</span>
               </div>
@@ -345,7 +345,7 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
           {thread.seeded ? (
             <Badge variant="outline" className={cn("text-[10px]", CHIP_CLASS.badgeWarning)}>{t("comm.samplePost")}</Badge>
           ) : (
-            <Badge className="bg-primary/15 text-primary text-[10px]">{t("comm.yours")}</Badge>
+            <Badge className={cn("text-[10px]", CHIP_CLASS.labelPrimary)}>{t("comm.yours")}</Badge>
           )}
           <span className="text-xs text-muted-foreground">{authorName(t, thread.author)} · {rowLine(timeAgo(locale, thread.at), t)}</span>
         </div>

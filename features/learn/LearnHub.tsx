@@ -114,7 +114,7 @@ export function LearnHub() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">◈</div>
+        <div className={cn("grid h-10 w-10 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>◈</div>
         <div>
           <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("learn.title")}</h1><DemoBadge /></div>
           <p className="text-xs text-muted-foreground">{t("learn.subtitle")}</p>
@@ -252,7 +252,7 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
             const isAnswer = i === lesson.quiz.answer;
             return (
               <button key={i} disabled={choice !== null} onClick={() => answer(i)} className={cn("w-full rounded-md border px-3 py-2 text-left text-sm disabled:cursor-default",
-                choice === null ? "hover:border-primary/50" : isAnswer ? "border-success bg-success/10" : picked ? "border-destructive bg-destructive/10" : "opacity-60")}>
+                choice === null ? "hover:border-primary/50" : isAnswer ? CHIP_CLASS.labelBorderSuccess : picked ? CHIP_CLASS.labelBorderDestructive : "opacity-60")}>
                 <span className="font-mono text-xs text-muted-foreground mr-2">{String.fromCharCode(65 + i)}</span>{t(ok)}
                 {choice !== null && isAnswer && <span className="float-right text-success">✓</span>}
               </button>

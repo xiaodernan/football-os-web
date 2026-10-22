@@ -197,7 +197,7 @@ export function Dashboard() {
                     <span className="uppercase tracking-wide">{t("dash.nextBadge")}</span>
                   </div>
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/15 text-sm text-primary">{growth.next.icon}</span>
+                    <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-md text-sm", CHIP_CLASS.labelPrimary)}>{growth.next.icon}</span>
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">{t(`ach.name.${growth.next.id}`)}</span>
                     <span className="font-mono text-xs text-muted-foreground tabular-nums">{Math.min(growth.next.value, growth.next.target)}/{growth.next.target}</span>
                   </div>

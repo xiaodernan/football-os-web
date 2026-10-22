@@ -83,7 +83,7 @@ export function PlayerOS() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/15 text-primary">⚽</span>
+          <span className={cn("grid h-11 w-11 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>⚽</span>
           <div>
             <h1 className="text-xl font-bold">{t("nav.player")} · {state.profile.displayName}</h1>
             <div className="text-sm text-muted-foreground">{positionLabel(state.profile.position, t)} · {ageGroupLabel(state.profile.ageGroup, t)} · {t("player.goalWord")}: {goalLabel(state.profile.goal, t)}</div>
@@ -361,7 +361,7 @@ function Skills() {
               const nodeLevel = Math.max(1, Math.floor(v / 12));
               return (
                 <div key={d.key} className="flex items-center gap-2">
-                  <div className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-md text-[10px] font-bold", v >= 70 ? "bg-primary/20 text-primary" : v >= 50 ? "bg-info/20 text-info" : "bg-secondary text-muted-foreground")}>
+                  <div className={cn("grid h-6 w-6 shrink-0 place-items-center rounded-md text-[10px] font-bold", v >= 70 ? CHIP_CLASS.labelPrimary20 : v >= 50 ? CHIP_CLASS.labelInfo : CHIP_CLASS.labelSecondary)}>
                     {nodeLevel}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -428,7 +428,7 @@ function Training() {
                   {sess.growth && sess.growth.some((g) => g.delta > 0) && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {sess.growth.filter((g) => g.delta > 0).map((g) => (
-                        <span key={g.key} className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">{t(`attr.name.${g.key}`)} +{g.delta}</span>
+                        <span key={g.key} className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", CHIP_CLASS.labelSuccess10)}>{t(`attr.name.${g.key}`)} +{g.delta}</span>
                       ))}
                     </div>
                   )}

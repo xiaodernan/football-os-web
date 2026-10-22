@@ -203,7 +203,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
                 const w = r.ourGoals > r.oppGoals, d = r.ourGoals === r.oppGoals;
                 return (
                   <li key={i} className="flex items-center justify-between">
-                    <span className="flex items-center gap-2"><span className={cn("grid h-5 w-5 place-items-center rounded text-[10px] font-bold", w ? "bg-success/20 text-success" : d ? "bg-muted text-muted-foreground" : "bg-destructive/20 text-destructive")}>{w ? "W" : d ? "D" : "L"}</span>{getClub(r.opponent)?.name} ({r.weHome ? "H" : "A"})</span>
+                    <span className="flex items-center gap-2"><span className={cn("grid h-5 w-5 place-items-center rounded text-[10px] font-bold", w ? CHIP_CLASS.labelSuccess : d ? CHIP_CLASS.labelMuted : CHIP_CLASS.labelDestructive)}>{w ? "W" : d ? "D" : "L"}</span>{getClub(r.opponent)?.name} ({r.weHome ? "H" : "A"})</span>
                     <span className="font-mono text-xs">{r.ourGoals}-{r.oppGoals}</span>
                   </li>
                 );
@@ -556,7 +556,7 @@ function ClubPicker({ onStart }: { onStart: (clubId: string) => void }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">♟</div>
+        <div className={cn("grid h-10 w-10 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>♟</div>
         <div>
           <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("nav.manager")}</h1><DemoBadge /></div>
           <p className="text-xs text-muted-foreground">{t("mgr.subtitle")}</p>

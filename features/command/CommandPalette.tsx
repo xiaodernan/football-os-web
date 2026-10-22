@@ -18,6 +18,8 @@ import { globalSearch } from "@/data/footballService";
 import { rowLine, searchKindLabel } from "@/domain/rowText";
 import { MODES } from "@/domain/types";
 import { useDebounced } from "@/lib/hooks";
+import { CHIP_CLASS } from "@/ui/primitives";
+import { cn } from "@/lib/utils";
 
 interface ActionCmd {
   id: string;
@@ -142,7 +144,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                         「club」 in an otherwise translated list — the only display position in the
                         tree that showed a retrieval kind. It asks the door's composer now, the same
                         line that words a kind anywhere else. */}
-                    <span className="mr-2 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground">{searchKindLabel(r.type, t)}</span>
+                    <span className={cn("mr-2 rounded px-1.5 py-0.5 font-mono text-[10px] uppercase", CHIP_CLASS.labelSecondary)}>{searchKindLabel(r.type, t)}</span>
                     {/* The news family's title is the seed's composed English sentence, so it
                         rides on its keyed row (M275); the four proper-noun families show the
                         record's own word, as their names do everywhere. */}

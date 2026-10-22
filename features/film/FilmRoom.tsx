@@ -190,7 +190,7 @@ export function FilmRoom() {
                   key={c.clipId}
                   className={cn(
                     "group flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors",
-                    selected === c.clipId ? "bg-primary/10 text-foreground" : "hover:bg-secondary/50",
+                    selected === c.clipId ? CHIP_CLASS.labelPrimaryForeground : "hover:bg-secondary/50",
                   )}
                 >
                   <button className="min-w-0 flex-1 text-left" onClick={() => setSelected(c.clipId)}>

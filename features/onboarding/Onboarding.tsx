@@ -83,7 +83,7 @@ export function Onboarding() {
                 onClick={() => setMode(m)}
                 className={cn(
                   "rounded-xl border p-4 text-left transition",
-                  mode === m ? "border-primary bg-primary/5 ring-1 ring-primary/40" : "hover:border-primary/40",
+                  mode === m ? cn("ring-1 ring-primary/40", CHIP_CLASS.labelBorderPrimarySoft) : "hover:border-primary/40",
                 )}
               >
                 <div className="text-sm font-semibold">{t(`onboarding.${m.toLowerCase()}`)}</div>
@@ -166,7 +166,7 @@ export function Onboarding() {
               <Label>{t("onb.favPlayer")} {clubId && `· ${WORLD.clubs.find((c) => c.id === clubId)?.name}`}</Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {clubPlayers.map((p) => (
-                  <button key={p.id} onClick={() => setPlayer(p.id)} className={cn("flex items-center gap-2 rounded-lg border px-2 py-1 text-xs", playerId === p.id ? "border-primary bg-primary/10" : "hover:border-primary/40")}>
+                  <button key={p.id} onClick={() => setPlayer(p.id)} className={cn("flex items-center gap-2 rounded-lg border px-2 py-1 text-xs", playerId === p.id ? CHIP_CLASS.labelBorderPrimary : "hover:border-primary/40")}>
                     <Crest colors={WORLD.clubs.find((c) => c.id === clubId)?.colors} short={last(p.name.split(" "))?.[0]} size={18} />
                     {p.name}
                   </button>

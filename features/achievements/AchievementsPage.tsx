@@ -117,7 +117,7 @@ function AchievementCard({ a, t }: { a: AchievementStatus; t: (k: string) => str
       )}
     >
       <div className="flex items-center gap-3">
-        <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-lg text-lg", a.unlocked ? "bg-card" : "bg-secondary text-muted-foreground")}>
+        <div className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-lg text-lg", a.unlocked ? "bg-card" : CHIP_CLASS.labelSecondary)}>
           {a.unlocked ? a.icon : "🔒"}
         </div>
         <div className="min-w-0">

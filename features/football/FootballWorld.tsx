@@ -297,7 +297,7 @@ function CompetitionsList() {
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {comps.map((c) => (
           <EntityLink key={c.id} to={`/competitions/${c.id}`} className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/15 text-primary">🏆</div>
+            <div className={cn("grid h-10 w-10 place-items-center rounded-lg", CHIP_CLASS.labelPrimary)}>🏆</div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-semibold">{c.name}</div>
               <div className="truncate text-xs text-muted-foreground">{c.nation} · {t("fw.comps.teams", { n: c.clubIds.length, tier: c.tier })}</div>

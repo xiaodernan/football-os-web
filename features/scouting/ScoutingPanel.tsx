@@ -73,7 +73,7 @@ export function ScoutingPanel() {
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">◎</div>
+        <div className={cn("grid h-10 w-10 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>◎</div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("nav.scouting")}</h1><DemoBadge /></div>
           <p className="text-xs text-muted-foreground">{t("scout.subtitle")}</p>

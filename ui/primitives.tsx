@@ -140,6 +140,23 @@ export const CHIP_CLASS = {
   // force wears a stronger border than a tone chip, and a filter at rest keeps a border of its own.
   filterOn: "border-primary/50 bg-primary/10 text-primary",
   filterOff: "border-border/60 text-muted-foreground hover:border-primary/30",
+  // The LABEL — a wash and a word with NO border — and its mirror, the MARK: a full-strength
+  // border and a wash with NO word. The app wore the primary wash on thirteen icon plates and the
+  // "yours" chip, the neutral wash twice, and the answer's border-and-wash once per answer.
+  labelPrimary: "bg-primary/15 text-primary",
+  labelPrimary20: "bg-primary/20 text-primary",
+  labelPrimaryForeground: "bg-primary/10 text-foreground",
+  labelSuccess: "bg-success/20 text-success",
+  labelSuccess10: "bg-success/10 text-success",
+  labelDestructive: "bg-destructive/20 text-destructive",
+  labelInfo: "bg-info/20 text-info",
+  labelMuted: "bg-muted text-muted-foreground",
+  labelSecondary: "bg-secondary text-muted-foreground",
+  labelSidebarPrimary: "bg-sidebar-primary/15 text-sidebar-primary",
+  labelBorderSuccess: "border-success bg-success/10",
+  labelBorderDestructive: "border-destructive bg-destructive/10",
+  labelBorderPrimary: "border-primary bg-primary/10",
+  labelBorderPrimarySoft: "border-primary bg-primary/5",
 } as const;
 
 // The load ZONE's chip: what the four action zones wear. The `none` state is deliberately NOT

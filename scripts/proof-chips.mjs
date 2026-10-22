@@ -16,17 +16,19 @@
 //
 // This script reads the app and charges the family. Its shape is a class string that carries a
 // border colour and a word colour, and it is read as a SET of colour classes, because the order of
-// the classes in an attribute does not change what is painted. Four shapes are charged:
+// the classes in an attribute does not change what is painted. Five shapes are charged:
 //
 //   · the TONE chip — a border, a wash and a word, all of one colour, at rest;
 //   · the MUTED chip — a border of the border colour and a muted word (with or without a wash);
 //   · the option AT REST — muted words that turn primary when you point at them;
-//   · the BADGE — a border and a word of one colour, with NO wash of that colour.
+//   · the BADGE — a border and a word of one colour, with NO wash of that colour;
+//   · the LABEL — a wash and a word of one colour with NO border (icon badges), OR a border and a wash with NO word (answer selections).
 //
 // The rule is one sentence: a chip that is written twice lives in the palette, and a chip written
 // once is its screen's own. A BADGE is stricter: it is written once too, and that once is the
 // palette — the amber badge alone was spelled out in seven places and the green one in five, and
-// the family has one home like the chips do.
+// the family has one home like the chips do. A LABEL is equally strict: the app wore the primary
+// wash in thirteen places and the answer border/wash in two — every label lives in the palette.
 //
 // Run: node scripts/proof-chips.mjs
 import { readFileSync } from "node:fs";
@@ -57,17 +59,24 @@ const colourClass = (cls) => {
   const base = variant ? cls.slice(cls.indexOf(":") + 1) : cls;
   const m = base.match(/^(border|bg|text)-([a-z][a-z0-9-]*)(?:\/\d+)?$/);
   if (!m || !themeColours.has(m[2])) return null;
-  return { raw: cls, variant, role: m[1], colour: m[2] };
+  // A colour class with an opacity suffix is a SOFTENED one: `border-success/40` is a hint of a
+  // colour, `border-success` is the colour itself. The mark needs the colour itself.
+  const softened = /\/\d+$/.test(base);
+  return { raw: cls, variant, role: m[1], colour: m[2], softened };
 };
 
 /** The colour classes a string carries, in the order they are written. */
 const colourClasses = (str) => str.split(/\s+/).filter(Boolean).map(colourClass).filter(Boolean);
 
+// The SURFACES: the colours a PANEL wears, not a label's. A wash of one of these is a card, a
+// popover, a sidebar or a page, and the app's panels are not labels.
+const SURFACES = new Set(["background", "card", "popover", "sidebar", "accent"]);
+
 /**
  * The shape of a string, or null when it is not a chip.
  *
- * The three shapes are named so the census can print which family it charged, and so a planted
- * fixture can be asked to be one of them.
+ * The shapes are named so the census can print which family it charged, and so a planted fixture
+ * can be asked to be one of them.
  */
 const shapeOf = (str) => {
   const classes = colourClasses(str);
@@ -81,6 +90,15 @@ const shapeOf = (str) => {
   if (border && word && border.colour === "border" && word.colour === "muted-foreground") return "muted";
   // The badge: a border and a word of one colour, with no wash of that colour.
   if (border && word && border.colour === word.colour && !(wash && wash.colour === border.colour)) return "badge";
+  // The LABEL: a wash and a word, with NO border — the icon plates, the "yours" chip, the result
+  // squares. The word is the wash's own colour, or the app's neutral word (the muted one, or the
+  // default one); a wash of a SURFACE colour is a panel, and a word that is the wash's own
+  // "-foreground" partner is a solid button, not a label.
+  if (!border && wash && word && !SURFACES.has(wash.colour) &&
+      (word.colour === wash.colour || word.colour === "muted-foreground" || word.colour === "foreground")) return "label";
+  // The MARK, the label's mirror: a FULL-STRENGTH border and a wash of that colour, with NO word
+  // — the chosen answer, the selected player. A softened border is a container's edge, not a mark.
+  if (border && wash && !word && border.colour === wash.colour && !border.softened) return "mark";
   // The option at rest: muted words, and a border that appears when you point at them.
   const hoverBorder = classes.find((c) => c.variant && c.role === "border");
   if (!border && word && word.colour === "muted-foreground" && hoverBorder && hoverBorder.colour === "primary") return "rest";
@@ -161,6 +179,12 @@ const PLANTS = [
   ["text-muted-foreground hover:border-primary/40", "rest"],
   ["border-warning/40 text-warning", "badge"],
   ["border-warning/40 bg-warning/10 text-warning", "tone"],
+  ["bg-primary/15 text-primary", "label"],
+  ["border-success bg-success/10", "mark"],
+  // A wash of a surface colour is a panel, not a label.
+  ["bg-card/50 px-3 py-1 text-sm text-muted-foreground", null],
+  // A softened border is a container's edge, not a mark.
+  ["border-success/40 bg-success/10 p-3", null],
   ["border border-border/60 bg-secondary/20 p-3 transition-colors hover:border-primary/40", null],
   ["text-xs text-muted-foreground", null],
 ];
@@ -197,6 +221,38 @@ ok(`every badge the app wears is written in the palette alone (${badgeGroups.len
   badgeGroups.length > 0 && badgesOutside.length === 0,
   badgesOutside.join("; "));
 
+// --- 2c · a label and a mark are written once, in the palette ----------------------------------------
+// The label family is stricter than the chips in the same way the badge family is. A LABEL is a wash
+// and a word with no border (an icon's plate, a "yours" chip, a result square); its mirror, a MARK,
+// is a full-strength border and a wash with no word (a chosen answer, a selected player). The app wore
+// the primary wash on thirteen icon plates and the answer's border-and-wash in two — every label and
+// every mark the app knows must live in the palette, because a screen that spells one out is exactly
+// the defect this closes.
+const labelGroups = chipGroups.filter(([, g]) => g.shape === "label");
+const markGroups = chipGroups.filter(([, g]) => g.shape === "mark");
+const labelsOutside = labelGroups.flatMap(([id, g]) => g.sites.filter((s) => !s.startsWith(HOME + ":")).map((s) => `${id} at ${s}`));
+const marksOutside = markGroups.flatMap(([id, g]) => g.sites.filter((s) => !s.startsWith(HOME + ":")).map((s) => `${id} at ${s}`));
+ok(`every label the app wears is written in the palette alone (${labelGroups.length} label(s); ${labelsOutside.length} written outside it)`,
+  labelGroups.length > 0 && labelsOutside.length === 0,
+  labelsOutside.join("; "));
+ok(`and so is every mark, its mirror (${markGroups.length} mark(s); ${marksOutside.length} written outside it)`,
+  markGroups.length > 0 && marksOutside.length === 0,
+  marksOutside.join("; "));
+// The two clauses above must be able to REFUSE: a label spelled out in a screen has to be caught,
+// or the zeros above would be a blind spot rather than a measurement. The census is asked about a
+// planted label and a planted mark in a screen's own file, and both must be charged.
+const PLANTED_SCREEN = [
+  ["features/community/CommunityHub.tsx", 900, 'const x = "bg-primary/15 text-primary";'],
+  ["features/learn/LearnHub.tsx", 900, 'const y = "border-success bg-success/10";'],
+];
+const plantedCharged = PLANTED_SCREEN.map(([file, line, src]) => {
+  const planted = [...quotedStrings(src)].filter(({ str }) => shapeOf(str));
+  return planted.length;
+});
+ok(`the label and mark clauses can refuse a screen that spells one out (${plantedCharged.join(", ")} planted string(s) charged)`,
+  plantedCharged.every((n) => n === 1),
+  `planted strings read ${plantedCharged.join(", ")}`);
+
 // --- 3 · the palette holds the chips the screens used to spell out ---------------------------------
 // The reference classes live in this proof file, not in the app: this is the text the app wore
 // before the fold, and the shipped table is checked against it.
@@ -218,9 +274,23 @@ const EXPECTED = {
   badgeSuccessStrong: "border-success/50 text-success",
   badgeWarningStrong: "border-warning/50 text-warning",
   badgeInfoStrong: "border-info/50 text-info",
+  labelPrimary: "bg-primary/15 text-primary",
+  labelPrimary20: "bg-primary/20 text-primary",
+  labelPrimaryForeground: "bg-primary/10 text-foreground",
+  labelSuccess: "bg-success/20 text-success",
+  labelSuccess10: "bg-success/10 text-success",
+  labelDestructive: "bg-destructive/20 text-destructive",
+  labelInfo: "bg-info/20 text-info",
+  labelMuted: "bg-muted text-muted-foreground",
+  labelSecondary: "bg-secondary text-muted-foreground",
+  labelSidebarPrimary: "bg-sidebar-primary/15 text-sidebar-primary",
+  labelBorderSuccess: "border-success bg-success/10",
+  labelBorderDestructive: "border-destructive bg-destructive/10",
+  labelBorderPrimary: "border-primary bg-primary/10",
+  labelBorderPrimarySoft: "border-primary bg-primary/5",
 };
 const { CHIP_CLASS, ZONE_CLASS } = await server.ssrLoadModule("/ui/primitives.tsx");
-ok(`the palette holds the seventeen chips and badges the app wore (${CHIP_CLASS ? Object.keys(CHIP_CLASS).length : 0} entries)`,
+ok(`the palette holds the thirty-one chips, badges, labels and marks the app wore (${CHIP_CLASS ? Object.keys(CHIP_CLASS).length : 0} entries)`,
   CHIP_CLASS !== null && Object.keys(EXPECTED).every((k) => CHIP_CLASS[k] === EXPECTED[k]) &&
     Object.keys(CHIP_CLASS).length === Object.keys(EXPECTED).length,
   CHIP_CLASS ? Object.keys(EXPECTED).filter((k) => CHIP_CLASS[k] !== EXPECTED[k]).join(", ") : "the palette did not load");
@@ -277,9 +347,11 @@ const CONSUMERS = [
   "features/world/DynamicWorld.tsx",
   "features/film/FilmRoom.tsx",
   "features/football/Details.tsx",
+  "features/command/CommandPalette.tsx",
+  "features/shell/AppShell.tsx",
 ];
 const readers = CONSUMERS.filter((f) => /import[^;]*\bCHIP_CLASS\b[^;]*from ["']@\/ui\/primitives["']/.test(src[f] ?? ""));
-ok(`every screen that wears a chip or a badge reads the palette (${readers.length} of ${CONSUMERS.length})`,
+ok(`every screen that wears a chip, a badge, a label or a mark reads the palette (${readers.length} of ${CONSUMERS.length})`,
   readers.length === CONSUMERS.length,
   `not reading it: ${CONSUMERS.filter((f) => !readers.includes(f)).join(", ")}`);
 

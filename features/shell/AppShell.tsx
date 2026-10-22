@@ -8,7 +8,7 @@ import { levelInfo } from "@/store/useFootballOS";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { cn, pctLabel } from "@/lib/utils";
-import { DemoBadge } from "@/ui/primitives";
+import { DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { CommandPalette } from "@/features/command/CommandPalette";
 import { MODES, type Mode } from "@/domain/types";
 
@@ -98,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       onClick={() => setMobileOpen(false)}
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-        isActive(n) ? "bg-sidebar-primary/15 font-medium text-sidebar-primary" : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+        isActive(n) ? cn("font-medium", CHIP_CLASS.labelSidebarPrimary) : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
         compact && "w-full",
       )}
     >

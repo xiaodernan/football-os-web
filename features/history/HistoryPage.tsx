@@ -140,7 +140,7 @@ export function HistoryPage() {
                       {e.growth && e.growth.some((g) => g.delta > 0) && (
                         <div className="mt-1 flex flex-wrap gap-1">
                           {e.growth.filter((g) => g.delta > 0).map((g) => (
-                            <span key={g.key} className="rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">{t(`attr.name.${g.key}`)} +{g.delta}</span>
+                            <span key={g.key} className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", CHIP_CLASS.labelSuccess10)}>{t(`attr.name.${g.key}`)} +{g.delta}</span>
                           ))}
                         </div>
                       )}

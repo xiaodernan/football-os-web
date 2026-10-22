@@ -85,7 +85,7 @@ export function TacticalStudio() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">⛶</div>
+        <div className={cn("grid h-10 w-10 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>⛶</div>
         <div>
           <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("tac.title")}</h1>{<DemoBadge />}</div>
           <p className="text-xs text-muted-foreground">{t("tac.subtitle")}</p>

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M446
+Work ships one milestone per commit and is currently at M447
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,18 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M447 — the label is written once too: the wash and the word, and the border and the wash
+
+M446 closed the badge family and named what the census still could not see: a label that carries a wash and a word with **no border** (the community hub's "yours" label, `bg-primary/15 text-primary`) and its mirror, a border and a wash with no word (the learning hub's right answer, `border-success bg-success/10`). This unit folds both into the palette and teaches the reader to charge them.
+
+**The defect, measured before it was fixed.** The primary wash on an icon plate (`bg-primary/15 text-primary`) was written out in **thirteen places across eleven screens** — the AI studio, the community hub, the dashboard, the football world, the learning hub, the manager OS, the player OS, the profile, the scouting panel, the simulation lab and the tactical studio all wrote the same two classes by hand. The "yours" chip wrote the same two classes a third time with a size beside them, and the answer selection wrote its border-and-wash in two more. Twenty-one spellings of one family, every one of them a copy of the rest, and the shade an icon plate wore was decided by whichever screen had been edited last. A reader who saw the same teal plate on eleven screens had no way to know the app meant them to be the same teal.
+
+**The fold.** Fourteen entries joined the palette — ten labels and four marks — and the twenty-one sites now name the palette. The class **set** is unchanged: an entry carries exactly the colour classes the site wore, and every other class the site wore (a size, a padding, a ring) stays at the site, so nothing is painted differently. The fold matched by **colour class set**, not by substring: a string whose colours were exactly an entry's set was folded, and one that carried an extra colour was left alone — which is why the tone chip `border-primary bg-primary/15 text-primary` (a border, a wash and a word) stayed a chip and did not become a label with a border bolted on. The fold compared the class set before and after for every site and refused to write a file whose set had changed.
+
+**The seam, charged both ways.** The census now reads **six** shapes, and the last two are the label and its mirror. The boundary is measured, not assumed, and it is measured twice over. A **label** is a wash and a word with no border; a **mark** is a full-strength border and a wash of that colour with no word. Two things are *not* labels and the reader says so: a wash of a **surface** colour (a card, a popover, a sidebar) is a panel, and a **softened** border (`border-success/40`) is a container's edge, not a mark — a border at full strength is the colour itself, a border with an opacity suffix is a hint of one. The reader is planted with both wrong readings alongside the right ones, so the zeros below are a measurement and not a blind spot, and the two new clauses are planted with a screen that spells a label and a mark out, so the clauses are seen **refusing** rather than only reported clean. The palette now holds thirty-one entries (eleven chips, six badges, ten labels and four marks) and the reader checks all thirty-one against the text the app wore before the fold, and twenty-four screens are checked for reading it. proof-chips reads 12/12; `tsc --noEmit` is clean.
+
+**Still outstanding.** The census reads a class string, and it reads the three colour roles a Tailwind chip wears: `border-`, `bg-`, `text-`. A **ring** (`ring-1 ring-primary/40`, the onboarding screen's selected mode) is a fourth role the reader does not see, and the onboarding screen's selected mode therefore wears its mark plus a ring the census cannot charge. The selection's own border-and-wash is folded, but the glow around it is still a screen's own. The next family is the ring.
 
 ### M446 — the badge is written once too: the border and the word that share a colour
 

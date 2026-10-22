@@ -155,7 +155,7 @@ export function ProfilePage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/15 text-2xl font-bold text-primary">
+          <div className={cn("grid h-14 w-14 place-items-center rounded-2xl text-2xl font-bold", CHIP_CLASS.labelPrimary)}>
             {p.displayName.slice(0, 1).toUpperCase()}
           </div>
           <div>
@@ -339,7 +339,7 @@ export function ProfilePage() {
 function LinkCard({ to, icon, title, hint }: { to: string; icon: string; title: string; hint: string }) {
   return (
     <Link to={to} className="flex items-center gap-3 rounded-xl border border-border/60 bg-secondary/20 px-3.5 py-3 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/40">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary">{icon}</span>
+      <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", CHIP_CLASS.labelPrimary)}>{icon}</span>
       <span className="min-w-0">
         <span className="block font-medium">{title}</span>
         <span className="block truncate text-xs text-muted-foreground">{hint}</span>
