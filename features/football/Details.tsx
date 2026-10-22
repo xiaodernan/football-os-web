@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
-import { fmtDateTime, useI18n, type Locale } from "@/i18n";
+import { fmtDateTime, useI18n } from "@/i18n";
 import { byOverall, maxBy, last, deltaSign } from "@/domain/attributes";
 import { favoriteLabel, footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine, type RowText } from "@/domain/rowText";
 import { FAVORITES, type FavoriteKind } from "@/domain/types";
