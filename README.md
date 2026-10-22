@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M442
+Work ships one milestone per commit and is currently at M443
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7093,6 +7093,16 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M443 — the rule census learned to read one file at a time, and the class that produced byDeltaDesc
+
+M442 fixed how the rule census reads a body. This unit closes the other half of its reach. Both existing clauses skip **same-file** pairs by design — M417's exported census and M438's local census each `continue` past two units that share a file — and that class is where some of this project's oldest duplications lived: M241's `byDeltaDesc` was two byte-identical comparators inside one module, and the tempo/press band words were two identical rules on adjacent lines of ManagerOS (converged onto `rowText.ts`'s `levelWord` by the concurrent chip work before this unit landed). One author, one sitting, no cross-file signal at all: a cross-file census structurally cannot see it.
+
+The clause runs the same strict-alignment measure over every named body **restricted to one file at a time**, with the same splits mechanism the local clause uses, so a deliberate pair is declared rather than silently charged. A probe over the current tree reads 155 named units and **zero same-file pairs** — the class is clean today, which is exactly when a gate is worth building: it costs nothing now and reddens the day someone writes the second copy. The clause is armed with a planted same-file pair (two units that share one file on purpose) that must read 1, so the zero above is a measurement and not a loop that cannot reach its class.
+
+**The seam, charged both ways.** proof-rules now reads 7/7: the exported families closed, the local families closed with M438's declared split, the same-file families closed with the plant proving reach, and the measure still refuses a wall. proof-i18n's own vacuity census counts the new clause and credits it (its predicate carries the positive pin). tsc is clean; the one proof-i18n failure in the tree at the time of writing is the other session's in-flight state, verified by stashing this unit's change and re-running.
+
+**Still outstanding.** The rule census now measures all three extents — exported, local, same-file — and the body-extraction bug is fixed. What it does not do is read **multi-statement** bodies: M417's conservative first-statement reading is still the rule for brace bodies, so a rule duplicated in full but spelled with a different first line would still hide. Reading whole brace bodies is the next extension, and it is the same shape of hole as the other three.
+
 ### M442 — the census read a stretch of the file as a body, and the byte-identical twin behind it
 
 M438 extended the rule census to local bodies and declared the layer closed. This unit is the first family it could not see, found by fixing how it reads a body. `bodyOf` decided a unit's shape by looking for a `{` on the body's first line — but a **concise arrow whose body carries an object literal** (`=> formatDate(…, { month: "short", … })`) has a `{` on that line that is not the function's brace, so the extractor entered brace-matching from inside the statement and ran to a **distant close brace**: the unit's "body" was a stretch of the file, its token count was garbage, and it could never pair with its twin. The census was blind exactly where a body was most likely to carry options.
@@ -7105,7 +7115,51 @@ The fix is one sentence of shape: the extraction match knows whether it consumed
 
 **Still outstanding.** The rule census now reads local bodies correctly, but it still skips **same-file** pairs by design (M438's choice) — that class hides copies like the tempo/press band words, which the concurrent chip work converged onto `rowText.ts`'s `levelWord` before this unit landed; a same-file clause is the obvious next extension. The body-extraction fix is worth remembering as the third shape of the M387/M420 lesson: a census charges the shapes its author could think of — here not a dialect of the rule, but a dialect of the **body** the rule was read from.
 
-### M439 — the sign of a difference, everywhere it is asked: the copies the door did not reach
+### M441 - the app's chip is written once: the palette, and the colours the domain no longer names
+
+**The defect.** A chip is the app's smallest coloured badge - a border, a wash and a word, all of
+one colour - and the same chips were spelled out over and over:
+
+- the **load module's four zone chips**, the **news module's three certainty chips**, the **review
+  screen's three kind chips** and the **achievements screen's three tier chips** each wrote class
+  strings that were, class for class, the same chip - so a caution could be one colour on the
+  dashboard and another on the review page, and moving a chip off its colour in one place would
+  have left the others disagreeing about what it looks like;
+- the **muted chip** (`border-border text-muted-foreground`) was written out five times, in four
+  files;
+- the chip an **option** wears when you have **picked** it (`border-primary bg-primary/10
+  text-primary`) was written out **sixteen times**, in nine screens, each one a copy of the rest;
+- the **offline notice**'s info chip was written out in three files.
+
+**The fold.** The chips are one table now: `ui/primitives.tsx`'s `CHIP_CLASS` - five tone chips
+(success, warning, primary, destructive, info), the two muted chips, the option's two states and the
+filter chip's two states - and the load zone's map (`ZONE_CLASS`) rides it. The colours left the
+**domain**: `domain/load.ts`'s `ZONE_TONE` and `domain/newsImpact.ts`'s `CERTAINTY_TONE` are gone,
+because a domain module that hands a screen a Tailwind class string knows the app's colours and can
+disagree with the UI about them. The domain still says what a zone **means** and how certain a read
+is; the UI says what it **wears**.
+
+**The seam, charged both ways.** `scripts/proof-chips.mjs` is the census. It reads every quoted
+class string in the app, keeps the ones that carry a border colour and a word colour, and charges
+three shapes: the **tone chip** (a border, a wash and a word of one colour), the **muted chip** (the
+border colour and the muted word) and the **option at rest** (muted words, and a border that
+appears when you point at them). The rule is one sentence: *a chip written twice lives in the
+palette, and a chip written once is its screen's own.* The reader is armed by planted chips - one of
+each shape, and two shapes that are not chips - so the census is not empty and each shape is
+measured rather than assumed. It also pins the two things the fold had to keep: the palette holds
+exactly the eleven classes the app wore, and the domain names no chip at all (a planted domain
+module that carries one reads 1, so the zero there is a measurement and not a blind spot). The file
+passes 8/8. `proof-zone-tone` was rewritten to the door's new home and keeps its old clauses - one
+declaration, three consumers that spread it, the four classes every screen renders, and the pin
+that the /load banner's `none` still carries a wash the other two do not - 8/8.
+
+**Still outstanding.** The **badge** family is not charged: a badge is a border and a word of one
+colour with **no wash** (`border-success/40 text-success`, written out in five files, and
+`border-warning/40 text-warning`, in seven more), and it is the next family to fold. And the
+census charges the shapes its author could name: a chip written with a wash of a second colour, or
+with a border the theme does not define, is none of these three shapes and would pass uncharged.
+
+### M439 - the sign of a difference, everywhere it is asked: the copies the door did not reach
 
 **The defect.** M426 closed the door that says *which way* a difference points, and left the copies behind. Four places still asked the question by themselves:
 
@@ -11220,6 +11274,7 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M372 — nineteen one-decimal display strings across eleven files ride the new fmt1 door, parseFloat and conditional decimals stay pinned, fmt0 counted as blind spot
 - M373 — three integer display strings ride the new fmt0 door, and proof-fmt1 charges them former
 - M392 — fix: the censuses my M384-M391 conversions blinded: restored green, with the walker, the rng invariant and two vacuity plants (the commit that carried this number without naming it)
+- M440 — the date-and-time door and the body extractor behind it, renumbered to M442 before it landed (the commit that carried this number without naming it)
 
 <!-- /gaps -->
 

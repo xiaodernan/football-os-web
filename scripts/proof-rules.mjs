@@ -219,5 +219,33 @@ ok(`no two LOCAL bodies are the same rule wearing two names (${localUnits.length
   localUndeclared.length === 0 && localStale.length === 0 && pLocal === 1,
   `undeclared: ${localUndeclared.join(", ")}; stale: ${localStale.join(", ")}`);
 
+// --- 7. M443: the same rule inside ONE file — the class both clauses above skip. M241's byDeltaDesc
+// --- was two byte-identical comparators in one module, and the tempo/press band words were two
+// --- identical rules on adjacent lines of ManagerOS: one author, one sitting, no cross-file signal at
+// --- all. Both clauses above skip same-file pairs by design, so the class gets its own clause here —
+// --- with the same splits mechanism, so a deliberate pair is declared rather than silently charged.
+const sameFilePairs = [];
+for (let i = 0; i < allUnits.length; i++) {
+  for (let j = i + 1; j < allUnits.length; j++) {
+    if (allUnits[i].f !== allUnits[j].f) continue;
+    if (sameRule(allUnits[i].tk, allUnits[j].tk)) sameFilePairs.push([allUnits[i], allUnits[j]]);
+  }
+}
+const SAME_FILE_SPLITS = {};
+const sfUndeclared = sameFilePairs
+  .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)
+  .filter((k) => !(k in SAME_FILE_SPLITS));
+const sfStale = Object.keys(SAME_FILE_SPLITS).filter((k) => !sameFilePairs.some(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}` === k));
+// The reader is armed: a planted SAME-FILE pair that IS the same rule is charged — the zero above must
+// be a measurement, not a class the loop cannot reach (the two planted units share one file on purpose).
+const pSameFile = (() => {
+  const a = { f: "planted.ts", name: "one", tk: tokenize("const a = list.filter((x) => x.on).length;") };
+  const b = { f: "planted.ts", name: "two", tk: tokenize("const b = rows.filter((y) => y.up).length;") };
+  return sameRule(a.tk, b.tk) ? 1 : 0;
+})();
+ok(`no two bodies in the SAME file are the same rule wearing two names (${sameFilePairs.length} pair(s) [${sameFilePairs.slice(0, 3).map(([a, b]) => `${a.f.split("/").pop()}:${a.name} ~ ${b.name}`).join(", ")}], ${sfUndeclared.length} undeclared, ${sfStale.length} stale; a planted same-file pair reads ${pSameFile})`,
+  sfUndeclared.length === 0 && sfStale.length === 0 && pSameFile === 1,
+  `undeclared: ${sfUndeclared.join(", ")}; stale: ${sfStale.join(", ")}`);
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);
