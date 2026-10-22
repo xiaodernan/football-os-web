@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M436
+Work ships one milestone per commit and is currently at M438
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,36 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M438 — the rule census, extended to the bodies it could not see: the local helpers
+
+**The defect.** M417's rule census reads **exported** bodies — a census of "no two exported bodies are the same rule wearing two names" — and M422 found a family it structurally could not see: *"one result credits one row"* was spelled in three **local** helpers, and a local copy of a door is exactly what that census was blind to. The app has **118 local bodies** against **52 exported** ones: more than twice as many rules live where the gate never looked.
+
+**The fix.** The same strict-alignment measure now runs over **every** named body — 170 of them, exported or not — and the local families are closed on the same terms as the exported ones.
+
+**The seam, charged both ways.** The new clause reads the local population and requires its families to be closed: **118** local bodies, **1** same-rule pair, **0** undeclared, **0** stale. That one pair is a **declared split**, and it is worth naming: the Film Room removes a clip by its `clipId` and the Learning Hub removes a record by its `id` — the same shape, two different contracts, and the measure cannot tell them apart because it renames identifiers (a clip and a record are not the same row). The reader is armed by a planted pair of local bodies, which reads 1, so the zero above is a measurement and not a blind spot. The file passes 6/6.
+
+**What the extension found.** Nothing new — and that is the finding: after M422's fold, the app's local bodies are already converged under this measure. The value of the extension is reach, not a family: **a local copy of a rule written tomorrow is caught tomorrow**, in a place the census did not look before, and the one pair the measure does pair is named rather than quietly excused.
+
+**Still outstanding.** The measure pairs bodies that are the same rule **token for token**, so the family M422 found is still invisible to it: four copies of the same rule, each shaped differently, are four different token sequences. That is M420's lesson again — *a census charges the shapes its author could think of* — and the honest measure there is not the text but the **decision**: a comparison that answers the same question twice, whatever it is compared against. No gate in the app measures that yet, and the two-arm and three-arm sign censuses are the closest thing to it.
+
+### M437 — the working tree is the app's tree: the neighbours go, and the root's files are named
+
+**The promise M423 made and did not keep.** That unit gave the tree **one rule** — a hidden directory is not shipped, a directory carrying its own `.git` is another repository — and it ended by saying what the next unit had to do: *"decide what the working tree is **for** — the app, the clone, or the historical planes — and remove the ones that are not it, and the `.gitignore` line is a promise the tree has not yet kept."* The tree had not kept it. The root still carried:
+
+- **thirteen scratch planes** — `.m225-plane`, `.m228ref`, `.m230-mine`, `.m248-plane` … `.m326-arm1` — full copies of the tree left by experiments between **28 September and 9 October**;
+- a **stale clone of the repository** — `football-os/`, whose own `HEAD` was **M422** while the app was at M436;
+- a **Chinese-named twin** of it, `足球-os/`, holding two scratch files from M419; and
+- a **stray text file** at the root — 45 KB, the original task brief in a "New Text Document" that
+  no program had read since 22 September.
+
+**The fix.** The tree is the app's tree now: the planes, the clone, the twin and the stray are gone (the brief is preserved outside the repository, not deleted), and the rule covers the root's **files** as well as its directories.
+
+**The seam, charged both ways.** `proof-app-tree` gained the file reading the rule could not do: **every visible file at the root is one the app names** — nine of them, none stray, none missing — and the list is pinned, so a file added to the root without a line in the proof reddens. The clone clause became a **plant** (a real clone with its own `.git`, in a real tree, beside a real app module), which is a stronger claim than the case that was there once: the rule is exercised on a neighbour that exists rather than on one that existed. The file passes 12/12.
+
+**What is left, and why.** The other lane's **hidden notes** (`.m226-*.md`, `.m227-*.txt` — two weeks old, and not this lane's to delete) stay in the root: they are hidden, the rule tolerates a hidden neighbour the way it tolerates a hidden directory, and a tree that carries a hidden scratch file is a normal thing to be. What M437 removes is the other kind: the visible, the enormous and the copied.
+
+**Still outstanding.** The rule settles what the tree *is*; it does not settle what the app is *made of* — the ten directories and their 98 modules are pinned, but a file that arrives inside one of them is a different question, and the census that would ask it does not exist yet.
 
 ### M436 — the last three mirrors: a vocabulary is a type, and the type is derived from the list
 

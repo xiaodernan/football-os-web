@@ -38,7 +38,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { isHiddenName, carriesOwnRepo, skipReason, appDirsIn, walkApp } from "./lib/appTree.mjs";
+import { isHiddenName, carriesOwnRepo, skipReason, appDirsIn, appFilesIn, walkApp } from "./lib/appTree.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -113,11 +113,21 @@ ok(`the app is the ten directories it is made of, and they hold ${appModules} mo
   appModules === APP_MODULE_PIN && Object.keys(byDir).length === APP_DIRS.length);
 
 // The neighbour that caused this: a clone of this repository, sitting in the root, carrying its
-// own copy of the app. The rule says it is not the app, and the population does not move.
-const cloneBeside = walkApp(root, { dirs: null, notApp: ["node_modules", "dist", "dev", "scripts"], exts: [".ts", ".tsx"] });
-const cloneModules = cloneBeside.filter((f) => f.includes(`${"football-os"}/`)).length;
-ok(`a clone of the app sitting beside the app does not join its population (${cloneModules} of the clone's modules in the app's ${appModules}, the clone carries ${readdirSync(join(root, "football-os"), { withFileTypes: true }).filter((e) => e.isDirectory()).length} directories of its own)`,
-  cloneModules === 0);
+// own copy of the app. M437 removed the clone the milestone found, so the case is PLANTED now —
+// and a planted case is the stronger claim, because the rule is exercised on a neighbour that is
+// really there rather than on one that was there once.
+const cloneTree = mkdtempSync(join(tmpdir(), "app-tree-clone-"));
+mkdirSync(join(cloneTree, "domain"), { recursive: true });
+mkdirSync(join(cloneTree, "clone-of-us", ".git"), { recursive: true });
+writeFileSync(join(cloneTree, "domain", "real.ts"), "export const real = 1;\n");
+writeFileSync(join(cloneTree, "clone-of-us", "copy.ts"), "export const copy = 1;\n");
+const cloneWalk = walkApp(cloneTree, { dirs: null, notApp: ["node_modules"], exts: [".ts", ".tsx"] })
+  .map((f) => f.replace(/\\/g, "/"));
+const cloneModules = cloneWalk.filter((f) => f.includes("clone-of-us/")).length;
+const cloneReal = cloneWalk.filter((f) => f.includes("domain/")).length;
+rmSync(cloneTree, { recursive: true, force: true });
+ok(`a clone of the app sitting beside the app does not join its population (${cloneModules} of the clone's modules in the walk's ${cloneReal} app module(s))`,
+  cloneModules === 0 && cloneReal === 1);
 
 // ---------------------------------------------------------------------------
 // 3 · the gates read ONE rule
@@ -160,6 +170,37 @@ ok(`every proof that reads the repository's top-level directories imports the ru
 // ---------------------------------------------------------------------------
 // 4 · the repository points at no other repository
 // ---------------------------------------------------------------------------
+// M437: the root's FILES are the app's too. The rule above settles which DIRECTORIES are the
+// app's; a file the app does not name is a neighbour's, and a visible one is a stray in the tree
+// — the shape the census could not see, because it read directories only. The app's own files are
+// named here, and the list is pinned: a file added to the root without a line here is a stray.
+const APP_ROOT_FILES = [
+  "components.json",
+  "index.html",
+  "package-lock.json",
+  "package.json",
+  "postcss.config.mjs",
+  "PROVENANCE.md",
+  "README.md",
+  "tsconfig.json",
+  "vite.config.ts",
+];
+const rootFiles = appFilesIn(root);
+const strayFiles = rootFiles.filter((f) => !APP_ROOT_FILES.includes(f));
+const missingFiles = APP_ROOT_FILES.filter((f) => !rootFiles.includes(f));
+// The reader is armed: a file the app does not name is a stray, read in a planted root.
+const pStray = (() => {
+  const planted = mkdtempSync(join(tmpdir(), "app-tree-files-"));
+  writeFileSync(join(planted, "stray.txt"), "not the app's\n");
+  writeFileSync(join(planted, "README.md"), "the app's\n");
+  const read = appFilesIn(planted).filter((f) => !APP_ROOT_FILES.includes(f));
+  rmSync(planted, { recursive: true, force: true });
+  return read.length;
+})();
+ok(`every visible file at the root is one the app names (${rootFiles.length} visible file(s), ${strayFiles.length} stray [${strayFiles.join(", ")}], ${missingFiles.length} named but absent [${missingFiles.join(", ")}]; a planted stray reads ${pStray})`,
+  strayFiles.length === 0 && missingFiles.length === 0 && rootFiles.length === APP_ROOT_FILES.length && pStray === 1,
+  `stray: ${strayFiles.join(", ")}; absent: ${missingFiles.join(", ")}`);
+
 /** The paths the index records as a pointer to another repository (mode 160000). */
 const gitlinksIn = (cwd) => {
   let out = "";

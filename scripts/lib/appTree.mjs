@@ -56,6 +56,17 @@ export const appDirsIn = (root, { notApp = [] } = {}) =>
     .map((e) => e.name);
 
 /**
+ * The root's FILES that are the app's. A file is the app's when the app NAMES it (the list is
+ * in proof-app-tree, which pins it), and a file the app does not name is a neighbour's — the
+ * ledger's own scratch notes, mostly, which are hidden and are skipped the way a hidden
+ * directory is.
+ */
+export const appFilesIn = (root, { notApp = [] } = {}) =>
+  readdirSync(root, { withFileTypes: true })
+    .filter((e) => e.isFile() && !isHiddenName(e.name) && !notApp.includes(e.name))
+    .map((e) => e.name);
+
+/**
  * Every file under the app, recursively, as absolute paths.
  *
  * `dirs` names the directories to walk; leave it unset to walk the whole root (which is what the
