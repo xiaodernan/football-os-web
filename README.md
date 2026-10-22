@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M443
+Work ships one milestone per commit and is currently at M444
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,20 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M444 — the census reads whole bodies now, and the context guard was hiding in its blind spot
+
+M443 closed the same-file extent. This unit is the last of the three holes in the rule census's reach, and it is the one M417 chose on purpose: brace bodies were read **first-statement only**, conservatively, so a rule whose duplicate spelled a different first line could never pair. The full-body probe over the tree reads 410 named units and finds exactly four pairs in two families — and one of them has been sitting in the codebase since the first screen.
+
+**The context guard, three times.** `useRouter`, `useTheme` and `useOs` each spelled the same rule — read the context, throw the provider's diagnostic when it is missing, return the value — identical from the second statement on, so no first-statement reading could pair them. `requireContext(ctx, message)` in `lib/context.ts` is the door: not a hook itself (it calls no React API), each hook keeps its own message, and the three bodies collapse to one line each. The door is a new app module, and four population pins across the suite (proof-storage, proof-i18n, proof-app-tree, proof-coverage) reddened the moment it landed — the pins doing exactly the job M248 built them for, paid in the same commit.
+
+**The overlay pair, declared.** The same probe pairs `DialogOverlay` with `SheetOverlay` — the vendor's own overlay wrapper, one per Radix primitive, sharing the template's backdrop classes. That is a deliberate split, not a defect, and it is now declared in the census's split map rather than silently charged.
+
+**And one artifact retired.** M438's declared split — the film room's clip removal against the learning hub's record removal — went **stale** under whole bodies: the film room's removal carries a second statement (the selection cleanup), so the two never aligned in the first place. The pair was an artifact of the first-statement reading, and the stale check is what caught it. A gate that can retire its own exceptions is a gate that is reading.
+
+**The seam, charged both ways.** proof-rules reads 7/7: exported families closed, local families closed with one declared split, same-file families closed with a planted pair proving reach, the measure still refuses a wall, and the retired split is gone from the map (leaving it would have reddened the stale check). tsc is clean; proof-storage 61/61, proof-app-tree 12/12 and proof-coverage 26/26 all pass with the new pins; proof-i18n passes everything but the surgery scan, which is the other session's in-flight state (verified by stashing this unit's files).
+
+**Still outstanding.** The census now measures every named body whole, in every extent. What it cannot see is a rule duplicated **inside** a larger body without being factored into a named unit — that class has no mechanical detector here, and it is the one the door milestones (M384–M422) closed by hand, family by family. A fresh probe for *unnamed* inline blocks — the shape the line-level census used to find — is the honest next extension.
 
 ### M443 — the rule census learned to read one file at a time, and the class that produced byDeltaDesc
 

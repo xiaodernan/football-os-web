@@ -102,7 +102,9 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // 2 · the app's own population, with a clone of the app sitting beside it
 // ---------------------------------------------------------------------------
 const APP_DIRS = ["components", "data", "domain", "features", "functions", "i18n", "lib", "src", "store", "ui"];
-const APP_MODULE_PIN = 98;
+// M444: 98 -> 99. lib/context.ts (the context-guard door) is a new app module; the pin pays in the
+// same commit, which is what makes a lost directory redden instead of shrinking quietly.
+const APP_MODULE_PIN = 99;
 const byDir = {};
 for (const d of APP_DIRS) {
   const n = walkApp(root, { dirs: [d], exts: [".ts", ".tsx"] }).length;

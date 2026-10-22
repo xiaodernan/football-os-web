@@ -8,6 +8,7 @@ import {
   type ReactNode,
   type MouseEvent,
 } from "react";
+import { requireContext } from "./context";
 
 interface RouterValue {
   path: string;
@@ -55,9 +56,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
 }
 
 export function useRouter(): RouterValue {
-  const ctx = useContext(RouterContext);
-  if (!ctx) throw new Error("useRouter must be used within RouterProvider");
-  return ctx;
+  return requireContext(useContext(RouterContext), "useRouter must be used within RouterProvider");
 }
 
 /** A hash is typed by a visitor, so any segment may be a malformed escape (`#/players/%`).

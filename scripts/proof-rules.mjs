@@ -70,11 +70,10 @@ const raw = Object.fromEntries(appFiles.map((f) => [f, readFileSync(f, "utf8")])
 
 const EXPORT = /export\s+(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)[^{]*\{|export\s+const\s+(\w+)\s*=\s*(?:\(([^)]*)|(\w+))\s*(?::[^=]+)?=>\s*\{?/g;
 // The unit's body: to the matching close brace, or to the end of the statement for a concise arrow.
-// M441: the match tells us which shape the unit has — it consumed the function's `{` or it did not.
-// A concise arrow whose body line carries an object literal (`=> formatDate(…, { … })`) used to enter
-// the brace path below and run to a DISTANT close brace, so its "body" was a stretch of the file and
-// the unit could never pair with its twin — that is how Details' and FootballWorld's byte-identical
-// fmtDateTime hid from this census. A brace body keeps M417's conservative first-statement reading.
+// M444: whole brace bodies. M417's conservative first-statement reading hid every rule whose
+// duplicate spelled a different first line — the three context guards (useRouter, useTheme, useOs)
+// were identical from the second statement on, and no first-statement census could pair them. A
+// brace body is now matched to its close, the way a concise arrow always was.
 const bodyOf = (s, start, hadBrace) => {
   if (!hadBrace) {
     let depth = 0, inStr = null, i = start;
@@ -88,12 +87,6 @@ const bodyOf = (s, start, hadBrace) => {
       i++;
     }
     return s.slice(start, i);
-  }
-  const nl = s.indexOf("\n", start);
-  const head = s.slice(start, nl < 0 ? s.length : nl);
-  if (!head.includes("{")) {
-    const semi = s.indexOf(";", start);
-    return s.slice(start, semi < 0 ? s.length : semi);
   }
   let depth = 1, i = start;
   while (i < s.length && depth > 0) { if (s[i] === "{") depth++; else if (s[i] === "}") depth--; i++; }
@@ -201,9 +194,15 @@ for (let i = 0; i < localUnits.length; i++) {
     if (sameRule(localUnits[i].tk, localUnits[j].tk)) localPairs.push([localUnits[i], localUnits[j]]);
   }
 }
+// M444 removed the remove/undo entry this map carried: with whole bodies, the film room's removal
+// (a filter PLUS the selection cleanup on the next statement) no longer aligns with the learning
+// hub's one-line removal — the pair was an artifact of the first-statement reading, never a real
+// duplicate. The stale check caught it, which is the check doing its job.
 const LOCAL_SPLITS = {
-  "features/film/FilmRoom.tsx:remove|features/learn/LearnHub.tsx:undo":
-    "two removals of a row by its own key — a film clip by its clipId, a learning record by its id: the same shape, two different contracts",
+  // M444: surfaced by the whole-body reading — the vendor's own overlay wrapper, one per Radix
+  // primitive. The backdrop classes are the shadcn template's, the components stay separate.
+  "components/ui/dialog.tsx:DialogOverlay|components/ui/sheet.tsx:SheetOverlay":
+    "two Radix overlay wrappers — dialog and sheet are different primitives and the shared backdrop classes are the vendor template's own, so the components stay separate",
 };
 const localUndeclared = localPairs
   .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)

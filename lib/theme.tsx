@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { THEME_KEY, browserStore, writeJson } from "@/domain/localData";
+import { requireContext } from "./context";
 
 type Theme = "dark" | "light";
 const STORAGE_KEY = THEME_KEY;
@@ -51,7 +52,5 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 }
 
 export function useTheme(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
-  return ctx;
+  return requireContext(useContext(ThemeContext), "useTheme must be used within ThemeProvider");
 }

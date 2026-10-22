@@ -86,7 +86,9 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // is `APP_FILES.every(...)` — on an empty population `every` answers true, so a walk that lost a
 // directory would have produced a green "newline counts survive on all 0 app files". The pin is
 // what makes that sentence mean something.
-const APP_FILES_PIN = 94;
+// M444: 94 -> 95. lib/context.ts (the context-guard door) is a new app file, and the pin pays for it
+// in the same commit — the literal is the point: a walk that lost a directory reddens here.
+const APP_FILES_PIN = 95;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */

@@ -28,6 +28,7 @@ import { countGoalTitle, repairGoalTitles } from "@/domain/goals";
 import { coachMemory, profileMemory, repairMemoryTexts, trainingMemory } from "@/domain/memory";
 import { normalizeGoalChoice } from "@/domain/onboarding";
 import type { RowText } from "@/domain/rowText";
+import { requireContext } from "@/lib/context";
 import { FAVORITES, type FavoriteKind } from "@/domain/types";
 import { buildLoad } from "@/domain/load";
 import { dayKey } from "@/domain/history";
@@ -370,9 +371,7 @@ function aggregateFocus(sessions: TrainingSession[]): { focus: string; completed
 }
 
 export function useOs(): OsContext {
-  const ctx = useContext(Ctx);
-  if (!ctx) throw new Error("useOs must be used within OsProvider");
-  return ctx;
+  return requireContext(useContext(Ctx), "useOs must be used within OsProvider");
 }
 
 export { levelInfo };

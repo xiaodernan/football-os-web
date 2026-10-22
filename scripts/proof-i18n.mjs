@@ -492,9 +492,12 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // narrowing walk right up to the day it doesn't, and then the honest repair is to lower the floor,
 // which is exactly the move this file bans elsewhere. A literal makes the next deletion pay here,
 // in the same commit, and prints measured-vs-pin when it does.
-const APP_SRC_PIN = 97;
+// M444: 97 -> 98. lib/context.ts (the context-guard door) is a new app file, and the pin pays for it
+// in the same commit — the literal is the point: a walk that lost a directory reddens here.
+const APP_SRC_PIN = 98;
 const TSX_PIN = 50;
-const SRC_PIN = 100;
+// M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
+const SRC_PIN = 101;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
