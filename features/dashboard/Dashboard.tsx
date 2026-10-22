@@ -21,7 +21,7 @@ import { summarizeLearn } from "@/domain/learn";
 import { plannedSessions } from "@/domain/training";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords, usePersonalNews } from "@/lib/hooks";
-import { Panel, SectionTitle, Crest, PositionTag, AttributeBar, EmptyState, CHIP_CLASS, ZONE_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, PositionTag, AttributeBar, EmptyState, CHIP_CLASS, ZONE_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -100,7 +100,7 @@ export function Dashboard() {
       {live.length > 0 && (
         <Panel className="p-0">
           <div className="flex items-center gap-2 border-b px-4 py-2 text-xs font-semibold uppercase tracking-widest text-destructive">
-            <span className="fo-live-dot h-2 w-2 rounded-full bg-destructive" /> {t("dash.live")}
+            <span className={cn("fo-live-dot h-2 w-2 rounded-full", BAR_FILL.bad)} /> {t("dash.live")}
             {/* M294: the strip shows 4 of the world's in-play matches; the count and the
                 door to the full LIVE tab make the other 45 reachable from here. */}
             <Link to="/matches?status=LIVE" className="ml-auto normal-case tracking-normal hover:underline">

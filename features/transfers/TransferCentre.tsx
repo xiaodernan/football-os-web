@@ -7,7 +7,7 @@ import { transferRumours, clubOf, availableKinds, type RumourLink } from "@/doma
 import { newsKindLabel, rowLine } from "@/domain/rowText";
 import { sum } from "@/domain/attributes";
 import type { NewsArticle } from "@/domain/types";
-import { Panel, Crest, PositionTag, EmptyState, StatTile, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, Crest, PositionTag, EmptyState, StatTile, DemoBadge, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn, pctLabel, ABSENT, fmtMoney, signed } from "@/lib/utils";
 
@@ -146,7 +146,7 @@ function RumourCard({ r, showFit }: { r: RumourLink; showFit: boolean }) {
             </span>
           </div>
           <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary">
-            <div className={cn("h-full rounded-full", r.isTarget ? "bg-success" : "bg-info")} style={{ width: `${r.fitScore}%` }} />
+            <div className={cn("h-full rounded-full", r.isTarget ? BAR_FILL.good : BAR_FILL.info)} style={{ width: `${r.fitScore}%` }} />
           </div>
         </div>
       )}

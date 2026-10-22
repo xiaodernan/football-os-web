@@ -7,7 +7,7 @@ import { SUGGESTED_ASKS } from "@/data/ai";
 import { rowLine, asRowText, searchKindLabel, type RowText } from "@/domain/rowText";
 import type { SearchKind } from "@/domain/types";
 import { AI_CHAT_KEY } from "@/domain/localData";
-import { Panel, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -138,7 +138,7 @@ function Chat() {
             ) : null}
           </div>
         ))}
-        {busy && <div className="flex items-center gap-2 text-sm text-muted-foreground"><span className="inline-block h-2 w-2 animate-ping rounded-full bg-primary" /> {t("ai.retrieving")}</div>}
+        {busy && <div className="flex items-center gap-2 text-sm text-muted-foreground"><span className={cn("inline-block h-2 w-2 animate-ping rounded-full", BAR_FILL.progress)} /> {t("ai.retrieving")}</div>}
       </div>
       <div className="border-t p-3">
         {log.length > 0 && <button onClick={() => setLog([])} className="mb-2 text-xs text-muted-foreground hover:text-foreground">{t("ai.clear")}</button>}

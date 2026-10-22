@@ -4,7 +4,7 @@ import { useI18n, formatDate } from "@/i18n";
 import { footballProvider, getClub, getCompetition, fixtureForecast } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
-import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { cn, clamp, fmt2, ABSENT, SEPARATOR, signed, pct } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
@@ -30,7 +30,7 @@ function FormPips({ form }: { form: FormLetter[] }) {
           title={r}
           className={cn(
             "grid h-4 w-4 place-items-center rounded-[3px] text-[9px] font-bold text-white",
-            r === "W" ? "bg-success" : r === "L" ? "bg-destructive" : "bg-muted-foreground/60",
+            r === "W" ? BAR_FILL.good : r === "L" ? BAR_FILL.bad : "bg-muted-foreground/60",
           )}
         >
           {r}
@@ -42,7 +42,7 @@ function FormPips({ form }: { form: FormLetter[] }) {
 
 function RatingBar({ label, value, better }: { label: string; value: number; better: "high" | "low" }) {
   const scale = clamp(value, 0, 2) / 2; // 0..2 → 0..100%
-  const tone = better === "high" ? "bg-info" : "bg-warning";
+  const tone = better === "high" ? BAR_FILL.info : BAR_FILL.low;
   return (
     <div className="flex items-center gap-2 text-xs">
       <span className="w-16 shrink-0 text-muted-foreground">{label}</span>
@@ -259,9 +259,9 @@ export function DataRoom() {
                     </span>
                   </div>
                   <div className="mt-2 flex h-2 w-full overflow-hidden rounded">
-                    <div className="bg-primary" style={{ width: `${f.homePct}%` }} />
+                    <div className={BAR_FILL.progress} style={{ width: `${f.homePct}%` }} />
                     <div className="bg-muted-foreground/40" style={{ width: `${f.drawPct}%` }} />
-                    <div className="bg-info" style={{ width: `${f.awayPct}%` }} />
+                    <div className={BAR_FILL.info} style={{ width: `${f.awayPct}%` }} />
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                     <span><span className="font-mono text-foreground">{f.homePct}%</span> {h?.short}</span>

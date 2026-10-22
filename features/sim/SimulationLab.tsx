@@ -6,7 +6,7 @@ import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/do
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine, tempoLevel, pressLevel } from "@/domain/rowText";
 import { clubInput } from "@/domain/career";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
@@ -193,7 +193,7 @@ const rows = [
           return (
             <div key={r.name}>
               <div className="flex justify-between text-[11px]"><span className="font-mono">{r.h}{r.unit}</span><span className="text-muted-foreground">{r.name}</span><span className="font-mono">{r.a}{r.unit}</span></div>
-              <div className="mt-0.5 flex h-1.5 overflow-hidden rounded bg-muted"><div className="bg-primary" style={{ width: pctOf(r.h, total) }} /><div className="flex-1 bg-muted-foreground/40" /></div>
+              <div className="mt-0.5 flex h-1.5 overflow-hidden rounded bg-muted"><div className={BAR_FILL.progress} style={{ width: pctOf(r.h, total) }} /><div className="flex-1 bg-muted-foreground/40" /></div>
             </div>
           );
         })}
@@ -217,9 +217,9 @@ function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
       </div>
       <div className="mt-3">
         <div className="flex h-3 w-full overflow-hidden rounded">
-          <div className="bg-primary" style={{ width: seg(prob.homeWinPct) }} />
+          <div className={BAR_FILL.progress} style={{ width: seg(prob.homeWinPct) }} />
           <div className="bg-muted-foreground/40" style={{ width: seg(prob.drawPct) }} />
-          <div className="bg-info" style={{ width: seg(prob.awayWinPct) }} />
+          <div className={BAR_FILL.info} style={{ width: seg(prob.awayWinPct) }} />
         </div>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
           <div><div className="truncate text-xs text-muted-foreground">{t("sim.teamWin", { team: prob.homeName })}</div><div className="font-mono font-semibold text-primary">{pctLabel(prob.homeWinPct)}</div></div>

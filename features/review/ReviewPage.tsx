@@ -11,7 +11,7 @@ import { VIDEO_KIND_KEY } from "@/data/video";
 import { attributeGoalTitle } from "@/domain/goals";
 import { useLearnRecords, useFilmClips } from "@/lib/hooks";
 import { DEMO_MODE } from "@/data/footballService";
-import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import type { TileTone } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
 import { Progress } from "@/components/ui/progress";
@@ -226,7 +226,7 @@ export function ReviewPage() {
                     <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                       <span>{t("rv.confidence")}</span>
                       <div className="h-1.5 flex-1 overflow-hidden rounded bg-muted">
-                        <div className="h-full bg-primary" style={{ width: `${review.recommendation.confidence}%` }} />
+                        <div className={cn("h-full", BAR_FILL.progress)} style={{ width: `${review.recommendation.confidence}%` }} />
                       </div>
                       <span className="font-mono">{review.recommendation.confidence}%</span>
                     </div>
@@ -261,7 +261,7 @@ export function ReviewPage() {
                             <span className="font-mono text-muted-foreground">×{f.sessions}</span>
                           </div>
                           <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
-                            <div className="h-full bg-primary" style={{ width: pctOf(f.sessions, max) }} />
+                            <div className={cn("h-full", BAR_FILL.progress)} style={{ width: pctOf(f.sessions, max) }} />
                           </div>
                         </div>
                       );
@@ -299,7 +299,7 @@ export function ReviewPage() {
                             </span>
                           </div>
                           <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
-                            <div className="h-full bg-primary" style={{ width: pctOf(k.perMinute, max) }} />
+                            <div className={cn("h-full", BAR_FILL.progress)} style={{ width: pctOf(k.perMinute, max) }} />
                           </div>
                         </div>
                       );

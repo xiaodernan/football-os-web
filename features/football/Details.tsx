@@ -29,7 +29,7 @@ import { playerDna } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
-import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -306,8 +306,8 @@ function CompareBars({ a, b }: { a: PlayerRef; b: PlayerRef }) {
               <span className="font-mono">{r.av}</span><span>{t(r.labelKey)}</span><span className="font-mono">{r.bv}</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="flex flex-1 justify-end"><div className={cn("h-2 rounded-l", aWin ? "bg-primary" : "bg-muted")} style={{ width: pctOf(r.av, r.max) }} /></div>
-              <div className="flex flex-1"><div className={cn("h-2 rounded-r", bWin ? "bg-primary" : "bg-muted")} style={{ width: pctOf(r.bv, r.max) }} /></div>
+              <div className="flex flex-1 justify-end"><div className={cn("h-2 rounded-l", aWin ? BAR_FILL.progress : "bg-muted")} style={{ width: pctOf(r.av, r.max) }} /></div>
+              <div className="flex flex-1"><div className={cn("h-2 rounded-r", bWin ? BAR_FILL.progress : "bg-muted")} style={{ width: pctOf(r.bv, r.max) }} /></div>
             </div>
           </div>
         );
@@ -439,7 +439,7 @@ function Ratio({ label, value, goodHigh = false }: { label: string; value: numbe
         <span className={cn("font-mono", good ? "text-success" : "text-destructive")}>{fmt2(value)}</span>
       </div>
       <div className="relative mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
-        <div className={cn("h-full", good ? "bg-success" : "bg-destructive")} style={{ width: `${pct}%` }} />
+        <div className={cn("h-full", good ? BAR_FILL.good : BAR_FILL.bad)} style={{ width: `${pct}%` }} />
         <div className="absolute inset-y-0 left-1/2 w-px bg-border" />
       </div>
     </div>
@@ -648,7 +648,7 @@ function StatCompare({ stats, home, away, ratings }: { stats: { home: MatchStats
           <div key={r.labelKey}>
             <div className="flex justify-between text-[11px]"><span className="font-mono">{fmt(r.h)}</span><span className="text-muted-foreground">{t(r.labelKey)}</span><span className="font-mono">{fmt(r.a)}</span></div>
             <div className="mt-0.5 flex h-1.5 overflow-hidden rounded bg-muted">
-              <div className="bg-primary" style={{ width: pctOf(r.h, total) }} />
+              <div className={BAR_FILL.progress} style={{ width: pctOf(r.h, total) }} />
               <div className="flex-1 bg-muted-foreground/40" />
             </div>
           </div>

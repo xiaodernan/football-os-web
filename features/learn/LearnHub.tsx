@@ -18,7 +18,7 @@ import {
   type Lesson,
   type Level,
 } from "@/domain/learn";
-import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { rowLine } from "@/domain/rowText";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,11 +127,11 @@ export function LearnHub() {
           <div className="mt-3 space-y-3">
             <div>
               <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t("learn.completed")}</span><span className="font-mono">{summary.completed}/{summary.totalLessons} · {summary.pct}%</span></div>
-              <div className="mt-1 h-1.5 overflow-hidden rounded bg-muted"><div className="h-full bg-primary transition-all" style={{ width: `${summary.pct}%` }} /></div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full transition-all", BAR_FILL.progress)} style={{ width: `${summary.pct}%` }} /></div>
             </div>
             <div>
               <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t("learn.quizPassed")}</span><span className="font-mono text-success">{summary.mastered}/{summary.totalLessons} · {summary.masteredPct}%</span></div>
-              <div className="mt-1 h-1.5 overflow-hidden rounded bg-muted"><div className="h-full bg-success transition-all" style={{ width: `${summary.masteredPct}%` }} /></div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full transition-all", BAR_FILL.good)} style={{ width: `${summary.masteredPct}%` }} /></div>
             </div>
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">

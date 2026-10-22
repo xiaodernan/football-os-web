@@ -30,7 +30,7 @@ import {
 } from "@/domain/career";
 import type { MatchProbability } from "@/domain/matchProbability";
 import { CAREER_KEY } from "@/domain/localData";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, TONE_CLASS, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, TONE_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
@@ -394,7 +394,7 @@ function Outlook({ career }: { career: CareerState }) {
           </div>
           <div className="mt-4">
             <div className="flex justify-between text-xs"><span className="text-muted-foreground">{t("mgr.titleChance")}</span><span className={cn("font-mono font-semibold", zoneTone)}>{pctLabel(o.titleChance)}</span></div>
-            <div className="mt-1 h-2 overflow-hidden rounded bg-muted"><div className="h-full bg-primary" style={{ width: `${Math.max(2, o.titleChance * 100)}%` }} /></div>
+            <div className="mt-1 h-2 overflow-hidden rounded bg-muted"><div className={cn("h-full", BAR_FILL.progress)} style={{ width: `${Math.max(2, o.titleChance * 100)}%` }} /></div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <Fact label={t("mgr.playedTotal")} value={`${o.played} / ${o.totalFixtures}`} />
@@ -423,7 +423,7 @@ function Outlook({ career }: { career: CareerState }) {
                     </span>
                     <span className={cn("font-mono text-xs", likely ? "text-destructive" : "text-muted-foreground")}>{pctLabel(r.beatUsChance)}</span>
                   </div>
-                  <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full", likely ? "bg-destructive" : "bg-primary/60")} style={{ width: `${Math.max(2, r.beatUsChance * 100)}%` }} /></div>
+                  <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full", likely ? BAR_FILL.bad : "bg-primary/60")} style={{ width: `${Math.max(2, r.beatUsChance * 100)}%` }} /></div>
                 </div>
               );
             })}
@@ -435,7 +435,7 @@ function Outlook({ career }: { career: CareerState }) {
         <Panel className="p-4">
           <SectionTitle title={t("common.confidence")} />
           <div className="mt-2 flex items-center gap-3">
-            <div className="h-2 flex-1 overflow-hidden rounded bg-muted"><div className="h-full bg-info" style={{ width: `${o.confidence}%` }} /></div>
+            <div className="h-2 flex-1 overflow-hidden rounded bg-muted"><div className={cn("h-full", BAR_FILL.info)} style={{ width: `${o.confidence}%` }} /></div>
             <span className="font-mono text-xs">{o.confidence}%</span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">{t("mgr.confidenceRise")}</p>
@@ -517,9 +517,9 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
               <DemoBadge />
             </div>
             <div className="mt-3 flex h-3 w-full overflow-hidden rounded">
-              <div className="bg-primary" style={{ width: `${ourWin * 100}%` }} />
+              <div className={BAR_FILL.progress} style={{ width: `${ourWin * 100}%` }} />
               <div className="bg-muted-foreground/40" style={{ width: `${odds.drawPct * 100}%` }} />
-              <div className="bg-info" style={{ width: `${theirWin * 100}%` }} />
+              <div className={BAR_FILL.info} style={{ width: `${theirWin * 100}%` }} />
             </div>
             <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
               <div><div className="text-xs text-muted-foreground">{t("mgr.usWin")}</div><div className="font-mono font-semibold text-primary">{pctLabel(ourWin)}</div></div>
@@ -534,7 +534,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
         <Panel className="p-4">
           <SectionTitle title={t("common.confidence")} />
           <div className="mt-2 flex items-center gap-3">
-            <div className="h-2 flex-1 overflow-hidden rounded bg-muted"><div className="h-full bg-info" style={{ width: `${p.confidence}%` }} /></div>
+            <div className="h-2 flex-1 overflow-hidden rounded bg-muted"><div className={cn("h-full", BAR_FILL.info)} style={{ width: `${p.confidence}%` }} /></div>
             <span className="font-mono text-xs">{p.confidence}%</span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">{t("mgr.strengthNote")}</p>

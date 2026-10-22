@@ -168,6 +168,20 @@ export const CHIP_CLASS = {
   solidSidebarPrimary: "bg-sidebar-primary text-sidebar-primary-foreground",
 } as const;
 
+// The BAR: the app's progress bar. Its FILL wears the colour of what the bar MEASURES — a
+// progress, a thing mastered, a confidence, a low figure, a bad one — and the tone is the MEANING.
+// This is the same split the delta map makes: the domain and the screen say WHAT the bar is, and
+// the UI says what that wears. The bar's own LAYOUT (its thickness, its rounding, its width)
+// stays at the screen that draws it; only the colour is the app's.
+export type BarTone = "progress" | "good" | "info" | "low" | "bad";
+export const BAR_FILL: Record<BarTone, string> = {
+  progress: "bg-primary",
+  good: "bg-success",
+  info: "bg-info",
+  low: "bg-warning",
+  bad: "bg-destructive",
+};
+
 // The PANEL: the app's own quiet box — a border and a wash of one of its quiet surfaces, with no
 // word of its own. A bare `border` IS the border colour in Tailwind (the width class with the
 // theme's border colour), so the panel's border rides with its wash and the reader can see it.

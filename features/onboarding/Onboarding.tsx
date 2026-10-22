@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {cn, ABSENT } from "@/lib/utils";
-import { Crest, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Crest, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 
 // The step rail. Keys live in a module-level table rather than inline in the JSX, where
 // any literal is read as a child of the element regardless of what it holds.
@@ -69,7 +69,7 @@ export function Onboarding() {
 
       <div className="mb-6 flex gap-1.5">
         {STEPS.map((s, i) => (
-          <div key={s.labelKey} title={t(s.labelKey)} className={cn("h-1 flex-1 rounded-full", i <= step ? "bg-primary" : "bg-secondary")} />
+          <div key={s.labelKey} title={t(s.labelKey)} className={cn("h-1 flex-1 rounded-full", i <= step ? BAR_FILL.progress : "bg-secondary")} />
         ))}
       </div>
 

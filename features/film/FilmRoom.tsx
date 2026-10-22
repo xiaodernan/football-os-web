@@ -10,7 +10,7 @@ import { deltaSign } from "@/domain/attributes";
 import { rowLine } from "@/domain/rowText";
 import { loadFilmClips, saveFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { useOnline } from "@/lib/hooks";
-import { Panel, SectionTitle, EmptyState, LoadingBlock, ErrorState, DemoBadge, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, LoadingBlock, ErrorState, DemoBadge, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -329,7 +329,7 @@ export function FilmRoom() {
                         <span className="font-mono text-muted-foreground">{fmt2(k.perMinute)} · ×{k.count}</span>
                       </div>
                       <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted">
-                        <div className="h-full bg-primary" style={{ width: `${Math.max(3, (k.perMinute / max) * 100)}%` }} />
+                        <div className={cn("h-full", BAR_FILL.progress)} style={{ width: `${Math.max(3, (k.perMinute / max) * 100)}%` }} />
                       </div>
                     </div>
                   );

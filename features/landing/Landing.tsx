@@ -4,7 +4,7 @@ import { useI18n } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { WORLD } from "@/data/footballSeed";
 import { trendingPlayers, getClub } from "@/data/footballService";
-import { Crest, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
+import { Crest, PANEL_CLASS, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
 // The six pillars, as ids only. Every word a pillar shows — its name and its one-line
@@ -39,7 +39,7 @@ export function Landing() {
         <div className="fo-grid absolute inset-0 opacity-60" />
         <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-16 text-center sm:pt-24">
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border bg-card/50 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-            <span className="fo-live-dot h-1.5 w-1.5 rounded-full bg-success" /> {t("landing.statLine", { players: WORLD.players.length, clubs: WORLD.clubs.length, matches: WORLD.matches.length })}
+            <span className={cn("fo-live-dot h-1.5 w-1.5 rounded-full", BAR_FILL.good)} /> {t("landing.statLine", { players: WORLD.players.length, clubs: WORLD.clubs.length, matches: WORLD.matches.length })}
           </div>
           <h1 className="text-5xl font-black leading-[0.95] tracking-tighter sm:text-7xl md:text-8xl">
             {t("landing.hero.1")}

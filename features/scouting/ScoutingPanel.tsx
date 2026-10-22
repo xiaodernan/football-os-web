@@ -20,7 +20,7 @@ import type { PlayerRef } from "@/domain/types";
 
 import { useI18n } from "@/i18n";
 import { bucketLabel, footLabel, positionLabel } from "@/domain/rowText";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, bestEdgeTone, worstEdgeTone, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, bestEdgeTone, worstEdgeTone, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
@@ -88,7 +88,7 @@ export function ScoutingPanel() {
             {profile.map((r) => (
               <div key={r.bucket}>
                 <div className="flex justify-between text-xs"><span className="font-medium">{bucketLabel(r.bucket, t)}</span><span className="text-muted-foreground">{t("scout.playersAvg", { count: r.count, avg: r.avg || ABSENT })}</span></div>
-                <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full rounded", r.count < 4 || r.avg < 74 ? "bg-warning" : "bg-success")} style={{ width: `${Math.min(100, (r.avg / 90) * 100)}%` }} /></div>
+                <div className="mt-0.5 h-1.5 overflow-hidden rounded bg-muted"><div className={cn("h-full rounded", r.count < 4 || r.avg < 74 ? BAR_FILL.low : BAR_FILL.good)} style={{ width: `${Math.min(100, (r.avg / 90) * 100)}%` }} /></div>
               </div>
             ))}
           </div>

@@ -6,7 +6,7 @@ import { useOs } from "@/store/useFootballOS";
 import { buildLoad, ZONE_LABEL, ZONE_LEGEND, type LoadZone } from "@/domain/load";
 import { rowLine } from "@/domain/rowText";
 import { DEMO_MODE } from "@/data/footballService";
-import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, CHIP_CLASS, ZONE_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, CHIP_CLASS, ZONE_CLASS, BAR_FILL } from "@/ui/primitives";
 import type { TileTone } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
@@ -116,7 +116,7 @@ export function LoadPage() {
                   <div key={w.weekStart} className="flex flex-1 flex-col items-center justify-end gap-1">
                     <span className="font-mono text-[10px] text-muted-foreground">{w.load || ""}</span>
                     <div
-                      className={cn("w-full rounded-t transition-all", w.sessions ? "bg-primary" : "bg-muted")}
+                      className={cn("w-full rounded-t transition-all", w.sessions ? BAR_FILL.progress : "bg-muted")}
                       style={{ height: `${Math.max(2, (w.load / maxWeek) * 100)}%` }}
                       title={`${w.sessions} ${t("ld.sessions")}`}
                     />
@@ -145,7 +145,7 @@ export function LoadPage() {
                     <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
                       <span>{t("ld.confidence")}</span>
                       <div className="h-1.5 flex-1 overflow-hidden rounded bg-muted">
-                        <div className="h-full bg-primary" style={{ width: `${load.recommendation.confidence}%` }} />
+                        <div className={cn("h-full", BAR_FILL.progress)} style={{ width: `${load.recommendation.confidence}%` }} />
                       </div>
                       <span className="font-mono">{load.recommendation.confidence}%</span>
                     </div>
