@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, matchRoute, useRouter } from "@/lib/router";
-import { fmtDateTime, useI18n, type Locale } from "@/i18n";
+import { formatDate, fmtDateTime, useI18n, type Locale } from "@/i18n";
 import { byOverall } from "@/domain/attributes";
 import {
   footballProvider,
