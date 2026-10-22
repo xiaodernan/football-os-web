@@ -7,7 +7,7 @@ import { SUGGESTED_ASKS } from "@/data/ai";
 import { rowLine, asRowText, searchKindLabel, type RowText } from "@/domain/rowText";
 import type { SearchKind } from "@/domain/types";
 import { AI_CHAT_KEY } from "@/domain/localData";
-import { Panel, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,7 +51,7 @@ export function AiStudio({ initialTab = "chat" }: { initialTab?: AiTab }) {
         </div>
         <div className="flex gap-1.5">
           {TABS.map((k) => (
-            <button key={k} onClick={() => { setTab(k); navigate(k === "chat" ? "/ai" : "/knowledge"); }} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === k ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
+            <button key={k} onClick={() => { setTab(k); navigate(k === "chat" ? "/ai" : "/knowledge"); }} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === k ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>
               {k === "chat" ? t("ai.tab.chat") : t("ai.tab.graph")}
             </button>
           ))}
@@ -104,7 +104,7 @@ function Chat() {
 
   return (
     <Panel className="flex h-[62vh] flex-col p-0">
-      {!online && <div className="border-b border-info/40 bg-info/10 px-4 py-2 text-xs text-info">{t("ai.offline")}</div>}
+      {!online && <div className={cn("border-b px-4 py-2 text-xs", CHIP_CLASS.info)}>{t("ai.offline")}</div>}
       <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto p-4">
         {log.length === 0 && (
           <div className="space-y-3">

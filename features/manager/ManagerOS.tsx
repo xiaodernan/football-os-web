@@ -30,7 +30,7 @@ import {
 } from "@/domain/career";
 import type { MatchProbability } from "@/domain/matchProbability";
 import { CAREER_KEY } from "@/domain/localData";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, TONE_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, TONE_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
@@ -103,7 +103,7 @@ export function ManagerOS() {
       <CareerHeader career={career} onPlay={play} onReset={() => { setCareer(null); setLast(null); }} />
       <div className="flex flex-wrap gap-1.5">
         {TABS.map((entry) => (
-          <button key={entry.id} onClick={() => setTab(entry.id)} className={cn("rounded-md border px-3 py-1.5 text-sm", tab === entry.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(entry.labelKey)}</button>
+          <button key={entry.id} onClick={() => setTab(entry.id)} className={cn("rounded-md border px-3 py-1.5 text-sm", tab === entry.id ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t(entry.labelKey)}</button>
         ))}
       </div>
 
@@ -287,7 +287,7 @@ function Transfers({ career, onBuy }: { career: CareerState; onBuy: (id: string)
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {BUCKETS.map((g) => (
-          <button key={g.code} onClick={() => setPos(g.code)} className={cn("rounded-md border px-2.5 py-1 text-xs", pos === g.code ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(g.labelKey)}</button>
+          <button key={g.code} onClick={() => setPos(g.code)} className={cn("rounded-md border px-2.5 py-1 text-xs", pos === g.code ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t(g.labelKey)}</button>
         ))}
       </div>
       <div className="mt-3 space-y-1.5">
@@ -566,7 +566,7 @@ function ClubPicker({ onStart }: { onStart: (clubId: string) => void }) {
         <SectionTitle title={t("mgr.chooseClub")} />
         <div className="mt-2 flex flex-wrap gap-1.5">
           {comps.map((c) => (
-            <button key={c.id} onClick={() => setCompId(c.id)} className={cn("rounded-md border px-2.5 py-1 text-xs", compId === c.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{c.name}</button>
+            <button key={c.id} onClick={() => setCompId(c.id)} className={cn("rounded-md border px-2.5 py-1 text-xs", compId === c.id ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{c.name}</button>
           ))}
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

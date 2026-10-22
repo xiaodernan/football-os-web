@@ -13,7 +13,7 @@ import {
   DEMO_ANCHOR_MS,
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
-import { buildLoad, ZONE_LABEL, ZONE_TONE, type LoadZone } from "@/domain/load";
+import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { newsKindLabel, newsTitle, rowLine } from "@/domain/rowText";
 import { overallRating, byDateDesc } from "@/domain/attributes";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -21,7 +21,7 @@ import { summarizeLearn } from "@/domain/learn";
 import { plannedSessions } from "@/domain/training";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords, usePersonalNews } from "@/lib/hooks";
-import { Panel, SectionTitle, Crest, PositionTag, AttributeBar, EmptyState } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, PositionTag, AttributeBar, EmptyState, CHIP_CLASS, ZONE_CLASS } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,8 +31,8 @@ import { Label } from "@/components/ui/label";
 import { cn, clamp, ABSENT, SEPARATOR, fmtMoney } from "@/lib/utils";
 
 const RECOVERY_TONE: Record<LoadZone, string> = {
-  none: "border-border text-muted-foreground",
-  ...ZONE_TONE,
+  none: CHIP_CLASS.muted,
+  ...ZONE_CLASS,
 };
 
 export function Dashboard() {
@@ -205,7 +205,7 @@ export function Dashboard() {
                   <div className="mt-1 text-[11px] text-muted-foreground">{t(`ach.desc.${growth.next.id}`)}</div>
                 </Link>
               ) : (
-                <Link to="/achievements" className="block rounded-lg border border-success/40 bg-success/10 p-3 text-sm text-success">
+                <Link to="/achievements" className={cn("block rounded-lg border p-3 text-sm", CHIP_CLASS.success)}>
                   {t("dash.allBadges")} →
                 </Link>
               )}
@@ -428,7 +428,7 @@ function CompleteQuick({ onDone }: { onDone: (rating: number) => void }) {
   const { navigate } = useRouter();
   if (done)
     return (
-      <div className="mt-3 rounded-lg border border-success/40 bg-success/10 p-2 text-xs text-success">
+      <div className={cn("mt-3 rounded-lg border p-2 text-xs", CHIP_CLASS.success)}>
         {t("dash.logged")} <button className="underline" onClick={() => navigate("/player/progress")}>{t("dash.viewProgress")}</button>
       </div>
     );

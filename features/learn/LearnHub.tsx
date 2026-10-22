@@ -18,7 +18,7 @@ import {
   type Lesson,
   type Level,
 } from "@/domain/learn";
-import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { rowLine } from "@/domain/rowText";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -173,7 +173,7 @@ export function LearnHub() {
 
       <div className="flex flex-wrap gap-1.5">
         {categories.map((c) => (
-          <button key={c} onClick={() => setCategory(c)} className={cn("rounded-md border px-2.5 py-1 text-xs", category === c ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{c === "All" ? t("learn.filterAll") : t(`learn.cat.${c}`)}</button>
+          <button key={c} onClick={() => setCategory(c)} className={cn("rounded-md border px-2.5 py-1 text-xs", category === c ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{c === "All" ? t("learn.filterAll") : t(`learn.cat.${c}`)}</button>
         ))}
       </div>
 

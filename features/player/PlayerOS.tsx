@@ -16,14 +16,14 @@ import {
 import { CATEGORY_ORDER } from "@/domain/types";
 import { computeDna } from "@/domain/playerDna";
 import { SUPPORTED_MINUTES, sessionIntensity, plannedSessions, type GrowthDelta } from "@/domain/training";
-import { buildLoad, ZONE_LABEL, ZONE_TONE, type LoadZone } from "@/domain/load";
+import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
 import { videoProvider, type VideoReport } from "@/data/video";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { FIXTURES_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { goalProgressPct, isValidGoalTarget } from "@/domain/goals";
 import { ageGroupLabel, goalLabel, phaseLabel, positionLabel, rowLine } from "@/domain/rowText";
 import { getClub } from "@/data/footballService";
-import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, CHIP_CLASS, ZONE_CLASS } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -209,8 +209,8 @@ function Coach() {
   const plan = state.plans.find((x) => x.id === planId) ?? null;
   const load = useMemo(() => buildLoad({ nowMs: Date.now(), sessions: state.sessions }), [state.sessions]);
   const LOAD_TONE: Record<LoadZone, string> = {
-    none: "border-border text-muted-foreground",
-    ...ZONE_TONE,
+    none: CHIP_CLASS.muted,
+    ...ZONE_CLASS,
   };
 
   const onBriefChange = (v: string) => {
@@ -255,7 +255,7 @@ function Coach() {
           <Label>{t("player.availableTime")}</Label>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {SUPPORTED_MINUTES.map((m) => (
-              <button key={m} onClick={() => setMinutes(m)} className={cn("rounded-md border px-2.5 py-1 text-xs", minutes === m ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
+              <button key={m} onClick={() => setMinutes(m)} className={cn("rounded-md border px-2.5 py-1 text-xs", minutes === m ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>
                 {m}′
               </button>
             ))}

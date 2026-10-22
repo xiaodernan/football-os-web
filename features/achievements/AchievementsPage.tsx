@@ -6,15 +6,17 @@ import { achievementInput, evaluateAchievements, summary, type AchievementStatus
 import { summarizeLearn } from "@/domain/learn";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords } from "@/lib/hooks";
-import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+// The tier's chip: the app's shared palette (M441). A tier wears the same three-class chip the
+// load zones and the review kinds wear, and the bronze tier wears the muted chip with its wash.
 const TONE: Record<Tier, string> = {
-  gold: "text-warning border-warning/40 bg-warning/10",
-  silver: "text-info border-info/40 bg-info/10",
-  bronze: "text-muted-foreground border-border bg-secondary/30",
+  gold: CHIP_CLASS.warning,
+  silver: CHIP_CLASS.info,
+  bronze: CHIP_CLASS.mutedSoft,
 };
 
 // `labelKey`, not `label`: these strings are dictionary keys the panel below

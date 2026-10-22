@@ -10,7 +10,7 @@ import { deltaSign } from "@/domain/attributes";
 import { rowLine } from "@/domain/rowText";
 import { loadFilmClips, saveFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { useOnline } from "@/lib/hooks";
-import { Panel, SectionTitle, EmptyState, LoadingBlock, ErrorState, DemoBadge, DELTA_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, LoadingBlock, ErrorState, DemoBadge, DELTA_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -164,7 +164,7 @@ export function FilmRoom() {
       </div>
 
       {!online && (
-        <div className="rounded-lg border border-info/40 bg-info/10 px-3 py-2 text-xs text-info">{t("film.offline")}</div>
+        <div className={cn("rounded-lg border px-3 py-2 text-xs", CHIP_CLASS.info)}>{t("film.offline")}</div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">

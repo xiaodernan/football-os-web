@@ -7,16 +7,19 @@ import { transferRumours, clubOf, availableKinds, type RumourLink } from "@/doma
 import { newsKindLabel, rowLine } from "@/domain/rowText";
 import { sum } from "@/domain/attributes";
 import type { NewsArticle } from "@/domain/types";
-import { Panel, Crest, PositionTag, EmptyState, StatTile, DemoBadge } from "@/ui/primitives";
+import { Panel, Crest, PositionTag, EmptyState, StatTile, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn, pctLabel, ABSENT, fmtMoney, signed } from "@/lib/utils";
 
+// The stance badge is a border and a word, with no wash — a different chip from the palette's
+// three-class tone chip, and its own shape on purpose (M441). The two neutral stances wear the
+// app's shared muted chip.
 const KIND_TONE: Record<NewsArticle["kind"], string> = {
   Rumor: "border-warning/50 text-warning",
   Reported: "border-info/50 text-info",
   Confirmed: "border-success/50 text-success",
-  Analysis: "border-border text-muted-foreground",
-  Opinion: "border-border text-muted-foreground",
+  Analysis: CHIP_CLASS.muted,
+  Opinion: CHIP_CLASS.muted,
 };
 
 export function TransferCentre() {
@@ -82,7 +85,7 @@ export function TransferCentre() {
             onClick={() => toggle(k)}
             className={cn(
               "rounded-full border px-3 py-1 text-xs transition-colors",
-              active.has(k) ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 text-muted-foreground hover:border-primary/30",
+              active.has(k) ? CHIP_CLASS.filterOn : CHIP_CLASS.filterOff,
             )}
           >
             {newsKindLabel(k, t)}

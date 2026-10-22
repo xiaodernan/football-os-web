@@ -3,18 +3,21 @@ import { toast } from "sonner";
 import { Link, useRouter } from "@/lib/router";
 import { formatDate, useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
-import { buildLoad, ZONE_LABEL, ZONE_LEGEND, ZONE_TONE, type LoadZone } from "@/domain/load";
+import { buildLoad, ZONE_LABEL, ZONE_LEGEND, type LoadZone } from "@/domain/load";
 import { rowLine } from "@/domain/rowText";
 import { DEMO_MODE } from "@/data/footballService";
-import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, CHIP_CLASS, ZONE_CLASS } from "@/ui/primitives";
 import type { TileTone } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import {cn, fmt2, ABSENT } from "@/lib/utils";
 
+// The banner's `none` row carries a secondary fill the bare chips do not, so it is the muted chip
+// WITH its wash — a chip of its own in the palette, not the bare muted chip the other two screens
+// wear. The shared map holds the four action zones only.
 const ZONE_BANNER_TONE: Record<LoadZone, string> = {
-  none: "border-border bg-secondary/30 text-muted-foreground",
-  ...ZONE_TONE,
+  none: CHIP_CLASS.mutedSoft,
+  ...ZONE_CLASS,
 };
 
 const ACWR_TONE = (z: LoadZone): TileTone =>

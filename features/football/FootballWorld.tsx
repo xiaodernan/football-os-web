@@ -19,15 +19,24 @@ import {
   DEMO_MODE,
 } from "@/data/footballService";
 import type { Club, Match, MatchStatus, PlayerRef, SearchKind, Standing } from "@/domain/types";
-import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn, pctLabel, fmt2, SEPARATOR, ABSENT, paramText, paramOneOf } from "@/lib/utils";
 import { usePersonalNews } from "@/lib/hooks";
 import { PlayerDetail, ClubDetail, MatchDetail, FavoriteButton } from "@/features/football/Details";
-import { buildImpact, CERTAINTY_TONE, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
+import { buildImpact, type Certainty, type ImpactEntity, type ClubStandingFact } from "@/domain/newsImpact";
 import { matchStatusLabel, newsKindLabel, newsSummary, newsTitle, rowLine } from "@/domain/rowText";
+
+// The CERTAINTY's chip. The domain says how certain the read is; the screen says what the badge
+// wears — and the classes it wears are the app's shared palette (M441), the same chips the load
+// zones and the review kinds wear.
+const CERTAINTY_CHIP: Record<Certainty, string> = {
+  high: CHIP_CLASS.success,
+  moderate: CHIP_CLASS.warning,
+  low: CHIP_CLASS.destructive,
+};
 
 const fmtDate = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric" });
@@ -326,7 +335,7 @@ function MatchesList() {
       <PageHeader title={t("fw.matches.title")} hint={t("fw.matches.hint", { n: all.length, status: matchStatusLabel(tab, t) })} back="/football" />
       <div className="flex gap-1.5">
         {MATCH_STATUSES.map((s) => (
-          <button key={s} onClick={() => setTab(s)} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === s ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{matchStatusLabel(s, t)}</button>
+          <button key={s} onClick={() => setTab(s)} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === s ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{matchStatusLabel(s, t)}</button>
         ))}
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
@@ -406,7 +415,7 @@ function NewsDetail({ id }: { id: string }) {
         <Panel className="p-4">
           <div className="flex items-center justify-between gap-2">
             <SectionTitle title={t("fw.news.impact")} hint={t("fw.news.impactHint")} />
-            <span className={cn("shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-medium uppercase tracking-widest", CERTAINTY_TONE[impact.certainty])}>
+            <span className={cn("shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-medium uppercase tracking-widest", CERTAINTY_CHIP[impact.certainty])}>
               {t(`ni.certainty.${impact.certainty}`)} · {impact.confidence}%
             </span>
           </div>

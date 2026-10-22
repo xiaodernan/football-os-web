@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {cn, ABSENT } from "@/lib/utils";
-import { Crest } from "@/ui/primitives";
+import { Crest, CHIP_CLASS } from "@/ui/primitives";
 
 // The step rail. Keys live in a module-level table rather than inline in the JSX, where
 // any literal is read as a child of the element regardless of what it holds.
@@ -108,7 +108,7 @@ export function Onboarding() {
                 <button
                   key={p.id}
                   onClick={() => setPg(p.id)}
-                  className={cn("rounded-lg border px-2 py-2 text-xs transition", positionGroup === p.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}
+                  className={cn("rounded-lg border px-2 py-2 text-xs transition", positionGroup === p.id ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}
                 >
                   <div className="font-mono font-bold">{p.id}</div>
                   <div className="truncate text-[10px]">{positionGroupLabel(p.id, t)}</div>
@@ -132,7 +132,7 @@ export function Onboarding() {
             <Label>{t("onb.mainGoal")}</Label>
             <div className="mt-2 flex flex-wrap gap-2">
               {GOAL_CODES.map((g) => (
-                <button key={g} onClick={() => setGoal(g)} className={cn("rounded-full border px-3 py-1 text-xs", goal === g ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
+                <button key={g} onClick={() => setGoal(g)} className={cn("rounded-full border px-3 py-1 text-xs", goal === g ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>
                   {goalLabel(g, t)}
                 </button>
               ))}

@@ -20,7 +20,7 @@ import type { PlayerRef } from "@/domain/types";
 
 import { useI18n } from "@/i18n";
 import { bucketLabel, footLabel, positionLabel } from "@/domain/rowText";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, bestEdgeTone, worstEdgeTone } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, bestEdgeTone, worstEdgeTone, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
@@ -113,11 +113,11 @@ export function ScoutingPanel() {
         <SectionTitle title={t("scout.discover")} />
         <div className="flex flex-wrap items-center gap-2">
           {BUCKETS.map((b) => (
-            <button key={b} onClick={() => setBucket(b)} className={cn("rounded-md border px-2.5 py-1 text-xs", bucket === b ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{bucketLabel(b, t)}</button>
+            <button key={b} onClick={() => setBucket(b)} className={cn("rounded-md border px-2.5 py-1 text-xs", bucket === b ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{bucketLabel(b, t)}</button>
           ))}
           <span className="mx-1 h-4 w-px bg-border" />
           {SORTS.map((s) => (
-            <button key={s.id} onClick={() => setSort(s.id)} className={cn("rounded-md border px-2.5 py-1 text-xs", sort === s.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(s.labelKey)}</button>
+            <button key={s.id} onClick={() => setSort(s.id)} className={cn("rounded-md border px-2.5 py-1 text-xs", sort === s.id ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t(s.labelKey)}</button>
           ))}
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">

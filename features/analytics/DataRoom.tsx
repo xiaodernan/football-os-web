@@ -4,7 +4,7 @@ import { useI18n, formatDate } from "@/i18n";
 import { footballProvider, getClub, getCompetition, fixtureForecast } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
-import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { cn, clamp, fmt2, ABSENT, SEPARATOR, signed, pct } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
@@ -117,7 +117,7 @@ export function DataRoom() {
             }}
             className={cn(
               "rounded-full border px-3 py-1 text-xs transition-colors",
-              compId === c.id ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 text-muted-foreground hover:border-primary/30",
+              compId === c.id ? CHIP_CLASS.filterOn : CHIP_CLASS.filterOff,
             )}
           >
             {c.name}

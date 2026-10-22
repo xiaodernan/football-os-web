@@ -11,7 +11,7 @@ import { VIDEO_KIND_KEY } from "@/data/video";
 import { attributeGoalTitle } from "@/domain/goals";
 import { useLearnRecords, useFilmClips } from "@/lib/hooks";
 import { DEMO_MODE } from "@/data/footballService";
-import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import type { TileTone } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
 import { Progress } from "@/components/ui/progress";
@@ -30,9 +30,9 @@ const DELTA_TILE: Record<DeltaSign, TileTone> = {
 };
 
 const TONE: Record<WeeklyReview["insights"][number]["kind"], string> = {
-  positive: "border-success/40 bg-success/10 text-success",
-  watch: "border-warning/40 bg-warning/10 text-warning",
-  plan: "border-primary/40 bg-primary/10 text-primary",
+  positive: CHIP_CLASS.success,
+  watch: CHIP_CLASS.warning,
+  plan: CHIP_CLASS.primary,
 };
 
 export function ReviewPage() {
@@ -277,7 +277,7 @@ export function ReviewPage() {
                   <SectionTitle title={t("rv.gainsTitle")} hint={t("rv.gainsHint")} />
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {review.attributeGains.map((g) => (
-                      <span key={g.key} className="rounded-md border border-success/40 bg-success/10 px-2 py-1 text-xs font-medium text-success">
+                      <span key={g.key} className={cn("rounded-md border px-2 py-1 text-xs font-medium", CHIP_CLASS.success)}>
                         {t(`attr.name.${g.key}`)} <span className="font-mono">+{g.delta}</span>
                       </span>
                     ))}

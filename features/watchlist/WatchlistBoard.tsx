@@ -7,7 +7,7 @@ import { headroom, valueIndex, primeYearsLabel, templateEdge, scoutComparators }
 import { sum } from "@/domain/attributes";
 import { SCOUT_SORTS, type ScoutSort } from "@/domain/scouting";
 import type { PlayerRef } from "@/domain/types";
-import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge, bestEdgeTone, worstEdgeTone } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, PositionTag, EmptyState, StatTile, DemoBadge, bestEdgeTone, worstEdgeTone, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn, fmt1, fmtMoney, signed } from "@/lib/utils";
 
@@ -76,7 +76,7 @@ export function WatchlistBoard() {
                 onClick={() => setSort(s)}
                 className={cn(
                   "rounded-full border px-2.5 py-1 text-xs transition-colors",
-                  sort === s ? "border-primary/50 bg-primary/10 text-primary" : "border-border/60 text-muted-foreground hover:border-primary/30",
+                  sort === s ? CHIP_CLASS.filterOn : CHIP_CLASS.filterOff,
                 )}
               >
                 {t(`watch.sort.${s}`)}

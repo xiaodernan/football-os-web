@@ -5,7 +5,7 @@ import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { getClub, playersByClub } from "@/data/footballService";
 import { TACTICS_KEY } from "@/domain/localData";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn, clamp, pct, safeDiv } from "@/lib/utils";
 import { capRound, sum } from "@/domain/attributes";
@@ -96,7 +96,7 @@ export function TacticalStudio() {
         <Panel className="p-3 lg:col-span-2">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             {Object.keys(FORMATIONS).map((f) => (
-              <button key={f} onClick={() => applyFormation(f)} className={cn("rounded-md border px-2.5 py-1 text-xs", formation === f ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{f}</button>
+              <button key={f} onClick={() => applyFormation(f)} className={cn("rounded-md border px-2.5 py-1 text-xs", formation === f ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{f}</button>
             ))}
             <span className="ml-auto flex items-center gap-2 text-xs text-muted-foreground"><Crest colors={club.colors} short={club.short} size={22} />{club.name}</span>
           </div>

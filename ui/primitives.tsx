@@ -10,6 +10,7 @@ import { positionLabel, rowLine } from "@/domain/rowText";
 import { deltaSign } from "@/domain/attributes";
 import type { DeltaSign } from "@/domain/attributes";
 import type { Tone } from "@/domain/types";
+import type { LoadZone } from "@/domain/load";
 import type { Dna } from "@/domain/playerDna";
 
 export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
@@ -36,7 +37,7 @@ export function DemoBadge() {
   const { t } = useI18n();
   if (!DEMO_MODE) return null;
   return (
-    <Badge variant="outline" className="border-warning/40 bg-warning/10 text-warning font-mono text-[10px]">
+    <Badge variant="outline" className={cn(CHIP_CLASS.warning, "font-mono text-[10px]")}>
       ● {t("common.demo")} · {t("common.synthetic")}
     </Badge>
   );
@@ -99,6 +100,50 @@ export const TONE_CLASS: Record<Tone, string> = {
   good: "text-success",
   mixed: "text-info",
   bad: "text-destructive",
+};
+
+// The app's CHIP: the border, the wash and the word a tone wears. A chip is the app's smallest
+// coloured badge, and the same chip was spelled out in many places: the load module's four zone
+// chips, the news module's three certainty chips and the review screen's three kind chips each
+// wrote the same three class strings, the muted chip ("border-border text-muted-foreground") was
+// written out five times, and the chip an option wears when you have PICKED it — "border-primary
+// bg-primary/10 text-primary" — was written out sixteen times, in nine screens, each one a copy of
+// the others. So the app could wear a caution in one colour on one screen and in another colour on
+// the next, and moving a chip off its colour in one place would have left the other two disagreeing
+// about what it looks like.
+//
+// The chip is the app's, and it lives here with the other shared UI vocabulary: the DOMAIN says
+// what a chip MEANS (a load zone, a news certainty, a review kind) and the UI says what it wears.
+export const CHIP_CLASS = {
+  // The tone chips: a border, a wash and a word, all of one colour.
+  success: "border-success/40 bg-success/10 text-success",
+  warning: "border-warning/40 bg-warning/10 text-warning",
+  primary: "border-primary/40 bg-primary/10 text-primary",
+  destructive: "border-destructive/40 bg-destructive/10 text-destructive",
+  info: "border-info/40 bg-info/10 text-info",
+  // The muted chips: a border and a word, with no colour of their own.
+  muted: "border-border text-muted-foreground",
+  mutedSoft: "border-border bg-secondary/30 text-muted-foreground",
+  // The option you have picked wears a full-strength border; the ones you have not wear muted
+  // words that turn primary when you point at them.
+  optionOn: "border-primary bg-primary/10 text-primary",
+  optionOff: "text-muted-foreground hover:border-primary/40",
+  // The filter chip's two states: the one in force, and the ones you could turn on. A filter in
+  // force wears a stronger border than a tone chip, and a filter at rest keeps a border of its own.
+  filterOn: "border-primary/50 bg-primary/10 text-primary",
+  filterOff: "border-border/60 text-muted-foreground hover:border-primary/30",
+} as const;
+
+// The load ZONE's chip: what the four action zones wear. The `none` state is deliberately NOT
+// here — it is presentational, and the /load banner carries a subtle secondary fill a bare chip
+// does not, so each caller supplies its own `none` and spreads these four. Excluding `none` is the
+// point: the type will not let a caller forget the divergence is intentional by re-adding it to
+// the shared map.
+export const ZONE_CLASS: Record<Exclude<LoadZone, "none">, string> = {
+  under: CHIP_CLASS.primary,
+  optimal: CHIP_CLASS.success,
+  caution: CHIP_CLASS.warning,
+  high: CHIP_CLASS.destructive,
 };
 
 // The compact stat tile: a bold figure ABOVE a small uppercase label, in a tighter px-2 py-1.5 box than

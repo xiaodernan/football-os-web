@@ -354,19 +354,9 @@ export const ZONE_LEGEND: { zone: Exclude<LoadZone, "none">; band: string }[] = 
   },
 );
 
-// The four risk zones' semantic-tone classes — the app's ACWR color contract. The dashboard's
-// recovery chip, the /load banner and the player screen's load row each rendered a zone by
-// picking a Tailwind class from a local `Record<LoadZone, string>`, and all three copies of the
-// under/optimal/caution/high rows were byte-identical: the same words typed in three files, so
-// moving `caution` off the warning token on one screen would quietly make that screen disagree
-// with the other two about what a caution looks like. The four action rows are the door now.
-// The `none` state is deliberately NOT here — it is presentational, and the /load banner carries
-// a subtle secondary fill a bare chip does not, so each caller supplies its own `none` and spreads
-// these four. Excluding `none` is the point: the type will not let a caller forget the divergence
-// is intentional by re-adding it to the shared map.
-export const ZONE_TONE: Record<Exclude<LoadZone, "none">, string> = {
-  under: "border-primary/40 bg-primary/10 text-primary",
-  optimal: "border-success/40 bg-success/10 text-success",
-  caution: "border-warning/40 bg-warning/10 text-warning",
-  high: "border-destructive/40 bg-destructive/10 text-destructive",
-};
+// The zones' CHIPS used to live here: `ZONE_TONE` was the domain's own map from a zone to the
+// Tailwind classes the zone wore, and the dashboard's recovery chip, the /load banner and the
+// player screen's load row each spread it. M441 moved the chip to where the app's other chips
+// live — ui/primitives.tsx's `ZONE_CLASS`, over the shared palette — because a colour is not a
+// domain's business: this module says what a zone MEANS, and the UI says what it wears.
+

@@ -132,9 +132,8 @@ export function rankNewsForClub<T extends Pick<NewsArticle, "entityIds">>(
   for (const a of articles) (a.entityIds.some((id) => related.has(id)) ? about : rest).push(a);
   return { items: [...about, ...rest], matched: about.length };
 }
-
-export const CERTAINTY_TONE: Record<Certainty, string> = {
-  high: "border-success/40 bg-success/10 text-success",
-  moderate: "border-warning/40 bg-warning/10 text-warning",
-  low: "border-destructive/40 bg-destructive/10 text-destructive",
-};
+// The certainty's CHIP used to live here: `CERTAINTY_TONE` mapped a certainty band to the
+// Tailwind classes the band wore, and the football world rendered the one chip it had. M441 moved
+// the chip to where the app's other chips live — ui/primitives.tsx's palette — because a colour is
+// not a domain's business: this module says how certain the read is, and the UI says what it
+// wears.

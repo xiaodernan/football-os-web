@@ -11,7 +11,7 @@ import { CAREER_KEY, COMMUNITY_KEY, browserStore, readJson, writeJson } from "@/
 import { rowLine, type RowText, type Translate } from "@/domain/rowText";
 import { getClub } from "@/data/footballService";
 import { round1 } from "@/domain/scouting";
-import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, epochMs } from "@/lib/utils";
@@ -216,7 +216,7 @@ export function CommunityHub() {
             {" · "}{nReplies(t, activity.replies)}
             {" · "}{t(activity.likes === 1 ? "comm.nLikesGivenOne" : "comm.nLikesGiven", { n: activity.likes })}
           </div>
-          <button onClick={() => setMine((m) => !m)} className={cn("rounded-md border px-2.5 py-1 text-xs", mine ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
+          <button onClick={() => setMine((m) => !m)} className={cn("rounded-md border px-2.5 py-1 text-xs", mine ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>
             {mine ? t("comm.showingYours") : t("comm.showMine")}
           </button>
         </div>
@@ -225,7 +225,7 @@ export function CommunityHub() {
         </p>
       </Panel>
 
-      {!online && <div className="rounded-md border border-info/40 bg-info/10 px-3 py-2 text-xs text-info">{t("community.offline")}</div>}
+      {!online && <div className={cn("rounded-md border px-3 py-2 text-xs", CHIP_CLASS.info)}>{t("community.offline")}</div>}
 
       {composing && <Composer starters={starters} onSubmit={addThread} onCancel={() => setComposing(false)} />}
 
@@ -233,12 +233,12 @@ export function CommunityHub() {
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("comm.searchPlaceholder")} className="w-52 rounded-md border bg-card px-3 py-1.5 text-sm" />
         <div className="flex gap-1">
           {SORTS.map((s) => (
-            <button key={s} onClick={() => setSort(s)} className={cn("rounded-md border px-2.5 py-1 text-xs capitalize", sort === s ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{t(`comm.sort.${s}`)}</button>
+            <button key={s} onClick={() => setSort(s)} className={cn("rounded-md border px-2.5 py-1 text-xs capitalize", sort === s ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t(`comm.sort.${s}`)}</button>
           ))}
         </div>
         <div className="flex flex-wrap gap-1">
           {allTags().map((tg) => (
-            <button key={tg} onClick={() => setTag(tg)} className={cn("rounded-md border px-2.5 py-1 text-xs", tag === tg ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>{tagLabel(t, tg)}</button>
+            <button key={tg} onClick={() => setTag(tg)} className={cn("rounded-md border px-2.5 py-1 text-xs", tag === tg ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{tagLabel(t, tg)}</button>
           ))}
         </div>
       </div>
@@ -301,7 +301,7 @@ function Composer({ starters, onSubmit, onCancel }: { starters: StarterDraft[]; 
           <p className="mt-0.5 text-[11px] text-muted-foreground">{t("comm.startFromDataHint")}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {starters.map((s) => (
-              <button key={s.id} onClick={() => apply(s)} className={cn("rounded-md border px-2.5 py-1 text-xs", usedStarter?.id === s.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:border-primary/40")}>
+              <button key={s.id} onClick={() => apply(s)} className={cn("rounded-md border px-2.5 py-1 text-xs", usedStarter?.id === s.id ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>
                 {tagLabel(t, s.tag)} · {rowLine(s.evidence[0], t)}
               </button>
             ))}

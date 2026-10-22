@@ -6,7 +6,7 @@ import { buildTimeline, groupByDay, dayKey, type TimelineKind } from "@/domain/h
 import { rowLine, type RowText } from "@/domain/rowText";
 import { lessonById } from "@/domain/learn";
 import { useLearnRecords, useFilmRecords } from "@/lib/hooks";
-import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn, DAY_MS, isRealInstant } from "@/lib/utils";
 
@@ -94,7 +94,7 @@ export function HistoryPage() {
               onClick={() => setFilter(k.id)}
               className={cn(
                 "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition",
-                filter === k.id ? "border-primary/40 bg-primary/10 text-primary" : "bg-card text-muted-foreground hover:text-foreground",
+                filter === k.id ? CHIP_CLASS.primary : "bg-card text-muted-foreground hover:text-foreground",
               )}
             >
               <span>{k.icon}</span>
