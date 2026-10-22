@@ -19,8 +19,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const server = await createServer({ root, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { buildTimeline, groupByDay, dayKey } = await server.ssrLoadModule("/domain/history.ts");
 const { rowLine } = await server.ssrLoadModule("/domain/rowText.ts");
-const { GOAL_METRICS, goalUnitKey, countGoalTitle, attributeGoalTitle, repairGoalTitles, isValidGoalTarget, goalProgressPct } =
+const { goalUnitKey, countGoalTitle, attributeGoalTitle, repairGoalTitles, isValidGoalTarget, goalProgressPct } =
   await server.ssrLoadModule("/domain/goals.ts");
+// M436: the goal metrics' list lives in domain/types.ts now (the type is derived from it).
+const { GOAL_METRICS } = await server.ssrLoadModule("/domain/types.ts");
 // The nested-row clause below reads through the app's own door rather than a private
 // filler, so a row that fails to resolve is reported instead of quietly echoed.
 const { say, locales } = await makeSay(server);

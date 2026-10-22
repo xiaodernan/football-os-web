@@ -1,4 +1,5 @@
 import type { AttributeDef, Attributes, PositionCode, PositionGroup } from "./types";
+import { CATEGORY_ORDER } from "./types";
 import { ATTRIBUTE_LABELS, POSITION_GROUP_LABELS, POSITION_BY_GROUP_LABELS } from "../data/attributesLabels";
 import { clamp, epochMs } from "@/lib/utils";
 
@@ -47,7 +48,8 @@ export const ATTRIBUTE_DEFS: AttributeDef[] = [
 
 export const ATTRIBUTE_KEYS = ATTRIBUTE_DEFS.map((d) => d.key);
 
-export const CATEGORY_ORDER = ["technical", "physical", "tactical", "mental"] as const;
+// M436: the four categories live in domain/types.ts now and the `AttributeCategory` type is
+// derived from the list, so the two cannot drift; this module reads the list back.
 
 export function attributesByCategory(category: AttributeDef["category"]): AttributeDef[] {
   return ATTRIBUTE_DEFS.filter((a) => a.category === category);

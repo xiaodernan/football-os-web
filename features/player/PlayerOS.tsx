@@ -5,13 +5,15 @@ import { useI18n, formatDate } from "@/i18n";
 import { useOs, levelInfo } from "@/store/useFootballOS";
 import {
   ATTRIBUTE_KEYS,
-  CATEGORY_ORDER,
   attributesByCategory,
   overallRating,
   weakestAttributes,
   sum,
   unique,
 } from "@/domain/attributes";
+// M436: the four categories live in domain/types.ts (the type is derived from the list), so the
+// screen reads the list from there.
+import { CATEGORY_ORDER } from "@/domain/types";
 import { computeDna } from "@/domain/playerDna";
 import { SUPPORTED_MINUTES, sessionIntensity, plannedSessions, type GrowthDelta } from "@/domain/training";
 import { buildLoad, ZONE_LABEL, ZONE_TONE, type LoadZone } from "@/domain/load";

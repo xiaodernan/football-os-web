@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M435
+Work ships one milestone per commit and is currently at M436
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,18 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M436 — the last three mirrors: a vocabulary is a type, and the type is derived from the list
+
+**The defect.** M435 closed the class of vocabularies spelled as a **list** in two places, and left three spelled as **both** a type and a list: the attribute categories, the goal metrics and the age bands. Each was a pair the app's own gate cross-checked — the i18n gate compared the union with the list and failed if they drifted — so it was guarded, not broken. But the pair was the *shape* that allowed the drift, and the shape could be closed: the **list** moves to the type home, and the type is derived from it.
+
+The obstacle was a direction of import: the type lived in `domain/types.ts` and the list in a module that imports it, and a runtime list cannot cross that way without a cycle. The fix is the other way round — `domain/types.ts` has **no runtime imports** at all (its one import is a type), so the lists can live there and the modules read them back with nothing to cycle.
+
+**The fold.** `CATEGORY_ORDER`, `GOAL_METRICS` and `AGE_GROUP_WORDS` live in `domain/types.ts` now, and `AttributeCategory`, `GoalMetric` and `AgeGroupWord` are derived from them. The modules that owned the lists — `domain/attributes.ts`, `domain/goals.ts`, `domain/onboarding.ts` — import them back, and the i18n gate's two cross-checks became checks that the type **is** derived, which is a stronger claim than the one they replaced: a hand-typed union is the one thing that could drift again, and now there is none to write.
+
+**The seam, charged both ways.** `proof-vocab` charges the shape itself: a set of words that appears as a union **and** as a list is a set that can drift, and there are **none** — 43 vocabularies, 195 lists, 0 written both ways. The file passes 7/7, and the suite is green with tsc clean.
+
+**Still outstanding.** The census still reads the **source**, so a vocabulary written in a shape it cannot see is invisible to it: `CATEGORIES` in `domain/attributes.ts` is built by a set-spread over the attribute definitions rather than written out, and the scout cannot pair it with anything. A definition that is a *call* is the next shape the reader has to refuse, and the app has one to refuse it with.
 
 ### M435 — a vocabulary's list and its type are one declaration
 

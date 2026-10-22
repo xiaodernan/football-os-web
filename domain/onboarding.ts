@@ -12,6 +12,7 @@
 // check holds that template, the code tables here and the unions in ./types together.
 
 import type { AgeGroupWord, OnboardingGoalCode } from "./types";
+import { AGE_GROUP_WORDS } from "./types";
 // The reverse lookup lives in `data/`, not here: its keys are old stored profile text that is
 // never displayed, so it is a table of records rather than the model's own voice — and the
 // prose audit counts sentences in `domain/`, which is what kept this module out of
@@ -21,7 +22,9 @@ import { LEGACY_GOAL_TEXT } from "@/data/onboardingLegacy";
 
 export const AGE_GROUPS = ["U15", "U17", "U19", "Amateur", "Semi-pro", "Pro", "Veteran"] as const;
 
-export const TRANSLATED_AGE_GROUPS: readonly AgeGroupWord[] = ["Amateur", "Semi-pro", "Pro", "Veteran"];
+// The age bands whose codes happen to be English words. M436: the list lives in ./types and the
+// `AgeGroupWord` type is derived from it, so the two cannot drift — the drift the i18n gate used
+// to have to check.
 
 export const GOAL_CODES: readonly OnboardingGoalCode[] = [
   "firstTouch",
@@ -37,7 +40,7 @@ export function isGoalCode(value: string): value is OnboardingGoalCode {
 }
 
 export function isAgeGroupWord(value: string): value is AgeGroupWord {
-  return (TRANSLATED_AGE_GROUPS as readonly string[]).includes(value as AgeGroupWord);
+  return (AGE_GROUP_WORDS as readonly string[]).includes(value as AgeGroupWord);
 }
 
 /** A stored goal read as a code: recognised legacy text becomes its code, anything else

@@ -435,7 +435,9 @@ ok(`no Scouting string reintroduces the English M145 replaced (${scoutBack.join(
 //     string prop. `templateEdge` used to return `bestLabel: "Tactical"`, which the
 //     two list boards printed as English on a 繁體中文 page; only the browser showed
 //     it. It now returns the category id and each board translates it.
-const { CATEGORY_ORDER, ATTRIBUTE_DEFS, POSITION_GROUPS } = await server.ssrLoadModule("/domain/attributes.ts");
+// M436: the four categories live in domain/types.ts now (the type is derived from the list).
+const { CATEGORY_ORDER } = await server.ssrLoadModule("/domain/types.ts");
+const { ATTRIBUTE_DEFS, POSITION_GROUPS } = await server.ssrLoadModule("/domain/attributes.ts");
 const SCOUT_DOMAIN = readFileSync(join(root, "domain", "scouting.ts"), "utf8");
 const EDGE_SOURCES = [
   ["the Scouting board", scoutSrc],
@@ -690,7 +692,9 @@ const S_ATTR = { name: "attribute keys", values: ATTRIBUTE_DEFS.map((d) => d.key
 const S_GROUP = { name: "position groups", values: POSITION_GROUPS.map((g) => g.id) };
 const S_MODE = { name: "Mode union", values: MODES_UPPER };
 const ONB_GOAL_CODES = spaceOf("domain/onboarding.ts", /export const GOAL_CODES[^;]+;/, quoted);
-const ONB_AGE_WORDS = spaceOf("domain/onboarding.ts", /export const TRANSLATED_AGE_GROUPS[^;]+;/, quoted);
+// M436: the age bands' words live in domain/types.ts now and the `AgeGroupWord` type is derived
+// from the list, so the anchor reads the list where it is defined.
+const ONB_AGE_WORDS = spaceOf("domain/types.ts", /export const AGE_GROUP_WORDS[^=]*=[^\]]*\]/, quoted);
 const S_ONB_GOAL = { name: "onboarding goal codes", values: ONB_GOAL_CODES };
 const S_ONB_AGE = { name: "translated age bands", values: ONB_AGE_WORDS };
 // M166: the palette groups its own rows, so the codes it can hand to `cmd.group.` are
@@ -967,7 +971,9 @@ for (const s of SPACE_SITES.values()) {
 // the same rule check 17 applies to a component site. The composing template is
 // re-read from the source that claims it, so a deleted composer stops claiming
 // rather than leaving its keys reachable on paper — check 25 audits it.
-const { GOAL_METRICS } = await server.ssrLoadModule("/domain/goals.ts");
+// M436: the goal metrics' list lives in domain/types.ts now (the type is derived from it), so the
+// gate loads it from there.
+const { GOAL_METRICS } = await server.ssrLoadModule("/domain/types.ts");
 const { MODES } = await server.ssrLoadModule("/domain/types.ts");
 const DOMAIN_SPACES = [
   {
@@ -976,7 +982,9 @@ const DOMAIN_SPACES = [
     prefix: "goal.unit.",
     path: "domain/goals.ts",
     compose: /`goal\.unit\.\$\{metric\}`/,
-    union: ["domain/types.ts", /export type GoalMetric = [^;]+;/],
+    // M436: the goal metrics' type is derived from the list, so the space the module is checked
+    // against is the definition itself.
+    union: ["domain/types.ts", /export const GOAL_METRICS[^=]*=[^\]]*\]/],
   },
   {
     // The three modes a remembered row can name. types.ts holds the runtime list and the type
@@ -2163,9 +2171,12 @@ const unionOf = (name) => spaceOf("domain/types.ts", new RegExp(`export type ${n
 ok(`onb.goal.… · the code table in domain/onboarding.ts is the OnboardingGoalCode union (${ONB_GOAL_CODES.join(", ")} / ${unionOf("OnboardingGoalCode").join(", ")})`,
   ONB_GOAL_CODES.length > 0 && unionOf("OnboardingGoalCode").length === ONB_GOAL_CODES.length &&
     ONB_GOAL_CODES.every((c) => unionOf("OnboardingGoalCode").includes(c)));
-ok(`onb.age.… · the word list in domain/onboarding.ts is the AgeGroupWord union (${ONB_AGE_WORDS.join(", ")} / ${unionOf("AgeGroupWord").join(", ")})`,
-  ONB_AGE_WORDS.length > 0 && unionOf("AgeGroupWord").length === ONB_AGE_WORDS.length &&
-    ONB_AGE_WORDS.every((c) => unionOf("AgeGroupWord").includes(c)));
+// M436: the age bands' type is DERIVED from the list, so the two cannot drift — and the check
+// that says so reads the derivation itself, because a hand-typed union is the one thing that
+// could drift again.
+const AGE_DERIVED = /export type AgeGroupWord = \(typeof AGE_GROUP_WORDS\)\[number\];/.test(appSrc.get("domain/types.ts") ?? "");
+ok(`onb.age.… · the age bands' type is derived from the list, so the two cannot carry different words (${ONB_AGE_WORDS.join(", ")})`,
+  ONB_AGE_WORDS.length === 4 && AGE_DERIVED);
 
 for (const sp of DOMAIN_SPACES) {
   const src = appSrc.get(sp.path);

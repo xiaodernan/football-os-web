@@ -84,10 +84,16 @@ export type Side = "home" | "away";
 // One row of the capability model. The interface lives here rather than in
 // domain/attributes.ts because the English label table it is paired with now sits in
 // `data/attributesLabels.ts`, and that file cannot import from the module that imports it.
+// The four attribute categories, in table order. M436: the list lives here and the type is
+// derived from it, so the two cannot drift.
+export const CATEGORY_ORDER = ["technical", "physical", "tactical", "mental"] as const;
+
+export type AttributeCategory = (typeof CATEGORY_ORDER)[number];
+
 export interface AttributeDef {
   key: string;
   label: string;
-  category: "technical" | "physical" | "tactical" | "mental";
+  category: AttributeCategory;
 }
 
 export interface PlayerRef {
@@ -323,7 +329,13 @@ export interface CoachPlan {
 // The four things a goal can count. A row stores the code, never the word: the
 // unit label is resolved through the dictionary where the row is read, so a goal
 // created in one locale does not freeze its own wording for every later reader.
-export type GoalMetric = "xp" | "sessions" | "level" | "attribute";
+// The four things a goal can count. A row stores the code, never the word: the
+// unit label is resolved through the dictionary where the row is read, so a goal
+// created in one locale does not freeze its own wording for every later reader.
+// M436: the list lives here and the type is derived from it, so the two cannot drift.
+export const GOAL_METRICS = ["xp", "sessions", "level", "attribute"] as const;
+
+export type GoalMetric = (typeof GOAL_METRICS)[number];
 
 // The goal a visitor picks during onboarding, stored as a code: profile.goal is persisted
 // and read back on the profile header and the coach's memory line, so a sentence stored
@@ -338,8 +350,11 @@ export type OnboardingGoalCode =
   | "twoFooted";
 
 // The age bands whose codes happen to be English words. "U15" needs no lookup; these four
-// do, and the list is mirrored by TRANSLATED_AGE_GROUPS in ./onboarding.
-export type AgeGroupWord = "Amateur" | "Semi-pro" | "Pro" | "Veteran";
+// do. M436: the list lives here and the type is derived from it, so the two cannot drift;
+// ./onboarding reads it back for the row that stores one.
+export const AGE_GROUP_WORDS = ["Amateur", "Semi-pro", "Pro", "Veteran"] as const;
+
+export type AgeGroupWord = (typeof AGE_GROUP_WORDS)[number];
 
 export interface Goal {
   id: string;

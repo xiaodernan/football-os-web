@@ -4,14 +4,14 @@
 // XP" for an onboarding goal and the raw metric code ("12/20 xp") for one the visitor
 // typed, in every locale. Its `title` had the same defect one layer up, and is now a
 // RowText for the same reason.
-import type { Goal, GoalMetric } from "./types";
+import type { Goal } from "./types";
+import { GOAL_METRICS } from "./types";
 import type { RowText } from "./rowText";
 import { repairTextField } from "./rowText";
 import { clamp, pct } from "@/lib/utils";
 
-// Mirrors the `GoalMetric` union in ./types; proof-timeline fails if the two drift,
-// because both the compiler and the dictionary have to agree on this list.
-export const GOAL_METRICS: readonly GoalMetric[] = ["xp", "sessions", "level", "attribute"];
+// The four things a goal can count. M436: the list lives in ./types and the `GoalMetric` type
+// is derived from it, so the two cannot drift — the drift the i18n gate used to have to check.
 
 // null for a metric the app does not name: a stored row from an older build could
 // carry one, and showing no unit word is honest while showing `goal.unit.foo` is not.

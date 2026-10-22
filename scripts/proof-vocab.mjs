@@ -147,6 +147,21 @@ ok(`every list of names is written in one place, except the declared orders (${l
   undeclaredLists.length === 0 && staleLists.length === 0,
   `undeclared: ${undeclaredLists.join(", ")}; stale: ${staleLists.join(", ")}`);
 
+// A vocabulary written as BOTH a type and a list is the same drift risk twice over: the compiler
+// checks one copy and the runtime walks the other. M436 closed the last three of them by deriving
+// the type from the list, so the shape itself is now charged: a set of words that appears as a
+// union AND as a list is a set that can drift, and there must be none.
+const bothWaysIn = (g, l) => [...g.keys()].filter((k) => l.has(k));
+const bothWays = bothWaysIn(groups, listGroups);
+// The reader is armed: a planted vocabulary written both ways is seen.
+const pBoth = bothWaysIn(
+  new Map([["a|b", [{ file: "planted.ts", line: 1 }]]]),
+  new Map([["a|b", [{ file: "planted.ts", line: 2 }]]]),
+).length;
+ok(`no vocabulary is written as both a type and a list (${bothWays.length} written both ways${bothWays.length ? `: ${bothWays.join(", ")}` : ""}; a planted one reads ${pBoth})`,
+  bothWays.length === 0 && pBoth === 1,
+  `both ways: ${bothWays.join(", ")}`);
+
 // --- 3 · the nine vocabularies are named types ------------------------------------------------------
 // Each entry names the type and the file that declares it. A vocabulary that is shared is a type
 // with a NAME, so the words can be referred to rather than written out.
