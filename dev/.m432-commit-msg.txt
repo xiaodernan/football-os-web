@@ -1,0 +1,41 @@
+M433: a set of words that means one thing is spelled in one place - the vocabulary census
+
+M427 and M428 closed the app's two colour vocabularies, and M430 said what remained: the
+remaining risk is a fourth vocabulary appearing with no door behind it, and that is the class a
+census of VOCABULARIES would charge. This unit writes that census - and it found nine
+vocabularies spelled more than once, FOUR of them in a file that already had a name for them:
+
+- the career's TONE, "good" | "mixed" | "bad" - five times: the zone table, the honour table,
+  the two interfaces that carry them, and the interface the app's colours are keyed by;
+- the comparison page's FAVOUR, "a" | "b" | "even" - four times in one file;
+- the FOOT, "L" | "R" - the type was named in domain/types.ts, and the seed spelled it out twice
+  anyway;
+- the FORM LETTER, "W" | "D" | "L" - named in analytics, spelled out twice in attributes;
+- the SIDE, "home" | "away" - in the engine, in the types and in the seed;
+- the TILE's direction, "up" | "down" | "neutral" - the tile's prop, the review's table and the
+  load page's own;
+- the engine's EVENT SIDE, "H" | "A" - twice in the engine;
+- the MODE, "FAN" | "PLAYER" | "MANAGER" - named in the types, spelled out in the shell;
+- the MATCH STATUS, "SCHEDULED" | "LIVE" | "FINISHED" - named in the types, spelled out in the
+  world screen.
+
+A vocabulary spelled twice is a vocabulary that can drift: a word added to one copy leaves the
+other copy out of it, and the compiler cannot see it, because a union of literals is a type, not
+a value.
+
+The fold. Each of the nine is a NAMED TYPE now, declared once and exported: Tone, Side, Foot,
+Mode and MatchStatus in domain/types.ts (the app's type home - the words live with the types,
+and a type import costs no bundle), FormLetter in domain/attributes.ts (where the ladder and the
+letter door already live, re-exported by analytics for the callers that already import its
+types), Favor in domain/compare.ts, EventSide in domain/matchEngine.ts and TileTone in
+ui/primitives.tsx (the tile's own vocabulary, named so the screens that hand a tile a tone write
+the three words once).
+
+The seam, charged both ways. New scripts/proof-vocab.mjs (4/4) reads every UNION OF STRING
+LITERALS in the app and requires it to be spelled in exactly one place: 59 vocabularies, 59
+spellings, none twice. Comments are prose about the code, not code, so the reader strips them
+first - the dictionary's own note about the foot's two words is not a second spelling - and it
+is armed by a plant for each shape it refuses. The nine vocabularies are then checked to be
+named types, each declared once and exported, and the thirteen places that used to spell the
+words out are checked to name them instead.
+

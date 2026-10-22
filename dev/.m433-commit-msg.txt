@@ -1,0 +1,23 @@
+M434: the rule has to be read, not remembered - two gates were written after it landed
+
+M423 gave the tree-walking proofs ONE rule - a hidden directory is not shipped, and a directory
+carrying its own .git is another repository - and applied it to six of them. Two gates were written
+AFTER it landed: the dead-code boundary's first direction (proof-orphans) and its fourth
+(proof-unused-locals). Each reads the repository's TOP-LEVEL directories to ask whether every one
+of them is covered by the app's roots, and neither read the rule - so each of the eleven scratch
+planes an old experiment left in the root (.m225-plane ... .m326-plane, untracked, dated between
+28 September and 9 October) read as an uncovered directory, and the suite was red with two
+failures that had nothing to do with the app.
+
+A third gate kept a private copy of half the rule: proof-screens filtered the root's directories
+with its own hidden-directory test while parsing another proof's source for the rest.
+
+The fix. All three read the shared rule now, and the private copy is gone.
+
+The seam, charged both ways. The durable half of this unit is that the rule is now checked against
+the WHOLE suite rather than against a list proof-app-tree remembers: a proof script that reads
+the root's directories - directly, or through the rule - must import it. Seven scripts do today
+(the census names them), the number is pinned, and a NEW gate that forgets the rule is caught the
+day it is written rather than the day a scratch directory reappears in the root. The eight gates
+that walk the tree are checked by name as well, so a fork - a proof keeping a private
+hidden-directory test of its own - is still refused.

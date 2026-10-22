@@ -1,0 +1,24 @@
+M443: the rule census learned to read one file at a time, and the class that produced byDeltaDesc
+
+M442 fixed how the rule census reads a body. This unit closes the other
+half of its reach: both existing clauses skip SAME-FILE pairs by design,
+and that class is where this project's oldest duplications lived — M241's
+byDeltaDesc was two byte-identical comparators in one module, and the
+tempo/press band words were two identical rules on adjacent lines of
+ManagerOS. One author, one sitting, no cross-file signal: a cross-file
+census structurally cannot see it.
+
+- New clause 7 in scripts/proof-rules.mjs: the same strict-alignment measure
+  over every named body, restricted to one file at a time, with the same
+  splits mechanism the local clause uses (a deliberate pair is declared,
+  not silently charged). A probe over the tree reads 155 named units and
+  ZERO same-file pairs — the class is clean today, which is when a gate is
+  worth building.
+- The clause is armed: a planted same-file pair (two units sharing one file
+  on purpose) must read 1, so the zero is a measurement and not a loop that
+  cannot reach its class. proof-rules reads 7/7.
+- proof-record 5/5 (235 headings, pointer M443). The one proof-i18n failure
+  in the tree is the other session's in-flight state, verified by stashing
+  this unit's change and re-running (the failure persists without it).
+- The other session's in-flight files (their chip work, 24 files incl.
+  proof-chips.mjs untracked) are NOT in this commit.

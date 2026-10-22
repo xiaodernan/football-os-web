@@ -1,0 +1,32 @@
+M437: the working tree is the app's tree - the neighbours go, and the root's files are named
+
+M423 gave the tree ONE rule - a hidden directory is not shipped, a directory carrying its own
+.git is another repository - and it ended by saying what the next unit had to do: decide what the
+working tree is FOR - the app, the clone, or the historical planes - and remove the ones that are
+not it, because the .gitignore line was a promise the tree had not yet kept. It had not kept it.
+The root still carried:
+
+- THIRTEEN SCRATCH PLANES - .m225-plane, .m228ref, .m230-mine, .m248-plane ... .m326-arm1 -
+  full copies of the tree left by experiments between 28 September and 9 October;
+- a STALE CLONE OF THE REPOSITORY - football-os/, whose own HEAD was M422 while the app was at
+  M436;
+- a CHINESE-NAMED TWIN of it, 足球-os/, holding two scratch files from M419; and
+- a STRAY TEXT FILE at the root - 45 KB, the original task brief in a "New Text Document" that no
+  program had read since 22 September.
+
+The fix. The tree is the app's tree now: the planes, the clone, the twin and the stray are gone
+(the brief is preserved outside the repository, not deleted), and the rule covers the root's FILES
+as well as its directories.
+
+The seam, charged both ways. proof-app-tree gained the file reading the rule could not do: EVERY
+VISIBLE FILE AT THE ROOT IS ONE THE APP NAMES - nine of them, none stray, none missing - and the
+list is pinned, so a file added to the root without a line in the proof reddens. The clone clause
+became a PLANT (a real clone with its own .git, in a real tree, beside a real app module), which
+is a stronger claim than the case that was there once: the rule is exercised on a neighbour that
+exists rather than on one that existed. The file passes 12/12.
+
+What is left, and why. The other lane's HIDDEN NOTES (.m226-*.md, .m227-*.txt - two weeks old, and
+not this lane's to delete) stay in the root: they are hidden, the rule tolerates a hidden
+neighbour the way it tolerates a hidden directory, and a tree that carries a hidden scratch file is
+a normal thing to be. What M437 removes is the other kind: the visible, the enormous and the
+copied.

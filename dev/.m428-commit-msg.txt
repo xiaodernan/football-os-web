@@ -1,0 +1,27 @@
+M430: the colours for a tone - one mapping, and the screen that spelled it twice
+
+M427 closed the app's colours for a DIFFERENCE. This unit closes the colours for a TONE - and
+the app has two of those, because they are two different questions: a SIGN says which way a
+figure moved, a TONE says how well a thing sits. The domain's judgement of a league position is
+a tone - "good" | "mixed" | "bad" - and the app has three classes for it: green for good, blue
+for mixed, red for bad. That mapping was spelled TWICE in features/manager/ManagerOS.tsx, with
+the same three words in the same order: once for the season summary's honour and once for the
+outlook's zone. A third, two-armed copy sat in the screen's own metric component.
+
+So the app could have shown a mid-table club in blue on one card and in red on another, and a
+change to the palette would have had to be made in two places.
+
+The fold. TONE_CLASS - the three classes, keyed by the tone - lives in ui/primitives.tsx with
+the rest of the shared UI vocabulary, and the manager screen reads it: the honour's tone (with
+no honour at all reading as the middle blue, as it did), the zone's tone, and the metric
+component's two arms (a metric with no tone stays uncoloured, as it did). Nothing a reader sees
+moves: the proof replays the mapping against the inline forms it replaced, for all three tones.
+
+The seam, charged both ways. New scripts/proof-toneclass.mjs (4/4) charges a COLOUR CHOSEN BY A
+TONE - a comparison against one of the domain's tone words whose arms name a colour class - and
+there are none outside the shared mapping. Two near shapes are refused, each for a reason: a
+comparison against some OTHER string is not a tone, and the tile's own "up" | "down" | "neutral"
+vocabulary is the TILE's, not the domain's - the tile's mapping lives inside the component,
+which is where a component's contract belongs, and this census does not reach into it. The
+reader is armed by a plant for each shape, the mapping is checked to be declared once, the
+manager screen is checked to read it, and the three tones are replayed against the inline forms.

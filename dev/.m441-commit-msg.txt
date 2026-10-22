@@ -1,0 +1,31 @@
+M441: the app's chip is written once - the palette, and the colours the domain no longer names
+
+A chip is the app's smallest coloured badge - a border, a wash and a word, all of one colour - and
+the same chips were spelled out over and over: the load module's four zone chips, the news module's
+three certainty chips, the review screen's three kind chips and the achievements screen's three tier
+chips each wrote class strings that were, class for class, the same chip; the muted chip was written
+out five times in four files; the chip an option wears when you have PICKED it was written out
+sixteen times, in nine screens; and the offline notice's info chip was written out in three files.
+So a caution could be one colour on the dashboard and another on the review page, and moving a chip
+off its colour in one place left the others disagreeing about what it looks like.
+
+The fold puts the chips in one table - ui/primitives.tsx's CHIP_CLASS: five tone chips, the two
+muted chips, the option's two states and the filter chip's two states - and the load zone's map
+(ZONE_CLASS) rides it. The colours leave the DOMAIN: domain/load.ts's ZONE_TONE and
+domain/newsImpact.ts's CERTAINTY_TONE are gone, because a domain module that hands a screen a
+Tailwind class string knows the app's colours and can disagree with the UI about them. The domain
+still says what a zone means and how certain a read is; the UI says what it wears.
+
+**The seam, charged both ways.** scripts/proof-chips.mjs is the census: it reads every quoted class
+string in the app, keeps the ones that carry a border colour and a word colour, and charges three
+shapes - the tone chip (a border, a wash and a word of one colour), the muted chip (the border
+colour and the muted word) and the option at rest (muted words, and a border that appears when you
+point at them). The rule is one sentence: a chip written twice lives in the palette, and a chip
+written once is its screen's own. The reader is armed by planted chips - one of each shape, and two
+shapes that are not chips - so the census is not empty and each shape is measured rather than
+assumed; it also pins the two things the fold had to keep, the eleven classes the app wore and the
+domain's freedom from colour (a planted domain module that carries a chip reads 1, so the zero
+there is a measurement and not a blind spot). The file passes 8/8, and proof-zone-tone was rewritten
+to the door's new home and keeps its old clauses - one declaration, three consumers that spread it,
+the four classes every screen renders, and the pin that the /load banner's none still carries a wash
+the other two do not - 8/8. The suite is green with tsc clean.

@@ -1,0 +1,725 @@
+﻿PASS        proof:absent-glyph  (12/12 checks)
+PASS        proof:absent-name  (10/10 checks)
+PASS        proof:ai-grounding  (70/70 checks)
+PASS        proof:analytics  (77/77 checks)
+PASS        proof:app-tree  (12/12 checks)
+PASS        proof:capround  (9/9 checks)
+PASS        proof:career  (205/205 checks)
+PASS        proof:careerarc  (69/69 checks)
+PASS        proof:clamp-feature  (11/11 checks)
+PASS        proof:clamp  (11/11 checks)
+PASS        proof:cn  (11/11 checks)
+PASS        proof:command-entry  (11/11 checks)
+PASS        proof:community  (57/57 checks)
+PASS        proof:compare  (70/70 checks)
+PASS        proof:coverage  (26/26 checks)
+PASS        proof:creditresult  (9/9 checks)
+PASS        proof:datesort  (9/9 checks)
+PASS        proof:day-ms  (10/10 checks)
+PASS        proof:dead-exports  (4/4 checks)
+PASS        proof:dead-imports  (4/4 checks)
+PASS        proof:deltacolor  (4/4 checks)
+PASS        proof:deltasign  (4/4 checks)
+PASS        proof:dependencies  (6/6 checks)
+PASS        proof:div-guard  (10/10 checks)
+PASS        proof:doors  (6/6 checks)
+PASS        proof:epoch  (11/11 checks)
+PASS        proof:feedranking  (189/189 checks)
+PASS        proof:film  (55/55 checks)
+PASS        proof:filmlibrary  (30/30 checks)
+PASS        proof:fixtures  (7/7 checks)
+PASS        proof:fmt0  (10/10 checks)
+PASS        proof:fmt1  (12/12 checks)
+PASS        proof:fmt2  (12/12 checks)
+PASS        proof:footprint  (36/36 checks)
+PASS        proof:formletter  (8/8 checks)
+PASS        proof:gap  (35/35 checks)
+PASS        proof:gauge-hole  (6/6 checks)
+PASS        proof:graph  (22/22 checks)
+PASS        proof:headroom  (8/8 checks)
+FAIL        proof:i18n  (375/376 checks)  [checks-failed] 1 of 376 checks failed
+PASS        proof:ids  (15/15 checks)
+PASS        proof:impact  (15/15 checks)
+PASS        proof:index-by-id  (10/10 checks)
+PASS        proof:last  (10/10 checks)
+PASS        proof:leaguepoints  (8/8 checks)
+PASS        proof:learn  (81/81 checks)
+PASS        proof:ledger-refs  (4/4 checks)
+PASS        proof:ledger-run  (5/5 checks)
+PASS        proof:ledger  (5/5 checks)
+PASS        proof:load  (89/89 checks)
+PASS        proof:localdata  (32/32 checks)
+PASS        proof:m65  (27/27 checks)
+PASS        proof:m67  (39/39 checks)
+PASS        proof:m73  (19/19 checks)
+PASS        proof:m74  (17/17 checks)
+PASS        proof:m75  (6/6 checks)
+PASS        proof:m77  (11/11 checks)
+PASS        proof:m99  (29/29 checks)
+PASS        proof:matchengine  (44/44 checks)
+PASS        proof:matchprobability  (38/38 checks)
+PASS        proof:matchstats  (16/16 checks)
+PASS        proof:maxby  (8/8 checks)
+PASS        proof:mini-tile  (9/9 checks)
+PASS        proof:money  (10/10 checks)
+PASS        proof:offline  (46/46 checks)
+PASS        proof:orphans  (5/5 checks)
+PASS        proof:param  (8/8 checks)
+PASS        proof:pct-feature  (9/9 checks)
+PASS        proof:pct-label  (10/10 checks)
+PASS        proof:pct-of  (10/10 checks)
+PASS        proof:pct  (10/10 checks)
+PASS        proof:projection  (42/42 checks)
+PASS        proof:quantities  (5/5 checks)
+PASS        proof:real-instant  (8/8 checks)
+PASS        proof:recentresults  (8/8 checks)
+PASS        proof:record  (5/5 checks)
+PASS        proof:repair  (8/8 checks)
+PASS        proof:review  (49/49 checks)
+PASS        proof:rng  (55/55 checks)
+PASS        proof:round1  (10/10 checks)
+PASS        proof:round2  (10/10 checks)
+PASS        proof:round3  (10/10 checks)
+PASS        proof:router  (28/28 checks)
+PASS        proof:rules  (6/6 checks)
+PASS        proof:runner  (104/104 checks)
+PASS        proof:screens  (31/31 checks)
+PASS        proof:separator  (10/10 checks)
+PASS        proof:signed  (19/19 checks)
+PASS        proof:signed2  (13/13 checks)
+PASS        proof:storage  (61/61 checks)
+PASS        proof:sum  (9/9 checks)
+PASS        proof:tablestanding  (10/10 checks)
+PASS        proof:tally  (8/8 checks)
+PASS        proof:thresholds  (7/7 checks)
+PASS        proof:timeline  (118/118 checks)
+PASS        proof:toneclass  (4/4 checks)
+PASS        proof:training  (72/72 checks)
+PASS        proof:transfers  (76/76 checks)
+PASS        proof:unique  (8/8 checks)
+PASS        proof:unused-locals  (5/5 checks)
+PASS        proof:unused-params  (5/5 checks)
+PASS        proof:vector  (7/7 checks)
+PASS        proof:vocab  (7/7 checks)
+PASS        proof:world  (40/40 checks)
+PASS        proof:xp  (28/28 checks)
+PASS        proof:zone-tone  (8/8 checks)
+
+105/106 proof scripts proven (3082/3083 checks counted)
+1 contract failure(s)
+node : 
+所在位置 行:1 字符: 1
++ node scripts/run-proofs.mjs 2>&1 | Out-File -Encoding utf8 dev/.m437- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+===== proof-i18n.mjs output [checks-failed] =====
+ok   zh-CN: no keys missing (0)
+ok   zh-CN: no keys English lacks (0)
+ok   zh-TW: no keys missing (0)
+ok   zh-TW: no keys English lacks (0)
+ok   en: no blank values
+ok   zh-CN: no blank values
+ok   zh-TW: no blank values
+ok   placeholders agree across locales
+ok   the placeholder rule still reports a disagreement, so the zero above is measured and not a blind spot (true)
+ok   no t() call site names an undefined key (0)
+ok   the call-site rule still reports an undefined key, so the zero above is measured and not a blind spot (1 of 1)
+ok   every dynamic t() prefix resolves (36 checked)
+ok   all three dictionary literal blocks are locatable by name (else the checks below slice garbage)
+ok   en declares its own keys instead of spreading a sibling dictionary
+ok   zh-CN declares its own keys instead of spreading a sibling dictionary
+ok   zh-TW declares its own keys instead of spreading a sibling dictionary
+ok   no zh-TW value reintroduces one of the 19 绠€浣?characters the audits corrected (none)
+ok   the player TABS array is locatable and names its label field (labelKey)
+ok   all ten tabs carry a label (10)
+ok   every tab label is a key all three dictionaries declare (none)
+ok   the tab strip renders its labels through t() rather than as stored text
+ok   the primitives read all 7 of their own labels from the dictionary (none)
+ok   no primitive still hardcodes the English M144 replaced (none)
+ok   the 2 chrome files that outlived M248 (pin 2) read their own labels from the dictionary at all 2 positions (pin 2)
+ (none)
+ok   and neither one hardcodes the word the dictionary holds for its key (1 forbidden spelling(s): >Close<; none found)
+ok   the chrome namespace holds exactly its 1 surviving label, pin 1 (ui.close), and mints no second key for the word c
+ta.loading already carries
+ok   the Scouting SORTS array is locatable (else this check is vacuous)
+ok   Scouting SORTS carries 4 label keys
+ok   every Scouting SORTS label key is one all three dictionaries declare (none)
+ok   Scouting SORTS holds no key in a field named `label` (0)
+ok   the Scouting comparison rows array is locatable (else this check is vacuous)
+ok   Scouting comparison rows carries 6 label keys
+ok   every Scouting comparison rows label key is one all three dictionaries declare (none)
+ok   Scouting comparison rows holds no key in a field named `label` (0)
+ok   both Scouting label arrays render through t()
+ok   the palette's group list is locatable and holds codes (goto, modes, actions)
+ok   the palette's group codes are codes (goto, modes, actions)
+ok   every palette row names one of its declared groups (actions, goto, modes)
+ok   the palette's 40 spelled-out keys exist in all three locales (none)
+ok   no Scouting string prop still carries raw English (none)
+ok   the Scouting board renders no untranslated short text node (none)
+ok   the text-node scan still walks the board's markup (10 nodes, 0 words)
+ok   no Scouting string reintroduces the English M145 replaced (none)
+ok   no template-edge display label reaches either board (none)
+ok   the scout-report rows domain/scouting.ts exports carry no label field (0)
+ok   both boards translate both template-edge categories (none)
+ok   all 4 categories have attr.* in every locale (none)
+ok   dna.arch.鈥?路 the archetype ids and the dictionary's name rows are one list (creator, progressor, ball_winner, deep
+_playmaker, press_resistant, box_crasher, inverted_fullback, transition_runner, target_man, false_9 / 10 keys)
+ok   dna.blurb.鈥?路 every archetype has a description and nothing else has one (10 keys)
+ok   every dynamic t() site is declared, and every declaration is live (86 sites / 0 undeclared / 0 stale)
+ok   ach.name.鈥?路 achievement ids: all 21 values keyed in every locale (none)
+ok   ach.name.鈥?路 achievement ids: all 21 values keyed in every locale (none)
+ok   ach.desc.鈥?路 achievement ids: all 21 values keyed in every locale (none)
+ok   ach.desc.鈥?路 achievement ids: all 21 values keyed in every locale (none)
+ok   ach.tier.鈥?路 achievement tiers: all 3 values keyed in every locale (none)
+ok   dna.arch.鈥?路 football DNA archetypes: all 10 values keyed in every locale (none)
+ok   dna.arch.鈥?路 football DNA archetypes: all 10 values keyed in every locale (none)
+ok   dna.arch.鈥?路 football DNA archetypes: all 10 values keyed in every locale (none)
+ok   dna.arch.鈥?路 football DNA archetypes: all 10 values keyed in every locale (none)
+ok   dna.arch.鈥?路 football DNA archetypes: all 10 values keyed in every locale (none)
+ok   dna.arch.鈥?路 football DNA archetypes: all 10 values keyed in every locale (none)
+ok   dna.arch.鈥?路 football DNA archetypes: all 10 values keyed in every locale (none)
+ok   dna.blurb.鈥?路 football DNA archetypes: all 10 values keyed in every locale (none)
+ok   ai.sug.鈥?路 the AI screen's suggested questions: all 4 values keyed in every locale (none)
+ok   attr.鈥?路 attribute categories: all 4 values keyed in every locale (none)
+ok   attr.鈥?路 attribute categories: all 4 values keyed in every locale (none)
+ok   attr.鈥?路 attribute categories: all 4 values keyed in every locale (none)
+ok   attr.鈥?路 attribute categories: all 4 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   film.stage.鈥?路 film pipeline stages: all 6 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   group.鈥?路 position groups: all 8 values keyed in every locale (none)
+ok   prof.mode.鈥?路 Mode union: all 3 values keyed in every locale (none)
+ok   ai.legend.鈥?路 retrieval entity kinds: all 5 values keyed in every locale (none)
+ok   attr.鈥?路 attribute categories: all 4 values keyed in every locale (none)
+ok   det.arc.鈥?路 career-arc trajectories: all 3 values keyed in every locale (none)
+ok   onb.goal.鈥?路 onboarding goal codes: all 6 values keyed in every locale (none)
+ok   onb.age.鈥?路 translated age bands: all 4 values keyed in every locale (none)
+ok   sim.shot.鈥?路 the match engine's shot types: all 7 values keyed in every locale (none)
+ok   ni.kind.鈥?路 the article types a news story claims: all 5 values keyed in every locale (none)
+ok   comm.feels.鈥?路 how a record sits against its points: all 3 values keyed in every locale (none)
+ok   mgr.venue.鈥?路 the venue a fixture is played at: all 2 values keyed in every locale (none)
+ok   ni.certainty.鈥?路 certainty bands: all 3 values keyed in every locale (none)
+ok   attr.name.鈥?路 attribute keys: all 32 values keyed in every locale (none)
+ok   compare.m.鈥?路 comparison metrics: all 7 values keyed in every locale (none)
+ok   fw.status.鈥?路 the statuses a match can be in: all 3 values keyed in every locale (none)
+ok   fw.type.鈥?路 search result types: all 5 values keyed in every locale (none)
+ok   landing.pillars.鈥?路 landing pillar ids: all 6 values keyed in every locale (none)
+ok   landing.pillarDesc.鈥?路 landing pillar ids: all 6 values keyed in every locale (none)
+ok   onboarding.鈥?路 modes, lower-cased by the site: all 3 values keyed in every locale (none)
+ok   onboarding.鈥?desc 路 modes, lower-cased by the site: all 3 values keyed in every locale (none)
+ok   prof.mode.鈥?路 Mode union: all 3 values keyed in every locale (none)
+ok   prof.mode.鈥?路 cross-mode record rows: all 4 values keyed in every locale (none)
+ok   set.mode.鈥?路 Mode union: all 3 values keyed in every locale (none)
+ok   tac.mentality.鈥?路 mentality slider: all 5 values keyed in every locale (none)
+ok   watch.sort.鈥?路 watchlist sorts: all 4 values keyed in every locale (none)
+ok   fav.鈥?active 路 favourite kinds: all 3 values keyed in every locale (none)
+ok   fav.鈥?idle 路 favourite kinds: all 3 values keyed in every locale (none)
+ok   det.arc.鈥?路 career trajectories: all 3 values keyed in every locale (none)
+ok   comm.tag.鈥?路 community tags: all 7 values keyed in every locale (none)
+ok   comm.sort.鈥?路 community sorts: all 2 values keyed in every locale (none)
+ok   drill.鈥?路 drill catalogue keys: all 18 values keyed in every locale (none)
+ok   cmd.group.鈥?路 command palette group codes: all 3 values keyed in every locale (none)
+ok   prof.mode.鈥?路 Mode union: all 3 values keyed in every locale (none)
+ok   learn.cat.鈥?路 Knowledge Academy categories: all 4 values keyed in every locale (none)
+ok   learn.cat.鈥?路 Knowledge Academy categories: all 4 values keyed in every locale (none)
+ok   learn.cat.鈥?路 Knowledge Academy categories: all 4 values keyed in every locale (none)
+ok   learn.cat.鈥?路 Knowledge Academy categories: all 4 values keyed in every locale (none)
+ok   learn.level.鈥?路 Knowledge Academy levels, lower-cased by the site: all 3 values keyed in every locale (none)
+ok   learn.level.鈥?路 Knowledge Academy levels, lower-cased by the site: all 3 values keyed in every locale (none)
+ok   every dictionary key is reachable 鈥?static, quoted, or a value a dynamic site can build (99 reader files, none)
+ok   the reachability scan claims the dictionary rather than nothing (1778 static/quoted + 256 dynamic)
+ok   en attr.name.* still equals the domain attribute table, all 32 of them (none)
+ok   en group.* still equals the domain position-group table, all 8 of them (none)
+ok   the drill catalogue names 18 drills and carries no word of its own (no label field)
+ok   no screen prints a domain name table's English label (4 files mapping those rows, none)
+ok   compare.cat.* stays deleted from every locale and every caller (no keys / no sites)
+ok   no UI file composes an English attribute name any more (0 of 30 UI files, declared table 0), while the 1 prose mod
+ule(s) outside that scope still reach the tables (domain/attributes.ts), and the planted screen is caught (true)
+ok   no UI file passes an attribute's English name as a literal prop or text node (none)
+ok   the literal-name scan is reading a UI that does pass label props (146)
+ok   none of the 18 converted row reads came back (none)
+ok   every placeholder key is read by a call that supplies its variables (137 filled, 0 short)
+ok   the placeholder scan reads t()'s own variable filling, and everything it looks at is readable (137 filled, 0 unrea
+dable)
+ok   no literal-key call throws a variable away 鈥?every name it supplies is interpolated by the value (137 var-carrying
+ sites, 0 dropped)
+ok   check 24's fill scan walks the whole tree, not five directories (97 modules walked; outside the old walk: componen
+ts/ui/dialog.tsx, components/ui/sheet.tsx, src/App.tsx; outside sites seen: 5)
+ok   a template site that passes variables supplies only what its space interpolates (98 dynamic sites read, 0 carrying
+ variables, 0 disagreement(s))
+ok   every read of a keyed row is resolved by rowLine (13 reads, 0 bare)
+ok   every read of a RowText map is resolved by rowLine (3 derived maps, 5 reads, 0 bare)
+ok   every JSX read of a row field the reader cannot confuse is resolved by rowLine (16 file/field pairs, 16 reads, 0 b
+are)
+ok   the derivation is reading the /review screen's prose fields (2 of them)
+ok   every archetype id a component reads, it reads through dna.arch. (6 guarded, 0 raw)
+ok   the id-leak scan is reading sites that exist (6 guarded reads)
+ok   the AI's retrieval kinds and the graph's drawable kinds are one list (club, player, competition, match, news / clu
+b, player, competition, news, match)
+ok   the raw-UI scan reports exactly the copy planted in its fixture (row:label, call, call, call, attr:title, text)
+ok   a hole containing a JSX-text apostrophe closes on its own line, not on the next declaration (0 swallowed)
+ok   the fixture's t() lookups are read as lookups, not as interface copy (planted.toasted, planted.key, planted.a, pla
+nted.b, planted.c, common.back)
+ok   a function-valued prop is a display position: the words it returns are copy (fn:format, fn:format)
+ok   鈥nd the shapes that are not copy stay out of it: the keyed formatter and the two event handlers (0 reported)
+ok   no function-valued prop outside the event-handler shape carries prose (none) 鈥?the walk read 74 function-valued pr
+ops, 5 of them not handlers
+ok   a mime wildcard inside an attribute is not a comment opener 鈥?copy after it is still scanned (Planted after a mime
+ wildcard, Planted after a real comment)
+ok   鈥nd a real {/* 鈥?*/} is still a comment: the copy inside it stays out of the scan (Planted after a real comment)
+ok   the fixture plants the shape that hid AppShell (1 site), and that shape is still live in 2 app files, so the scann
+er's own copy is the one being measured
+ok   the value-position table is "=({[\\,:;?" (= ( { [ , : ; ?) 鈥?it holds `=`, which is the shape that hid AppShell, a
+nd no letter, digit, `)` or `]`, so an apostrophe inside copy is never read as a delimiter
+ok   the call rule reads a method receiver as well as a bare call, and nothing that merely ends in "toast" (\b(?:toast|
+alert)(?:\.\w+)?\( 路 7 probes as predicted)
+ok   the 34 localised files still render no raw UI text (none)
+ok   the raw-UI debt outside the covered set has not grown (0 across 0 files, ceiling 0)
+ok   the skip-list audit read 745 import specifiers over 97 files (population pin 97) and 0 of them reaches a skipped d
+irectory (none reaches node_modules, dist, dev)
+ok   the balance the census reads reports one field per thread the walker can lose (elem, depth, inTag, tick)
+ok   the walker kept its thread to the end of all 97 measured files (population pin 97), and its filter flags exactly t
+he 4 planted refusals and nothing else (4: planted unclosed element elem, planted bracket open at EOF depth, planted un
+closed attribute inTag, planted runaway template tick)
+ok   and a whole fixture reads zero on every field while still showing its copy ({"elem":0,"depth":0,"inTag":false,"tic
+k":0} / attr:title,child)
+ok   a caption planted at the midpoint of every one of the 50 .tsx files (pin 50, and the two selectors agree: true) co
+mes back in full (blind: none), while the file planted blind here is reported blind (true)
+ok   the midpoint every caption is planted at opens no thread that swallows it (compromised: none; other walker threads
+ open at midpoints: 47 of 50), and the reader names the control's own runaway template (depth+tick) and a planted spann
+ing comment (comment) while a closed one reads clean (clean)
+ok   the probe's position choice is load-bearing against the shape that exists for it: a fixture broken in its interior
+ and recovered by its end reads 0 at the midpoint (blind under the standing demand) and 2 at end-of-file, where no dema
+nd can call it blind, while the healthy fixture reads 2 and 2 at the same two positions (the runaway control above read
+s 0 under the same arithmetic)
+ok   a wrongness that heals before the walk ends leaves true regions behind it: on the unterminated-attribute fixture t
+he healed fragment charges itself exactly once (1, as the attribute it opened) and the caption after the heal reads 2 鈥
+?the two hits the clean fixture reads 鈥?while a caption inside the open template above reads 0, because string content 
+is not code
+ok   the debt scan still walks the whole tree and reports what it finds in it (50 .tsx files against pin 50, 0 in debt,
+ 0 distinct positions: none)
+ok   every literal the raw-UI exemption treats as a t() lookup is a real key (1295 lookups, no unknown)
+ok   the exemption audit is reading real lookups rather than nothing (1295)
+ok   onb.goal.鈥?路 the code table in domain/onboarding.ts is the OnboardingGoalCode union (firstTouch, getFaster, finish
+Better, playSmarter, holdUpPlay, twoFooted / firstTouch, getFaster, finishBetter, playSmarter, holdUpPlay, twoFooted)
+ok   onb.age.鈥?路 the age bands' type is derived from the list, so the two cannot carry different words (Amateur, Semi-p
+ro, Pro, Veteran)
+ok   domain/goals.ts still composes its goal.unit.鈥?keys
+ok   goal.unit.鈥?路 goal metrics: the domain table and the domain/types.ts union are one list (xp, sessions, level, attr
+ibute / xp, sessions, level, attribute)
+ok   goal.unit.鈥?路 goal metrics: all 4 values keyed in every locale (none)
+ok   domain/rowText.ts still composes its prof.mode.鈥?keys
+ok   prof.mode.鈥?路 modes: the domain table and the domain/types.ts union are one list (FAN, PLAYER, MANAGER / FAN, PLAY
+ER, MANAGER)
+ok   prof.mode.鈥?路 modes: all 3 values keyed in every locale (none)
+ok   every row text a domain module hands the screen is a real key with exactly its placeholders (347 keys, clean)
+ok   every dictionary key is namespaced, which is what lets a row literal be told from a record table (0 dotless of 200
+7)
+ok   the row-text scan is reading modules that actually carry the union (29 files, 347 keys)
+ok   the planted relative-time shapes are bucketed exactly as declared and each bucket says whether it is charged (10 p
+lants over 4 buckets, all as predicted; untested buckets: none)
+ok   every relative measurement either hands back a row or is provably not shown to anyone (2 candidates in 2 files 鈥?r
+ow-typed 2 [features/community/CommunityHub.tsx timeAgo, i18n/format.ts relativeDay via now], selection-only 0 [none], 
+charged none; the door is inside the population: yes)
+ok   the door counts the reader's calendar days over 11 planted date anchors 脳 3 locales (clean; the two direction word
+s differ, and today is a word plus its clock), while the elapsed-24-hour rule it replaced still calls tomorrow at 00:30
+ 鈥? days鈥?(in 1d)
+ok   the day rows keep M304's per-locale policy while the dashboard's stamp stays narrow (English compact: true, the tw
+o Chinese columns word-form: true, the 56px w-14 stamp still renders relativeDay: true; M309's pair is refused: true, M
+304's passes: true, and the widened stamp accepts the spelled form: true)
+ok   the door measures against a given now: a day the reader calls 13d ago reads as tomorrow on a clock 14 days behind,
+ and stays 13d ago on the reader's own (clean)
+ok   the four planted ways of reaching an English word are classified exactly as declared (4 plants, all as predicted)
+ok   only i18n/ touches the dictionary table (100 files read against pin 100, 3 readers inside i18n/: i18n/dictionaries
+.ts, i18n/format.ts, i18n/index.tsx, offenders outside: none)
+ok   provider vocabulary is asked for only by modules, never rendered from a screen (2 caller(s): data/ai.ts, domain/pl
+ayerDna.ts, screens: none)
+ok   the vocabulary door answers from the English column and echoes a key it does not know (clean)
+ok   the 4 suggested questions send exactly the English row of the key the reader sees (all equal), the AI screen carri
+es 0 question literal(s), and the same scan finds the planted one (1)
+ok   the 2 coach prompts the screens hand over are the reader's own rows, read here in both languages (clean), and the 
+6 call site(s) across 50 screens type no sentence into requestPlan (none), while the plant under the same regex is repo
+rted (true)
+ok   the variables that resolve as keys are exactly the 6 this clause can find keys for (lead, target, game, zone, even
+t, improvement; unknown: none; found nothing for: none)
+ok   no key a key-holding variable can carry asks for variables of its own (21 keys 脳 3 locales, all var-free)
+ok   the English-leak rule calls the pre-M230 sentence a leak and its replacement clean (3 plants, all as declared)
+ok   every row of 6 real plans and 3 answers reaches a reader in the reader's own column (213 readings, clean)
+ok   the provider composes no English label into a row any more (data/ai.ts names keys only)
+ok   the bracket rule catches a pair opened in one script and closed in the other (4 plants, all as declared)
+ok   every dictionary row closes its own brackets in its own script (6021 rows read, clean)
+ok   t()'s variable filling is the only interpolator in the UI source (none)
+ok   the hand-rolled interpolator rule, planted both ways, still catches the two shapes it refuses and accuses neither 
+shape it does not (ok const s = tpl.replace("{n}", String(n));; ok const s = tpl.replace(/{n}/, String(n));; ok const s
+ = tpl.replace("a", "b");; ok const s = iso.replace(/-/g, "/");)
+ok   every key held in a *Key field is a real dictionary row in all 3 locales (125 sites across 10 files, clean)
+ok   every *Key field is read back through t(), so a rename can never dodge the scan by leaving the translation out (al
+l resolved)
+ok   the *Key scan is reading files that actually carry the fields (10 files, 125 sites)
+ok   English duplicate-value count is pinned at 107 (actual: 107)
+ok   English excess-key count is pinned at 177 (actual: 177)
+ok   every key carrying a duplicated English value is present in all 3 locales (0 missing)
+ok   no screen renders a shared English value as raw copy (0 bare hits)
+ok   the prose rule calls a sentence a sentence and a format a format (0 wrong of 14)
+ok   the rule is tested in both directions (7 sentences, 7 non-sentences)
+ok   domain prose still on keys has not grown (0 literals across 0 files, ceiling 0)
+ok   no module's own prose debt has grown (all 12 at or under cap)
+ok   the per-module caps cover the whole counted debt (0 capped vs 0 counted)
+       inventory: 
+ok   domain/load.ts publishes no sentence of its own (0 left on lines )
+ok   domain/review.ts publishes no sentence of its own (0 left on lines )
+ok   domain/history.ts publishes no sentence of its own (0 left on lines )
+ok   domain/compare.ts publishes no sentence of its own (0 left on lines )
+ok   domain/worldEngine.ts publishes no sentence of its own (0 left on lines )
+ok   domain/playerDna.ts publishes no sentence of its own (0 left on lines )
+ok   domain/scouting.ts publishes no sentence of its own (0 left on lines )
+ok   domain/careerArc.ts publishes no sentence of its own (0 left on lines )
+ok   domain/gap.ts publishes no sentence of its own (0 left on lines )
+ok   domain/matchEngine.ts publishes no sentence of its own (0 left on lines )
+ok   domain/newsImpact.ts publishes no sentence of its own (0 left on lines )
+ok   domain/footprint.ts publishes no sentence of its own (0 left on lines )
+ok   domain/filmInsights.ts publishes no sentence of its own (0 left on lines )
+ok   domain/training.ts publishes no sentence of its own (0 left on lines )
+ok   domain/onboarding.ts publishes no sentence of its own (0 left on lines )
+ok   domain/attributes.ts publishes no sentence of its own (0 left on lines )
+ok   domain/community.ts publishes no sentence of its own (0 left on lines )
+ok   domain/career.ts publishes no sentence of its own (0 left on lines )
+ok   domain/learn.ts publishes no sentence of its own (0 left on lines )
+ok   the zero list names modules that really are in the tree (19)
+ok   the scan walks the whole domain population (0 of 31 files carry debt, 0 hits)
+ok   data/intelligence.ts prose has not grown (0 literals, ceiling 0)
+ok   the prose rule still reports a sentence and still ignores a regex, so the zero above is measured and not a blind s
+pot (1 of 1 prose, 0 of 0 regex)
+ok   鈥nd proseDebt reads code rather than comments, both ways: the same sentence as a live literal still counts (1 of 
+1) and inside a block comment counts for nothing (0 of 0)
+ok   the extra prose allowances are respected (data/intelligence.ts 0/0)
+ok   no English sentence is carried by two keys (0 of 879 sentences shared)
+ok   the sentence rule still reports a duplicate, so the zero above is measured and not a blind spot (1 of 1)
+ok   the collapsed triples are read as one row by both screens (6 sites)
+ok   no file formats an instant for the browser (0 sites anywhere in the app; one bare toLocale* call reddens this)
+ok   the browser-locale classifier, planted both ways, still refuses all four ways of asking the host and accuses none 
+of the three ways of telling it (all 7 as declared)
+ok   no formatted value takes its locale from the host (0 reads outside i18n; the start-locale picker reads it 1脳)
+ok   the census still recognises all 5 ways of asking the host (all caught)
+ok   and recognises none of the 2 calls that name a locale (no false positives)
+ok   the census scanned the app rather than an empty set (97 source files against pin 97, 0 browser-locale sites left)
+ok   every formatDate call resolves and none was mis-parsed (17 calls, 0 unresolved)
+ok   the door's argument readers, planted both ways, still pass the reader's locale and still catch a literal locale, a
+ non-locale first argument and an unparseable call (all 5 as declared)
+ok   no formatDate call passes a literal locale 鈥?that renders one language for everyone (none)
+ok   every formatDate call's first argument is the reader's locale (all clear)
+ok   every file that formats a date imports the door from @/i18n (none missing)
+ok   the umbrella re-exports exactly the doors outside i18n/ ask for (4 doors declared in format.ts, 5 names imported f
+rom @/i18n, 2 of them doors: formatDate, relativeDay) 鈥?phantom none, unreachable none
+ok   the door is the ONE door 鈥?nothing else constructs a formatter (none)
+ok   the door scan is reading real call sites (17 across 11 files)
+ok   every askIntelligence call resolves and passes an answer language (1 calls, 0 unresolved)
+ok   no askIntelligence call hard-codes the reader (none)
+ok   every askIntelligence call hands over the live locale (all clear)
+ok   the RAG entry point requires a Locale rather than defaulting it (question: string, locale: Locale)
+ok   no hand-assembled date label reaches a screen (none)
+ok   the declared ISO day keys are still there and still keys (all in place)
+ok   the day-key scan is reading the builders it claims (1)
+ok   the feed's day branch asks the calendar-day gate rather than counting its own (relativeDay call present, inline da
+y-row names 0)
+ok   every useMemo the scanner was asked about resolved (72 calls, 0 unparsed)
+ok   no cached row reads the reader's language without depending on it (none)
+ok   the memo rule is watching a locale that is really read (3 of 72 memos)
+ok   the i18n umbrella really exports formatDate at runtime
+ok   every app locale id is one Intl actually resolves (all resolve)
+ok   the same instant renders differently per locale (en=Sep 12 zh-CN=9鏈?2鏃?zh-TW=9鏈?2鏃?
+ok   a Chinese reader is shown CJK and an English reader Latin (zh renders CJK | en latin)
+ok   no screen rewrites what the door rendered (0 rewrites; door and 3 per-file aliases walked)
+ok   and no formatted value is laundered through a local and then edited (0 holders edited of 17 door call sites)
+ok   the surgery scan catches all 4 ways of rewriting a rendered value (all caught)
+ok   and refuses none of the 3 ways of using one honestly (no false positives)
+ok   a date-time with the fixture row's own options carries a comma in exactly en locale (en=Sep 12, 04:30 PM zh-CN=9鏈?
+2鏃?16:30 zh-TW=9鏈?2鏃?涓嬪崍04:30)
+ok   so a punctuation-strip aimed at that comma cannot reach the readers it appears to serve (zh-CN/zh-TW have no comma
+ to strip)
+ok   and the fixture row really renders the door's string unchanged today
+ok   no proof resolves a RowText with its own interpreter (110 scripts, 28 read a dictionary, 4 of them by a row's key 
+(proof-ai-grounding.mjs, proof-i18n.mjs, proof-localdata.mjs, proof-projection.mjs), 25 hold the seam, 0 hand-rolled)
+ok   the census read the suite's own scripts rather than an empty set (110 files, 28 dictionary readers, 25 seam users)
+ok   and the two files this milestone converted are inside the population it cleared (proof-m74.mjs, proof-m77.mjs)
+ok   the classifier catches all 3 ways of hand-resolving a row, the removed one included (all caught)
+ok   and none of the 6 shapes that read a dictionary without resolving a row (no false accusations)
+ok   so the census is a shape test with both ends demonstrated (3 refused + 6 accepted shapes, through the same classif
+ier that just cleared 110 scripts)
+ok   the 3 screens that show what a news story claims read it through the shared composer at all 5 position(s) (pins 3 
+files/5 positions), and each imports it from domain/rowText (none)
+ok   no module prints a stored kind straight into a label slot (none of 97) and no screen types one of the union's 5 wo
+rds into a text node or a label prop (none), while the planted screen is caught by both halves (bare 1, word true)
+ok   the Transfer Centre's own kind loop hands its chip to the composer, not to the code (420 chars read, bare child fa
+lse), keeping React's key={k} as the code it is (true), and the same extractor reports the planted loop (49 chars, bare
+ true)
+ok   exactly 1 module composes a ni.kind. key and it is the composer, not a screen (domain/rowText.ts x1, pins 1/1), wh
+ile a screen that builds the key inline is caught (1)
+ok   the module loaded as the composer is the file this gate read (21 declared export(s): ageGroupLabel, asRowText, buc
+ketLabel, favoriteLabel, fillRowVars, footLabel, goalLabel, isCodeVar, isKeyVar, matchStatusLabel, newsKindLabel, newsS
+ummary, newsTitle, phaseLabel, positionGroupLabel, positionLabel, pressLevel, repairTextField, rowLine, searchKindLabel
+, tempoLevel)
+ok   the shipped newsKindLabel answers all 5 article types in all 3 locales with the dictionary's own word and never a 
+key (no bad reading), and 11/15 of those words are not the code already spelled 鈥?the pin that keeps the equality load-
+bearing rather than tautological
+ok   and the fallback the readings are measured against is real: a code outside the union comes back as written (Plante
+d)
+ok   and the English badge changes spelling, not meaning: Rumor now reads the word the dictionary holds (Rumour)
+ok   the corpus learns which glyphs only the simplified script writes (180 glyphs, e.g. 瀹炰綋鎵у憳涔愯禌杈撴病)
+ok   and the learned set is a working detector, not a number: a planted simplified word (璁粌) is inside it (true)
+ok   no zh-TW value carries a glyph the traditional corpus never writes (0 of 2007 values; planted word caught: true)
+ok   every value carries the same set of template variables in all three locales, counts included (0 drifting)
+ok   a 绠€浣撲腑鏂?value that is still English is named, not waved through (brand.name; planted arrangements: true)
+ok   every t() call in the 97 app modules is one of four known shapes (1288 literal, 98 template, 32 expression, 23 com
+puted-with-literals, 0 unknown; planted unknown caught: true)
+ok   a literal wearing backticks is still a literal 鈥?check 24 and this census read it as one (attr.name.decision_makin
+g, attr.name.first_touch, attr.name.passing; planted ticked literal classifies and reports its missing variable: true)
+ok   every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dro
+pped side included (137 literal sites with placeholders, 8 of 23 computed sites; short: 0, dropped: 0; planted short/dr
+opped: true/true)
+ok   a call whose key is an expression passes no variables it cannot know (32 sites, none with an object)
+ok   the values behind every bare key pool carry no placeholder, in any locale (4 *Key fields + 3 *Keys arrays + FILM_K
+IND_KEY's 7 entries, 167 keys; fields pinned: bodyKeys,foundKeys,labelKey,optionKeys,qKey,summaryKey,titleKey; planted 
+value held: true)
+ok   the kind badges read the same table this gate audited: VIDEO_KIND_KEY is a bare re-export of FILM_KIND_KEY and the
+ table holds exactly these seven rows (vid.kind.dribble,vid.kind.pass,vid.kind.press,vid.kind.scan,vid.kind.shot,vid.ki
+nd.touch,vid.kind.turn; wired: true; planted rewire and planted eighth row caught: true)
+ok   every template's braces close in all three locales (0 of 6021 values; planted arrangements: true)
+ok   the 3 screens that show which positional group a player is in read it through the shared composer at all 5 positio
+n(s) (pins 3 files/5 positions), and each imports it from domain/rowText (none)
+ok   no module prints a stored positional group straight into a display slot and no screen types one of the union's 8 c
+odes as a text node (multi-letter only 鈥?the union's single-letter W is a wins column heading in features/manager/Manag
+erOS.tsx, measured on this run; none of 97), the picker table and the union carry the same 8 ids, while the planted row
+ is caught by both halves (true)
+ok   the 1 direct t() call(s) that name a positional group hand it over already resolved (pin 1; none unresolved), the 
+plant in the same shape is caught (true), and the keyed-row door those other vars ride 鈥?CODE_VARS listing group 鈥?rend
+ers the word in all 3 locales (no bad row reading)
+ok   the Development page's own group loop hands its chip to the composer, not to the code (673 chars read, bare false)
+, keeping React's key={g.id} as the identity it is (true), and the same extractor reports the planted loop (65 chars, b
+are true)
+ok   exactly 1 module composes a group. key and it is the composer, not a screen (domain/rowText.ts x1), while a screen
+ that builds the key inline is caught (1), and the loaded composer is the module that declares positionGroupLabel (ageG
+roupLabel, asRowText, bucketLabel, favoriteLabel, fillRowVars, footLabel, goalLabel, isCodeVar, isKeyVar, matchStatusLa
+bel, newsKindLabel, newsSummary, newsTitle, phaseLabel, positionGroupLabel, positionLabel, pressLevel, repairTextField,
+ rowLine, searchKindLabel, tempoLevel)
+ok   the shipped positionGroupLabel answers all 8 positional groups in all 3 locales with the dictionary's own word and
+ never a key (no bad reading), and 24/24 of those readings are not the code already spelled (pin 24 鈥?every one differs
+ here, unlike M249's 11/15)
+ok   and the same fallback M249 measured is still the last resort for a code outside the union (Planted)
+ok   the 2 screens that show what state a fixture is in read it through the shared composer at all 5 position(s) (pins 
+2 files/5 positions), and each imports it from domain/rowText (none)
+ok   no module prints a stored fixture status straight into a display slot and no screen types one of the union's 3 cod
+es as a text node (none of 97), the list the composer reads, the type it shadows and the filter strip's own array carry
+ the same 3/3/3 codes, while the planted row is caught by both halves (true)
+ok   the 2 direct t() call(s) that name a fixture status hand it over already resolved (pin 2; none unresolved), the pl
+ant in the same shape is caught (tab), and the 1 keyed row(s) that would carry a status go through the CODE_VARS door (
+door open: true)
+ok   the matches screen's own status loop hands its chip to the composer, not to the code (276 chars read, bare false),
+ keeping key={s}, tab === s and setTab(s) as the identities they are (true), and the same extractor reports the planted
+ loop (58 chars, bare true)
+ok   exactly 1 module composes a fw.status. key and it is the composer, not a screen (domain/rowText.ts x1), while a sc
+reen that builds the key inline is caught (1), and the loaded composer is the module that declares matchStatusLabel (ag
+eGroupLabel, asRowText, bucketLabel, favoriteLabel, fillRowVars, footLabel, goalLabel, isCodeVar, isKeyVar, matchStatus
+Label, newsKindLabel, newsSummary, newsTitle, phaseLabel, positionGroupLabel, positionLabel, pressLevel, repairTextFiel
+d, rowLine, searchKindLabel, tempoLevel)
+ok   the shipped matchStatusLabel answers all 3 fixture statuses in all 3 locales with the dictionary's own word and ne
+ver a key (no bad reading), and 9/9 of those readings are not the code already spelled (pin 9)
+ok   and the same fallback is still the last resort for a status outside the union (Planted)
+ok   every search subtitle leaves the data layer as a keyed sr. row, and each of the five renders with no braces and no
+ record code left in any locale (sr.clubLine, sr.competitionLine, sr.matchLine, sr.newsLine, sr.playerLine; bad reading
+s: none; codes left: none; planted bare-string shape yields no key: true; planted varless render keeps its braces: true
+)
+ok   no search subtitle carries a bare record code (pin 0: none), no reader prints one raw (none bare), both readers re
+solve the row through rowLine (pin 2: features/command/CommandPalette.tsx, features/football/FootballWorld.tsx) 鈥?while
+ the old shape is still caught (1)
+ok   the 2 screens that show a preferred foot read it through the shared composer at all 4 position(s) (pins 2 files/4 
+positions), and each imports it from domain/rowText (none)
+ok   the foot's type is derived from its runtime list, so the two cannot carry different codes (L,R)
+ok   no component prints a stored foot straight into a display slot (none of 97), while the planted bare read is caught
+ and the resolved shape is clean (true)
+ok   exactly 1 module names a foot.* key and it is the composer, not a screen (domain/rowText.ts x2), while a screen th
+at starts quoting one is caught (1), and the loaded composer is the module that declares footLabel (true)
+ok   the shipped footLabel answers both preferred feet in all 3 locales with the dictionary's own word and never a key 
+(no bad reading), and 6/6 of those readings are not the code already spelled (pin 6)
+ok   and the same fallback is still the last resort for a foot outside the union (Planted)
+ok   the 1 shipped row(s) carrying a preferred foot go through the CODE_VARS door (door open: true; data/intelligence.t
+s), the intelligence fact renders the word in all 3 locales (clean), and the detector tells a foot-carrying vars body f
+rom a clean one (true)
+ok   the 1 screen that shows a bucket word reads it through the shared composer at all 3 position(s) (pins 1 files/3 po
+sitions), and each imports it from domain/rowText (none)
+ok   the scout filter loop hands its chip to the composer, not to the code (272 chars read, bare false), keeping key={b
+}, bucket === b and setBucket(b) as the identities they are (true), no module types one of the five codes as a text nod
+e (none), and the same extractor reports the planted loop (51 chars, bare true)
+ok   no module prints a stored bucket straight into a display slot beyond the chip the loop clause reads and no screen 
+types one of the five codes as a text node (none of 97), while the planted pair is caught (2) and the resolved shapes a
+re clean (0 + 0)
+ok   the bucket union's type and the composer's switch carry the same codes (ALL,GK,DEF,MID,ATT vs ALL,ATT,DEF,GK,MID; 
+planted two-case switch reads 2)
+ok   exactly 1 module names a scout.bucket.* key and it is the composer, not a screen (domain/rowText.ts x5), while a s
+creen that starts quoting one is caught (1), and the loaded composer is the module that declares bucketLabel (true)
+ok   the shipped bucketLabel answers all 5 filter buckets in all 3 locales with the dictionary's own word and never a k
+ey (no bad reading), and 15/15 of those readings are not the code already spelled (pin 15)
+ok   and the same fallback is still the last resort for a bucket outside the union (Planted)
+ok   the 1 screen that tags a drill with its phase reads it through the shared composer at all 1 position(s) (pins 1 fi
+les/1 positions), and each imports it from domain/rowText (none)
+ok   no module prints a stored drill phase straight into a display slot and no screen types one of the five codes as a 
+text node (none of 97), while the planted pair is caught twice and the resolved shape is clean (true)
+ok   the drill-phase union's type and the composer's switch carry the same codes (warmup,technique,decision,game,cooldo
+wn vs cooldown,decision,game,technique,warmup; planted two-case switch reads 2)
+ok   exactly 1 module names a training.phase.* key and it is the composer, not a screen (domain/rowText.ts x5), while a
+ screen that starts quoting one is caught (1), and the loaded composer is the module that declares phaseLabel (true)
+ok   the shipped phaseLabel answers all 5 drill phases in all 3 locales with the dictionary's own word and never a key 
+(no bad reading), and 15/15 of those readings are not the code already spelled (pin 15)
+ok   and the same fallback is still the last resort for a phase outside the union (Planted)
+ok   the 9 modules that show a player's position word it through the shared composer at all 13 position(s) (pins 9 file
+s/13 positions), and each imports it from domain/rowText (none)
+ok   no module words a player's position as a raw code in a display slot, and the shapes this census counts apart are p
+inned rather than waved through (0 display, 7 badge attributes pin 7, 2 rank templates pin 2, 1 binding pattern(s) excl
+uded by name; none on the glass) 鈥?and the receiver-less display shape is not simply trusted: a plant holding one of ea
+ch of the four shapes reads 2/1/1/1
+ok   the position union's type and the composer's switch carry the same codes (GK, CB, LB / RB, DM, CM, AMC, LW / RW, S
+T vs AMC, CB, CM, DM, GK, LB / RB, LW / RW, ST), the switch names a pos.* key for every one of them (8 pairs), and a pl
+anted two-case switch reads 2 rather than sliding a floor (2)
+ok   the two families that share five spellings answer from two tables: GK through `group` is the group's word and thro
+ugh `position` the badge's, in all 3 locales, and in 1 of them one spelling really does mean two different things (pin 
+鈮? 鈥?en words the group "Goalkeeper" and the position "GK") (no misread)
+ok   exactly 1 module names a pos.* key and it is the composer, not a screen (domain/rowText.ts x8), while a screen tha
+t starts quoting one is caught (1), and the loaded composer is the module that declares positionLabel (true)
+ok   the shipped positionLabel answers all 8 position codes in all 3 locales with the dictionary's own word and never a
+ key (no bad reading), and 16/24 of those readings are not the code already spelled (pin 16)
+ok   and the same fallback is still the last resort for a position outside the space (Planted)
+ok   the 2 shipped row(s) carrying a position go through the CODE_VARS door (door open: true; data/intelligence.ts, dom
+ain/community.ts), all 24 door readings match the dictionary (clean), the fact words a CM in all 3 locales and prints n
+o bare code to the two Chinese ones (clean), a rank row's number still passes through untouched (7), and the detector t
+ells a position-carrying vars body from a clean one (true)
+ok   exactly 1 module declares the position space (domain/types.ts), 5 fields are typed with it and 0 still take any st
+ring (pin 0; none), and no module abbreviates a position with one of the four spellings only the engine's retired hand 
+copy used (none)
+ok   a switch-cases extractor reads the composer it names, not the file it lives in (2 cases in the planted bucket swit
+ch where the same text scanned whole reads 3; shipped bucket switch 5 of 6 whole-file matches), and the difference is l
+oad-bearing rather than decorative (a second family in the same module shares its spellings)
+ok   codeWord's body walks 14 branches in source order (0:ATTRIBUTE_KEYS=32 1:POSITION_GROUPS=8 2:MODES=3 3:ARCHETYPE_K
+EYS=10 4:SEARCH_KINDS=5 5:NEWS_KINDS=5 6:MATCH_STATUSES=3 7:FOOTS=2 8:RECORD_FEELS=3 9:TRAJECTORIES=3 10:CATEGORIES=4 1
+1:SHOT_TYPES=7 12:isGoalCode<-GOAL_CODES=6 13:isAgeGroupWord<-AGE_GROUP_WORDS=4) totalling 95 codes, each one matched t
+o an exported list of a module domain/rowText.ts itself imports and none of them empty or ambiguous (all resolved), whi
+le a branch naming a list nobody registers comes back UNRESOLVED NOT_A_REGISTERED_LIST rather than as an empty success
+ok   all 95 codes go through the shipped door and each asks its OWN branch's key (0 mismatched) 鈥?that is the shadowing
+ test, because a spelling two branches claim asks the earlier one's prefix 鈥?and a code no branch claims asks nothing a
+nd is returned exactly as written (0 keys asked, reads "NO_SUCH_CODE_ANYWHERE")
+ok   the 95 codes are pairwise disjoint across the 14 spaces (91 pairs, 0 shared), and the same detector run on a plant
+ed table where a later branch re-claims one foot code names exactly that one shadowing and blames the earlier branch (L
+ branch 1 answers for 2)
+ok   the 5 retrieval kinds (club, player, competition, match, news) are typed once: SearchKind is derived from (typeof 
+SEARCH_KINDS)[number], the canvas's colour table holds 5 rows (club,player,competition,news,match) declared const TYPE_
+COLOR: Record<SearchKind, string> = and the legend walks Object.keys(TYPE_COLOR), 2 arrays write all 5 names (domain/ty
+pes.ts: export const SEARCH_KINDS = | features/football/FootballWorld.tsx: const SEARCH_TYPES: readonly SearchKind[] =)
+ of which 0 define the family instead of naming it (none 鈥?that is the four-copies test, because a carrier that restate
+s the union is a carrier no sixth kind can reach), while 2 near-miss subsets stay a different space (domain/newsImpact.
+ts=2 domain/types.ts=3) and the same scan charges a planted union and a planted list (1/1 exact) yet never charges the 
+subsets (1 read, 0 charged)
+ok   ai.legend. is composed by 1 line in the 97 app modules (domain/rowText.ts) 鈥?the door's own branch 鈥?and the shipp
+ed composer takes (kind: SearchKind, t: Translate) and its body is codeWord(kind, t), so it words a kind THROUGH the do
+or rather than beside it, while the 2 modules that show a kind (features/ai/AiStudio.tsx features/command/CommandPalett
+e.tsx) both ask it and a chrome-side lookup written into a planted module is counted by the same scan (1)
+ok   25 text children read a kind or type field and 0 of them show the stored code bare (none) while 5 attribute positi
+ons still carry it, and those are the app's own identity rather than the reader's copy (features/command/CommandPalette
+.tsx=2 features/film/FilmRoom.tsx=1 features/football/FootballWorld.tsx=1 features/review/ReviewPage.tsx=1) 鈥?the same 
+scan charges a planted code in a text child (1), reads a planted worded composer as 1 child charged 0, reads a planted 
+key built inside a template literal as 1 child charged 0 (the walk is balanced, so the braces of ${} do not end the rea
+d), and an attribute-bearing key as 0 text child and 1 attribute
+ok   all 5 kinds go through the shipped door and the shipped composer in 3 locales (club: Club / 淇变箰閮?/ 淇辨▊閮?| plural C
+lubs / 淇变箰閮?/ 淇辨▊閮? 路  player: Player / 鐞冨憳 / 鐞冨摗 | plural Players / 鐞冨憳 / 鐞冨摗  路  competition: Competition / 璧涗簨 / 璩戒簨
+ | plural Competitions / 璧涗簨 / 璩戒簨  路  match: Fixture / 璧涚▼ / 璩界▼ | plural Matches / 姣旇禌 / 姣旇辰  路  news: News / 鏂伴椈 / 鏂
+拌仦 | plural News / 鏂伴椈 / 鏂拌仦): every kind asks exactly one key of its own family (0 wrong), the composer's English answ
+er is the door's own (all agree), no locale shows the code or the key back (none), the two families disagree on en=club
++player+competition+match zh-CN=match zh-TW=match 鈥?English splits singular chip from plural section heading, Chinese w
+rites one word except for the fixture/match pair 鈥?and 5+5 5+5 5+5 keys carry them
+ok   the 3 favourite kinds are one runtime list: domain/types.ts holds export const FAVORITE_KINDS = ["club", "player",
+ "competition"] as const; and the type is derived from it, while 1 carriers in the 97 modules hold all 3 names (domain/
+types.ts:array) of which 0 is a copy rather than the list (none), and the same scan charges a planted union and a plant
+ed array (2 read, 2 charged) yet leaves a planted five-name list out of the population entirely and a planted two-name 
+subset read-but-uncharged (1 read, 0 charged)
+ok   the slot table is exhaustive over the list: 3 rows (club->favoriteClubId player->favoritePlayerId competition->fav
+oriteCompetitionId) against 3 kinds, every row reads and writes the SAME field (0 mismatched), every field it names is 
+on UserProfile (0 invented), and every favorite field on the profile has a row (0 orphan) 鈥?the two ternary chains this
+ replaced each ended in a fallback arm, so a kind outside the space resolved to the competition slot on both sides of t
+he app
+ok   a favourite key is built in one module: 2 interpolation sites across 1 files (domain/rowText.ts=2), the composer i
+s export const favoriteLabel = (kind: FavoriteKind, active: boolean, t: Translate): string => acti, and 1 screen module
+s call it (features/football/Details.tsx)
+ok   all 3 kinds go through the shipped composer in 3 locales (club: My club / Set as my club | player: My player / Set
+ as my player | competition: My league / Set as my league): each asks exactly its own two keys (0 wrong), the answer is
+ the dictionary row every time (all agree), no locale shows the code or the key (none), the three kinds give three diff
+erent words (3 in en) so the answer moves with the code rather than being a constant, and 6/6/6 fav keys are exactly th
+e space times the two states (6 expected)
+ok   the manager's xG fact pair reads the dictionary on both sides (xG (us) / xG (them) | 棰勬湡杩涚悆锛堟垜鏂癸級 / 棰勬湡杩涚悆锛堝鎵嬶級 |
+ 闋愭湡閫茬悆锛堟垜鏂癸級 / 闋愭湡閫茬悆锛堝皪鎵嬶級) and the file carries no label-attribute literal the letter bar hides (0; a planted one re
+ads 1)
+ok   the match page's AI path is rows end to end: the provider takes { label, facts } rows (a planted RowText signature
+ reads 1, a planted string[] one reads 0) and seeds on the label's English reading, Details asks 6 ai.qf.* question key
+s with no string-array facts anywhere in the file, all 10 dictionary rows exist in 3 locales (none missing), and the th
+ree keys the old string path leaned on are gone (planted absence reads 0)
+ok   the two-letter connector between two sides is keyed, not typed: the shipped modules carry 0 bare-vs text nodes and
+ 0 bare-vs text children (planted node reads 1, planted child reads 1), and both connector rows exist in 3 locales (non
+e missing)
+ok   every text node the letter bar cannot see is a decision or a row: the app-wide walk reads 4 under-bar nodes (F F F
+ 鈱楰) and 0 of them stray off the decision list, a planted fixture charges 1 under-bar word, the two prop-string shapes 
+the walk cannot see are gone (a planted Lv template reads 1, a planted xG label reads 1), and all 7 rows exist in 3 loc
+ales (none missing)
+ok   display-named props carry no bare prose: the app-wide walk reads 0 bare strings on a display prop (none), and plan
+ted default-param and object-literal shapes read 1 and 1
+ok   the forms 37f's quoted-only read leaves outside are held too: 10 aria display attributes resolve through t() and t
+he one forwarded label is pinned at its source (a planted aria bare string reads 1), and the single-quote and no-interp
+olation forms of the display-prop class read 0 and 0 bare strings (planted shapes read 1 and 1)
+ok   the seeded news sentences are read through the composers: 0 bare .summary and 0 bare .title renders, both 0 (plant
+ed shapes read 1 and 1), the news title row is produced once and read at 2 palette/search sites and 3 AI var sites, and
+ the glass reads sit at 4 newsTitle() + 2 newsSummary() + 1 rowLine(r.title) call sites
+ok   the news record carries no seed-composed summary sentence: the NewsArticle interface holds 0 summary field, the se
+ed builder composes 0 summary line, and the composer file holds 0 raw .summary reads - all 0 (planted shape reads 1)
+FAIL the suite's own zero-asserting clauses carry a plant, a pin or a planted companion (1 owing across 106 proof scrip
+ts, ceiling 0)
+ok   the device reader credits each of the three devices at each distance the suite writes them and refuses a clause wi
+th none (a plant in the clause itself: true; a blind-spot witness in the clause itself: true; a floor in the clause its
+elf: true; a guarded companion one clause down: true; a guarded companion two clauses down: true; nothing at all: true)
+ok   the zeroish reader refuses a zero that is part of a larger number and keeps every zero a clause is held to (a pin 
+against a decimal constant is not a zero-assertion: true; an equality against zero is: true; a label that states a zero
+ value is, even with the comparison below the first line: true; a bound zero is kept charged on purpose: true; a zero i
+nside a score is kept charged (the conservative side): true; an array subscript reads a position, not an asserted zero:
+ true; a zero asserted against an indexed read is still charged (the strip leaves the asserted one): true; a literal ze
+ro element is kept charged 鈥?nothing indexes into it: true)
+ok   the guard reader credits a positive pin and refuses === 0 and OR-mixes (a positive pin is credited: true; a positi
+ve pin in the clause itself is credited: true; === 0 is never credited by the guard: true; an OR-mixed zero arm stays c
+harged: true; a strict positive floor (`> 4`) is credited the way `>= 1` is: true; an arrow that returns zero is not a 
+floor pin: true; an OR in the message is not an OR in the assertion: true; an OR in the assertion is still an OR, messa
+ge or no message: true)
+       owing: proof-rules.mjs:194
+ok   鈥nd the census reads clauses rather than an empty set (1 of 1 owing in the planted script; the suite read 106 scr
+ipts)
+ok   every proof script's verdicts reach an exit path (106 scripts: 0 with no ok() definition, 0 that define it and nev
+er call it, 0 whose ok() counts into nothing, 0 whose exit reads none of its counters)
+ok   every proof script prints its own tally as a computation rather than a fixed number (106 of 106 computed)
+ok   the harness reader, planted both ways, links a counter that reaches an exit and refuses one that does not, and ref
+uses a literal tally (ok() counts into fail and the exit reads it: true; ok() counts into a variable no exit reads: tru
+e; ok() counts with += 1 rather than ++, as proof-runner does: true; ok() collects verdicts and the exit reads the coll
+ection, as proof-m65 does: true; ok() is defined and never called: true; the tally is printed as a literal: true; the t
+ally is computed from the counters: true)
+ok   no clause's predicate is true by construction (2336 predicates read across 106 scripts, floor 1000, 0 unfailable)
+ok   the failable reader, planted both ways, catches a literal, a self-comparison and an `|| true` arm and accuses no r
+eal assertion (a literal true: true; a self-comparison: true; an `|| true` arm: true; a real zero-assertion: true; a re
+al floor: true)
+
+2007 keys 路 3 locales
+375/376 checks passed

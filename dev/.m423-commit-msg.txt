@@ -1,0 +1,42 @@
+M423: the app is the app: six proofs walked the tree, and one of them walked a clone of it
+
+Six proofs walk the repository's tree and print numbers about it — the coverage
+ratchet, the i18n gate, the id gate, the dead-import census, the dead-export
+census and the rng gate. Each kept its own private list of directories to leave
+alone, and the lists disagreed, so two neighbours of the repository came to be
+read as if they were the app.
+
+football-os/ was a local clone of THIS repository — its origin pointed at the
+same GitHub remote and its HEAD was M422 — and M419 committed it as a submodule
+pointer with no .gitmodules file, so the pointer resolved for nobody and the
+directory carried 79 modules of the same code. The coverage census measured 197
+modules where the app has 98: its dead list, its exemption surface, its
+per-directory pin and its recursion pin all stopped describing the app. Six
+gates went red with numbers nobody could act on — 59 of 376 i18n checks, 2 of 15
+id checks, 1 of 4 in each dead census, 1 of 55 in the rng gate — and every one of
+them was a measurement of a copy. The thirteen scratch planes that experiments
+left in the root were read the same way: the id gate charged a clock-derived id
+in a copy of data/ai.ts that the app had already fixed.
+
+The rule is one sentence in one place. A neighbour is a neighbour: a hidden name
+is not shipped — the build would not find it and git would not show it — and a
+directory carrying its own .git is another repository, with its own package.json,
+its own tests and its own history. scripts/lib/appTree.mjs holds that rule and
+the six gates read it rather than keeping a list of their own. The broken
+pointer leaves the index, and football-os/ is in .gitignore so a clone of the
+app can never be committed into it again.
+
+- New scripts/lib/appTree.mjs: the rule (skipReason), the top-level read
+  (appDirsIn) and the walk (walkApp), with the reason each verdict is given.
+- New scripts/proof-app-tree.mjs (10/10): the rule read on a real tree with the
+  three cases in it; a neighbour is not read and an ordinary directory IS, judged
+  through the id census's own shape; the app's ten directories and their 98
+  modules pinned, with a clone beside them joining none; the six gate sources
+  required to import the one rule and keep no private hidden-directory test; the
+  index read for a pointer, with the reader witnessed on a planted gitlink.
+- proof-coverage, proof-dead-imports, proof-dead-exports, proof-i18n,
+  proof-ids, proof-rng: the shared rule, and the private lists removed.
+- package-lock.json: the lock now carries the playwright devDependency and the
+  relaxed engines range that package.json already declared.
+
+97/97 proof scripts, 3027/3027 checks, tsc --noEmit clean.

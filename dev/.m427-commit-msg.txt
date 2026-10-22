@@ -1,0 +1,32 @@
+M427: the colours for a difference - one table, and the three files that spelled them
+
+M426 closed the door that says WHICH WAY a difference points. This unit closes the one that says
+what colour that is - and the app had three classes for it (green for a gain, red for a loss, grey
+for a figure that did not move), spelled in three files:
+
+- features/football/Details.tsx, for a CATEGORY difference;
+- features/scouting/ScoutingPanel.tsx, for a player's BEST edge and WORST edge;
+- features/watchlist/WatchlistBoard.tsx, for the SAME two edges, in the same words.
+
+So the app could have shown the same figure in green on one screen and in grey on another, and a
+change to the palette would have had to be made in three places. It is the third door in the
+family M424 and M425 opened: the sign is the question, this is what the app does with the answer.
+
+The fold. DELTA_CLASS - the three classes, keyed by the sign - and bestEdgeTone/worstEdgeTone
+live in ui/primitives.tsx, beside the other shared UI vocabulary, and they ride M426's deltaSign
+for the question. The two edge tones are deliberately two-armed: a best edge is green when it is
+an advantage and grey when it is not, and it is never red - a red "best" would be a lie about the
+best thing a player has going for them; a worst edge is red when it is a disadvantage and grey
+when it is not, and never green. Nothing a reader sees moves: the proof replays both doors
+against the inline forms they replaced, over ten figures including zero and negative zero.
+
+The seam, charged both ways. New scripts/proof-deltacolor.mjs (4/4) charges a COLOUR CHOSEN BY
+A COMPARISON - a comparison against zero whose arms name a colour class - and there are none
+outside the shared vocabulary. Two near shapes are refused, each for a reason: a comparison
+against a VARIABLE is some other decision (the manager's head-to-head, not a difference's sign),
+and a comparison against a STRING is a different question again (the manager's "good" | "mixed" |
+"bad" tone, which is a TONE and not a sign). The reader is armed by a plant for each shape, the
+table and the two tones are checked to be declared once in the shared module, the three former
+sites are checked to import them, and the doors are replayed against the inline forms.
+
+100/100 proof scripts, 3048/3048 checks, tsc --noEmit clean.

@@ -1,0 +1,33 @@
+M439: the sign of a difference, everywhere it is asked - the copies the door did not reach
+
+M426 closed the door that says WHICH WAY a difference points, and left the copies behind. Four
+places still asked the question by themselves:
+
+- the CAREER SUMMARY - a best win (best.diff > 0) and a worst loss (worst.diff < 0), each spelled
+  TWICE in the same function: once in the evidence lines and once in the record;
+- the WEEKLY REVIEW - a scan trend's kind (f.scanTrend >= 0 ? "positive" : "watch");
+- the FILM ROOM - a scan trend's colour (insights.scanTrend >= 0 ? "text-success" :
+  "text-destructive");
+- the COMPARISON PAGE - a verdict's side (adv > 0 ? "a" : "b").
+
+So the review's scan trend and the Film Room's scan trend were THE SAME QUESTION - which way does
+this trend point - asked in a domain module and in a screen, each with its own answer, and the
+career summary asked it twice in one place.
+
+The fold. All four ask deltaSign - the door - and the Film Room's colour rides the app's shared
+difference table (DELTA_CLASS), so the three classes a difference wears are written once. The
+review's kind keeps its own WORDS ("positive" and "watch" are the review's vocabulary, not the
+app's) but asks the door for the DIRECTION, which preserves its rule exactly: a trend of zero is
+not a fall, and "not down" is what the old >= 0 said.
+
+The seam, charged both ways. proof-deltasign gained the TWO-ARMED shape - a comparison against
+zero that comes FIRST - and one subtlety: a chain whose zero test is its LAST arm is a BAND, not
+a sign (the seed's fixture status, "-2 days then 0 days then live"), and the reader refuses it. One
+SPLIT is declared: the manager's MORALE, where a morale of exactly zero reads "good" while the
+door's "flat" is neither up nor down - two different questions about two different quantities. The
+file passes 5/5.
+
+Still outstanding. The census can only see a sign WRITTEN AS A COMPARISON: a sign asked through a
+call (fatigueIsHigh(x) ? ... : ...) is invisible to it, and so is a sign asked against a VARIABLE
+(x > limit). The rule "the door owns the question" is therefore enforced on the shapes the reader
+knows, and the shapes it does not know are exactly the ones a new author would reach for first.

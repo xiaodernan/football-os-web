@@ -1,0 +1,9 @@
+fix: the details page's dead locale import, left by the formatter's move
+
+M442 moved the details page's local fmtDateTime to the door in @/i18n and
+deleted the copy, but the page's `type Locale` import was left behind, and
+nothing in the file read it any more. Three proofs noticed: the dead-import
+census, the unread-declaration census, and the surgery scan that walks the
+i18n surfaces. The import is dropped; the page names no locale type now.
+
+proof-dead-imports, proof-unused-locals and proof-i18n read green again.

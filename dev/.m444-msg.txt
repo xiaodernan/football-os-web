@@ -1,0 +1,28 @@
+M444: the census reads whole bodies now, and the context guard was hiding in its blind spot
+
+M443 closed the same-file extent. This unit is the last of the three holes
+in the rule census's reach — M417's deliberate first-statement reading of
+brace bodies, which hid any rule whose duplicate spelled a different first
+line. The full-body probe reads 410 named units and finds four pairs in two
+families.
+
+- The context guard, three times: useRouter, useTheme and useOs spelled the
+  same rule (read the context, throw the provider's diagnostic, return the
+  value) — identical from the second statement on. requireContext(ctx,
+  message) in the new lib/context.ts is the door (not a hook itself; each
+  hook keeps its own message); the three bodies collapse to one line each.
+- The overlay pair declared: DialogOverlay ~ SheetOverlay is the vendor's
+  own wrapper, one per Radix primitive — a deliberate split, now in the
+  split map instead of silently charged.
+- One artifact retired: M438's remove/undo split went STALE under whole
+  bodies — the film room's removal carries a second statement, so the pair
+  was a first-statement-reading artifact. The stale check caught it.
+- The new app module reddened four population pins (proof-storage,
+  proof-i18n, proof-app-tree, proof-coverage); all four paid in this commit,
+  which is the pins doing their job.
+- proof-rules 7/7; tsc --noEmit clean; proof-storage 61/61, proof-app-tree
+  12/12, proof-coverage 26/26; proof-i18n passes all but the surgery scan,
+  which is the other session's in-flight state (verified by stashing this
+  unit's files and re-running).
+- proof-record 5/5 (236 headings, pointer M444). The other session's
+  in-flight files are NOT in this commit.

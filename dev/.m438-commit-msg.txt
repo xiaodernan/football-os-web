@@ -1,0 +1,31 @@
+M438: the rule census, extended to the bodies it could not see - the local helpers
+
+M417's rule census reads EXPORTED bodies - a census of "no two exported bodies are the same rule
+wearing two names" - and M422 found a family it structurally could not see: "one result credits
+one row" was spelled in three LOCAL helpers, and a local copy of a door is exactly what that
+census was blind to. The app has 118 local bodies against 52 exported ones: more than twice as
+many rules live where the gate never looked.
+
+The fix. The same strict-alignment measure now runs over EVERY named body - 170 of them, exported
+or not - and the local families are closed on the same terms as the exported ones.
+
+The seam, charged both ways. The new clause reads the local population and requires its families
+to be closed: 118 local bodies, 1 same-rule pair, 0 undeclared, 0 stale. That one pair is a
+DECLARED SPLIT, and it is worth naming: the Film Room removes a clip by its clipId and the
+Learning Hub removes a record by its id - the same shape, two different contracts, and the measure
+cannot tell them apart because it renames identifiers (a clip and a record are not the same row).
+The reader is armed by a planted pair of local bodies, which reads 1, so the zero above is a
+measurement and not a blind spot. The file passes 6/6.
+
+What the extension found. Nothing new - and that is the finding: after M422's fold, the app's
+local bodies are already converged under this measure. The value of the extension is REACH, not
+a family: a local copy of a rule written tomorrow is caught tomorrow, in a place the census did
+not look before, and the one pair the measure does pair is named rather than quietly excused.
+
+Still outstanding. The measure pairs bodies that are the same rule TOKEN FOR TOKEN, so the
+family M422 found is still invisible to it: four copies of the same rule, each shaped
+differently, are four different token sequences. That is M420's lesson again - a census charges
+the shapes its author could think of - and the honest measure there is not the text but the
+DECISION: a comparison that answers the same question twice, whatever it is compared against. No
+gate in the app measures that yet, and the two-arm and three-arm sign censuses are the closest
+thing to it.

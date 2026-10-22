@@ -1,0 +1,16 @@
+fix: M442's import dropped formatDate — the football world's kickoff-date helper still used it
+
+M442 replaced the import with the new fmtDateTime door but the file carries a
+SECOND date helper — fmtDate, the day-only kickoff stamp — that still calls
+formatDate, so the commit shipped a TS2552. The import now carries both:
+`import { formatDate, fmtDateTime, useI18n, type Locale } from "@/i18n"`.
+
+The lesson is the dance's own: the pre-commit tsc run passed against a tree
+whose FootballWorld was mid-dance, and the committed state was never
+type-checked as committed. From here: tsc runs on the exact commit state,
+and after committing, `git show HEAD -- <file>` is read before the push.
+
+Verified: tsc --noEmit reports no error in this file (the one remaining
+error, FootballWorld:29's CERTAINTY_TONE, comes from the other session's
+in-flight domain/newsImpact.ts — HEAD's own copy exports it, so the
+committed state is self-consistent); proof-record 5/5 unaffected.

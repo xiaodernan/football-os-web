@@ -1,0 +1,24 @@
+M436: the last three mirrors - a vocabulary is a type, and the type is derived from the list
+
+M435 closed the class of vocabularies spelled as a LIST in two places, and left three spelled as
+BOTH a type and a list: the attribute categories, the goal metrics and the age bands. Each was a
+pair the app's own gate cross-checked - the i18n gate compared the union with the list and failed
+if they drifted - so it was guarded, not broken. But the pair was the SHAPE that allowed the
+drift, and the shape could be closed: the LIST moves to the type home, and the type is derived
+from it.
+
+The obstacle was a direction of import: the type lived in domain/types.ts and the list in a
+module that imports it, and a runtime list cannot cross that way without a cycle. The fix is the
+other way round - domain/types.ts has NO runtime imports at all (its one import is a type), so
+the lists can live there and the modules read them back with nothing to cycle.
+
+The fold. CATEGORY_ORDER, GOAL_METRICS and AGE_GROUP_WORDS live in domain/types.ts now, and
+AttributeCategory, GoalMetric and AgeGroupWord are derived from them. The modules that owned the
+lists - domain/attributes.ts, domain/goals.ts, domain/onboarding.ts - import them back, and the
+i18n gate's two cross-checks became checks that the type IS derived, which is a stronger claim
+than the one they replaced: a hand-typed union is the one thing that could drift again, and now
+there is none to write.
+
+The seam, charged both ways. proof-vocab charges the shape itself: a set of words that appears
+as a union AND as a list is a set that can drift, and there are NONE - 43 vocabularies, 195
+lists, 0 written both ways. The file passes 7/7.
