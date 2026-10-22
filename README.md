@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M449
+Work ships one milestone per commit and is currently at M451
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7093,6 +7093,65 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M451 — the sixth direction: an import nobody declared
+
+**What the gauge says.** `scripts/proof-phantom-imports.mjs` **5/5**. On the shipped tree it
+parses **278 files** and **1364 module specifiers**, finds all **20 declared** packages, and charges
+**0 phantom imports** — a bare specifier the manifest does not declare. A stylesheet census reads
+**1 sheet** with **2 package references** and **1 relative reference**, and charges **0**. Every
+shipped file parses with **0 diagnostics**, the six named carriers are present, and the gate parses
+itself (**5 specifiers**, including `typescript`), so the population is not "everything except the
+reader".
+
+**The measurement came before the gate, and it found nothing.** A probe using the same TypeScript
+parser read **217 files / 1119 specifiers** on `1c4f427` and charged **0** phantoms; the gate read
+**246 / 1236** on `9f7801a` before the M450 archive commit, and reads **278 / 1364** on `1fe63ff`
+after it, charging **0** each time. This unit is therefore a belt, not a fold: no import needed
+removing, and the diff is one proof script. The live specimen is `playwright`: M432 removed its
+declaration, yet it still resolves from `node_modules` through `@playwright/test`. Nothing imports
+it, so nothing is charged today — but the gate asks about the **declaration**, not about
+resolution, and would charge the first file that did.
+
+**The reader.** The TypeScript parser, so the reader sees statements and not text. The fixture
+proves a real import of an undeclared package is charged, while a commented import and an
+import-shaped string are not; a relative import, the `@/` alias and `node:` builtins are counted by
+kind and not charged; a dynamic `import()` and a `require()` are charged; Deno's `npm:`, `jsr:` and
+URL specifiers are counted as **remote** and stay out of this manifest's question. Stylesheets are
+read as M432 reads them — `@import`, `@plugin`, `@reference` — and a comment is stripped first.
+Parse health is part of the claim: a file the parser cannot read would otherwise look like a file
+with no imports, so the tree must parse with 0 diagnostics and a broken fixture proves the check
+can see one.
+
+**What is NOT claimed.** Resolution is not read: the gate does not ask whether a declared package is
+installed, nor whether an undeclared one resolves — the latter is exactly why a transitive-only
+import is charged. A type-only import is still an import and is charged. `.d.ts` files parse, but
+their `declare module` names are not charged, only import/export specifiers. `functions/` is Deno
+code: its relative import is read, while `npm:`/URL specifiers would be counted out of scope by
+construction. The vendor stylesheet is skipped by the walk, as in M432. Parse diagnostics prove
+syntax, not type correctness (`tsc` owns that), and the CSS scan is textual with comments stripped,
+so an `@import` inside a string would still read as a reference.
+
+**The arms.** `dev/.m451-arms.mjs` runs **10/10** on the isolated plane, each arm restored
+byte-exactly and the plane's `git status` compared to its baseline. The fixture's only ghost import
+becomes a comment (A) and its only ghost CSS import does too (B); a real undeclared import enters a
+shipped file (C) and a stylesheet names an undeclared package (D); a carrier is made absent (E) and
+a shipped file stops parsing (F); a package the tree imports loses its declaration (G). Three
+controls must stay green, and they separate this gate from M432: a declared package nobody imports
+(H) is that gate's question, a real import of a declared package changes nothing (I), and a string
+holding an import statement is not an import (J). Predicted from each clause's own sentence:
+A[1] B[1] C[2] D[3] E[4] F[4] G[2] H[] I[] J[]. All ten matched, and at rest and after every arm
+the plane's status equalled its baseline.
+
+**Next.** With this direction the boundary has seven gates — named imports, exports, orphan modules,
+locals, parameters, declared packages and undeclared imports — and the next unit returns to the
+app's own declarations. Measured during M432 and re-measured here: `src/globals.css` declares
+**76** custom properties and **37** are read through `var()`, leaving **39**; that is not yet a
+finding, because Tailwind 4 `@theme` names become utility classes, and a `var()`-only census would
+charge live tokens. The next unit measures the class-name axis before it charges anything.
+
+`tsc --noEmit` exit 0, `npm run build` exit 0, and the full suite is green (108/108 proof
+scripts proven, 3107/3107 checks counted).
+
 ### M449 — the solid is written once too: the wash and the word that reads on it
 
 M448 closed the panel family and left the census reading three colour roles. There is one shape left that the census can see and the app had not named: the **solid** — a wash and the word that reads *on* it, the wash's own `-foreground` companion, with no border of its own. This unit folds it, and it corrects a misclassification the last three units left behind.
@@ -11355,6 +11414,7 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M373 — three integer display strings ride the new fmt0 door, and proof-fmt1 charges them former
 - M392 — fix: the censuses my M384-M391 conversions blinded: restored green, with the walker, the rng invariant and two vacuity plants (the commit that carried this number without naming it)
 - M440 — the date-and-time door and the body extractor behind it, renumbered to M442 before it landed (the commit that carried this number without naming it)
+- M450 — the shared bar tone map every screen reads, and the lane's millstone evidence committed as it stood
 
 <!-- /gaps -->
 
