@@ -38,7 +38,7 @@ export function translate(locale: Locale, key: string, vars?: Record<string, str
  *  see i18n/format.ts, which holds them so a domain module can reach them without
  *  importing React. Re-exported here so a screen's `import { formatDate } from "@/i18n"`
  *  reads the same as its `t`. */
-export { formatDate, relativeDay } from "./format";
+export { formatDate, fmtDateTime, relativeDay } from "./format";
 
 function detectLocale(): Locale {
   const stored = browserStore()?.getItem(STORAGE_KEY) as Locale | null;

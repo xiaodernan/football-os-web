@@ -21,6 +21,15 @@ export function formatDate(
   return new Intl.DateTimeFormat(locale, opts).format(new Date(value));
 }
 
+/** Date-and-time in the compact form the football screens print: short month, day, hour and minute.
+ *  The body was spelled twice — the player details header and the football world's kickoff cells —
+ *  byte for byte, in two files, and it hid from the rule census behind a body-extraction bug (a concise
+ *  arrow whose body carries an object literal used to be read as a stretch of the file). One door now
+ *  (M440). */
+export function fmtDateTime(locale: Locale, iso: string): string {
+  return formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
 // The local midnight an instant fell on — the day the reader's wall calendar shows. A DST day is
 // 23 or 25 hours, so whoever differences these rounds.
 const localMidnight = (value: string | number | Date): number => {

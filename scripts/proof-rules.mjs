@@ -70,7 +70,25 @@ const raw = Object.fromEntries(appFiles.map((f) => [f, readFileSync(f, "utf8")])
 
 const EXPORT = /export\s+(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)[^{]*\{|export\s+const\s+(\w+)\s*=\s*(?:\(([^)]*)|(\w+))\s*(?::[^=]+)?=>\s*\{?/g;
 // The unit's body: to the matching close brace, or to the end of the statement for a concise arrow.
-const bodyOf = (s, start) => {
+// M441: the match tells us which shape the unit has — it consumed the function's `{` or it did not.
+// A concise arrow whose body line carries an object literal (`=> formatDate(…, { … })`) used to enter
+// the brace path below and run to a DISTANT close brace, so its "body" was a stretch of the file and
+// the unit could never pair with its twin — that is how Details' and FootballWorld's byte-identical
+// fmtDateTime hid from this census. A brace body keeps M417's conservative first-statement reading.
+const bodyOf = (s, start, hadBrace) => {
+  if (!hadBrace) {
+    let depth = 0, inStr = null, i = start;
+    while (i < s.length) {
+      const c = s[i];
+      if (inStr) { if (c === "\\") { i++; continue; } if (c === inStr) inStr = null; i++; continue; }
+      if (c === '"' || c === "'" || c === "`") { inStr = c; i++; continue; }
+      if (c === "(" || c === "[" || c === "{") depth++;
+      else if (c === ")" || c === "]" || c === "}") { if (depth === 0) break; depth--; }
+      else if ((c === ";" || c === ",") && depth === 0) break;
+      i++;
+    }
+    return s.slice(start, i);
+  }
   const nl = s.indexOf("\n", start);
   const head = s.slice(start, nl < 0 ? s.length : nl);
   if (!head.includes("{")) {
@@ -90,7 +108,7 @@ for (const f of appFiles) {
   while ((m = EXPORT.exec(s))) {
     const name = m[1] || m[3];
     const start = m.index + m[0].length;
-    const body = bodyOf(s, start);
+    const body = bodyOf(s, start, m[0].endsWith("{"));
     const tk = tokenize(body);
     // A short body is trivially the same rule as another short one -- "return X.find(...)"
     // aligns with "return Y.filter(...)" under a renaming -- so the measure only runs on
@@ -114,7 +132,7 @@ for (const f of appFiles) {
     const name = m[1] || m[3];
     const exported = /export/.test(m[0]);
     const start = m.index + m[0].length;
-    const body = bodyOf(s, start);
+    const body = bodyOf(s, start, m[0].endsWith("{"));
     const tk = tokenize(body);
     if (tk.length < 24) continue;
     allUnits.push({ f, name, exported, tk, body: body.replace(/\s+/g, " ").trim() });

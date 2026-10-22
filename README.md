@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M439
+Work ships one milestone per commit and is currently at M442
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,18 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M442 — the census read a stretch of the file as a body, and the byte-identical twin behind it
+
+M438 extended the rule census to local bodies and declared the layer closed. This unit is the first family it could not see, found by fixing how it reads a body. `bodyOf` decided a unit's shape by looking for a `{` on the body's first line — but a **concise arrow whose body carries an object literal** (`=> formatDate(…, { month: "short", … })`) has a `{` on that line that is not the function's brace, so the extractor entered brace-matching from inside the statement and ran to a **distant close brace**: the unit's "body" was a stretch of the file, its token count was garbage, and it could never pair with its twin. The census was blind exactly where a body was most likely to carry options.
+
+The fix is one sentence of shape: the extraction match knows whether it consumed the function's `{`. A concise arrow now scans to the end of its own statement (quote- and bracket-aware); a brace body keeps M417's conservative first-statement reading. With the bug fixed the census immediately went red — `Details.tsx:fmtDateTime` and `FootballWorld.tsx:fmtDateTime`, two **byte-identical** bodies in two files, cross-file, the pair the local clause exists to catch. That red is the proof the fix was needed.
+
+`fmtDateTime(locale, iso)` in `i18n/format.ts` is the door — the date formatter's own home, re-exported from `@/i18n` beside `formatDate` — and both pages' local copies are gone; they import the door. The one pair the local clause still reads is M438's declared split (the film room's clip removal and the learning hub's record removal: the same shape, two different contracts), so the census reads 6/6 with zero undeclared pairs.
+
+**The seam, charged both ways.** The fix came with its own arming: the census's planted local pair still reads 1, so the zero above is a measurement. The door rides `formatDate`, so check 33's "one date formatter" still holds (proof-i18n 376/376), and the byte-identity of the two old bodies is pinned by the census clause that found them.
+
+**Still outstanding.** The rule census now reads local bodies correctly, but it still skips **same-file** pairs by design (M438's choice) — that class hides copies like the tempo/press band words, which the concurrent chip work converged onto `rowText.ts`'s `levelWord` before this unit landed; a same-file clause is the obvious next extension. The body-extraction fix is worth remembering as the third shape of the M387/M420 lesson: a census charges the shapes its author could think of — here not a dialect of the rule, but a dialect of the **body** the rule was read from.
 
 ### M439 — the sign of a difference, everywhere it is asked: the copies the door did not reach
 

@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, matchRoute, useRouter } from "@/lib/router";
-import { formatDate, useI18n, type Locale } from "@/i18n";
+import { fmtDateTime, useI18n, type Locale } from "@/i18n";
 import { byOverall } from "@/domain/attributes";
 import {
   footballProvider,
@@ -31,9 +31,6 @@ import { matchStatusLabel, newsKindLabel, newsSummary, newsTitle, rowLine } from
 
 const fmtDate = (locale: Locale, iso: string) =>
   formatDate(locale, iso, { month: "short", day: "numeric" });
-const fmtDateTime = (locale: Locale, iso: string) =>
-  formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-
 /** Route dispatcher for the read-only Football World (spec §12–§13, §28). */
 export function FootballWorld() {
   const { path } = useRouter();

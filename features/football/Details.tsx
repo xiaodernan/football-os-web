@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useRouter } from "@/lib/router";
-import { formatDate, useI18n, type Locale } from "@/i18n";
+import { fmtDateTime, useI18n, type Locale } from "@/i18n";
 import { byOverall, maxBy, last, deltaSign } from "@/domain/attributes";
 import { favoriteLabel, footLabel, matchStatusLabel, positionGroupLabel, positionLabel, rowLine, type RowText } from "@/domain/rowText";
 import { FAVORITES, type FavoriteKind } from "@/domain/types";
@@ -35,9 +35,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { clamp, cn, pctOf, fmt2, fmt1, ABSENT, SEPARATOR, fmtMoney, signed } from "@/lib/utils";
-
-const fmtDateTime = (locale: Locale, iso: string) =>
-  formatDate(locale, iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 function EntityHeader({ title, sub, back, crest }: { title: string; sub?: ReactNode; back?: string; crest?: ReactNode }) {
   const { t } = useI18n();
