@@ -100,6 +100,28 @@ for (const f of appFiles) {
   }
 }
 
+// M438: the same measure over EVERY named body, exported or not. The census above could only see
+// an exported rule, and M422 found a family it structurally could not: "one result credits one
+// row" was spelled in three LOCAL helpers, and a local copy of a door is exactly what this
+// census was blind to.
+const NAMED = /(?:export\s+)?(?:async\s+)?function\s+(\w+)\s*\(([^)]*)\)[^{;]*\{|(?:export\s+)?const\s+(\w+)\s*(?::[^=]+)?=\s*(?:async\s*)?(?:\(([^)]*)\)|(\w+))\s*(?::[^=]*)?=>\s*\{?/g;
+const allUnits = [];
+for (const f of appFiles) {
+  const s = raw[f];
+  NAMED.lastIndex = 0;
+  let m;
+  while ((m = NAMED.exec(s))) {
+    const name = m[1] || m[3];
+    const exported = /export/.test(m[0]);
+    const start = m.index + m[0].length;
+    const body = bodyOf(s, start);
+    const tk = tokenize(body);
+    if (tk.length < 24) continue;
+    allUnits.push({ f, name, exported, tk, body: body.replace(/\s+/g, " ").trim() });
+  }
+}
+const localUnits = allUnits.filter((u) => !u.exported);
+
 // --- 1. Plants: the measure must catch a planted pair that IS the same rule, and refuse one
 // --- that is not. A gate that cannot fail is not a gate. --------------------------------------
 const pSame = sameRule(tokenize("const a = list.filter((x) => x.on).length;"), tokenize("const b = rows.filter((y) => y.up).length;"));
@@ -149,6 +171,35 @@ for (let i = 0; i < units.length && diffs.length < 40; i++) {
 }
 ok(`the measure is not a wall: it reads real different bodies as different (${diffs.length} different pair(s) sampled, ${pairs.length} same-rule pair(s) — a detector that paired everything would find no different pair)`,
   diffs.length > 0 && pairs.length === 0);
+
+// --- 6. M438: the same rule inside a LOCAL helper, which the census above could not see. -------
+// The families are closed here too, with one declared exception: two removals of a row by its own
+// key — a film clip by its clipId and a learning record by its id — are the same SHAPE and two
+// different contracts, and the measure cannot tell them apart because it renames identifiers.
+const localPairs = [];
+for (let i = 0; i < localUnits.length; i++) {
+  for (let j = i + 1; j < localUnits.length; j++) {
+    if (localUnits[i].f === localUnits[j].f) continue;
+    if (sameRule(localUnits[i].tk, localUnits[j].tk)) localPairs.push([localUnits[i], localUnits[j]]);
+  }
+}
+const LOCAL_SPLITS = {
+  "features/film/FilmRoom.tsx:remove|features/learn/LearnHub.tsx:undo":
+    "two removals of a row by its own key — a film clip by its clipId, a learning record by its id: the same shape, two different contracts",
+};
+const localUndeclared = localPairs
+  .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)
+  .filter((k) => !(k in LOCAL_SPLITS));
+const localStale = Object.keys(LOCAL_SPLITS).filter((k) => !localPairs.some(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}` === k));
+// The reader is armed: a planted pair of local bodies that IS the same rule is charged.
+const pLocal = (() => {
+  const a = { f: "planted.ts", name: "one", tk: tokenize("const a = list.filter((x) => x.on).length;") };
+  const b = { f: "planted2.ts", name: "two", tk: tokenize("const b = rows.filter((y) => y.up).length;") };
+  return sameRule(a.tk, b.tk) ? 1 : 0;
+})();
+ok(`no two LOCAL bodies are the same rule wearing two names (${localUnits.length} local bodies of ${allUnits.length} named, ${localPairs.length} same-rule pair(s), ${localUndeclared.length} undeclared [${localUndeclared.join(", ")}], ${localStale.length} stale [${localStale.join(", ")}]; a planted local pair reads ${pLocal})`,
+  localUndeclared.length === 0 && localStale.length === 0 && pLocal === 1,
+  `undeclared: ${localUndeclared.join(", ")}; stale: ${localStale.join(", ")}`);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);
