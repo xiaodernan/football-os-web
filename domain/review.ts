@@ -1,6 +1,6 @@
 import type { Attributes, Goal, TrainingSession } from "./types";
 import type { RowText } from "./rowText";
-import { weakestAttributes, byDeltaDescThenKey, byDateAsc, sum, last, tally } from "./attributes";
+import { weakestAttributes, byDeltaDescThenKey, byDateAsc, sum, last, tally, deltaSign } from "./attributes";
 import { buildFilmInsights, type FilmClipInput, type KindRate } from "./filmInsights";
 import { round1 } from "./scouting";
 import { completedMinutes, completedSessions, plannedSessions } from "./training";
@@ -363,7 +363,11 @@ function buildInsights(a: {
           : { key: "rv.ins.filmMany", vars: { n: f.clips, min: fmt1(f.analysedMinutes), conf: f.avgConfidence, d: f.detections } },
     });
     out.push({
-      kind: f.scanTrend == null ? "positive" : f.scanTrend >= 0 ? "positive" : "watch",
+      // M439: the scan trend's DIRECTION is the door's question (attributes.ts's deltaSign), so the
+      // review asks it there rather than re-testing the number — and the Film Room's trend cell,
+      // which asked the same question, now asks the same door. A zero trend still reads positive
+      // here: the door's "flat" is neither up nor down, and the review's rule is "not down".
+      kind: f.scanTrend == null ? "positive" : deltaSign(f.scanTrend) === "down" ? "watch" : "positive",
       text: scanInsight(f),
     });
     if (f.topFocus.length) {

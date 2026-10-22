@@ -2,7 +2,7 @@ import { footballProvider, getClub, clubIdsByCompetition } from "@/data/football
 import { simulateMatch, type TeamInput, type SimResult } from "./matchEngine";
 import { matchProbability, type MatchProbability } from "./matchProbability";
 import type { PlayerRef } from "./types";
-import { byOverall, meanOverall, byTableStanding, sum, resultPoints, recentResults, creditResult, positionBand, SeasonRowFields } from "./attributes";
+import { byOverall, meanOverall, byTableStanding, sum, resultPoints, recentResults, creditResult, positionBand, deltaSign, SeasonRowFields } from "./attributes";
 import type { PositionBand } from "./attributes";
 import type { Tone } from "./types";
 import type { RowText } from "./rowText";
@@ -607,8 +607,8 @@ export function seasonSummary(state: CareerState): SeasonSummary {
           { key: played === 1 ? "mgr.summary.prizeOne" : "mgr.summary.prize", vars: { money: fmtMoney(prizeTotal), played } },
         ]
       : [{ key: "mgr.summary.noFixtures" }]),
-    ...(best && best.diff > 0 ? [{ key: "mgr.summary.bestWin", vars: { score: best.score, opponent: best.opponent } }] : []),
-    ...(worst && worst.diff < 0 ? [{ key: "mgr.summary.worstLoss", vars: { score: worst.score, opponent: worst.opponent } }] : []),
+    ...(best && deltaSign(best.diff) === "up" ? [{ key: "mgr.summary.bestWin", vars: { score: best.score, opponent: best.opponent } }] : []),
+    ...(worst && deltaSign(worst.diff) === "down" ? [{ key: "mgr.summary.worstLoss", vars: { score: worst.score, opponent: worst.opponent } }] : []),
     complete
       ? { key: "mgr.summary.complete" }
       : // `mgr.fixturesLeft` already carries this sentence — the profile screen says it too, and one
@@ -620,8 +620,8 @@ export function seasonSummary(state: CareerState): SeasonSummary {
     played, won, drawn, lost, gf, ga, gd: gf - ga, points,
     ppg: played ? round2(points / played) : 0,
     cleanSheets, prizeTotal,
-    bestWin: best && best.diff > 0 ? { opponent: best.opponent, score: best.score } : null,
-    worstLoss: worst && worst.diff < 0 ? { opponent: worst.opponent, score: worst.score } : null,
+    bestWin: best && deltaSign(best.diff) === "up" ? { opponent: best.opponent, score: best.score } : null,
+    worstLoss: worst && deltaSign(worst.diff) === "down" ? { opponent: worst.opponent, score: worst.score } : null,
     position, clubCount, complete, honour, evidence,
   };
 }

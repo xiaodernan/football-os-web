@@ -114,7 +114,7 @@ export function compare(aId: string, bId: string): CompareResult | null {
   }
 
   const adv = advantage(a) - advantage(b);
-  const verdict: CompareResult["verdict"] = Math.abs(adv) < 1.5 ? "even" : adv > 0 ? "a" : "b";
+  const verdict: CompareResult["verdict"] = Math.abs(adv) < 1.5 ? "even" : deltaSign(adv) === "up" ? "a" : "b";
 
   const hasAttributes = hasVector(a) && hasVector(b);
   let attributeEdges: AttributeEdge[] = [];

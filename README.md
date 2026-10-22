@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M438
+Work ships one milestone per commit and is currently at M439
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,23 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M439 — the sign of a difference, everywhere it is asked: the copies the door did not reach
+
+**The defect.** M426 closed the door that says *which way* a difference points, and left the copies behind. Four places still asked the question by themselves:
+
+- the **career summary** — a best win (`best.diff > 0`) and a worst loss (`worst.diff < 0`), each spelled **twice in the same function**: once in the evidence lines and once in the record;
+- the **Weekly Review** — a scan trend's kind (`f.scanTrend >= 0 ? "positive" : "watch"`);
+- the **Film Room** — a scan trend's colour (`insights.scanTrend >= 0 ? "text-success" : "text-destructive"`);
+- the **comparison page** — a verdict's side (`adv > 0 ? "a" : "b"`).
+
+So the review's scan trend and the Film Room's scan trend were **the same question** — which way does this trend point — asked in a domain module and in a screen, each with its own answer, and the career summary asked it twice in one place.
+
+**The fold.** All four ask `deltaSign` — the door — and the Film Room's colour rides the app's shared difference table (`DELTA_CLASS`), so the three classes a difference wears are written once. The review's kind keeps its own **words** ("positive" and "watch" are the review's vocabulary, not the app's) but asks the door for the **direction**, which preserves its rule exactly: a trend of zero is not a fall, and "not down" is what the old `>= 0` said.
+
+**The seam, charged both ways.** `proof-deltasign` gained the **two-armed** shape — a comparison against zero that comes *first* — and one subtlety: a chain whose zero test is its **last** arm is a **band**, not a sign (the seed's fixture status, "-2 days then 0 days then live"), and the reader refuses it. One **split** is declared: the manager's **morale**, where a morale of exactly zero reads "good" while the door's "flat" is neither up nor down — two different questions about two different quantities. The file passes 5/5, and the suite is green with tsc clean.
+
+**Still outstanding.** The census can only see a sign **written as a comparison**: a sign asked through a call (`fatigueIsHigh(x) ? … : …`) is invisible to it, and so is a sign asked against a **variable** (`x > limit`). The rule "the door owns the question" is therefore enforced on the shapes the reader knows, and the shapes it does not know are exactly the ones a new author would reach for first.
 
 ### M438 — the rule census, extended to the bodies it could not see: the local helpers
 

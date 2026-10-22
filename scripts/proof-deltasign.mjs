@@ -82,6 +82,45 @@ ok(`the three-arm sign ladder survives in ONE place, and that place is the door 
   ladders.length === 1 && byFile.length === 1 && byFile[0] === HOME,
   `carriers: ${byFile.join(", ")}`);
 
+// M439: the same question in TWO arms. A comparison against zero whose outcome picks between two
+// WORDS is a sign with the third arm left out — and the app had three of them: the review's scan
+// trend, the Film Room's trend cell and the manager's morale. Two of them now ask the door; the
+// morale is a DECLARED SPLIT, because a morale of exactly zero reads "good" there and the door's
+// "flat" is neither up nor down.
+const TWO_ARM = /[<>]=? *0 *\? *"[^"]+"\s*:\s*"[^"]+"/g;
+const readTwoArm = (text) => {
+  const out = [];
+  stripComments(text).split(/\r?\n/).forEach((line, i) => {
+    for (const m of line.matchAll(TWO_ARM)) {
+      // The sign's shape is a comparison against zero that comes FIRST: a chain whose zero test is
+      // its last arm is a BAND (the seed's fixture status, "-2 days then 0 days then live"), not a
+      // sign, and a band is a different question.
+      const before = line.slice(0, m.index);
+      if (/[<>]=?[^?]*\?/.test(before)) continue;
+      out.push({ line: i + 1, text: line.trim().slice(0, 120) });
+    }
+  });
+  return out;
+};
+const twoArms = [];
+for (const f of appFiles) {
+  const rel = f.slice(root.length + 1).replace(/\\/g, "/");
+  if (rel === HOME) continue; // the door is the question's owner, not a site of it
+  for (const t of readTwoArm(readFileSync(f, "utf8"))) twoArms.push({ ...t, file: rel });
+}
+// The one split: the manager's morale. A morale of exactly zero is a good morale there, while the
+// door's "flat" is neither up nor down — two different questions about two different quantities.
+const TWO_ARM_SPLITS = {
+  "features/manager/ManagerOS.tsx": "the squad's morale: a morale of exactly zero reads good there, while the door's flat is neither up nor down",
+};
+const twoArmFiles = [...new Set(twoArms.map((t) => t.file))].sort();
+const twoArmUndeclared = twoArmFiles.filter((f) => !(f in TWO_ARM_SPLITS));
+const twoArmStale = Object.keys(TWO_ARM_SPLITS).filter((f) => !twoArmFiles.includes(f));
+const pTwoArmNow = readTwoArm("const tone = m >= 0 ? \"good\" : \"bad\";").length;
+ok(`the two-armed sign survives only where a split is declared (${twoArms.length} site(s) in ${twoArmFiles.length} file(s): ${twoArmFiles.join(", ") || "none"}; ${twoArmUndeclared.length} undeclared [${twoArmUndeclared.join(", ")}], ${twoArmStale.length} stale [${twoArmStale.join(", ")}]; a planted two-armed sign reads ${pTwoArmNow})`,
+  twoArmUndeclared.length === 0 && twoArmStale.length === 0 && pTwoArmNow === 1,
+  `undeclared: ${twoArmUndeclared.join(", ")}; stale: ${twoArmStale.join(", ")}`);
+
 // --- 3 · the door is declared once, and every former site asks it ----------------------------------
 const src = Object.fromEntries(appFiles.map((f) => [f.slice(root.length + 1).replace(/\\/g, "/"), readFileSync(f, "utf8")]));
 const DECL = /\nexport const deltaSign[ \t]*=/g;
