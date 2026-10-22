@@ -115,7 +115,7 @@ function Chat() {
           </div>
         )}
         {entries.map((m, i) => m.role === "user" ? (
-          <div key={i} className="flex justify-end"><div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary/90 px-3.5 py-2 text-sm text-primary-foreground">{m.content}</div></div>
+          <div key={i} className="flex justify-end"><div className={cn("max-w-[80%] rounded-2xl rounded-br-sm px-3.5 py-2 text-sm", CHIP_CLASS.solidPrimarySoft)}>{m.content}</div></div>
         ) : (
           <div key={i} className="max-w-[92%] space-y-2">
             <div className={cn("rounded-2xl rounded-bl-sm px-3.5 py-2 text-sm leading-relaxed", PANEL_CLASS.panelMuted)}>

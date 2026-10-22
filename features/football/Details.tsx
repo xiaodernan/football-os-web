@@ -394,7 +394,7 @@ export function ClubDetail({ id }: { id: string }) {
                   <span className="text-xs text-muted-foreground">{t("det.analytics.form")}</span>
                   <span className="flex gap-1">
                     {mine.form.map((f, i) => (
-                      <span key={i} className={cn("grid h-5 w-5 place-items-center rounded text-[10px] font-bold", f === "W" ? CHIP_CLASS.labelSuccess : f === "D" ? CHIP_CLASS.labelMuted : CHIP_CLASS.labelDestructive)}>{f}</span>
+                      <span key={i} className={cn("grid h-5 w-5 place-items-center rounded text-[10px] font-bold", f === "W" ? CHIP_CLASS.labelSuccess : f === "D" ? CHIP_CLASS.solidMuted : CHIP_CLASS.labelDestructive)}>{f}</span>
                     ))}
                     {!mine.form.length && <span className="text-xs text-muted-foreground">{ABSENT}</span>}
                   </span>

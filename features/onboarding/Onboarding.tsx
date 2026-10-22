@@ -60,7 +60,7 @@ export function Onboarding() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col justify-center px-6 py-10">
       <div className="mb-6 flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-lg font-black text-primary-foreground">F</span>
+        <span className={cn("grid h-9 w-9 place-items-center rounded-lg text-lg font-black", CHIP_CLASS.solidPrimary)}>F</span>
         <div>
           <div className="font-bold">{t("brand.name")}</div>
           <div className="text-xs text-muted-foreground">{t("onb.build")}</div>

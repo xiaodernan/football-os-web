@@ -98,9 +98,14 @@ const shapeOf = (str) => {
   // The LABEL: a wash and a word, with NO border — the icon plates, the "yours" chip, the result
   // squares. The word is the wash's own colour, or the app's neutral word (the muted one, or the
   // default one); a wash of a SURFACE colour is a panel, and a word that is the wash's own
-  // "-foreground" partner is a solid button, not a label.
+  // "-foreground" partner is a SOLID, not a label.
   if (!border && wash && word && !SURFACES.has(wash.colour) &&
-      (word.colour === wash.colour || word.colour === "muted-foreground" || word.colour === "foreground")) return "label";
+      (word.colour === wash.colour || word.colour === "muted-foreground" || word.colour === "foreground") &&
+      word.colour !== `${wash.colour}-foreground`) return "label";
+  // The SOLID: a wash and the word that READS ON it — the wash's own "-foreground" companion, with
+  // no border of its own. A label wears a word of its own colour; a solid wears the companion that
+  // stays legible on the wash. The two are mirrors, and the companion is what tells them apart.
+  if (!border && wash && word && word.colour === `${wash.colour}-foreground`) return "solid";
   // The MARK, the label's mirror: a FULL-STRENGTH border and a wash of that colour, with NO word
   // — the chosen answer, the selected player. A softened border is a container's edge, not a mark.
   if (border && wash && !word && border.colour === wash.colour && !border.softened) return "mark";
@@ -210,6 +215,7 @@ const PLANTS = [
   ["border-warning/40 bg-warning/10 text-warning", "tone"],
   ["bg-primary/15 text-primary", "label"],
   ["border-success bg-success/10", "mark"],
+  ["bg-primary text-primary-foreground", "solid"],
   ["rounded-md border bg-card/30 px-2 py-1.5", "panel"],
   ["border border-border/60 bg-secondary/20 p-3 transition-colors hover:border-primary/40", "panel"],
   // A wash of a surface colour with a word is not a label: it says something.
@@ -220,8 +226,9 @@ const PLANTS = [
   ["rounded-md border bg-card/30 px-2 py-1.5 text-muted-foreground", null],
   // A wash of the shell's own surface is not a panel the app composes.
   ["border bg-background p-6 shadow-lg", null],
-  // A solid button is not a label: its word is the wash's own foreground companion.
-  ["bg-primary/90 px-3.5 py-2 text-sm text-primary-foreground", null],
+  // A solid button is not a label: its word is the wash's own foreground companion — that is what
+  // makes it a SOLID, and the two families are mirrors.
+  ["bg-primary/90 px-3.5 py-2 text-sm text-primary-foreground", "solid"],
   ["text-xs text-muted-foreground", null],
 ];
 const planted = PLANTS.map(([str, want]) => ({ str, want, got: shapeOf(str) }));
@@ -236,8 +243,12 @@ ok(`the app holds ${chipGroups.length} chip(s) and the census is not empty (${ch
 
 // --- 2 · a chip written twice lives in the palette ------------------------------------------------
 // The palette is ui/primitives.tsx. A chip that appears in two or more places must appear ONLY
-// there: the copy in a screen is the defect this milestone closed.
-const shared = chipGroups.filter(([, g]) => g.sites.length > 1);
+// there: the copy in a screen is the defect this milestone closed. The clause reads the CHIP
+// family — the tone chip, the muted chip and the option at rest. The families that came after it
+// (the badge, the label, the mark, the panel, the solid) each carry a stricter rule of their own
+// below, so they are not read twice.
+const CHIP_SHAPES = new Set(["tone", "muted", "rest"]);
+const shared = chipGroups.filter(([, g]) => g.sites.length > 1 && CHIP_SHAPES.has(g.shape));
 const outsideHome = shared.map(([id, g]) => ({ id, sites: g.sites.filter((s) => !s.startsWith(HOME + ":")) }));
 ok(`every chip written more than once lives in the palette alone (${shared.length} shared chip(s); ${outsideHome.filter((o) => o.sites.length).length} still written outside it)`,
   outsideHome.every((o) => o.sites.length === 0) && chipGroups.length > 0,
@@ -303,6 +314,33 @@ ok(`every panel the app wears is written in the palette alone (${panelGroups.len
   panelGroups.length > 0 && panelsOutside.length === 0,
   panelsOutside.join("; "));
 
+// --- 2d · a solid is written once, in the palette ------------------------------------------------------
+// The SOLID is the label's third mirror: a wash and the word that READS ON it — the wash's own
+// "-foreground" companion — with no border of its own. The app wore the primary solid in the
+// settings page's chosen tab, the shell's own two solids on its emblem and its active mode, and
+// the muted one in the result squares.
+//
+// The starter's own components (components/ui) are NOT the app's: they came with the template, and
+// the app's palette must not depend on the components that wear it — a palette that the badge
+// imported would close a loop from ui/primitives back to ui/primitives, and the class it read
+// would not be initialised yet. So the starter's solids are left as they are, and the clause says
+// so rather than hiding them.
+const VENDOR = "components/";
+const solidGroups = chipGroups.filter(([, g]) => g.shape === "solid");
+const appSolids = solidGroups.filter(([, g]) => g.sites.some((s) => !s.startsWith(VENDOR)));
+const vendorSolids = solidGroups.filter(([, g]) => g.sites.every((s) => s.startsWith(VENDOR)));
+const solidsOutside = appSolids.flatMap(([id, g]) => g.sites.filter((s) => !s.startsWith(VENDOR) && !s.startsWith(HOME + ":")).map((s) => `${id} at ${s}`));
+ok(`every solid the app wears is written in the palette alone (${appSolids.length} solid(s) in the app's own code; ${solidsOutside.length} written outside it; ${vendorSolids.length} left to the starter)`,
+  appSolids.length > 0 && solidsOutside.length === 0,
+  solidsOutside.join("; "));
+// And the clause must be able to REFUSE: a solid spelled out in a screen has to be caught, or the
+// zero above would be a blind spot rather than a measurement.
+const PLANTED_SOLID = 'const s = "bg-primary text-primary-foreground";';
+const plantedSolid = [...quotedStrings(PLANTED_SOLID)].filter(({ str }) => shapeOf(str)).length;
+ok(`the solid clause can refuse a screen that spells one out (${plantedSolid} planted string(s) charged)`,
+  plantedSolid === 1,
+  `the planted solid read ${plantedSolid}`);
+
 // --- 3 · the palette holds the chips the screens used to spell out ---------------------------------
 // The reference classes live in this proof file, not in the app: this is the text the app wore
 // before the fold, and the shipped table is checked against it.
@@ -331,16 +369,21 @@ const EXPECTED = {
   labelSuccess10: "bg-success/10 text-success",
   labelDestructive: "bg-destructive/20 text-destructive",
   labelInfo: "bg-info/20 text-info",
-  labelMuted: "bg-muted text-muted-foreground",
   labelSecondary: "bg-secondary text-muted-foreground",
   labelSidebarPrimary: "bg-sidebar-primary/15 text-sidebar-primary",
   labelBorderSuccess: "border-success bg-success/10",
   labelBorderDestructive: "border-destructive bg-destructive/10",
   labelBorderPrimary: "border-primary bg-primary/10",
   labelBorderPrimarySoft: "border-primary bg-primary/5",
+  solidPrimary: "bg-primary text-primary-foreground",
+  solidPrimarySoft: "bg-primary/90 text-primary-foreground",
+  solidSecondary: "bg-secondary text-secondary-foreground",
+  solidMuted: "bg-muted text-muted-foreground",
+  solidSidebar: "bg-sidebar text-sidebar-foreground",
+  solidSidebarPrimary: "bg-sidebar-primary text-sidebar-primary-foreground",
 };
 const { CHIP_CLASS, ZONE_CLASS, PANEL_CLASS } = await server.ssrLoadModule("/ui/primitives.tsx");
-ok(`the palette holds the thirty-one chips, badges, labels and marks the app wore (${CHIP_CLASS ? Object.keys(CHIP_CLASS).length : 0} entries)`,
+ok(`the palette holds the thirty-six chips, badges, labels, marks and solids the app wore (${CHIP_CLASS ? Object.keys(CHIP_CLASS).length : 0} entries)`,
   CHIP_CLASS !== null && Object.keys(EXPECTED).every((k) => CHIP_CLASS[k] === EXPECTED[k]) &&
     Object.keys(CHIP_CLASS).length === Object.keys(EXPECTED).length,
   CHIP_CLASS ? Object.keys(EXPECTED).filter((k) => CHIP_CLASS[k] !== EXPECTED[k]).join(", ") : "the palette did not load");

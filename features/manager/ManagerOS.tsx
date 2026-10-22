@@ -203,7 +203,7 @@ function Overview({ career, last }: { career: CareerState; last: MatchOutcome | 
                 const w = r.ourGoals > r.oppGoals, d = r.ourGoals === r.oppGoals;
                 return (
                   <li key={i} className="flex items-center justify-between">
-                    <span className="flex items-center gap-2"><span className={cn("grid h-5 w-5 place-items-center rounded text-[10px] font-bold", w ? CHIP_CLASS.labelSuccess : d ? CHIP_CLASS.labelMuted : CHIP_CLASS.labelDestructive)}>{w ? "W" : d ? "D" : "L"}</span>{getClub(r.opponent)?.name} ({r.weHome ? "H" : "A"})</span>
+                    <span className="flex items-center gap-2"><span className={cn("grid h-5 w-5 place-items-center rounded text-[10px] font-bold", w ? CHIP_CLASS.labelSuccess : d ? CHIP_CLASS.solidMuted : CHIP_CLASS.labelDestructive)}>{w ? "W" : d ? "D" : "L"}</span>{getClub(r.opponent)?.name} ({r.weHome ? "H" : "A"})</span>
                     <span className="font-mono text-xs">{r.ourGoals}-{r.oppGoals}</span>
                   </li>
                 );

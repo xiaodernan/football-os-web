@@ -6,7 +6,7 @@ import { useOs, STORAGE_KEY } from "@/store/useFootballOS";
 import { applyImport, browserStore, buildExport, clearActivity, inventory, readImport } from "@/domain/localData";
 import { DEMO_MODE, footballProvider } from "@/data/footballService";
 import { MODES } from "@/domain/types";
-import { Panel, SectionTitle, DemoBadge, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, DemoBadge, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {cn, fmt2, fmt1, ABSENT } from "@/lib/utils";
@@ -96,7 +96,7 @@ export function SettingsPage() {
                   onClick={() => setMode(m)}
                   className={cn(
                     "rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition",
-                    state.mode === m ? "bg-primary text-primary-foreground" : "border bg-card text-muted-foreground hover:text-foreground",
+                    state.mode === m ? CHIP_CLASS.solidPrimary : "border bg-card text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {t(`set.mode.${m}`)}
@@ -113,7 +113,7 @@ export function SettingsPage() {
                   onClick={() => setLocale(l.id as Locale)}
                   className={cn(
                     "rounded-md px-3 py-1.5 text-xs font-medium transition",
-                    locale === l.id ? "bg-primary text-primary-foreground" : "border bg-card text-muted-foreground hover:text-foreground",
+                    locale === l.id ? CHIP_CLASS.solidPrimary : "border bg-card text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {l.label}

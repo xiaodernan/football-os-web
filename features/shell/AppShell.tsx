@@ -110,9 +110,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const info = state.profile ? levelInfo(state.profile.xp) : null;
 
   const sidebar = (
-    <div className="flex h-full flex-col gap-1 bg-sidebar p-3 text-sidebar-foreground">
+    <div className={cn("flex h-full flex-col gap-1 p-3", CHIP_CLASS.solidSidebar)}>
       <Link to="/" className="mb-2 flex items-center gap-2 px-1 py-2">
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-sidebar-primary text-lg font-black text-sidebar-primary-foreground">F</span>
+        <span className={cn("grid h-8 w-8 place-items-center rounded-lg text-lg font-black", CHIP_CLASS.solidSidebarPrimary)}>F</span>
         <div className="leading-tight">
           <div className="text-sm font-bold tracking-tight">{t("brand.name")}</div>
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t("brand.tagline")}</div>
@@ -217,7 +217,7 @@ function ModeSwitch() {
           onClick={() => setMode(m)}
           className={cn(
             "rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wide transition",
-            state.mode === m ? "bg-sidebar-primary text-sidebar-primary-foreground" : "bg-sidebar/60 text-muted-foreground hover:text-foreground",
+            state.mode === m ? CHIP_CLASS.solidSidebarPrimary : "bg-sidebar/60 text-muted-foreground hover:text-foreground",
           )}
           title={t(`onboarding.${m.toLowerCase()}`)}
         >

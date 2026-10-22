@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M448
+Work ships one milestone per commit and is currently at M449
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,22 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M449 — the solid is written once too: the wash and the word that reads on it
+
+M448 closed the panel family and left the census reading three colour roles. There is one shape left that the census can see and the app had not named: the **solid** — a wash and the word that reads *on* it, the wash's own `-foreground` companion, with no border of its own. This unit folds it, and it corrects a misclassification the last three units left behind.
+
+**The defect, measured before it was fixed.** The app wore the primary solid (`bg-primary text-primary-foreground`) on the settings page's chosen tab, the secondary solid on the position tag, the shell's own two solids on its emblem and its active mode, and the muted solid on the two result squares that carry a draw. Ten sites in the app's own code spelled a wash and its companion by hand, and the **destructive** solid — the one the destructive button and the destructive badge wear — is written `bg-destructive text-white`: `text-white` is a colour **the theme does not name**, so the census cannot see that solid at all, and neither can the palette. So the app's most alarming colour was the one colour the app had never given a name.
+
+**The fold.** Six entries joined the palette (`solidPrimary`, `solidPrimarySoft`, `solidSecondary`, `solidMuted`, `solidSidebar`, `solidSidebarPrimary`) and the ten sites now name it. The class **set** is unchanged, and the fold compared the class set before and after for every site and refused to write a file whose set had changed; a separate reader re-derived all ten sets from the committed files and found no change in any of them. One entry moved rather than appeared: the muted one had been filed as a **label** since M447, and this unit says why it was not one.
+
+**The seam, charged both ways.** A **label** is a wash and a word of its *own* colour — a tint with its own colour on it. A **solid** is a wash and the *companion* that stays legible on it. The two are mirrors, and the companion is what tells them apart: `bg-primary/15 text-primary` is a label, `bg-primary text-primary-foreground` is a solid, and `bg-muted text-muted-foreground` is the second, because the muted colour's companion **is** the muted word — so M447's label entry was a solid wearing a label's name, and this unit moved it. With that correction the two rules no longer overlap, and the census reads **eight** shapes with each one named. The reader is planted with the solid alongside the label, the mark and the panel, and the solid's own clause is planted with a screen that spells a solid out, so it is seen **refusing** rather than only reported clean.
+
+**The scope, stated plainly.** The starter's own components (`components/ui`) wear their own solids — the button's four variants and the badge's four — and this unit **left them alone**, deliberately. The app's palette lives in `ui/primitives.tsx`, and that file already imports the badge and the button; a palette the badge imported would close a loop from `ui/primitives` back to `ui/primitives`, and the class the badge read would not be initialised when the badge's own module ran. The app's palette must not depend on the components that wear it. The clause says so and prints the count it left to the starter, so the gap is measured rather than hidden.
+
+**The correction, measured.** The census's shared-chip rule now reads the **chip** family — the tone chip, the muted chip and the option at rest — and the families that came after it each carry their own stricter rule. Before this unit the shared rule also read the solids, and it fired on the starter's own button and badge; a rule that cannot tell the app's copy from the template's is not a rule about the app.
+
+**Still outstanding.** The destructive solid still wears a word the theme does not name, so the theme has no `--color-destructive-foreground` to give it — the palette cannot hold a colour the reader cannot see. And the app's **progress bar** is still two halves drawn apart: a groove that wears `bg-muted` in thirteen places, `bg-secondary` in five and `bg-sidebar` in one, and a fill whose colour means something (`bg-primary` for progress, `bg-success` for mastered, `bg-info` for confidence, `bg-warning` and `bg-destructive` for a low bar). The bar's own `Progress` component wears a fourth track, `bg-primary/20`. That is the next family, and it is the first one where the *meaning* of a colour, not just its shade, is the thing to name.
 
 ### M448 — the panel is written once too: the quiet box and the depth it wears
 

@@ -150,13 +150,22 @@ export const CHIP_CLASS = {
   labelSuccess10: "bg-success/10 text-success",
   labelDestructive: "bg-destructive/20 text-destructive",
   labelInfo: "bg-info/20 text-info",
-  labelMuted: "bg-muted text-muted-foreground",
   labelSecondary: "bg-secondary text-muted-foreground",
   labelSidebarPrimary: "bg-sidebar-primary/15 text-sidebar-primary",
   labelBorderSuccess: "border-success bg-success/10",
   labelBorderDestructive: "border-destructive bg-destructive/10",
   labelBorderPrimary: "border-primary bg-primary/10",
   labelBorderPrimarySoft: "border-primary bg-primary/5",
+  // The SOLID — a wash and the word that READS ON it, the wash's own "-foreground" companion. A
+  // label is a wash and a word of its OWN colour; a solid is a wash and the companion that stays
+  // legible on it. The app wore the primary solid in four places, the secondary one in three, and
+  // the shell's and the vendor's own solids once each.
+  solidPrimary: "bg-primary text-primary-foreground",
+  solidPrimarySoft: "bg-primary/90 text-primary-foreground",
+  solidSecondary: "bg-secondary text-secondary-foreground",
+  solidMuted: "bg-muted text-muted-foreground",
+  solidSidebar: "bg-sidebar text-sidebar-foreground",
+  solidSidebarPrimary: "bg-sidebar-primary text-sidebar-primary-foreground",
 } as const;
 
 // The PANEL: the app's own quiet box — a border and a wash of one of its quiet surfaces, with no
@@ -221,7 +230,7 @@ export function Crest({ colors, short, size = 36 }: { colors?: [string, string];
 
 export function PositionTag({ position }: { position: string }) {
   const { t } = useI18n();
-  return <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-secondary-foreground">{positionLabel(position, t)}</span>;
+  return <span className={cn("rounded px-1.5 py-0.5 font-mono text-[10px]", CHIP_CLASS.solidSecondary)}>{positionLabel(position, t)}</span>;
 }
 
 export function AttributeBar({ label, value, max = 99 }: { label: string; value: number; max?: number }) {

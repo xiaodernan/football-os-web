@@ -4,7 +4,7 @@ import { useI18n } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { WORLD } from "@/data/footballSeed";
 import { trendingPlayers, getClub } from "@/data/footballService";
-import { Crest, PANEL_CLASS } from "@/ui/primitives";
+import { Crest, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
 // The six pillars, as ids only. Every word a pillar shows — its name and its one-line
@@ -20,7 +20,7 @@ export function Landing() {
     <div className="min-h-dvh bg-background">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-lg font-black text-primary-foreground">F</span>
+          <span className={cn("grid h-8 w-8 place-items-center rounded-lg text-lg font-black", CHIP_CLASS.solidPrimary)}>F</span>
           <span className="font-bold tracking-tight">{t("brand.name")}</span>
         </div>
         <div className="flex items-center gap-3">
