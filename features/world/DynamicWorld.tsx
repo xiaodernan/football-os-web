@@ -9,6 +9,7 @@ import { sum, last } from "@/domain/attributes";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -65,6 +66,7 @@ export function DynamicWorld() {
   }, []);
 
   const latest: SeasonStep | undefined = snapshot ? last(snapshot.history) : undefined;
+  const history: SeasonStep[] = snapshot?.history ?? [];
   const avgNow = latest?.avgOverall ?? round1(sum(base.players, (p) => p.overall) / base.players.length);
   const marketNow = latest?.marketTotal ?? sum(base.players, (p) => p.value);
 
@@ -174,6 +176,41 @@ export function DynamicWorld() {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">{t("world.retired.empty")}</p>
+            )}
+          </Panel>
+
+          <Panel className="p-4">
+            <SectionTitle title={t("world.history.title")} hint={t("world.history.hint")} />
+            {history.length > 0 ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="h-48">
+                    <ProgressLine points={history.map((s) => ({ label: s.label, value: s.avgOverall }))} />
+                  </div>
+                  <div className="h-48">
+                    <ProgressLine points={history.map((s) => ({ label: s.label, value: s.marketTotal }))} />
+                  </div>
+                </div>
+                <div className="mt-4 space-y-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">{t("world.history.champions")}</span>
+                  </div>
+                  {history.slice().reverse().map((s) => (
+                    <div key={s.index} className="flex items-center justify-between text-sm border-b border-b-border/50 pb-1 last:border-0">
+                      <span className="font-mono text-muted-foreground">{s.label}</span>
+                      <div className="flex items-center gap-2">
+                        {s.champions.map((c) => (
+                          <span key={c.compId} className="truncate min-w-0">
+                            {c.clubName} · {c.compName} <span className="text-muted-foreground">{t("world.pts", { n: c.points })}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">{t("world.history.empty")}</p>
             )}
           </Panel>
         </div>
