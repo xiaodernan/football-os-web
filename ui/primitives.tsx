@@ -124,6 +124,14 @@ export const CHIP_CLASS = {
   // The muted chips: a border and a word, with no colour of their own.
   muted: "border-border text-muted-foreground",
   mutedSoft: "border-border bg-secondary/30 text-muted-foreground",
+  // The badges: a border and a word of ONE colour, with no wash. The amber badge alone was written
+  // out in seven places and the green one in five.
+  badgeSuccess: "border-success/40 text-success",
+  badgeWarning: "border-warning/40 text-warning",
+  badgePrimary: "border-primary/40 text-primary",
+  badgeSuccessStrong: "border-success/50 text-success",
+  badgeWarningStrong: "border-warning/50 text-warning",
+  badgeInfoStrong: "border-info/50 text-info",
   // The option you have picked wears a full-strength border; the ones you have not wear muted
   // words that turn primary when you point at them.
   optionOn: "border-primary bg-primary/10 text-primary",

@@ -16,16 +16,17 @@
 //
 // This script reads the app and charges the family. Its shape is a class string that carries a
 // border colour and a word colour, and it is read as a SET of colour classes, because the order of
-// the classes in an attribute does not change what is painted. Three shapes are charged:
+// the classes in an attribute does not change what is painted. Four shapes are charged:
 //
 //   · the TONE chip — a border, a wash and a word, all of one colour, at rest;
 //   · the MUTED chip — a border of the border colour and a muted word (with or without a wash);
-//   · the option AT REST — muted words that turn primary when you point at them.
+//   · the option AT REST — muted words that turn primary when you point at them;
+//   · the BADGE — a border and a word of one colour, with NO wash of that colour.
 //
 // The rule is one sentence: a chip that is written twice lives in the palette, and a chip written
-// once is its screen's own. The BADGE family (a border and a word of one colour, with no wash) is
-// NOT charged here — it wears no wash, so it is not one of these three shapes, and it is the next
-// family to fold.
+// once is its screen's own. A BADGE is stricter: it is written once too, and that once is the
+// palette — the amber badge alone was spelled out in seven places and the green one in five, and
+// the family has one home like the chips do.
 //
 // Run: node scripts/proof-chips.mjs
 import { readFileSync } from "node:fs";
@@ -78,6 +79,8 @@ const shapeOf = (str) => {
   if (border && wash && word && border.colour === word.colour && wash.colour === border.colour) return "tone";
   // The muted chip: the border colour and the muted word.
   if (border && word && border.colour === "border" && word.colour === "muted-foreground") return "muted";
+  // The badge: a border and a word of one colour, with no wash of that colour.
+  if (border && word && border.colour === word.colour && !(wash && wash.colour === border.colour)) return "badge";
   // The option at rest: muted words, and a border that appears when you point at them.
   const hoverBorder = classes.find((c) => c.variant && c.role === "border");
   if (!border && word && word.colour === "muted-foreground" && hoverBorder && hoverBorder.colour === "primary") return "rest";
@@ -156,6 +159,8 @@ const PLANTS = [
   ["border-success/40 bg-success/10 text-success", "tone"],
   ["border-border text-muted-foreground", "muted"],
   ["text-muted-foreground hover:border-primary/40", "rest"],
+  ["border-warning/40 text-warning", "badge"],
+  ["border-warning/40 bg-warning/10 text-warning", "tone"],
   ["border border-border/60 bg-secondary/20 p-3 transition-colors hover:border-primary/40", null],
   ["text-xs text-muted-foreground", null],
 ];
@@ -182,6 +187,16 @@ const singles = chipGroups.filter(([, g]) => g.sites.length === 1);
 ok(`a chip written once is its screen's own, and the palette's own chips are single (${singles.length} single-site chip(s), ${singles.filter(([, g]) => g.sites[0].startsWith(HOME + ":")).length} of them in the palette)`,
   singles.length > 0);
 
+// --- 2b · a badge is written once, in the palette ---------------------------------------------------
+// The badge family is stricter than the chips: a badge is a border and a word of one colour with no
+// wash, and the app wore the amber one in seven places and the green one in five. Every badge the
+// app knows must live in the palette — a screen that spells one out is the defect this closes.
+const badgeGroups = chipGroups.filter(([, g]) => g.shape === "badge");
+const badgesOutside = badgeGroups.flatMap(([id, g]) => g.sites.filter((s) => !s.startsWith(HOME + ":")).map((s) => `${id} at ${s}`));
+ok(`every badge the app wears is written in the palette alone (${badgeGroups.length} badge(s); ${badgesOutside.length} written outside it)`,
+  badgeGroups.length > 0 && badgesOutside.length === 0,
+  badgesOutside.join("; "));
+
 // --- 3 · the palette holds the chips the screens used to spell out ---------------------------------
 // The reference classes live in this proof file, not in the app: this is the text the app wore
 // before the fold, and the shipped table is checked against it.
@@ -197,9 +212,15 @@ const EXPECTED = {
   optionOff: "text-muted-foreground hover:border-primary/40",
   filterOn: "border-primary/50 bg-primary/10 text-primary",
   filterOff: "border-border/60 text-muted-foreground hover:border-primary/30",
+  badgeSuccess: "border-success/40 text-success",
+  badgeWarning: "border-warning/40 text-warning",
+  badgePrimary: "border-primary/40 text-primary",
+  badgeSuccessStrong: "border-success/50 text-success",
+  badgeWarningStrong: "border-warning/50 text-warning",
+  badgeInfoStrong: "border-info/50 text-info",
 };
 const { CHIP_CLASS, ZONE_CLASS } = await server.ssrLoadModule("/ui/primitives.tsx");
-ok(`the palette holds the eleven chips the app wore (${CHIP_CLASS ? Object.keys(CHIP_CLASS).length : 0} entries)`,
+ok(`the palette holds the seventeen chips and badges the app wore (${CHIP_CLASS ? Object.keys(CHIP_CLASS).length : 0} entries)`,
   CHIP_CLASS !== null && Object.keys(EXPECTED).every((k) => CHIP_CLASS[k] === EXPECTED[k]) &&
     Object.keys(CHIP_CLASS).length === Object.keys(EXPECTED).length,
   CHIP_CLASS ? Object.keys(EXPECTED).filter((k) => CHIP_CLASS[k] !== EXPECTED[k]).join(", ") : "the palette did not load");
@@ -252,9 +273,13 @@ const CONSUMERS = [
   "features/onboarding/Onboarding.tsx",
   "features/scouting/ScoutingPanel.tsx",
   "features/tactical/TacticalStudio.tsx",
+  "features/sim/SimulationLab.tsx",
+  "features/world/DynamicWorld.tsx",
+  "features/film/FilmRoom.tsx",
+  "features/football/Details.tsx",
 ];
 const readers = CONSUMERS.filter((f) => /import[^;]*\bCHIP_CLASS\b[^;]*from ["']@\/ui\/primitives["']/.test(src[f] ?? ""));
-ok(`every screen that wears a chip reads the palette (${readers.length} of ${CONSUMERS.length})`,
+ok(`every screen that wears a chip or a badge reads the palette (${readers.length} of ${CONSUMERS.length})`,
   readers.length === CONSUMERS.length,
   `not reading it: ${CONSUMERS.filter((f) => !readers.includes(f)).join(", ")}`);
 

@@ -29,7 +29,7 @@ import { playerDna } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
-import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -161,7 +161,7 @@ export function PlayerDetail({ id }: { id: string }) {
       <Panel className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <SectionTitle title={t(profile.measured ? "det.attrs.title" : "det.attrs.titleModelled")} hint={t(profile.measured ? "det.attrs.hintDataset" : "det.attrs.hintEstimate")} />
-          <Badge variant="outline" className={profile.measured ? "border-success/40 text-success" : "border-warning/40 text-warning"}>
+          <Badge variant="outline" className={profile.measured ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning}>
             {t(profile.measured ? "det.attrs.badgeDataset" : "det.attrs.badgeModel")} · {profile.confidence}%
           </Badge>
         </div>
@@ -236,7 +236,7 @@ export function PlayerDetail({ id }: { id: string }) {
       <Panel className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <SectionTitle title={t("det.arc.title")} hint={t("det.arc.hint")} />
-          <Badge variant="outline" className={cn(arc.trajectory === "rising" ? "border-success/40 text-success" : arc.trajectory === "declining" ? "border-warning/40 text-warning" : "text-muted-foreground")}>
+          <Badge variant="outline" className={cn(arc.trajectory === "rising" ? CHIP_CLASS.badgeSuccess : arc.trajectory === "declining" ? CHIP_CLASS.badgeWarning : "text-muted-foreground")}>
             {t(`det.arc.${arc.trajectory}`)}
           </Badge>
         </div>

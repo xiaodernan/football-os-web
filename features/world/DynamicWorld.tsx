@@ -8,7 +8,7 @@ import { runWorld, seasonLabel, type WorldInput, type SeasonStep } from "@/domai
 import { sum, last } from "@/domain/attributes";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
-import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -151,7 +151,7 @@ export function DynamicWorld() {
                     <span className="truncate">{p.name} <span className="text-xs text-muted-foreground">· {positionLabel(p.position, t)} · {p.age}</span></span>
                     <span className="flex items-center gap-2 font-mono text-xs">
                       <span className="text-muted-foreground">{p.overall}</span>
-                      <Badge variant="outline" className="border-success/40 text-success">→ {p.potential}</Badge>
+                      <Badge variant="outline" className={CHIP_CLASS.badgeSuccess}>→ {p.potential}</Badge>
                     </span>
                   </Link>
                 ))}

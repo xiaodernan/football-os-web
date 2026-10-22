@@ -1,0 +1,42 @@
+M446: the badge is written once too - the border and the word that share a colour
+
+M441 folded the chip - a border, a wash and a word, all of one colour - into one
+palette, and named the family it did not fold: the BADGE, a border and a word of
+one colour with no wash of its own. This closes that family.
+
+The defect, measured before it was fixed. The amber badge
+("border-warning/40 text-warning") was spelled out in seven places, the green
+one ("border-success/40 text-success") in five, the strong amber
+("border-warning/50 text-warning") in two, and the strong green, the strong blue
+and the plain blue once each: seventeen spellings across ten screens, every one
+of them a copy of the rest. A screen could wear a caution in one shade on one
+page and another shade on the next, and the shade a badge wore was decided by
+whichever screen happened to write it first.
+
+The fold. Six entries joined the palette beside the chips (badgeSuccess,
+badgeWarning, badgePrimary and the three strong forms), and the seventeen sites
+now name the palette instead of spelling the classes. The class SET is
+unchanged: the badge's own classes move to the end of the list and CSS does not
+read the order of a class attribute, so nothing is painted differently. A site
+that wore its badge with a size ("border-warning/40 text-[10px] text-warning")
+keeps the size and wears the palette's colour; a site that wore the badge alone
+wears the palette's entry and nothing else. The fold checked its own work: for
+every site it compared the class set before and after and refused to write a
+file whose set had changed.
+
+The seam, charged both ways. The chip census now reads FOUR shapes, and the
+fourth is the badge. A wash of the same colour makes it a chip again, and the
+reader is planted with both so the boundary is measured rather than assumed. The
+family has a clause of its own - every badge the app wears is written in the
+palette alone - which is stricter than the chips' rule, because a badge was
+never allowed to be a single screen's own. The palette now holds seventeen
+entries (eleven chips and six badges), the reader checks all seventeen against
+the text the app wore before the fold, and twenty-two screens are checked for
+reading it. proof-chips 9/9; proof-record 5/5 (237 headings); proof-ledger-run
+5/5; tsc --noEmit clean.
+
+Still outstanding. The census charges a label that carries a border and a word.
+It does not yet charge one that carries a wash and a word with no border - the
+community hub's "yours" label ("bg-primary/15 text-primary") is that shape, and
+the learning hub's right answer ("border-success bg-success/10", a border and a
+wash with no word) is its mirror. Neither is visible to the reader today.

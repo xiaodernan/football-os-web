@@ -237,7 +237,7 @@ export function FilmRoom() {
                       })}
                     </div>
                   </div>
-                  <Badge variant="outline" className="border-warning/40 text-warning">
+                  <Badge variant="outline" className={CHIP_CLASS.badgeWarning}>
                     {t(current.report.demo ? "film.mode.demo" : "film.mode.live")} · {t("film.confidenceShort", { n: current.report.confidence })}
                   </Badge>
                 </div>

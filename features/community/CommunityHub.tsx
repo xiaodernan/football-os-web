@@ -254,7 +254,7 @@ export function CommunityHub() {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="text-[10px]">{tagLabel(t, th.tag)}</Badge>
                 {th.seeded ? (
-                  <Badge variant="outline" className="border-warning/40 text-[10px] text-warning">{t("comm.sample")}</Badge>
+                  <Badge variant="outline" className={cn("text-[10px]", CHIP_CLASS.badgeWarning)}>{t("comm.sample")}</Badge>
                 ) : (
                   <Badge className="bg-primary/15 text-primary text-[10px]">{t("comm.yours")}</Badge>
                 )}
@@ -343,7 +343,7 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="text-[10px]">{tagLabel(t, thread.tag)}</Badge>
           {thread.seeded ? (
-            <Badge variant="outline" className="border-warning/40 text-[10px] text-warning">{t("comm.samplePost")}</Badge>
+            <Badge variant="outline" className={cn("text-[10px]", CHIP_CLASS.badgeWarning)}>{t("comm.samplePost")}</Badge>
           ) : (
             <Badge className="bg-primary/15 text-primary text-[10px]">{t("comm.yours")}</Badge>
           )}
@@ -369,7 +369,7 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
                 <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-2">
                     <span className={cn("font-medium", c.sample ? "text-warning" : "text-foreground/80")}>{authorName(t, c.author)}</span>
-                    {c.sample && <Badge variant="outline" className="border-warning/40 text-[10px] text-warning">{t("comm.sampleReply")}</Badge>}
+                    {c.sample && <Badge variant="outline" className={cn("text-[10px]", CHIP_CLASS.badgeWarning)}>{t("comm.sampleReply")}</Badge>}
                   </span>
                   <span>{rowLine(timeAgo(locale, c.at), t)}</span>
                 </div>

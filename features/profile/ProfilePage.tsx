@@ -305,7 +305,7 @@ export function ProfilePage() {
             <Link key={r.id} to={r.to} className="rounded-lg border bg-card/40 p-3 hover:border-primary/50">
               <div className="flex items-center justify-between gap-2">
                 <span className={cn("text-sm font-semibold", r.active ? "text-foreground" : "text-muted-foreground")}>{t(`prof.mode.${r.id}`)}</span>
-                <span className={cn("rounded border px-1.5 py-px text-[10px] uppercase tracking-wide", r.active ? "border-success/40 text-success" : CHIP_CLASS.muted)}>
+                <span className={cn("rounded border px-1.5 py-px text-[10px] uppercase tracking-wide", r.active ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.muted)}>
                   {r.active ? t("prof.active") : t("prof.notStarted")}
                 </span>
               </div>

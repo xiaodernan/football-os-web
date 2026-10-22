@@ -15,9 +15,9 @@ import { cn, pctLabel, ABSENT, fmtMoney, signed } from "@/lib/utils";
 // three-class tone chip, and its own shape on purpose (M441). The two neutral stances wear the
 // app's shared muted chip.
 const KIND_TONE: Record<NewsArticle["kind"], string> = {
-  Rumor: "border-warning/50 text-warning",
-  Reported: "border-info/50 text-info",
-  Confirmed: "border-success/50 text-success",
+  Rumor: CHIP_CLASS.badgeWarningStrong,
+  Reported: CHIP_CLASS.badgeInfoStrong,
+  Confirmed: CHIP_CLASS.badgeSuccessStrong,
   Analysis: CHIP_CLASS.muted,
   Opinion: CHIP_CLASS.muted,
 };

@@ -3718,7 +3718,7 @@ ok(`a Chinese reader is shown CJK and an English reader Latin (${LONG.map((l) =>
 //     Chinese readers and a rewrite for the English one — and it made the same instant read
 //     differently on a row and on the detail page beside it. The door's output is a rendered
 //     string: post-processing it is the app deciding the reader's format again, downstream.
-const DOOR_ALIASES = new Set(["formatDate"]);
+const DOOR_ALIASES = new Set(["formatDate", "fmtDateTime", "relativeDay"]);
 for (const [, code] of appSrc) {
   for (const m of code.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=[\s\S]{0,160}?(?:=>|function)[\s\S]{0,60}?\bformatDate\s*\(/g)) DOOR_ALIASES.add(m[1]);
 }

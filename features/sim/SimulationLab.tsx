@@ -6,7 +6,7 @@ import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/do
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine, tempoLevel, pressLevel } from "@/domain/rowText";
 import { clubInput } from "@/domain/career";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
@@ -103,7 +103,7 @@ export function SimulationLab() {
       {studioMentality !== null && (
         <Panel className="p-3">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <Badge variant="outline" className="border-primary/40 text-primary">{t("sim.fromStudio")}</Badge>
+            <Badge variant="outline" className={CHIP_CLASS.badgePrimary}>{t("sim.fromStudio")}</Badge>
             <span>{carriedShape
               ? t("sim.studioCarryShape", { mentality: mentalityWord(t, studioMentality), shape: carriedShape })
               : t("sim.studioCarry", { mentality: mentalityWord(t, studioMentality) })}</span>

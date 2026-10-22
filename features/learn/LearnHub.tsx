@@ -136,7 +136,7 @@ export function LearnHub() {
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {summary.byCategory.map((c) => (
-              <Badge key={c.category} variant="outline" className={cn("text-[11px]", c.completed === c.total && "border-success/40 text-success")}>
+              <Badge key={c.category} variant="outline" className={cn("text-[11px]", c.completed === c.total && CHIP_CLASS.badgeSuccess)}>
                 {t(`learn.cat.${c.category}`)} {c.completed}/{c.total}
               </Badge>
             ))}

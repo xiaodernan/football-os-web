@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M444
+Work ships one milestone per commit and is currently at M446
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,30 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M446 — the badge is written once too: the border and the word that share a colour
+
+M441 folded the chip — a border, a wash and a word, all of one colour — into one palette, and named the family it did not fold: the BADGE, a border and a word of one colour with **no wash** of its own. This unit closes that family.
+
+**The defect, measured before it was fixed.** The amber badge (`border-warning/40 text-warning`) was spelled out in seven places, the green one (`border-success/40 text-success`) in five, the strong amber (`border-warning/50 text-warning`) in two, and the strong green, the strong blue and the plain blue once each — **seventeen spellings across ten screens**, every one of them a copy of the rest. A screen could wear a caution in one shade on one page and another shade on the next, and the shade a badge wore was decided by whichever screen happened to write it first. The transfer centre's table was the clearest case: three kinds, three badge spellings, one table.
+
+**The fold.** Six entries joined the palette beside the chips (`badgeSuccess`, `badgeWarning`, `badgePrimary` and the three strong forms), and the seventeen sites now name the palette instead of spelling the classes. The class **set** is unchanged: the badge's own classes move to the end of the list and CSS does not read the order of a class attribute, so nothing is painted differently. A site that wore its badge with a size (`border-warning/40 text-[10px] text-warning`) keeps the size and wears the palette's colour; a site that wore the badge alone wears the palette's entry and nothing else. The fold was mechanical and checked its own work: for every site it compared the class set before and after and refused to write a file whose set had changed.
+
+**The seam, charged both ways.** The chip census now reads **four** shapes, and the fourth is the badge: a border and a word of one colour with no wash of that colour. A wash of the same colour makes it a chip again, and the reader is planted with both so the boundary is measured rather than assumed. The family has a clause of its own — *every badge the app wears is written in the palette alone* — which is stricter than the chips' rule, because a badge was never allowed to be a single screen's own. The palette now holds seventeen entries (eleven chips and six badges) and the reader checks all seventeen against the text the app wore before the fold, and twenty-two screens are checked for reading it. proof-chips reads 9/9; `tsc --noEmit` is clean.
+
+**Still outstanding.** The census charges a label that carries a border and a word. It does not yet charge one that carries a wash and a word with **no border** — the community hub's "yours" label (`bg-primary/15 text-primary`) is that shape, and the learning hub's right answer (`border-success bg-success/10`, a border and a wash with no word) is its mirror. Neither is visible to the reader today. That is the next family, and the fifth shape the reader will learn.
+
+### M445 — the unnamed-block class was probed in both directions, and neither direction is a gate
+
+M444's closing note named the last extent the rule census cannot see: a rule duplicated **inside** a larger body without being factored into a named unit. This unit probed that class in both directions and ships the measurement instead of a gate, because both directions fail the project's own bar — one is a wall, the other is too thin to mean anything.
+
+**The raw reading is a wall.** Splitting every file into top-level statements and pairing the substantial ones (≥24 tokens, under the same strict alignment) reads 308 blocks and **266 same-rule pairs** — and the pairs are almost entirely noise: per-page data tables (`const TONE: Record<Tier, string> = { gold: … }`), named-unit declarations the splitter re-counts as statements, and the vendor's overlay wrappers. M417 named this failure mode exactly ("a gate built on it would be either noise or a wall"), and a 266-pair census would be abandoned the first time someone needed it to say something.
+
+**The refined reading is honest and empty.** Excluding declarations (the named-unit census's class), pure data tables (statements with no call — tone maps, label maps) and JSX leaves **five statements in the whole tree**, all singletons: footprint's iso filter, rowText's summary line, its favourite ternary and its band-word ternary, and main's root render. Zero pairs. A pair-gate over a five-unit population would be the vacuity the suite's own census charges — a zero that reads the same whether the class is clean or the detector is broken.
+
+**What the probe did find, briefly.** The raw form surfaced one real family before the noise swallowed it — per-page tier→class tables — which is exactly the other session's active chip convergence (their M440/M441), so it is already being closed where it belongs. The residue this unit measured is what remains after sixty milestones of door work: five unique statements, no duplicates.
+
+**The reservation, stated plainly.** The unnamed-block class has no mechanical gate here, and this unit does not pretend otherwise. The tree's coverage rests on the named-unit census (exported, local, same-file, whole bodies — M417/M438/M443/M444) plus the door families closed by hand. If a future milestone needs this class gated, the honest starting point is the refined reader with a population pin, and the pin's brittleness (five units) is the price of the class being this thin.
 
 ### M444 — the census reads whole bodies now, and the context guard was hiding in its blind spot
 
