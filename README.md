@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M447
+Work ships one milestone per commit and is currently at M448
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,20 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M448 — the panel is written once too: the quiet box and the depth it wears
+
+M447 closed the label family and left a boundary of its own: a wash of a **surface** colour is a **panel**, not a label — the app's quiet box, a border and a wash with no word of its own. The census could name that boundary but could not charge it, and the app had been drawing its boxes by hand the whole time. This unit folds the panel family into a palette of its own.
+
+**The defect, measured before it was fixed.** The app drew its quiet boxes in **five depths of the same card surface** — `/30`, `/40`, `/50`, `/60` and the full `bg-card` — and **fifty-nine sites across twenty-one screens** spelled the wash out by hand. The smallest box, the one a fact sits in (`rounded-md border bg-card/30 px-2 py-1.5`), was written **thirteen times**: four in the film room, four in the club detail, four in the simulation lab, one in the manager OS. The softer panel (`rounded-lg border bg-card/40 p-3`) was written four more, and the app's own `Panel`, `Mini`, `StatTile` and `EmptyState` primitives each spelled a depth of their own. So the shade a box wore was decided by whichever screen wrote it first, and there was no single place in the app where a reader could see how many depths the app had.
+
+**The fold.** Eight entries joined a new `PANEL_CLASS` beside the chip palette, and the fifty-nine sites now name it. The class **set** is unchanged: an entry carries exactly the colour classes the site wore — its wash and its border — and every other class the site wore (its radius, its padding, its size) stays at the site, so a box is drawn exactly as it was. A bare `border` IS the border colour in Tailwind (the width class with the theme's border colour), so the reader sees it as a border and the panel's border rides with its wash. The fold compared the class set before and after for every site and refused to write a file whose set had changed; a separate reader re-derived all fifty-nine sets from the committed files and found no change in any of them.
+
+**The seam, charged both ways.** The census now reads a **seventh** shape, the panel, and the boundary around it is measured rather than assumed. A panel is a border and a wash of one of the app's **quiet surfaces** — the card a page is made of, and the secondary a quiet row sits on — with no word of its own, not even a word on hover. Four things are *not* panels and the reader says so: a box with a **word** in it says something and is not a panel; a wash of the **shell's** own surface (the modal's background, the sidebar) is the shell's, not a panel the app composes; a **softened** border with a semantic wash is a tinted container; and a solid button is not a label, because its word is the wash's own foreground companion. The reader is planted with all four, so the zeros below are a measurement and not a blind spot, and the panel clause is planted with a screen that spells a panel out, so it is seen **refusing** rather than only reported clean. The panel palette holds eight entries and the reader checks every panel the app wears against them, so a panel written in the palette's own file but missing from the palette is caught too.
+
+**The measurement, stated plainly.** The five depths were **not** merged, and this unit says why rather than assuming: each depth is used consistently for its own kind of box — `/30` for the small fact box, `/40` for the soft panel, `/50` for the app's own stat tiles, `/60` for the app's `Panel`, and the full card for a field row. There is no depth fighting another; there are five kinds of box, and this unit gave each of them a name. Merging them would flatten a hierarchy the app is drawing on purpose, and a milestone that cannot say which of the two is right should not pick one.
+
+**Still outstanding.** The census reads a class string, and it reads three colour roles — `border-`, `bg-`, `text-` — plus the bare `border`. A **ring** (`ring-1 ring-primary/40`, the onboarding screen's selected mode) is a fourth role the reader does not see, and the app's **progress bar** is a fifth: a groove (`bg-muted` in eleven places, `bg-secondary` in five, `bg-sidebar` in one) with a fill that wears `bg-primary`, `bg-primary/50`, `bg-primary/60`, `bg-success`, `bg-info`, `bg-warning` or `bg-destructive` depending on what the bar measures. The bar's own two halves are drawn apart, and the groove is the same groove in three washes. That is the next family.
 
 ### M447 — the label is written once too: the wash and the word, and the border and the wash
 

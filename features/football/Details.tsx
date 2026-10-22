@@ -29,7 +29,7 @@ import { playerDna } from "@/domain/playerDna";
 import { teamMetrics, expectedGoals } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
-import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { AttributeRadar } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -277,7 +277,7 @@ export function PlayerDetail({ id }: { id: string }) {
 
 function Fact({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-md border bg-card/30 px-2 py-1.5">
+    <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}>
       <div className="text-[10px] text-muted-foreground">{label}</div>
       <div className="font-mono text-sm">{value}</div>
     </div>
@@ -402,15 +402,15 @@ export function ClubDetail({ id }: { id: string }) {
                 <Ratio label={t("data.attack")} value={mine.attack} goodHigh />
                 <Ratio label={t("det.analytics.ratioDefence")} value={mine.defence} />
                 <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("det.analytics.ppg")}</div><div className="font-mono text-sm">{fmt2(mine.ppg)}</div></div>
-                  <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("det.analytics.cleanSheets")}</div><div className="font-mono text-sm">{mine.cleanSheets}</div></div>
+                  <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("det.analytics.ppg")}</div><div className="font-mono text-sm">{fmt2(mine.ppg)}</div></div>
+                  <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("det.analytics.cleanSheets")}</div><div className="font-mono text-sm">{mine.cleanSheets}</div></div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <Split label={t("data.home")} s={mine.home} />
                   <Split label={t("data.away")} s={mine.away} />
                 </div>
                 {preview && (
-                  <div className="rounded-md border bg-card/40 px-3 py-2 text-xs">
+                  <div className={cn("rounded-md px-3 py-2 text-xs", PANEL_CLASS.panelSoft)}>
                     <span className="text-muted-foreground">{t("det.analytics.nextUp", { club: preview.oppName })} </span>
                     <span className="font-mono">{fmt2(preview.us)}{SEPARATOR}{fmt2(preview.them)}</span>
                   </div>
@@ -449,7 +449,7 @@ function Ratio({ label, value, goodHigh = false }: { label: string; value: numbe
 function Split({ label, s }: { label: string; s: { played: number; won: number; drawn: number; lost: number; gf: number; ga: number } }) {
   const { t } = useI18n();
   return (
-    <div className="rounded-md border bg-card/30 px-2 py-1.5">
+    <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}>
       <div className="text-muted-foreground">{label} · {t("det.split.played", { n: s.played })}</div>
       <div className="font-mono text-sm">{s.won}-{s.drawn}-{s.lost} <span className="text-muted-foreground">({s.gf}:{s.ga})</span></div>
     </div>
@@ -594,7 +594,7 @@ export function MatchDetail({ id }: { id: string }) {
           <Button onClick={ask} disabled={busy}>{t(busy ? "det.ai.thinking" : "det.ai.ask")}</Button>
         </div>
         {ai && (
-          <div className="mt-3 space-y-2 rounded-lg border bg-card/40 p-3 text-sm">
+          <div className={cn("mt-3 space-y-2 rounded-lg p-3 text-sm", PANEL_CLASS.panelSoft)}>
             <p>{ai.text.map((r) => rowLine(r, t)).join(" ")}</p>
             <div><div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("common.evidence")}</div><ul className="mt-1 list-disc pl-5 text-xs text-muted-foreground">{ai.evidence.map((x, i) => <li key={i}>{rowLine(x, t)}</li>)}</ul></div>
             <div className="flex items-center gap-3 text-xs">
@@ -655,7 +655,7 @@ function StatCompare({ stats, home, away, ratings }: { stats: { home: MatchStats
         );
       })}
       {ratings && (
-        <details className="mt-1 rounded-md border bg-card/30 p-2 text-xs">
+        <details className={cn("mt-1 rounded-md p-2 text-xs", PANEL_CLASS.panelFaint)}>
           <summary className="cursor-pointer uppercase tracking-widest text-muted-foreground">{t("det.ratings.key")}</summary>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <RatingsCol title={home} ratings={ratings.home} />

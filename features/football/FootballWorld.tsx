@@ -19,7 +19,7 @@ import {
   DEMO_MODE,
 } from "@/data/footballService";
 import type { Club, Match, MatchStatus, PlayerRef, SearchKind, Standing } from "@/domain/types";
-import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,7 +79,7 @@ function PageHeader({ title, hint, back }: { title: string; hint?: string; back?
 
 function EntityLink({ to, children, className }: { to: string; children: ReactNode; className?: string }) {
   return (
-    <Link to={to} className={cn("block rounded-lg border bg-card/30 p-3 transition hover:border-primary/50 hover:bg-card/60", className)}>
+    <Link to={to} className={cn(cn("block rounded-lg p-3 transition hover:border-primary/50 hover:bg-card/60", PANEL_CLASS.panelFaint), className)}>
       {children}
     </Link>
   );
@@ -427,7 +427,7 @@ function NewsDetail({ id }: { id: string }) {
           <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
             {impact.watch.map((w, i) => <li key={i} className="flex gap-1.5"><span>•</span><span>{rowLine(w, t)}</span></li>)}
           </ul>
-          <details className="mt-2 rounded-md border bg-card/30 p-2 text-xs">
+          <details className={cn("mt-2 rounded-md p-2 text-xs", PANEL_CLASS.panelFaint)}>
             <summary className="cursor-pointer uppercase tracking-widest text-muted-foreground">{t("fw.news.evidence")}</summary>
             <ul className="mt-1.5 list-disc pl-5 text-muted-foreground">
               {impact.evidence.map((ev, i) => <li key={i}>{rowLine(ev, t)}</li>)}

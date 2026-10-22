@@ -20,7 +20,7 @@ import type { PlayerRef } from "@/domain/types";
 
 import { useI18n } from "@/i18n";
 import { bucketLabel, footLabel, positionLabel } from "@/domain/rowText";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, bestEdgeTone, worstEdgeTone, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, bestEdgeTone, worstEdgeTone, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
@@ -99,7 +99,7 @@ export function ScoutingPanel() {
           <SectionTitle title={t("scout.bestValue")} hint={t("scout.bestValueHint")} />
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {picks.map((p) => (
-              <div key={p.b} className="flex items-center gap-3 rounded-md border bg-card/40 px-3 py-2">
+              <div key={p.b} className={cn("flex items-center gap-3 rounded-md px-3 py-2", PANEL_CLASS.panelSoft)}>
                 <Badge variant="outline" className="text-[10px]">{bucketLabel(p.b, t)}</Badge>
                 <div className="min-w-0 flex-1"><Link to={`/players/${p.player.id}`} className="truncate text-sm hover:text-primary hover:underline">{p.player.name}</Link><div className="text-[11px] text-muted-foreground">{p.clubName} · {t("scout.ovr")} {p.player.overall} · {fmtMoney(p.player.value)}</div></div>
                 <Button size="sm" variant={state.watchlist.includes(p.player.id) ? "secondary" : "outline"} onClick={() => toggleWatch(p.player.id)}>{state.watchlist.includes(p.player.id) ? "★" : "☆"}</Button>

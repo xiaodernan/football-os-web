@@ -72,6 +72,11 @@ const colourClasses = (str) => str.split(/\s+/).filter(Boolean).map(colourClass)
 // popover, a sidebar or a page, and the app's panels are not labels.
 const SURFACES = new Set(["background", "card", "popover", "sidebar", "accent"]);
 
+// The QUIET SURFACES: the two the app's own panels are drawn on — the card a page is made of, and
+// the secondary a quiet row sits on. The shell's surfaces (the modal's background, the sidebar) are
+// the shell's own, not panels the app composes.
+const QUIET_SURFACES = new Set(["card", "secondary"]);
+
 /**
  * The shape of a string, or null when it is not a chip.
  *
@@ -99,6 +104,13 @@ const shapeOf = (str) => {
   // The MARK, the label's mirror: a FULL-STRENGTH border and a wash of that colour, with NO word
   // — the chosen answer, the selected player. A softened border is a container's edge, not a mark.
   if (border && wash && !word && border.colour === wash.colour && !border.softened) return "mark";
+  // The PANEL: the app's own quiet box — a border and a wash of one of the app's quiet surfaces,
+  // with NO word of its own, not even a word on hover. A bare `border` IS the border colour in
+  // Tailwind, so the reader sees it as a border of the theme's border colour.
+  if (wash && QUIET_SURFACES.has(wash.colour) && !classes.some((c) => c.role === "text")) {
+    const hasBorder = border || str.split(/\s+/).includes("border");
+    if (hasBorder) return "panel";
+  }
   // The option at rest: muted words, and a border that appears when you point at them.
   const hoverBorder = classes.find((c) => c.variant && c.role === "border");
   if (!border && word && word.colour === "muted-foreground" && hoverBorder && hoverBorder.colour === "primary") return "rest";
@@ -107,6 +119,23 @@ const shapeOf = (str) => {
 
 /** The chip's identity: the colour classes it wears, order-insensitive. */
 const identityOf = (str) => colourClasses(str).map((c) => c.raw).sort().join(" ");
+
+/**
+ * The PANEL's identity: its wash and its border, order-insensitive.
+ *
+ * A bare `border` IS the border colour in Tailwind, so it counts as a border here — without it, a
+ * panel with the theme's border colour and a panel with a softened one would share an identity.
+ */
+const panelIdentityOf = (str) => {
+  const tokens = str.split(/\s+/).filter(Boolean);
+  const plain = colourClasses(str).filter((c) => !c.variant);
+  const wash = plain.find((c) => c.role === "bg");
+  const border = plain.find((c) => c.role === "border");
+  const set = [wash?.raw];
+  if (border) set.push(border.raw);
+  else if (tokens.includes("border")) set.push("border");
+  return set.filter(Boolean).sort().join(" ");
+};
 
 /**
  * The source without its comments.
@@ -159,10 +188,10 @@ const census = () => {
   const groups = new Map();
   for (const [file, text] of Object.entries(src)) {
     for (const { str, line } of quotedStrings(text)) {
-      if (!str.includes("border-") && !str.includes("text-")) continue;
+      if (!str.includes("border-") && !str.includes("text-") && !str.includes("bg-")) continue;
       const shape = shapeOf(str);
       if (!shape) continue;
-      const id = identityOf(str);
+      const id = shape === "panel" ? panelIdentityOf(str) : identityOf(str);
       if (!groups.has(id)) groups.set(id, { shape, sites: [] });
       groups.get(id).sites.push(`${file}:${line}`);
     }
@@ -181,11 +210,18 @@ const PLANTS = [
   ["border-warning/40 bg-warning/10 text-warning", "tone"],
   ["bg-primary/15 text-primary", "label"],
   ["border-success bg-success/10", "mark"],
-  // A wash of a surface colour is a panel, not a label.
+  ["rounded-md border bg-card/30 px-2 py-1.5", "panel"],
+  ["border border-border/60 bg-secondary/20 p-3 transition-colors hover:border-primary/40", "panel"],
+  // A wash of a surface colour with a word is not a label: it says something.
   ["bg-card/50 px-3 py-1 text-sm text-muted-foreground", null],
   // A softened border is a container's edge, not a mark.
   ["border-success/40 bg-success/10 p-3", null],
-  ["border border-border/60 bg-secondary/20 p-3 transition-colors hover:border-primary/40", null],
+  // A panel with a word of its own is not a panel: it says something.
+  ["rounded-md border bg-card/30 px-2 py-1.5 text-muted-foreground", null],
+  // A wash of the shell's own surface is not a panel the app composes.
+  ["border bg-background p-6 shadow-lg", null],
+  // A solid button is not a label: its word is the wash's own foreground companion.
+  ["bg-primary/90 px-3.5 py-2 text-sm text-primary-foreground", null],
   ["text-xs text-muted-foreground", null],
 ];
 const planted = PLANTS.map(([str, want]) => ({ str, want, got: shapeOf(str) }));
@@ -244,6 +280,7 @@ ok(`and so is every mark, its mirror (${markGroups.length} mark(s); ${marksOutsi
 const PLANTED_SCREEN = [
   ["features/community/CommunityHub.tsx", 900, 'const x = "bg-primary/15 text-primary";'],
   ["features/learn/LearnHub.tsx", 900, 'const y = "border-success bg-success/10";'],
+  ["features/film/FilmRoom.tsx", 900, 'const z = "rounded-md border bg-card/30 px-2 py-1.5";'],
 ];
 const plantedCharged = PLANTED_SCREEN.map(([file, line, src]) => {
   const planted = [...quotedStrings(src)].filter(({ str }) => shapeOf(str));
@@ -252,6 +289,19 @@ const plantedCharged = PLANTED_SCREEN.map(([file, line, src]) => {
 ok(`the label and mark clauses can refuse a screen that spells one out (${plantedCharged.join(", ")} planted string(s) charged)`,
   plantedCharged.every((n) => n === 1),
   `planted strings read ${plantedCharged.join(", ")}`);
+
+// --- 2d · a panel is written once, in the palette -----------------------------------------------------
+// The panel is the app's own quiet box: a border and a wash of one of the app's quiet surfaces, with
+// no word of its own. The app drew its panels in FOUR strengths of the card surface, and each
+// strength was used consistently for its own kind of panel — so the four are NAMED rather than
+// merged, and the panel's LAYOUT (its radius, its padding) stays at the screen that draws it. Every
+// panel the app wears must live in PANEL_CLASS, because a screen that spells its wash out is the
+// defect this closes: the shade a panel wore was decided by whichever screen wrote it first.
+const panelGroups = chipGroups.filter(([, g]) => g.shape === "panel");
+const panelsOutside = panelGroups.flatMap(([id, g]) => g.sites.filter((s) => !s.startsWith(HOME + ":")).map((s) => `${id} at ${s}`));
+ok(`every panel the app wears is written in the palette alone (${panelGroups.length} panel(s); ${panelsOutside.length} written outside it)`,
+  panelGroups.length > 0 && panelsOutside.length === 0,
+  panelsOutside.join("; "));
 
 // --- 3 · the palette holds the chips the screens used to spell out ---------------------------------
 // The reference classes live in this proof file, not in the app: this is the text the app wore
@@ -289,11 +339,36 @@ const EXPECTED = {
   labelBorderPrimary: "border-primary bg-primary/10",
   labelBorderPrimarySoft: "border-primary bg-primary/5",
 };
-const { CHIP_CLASS, ZONE_CLASS } = await server.ssrLoadModule("/ui/primitives.tsx");
+const { CHIP_CLASS, ZONE_CLASS, PANEL_CLASS } = await server.ssrLoadModule("/ui/primitives.tsx");
 ok(`the palette holds the thirty-one chips, badges, labels and marks the app wore (${CHIP_CLASS ? Object.keys(CHIP_CLASS).length : 0} entries)`,
   CHIP_CLASS !== null && Object.keys(EXPECTED).every((k) => CHIP_CLASS[k] === EXPECTED[k]) &&
     Object.keys(CHIP_CLASS).length === Object.keys(EXPECTED).length,
   CHIP_CLASS ? Object.keys(EXPECTED).filter((k) => CHIP_CLASS[k] !== EXPECTED[k]).join(", ") : "the palette did not load");
+
+// The PANEL palette: the app's quiet boxes, named by the wash and the border they wear. The
+// reference classes live here too — this is the text the app wore before the fold.
+const PANEL_EXPECTED = {
+  panelFaint: "border bg-card/30",
+  panelSoft: "border bg-card/40",
+  panelMuted: "border bg-card/50",
+  panelDeep: "border bg-card/60",
+  panelPlain: "border bg-card",
+  panelGhost: "border-border/60 bg-secondary/20",
+  panelDim: "border-border/50 bg-secondary/10",
+  panelQuiet: "border bg-secondary/20",
+};
+ok(`the panel palette holds the eight washes the app's boxes wore (${PANEL_CLASS ? Object.keys(PANEL_CLASS).length : 0} entries)`,
+  PANEL_CLASS !== null && Object.keys(PANEL_EXPECTED).every((k) => PANEL_CLASS[k] === PANEL_EXPECTED[k]) &&
+    Object.keys(PANEL_CLASS).length === Object.keys(PANEL_EXPECTED).length,
+  PANEL_CLASS ? Object.keys(PANEL_EXPECTED).filter((k) => PANEL_CLASS[k] !== PANEL_EXPECTED[k]).join(", ") : "the panel palette did not load");
+// The stronger half of the panel rule: a panel the app wears must be one of the palette's ENTRIES,
+// not merely written in the palette's file. A panel written in ui/primitives.tsx but missing from
+// PANEL_CLASS would pass the "written outside it" clause and still be a wash the app spells out.
+const panelPaletteIds = new Set(PANEL_CLASS ? Object.values(PANEL_CLASS).map((v) => panelIdentityOf(v)) : []);
+const panelsUnnamed = panelGroups.filter(([id]) => !panelPaletteIds.has(id)).map(([id, g]) => `${id} at ${g.sites.join(", ")}`);
+ok(`and every panel the app wears is one of the palette's own entries (${panelPaletteIds.size} named; ${panelsUnnamed.length} unnamed)`,
+  panelsUnnamed.length === 0,
+  panelsUnnamed.join("; "));
 
 // --- 4 · the zone map rides the palette ------------------------------------------------------------
 // The load zones wear the tone chips; the map names the palette, not the classes.

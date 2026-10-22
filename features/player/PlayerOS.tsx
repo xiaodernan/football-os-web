@@ -23,7 +23,7 @@ import { FIXTURES_KEY, browserStore, readJson, writeJson } from "@/domain/localD
 import { goalProgressPct, isValidGoalTarget } from "@/domain/goals";
 import { ageGroupLabel, goalLabel, phaseLabel, positionLabel, rowLine } from "@/domain/rowText";
 import { getClub } from "@/data/footballService";
-import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, CHIP_CLASS, ZONE_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, CHIP_CLASS, ZONE_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -139,7 +139,7 @@ function Overview() {
           <AttributeRadar attrs={p.attributes} />
           <div className="space-y-3">
             <DnaCard dna={dna} />
-            <div className="rounded-lg border bg-card/40 p-3">
+            <div className={cn("rounded-lg p-3", PANEL_CLASS.panelSoft)}>
               <div className="text-xs uppercase tracking-widest text-muted-foreground">{t("player.biggestGaps")}</div>
               <div className="mt-2 space-y-2">
                 {weak.map((w) => <AttributeBar key={w.key} label={t(`attr.name.${w.key}`)} value={w.value} />)}
@@ -285,7 +285,7 @@ function Coach() {
         {!busy && !plan && <EmptyState title={t("player.noPlanYet")} hint={t("player.askCoachBuild")} icon="✦" />}
         {!busy && plan && (
           <div className="space-y-3">
-            <div className="rounded-lg border bg-card/40 p-3 text-sm">{plan.diagnosis.map((d) => rowLine(d, t)).join(" ")}</div>
+            <div className={cn("rounded-lg p-3 text-sm", PANEL_CLASS.panelSoft)}>{plan.diagnosis.map((d) => rowLine(d, t)).join(" ")}</div>
             <div className="flex flex-wrap gap-1.5">
               {plan.focus.map((f) => <Badge key={f} variant="outline" className="text-primary">{t(`attr.name.${f}`)}</Badge>)}
             </div>
@@ -293,14 +293,14 @@ function Coach() {
               <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("player.sessionMinutes", { n: plan.session.targetMinutes })}</div>
               <div className="mt-2 space-y-1.5">
                 {plan.session.exercises.map((e, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-md border bg-card/30 px-3 py-1.5 text-sm">
+                  <div key={i} className={cn("flex items-center justify-between rounded-md px-3 py-1.5 text-sm", PANEL_CLASS.panelFaint)}>
                     <span><span className="mr-2 font-mono text-[10px] text-muted-foreground">{phaseLabel(e.phase, t)}</span>{t(`drill.${e.key}`)}</span>
                     <span className="font-mono text-xs text-muted-foreground">{e.minutes}′</span>
                   </div>
                 ))}
               </div>
             </div>
-            <details className="rounded-md border bg-card/30 p-3 text-sm">
+            <details className={cn("rounded-md p-3 text-sm", PANEL_CLASS.panelFaint)}>
               <summary className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("player.rationaleEvidenceSources")}</summary>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
                 {plan.rationale.map((r, i) => <li key={i}>{rowLine(r, t)}</li>)}
@@ -451,7 +451,7 @@ function SessionCard({ session, onComplete }: { session: TrainingSession; onComp
   const [notes, setNotes] = useState("");
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-lg border bg-card/40 p-3">
+    <div className={cn("rounded-lg p-3", PANEL_CLASS.panelSoft)}>
       <div className="flex items-center justify-between">
         <div>
           <div className="text-sm font-medium">{rowLine(session.title, t)}</div>
@@ -556,7 +556,7 @@ function Goals() {
         <SectionTitle title={t("player.goalsTitle")} />
         <div className="space-y-3">
           {state.goals.map((g) => (
-            <div key={g.id} className="group rounded-lg border bg-card/40 p-3">
+            <div key={g.id} className={cn("group rounded-lg p-3", PANEL_CLASS.panelSoft)}>
               <div className="flex items-center justify-between text-sm">
                 <span className={cn("min-w-0 truncate", g.done && "text-muted-foreground line-through")}>{rowLine(g.title, t)}</span>
                 <span className="ml-2 flex shrink-0 items-center gap-1.5">
@@ -575,7 +575,7 @@ function Goals() {
         <div className="space-y-3">
           <div><Label>{t("player.goalFieldTitle")}</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" placeholder={t("player.goalPlaceholder")} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><Label>{t("player.goalFieldMetric")}</Label><select value={metric} onChange={(e) => setMetric(e.target.value as GoalMetric)} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm"><option value="xp">{t("player.goalMetricXp")}</option><option value="sessions">{t("player.goalMetricSessions")}</option><option value="level">{t("player.goalMetricLevel")}</option></select></div>
+            <div><Label>{t("player.goalFieldMetric")}</Label><select value={metric} onChange={(e) => setMetric(e.target.value as GoalMetric)} className={cn("mt-1 h-9 w-full rounded-md px-2 text-sm", PANEL_CLASS.panelPlain)}><option value="xp">{t("player.goalMetricXp")}</option><option value="sessions">{t("player.goalMetricSessions")}</option><option value="level">{t("player.goalMetricLevel")}</option></select></div>
             <div><Label>{t("player.goalFieldTarget")}</Label><Input type="number" value={target} onChange={(e) => setTarget(e.target.value)} className="mt-1" /></div>
           </div>
           {!targetOk && <p className="text-[11px] text-destructive">{t("player.goalTargetHint")}</p>}

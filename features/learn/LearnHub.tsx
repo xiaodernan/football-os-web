@@ -18,7 +18,7 @@ import {
   type Lesson,
   type Level,
 } from "@/domain/learn";
-import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { rowLine } from "@/domain/rowText";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -155,7 +155,7 @@ export function LearnHub() {
           {picks.length ? (
             <div className="mt-2 space-y-3">
               {picks.map((p) => (
-                <button key={p.lesson.id} onClick={() => setOpenId(p.lesson.id)} className="block w-full rounded-lg border bg-card/40 p-3 text-left hover:border-primary/50">
+                <button key={p.lesson.id} onClick={() => setOpenId(p.lesson.id)} className={cn("block w-full rounded-lg p-3 text-left hover:border-primary/50", PANEL_CLASS.panelSoft)}>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium">{t(p.lesson.titleKey)}</span>
                     <span className="shrink-0 text-[11px] text-muted-foreground">{p.lesson.minutes} {t("ld.minutesUnit")}</span>
@@ -182,7 +182,7 @@ export function LearnHub() {
           const rec = byId.get(l.id);
           const done = isCompleted(rec);
           return (
-            <button key={l.id} onClick={() => setOpenId(l.id)} className="group flex flex-col rounded-xl border bg-card/50 p-4 text-left hover:border-primary/50">
+            <button key={l.id} onClick={() => setOpenId(l.id)} className={cn("group flex flex-col rounded-xl p-4 text-left hover:border-primary/50", PANEL_CLASS.panelMuted)}>
               <div className="flex items-center justify-between">
                 <Badge variant="outline" className="text-[10px]">{t(`learn.cat.${l.category}`)}</Badge>
                 {done ? (

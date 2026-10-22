@@ -6,7 +6,7 @@ import { useOs, STORAGE_KEY } from "@/store/useFootballOS";
 import { applyImport, browserStore, buildExport, clearActivity, inventory, readImport } from "@/domain/localData";
 import { DEMO_MODE, footballProvider } from "@/data/footballService";
 import { MODES } from "@/domain/types";
-import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, DemoBadge, PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {cn, fmt2, fmt1, ABSENT } from "@/lib/utils";
@@ -158,7 +158,7 @@ export function SettingsPage() {
           </table>
         </div>
 
-        <div className="mt-3 flex items-center justify-between rounded-lg border bg-secondary/20 px-3 py-2 text-xs">
+        <div className={cn("mt-3 flex items-center justify-between rounded-lg px-3 py-2 text-xs", PANEL_CLASS.panelQuiet)}>
           <span className="text-muted-foreground">{t("set.storageUsed")}</span>
           <span className="font-mono tabular-nums">
             {formatBytes(inv.bytes)} · {t("set.totals", { r: inv.records, k: inv.present })}

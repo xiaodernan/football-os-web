@@ -6,7 +6,7 @@ import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/do
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine, tempoLevel, pressLevel } from "@/domain/rowText";
 import { clubInput } from "@/domain/career";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
@@ -154,7 +154,7 @@ function TeamPanel({ title, colors, short, value, onChange, clubs, selected, onS
     <Panel className="p-4">
       <div className="flex items-center gap-3">
         <Crest colors={colors} short={short} size={40} />
-        <select value={selected} onChange={(e) => onSelect(e.target.value)} className="flex-1 rounded-md border bg-card px-2 py-1.5 text-sm">
+        <select value={selected} onChange={(e) => onSelect(e.target.value)} className={cn("flex-1 rounded-md px-2 py-1.5 text-sm", PANEL_CLASS.panelPlain)}>
           {clubs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <Badge variant="outline" className="font-mono">{title}</Badge>
@@ -228,16 +228,16 @@ function ProbabilityPanel({ prob }: { prob: MatchProbability }) {
         </div>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgGoals")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeGoals)}{SEPARATOR}{fmt2(prob.avgAwayGoals)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.avgXg")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeXg)}{SEPARATOR}{fmt2(prob.avgAwayXg)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.bothScore")}</div><div className="font-mono text-sm">{pctLabel(prob.bttsPct)}</div></div>
-        <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("sim.over25")}</div><div className="font-mono text-sm">{pctLabel(prob.over25Pct)}</div></div>
+        <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("sim.avgGoals")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeGoals)}{SEPARATOR}{fmt2(prob.avgAwayGoals)}</div></div>
+        <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("sim.avgXg")}</div><div className="font-mono text-sm">{fmt2(prob.avgHomeXg)}{SEPARATOR}{fmt2(prob.avgAwayXg)}</div></div>
+        <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("sim.bothScore")}</div><div className="font-mono text-sm">{pctLabel(prob.bttsPct)}</div></div>
+        <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("sim.over25")}</div><div className="font-mono text-sm">{pctLabel(prob.over25Pct)}</div></div>
       </div>
       <div className="mt-4">
         <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("sim.mostLikelyScores")}</div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {prob.mostLikely.map((s) => (
-            <span key={s.score} className="rounded-md border bg-card/40 px-2 py-1 text-sm"><span className="font-mono font-semibold">{s.score}</span> <span className="text-xs text-muted-foreground">{pctLabel(s.pct)}</span></span>
+            <span key={s.score} className={cn("rounded-md px-2 py-1 text-sm", PANEL_CLASS.panelSoft)}><span className="font-mono font-semibold">{s.score}</span> <span className="text-xs text-muted-foreground">{pctLabel(s.pct)}</span></span>
           ))}
         </div>
       </div>

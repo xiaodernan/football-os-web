@@ -5,7 +5,7 @@ import { useI18n } from "@/i18n";
 import { useOs } from "@/store/useFootballOS";
 import { getClub, playersByClub } from "@/data/footballService";
 import { TACTICS_KEY } from "@/domain/localData";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn, clamp, pct, safeDiv } from "@/lib/utils";
 import { capRound, sum } from "@/domain/attributes";
@@ -158,7 +158,7 @@ export function TacticalStudio() {
 function dirWidth(dir: -1 | 1) { return dir === -1 ? 0.8 : 1.15; }
 
 function Stat({ label, value }: { label: string; value: string | number }) {
-  return <div className="rounded-md border bg-card/30 px-2.5 py-2"><div className="text-[11px] text-muted-foreground">{label}</div><div className="font-mono text-primary">{value}</div></div>;
+  return <div className={cn("rounded-md px-2.5 py-2", PANEL_CLASS.panelFaint)}><div className="text-[11px] text-muted-foreground">{label}</div><div className="font-mono text-primary">{value}</div></div>;
 }
 
 function PitchLines() {

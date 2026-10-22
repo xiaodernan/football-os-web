@@ -10,7 +10,7 @@ import { POSITION_GROUPS } from "@/domain/attributes";
 import { attributeGoalTitle } from "@/domain/goals";
 import type { PositionGroup } from "@/domain/types";
 import { DEMO_MODE } from "@/data/footballService";
-import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -23,7 +23,7 @@ function GapRow({ item, kind, action }: { item: GapItem; kind: "priority" | "str
   const { t } = useI18n();
   const max = Math.max(item.actual, item.target, 1);
   return (
-    <div className="rounded-lg border border-border/60 bg-secondary/20 p-3">
+    <div className={cn("rounded-lg border p-3", PANEL_CLASS.panelGhost)}>
       <div className="flex items-center justify-between text-sm">
         <span className="min-w-0 truncate font-medium">{t(`attr.name.${item.key}`)}</span>
         <span className="ml-2 flex shrink-0 items-center gap-2 font-mono text-xs tabular-nums">

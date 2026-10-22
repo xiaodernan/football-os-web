@@ -7,7 +7,7 @@ import { transferRumours, clubOf, availableKinds, type RumourLink } from "@/doma
 import { newsKindLabel, rowLine } from "@/domain/rowText";
 import { sum } from "@/domain/attributes";
 import type { NewsArticle } from "@/domain/types";
-import { Panel, Crest, PositionTag, EmptyState, StatTile, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, Crest, PositionTag, EmptyState, StatTile, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn, pctLabel, ABSENT, fmtMoney, signed } from "@/lib/utils";
 
@@ -164,7 +164,7 @@ function RumourCard({ r, showFit }: { r: RumourLink; showFit: boolean }) {
 
 function Cell({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-lg border bg-card/50 px-2 py-1.5">
+    <div className={cn("rounded-lg px-2 py-1.5", PANEL_CLASS.panelMuted)}>
       <div className="font-mono text-sm font-semibold tabular-nums">{value}</div>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
       {sub && <div className="text-[10px] text-muted-foreground/70">{sub}</div>}

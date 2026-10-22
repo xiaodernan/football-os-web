@@ -11,7 +11,7 @@ import { CAREER_KEY, COMMUNITY_KEY, browserStore, readJson, writeJson } from "@/
 import { rowLine, type RowText, type Translate } from "@/domain/rowText";
 import { getClub } from "@/data/footballService";
 import { round1 } from "@/domain/scouting";
-import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, epochMs } from "@/lib/utils";
@@ -230,7 +230,7 @@ export function CommunityHub() {
       {composing && <Composer starters={starters} onSubmit={addThread} onCancel={() => setComposing(false)} />}
 
       <div className="flex flex-wrap items-center gap-2">
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("comm.searchPlaceholder")} className="w-52 rounded-md border bg-card px-3 py-1.5 text-sm" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("comm.searchPlaceholder")} className={cn("w-52 rounded-md px-3 py-1.5 text-sm", PANEL_CLASS.panelPlain)} />
         <div className="flex gap-1">
           {SORTS.map((s) => (
             <button key={s} onClick={() => setSort(s)} className={cn("rounded-md border px-2.5 py-1 text-xs capitalize", sort === s ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t(`comm.sort.${s}`)}</button>
@@ -245,7 +245,7 @@ export function CommunityHub() {
 
       <div className="space-y-3">
         {visible.length ? visible.map((th) => (
-          <button key={th.id} onClick={() => setOpenId(th.id)} className="flex w-full items-start gap-3 rounded-xl border bg-card/50 p-4 text-left hover:border-primary/50">
+          <button key={th.id} onClick={() => setOpenId(th.id)} className={cn("flex w-full items-start gap-3 rounded-xl p-4 text-left hover:border-primary/50", PANEL_CLASS.panelMuted)}>
             <div className="flex w-12 shrink-0 flex-col items-center rounded-md border py-1.5 text-center">
               <span className="text-sm font-semibold text-primary">{likeCount(th.id, 0)}</span>
               <span className="text-[10px] text-muted-foreground">{t("comm.yourLikes")}</span>
@@ -296,7 +296,7 @@ function Composer({ starters, onSubmit, onCancel }: { starters: StarterDraft[]; 
     <Panel className="p-4">
       <SectionTitle title={t("comm.composerTitle")} />
       {starters.length > 0 && (
-        <div className="mt-2 rounded-md border bg-card/30 p-3">
+        <div className={cn("mt-2 rounded-md p-3", PANEL_CLASS.panelFaint)}>
           <div className="text-xs font-medium">{t("comm.startFromData")}</div>
           <p className="mt-0.5 text-[11px] text-muted-foreground">{t("comm.startFromDataHint")}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -314,10 +314,10 @@ function Composer({ starters, onSubmit, onCancel }: { starters: StarterDraft[]; 
         </div>
       )}
       <div className="mt-3 space-y-2">
-        <input value={title} onChange={(e) => { setTitle(e.target.value); setErr(null); }} placeholder={t("comm.titlePlaceholder")} className="w-full rounded-md border bg-card px-3 py-2 text-sm" />
-        <textarea value={body} onChange={(e) => { setBody(e.target.value); setErr(null); }} placeholder={t("comm.bodyPlaceholder")} rows={3} className="w-full rounded-md border bg-card px-3 py-2 text-sm" />
+        <input value={title} onChange={(e) => { setTitle(e.target.value); setErr(null); }} placeholder={t("comm.titlePlaceholder")} className={cn("w-full rounded-md px-3 py-2 text-sm", PANEL_CLASS.panelPlain)} />
+        <textarea value={body} onChange={(e) => { setBody(e.target.value); setErr(null); }} placeholder={t("comm.bodyPlaceholder")} rows={3} className={cn("w-full rounded-md px-3 py-2 text-sm", PANEL_CLASS.panelPlain)} />
         <div className="flex items-center justify-between gap-2">
-          <select value={tag} onChange={(e) => setTag(e.target.value)} className="rounded-md border bg-card px-2 py-1.5 text-sm">
+          <select value={tag} onChange={(e) => setTag(e.target.value)} className={cn("rounded-md px-2 py-1.5 text-sm", PANEL_CLASS.panelPlain)}>
             {allTags().filter((tg) => tg !== "All").map((tg) => <option key={tg} value={tg}>{tagLabel(t, tg)}</option>)}
           </select>
           <div className="flex gap-2">
@@ -358,14 +358,14 @@ function ThreadDetail({ thread, liked, onLike, likedComments, onLikeComment, onR
       <Panel className="p-4">
         <SectionTitle title={t("comm.repliesHeader", { n: thread.comments.length })} />
         <div className="flex gap-2">
-          <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && text.trim()) { onReply(text.trim()); setText(""); } }} placeholder={t("comm.replyPlaceholder")} className="flex-1 rounded-md border bg-card px-3 py-2 text-sm" />
+          <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && text.trim()) { onReply(text.trim()); setText(""); } }} placeholder={t("comm.replyPlaceholder")} className={cn("flex-1 rounded-md px-3 py-2 text-sm", PANEL_CLASS.panelPlain)} />
           <Button size="sm" disabled={!text.trim()} onClick={() => { onReply(text.trim()); setText(""); }}>{t("comm.reply")}</Button>
         </div>
         <div className="mt-4 space-y-3">
           {thread.comments.length ? thread.comments.map((c) => {
             const cLiked = likedComments.includes(c.id);
             return (
-              <div key={c.id} className="rounded-lg border bg-card/40 p-3">
+              <div key={c.id} className={cn("rounded-lg p-3", PANEL_CLASS.panelSoft)}>
                 <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-2">
                     <span className={cn("font-medium", c.sample ? "text-warning" : "text-foreground/80")}>{authorName(t, c.author)}</span>

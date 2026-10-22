@@ -10,7 +10,7 @@ import { deltaSign } from "@/domain/attributes";
 import { rowLine } from "@/domain/rowText";
 import { loadFilmClips, saveFilmClips, toClipInputs, type FilmClip } from "@/domain/filmLibrary";
 import { useOnline } from "@/lib/hooks";
-import { Panel, SectionTitle, EmptyState, LoadingBlock, ErrorState, DemoBadge, DELTA_CLASS, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, LoadingBlock, ErrorState, DemoBadge, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -310,10 +310,10 @@ export function FilmRoom() {
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2 text-center text-xs sm:grid-cols-4">
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.actionsPerMin")}</div><div className="font-mono text-sm">{fmt2(insights.actionsPerMinute)}</div></div>
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.scansPerMin")}</div><div className="font-mono text-sm">{fmt2(insights.scanPerMinute)}</div></div>
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.scanTrend")}</div><div className={cn("font-mono text-sm", DELTA_CLASS[deltaSign(insights.scanTrend ?? 0)])}>{insights.scanTrend == null ? ABSENT : signed2(insights.scanTrend)}</div></div>
-            <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-muted-foreground">{t("film.meanConf")}</div><div className="font-mono text-sm">{insights.avgConfidence}%</div></div>
+            <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("film.actionsPerMin")}</div><div className="font-mono text-sm">{fmt2(insights.actionsPerMinute)}</div></div>
+            <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("film.scansPerMin")}</div><div className="font-mono text-sm">{fmt2(insights.scanPerMinute)}</div></div>
+            <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("film.scanTrend")}</div><div className={cn("font-mono text-sm", DELTA_CLASS[deltaSign(insights.scanTrend ?? 0)])}>{insights.scanTrend == null ? ABSENT : signed2(insights.scanTrend)}</div></div>
+            <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-muted-foreground">{t("film.meanConf")}</div><div className="font-mono text-sm">{insights.avgConfidence}%</div></div>
           </div>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">

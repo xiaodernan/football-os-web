@@ -7,7 +7,7 @@ import { SUGGESTED_ASKS } from "@/data/ai";
 import { rowLine, asRowText, searchKindLabel, type RowText } from "@/domain/rowText";
 import type { SearchKind } from "@/domain/types";
 import { AI_CHAT_KEY } from "@/domain/localData";
-import { Panel, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -118,13 +118,13 @@ function Chat() {
           <div key={i} className="flex justify-end"><div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary/90 px-3.5 py-2 text-sm text-primary-foreground">{m.content}</div></div>
         ) : (
           <div key={i} className="max-w-[92%] space-y-2">
-            <div className="rounded-2xl rounded-bl-sm border bg-card/50 px-3.5 py-2 text-sm leading-relaxed">
+            <div className={cn("rounded-2xl rounded-bl-sm px-3.5 py-2 text-sm leading-relaxed", PANEL_CLASS.panelMuted)}>
               {Array.isArray(m.content)
                 ? m.content.map((r, j) => <p key={j} className={j ? "mt-1" : undefined}>{rowLine(r, t)}</p>)
                 : m.content}
             </div>
             {m.facts?.length ? (
-              <div className="rounded-lg border bg-card/30 p-2.5 text-xs">
+              <div className={cn("rounded-lg p-2.5 text-xs", PANEL_CLASS.panelFaint)}>
                 <div className="mb-1 font-semibold uppercase tracking-widest text-muted-foreground">{t("ai.evidence", { n: m.facts.length })}</div>
                 <ul className="space-y-1">
                   {m.facts.map((f, j) => <li key={j}>{f.to ? <Link to={f.to} className="text-primary hover:underline">{rowLine(f.label, t)}</Link> : <span className="font-medium">{rowLine(f.label, t)}</span>}<span className="text-muted-foreground"> — {rowLine(f.text, t)}</span></li>)}

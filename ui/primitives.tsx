@@ -15,7 +15,7 @@ import type { Dna } from "@/domain/playerDna";
 
 export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
   return (
-    <Card className={cn("relative overflow-hidden rounded-xl border bg-card/60 backdrop-blur", glow && "fo-glass", className)}>
+    <Card className={cn("relative overflow-hidden rounded-xl backdrop-blur", PANEL_CLASS.panelDeep, glow && "fo-glass", className)}>
       {children}
     </Card>
   );
@@ -50,7 +50,7 @@ export type TileTone = "up" | "down" | "neutral";
 
 export function StatTile({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: TileTone }) {
   return (
-    <div className="rounded-lg border bg-card/50 px-4 py-3">
+    <div className={cn("rounded-lg px-4 py-3", PANEL_CLASS.panelMuted)}>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="mt-1 text-2xl font-semibold tabular-nums">{value}</div>
       {sub && (
@@ -159,6 +159,25 @@ export const CHIP_CLASS = {
   labelBorderPrimarySoft: "border-primary bg-primary/5",
 } as const;
 
+// The PANEL: the app's own quiet box — a border and a wash of one of its quiet surfaces, with no
+// word of its own. A bare `border` IS the border colour in Tailwind (the width class with the
+// theme's border colour), so the panel's border rides with its wash and the reader can see it.
+//
+// The app drew its panels in FOUR strengths of the card surface, and each strength was used
+// consistently for its own kind of panel — so the four are named rather than merged. A panel's
+// LAYOUT (its radius, its padding, its size) stays at the screen that draws it; only the colour
+// is the app's.
+export const PANEL_CLASS = {
+  panelFaint: "border bg-card/30",
+  panelSoft: "border bg-card/40",
+  panelMuted: "border bg-card/50",
+  panelDeep: "border bg-card/60",
+  panelPlain: "border bg-card",
+  panelGhost: "border-border/60 bg-secondary/20",
+  panelDim: "border-border/50 bg-secondary/10",
+  panelQuiet: "border bg-secondary/20",
+} as const;
+
 // The load ZONE's chip: what the four action zones wear. The `none` state is deliberately NOT
 // here — it is presentational, and the /load banner carries a subtle secondary fill a bare chip
 // does not, so each caller supplies its own `none` and spreads these four. Excluding `none` is the
@@ -180,7 +199,7 @@ export const ZONE_CLASS: Record<Exclude<LoadZone, "none">, string> = {
 // caller passes, so the two tiles coexist on purpose.
 export function Mini({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-lg border bg-card/50 px-2 py-1.5">
+    <div className={cn("rounded-lg px-2 py-1.5", PANEL_CLASS.panelMuted)}>
       <div className="text-lg font-semibold tabular-nums">{value}</div>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
     </div>
@@ -251,7 +270,7 @@ export function DnaCard({ dna, note, fallbackLabel, fallbackNote, bare }: { dna?
   // `bare` lets the card drop its own frame and header so it can sit inside a
   // Panel that already supplies a title, instead of nesting box inside box.
   if (bare) return <div>{body}</div>;
-  return <div className="rounded-lg border bg-card/40 p-3">{body}</div>;
+  return <div className={cn("rounded-lg p-3", PANEL_CLASS.panelSoft)}>{body}</div>;
 }
 
 export function LoadingBlock({ rows = 3 }: { rows?: number }) {

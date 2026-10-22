@@ -4,7 +4,7 @@ import { useI18n, formatDate } from "@/i18n";
 import { footballProvider, getClub, getCompetition, fixtureForecast } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { teamMetrics, leaders, expectedGoals, formPoints, finishedCount, byKickoff, type TeamMetrics, type FormLetter } from "@/domain/analytics";
-import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { cn, clamp, fmt2, ABSENT, SEPARATOR, signed, pct } from "@/lib/utils";
 
 // A date-format option bag is not interface copy, but written inside a render hole the
@@ -245,7 +245,7 @@ export function DataRoom() {
               const h = getClub(match.homeClubId);
               const a = getClub(match.awayClubId);
               return (
-                <div key={match.id} className="rounded-lg border bg-card/40 p-3">
+                <div key={match.id} className={cn("rounded-lg p-3", PANEL_CLASS.panelSoft)}>
                   <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                     <Link to={`/matches/${match.id}`} className="flex items-center gap-2 hover:text-primary">
                       <Crest colors={h?.colors} short={h?.short} size={20} />
@@ -288,7 +288,7 @@ export function DataRoom() {
 function SplitCard({ title, s }: { title: string; s: TeamMetrics["home"] }) {
   const { t } = useI18n();
   return (
-    <div className="rounded-lg border bg-card/50 p-2.5">
+    <div className={cn("rounded-lg p-2.5", PANEL_CLASS.panelMuted)}>
       <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</div>
       <div className="mt-1 font-mono text-xs tabular-nums">{s.won}-{s.drawn}-{s.lost}</div>
       <div className="text-[11px] text-muted-foreground">{t("data.splitLine", { gf: s.gf, ga: s.ga, p: s.played })}</div>

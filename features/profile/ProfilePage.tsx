@@ -15,7 +15,7 @@ import { buildFootprint } from "@/domain/footprint";
 import { buildFilmInsights } from "@/domain/filmInsights";
 import { loadFilmClips, newestClipAt, toClipInputs } from "@/domain/filmLibrary";
 import { CAREER_KEY, COMMUNITY_KEY, browserStore, readJson } from "@/domain/localData";
-import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Mini, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -302,7 +302,7 @@ export function ProfilePage() {
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {footprint.rows.map((r) => (
-            <Link key={r.id} to={r.to} className="rounded-lg border bg-card/40 p-3 hover:border-primary/50">
+            <Link key={r.id} to={r.to} className={cn("rounded-lg p-3 hover:border-primary/50", PANEL_CLASS.panelSoft)}>
               <div className="flex items-center justify-between gap-2">
                 <span className={cn("text-sm font-semibold", r.active ? "text-foreground" : "text-muted-foreground")}>{t(`prof.mode.${r.id}`)}</span>
                 <span className={cn("rounded border px-1.5 py-px text-[10px] uppercase tracking-wide", r.active ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.muted)}>
@@ -338,7 +338,7 @@ export function ProfilePage() {
 
 function LinkCard({ to, icon, title, hint }: { to: string; icon: string; title: string; hint: string }) {
   return (
-    <Link to={to} className="flex items-center gap-3 rounded-xl border border-border/60 bg-secondary/20 px-3.5 py-3 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/40">
+    <Link to={to} className={cn("flex items-center gap-3 rounded-xl border px-3.5 py-3 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/40", PANEL_CLASS.panelGhost)}>
       <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", CHIP_CLASS.labelPrimary)}>{icon}</span>
       <span className="min-w-0">
         <span className="block font-medium">{title}</span>

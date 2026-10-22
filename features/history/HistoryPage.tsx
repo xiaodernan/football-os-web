@@ -6,7 +6,7 @@ import { buildTimeline, groupByDay, dayKey, type TimelineKind } from "@/domain/h
 import { rowLine, type RowText } from "@/domain/rowText";
 import { lessonById } from "@/domain/learn";
 import { useLearnRecords, useFilmRecords } from "@/lib/hooks";
-import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { cn, DAY_MS, isRealInstant } from "@/lib/utils";
 
@@ -120,7 +120,7 @@ export function HistoryPage() {
                   const detail = rowLine(e.detail, t);
                   return (
                     <li key={e.id} className="relative">
-                      <span className={cn("absolute -left-[26px] top-0.5 grid h-4 w-4 place-items-center rounded-full border bg-card text-[9px]", meta.tone)}>
+                      <span className={cn(cn("absolute -left-[26px] top-0.5 grid h-4 w-4 place-items-center rounded-full text-[9px]", PANEL_CLASS.panelPlain), meta.tone)}>
                         {meta.icon}
                       </span>
                       <div className="flex flex-wrap items-center gap-2 text-sm">

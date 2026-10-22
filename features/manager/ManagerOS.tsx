@@ -30,7 +30,7 @@ import {
 } from "@/domain/career";
 import type { MatchProbability } from "@/domain/matchProbability";
 import { CAREER_KEY } from "@/domain/localData";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, TONE_CLASS, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, TONE_CLASS, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { Link } from "@/lib/router";
@@ -470,7 +470,7 @@ function MatchPrepPanel({ career, onApply }: { career: CareerState; onApply: (t:
   const ourWin = odds ? (p.weHome ? odds.homeWinPct : odds.awayWinPct) : 0;
   const theirWin = odds ? (p.weHome ? odds.awayWinPct : odds.homeWinPct) : 0;
   const vs = (label: string, a: number, b: number) => (
-    <div className="flex items-center justify-between rounded-md border bg-card/30 px-3 py-2 text-sm">
+    <div className={cn("flex items-center justify-between rounded-md px-3 py-2 text-sm", PANEL_CLASS.panelFaint)}>
       <span className="text-muted-foreground">{label}</span>
       <span className="font-mono">{a} <span className="text-muted-foreground">{t("common.vs")}</span> {b}</span>
       <span className={cn("font-mono text-xs", a >= b ? "text-success" : "text-destructive")}>{signed(a - b)}</span>
@@ -586,7 +586,7 @@ function ClubPicker({ onStart }: { onStart: (clubId: string) => void }) {
 // the prop says what the callers actually hand it.
 function Metric({ label, value, tone }: { label: string; value: string | undefined; tone?: "good" | "bad" }) {
   return (
-    <div className="rounded-md border bg-card/40 px-3 py-2">
+    <div className={cn("rounded-md px-3 py-2", PANEL_CLASS.panelSoft)}>
       <div className="text-[11px] text-muted-foreground">{label}</div>
       <div className={cn("font-mono text-sm font-semibold", tone && TONE_CLASS[tone])}>{value}</div>
     </div>
@@ -594,6 +594,6 @@ function Metric({ label, value, tone }: { label: string; value: string | undefin
 }
 
 function Fact({ label, value }: { label: string; value: string | number }) {
-  return <div className="rounded-md border bg-card/30 px-2 py-1.5"><div className="text-[10px] text-muted-foreground">{label}</div><div className="font-mono text-sm">{value}</div></div>;
+  return <div className={cn("rounded-md px-2 py-1.5", PANEL_CLASS.panelFaint)}><div className="text-[10px] text-muted-foreground">{label}</div><div className="font-mono text-sm">{value}</div></div>;
 }
 

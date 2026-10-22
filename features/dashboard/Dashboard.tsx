@@ -21,7 +21,7 @@ import { summarizeLearn } from "@/domain/learn";
 import { plannedSessions } from "@/domain/training";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords, usePersonalNews } from "@/lib/hooks";
-import { Panel, SectionTitle, Crest, PositionTag, AttributeBar, EmptyState, CHIP_CLASS, ZONE_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, PositionTag, AttributeBar, EmptyState, CHIP_CLASS, ZONE_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -191,7 +191,7 @@ export function Dashboard() {
                 action={<span className="font-mono text-xs text-muted-foreground tabular-nums">{growth.unlocked}/{growth.total}</span>}
               />
               {growth.next ? (
-                <Link to="/achievements" className="block rounded-lg border border-border/60 bg-secondary/20 p-3 transition-colors hover:border-primary/40 hover:bg-secondary/40">
+                <Link to="/achievements" className={cn("block rounded-lg border p-3 transition-colors hover:border-primary/40 hover:bg-secondary/40", PANEL_CLASS.panelGhost)}>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>🔒</span>
                     <span className="uppercase tracking-wide">{t("dash.nextBadge")}</span>
@@ -334,7 +334,7 @@ export function Dashboard() {
                 <Link
                   key={m.to}
                   to={m.to}
-                  className="flex items-center gap-2 rounded-lg border border-border/60 bg-secondary/20 px-2.5 py-2 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/50"
+                  className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-2 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/50", PANEL_CLASS.panelGhost)}
                 >
                   <span className="grid w-5 place-items-center text-base leading-none text-primary">{m.icon}</span>
                   <span className="truncate">{t(m.labelKey)}</span>

@@ -4,7 +4,8 @@ import { useI18n } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { WORLD } from "@/data/footballSeed";
 import { trendingPlayers, getClub } from "@/data/footballService";
-import { Crest } from "@/ui/primitives";
+import { Crest, PANEL_CLASS } from "@/ui/primitives";
+import { cn } from "@/lib/utils";
 
 // The six pillars, as ids only. Every word a pillar shows — its name and its one-line
 // description — is keyed off `k`, and proof-i18n enumerates this array as the whole
@@ -64,7 +65,7 @@ export function Landing() {
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PILLARS.map((k) => (
-            <div key={k} className="group rounded-xl border bg-card/40 p-5 transition hover:border-primary/40 hover:bg-card/70">
+            <div key={k} className={cn("group rounded-xl p-5 transition hover:border-primary/40 hover:bg-card/70", PANEL_CLASS.panelSoft)}>
               <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">{t(`landing.pillars.${k}`)}</div>
               <p className="text-sm text-muted-foreground">{t(`landing.pillarDesc.${k}`)}</p>
             </div>
@@ -78,7 +79,7 @@ export function Landing() {
           {stars.map((p) => {
             const club = getClub(p.clubId);
             return (
-              <Link key={p.id} to={`/players/${p.id}`} className="rounded-xl border bg-card/40 p-4 transition hover:border-primary/40">
+              <Link key={p.id} to={`/players/${p.id}`} className={cn("rounded-xl p-4 transition hover:border-primary/40", PANEL_CLASS.panelSoft)}>
                 <div className="flex items-center gap-2">
                   <Crest colors={club?.colors} short={club?.short} size={30} />
                   <div className="text-right text-lg font-bold tabular-nums">{p.overall}</div>

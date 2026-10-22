@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {cn, ABSENT } from "@/lib/utils";
-import { Crest, CHIP_CLASS } from "@/ui/primitives";
+import { Crest, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 
 // The step rail. Keys live in a module-level table rather than inline in the JSX, where
 // any literal is read as a child of the element regardless of what it holds.
@@ -119,7 +119,7 @@ export function Onboarding() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>{t("common.level")}</Label>
-              <select value={ageGroup} onChange={(e) => setAge(e.target.value)} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm">
+              <select value={ageGroup} onChange={(e) => setAge(e.target.value)} className={cn("mt-1 h-9 w-full rounded-md px-2 text-sm", PANEL_CLASS.panelPlain)}>
                 {AGE_GROUPS.map((a) => <option key={a} value={a}>{ageOptionLabel(a, t)}</option>)}
               </select>
             </div>
@@ -148,14 +148,14 @@ export function Onboarding() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>{t("onb.favClub")}</Label>
-              <select value={clubId ?? ""} onChange={(e) => { setClub(e.target.value || undefined); setPlayer(undefined); }} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm">
+              <select value={clubId ?? ""} onChange={(e) => { setClub(e.target.value || undefined); setPlayer(undefined); }} className={cn("mt-1 h-9 w-full rounded-md px-2 text-sm", PANEL_CLASS.panelPlain)}>
                 <option value="">{ABSENT}</option>
                 {WORLD.clubs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
               <Label>{t("onb.favComp")}</Label>
-              <select value={compId ?? ""} onChange={(e) => setComp(e.target.value || undefined)} className="mt-1 h-9 w-full rounded-md border bg-card px-2 text-sm">
+              <select value={compId ?? ""} onChange={(e) => setComp(e.target.value || undefined)} className={cn("mt-1 h-9 w-full rounded-md px-2 text-sm", PANEL_CLASS.panelPlain)}>
                 <option value="">{ABSENT}</option>
                 {WORLD.competitions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>

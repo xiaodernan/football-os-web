@@ -6,7 +6,7 @@ import { achievementInput, evaluateAchievements, summary, type AchievementStatus
 import { summarizeLearn } from "@/domain/learn";
 import { loadFilmClips } from "@/domain/filmLibrary";
 import { useLearnRecords } from "@/lib/hooks";
-import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -113,7 +113,7 @@ function AchievementCard({ a, t }: { a: AchievementStatus; t: (k: string) => str
     <div
       className={cn(
         "rounded-xl border p-3 transition-colors",
-        a.unlocked ? TONE[a.tier] : "border-border/50 bg-secondary/10 opacity-80",
+        a.unlocked ? TONE[a.tier] : cn("opacity-80", PANEL_CLASS.panelDim),
       )}
     >
       <div className="flex items-center gap-3">
