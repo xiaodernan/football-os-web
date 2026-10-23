@@ -12,7 +12,6 @@ import { requireContext } from "./context";
 
 interface RouterValue {
   path: string;
-  segments: string[];
   query: URLSearchParams;
   navigate: (to: string, opts?: { replace?: boolean }) => void;
 }
@@ -45,7 +44,6 @@ export function RouterProvider({ children }: { children: ReactNode }) {
   const value = useMemo<RouterValue>(
     () => ({
       path: loc.path,
-      segments: loc.path.split("/").filter(Boolean),
       query: loc.query,
       navigate,
     }),

@@ -196,17 +196,17 @@ const t_throw = renderTheme("throw");
 ok(`THE DEFECT: with site data blocked the old code threw out of getInitialTheme; now the render completes and the shell is dark (theme ${JSON.stringify(t_throw.err ? "no render" : themeCap && themeCap.theme)}${t_throw.err ? `, THREW ${t_throw.err.name}: ${t_throw.err.message}` : ""})`,
   !t_throw.err && themeCap && themeCap.theme === "dark" && themeCap.theme.length > 0, t_throw.err && `${t_throw.err.name}: ${t_throw.err.message}`);
 
-const t_types = themeCap && { setTheme: typeof themeCap.setTheme, toggle: typeof themeCap.toggle };
-ok(`the provider publishes both mutators as functions (${JSON.stringify(t_types)})`,
-  !!t_types && t_types.setTheme === "function" && t_types.toggle === "function");
+const t_types = themeCap && { toggle: typeof themeCap.toggle };
+ok(`the provider publishes its toggle as a function (${JSON.stringify(t_types)})`,
+  !!t_types && t_types.toggle === "function");
 
 let guardErr = null;
 try { renderBare(ThemeGrab); } catch (e) { guardErr = e; }
 ok(`useTheme refuses to answer outside the provider, by name (message ${JSON.stringify(guardErr ? guardErr.message : "no throw")})`,
   !!guardErr && /useTheme must be used within ThemeProvider/.test(guardErr.message));
 // M324 companion: useTheme answers inside the provider, so the "refuses outside" clause above has a population pin.
-ok("the theme cap exposes both mutators when rendered through the provider",
-  !!themeCap && typeof themeCap.setTheme === "function" && typeof themeCap.toggle === "function");
+ok(`the theme cap publishes exactly the fields the screens read (${JSON.stringify(themeCap && Object.keys(themeCap).sort())})`,
+  !!themeCap && Object.keys(themeCap).sort().join(",") === "theme,toggle");
 
 let localeCap = null;
 function LocaleGrab() { localeCap = useI18n(); return null; }

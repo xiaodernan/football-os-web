@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M455
+Work ships one milestone per commit and is currently at M456
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7093,6 +7093,80 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M456 — the ninth direction: a provider field no consumer reads
+
+**What the gauge says.** `scripts/proof-context-readers.mjs` **5/5**. The app declares **4**
+contexts — `I18nValue` in `i18n/index.tsx`, `RouterValue` in `lib/router.tsx`,
+`ThemeContextValue` in `lib/theme.tsx` and `OsContext` in `store/useFootballOS.tsx` — and the
+folded tree offers **20** fields, every one with a consumer outside its declaring file (**0**
+unread). Before the fold the same census read **23** fields and charged **3**: `I18nValue.locales`,
+`RouterValue.segments`, `ThemeContextValue.setTheme`. The program parses **100** shipped modules,
+every context resolves to a same-file interface, and none is unresolved.
+
+**The measurement came before the gate.** The store's surface — twelve actions and ten persisted
+slices — was the first candidate, and every one already had a reader, so nothing was charged. A
+per-declaration interface-member census was measured and rejected before it could ship: TypeScript
+joins a read to a field by shape, not by declaration, so it charged live fields (`AiMemoryEntry.at`,
+read through an unrelated local seed type) and went blind on dynamic element access
+(`MEMORY_DETAIL[m.kind]`). The context surface is the same question asked where identity is
+decidable: the field is reached through a hook whose return type is the interface.
+
+**The reader.** A `createContext<T | null>` whose `T` is an interface declared in the same file. A
+field is read when another file destructures it (`const { toggle } = useTheme()`), renames it
+(`{ toggle: flip }`), reaches it through a member access (`useThing().member`) or a string element
+access, and the resolved symbol's declaration is that interface member. Reads inside the declaring
+file are the provider's own wiring, not consumers. A context whose type argument is not a same-file
+interface is charged as unresolved, never skipped.
+
+**What is NOT claimed.** Identity is the join, so a field reached only through a structurally equal
+local type is charged even when a context value was assigned to it — the census never exempts. An
+imported context type or an inline type literal is charged as unresolved rather than followed. A
+bare `useContext(Context)` call is not resolved to a field (all four hooks here go through a named
+`use*` function). The fixture pins these edges: a twin interface with the same field names reads
+nothing, and a read in the provider's own file reads nothing.
+
+**The fold.** Three fields left with their wiring: `setTheme` was a wrapper around the provider's
+own `setThemeState` that no screen called (consumers read only `theme` and `toggle`), `segments` was
+a derived split of `path` that no consumer read (they match routes against `path` with
+`matchRoute`), and `locales` was a copy of `LOCALES` with no reader — `LOCALES` itself stays
+exported, imported directly by the two language switchers and read by `detectLocale`. Three files,
+no behaviour change.
+
+**Two gates already pinned that surface.** `proof-storage.mjs` asserted that both theme mutators
+were functions, and `proof-router.mjs` parsed a hash into `path / segments / query`. Both checks
+described the published cap, so the fold updated them to the surface the screens read: the theme cap
+publishes exactly `theme,toggle`, and the router's cap carries exactly `navigate,path,query`, with
+the trailing-slash case reading `path` verbatim instead of a segment list. Neither file lost a
+check; their assertions now name the smaller surface.
+
+**The arms.** `dev/.m456-arms.mjs` runs **12/12** on the isolated plane, each arm restored
+byte-exactly and the plane's `git status` compared to its baseline. Fixture arms: dropping the
+destructuring read (A), adding a second unread field (B) and reading the ghost through member access
+(J) each charge clause 1, while a field read only by its own provider stays charged (C, control);
+dropping the broken fixture from the program silences the unresolved charge and reds clause 2 (K).
+Real-tree arms: a dead field in `ThemeContextValue` (D), in `RouterValue` (E), and a rename that
+leaves the old key unread (F) each charge clause 3; a context whose type is not a same-file
+interface charges clause 4 (G); a new field with a consumer stays green (H) and a renamed
+destructuring binding still reads its property (I, both controls); a skip set naming a field charges
+clause 5 (L). Predicted from each clause's own sentence: A[1] B[1] C[] D[3] E[3] F[3] G[4] H[] I[]
+J[1] K[2] L[5]. All twelve matched, and at rest and after every arm the plane's status equalled its
+baseline.
+
+**One fixture lesson.** The first fixture run read **0** of its four fields: the consumer's relative
+import resolved to `any`, silently, because Bundler module resolution stats the fixture directory
+and canonicalises the path before probing the file — the virtual host answered `fileExists` but not
+`directoryExists` or `realpath`. The host now serves one canonical `SourceFile` per virtual path
+and answers all three, and the fixture went from 0 reads to the 2 it should see. A fixture that
+cannot resolve its own import is not a fixture: every field is charged, and the gate's red would
+have been blamed on the reader.
+
+**Next.** The dictionary is the next app-owned declaration surface: `i18n/dictionaries.ts` declares
+thousands of rows, and a key no lookup reads is the same debt one layer over. Dynamic lookups are
+real (`attr.name.${code}`, `group.${code}`, `prof.mode.${code}`, `dna.arch.${code}`), so the reader
+has to expand a template's values from the list that enumerates them before any key is charged.
+That census is measured before anything is charged.
+
+`tsc --noEmit` exit 0, `npm run build` exit 0, and the full suite is green (113/113 proof scripts proven, 3134/3134 checks counted).
 ### M455 — the eighth direction: a utility, a keyframe and a class nobody reads
 
 **What the gauge says.** `scripts/proof-utility-readers.mjs` **4/4**. `src/globals.css` declares

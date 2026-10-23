@@ -130,9 +130,9 @@ const r1 = renderAt("#/players/p1?tab=stats&q=one");
 ok(`the provider renders under this harness, so the module's own exemption is no longer true (markup ${JSON.stringify(r1.html)}, context ${cap ? "published" : "NOT published"}${r1.err ? `, threw ${r1.err.constructor.name}` : ""})`,
   !r1.err && cap !== null, r1.err && r1.err.message);
 
-const shape = cap && { path: cap.path, segments: cap.segments, query: [...cap.query.entries()] };
-ok(`a hash is parsed into path / segments / query exactly as documented (#/players/p1?tab=stats&q=one -> ${JSON.stringify(shape)})`,
-  !!shape && shape.path === "/players/p1" && shape.segments.join(",") === "players,p1" &&
+const shape = cap && { path: cap.path, keys: Object.keys(cap).sort(), query: [...cap.query.entries()] };
+ok(`a hash is parsed into the published path / query exactly as documented (#/players/p1?tab=stats&q=one -> ${JSON.stringify(shape)})`,
+  !!shape && shape.path === "/players/p1" && shape.keys.join(",") === "navigate,path,query" &&
   shape.query.map(([k, v]) => `${k}=${v}`).join(",") === "tab=stats,q=one");
 
 const r2 = renderAt("");
@@ -140,8 +140,8 @@ ok(`an unset hash still reports a root path, because the app dispatches on strin
   !r2.err && cap && Object.keys(cap).length > 0 && cap.path === "/");
 
 const r3 = renderAt("#/players/");
-ok(`a trailing slash does not invent a segment (#/players/ -> ${JSON.stringify(cap && cap.segments)})`,
-  !r3.err && cap && cap.segments.join(",") === "players");
+ok(`a trailing slash is reported verbatim in the path, not split into segments (#/players/ -> ${JSON.stringify(cap && cap.path)})`,
+  !r3.err && cap && cap.path === "/players/");
 
 const r4 = renderAt("#/search?q=%zz");
 ok(`a query is read by URLSearchParams, which tolerates a malformed escape instead of throwing (#/search?q=%zz -> ${JSON.stringify(cap && [...cap.query.entries()])}${r4.err ? `, threw ${r4.err.constructor.name}` : ""})`,

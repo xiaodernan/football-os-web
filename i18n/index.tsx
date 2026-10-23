@@ -19,7 +19,6 @@ interface I18nValue {
   locale: Locale;
   setLocale: (l: Locale) => void;
   t: (key: string, vars?: Record<string, string | number>) => string;
-  locales: typeof LOCALES;
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
@@ -69,7 +68,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ locale, setLocale, t, locales: LOCALES }),
+    () => ({ locale, setLocale, t }),
     [locale, setLocale, t],
   );
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

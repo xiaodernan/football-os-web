@@ -15,7 +15,6 @@ const STORAGE_KEY = THEME_KEY;
 
 interface ThemeContextValue {
   theme: Theme;
-  setTheme: (t: Theme) => void;
   toggle: () => void;
 }
 
@@ -41,13 +40,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     writeJson(browserStore(), STORAGE_KEY, theme);
   }, [theme]);
 
-  const setTheme = useCallback((t: Theme) => setThemeState(t), []);
   const toggle = useCallback(
     () => setThemeState((t) => (t === "dark" ? "light" : "dark")),
     [],
   );
 
-  const value = useMemo(() => ({ theme, setTheme, toggle }), [theme, setTheme, toggle]);
+  const value = useMemo(() => ({ theme, toggle }), [theme, toggle]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
