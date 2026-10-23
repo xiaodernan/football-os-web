@@ -14,10 +14,6 @@
   }
 }
 
-@utility scrollbar-gutter-stable {
-  scrollbar-gutter: stable;
-}
-
 /* Football OS — light theme (fallback; the product defaults to dark) */
 :root {
   --background: #f6f8f6;
@@ -175,12 +171,6 @@ body {
   }
   50% {
     opacity: 0.35;
-  }
-}
-
-@keyframes fo-shimmer {
-  100% {
-    transform: translateX(100%);
   }
 }
 

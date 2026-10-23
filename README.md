@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M454
+Work ships one milestone per commit and is currently at M455
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,65 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M455 — the eighth direction: a utility, a keyframe and a class nobody reads
+
+**What the gauge says.** `scripts/proof-utility-readers.mjs` **4/4**. `src/globals.css` declares
+**10** names of its own — **5** `@utility` blocks, **2** `@keyframes` and **3** plain class
+selectors — and the census finds a reader for every one: **8** are read as class tokens (the five
+utilities `scrollbar-thin`, `scrollbar-none`, `fo-grid`, `fo-radial`, `fo-glass`, and the three
+selectors `.dark`, `.fo-rise`, `.fo-live-dot`), **2** keyframes are read through an `animation`
+value (`fo-rise`, `fo-pulse`), and **0** through neither. The one sheet is balanced, every at-rule
+block parses (7), and the walk covers **287** code files.
+
+**The measurement came before the gate.** A name-by-name grep of the unfolded sheet found exactly
+two names that appear nowhere but their own declaration: `@utility scrollbar-gutter-stable` and
+`@keyframes fo-shimmer`. An earlier reading had also named `fo-glass`, and that reading was wrong —
+`fo-glass` is read as a conditional literal in `ui/primitives.tsx` (`glow && "fo-glass"`), which is
+why the grep was corrected before anything was charged. The fold removed **2** declarations,
+leaving 10 declared and 0 unread.
+
+**The reader.** Three declaration kinds, two reader axes. An `@utility <x>` block and an `.x`
+selector are read where the class token `x` appears in code — a `className` string, a `class`
+attribute or an `@apply` — including variants (`hover:`), opacity (`/70`) and important suffixes. A
+`@keyframes <x>` block is read by an `animation` / `animation-name` value in CSS or in an inline
+style string, or by a `@theme --animate-*` value, which is how Tailwind 4 wires that namespace. An
+at-rule header is not a reader of the declaration it introduces, a selector is not a reader of
+itself, a comment reads nothing, and a selector-shaped string (`".foo"`) is not a class token. The
+vendor stylesheet is skipped as in M432/M451/M454.
+
+**What is NOT claimed.** The census reads spellings, not Tailwind's compiler: a class built at
+runtime (`fo-${x}`) would not be seen, so a declaration read only that way would be charged.
+Measured: no such construction exists in the tree today (no `bg-${…}`, `fo-${…}` or
+`scrollbar-${…}` pattern). An inline-style `animation` string is read by its identifiers, not by a
+browser, and a name that appears only in a keyframes header is still charged. Parse health is part
+of the claim: every at-rule block must close and every sheet must balance, and a broken fixture
+proves the check can see damage.
+
+**The arms.** `dev/.m455-arms.mjs` runs **10/10** on the isolated plane, each arm restored
+byte-exactly and the plane's `git status` compared to its baseline. Three fixture readers — a class
+for a fixture utility (A), an animation value for a fixture keyframe (B) and a class attribute for a
+fixture class selector (C) — each charge clause 1; a dead `@utility` (D), a dead `@keyframes` (E)
+and a dead class selector (F) enter the real sheet and charge clause 2; an unbalanced sheet charges
+clause 3 (G). Three controls separate the axes: a new utility read through `hover:`/opacity stays
+green (H), a new keyframe read through an animation value stays green (I), and a selector-shaped
+string does not read a class selector (J). Predicted from each clause's own sentence: A[1] B[1] C[1]
+D[2] E[2] F[2] G[3] H[] I[] J[]. All ten matched, and at rest and after every arm the plane's
+status equalled its baseline.
+
+**One fixture lesson.** The first fixture run charged `keyframes fixture-motion` even though its
+sample carried `"animation: fixture-motion 1s"`: the value reader's boundary set required
+whitespace, `;` or `{` before `animation`, so an inline style string — where the quote is the
+preceding character — was invisible. The fixture caught the gate's blind spot before the real tree
+could hide a live keyframe behind it, and the set now includes the quote.
+
+**Next.** The sheet's own declarations are all read now, so the next direction leaves the
+stylesheet for the app's state: the store's exposed actions and the fields it persists, where a
+slice can exist and be written while no screen reads it. That census is measured before anything is
+charged.
+
+`tsc --noEmit` exit 0, `npm run build` exit 0, and the full suite is green (112/112 proof scripts
+proven, 3129/3129 checks counted).
 
 ### M454 — the seventh direction: a theme token no reader can see
 
