@@ -62,7 +62,7 @@ export function attributesByCategory(category: AttributeDef["category"]): Attrib
 /** Every attribute category, in table order. `attr.*` holds the display words; a row
  *  names a category by one of these codes. */
 export const CATEGORIES: readonly AttributeDef["category"][] = [
-  ...new Set(ATTRIBUTE_DEFS.map((d) => d.category)),
+  ...unique(ATTRIBUTE_DEFS.map((d) => d.category)),
 ];
 
 export interface CategoryAverage {

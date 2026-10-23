@@ -88,7 +88,9 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // what makes that sentence mean something.
 // M444: 94 -> 95. lib/context.ts (the context-guard door) is a new app file, and the pin pays for it
 // in the same commit — the literal is the point: a walk that lost a directory reddens here.
-const APP_FILES_PIN = 95;
+// M453: 95 -> 97. domain/playerCareer.ts and features/player/TrainingTree.tsx are app files the
+// lane added, and the pin pays for them here — a walk that lost a directory still reddens.
+const APP_FILES_PIN = 97;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */

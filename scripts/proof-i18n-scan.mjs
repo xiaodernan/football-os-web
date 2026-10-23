@@ -20,7 +20,8 @@ const textRe = />([^<]{4,})</g;
 // JS expression hints: a JSX text node holding these is code, not user-visible copy.
 const codeHint = /=>|==|!=|<=|>=|&&|\|\||\?\s*\w|\.\s*(map|filter|find|reduce|forEach|some|every)\s*\(|["'`].*["'`]|\([^)]{0,40}\)|^\s*[A-Za-z_$][\w$.]*\s*$|\w+\s*:\s*\w+/;
 
-let failures = 0;
+let pass = 0, fail = 0;
+const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 function walk(dir, out) {
   for (const f of readdirSync(dir)) {
@@ -56,14 +57,9 @@ for (const file of files) {
   });
 }
 
-console.log(`i18n-scan: scanned ${files.length} feature files, ${rows.length} raw-string candidates`);
-for (const r of rows) {
-  failures += 1;
-  console.log(`  UNKEYED ${r.file}:${r.line} [${r.kind}] ${r.snippet}`);
-}
-if (failures === 0) {
-  console.log("i18n-scan: PROVEN — no raw user-visible English strings outside t()");
-  process.exit(0);
-}
-console.log(`i18n-scan: FAIL — ${failures} candidate(s) need t() keys`);
-process.exit(1);
+for (const r of rows) console.log(`  UNKEYED ${r.file}:${r.line} [${r.kind}] ${r.snippet}`);
+ok(`the raw-string scan reads the feature tree and finds no unkeyed copy (${files.length} feature files, ${rows.length} candidate(s))`,
+  rows.length === 0 && files.length >= 20);
+
+console.log(`\n${pass}/${pass + fail} checks passed`);
+process.exit(fail ? 1 : 0);

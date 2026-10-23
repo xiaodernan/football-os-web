@@ -201,7 +201,7 @@ export function DynamicWorld() {
                       <div className="flex items-center gap-2">
                         {s.champions.map((c) => (
                           <span key={c.compId} className="truncate min-w-0">
-                            {c.clubName} · {c.compName} <span className="text-muted-foreground">{t("world.pts", { n: c.points })}</span>
+                            {c.clubName} · {c.compName} <span className="text-muted-foreground">{t("world.pts", { points: c.points })}</span>
                           </span>
                         ))}
                       </div>

@@ -168,10 +168,6 @@ export const INJURIES: InjuryDef[] = [
   { key: "knee", severity: 3, weeks: 4, attrs: ["positioning", "decision_making"] },
 ];
 
-function injuryByKey(key: string): InjuryDef | undefined {
-  return INJURIES.find((i) => i.key === key);
-}
-
 /** About one week in twelve carries an injury; the rest are clear. Deterministic under
  *  (seed, week): the same player's same week always answers the same. */
 export function injuryFor(seed: string, week: number): InjuryDef | null {

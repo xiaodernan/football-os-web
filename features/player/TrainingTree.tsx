@@ -21,6 +21,7 @@ import {
   weekIndexOf,
   headroom,
 } from "@/domain/playerCareer";
+import { unique } from "@/domain/attributes";
 
 export function TrainingTree({
   attrs,
@@ -40,7 +41,7 @@ export function TrainingTree({
   const injury = injuryFor(seed, week);
   const fitness = fitnessFor(seed, week);
   const open = new Set(unlockedCourses(finished).map((c) => c.key));
-  const tiers = [...new Set(COURSES.map((c) => courseTier(c.key)))].sort((a, b) => a - b);
+  const tiers = unique(COURSES.map((c) => courseTier(c.key))).sort((a, b) => a - b);
   const gaps = headroom(attrs, potential).slice(0, 5);
 
   return (

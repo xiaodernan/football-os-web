@@ -144,7 +144,9 @@ const DEAD_CEILING = 22;
 // M248: section 9b and the HOST_OK exemptions retired with their files, POP_PIN drops by 11.
 // M444: 98 -> 99. lib/context.ts (the context-guard door) is a new app module; the pin pays in the
 // same commit, which is what makes a lost directory redden instead of shrinking quietly.
-const POP_PIN = 99;
+// M453: 99 -> 102. domain/playerCareer.ts, features/player/TrainingTree.tsx and
+// ui/charts/PotentialRadar.tsx are app modules the lane added; the pin pays for them here.
+const POP_PIN = 102;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -155,8 +157,8 @@ const POP_PIN = 99;
 // the measured number says what this tree actually looks like.
 // M444: lib 6 -> 7 (lib/context.ts, the context-guard door). The per-directory pin pays in the same
 // commit, so a file that moved directories or vanished reddens the row it left.
-const BY_DIR_PIN = { components: 15, data: 7, domain: 31, features: 28, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 2 };
-const DEEP_PIN = 43;
+const BY_DIR_PIN = { components: 15, data: 7, domain: 32, features: 29, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+const DEEP_PIN = 45;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

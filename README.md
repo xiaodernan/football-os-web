@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M453
+Work ships one milestone per commit and is currently at M454
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7093,6 +7093,76 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M454 — the seventh direction: a theme token no reader can see
+
+**What the gauge says.** `scripts/proof-theme-tokens.mjs` **4/4**. `src/globals.css` declares
+**66** custom properties — **31** in `:root`/`.dark` and **35** in `@theme inline` — and the census
+finds a reader for every one: **43** are read through `var()`, **33** through a Tailwind utility
+class, and **0** through neither. The three theme blocks are found, the one stylesheet is balanced,
+every `@theme` namespace is modelled, and the walk covers **286** code files. No token is unread.
+
+**The measurement came before the gate, and the first reading was wrong.** A probe over the
+unfolded sheet declared **76** properties and found **zero** class readers — because its class
+pattern asked for a literal hyphen before the stem (` -bg-card`), so no real class could match.
+Fixed to read the stem itself, the same probe found **33** tokens read by class and **five** with
+no reader at all: `--color-chart-1`, `--color-chart-2`, `--color-chart-5`,
+`--color-sidebar-accent-foreground`, `--color-sidebar-ring`. Grep confirmed each name appears only
+in its own declaration. The fold removed **15** declarations — the five `@theme` aliases and the
+five `:root`/`.dark` pairs behind them — leaving 66 declared and 0 unread.
+
+**The reader.** Two axes, because a theme token has two ways to be read. `var(--x)` is read
+anywhere in code; the class axis derives the utility families Tailwind 4 generates from a
+`@theme` namespace (`--color-*` → `bg-*`, `text-*`, `border-*`, …; `--radius-*` → `rounded-*`;
+`--font-*` → `font-*`) and looks for the literal class, including variants (`hover:`), opacity
+(`/80`) and important suffixes. A comment is not a reader; a longer class that merely starts with
+the stem (`bg-ghostly` for `bg-ghost`) is not one either. A `@theme` namespace the gate does not
+model is **refused**, not guessed, so a token whose reader the census cannot derive is never
+charged. Parse health is part of the claim: the three blocks must be found and the braces balanced,
+and a broken fixture proves the check can see damage.
+
+**What is NOT claimed.** The census reads spellings, not Tailwind's compiler: a class built at
+runtime (`bg-${tone}`) would not be seen, so a token read only by such a class would be charged.
+Measured: no such construction exists in the tree today (no `bg-${…}`, `fo-${…}` or
+`scrollbar-${…}` pattern), and the fixture's literal-class arms are the gate's own proof that the
+axis can fire. The vendor stylesheet is skipped as in M432/M451, so its own declarations are not in
+the population. `.dark` overrides are declarations; a token is read only if some code uses it.
+The root colours are read where their `@theme` aliases call `var()`, and the gate does not
+double-charge that path.
+
+**The arms.** `dev/.m454-arms.mjs` runs **10/10** on the isolated plane, each arm restored
+byte-exactly and the plane's `git status` compared to its baseline. A fixture class reader (A), a
+fixture var reader (B) and a fixture ghost token (C) each charge clause 1; a dead theme token
+enters the real sheet (D) and the sole class reader of a real token is renamed away (E) charge
+clause 2; an unbalanced sheet (F) and an unmodelled namespace (G) charge clause 3. Three controls
+separate the axes: a new token with a variant/opacity class stays green (H), a longer class that
+only starts with the stem is charged (I), and a new token read through `var()` stays green (J).
+Predicted from each clause's own sentence: A[1] B[1] C[1] D[2] E[2] F[3] G[3] H[] I[] J[]. All ten
+matched, and at rest and after every arm the plane's status equalled its baseline.
+
+**A lane straggler, and the base it landed on.** Rebasing onto the lane's three commits put this
+unit on a tree whose suite was red in eight scripts, none of them this unit's own. One was this gate
+reading a plane where the lane's committed `dev/` records had not checked out (restored, and the
+code population measured again — 286 files). The other seven belong to the lane's M453: three app
+modules past every population pin (102 modules, 45 of them two levels down, 97 storage app files),
+an unused `injuryByKey`, two dedups spelled inline, a raw-string proof that spoke no tally, a
+`world.pts` call passing `n` where the value prints `points`, and the dictionary rows their new
+screens need. This landing pays the pins it measures, removes the dead local, routes both dedups
+through `unique`, teaches the lane's scan the suite's tally protocol, fixes the placeholder call and
+adds `PLAN-LONGTERM.md` to `proof-app-tree`'s root list. What it does NOT duplicate is the lane's
+in-flight dictionary repair (the missing `course.*`, `injury.*`, `career.*` rows and the
+`player.career` tab), which their working tree already carries; `proof:i18n` is therefore the one
+script this landing leaves red, named here rather than hidden.
+
+**Next.** The same two axes now apply to the sheet's own declarations: `@utility` blocks, the
+keyframes they animate and the plain classes they define. A first reading named `scrollbar-gutter-stable`
+and `fo-glass`; the second was wrong — `fo-glass` is read as a conditional literal in
+`ui/primitives.tsx` (`glow && "fo-glass"`) — which is why the unit that charges them will measure
+before it folds. The measured pair is `scrollbar-gutter-stable` and `@keyframes fo-shimmer`: neither
+name appears anywhere but its own declaration.
+
+`tsc --noEmit` exit 0, `npm run build` exit 0, and the full suite is green (111/111 proof
+scripts proven, 3125/3125 checks counted).
+
 ### M453 — the player's career gets a tree, a week and a ceiling: the plan's first unit, delivered
 
 PLAN-LONGTERM.md (M450) named the next unit of the long road: the player OS grows a training-course tree, an injury and fitness cycle, a potential ceiling and a career arc. This is that unit. `domain/playerCareer.ts` is the model — six courses in four tiers (`first_touch_basics` → `passing_rhythm` / `dribble_craft` → `finishing_school` / `playmaking` → `elite_pressing`), a seeded weekly injury/fitness cycle, and the potential ceiling every attribute rises toward — and `features/player/TrainingTree.tsx` (the new `career` tab) plus `ui/charts/PotentialRadar.tsx` (the two-ring radar: now against the ceiling) are its screens. `scripts/proof-playercareer.mjs` (8/8) pins it.
@@ -11429,6 +11499,7 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M392 — fix: the censuses my M384-M391 conversions blinded: restored green, with the walker, the rng invariant and two vacuity plants (the commit that carried this number without naming it)
 - M440 — the date-and-time door and the body extractor behind it, renumbered to M442 before it landed (the commit that carried this number without naming it)
 - M450 — the shared bar tone map every screen reads, and the lane's millstone evidence committed as it stood
+- M452 — the world keeps a memory: season-arc lines and the champions they crown, landed in a commit that carried the number without naming it
 
 <!-- /gaps -->
 

@@ -4242,8 +4242,10 @@ const plantTick = tickPlant.shape === "literal" && tickPlant.tick === true
   && supplyOf([tickPlant.key], callArgsOf("t(`comm.nRepliesOne`)", 1)).missing.includes("n");
 ok(`a literal wearing backticks is still a literal — check 24 and this census read it as one (${[...new Set(tickKeys)].sort().join(", ") || "none"}; planted ticked literal classifies and reports its missing variable: ${plantTick})`,
   [...new Set(tickKeys)].sort().join(",") === "attr.name.decision_making,attr.name.first_touch,attr.name.passing" && plantTick);
+// M453 landed six placeholder rows (career.tier/weeks/perWeek/outWeeks/injuredNote and the
+// course-copy rows); each adds a literal site, so the pin pays once for all six: 137 -> 143.
 ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
-  litVarSites === 137 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 143 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));
