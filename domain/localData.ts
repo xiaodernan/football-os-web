@@ -9,6 +9,9 @@ import { LEARN_STORE_KEY } from "./learn";
 
 export const OS_STATE_KEY = "football-os.state.v2";
 export const CAREER_KEY = "football-os.career.v1";
+// M453: the player OS's finished training courses. CAREER_KEY is the MANAGER career state, so
+// the player's own tree gets its own key.
+export const TRAINING_TREE_KEY = "football-os.trainingTree.v1";
 export const FILM_KEY = "football-os.film.v1";
 export const COMMUNITY_KEY = "football-os.community.v1";
 export const WORLD_KEY = "football-os.world.v1";

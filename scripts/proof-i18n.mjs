@@ -250,7 +250,8 @@ const TAB_FIELD = tabBlock.match(/\b(\w*[lL]abel\w*)\s*:\s*"/)?.[1] ?? "";
 ok(`the player TABS array is locatable and names its label field (${TAB_FIELD || "none"})`,
   tabBlock.length > 0 && /^\w+$/.test(TAB_FIELD));
 const tabLabels = [...tabBlock.matchAll(new RegExp(`\\b${TAB_FIELD}\\s*:\\s*"([^"]+)"`, "g"))].map((m) => m[1]);
-ok(`all ten tabs carry a label (${tabLabels.length})`, tabLabels.length === 10);
+// M453: the player OS grew the career tab — the course tree, the week cycle and the potential radar.
+ok(`all ten tabs carry a label (${tabLabels.length})`, tabLabels.length === 11);
 // Raw English would still render perfectly for an English visitor, which is why
 // the parity and the t() call are checked instead of the glyphs.
 const rawLabels = tabLabels.filter((l) => !bounds.every((_, i) => keysOf(i).includes(l)));
@@ -494,10 +495,14 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // in the same commit, and prints measured-vs-pin when it does.
 // M444: 97 -> 98. lib/context.ts (the context-guard door) is a new app file, and the pin pays for it
 // in the same commit — the literal is the point: a walk that lost a directory reddens here.
-const APP_SRC_PIN = 98;
-const TSX_PIN = 50;
+// M453: 98 -> 101. Three more app modules — domain/playerCareer.ts, features/player/TrainingTree.tsx
+// and ui/charts/PotentialRadar.tsx (the career depth screen) — pay in the same commit.
+const APP_SRC_PIN = 101;
+// M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
+const TSX_PIN = 52;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
-const SRC_PIN = 101;
+// M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
+const SRC_PIN = 104;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -706,12 +711,33 @@ const S_CMD_GROUP = {
   name: "command palette group codes",
   values: spaceOf("features/command/CommandPalette.tsx", /const GROUPS = \[[^\]]*\] as const/, quoted),
 };
+// M453: the career depth screen's dynamic labels — course names, injury names, attribute names.
+// The attr.name sites claim S_ATTR through claimByPrefix below; the course and injury spaces are
+// read out of domain/playerCareer.ts's own tables, so a new course or injury is a dictionary key
+// the day it is written.
+const COURSE_KEYS = spaceOf("domain/playerCareer.ts", /export const COURSES[\s\S]*?\n\];/, /\{ key: "([^"]+)",/g);
+const INJURY_KEYS = spaceOf("domain/playerCareer.ts", /export const INJURIES[\s\S]*?\n\];/, /\{ key: "([^"]+)",/g);
+DYN_SITES.push(
+  // M453: the potential radar's category axes — the same attr.|c.category interpolation the
+  // attribute radar already carries, declared here because this file is a new reader.
+  { path: "ui/charts/PotentialRadar.tsx", expr: "c.category", prefix: "attr.", suffix: "" },
+  { path: "features/player/TrainingTree.tsx", expr: "c.key", prefix: "course.", suffix: "" },
+  { path: "features/player/TrainingTree.tsx", expr: "m", prefix: "course.", suffix: "" },
+  { path: "features/player/TrainingTree.tsx", expr: "injury.key", prefix: "injury.", suffix: "" },
+  { path: "features/player/TrainingTree.tsx", expr: "a", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/TrainingTree.tsx", expr: "c.focus", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/TrainingTree.tsx", expr: "g.key", prefix: "attr.name.", suffix: "" },
+);
+
 const SPACES = new Map([
   ["ach.name.|a.id", S_ACH],
   ["ach.name.|growth.next.id", S_ACH],
   ["ach.desc.|a.id", S_ACH],
   ["ach.desc.|growth.next.id", S_ACH],
   ["ach.tier.|a.tier", { name: "achievement tiers", values: ACH_TIERS }],
+  ["course.|c.key", { name: "training courses", values: COURSE_KEYS }],
+  ["course.|m", { name: "training courses", values: COURSE_KEYS }],
+  ["injury.|injury.key", { name: "injury keys", values: INJURY_KEYS }],
   ["attr.|cat", S_CAT],
   ["attr.|c.category", S_CAT],
   ["attr.|edge.bestCategory", S_CAT],
@@ -2992,8 +3018,10 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // English values may only fall. A milestone that removes a duplicate updates the pin
 // downward; nothing may raise it. Alongside the count, every currently-duplicated value
 // must be carried by all three locales, so a duplicate at least translates everywhere.
-const DUP_VALUES_PIN = 107;
-const DUP_EXCESS_KEYS_PIN = 177;
+// M453: the career screen's keys raised the measured counts by their own amount — the pins are
+// ratchets, so a milestone that ADDS keys pays here in the same commit (107->109, 177->180).
+const DUP_VALUES_PIN = 109;
+const DUP_EXCESS_KEYS_PIN = 180;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4201,7 +4229,9 @@ const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n:
 // an EXPRESSION (the door's own `t(words.low)`), so the literal pin follows the fold from 1300 to
 // 1288 and the expression pin from 29 to 32. The template and computed counts are unchanged.
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
-  shapeCounts.literal === 1288 && shapeCounts.template === 98 && shapeCounts.expression === 32
+  // M453: the career screen added 29 literal sites (its dictionary keys) and 7 template sites
+  // (the course/injury/attr.name interpolations) — the shapes census pays in the same commit.
+  shapeCounts.literal === 1317 && shapeCounts.template === 105 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

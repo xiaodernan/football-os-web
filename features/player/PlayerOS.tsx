@@ -22,9 +22,10 @@ import { loadFilmClips } from "@/domain/filmLibrary";
 import { FIXTURES_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { goalProgressPct, isValidGoalTarget } from "@/domain/goals";
 import { ageGroupLabel, goalLabel, phaseLabel, positionLabel, rowLine } from "@/domain/rowText";
-import { getClub } from "@/data/footballService";
+import { getClub, getPlayer } from "@/data/footballService";
 import { Panel, SectionTitle, StatTile, AttributeBar, DnaCard, EmptyState, LoadingBlock, ErrorState, CHIP_CLASS, ZONE_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
+import { TrainingTree } from "./TrainingTree";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,6 +55,7 @@ const TABS = [
   { key: "attributes", labelKey: "player.attributes" },
   { key: "skills", labelKey: "player.skills" },
   { key: "training", labelKey: "player.training" },
+  { key: "career", labelKey: "player.career" },
   { key: "progress", labelKey: "player.progress" },
   { key: "goals", labelKey: "player.goals" },
   { key: "workload", labelKey: "player.workload" },
@@ -113,6 +115,7 @@ export function PlayerOS() {
       {active === "attributes" && <Attributes />}
       {active === "skills" && <Skills />}
       {active === "training" && <Training />}
+      {active === "career" && <Career />}
       {active === "progress" && <ProgressView />}
       {active === "goals" && <Goals />}
       {active === "workload" && <Workload />}
@@ -374,6 +377,31 @@ function Skills() {
           </div>
         </Panel>
       ))}
+    </div>
+  );
+}
+
+// M453: the career depth screen. The profile itself carries no potential or id, so the screen
+// reads them from the visitor's template player — the one picked during onboarding — and falls
+// back to the profile's own overall with the profile's own stable fields as the seed. With no
+// template the ceiling ring sits on the current ring (headroom zero everywhere), which is the
+// honest reading: there is no modelled potential without a player to model it from.
+function Career() {
+  const { state } = useOs();
+  const { t } = useI18n();
+  const profile = state.profile;
+  if (!profile) return null;
+  const template = profile.favoritePlayerId ? getPlayer(profile.favoritePlayerId) : undefined;
+  return (
+    <div className="space-y-3">
+      <TrainingTree
+        attrs={template?.attributes ?? profile.attributes}
+        potential={template?.potential ?? overallRating(profile.attributes)}
+        seed={template?.id ?? `profile:${profile.displayName}:${profile.createdAt}`}
+      />
+      {!template && (
+        <p className="px-1 text-xs text-muted-foreground">{t("career.noTemplate")}</p>
+      )}
     </div>
   );
 }

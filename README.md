@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M451
+Work ships one milestone per commit and is currently at M453
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,20 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M453 — the player's career gets a tree, a week and a ceiling: the plan's first unit, delivered
+
+PLAN-LONGTERM.md (M450) named the next unit of the long road: the player OS grows a training-course tree, an injury and fitness cycle, a potential ceiling and a career arc. This is that unit. `domain/playerCareer.ts` is the model — six courses in four tiers (`first_touch_basics` → `passing_rhythm` / `dribble_craft` → `finishing_school` / `playmaking` → `elite_pressing`), a seeded weekly injury/fitness cycle, and the potential ceiling every attribute rises toward — and `features/player/TrainingTree.tsx` (the new `career` tab) plus `ui/charts/PotentialRadar.tsx` (the two-ring radar: now against the ceiling) are its screens. `scripts/proof-playercareer.mjs` (8/8) pins it.
+
+**The promise is the payment.** A course card shows `from → to (+gain)`, and `expectedGain` computes that number by replaying `perSessionGain` session by session — the same function a completed session pays with. The proof replays the same replay independently on six cases and pins equality, so the number on the card cannot drift from the number that persists (the M399 discipline, applied to a projection). The ceiling a plan respects is the clamp the payment itself enforces (99), not the player's overall: the first draft promised against the overall and the proof reddened it, because a single attribute is trained past the overall all the time.
+
+**The week is a seed, not a clock.** `injuryFor(seed, week)` and `fitnessFor(seed, week)` are pure functions of (seed, week) — the same player's same week answers the same on every device, forever, and the proof pins both the determinism and the distribution (240 weeks, 12.5% injured, eight distinct fitness values). `weekIndexOf` maps an instant to whole weeks since a fixed epoch, so the screen's "this week" is a week index, not a timestamp.
+
+**The domain writes no English.** The course-graph checker answers with structured codes (`focusNotAttribute`, `cycle`, `badWeeks`…), not sentences — the i18n suite's domain-prose ceiling is zero, and the first draft's five diagnostic sentences reddened it. The caller renders the words; the module carries the facts. That same suite charged six population and count pins for the new modules and keys (app files 98→101, .tsx 50→52, source 101→104, literal t() sites 1288→1317, template sites 98→105, duplicate values 107→109), all paid in this commit — the ratchets doing their job.
+
+**Verified:** tsc clean, build exit 0, proof-playercareer 8/8, proof-i18n 376/381. The five remaining i18n failures are the other session's, verified by stashing this unit's files: `world.pts`'s placeholder mismatch and the two proof-script conventions belong to their M451/M452 (DynamicWorld's `world.pts`, proof-i18n-scan.mjs's tally-free style). M452 also landed without a README section — the pointer below therefore steps over it, and that debt is theirs to close.
+
+**Still outstanding, honestly.** With no template player chosen during onboarding the ceiling ring sits on the current ring — there is no modelled potential without a player to model it from, and the screen says so rather than inventing one. Finished courses are a local record only; they do not yet feed a season arc. The plan's next units (M454 tactical board animation, M455 match-event timeline) are the road ahead.
 
 ### M451 — the sixth direction: an import nobody declared
 
