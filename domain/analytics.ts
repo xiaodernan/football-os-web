@@ -29,7 +29,6 @@ export interface TeamMetrics {
   points: number;
   ppg: number;
   gfAvg: number;
-  gaAvg: number;
   cleanSheets: number;
   form: FormLetter[];
   home: Split;
@@ -141,7 +140,6 @@ export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): Te
       points: won * 3 + drawn,
       ppg: played ? round2(((won * 3 + drawn) / played)) : 0,
       gfAvg: round2(gfAvg),
-      gaAvg: round2(gaAvg),
       cleanSheets,
       form,
       home: a.home,

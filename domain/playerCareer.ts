@@ -108,7 +108,6 @@ export function unlockedCourses(done: readonly string[]): CourseDef[] {
 // ---- Scheduling a course -----------------------------------------------------------------
 
 export interface CoursePlan {
-  courseKey: string;
   focus: string;
   weeks: number;
   sessionsPerWeek: number;
@@ -137,7 +136,7 @@ export function planCourse(courseKey: string, current: number): CoursePlan | nul
   if (!c) return null;
   const sessions = c.weeks * c.sessionsPerWeek;
   const { from, to, gain } = expectedGain(current, c.intensity, sessions);
-  return { courseKey: c.key, focus: c.focus, weeks: c.weeks, sessionsPerWeek: c.sessionsPerWeek, sessions, intensity: c.intensity, from, to, gain };
+  return { focus: c.focus, weeks: c.weeks, sessionsPerWeek: c.sessionsPerWeek, sessions, intensity: c.intensity, from, to, gain };
 }
 
 // ---- The injury and fitness cycle ---------------------------------------------------------

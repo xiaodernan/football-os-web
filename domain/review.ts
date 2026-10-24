@@ -51,7 +51,6 @@ export interface ReviewRecommendation {
 
 export interface WeeklyReview {
   windowDays: number;
-  fromMs: number;
   completed: number;
   planned: number;
   missed: number;
@@ -74,7 +73,6 @@ export interface WeeklyReview {
   filmConfidence: number;
   filmKinds: KindRate[];
   filmFocus: { key: string; clips: number }[];
-  goalsTotal: number;
   goalsDone: number;
   insights: ReviewInsight[];
   recommendation: ReviewRecommendation | null;
@@ -208,7 +206,6 @@ export function buildReview(input: ReviewInput): WeeklyReview {
 
   return {
     windowDays,
-    fromMs,
     completed: completed.length,
     planned: planned.length,
     missed: missed.length,
@@ -231,7 +228,6 @@ export function buildReview(input: ReviewInput): WeeklyReview {
     filmConfidence: film?.avgConfidence ?? 0,
     filmKinds: film ? film.byKind.filter((k) => k.count > 0).slice(0, 5) : [],
     filmFocus: film ? film.topFocus.slice(0, 3).map((f) => ({ key: f.key, clips: f.clips })) : [],
-    goalsTotal,
     goalsDone,
     insights,
     recommendation,

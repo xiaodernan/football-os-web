@@ -197,7 +197,6 @@ export type SectionValue = unknown | { __raw: string };
 export interface ExportBundle {
   app: typeof EXPORT_APP;
   version: typeof EXPORT_VERSION;
-  exportedAt: string;
   sections: Record<string, SectionValue>;
 }
 
@@ -234,7 +233,7 @@ export function buildExport(storage: StorageLike | null): ExportBundle {
       /* skip an unreadable key rather than fail the whole export */
     }
   }
-  return { app: EXPORT_APP, version: EXPORT_VERSION, exportedAt: new Date().toISOString(), sections };
+  return { app: EXPORT_APP, version: EXPORT_VERSION, sections };
 }
 
 export interface ImportResult {

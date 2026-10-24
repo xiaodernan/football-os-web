@@ -49,7 +49,6 @@ export interface VideoEvent {
 }
 
 export interface VideoReport {
-  fileId: string;
   fileName: string;
   durationSec: number;
   provider: string;
@@ -92,7 +91,6 @@ class DemoVideoProvider implements VideoProvider {
     const weak = weakestAttributes(input.attrs, 3).map((w) => w.key);
     const scanCount = events.filter((e) => e.kind === "scan").length;
     return {
-      fileId: input.fileId,
       fileName: input.fileName,
       durationSec,
       provider: this.id,

@@ -7105,6 +7105,91 @@ PLAN-LONGTERM.md's M458: installable, offline-cached, and honest about what a fi
 
 **A debt paid in passing.** The working tree carried 105 duplicated dictionary lines — the career keys M453 added, staged again on top of a HEAD that already had them (M454's commit had swept them in). The duplicate reddened `tsc` with 105 TS1117s, and this unit restores the dictionary to HEAD and rebuilds green. The lesson is M453's own: a commit's pathspec is a promise to the whole change, and a file left out of it does not stay put — it gets swept into somebody else's commit, or duplicated in a later one.
 
+### M457 — the tenth direction: a model field no shipped file reads
+
+**What the gauge says.** `scripts/proof-model-fields.mjs` **5/5**. The shipped tree declares **138**
+exported model interfaces with property signatures (no exported type-literal alias exists today;
+the census admits them), offering **874** fields — every one read by a file outside its declaration
+(**0** unread). The program parses **100** shipped modules and indexes **848** access names across
+**8201** sites, with **117** other proof scripts naming **1792** names; **2** declarations are
+fieldless and disclosed (`Split` inherits its base's fields, `StorageLike` is methods only); **0**
+records are unresolved. Before the fold the same census charged **6** fields of **880**:
+`WeeklyReview.fromMs`, `WeeklyReview.goalsTotal`, `TeamMetrics.gaAvg`, `ExportBundle.exportedAt`,
+`VideoReport.fileId` and `CoursePlan.courseKey`.
+
+**The measurement came before the gate, and it moved the unit.** M456's closing paragraph named the
+dictionary as the next surface. That census was measured first: `proof-i18n` already owns it —
+check 16 requires every dynamic site to be declared and every declared site to be live, check 17
+keys each space's values in all three locales, and check 18 requires every dictionary key to be
+reachable through a static, quoted or composed lookup. Every candidate the probe called dead
+(`prof.mode.*` in lowercase, `landing.world`, `drill.small_sided`, `onb.goal.twoFooted`,
+`ach.tier.gold`, `learn.level.advanced`, `fw.status.live`, `comm.feels.inline`) is one of those
+declared values, so there was no charge and no unit: a gate repeating those checks would pin
+nothing the suite did not already pin. The store's context surface was measured next and was also
+clean — ten actions and ten persisted slices, every one with a caller. The surface that did carry
+debt is the declaration layer one step out: a record can be exported, constructed, and still offer
+a field no screen, domain module or proof ever reads.
+
+**The reader.** Declaration identity is the wrong join here. The engine's shape is mirrored into
+`domain/types.ts` and the screens read the mirror — `SimTeamStats` is read through the structurally
+identical `MatchStats` at `features/football/Details.tsx` — so an identity census charged **78** of
+**880** live fields, including `passes`, `passAcc`, `tackles`, `duels` and `fouls`. The shipped
+reader asks instead whether any access of the field's name lands on a value whose type is assignable
+to the record, in either direction. An `any` receiver (a parsed document, an untyped seed) reads by
+name, which is the conservative answer: it can miss a dead field, never invent one. Destructuring is
+resolved through the declaration it binds — a variable initializer, a parameter, or a for-of element
+— and string element access counts. Unlike a context's provider wiring, a model module reading its
+own record is a real consumer, so reads inside the declaring file count.
+
+**The untyped seam.** The proof scripts are plain JS loaded through `vite.ssrLoadModule`, so every
+value in them is `any` and their accesses cannot be resolved to a type. They are shipped readers,
+and many read model fields (`sessionsPerWeek`, `hasData`, `attackEdge`, `ourXg`, `totalMinutes`,
+`seedBase`, …). The only sound join there is the name: a field any other proof script names is not
+charged. This is deliberately blunt — one `.version` anywhere would read every record's `version` —
+and it is why the final charge was six, not dozens. The gate excludes its own source from that scan:
+the counter reading its own fixture is not a consumer, and counting it would make the population
+depend on the gate.
+
+**The fold.** Six fields left with their producers. `WeeklyReview.fromMs` and `.goalsTotal` were
+computed and returned; the locals stay because the evidence, confidence and `hasData` rules read
+them, and only the returned members go. `TeamMetrics.gaAvg` was computed and returned; the local
+still divides into `defence`, and only the member goes. `ExportBundle.exportedAt` was written into
+every export and read by nothing — the importer validates `app` and `sections`, never a timestamp.
+`VideoReport.fileId` was copied from the analyze input into the report and never read back; the
+input's own `fileId` stays because it seeds the demo RNG. `CoursePlan.courseKey` was the key the
+caller already passed to `planCourse`, returned and never read. Five files, no behaviour change.
+
+**The fixture caught a dead branch before the tree did.** The fixture's `for (const { fxLoop } of
+list)` read nothing on the first run, and the reason was in the census, not the fixture: a for-of
+binding's owner in the AST is the `VariableDeclaration` (under a `VariableDeclarationList`), not the
+`ForOfStatement`, so the branch that looked for the loop was unreachable and the declaration had no
+initializer to fall back on. The declaration itself already carries the element type; using it
+turned the fixture from **6** of **9** fields read to **7** of **9**, and the real tree's index
+gained the two for-of reads (`for (const { key } of ATTRIBUTE_DEFS)`) it had been blind to. A
+fixture is the only place this kind of branch death is visible: on the real tree those two sites
+were redundant reads of `key`, so the charge never moved.
+
+**The arms.** `dev/.m457-arms.mjs` runs **9/9** on the isolated plane, each arm restored
+byte-exactly and the plane's `git status` compared to its baseline. A dead field planted on
+`TeamMetrics` charges clause 3 (A); a field only a proof script names stays green (B, control); a
+join that falls back to declaration identity reds clauses 1 and 3 (C); deleting the for-of element
+read reds clause 1 (D); making the fixture's stranger structurally identical reds clause 1 (E); a
+skip set naming a declared field charges clause 5 (F); dropping type-literal aliases from the
+population reds clause 1 (G); swallowing the fieldless disclosure reds clause 2 (H); and re-adding
+the six folded fields reds clause 3 with exactly those six names in its message (I, the fold
+measured both ways). Predicted from each clause's own sentence: A[3] B[] C[1,3] D[1] E[1] F[5]
+G[1] H[2] I[3]. All nine matched.
+
+**Honest reservation.** Two suite reds at this plane's HEAD are not this unit's: `proof-coverage`
+measures `src/main.tsx`'s exempt surface at **20** lines against a ceiling of **9**, and
+`proof-offline` finds the one network call the tree has, in `src/main.tsx` — the M458 worker
+registration (`navigator.serviceWorker`), which the offline gate's premise forbids. That file is
+unmodified here and neither clause reads any file this unit touched; both belong to the M458 lane
+and are disclosed, not papered over. This section closes the ledger's third red, its own gap.
+
+`tsc --noEmit` exit 0, `npm run build` exit 0, and `npm run proof` reports **113/115** scripts
+proven (**3141/3143** checks counted), the two reds being the M458 checks named above.
+
 ### M456 — the ninth direction: a provider field no consumer reads
 
 **What the gauge says.** `scripts/proof-context-readers.mjs` **5/5**. The app declares **4**
