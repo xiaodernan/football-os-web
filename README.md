@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M456
+Work ships one milestone per commit and is currently at M458
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7092,6 +7092,18 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M458 — the app installs, the shell survives offline, and the budget is measured
+
+PLAN-LONGTERM.md's M458: installable, offline-cached, and honest about what a first paint costs. The shell is four files — `public/manifest.webmanifest` (standalone, `#05070a`, an SVG icon that is also maskable), `public/icon.svg`, `public/sw.js` and the links in `index.html` — and `src/main.tsx` registers the worker **behind `import.meta.env.PROD`**, because a worker in dev caches the module graph and turns every edit into a hard reload.
+
+**The worker's rules, in the order they apply.** Same-origin GET only; the API (`/functions/`) is never cached, because a stale API answer is a lie about the world; navigations are network-first with a cached-shell fallback, so an offline deep link still opens the app; static assets are stale-while-revalidate, so a cached asset paints immediately and refreshes behind the scene. The cache name carries a version and `activate` drops every other cache. There is deliberately **no precache list**: the build is hash-named, so a list would be stale the moment the build changes — runtime caching with a versioned name is the strategy that cannot lie about its contents.
+
+**The budget, measured not promised.** The plan's "3G first paint" has no browser to measure it yet, so the proof measures what ships: 475 KB gzip across 34 assets (JS 463, CSS 12.5), pinned at 520 KB. When M459's E2E suite lands it can replace the proxy with a real throttled measurement; until then the number is at least taken from the real build with zlib, not from the source's intentions.
+
+**The seam, charged both ways.** `scripts/proof-pwa.mjs` (4/4) runs four pure predicates over the files — manifest completeness, the shell link, the production guard, the worker's ten rules — and each one is fed a broken fixture it must refuse (no `display`, no maskable icon, no manifest link, a dev-only registration, a worker without the API guard, without the origin guard, without the shell fallback). The bundle budget reads `dist/assets` and reddens when the pin is exceeded.
+
+**A debt paid in passing.** The working tree carried 105 duplicated dictionary lines — the career keys M453 added, staged again on top of a HEAD that already had them (M454's commit had swept them in). The duplicate reddened `tsc` with 105 TS1117s, and this unit restores the dictionary to HEAD and rebuilds green. The lesson is M453's own: a commit's pathspec is a promise to the whole change, and a file left out of it does not stay put — it gets swept into somebody else's commit, or duplicated in a later one.
 
 ### M456 — the ninth direction: a provider field no consumer reads
 

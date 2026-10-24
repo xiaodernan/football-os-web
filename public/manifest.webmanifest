@@ -1,0 +1,19 @@
+{
+  "name": "Football OS",
+  "short_name": "Football OS",
+  "description": "Train smarter. Understand deeper. Manage everything. Live the football world.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#05070a",
+  "theme_color": "#05070a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
