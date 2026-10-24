@@ -13,9 +13,9 @@ import type { Tone } from "@/domain/types";
 import type { LoadZone } from "@/domain/load";
 import type { Dna } from "@/domain/playerDna";
 
-export function Panel({ className, children, glow }: { className?: string; children: ReactNode; glow?: boolean }) {
+export function Panel({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <Card className={cn("relative overflow-hidden rounded-xl backdrop-blur", PANEL_CLASS.panelDeep, glow && "fo-glass", className)}>
+    <Card className={cn("relative overflow-hidden rounded-xl backdrop-blur", PANEL_CLASS.panelDeep, className)}>
       {children}
     </Card>
   );

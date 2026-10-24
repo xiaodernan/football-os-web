@@ -176,7 +176,7 @@ const codeEntries = files.filter((f) => CODE_EXT.has(extname(f).toLowerCase()))
 const cssEntries = codeEntries.filter((e) => e.rel.toLowerCase().endsWith(".css"));
 const tree = census(cssEntries, codeEntries);
 ok(`every declaration the sheet makes has a reader (${tree.declarations.length} declared: ${tree.utilities} @utility, ${tree.keyframes} @keyframes, ${tree.classes} class selectors; ${tree.classReadDecls} read through a class, ${tree.keyframeReadDecls} through an animation; ${tree.unread.length} unread: ${tree.unread.join(", ") || "none"})`,
-  tree.unread.length === 0 && tree.utilities >= 5 && tree.keyframes >= 2 && tree.classes >= 3 &&
+  tree.unread.length === 0 && tree.utilities >= 4 && tree.keyframes >= 2 && tree.classes >= 3 &&
   tree.classReadDecls >= 5 && tree.keyframeReadDecls >= 2 && codeEntries.length >= 250);
 
 // --- 3. Parse health: every at-rule block and every class selector is found, the tree's sheets are

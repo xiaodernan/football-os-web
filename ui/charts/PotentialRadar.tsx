@@ -20,11 +20,9 @@ import { useI18n } from "@/i18n";
 export function PotentialRadar({
   attrs,
   potential,
-  height = 260,
 }: {
   attrs: Attributes;
   potential: number;
-  height?: number;
 }) {
   const { theme } = useTheme();
   const { t } = useI18n();
@@ -36,7 +34,7 @@ export function PotentialRadar({
     potential: ceiling,
   }));
   return (
-    <div style={{ height }}>
+    <div style={{ height: 260 }}>
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} outerRadius="72%">
           <PolarGrid stroke={stroke} />

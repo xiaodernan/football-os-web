@@ -147,12 +147,6 @@ body {
     radial-gradient(900px 500px at 0% 0%, #38bdf814, transparent 55%);
 }
 
-@utility fo-glass {
-  background: color-mix(in oklab, var(--card) 72%, transparent);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border);
-}
-
 @keyframes fo-rise {
   from {
     opacity: 0;

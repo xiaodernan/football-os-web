@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M458
+Work ships one milestone per commit and is currently at M461
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7093,6 +7093,67 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M461 — the eleventh direction: a prop no JSX call site passes
+
+**What the gauge says.** `scripts/proof-component-props.mjs` **6/6**. The shipped tree exports
+**28** components with named props and offers **62** props — every one passed by a JSX call site
+(**0** unpassed) across **100** parsed modules and **608** resolved call sites. **1** component has
+no JSX call site at all (`AiStudio`, lazy-wrapped in `src/App.tsx` and reached through
+`m.AiStudio`), which is also the tree's **1** value reference; **0** elements spread their props
+and **0** call `cloneElement`. Before the fold the same census charged **2** of **64**:
+`Panel.glow` and `PotentialRadar.height`.
+
+**The measurement came first.** M457's closing paragraph left two surfaces unnamed. The const-table
+key census was measured first: 18 exported tables and 151 keys, and after resolving import aliases,
+local aliases and parameter initializers, **0** unread — but 14 of the 18 tables are indexed
+dynamically, so a name-level join there would have been a guess rather than a reader. The component
+props surface carried the only debt the probe could name.
+
+**The reader.** A prop is passed when a JSX opening tag resolves to the component's symbol and
+carries the attribute. Tag resolution follows import aliases (`FxRenamed as FxAlias`) and namespace
+qualifiers (`<UI.FxQualified>`), and `children` counts when the element has meaningful children
+rather than whitespace. Four shapes cannot be attributed from a call site and are read whole,
+conservatively: a spread attribute on that element; a component referenced outside JSX (a registry,
+an HOC argument, or a lazy wrapper's `m.AiStudio`); a component with no JSX call site; and any file
+that calls `cloneElement`, whose second argument never appears as an attribute. `key` and `ref`
+are not props a caller writes, so they are outside the population. The tree pins `cloneElement` at
+**0**: a green under an unattributable call would mean nothing.
+
+**Two folds, two different reasons.** `Panel.glow` was the easy one: `glow && "fo-glass"` is the
+only place the utility class is named, and no caller ever passes `glow`, so both the branch and the
+`@utility fo-glass` block in `src/globals.css` are dead. The M455 gate's population drops from
+five utilities to four and its floor follows the sheet; the M454 and M455 sections that named
+`fo-glass` as a live conditional literal were right about the class token and wrong to treat its
+reader as live — this is the unit that measured the caller and found none. `PotentialRadar.height`
+is not the same story: the prop was never passed, but its default **260** was load-bearing — it is
+the only thing setting the chart container's height. Removing the prop without the value would
+collapse the radar; the fold inlines the constant in the style and deletes the parameter, so the
+screen renders exactly as before.
+
+**The seam, charged both ways.** Twelve arms, **12/12 matched, 0 interfered**. Two restore the
+folded props and assert the exact charge (`Panel.glow`, `PotentialRadar.height`); seven break the
+reader one joint at a time (children, spread, value reference, zero-use, `cloneElement`, alias
+resolution, the `key`/`ref` filter); one plants a real `cloneElement` call and reds the tree
+pin; one is a comment-only control that stays green; one lifts the M455 floor and reds the utility
+gate. The first battery pass mispredicted six of them — not because the gate was wrong, but because
+the predictions charged the wrong clause: removing the spread clamp also empties a disclosure list,
+the value-reference fixture is already clamped as unused, the clone fixture also asserts its prop
+total, an alias-less run loses the call-site floor rather than the prop clause, the `key`/`ref`
+filter moves both prop totals, and the planted clone call reds the tree pin rather than a charge.
+The corrected predictions are in the arm spec; every arm names its own witness string.
+
+**What the gauge says about the suite.** `npx tsc --noEmit` exit 0, `npm run build` exit 0.
+`npm run proof` **114/116 scripts (3147/3149 checks)**. The two reds are the same two this file
+recorded at M457 and they are not this unit's: `proof-coverage` measures **20** exempt lines in
+`src/main.tsx` against a ceiling of **9**, and `proof-offline` finds **1** network call there —
+both are the M458 service-worker registration, and `src/main.tsx` is untouched by this commit.
+
+**Honest reservation.** A prop passed through `React.createElement(Comp, props)` is not a JSX
+attribute the reader sees. `React.createElement` does not appear in the tree today, but unlike
+`cloneElement` it is not pinned, so a future dynamic render would be charged as unpassed rather
+than clamped (the build's automatic JSX runtime does not produce it from source). The zero-use clamp
+would hide that only if the component also lost every JSX site.
+
 ### M458 — the app installs, the shell survives offline, and the budget is measured
 
 PLAN-LONGTERM.md's M458: installable, offline-cached, and honest about what a first paint costs. The shell is four files — `public/manifest.webmanifest` (standalone, `#05070a`, an SVG icon that is also maskable), `public/icon.svg`, `public/sw.js` and the links in `index.html` — and `src/main.tsx` registers the worker **behind `import.meta.env.PROD`**, because a worker in dev caches the module graph and turns every edit into a hard reload.
@@ -11678,7 +11739,7 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **forty-one milestone numbers have no section at
+later ones as sections, and between the two **forty-six milestone numbers have no section at
 all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
@@ -11730,6 +11791,8 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M440 — the date-and-time door and the body extractor behind it, renumbered to M442 before it landed (the commit that carried this number without naming it)
 - M450 — the shared bar tone map every screen reads, and the lane's millstone evidence committed as it stood
 - M452 — the world keeps a memory: season-arc lines and the champions they crown, landed in a commit that carried the number without naming it
+- M459 — PLAN-LONGTERM.md's E2E suite is not landed; this record's dead-code arc jumps from M458 to M461, so the number stays a named gap
+- M460 — PLAN-LONGTERM.md's performance baseline is likewise not landed, and the skip is recorded here rather than left silent
 
 <!-- /gaps -->
 
