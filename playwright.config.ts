@@ -6,7 +6,10 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 45_000,
-  expect: { timeout: 8_000 },
+  // Vite compiles on demand: the first visit to a heavy route can take seconds on a cold
+  // server, and an 8-second expect turns that into a flake. Fifteen is still a real bound —
+  // a broken assertion fails on the selector, not on the compiler's speed.
+  expect: { timeout: 15_000 },
   fullyParallel: false,
   workers: 1,
   retries: 0,

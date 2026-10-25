@@ -174,7 +174,7 @@ export function CommunityHub() {
     const score = (th: Thread) => th.comments.length + likeCount(th.id, 0) * 2;
     return [...list].sort((a, b) => sort === "top"
       ? score(b) - score(a)
-      : Math.max(new Date(b.at).getTime(), ...b.comments.map((c) => new Date(c.at).getTime())) - Math.max(new Date(a.at).getTime(), ...a.comments.map((c) => new Date(c.at).getTime()));
+      : Math.max(new Date(b.at).getTime(), ...b.comments.map((c) => new Date(c.at).getTime())) - Math.max(new Date(a.at).getTime(), ...a.comments.map((c) => new Date(c.at).getTime())));
   }, [merged, tag, q, sort, mine, store.likes]);
 
   const open = openId ? merged.find((th) => th.id === openId) ?? null : null;
