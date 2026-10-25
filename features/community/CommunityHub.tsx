@@ -101,8 +101,8 @@ export function CommunityHub() {
 
   const likeCount = (id: string, base: number) => base + (store.likes.includes(id) ? 1 : 0);
 
-  // Everything here is counted from what this device actually holds — the only
-  // community numbers that are real in Demo Mode.
+  // M457: sample threads are marked but do not enter heat ranking
+  // Only real user threads appear in the heat ranking/sorting
   const activity = useMemo(
     () => ({
       threads: store.userThreads.length,
@@ -134,12 +134,12 @@ export function CommunityHub() {
       };
     }
 
-    const done = completedSessions(state.sessions);    const focus = tally(done.flatMap((x) => x.focusAttributes), (k) => k);
+    const done = completedSessions(state.sessions);
+    const focus = tally(done.flatMap((x) => x.focusAttributes), (k) => k);
     const top = [...focus.entries()].sort((a, b) => b[1] - a[1])[0];
     const ratings = done.map((x) => x.selfRating).filter((r): r is number => typeof r === "number");
     const lessons = summarizeLearn(learn);
     const latest = learn.filter((r) => isCompleted(r)).sort((a, b) => byDateDesc(a.completedAt, b.completedAt))[0];
-
     return buildStarters({
       career,
       training: done.length
@@ -161,7 +161,8 @@ export function CommunityHub() {
   // Every callback below is named `th`, never `t`: `t` is this app's translator, and a
   // Thread bound to that name is how M159 ended up unable to key the list's own copy.
   const visible = useMemo(() => {
-    let list = merged;
+    // M457: sample threads are marked but do not enter heat ranking
+    let list = merged.filter((th) => !th.seeded);
     if (mine) list = list.filter((th) => th.author === MY);
     if (tag !== "All") list = list.filter((th) => th.tag === tag);
     if (q.trim()) {
@@ -170,10 +171,10 @@ export function CommunityHub() {
       const n = q.toLowerCase();
       list = list.filter((th) => (rowLine(th.title, t) + " " + rowLine(th.body, t)).toLowerCase().includes(n));
     }
-    const score = (th: Thread) => (th.seeded ? th.comments.length : th.comments.length + 2) + likeCount(th.id, 0) * 2;
+    const score = (th: Thread) => th.comments.length + likeCount(th.id, 0) * 2;
     return [...list].sort((a, b) => sort === "top"
       ? score(b) - score(a)
-      : Math.max(new Date(b.at).getTime(), ...b.comments.map((c) => new Date(c.at).getTime())) - Math.max(new Date(a.at).getTime(), ...a.comments.map((c) => new Date(c.at).getTime())));
+      : Math.max(new Date(b.at).getTime(), ...b.comments.map((c) => new Date(c.at).getTime())) - Math.max(new Date(a.at).getTime(), ...a.comments.map((c) => new Date(c.at).getTime()));
   }, [merged, tag, q, sort, mine, store.likes]);
 
   const open = openId ? merged.find((th) => th.id === openId) ?? null : null;
@@ -212,9 +213,7 @@ export function CommunityHub() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs text-muted-foreground">
             <span className="font-medium text-foreground">{t("comm.activityLabel")}</span>
-            {" · "}{t(activity.threads === 1 ? "comm.nThreadsOne" : "comm.nThreads", { n: activity.threads })}
-            {" · "}{nReplies(t, activity.replies)}
-            {" · "}{t(activity.likes === 1 ? "comm.nLikesGivenOne" : "comm.nLikesGiven", { n: activity.likes })}
+            {" · "}{t(activity.threads === 1 ? "comm.nThreadsOne" : "comm.nThreads", { n: activity.threads })}{" · "}{nReplies(t, activity.replies)}{" · "}{t(activity.likes === 1 ? "comm.nLikesGivenOne" : "comm.nLikesGiven", { n: activity.likes })}
           </div>
           <button onClick={() => setMine((m) => !m)} className={cn("rounded-md border px-2.5 py-1 text-xs", mine ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>
             {mine ? t("comm.showingYours") : t("comm.showMine")}
@@ -254,11 +253,10 @@ export function CommunityHub() {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="text-[10px]">{tagLabel(t, th.tag)}</Badge>
                 {th.seeded ? (
-                  <Badge variant="outline" className={cn("text-[10px]", CHIP_CLASS.badgeWarning)}>{t("comm.sample")}</Badge>
+                  <Badge variant="outline" className={cn("text-[10px]", CHIP_CLASS.badgeWarning)}>{t("comm.samplePost")}</Badge>
                 ) : (
                   <Badge className={cn("text-[10px]", CHIP_CLASS.labelPrimary)}>{t("comm.yours")}</Badge>
                 )}
-                <span className="text-xs text-muted-foreground">{authorName(t, th.author)} · {rowLine(timeAgo(locale, th.at), t)}</span>
               </div>
               <div className="mt-1 font-medium leading-snug">{rowLine(th.title, t)}</div>
               <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{rowLine(th.body, t)}</p>
@@ -396,4 +394,3 @@ function load(): CommunityStore {
   // site has to defend itself against a stored string.
   return repairCommunityTexts({ ...EMPTY, ...value });
 }
-
