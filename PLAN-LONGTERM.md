@@ -29,7 +29,7 @@
 | **M456 AI 教练长期记忆 ✅** | `/ai` 对话持久化，每条回答带可点击的世界数据出处与置信分；会话可重放 | 对话历史本地保存并可删除；引用的球员/俱乐部可跳转详情页；置信分低于阈值时标注“需谨慎” | `features/ai/AiMemory.tsx`；`data/aiStore.ts`（本地会话持久化） |
 | **M457 社区透明化 ✅** | `/community` 只统计真实用户的帖子/回复/点赞；sample 数据标注更醒目，不计入排名 | “你的活动”只计本人操作；sample 帖子统一 badge 标注，不进入热度排序 | `features/community/CommunityHub.tsx` 过滤逻辑调整；badge 组件复用 |
 | **M458 PWA 与离线 ✅** | 可安装为 PWA，离线可浏览已缓存的合成世界数据与已读文章 | `manifest.json` + Service Worker；核心页面离线加载；首屏指标 <3G 模拟下可用 | `public/manifest.json`；`src/sw.ts`；Vite PWA 插件配置 |
-| **M459 测试体系** | Playwright E2E 覆盖核心路径：引导→指挥中心→球员训练→经理比赛 | E2E 脚本 `tests/e2e/*.spec.ts`，CI 本地可运行 `npx playwright test` 皆绿 | `tests/e2e/onboarding.spec.ts`、`command-center.spec.ts`、`player-training.spec.ts`、`manager-match.spec.ts` |
+| **M459 测试体系 ✅** | Playwright E2E 覆盖核心路径：引导→指挥中心→球员训练→经理比赛 | E2E 脚本 `tests/e2e/*.spec.ts`，CI 本地可运行 `npx playwright test` 皆绿 | `tests/e2e/onboarding.spec.ts`、`command-center.spec.ts`、`player-training.spec.ts`、`manager-match.spec.ts` |
 | **M460 性能基线** | 建构体积、首屏 TTI、模拟引擎并发上限的可测基线并回归守护 | `npm run build` 产物体积不超基线；全赛季模拟耗时有上限并可配置并发 | `scripts/perf-baseline.mjs`；`tests/perf/` |
 
 中期展望（M461–M500，待 M460 完成后细化）：AI 代理经理（代替人类下指令）、用户自建联赛、真实数据源可选接口、移动端原生体验、俱乐部财务模型
@@ -58,5 +58,6 @@
 - 607259d M456: the ninth direction (AiMemory 对话持久化 + 置信分 + 跳转出处) — pushed
 - 35e1d46 M457: 社区透明化（真实用户活动统计 + sample badge 区分）— pushed
 - 04b8ca3 M458: the app installs, the shell survives offline, and the budget is measured (PWA 安装 + 离线缓存) — pushed
+- 00ead9c M459: 测试体系 - Playwright E2E covering onboarding, command-center, player-training, manager-match — pushed
 
-下一条目：M459 测试体系（Playwright E2E 覆盖核心路径：引导→指挥中心→球员训练→经理比赛）
+下一条目：M460 性能基线（建构体积、首屏 TTI、模拟引擎并发上限的可测基线并回归守护）
