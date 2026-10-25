@@ -61,17 +61,33 @@ const matchParen = (text, open) => {
   }
   return -1;
 };
+
+// Strip comments so doc text mentioning the pattern doesn't inflate the count.
+const stripComments = (text) => {
+  let out = "", i = 0, mode = null;
+  while (i < text.length) {
+    const c = text[i];
+    if (mode === "line") { if (c === "\n") { mode = null; out += c; } else out += " "; i++; continue; }
+    if (mode === "block") { if (c === "*" && text[i+1] === "/") { mode = null; out += "  "; i += 2; } else { out += c === "\n" ? "\n" : " "; i++; } continue; }
+    if (c === "/" && text[i+1] === "/") { mode = "line"; out += "  "; i += 2; continue; }
+    if (c === "/" && text[i+1] === "*") { mode = "block"; out += "  "; i += 2; continue; }
+    out += c; i++;
+  }
+  return out;
+};
+
 // Count PURE round-then-clamp sites: `clamp(Math.round(EXPR), lo, hi)` where the outer clamp's first
 // argument is exactly the Math.round call (its close is immediately followed by the clamp's comma).
 const ROUND = "clamp(Math.round(";
 const roundClampSites = (text) => {
+  const code = stripComments(text);
   let n = 0, from = 0, idx;
-  while ((idx = text.indexOf(ROUND, from)) !== -1) {
+  while ((idx = code.indexOf(ROUND, from)) !== -1) {
     from = idx + 1;
     const innerOpen = idx + ROUND.length - 1;
-    const innerClose = matchParen(text, innerOpen);
+    const innerClose = matchParen(code, innerOpen);
     if (innerClose === -1) continue;
-    if (text[innerClose + 1] === ",") n++;
+    if (code[innerClose + 1] === ",") n++;
   }
   return n;
 };
@@ -99,7 +115,7 @@ const present = READERS.concat([HOME]).every((p) => Object.prototype.hasOwnPrope
 ok(`the census walks the real source tree and every reader is inside it (${carriers.length} .ts/.tsx files, ${READERS.length} readers present)`,
   carriers.length >= 80 && present);
 
-// --- Convergence completeness: the door body itself is the ONE legitimate pure round-then-clamp in ----
+// --- Convergence completeness: the door body itself is the ONE legitimate pure round-then-clamp in ---
 // --- the tree (it IS the definition). Any occurrence in any OTHER file is a leftover the ------------
 // --- conversion should have removed — worldEngine 100–101 keep an rng nudge and read 0 by the --------
 // --- comma-adjacency rule, and the only comment occurrence is the rng-variant doc text. --------------
@@ -123,7 +139,7 @@ const plantRngInline = roundClampSites("const y = clamp(Math.round(v) + rngInt(r
 ok(`worldEngine's round-then-nudge-then-bound lines (100–101) stay inline — the pure-round census excludes them (worldEngine reads ${roundClampSites(weRaw)}, rng-variant present ${weRngVariant}, planted rng ${plantRngInline})`,
   roundClampSites(weRaw) === 0 && weRngVariant && plantRngInline === 0);
 
-// --- Behavioural: capRound(v, lo, hi) equals clamp(Math.round(v), lo, hi) on every band the sites -----
+// --- Behavioural: capRound(v, lo, hi) equals clamp(Math.round(v), lo, hi) on every band the sites ---
 // --- actually use, across samples below / at / above both bounds — so the conversions move no number. -
 const GRID_V = [-3, 0, 0.4, 1, 4, 9, 10, 22, 45, 70, 96, 97, 100, 1000];
 const BANDS = [[0, 4], [5, 96], [0, 10], [1, 5], [5, 99], [30, 100], [15, 45], [1, 99]];

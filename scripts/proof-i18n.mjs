@@ -497,12 +497,15 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // in the same commit — the literal is the point: a walk that lost a directory reddens here.
 // M453: 98 -> 101. Three more app modules — domain/playerCareer.ts, features/player/TrainingTree.tsx
 // and ui/charts/PotentialRadar.tsx (the career depth screen) — pay in the same commit.
-const APP_SRC_PIN = 101;
+// M459: 101 -> 107. The E2E suite's six files (tests/e2e/*.spec.ts and helpers.ts) and the two
+// root configs (playwright.config.ts, vite.config.ts) joined the walker's population.
+const APP_SRC_PIN = 107;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 const TSX_PIN = 52;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
-const SRC_PIN = 104;
+// M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
+const SRC_PIN = 110;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;

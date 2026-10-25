@@ -112,7 +112,7 @@ export function TrainingTree({
                           </Button>
                         ) : (
                           <span className="text-xs text-muted-foreground">
-                            {t("career.locked")}: {missing.map((m) => t(`course.${m}`)).join(", ")}
+                            {t("career.requires")}: {missing.map((m) => t(`course.${m}`)).join(", ")}
                           </span>
                         )}
                       </div>

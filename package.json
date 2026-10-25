@@ -15,7 +15,8 @@
     "proof": "node scripts/run-proofs.mjs",
     "test": "node scripts/run-proofs.mjs",
     "dev:function": "deno run --allow-net=127.0.0.1:8000 dev/function-local.ts",
-    "check:function": "deno check functions/index.ts"
+    "check:function": "deno check functions/index.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "class-variance-authority": "0.7.1",
