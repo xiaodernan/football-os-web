@@ -17,7 +17,7 @@ export const PERF_BENCHMARKS = {
 
 // 触摸事件防抖 hook
 export function useTouchThrottle(
-  callback: () => void,
+  callback: (...args: any[]) => void,
   wait: number = 100
 ) {
   let timeoutId: NodeJS.Timeout;
@@ -83,7 +83,7 @@ export function fixiOSClickDelay() {
   for (let i = sheets.length; i-- > 0; ) {
     const rules = sheets[i].rules || sheets[i].cssRules;
     for (let j = rules.length; j-- > 0; ) {
-      const rule = rules[j];
+      const rule = rules[j] as CSSStyleRule;
       if (rule.selectorText === "button, a, [role='button']") {
         rule.style.touchAction = "manipulation";
       }
