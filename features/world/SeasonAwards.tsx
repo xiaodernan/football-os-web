@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
-import { getSeasonStats, SeasonStats } from "@/world/seasonStats";
+import { getSeasonStats, SeasonStats } from "@/features/world/seasonStats";
 import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ export function SeasonAwards() {
         <SectionTitle title={t("world.awardsTitle")} />
         
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <!-- 最佳球员 -->
+          {/* 最佳球员 */}
           <div>
             <div className="text-xs text-muted-foreground">{t("world.bestPlayer")}</div>
             <div className="mt-2">
@@ -41,9 +41,8 @@ export function SeasonAwards() {
               </div>
               <div className="text-sm text-primary">{topScorer?.goals ?? 0} {t("world.goals")}</div>
             </div>
-          </div>
 
-          <!-- 最佳射手 -->
+          {/* 最佳射手 */}
           <div>
             <div className="text-xs text-muted-foreground">{t("world.topScorer")}</div>
             <div className="mt-2">
@@ -53,33 +52,32 @@ export function SeasonAwards() {
               </div>
               <div className="text-sm text-primary">{topScorer?.goals ?? 0} {t("world.goals")}</div>
             </div>
-          </div>
 
-          <!-- 总进球 -->
+          {/* 总进球 */}
           <div>
             <div className="text-xs text-muted-foreground">{t("world.totalGoals")}</div>
             <div className="mt-2 font-medium text-primary">{stats.goals} {t("world.goals")}</div>
           </div>
 
-          <!-- 总助攻 -->
+          {/* 总助攻 */}
           <div>
             <div className="text-xs text-muted-foreground">{t("world.totalAssists")}</div>
             <div className="mt-2 font-medium text-primary">{stats.assists} {t("world.assists")}</div>
           </div>
 
-          <!-- 出场次数 -->
+          {/* 出场次数 */}
           <div>
             <div className="text-xs text-muted-foreground">{t("world.appearances")}</div>
             <div className="mt-2 font-medium text-primary">{stats.appearances} {t("world.matches")}</div>
           </div>
 
-          <!-- 黄牌 -->
+          {/* 黄牌 */}
           <div>
             <div className="text-xs text-muted-foreground">{t("world.yellowCards")}</div>
             <div className="mt-2 font-medium text-yellow-500">{stats.yellowCards} {t("world.cards")}</div>
           </div>
 
-          <!-- 红牌 -->
+          {/* 红牌 */}
           <div>
             <div className="text-xs text-muted-foreground">{t("world.redCards")}</div>
             <div className="mt-2 font-medium text-red-500">{stats.redCards} {t("world.cards")}</div>

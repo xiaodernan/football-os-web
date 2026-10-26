@@ -12,6 +12,7 @@ import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorSt
 import { ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SeasonAwards } from "./SeasonAwards";
 
 const STORE_KEY = WORLD_KEY;
 

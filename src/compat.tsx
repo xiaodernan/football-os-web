@@ -3,6 +3,9 @@
  * 跨浏览器兼容性与特性检测工具
  */
 
+import { useI18n } from "@/i18n";
+import { Panel } from "@/ui/primitives";
+
 // 检测浏览器类型和版本
 export const detectBrowser = (): {
   name: "Chrome" | "Firefox" | "Safari" | "Edge" | "Opera" | "Unknown";
@@ -97,7 +100,7 @@ export function CompatNotice() {
   if (missingFeatures.length === 0) return null;
 
   return (
-    <Panel className="p-4 mb-6" style={{ borderColor: "warning" }}>
+    <Panel className="p-4 mb-6 border border-warning">
       <div className="flex items-start">
         <div className="w-1 h-1 rounded-full mr-2 bg-warning flex-shrink-0"></div>
         <div>
@@ -108,7 +111,7 @@ export function CompatNotice() {
           {missingFeatures.map((f, i) => (
             <Key key={i}>{f}</Key>
           ))}
-        </p>
+        </div>
       </div>
     </Panel>
   );

@@ -1,6 +1,5 @@
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { footballProvider } from "@/data/footballService";
-import { sum, avg, maxBy } from "@/domain/attributes";
 
 const STORE_KEY = WORLD_KEY;
 

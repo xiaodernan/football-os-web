@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
 import { Panel, SectionTitle, EmptyState, StatTile, CHIP_CLASS } from "@/ui/primitives";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export function TacticalStudio() {
   const { t } = useI18n();
   const formations = useMemo(() => ["4-4-2", "4-3-3", "3-5-2", "5-3-2", "4-2-3-1"], []);
-  const [selectedFormation, setSelectedFormation] = React.useState<string | null>(null);
+  const [selectedFormation, setSelectedFormation] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
@@ -20,7 +20,7 @@ export function TacticalStudio() {
           {formations.map(fmt => (
             <Button
               key={fmt}
-              variant={selectedFormation === fmt ? "primary" : "outline"}
+              variant={selectedFormation === fmt ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedFormation(fmt)}
             >
