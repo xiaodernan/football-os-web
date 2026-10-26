@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
-import { getSeasonStats, SeasonStats } from "@/world/seasonStats";
+import { getSeasonStats, SeasonStats } from "@/features/world/seasonStats";
 import { Panel, SectionTitle, EmptyState, StatTile, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

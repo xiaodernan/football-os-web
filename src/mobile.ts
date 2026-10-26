@@ -3,6 +3,8 @@
  * 移动端原生体验配置工具
  */
 
+import * as React from "react";
+
 // 检测是否为移动设备
 export function isMobileDevice(): boolean {
   if (typeof window === "undefined") return false;
@@ -30,9 +32,9 @@ export function useTouchDetection(
   React.useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
-    const handleStart = (e: React.TouchEvent | MouseEvent) => {
+    const handleStart = (e: Event) => {
       setIsTapping(true);
-      const touch = e.touches ? e.touches[0] : e;
+      const touch = "touches" in e ? (e as TouchEvent).touches[0] : (e as MouseEvent);
       setStartX(touch.clientX);
       setStartY(touch.clientY);
 
@@ -40,13 +42,13 @@ export function useTouchDetection(
       timeoutId = setTimeout(() => setIsTapping(false), 250);
     };
 
-    const handleEnd = (e: React.TouchEvent | MouseEvent) => {
+    const handleEnd = (e: Event) => {
       clearTimeout(timeoutId);
 
       if (!isTapping) return;
-      isTapping = false;
+      setIsTapping(false);
 
-      const touch = e.touches ? e.touches[0] : e;
+      const touch = "touches" in e ? (e as TouchEvent).touches[0] : (e as MouseEvent);
       const diffX = touch.clientX - startX;
       const diffY = touch.clientY - startY;
       const absDiffX = Math.abs(diffX);
@@ -97,7 +99,7 @@ export function isInBreakpoint(breakpoint: keyof typeof breakpoints): boolean {
   if (typeof window === "undefined") return false;
   const maxWidth = breakpoints[breakpoint];
   if (!maxWidth) return false;
-  return window.innerWidth <= parseInt(maxRadius);
+  return window.innerWidth <= parseInt(maxWidth);
 }
 
 // 轻量级离线缓存键
