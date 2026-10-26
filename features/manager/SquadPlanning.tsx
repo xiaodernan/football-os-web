@@ -39,7 +39,7 @@ export function SquadPlanning() {
           >
             {t(fmt)}
           </Button>
-        ))}
+        ))
       </div>
 
       {/* 首发阵容 */}
@@ -56,7 +56,7 @@ export function SquadPlanning() {
                 <div className="text-primary">{p.overall}★</div>
                 <div className="text-xs text-muted-foreground">{p.position}</div>
               </div>
-            ))}
+            ))
           </div>
         </Panel>
       )}
@@ -88,16 +88,6 @@ export function SquadPlanning() {
               </div>
             ))}
           </div>
-        </Panel>
-      )}
-
-      {/* 战术说明 */}
-      {!formation && (
-        <Panel className="p-4">
-          <SectionTitle title={t("manager.tacticalSetup")} />
-          <p className="text-sm text-muted-foreground">
-            {t("manager.chooseFormation")}
-          </p>
         </Panel>
       )}
     </Panel>
