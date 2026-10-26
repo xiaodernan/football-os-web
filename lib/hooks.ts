@@ -53,8 +53,8 @@ export function useFilmClips(rev = 0): FilmClipInput[] {
 
 /** The same library with the provider report attached, for surfaces that need the
  *  file name or per-clip counts rather than the analysis input. */
-export function useFilmRecords(rev = 0): FilmClip[] {
-  return useMemo(() => loadFilmClips(), [rev]);
+export function useFilmRecords(): FilmClip[] {
+  return useMemo(() => loadFilmClips(), []);
 }
 
 /** True when the visitor can reach the network (drives offline/degraded states). */

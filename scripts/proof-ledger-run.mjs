@@ -60,10 +60,18 @@ ok(`the gap reader is armed (a planted list reads ${planted && planted.entries ?
   !!plantedMalformed && !!plantedMalformed.malformed && parseGaps("no block") === null);
 
 // --- 2. The tree's gaps: the numbers between the oldest and newest section that have none. -----
+// The vacuity ceiling is derived from the run it guards instead of a hand-typed constant: a gap
+// list that is most of the ledger would mean the record stopped being written at all, so the gaps
+// must stay a minority of the sections. (The old constant was 60; a lane that mints numbers in
+// code-only commits outgrew it, and a constant a tree can outgrow is a false alarm waiting to fire.)
+const ceilingHolds = (gapCount, sectionCount) => gapCount > 0 && gapCount * 2 <= sectionCount;
 const treeGaps = [];
 for (let n = min; n <= max; n++) if (!withSection.has(n)) treeGaps.push(n);
 ok(`the tree's gap set is read off the sections themselves (${sections.length} sections, M${min}..M${max}, ${treeGaps.length} gap(s) [${treeGaps.join(",")}])`,
-  sections.length >= 190 && treeGaps.length > 0 && treeGaps.length <= 60);
+  sections.length >= 190 && ceilingHolds(treeGaps.length, sections.length));
+
+ok(`the vacuity ceiling is armed (gaps ${treeGaps.length} of ${sections.length} sections; planted 5/10 holds ${ceilingHolds(5, 10)}, 6/10 holds ${ceilingHolds(6, 10)}, 0/10 holds ${ceilingHolds(0, 10)})`,
+  ceilingHolds(5, 10) && !ceilingHolds(6, 10) && !ceilingHolds(0, 10));
 
 // --- 3. The ledger's set is read off its own marked block, and the two must be EQUAL. ----------
 // --- A gap the ledger does not name is an unrecorded milestone; a gap it names that now has a

@@ -148,7 +148,7 @@ export interface ScoutReport {
 // skill level. Differences therefore describe what makes this player
 // *different from a same-rated archetype peer*, computed from two real vectors
 // rather than an opinion. Without a vector this reports that plainly.
-export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
+export function scoutReport(p: PlayerRef): ScoutReport {
   const skill = clamp((p.overall - 52) / 30, 0, 1);
   const real = playerVector(p.attributes);
 
@@ -171,8 +171,8 @@ export function scoutReport(p: PlayerRef, top = 5): ScoutReport {
     .map((k) => ({ key: k, value: real[k], template: template[k], delta: real[k] - template[k] }))
     .sort(byDeltaDescThenKey);
 
-  const strengths = edges.filter((e) => e.delta > 0).slice(0, top);
-  const concerns = [...edges].reverse().filter((e) => e.delta < 0).slice(0, top).reverse();
+  const strengths = edges.filter((e) => e.delta > 0).slice(0, 5);
+  const concerns = [...edges].reverse().filter((e) => e.delta < 0).slice(0, 5).reverse();
   const templateCats = categoryAverages(template);
   const cats: CategoryEdgeRow[] = categoryAverages(real).map((ca, i) => {
     const tmpl = templateCats[i];
@@ -273,11 +273,11 @@ export interface ModelledProfile {
 // from, that vector is reported directly. Only when it is absent (a leaner
 // provider) does this fall back to the demo baseline for the position, and the
 // note and confidence say which of the two the reader is looking at.
-export function modelPlayerProfile(p: PlayerRef, top = 6): ModelledProfile {
+export function modelPlayerProfile(p: PlayerRef): ModelledProfile {
   const skill = clamp((p.overall - 52) / 30, 0, 1);
   const real = playerVector(p.attributes);
   const attrs: Attributes = real ?? baselineAttributes(p.positionGroup as PositionGroup, skill);
-  const attributes: ModelledAttribute[] = strongestAttributes(attrs, top).map((a) => ({
+  const attributes: ModelledAttribute[] = strongestAttributes(attrs, 6).map((a) => ({
     key: a.key,
     value: a.value,
   }));

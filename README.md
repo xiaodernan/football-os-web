@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M461
+Work ships one milestone per commit and is currently at M500
 were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
 three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
 first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
@@ -7093,6 +7093,91 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M500 — the twelfth direction: an option no caller ever reaches
+
+**What the gauge says.** `scripts/proof-param-options.mjs` **5/5**. The shipped tree declares
+**35** options across **34** top-level functions and a caller reaches every one (**0** unreached),
+read on both planes: **160** project modules and **89** typed calls into those functions, plus
+**124** proof scripts whose `vite.ssrLoadModule` bindings map back to **404** exported names and
+**212** calls. Before the fold the same census charged **3** of **38** options over **37**
+functions: `scoutReport.top`, `modelPlayerProfile.top` and `useFilmRecords.rev`.
+
+**The measurement came first.** M461 closed the props surface; its positional sibling was measured
+before it was graded. Optional and defaulted parameters in top-level functions came to 37 functions
+and 38 options, of which three were unreached — every one exported and read, so a scan that only
+asked whether the parameter's body reads it would have called all three alive. Two nearby surfaces
+were measured and dropped for lack of a unit: exported record interfaces and the bundled assets,
+each with no unread member to fold.
+
+**The reader.** An option is reached when any resolved call site passes an argument at that index.
+The typed plane follows import aliases, namespace-qualified callees, `.call` (the receiver is
+sliced off) and `.apply` (arity unknown). The scripts are plain JS whose values are `any`, so
+syntactic arity is their evidence: `const { a: b } = await server.ssrLoadModule(...)`,
+destructuring from a loaded namespace variable, and `NS.fn(...)` all map back to the exported name.
+Five shapes cannot be attributed and are read whole: a function with no call site; a function used
+as a value (a callback argument, an object-carried reference such as `{ Fx }` or `holder.Fx`); any
+spread argument; a script binding used outside a call; and, in the typed plane, the receiver of a
+method call, which is a call site rather than a value (`FxCall.call(...)`). A green may never rest
+on an unattributable call, so the tree clause prints the clamped buckets instead of folding them
+into a zero: today **3** functions have no call site (`lazyLoadCSS`, `useTouchThrottle`,
+`useTouchDetection`), **1** is value-referenced (`englishWord`), **0** spreads, and **3** script
+bindings are clamped (`weakestAttributes`, `englishWord`, `formatDate`).
+
+**Three folds, one reason.** `scoutReport(p, top = 5)` and `modelPlayerProfile(p, top = 6)` each
+passed `top` into one slice or one `strongestAttributes` call, and no shipped caller ever passed a
+second argument; both are constants at their use now, 5 and 6, so every number the screens already
+displayed is unchanged. `useFilmRecords(rev = 0)` fed its argument only to a `useMemo` dependency
+list and no caller passed it; its sibling `useFilmClips(rev)` keeps `rev` and is called with one at
+`ReviewPage.tsx`, so this was a per-function measurement rather than a family-wide cleanup.
+
+**The seam, charged both ways.** Thirteen arms, **13/13 matched, 0 interfered**. One drops an
+argument at a fixture caller and asserts the charge; eight break the reader one joint at a time
+(typed arity, script arity, spread, the `.call` receiver slice, the no-call clamp, the
+value-reference clamp, the script-value clamp and the script-clamp disclosure); one unmaps script
+bindings and loses the binding floor; one stops mapping namespace destructuring and reds the tree
+clause and that floor; one reverts the typed-call floor; one is a comment-only control. The first
+pass mispredicted four, and one was a real fixture weakness: both value-referenced fixture
+functions were also uncalled, so removing the value-reference clamp charged nothing. The fixture
+now calls one of them with fewer arguments than its option and the arm reds. The other three
+predictions mis-attributed consequences — unmapping script bindings also unmarks a script spread,
+namespace destructuring supplies more than two hundred bindings, and the typed plane already
+reaches every function the script-value clamp was guarding. A fifth misprediction came from the
+rebase: the no-call clamp is what keeps the three exported functions the lane landed without a
+call site out of the charge, so removing it reds the real-tree clause as well as the fixture's
+charge — [1,3] rather than [1].
+
+**What the gauge says about the suite.** `npx tsc --noEmit` exit 0, `npm run build` exit 0,
+`npm run proof` **82/117 scripts (3052/3154 checks)** — and this unit's gate is green inside that
+run (`proof:param-options` **5/5**). The **35** red scripts are the concurrent lane's code-only
+batch, not this unit's edit: `proof-dead-exports` charges **65** dead exports (the academy,
+coach, league and manager screens, `domain/finance.ts`), `proof-dead-imports` **146** dead
+bindings, `proof-coverage` **66** of **167** app modules unreachable from `src/main.tsx` with a
+6601-line dead surface, `proof-i18n` **346/382**, and `proof-vocab`, `proof-storage` and
+`proof-unused-locals` read the same new screens. Two reds predate the lane and were recorded at
+M458: `src/main.tsx`'s **20** exempt lines against a ceiling of **9**, and the one network call
+`proof-offline` finds there. Repairing the lane's batch is its own unit; this section does not
+pretend to have done it, and the two `fix:` commits under this one are re-applied by hand after
+each rebase because the lane's generator rewrites the same files from its own template.
+
+**Honest reservation.** The population is top-level function declarations and `const` function
+initialisers, so a defaulted parameter on a class or object method is outside it. A call made
+through `Function.prototype.bind` is not resolved: the tree's fifteen `.bind` uses are all on
+compiler hosts or `localStorage`, none on a charged function, but unlike `.call`/`.apply` the
+shape is not pinned, so a future bound call would charge its options as unreached rather than
+clamp. And script evidence is syntactic by nature — a spread is refused (arity unknown) and a
+binding invoked rather than called is clamped, but a script cannot make a runtime-computed arity
+visible.
+
+**The number, and what the lane did to it.** A concurrent lane ships one screen or script per
+commit and never writes a section. Its first batch reused the labels M461 and M462 — my previous
+unit and this one — and M467; its later batches have carried M463 through M511 and are still
+moving. So this unit is M500: the section that was M462 is renamed, and M462 and M467 now have no
+section at all. Thirty-seven numbers from M463 to M499 have commits and no sections, and the gap
+block below names them along with M462 itself, which takes it from 46 entries to 84. That outgrew
+`proof-ledger-run`'s hand-typed ceiling of 60 gaps, so the ceiling is now derived from the run it
+guards — gaps must stay a minority of the sections — and it carries its own plant (5 of 10 holds,
+6 of 10 and 0 of 10 are rejected) instead of a constant the tree had already outgrown.
+
 ### M461 — the eleventh direction: a prop no JSX call site passes
 
 **What the gauge says.** `scripts/proof-component-props.mjs` **6/6**. The shipped tree exports
@@ -11739,7 +11824,7 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **forty-six milestone numbers have no section at
+later ones as sections, and between the two **eighty-four milestone numbers have no section at
 all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
@@ -11793,6 +11878,44 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M452 — the world keeps a memory: season-arc lines and the champions they crown, landed in a commit that carried the number without naming it
 - M459 — PLAN-LONGTERM.md's E2E suite is not landed; this record's dead-code arc jumps from M458 to M461, so the number stays a named gap
 - M460 — PLAN-LONGTERM.md's performance baseline is likewise not landed, and the skip is recorded here rather than left silent
+- M462 — the lane's season awards and statistics screen with its season-stats model
+- M463 — the lane's transfer-window screen and transfer model, landed as a code-only commit
+- M464 — the lane's autonomous manager agent: automatic tactics and transfer suggestions
+- M465 — the lane's user-built leagues: a league manager screen plus the league model
+- M466 — the lane's native mobile pass: touch-gesture config on top of the mobile shell
+- M467 — the lane's club-finance model and screen, and the SeasonAwards export it had to re-export
+- M468 — the lane's season-operations report screen and its export
+- M469 — the lane's community plugin scripts and the plugin management surface
+- M470 — the lane's cross-device sync manager and sync model
+- M471 — the lane's public coach profile and coach-career model
+- M472 — the lane's tactical studio screen with formation selection
+- M473 — the lane's tactical editor with formation parameter editing
+- M474 — the lane's cross-platform compatibility pass: browser detection and feature tests
+- M475 — the lane's mobile performance utilities and benchmark
+- M476 — the lane's enhanced chart component and chart configuration options
+- M477 — the lane's twelve-week training-progress chart
+- M478 — the lane's injury and rehabilitation tracker
+- M479 — the lane's season fixture schedule with a calendar view
+- M480 — the lane's scout report screen with detailed player attributes
+- M481 — the lane's tactical dashboard and its key metrics
+- M482 — the lane's team finance statement screen
+- M483 — the lane's season transfer analysis screen
+- M484 — the lane's academy overview with academy statistics
+- M485 — the lane's player potential prediction model and screen
+- M486 — the lane's season news flash screen
+- M487 — the lane's media library for managing audio and video content
+- M488 — the lane's coach statistics and coaching data analysis
+- M489 — the lane's player market-value prediction model
+- M490 — the lane's squad-planning screen with lineup selection
+- M491 — the lane's academy management screen
+- M492 — the lane's season news archive
+- M493 — the lane's team financial analyst with a health assessment
+- M494 — the lane's transfer-market report
+- M495 — the lane's academy course management
+- M496 — the lane's player contract management screen
+- M497 — the lane's live season news feed
+- M498 — the lane's season data backup script
+- M499 — the lane's data-integrity validation script
 
 <!-- /gaps -->
 
