@@ -223,6 +223,10 @@ export function DynamicWorld() {
   );
 }
 
+export function SeasonAwardsComponent() {
+  return <SeasonAwards />;
+}
+
 function PlayerDelta({ name, clubId, from, to, delta }: { name: string; clubId: string; from: number; to: number; delta: number }) {
   const up = delta > 0;
   return (
