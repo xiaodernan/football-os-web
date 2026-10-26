@@ -51,6 +51,8 @@ const CONSUMERS = [
   "features/football/FootballWorld.tsx", "features/load/LoadPage.tsx", "features/manager/ManagerOS.tsx",
   "features/player/PlayerOS.tsx", "features/review/ReviewPage.tsx", "features/settings/SettingsPage.tsx",
   "features/sim/SimulationLab.tsx",
+  // M523: the coach résumé prints its points-per-game through the door like every other screen.
+  "features/coach/CoachProfile.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the
@@ -254,7 +256,7 @@ const treeReaders = carriers.filter((f) => f !== HOME && count(src[f], CALL_FMT2
 const listedReaders = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) > 0).sort();
 const unlisted = treeReaders.filter((f) => !CONSUMERS.includes(f));
 const stale = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) === 0);
-ok(`all twenty-one consumers read the door, and the user set is EQUAL to the tree's own (imports ${importing.length}/21, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70; tree readers ${treeReaders.length}, unlisted ${unlisted.length} [${unlisted.join(",")}], stale rows ${stale.length} [${stale.join(",")}])`,
+ok(`all twenty-two consumers read the door, and the user set is EQUAL to the tree's own (imports ${importing.length}/22, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70; tree readers ${treeReaders.length}, unlisted ${unlisted.length} [${unlisted.join(",")}], stale rows ${stale.length} [${stale.join(",")}])`,
   importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 70 &&
   treeReaders.length === CONSUMERS.length && treeReaders.join(",") === listedReaders.join(",") &&
   unlisted.length === 0 && stale.length === 0);

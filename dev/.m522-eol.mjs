@@ -1,0 +1,11 @@
+import { readFileSync, writeFileSync } from "node:fs";
+const p = "README.md";
+const before = readFileSync(p, "utf8");
+const crlf = (before.match(/\r\n/g) || []).length;
+const lf = (before.match(/(?<!\r)\n/g) || []).length;
+const loneCr = (before.match(/\r(?!\n)/g) || []).length;
+console.log(`before: CRLF ${crlf}, lone LF ${lf}, lone CR ${loneCr}, bytes ${Buffer.byteLength(before)}`);
+const normal = before.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n");
+writeFileSync(p, normal, "utf8");
+const after = readFileSync(p, "utf8");
+console.log(`after: CRLF ${(after.match(/\r\n/g) || []).length}, lone LF ${(after.match(/(?<!\r)\n/g) || []).length}, lone CR ${(after.match(/\r(?!\n)/g) || []).length}, bytes ${Buffer.byteLength(after)}`);

@@ -90,7 +90,9 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // in the same commit — the literal is the point: a walk that lost a directory reddens here.
 // M453: 95 -> 97. domain/playerCareer.ts and features/player/TrainingTree.tsx are app files the
 // lane added, and the pin pays for them here — a walk that lost a directory still reddens.
-const APP_FILES_PIN = 97;
+// M523: 97 -> 99. domain/coachCareer.ts and features/coach/CoachProfile.tsx are app files
+// the coach résumé milestone added, and the pin pays for them here.
+const APP_FILES_PIN = 99;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */

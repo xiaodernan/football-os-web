@@ -17,6 +17,9 @@ export const COMMUNITY_KEY = "football-os.community.v1";
 export const WORLD_KEY = "football-os.world.v1";
 export const AI_CHAT_KEY = "football-os.ai.chat.v1";
 export const TACTICS_KEY = "football-os.tactics.v1";
+// M523: which parts of the coach résumé a visiting reader may see. A preference, not
+// activity: how you present your record survives a reset the way the theme does.
+export const COACH_KEY = "football-os.coach.v1";
 export const FIXTURES_KEY = "football-os.matches";
 export const LOCALE_KEY = "football-os.locale";
 export const THEME_KEY = "football-os.theme";
@@ -39,6 +42,7 @@ export const LOCAL_KEYS: KeySpec[] = [
   { key: WORLD_KEY, labelKey: "set.key.world", kind: "activity" },
   { key: AI_CHAT_KEY, labelKey: "set.key.ai", kind: "activity" },
   { key: TACTICS_KEY, labelKey: "set.key.tactics", kind: "activity" },
+  { key: COACH_KEY, labelKey: "set.key.coach", kind: "preference" },
   { key: FIXTURES_KEY, labelKey: "set.key.fixtures", kind: "activity" },
   { key: LOCALE_KEY, labelKey: "set.key.locale", kind: "preference" },
   { key: THEME_KEY, labelKey: "set.key.theme", kind: "preference" },

@@ -10,6 +10,10 @@ dist/
 
 *.log
 
+# Playwright's transient run artifacts: a failed run's screenshots and traces are
+# evidence for the run that made them, not for the next one.
+test-results/
+
 # A clone of this repository is a neighbour, not a directory of this one (M423). It was
 # committed once as a submodule pointer with no .gitmodules file, and every proof that walks
 # the tree then read the app twice. The rule lives in scripts/lib/appTree.mjs; this line is

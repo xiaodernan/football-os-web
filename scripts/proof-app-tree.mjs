@@ -112,7 +112,9 @@ const APP_DIRS = ["components", "data", "domain", "features", "functions", "i18n
 // SeasonAwards/seasonStats (reachable only through a re-export nothing rendered). A hidden name is
 // not shipped. The number is the measured population: a module that disappears from the app, or
 // reappears from the drafts without this line, reddens here.
-const APP_MODULE_PIN = 102;
+// M523: 102 -> 104. domain/coachCareer.ts and features/coach/CoachProfile.tsx — the coach résumé,
+// derived from the career state the manager OS already keeps.
+const APP_MODULE_PIN = 104;
 const byDir = {};
 for (const d of APP_DIRS) {
   const n = walkApp(root, { dirs: [d], exts: [".ts", ".tsx"] }).length;
@@ -142,6 +144,8 @@ ok(`a clone of the app sitting beside the app does not join its population (${cl
 // ---------------------------------------------------------------------------
 // 3 · the gates read ONE rule
 // ---------------------------------------------------------------------------
+// M523: proof-drafts joins the list — it walks the app's directories, root files and the drafts,
+// and it must keep reading the one rule rather than growing a private skip list of its own.
 const TREE_PROOFS = ["proof-coverage.mjs", "proof-dead-exports.mjs", "proof-dead-imports.mjs", "proof-i18n.mjs", "proof-ids.mjs", "proof-rng.mjs", "proof-orphans.mjs", "proof-unused-locals.mjs", "proof-unused-params.mjs"];
 const importLine = /from "\.\/lib\/appTree\.mjs"/;
 const imported = [], forked = [];
@@ -174,7 +178,7 @@ const readsRoot = (src) => /readdirSync\(\s*(?:root|resolve\(root\))\s*,/.test(s
 const rootReaders = scriptFiles.filter((f) => readsRoot(readFileSync(join(root, "scripts", f), "utf8")));
 const rootReadersMissing = rootReaders.filter((f) => !importLine.test(readFileSync(join(root, "scripts", f), "utf8")));
 ok(`every proof that reads the repository's top-level directories imports the rule, so a new gate cannot forget it (${rootReaders.length} such script(s): ${rootReaders.join(", ")}; ${rootReadersMissing.length} without it [${rootReadersMissing.join(", ")}])`,
-  rootReadersMissing.length === 0 && rootReaders.length === 8,
+  rootReadersMissing.length === 0 && rootReaders.length === 9,
   `without the rule: ${rootReadersMissing.join(", ")}`);
 
 // ---------------------------------------------------------------------------

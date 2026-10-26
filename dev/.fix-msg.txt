@@ -1,0 +1,15 @@
+fix: CommunityHub's sort callback was missing its closing paren, and the E2E expect window was too tight for a cold Vite
+
+Two repairs carried by the working tree while the other session rebased the
+history around them:
+
+1. features/community/CommunityHub.tsx: the "recent" branch of the visible
+   list's sort ended with three closers (getTime, map, Math.max) and none for
+   sort( itself — TS1005 at 177:184, which took tsc, build and two proof-i18n
+   clauses (the walker's depth scan, the useMemo census) down with it. The
+   paren goes back; the tree compiles again and proof-i18n reads 381/381.
+2. playwright.config.ts: the expect window was 8s, but Vite compiles on
+   demand and the first visit to a heavy route on a cold server can take
+   longer — three runs flaked on three different tests. The window is 15s
+   with the reason written next to it: a broken assertion still fails on the
+   selector, not on the compiler's speed. Three consecutive runs read 6/6.

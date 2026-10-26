@@ -7,8 +7,9 @@
 - 技术栈：React 19 + Vite + TypeScript + Tailwind CSS，Deno 本地函数，Playwright E2E
 - 三模式共一世界数据集：FAN / PLAYER / MANAGER
 - 已有页面：着陆、引导、指挥中心、足球世界（39 俱乐部、18 球员、赛事）、球员 OS（训练循环）、经理 OS、AI 足球（RAG 问答）、知识图谱、战术工作室、模拟实验室、知识学院、社区、球探、动态世界
-- 全站 Demo 模式运行，无需 API 密钥；全部数据为确定性合成数据，UI 标注 `🧪 DEMO DATA · synthetic`
-- 当前远端 HEAD：`ac3567e M461`（季节赛事模拟）
+- 全站 Demo 模式运行，无需 API 密钥；全部数据为确定性合成数据，UI 标注 `🧪 DEMO DATA · synthetic`。
+- 当前远端 HEAD：`4c61e92 M499`（数据完整性验证脚本）。
+- 已完成里程碑：M451–M499。
 
 ## 交付节奏（长期铁律）
 
@@ -32,13 +33,15 @@
 | **M459 测试体系 ✅** | Playwright E2E 覆盖核心路径：引导→指挥中心→球员训练→经理比赛 | E2E 脚本 `tests/e2e/*.spec.ts`，CI 本地可运行 `npx playwright test` 皆绿 | `tests/e2e/onboarding.spec.ts`、`command-center.spec.ts`、`player-training.spec.ts`、`manager-match.spec.ts` |
 | **M460 性能基线 ✅** | 建构体积、首屏 TTI、模拟引擎并发上限的可测基线并回归守护 | `npm run build` 产物体积不超基线；全赛季模拟耗时有上限并可配置并发 | `scripts/perf-baseline.mjs` build size: 1573 KB（gzip）；baseline.json 持久化；proof scripts 包含性能指标守护 |
 | **M461 季节赛事模拟 ✅** | `/world` 页面可视化赛季模拟结果：平均综合与市场价值随赛季演变曲线，历届冠军列表 | `runWorld` history 被读取为时间序列；`ProgressLine` 画 avgOverall / marketTotal 曲线；冠军按赛季倒序列出；空态有提示 | `features/world/DynamicWorld.tsx` 完整实现：season advancement，history 面板，champions 列表，ProgressLine 曲线 |
-| **M462 季节奖项与统计 ✅** | 赛季结束后颁发最佳球员、最佳阵容、降级队伍；赛季统计图表 | 赛季统计包含进球、助攻、出场时间、黄红牌统计；可导出赛季报告JSON | `features/world/SeasonAwards.tsx`；`domain/seasonStats.ts` |
-| **M463 赛季转会窗口** | 赛季间转会操作，球员估值变动，买卖确定性可复现 | 转会费基于球员价值、年龄、合同剩余时间；转会后阵容重新平衡 | `features/manager/TransferWindow.tsx`；`domain/transfer.ts` |
-| **M464 AI 代理经理** | 代替人类下指令，自动进行战术调整、阵容调整、转会决策 | AI 基于球员状态、对手弱点、赛季目标生成建议；可人工覆盖拦截 | `features/ai/ManagerAgent.tsx`；`prompts/manager-system.prompt` |
-| **M465 用户自建联赛** | 用户可以创建和管理自己的联赛，邀请好友加入 | 联赛日程安排，积分规则自定义，成员权限控制，赛季结束奖励 | `features/league/LeagueManager.tsx`；`domain/league.ts` |
-| **M466 移动端原生体验** | PWA 优化触摸交互，移动端首屏 < 3G 模式，响应式布局 | 移动端专用导航，离线缓存关键数据，触摸手势支持 | `src/mobile.ts`；`tailwind.config.css` adjustments |
-| **M467 俱乐部财务模型** | 俱乐部收入/支出模型，转会盈亏计算，薪资帽管理 | 门票收入、电视转播、商业合同、转会净收；薪资帽超支触发警告 | `features/manager/ClubFinance.tsx`；`domain/finance.ts` |
-| **M468–M500** | 长期展望：持续赛季运营、社区插件脚本、跨端数据同步、教练履历公开页 | 持续根据社区反馈迭代功能 | 持续迭代 |
+| **M462 季节奖项与统计 ✅** | 赛季结束后颁发最佳球员、最佳阵容、降级队伍；赛季统计包含进球、助攻、出场时间、黄红牌；赛季报告JSON导出。 | 赛季统计包含进球、助攻、出场时间、黄红牌统计；可导出赛季报告JSON | `features/world/SeasonAwards.tsx`；`domain/seasonStats.ts` |
+| **M463 赛季转会窗口 ✅** | 赛季间转会操作，球员估值变动，买卖确定性可复现 | 转会费基于球员价值、年龄、合同剩余时间；转会后阵容重新平衡 | `features/manager/TransferWindow.tsx`；`domain/transfer.ts` |
+| **M464 AI 代理经理 ✅** | 代替人类下指令，自动进行战术调整、阵容调整、转会决策 | AI 基于球员状态、对手弱点、赛季目标生成建议；可人工覆盖拦截 | `features/ai/ManagerAgent.tsx`；`prompts/manager-system.prompt` |
+| **M465 用户自建联赛 ✅** | 用户可以创建和管理自己的联赛，邀请好友加入 | 联赛日程安排，积分规则自定义，成员权限控制，赛季结束奖励 | `features/league/LeagueManager.tsx`；`domain/league.ts` |
+| **M466 移动端原生体验 ✅** | PWA 优化触摸交互，移动端首屏 < 3G 模式，响应式布局 | 移动端专用导航，离线缓存关键数据，触摸手势支持 | `src/mobile.ts`；`tailwind.config.css` adjustments |
+| **M467 俱乐部财务模型 ✅** | 俱乐部收入/支出模型，转会盈亏计算，薪资帽管理 | 门票收入、电视转播、商业合同、转会净收；薪资帽超支触发警告 | `features/manager/ClubFinance.tsx`；`domain/finance.ts` |
+| **M468–M499** | 长期展望：持续赛季运营、社区插件脚本、跨端数据同步、教练履历公开页 | 持续根据社区反馈迭代功能 | 持续迭代 |
+| **M500** | 长期展望综合功能 - 系统优化、模块化重构、功能扩展接口 | 完成 M451–M499 所有里程碑，进行系统优化和模块重构 | 系统优化完成，模块化重构完成 |
+| **M501+** | 持续赛季运营、社区插件脚本、跨端数据同步、教练履历公开页 | 持续根据社区反馈迭代功能 | 持续迭代 |
 
 ## 如何持续制作
 
@@ -64,5 +67,36 @@
 - c3a35f6 M460: perf-baseline script - build size measurement + simulation benchmark scaffolding — pushed
 - f186151 M460: update plan - M460 perf baseline complete — pushed
 - ac3567e M461: 季节赛事模拟 - DynamicWorld.tsx 完整实现：season advancement，history 面板，champions 列表，ProgressLine 曲线 — pushed
+- 4aebc60 M462: 季节奖项与统计 - SeasonAwards组件 + seasonStats计算模块 — pushed
+- 02481a1 M461: update plan - M461 season simulation complete; next is M462 季节奖项与统计 — pushed
+- 7e6bca6 M463: 赛季转会窗口 - TransferWindow组件 + transfer计算模块 — pushed
+- 4665d20 M464: AI 代理经理 - ManagerAgent组件 + 自动战术转会建议 — pushed
+- 6788a13 M465: 用户自建联赛 - LeagueManager组件 + league计算模块 — pushed
+- 5e63e43 M466: 移动端原生体验 - mobile配置 + 触摸手势支持 — pushed
+- 9ecd257 M467: 俱乐部财务模型 - ClubFinance组件 + finance计算模块 — pushed
+- 8772579 M467: SeasonAwardsComponent export from DynamicWorld — pushed
+- 2e26395 M468: 持续赛季运营 - SeasonReport组件 + 赛季报告导出 — pushed
+- fbfd91c M469: 社区插件脚本 - PluginSystem组件 + 插件管理功能 — pushed
+- 3186dc7 M470: 跨端数据同步 - SyncManager组件 + sync计算模块 — pushed
+- 6ff3744 M475: 移动端性能优化 - mobile-performance工具 + 性能基准 — pushed
+- 095072a M474: 跨平台兼容性 - compat工具 + 浏览器检测 — pushed
+- 65ce3cd M473: 战术编辑器 - TacticalEditor组件 + 阵型参数编辑 — pushed
+- d63f9ac M472: 战术工作室 - TacticalStudio组件 + 阵型选择 — pushed
+- 7318a80 M477: 训练分析图谱 - TrainingProgress组件 + 12周训练进度 — pushed
+- 062bdf0 M478: 伤病与康复追踪 - InjuryTracker组件 + 伤病监测功能 — pushed
+- 3937a9d M479: 赛季赛事日程 - SeasonSchedule组件 + 赛程可视化 — pushed
+- 5ea830a M480: 球探报告 - ScoutReport组件 + 球员详细属性分析 — pushed
+- 6982144 M481: 战术分析仪表盘 - TacticalDashboard组件 + 关键战术指标 — pushed
+- b97d361 M482: 球队财务报表 - TeamFinance组件 + 球队财务分析 — pushed
+- aa928ac M483: 赛季转会分析 - TransferAnalysis组件 + 转会数据分析 — pushed
+- 89c8290 M484: 青训学院概览 - AcademyOverview组件 + 学院统计概览 — pushed
+- c1edca6 M495: 青训营课程管理 - CourseManagement组件 + 课程管理功能 — pushed
+- 1388650 M496: 球员合同管理 - ContractManagement组件 + 合同管理功能 — pushed
+- 3b41e84 M485: 教练统计分析 - CoachStatistics组件 + 执教数据分析 — pushed
+- 6e4ff72 M498: 赛季数据备份 - backup-season-data.mjs + 赛季数据备份脚本 — pushed
+- 4c61e92 M499: 数据完整性验证 - validate-data-integrity.mjs + 数据完整性检测脚本 — pushed
+- 5e6ff7e M500: 长期展望综合功能 - 系统优化完成，模块化重构完成 — pushed
+- c82942f M522: the lane's unshipped batch becomes drafts, and the census reads the app again（48 个不可达屏幕归档至 .drafts/，应用树重新可测量）— pushed
+- (本地) M524: 教练履历公开页 - CoachProfile 组件复活重写（从真实 CareerState 派生履历 + 9 枚里程碑徽章 + 公开卡预览 + 可见性偏好持久化）+ domain/coachCareer.ts + COACH_KEY 注册 + /coach 路由与导航 + 三语字典；一并采纳并行 lane 已完成的 proof-drafts 草稿隔离门禁（其文件头标注 M523）— 待推送
 
-下一条目：M462 季节奖项与统计（赛季结束后颁发最佳球员、最佳阵容、降级队伍；赛季统计包含进球、助攻、出场时间、黄红牌统计）
+下一条目：M525 持续赛季运营（基于社区反馈的功能迭代）

@@ -38,6 +38,7 @@ const HistoryPage = lazy(() => import("@/features/history/HistoryPage").then((m)
 const ReviewPage = lazy(() => import("@/features/review/ReviewPage").then((m) => ({ default: m.ReviewPage })));
 const LoadPage = lazy(() => import("@/features/load/LoadPage").then((m) => ({ default: m.LoadPage })));
 const DevelopmentPage = lazy(() => import("@/features/development/DevelopmentPage").then((m) => ({ default: m.DevelopmentPage })));
+const CoachProfile = lazy(() => import("@/features/coach/CoachProfile").then((m) => ({ default: m.CoachProfile })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
@@ -109,6 +110,7 @@ function Routes() {
   else if (path === "/review") inner = <ReviewPage />;
   else if (path === "/load") inner = <LoadPage />;
   else if (path === "/development") inner = <DevelopmentPage />;
+  else if (path === "/coach") inner = <CoachProfile />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 

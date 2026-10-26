@@ -499,13 +499,17 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // and ui/charts/PotentialRadar.tsx (the career depth screen) — pay in the same commit.
 // M459: 101 -> 107. The E2E suite's six files (tests/e2e/*.spec.ts and helpers.ts) and the two
 // root configs (playwright.config.ts, vite.config.ts) joined the walker's population.
-const APP_SRC_PIN = 107;
+// M523: 107 -> 109. domain/coachCareer.ts and features/coach/CoachProfile.tsx — the coach
+// résumé screen and its domain module — pay in the same commit.
+const APP_SRC_PIN = 109;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
-const TSX_PIN = 52;
+// M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
+const TSX_PIN = 53;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
-const SRC_PIN = 110;
+// M523: 110 -> 112, the same debt again (coachCareer, CoachProfile).
+const SRC_PIN = 112;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -730,6 +734,13 @@ DYN_SITES.push(
   { path: "features/player/TrainingTree.tsx", expr: "a", prefix: "attr.name.", suffix: "" },
   { path: "features/player/TrainingTree.tsx", expr: "c.focus", prefix: "attr.name.", suffix: "" },
   { path: "features/player/TrainingTree.tsx", expr: "g.key", prefix: "attr.name.", suffix: "" },
+  // M523: the coach résumé's badge wall and its public card both key a badge's name off
+  // the badge id; the space is read out of domain/coachCareer.ts's own BADGE_IDS list.
+  // The wall's id site is declared twice because the screen has two of it — the earned
+  // chip and the not-yet-earned placeholder — which is the dna.arch precedent.
+  { path: "features/coach/CoachProfile.tsx", expr: "id", prefix: "coach.badge.", suffix: ".name" },
+  { path: "features/coach/CoachProfile.tsx", expr: "id", prefix: "coach.badge.", suffix: ".name" },
+  { path: "features/coach/CoachProfile.tsx", expr: "b.id", prefix: "coach.badge.", suffix: ".name" },
 );
 
 const SPACES = new Map([
@@ -944,6 +955,13 @@ const S_LEARN_LEVEL = {
   values: lower(spaceOf("domain/learn.ts", /export type Level = [^;]+;/, quoted)),
 };
 claimByPrefix("learn.level.", S_LEARN_LEVEL);
+// M523: the badge names the coach résumé keys, read off the domain module's own id list —
+// a ninth badge without a ninth row in three locales fails here by nobody noticing.
+const S_COACH_BADGE = {
+  name: "coach badge ids",
+  values: spaceOf("domain/coachCareer.ts", /export const BADGE_IDS[^=]*=[^\]]*\]/, quoted),
+};
+claimByPrefix("coach.badge.", S_COACH_BADGE);
 // Both directions, because a space read from the table only proves the table is covered.
 // An archetype deleted from the model would otherwise leave its words behind as keys no
 // site can build — reachable-looking, because the prefix claim still spells them out.
@@ -3023,8 +3041,9 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // must be carried by all three locales, so a duplicate at least translates everywhere.
 // M453: the career screen's keys raised the measured counts by their own amount — the pins are
 // ratchets, so a milestone that ADDS keys pays here in the same commit (107->109, 177->180).
-const DUP_VALUES_PIN = 109;
-const DUP_EXCESS_KEYS_PIN = 180;
+// M523: the coach résumé's 40 keys per locale pay their own toll (109->113, 180->189).
+const DUP_VALUES_PIN = 113;
+const DUP_EXCESS_KEYS_PIN = 189;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4234,7 +4253,9 @@ const exprObjPlant = classifyCall("t(m.labelKey, { n: 1 })", "t(m.labelKey, { n:
 ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes (${shapeCounts.literal} literal, ${shapeCounts.template} template, ${shapeCounts.expression} expression, ${shapeCounts.computed} computed-with-literals, ${shapeCounts.unknown} unknown${unknownSites.length ? `: ${unknownSites.slice(0, 3).join(" | ")}` : ""}; planted unknown caught: ${plantUnknown})`,
   // M453: the career screen added 29 literal sites (its dictionary keys) and 7 template sites
   // (the course/injury/attr.name interpolations) — the shapes census pays in the same commit.
-  shapeCounts.literal === 1317 && shapeCounts.template === 105 && shapeCounts.expression === 32
+  // M523: the coach résumé lands 37 literal sites and 3 template sites (the badge-name
+  // interpolations) — the shapes census pays in the same commit: 1317 -> 1354, 105 -> 108.
+  shapeCounts.literal === 1354 && shapeCounts.template === 108 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4248,7 +4269,8 @@ ok(`a literal wearing backticks is still a literal — check 24 and this census 
 // M453 landed six placeholder rows (career.tier/weeks/perWeek/outWeeks/injuredNote and the
 // course-copy rows); each adds a literal site, so the pin pays once for all six: 137 -> 143.
 ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
-  litVarSites === 143 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M523: 143 -> 146 — the résumé's since/standing/matchN rows each hand over their variables.
+  litVarSites === 146 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));
