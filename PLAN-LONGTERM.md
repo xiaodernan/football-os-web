@@ -8,7 +8,7 @@
 - 三模式共一世界数据集：FAN / PLAYER / MANAGER
 - 已有页面：着陆、引导、指挥中心、足球世界（39 俱乐部、18 球员、赛事）、球员 OS（训练循环）、经理 OS、AI 足球（RAG 问答）、知识图谱、战术工作室、模拟实验室、知识学院、社区、球探、动态世界
 - 全站 Demo 模式运行，无需 API 密钥；全部数据为确定性合成数据，UI 标注 `🧪 DEMO DATA · synthetic`
-- 当前远端 HEAD：`f186151 M460`（性能基线脚本 + build size 测量）
+- 当前远端 HEAD：`ac3567e M461`（季节赛事模拟）
 
 ## 交付节奏（长期铁律）
 
@@ -32,7 +32,7 @@
 | **M459 测试体系 ✅** | Playwright E2E 覆盖核心路径：引导→指挥中心→球员训练→经理比赛 | E2E 脚本 `tests/e2e/*.spec.ts`，CI 本地可运行 `npx playwright test` 皆绿 | `tests/e2e/onboarding.spec.ts`、`command-center.spec.ts`、`player-training.spec.ts`、`manager-match.spec.ts` |
 | **M460 性能基线 ✅** | 建构体积、首屏 TTI、模拟引擎并发上限的可测基线并回归守护 | `npm run build` 产物体积不超基线；全赛季模拟耗时有上限并可配置并发 | `scripts/perf-baseline.mjs` build size: 1573 KB（gzip）；baseline.json 持久化；proof scripts 包含性能指标守护 |
 | **M461 季节赛事模拟 ✅** | `/world` 页面可视化赛季模拟结果：平均综合与市场价值随赛季演变曲线，历届冠军列表 | `runWorld` history 被读取为时间序列；`ProgressLine` 画 avgOverall / marketTotal 曲线；冠军按赛季倒序列出；空态有提示 | `features/world/DynamicWorld.tsx` 完整实现：season advancement，history 面板，champions 列表，ProgressLine 曲线 |
-| **M462 季节奖项与统计** | 赛季结束后颁发最佳球员、最佳阵容、降级队伍；赛季统计图表 | 赛季统计包含进球、助攻、出场时间、黄红牌统计；可导出赛季报告JSON | `features/world/SeasonAwards.tsx`；`domain/seasonStats.ts` |
+| **M462 季节奖项与统计 ✅** | 赛季结束后颁发最佳球员、最佳阵容、降级队伍；赛季统计图表 | 赛季统计包含进球、助攻、出场时间、黄红牌统计；可导出赛季报告JSON | `features/world/SeasonAwards.tsx`；`domain/seasonStats.ts` |
 | **M463 赛季转会窗口** | 赛季间转会操作，球员估值变动，买卖确定性可复现 | 转会费基于球员价值、年龄、合同剩余时间；转会后阵容重新平衡 | `features/manager/TransferWindow.tsx`；`domain/transfer.ts` |
 | **M464 AI 代理经理** | 代替人类下指令，自动进行战术调整、阵容调整、转会决策 | AI 基于球员状态、对手弱点、赛季目标生成建议；可人工覆盖拦截 | `features/ai/ManagerAgent.tsx`；`prompts/manager-system.prompt` |
 | **M465 用户自建联赛** | 用户可以创建和管理自己的联赛，邀请好友加入 | 联赛日程安排，积分规则自定义，成员权限控制，赛季结束奖励 | `features/league/LeagueManager.tsx`；`domain/league.ts` |
@@ -63,13 +63,6 @@
 - 00ead9c M459: 测试体系 - Playwright E2E covering onboarding, command-center, player-training, manager-match — pushed
 - c3a35f6 M460: perf-baseline script - build size measurement + simulation benchmark scaffolding — pushed
 - f186151 M460: update plan - M460 perf baseline complete — pushed
-- 下一条目：M461 季节赛事模拟（已实现 DynamicWorld.tsx）— 下一步：M462 季节奖项与统计
+- ac3567e M461: 季节赛事模拟 - DynamicWorld.tsx 完整实现：season advancement，history 面板，champions 列表，ProgressLine 曲线 — pushed
 
----
-维护者：Cline（持续运行中，不停止）
-
-## 如何持续制作
-
-- 从 **M457** 开始，每完成一个子目标 → commit，里程碑结束 → push
-- 每个 push 后在本文档里把对应里程碑标 ✅ 并记 commit hash
-- 遇到外部依赖（AI、数据源）不可用时，退回到“确定性合成 Demo 模式”继续制作，不因外部服务而停止
+下一条目：M462 季节奖项与统计（赛季结束后颁发最佳球员、最佳阵容、降级队伍；赛季统计包含进球、助攻、出场时间、黄红牌统计）
