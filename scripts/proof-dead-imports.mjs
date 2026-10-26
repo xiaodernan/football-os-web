@@ -86,7 +86,9 @@ const ROOTS = ["domain", "data", "lib", "features", "components", "ui", "src", "
 // hiding code in — and a directory carrying its own `.git` is another repository. That second one
 // is not hypothetical: `football-os/` was a local clone of this repository, and a clone of the app
 // is not the app.
-const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor", "Python"];
+// M522: `tests/` carries the Playwright specs — test entry points, not app modules; coverage's
+// POP_SKIP names the same directory.
+const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor", "Python", "tests"];
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => {
   const p = `${d}/${e.name}`;

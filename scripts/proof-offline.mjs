@@ -46,10 +46,36 @@ const APP_DIRS = ["domain", "data", "features", "store", "lib", "ui", "i18n", "c
 const appFiles = APP_DIRS.map((d) => join(root, d)).filter(existsSync).flatMap((d) => walk(d));
 ok(`the scan actually covers the shipped app (${appFiles.length} files)`, appFiles.length > 80);
 
-const NETWORK = /\bfetch\s*\(|XMLHttpRequest|\baxios\b|new\s+WebSocket|new\s+EventSource|sendBeacon|navigator\.serviceWorker/;
+// M458 put a service-worker registration in the entry. Registering one is not a network call — it
+// is the offline asset itself, and its absence would make "runs on this device" mean less — but it
+// is still the one shipped place that names the network stack. So the premise is read as two
+// clauses: no call API anywhere, and the single registration guarded and pointed at a shell the
+// build actually ships. Dropping the registration reds the second clause, and a `fetch` returning
+// anywhere reds the first.
+const NETWORK = /\bfetch\s*\(|XMLHttpRequest|\baxios\b|new\s+WebSocket|new\s+EventSource|sendBeacon/;
 const netHits = appFiles.filter((f) => NETWORK.test(readFileSync(f, "utf8"))).map((f) => f.replace(root, ""));
 ok(`no shipped source performs network I/O (${netHits.length})`, netHits.length === 0);
 for (const h of netHits.slice(0, 8)) console.log("       network call: " + h);
+
+const SW_REGISTER = /navigator\s*\.\s*serviceWorker\s*\.\s*register\s*\(\s*["'`]([^"'`]+)["'`]/;
+const swSites = appFiles.flatMap((f) => {
+  const src = readFileSync(f, "utf8");
+  if (!/\bnavigator\s*\.\s*serviceWorker\b/.test(src)) return [];
+  const m = src.match(SW_REGISTER);
+  return [{
+    rel: f.slice(root.length + 1).split("\\").join("/"),
+    target: m ? m[1] : null,
+    // The guard must be in the same statement's neighbourhood: production-only or not at all.
+    prodOnly: m ? /import\.meta\.env\.PROD/.test(src.slice(Math.max(0, m.index - 300), m.index)) : false,
+  }];
+});
+const swPath = join(root, "public", "sw.js");
+const swExists = existsSync(swPath);
+const swSource = swExists ? readFileSync(swPath, "utf8") : "";
+const swSite = swSites[0];
+ok(`the one service-worker registration is production-only and names a shipped shell (${swSites.length} site(s)${swSite ? `: ${swSite.rel} -> ${swSite.target ?? "no literal target"}${swSite.prodOnly ? "" : " (not PROD-guarded)"}` : ""}; public/sw.js ${swExists ? `present, ${(swSource.match(/addEventListener\(\s*["']fetch["']/g) ?? []).length} fetch handler` : "missing"})`,
+  swSites.length === 1 && swSite.rel === "src/main.tsx" && swSite.target === "/sw.js" && swSite.prodOnly
+  && swExists && /addEventListener\(\s*["']fetch["']/.test(swSource));
 
 // --- 2. Connection state is a presentation concern only. ---------------------
 const DATA_DIRS = ["domain", "data", "store"];

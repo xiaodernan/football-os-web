@@ -82,7 +82,9 @@ ok(`the real tree has no unread parameter (${realDiags.length} diagnostic(s)${re
 // --- 3. The program reads every module the walk names. A file tsc never sees cannot be charged, ---
 // --- so coverage is part of the claim. functions/ is Deno code, outside the app's tsconfig. ----
 const ROOTS = ["domain", "data", "lib", "features", "components", "ui", "src", "store", "i18n"];
-const NON_APP = ["functions", "scripts", "dev", "dist", "node_modules", "test-results", "vendor"];
+// M522: `tests/` carries the Playwright specs — test entry points, not app modules; coverage's
+// POP_SKIP names the same directory.
+const NON_APP = ["functions", "scripts", "dev", "dist", "node_modules", "test-results", "vendor", "tests"];
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => {
   const p = `${d}/${e.name}`;
   if (e.isDirectory()) return skipReason(e.name, p) ? [] : walk(p);

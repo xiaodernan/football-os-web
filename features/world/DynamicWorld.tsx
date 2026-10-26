@@ -12,7 +12,6 @@ import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorSt
 import { ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SeasonAwards } from "./SeasonAwards";
 
 const STORE_KEY = WORLD_KEY;
 
@@ -222,10 +221,6 @@ export function DynamicWorld() {
       </p>
     </div>
   );
-}
-
-export function SeasonAwardsComponent() {
-  return <SeasonAwards />;
 }
 
 function PlayerDelta({ name, clubId, from, to, delta }: { name: string; clubId: string; from: number; to: number; delta: number }) {

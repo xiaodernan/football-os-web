@@ -2,6 +2,12 @@
 @import "tw-animate-css";
 @import "../vendor/shadcn-tailwind-4.13.0.css";
 
+/* M522: `.drafts/` holds the lane's unbuilt screens. No module is imported from there, but
+   Tailwind's automatic content detection reads class names by text, so a draft's utility reached
+   the shipped stylesheet (measured: `bg-blue-500`, used only by three drafts, was in the built
+   CSS). A draft is not shipped; this line makes the stylesheet agree. */
+@source not "../.drafts";
+
 @utility scrollbar-thin {
   scrollbar-width: thin;
 }

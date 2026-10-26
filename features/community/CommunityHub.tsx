@@ -78,7 +78,7 @@ function latestLessonTitle(t: Translate, id: string): string | undefined {
 }
 
 export function CommunityHub() {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const online = useOnline();
   const { state } = useOs();
   const learn = useLearnRecords();

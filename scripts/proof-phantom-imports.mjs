@@ -10,6 +10,7 @@ import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { builtinModules } from "node:module";
 import ts from "typescript";
+import { skipReason } from "./lib/appTree.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 let pass = 0, fail = 0;
@@ -21,9 +22,14 @@ const dev = pkg.devDependencies ?? {};
 const declared = new Set([...Object.keys(runtime), ...Object.keys(dev)]);
 const builtins = new Set(builtinModules);
 
-const SKIP = new Set(["node_modules", "dist", ".git", "football-os", "test-results", "vendor"]);
+// M522: the walk is the shared one. A hidden directory (`.drafts/`, the lane's unbuilt batch) is
+// not shipped, and `tests/`, `dev/` hold the Playwright specs and scratch analyzers — entry points
+// and experiments, not app modules. The other censuses name the same ones; this gate's private skip
+// list is how 39 draft screens, none of them reachable from the entry, came to be parsed as the app
+// and charged 484 diagnostics.
+const NOT_APP = ["node_modules", "dist", "football-os", "test-results", "vendor", "tests", "dev"];
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
-  e.isDirectory() ? (SKIP.has(e.name) ? [] : walk(join(d, e.name))) : [join(d, e.name)]);
+  e.isDirectory() ? (skipReason(e.name, join(d, e.name), NOT_APP) ? [] : walk(join(d, e.name))) : [join(d, e.name)]);
 const files = walk(root).map((f) => f.slice(root.length + 1).split("\\").join("/"));
 const JS_EXT = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]);
 const jsFiles = files.filter((f) => JS_EXT.has(extname(f).toLowerCase()));

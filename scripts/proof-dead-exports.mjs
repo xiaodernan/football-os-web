@@ -287,7 +287,9 @@ const ROOTS = ["domain", "data", "lib", "features", "components", "ui", "src", "
 // now (scripts/lib/appTree.mjs) — a hidden directory is not shipped, and a directory carrying its
 // own `.git` is another repository. `football-os/` was a local clone of this repository, so this
 // census read the app's exports and the clone's copy of the same exports.
-const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor", "Python"];
+// M522: `tests/` carries the Playwright specs — test entry points, not app modules; coverage's
+// POP_SKIP names the same directory.
+const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor", "Python", "tests"];
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => {
   const p = `${d}/${e.name}`;
   if (e.isDirectory()) return skipReason(e.name, p) ? [] : walk(p);

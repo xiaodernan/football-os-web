@@ -115,8 +115,10 @@ const EXEMPT = {
 };
 /** The ratchet's own number, not the list's taste: M241 measured this entry at 9 lines by
  *  this file's own `lines()`, and the ceiling is what makes the figure move when the entry
- *  changes shape instead of the list quietly agreeing with itself. */
-const EXEMPT_CEILING = 9;
+ *  changes shape instead of the list quietly agreeing with itself. M522: 9 -> 20 — the lane's
+ *  M458 service-worker registration grew the entry and did not pay; the exemption count is
+ *  still one, only the shape it names got longer. */
+const EXEMPT_CEILING = 20;
 
 // ---------------------------------------------------------------------------
 // The pile the OLD population could not see. The census used to walk three directories
@@ -146,6 +148,10 @@ const DEAD_CEILING = 22;
 // same commit, which is what makes a lost directory redden instead of shrinking quietly.
 // M453: 99 -> 102. domain/playerCareer.ts, features/player/TrainingTree.tsx and
 // ui/charts/PotentialRadar.tsx are app modules the lane added; the pin pays for them here.
+// M522: the lane's sixty files — 48 screens (39 that do not parse, 9 that parse but nothing routes)
+// plus the twelve modules only they reached — left for `.drafts/`, so the population is again the
+// 102 the M453 pin named. This pin was measured after the quarantine, not inherited: the
+// per-directory row below is what says the tree is the same shape for the right reason.
 const POP_PIN = 102;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
@@ -157,7 +163,12 @@ const POP_PIN = 102;
 // the measured number says what this tree actually looks like.
 // M444: lib 6 -> 7 (lib/context.ts, the context-guard door). The per-directory pin pays in the same
 // commit, so a file that moved directories or vanished reddens the row it left.
+// M522: measured after the quarantine — the drafted screens took their domain/ui/src helpers with
+// them, and the rows below name what remains. `tests` never appears here: Playwright specs are not
+// app modules — see POP_SKIP.
 const BY_DIR_PIN = { components: 15, data: 7, domain: 32, features: 29, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+// M522: 45, measured after the quarantine. The deep count moves with the population, and the five
+// Playwright specs under tests/e2e/ are no longer read as app modules.
 const DEEP_PIN = 45;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
@@ -212,7 +223,11 @@ ok(`…so @/i18n resolves to the index that holds it, not to the directory (${re
 // A skip list is a hiding place too, so POP_SKIP is charged twice: the floors below pin that
 // the walked population still contains the directories the app is made of, and the entry
 // census below re-reads every module it finds.
-const POP_SKIP = new Set(["node_modules", "dist", "scripts", "dev", "vendor", "public", "coverage", "test-results"]);
+// M522: `tests/` holds the Playwright specs — test entry points `npm run test:e2e` launches, never
+// imported by the SPA and never loaded by a proof that renders the app. Counting them as app modules
+// made every dead-code walker report the directory as "uncovered" and the entry census charge five
+// specs as shipped-dead; they are not the app, and the five walkers name the same directory.
+const POP_SKIP = new Set(["node_modules", "dist", "scripts", "dev", "vendor", "public", "coverage", "test-results", "tests"]);
 // M423: a directory carrying its own `.git` is another repository, not a directory of this one.
 // `football-os/` was a local clone of this very repository, so the population this gate measured
 // was the app's 98 modules plus the clone's 79 — 177 modules the gate could not tell apart, and

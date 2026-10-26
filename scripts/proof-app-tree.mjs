@@ -104,7 +104,14 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 const APP_DIRS = ["components", "data", "domain", "features", "functions", "i18n", "lib", "src", "store", "ui"];
 // M444: 98 -> 99. lib/context.ts (the context-guard door) is a new app module; the pin pays in the
 // same commit, which is what makes a lost directory redden instead of shrinking quietly.
-
+// M453: 99 -> 102. domain/playerCareer.ts, features/player/TrainingTree.tsx and
+// ui/charts/PotentialRadar.tsx are app modules the lane added; the pin pays for them in the
+// same landing, so a lost directory reddens instead of shrinking quietly.
+// M522: 162 -> 102. The lane's M463-M521 batch left for .drafts/ in two waves: the 39 screens that
+// do not parse, then the 9 that parse but nothing routes, the twelve modules only they reached, and
+// SeasonAwards/seasonStats (reachable only through a re-export nothing rendered). A hidden name is
+// not shipped. The number is the measured population: a module that disappears from the app, or
+// reappears from the drafts without this line, reddens here.
 const APP_MODULE_PIN = 102;
 const byDir = {};
 for (const d of APP_DIRS) {
@@ -115,54 +122,124 @@ const appModules = Object.values(byDir).reduce((s, n) => s + n, 0);
 ok(`the app is the ten directories it is made of, and they hold ${appModules} modules (${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")})`,
   appModules === APP_MODULE_PIN && Object.keys(byDir).length === APP_DIRS.length);
 
-// The neighbour that caused this: a clone of this repository, sitting in the root, called
-// `football-os/` — it is not an app module, but before the rule it was read as one.
-ok(`a clone of the app sitting beside the app does not join its population (${Object.values(byDir).reduce((s, n) => s + n, 0)} of the clone's modules in the walk's ${walkApp(root, { dirs: ["domain"], exts: [".ts", ".tsx"] }).length} app module(s))`,
-  walkApp(root, { dirs: ["domain"], exts: [".ts", ".tsx"] }).length === appModules);
+// The neighbour that caused this: a clone of this repository, sitting in the root, carrying its
+// own copy of the app. M437 removed the clone the milestone found, so the case is PLANTED now —
+// and a planted case is the stronger claim, because the rule is exercised on a neighbour that is
+// really there rather than on one that was there once.
+const cloneTree = mkdtempSync(join(tmpdir(), "app-tree-clone-"));
+mkdirSync(join(cloneTree, "domain"), { recursive: true });
+mkdirSync(join(cloneTree, "clone-of-us", ".git"), { recursive: true });
+writeFileSync(join(cloneTree, "domain", "real.ts"), "export const real = 1;\n");
+writeFileSync(join(cloneTree, "clone-of-us", "copy.ts"), "export const copy = 1;\n");
+const cloneWalk = walkApp(cloneTree, { dirs: null, notApp: ["node_modules"], exts: [".ts", ".tsx"] })
+  .map((f) => f.replace(/\\/g, "/"));
+const cloneModules = cloneWalk.filter((f) => f.includes("clone-of-us/")).length;
+const cloneReal = cloneWalk.filter((f) => f.includes("domain/")).length;
+rmSync(cloneTree, { recursive: true, force: true });
+ok(`a clone of the app sitting beside the app does not join its population (${cloneModules} of the clone's modules in the walk's ${cloneReal} app module(s))`,
+  cloneModules === 0 && cloneReal === 1);
 
 // ---------------------------------------------------------------------------
-// 3 · the rule is the only way into the app tree — every tree-reading proof imports it
+// 3 · the gates read ONE rule
 // ---------------------------------------------------------------------------
-const scriptFiles = readdirSync(join(root, "scripts")).filter((f) => /^proof-.*\.mjs$/.test(f));
-const importLine = /from\s+["']\.\/lib\/appTree\.mjs["']/;
-const readers = scriptFiles.filter((f) => readFileSync(join(root, "scripts", f), "utf8").includes("walkApp(") || readFileSync(join(root, "scripts", f), "utf8").includes("appDirsIn(") || readFileSync(join(root, "scripts", f), "utf8").includes("appFilesIn("));
-const readersMissing = readers.filter((f) => !importLine.test(readFileSync(join(root, "scripts", f), "utf8")));
-ok(`every proof that walks the tree reads the one rule (${readers.length} of ${readers.length} import scripts/lib/appTree.mjs)`,
-  readersMissing.length === 0 && readers.length >= 8);
+const TREE_PROOFS = ["proof-coverage.mjs", "proof-dead-exports.mjs", "proof-dead-imports.mjs", "proof-i18n.mjs", "proof-ids.mjs", "proof-rng.mjs", "proof-orphans.mjs", "proof-unused-locals.mjs", "proof-unused-params.mjs"];
+const importLine = /from "\.\/lib\/appTree\.mjs"/;
+const imported = [], forked = [];
+for (const f of TREE_PROOFS) {
+  const src = readFileSync(join(root, "scripts", f), "utf8");
+  if (importLine.test(src)) imported.push(f);
+  // A private test of its own for a hidden directory is the fork this rule exists to stop.
+  // The shape is a directory entry's NAME: `e.name.startsWith(".")`. A relative import
+  // specifier (`spec.startsWith(".")`) is a different thing and is not a fork.
+  if (/\.name\.startsWith\("\."\)/.test(src)) forked.push(f);
+}
+ok(`every proof that walks the tree reads the one rule (${imported.length} of ${TREE_PROOFS.length} import scripts/lib/appTree.mjs${forked.length ? `; forked: ${forked.join(", ")}` : ""})`,
+  imported.length === TREE_PROOFS.length && forked.length === 0, `missing: ${TREE_PROOFS.filter((f) => !imported.includes(f)).join(", ")}`);
+
+// M432: the rule has to be READ, not remembered. Two gates were written AFTER this rule landed —
+// the dead-code boundary's first direction (proof-orphans) and its fourth (proof-unused-locals) —
+// and each read the repository's TOP-LEVEL directories to ask whether every one of them is
+// covered. Without the rule, each of the eleven scratch planes an old experiment left in the root
+// read as an uncovered directory, and the suite was red with two failures that had nothing to do
+// with the app. So the rule is now checked against the WHOLE suite rather than against a list
+// this file remembers: a proof script that reads the root's directories must import the rule.
+const scriptFiles = readdirSync(join(root, "scripts")).filter((f) => /^proof-.*\.mjs$/.test(f)).sort();
+// A script that reads the ROOT's own directory list — the top-level directories — as opposed to a
+// NAMED directory under the root, which is the app's business and needs no rule. The shared rule's
+// own readers count too: appDirsIn(root, …) and walkApp(root, …) are the same question asked
+// through the rule rather than beside it.
+const readsRoot = (src) => /readdirSync\(\s*(?:root|resolve\(root\))\s*,/.test(src)
+  || /readdirSync\(\s*join\(root,\s*""\s*\)\s*,/.test(src)
+  || /\b(?:appDirsIn|walkApp)\(\s*root\b/.test(src);
+const rootReaders = scriptFiles.filter((f) => readsRoot(readFileSync(join(root, "scripts", f), "utf8")));
+const rootReadersMissing = rootReaders.filter((f) => !importLine.test(readFileSync(join(root, "scripts", f), "utf8")));
+ok(`every proof that reads the repository's top-level directories imports the rule, so a new gate cannot forget it (${rootReaders.length} such script(s): ${rootReaders.join(", ")}; ${rootReadersMissing.length} without it [${rootReadersMissing.join(", ")}])`,
+  rootReadersMissing.length === 0 && rootReaders.length === 8,
+  `without the rule: ${rootReadersMissing.join(", ")}`);
 
 // ---------------------------------------------------------------------------
 // 4 · the repository points at no other repository
 // ---------------------------------------------------------------------------
 // M437: the root's FILES are the app's too. The rule above settles which DIRECTORIES are the
 // app's; a file the app does not name is a neighbour's, and a visible one is a stray in the tree
-// — the shape the census could not see, because it read directories, not files.
+// — the shape the census could not see, because it read directories only. The app's own files are
+// named here, and the list is pinned: a file added to the root without a line here is a stray.
 const APP_ROOT_FILES = [
   "components.json",
   "index.html",
   "package-lock.json",
   "package.json",
   "PLAN-LONGTERM.md",
+  "playwright.config.ts",
   "postcss.config.mjs",
   "PROVENANCE.md",
   "README.md",
   "tsconfig.json",
   "vite.config.ts",
 ];
-const rootFiles = readdirSync(root).filter((f) => !f.startsWith(".") && !f.startsWith("node_modules") && !f.startsWith(".git") && !f.startsWith(".workbuddy-ai") && !f.startsWith("Python") && !f.startsWith("dev"));
+const rootFiles = appFilesIn(root);
 const strayFiles = rootFiles.filter((f) => !APP_ROOT_FILES.includes(f));
-ok(`the repository carries no pointer to another repository — the app's root files are exactly the ${APP_ROOT_FILES.length} named below (stray: ${strayFiles.join(", ") || "none"})`,
-  strayFiles.length === 0 && rootFiles.length === APP_ROOT_FILES.length);
+const missingFiles = APP_ROOT_FILES.filter((f) => !rootFiles.includes(f));
+// The reader is armed: a file the app does not name is a stray, read in a planted root.
+const pStray = (() => {
+  const planted = mkdtempSync(join(tmpdir(), "app-tree-files-"));
+  writeFileSync(join(planted, "stray.txt"), "not the app's\n");
+  writeFileSync(join(planted, "README.md"), "the app's\n");
+  const read = appFilesIn(planted).filter((f) => !APP_ROOT_FILES.includes(f));
+  rmSync(planted, { recursive: true, force: true });
+  return read.length;
+})();
+ok(`every visible file at the root is one the app names (${rootFiles.length} visible file(s), ${strayFiles.length} stray [${strayFiles.join(", ")}], ${missingFiles.length} named but absent [${missingFiles.join(", ")}]; a planted stray reads ${pStray})`,
+  strayFiles.length === 0 && missingFiles.length === 0 && rootFiles.length === APP_ROOT_FILES.length && pStray === 1,
+  `stray: ${strayFiles.join(", ")}; absent: ${missingFiles.join(", ")}`);
 
-// ---------------------------------------------------------------------------
-// 5 · every proof that reads the repository's top-level directories imports the rule
-// ---------------------------------------------------------------------------
-const readsRoot = (src) =>
-  /walkApp\(.*root/.test(src) || /appDirsIn\(.*root/.test(src) || /appFilesIn\(.*root/.test(src) || /\b(?:appDirsIn|walkApp)\(\s*root\b/.test(src);
-const rootReaders = scriptFiles.filter((f) => readsRoot(readFileSync(join(root, "scripts", f), "utf8")));
-const rootReadersMissing = rootReaders.filter((f) => !importLine.test(readFileSync(join(root, "scripts", f), "utf8")));
-ok(`every proof that reads the repository's top-level directories imports the rule, so a new gate cannot forget it (${rootReaders.length} such script(s): ${rootReaders.join(", ")}; ${rootReadersMissing.length} without it [${rootReadersMissing.join(", ")}])`,
-  rootReadersMissing.length === 0 && rootReaders.length === 8,
-  `without the rule: ${rootReadersMissing.join(", ")}`);
+/** The paths the index records as a pointer to another repository (mode 160000). */
+const gitlinksIn = (cwd) => {
+  let out = "";
+  try {
+    out = execFileSync("git", ["ls-files", "-s"], { cwd, encoding: "utf8" });
+  } catch { return []; }
+  return out.split(/\r?\n/)
+    .filter((l) => l.startsWith("160000 "))
+    .map((l) => l.split(/\s+/).pop());
+};
+const gitlinks = gitlinksIn(root);
+// The reader, planted both ways: a pointer in a real index is seen, so the zero above is a
+// measurement and not a blind spot. The plant is a fresh repository whose index really does
+// carry a gitlink — the shape M419 committed by accident.
+const plantRepo = mkdtempSync(join(tmpdir(), "app-tree-git-"));
+execFileSync("git", ["init", "-q"], { cwd: plantRepo });
+execFileSync("git", ["update-index", "--add", "--cacheinfo",
+  "160000,1234567890123456789012345678901234567890,clone-of-us"], { cwd: plantRepo });
+const plantedLinks = gitlinksIn(plantRepo);
+rmSync(plantRepo, { recursive: true, force: true });
+
+ok(`the repository carries no pointer to another repository (${gitlinks.length} found${gitlinks.length ? `: ${gitlinks.join(", ")}` : ""})`,
+  gitlinks.length === 0, `pointers: ${gitlinks.join(", ")}`);
+ok(`the index reader finds a pointer when one is there (planted ${plantedLinks.length} in a fresh index, the repository's own ${gitlinks.length})`,
+  plantedLinks.length === 1 && plantedLinks[0] === "clone-of-us");
+
+rmSync(tmp, { recursive: true, force: true });
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);

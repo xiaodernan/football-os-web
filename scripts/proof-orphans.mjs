@@ -120,7 +120,9 @@ ok(`the reader resolves @/, relative, extensionless and index specifiers, ignore
 
 // --- 2. The walk is the real tree, the roots are derived, and both entries are inside it. -----
 const ROOTS = ["domain", "data", "lib", "features", "components", "ui", "src", "store", "i18n", "functions"];
-const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor"];
+// M522: `tests/` carries the Playwright specs — test entry points, not app modules; coverage's
+// POP_SKIP names the same directory.
+const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor", "tests"];
 // M423: the rule that says which tree this is lives in scripts/lib/appTree.mjs now — a hidden
 // directory is not shipped and a directory carrying its own `.git` is another repository. Without
 // it the scratch planes left in the root by old experiments each read as an uncovered directory.

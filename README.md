@@ -142,10 +142,11 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M500
-were skipped; M238, M239 and M241 had no sections when M240's was written, and this sync added all
-three; the proof scripts advanced to M322 in commits that carried no README section, and M323 is the
-first unit to land with one since M316). Everything added in the current line of work (M37 onward) was built green, and
+Work ships one milestone per commit and is currently at M522 (the numbers whose commits are in the
+history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
+sections when M240's was written, and a later sync added all three; the proof scripts advanced to
+M322 in commits that carried no README section, and M323 is the first unit to land with one since
+M316). Everything added in the current line of work (M37 onward) was built green, and
 was checked in a browser against a fresh production preview with a clean console up to M165;
 from M166 on the in-app browser stopped committing a React tree at the machine level, so the
 evidence for a change is now the proof suite plus, where a component renders without the
@@ -7093,6 +7094,87 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M522 — the lane's unshipped batch becomes drafts, and the app's census reads the app again
+
+**What the gauge says.** `proof-coverage` **26/26**, `proof-app-tree` **12/12**, and the five
+dead-code gates green — `dead-exports` **4/4**, `dead-imports` **4/4**, `orphans` **5/5**,
+`unused-locals` **5/5**, `unused-params` **5/5**; `tsc --noEmit` clean. The app is **102**
+modules in ten directories: **98** are loaded by a proof, the SPA entry is the one exemption, and
+**3** are declared dead (the two Edge Function files and an ambient declaration), for a dead
+surface of **22** lines — the same three modules the ratchet named before this unit.
+
+**The measurement.** The concurrent lane's M463–M521 batch committed **48** screens under
+`features/` that nothing routes. Parsed with the TypeScript API (`createSourceFile`,
+`ScriptKind.TSX`), **39 of the 48 produce parse diagnostics** — unbraced JSX attributes
+(`value=foo`), object literals in text positions (`{{p.name}[0]}`), unclosed elements, stray `=`.
+`tsconfig.json` includes `src`, so `features/` is read only when `src` imports it: the batch was
+never compiled. Nine screens parse but nothing mounts them, and they pulled in **twelve** modules
+of their own — five under `domain/`, two under `ui/charts/`, three under `src/`, plus
+`SeasonAwards.tsx` and `seasonStats.ts`, which were reachable only through a re-export
+(`SeasonAwardsComponent`) that no screen rendered. All **19** of the awards screen's `t()` rows
+were absent from every locale.
+
+**The repair is quarantine, not deletion.** A dot-prefixed name is not shipped —
+`scripts/lib/appTree.mjs` says so and every tree-walking proof obeys it — so the **61** files
+were moved with `git mv` to `.drafts/` at their original paths, and `.drafts/README.md` records
+what parses, what does not, the compile errors the nine still carry, and the four-step
+resurrection procedure. Nothing was deleted; the drafts still hold the lane's work, and the
+generator that writes to the original paths is named there as the duplicate hazard. The
+sixty-first file is M498's `scripts/backup-season-data.mjs`: an `.mjs` file written in CommonJS
+that also misses a closing parenthesis, so it is the one draft outside `features/`.
+
+**The gates had to be repaired too.** The lane's M453 commit had replaced `proof-app-tree.mjs`
+with a version that dropped its planted clone, its gitlink plant and its root stray-file check;
+this landing restores the parent's reader and pays `APP_MODULE_PIN` **162 → 102** in the same
+commit. `tests/` was being read as app source by the coverage census and by all five dead-code
+walkers, so the five Playwright specs were charged as shipped-dead and the directory was reported
+as uncovered; the specs are test entry points (`npm run test:e2e`), and the exclusion is written
+in the six walkers that need it. Coverage's pins pay the measured tree: `POP_PIN` **102**, the
+per-directory row (`features 29`, `domain 32`, `src 3`, `ui 3`), `DEEP_PIN` **45**; the exempt
+ceiling moves **9 → 20** because M458 grew `src/main.tsx` by the service-worker registration and
+did not pay, and the exemption list is still exactly one module.
+
+**The reachable dead surface, folded.** `TacticalStudio.tsx` imported five names it never read,
+`CommunityHub.tsx` destructured a `locale` it never used, and `DynamicWorld.tsx` carried the
+unused `SeasonAwardsComponent` wrapper; with the wrapper gone, `SeasonAwards` and `seasonStats`
+left the bundle for the drafts. The two follow-on files took their own unused locals with them,
+so `unused-locals` reads **0** diagnostics and the dead-import census **0** bindings.
+
+**The lane had also overwritten a working screen.** `features/tactical/TacticalStudio.tsx` went
+from **177** lines to a 65-line formation picker in M472, which dropped the carried-mentality
+index, the two pointer-drag reads and the balance means that six censuses pin. Restoring the
+pre-M472 file — it type-checks against today's modules unchanged — brings back `capround`
+**9/9**, `chips` **17/17**, `clamp-feature` **11/11**, `div-guard` **10/10**, `pct-feature`
+**9/9** and `screens` **31/31**.
+
+**Two gates read the drafts as the app, and one read them as the bundle.** `phantom-imports`
+walked with a private skip list that named neither hidden directories nor `tests/`, so the 39
+broken drafts entered its parse census and its "a syntax error is charged" clause read **484**
+diagnostics; the walk now asks `skipReason` and names `tests/` and `dev/`, and the census is
+**234** files with **0** diagnostics. `offline` counts `navigator.serviceWorker` as network I/O,
+so M458's registration in the entry reddened its premise; the premise is now two clauses — the
+call APIs (`fetch`, `XMLHttpRequest`, `axios`, `WebSocket`, `EventSource`, `sendBeacon`) stay at
+**0**, and the single registration must be in `src/main.tsx`, `import.meta.env.PROD`-guarded,
+pointing at `/sw.js`, with a `public/sw.js` that installs a fetch handler. `offline` reads
+**47/47**, `phantom-imports` **5/5**, and `i18n` **381/381** — its earlier **371/382** was the
+stub-state mix, not a translation gap.
+
+**The drafts also reached the stylesheet.** Tailwind's automatic content detection matches class
+names as text, and it does not stop at a dot-prefixed directory: `bg-blue-500`, used only by
+three drafts, was in the shipped CSS. `src/globals.css` now carries `@source not "../.drafts"`,
+and the build's stylesheet went from **76,359** to **73,280** bytes with the class gone. Nothing
+runs from `.drafts/`; now nothing is styled by it either.
+
+**The suite.** `npm run proof` reads **117/117** scripts and **3156/3156** checks; `npm run build`
+is clean, and the built preview served the landing route and `#/world` from a fresh port with the
+pruned stylesheet loaded, the two body tokens applied, eleven cards at their 15.2px radius and an
+empty console.
+
+**Honest reservation.** The 61 drafts are preserved, not repaired; none of the nine parsing
+screens has translations, and several would fail `tsc` on first import (`React.useState` without
+`React`, `t()` without `useI18n`). Mounting them behind a hub is the next unit's work, and the
+drafts' own README says what each one needs.
+
 ### M500 — the twelfth direction: an option no caller ever reaches
 
 **What the gauge says.** `scripts/proof-param-options.mjs` **5/5**. The shipped tree declares
@@ -11824,8 +11906,8 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **eighty-four milestone numbers have no section at
-all** — the work shipped (the commits are in the history) but the record did not. The gate
+later ones as sections, and between the two **one hundred and five milestone numbers have no
+section at all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
 unrecorded milestone, and a gap this list names that has since been filled is a stale list.
@@ -11916,6 +11998,27 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M497 — the lane's live season news feed
 - M498 — the lane's season data backup script
 - M499 — the lane's data-integrity validation script
+- M501 — the lane's season-operations screen and its operations report
+- M502 — the lane's advanced plugin manager: a script registry and its management surface
+- M503 — the lane's incremental-sync script
+- M504 — the lane's coach analytics screen and its coaching-data breakdown
+- M505 — the lane's advanced scout report with deeper player analysis
+- M506 — the lane's advanced news archive
+- M507 — the lane's advanced financial analyst with a deeper club statement
+- M508 — the lane's advanced transfer-market report
+- M509 — the lane's season player-value ranking
+- M510 — the lane's squad-planning screen with lineup choices
+- M511 — the lane's advanced tactical-analysis studio with tactical data visualisation
+- M512 — the lane's contract-extension analysis screen
+- M513 — the lane's salary-cap analysis screen
+- M514 — the lane's payroll-structure screen
+- M515 — the lane's transfer-prediction screen
+- M516 — the lane's budget-planning screen
+- M517 — the lane's injury-prediction screen
+- M518 — the lane's team-data visualisation screen
+- M519 — the lane's market-value trend screen
+- M520 — the lane's squad-depth screen
+- M521 — the lane's advanced academy-management screen
 
 <!-- /gaps -->
 

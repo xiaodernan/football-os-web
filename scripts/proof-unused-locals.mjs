@@ -78,7 +78,9 @@ ok(`the real tree has no unread declaration (${realDiags.length} diagnostic(s)${
 // --- so coverage is part of the claim, not a separate nicety. functions/ is Deno code, outside ---
 // --- the tsconfig the app builds with. ----------------------------------------------------------
 const ROOTS = ["domain", "data", "lib", "features", "components", "ui", "src", "store", "i18n"];
-const NON_APP = ["functions", "scripts", "dev", "dist", "node_modules", "test-results", "vendor"];
+// M522: `tests/` carries the Playwright specs — test entry points, not app modules; coverage's
+// POP_SKIP names the same directory.
+const NON_APP = ["functions", "scripts", "dev", "dist", "node_modules", "test-results", "vendor", "tests"];
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => {
   const p = `${d}/${e.name}`;
   if (e.isDirectory()) return skipReason(e.name, p) ? [] : walk(p);
