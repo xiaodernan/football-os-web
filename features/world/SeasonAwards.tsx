@@ -89,7 +89,7 @@ export function SeasonAwards() {
         <SectionTitle title={t("world.bestXITitle")} />
         <p className="text-sm text-muted-foreground">{t("world.bestXIExplanation")}</p>
         <div className="grid grid-cols-3 gap-2">
-          {bestXI.map((pid, i) => {
+          {bestXI.map((pid) => {
             const player = footballProvider.players().find(p => p.id === pid);
             if (!player) return null;
             return (
