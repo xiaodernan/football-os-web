@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M526 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M527 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7093,6 +7093,37 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M527 — the second draft comes back, and this one earns its route: a persisted notebook
+
+**What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31** (the new route renders in
+all three locales), `proof-app-tree` **12/12**, `proof-coverage` **26/26**, `proof-storage`
+**61/61**, `proof-unused-locals`/`proof-unused-params` **5/5**, `tsc --noEmit` clean, `npm run build`
+exit 0, bundle **483 → 485 KB** gzip, recorded.
+
+**Why this draft and not the literal one.** `.drafts/features/tactical/TacticalNotebook.tsx` was a
+stub: five hard-coded Chinese notes, a `switch` expression that is not JS, `$`-interpolated class
+strings Tailwind cannot see, a dynamic ``t(`priority.${p}`)`` key, and `StatTile` without its
+props — none of it type-checks, and resurrecting it as-is would ship a placeholder. The draft's
+*intent* — a tactical notebook — is worth keeping, so it was rebuilt against the app's own doors
+instead of pasted back: `useLocalStorage` persists the notes and returns the write verdict (the
+screen says "Saved" only when `verdict.landed`), `formatDate(locale, …)` renders the timestamp (never
+the browser locale), the three priority words are three literal lookups rather than a template key,
+and the note field is `heading`, not `title`, so it cannot trip the news-composer census that charges
+a bare `{x.title}` render.
+
+**What it does.** Add a note (title, body, priority), see the recent notes newest-first with a tone
+chip and a localised date, and delete any of them — all kept on the device. `EmptyState` when there
+are none. Route `/notebook`, a sidebar entry, sixteen keys across en / zh-CN / zh-TW.
+
+**The pins paid.** `APP_SRC_PIN` 110→111, `TSX_PIN` 54→55, `SRC_PIN` 113→114, literal sites
+1381→1397 and the dictionary's duplicate-value / excess-key counts 114→118 and 190→194 in
+`proof-i18n`; `APP_MODULE_PIN` 105→106 in `proof-app-tree`; `POP_PIN` 105→106, `BY_DIR_PIN.features`
+31→32 and `DEEP_PIN` 47→48 in `proof-coverage`; `APP_FILES_PIN` 100→101 in `proof-storage`.
+
+**Honest reservation.** The notebook is local-only — it never leaves the device, and it has no
+server-side share or export. That is the honest scope of a device-kept tool; a shared version would
+need the storage door's refusal path to become a sync conflict story, which is a milestone of its own.
 
 ### M526 — a draft comes back: the squad-planning screen, routed and keyed
 

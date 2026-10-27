@@ -502,17 +502,20 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M523: 107 -> 109. domain/coachCareer.ts and features/coach/CoachProfile.tsx — the coach
 // résumé screen and its domain module — pay in the same commit.
 // M526: 109 -> 110 — features/manager/SquadPlanning.tsx is resurrected from the drafts.
-const APP_SRC_PIN = 110;
+// M527: 110 -> 111 — features/tactical/TacticalNotebook.tsx is resurrected from the drafts.
+const APP_SRC_PIN = 111;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
-const TSX_PIN = 54;
+// M527: 54 -> 55 — TacticalNotebook.tsx is the new .tsx module.
+const TSX_PIN = 55;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
 // M523: 110 -> 112, the same debt again (coachCareer, CoachProfile).
 // M526: 112 -> 113, SquadPlanning.tsx again.
-const SRC_PIN = 113;
+// M527: 113 -> 114, TacticalNotebook.tsx again.
+const SRC_PIN = 114;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -3046,8 +3049,9 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // ratchets, so a milestone that ADDS keys pays here in the same commit (107->109, 177->180).
 // M523: the coach résumé's 40 keys per locale pay their own toll (109->113, 180->189).
 // M525: the season report's rows pay theirs (113->114, 189->190).
-const DUP_VALUES_PIN = 114;
-const DUP_EXCESS_KEYS_PIN = 190;
+// M527: TacticalNotebook's 16 new keys add 4 duplicate values and 4 excess keys (114->118, 190->194).
+const DUP_VALUES_PIN = 118;
+const DUP_EXCESS_KEYS_PIN = 194;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4261,7 +4265,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // interpolations) — the shapes census pays in the same commit: 1317 -> 1354, 105 -> 108.
   // M525: the season report panel adds 20 more literal sites: 1354 -> 1374.
   // M526: SquadPlanning adds its 7 literal t() sites: 1374 -> 1381.
-  shapeCounts.literal === 1381 && shapeCounts.template === 108 && shapeCounts.expression === 32
+  // M527: TacticalNotebook adds its 16 literal t() sites: 1381 -> 1397.
+  shapeCounts.literal === 1397 && shapeCounts.template === 108 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
