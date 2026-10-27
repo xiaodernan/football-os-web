@@ -120,7 +120,8 @@ const APP_DIRS = ["components", "data", "domain", "features", "functions", "i18n
 // M529: 107 -> 108 — features/community/CommunityPoll.tsx resurrected from the drafts.
 // M530: 108 -> 109 — features/injury/InjuryReport.tsx resurrected from the drafts.
 // M531: 109 -> 110 — features/compare/ClubCompare.tsx is a new comparison screen.
-const APP_MODULE_PIN = 110;
+// M532: 110 -> 111 — features/leaders/LeagueLeaders.tsx is a new leaderboard screen.
+const APP_MODULE_PIN = 111;
 const byDir = {};
 for (const d of APP_DIRS) {
   const n = walkApp(root, { dirs: [d], exts: [".ts", ".tsx"] }).length;

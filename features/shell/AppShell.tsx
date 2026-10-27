@@ -90,6 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/poll", label: t("nav.poll"), icon: I.chat, match: ["/poll"] },
     { to: "/injuries", label: t("nav.availability"), icon: I.shield, match: ["/injuries"] },
     { to: "/club-compare", label: t("nav.clubCompare"), icon: I.compare, match: ["/club-compare"] },
+    { to: "/leaders", label: t("nav.leaders"), icon: I.trophy, match: ["/leaders"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },
     { to: "/settings", label: t("nav.settings"), icon: I.settings, match: ["/settings"] },
   ];

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M531 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M532 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7093,6 +7093,34 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M532 — the league's leaders, folded from the fixtures themselves
+
+**What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31**, `proof-app-tree`
+**12/12**, `proof-coverage` **26/26**, `proof-storage` **61/61**, `tsc --noEmit` clean, `npm run
+build` exit 0, bundle **493 → 494 KB** gzip, recorded.
+
+**A board that is a fold, not a table.** Every goal and card in the seeded fixtures is already a
+`MatchEvent` on the match record — 948 goals, 434 yellows and 108 reds across 1,566 fixtures — so the
+leaderboard is computed by walking those events, never stored. The key is `clubId|playerName`, which
+keeps two same-named players on different clubs apart, and the club comes from the event's own side
+of the fixture rather than a name lookup. Read once in a `useMemo`; a stored table could drift from
+the fixtures it summarises, a fold cannot.
+
+**What it does.** Two boards: the **top fifteen scorers** (goals, with club and position) and the
+**ten most-booked** players (yellow and red counts), each ranked with ties broken by name. Route
+`/leaders`, a sidebar entry, nine keys across en / zh-CN / zh-TW.
+
+**The pins paid.** `APP_SRC_PIN` 115→116, `TSX_PIN` 59→60, `SRC_PIN` 118→119 and literal sites
+1457→1467 in `proof-i18n`; `APP_MODULE_PIN` 110→111 in `proof-app-tree`; `POP_PIN` 110→111,
+`BY_DIR_PIN.features` 36→37 and `DEEP_PIN` 52→53 in `proof-coverage`; `APP_FILES_PIN` 105→106 in
+`proof-storage`.
+
+**Honest reservation.** The board counts the seeded dataset's fixtures, and it groups by player
+*name* (the events carry a name, not an id), so two identically named players in the same club would
+merge — the `clubId|name` key removes the cross-club case but not the same-club one. It also reads
+only finished fixtures that carry events (1,064 of 1,566); the rest contribute no goals, which is
+correct but means the totals are a subset of the season.
 
 ### M531 — two clubs side by side: a comparison the player board could not answer
 

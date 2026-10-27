@@ -2318,6 +2318,15 @@ const en: Dict = {
   "compare.club.resultDraw": "D",
   "compare.club.resultLoss": "L",
   "compare.club.noForm": "No results yet",
+  "nav.leaders": "League Leaders",
+  "leaders.title": "League leaders",
+  "leaders.subtitle": "Top scorers and the most-booked players, folded from every seeded fixture.",
+  "leaders.scorersTitle": "Top scorers",
+  "leaders.bookedTitle": "Most booked",
+  "leaders.colGoals": "goals",
+  "leaders.yellowShort": "Y",
+  "leaders.redShort": "R",
+  "leaders.empty": "No fixtures to read yet.",
 };
 
 const zhCN: Dict = {
@@ -4524,6 +4533,15 @@ const zhCN: Dict = {
   "compare.club.resultDraw": "平",
   "compare.club.resultLoss": "负",
   "compare.club.noForm": "暂无战绩",
+  "nav.leaders": "联赛榜",
+  "leaders.title": "联赛榜",
+  "leaders.subtitle": "射手榜与黄红牌榜，由全部已排赛程的比赛事件汇总。",
+  "leaders.scorersTitle": "射手榜",
+  "leaders.bookedTitle": "黄红牌榜",
+  "leaders.colGoals": "球",
+  "leaders.yellowShort": "黄",
+  "leaders.redShort": "红",
+  "leaders.empty": "暂无可读取的赛程。",
 };
 
 const zhTW: Dict = {
@@ -6735,6 +6753,15 @@ const zhTW: Dict = {
   "compare.club.resultDraw": "和",
   "compare.club.resultLoss": "負",
   "compare.club.noForm": "尚無戰績",
+  "nav.leaders": "聯賽榜",
+  "leaders.title": "聯賽榜",
+  "leaders.subtitle": "射手榜與黃紅牌榜，由全部已排賽程的比賽事件彙總。",
+  "leaders.scorersTitle": "射手榜",
+  "leaders.bookedTitle": "黃紅牌榜",
+  "leaders.colGoals": "球",
+  "leaders.yellowShort": "黃",
+  "leaders.redShort": "紅",
+  "leaders.empty": "尚無可讀取的賽程。",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

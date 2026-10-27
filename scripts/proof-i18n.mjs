@@ -507,7 +507,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M529: 112 -> 113 — features/community/CommunityPoll.tsx is resurrected from the drafts.
 // M530: 113 -> 114 — features/injury/InjuryReport.tsx is resurrected from the drafts.
 // M531: 114 -> 115 — features/compare/ClubCompare.tsx is a new comparison screen.
-const APP_SRC_PIN = 115;
+// M532: 115 -> 116 — features/leaders/LeagueLeaders.tsx is a new leaderboard screen.
+const APP_SRC_PIN = 116;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -516,7 +517,8 @@ const APP_SRC_PIN = 115;
 // M529: 56 -> 57 — CommunityPoll.tsx is the new .tsx module.
 // M530: 57 -> 58 — InjuryReport.tsx is the new .tsx module.
 // M531: 58 -> 59 — ClubCompare.tsx is the new .tsx module.
-const TSX_PIN = 59;
+// M532: 59 -> 60 — LeagueLeaders.tsx is the new .tsx module.
+const TSX_PIN = 60;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -527,7 +529,8 @@ const TSX_PIN = 59;
 // M529: 115 -> 116, CommunityPoll.tsx again.
 // M530: 116 -> 117, InjuryReport.tsx again.
 // M531: 117 -> 118, ClubCompare.tsx again.
-const SRC_PIN = 118;
+// M532: 118 -> 119, LeagueLeaders.tsx again.
+const SRC_PIN = 119;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -4285,7 +4288,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M529: CommunityPoll adds its 11 literal t() sites: 1413 -> 1424.
   // M530: InjuryReport adds its 15 literal t() sites: 1424 -> 1439.
   // M531: ClubCompare adds its 18 literal t() sites: 1439 -> 1457.
-  shapeCounts.literal === 1457 && shapeCounts.template === 108 && shapeCounts.expression === 32
+  // M532: LeagueLeaders adds its 10 literal t() sites: 1457 -> 1467.
+  shapeCounts.literal === 1467 && shapeCounts.template === 108 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

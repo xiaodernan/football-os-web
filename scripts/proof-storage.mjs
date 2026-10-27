@@ -98,7 +98,8 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // M529: 102 -> 103 — features/community/CommunityPoll.tsx resurrected from the drafts.
 // M530: 103 -> 104 — features/injury/InjuryReport.tsx resurrected from the drafts.
 // M531: 104 -> 105 — features/compare/ClubCompare.tsx is a new comparison screen.
-const APP_FILES_PIN = 105;
+// M532: 105 -> 106 — features/leaders/LeagueLeaders.tsx is a new leaderboard screen.
+const APP_FILES_PIN = 106;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */
