@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M537 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M539 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,90 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M539 — the quarantine's type health, and the two cheapest families repaired
+
+**What the gauge says.** `scripts/proof-draft-types.mjs` **5/5** (a new gate). The quarantine holds
+**79** TypeScript drafts, and the app's own compiler now reads every one of them: **69** carry a
+type defect and **423** defects sit between them. The same census over HEAD's bytes read **71**
+files and **475** defects, so this milestone removed **52** defects and cleared **2** files
+completely. Every family of defect is bounded by the figure measured when this milestone landed,
+and a family that appears with no bound is refused.
+
+**The layer underneath syntax.** M535–M537 closed the quarantine's *syntax* backlog: every draft
+parses. Parse-clean is not shippable, and nothing was measuring what lies beneath. The app's own
+compiler never looked at `.drafts/` at all — the app's `tsconfig.json` includes `src`, `components`,
+`hooks` and `lib`, and the quarantine is in none of them — so the drafts' type defects had never
+been counted by anything. The census that counts them now reads the quarantine with the **app's own
+compiler options**: the same `tsconfig.json`, the same `paths` mapping, the same `jsx` mode. A draft
+is judged the way the app would judge it, not the way a standalone checker would.
+
+**Two families, and why they were the cheapest.** A family here is a *signature*, not a code: "cannot
+find name" appears for both `useState` and `EmptyState`, and they are two different defects. Two
+families were both a bound binding and not a type, and both were mechanical:
+
+- **`2304:useState` — 36 occurrences.** A draft that calls `useState` without importing it. The hook
+  was never bound, so the call was an unknown name.
+- **`2686` — 13 occurrences.** A draft that reaches for `React` without binding it, so `React` was a
+  UMD global the module never declared.
+
+**Thirty-seven files, and thirty-six of them needed nothing else.** The rule reads each file's
+react import and asks two questions: does the file *call* `useState`, and does its import *bind* the
+name? If the call is there and the binding is not, the binding is added — as a named import (`import
+{ useMemo, useState } from "react";`, 33 files) or, where the file already reached for the `React`
+namespace, as a default binding beside it (`import React, { useMemo } from "react";`, 4 files:
+`LeagueManager`, `ClubFinance`, `TransferWindow`, `SyncManager`). The rule refuses to guess: it
+checks that the identifier `React` is genuinely unbound, that the file's line endings are not mixed,
+that the repair adds tokens and removes none, that the file still parses, and — after the write —
+that the file introduced **no new** diagnostic signature and carries **strictly fewer** diagnostics
+than it did.
+
+**The one file the rule refused.** `TeamDataScreen.tsx` held a state variable typed `string | null`
+and a panel that read `selectedClub.squadValue` — a property of a row in `clubData`, not of a
+`Club`. The missing `useState` import had been **masking** that: with the hook unbound, the checker
+never reached the assignment. Binding the hook made the real defect visible, and the rule — which
+insists a repair introduces no new diagnostic — refused the file and restored its bytes. A hand
+fixed it first: the state now holds the club's **id**, and the panel looks the row up by that id.
+Only then did the rule bind the hook there as well, so the file carries **both** — four hand patches
+and the same import the other thirty-six got. The rule's refusal is the reason the file is honest
+rather than quietly wrong, and the hand is why it was able to land at all.
+
+**What the repair moved.** Beyond the two families that went to zero, `7006` — "parameter implicitly
+has an `any` type" — fell from **26** to **23**: three parameters in `PlayerValueComparison.tsx` were
+implicitly `any` only because the hook that produced them was unbound. Everything else held its
+figure exactly: `2322` at **280**, `2339` at **71**, `2307` at **8**, `2554` at **7**, and the rest
+where they were. Two files reached **zero** defects: `TeamDataScreen.tsx` and
+`PlayerFiveYearPlan.tsx`.
+
+**The gate, armed.** A bound of zero is only a measurement if the reader can still see what it
+forbids. Two things were done. The same reader was run over a **mirror** of the quarantine carrying
+one draft that calls `useState` without importing it, one that reaches for `React` without binding
+it, and one sound draft beside them: it must name the first two and leave the third alone. And a
+live arm planted the missing `useState` import back into a real draft —
+`.drafts/features/academy/AcademyReport.tsx` — and ran the gate: it exits **1** with the forbidden
+family red, the backlog red and the unbound family red; the file is then restored and a SHA-256 of
+its bytes before and after is identical. The control run is green.
+
+**Honest reservation.** The quarantine's types are still not right, and this milestone does not claim
+they are. **423** defects remain across **69** of the **79** drafts, and the biggest family of them
+(`2322`, "not assignable", **280** of them) was not touched: telling a value from a type is a
+question about what the code means, and no rule answers it. One family was deliberately left out of
+the repair, and the reason is worth naming: **14** defects are names the app exports and the draft
+never imports — `EmptyState` (**4**), `browserStore` (**2**), `useI18n` (**2**), and `readJson`,
+`writeJson`, `calculateTransferFee`, `newsData`, `prev` and `syncedCount` (**1** each). Repairing
+them means knowing which module exports each name, and deriving that means reading the app's module
+graph — which is exactly the thing `proof-app-tree.mjs` pins the count of. A repair that hard-codes
+the nine mappings would fix the pile and teach the next draft nothing; the honest next unit derives
+the export index and reads it. Until then, the two families this milestone repaired are at **zero**,
+every other family is bounded, and the backlog is a number that can only go down.
+
+**One coupling worth naming.** The gaps block still carries **M538**: the concurrent line of work has
+that number in flight, and by the ledger's own arithmetic a number between the oldest and the newest
+heading with no section of its own is a gap until it lands one. The paragraph above the block named
+the block's size in **words** — "one hundred and five" — while the block held **107**; the figure is
+now carried as a numeral and read by `scripts/proof-ledger-run.mjs`, so a milestone that changes the
+block without changing the sentence is refused.
+
 ### M537 — the thirteen that no rule could repair, repaired by hand
 
 **What the gauge says.** `scripts/proof-drafts.mjs` **8/8** (the count is unchanged; one clause changed
@@ -12443,7 +12527,7 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **one hundred and five milestone numbers have no
+later ones as sections, and between the two **108 milestone numbers have no
 section at all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
@@ -12558,6 +12642,7 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M521 — the lane's advanced academy-management screen
 - M523 — the drafts boundary gate (`proof-drafts`), swept into M524's commit
 - M524 — the coach's résumé resurrected from the drafts (`CoachProfile`)
+- M538 — the concurrent line of work's in-flight unit, landed without a section of its own
 
 <!-- /gaps -->
 

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
 import { executeTransfer, TransferOffer, TransferResult, getFreeAgents } from "@/domain/transfer";

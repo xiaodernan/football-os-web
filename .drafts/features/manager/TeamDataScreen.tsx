@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ export function TeamDataScreen() {
   const { t } = useI18n();
   const clubs = useMemo(() => footballProvider.clubs(), []);
 
-  const [selectedClub, setSelectedClub] = useState<string | null>(null);
+  const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
 
   const clubData = useMemo(() => {
     return clubs.map(c => ({
@@ -29,6 +29,8 @@ export function TeamDataScreen() {
       points: 0, // calculated
     }));
   }, [clubs]);
+
+  const selectedClub = selectedClubId ? clubData.find(c => c.id === selectedClubId) ?? null : null;
 
   // 计算积分
   clubData.forEach(c => {
@@ -87,7 +89,7 @@ export function TeamDataScreen() {
                 key={c.id}
                 variant="outline"
                 size="sm"
-                onClick={() => setSelectedClub(c)}
+                onClick={() => setSelectedClubId(c.id)}
               >
                 {c.name}
               </Button>
@@ -139,7 +141,7 @@ export function TeamDataScreen() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setSelectedClub(null)}
+          onClick={() => setSelectedClubId(null)}
         >
           {t("manager.backToClubs")}
         </Button>

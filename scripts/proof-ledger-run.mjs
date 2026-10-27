@@ -104,5 +104,26 @@ const plantStaleHit = (plantStale.entries || []).filter((e) => withSection.has(e
 ok(`the gate is armed both ways: a planted ledger that misses a gap is rejected (${plantMissUnrecorded.length} unrecorded gap(s) it would not report), and a planted ledger that names a FILLED gap is rejected (${plantStaleHit.length} stale entry/entries it would keep)`,
   plantMissUnrecorded.length === treeGaps.length - 1 && plantStaleHit.length === 1);
 
+// --- 6. The PROSE that names the block's size is derived, not typed. -----------------------------
+// The paragraph above the block said "one hundred and five" while the block held 107: the count
+// was written by hand, and a hand-written count is a claim with no reader — the same defect the
+// gap list itself had, one level up. The figure is now carried as a numeral and read here, so a
+// milestone that changes the block without changing the sentence is refused.
+// -------------------------------------------------------------------------------------------------
+// The sentence is wrapped across two lines, so the match may cross the wrap.
+const COUNT_RE = /\*\*(\d+) milestone numbers have no\s+section at all\*\*/;
+const countRead = COUNT_RE.exec(readme);
+const countNamed = countRead ? Number(countRead[1]) : null;
+ok(`the prose names the size the block actually has (${countNamed === null ? "no count" : countNamed} named, ${treeGaps.length} gap(s) in the tree)`,
+  countNamed !== null && countNamed === treeGaps.length);
+
+// The counter is armed, because a clause that reads a number it never compares would pass on any
+// prose at all: a planted sentence naming a count the tree does not have must be refused, and the
+// reader must see the number it was handed.
+const plantProse = "**7 milestone numbers have no section at all**";
+const plantCount = COUNT_RE.exec(plantProse);
+ok(`the prose reader is armed: a ledger whose prose names a count the tree does not have is refused (planted 7 against a tree of ${treeGaps.length})`,
+  !!plantCount && Number(plantCount[1]) !== treeGaps.length);
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);
