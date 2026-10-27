@@ -2281,6 +2281,14 @@ const en: Dict = {
   "player.valueBoard.colValue": "Value",
   "player.valueBoard.colEfficiency": "Per €M",
   "player.valueBoard.empty": "No players to rank yet.",
+  "nav.poll": "Community Poll",
+  "community.poll.title": "Community poll",
+  "community.poll.question": "Who is your Player of the Season?",
+  "community.poll.hint": "Pick one of the five strongest players to cast your vote.",
+  "community.poll.votedFor": "You voted for {name}.",
+  "community.poll.resultsTitle": "Live results",
+  "community.poll.total": "{n} votes cast.",
+  "community.poll.votes": "{n} votes",
 };
 
 const zhCN: Dict = {
@@ -4450,6 +4458,14 @@ const zhCN: Dict = {
   "player.valueBoard.colValue": "身价",
   "player.valueBoard.colEfficiency": "每百万",
   "player.valueBoard.empty": "暂无可排名的球员。",
+  "nav.poll": "社区投票",
+  "community.poll.title": "社区投票",
+  "community.poll.question": "谁是你心中的赛季最佳球员？",
+  "community.poll.hint": "从五名最强球员中选一位投票。",
+  "community.poll.votedFor": "你投给了 {name}。",
+  "community.poll.resultsTitle": "实时结果",
+  "community.poll.total": "共 {n} 票。",
+  "community.poll.votes": "{n} 票",
 };
 
 const zhTW: Dict = {
@@ -6624,6 +6640,14 @@ const zhTW: Dict = {
   "player.valueBoard.colValue": "身價",
   "player.valueBoard.colEfficiency": "每百萬",
   "player.valueBoard.empty": "尚無可排名的球員。",
+  "nav.poll": "社群投票",
+  "community.poll.title": "社群投票",
+  "community.poll.question": "誰是你心中的賽季最佳球員？",
+  "community.poll.hint": "從五名最強球員中選一位投票。",
+  "community.poll.votedFor": "你投給了 {name}。",
+  "community.poll.resultsTitle": "即時結果",
+  "community.poll.total": "共 {n} 票。",
+  "community.poll.votes": "{n} 票",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

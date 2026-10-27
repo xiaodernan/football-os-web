@@ -504,13 +504,15 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M526: 109 -> 110 — features/manager/SquadPlanning.tsx is resurrected from the drafts.
 // M527: 110 -> 111 — features/tactical/TacticalNotebook.tsx is resurrected from the drafts.
 // M528: 111 -> 112 — features/player/PlayerValueRanking.tsx is resurrected from the drafts.
-const APP_SRC_PIN = 112;
+// M529: 112 -> 113 — features/community/CommunityPoll.tsx is resurrected from the drafts.
+const APP_SRC_PIN = 113;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
 // M527: 54 -> 55 — TacticalNotebook.tsx is the new .tsx module.
 // M528: 55 -> 56 — PlayerValueRanking.tsx is the new .tsx module.
-const TSX_PIN = 56;
+// M529: 56 -> 57 — CommunityPoll.tsx is the new .tsx module.
+const TSX_PIN = 57;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -518,7 +520,8 @@ const TSX_PIN = 56;
 // M526: 112 -> 113, SquadPlanning.tsx again.
 // M527: 113 -> 114, TacticalNotebook.tsx again.
 // M528: 114 -> 115, PlayerValueRanking.tsx again.
-const SRC_PIN = 115;
+// M529: 115 -> 116, CommunityPoll.tsx again.
+const SRC_PIN = 116;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -4271,7 +4274,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M526: SquadPlanning adds its 7 literal t() sites: 1374 -> 1381.
   // M527: TacticalNotebook adds its 16 literal t() sites: 1381 -> 1397.
   // M528: PlayerValueRanking adds its 16 literal t() sites: 1397 -> 1413.
-  shapeCounts.literal === 1413 && shapeCounts.template === 108 && shapeCounts.expression === 32
+  // M529: CommunityPoll adds its 11 literal t() sites: 1413 -> 1424.
+  shapeCounts.literal === 1424 && shapeCounts.template === 108 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4287,7 +4291,7 @@ ok(`a literal wearing backticks is still a literal — check 24 and this census 
 ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
   // M523: 143 -> 146 — the résumé's since/standing/matchN rows each hand over their variables.
   // M525: 146 -> 149 — the report's exported/avgGrowthSub/prospectsSub rows join them.
-  litVarSites === 151 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 154 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));

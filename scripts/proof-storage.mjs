@@ -95,7 +95,8 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // M526: 99 -> 100 — features/manager/SquadPlanning.tsx resurrected from the drafts.
 // M527: 100 -> 101 — features/tactical/TacticalNotebook.tsx resurrected from the drafts.
 // M528: 101 -> 102 — features/player/PlayerValueRanking.tsx resurrected from the drafts.
-const APP_FILES_PIN = 102;
+// M529: 102 -> 103 — features/community/CommunityPoll.tsx resurrected from the drafts.
+const APP_FILES_PIN = 103;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */

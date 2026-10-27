@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M528 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M529 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7093,6 +7093,36 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M529 — a vote that is real: the community poll, seeded and persisted
+
+**What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31**, `proof-app-tree`
+**12/12**, `proof-coverage` **26/26**, `proof-storage` **61/61**, `proof-ids` **15/15**,
+`proof-rng` **55/55**, `proof-vocab` **7/7**, `tsc --noEmit` clean, `npm run build` exit 0, bundle
+**487 → 488 KB** gzip, recorded.
+
+**The draft was another stub, but the capability was missing.** `CommunityPoll.tsx` held one
+hard-coded Chinese question with hand-typed percentages and a "vote again" that just cleared the
+selection. The community board has posts but no voting, so the capability was worth building — on
+real data and the app's doors. The ballot is the **five strongest players** (`byOverall`), their
+sample tallies are seeded off the poll id (`makeRng` / `rngInt`, never the clock or `Math.random`),
+and the reader's own vote is persisted through `useLocalStorage`, so the standing only moves by the
+one vote they cast. Percentages go through `pctLabel` and the bar width through `pctOf` (the
+share-of-a-max door), not a hand-built string, and the total is a `sum` fold, not an inline
+`reduce`.
+
+**What it does.** Before voting: the question and the five candidates as buttons. After voting: the
+tally, each option's share and count, the reader's own choice marked, and a line naming who they
+voted for. Route `/poll`, a sidebar entry, eight keys across en / zh-CN / zh-TW.
+
+**The pins paid.** `APP_SRC_PIN` 112→113, `TSX_PIN` 56→57, `SRC_PIN` 115→116, literal sites
+1413→1424 and `litVarSites` 151→154 in `proof-i18n`; `APP_MODULE_PIN` 107→108 in
+`proof-app-tree`; `POP_PIN` 107→108, `BY_DIR_PIN.features` 33→34 and `DEEP_PIN` 49→50 in
+`proof-coverage`; `APP_FILES_PIN` 102→103 in `proof-storage`.
+
+**Honest reservation.** The sample tallies are synthetic — five seeded numbers standing in for a
+crowd — so the poll is a demonstration of the mechanism, not a real ballot; the demo badge says so.
+A real poll needs other voters, which is a server, which this device-only build does not have.
 
 ### M528 — the third draft, and the first one built on real data: a player value board
 
