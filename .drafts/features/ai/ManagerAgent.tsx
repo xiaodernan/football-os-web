@@ -20,10 +20,10 @@ export function ManagerAgent() {
       playerName: string;
       fromClub: string;
       toClub: string;
-      action: "buy"" | "sell";
+      action: "buy" | "sell";
       fee: number;
       reasoning: string;
-    }> = []);
+    }> = [];
 
     // 逻辑：根据球队当前统计和阵容空缺生成建议
     // 1. 如果进球不足，推荐进攻球员

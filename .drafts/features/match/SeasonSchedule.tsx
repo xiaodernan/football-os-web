@@ -13,9 +13,9 @@ export function SeasonSchedule() {
   const matches = useMemo(() => ([
     { id: "1", homeTeam: "队伍A", awayTeam: "队伍B", date: `${currentYear}-08-08`, time: "19:30", status: "completed" },
     { id: "2", homeTeam: "队伍C", awayTeam: "队伍D", date: `${currentYear}-08-10`, time: "14:00", status: "scheduled" },
-    { id: "3", homeTeam: "队伍E", awayTeam: "队伍F", date: `${currentYear}-08-12", time": "20:00", status: "scheduled" },
-    { id: "4", homeTeam: "队伍G", awayTeam: "队伍H", date: `${currentYear}-08-15", time": "18:00", status: "upcoming" },
-    { id: "5", homeTeam: "队伍I", awayTeam: "队伍J", date: `${currentYear}-08-18", time": "16:00", status: "upcoming" },
+    { id: "3", homeTeam: "队伍E", awayTeam: "队伍F", date: `${currentYear}-08-12`, time: "20:00", status: "scheduled" },
+    { id: "4", homeTeam: "队伍G", awayTeam: "队伍H", date: `${currentYear}-08-15`, time: "18:00", status: "upcoming" },
+    { id: "5", homeTeam: "队伍I", awayTeam: "队伍J", date: `${currentYear}-08-18`, time: "16:00", status: "upcoming" },
   ] as const));
 
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export function SeasonSchedule() {
               size="sm"
               onClick={() => handleSelectMatch(m.id)}
             >
-              {t(`team.${m.homeTeam}`)} vs {t(`team.${m.awayTeam}`)} - {t(`date.${m.date.split("-")[1]})}
+              {t(`team.${m.homeTeam}`)} vs {t(`team.${m.awayTeam}`)} - {t(`date.${m.date.split("-")[1]}`)}
             </Button>
           ))}
         </div>
@@ -67,10 +67,10 @@ export function SeasonSchedule() {
             {t(`team.${match.homeTeam}`)} vs {t(`team.${match.awayTeam}`)}
           </div>
           <div className="text-muted-foreground">
-            {t(`date.${match.date.split("-")[1] + "月" + match.date.split("-")[2] + "日"})}
+            {t(`date.${match.date.split("-")[1] + "月" + match.date.split("-")[2] + "日"}`)}
           </div>
           <div className="text-muted-foreground">
-            {t(`time.${match.time.split(":")[1] + ":00"})}
+            {t(`time.${match.time.split(":")[1] + ":00"}`)}
           </div>
         </Panel>
 

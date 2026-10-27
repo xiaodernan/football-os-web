@@ -22,7 +22,7 @@ export function CoachStatistics() {
       totalWins: c.totalWins,
       totalDraws: c.totalDraws,
       totalLosses: c.totalLosses,
-      winRate: Math.round((c.totalWins / c.totalMatches) * 100) if c.totalMatches > 0 else 0,
+      winRate: c.totalMatches > 0 ? Math.round((c.totalWins / c.totalMatches) * 100) : 0,
       trophies: c.trophies || 0,
     }));
   }, [coaches]);

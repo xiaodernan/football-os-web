@@ -90,7 +90,8 @@ export function NewsArchiveAdvanced() {
               onClick={() => setSelectedImportance("high")}
             >
               {t(`importance.high`, { count: importanceCounts.high })} {t("news.news")}
-          </Button>
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -118,7 +119,7 @@ export function NewsArchiveAdvanced() {
                 <div className="font-medium">{t(`importance.${importance}`)}</div>
                 <div className="text-xs text-muted-foreground">{count} {t("news.news")}</div>
               </div>
-            </div>
+            ))}
           </div>
         </Panel>
       )}

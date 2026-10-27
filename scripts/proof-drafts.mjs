@@ -14,7 +14,8 @@
 //   4. every draft sits at `.drafts/<its original path>`, so a `git mv` restores it exactly;
 //   5. the drafts' own README carries the two mechanisms a resurrector must honour — `git mv` to
 //      restore the path, and `@source not` which keeps the stylesheet from scanning the directory;
-//   6. the drafts that do not parse are measured, named, and may not grow.
+//   6. the drafts that do not parse are measured, named, and may not grow — and at a zero backlog
+//      the reader is armed on a planted broken draft, so "0 broken" is a measurement, not an absence.
 //
 // A live copy of a drafted path is printed, not charged: that is a resurrection in progress, and
 // the `git mv` that finishes it removes the draft. Run: node scripts/proof-drafts.mjs
@@ -165,30 +166,26 @@ ok(`the drafts README carries the resurrection path and the stylesheet exclusion
 //
 // The reader is exercised first, on a fixture: a gate that has only ever reported "clean" has
 // never been seen to refuse anything.
-const BROKEN = [
-  "features/ai/ManagerAgent.tsx",
-  "features/coach/CoachStatistics.tsx",
-  "features/community/AdvancedPluginSystem.tsx",
-  "features/community/DataSync.tsx",
-  "features/manager/SalaryCapAnalysis.tsx",
-  "features/manager/SeasonOps.tsx",
-  "features/manager/SeasonReport.tsx",
-  "features/manager/SquadDepth.tsx",
-  "features/match/SeasonSchedule.tsx",
-  "features/media/MediaLibrary.tsx",
-  "features/news/NewsArchiveAdvanced.tsx",
-  "features/player/ContractPrediction.tsx",
-  "features/player/PlayerContractDetails.tsx",
-];
+const BROKEN = [];
+// M537: the pile parses, so the registry names nothing. A list of thirteen entries against a pile
+// of zero would be thirteen stale claims; a list that grows with the pile proves nothing. The rule
+// the list encodes survives — a draft that starts parsing comes off the list, a new broken draft
+// goes on it, and both totals are bounded.
 // M535: the pile measured 60 broken files and 861 diagnostics when this clause was written. The
 // nine screens and the one tool repaired in the same milestone bring it to 50 and 841.
 // M536: six mechanical families — a bare template attribute, a bare expression attribute, an
 // unterminated `t("key)`, a `.map(…)` whose JSX container was closed by `))`, an interpolation
 // inside a double-quoted attribute, and the `)` the parser itself named — take the pile to 13
-// files and 102 diagnostics. These ceilings are what the next repair has to beat, and they are
-// lowered as the pile shrinks.
-const BROKEN_CEILING = 13;
-const DIAGNOSTIC_CEILING = 102;
+// files and 102 diagnostics.
+// M537: the thirteen that remained were hand-authored one-offs — a Rust-style switch, a
+// Python-style conditional, a stray quote, a mangled date literal, two mismatched closing tags —
+// and each is repaired by hand with a reviewed replacement. The pile is 0 files and 0 diagnostics,
+// so both ceilings are 0.
+//
+// A ceiling of zero only means something if a breach would be caught, so the reader is armed below
+// on a planted broken draft: "0 broken" must be a measurement, not an absence.
+const BROKEN_CEILING = 0;
+const DIAGNOSTIC_CEILING = 0;
 
 const kindOf = (rel) => rel.endsWith(".tsx") ? ts.ScriptKind.TSX : rel.endsWith(".jsx") ? ts.ScriptKind.JSX
   : /\.[mc]?ts$/.test(rel) ? ts.ScriptKind.TS : ts.ScriptKind.JS;
@@ -200,23 +197,49 @@ const parseDiags = (rel, text) => {
 const readerSeesBroken = parseDiags("fixture.ts", "export const x = ( => 1;\n").length > 0;
 const readerSeesClean = parseDiags("fixture.ts", "export const x = (1);\n").length === 0;
 
-const brokenNow = [];
-let diagnosticsNow = 0;
-for (const rel of draftFiles) {
-  const d = parseDiags(rel, readFileSync(join(draftsDir, rel), "utf8"));
-  if (d.length) { brokenNow.push(rel); diagnosticsNow += d.length; }
-}
-brokenNow.sort();
+// The census: read a list of draft-relative paths out of a quarantine directory and report which
+// of them do not parse. The directory is a parameter so the same reader can be armed on a mirror.
+const scan = (baseDir, rels) => {
+  const broken = [];
+  let diagnostics = 0;
+  for (const rel of rels) {
+    const d = parseDiags(rel, readFileSync(join(baseDir, rel), "utf8"));
+    if (d.length) { broken.push(rel); diagnostics += d.length; }
+  }
+  broken.sort();
+  return { broken, diagnostics };
+};
+
+const { broken: brokenNow, diagnostics: diagnosticsNow } = scan(draftsDir, draftFiles);
 
 const registered = new Set(BROKEN);
 const undeclared = brokenNow.filter((p) => !registered.has(p));
 const closed = BROKEN.filter((p) => !existsSync(join(draftsDir, p)));
 const stale = BROKEN.filter((p) => existsSync(join(draftsDir, p)) && !brokenNow.includes(p));
 
-ok(`every draft that does not parse is named in the list (${draftFiles.length} source drafts, ${brokenNow.length} broken, ${diagnosticsNow} diagnostics; ${undeclared.length} unnamed [${undeclared.join(", ")}]; reader armed: broken ${readerSeesBroken}, clean ${readerSeesClean})`,
-  undeclared.length === 0 && readerSeesBroken && readerSeesClean);
-ok(`a registered draft that now parses has come off the list (${stale.length} stale [${stale.join(", ")}]; ${closed.length} closed by a resurrection, reported and not charged)`,
-  stale.length === 0);
+ok(`the registry and the pile agree in both directions (${draftFiles.length} source drafts, ${brokenNow.length} broken, ${diagnosticsNow} diagnostics; ${undeclared.length} unnamed [${undeclared.join(", ")}]; ${stale.length} stale; ${closed.length} closed by a resurrection, reported and not charged; reader armed: broken ${readerSeesBroken}, clean ${readerSeesClean})`,
+  undeclared.length === 0 && stale.length === 0 && readerSeesBroken && readerSeesClean);
+
+// The reader must still find breakage at a zero backlog. The pile alone cannot show that: a census
+// that returned nothing for any reason would read the same. So the same reader is run over a
+// mirror of the quarantine carrying one broken draft and one sound one, and it must name the first
+// and leave the second alone.
+const mirror = mkdtempSync(join(tmpdir(), "drafts-mirror-"));
+let plantedBroken = 0, plantedWrongly = 0;
+try {
+  const mirrorDrafts = join(mirror, ".drafts");
+  mkdirSync(join(mirrorDrafts, "features", "plant"), { recursive: true });
+  writeFileSync(join(mirrorDrafts, "features", "plant", "Broken.tsx"), "export const x = ( => 1;\n");
+  writeFileSync(join(mirrorDrafts, "features", "plant", "Sound.tsx"), "export const x = (1);\n");
+  const seen = scan(mirrorDrafts, ["features/plant/Broken.tsx", "features/plant/Sound.tsx"]);
+  plantedBroken = seen.broken.filter((p) => p === "features/plant/Broken.tsx").length;
+  plantedWrongly = seen.broken.filter((p) => p === "features/plant/Sound.tsx").length;
+} finally {
+  rmSync(mirror, { recursive: true, force: true });
+}
+ok(`the reader still finds breakage with one broken draft planted in a mirror of the quarantine (planted broken ${plantedBroken}, planted sound wrongly broken ${plantedWrongly})`,
+  plantedBroken === 1 && plantedWrongly === 0);
+
 ok(`the backlog may not grow (${brokenNow.length} broken <= ${BROKEN_CEILING}; ${diagnosticsNow} diagnostics <= ${DIAGNOSTIC_CEILING})`,
   brokenNow.length <= BROKEN_CEILING && diagnosticsNow <= DIAGNOSTIC_CEILING);
 

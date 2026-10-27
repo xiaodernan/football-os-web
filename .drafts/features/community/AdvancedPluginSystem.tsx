@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -8,15 +8,18 @@ export function AdvancedPluginSystem() {
   const { t } = useI18n();
 
   // 模拟进阶插件数据
-  const plugins = useMemo(() => [
+  const [plugins, setPlugins] = useState(() => [
     { id: "plugin-1", name: t("plugin.advancedAnalysis"), description: t("plugin.advancedAnalysisDesc"), category: t("plugin.analysis"), active: true, rating: 4.5, downloads: 1250 },
     { id: "plugin-2", name: t("plugin.tacticalAnalysis"), description: t("plugin.tacticalAnalysisDesc"), category: t("plugin.tactical"), active: false, rating: 4.2, downloads: 980 },
     { id: "plugin-3", name: t("player.statTracking"), description: t("player.statTrackingDesc"), category: t("player.stats"), active: true, rating: 4.7, downloads: 2100 },
     { id: "plugin-4", name: t("community.integration"), description: t("community.integrationDesc"), category: t("community"), active: true, rating: 4.8, downloads: 3200 },
-  ], []);
+  ]);
 
-  const activePlugins = useMemo(() => plugins.filter(p => p.active), []);
-  const totalDownloads = useMemo(() => plugins.reduce((sum, p) => sum + p.downloads, 0), []);
+  const activePlugins = useMemo(() => plugins.filter(p => p.active), [plugins]);
+  const totalDownloads = useMemo(() => plugins.reduce((sum, p) => sum + p.downloads, 0), [plugins]);
+
+  const togglePlugin = (id: string) =>
+    setPlugins(prev => prev.map(p => (p.id === id ? { ...p, active: !p.active } : p)));
 
   return (
     <Panel className="p-6">
@@ -72,7 +75,7 @@ export function AdvancedPluginSystem() {
             <div
               key={plugin.id}
               className="border rounded p-2 cursor-pointer hover:bg-primary/5 transition-colors {plugin.active ? 'bg-primary/20 text-primary' : ''}"
-              onClick={() => /* toggle plugin */}
+              onClick={() => togglePlugin(plugin.id)}
             >
               <div>{t(`plugin.${plugin.id}`)}</div>
               <div className="text-xs text-muted-foreground">{plugin.description}</div>

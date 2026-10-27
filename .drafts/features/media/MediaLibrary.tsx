@@ -89,7 +89,7 @@ export function MediaLibrary() {
               <div className="flex-1 flex flex-col justify-between">
                 <div className="font-truncate line-clamp-1">{item.title}</div>
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  {t(`type.${item.type}`)} · {t(`uploaded.${item.uploaded.split("-")[1]})}
+                  {t(`type.${item.type}`)} · {t(`uploaded.${item.uploaded.split("-")[1]}`)}
                 </div>
               </div>
             </div>

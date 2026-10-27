@@ -116,7 +116,7 @@ export function SeasonReport() {
             </div>
           </Panel>
         </div>
-      </div>
+      </Panel>
 
       {/* 联赛积分榜 */}
       <Panel className="p-4">

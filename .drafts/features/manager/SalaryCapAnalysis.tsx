@@ -81,7 +81,7 @@ export function SalaryCapAnalysis() {
           variant={isOverBudget ? "destructive" : "primary"}
         />
         <p className="text-sm text-muted-foreground mb-3">
-          {t("manager.budgetStatusDesc", { rate: complianceRate.toFixed(1) }%}
+          {t("manager.budgetStatusDesc", { rate: complianceRate.toFixed(1) })}
         </p>
       </Panel>
 

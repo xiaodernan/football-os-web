@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M536 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M537 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7095,6 +7095,89 @@ for them; their narrative is a docs debt this sync is not pretending to close, a
 reflects the latest section this file actually carries.
 
 
+
+
+### M537 — the thirteen that no rule could repair, repaired by hand
+
+**What the gauge says.** `scripts/proof-drafts.mjs` **8/8** (the count is unchanged; one clause changed
+and one was added). The quarantine holds **80** source drafts, and it now holds **0** that do not
+parse, with **0** diagnostics between them. When this milestone began the same census read **13**
+broken files and **102** diagnostics: **13** files were repaired by hand and **102** diagnostics left
+the pile. The gate's registry was emptied and its two ceilings were lowered from 13 and 102 to **0**
+and **0** in the same landing, so the ratchet now holds the pile at nothing rather than at thirteen.
+
+**Why they needed a hand.** The thirteen M536 left behind were not families. Each was one author's
+one mistake, and each had to be read as a question — what did this line mean to say? — before it
+could be answered. A rule can repair "a `t("key)` whose closing quote is missing", because the shape
+is the same everywhere and the repair cannot change what the author meant. A rule cannot repair "the
+date literal says `` `${currentYear}-08-12", time": "20:00" ``", because the answer depends on which
+of the two adjacent quotes the author meant to close.
+
+**The rule a hand-repair had to pass.** Three, and the repair script enforces all three rather than
+the author honouring them:
+1. the needle must match **exactly once** in the file — a repair that hit two places, or none, stops
+   the run before a byte is written;
+2. the file's line endings must not be mixed, and the file is written back in the endings it already
+   had, so the write cannot silently re-encode a file the ledger counts in bytes;
+3. after the repair, the same TypeScript parser that reads the pile must report **zero** diagnostics
+   for that file — not fewer. A repair that left a file still broken did not land at all.
+
+**The thirteen, and what each one was.** **28** patches over **13** files, and the **102** diagnostics
+they removed by kind: a stray quote inside a union type (`"buy"" | "sell"`) and a parenthesis that
+closed a `useMemo(` call before the block it opened, both in `ManagerAgent.tsx` (**9**); a
+Python-style conditional in a JavaScript expression, answered with the ternary the author was
+reaching for, in `CoachStatistics.tsx` (**4**); a plugin list held in a `useMemo` whose body the
+author had emptied with a `/* toggle plugin */` comment, answered by making the list state and the
+comment a real `togglePlugin` handler, in `AdvancedPluginSystem.tsx` (**1**); a ternary whose false
+branch lost its closing quote, in `DataSync.tsx` (**3**); a `t()` call closed by `}%` where the
+author meant `%)}`, in `SalaryCapAnalysis.tsx` (**1**); a self-closing element that was never closed,
+in `SeasonOps.tsx` (**1**); a `</div>` where the element the author opened was a `</Panel>`, in
+`SeasonReport.tsx` (**1**); two `t()` interpolations never closed and three doubled braces
+(`{{p.name}[0]}`, `{{p.name}}`, `{{p.overall}}`) where the author meant one, in `SquadDepth.tsx`
+(**5**); three date literals that lost the quote closing the template and the one opening the time,
+plus three template literals never closed, in `SeasonSchedule.tsx` (**30**); a template literal never
+closed, in `MediaLibrary.tsx` (**13**); a conditional never closed and a `.map(…)` whose own
+container was closed by a `</div>`, in `NewsArchiveAdvanced.tsx` (**8**); and a Rust-style `switch`
+expression answered with the descending ternary chain its arms describe, in `ContractPrediction.tsx`
+(**13**) and `PlayerContractDetails.tsx` (**13**).
+
+**A partial repair can make a file worse.** `SeasonSchedule.tsx` is the proof, and it is worth
+keeping because the rule that caught it is the rule this milestone rests on. The first repair removed
+the stray quotes from the three date literals and changed nothing else: the file's diagnostics went
+from **30** to **36**. Closing the three date templates — the real defect, and the one the stray
+quotes were masking — but leaving the other three templates open took it to **33**. Only the
+complete repair reaches **0**. A gate that accepted "fewer diagnostics" would have accepted a file
+that got worse twice; this one accepts only zero, and it is the same parser that reads the pile
+every time the gate runs.
+
+**A rendering that is not byte-accurate.** The stray `)` in `ManagerAgent.tsx` was invisible in the
+rendering this session read the file through: the line appeared as `}> = [];` where the bytes held
+`}> = []);`. That `)` closed the `useMemo(` call before the block it opened, which is why the parser
+complained about the `;` several lines later and not about the `)`. Six minimal reproductions were
+written to test whether the type annotation was itself illegal — it is not, in TSX or in TS. The
+needle rule is what caught it: every repair is matched against raw bytes and must match exactly
+once, so a rendering that cannot be trusted never reaches the file.
+
+**The gate, armed.** The registry is empty, and a belt that scrapes nothing is green for the wrong
+reason, so two things were done. The rule the registry encodes — a draft that now parses comes off
+the list, a new broken draft goes on it — was folded into a single clause that reads the pile and
+the registry in both directions. And the census was made to run over a **mirror** of the quarantine
+with one broken draft planted in it and one sound draft beside it: the reader must name the first
+and leave the second alone. The arm confirms that a breach would be caught: with a syntax defect
+planted in one draft, the gate exits **1** with both the registry clause and the ceiling clause
+red, and the tree is byte-identical afterwards (a SHA-256 of the file before and after).
+
+**Honest reservation.** This milestone made thirteen files parse. It did not make them correct, and
+it does not claim to: a draft that parses may still import a module that is itself quarantined, miss
+a type, read a `t()` key no locale carries, or interpolate a value into a `className` that no
+attribute ever reads. The layer beneath syntax is untouched, and it is the next thing the pile needs
+— a census that reads the drafts the way this one does, but asks what the types say rather than
+whether the tokens parse. Until that census exists, the honest statement is that the quarantine's
+**syntax** backlog is closed and nothing else about it is.
+
+**One coupling worth naming.** The gaps block still carries **M534**: the concurrent line of work
+has that number in flight, and by the ledger's own arithmetic a number between the oldest and the
+newest heading with no section of its own is a gap until it lands one.
 
 ### M536 — the quarantine's parse backlog, repaired family by family
 

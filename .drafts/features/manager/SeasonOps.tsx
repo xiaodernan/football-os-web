@@ -80,6 +80,7 @@ export function SeasonOps() {
             title={t("manager.totalMembers")}
             value={opsData.totalMembers.toString()}
             subtitle={t("manager.total")}
+            />
         </div>
       </Panel>
     </Panel>

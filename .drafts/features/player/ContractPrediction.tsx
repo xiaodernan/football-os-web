@@ -66,12 +66,11 @@ export function ContractPrediction() {
 
   const probabilityClass = renewalProbability > 70 ? "primary" : renewalProbability > 40 ? "warning" : "destructive";
 
-  const renewalTiming = yearsUntilExpiry switch {
-    > 3 => t("player.renewalLongTerm"),
-    > 1 => t("player.renewalMediumTerm"),
-    > 0 => t("player.renewalImmediate"),
-    default => t("player.renewalShortTerm"),
-  };
+  const renewalTiming =
+    yearsUntilExpiry > 3 ? t("player.renewalLongTerm")
+    : yearsUntilExpiry > 1 ? t("player.renewalMediumTerm")
+    : yearsUntilExpiry > 0 ? t("player.renewalImmediate")
+    : t("player.renewalShortTerm");
 
   if (yearsUntilExpiry > 3) {
     return (

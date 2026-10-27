@@ -48,7 +48,7 @@ export function DataSync() {
           title={t("community.isSyncing")}
           value={syncStatus.isSyncing ? t("community.syncing") : t("community.idle")}
           subtitle={t("community.syncStatus")}
-          variant={syncStatus.isSyncing ? "destructive" : "primary}
+          variant={syncStatus.isSyncing ? "destructive" : "primary"}
         />
       </div>
 

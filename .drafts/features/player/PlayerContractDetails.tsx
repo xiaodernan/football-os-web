@@ -60,12 +60,11 @@ export function PlayerContractDetails() {
   }, []);
 
   // 合同状态
-  const contractStatus = yearsLeft switch {
-    > 2 => "长期合同",
-    > 1 => "中期合同",
-    > 0 => "最后赛季",
-    default => "已自由身",
-  };
+  const contractStatus =
+    yearsLeft > 2 ? "长期合同"
+    : yearsLeft > 1 ? "中期合同"
+    : yearsLeft > 0 ? "最后赛季"
+    : "已自由身";
 
   // 年薪
   const weeklyWage = useMemo(() => Math.floor(p.marketValue * 0.001), [p.marketValue]);

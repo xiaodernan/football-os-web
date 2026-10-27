@@ -36,9 +36,9 @@ export function SquadDepth() {
 
   const formationDiff = useMemo(() => {
     if (avgStartingXI > avgSubstitutes) {
-      return `${t("manager.betterDepth", { diff: (avgStartingXI - avgSubstitutes).toFixed(1) }}`;
+      return `${t("manager.betterDepth", { diff: (avgStartingXI - avgSubstitutes).toFixed(1) })}`;
     } else {
-      return `${t("manager.shallowerDepth", { diff: (avgSubstitutes - avgStartingXI).toFixed(1) }}`;
+      return `${t("manager.shallowerDepth", { diff: (avgSubstitutes - avgStartingXI).toFixed(1) })}`;
     }
   }, [avgStartingXI, avgSubstitutes]);
 
@@ -119,14 +119,14 @@ export function SquadDepth() {
               >
                 <div className="w-full h-16 rounded-md overflow-hidden bg-gray-200">
                   <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white text-sm">
-                    {{p.name}[0]}
+                    {p.name[0]}
                   </div>
                 </div>
                 <div className="text-center text-xs font-medium mt-1">
-                  {{p.name}}
+                  {p.name}
                 </div>
                 <div className="text-right text-xs text-muted-foreground">
-                  {{p.overall}}★
+                  {p.overall}★
                 </div>
               </div>
             ))}
