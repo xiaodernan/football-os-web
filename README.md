@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M530 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M531 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7093,6 +7093,42 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M531 — two clubs side by side: a comparison the player board could not answer
+
+**What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31**, `proof-app-tree`
+**12/12**, `proof-coverage` **26/26**, `proof-storage` **61/61**, `proof-money` **10/10**,
+`proof-absent-glyph` **12/12**, `proof-maxby` **8/8**, `proof-sum` **9/9**, `tsc --noEmit` clean,
+`npm run build` exit 0, bundle **491 → 493 KB** gzip, recorded.
+
+**Why not another draft.** The remaining `.drafts` were checked first: the finance and sync drafts
+import `@/domain/finance` / `@/domain/sync` (neither exists), the squad-depth draft is a near-copy of
+M526's SquadPlanning, and the news/academy/media drafts overlap screens already shipped — and a
+finance model over this dataset would be absurd anyway (the seed's squads run to €1.8B and players
+to €400M, so any wage bill derived from them swamps revenue). So this unit adds the one comparison
+the app could not do: `/compare` compares *players* and the competition table compares *points*;
+nothing compared two **clubs** as squads.
+
+**What it does.** Pick two clubs; see squad size, average overall, squad value, average age, the top
+player and recent form (last five results as W/D/L chips) with a form-points tally, the stronger side
+highlighted per row. It reads only real data — `playersByClub`, `meanOverall`, `sum`, `maxBy`,
+`recentMatchesForClub`, `fmtMoney` — and derives form by comparing each finished match's goals from
+the right side of the fixture.
+
+**The doors it had to use.** `sum` for squad value, age total and form points (no inline `reduce`);
+`maxBy` for the top player (no inline argmax); `fmtMoney` for value; `ABSENT` for a missing top
+player (no bare em dash); `meanOverall` for the average (no `b.overall - a.overall`). Each of those
+is a proof that reddened on the first draft of this file and was paid here.
+
+**The pins paid.** `APP_SRC_PIN` 114→115, `TSX_PIN` 58→59, `SRC_PIN` 117→118, literal sites
+1439→1457, the duplicate-value / excess-key counts 124→125 and 206→210 in `proof-i18n`;
+`APP_MODULE_PIN` 109→110 in `proof-app-tree`; `POP_PIN` 109→110, `BY_DIR_PIN.features` 35→36 and
+`DEEP_PIN` 51→52 in `proof-coverage`; `APP_FILES_PIN` 104→105 in `proof-storage`; the ABSENT user
+set 20→21 (ClubCompare, two uses) and the money readers 12→13.
+
+**Honest reservation.** "Stronger side" is a per-metric comparison, not a verdict on who would win —
+a richer squad with better form can still lose, which is the whole point of the match engine. The
+form strip reads finished fixtures only; a club with none shows the absent marker, not a blank.
 
 ### M530 — availability on real engine data: who can play this week
 

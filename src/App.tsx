@@ -44,6 +44,7 @@ const TacticalNotebook = lazy(() => import("@/features/tactical/TacticalNotebook
 const PlayerValueRanking = lazy(() => import("@/features/player/PlayerValueRanking").then((m) => ({ default: m.PlayerValueRanking })));
 const CommunityPoll = lazy(() => import("@/features/community/CommunityPoll").then((m) => ({ default: m.CommunityPoll })));
 const InjuryReport = lazy(() => import("@/features/injury/InjuryReport").then((m) => ({ default: m.InjuryReport })));
+const ClubCompare = lazy(() => import("@/features/compare/ClubCompare").then((m) => ({ default: m.ClubCompare })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
@@ -121,6 +122,7 @@ function Routes() {
   else if (path === "/value") inner = <PlayerValueRanking />;
   else if (path === "/poll") inner = <CommunityPoll />;
   else if (path === "/injuries") inner = <InjuryReport />;
+  else if (path === "/club-compare") inner = <ClubCompare />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 

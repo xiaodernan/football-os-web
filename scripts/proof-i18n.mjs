@@ -506,7 +506,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M528: 111 -> 112 — features/player/PlayerValueRanking.tsx is resurrected from the drafts.
 // M529: 112 -> 113 — features/community/CommunityPoll.tsx is resurrected from the drafts.
 // M530: 113 -> 114 — features/injury/InjuryReport.tsx is resurrected from the drafts.
-const APP_SRC_PIN = 114;
+// M531: 114 -> 115 — features/compare/ClubCompare.tsx is a new comparison screen.
+const APP_SRC_PIN = 115;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -514,7 +515,8 @@ const APP_SRC_PIN = 114;
 // M528: 55 -> 56 — PlayerValueRanking.tsx is the new .tsx module.
 // M529: 56 -> 57 — CommunityPoll.tsx is the new .tsx module.
 // M530: 57 -> 58 — InjuryReport.tsx is the new .tsx module.
-const TSX_PIN = 58;
+// M531: 58 -> 59 — ClubCompare.tsx is the new .tsx module.
+const TSX_PIN = 59;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -524,7 +526,8 @@ const TSX_PIN = 58;
 // M528: 114 -> 115, PlayerValueRanking.tsx again.
 // M529: 115 -> 116, CommunityPoll.tsx again.
 // M530: 116 -> 117, InjuryReport.tsx again.
-const SRC_PIN = 117;
+// M531: 117 -> 118, ClubCompare.tsx again.
+const SRC_PIN = 118;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -3061,8 +3064,9 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M527: TacticalNotebook's 16 new keys add 4 duplicate values and 4 excess keys (114->118, 190->194).
 // M528: PlayerValueRanking's 15 keys add 6 excess keys (194->200).
 // M530: InjuryReport's 13 keys add 6 duplicate values and 6 excess keys (118->124, 200->206).
-const DUP_VALUES_PIN = 124;
-const DUP_EXCESS_KEYS_PIN = 206;
+// M531: ClubCompare's 16 keys add 1 duplicate value and 4 excess keys (124->125, 206->210).
+const DUP_VALUES_PIN = 125;
+const DUP_EXCESS_KEYS_PIN = 210;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4280,7 +4284,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M528: PlayerValueRanking adds its 16 literal t() sites: 1397 -> 1413.
   // M529: CommunityPoll adds its 11 literal t() sites: 1413 -> 1424.
   // M530: InjuryReport adds its 15 literal t() sites: 1424 -> 1439.
-  shapeCounts.literal === 1439 && shapeCounts.template === 108 && shapeCounts.expression === 32
+  // M531: ClubCompare adds its 18 literal t() sites: 1439 -> 1457.
+  shapeCounts.literal === 1457 && shapeCounts.template === 108 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
