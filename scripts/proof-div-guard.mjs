@@ -101,7 +101,9 @@ const callCounts = Object.fromEntries(CONSUMERS.map((f) => [f, count(src[f], CAL
 const totalCalls = Object.values(callCounts).reduce((s, n) => s + n, 0);
 ok(`all ${CONSUMERS.length} consumers hand-stitch nothing and read the door (plain guards ${consumerPlain}, importers ${importing.length}/${CONSUMERS.length}, per-file calls ${Object.entries(callCounts).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}; planted reads ${plantDiv})`,
   consumerPlain === 0 && plantDiv === 1 && importing.length === CONSUMERS.length
-  && totalCalls === 6 && callCounts["domain/career.ts"] === 1 && callCounts["domain/worldEngine.ts"] === 1
+  // M525: the season report measures growth three more times through the door, so the
+  // census pays here: worldEngine 1 -> 4, total 6 -> 9.
+  && totalCalls === 9 && callCounts["domain/career.ts"] === 1 && callCounts["domain/worldEngine.ts"] === 4
   && callCounts["domain/playerDna.ts"] === 1
   && callCounts["features/tactical/TacticalStudio.tsx"] === 2 && callCounts["features/ai/AiStudio.tsx"] === 1);
 

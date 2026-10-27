@@ -7,20 +7,23 @@ import { footballProvider } from "@/data/footballService";
 
 export function CoachStatistics() {
   const { t } = useI18n();
-  const coaches = useMemo(() => footballProvider.coaches ? footballProvider.coaches() : [], []);
+  const coaches = useMemo(() => footballProvider.coaches(), []);
+
   const [selectedCoach, setSelectedCoach] = useState<string | null>(null);
 
   const coachData = useMemo(() => {
     return coaches.map(c => ({
       id: c.id,
       name: c.name,
-      totalMatches: c.totalMatches || 0,
-      wins: c.wins || 0,
-      draws: c.draws || 0,
-      losses: c.losses || 0,
-      winRate: c.winRate || 0,
-      avgGoalsFor: c.avgGoalsFor || 0,
-      avgGoalsAgainst: c.avgGoalsAgainst || 0,
+      nationality: c.nationality,
+      age: c.age,
+      yearsAtClub: c.yearsAtClub,
+      totalMatches: c.totalMatches,
+      totalWins: c.totalWins,
+      totalDraws: c.totalDraws,
+      totalLosses: c.totalLosses,
+      winRate: Math.round((c.totalWins / c.totalMatches) * 100) if c.totalMatches > 0 else 0,
+      trophies: c.trophies || 0,
     }));
   }, [coaches]);
 
@@ -36,7 +39,7 @@ export function CoachStatistics() {
           {t("coach.selectCoachToViewStats")}
         </p>
         <div className="grid grid-cols-2 gap-3">
-          {coaches.slice(0, 6).map(c => (
+          {coachData.slice(0, 6).map(c => (
             <Button
               key={c.id}
               variant="outline"
@@ -51,76 +54,100 @@ export function CoachStatistics() {
     );
   }
 
-  const coach = coachData.find(c => c.id === selectedCoach)!;
-  const winRatePercent = coach.winRate * 100;
-  const gamesPlayed = coach.totalMatches;
-  const winGames = coach.wins;
-  const drawGames = coach.draws;
-  const lossGames = coach.losses;
-  const goalsForAvg = coach.avgGoalsFor.toFixed(1);
-  const goalsAgainstAvg = coach.avgGoalsAgainst.toFixed(1);
+  const c = coachData.find(pl => pl.id === selectedCoach)!;
+
+  // 执教战绩统计
+  const matchesPlayed = c.totalMatches;
+  const matchesWon = c.totalWins;
+  const matchesDrawn = c.totalDraws;
+  const matchesLost = c.totalLosses;
+  const winRate = Math.round((matchesWon / matchesPlayed) * 100);
+
+  // 获得的荣誉
+  const trophyLevels = useMemo(() => {
+    const levels: Record<string, number> = {};
+    for (let i = 0; i < c.trophies; i++) {
+      const level = t(`trophy.level.${i}`) || "unknown";
+      trophyLevels[level] = (trophyLevels[level] || 0) + 1;
+    }
+    return trophyLevels;
+  }, [c.trophies]);
 
   return (
     <Panel className="p-6">
       <SectionTitle title={t("coach.coachStatisticsTitle")} />
-      
+
       {/* 执教概览 */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
-          title={t("coach.totalGames")}
-          value=gamesPlayed.toLocaleString()
-          subtitle={t("coach.games")}
+          title={t("coach.totalMatches")}
+          value=c.totalMatches.toString()
+          subtitle={t("coach.matchesCoached)}
         />
         <StatTile
           title={t("coach.winRate")}
-          value=`${winRatePercent.toFixed(1)}%`
-          subtitle={t("coach.winRateDesc")}
-          variant="primary"
+          value=`${winRate}%`
+          subtitle={t("coach.winRateDesc)}
+          variant={winRate > 60 ? "primary" : winRate > 40 ? "warning" : "destructive"}
         />
         <StatTile
-          title={t("coach.goalsForAvg")}
-          value=`${goalsForAvg} ${t("goalsPerGame")}`
-          subtitle={t("coach.averageGoalsFor")}
+          title={t("coach.trophiesWon")}
+          value=c.trophies.toString()
+          subtitle={t("coach.honours)}
         />
         <StatTile
-          title={t("coach.goalsAgainstAvg")}
-          value=`${goalsAgainstAvg} ${t("goalsPerGame")}`
-          subtitle={t("coach.averageGoalsAgainst")}
+          title={t("coach.yearsAtClub")}
+          value=`${c.yearsAtClub}年`
+          subtitle={t("coach.coachAtClub)}
         />
       </div>
 
-      {/* 战绩明细 */}
+      {/* 战绩详情 */}
       <Panel className="p-4 mb-6">
-        <SectionTitle title={t("coach.record")} />
+        <SectionTitle title={t("coach.matchResults")} />
         <div className="grid grid-cols-3 gap-3">
-          <StatTile title={t("coach.wins")} value={winGames.toLocaleString()} subtitle={t("coach.wins")} />
-          <StatTile title={t("coach.draws")} value=drawGames.toLocaleString() subtitle={t("coach.draws")} />
-          <StatTile title={t("coach.losses")} value=lossGames.toLocaleString() subtitle={t("coach.losses")} />
+          <div className="border rounded p-3 text-center">
+            <div className="font-medium text-primary">胜</div>
+            <div className="text-3xl font-bold text-green-600">{c.totalWins}</div>
+          </div>
+          <div className="border rounded p-3 text-center">
+            <div className="font-medium text-warning">平</div>
+            <div className="text-3xl font-bold text-yellow-600">{c.totalDraws}</div>
+          </div>
+          <div className="border rounded p-3 text-center">
+            <div className="font-medium text-danger">负</div>
+            <div className="text-3xl font-bold text-red-600">{c.totalLosses}</div>
+          </div>
         </div>
       </Panel>
 
-      {/* 进球数据 */}
+      {/* 荣誉列表 */}
+      {c.trophies > 0 && (
+        <Panel className="p-4">
+          <SectionTitle title={t("coach.trophyList")} />
+          <div className="grid grid-cols-2 gap-3">
+            {Object.entries(trophyLevels).map(([level, count]) => (
+              <div
+                key={level}
+                className="border rounded p-2 text-center"
+              >
+                <div className="font-medium">{t(`trophy.${level}`)}</div>
+                <div className="text-sm text-muted-foreground">{count}座</div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      )}
+
+      {/* 执教风格/偏好 */}
       <Panel className="p-4">
-        <SectionTitle title={t("coach.goalStatistics")} />
-        <p className="text-sm text-muted-foreground mb-3">
-          {t("coach.goalsStatisticsDesc")}
+        <SectionTitle title={t("coach.coachingStyle")} />
+        <p className="text-sm text-muted-foreground">
+          {t("coach.formationPreference", { formation: t(`formation.${c.preferredFormation}`) })}
         </p>
-        <div className="grid grid-cols-2 gap-3">
-          <StatTile title={t("coach.goalsFor")} value={goalsForAvg} subtitle={t("goalsFor")} />
-          <StatTile title={t("coach.goalsAgainst")} value={goalsAgainstAvg} subtitle={t("goalsAgainst")} />
-        </div>
-      </Panel>
-
-      {/* 选换教练 */}
-      <Panel className="p-4">
-        <SectionTitle title={t("coach.selectAnotherCoach")} />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setSelectedCoach(null)}
-        >
-          {t("coach.selectAnotherCoach")}
-        </Button>
+        <p className="text-sm text-muted-foreground mt-2">
+          {t("coach.tacticalApproach", { approach: t(`tactical.${c.tacticalApproach}`) })}
+        </p>
       </Panel>
     </Panel>
   );

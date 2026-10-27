@@ -3042,8 +3042,9 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M453: the career screen's keys raised the measured counts by their own amount — the pins are
 // ratchets, so a milestone that ADDS keys pays here in the same commit (107->109, 177->180).
 // M523: the coach résumé's 40 keys per locale pay their own toll (109->113, 180->189).
-const DUP_VALUES_PIN = 113;
-const DUP_EXCESS_KEYS_PIN = 189;
+// M525: the season report's rows pay theirs (113->114, 189->190).
+const DUP_VALUES_PIN = 114;
+const DUP_EXCESS_KEYS_PIN = 190;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4255,7 +4256,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // (the course/injury/attr.name interpolations) — the shapes census pays in the same commit.
   // M523: the coach résumé lands 37 literal sites and 3 template sites (the badge-name
   // interpolations) — the shapes census pays in the same commit: 1317 -> 1354, 105 -> 108.
-  shapeCounts.literal === 1354 && shapeCounts.template === 108 && shapeCounts.expression === 32
+  // M525: the season report panel adds 20 more literal sites: 1354 -> 1374.
+  shapeCounts.literal === 1374 && shapeCounts.template === 108 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4270,7 +4272,8 @@ ok(`a literal wearing backticks is still a literal — check 24 and this census 
 // course-copy rows); each adds a literal site, so the pin pays once for all six: 137 -> 143.
 ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
   // M523: 143 -> 146 — the résumé's since/standing/matchN rows each hand over their variables.
-  litVarSites === 146 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M525: 146 -> 149 — the report's exported/avgGrowthSub/prospectsSub rows join them.
+  litVarSites === 149 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));

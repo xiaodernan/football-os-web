@@ -31,6 +31,7 @@ const SPLITS = {
   fatigue: "a bare integer inside a rationale row (pct) beside a labelled metric (pctLabel)",
   scanTrend: "a raw sign that follows the number (signed) beside the padded fixed-two-decimal cell (signed2)",
   skill: "a fraction shown as a decimal (fmt2) beside the same scale as a percentage (pct)",
+  marketGrowth: "the run's market movement as a bare integer inside an evidence row (pct) beside the labelled tile (pctLabel)",
 };
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>

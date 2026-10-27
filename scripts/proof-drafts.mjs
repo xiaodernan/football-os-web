@@ -1,4 +1,4 @@
-// M523: the drafts are one-way, and this gate keeps them that way.
+// M525: the drafts are one-way, and this gate keeps them that way.
 //
 // M522 moved 61 files the app never loaded into `.drafts/`, because a dot-prefixed name is not
 // shipped (`scripts/lib/appTree.mjs`). That rule has two halves, and until now only one of them was

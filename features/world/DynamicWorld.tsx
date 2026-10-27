@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { positionLabel } from "@/domain/rowText";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
-import { fmtMoney } from "@/lib/utils";
-import { runWorld, seasonLabel, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
+import { fmtMoney, pctLabel, signed, ABSENT } from "@/lib/utils";
+import { runWorld, seasonLabel, buildSeasonReport, seasonReportPayload, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
 import { sum, last } from "@/domain/attributes";
+import { rowLine } from "@/domain/rowText";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
@@ -67,6 +69,28 @@ export function DynamicWorld() {
 
   const latest: SeasonStep | undefined = snapshot ? last(snapshot.history) : undefined;
   const history: SeasonStep[] = snapshot?.history ?? [];
+  // M525: the whole-run report, read from the same snapshot the panels above render —
+  // one simulation, one set of numbers.
+  const report = useMemo(
+    () => (snapshot && snapshot.history.length ? buildSeasonReport(base, snapshot) : null),
+    [base, snapshot],
+  );
+
+  const exportReport = useCallback(() => {
+    if (!snapshot) return;
+    const payload = seasonReportPayload(base, snapshot);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `season-report-${elapsed}s.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success(t("world.report.exported", { seasons: elapsed }));
+  }, [snapshot, base, elapsed, t]);
+
   const avgNow = latest?.avgOverall ?? round1(sum(base.players, (p) => p.overall) / base.players.length);
   const marketNow = latest?.marketTotal ?? sum(base.players, (p) => p.value);
 
@@ -213,6 +237,80 @@ export function DynamicWorld() {
               <p className="text-sm text-muted-foreground">{t("world.history.empty")}</p>
             )}
           </Panel>
+
+          {report && (
+            <Panel className="p-4 lg:col-span-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <SectionTitle title={t("world.report.title")} hint={t("world.report.hint")} />
+                <Button variant="outline" size="sm" onClick={exportReport}>
+                  {t("world.report.export")}
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <StatTile
+                  label={t("world.report.dynastyWord")}
+                  value={report.dynasties[0]?.titles ?? 0}
+                  sub={report.dynasties[0]?.clubName ?? t("world.report.noDynasty")}
+                />
+                <StatTile
+                  label={t("world.report.retiredWord")}
+                  value={report.totalRetired}
+                  sub={t("world.report.prospectsSub", { n: report.totalProspects })}
+                />
+                <StatTile
+                  label={t("world.report.riseWord")}
+                  value={report.rise ? signed(report.rise.delta) : ABSENT}
+                  sub={report.rise?.name}
+                  tone={report.rise ? "up" : "neutral"}
+                />
+                <StatTile
+                  label={t("world.report.fallWord")}
+                  value={report.fall ? signed(report.fall.delta) : ABSENT}
+                  sub={report.fall?.name}
+                  tone={report.fall ? "down" : "neutral"}
+                />
+                <StatTile
+                  label={t("world.report.marketGrowth")}
+                  value={pctLabel(report.marketGrowth)}
+                  sub={t("world.report.avgGrowthSub", { n: signed(report.avgGrowth) })}
+                />
+              </div>
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                      <th className="py-1 pr-3 font-medium">{t("world.report.th.season")}</th>
+                      <th className="py-1 pr-3 font-medium">{t("world.report.th.topPoints")}</th>
+                      <th className="py-1 pr-3 font-medium">{t("world.report.th.risers")}</th>
+                      <th className="py-1 pr-3 font-medium">{t("world.report.th.fallers")}</th>
+                      <th className="py-1 pr-3 font-medium">{t("world.report.th.prospects")}</th>
+                      <th className="py-1 pr-3 font-medium">{t("world.report.th.retired")}</th>
+                      <th className="py-1 font-medium">{t("world.report.th.marketStep")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.rows.map((r) => (
+                      <tr key={r.index} className="border-t border-border/40">
+                        <td className="py-1.5 pr-3 font-mono text-xs text-muted-foreground">{r.label}</td>
+                        <td className="py-1.5 pr-3 tabular-nums">{r.topPoints}</td>
+                        <td className="py-1.5 pr-3 tabular-nums">{r.risers}</td>
+                        <td className="py-1.5 pr-3 tabular-nums">{r.fallers}</td>
+                        <td className="py-1.5 pr-3 tabular-nums">{r.prospectCount}</td>
+                        <td className="py-1.5 pr-3 tabular-nums">{r.retiredCount}</td>
+                        <td className="py-1.5 tabular-nums">{r.index === 1 ? ABSENT : pctLabel(r.marketStep)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <ul className="mt-3 space-y-0.5 text-[11px] text-muted-foreground">
+                {report.evidence.map((e, i) => <li key={i}>› {rowLine(e, t)}</li>)}
+              </ul>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">
+                {t("common.sources")}: {report.sources.map((src) => rowLine(src, t)).join(" · ")}
+              </p>
+            </Panel>
+          )}
         </div>
       )}
 

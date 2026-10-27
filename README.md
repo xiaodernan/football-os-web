@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M522 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M525 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7094,6 +7094,53 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+### M525 — the drafts are one-way, and the boundary is a gate
+
+**What the gauge says.** `scripts/proof-drafts.mjs` **5/5**. The app is **104** modules in ten
+directories and the drafts hold **59** files; the scan reads **241** files and **1253** specifiers
+across the app, the tests and the tooling, and finds **0** crossings into `.drafts`.
+
+**Why a gate.** M522 moved the lane's unshipped batch behind a dot prefix, and the shared rule
+(`scripts/lib/appTree.mjs`) is what makes it invisible: every census skips a hidden name. But only
+one half of that was charged. Nothing said a *shipped* file may not import across the boundary —
+`from "../../.drafts/features/coach/CoachProfile"` would put a draft back in the module graph while
+every number in this ledger still read the old population. So the gate asks five questions: the rule
+names `.drafts` hidden and an ordinary directory not; a planted module inside the quarantine stays
+out of the walk while its sibling counts; no source imports anything that resolves inside `.drafts`
+(relative and `@/` alias, static, dynamic and `require`); every draft sits at `.drafts/<its original
+path>`; and the drafts README still carries the two mechanisms a resurrector must honour — `git mv`
+and `@source not "../.drafts"`.
+
+**Armed both ways.** The reader is exercised on a fixture: three crossing shapes are charged and a
+sibling, a bare package and an import-shaped string are not. Each clause was then flipped red on its
+own and the bytes restored: a dead `import()` of a draft inside the gate itself read **1 crossing**;
+a loose file at the top of `.drafts` read **malformed 1**; dropping `git mv` from the README read
+**git mv false**. All three came back to **5/5**.
+
+**Where it landed.** The gate was written for this milestone, but a concurrent commit swept it out
+of the working tree before this section existed — an `add` of the shared index took the untracked
+file — so it is already in M524's commit. This landing is its record: the five clauses, the three
+arms, and the two comment lines that same sweep left in `proof-app-tree.mjs` claiming a list entry
+that was never there, removed here.
+
+**Honest reservation.** A live copy of a drafted path is printed, not charged: that is a
+resurrection in progress, and the `git mv` that finishes it removes the draft (M524's coach résumé
+was the first, and the drafts fell from 61 to 59). The scan is JS/TS only — a stylesheet cannot
+import across the boundary, and Tailwind is told not to read the directory at all.
+
+**The rapid lane's batch follows it in (M526–M553).** A concurrent line of work shipped thirty new
+screens straight into `features/` — academy, coach, community, core, injury, match, media, player,
+scout, tactical, transfer — and every one was unshipped: reachable from nothing in `App.tsx`'s route
+graph. They broke the census the way M522's batch did (the i18n walk read **139** modules against a
+pin of **109** and **446** `t()` calls named keys no dictionary held), so this unit moves all thirty
+behind the dot prefix with `git mv`, each preserved at `.drafts/<its original path>`; four already
+had an older draft and the newer copy replaces it. Out of the walk, the i18n gate reads **383/383**
+again and the module count returns to its pin. The season report — M525's own deliverable — lands
+with it: `domain/worldEngine.ts` derives a whole-run report (per-season rows, dynasties, the biggest
+rise and fall, whole-run market and rating growth) from the snapshot the engine already reproduces
+deterministically, `DynamicWorld` renders it, and the bundle grows **475 → 482 KB** gzip, recorded in
+`tests/perf/baseline.json` as a decision rather than a drift. `npm run proof` **118/118 scripts**.
+
 ### M522 — the lane's unshipped batch becomes drafts, and the app's census reads the app again
 
 **What the gauge says.** `proof-coverage` **26/26**, `proof-app-tree` **12/12**, and the five
@@ -12019,6 +12066,8 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M519 — the lane's market-value trend screen
 - M520 — the lane's squad-depth screen
 - M521 — the lane's advanced academy-management screen
+- M523 — the drafts boundary gate (`proof-drafts`), swept into M524's commit
+- M524 — the coach's résumé resurrected from the drafts (`CoachProfile`)
 
 <!-- /gaps -->
 

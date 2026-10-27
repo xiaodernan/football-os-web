@@ -11,9 +11,10 @@
 // regeneration and a simulated league champion.
 
 import { makeRng, rngInt, rngFloat, pick } from "@/lib/rng";
-import { clamp, indexById, safeDiv } from "@/lib/utils";
+import { clamp, indexById, safeDiv, pct } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
-import { POSITION_BY_GROUP, POSITION_GROUPS, marketValue, capRound, sum, headroomOf } from "@/domain/attributes";
+import { POSITION_BY_GROUP, POSITION_GROUPS, marketValue, capRound, sum, headroomOf, last } from "@/domain/attributes";
+import type { RowText } from "@/domain/rowText";
 import type { Club, Competition, PlayerRef, PositionCode, PositionGroup } from "@/domain/types";
 
 const BASE_START_YEAR = 2026; // base season is 2026/27
@@ -240,6 +241,144 @@ export function runWorld(base: WorldInput, seasonsElapsed: number): WorldSnapsho
     history.push(step);
   }
   return { players, seasonsElapsed, history };
+}
+
+// ─── M525: the season report ────────────────────────────────────────────────────
+// The history panel answers "what happened last season?"; the report answers "what has
+// the whole run done so far?". Like the résumé, it is DERIVED — every figure is read
+// out of the snapshot the engine already reproduces deterministically, so a report
+// exported from this device reconciles line for line with the screen beside it.
+
+export interface SeasonReportRow {
+  index: number;
+  label: string;
+  topPoints: number; // the strongest champion's points that season
+  risers: number;
+  fallers: number;
+  prospectCount: number;
+  retiredCount: number;
+  avgOverall: number;
+  marketTotal: number;
+  /** Fraction the tracked market moved against the previous season (0 for the first). */
+  marketStep: number;
+}
+
+export interface DynastyRow {
+  clubId: string;
+  clubName: string;
+  compName: string;
+  titles: number;
+}
+
+export interface SeasonReport {
+  rows: SeasonReportRow[];
+  /** Clubs that kept or regained a title, strongest hold first. */
+  dynasties: DynastyRow[];
+  rise: { name: string; clubId: string; from: number; to: number; delta: number; season: string } | null;
+  fall: { name: string; clubId: string; from: number; to: number; delta: number; season: string } | null;
+  totalRetired: number;
+  totalProspects: number;
+  /** Whole-run market growth against the base dataset, as a fraction. */
+  marketGrowth: number;
+  /** Whole-run movement of the squad's mean overall, in rating points. */
+  avgGrowth: number;
+  evidence: RowText[];
+  sources: RowText[];
+}
+
+const byDeltaDesc = (a: PlayerChange, b: PlayerChange): number => b.delta - a.delta || b.to - a.to;
+
+/** Read the whole simulated run into one report. `base` supplies the market and rating
+ *  baselines the growth figures are measured against; both grow only through the engine's
+ *  own steps, so the growth is the run's, not the clock's. */
+export function buildSeasonReport(base: WorldInput, snapshot: WorldSnapshot): SeasonReport {
+  const baseMarket = sum(base.players, (p) => p.value);
+  const baseAvg = safeDiv(sum(base.players, (p) => p.overall), base.players.length);
+
+  const rows: SeasonReportRow[] = [];
+  const titleCounts = new Map<string, DynastyRow>();
+  let rise: SeasonReport["rise"] = null;
+  let fall: SeasonReport["fall"] = null;
+  let totalRetired = 0;
+  let totalProspects = 0;
+
+  for (const step of snapshot.history) {
+    const prev = last(rows);
+    rows.push({
+      index: step.index,
+      label: step.label,
+      topPoints: step.champions.reduce((top, c) => Math.max(top, c.points), 0),
+      risers: step.developments.length,
+      fallers: step.declines.length,
+      prospectCount: step.prospects.length,
+      retiredCount: step.retired.length,
+      avgOverall: step.avgOverall,
+      marketTotal: step.marketTotal,
+      marketStep: prev ? safeDiv(step.marketTotal - prev.marketTotal, prev.marketTotal) : 0,
+    });
+    for (const c of step.champions) {
+      const key = `${c.clubId}|${c.compId}`;
+      const held = titleCounts.get(key) ?? { clubId: c.clubId, clubName: c.clubName, compName: c.compName, titles: 0 };
+      held.titles++;
+      titleCounts.set(key, held);
+    }
+    const stepRise = [...step.developments].sort(byDeltaDesc)[0];
+    if (stepRise && (!rise || stepRise.delta > rise.delta)) {
+      rise = { name: stepRise.name, clubId: stepRise.clubId, from: stepRise.from, to: stepRise.to, delta: stepRise.delta, season: step.label };
+    }
+    const stepFall = [...step.declines].sort(byDeltaDesc)[0];
+    if (stepFall && (!fall || stepFall.delta < fall.delta)) {
+      fall = { name: stepFall.name, clubId: stepFall.clubId, from: stepFall.from, to: stepFall.to, delta: stepFall.delta, season: step.label };
+    }
+    totalRetired += step.retired.length;
+    totalProspects += step.prospects.length;
+  }
+
+  const dynasties = [...titleCounts.values()].filter((d) => d.titles > 1).sort((a, b) => b.titles - a.titles || a.clubName.localeCompare(b.clubName));
+  const latest = last(snapshot.history);
+  const marketGrowth = safeDiv((latest?.marketTotal ?? baseMarket) - baseMarket, baseMarket);
+  const avgGrowth = round1((latest?.avgOverall ?? baseAvg) - baseAvg);
+
+  const evidence: RowText[] = [
+    { key: "world.report.evidence.market", vars: { pct: pct(marketGrowth), seasons: snapshot.seasonsElapsed } },
+    ...(rise ? [{ key: "world.report.evidence.rise", vars: { name: rise.name, delta: rise.delta, from: rise.from, to: rise.to, season: rise.season } }] : []),
+    ...(fall ? [{ key: "world.report.evidence.fall", vars: { name: fall.name, delta: Math.abs(fall.delta), from: fall.from, to: fall.to, season: fall.season } }] : []),
+  ];
+  // The list is filtered to titles > 1, so the sentence only ever needs the plural arm —
+  // an arm for a single title would be dead code wearing a key.
+  const topDynasty = dynasties[0];
+  if (topDynasty) {
+    evidence.push({ key: "world.report.evidence.dynasty", vars: { club: topDynasty.clubName, comp: topDynasty.compName, n: topDynasty.titles } });
+  }
+  evidence.push(
+    totalRetired === 1
+      ? { key: "world.report.evidence.retiredOne", vars: { prospects: totalProspects } }
+      : { key: "world.report.evidence.retired", vars: { n: totalRetired, prospects: totalProspects } },
+  );
+
+  return {
+    rows,
+    dynasties,
+    rise,
+    fall,
+    totalRetired,
+    totalProspects,
+    marketGrowth,
+    avgGrowth,
+    evidence,
+    sources: [{ key: "world.report.src.engine" }, { key: "world.report.src.base" }],
+  };
+}
+
+/** The export payload: the report plus the run it was read from, so a downloaded file
+ *  can be checked against the screen that produced it without re-running anything. */
+export function seasonReportPayload(base: WorldInput, snapshot: WorldSnapshot): Record<string, unknown> {
+  return {
+    app: "football-os",
+    kind: "season-report",
+    seasonsElapsed: snapshot.seasonsElapsed,
+    report: buildSeasonReport(base, snapshot),
+  };
 }
 
 // M401: this module used to carry its own euro formatter (`formatMarket`), and the app has

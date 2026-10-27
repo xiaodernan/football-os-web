@@ -197,6 +197,8 @@ const expectedUsers = [
   "features/player/PlayerOS.tsx", "features/review/ReviewPage.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/settings/SettingsPage.tsx",
   "features/sim/SimulationLab.tsx", "features/transfers/TransferCentre.tsx",
+  // M525: the season report's rise/fall tiles fall back to the door.
+  "features/world/DynamicWorld.tsx",
 ];
 const expectedPerUser = [
   ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
@@ -207,6 +209,7 @@ const expectedPerUser = [
   ["features/player/PlayerOS.tsx", 5], ["features/review/ReviewPage.tsx", 5],
   ["features/scouting/ScoutingPanel.tsx", 3], ["features/settings/SettingsPage.tsx", 2],
   ["features/sim/SimulationLab.tsx", 1], ["features/transfers/TransferCentre.tsx", 2],
+  ["features/world/DynamicWorld.tsx", 3],
 ].map(([f, c]) => `${f}=${c}`).join(",");
 ok(`the door is used by exactly the screens that render an absence, each importing it, and neither generate-time data file reaches for it (users ${users.length}/${expectedUsers.length} [${users.join(",")}] with uses ${perUser}; importers ${userImports.length}/${users.length}; generate-time users ${dataValueUsers.length})`,
   users.length === expectedUsers.length && users.join(",") === expectedUsers.join(",") &&
