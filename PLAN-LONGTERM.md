@@ -99,5 +99,6 @@
 - c82942f M522: the lane's unshipped batch becomes drafts, and the census reads the app again（48 个不可达屏幕归档至 .drafts/，应用树重新可测量）— pushed
 - bad5227 M524: 教练履历公开页 - CoachProfile 组件复活重写（从真实 CareerState 派生履历 + 9 枚里程碑徽章 + 公开卡预览 + 可见性偏好持久化）+ domain/coachCareer.ts + COACH_KEY 注册 + /coach 路由与导航 + 三语字典；一并采纳并行 lane 已完成的 proof-drafts 草稿隔离门禁（其文件头标注 M523）— pushed
 - 4c3a9ce M525: 持续赛季运营 — 赛季报告上线（worldEngine.buildSeasonReport 派生全跑报告 + DynamicWorld 面板 + 三语 world.report.*）；并行 lane 的 30 个未上线路由组件用 git mv 回归 .drafts/，census 139→109、i18n 门禁 383/383 恢复；bundle 475→482KB 记入 baseline；npm run proof 118/118 — pushed
+- 643fb27 M526: 从 .drafts 复活 SquadPlanning（阵容规划）— 修复对象渲染 JSX / useState / 非法 Button variant、补 mgr.* + nav.squad 三语键、/squad 路由 + 侧栏、positionLabel 替代裸 position；模块普查 10 处 pin 同步（i18n/app-tree/coverage/storage）；proof-screens 31/31、i18n 383/383、proof 118/118；bundle 482→483KB — pushed
 
-下一条目：M526 从 .drafts 复活一个组件并补齐 i18n 上线（按 `.drafts/README.md` 的 `git mv` 流程，逐块把未上线屏幕做成合规页面）
+下一条目：M527 从 .drafts 复活第二个组件——优先选一个 ManagerOS 目前做不到的（伤病报告 InjuryReport 或转会窗 TransferWindow），按同样的 git mv → 补 i18n → 路由 → 普查 pin 流程上线
