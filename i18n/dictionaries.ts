@@ -2246,6 +2246,11 @@ const en: Dict = {
   "coach.badge.points20.name": "Twenty banked",
   "coach.badge.topSpot.name": "Top of the table",
   "coach.badge.ironMan.name": "Full season",
+  "mgr.squadPlanningTitle": "Squad planning",
+  "mgr.startingXI": "Starting XI ({formation})",
+  "mgr.substitutes": "Substitutes",
+  "mgr.selectFormation": "Pick a formation to shape the starting eleven",
+  "nav.squad": "Squad Planning",
 };
 
 const zhCN: Dict = {
@@ -4380,6 +4385,11 @@ const zhCN: Dict = {
   "coach.badge.points20.name": "二十分入库",
   "coach.badge.topSpot.name": "登顶积分榜",
   "coach.badge.ironMan.name": "完整赛季",
+  "mgr.squadPlanningTitle": "阵容规划",
+  "mgr.startingXI": "首发阵容（{formation}）",
+  "mgr.substitutes": "替补席",
+  "mgr.selectFormation": "选择阵型以安排首发十一人",
+  "nav.squad": "阵容规划",
 };
 
 const zhTW: Dict = {
@@ -6519,6 +6529,11 @@ const zhTW: Dict = {
   "coach.badge.points20.name": "二十分入庫",
   "coach.badge.topSpot.name": "登頂積分榜",
   "coach.badge.ironMan.name": "完整賽季",
+  "mgr.squadPlanningTitle": "陣容規劃",
+  "mgr.startingXI": "先發陣容（{formation}）",
+  "mgr.substitutes": "替補席",
+  "mgr.selectFormation": "選擇陣型以安排先發十一人",
+  "nav.squad": "陣容規劃",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

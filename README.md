@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M525 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M526 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7093,6 +7093,37 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M526 — a draft comes back: the squad-planning screen, routed and keyed
+
+**What the gauge says.** `proof-screens` **31/31** (the new route renders in all three locales),
+`proof-i18n` **383/383**, `proof-app-tree` **12/12**, `proof-coverage` **26/26**, `proof-storage`
+**61/61**, `tsc --noEmit` clean, `npm run build` exit 0, and the bundle **482 → 483 KB** gzip,
+recorded in `tests/perf/baseline.json`.
+
+**The resurrection.** `.drafts/features/manager/SquadPlanning.tsx` was one of the batch M525
+quarantined. It came back the way the drafts README says — `git mv` to its original path — and then
+had to satisfy the four things a draft never does while it is hidden: it must compile (the draft's
+`{{p.name}}` rendered an object and its `React.useState` had no import), it must speak through the
+dictionary (four new `mgr.*` keys and a `nav.squad` entry in all three locales), it must not print a
+raw code (`{p.position}` became `positionLabel(p.position, t)`), and it must be routed (`/squad` in
+`App.tsx`'s route table and a sidebar entry). `proof-screens` renders it in each locale precisely to
+charge the last two.
+
+**What it does.** The manager's strongest eleven by overall, a formation selector that names the
+shape being planned, and the substitutes below the line — read off the same deterministic
+`footballProvider` the rest of the OS uses, with the demo badge the honesty rule requires.
+
+**The pins paid.** One module moves every census that counts modules: `APP_SRC_PIN` 109→110,
+`TSX_PIN` 53→54, `SRC_PIN` 112→113, the literal-site count 1374→1381 and `litVarSites` 149→150 in
+`proof-i18n`; `APP_MODULE_PIN` 104→105 in `proof-app-tree`; `POP_PIN` 104→105, `BY_DIR_PIN.features`
+30→31 and `DEEP_PIN` 46→47 in `proof-coverage`; `APP_FILES_PIN` 99→100 in `proof-storage`. Each is a
+deliberate number, not a drift — a module appearing or vanishing without its pin is exactly what
+reddens.
+
+**Honest reservation.** SquadPlanning overlaps ManagerOS's own squad view; it is the resurrection
+workflow's first proof-of-concept more than a new capability. The next draft should earn its route by
+doing something the app cannot already do.
 
 ### M525 — the drafts are one-way, and the boundary is a gate
 

@@ -501,15 +501,18 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // root configs (playwright.config.ts, vite.config.ts) joined the walker's population.
 // M523: 107 -> 109. domain/coachCareer.ts and features/coach/CoachProfile.tsx — the coach
 // résumé screen and its domain module — pay in the same commit.
-const APP_SRC_PIN = 109;
+// M526: 109 -> 110 — features/manager/SquadPlanning.tsx is resurrected from the drafts.
+const APP_SRC_PIN = 110;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
-const TSX_PIN = 53;
+// M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
+const TSX_PIN = 54;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
 // M523: 110 -> 112, the same debt again (coachCareer, CoachProfile).
-const SRC_PIN = 112;
+// M526: 112 -> 113, SquadPlanning.tsx again.
+const SRC_PIN = 113;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -4257,7 +4260,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M523: the coach résumé lands 37 literal sites and 3 template sites (the badge-name
   // interpolations) — the shapes census pays in the same commit: 1317 -> 1354, 105 -> 108.
   // M525: the season report panel adds 20 more literal sites: 1354 -> 1374.
-  shapeCounts.literal === 1374 && shapeCounts.template === 108 && shapeCounts.expression === 32
+  // M526: SquadPlanning adds its 7 literal t() sites: 1374 -> 1381.
+  shapeCounts.literal === 1381 && shapeCounts.template === 108 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4273,7 +4277,7 @@ ok(`a literal wearing backticks is still a literal — check 24 and this census 
 ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
   // M523: 143 -> 146 — the résumé's since/standing/matchN rows each hand over their variables.
   // M525: 146 -> 149 — the report's exported/avgGrowthSub/prospectsSub rows join them.
-  litVarSites === 149 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 150 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));

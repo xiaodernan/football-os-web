@@ -154,7 +154,8 @@ const DEAD_CEILING = 22;
 // per-directory row below is what says the tree is the same shape for the right reason.
 // M523: 102 -> 104. domain/coachCareer.ts and features/coach/CoachProfile.tsx join the
 // population (the coach résumé screen and its domain module).
-const POP_PIN = 104;
+// M526: 104 -> 105 — features/manager/SquadPlanning.tsx resurrected from the drafts.
+const POP_PIN = 105;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -169,11 +170,12 @@ const POP_PIN = 104;
 // them, and the rows below name what remains. `tests` never appears here: Playwright specs are not
 // app modules — see POP_SKIP.
 // M523: domain 32 -> 33 (coachCareer), features 29 -> 30 (CoachProfile).
-const BY_DIR_PIN = { components: 15, data: 7, domain: 33, features: 30, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+// M526: features 30 -> 31 (SquadPlanning).
+const BY_DIR_PIN = { components: 15, data: 7, domain: 33, features: 31, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
-const DEEP_PIN = 46;
+const DEEP_PIN = 47;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

@@ -114,7 +114,8 @@ const APP_DIRS = ["components", "data", "domain", "features", "functions", "i18n
 // reappears from the drafts without this line, reddens here.
 // M523: 102 -> 104. domain/coachCareer.ts and features/coach/CoachProfile.tsx — the coach résumé,
 // derived from the career state the manager OS already keeps.
-const APP_MODULE_PIN = 104;
+// M526: 104 -> 105 — features/manager/SquadPlanning.tsx resurrected from the drafts.
+const APP_MODULE_PIN = 105;
 const byDir = {};
 for (const d of APP_DIRS) {
   const n = walkApp(root, { dirs: [d], exts: [".ts", ".tsx"] }).length;

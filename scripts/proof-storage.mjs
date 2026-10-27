@@ -92,7 +92,8 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // lane added, and the pin pays for them here — a walk that lost a directory still reddens.
 // M523: 97 -> 99. domain/coachCareer.ts and features/coach/CoachProfile.tsx are app files
 // the coach résumé milestone added, and the pin pays for them here.
-const APP_FILES_PIN = 99;
+// M526: 99 -> 100 — features/manager/SquadPlanning.tsx resurrected from the drafts.
+const APP_FILES_PIN = 100;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */

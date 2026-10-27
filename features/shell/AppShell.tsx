@@ -84,6 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/transfers", label: t("nav.transfers"), icon: I.transfer, match: ["/transfers"] },
     { to: "/compare", label: t("nav.compare"), icon: I.compare, match: ["/compare"] },
     { to: "/watchlist", label: t("nav.watch"), icon: I.star, match: ["/watchlist"] },
+    { to: "/squad", label: t("nav.squad"), icon: I.board, match: ["/squad"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },
     { to: "/settings", label: t("nav.settings"), icon: I.settings, match: ["/settings"] },
   ];
