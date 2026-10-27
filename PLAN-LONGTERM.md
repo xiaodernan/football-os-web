@@ -107,5 +107,16 @@
 - a9df5a3 M531: 新增"球队对比"（ClubCompare）— 剩余草稿先筛查后否决（finance/sync 依赖不存在的 domain、SquadDepth 与 M526 重复、且此数据集身价虚高 €1.8B 做财务模型会失真）；补上应用缺的"两支队作为阵容对比"能力（/compare 比球员、积分榜比积分、此前无比球队）：两个下拉选队，对比人数/平均综合/身价/平均年龄/最佳球员/近 5 场战绩(W/D/L)+状态积分，逐行高亮更强方；全程真实数据 + 门（sum/maxBy/fmtMoney/ABSENT/meanOverall）；补 16 键 + nav.clubCompare 三语、/club-compare 路由 + 侧栏；13 处 pin（absent-glyph users 21、money readers 13）；bundle 491→493KB；proof 118/118 — pushed
 - 0b43035 M532: 新增"联赛榜"（LeagueLeaders）— 比赛记录里每个进球/黄牌/红牌本就是 MatchEvent（1566 场里 948 球、434 黄、108 红），故榜单是对事件的 fold 而非存储表：键用 `clubId|name` 区分不同队的同名球员，俱乐部取自事件所属 side；两块榜：射手 top15（俱乐部+位置）、黄红牌 top10；9 键 + nav.leaders 三语、/leaders 路由 + 侧栏；9 处 census pin；bundle 493→494KB；proof 118/118 — pushed
 - b8aa23a M533: 新增"球员成长预测"（PlayerProjection）— 把 `projectGrowth` 从"仅限本人 Development"扩展到任意球员（610 名全有 attributes）：选球员 + 周数/每周次数/单次评分，重点=最弱 3 项属性（weakestAttributes），逐项 now→预测 + 增量，综合 before→after，旁边标潜力上限（attrCeiling）。带符号增量走 `lib/utils.signed`、颜色走 `deltaSign`+`DELTA_CLASS`（禁止手写 `+` 或 `delta>0` 比较，proof-signed 会红）；属性名走已声明的 `attr.name.` 动态键（需在 proof-i18n 的 DYN_SITES 加一行）；16 键 + nav.projection 三语、/projection 路由 + 侧栏；census pin 同步（literal 1486、template 109、dup 126/214）；bundle 494→496KB；proof 118/118 — pushed
+- f03f4bb M534: 新增"赛季末赛程"（RunIn）— 每条已存在的 forecast 都只看单场（DataRoom 前 4 场、FootballWorld 每行概率），
+  而"每队剩余对手整体有多难"无人回答；`domain/analytics.ts` 新增 `runIn(compId, matches, clubs)`：按本赛事 SCHEDULED 赛程统计各队剩余对手，
+  取其场均积分（2 位小数）为难度，最难在前，无剩余者记 0 且排最后（防空赛程冒充最易），行内自带战绩；
+  屏幕=赛事 chips + 四块 tile（最难/最易/剩余场次/剩余均值）+ 榜单（队徽/战绩/剩余/对手场均条/对手简称）+ 空态；
+  门：sum、last（替代内联 `xs[xs.length-1]`）、ABSENT、fmt2、pctOf；`nav.runIn` + 17 个 `runIn.*` 三语、`/run-in` 路由 + 侧栏；
+  census pin 全同步（APP_SRC 118、TSX 62、SRC 121、literal 1506、placeholder 160、dup 127/215、APP_MODULE 113、POP 113、features 39、DEEP 55、APP_FILES 108、
+  last/fmt2/absent-glyph/absent-name 清单各 +1）；tsc 干净、npm run proof 118/118、bundle 496→499KB — pushed
 
-下一条目：M534 继续——优先"真实数据+不重叠+复用既有 domain"；候选：赛程/对阵预测（fixtureForecast）、或强化 Dashboard 的"下一步建议"；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 10 处 census pin 全套门禁
+下一条目：M538 继续——编号说明：M534 由本线落地，M535–M537 已被并发 lane 占用（parse backlog / drafts），故下一号取 M538；
+仍是"真实数据 + 不重叠 + 复用既有 domain"；候选：强化 Dashboard 的"下一步建议"（把多屏结论汇成一条可点击的动作链）、
+或"赛季末积分情景"（用 runIn + 剩余赛程做"若全胜/按现速率"的上限下限读数，和 projection 分属不同问题）；
+每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 10 处 census pin 全套门禁；
+并发 lane 的未提交文件（.drafts/*、README 的 M537 段落、proof-drafts.mjs）不要纳入本线提交。

@@ -7284,6 +7284,52 @@ that number in flight, and by the ledger's own arithmetic a number between the o
 heading with no section of its own is a gap until it lands one. If that unit lands with a section of
 its own, the entry comes off the list — the ledger's rule, not a favour.
 
+### M534 — the run-in: what every club still has to face, weighed by the clubs it faces
+
+**What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31**, `proof-app-tree`
+**12/12**, `proof-coverage` **26/26**, `proof-storage` **61/61**, `proof-analytics` **80/80**,
+`proof-last` **10/10**, `tsc --noEmit` clean, `npm run build` exit 0, bundle **496 → 499 KB**
+gzip, recorded.
+
+**Why not the fixture forecast.** The Data Room already prints the next four scheduled fixtures
+of a competition through `fixtureForecast`, and every scheduled row in Football World carries its
+match probability. A board of the same numbers would be the app's second copy of one read. What
+no screen answered is the aggregate question a manager actually asks in April: **for each club,
+how hard is what is left?**
+
+**The unit of difficulty.** `domain/analytics.ts` grows `runIn(compId, matches, clubs)` — for
+every club, the opponents still on its calendar (this competition's `SCHEDULED` fixtures, in
+kickoff order) and the average points-per-game of those opponents, two decimals. Rows come back
+hardest first, and a club with nothing left keeps zero and sits last, so an empty calendar can
+never be mistaken for the easiest run-in. Each row also carries the club's own record, because
+"tough run-in" means nothing without "for whom".
+
+**What it does.** Competition chips, four tiles (toughest run-in, easiest run-in, fixtures left,
+and the league average of what remains), then the board: crest, name and record, fixtures left,
+opponent PPG against a bar scaled to the hardest, and the short names of the clubs still to
+play. A competition with no fixtures left says so rather than drawing an empty chart. Route
+`/run-in`, a sidebar entry, and eighteen keys — `nav.runIn` plus seventeen `runIn.*` — across
+en / zh-CN / zh-TW.
+
+**The doors it had to use.** `runIn` and its `teamMetrics` / `byKickoff` ordering in the domain;
+`sum` for the totals; `last` (the last-element door) for the easiest row instead of an inline
+`xs[xs.length - 1]`; `ABSENT` wherever a figure or a club name is missing; `fmt2` for the
+two-decimal averages; `pctOf` for the bar width.
+
+**The pins paid.** `APP_SRC_PIN` 117→118, `TSX_PIN` 61→62, `SRC_PIN` 120→121, literal `t()`
+sites 1486→1506, placeholder sites 156→160, duplicate-value / excess-key counts 126→127 and
+214→215; `APP_MODULE_PIN` 112→113 in `proof-app-tree`; `POP_PIN` 112→113, `BY_DIR_PIN.features`
+38→39 and `DEEP_PIN` 54→55 in `proof-coverage`; `APP_FILES_PIN` 107→108 in `proof-storage`;
+`proof-last`'s reader list plus one reader; `proof-fmt2`'s consumer list plus one file;
+`proof-absent-glyph`'s user ledger plus one file and five cells; `proof-absent-name`'s carrier
+set plus one file and three sites.
+
+**Honest reservation.** The difficulty is today's table, not a forecast: a club's run-in looks
+hard because the clubs left on it have earned points so far, and the remaining matches can
+change exactly that. The average is unweighted — a single postponed giant counts as much as
+three mid-table sides. And on a finished competition every row reads zero; the screen shows the
+empty state there rather than pretending a number exists.
+
 ### M533 — projecting any player: the growth model as a scouting read
 
 **What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31**, `proof-app-tree`
@@ -12512,7 +12558,6 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M521 — the lane's advanced academy-management screen
 - M523 — the drafts boundary gate (`proof-drafts`), swept into M524's commit
 - M524 — the coach's résumé resurrected from the drafts (`CoachProfile`)
-- M534 — the concurrent line of work's in-flight unit, landed without a section of its own
 
 <!-- /gaps -->
 
