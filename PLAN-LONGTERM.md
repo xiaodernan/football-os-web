@@ -98,5 +98,6 @@
 - 5e6ff7e M500: 长期展望综合功能 - 系统优化完成，模块化重构完成 — pushed
 - c82942f M522: the lane's unshipped batch becomes drafts, and the census reads the app again（48 个不可达屏幕归档至 .drafts/，应用树重新可测量）— pushed
 - bad5227 M524: 教练履历公开页 - CoachProfile 组件复活重写（从真实 CareerState 派生履历 + 9 枚里程碑徽章 + 公开卡预览 + 可见性偏好持久化）+ domain/coachCareer.ts + COACH_KEY 注册 + /coach 路由与导航 + 三语字典；一并采纳并行 lane 已完成的 proof-drafts 草稿隔离门禁（其文件头标注 M523）— pushed
+- 4c3a9ce M525: 持续赛季运营 — 赛季报告上线（worldEngine.buildSeasonReport 派生全跑报告 + DynamicWorld 面板 + 三语 world.report.*）；并行 lane 的 30 个未上线路由组件用 git mv 回归 .drafts/，census 139→109、i18n 门禁 383/383 恢复；bundle 475→482KB 记入 baseline；npm run proof 118/118 — pushed
 
-下一条目：M525 持续赛季运营（基于社区反馈的功能迭代）
+下一条目：M526 从 .drafts 复活一个组件并补齐 i18n 上线（按 `.drafts/README.md` 的 `git mv` 流程，逐块把未上线屏幕做成合规页面）
