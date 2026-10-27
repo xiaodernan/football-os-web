@@ -144,8 +144,6 @@ ok(`a clone of the app sitting beside the app does not join its population (${cl
 // ---------------------------------------------------------------------------
 // 3 · the gates read ONE rule
 // ---------------------------------------------------------------------------
-// M523: proof-drafts joins the list — it walks the app's directories, root files and the drafts,
-// and it must keep reading the one rule rather than growing a private skip list of its own.
 const TREE_PROOFS = ["proof-coverage.mjs", "proof-dead-exports.mjs", "proof-dead-imports.mjs", "proof-i18n.mjs", "proof-ids.mjs", "proof-rng.mjs", "proof-orphans.mjs", "proof-unused-locals.mjs", "proof-unused-params.mjs"];
 const importLine = /from "\.\/lib\/appTree\.mjs"/;
 const imported = [], forked = [];
