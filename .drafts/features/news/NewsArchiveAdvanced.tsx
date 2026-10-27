@@ -130,7 +130,7 @@ export function NewsArchiveAdvanced() {
           <div className="space-y-3">
             {filteredNews.map(news => (
               <div
-                key=news.id
+                key={news.id}
                 className="border rounded p-3 flex items-start {news.importance === 'high' ? 'bg-red-50' : news.importance === 'medium' ? 'bg-yellow-50' : 'bg-green-50'}"
               >
                 <div className="flex-1">
@@ -142,7 +142,7 @@ export function NewsArchiveAdvanced() {
                   <div>{t(`importance.${news.importance}`)}</div>
                 </div>
               </div>
-            ))
+            ))}
           </div>
         </Panel>
       )}

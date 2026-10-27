@@ -30,12 +30,12 @@ export function InjuryPrediction() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("injury.totalPlayers")}
-          value=injuryRisks.length.toString()
+          value={injuryRisks.length.toString()}
           subtitle={t("injury.players")}
         />
         <StatTile
           title={t("injury.riskDistribution")}
-          value=Object.keys(riskLevels).length > 0 ? Object.keys(riskLevels).length : "0"
+          value={Object.keys(riskLevels).length > 0 ? Object.keys(riskLevels).length : "0"}
           subtitle={t("injury.riskTypes")}
         />
       </div>
@@ -45,7 +45,7 @@ export function InjuryPrediction() {
         <SectionTitle title={t("injury.highRiskPlayers")} />
         {injuryRisks.filter(r => r.riskLevel === "High").map(player => (
           <div
-            key=player.playerName
+            key={player.playerName}
             className="border rounded p-3 mb-2"
             style={{ borderColor: "red" }}
           >
@@ -62,7 +62,7 @@ export function InjuryPrediction() {
         <SectionTitle title={t("injury.mediumRiskPlayers")} />
         {injuryRisks.filter(r => r.riskLevel === "Medium").map(player => (
           <div
-            key=player.playerName
+            key={player.playerName}
             className="border rounded p-3 mb-2"
             style={{ borderColor: "orange" }}
           >
@@ -71,7 +71,7 @@ export function InjuryPrediction() {
             <div className="text-xs text-orange-500 mt-1">{t("injury.riskFactors", { factors: player.riskFactors.join(", ") })}</div>
             <div className="text-right text-orange-500 mt-1">{t("injury.predictedDaysOut", { days: player.predictedDaysOut })}</div>
           </div>
-        ))
+        ))}
       </Panel>
 
       {/* 低风险球员 */}
@@ -79,7 +79,7 @@ export function InjuryPrediction() {
         <SectionTitle title={t("injury.lowRiskPlayers")} />
         {injuryRisks.filter(r => r.riskLevel === "Low").map(player => (
           <div
-            key=player.playerName
+            key={player.playerName}
             className="border rounded p-3 mb-2"
             style={{ borderColor: "green" }}
           >
@@ -88,7 +88,7 @@ export function InjuryPrediction() {
             <div className="text-xs text-green-500 mt-1">{t("injury.riskFactors", { factors: player.riskFactors.join(", ") })}</div>
             <div className="text-right text-green-500 mt-1">{t("injury.predictedDaysOut", { days: player.predictedDaysOut })}</div>
           </div>
-        ))
+        ))}
       </Panel>
     </Panel>
   );

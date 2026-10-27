@@ -79,23 +79,23 @@ export function CoachCareerProfile() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("coach.totalCareerYears")}
-          value=`${totalCareerYears}年`
-          subtitle={t("coach.yearsExercising)}
+          value={`${totalCareerYears}年`}
+          subtitle={t("coach.yearsExercising")}
         />
         <StatTile
           title={t("coach.totalTrophies")}
-          value=totalTrophies.toString()
-          subtitle={t("coach.honoursWon)}
+          value={totalTrophies.toString()}
+          subtitle={t("coach.honoursWon")}
         />
         <StatTile
           title={t("coach.totalGames")}
-          value=totalGames.toString()
-          subtitle={t("coach.totalMatchesCoached)}
+          value={totalGames.toString()}
+          subtitle={t("coach.totalMatchesCoached")}
         />
         <StatTile
           title={t("coach.winPercentage")}
-          value=`${Math.round((totalWins / totalGames) * 100)}%`
-          subtitle={t("coach.winRateDesc)}
+          value={`${Math.round((totalWins / totalGames) * 100)}%`}
+          subtitle={t("coach.winRateDesc")}
         />
       </div>
 

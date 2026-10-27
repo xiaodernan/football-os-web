@@ -32,24 +32,24 @@ export function ModuleRefactoring() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("totalModules")}
-          value=modules.totalModules.toString()
-          subtitle={t("core.modules)}
+          value={modules.totalModules.toString()}
+          subtitle={t("core.modules")}
         />
         <StatTile
           title={t("refactoredModules")}
-          value=modules.refactoredModules.toString()
-          subtitle={t("core.refactored)}
+          value={modules.refactoredModules.toString()}
+          subtitle={t("core.refactored")}
         />
         <StatTile
           title={t("refactoringRate")}
-          value=`${modules.refactoringRate}%`
-          subtitle={t("core.completed)}
+          value={`${modules.refactoringRate}%`}
+          subtitle={t("core.completed")}
           variant={modules.refactoringRate > 80 ? "primary" : "warning"}
         />
         <StatTile
           title={t("remainingModules")}
-          value=modules.remainingModules.toString()
-          subtitle={t("core.remaining)}
+          value={modules.remainingModules.toString()}
+          subtitle={t("core.remaining")}
         />
       </div>
 

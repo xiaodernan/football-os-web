@@ -83,7 +83,7 @@ export function NewsArchive() {
           <div className="space-y-3">
             {yearNews.map(news => (
               <div
-                key=news.id
+                key={news.id}
                 className="border rounded p-3 flex items-start {news.category === 'transfer' ? 'bg-blue-50' : news.category === 'matchReport' ? 'bg-green-50' : 'bg-red-50'}"
               >
                 <div className="flex-1">

@@ -26,18 +26,18 @@ export function AdvancedPluginSystem() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("plugin.totalPlugins")}
-          value=plugins.length.toString()
+          value={plugins.length.toString()}
           subtitle={t("plugin.totalCount")}
         />
         <StatTile
           title={t("plugin.activePlugins")}
-          value=activePlugins.length.toString()
+          value={activePlugins.length.toString()}
           subtitle={t("plugin.activeCount")}
           variant="primary"
         />
         <StatTile
           title={t("plugin.totalDownloads")}
-          value=totalDownloads.toLocaleString()
+          value={totalDownloads.toLocaleString()}
           subtitle={t("plugin.totalDownloads")}
         />
       </div>

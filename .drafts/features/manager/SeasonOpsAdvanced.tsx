@@ -36,22 +36,22 @@ export function SeasonOpsAdvanced() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.season")}
-          value=opsData.season.toString()
+          value={opsData.season.toString()}
           subtitle={t("manager.currentSeason")}
         />
         <StatTile
           title={t("manager.totalEvents")}
-          value=opsData.totalEvents.toString()
+          value={opsData.totalEvents.toString()}
           subtitle={t("manager.totalEventsThisSeason")}
         />
         <StatTile
           title={t("manager.completedEvents")}
-          value=opsData.completedEvents.toString()
+          value={opsData.completedEvents.toString()}
           subtitle={t("manager.completed")}
         />
         <StatTile
           title={t("manager.remainingEvents")}
-          value=opsData.remainingEvents.toString()
+          value={opsData.remainingEvents.toString()}
           subtitle={t("manager.remaining")}
         />
       </div>
@@ -62,12 +62,12 @@ export function SeasonOpsAdvanced() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("manager.totalRewards")}
-            value=`${t("currency.euro")} ${opsData.totalRewards.toLocaleString()}`
+            value={`${t("currency.euro")} ${opsData.totalRewards.toLocaleString()}`}
             subtitle={t("manager.totalRewardPool")}
           />
           <StatTile
             title={t("manager.distributedRewards")}
-            value=`${t("currency.euro")} ${opsData.distributedRewards.toLocaleString()}`
+            value={`${t("currency.euro")} ${opsData.distributedRewards.toLocaleString()}`}
             subtitle={t("manager.alreadyDistributed")}
           />
         </div>
@@ -79,7 +79,7 @@ export function SeasonOpsAdvanced() {
         <div className="space-y-3">
           {opsData.significantMoments.map(event => (
             <div
-              key=event.id
+              key={event.id}
               className="border rounded p-3 flex items-start {event.type === 'transfer' ? 'bg-blue-50' : event.type === 'award' ? 'bg-green-50' : 'bg-yellow-50'}"
             >
               <div className="flex-1">

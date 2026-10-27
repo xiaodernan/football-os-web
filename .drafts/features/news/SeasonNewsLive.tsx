@@ -51,7 +51,7 @@ export function SeasonNewsLive() {
           <div className="space-y-2">
             {liveNews.filter(n => n.urgent).map(news => (
               <div
-                key=news.id
+                key={news.id}
                 className="border-l-4 border-red-500 p-3 rounded"
               >
                 <div className="font-medium">{news.title}</div>
@@ -68,7 +68,7 @@ export function SeasonNewsLive() {
         <div className="space-y-3">
           {liveNews.map(news => (
             <div
-              key=news.id
+              key={news.id}
               className="border rounded p-3 flex items-start {news.urgent ? 'bg-red-50' : 'bg-gray-50'}"
             >
               <div className="flex-1">

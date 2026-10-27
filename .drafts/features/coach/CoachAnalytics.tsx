@@ -33,23 +33,23 @@ export function CoachAnalytics() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("coach.totalCoaches")}
-          value=analyticsData.totalCoaches.toString()
+          value={analyticsData.totalCoaches.toString()}
           subtitle={t("coach.coachCount")}
         />
         <StatTile
           title={t("coach.avgWinRate")}
-          value=`${analyticsData.avgWinRate}%`
+          value={`${analyticsData.avgWinRate}%`}
           subtitle={t("coach.winRate")}
           variant="primary"
         />
         <StatTile
           title={t("coach.avgGoalsPerGame")}
-          value=analyticsData.avgGoalsPerGame.toFixed(1)
+          value={analyticsData.avgGoalsPerGame.toFixed(1)}
           subtitle={t("coach.goalsPerGame")}
         />
         <StatTile
           title={t("coach.avgPossession")}
-          value=`${analyticsData.avgPossession}%`
+          value={`${analyticsData.avgPossession}%`}
           subtitle={t("coach.possession")}
         />
       </div>
@@ -60,17 +60,17 @@ export function CoachAnalytics() {
         <div className="grid grid-cols-3 gap-3">
           <StatTile
             title={t("coach.possessionPlay")}
-            value=`${analyticsData.tacticalEffectiveness.possessionPlay}%`
+            value={`${analyticsData.tacticalEffectiveness.possessionPlay}%`}
             subtitle={t("coach.possessionPlayDesc")}
           />
           <StatTile
             title={t("coach.counterAttack")}
-            value=`${analyticsData.tacticalEffectiveness.counterAttack}%`
+            value={`${analyticsData.tacticalEffectiveness.counterAttack}%`}
             subtitle={t("coach.counterAttackDesc")}
           />
           <StatTile
             title={t("coach.setPieces")}
-            value=`${analyticsData.tacticalEffectiveness.setPieces}%`
+            value={`${analyticsData.tacticalEffectiveness.setPieces}%`}
             subtitle={t("coach.setPiecesDesc")}
           />
         </div>
@@ -81,18 +81,18 @@ export function CoachAnalytics() {
         <SectionTitle title={t("coach.topPerformer")} />
         <StatTile
           title={t("coach.topPerformerName")}
-          value=analyticsData.topPerformer.name
+          value={analyticsData.topPerformer.name}
           subtitle={t("coach.coachName")}
         />
         <StatTile
           title={t("coach.topPerformerWinRate")}
-          value=`${analyticsData.topPerformer.winRate}%`
+          value={`${analyticsData.topPerformer.winRate}%`}
           subtitle={t("coach.winRate")}
           variant="primary"
         />
         <StatTile
           title={t("coach.topPerformerGoals")}
-          value=`${analyticsData.topPerformer.avgGoals} ${t("coach.goalsPerGame")}`
+          value={`${analyticsData.topPerformer.avgGoals} ${t("coach.goalsPerGame")}`}
           subtitle={t("coach.avgGoals")}
         />
       </Panel>

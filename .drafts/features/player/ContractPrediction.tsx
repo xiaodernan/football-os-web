@@ -82,14 +82,14 @@ export function ContractPrediction() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <StatTile
             title={t("player.renewalProbability")}
-            value=`${renewalProbability}%`
+            value={`${renewalProbability}%`}
             subtitle={t("player.renewalChance")}
             variant={probabilityClass}
           />
           <StatTile
             title={t("player.contractYearsRemaining")}
-            value=`${yearsUntilExpiry}年`
-            subtitle={t("player.contractYears)}
+            value={`${yearsUntilExpiry}年`}
+            subtitle={t("player.contractYears")}
           />
           <StatTile
             title={t("player.negotiationLeverage")}
@@ -149,7 +149,7 @@ export function ContractPrediction() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <StatTile
             title={t("player.renewalProbability")}
-            value=`${renewalProbability}%`
+            value={`${renewalProbability}%`}
             subtitle={t("player.renewalChance")}
             variant={probabilityClass}
           />
@@ -183,12 +183,12 @@ export function ContractPrediction() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("player.contractYearsRemaining")}
-          value=`${yearsUntilExpiry}年`
-          subtitle={t("player.contractYears)}
+          value={`${yearsUntilExpiry}年`}
+          subtitle={t("player.contractYears")}
         />
         <StatTile
           title={t("player.renewalProbability")}
-          value=`${renewalProbability}%`
+          value={`${renewalProbability}%`}
           subtitle={t("player.renewalChance")}
           variant={probabilityClass}
         />

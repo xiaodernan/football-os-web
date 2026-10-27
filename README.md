@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M535 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M536 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7094,6 +7094,67 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+
+
+### M536 — the quarantine's parse backlog, repaired family by family
+
+**What the gauge says.** `scripts/proof-drafts.mjs` **8/8** (unchanged). The quarantine holds **80**
+source drafts, and it now holds **13** that do not parse, with **102** diagnostics between them. When
+this milestone began the same census read **50** broken files and **841** diagnostics: **37** files
+were repaired outright, **49** files changed, and **739** diagnostics left the pile. The gate's
+ceilings were lowered from 50 and 841 to 13 and 102 in the same landing, so the ratchet holds the
+pile where it now stands rather than where it stood.
+
+**Six families, and what each was worth.** The pile was not one mistake but six repeatable ones, and
+each was repaired by a rule that the parser then had to agree with. A bare template used as an
+attribute value — 88 occurrences in 32 files, worth **187** diagnostics. A bare expression used as an
+attribute value — 94 occurrences in 35 files, worth **340**. A `t("key)` whose closing quote was
+missing — 49 occurrences in 15 files, worth **125**. A `.map(…)` whose JSX container was closed by
+`))` and never by `}` — 23 occurrences in 19 files, worth **23**. An interpolation inside a
+double-quoted attribute — 7 occurrences in 6 files, worth **60**. And the `)` the parser itself
+named, inserted at the offset the parser named — worth **4**.
+
+**The rule a repair had to pass.** No change was kept on the strength of a pattern matching. The
+same TypeScript parser that reads the pile had to read strictly fewer diagnostics for that file
+after the change, and no repair was allowed to remove a token that was there before it. The
+expression family additionally had to sit inside an opening tag — a JSX attribute, not an assignment
+in a script body. Both guards carry their own self-test, armed at the top of the repair script and
+checked before any file is touched: a tag case that must be caught and a tag case that must not be,
+a token case that must be refused and a token case that must pass.
+
+**A bug the guards did not catch, and why the third one exists.** The `t("key)` family was written
+wrong first: the replacement dropped the `t` and left `("key")`. The file still parsed, and the
+diagnostic count still fell, so the diagnostic rule and the tag rule both passed it — a wrong repair
+that the measurements approved. A human read of the diff caught it. The token rule was written next,
+and it is the rule that would have refused that change. It refuses nothing in the landed run,
+because the family was fixed before the run, and its self-test still refuses the shape that slipped
+through.
+
+**A scanner bug worth naming too.** The interpolation family was applied by a scanner that
+understands strings and templates, not by a line regex. Its first version began looking for the
+attribute's closing quote from inside the interpolation, so it matched the `"` of a ternary's own
+string literals (`type === "shareRate"`) and stopped there. That version left 30 broken files and
+157 diagnostics on the tree. Beginning the search just after the interpolation brought it to 13 and
+102.
+
+**What is still broken, and why it was left.** The thirteen that remain are not mechanical. A stray
+quote in a union type, a Python-style conditional, an arrow whose body is only a comment, an
+unterminated string in a ternary, a `}%` where the author meant `%)}`, two mismatched closing tags, a
+doubled brace inside an interpolation, a mangled date literal, an unterminated template literal, a
+fragment with no parent element, and two Rust-style `switch` expressions. Each asks what the author
+meant, and a parser cannot answer that. They are named in the gate's registry, they are counted by
+the ceiling, and they wait for a milestone that can read the screens.
+
+**Honest reservation.** The repair was mechanical, and mechanical is all it was: it made files
+parse, it did not make them correct. A draft that parses may still import a module that is itself
+quarantined, miss a type, or read a `t()` key no locale carries — parse-clean is not shippable, and
+this milestone does not claim otherwise. Where a repair had to guess — wrapping a bare attribute
+value in braces is a guess about what the author meant — the guess is visible in the diff, and the
+file is a draft behind a dot prefix, not a screen anyone sees.
+
+**One coupling worth naming.** The gaps block still carries **M534**: the concurrent line of work
+has that number in flight, and by the ledger's own arithmetic a number between the oldest and the
+newest heading with no section of its own is a gap until it lands one.
 
 ### M535 — the parse backlog is measured, and the ten cheapest drafts are repaired
 

@@ -17,7 +17,7 @@ export function BudgetPlanning() {
       totalBudget: Math.floor(Math.random() * 300000000) + 100000000,
       spentBudget: Math.floor(Math.random() * 150000000) + 50000000,
       remainingBudget: Math.floor(Math.random() * 100000000) + 20000000,
-    });
+    }));
   }, [clubs]);
 
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export function BudgetPlanning() {
             >
               {c.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -59,18 +59,18 @@ export function BudgetPlanning() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.totalBudget")}
-          value=`${t("currency.euro")} ${club.totalBudget.toLocaleString()}`
+          value={`${t("currency.euro")} ${club.totalBudget.toLocaleString()}`}
           subtitle={t("manager.totalBudgetDesc")}
         />
         <StatTile
           title={t("manager.spentBudget")}
-          value=`-${t("currency.euro")} ${club.spentBudget.toLocaleString()}`
+          value={`-${t("currency.euro")} ${club.spentBudget.toLocaleString()}`}
           subtitle={t("manager.spentBudgetDesc")}
           variant="destructive"
         />
         <StatTile
           title={t("manager.remainingBudget")}
-          value=`${t("currency.euro")} ${club.remainingBudget.toLocaleString()}`
+          value={`${t("currency.euro")} ${club.remainingBudget.toLocaleString()}`}
           subtitle={t("manager.remainingBudgetDesc")}
         />
       </div>
@@ -81,7 +81,7 @@ export function BudgetPlanning() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("manager.usageRate")}
-            value=`${Math.round((club.spentBudget / club.totalBudget) * 100)}%`
+            value={`${Math.round((club.spentBudget / club.totalBudget) * 100)}%`}
             subtitle={t("manager.usageRateDesc")}
           />
         </div>

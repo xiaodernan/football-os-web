@@ -55,7 +55,7 @@ export function AdvancedFinancialAnalyst() {
             >
               {c.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -73,12 +73,12 @@ export function AdvancedFinancialAnalyst() {
         <div className="grid grid-cols-3 gap-3">
           <StatTile
             title={t("manager.totalAssets")}
-            value=`${t("currency.euro")} ${club.totalAssets.toLocaleString()}`
+            value={`${t("currency.euro")} ${club.totalAssets.toLocaleString()}`}
             subtitle={t("manager.totalAssetsDesc")}
           />
           <StatTile
             title={t("manager.totalLiabilities")}
-            value=`-${t("currency.euro")} ${club.totalLiabilities.toLocaleString()}`
+            value={`-${t("currency.euro")} ${club.totalLiabilities.toLocaleString()}`}
             subtitle={t("manager.totalLiabilitiesDesc")}
             variant="destructive"
           />
@@ -96,12 +96,12 @@ export function AdvancedFinancialAnalyst() {
         <div className="grid grid-cols-3 gap-3">
           <StatTile
             title={t("manager.totalRevenue")}
-            value=`${t("currency.euro")} ${club.totalRevenue.toLocaleString()}`
+            value={`${t("currency.euro")} ${club.totalRevenue.toLocaleString()}`}
             subtitle={t("manager.totalRevenueDesc")}
           />
           <StatTile
             title={t("manager.totalExpenses")}
-            value=`-${t("currency.euro")} ${club.totalExpenses.toLocaleString()}`
+            value={`-${t("currency.euro")} ${club.totalExpenses.toLocaleString()}`}
             subtitle={t("manager.totalExpensesDesc")}
             variant="destructive"
           />
@@ -119,22 +119,22 @@ export function AdvancedFinancialAnalyst() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("manager.wages")}
-            value=`-${t("currency.euro")} ${club.expenses.wages.toLocaleString()}`
+            value={`-${t("currency.euro")} ${club.expenses.wages.toLocaleString()}`}
             subtitle={t("manager.wagesDesc")}
           />
           <StatTile
             title={t("manager.transferSpending")}
-            value=`-${t("currency.euro")} ${club.expenses.transferSpending.toLocaleString()}`
+            value={`-${t("currency.euro")} ${club.expenses.transferSpending.toLocaleString()}`}
             subtitle={t("manager.transferSpendingDesc")}
           />
           <StatTile
             title={t("manager.stadiumMaintenance")}
-            value=`-${t("currency.euro")} ${club.expenses.stadiumMaintenance.toLocaleString()}`
+            value={`-${t("currency.euro")} ${club.expenses.stadiumMaintenance.toLocaleString()}`}
             subtitle={t("manager.stadiumMaintenanceDesc")}
           />
           <StatTile
             title={t("manager.youthAcademy")}
-            value=`-${t("currency.euro")} ${club.expenses.youthAcademy.toLocaleString()}`
+            value={`-${t("currency.euro")} ${club.expenses.youthAcademy.toLocaleString()}`}
             subtitle={t("manager.youthAcademyDesc")}
           />
         </div>

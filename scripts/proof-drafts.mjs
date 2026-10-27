@@ -166,62 +166,29 @@ ok(`the drafts README carries the resurrection path and the stylesheet exclusion
 // The reader is exercised first, on a fixture: a gate that has only ever reported "clean" has
 // never been seen to refuse anything.
 const BROKEN = [
-  "features/academy/AcademyManagement.tsx",
-  "features/academy/AcademyOverview.tsx",
-  "features/academy/AcademyReport.tsx",
-  "features/academy/AdvancedAcademyManagement.tsx",
-  "features/academy/CourseManagement.tsx",
   "features/ai/ManagerAgent.tsx",
-  "features/coach/CoachAnalytics.tsx",
-  "features/coach/CoachCareerProfile.tsx",
   "features/coach/CoachStatistics.tsx",
   "features/community/AdvancedPluginSystem.tsx",
-  "features/community/CommunityEngagement.tsx",
   "features/community/DataSync.tsx",
-  "features/community/PluginSystem.tsx",
-  "features/community/UserFeedback.tsx",
-  "features/core/ModuleRefactoring.tsx",
-  "features/core/SystemOptimization.tsx",
-  "features/injury/InjuryPrediction.tsx",
-  "features/manager/AdvancedFinancialAnalyst.tsx",
-  "features/manager/AdvancedTransferMarketReport.tsx",
-  "features/manager/BudgetPlanning.tsx",
-  "features/manager/FinancialAnalyst.tsx",
-  "features/manager/PayrollStructure.tsx",
   "features/manager/SalaryCapAnalysis.tsx",
-  "features/manager/SeasonDataViz.tsx",
-  "features/manager/SeasonNews.tsx",
   "features/manager/SeasonOps.tsx",
-  "features/manager/SeasonOpsAdvanced.tsx",
   "features/manager/SeasonReport.tsx",
   "features/manager/SquadDepth.tsx",
-  "features/manager/TeamDataViz.tsx",
-  "features/manager/TeamFinance.tsx",
-  "features/manager/TransferMarketReport.tsx",
   "features/match/SeasonSchedule.tsx",
   "features/media/MediaLibrary.tsx",
-  "features/news/NewsArchive.tsx",
   "features/news/NewsArchiveAdvanced.tsx",
-  "features/news/SeasonNews.tsx",
-  "features/news/SeasonNewsLive.tsx",
-  "features/player/ContractExtensionAnalysis.tsx",
-  "features/player/ContractManagement.tsx",
   "features/player/ContractPrediction.tsx",
   "features/player/PlayerContractDetails.tsx",
-  "features/player/PlayerDevelopmentAssessment.tsx",
-  "features/player/PlayerFiveYearPlan.tsx",
-  "features/player/PlayerMarketValueHistory.tsx",
-  "features/player/PotentialPrediction.tsx",
-  "features/player/TransferPrediction.tsx",
-  "features/scouting/EnhancedScoutReport.tsx",
-  "features/scouting/ScoutReport.tsx",
-  "features/transfer/TransferMarketReport.tsx",
 ];
 // M535: the pile measured 60 broken files and 861 diagnostics when this clause was written. The
-// nine screens and the one tool repaired in the same milestone bring it to 50 and 841. These
-// ceilings are what the next repair has to beat, and they are lowered as the pile shrinks.
-const BROKEN_CEILING = 50;
-const DIAGNOSTIC_CEILING = 841;
+// nine screens and the one tool repaired in the same milestone bring it to 50 and 841.
+// M536: six mechanical families — a bare template attribute, a bare expression attribute, an
+// unterminated `t("key)`, a `.map(…)` whose JSX container was closed by `))`, an interpolation
+// inside a double-quoted attribute, and the `)` the parser itself named — take the pile to 13
+// files and 102 diagnostics. These ceilings are what the next repair has to beat, and they are
+// lowered as the pile shrinks.
+const BROKEN_CEILING = 13;
+const DIAGNOSTIC_CEILING = 102;
 
 const kindOf = (rel) => rel.endsWith(".tsx") ? ts.ScriptKind.TSX : rel.endsWith(".jsx") ? ts.ScriptKind.JSX
   : /\.[mc]?ts$/.test(rel) ? ts.ScriptKind.TS : ts.ScriptKind.JS;

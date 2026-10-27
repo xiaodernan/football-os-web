@@ -16,7 +16,7 @@ export function SalaryCapAnalysis() {
       name: c.name,
       payroll: Math.floor(Math.random() * 200000000) + 80000000,
       salaryCap: Math.floor(Math.random() * 100000000) + 50000000,
-    });
+    }));
   }, [clubs]);
 
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export function SalaryCapAnalysis() {
             >
               {c.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -62,12 +62,12 @@ export function SalaryCapAnalysis() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.payroll")}
-          value=`${t("currency.euro")} ${club.payroll.toLocaleString()}`
+          value={`${t("currency.euro")} ${club.payroll.toLocaleString()}`}
           subtitle={t("manager.totalPayroll")}
         />
         <StatTile
           title={t("manager.salaryCap")}
-          value=`${t("currency.euro")} ${club.salaryCap.toLocaleString()}`
+          value={`${t("currency.euro")} ${club.salaryCap.toLocaleString()}`}
           subtitle={t("manager.salaryCapDesc")}
         />
       </div>

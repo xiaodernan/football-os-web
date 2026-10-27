@@ -33,22 +33,22 @@ export function AcademyManagement() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("academy.totalCampuses")}
-          value=academyData.totalCampuses.toString()
+          value={academyData.totalCampuses.toString()}
           subtitle={t("academy.campuses")}
         />
         <StatTile
           title={t("academy.totalStudents")}
-          value=academyData.totalStudents.toLocaleString()
+          value={academyData.totalStudents.toLocaleString()}
           subtitle={t("academy.students")}
         />
         <StatTile
           title={t("academy.activeCoaches")}
-          value=academyData.activeCoaches.toString()
+          value={academyData.activeCoaches.toString()}
           subtitle={t("academy.coaches")}
         />
         <StatTile
           title={t("academy.completionRate")}
-          value=`${academyData.completionRate}%`
+          value={`${academyData.completionRate}%`}
           subtitle={t("academy.rate")}
           variant="primary"
         />
@@ -76,7 +76,7 @@ export function AcademyManagement() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("academy.graduationThisYear")}
-            value=academyData.graduationThisYear.toLocaleString()
+            value={academyData.graduationThisYear.toLocaleString()}
             subtitle={t("academy.graduates")}
           />
         </div>

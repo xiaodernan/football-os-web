@@ -51,13 +51,13 @@ export function SeasonNews() {
       <div className="grid grid-cols-3 gap-3 mb-6">
         <StatTile
           title={t("news.totalNews")}
-          value=newsItems.length.toLocaleString()
+          value={newsItems.length.toLocaleString()}
           subtitle={t("news.totalArticles")}
         />
         {categories && Object.entries(categories).length > 0 && (
           <StatTile
             title={t("news.categories")}
-            value=Object.keys(categories).length.toString()
+            value={Object.keys(categories).length.toString()}
             subtitle={t("news.categoryTypes")}
           />
         )}
@@ -70,7 +70,7 @@ export function SeasonNews() {
           <div className="space-y-3">
             {newsItems.map(news => (
               <div
-                key=news.id
+                key={news.id}
                 className="border rounded p-3 flex items-start {news.category === 'transfer' ? 'bg-blue-50' : news.category === 'matchReport' ? 'bg-green-50' : 'bg-red-50'}"
               >
                 <div className="flex-1">

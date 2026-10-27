@@ -32,22 +32,22 @@ export function DataSync() {
         <StatTile
           title={t("community.lastSync")}
           value={syncStatus.lastSync.toLocaleString()}
-          subtitle={t("community.lastSyncTime)}
+          subtitle={t("community.lastSyncTime")}
         />
         <StatTile
           title={t("community.successRate")}
-          value=`${syncStatus.successRate.toFixed(1)}%`
-          subtitle={t("community.successRateDesc)}
+          value={`${syncStatus.successRate.toFixed(1)}%`}
+          subtitle={t("community.successRateDesc")}
         />
         <StatTile
           title={t("community.totalSyncedItems")}
-          value=syncedCount.toLocaleString()
-          subtitle={t("community.totalItemsSynced)}
+          value={syncedCount.toLocaleString()}
+          subtitle={t("community.totalItemsSynced")}
         />
         <StatTile
           title={t("community.isSyncing")}
-          value={syncStatus.isSyncing ? t("community.syncing") : t("community.idle)}
-          subtitle={t("community.syncStatus)}
+          value={syncStatus.isSyncing ? t("community.syncing") : t("community.idle")}
+          subtitle={t("community.syncStatus")}
           variant={syncStatus.isSyncing ? "destructive" : "primary}
         />
       </div>
@@ -64,7 +64,7 @@ export function DataSync() {
               }`}
             >
               <div className="font-medium">{t(`community.${type}`)}</div>
-              <div className="text-sm ${available ? "text-green-600" : "text-red-600"}">
+              <div className={`text-sm ${available ? "text-green-600" : "text-red-600"}`}>
                 {t(available ? "community.available" : "community.unavailable")}
               </div>
             </div>

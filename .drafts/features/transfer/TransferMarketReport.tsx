@@ -44,7 +44,7 @@ export function TransferMarketReport() {
             >
               {p.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -86,14 +86,14 @@ export function TransferMarketReport() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("player.currentValue")}
-          value=`${t("currency.euro")} ${currentValue.toLocaleString()}`
-          subtitle={t("player.marketValue)}
+          value={`${t("currency.euro")} ${currentValue.toLocaleString()}`}
+          subtitle={t("player.marketValue")}
         />
         <StatTile
           title={t("player.predictedValue12M")}
           value={totalChange >= 0 ? `+${t("currency.euro")} ${totalChange.toLocaleString()}` : `-${t("currency.euro")} ${Math.abs(totalChange).toLocaleString()}`}
           variant={totalChange >= 0 ? "primary" : "destructive"}
-          subtitle={t("player.in12M)}
+          subtitle={t("player.in12M")}
         />
       </div>
 

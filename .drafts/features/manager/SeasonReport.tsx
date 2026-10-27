@@ -57,23 +57,23 @@ export function SeasonReport() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.season")}
-          value=seasonStats.season.toString()
-          subtitle={t("manager.currentSeason)}
+          value={seasonStats.season.toString()}
+          subtitle={t("manager.currentSeason")}
         />
         <StatTile
           title={t("manager.totalMatches")}
-          value=seasonStats.totalMatches.toString()
-          subtitle={t("manager.totalGames)}
+          value={seasonStats.totalMatches.toString()}
+          subtitle={t("manager.totalGames")}
         />
         <StatTile
           title={t("manager.goalsFor")}
-          value=seasonStats.goalsFor.toString()
-          subtitle={t("manager.totalGoalsFor)}
+          value={seasonStats.goalsFor.toString()}
+          subtitle={t("manager.totalGoalsFor")}
         />
         <StatTile
           title={t("manager.goalsAgainst")}
-          value=seasonStats.goalsAgainst.toString()
-          subtitle={t("manager.totalGoalsAgainst)}
+          value={seasonStats.goalsAgainst.toString()}
+          subtitle={t("manager.totalGoalsAgainst")}
         />
       </div>
 

@@ -43,7 +43,7 @@ export function PlayerDevelopmentAssessment() {
             >
               {p.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -134,9 +134,9 @@ export function PlayerDevelopmentAssessment() {
       {/* 发展阶段 */}
       <Panel className="p-4 mb-6">
         <SectionTitle title={t("player.developmentStage")} />
-        <div className="p-3 rounded ${
+        <div className={`p-3 rounded ${
           ["青年提潜", "黄金发展期"].includes(developmentStage) ? "bg-green-50" : "bg-blue-50"
-        }">
+        }`}>
           <div className="font-medium">{t(`stage.${developmentStage}`)}</div>
           <p className="text-sm text-muted-foreground mt-1">
             {t(`stageDesc.${developmentStage}`) || ""}

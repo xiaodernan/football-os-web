@@ -17,7 +17,7 @@ export function PayrollStructure() {
       totalPayroll: Math.floor(Math.random() * 200000000) + 80000000,
       avgWeeklyWage: Math.floor(Math.random() * 50000) + 20000,
       highEarners: Math.floor(Math.random() * 5) + 2,
-    });
+    }));
   }, [clubs]);
 
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export function PayrollStructure() {
             >
               {c.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -59,12 +59,12 @@ export function PayrollStructure() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.totalPayroll")}
-          value=`${t("currency.euro")} ${club.totalPayroll.toLocaleString()}`
+          value={`${t("currency.euro")} ${club.totalPayroll.toLocaleString()}`}
           subtitle={t("manager.totalPayrollDesc")}
         />
         <StatTile
           title={t("manager.avgWeeklyWage")}
-          value=`${t("currency.euro")} ${club.avgWeeklyWage.toLocaleString()}/w`
+          value={`${t("currency.euro")} ${club.avgWeeklyWage.toLocaleString()}/w`}
           subtitle={t("manager.avgWeeklyWageDesc")}
         />
       </div>

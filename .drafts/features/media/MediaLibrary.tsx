@@ -40,13 +40,13 @@ export function MediaLibrary() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("media.totalItems")}
-          value=mediaItems.length.toString()
-          subtitle={t("media.mediaCount)}
+          value={mediaItems.length.toString()}
+          subtitle={t("media.mediaCount")}
         />
         <StatTile
           title={t("media.published")}
-          value=statusCounts.published?.toString() || "0"
-          subtitle={t("media.publishedStatus)}
+          value={statusCounts.published?.toString() || "0"}
+          subtitle={t("media.publishedStatus")}
         />
       </div>
 
@@ -62,7 +62,7 @@ export function MediaLibrary() {
             >
               {t(`type.${type}`)} {t(`count.${type}`, { count: mediaItems.filter(m => m.type === type).length })}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
 

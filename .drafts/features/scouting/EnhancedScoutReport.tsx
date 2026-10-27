@@ -64,23 +64,23 @@ export function EnhancedScoutReport() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("player.overall")}
-          value=p.overall.toLocaleString()
+          value={p.overall.toLocaleString()}
           subtitle={t("player.currentRating")}
         />
         <StatTile
           title={t("player.potential")}
-          value=p.potential.toLocaleString()
+          value={p.potential.toLocaleString()}
           subtitle={t("player.ceilingRating")}
           variant="primary"
         />
         <StatTile
           title={t("player.potentialScore")}
-          value=potentialScore.toLocaleString()
+          value={potentialScore.toLocaleString()}
           subtitle={t("player.potentialScoreDesc", { score: potentialScore })}
         />
         <StatTile
           title={t("player.growthRate")}
-          value=p.growthRate > 0 ? `${p.growthRate}` + t("player.pointsPerSeason") : t("player.atCeiling")
+          value={p.growthRate > 0 ? `${p.growthRate}` + t("player.pointsPerSeason") : t("player.atCeiling")}
           subtitle={t("player.estimatedGrowth")}
         />
       </div>

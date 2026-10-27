@@ -27,17 +27,17 @@ export function CourseManagement() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("academy.totalCourses")}
-          value=courses.length.toString()
+          value={courses.length.toString()}
           subtitle={t("academy.courses")}
         />
         <StatTile
           title={t("academy.totalStudents")}
-          value=totalStudents.toLocaleString()
+          value={totalStudents.toLocaleString()}
           subtitle={t("academy.students")}
         />
         <StatTile
           title={t("academy.avgProgress")}
-          value=`${avgProgress}%`
+          value={`${avgProgress}%`}
           subtitle={t("academy.progress")}
           variant="primary"
         />
@@ -49,7 +49,7 @@ export function CourseManagement() {
         <div className="space-y-3">
           {courses.map(course => (
             <div
-              key=course.id
+              key={course.id}
               className="border rounded p-3 flex items-start"
             >
               <div className="flex-1">

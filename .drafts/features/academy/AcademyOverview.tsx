@@ -37,18 +37,18 @@ export function AcademyOverview() {
         />
         <StatTile
           title={t("academy.currentStudents")}
-          value=academyData.currentStudents.toLocaleString()
+          value={academyData.currentStudents.toLocaleString()}
           subtitle={t("academy.currentStudents")}
         />
         <StatTile
           title={t("academy.graduationRate")}
-          value=`${academyData.graduationRate}%`
+          value={`${academyData.graduationRate}%`}
           subtitle={t("academy.rate")}
           variant="primary"
         />
         <StatTile
           title={t("academy.yearsInOperation")}
-          value=`${academyData.yearsInOperation}`
+          value={`${academyData.yearsInOperation}`}
           subtitle={t("academy.years")}
         />
       </div>
@@ -62,7 +62,7 @@ export function AcademyOverview() {
         />
         <StatTile
           title={t("academy.courseCompletion")}
-          value=`${Math.round((courseProgress.goalkeeping + courseProgress.defensive + courseProgress.playmaking + courseProgress.finishing) / 4)}%`
+          value={`${Math.round((courseProgress.goalkeeping + courseProgress.defensive + courseProgress.playmaking + courseProgress.finishing) / 4)}%`}
           subtitle={t("academy.avgCourseCompletion")}
         />
       </div>

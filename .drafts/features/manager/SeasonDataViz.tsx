@@ -42,22 +42,22 @@ export function SeasonDataViz() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.season")}
-          value=seasonData.season.toString()
+          value={seasonData.season.toString()}
           subtitle={t("manager.currentSeason")}
         />
         <StatTile
           title={t("manager.matchesPlayed")}
-          value=seasonData.matchesPlayed.toString()
+          value={seasonData.matchesPlayed.toString()}
           subtitle={t("manager.matchesThisSeason")}
         />
         <StatTile
           title={t("manager.matchesCompleted")}
-          value=seasonData.matchesCompleted.toString()
+          value={seasonData.matchesCompleted.toString()}
           subtitle={t("manager.completed")}
         />
         <StatTile
           title={t("manager.goalsScored")}
-          value=seasonData.goalsScored.toString()
+          value={seasonData.goalsScored.toString()}
           subtitle={t("manager.totalGoals")}
         />
       </div>
@@ -68,22 +68,22 @@ export function SeasonDataViz() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("manager.avgAttendance")}
-            value=`${seasonData.avgAttendance.toLocaleString()}`
+            value={`${seasonData.avgAttendance.toLocaleString()}`}
             subtitle={t("manager.attendance")}
           />
           <StatTile
             title={t("manager.possessionAvg")}
-            value=`${seasonData.possessionAvg.toFixed(1)}%`
+            value={`${seasonData.possessionAvg.toFixed(1)}%`}
             subtitle={t("manager.possession")}
           />
           <StatTile
             title={t("manager.shotsPerGame")}
-            value=seasonData.shotsPerGame.toFixed(1)
+            value={seasonData.shotsPerGame.toFixed(1)}
             subtitle={t("manager.shotsPerGameDesc")}
           />
           <StatTile
             title={t("manager.passesAccurate")}
-            value=`${seasonData.passesAccurate.toFixed(1)}%`
+            value={`${seasonData.passesAccurate.toFixed(1)}%`}
             subtitle={t("manager.passesAccurateDesc")}
           />
         </div>
@@ -95,17 +95,17 @@ export function SeasonDataViz() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("manager.goalsConceded")}
-            value=seasonData.goalsConceded.toString()
+            value={seasonData.goalsConceded.toString()}
             subtitle={t("manager.totalConceded")}
           />
           <StatTile
             title={t("manager.cleanSheets")}
-            value=seasonData.cleanSheets.toString()
+            value={seasonData.cleanSheets.toString()}
             subtitle={t("manager.cleanSheetsDesc")}
           />
           <StatTile
             title={t("manager.savePercentage")}
-            value=`${seasonData.savePercentage.toFixed(1)}%`
+            value={`${seasonData.savePercentage.toFixed(1)}%`}
             subtitle={t("manager.savePctDesc")}
           />
         </div>
@@ -117,22 +117,22 @@ export function SeasonDataViz() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("manager.marketValue")}
-            value=`${t("currency.euro")} ${clubStats.marketValue.toLocaleString()}`
+            value={`${t("currency.euro")} ${clubStats.marketValue.toLocaleString()}`}
             subtitle={t("manager.squadValue")}
           />
           <StatTile
             title={t("manager.wageBill")}
-            value=`${t("currency.euro")} ${clubStats.wageBill.toLocaleString()}/w`
+            value={`${t("currency.euro")} ${clubStats.wageBill.toLocaleString()}/w`}
             subtitle={t("manager.totalWageBill")}
           />
           <StatTile
             title={t("manager.stadiumCapacity")}
-            value=clubStats.stadiumCapacity.toLocaleString()
+            value={clubStats.stadiumCapacity.toLocaleString()}
             subtitle={t("manager.stadiumCapacityDesc")}
           />
           <StatTile
             title={t("manager.attendanceRate")}
-            value=`${seasonData.avgAttendance > 0 ? (clubStats.attendanceRate || 0).toFixed(1) : "0"}%`
+            value={`${seasonData.avgAttendance > 0 ? (clubStats.attendanceRate || 0).toFixed(1) : "0"}%`}
             subtitle={t("manager.attendanceRateDesc")}
           />
         </div>

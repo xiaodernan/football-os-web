@@ -59,18 +59,18 @@ export function PotentialPrediction() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("player.overall")}
-          value=p.overall.toLocaleString()
+          value={p.overall.toLocaleString()}
           subtitle={t("player.currentRating")}
         />
         <StatTile
           title={t("player.potential")}
-          value=p.potential.toLocaleString()
+          value={p.potential.toLocaleString()}
           subtitle={t("player.ceilingRating")}
           variant="primary"
         />
         <StatTile
           title={t("player.age")}
-          value=`${p.age}`
+          value={`${p.age}`}
           subtitle={t("player.yearsOld")}
         />
         <StatTile

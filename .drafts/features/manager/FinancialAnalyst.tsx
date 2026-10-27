@@ -50,7 +50,7 @@ export function FinancialAnalyst() {
             >
               {c.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -68,12 +68,12 @@ export function FinancialAnalyst() {
         <div className="grid grid-cols-2 gap-4">
           <StatTile
             title={t("manager.totalAssets")}
-            value=`${t("currency.euro")} ${club.totalAssets.toLocaleString()}`
+            value={`${t("currency.euro")} ${club.totalAssets.toLocaleString()}`}
             subtitle={t("manager.totalAssetsDesc")}
           />
           <StatTile
             title={t("manager.totalLiabilities")}
-            value=`-${t("currency.euro")} ${club.totalLiabilities.toLocaleString()}`
+            value={`-${t("currency.euro")} ${club.totalLiabilities.toLocaleString()}`}
             subtitle={t("manager.totalLiabilitiesDesc")}
             variant="destructive"
           />
@@ -91,12 +91,12 @@ export function FinancialAnalyst() {
         <div className="grid grid-cols-2 gap-4">
           <StatTile
             title={t("manager.totalRevenue")}
-            value=`${t("currency.euro")} ${club.totalRevenue.toLocaleString()}`
+            value={`${t("currency.euro")} ${club.totalRevenue.toLocaleString()}`}
             subtitle={t("manager.totalRevenueDesc")}
           />
           <StatTile
             title={t("manager.totalExpenses")}
-            value=`-${t("currency.euro")} ${club.totalExpenses.toLocaleString()}`
+            value={`-${t("currency.euro")} ${club.totalExpenses.toLocaleString()}`}
             subtitle={t("manager.totalExpensesDesc")}
             variant="destructive"
           />

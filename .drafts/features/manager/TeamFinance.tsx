@@ -69,17 +69,17 @@ export function TeamFinance() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("revenue.ticketSales")}
-          value=`${t("currency.euro")} ${club.revenue.ticket.toLocaleString()}`
+          value={`${t("currency.euro")} ${club.revenue.ticket.toLocaleString()}`}
           subtitle={t("revenue.matchDay")}
         />
         <StatTile
           title={t("revenue.broadcast")}
-          value=`${t("currency.euro")} ${club.revenue.broadcast.toLocaleString()}`
+          value={`${t("currency.euro")} ${club.revenue.broadcast.toLocaleString()}`}
           subtitle={t("revenue.tvDeal")}
         />
         <StatTile
           title={t("revenue.commercial")}
-          value=`${t("currency.euro")} ${club.revenue.commercial.toLocaleString()}`
+          value={`${t("currency.euro")} ${club.revenue.commercial.toLocaleString()}`}
           subtitle={t("revenue.sponsorship")}
         />
       </div>
@@ -88,19 +88,19 @@ export function TeamFinance() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("expenses.wages")}
-          value=`-${t("currency.euro")} ${club.expenses.wages.toLocaleString()}`
+          value={`-${t("currency.euro")} ${club.expenses.wages.toLocaleString()}`}
           subtitle={t("playerWages")}
           variant="destructive"
         />
         <StatTile
           title={t("expenses.transferSpending")}
-          value=`-${t("currency.euro")} ${club.expenses.transferSpending.toLocaleString()}`
+          value={`-${t("currency.euro")} ${club.expenses.transferSpending.toLocaleString()}`}
           subtitle={t("transferFees")}
           variant="destructive"
         />
         <StatTile
           title={t("expenses.stadiumMaintenance")}
-          value=`-${t("currency.euro")} ${club.expenses.stadiumMaintenance.toLocaleString()}`
+          value={`-${t("currency.euro")} ${club.expenses.stadiumMaintenance.toLocaleString()}`}
           subtitle={t("stadiumUpkeep")}
         />
       </div>

@@ -30,22 +30,22 @@ export function SeasonOps() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.season")}
-          value=newsData.season.toString()
+          value={newsData.season.toString()}
           subtitle={t("manager.currentSeason")}
         />
         <StatTile
           title={t("manager.activeEvents")}
-          value=opsData.activeEvents.toString()
+          value={opsData.activeEvents.toString()}
           subtitle={t("manager.activeThisSeason")}
         />
         <StatTile
           title={t("manager.completedEvents")}
-          value=opsData.completedEvents.toString()
+          value={opsData.completedEvents.toString()}
           subtitle={t("manager.completed")}
         />
         <StatTile
           title={t("manager.remainingEvents")}
-          value=opsData.remainingEvents.toString()
+          value={opsData.remainingEvents.toString()}
           subtitle={t("manager.remaining")}
         />
       </div>
@@ -56,12 +56,12 @@ export function SeasonOps() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("manager.totalRewards")}
-            value=`${t("currency.euro")} ${opsData.totalRewards.toLocaleString()}`
+            value={`${t("currency.euro")} ${opsData.totalRewards.toLocaleString()}`}
             subtitle={t("manager.totalRewardPool")}
           />
           <StatTile
             title={t("manager.distributedRewards")}
-            value=`${t("currency.euro")} ${opsData.distributedRewards.toLocaleString()}`
+            value={`${t("currency.euro")} ${opsData.distributedRewards.toLocaleString()}`}
             subtitle={t("manager.alreadyDistributed")}
           />
         </div>
@@ -73,12 +73,12 @@ export function SeasonOps() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("manager.activeMembers")}
-            value=opsData.activeMembers.toString()
+            value={opsData.activeMembers.toString()}
             subtitle={t("manager.active")}
           />
           <StatTile
             title={t("manager.totalMembers")}
-            value=opsData.totalMembers.toString()
+            value={opsData.totalMembers.toString()}
             subtitle={t("manager.total")}
         </div>
       </Panel>

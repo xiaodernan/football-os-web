@@ -38,22 +38,22 @@ export function AdvancedTransferMarketReport() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.totalPlayers")}
-          value=marketAnalysis.totalPlayers.toLocaleString()
+          value={marketAnalysis.totalPlayers.toLocaleString()}
           subtitle={t("manager.squadSize")}
         />
         <StatTile
           title={t("manager.highValuePlayers")}
-          value=marketAnalysis.highValuePlayers.toLocaleString()
+          value={marketAnalysis.highValuePlayers.toLocaleString()}
           subtitle={t("manager.playersOver100M")}
         />
         <StatTile
           title={t("manager.lowValuePlayers")}
-          value=marketAnalysis.lowValuePlayers.toLocaleString()
+          value={marketAnalysis.lowValuePlayers.toLocaleString()}
           subtitle={t("manager.playersUnder10M")}
         />
         <StatTile
           title={t("manager.avgValue")}
-          value=`${t("currency.euro")} ${marketAnalysis.avgValue.toLocaleString()}`
+          value={`${t("currency.euro")} ${marketAnalysis.avgValue.toLocaleString()}`}
           subtitle={t("manager.averageValue")}
         />
       </div>
@@ -64,12 +64,12 @@ export function AdvancedTransferMarketReport() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("market.minValue")}
-            value=`${t("currency.euro")} ${marketAnalysis.valueRange.min.toLocaleString()}`
+            value={`${t("currency.euro")} ${marketAnalysis.valueRange.min.toLocaleString()}`}
             subtitle={t("market.minValueDesc")}
           />
           <StatTile
             title={t("market.maxValue")}
-            value=`${t("currency.euro")} ${marketAnalysis.valueRange.max.toLocaleString()}`
+            value={`${t("currency.euro")} ${marketAnalysis.valueRange.max.toLocaleString()}`}
             subtitle={t("market.maxValueDesc")}
           />
         </div>

@@ -43,7 +43,7 @@ export function ContractExtensionAnalysis() {
             >
               {p.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -61,22 +61,22 @@ export function ContractExtensionAnalysis() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("player.contractPeriod")}
-          value=`${p.contractStart}-${p.contractEnd}`
+          value={`${p.contractStart}-${p.contractEnd}`}
           subtitle={t("player.contractPeriodDesc")}
         />
         <StatTile
           title={t("player.yearsRemaining")}
-          value=yearsRemaining > 0 ? `${yearsRemaining}` + t("player.years") : t("player.expired")
+          value={yearsRemaining > 0 ? `${yearsRemaining}` + t("player.years") : t("player.expired")}
           variant={isContractExpiring ? "destructive" : "default"}
         />
         <StatTile
           title={t("player.weeklyWage")}
-          value=`${t("currency.euro")} ${p.currentWage.toLocaleString()}/w`
+          value={`${t("currency.euro")} ${p.currentWage.toLocaleString()}/w`}
           subtitle={t("player.wage")}
         />
         <StatTile
           title={t("player.contractStatus")}
-          value=p.contractStatus
+          value={p.contractStatus}
           subtitle={t("player.status")}
         />
       </div>

@@ -71,22 +71,22 @@ export function ScoutReport() {
         />
         <StatTile
           title={t("scouting.age")}
-          value=`${p.age} ${t("scouting.yearsOld")}`
+          value={`${p.age} ${t("scouting.yearsOld")}`}
           subtitle={t("scouting.age")}
         />
         <StatTile
           title={t("scouting.marketValue")}
-          value=`${t("currency.euro")} ${p.value.toLocaleString()}`
+          value={`${t("currency.euro")} ${p.value.toLocaleString()}`}
           subtitle={t("scouting.value")}
         />
         <StatTile
           title={t("scouting.wage")}
-          value=`${t("currency.euro")} ${p.wage.toLocaleString()}/w`
+          value={`${t("currency.euro")} ${p.wage.toLocaleString()}/w`}
           subtitle={t("scouting.wage")}
         />
         <StatTile
           title={t("scouting.position")}
-          value=p.position
+          value={p.position}
           subtitle={t("scouting.position")}
         />
       </div>

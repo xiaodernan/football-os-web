@@ -57,7 +57,7 @@ export function SquadDepth() {
           >
             {t(fmt)}
           </Button>
-        ))
+        ))}
       </div>
 
       {/* 阵容深度概览 */}
@@ -67,12 +67,12 @@ export function SquadDepth() {
           <div className="grid grid-cols-2 gap-3">
             <StatTile
               title={t("manager.avgStartingXI")}
-              value=`${avgStartingXI.toFixed(1)}★`
+              value={`${avgStartingXI.toFixed(1)}★`}
               subtitle={t("manager.avgRating")}
             />
             <StatTile
               title={t("manager.avgSubstitutes")}
-              value=`${avgSubstitutes.toFixed(1)}★`
+              value={`${avgSubstitutes.toFixed(1)}★`}
               subtitle={t("manager.avgRating")}
             />
           </div>
@@ -99,7 +99,7 @@ export function SquadDepth() {
                 <div className="text-primary">{p.overall}★</div>
                 <div className="text-xs text-muted-foreground">{p.position}</div>
               </div>
-            ))
+            ))}
           </div>
         </Panel>
       )}
@@ -129,7 +129,7 @@ export function SquadDepth() {
                   {{p.overall}}★
                 </div>
               </div>
-            ))
+            ))}
           </div>
         </Panel>
       )}

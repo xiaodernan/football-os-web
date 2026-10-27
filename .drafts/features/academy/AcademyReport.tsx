@@ -44,7 +44,7 @@ export function AcademyReport() {
             >
               {c.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -77,24 +77,24 @@ export function AcademyReport() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("academy.totalStudents")}
-          value=studentStats.totalStudents.toLocaleString()
-          subtitle={t("academy.students)}
+          value={studentStats.totalStudents.toLocaleString()}
+          subtitle={t("academy.students")}
         />
         <StatTile
           title={t("academy.totalCoaches")}
-          value=studentStats.totalCoaches.toString()
-          subtitle={t("academy.coaches)}
+          value={studentStats.totalCoaches.toString()}
+          subtitle={t("academy.coaches")}
         />
         <StatTile
           title={t("academy.graduationRate")}
-          value=`${studentStats.graduationRate}%`
-          subtitle={t("academy.rate)}
+          value={`${studentStats.graduationRate}%`}
+          subtitle={t("academy.rate")}
           variant="primary"
         />
         <StatTile
           title={t("academy.scholarshipStudents")}
-          value=studentStats.scholarshipStudents.toLocaleString()
-          subtitle={t("academy.scholarships)}
+          value={studentStats.scholarshipStudents.toLocaleString()}
+          subtitle={t("academy.scholarships")}
         />
       </div>
 

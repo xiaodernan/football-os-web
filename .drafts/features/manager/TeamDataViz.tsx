@@ -27,22 +27,22 @@ export function TeamDataViz() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.avgPossession")}
-          value=`${avgPossession}%`
+          value={`${avgPossession}%`}
           subtitle={t("manager.avgPossessionDesc")}
         />
         <StatTile
           title={t("manager.totalWins")}
-          value=data.wins.reduce((a, b) => a + b, 0).toString()
+          value={data.wins.reduce((a, b) => a + b, 0).toString()}
           subtitle={t("manager.totalWinsDesc")}
         />
         <StatTile
           title={t("manager.totalScores")}
-          value=data.scores.reduce((a, b) => a + b, 0).toString()
+          value={data.scores.reduce((a, b) => a + b, 0).toString()}
           subtitle={t("manager.totalScoresDesc")}
         />
         <StatTile
           title={t("manager.attendanceAvg")}
-          value=`${(data.attendence.reduce((a, b) => a + b, 0) / data.attendence.length).toLocaleString()}`
+          value={`${(data.attendence.reduce((a, b) => a + b, 0) / data.attendence.length).toLocaleString()}`}
           subtitle={t("manager.avgAttendance")}
         />
       </div>

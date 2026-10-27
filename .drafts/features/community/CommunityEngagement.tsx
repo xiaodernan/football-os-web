@@ -32,23 +32,23 @@ export function CommunityEngagement() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("community.totalPosts")}
-          value=engagement.totalPosts.toLocaleString()
-          subtitle={t("community.posts)}
+          value={engagement.totalPosts.toLocaleString()}
+          subtitle={t("community.posts")}
         />
         <StatTile
           title={t("community.totalComments")}
-          value=engagement.totalComments.toLocaleString()
-          subtitle={t("community.comments)}
+          value={engagement.totalComments.toLocaleString()}
+          subtitle={t("community.comments")}
         />
         <StatTile
           title={t("community.totalLikes")}
-          value=engagement.totalLikes.toLocaleString()
-          subtitle={t("community.likes)}
+          value={engagement.totalLikes.toLocaleString()}
+          subtitle={t("community.likes")}
         />
         <StatTile
           title={t("community.activeUsersToday")}
-          value=engagement.activeUsersToday.toLocaleString()
-          subtitle={t("community.activeToday)}
+          value={engagement.activeUsersToday.toLocaleString()}
+          subtitle={t("community.activeToday")}
         />
       </div>
 
@@ -62,7 +62,7 @@ export function CommunityEngagement() {
               className="border rounded p-3 text-center"
             >
               <div className="font-medium">{t(`community.${type}`)}</div>
-              <div className="text-3xl font-bold ${type === "shareRate" ? "text-primary" : type === "likeRate" ? "text-success" : "text-info"}">
+              <div className={`text-3xl font-bold ${type === "shareRate" ? "text-primary" : type === "likeRate" ? "text-success" : "text-info"}`}>
                 {rate}%
               </div>
             </div>

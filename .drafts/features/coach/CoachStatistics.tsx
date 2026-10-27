@@ -81,24 +81,24 @@ export function CoachStatistics() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("coach.totalMatches")}
-          value=c.totalMatches.toString()
-          subtitle={t("coach.matchesCoached)}
+          value={c.totalMatches.toString()}
+          subtitle={t("coach.matchesCoached")}
         />
         <StatTile
           title={t("coach.winRate")}
-          value=`${winRate}%`
-          subtitle={t("coach.winRateDesc)}
+          value={`${winRate}%`}
+          subtitle={t("coach.winRateDesc")}
           variant={winRate > 60 ? "primary" : winRate > 40 ? "warning" : "destructive"}
         />
         <StatTile
           title={t("coach.trophiesWon")}
-          value=c.trophies.toString()
-          subtitle={t("coach.honours)}
+          value={c.trophies.toString()}
+          subtitle={t("coach.honours")}
         />
         <StatTile
           title={t("coach.yearsAtClub")}
-          value=`${c.yearsAtClub}年`
-          subtitle={t("coach.coachAtClub)}
+          value={`${c.yearsAtClub}年`}
+          subtitle={t("coach.coachAtClub")}
         />
       </div>
 

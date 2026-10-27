@@ -40,8 +40,8 @@ export function UserFeedback() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("totalFeedback")}
-          value=feedback.length.toString()
-          subtitle={t("feedbackCount)}
+          value={feedback.length.toString()}
+          subtitle={t("feedbackCount")}
         />
         <div>
           <SectionTitle title={t("statusDistribution")} />
@@ -49,7 +49,7 @@ export function UserFeedback() {
             {["open", "in-progress", "resolved"].map(status => (
               <div key={status} className="border rounded p-2 text-center">
                 <div className="font-medium">{t(`status.${status}`)}</div>
-                <div className="text-2xl font-bold ${status === "open" ? "text-red-600" : status === "in-progress" ? "text-yellow-600" : "text-green-600"}">
+                <div className={`text-2xl font-bold ${status === "open" ? "text-red-600" : status === "in-progress" ? "text-yellow-600" : "text-green-600"}`}>
                   {statusCounts[status] || 0}
                 </div>
               </div>
@@ -64,7 +64,7 @@ export function UserFeedback() {
         <div className="grid grid-cols-5 gap-2">
           {[1, 2, 3, 4, 5].map(rating => (
             <div key={rating} className="border rounded p-2 text-center">
-              <div className="text-2xl font-bold ${rating <= 2 ? "text-red-600" : rating <= 4 ? "text-warning" : "text-green-600"}">
+              <div className={`text-2xl font-bold ${rating <= 2 ? "text-red-600" : rating <= 4 ? "text-warning" : "text-green-600"}`}>
                 {rating}★
               </div>
               <div className="text-sm text-muted-foreground">{ratingCounts[rating] || 0}</div>

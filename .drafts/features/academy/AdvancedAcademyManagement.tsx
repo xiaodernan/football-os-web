@@ -41,23 +41,23 @@ export function AdvancedAcademyManagement() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("academy.totalCampuses")}
-          value=academyData.totalCampuses.toString()
+          value={academyData.totalCampuses.toString()}
           subtitle={t("academy.campuses")}
         />
         <StatTile
           title={t("academy.totalStudents")}
-          value=academyData.totalStudents.toLocaleString()
+          value={academyData.totalStudents.toLocaleString()}
           subtitle={t("academy.students")}
         />
         <StatTile
           title={t("academy.graduationRate")}
-          value=`${academyData.graduationRate}%`
+          value={`${academyData.graduationRate}%`}
           subtitle={t("academy.rate")}
           variant="primary"
         />
         <StatTile
           title={t("academy.scholarshipStudents")}
-          value=academyData.scholarshipStudents.toString()
+          value={academyData.scholarshipStudents.toString()}
           subtitle={t("academy.scholarships")}
         />
       </div>
@@ -74,7 +74,7 @@ export function AdvancedAcademyManagement() {
             >
               {t(`academy.${group}`)} {ageGroupCounts[group].toLocaleString()}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
 
@@ -95,7 +95,7 @@ export function AdvancedAcademyManagement() {
                 </div>
               </div>
             </div>
-          ))
+          ))}
         </div>
       </Panel>
     </Panel>

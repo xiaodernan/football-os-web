@@ -43,7 +43,7 @@ export function ContractManagement() {
             >
               {p.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -61,17 +61,17 @@ export function ContractManagement() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("player.contractPeriod")}
-          value=`${p.contractStart}-${p.contractEnd}`
+          value={`${p.contractStart}-${p.contractEnd}`}
           subtitle={t("player.contractPeriodDesc")}
         />
         <StatTile
           title={t("player.yearsRemaining")}
-          value=yearsRemaining > 0 ? `${yearsRemaining}` + t("player.years") : t("player.expired")
+          value={yearsRemaining > 0 ? `${yearsRemaining}` + t("player.years") : t("player.expired")}
           variant={isContractExpiring ? "destructive" : "default"}
         />
         <StatTile
           title={t("player.weeklyWage")}
-          value=`${t("currency.euro")} ${p.weeklyWage.toLocaleString()}/w`
+          value={`${t("currency.euro")} ${p.weeklyWage.toLocaleString()}/w`}
           subtitle={t("player.wage")}
         />
         <StatTile

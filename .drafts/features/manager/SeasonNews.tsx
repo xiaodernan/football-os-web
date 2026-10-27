@@ -34,13 +34,13 @@ export function SeasonNews() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.totalNews")}
-          value=news.length.toString()
-          subtitle={t("manager.newsCount)}
+          value={news.length.toString()}
+          subtitle={t("manager.newsCount")}
         />
         <StatTile
           title={t("manager.categories")}
-          value=Object.keys(categories).length.toString()
-          subtitle={t("manager.categoryCount)}
+          value={Object.keys(categories).length.toString()}
+          subtitle={t("manager.categoryCount")}
         />
       </div>
 

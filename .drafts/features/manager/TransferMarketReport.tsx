@@ -35,17 +35,17 @@ export function TransferMarketReport() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.totalPlayers")}
-          value=marketStats.totalPlayers.toLocaleString()
+          value={marketStats.totalPlayers.toLocaleString()}
           subtitle={t("manager.squadSize")}
         />
         <StatTile
           title={t("manager.highValuePlayers")}
-          value=marketStats.highValuePlayers.toLocaleString()
+          value={marketStats.highValuePlayers.toLocaleString()}
           subtitle={t("manager.playersOver50M")}
         />
         <StatTile
           title={t("manager.totalBudget")}
-          value=`${t("currency.euro")} ${marketStats.totalTransferBudget.toLocaleString()}`
+          value={`${t("currency.euro")} ${marketStats.totalTransferBudget.toLocaleString()}`}
           subtitle={t("manager.annualBudget")}
         />
         <StatTile
@@ -75,7 +75,7 @@ export function TransferMarketReport() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("budgetSpent")}
-            value=`-${t("currency.euro")} ${marketStats.totalSpent.toLocaleString()}`
+            value={`-${t("currency.euro")} ${marketStats.totalSpent.toLocaleString()}`}
             subtitle={t("budgetSpentDesc")}
           />
           <StatTile

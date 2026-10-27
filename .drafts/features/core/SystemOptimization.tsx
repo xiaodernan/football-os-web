@@ -34,23 +34,23 @@ export function SystemOptimization() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("core.buildSize")}
-          value=`${optimizationData.buildSize}KB`
-          subtitle={t("core.gzipSize)}
+          value={`${optimizationData.buildSize}KB`}
+          subtitle={t("core.gzipSize")}
         />
         <StatTile
           title={t("core.buildTime")}
-          value=`${optimizationData.buildTime}s`
-          subtitle={t("core.compilationTime)}
+          value={`${optimizationData.buildTime}s`}
+          subtitle={t("core.compilationTime")}
         />
         <StatTile
           title={t("core.tti")}
-          value=`${optimizationData.averageTTI}s`
-          subtitle={t("core.timeToInteractive)}
+          value={`${optimizationData.averageTTI}s`}
+          subtitle={t("core.timeToInteractive")}
         />
         <StatTile
           title={t("core.performanceScore")}
-          value=`${optimizationData.performanceScore}分`
-          subtitle={t("core.score)}
+          value={`${optimizationData.performanceScore}分`}
+          subtitle={t("core.score")}
           variant={optimizationData.performanceScore > 90 ? "primary" : "warning"}
         />
       </div>
@@ -61,18 +61,18 @@ export function SystemOptimization() {
         <div className="grid grid-cols-2 gap-3">
           <StatTile
             title={t("core.coreModules")}
-            value=optimizationData.coreModules.toString()
-            subtitle={t("core.modules)}
+            value={optimizationData.coreModules.toString()}
+            subtitle={t("core.modules")}
           />
           <StatTile
             title={t("totalComponents")}
-            value=optimizationData.totalComponents.toString()
-            subtitle={t("core.components)}
+            value={optimizationData.totalComponents.toString()}
+            subtitle={t("core.components")}
           />
           <StatTile
             title={t("cacheHitRate")}
-            value=`${optimizationData.cacheHitRate.toFixed(1)}%`
-            subtitle={t("core.cache)}
+            value={`${optimizationData.cacheHitRate.toFixed(1)}%`}
+            subtitle={t("core.cache")}
           />
         </div>
       </Panel>

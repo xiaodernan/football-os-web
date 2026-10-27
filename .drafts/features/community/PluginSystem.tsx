@@ -33,13 +33,13 @@ export function PluginSystem() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("community.totalPlugins")}
-          value=plugins.length.toString()
-          subtitle={t("community.totalPluginsDesc)}
+          value={plugins.length.toString()}
+          subtitle={t("community.totalPluginsDesc")}
         />
         <StatTile
           title={t("community.activePlugins")}
-          value=activePlugins.length.toString()
-          subtitle={t("community.activePluginsDesc)}
+          value={activePlugins.length.toString()}
+          subtitle={t("community.activePluginsDesc")}
         />
       </div>
 
@@ -58,9 +58,9 @@ export function PluginSystem() {
                 <div className="font-medium">{t(`plugin.${p.name}`)}</div>
                 <div className="text-xs text-muted-foreground">{t(`plugin.${p.description}`)}</div>
               </div>
-              <span className="ml-3 text-xs ${
+              <span className={`ml-3 text-xs ${
                 p.active ? "text-green-600" : "text-gray-500"
-              }">
+              }`}>
                 {t(p.active ? "community.active" : "community.inactive")}
               </span>
             </div>
