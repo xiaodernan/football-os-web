@@ -509,7 +509,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M531: 114 -> 115 — features/compare/ClubCompare.tsx is a new comparison screen.
 // M532: 115 -> 116 — features/leaders/LeagueLeaders.tsx is a new leaderboard screen.
 // M533: 116 -> 117 — features/player/PlayerProjection.tsx is a new projection screen.
-const APP_SRC_PIN = 117;
+// M534: 117 -> 118 — features/analytics/RunIn.tsx is a new run-in screen.
+const APP_SRC_PIN = 118;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -520,7 +521,8 @@ const APP_SRC_PIN = 117;
 // M531: 58 -> 59 — ClubCompare.tsx is the new .tsx module.
 // M532: 59 -> 60 — LeagueLeaders.tsx is the new .tsx module.
 // M533: 60 -> 61 — PlayerProjection.tsx is the new .tsx module.
-const TSX_PIN = 61;
+// M534: 61 -> 62 — RunIn.tsx is the new .tsx module.
+const TSX_PIN = 62;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -533,7 +535,8 @@ const TSX_PIN = 61;
 // M531: 117 -> 118, ClubCompare.tsx again.
 // M532: 118 -> 119, LeagueLeaders.tsx again.
 // M533: 119 -> 120, PlayerProjection.tsx again.
-const SRC_PIN = 120;
+// M534: 120 -> 121, RunIn.tsx again.
+const SRC_PIN = 121;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -3073,8 +3076,9 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M530: InjuryReport's 13 keys add 6 duplicate values and 6 excess keys (118->124, 200->206).
 // M531: ClubCompare's 16 keys add 1 duplicate value and 4 excess keys (124->125, 206->210).
 // M533: PlayerProjection's 16 keys add 1 duplicate value and 4 excess keys (125->126, 210->214).
-const DUP_VALUES_PIN = 126;
-const DUP_EXCESS_KEYS_PIN = 214;
+// M534: RunIn's 18 keys add 1 duplicate value and 1 excess key (126->127, 214->215).
+const DUP_VALUES_PIN = 127;
+const DUP_EXCESS_KEYS_PIN = 215;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4295,7 +4299,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M531: ClubCompare adds its 18 literal t() sites: 1439 -> 1457.
   // M532: LeagueLeaders adds its 10 literal t() sites: 1457 -> 1467.
   // M533: PlayerProjection adds its 19 literal + 1 template t() sites: 1467 -> 1486, 108 -> 109.
-  shapeCounts.literal === 1486 && shapeCounts.template === 109 && shapeCounts.expression === 32
+  // M534: RunIn adds its 20 literal t() sites: 1486 -> 1506.
+  shapeCounts.literal === 1506 && shapeCounts.template === 109 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4311,7 +4316,9 @@ ok(`a literal wearing backticks is still a literal — check 24 and this census 
 ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
   // M523: 143 -> 146 — the résumé's since/standing/matchN rows each hand over their variables.
   // M525: 146 -> 149 — the report's exported/avgGrowthSub/prospectsSub rows join them.
-  litVarSites === 156 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M534: 156 -> 160 — the run-in rows (ppgSub, record) hand over their variables, along with
+  // the two more placeholder sites the run-in screen's tiles read.
+  litVarSites === 160 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));

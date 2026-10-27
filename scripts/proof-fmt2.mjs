@@ -53,6 +53,8 @@ const CONSUMERS = [
   "features/sim/SimulationLab.tsx",
   // M523: the coach résumé prints its points-per-game through the door like every other screen.
   "features/coach/CoachProfile.tsx",
+  // M534: the run-in screen prints four averages (league, two tiles, the opponent column).
+  "features/analytics/RunIn.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the

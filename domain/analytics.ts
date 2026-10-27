@@ -281,3 +281,48 @@ export function leaders(metrics: TeamMetrics[]): Leaders {
 export function formPoints(m: TeamMetrics): number {
   return sum(m.form, leaguePoints);
 }
+
+// The run-in: what each club still has to face. Difficulty is the average points-per-game of
+// the clubs left on its calendar — a club's own record says how good it has been, not how hard
+// the fixtures in front of it are. A club with nothing left reads zero and sorts last, so an
+// idle calendar cannot masquerade as the easiest run.
+export interface RunInRow {
+  clubId: string;
+  remaining: number;
+  /** Average points-per-game of the clubs still to play, 2dp; 0 when nothing is left. */
+  avgOppPpg: number;
+  /** The opponents left, in kickoff order. */
+  opponents: string[];
+  /** The club's own record, carried so a row can be read without a second lookup. */
+  points: number;
+  played: number;
+}
+
+export function runIn(compId: string, matches: Match[], clubs: Club[]): RunInRow[] {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const ppg = new Map(metrics.map((m) => [m.clubId, m.ppg]));
+  const upcoming = matches
+    .filter((m) => m.competitionId === compId && m.status === "SCHEDULED")
+    .sort(byKickoff);
+  const remaining = new Map<string, string[]>(metrics.map((m) => [m.clubId, []]));
+  for (const m of upcoming) {
+    remaining.get(m.homeClubId)?.push(m.awayClubId);
+    remaining.get(m.awayClubId)?.push(m.homeClubId);
+  }
+  return metrics
+    .map((m) => {
+      const opponents = remaining.get(m.clubId) ?? [];
+      const avg = opponents.length
+        ? round2(sum(opponents, (id) => ppg.get(id) ?? 0) / opponents.length)
+        : 0;
+      return {
+        clubId: m.clubId,
+        remaining: opponents.length,
+        avgOppPpg: avg,
+        opponents,
+        points: m.points,
+        played: m.played,
+      };
+    })
+    .sort((a, b) => b.avgOppPpg - a.avgOppPpg || a.clubId.localeCompare(b.clubId));
+}

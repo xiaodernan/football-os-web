@@ -71,9 +71,11 @@ const bodyLines = (text) => text.split(/\r?\n/).filter((l) => !/^\s*(?:import|ex
 const useText = (f) => bodyLines(raw[f]);
 
 // The files this unit folded, with the count it folded in each. DERIVED from the tree below
-// (the census names the seven files it touched), not typed from the fold plan.
+// (the census names the files it touched), not typed from the fold plan. M534 added the run-in
+// screen, whose three name lookups (hardest/easiest/competition short names) ride the door.
 const FOLDED = [
   "data/footballService.ts", "data/intelligence.ts", "features/analytics/DataRoom.tsx",
+  "features/analytics/RunIn.tsx",
   "features/football/Details.tsx", "features/football/FootballWorld.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/sim/SimulationLab.tsx",
 ];
@@ -112,16 +114,16 @@ const nameDoorByFile = carriers.map((f) => [f, n(raw[f], NAME_DOOR)]).filter(([,
 const nameDoorTotal = nameDoorByFile.reduce((a, [, c]) => a + c, 0);
 const nameDoorFiles = nameDoorByFile.map(([f]) => f);
 const expectedNameDoorFiles = [...FOLDED, ...PRE_EXISTING].sort();
-ok(`every name fallback now reads the door, and the carrier set is exactly the files that own one (${nameDoorTotal} sites over ${nameDoorFiles.length} files [${nameDoorFiles.join(",")}]; floor 33 sites / 9 files)`,
-  nameDoorTotal >= 33 && nameDoorFiles.length >= 9 && nameDoorFiles.join(",") === expectedNameDoorFiles.join(","));
+ok(`every name fallback now reads the door, and the carrier set is exactly the files that own one (${nameDoorTotal} sites over ${nameDoorFiles.length} files [${nameDoorFiles.join(",")}]; floor 36 sites / 10 files)`,
+  nameDoorTotal >= 36 && nameDoorFiles.length >= 10 && nameDoorFiles.join(",") === expectedNameDoorFiles.join(","));
 
 // --- 5. The files this unit folded import the door, and each imports it exactly once. -------
 // --- A fold that forgot its import would be a compile error, but a fold that added a SECOND ---
 // --- import line, or imported a DIFFERENT door's name, would compile and still be wrong. ------
 const foldedImport = FOLDED.map((f) => [f, n(raw[f], IMPORT_ABSENT)]);
 const importOk = foldedImport.every(([, c]) => c === 1);
-ok(`all seven folded files import the door exactly once, and no file outside the fold grew one (${foldedImport.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")})`,
-  importOk && foldedImport.length === 7);
+ok(`all eight folded files import the door exactly once, and no file outside the fold grew one (${foldedImport.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")})`,
+  importOk && foldedImport.length === 8);
 
 // --- 6. The CONTROL LANE survived: a control value is still "", and the fold did not sweep it.
 // --- This is the clause that keeps the census honest in the other direction: a census that
@@ -133,7 +135,7 @@ ok(`all seven folded files import the door exactly once, and no file outside the
 const controlByFile = carriers.map((f) => [f, n(raw[f], CONTROL_EMPTY) - n(raw[f], NAME_EMPTY)]).filter(([, c]) => c > 0).sort();
 const controlTotal = controlByFile.reduce((a, [, c]) => a + c, 0);
 ok(`the control lane survived the fold: an id default, a record field and a filter value still read "" (${controlTotal} sites over ${controlByFile.length} files [${controlByFile.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")}]; floor 15 sites / 12 files — the URL parameters left this lane at M409 for their own door)`,
-  controlTotal >= 15 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx"));
+  controlTotal >= 15 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/analytics/RunIn.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx"));
 
 // --- 7. The marker is the ABSENCE DOOR's own glyph, not a new character and not a hole. ------
 // --- The lane's whole claim is that a missing name now reads the em dash. If the door's value
@@ -220,7 +222,7 @@ const routedProps = laneProps.filter(([, v]) => CODE_VARS.includes(v) || KEY_VAR
 const pRouted = CODE_VARS.includes("group") ? 1 : 0;
 const laneTotal = laneVars.length + laneProps.length;
 ok(`every name-lane var is PLAIN, so the marker prints itself instead of being routed through a translator (${laneTotal} sites over ${FOLDED.length} files: ${laneVars.length} in a vars object + ${laneProps.length} as a JSX prop [${laneProps.map(([, p]) => p).join(",")}]; routed vars ${routedVars.length} [${routedVars.map(([, v]) => v).join(",")}], routed props ${routedProps.length}; the plant reads ${pRouted} on a var name that IS in the code set)`,
-  laneTotal === 28 && laneVars.length === 26 && laneProps.length === 2 &&
+  laneTotal === 31 && laneVars.length === 26 && laneProps.length === 5 &&
   routedVars.length === 0 && routedProps.length === 0 && pRouted === 1);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);

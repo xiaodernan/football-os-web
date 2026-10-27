@@ -31,6 +31,7 @@ const READERS = [
   "domain/history.ts", "domain/review.ts", "domain/scouting.ts",
   "features/profile/ProfilePage.tsx", "features/world/DynamicWorld.tsx",
   "features/football/Details.tsx", "features/onboarding/Onboarding.tsx",
+  "features/analytics/RunIn.tsx",
 ];
 const SURVIVOR = "data/footballSeed.ts";
 // rng's weighted-pick fallback keeps the index form inline on purpose: lib/rng.ts must stay

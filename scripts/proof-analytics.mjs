@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -300,6 +300,24 @@ const recentBlock = (SERVICE_SRC.match(/export function recentMatchesForClub[\s\
 ok(`recentMatchesForClub still orders newest-first rather than through the door (the reverse comparator ${/b\.kickoff\.localeCompare\(a\.kickoff\)/.test(recentBlock) ? "is present" : "is GONE"})`,
   /b\.kickoff\.localeCompare\(a\.kickoff\)/.test(recentBlock) === true && /byKickoff/.test(recentBlock) === false);
 
+// --- The run-in: difficulty is the opponents' record, not the club's own. ----------------
+// T1 has one scheduled fixture left (m6: A home to B), so the hand numbers are one row each:
+// B's run is the harder one because the only club it still faces is A (4 played, 2-0-2, 6 pts,
+// 1.5 PPG), while A faces B (3 played, 1-1-1, 4 pts, 1.33 PPG). C has nothing left and must
+// read zero and sort last rather than masquerade as the easiest remaining schedule.
+const runs = runIn("T1", fixtures, clubs);
+const runById = Object.fromEntries(runs.map((r) => [r.clubId, r]));
+ok(`the run-in reads each club's remaining opponents rather than its own record: B is hardest (avg ${runById.B.avgOppPpg} over ${runById.B.remaining} fixture(s) against ${runById.B.opponents.join(",")}), A next (${runById.A.avgOppPpg} against ${runById.A.opponents.join(",")}), C last with nothing left (${runById.C.remaining}, avg ${runById.C.avgOppPpg})`,
+  runs.length === 3 && runs[0].clubId === "B" && runById.B.remaining === 1 &&
+  runById.B.avgOppPpg === 1.5 && runById.B.opponents.join(",") === "A" &&
+  runById.A.remaining === 1 && runById.A.avgOppPpg === 1.33 && runById.A.opponents.join(",") === "B" &&
+  runById.C.remaining === 0 && runById.C.avgOppPpg === 0 && runs[2].clubId === "C");
+ok(`a run-in row carries the club's own record beside the opponents it has left, so the read never needs a second lookup (A: ${runById.A.points} pts in ${runById.A.played}, B: ${runById.B.points} in ${runById.B.played})`,
+  runById.A.points === 6 && runById.A.played === 4 && runById.B.points === 4 && runById.B.played === 3);
+// A finished fixture is not a remaining one, and another competition's schedule is not this one's:
+// the four finished T1 matches and T2's played match must not appear as opponents anywhere.
+ok(`the run-in counts only the competition's scheduled fixtures — the finished m1-m5 never appear and T2 stays out (opponents: ${runs.map((r) => r.opponents.join("|")).join(" / ")})`,
+  runs.every((r) => !r.opponents.includes("C") && !r.opponents.includes("D") && !r.opponents.includes("E")));
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);
