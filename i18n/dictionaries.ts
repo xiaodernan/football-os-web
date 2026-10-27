@@ -2289,6 +2289,19 @@ const en: Dict = {
   "community.poll.resultsTitle": "Live results",
   "community.poll.total": "{n} votes cast.",
   "community.poll.votes": "{n} votes",
+  "nav.availability": "Availability",
+  "squad.availability.title": "Squad availability",
+  "squad.availability.subtitle": "Who can play this week — injuries and fitness, derived from the career engine.",
+  "squad.availability.available": "Available",
+  "squad.availability.out": "Out",
+  "squad.availability.summary": "{out} of {total} unavailable",
+  "squad.availability.fitness": "Fitness",
+  "squad.availability.weeks": "{n} wk",
+  "squad.availability.injury.hamstring": "Hamstring",
+  "squad.availability.injury.ankle": "Ankle",
+  "squad.availability.injury.groin": "Groin",
+  "squad.availability.injury.knee": "Knee",
+  "squad.availability.empty": "No squad to check yet.",
 };
 
 const zhCN: Dict = {
@@ -4466,6 +4479,19 @@ const zhCN: Dict = {
   "community.poll.resultsTitle": "实时结果",
   "community.poll.total": "共 {n} 票。",
   "community.poll.votes": "{n} 票",
+  "nav.availability": "伤停情况",
+  "squad.availability.title": "球队伤停情况",
+  "squad.availability.subtitle": "本周谁可出战——伤病与体能，由生涯引擎派生。",
+  "squad.availability.available": "可出战",
+  "squad.availability.out": "伤停",
+  "squad.availability.summary": "{total} 人中 {out} 人不可用",
+  "squad.availability.fitness": "体能",
+  "squad.availability.weeks": "{n} 周",
+  "squad.availability.injury.hamstring": "腘绳肌",
+  "squad.availability.injury.ankle": "脚踝",
+  "squad.availability.injury.groin": "腹股沟",
+  "squad.availability.injury.knee": "膝盖",
+  "squad.availability.empty": "暂无球队可检查。",
 };
 
 const zhTW: Dict = {
@@ -6648,6 +6674,19 @@ const zhTW: Dict = {
   "community.poll.resultsTitle": "即時結果",
   "community.poll.total": "共 {n} 票。",
   "community.poll.votes": "{n} 票",
+  "nav.availability": "傷停情況",
+  "squad.availability.title": "球隊傷停情況",
+  "squad.availability.subtitle": "本週誰可出戰——傷病與體能，由生涯引擎派生。",
+  "squad.availability.available": "可出戰",
+  "squad.availability.out": "傷停",
+  "squad.availability.summary": "{total} 人中 {out} 人不可用",
+  "squad.availability.fitness": "體能",
+  "squad.availability.weeks": "{n} 週",
+  "squad.availability.injury.hamstring": "膕繩肌",
+  "squad.availability.injury.ankle": "腳踝",
+  "squad.availability.injury.groin": "腹股溝",
+  "squad.availability.injury.knee": "膝蓋",
+  "squad.availability.empty": "尚無球隊可檢查。",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {

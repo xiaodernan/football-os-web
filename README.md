@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M529 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M530 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7093,6 +7093,37 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M530 — availability on real engine data: who can play this week
+
+**What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31**, `proof-app-tree`
+**12/12**, `proof-coverage` **26/26**, `proof-storage` **61/61**, `proof-sum` **9/9**, `proof-rng`
+**55/55**, `tsc --noEmit` clean, `npm run build` exit 0, bundle **489 → 491 KB** gzip, recorded.
+
+**No new model was needed.** `InjuryReport.tsx` was a stub that invented `injuryStatus` /
+`daysUntilReturn` fields the player record does not have — but `domain/playerCareer.ts` already owns a
+deterministic injury model (`injuryFor(seed, week)` off a 12%-per-week roll, `fitnessFor(seed, week)`,
+`weekIndexOf`). So the screen is a read of that engine, not a second copy of it: every player's
+status is `injuryFor(playerId, week)` for the current calendar week, their fitness is
+`fitnessFor(playerId, week)`, and nothing is stored — the same player's same week always answers the
+same, and next week answers differently, exactly as the career engine intends.
+
+**What it does.** The unavailable first (by injury severity, then overall through `byOverall`), each
+row naming the club, position, overall and either the injury and weeks out or the fitness, with a
+fitness bar. A header line counts the unavailable and averages fitness through the `sum` door. Route
+`/injuries`, a sidebar entry, thirteen keys across en / zh-CN / zh-TW (the four injury names are
+literal lookups, never a template key).
+
+**The pins paid.** `APP_SRC_PIN` 113→114, `TSX_PIN` 57→58, `SRC_PIN` 116→117, literal sites
+1424→1439, `litVarSites` 154→156, the duplicate-value / excess-key counts 118→124 and 200→206, and
+the position-space `psTyped` 6→7 in `proof-i18n`; `APP_MODULE_PIN` 108→109 in `proof-app-tree`;
+`POP_PIN` 108→109, `BY_DIR_PIN.features` 34→35 and `DEEP_PIN` 50→51 in `proof-coverage`;
+`APP_FILES_PIN` 103→104 in `proof-storage`.
+
+**Honest reservation.** The injury roll is a model, not a medical feed — one week in twelve a player
+picks up a strain, seeded so it is reproducible, and the screen says so with the demo badge. It also
+reads the calendar week from the device clock, so two devices a week apart will disagree; that is the
+honest boundary of a device-only build with no server to fix "now".
 
 ### M529 — a vote that is real: the community poll, seeded and persisted
 
