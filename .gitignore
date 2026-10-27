@@ -19,3 +19,6 @@ test-results/
 # the tree then read the app twice. The rule lives in scripts/lib/appTree.mjs; this line is
 # the belt to that pair of braces.
 football-os/
+
+# Local agent/tool state (memory, session logs) — not part of the shipped app.
+.workbuddy-ai/
