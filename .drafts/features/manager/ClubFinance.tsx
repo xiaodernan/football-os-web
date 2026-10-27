@@ -84,61 +84,63 @@ export function ClubFinance() {
 
         {/* 预算设置 */}
         {selectedClub && budget && (
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1">{t("finance.budgetedRevenue")}</label>
-              <input
-                value={budget.budgetedRevenue.toLocaleString()}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value) || 0;
-                  setBudget(prev => ({ ...prev, budgetedRevenue: val }));
-                }}
-                type="number"
-                className="w-full rounded border px-2 py-1 text-sm"
-              />
+          <>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1">{t("finance.budgetedRevenue")}</label>
+                <input
+                  value={budget.budgetedRevenue.toLocaleString()}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    setBudget(prev => ({ ...prev, budgetedRevenue: val }));
+                  }}
+                  type="number"
+                  className="w-full rounded border px-2 py-1 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1">{t("finance.actualRevenue")}</label>
+                <input
+                  value={budget.actualRevenue?.toLocaleString() || "0"}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    setBudget(prev => ({ ...prev, actualRevenue: val }));
+                  }}
+                  type="number"
+                  className="w-full rounded border px-2 py-1 text-sm"
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1">{t("finance.actualRevenue")}</label>
-              <input
-                value={budget.actualRevenue?.toLocaleString() || "0"}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value) || 0;
-                  setBudget(prev => ({ ...prev, actualRevenue: val }));
-                }}
-                type="number"
-                className="w-full rounded border px-2 py-1 text-sm"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1">{t("finance.budgetedWages")}</label>
-              <input
-                value={budget.budgetedWages.toLocaleString()}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value) || 0;
-                  setBudget(prev => ({ ...prev, budgetedWages: val }));
-                  setWagesInput(val);
-                }}
-                type="number"
-                className="w-full rounded border px-2 py-1 text-sm"
-              />
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1">{t("finance.budgetedWages")}</label>
+                <input
+                  value={budget.budgetedWages.toLocaleString()}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    setBudget(prev => ({ ...prev, budgetedWages: val }));
+                    setWagesInput(val);
+                  }}
+                  type="number"
+                  className="w-full rounded border px-2 py-1 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1">{t("finance.actualWages")}</label>
+                <input
+                  value={budget.actualWages?.toLocaleString() || "0"}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    setBudget(prev => ({ ...prev, actualWages: val }));
+                    setWagesInput(val);
+                  }}
+                  type="number"
+                  className="w-full rounded border px-2 py-1 text-sm"
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1">{t("finance.actualWages")}</label>
-              <input
-                value={budget.actualWages?.toLocaleString() || "0"}
-                onChange={(e) => {
-                  const val = parseFloat(e.target.value) || 0;
-                  setBudget(prev => ({ ...prev, actualWages: val }));
-                  setWagesInput(val);
-                }}
-                type="number"
-                className="w-full rounded border px-2 py-1 text-sm"
-              />
-            </div>
-          </div>
+          </>
         )}
 
         {/* 转会交易 */}

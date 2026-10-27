@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M533 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M535 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7094,6 +7094,52 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
 
+
+### M535 — the parse backlog is measured, and the ten cheapest drafts are repaired
+
+**What the gauge says.** `scripts/proof-drafts.mjs` **8/8** (it was 5/5). The quarantine holds **80**
+source drafts; **50** of them do not parse, with **841** diagnostics between them. When this
+milestone measured it, the same census read **60** broken files and **861** diagnostics. Ten files
+were repaired in the same landing, taking **20** diagnostics out of the pile.
+
+**Why a gate.** M522 moved the lane's unshipped batch behind a dot prefix so the app's census would
+read the app again, and M525 charged the boundary in both directions. Neither said anything about the
+quarantine itself: how much of the pile parses was a number only a person could recompute by hand, and
+by hand it rots. The new clause measures the pile with the TypeScript parser, names every file in it,
+and holds the totals where they are. A draft that starts parsing has to come off the list, a new
+broken draft has to go on it, and the counts are bounded at **50** files and **841** diagnostics.
+
+**The claim is narrow on purpose, and the narrowness is the point.** It is about SYNTAX. A draft that
+parses may still import a module that is itself quarantined, miss a type, or read a `t()` key no
+locale carries — parse-clean is not shippable. What the clause buys is that the syntactic backlog
+cannot quietly grow, and that the ledger says which files are in it.
+
+**What was repaired.** Five screens were a missing `}` after a `.map(...)` expression; four used a
+backtick template where JSX wants an expression container; `ClubFinance` held two sibling grids in
+one JSX expression, which is now a fragment; and `TacticalDashboard`'s success rate had a ternary
+with a `?` and no `:` — the author's intent, a percentage over zero tackles, is written out. The
+quarantined backup tool was CommonJS in a `.mjs`: it is written as ESM now, and the `backups/`
+directory it used to create on import is created when a backup is taken instead. The tool was run in a
+scratch directory: it parses, it backs up, and it exports its four functions.
+
+**Armed both ways.** The reader is exercised on a fixture first — a broken snippet is seen and a sound
+one is not — and each of the three new clauses was then flipped red on its own and the bytes
+restored: a new broken draft read **1 unnamed** and **51 broken**; a registered draft rewritten to
+parse read **1 stale**; a registered draft broken further read **843 diagnostics**. All three came
+back to **8/8**.
+
+**Honest reservation.** The list is a ledger the lane's resurrections will keep touching. A draft
+that leaves `.drafts/` is CLOSED — reported, not charged — so a resurrection cannot redden a gate
+about syntax; a draft repaired in place has to be taken off the list, or the gate says so. The
+ceilings are a bound rather than a pin: they are lowered as the pile shrinks, and a ceiling with
+slack above it is slack, not a lie. Nothing here claims the fifty remaining drafts are fit to ship;
+ten of them are now closer to it.
+
+**One coupling worth naming.** The gaps block now carries **M534**: the concurrent line of work has
+that number in flight, and by the ledger's own arithmetic a number between the oldest and the newest
+heading with no section of its own is a gap until it lands one. If that unit lands with a section of
+its own, the entry comes off the list — the ledger's rule, not a favour.
+
 ### M533 — projecting any player: the growth model as a scouting read
 
 **What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31**, `proof-app-tree`
@@ -12322,6 +12368,7 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M521 — the lane's advanced academy-management screen
 - M523 — the drafts boundary gate (`proof-drafts`), swept into M524's commit
 - M524 — the coach's résumé resurrected from the drafts (`CoachProfile`)
+- M534 — the concurrent line of work's in-flight unit, landed without a section of its own
 
 <!-- /gaps -->
 

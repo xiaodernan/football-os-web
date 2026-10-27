@@ -1,16 +1,25 @@
 // Season Data Backup Script
 // 赛季数据备份脚本
 // 自动备份当前赛季数据，支持手动恢复
+//
+// M535: this tool was quarantined with the lane's batch because it did not parse — a CommonJS
+// `require` in a `.mjs`, and a `map` whose arrow body was never closed. It is ESM by extension,
+// so it is written as ESM: the two imports, the export list and the "run me directly" test.
 
-const fs = require('fs');
-const path = require('path');
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const BACKUP_DIR = path.join(process.cwd(), 'backups');
 const SEASON_DATA_FILE = path.join(process.cwd(), 'season-data.json');
 
 // 确保备份目录存在
-if (!fs.existsSync(BACKUP_DIR)) {
-  fs.mkdirSync(BACKUP_DIR, { recursive: true });
+// M535: this ran at import time, so merely importing the module wrote a `backups/` directory into
+// whoever's working directory. The directory is made when a backup is taken instead.
+function ensureBackupDir() {
+  if (!fs.existsSync(BACKUP_DIR)) {
+    fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  }
 }
 
 // 生成备份文件名
@@ -27,6 +36,7 @@ function generateBackupName() {
 // 自动备份赛季数据
 function autoBackup() {
   try {
+    ensureBackupDir();
     // 读取当前赛季数据
     let data = null;
     if (fs.existsSync(SEASON_DATA_FILE)) {
@@ -66,7 +76,7 @@ function listBackups() {
       name: f,
       date: f.replace(/season-backup-(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})\.json/, '$1-$2-$3 $4:$5'),
       size: fs.statSync(path.join(BACKUP_DIR, f)).size
-    }).sort((a, b) => b.date.localeCompare(a.date));
+    })).sort((a, b) => b.date.localeCompare(a.date));
   } catch (error) {
     console.error('List backups failed:', error);
     return [];
@@ -103,7 +113,7 @@ function restoreBackup(backupName) {
 }
 
 // 导出功能
-module.exports = {
+export {
   autoBackup,
   listBackups,
   restoreBackup,
@@ -111,7 +121,8 @@ module.exports = {
 };
 
 // 如果直接运行此脚本，则执行自动备份
-if (require.main === module) {
+const invokedDirectly = Boolean(process.argv[1]) && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (invokedDirectly) {
   const backupName = autoBackup();
   if (backupName) {
     console.log(`Season data backed up successfully: ${backupName}`);

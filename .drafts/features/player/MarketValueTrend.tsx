@@ -42,7 +42,7 @@ export function MarketValueTrend() {
             >
               {p.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
@@ -81,7 +81,7 @@ export function MarketValueTrend() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("player.currentValue")}
-          value=`${t("currency.euro")} ${currentValue.toLocaleString()}`
+          value={`${t("currency.euro")} ${currentValue.toLocaleString()}`}
           subtitle={t("player.marketValue")}
         />
         <StatTile

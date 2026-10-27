@@ -67,7 +67,7 @@ export function MarketValuePrediction() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("player.currentValue")}
-          value=`${t("currency.euro")} ${p.currentValue.toLocaleString()}`
+          value={`${t("currency.euro")} ${p.currentValue.toLocaleString()}`}
           subtitle={t("player.marketValue")}
         />
         <StatTile
@@ -77,7 +77,7 @@ export function MarketValuePrediction() {
         />
         <StatTile
           title={t("player.valueChangePercent")}
-          value=`${valueChangePercent >= 0 ? '+' : ''}${valueChangePercent}%`
+          value={`${valueChangePercent >= 0 ? '+' : ''}${valueChangePercent}%`}
           subtitle={t("player.predictedChange")}
         />
       </div>

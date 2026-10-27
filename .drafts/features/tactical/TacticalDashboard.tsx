@@ -64,7 +64,7 @@ export function TacticalDashboard() {
         />
         <StatTile
           title={t("tackles.successRate")}
-          value=`${Math.round(metrics.tackles > 0 ? (metrics.tackles / (metrics.tackles + 5)) * 100)}%`
+          value={`${Math.round(metrics.tackles > 0 ? (metrics.tackles / (metrics.tackles + 5)) * 100 : 0)}%`}
           subtitle={t("tackles.success")}
         />
         <StatTile

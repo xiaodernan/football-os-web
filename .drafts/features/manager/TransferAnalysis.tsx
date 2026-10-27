@@ -46,12 +46,12 @@ export function TransferAnalysis() {
         />
         <StatTile
           title={t("manager.avgAge")}
-          value=`${transferMetrics.avgAge}`
+          value={`${transferMetrics.avgAge}`}
           subtitle={t("manager.averageAge")}
         />
         <StatTile
           title={t("manager.avgOverall")}
-          value=`${transferMetrics.avgOverall}★`
+          value={`${transferMetrics.avgOverall}★`}
           subtitle={t("manager.averageRating")}
         />
         <StatTile

@@ -13,7 +13,8 @@
 //   3. no shipped file imports or re-exports anything that resolves inside `.drafts`;
 //   4. every draft sits at `.drafts/<its original path>`, so a `git mv` restores it exactly;
 //   5. the drafts' own README carries the two mechanisms a resurrector must honour — `git mv` to
-//      restore the path, and `@source not` which keeps the stylesheet from scanning the directory.
+//      restore the path, and `@source not` which keeps the stylesheet from scanning the directory;
+//   6. the drafts that do not parse are measured, named, and may not grow.
 //
 // A live copy of a drafted path is printed, not charged: that is a resurrection in progress, and
 // the `git mv` that finishes it removes the draft. Run: node scripts/proof-drafts.mjs
@@ -140,6 +141,117 @@ const carriesGitMv = /\bgit mv\b/.test(readme);
 const carriesSourceRule = /@source not\s+"\.\.\/\.drafts"/.test(readme);
 ok(`the drafts README carries the resurrection path and the stylesheet exclusion (${readme.length} chars; git mv ${carriesGitMv}; @source not ${carriesSourceRule})`,
   readme.length > 500 && carriesGitMv && carriesSourceRule);
+
+// --- 6. The parse backlog is measured, named, and may not grow. ---------------
+// M535: M522 moved sixty unshipped files into `.drafts/` so that the app's census would read the
+// app again. The quarantine was honest about the app; it said nothing about itself. How much of
+// the pile parses was a number only a person could recompute by hand, and by hand it rots.
+//
+// At the start of this milestone the quarantine held 80 source files, 60 of which did not parse,
+// with 861 diagnostics between them. This clause measures the pile with the TypeScript parser,
+// names every file in it, and holds the totals where they are.
+//
+// The claim is narrow on purpose, and the narrowness is the point: it is about SYNTAX. A draft
+// that parses may still import a module that is itself quarantined, miss a type, or read a `t()`
+// key that no locale carries — parse-clean is not shippable. What the clause buys is that the
+// syntactic backlog cannot quietly grow: a draft that starts parsing has to come off the list, a
+// new broken draft has to go on it, and both totals are bounded.
+//
+// The list is the ledger and the ceilings are the ratchet. The list is exact, because a list
+// that grows with the pile proves nothing; the ceilings are a bound, because a bound is what says
+// "this may not get bigger". A registered draft that has since been resurrected — the file is no
+// longer in `.drafts/` — is CLOSED: it is reported, not charged, because a resurrection moves
+// files OUT of the quarantine and must not redden a gate about syntax.
+//
+// The reader is exercised first, on a fixture: a gate that has only ever reported "clean" has
+// never been seen to refuse anything.
+const BROKEN = [
+  "features/academy/AcademyManagement.tsx",
+  "features/academy/AcademyOverview.tsx",
+  "features/academy/AcademyReport.tsx",
+  "features/academy/AdvancedAcademyManagement.tsx",
+  "features/academy/CourseManagement.tsx",
+  "features/ai/ManagerAgent.tsx",
+  "features/coach/CoachAnalytics.tsx",
+  "features/coach/CoachCareerProfile.tsx",
+  "features/coach/CoachStatistics.tsx",
+  "features/community/AdvancedPluginSystem.tsx",
+  "features/community/CommunityEngagement.tsx",
+  "features/community/DataSync.tsx",
+  "features/community/PluginSystem.tsx",
+  "features/community/UserFeedback.tsx",
+  "features/core/ModuleRefactoring.tsx",
+  "features/core/SystemOptimization.tsx",
+  "features/injury/InjuryPrediction.tsx",
+  "features/manager/AdvancedFinancialAnalyst.tsx",
+  "features/manager/AdvancedTransferMarketReport.tsx",
+  "features/manager/BudgetPlanning.tsx",
+  "features/manager/FinancialAnalyst.tsx",
+  "features/manager/PayrollStructure.tsx",
+  "features/manager/SalaryCapAnalysis.tsx",
+  "features/manager/SeasonDataViz.tsx",
+  "features/manager/SeasonNews.tsx",
+  "features/manager/SeasonOps.tsx",
+  "features/manager/SeasonOpsAdvanced.tsx",
+  "features/manager/SeasonReport.tsx",
+  "features/manager/SquadDepth.tsx",
+  "features/manager/TeamDataViz.tsx",
+  "features/manager/TeamFinance.tsx",
+  "features/manager/TransferMarketReport.tsx",
+  "features/match/SeasonSchedule.tsx",
+  "features/media/MediaLibrary.tsx",
+  "features/news/NewsArchive.tsx",
+  "features/news/NewsArchiveAdvanced.tsx",
+  "features/news/SeasonNews.tsx",
+  "features/news/SeasonNewsLive.tsx",
+  "features/player/ContractExtensionAnalysis.tsx",
+  "features/player/ContractManagement.tsx",
+  "features/player/ContractPrediction.tsx",
+  "features/player/PlayerContractDetails.tsx",
+  "features/player/PlayerDevelopmentAssessment.tsx",
+  "features/player/PlayerFiveYearPlan.tsx",
+  "features/player/PlayerMarketValueHistory.tsx",
+  "features/player/PotentialPrediction.tsx",
+  "features/player/TransferPrediction.tsx",
+  "features/scouting/EnhancedScoutReport.tsx",
+  "features/scouting/ScoutReport.tsx",
+  "features/transfer/TransferMarketReport.tsx",
+];
+// M535: the pile measured 60 broken files and 861 diagnostics when this clause was written. The
+// nine screens and the one tool repaired in the same milestone bring it to 50 and 841. These
+// ceilings are what the next repair has to beat, and they are lowered as the pile shrinks.
+const BROKEN_CEILING = 50;
+const DIAGNOSTIC_CEILING = 841;
+
+const kindOf = (rel) => rel.endsWith(".tsx") ? ts.ScriptKind.TSX : rel.endsWith(".jsx") ? ts.ScriptKind.JSX
+  : /\.[mc]?ts$/.test(rel) ? ts.ScriptKind.TS : ts.ScriptKind.JS;
+const parseDiags = (rel, text) => {
+  const sf = ts.createSourceFile(rel, text, ts.ScriptTarget.Latest, true, kindOf(rel));
+  return sf.parseDiagnostics ?? [];
+};
+// The reader, armed both ways: a broken snippet is seen, a sound one is not.
+const readerSeesBroken = parseDiags("fixture.ts", "export const x = ( => 1;\n").length > 0;
+const readerSeesClean = parseDiags("fixture.ts", "export const x = (1);\n").length === 0;
+
+const brokenNow = [];
+let diagnosticsNow = 0;
+for (const rel of draftFiles) {
+  const d = parseDiags(rel, readFileSync(join(draftsDir, rel), "utf8"));
+  if (d.length) { brokenNow.push(rel); diagnosticsNow += d.length; }
+}
+brokenNow.sort();
+
+const registered = new Set(BROKEN);
+const undeclared = brokenNow.filter((p) => !registered.has(p));
+const closed = BROKEN.filter((p) => !existsSync(join(draftsDir, p)));
+const stale = BROKEN.filter((p) => existsSync(join(draftsDir, p)) && !brokenNow.includes(p));
+
+ok(`every draft that does not parse is named in the list (${draftFiles.length} source drafts, ${brokenNow.length} broken, ${diagnosticsNow} diagnostics; ${undeclared.length} unnamed [${undeclared.join(", ")}]; reader armed: broken ${readerSeesBroken}, clean ${readerSeesClean})`,
+  undeclared.length === 0 && readerSeesBroken && readerSeesClean);
+ok(`a registered draft that now parses has come off the list (${stale.length} stale [${stale.join(", ")}]; ${closed.length} closed by a resurrection, reported and not charged)`,
+  stale.length === 0);
+ok(`the backlog may not grow (${brokenNow.length} broken <= ${BROKEN_CEILING}; ${diagnosticsNow} diagnostics <= ${DIAGNOSTIC_CEILING})`,
+  brokenNow.length <= BROKEN_CEILING && diagnosticsNow <= DIAGNOSTIC_CEILING);
 
 // --- What is not charged: a live copy of a draft is a resurrection in progress. ---
 const liveCopies = draftFiles.filter((rel) => existsSync(join(root, rel)));

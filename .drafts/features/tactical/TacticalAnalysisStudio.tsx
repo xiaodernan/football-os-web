@@ -43,7 +43,7 @@ export function TacticalAnalysisStudio() {
             >
               {p.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );

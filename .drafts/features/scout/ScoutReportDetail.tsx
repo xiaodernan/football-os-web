@@ -44,7 +44,7 @@ export function ScoutReportDetail() {
             >
               {p.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );

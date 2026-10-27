@@ -43,7 +43,7 @@ export function PlayerDataViz() {
             >
               {p.name}
             </Button>
-          ))
+          ))}
         </div>
       </Panel>
     );
