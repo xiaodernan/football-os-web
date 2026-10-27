@@ -508,7 +508,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M530: 113 -> 114 — features/injury/InjuryReport.tsx is resurrected from the drafts.
 // M531: 114 -> 115 — features/compare/ClubCompare.tsx is a new comparison screen.
 // M532: 115 -> 116 — features/leaders/LeagueLeaders.tsx is a new leaderboard screen.
-const APP_SRC_PIN = 116;
+// M533: 116 -> 117 — features/player/PlayerProjection.tsx is a new projection screen.
+const APP_SRC_PIN = 117;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -518,7 +519,8 @@ const APP_SRC_PIN = 116;
 // M530: 57 -> 58 — InjuryReport.tsx is the new .tsx module.
 // M531: 58 -> 59 — ClubCompare.tsx is the new .tsx module.
 // M532: 59 -> 60 — LeagueLeaders.tsx is the new .tsx module.
-const TSX_PIN = 60;
+// M533: 60 -> 61 — PlayerProjection.tsx is the new .tsx module.
+const TSX_PIN = 61;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -530,7 +532,8 @@ const TSX_PIN = 60;
 // M530: 116 -> 117, InjuryReport.tsx again.
 // M531: 117 -> 118, ClubCompare.tsx again.
 // M532: 118 -> 119, LeagueLeaders.tsx again.
-const SRC_PIN = 119;
+// M533: 119 -> 120, PlayerProjection.tsx again.
+const SRC_PIN = 120;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -624,6 +627,7 @@ const DYN_SITES = [
   { path: "features/player/PlayerOS.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "k", prefix: "attr.name.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "w.key", prefix: "attr.name.", suffix: "" },
+  { path: "features/player/PlayerProjection.tsx", expr: "it.key", prefix: "attr.name.", suffix: "" },
   { path: "features/profile/ProfilePage.tsx", expr: "s.key", prefix: "attr.name.", suffix: "" },
   { path: "features/profile/ProfilePage.tsx", expr: "s.key", prefix: "attr.name.", suffix: "" },
   { path: "features/review/ReviewPage.tsx", expr: "f.key", prefix: "attr.name.", suffix: "" },
@@ -3068,8 +3072,9 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M528: PlayerValueRanking's 15 keys add 6 excess keys (194->200).
 // M530: InjuryReport's 13 keys add 6 duplicate values and 6 excess keys (118->124, 200->206).
 // M531: ClubCompare's 16 keys add 1 duplicate value and 4 excess keys (124->125, 206->210).
-const DUP_VALUES_PIN = 125;
-const DUP_EXCESS_KEYS_PIN = 210;
+// M533: PlayerProjection's 16 keys add 1 duplicate value and 4 excess keys (125->126, 210->214).
+const DUP_VALUES_PIN = 126;
+const DUP_EXCESS_KEYS_PIN = 214;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4289,7 +4294,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M530: InjuryReport adds its 15 literal t() sites: 1424 -> 1439.
   // M531: ClubCompare adds its 18 literal t() sites: 1439 -> 1457.
   // M532: LeagueLeaders adds its 10 literal t() sites: 1457 -> 1467.
-  shapeCounts.literal === 1467 && shapeCounts.template === 108 && shapeCounts.expression === 32
+  // M533: PlayerProjection adds its 19 literal + 1 template t() sites: 1467 -> 1486, 108 -> 109.
+  shapeCounts.literal === 1486 && shapeCounts.template === 109 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

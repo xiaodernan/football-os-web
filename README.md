@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M532 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M533 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7093,6 +7093,41 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M533 — projecting any player: the growth model as a scouting read
+
+**What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31**, `proof-app-tree`
+**12/12**, `proof-coverage` **26/26**, `proof-storage` **61/61**, `tsc --noEmit` clean, `npm run
+build` exit 0, bundle **494 → 496 KB** gzip, recorded.
+
+**The same model, a different subject.** `projectGrowth` already replays the training loop's
+diminishing-returns per-session gain, but it was only ever pointed at the *reader's own* profile on
+the Development screen. This unit points it at **any** of the six hundred and ten players: pick a
+player, pick weeks / sessions-per-week / session rating, and the focus is the three **weakest**
+attributes (`weakestAttributes`) — the honest "if they keep working on their gaps, where do they
+land?" a scout asks before a bid. The potential ceiling (`attrCeiling`) is shown beside the
+projection so the reader can see the headroom the model is aiming inside.
+
+**What it does.** A player picker (all players, strongest first), three cadence selectors, the
+player's club / position / age / potential, and a projected table — each focus attribute's now →
+projected value and delta, then the overall before → after. Route `/projection`, a sidebar entry,
+sixteen keys across en / zh-CN / zh-TW.
+
+**The doors it had to use.** `projectGrowth` for the model, `weakestAttributes` for the focus,
+`attrCeiling` for the ceiling, `byOverall` for the picker order — and the attribute names resolve
+through `t(\`attr.name.${key}\`)`, the same dynamic site the Development screen uses, which meant
+declaring the new site in `proof-i18n`'s dynamic table rather than spelling a second label lane.
+
+**The pins paid.** `APP_SRC_PIN` 116→117, `TSX_PIN` 60→61, `SRC_PIN` 119→120, literal sites
+1467→1486 and the template count 108→109, plus the duplicate-value / excess-key counts 125→126 and
+210→214 in `proof-i18n` (and one new dynamic-site row); `APP_MODULE_PIN` 111→112 in
+`proof-app-tree`; `POP_PIN` 111→112, `BY_DIR_PIN.features` 37→38 and `DEEP_PIN` 53→54 in
+`proof-coverage`; `APP_FILES_PIN` 106→107 in `proof-storage`.
+
+**Honest reservation.** The projection trains the three weakest traits by default; a player whose
+ceiling is already reached will barely move, which is correct but can look like a broken screen
+until the reader sees the potential beside it. And like every model here it is deterministic and
+transparent — it is not a prediction of what a real player will become.
 
 ### M532 — the league's leaders, folded from the fixtures themselves
 
