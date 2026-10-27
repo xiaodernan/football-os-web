@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M527 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M528 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7093,6 +7093,38 @@ the new clause group); `tsc --noEmit` clean. No display string and no copy chang
 **Honest reservation.** M369–M372 landed as code-only commits and this file still carries no section
 for them; their narrative is a docs debt this sync is not pretending to close, and the pointer below
 reflects the latest section this file actually carries.
+
+### M528 — the third draft, and the first one built on real data: a player value board
+
+**What the gauge says.** `proof-i18n` **383/383**, `proof-screens` **31/31**, `proof-app-tree`
+**12/12**, `proof-coverage` **26/26**, `proof-storage` **61/61**, `proof-compare` **70/70**,
+`proof-quantities` **5/5**, `tsc --noEmit` clean, `npm run build` exit 0, bundle **485 → 487 KB**
+gzip, recorded.
+
+**The draft was a stub too — so the intent was rebuilt, not pasted.** `PlayerValueRanking.tsx`
+ranked on `p.marketValue` (the field is `value`), declared two `useState`s, printed
+`value=rank.toString()` with no braces, and formatted money with `toLocaleString()`. Its intent — a
+value ranking — is real, so the board was written against the app's own comparators and doors:
+`byValueDesc` / `byOverall` for the two sort orders (never an inline `b.overall - a.overall`, which
+`proof-compare` charges), `fmtMoney` for money, `round1` for the bargain metric, `positionLabel` for
+the position, and a `PositionCode`-typed row field (so `proof-i18n`'s position-space census reads a
+typed field, not an any-string).
+
+**What it does.** Every player ranked by market value or by overall, with club, position, age, value
+and a *rating-per-€M* bargain column, plus a callout naming the best bargain (the strongest rating
+per euro, not the cheapest player). Route `/value`, a sidebar entry, sixteen keys across en / zh-CN /
+zh-TW.
+
+**The pins paid.** `APP_SRC_PIN` 111→112, `TSX_PIN` 55→56, `SRC_PIN` 114→115, literal sites
+1397→1413, `litVarSites` 150→151, the excess-key count 194→200 and the position-space `psTyped`
+5→6 in `proof-i18n`; `APP_MODULE_PIN` 106→107 in `proof-app-tree`; `POP_PIN` 106→107,
+`BY_DIR_PIN.features` 32→33 and `DEEP_PIN` 48→49 in `proof-coverage`; `APP_FILES_PIN` 101→102 in
+`proof-storage`.
+
+**Honest reservation.** The board ranks the synthetic dataset's eighteen players, so its value spread
+is whatever the seed produces — it is a real read of the shipped data, not a market feed. The
+bargain metric (`overall / €M`) is a blunt proxy; it ignores contract length and resale, which is why
+it is a column and a callout, not the default sort.
 
 ### M527 — the second draft comes back, and this one earns its route: a persisted notebook
 

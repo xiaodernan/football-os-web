@@ -94,7 +94,8 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // the coach résumé milestone added, and the pin pays for them here.
 // M526: 99 -> 100 — features/manager/SquadPlanning.tsx resurrected from the drafts.
 // M527: 100 -> 101 — features/tactical/TacticalNotebook.tsx resurrected from the drafts.
-const APP_FILES_PIN = 101;
+// M528: 101 -> 102 — features/player/PlayerValueRanking.tsx resurrected from the drafts.
+const APP_FILES_PIN = 102;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */

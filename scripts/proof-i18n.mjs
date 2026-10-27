@@ -503,19 +503,22 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // résumé screen and its domain module — pay in the same commit.
 // M526: 109 -> 110 — features/manager/SquadPlanning.tsx is resurrected from the drafts.
 // M527: 110 -> 111 — features/tactical/TacticalNotebook.tsx is resurrected from the drafts.
-const APP_SRC_PIN = 111;
+// M528: 111 -> 112 — features/player/PlayerValueRanking.tsx is resurrected from the drafts.
+const APP_SRC_PIN = 112;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
 // M527: 54 -> 55 — TacticalNotebook.tsx is the new .tsx module.
-const TSX_PIN = 55;
+// M528: 55 -> 56 — PlayerValueRanking.tsx is the new .tsx module.
+const TSX_PIN = 56;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
 // M523: 110 -> 112, the same debt again (coachCareer, CoachProfile).
 // M526: 112 -> 113, SquadPlanning.tsx again.
 // M527: 113 -> 114, TacticalNotebook.tsx again.
-const SRC_PIN = 114;
+// M528: 114 -> 115, PlayerValueRanking.tsx again.
+const SRC_PIN = 115;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -3050,8 +3053,9 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M523: the coach résumé's 40 keys per locale pay their own toll (109->113, 180->189).
 // M525: the season report's rows pay theirs (113->114, 189->190).
 // M527: TacticalNotebook's 16 new keys add 4 duplicate values and 4 excess keys (114->118, 190->194).
+// M528: PlayerValueRanking's 15 keys add 6 excess keys (194->200).
 const DUP_VALUES_PIN = 118;
-const DUP_EXCESS_KEYS_PIN = 194;
+const DUP_EXCESS_KEYS_PIN = 200;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4266,7 +4270,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M525: the season report panel adds 20 more literal sites: 1354 -> 1374.
   // M526: SquadPlanning adds its 7 literal t() sites: 1374 -> 1381.
   // M527: TacticalNotebook adds its 16 literal t() sites: 1381 -> 1397.
-  shapeCounts.literal === 1397 && shapeCounts.template === 108 && shapeCounts.expression === 32
+  // M528: PlayerValueRanking adds its 16 literal t() sites: 1397 -> 1413.
+  shapeCounts.literal === 1413 && shapeCounts.template === 108 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4282,7 +4287,7 @@ ok(`a literal wearing backticks is still a literal — check 24 and this census 
 ok(`every call that names its keys in front of check 24's regex still hands over exactly the variables they print, dropped side included (${litVarSites} literal sites with placeholders, ${computedVarSites} of ${shapeCounts.computed} computed sites; short: ${shortSupply.length}, dropped: ${droppedSupply.length}${shortSupply[0] ? `, e.g. ${shortSupply[0]}` : ""}${droppedSupply[0] ? `, e.g. ${droppedSupply[0]}` : ""}; planted short/dropped: ${plantShort}/${plantDropped})`,
   // M523: 143 -> 146 — the résumé's since/standing/matchN rows each hand over their variables.
   // M525: 146 -> 149 — the report's exported/avgGrowthSub/prospectsSub rows join them.
-  litVarSites === 150 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 151 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));
@@ -5129,7 +5134,7 @@ const psTyped = [...appSrc].reduce((n, [, c]) => n + (c.match(/position: Positio
 const psUntyped = [...appSrc].filter(([, c]) => /position: string;/.test(c)).map(([p]) => p);
 const PS_STRAY = [...appSrc].filter(([, c]) => /"(RB|RW|CDM|CAM)"/.test(c)).map(([p]) => p);
 ok(`exactly 1 module declares the position space (${psUnionDecls.join(", ") || "none"}), ${psTyped} fields are typed with it and ${psUntyped.length} still take any string (pin 0; ${psUntyped.join(", ") || "none"}), and no module abbreviates a position with one of the four spellings only the engine's retired hand copy used (${PS_STRAY.join(", ") || "none"})`,
-  psUnionDecls.length === 1 && psUnionDecls[0] === "domain/types.ts" && psTyped === 5 && psUntyped.length === 0 && PS_STRAY.length === 0);
+  psUnionDecls.length === 1 && psUnionDecls[0] === "domain/types.ts" && psTyped === 6 && psUntyped.length === 0 && PS_STRAY.length === 0);
 
 // The witness for the gate fix this family forced. Sections 41 and 42 counted a composer's
 // switch cases by scanning the WHOLE of domain/rowText.ts, which was harmless while no two

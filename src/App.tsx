@@ -41,6 +41,7 @@ const DevelopmentPage = lazy(() => import("@/features/development/DevelopmentPag
 const CoachProfile = lazy(() => import("@/features/coach/CoachProfile").then((m) => ({ default: m.CoachProfile })));
 const SquadPlanning = lazy(() => import("@/features/manager/SquadPlanning").then((m) => ({ default: m.SquadPlanning })));
 const TacticalNotebook = lazy(() => import("@/features/tactical/TacticalNotebook").then((m) => ({ default: m.TacticalNotebook })));
+const PlayerValueRanking = lazy(() => import("@/features/player/PlayerValueRanking").then((m) => ({ default: m.PlayerValueRanking })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
@@ -115,6 +116,7 @@ function Routes() {
   else if (path === "/coach") inner = <CoachProfile />;
   else if (path === "/squad") inner = <SquadPlanning />;
   else if (path === "/notebook") inner = <TacticalNotebook />;
+  else if (path === "/value") inner = <PlayerValueRanking />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 

@@ -116,7 +116,8 @@ const APP_DIRS = ["components", "data", "domain", "features", "functions", "i18n
 // derived from the career state the manager OS already keeps.
 // M526: 104 -> 105 — features/manager/SquadPlanning.tsx resurrected from the drafts.
 // M527: 105 -> 106 — features/tactical/TacticalNotebook.tsx resurrected from the drafts.
-const APP_MODULE_PIN = 106;
+// M528: 106 -> 107 — features/player/PlayerValueRanking.tsx resurrected from the drafts.
+const APP_MODULE_PIN = 107;
 const byDir = {};
 for (const d of APP_DIRS) {
   const n = walkApp(root, { dirs: [d], exts: [".ts", ".tsx"] }).length;
