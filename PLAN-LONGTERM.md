@@ -100,5 +100,6 @@
 - bad5227 M524: 教练履历公开页 - CoachProfile 组件复活重写（从真实 CareerState 派生履历 + 9 枚里程碑徽章 + 公开卡预览 + 可见性偏好持久化）+ domain/coachCareer.ts + COACH_KEY 注册 + /coach 路由与导航 + 三语字典；一并采纳并行 lane 已完成的 proof-drafts 草稿隔离门禁（其文件头标注 M523）— pushed
 - 4c3a9ce M525: 持续赛季运营 — 赛季报告上线（worldEngine.buildSeasonReport 派生全跑报告 + DynamicWorld 面板 + 三语 world.report.*）；并行 lane 的 30 个未上线路由组件用 git mv 回归 .drafts/，census 139→109、i18n 门禁 383/383 恢复；bundle 475→482KB 记入 baseline；npm run proof 118/118 — pushed
 - 643fb27 M526: 从 .drafts 复活 SquadPlanning（阵容规划）— 修复对象渲染 JSX / useState / 非法 Button variant、补 mgr.* + nav.squad 三语键、/squad 路由 + 侧栏、positionLabel 替代裸 position；模块普查 10 处 pin 同步（i18n/app-tree/coverage/storage）；proof-screens 31/31、i18n 383/383、proof 118/118；bundle 482→483KB — pushed
+- 9b72210 M527: 从 .drafts 复活战术备忘录（TacticalNotebook）— 草稿是占位桩（非法 switch 表达式/动态 class/动态 t 键/假中文数据），改为按项目门重建：useLocalStorage 持久化（仅 verdict.landed 才说"已保存"）、formatDate 日期、newId 生成 id、优先级词表单一 as const 派生类型；补 16 键 + nav.notebook 三语、/notebook 路由 + 侧栏；11 处 census pin 同步；i18n 383/383、ids/rng/vocab 全绿、proof 118/118；bundle 483→485KB — pushed
 
-下一条目：M527 从 .drafts 复活第二个组件——优先选一个 ManagerOS 目前做不到的（伤病报告 InjuryReport 或转会窗 TransferWindow），按同样的 git mv → 补 i18n → 路由 → 普查 pin 流程上线
+下一条目：M528 继续从 .drafts 复活——但先按 M527 的经验判断"桩 vs 可用"：草稿若依赖不存在的 domain（如 InjuryReport 的伤病字段、TransferWindow 的 executeTransfer），要么补最小 domain，要么重建为干净实现；每复活一个都走 git mv → 门（persistence/date/id/vocab）→ i18n → 路由 → census pin 全流程
