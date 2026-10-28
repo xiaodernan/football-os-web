@@ -197,11 +197,18 @@
   `proof-absent-glyph` Details 账本 5→6 格；bundle 517 KB gzip/52 资产不变（基线不动）；tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3205/3205 检查；
   下一步（M573 候选）：① Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）；② 事件里的 SHOT/SAVE/VAR 时段读数；③ 纪律榜的赛季趋势（按轮次累计牌数）。
 
-下一条目：M573 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路，跨屏汇总结论）；
-② 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构，对象与结论不同）；
-③ 纪律榜的赛季趋势（按轮次累计牌数，读同一 fold 的时间序列）。
-编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线已落 M570–M572。
+- M573: Dashboard"下一步建议"动作链 —— 新 `domain/nextStep.ts`：`nextSteps(facts)` 把六个事实（live/nextFixture/无训练计划/空战术室/近徽章/空关注名单）按固定优先级排成最多 3 个一键动作，live 压过下一场，全部满足时回退 explore（/discipline）；`NEXT_STEP_LIMIT = 3`；
+  Dashboard 顶部新增建议面板：首条带 "Start here" 标签、其余弱化，每条按 kind 映射真实路由（/matches/:id、/development、/film、/achievements、/scouting、/discipline），文案走 `STEP_LABEL` 键表（t(STEP_LABEL[kind])）；
+  新 `proof-nextstep.mjs` 6/6（live 压 fixture = live,training,film；仅 next = fixture；busy = live,badge；全满足 = explore；上限 3 = fixture,training,film；确定性 + facts 不被改写）；
+  census pin：app-tree 119→120、coverage 119→120 / domain 33→34、storage 114→115、i18n src 124→125 / walk 127→128、literal 1677→1680、expression 32→33；字典 +10 键/语（2377→2387 值，无新增重复值，dup/excess 不动）；
+  bundle 517→518 KB gzip / 52 资产（js 505、css 13，baseline 重记）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3211/3211 检查；
+  下一步（M574 候选）：① 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构、对象不同）；② 纪律榜的赛季趋势（按轮次累计牌数）；③ 建议面板的时间维度（把"开球还有多久"读进排序）。
+
+下一条目：M574 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构，对象与结论不同）；
+② 纪律榜的赛季趋势（按轮次累计牌数，读同一 fold 的时间序列）；
+③ 建议面板的时间维度（把"开球还有多久"读进排序，让同一条建议随时间改变优先级）。
+编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线已落 M570–M573。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

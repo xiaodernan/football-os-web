@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M572 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M573 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,42 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M573 — the dashboard stops listing modules and names the next step
+
+**The question the grid could not answer.** The dashboard's module grid is a catalogue of twenty
+destinations; the page's own subtitle promises "what your own game should do next". Nothing on the
+page ranked anything. `domain/nextStep.ts` ranks the six facts the dashboard already holds — a
+fixture in play, the next kickoff, a missing training plan, an empty film room, a badge within
+reach, an unused watchlist — into at most three one-tap actions.
+
+**Precedence, not a checklist.** A live fixture outranks the next kickoff, because you can only
+watch what is being played. Each answered question disappears rather than turning into a check
+mark, and the panel keeps the first action (tagged "Start here") and up to two more. Only when all
+six are answered does the list fall back to the card ledger, which is a real "caught up" state
+rather than an empty panel. Every step links to its real route — the match page with its id,
+`/development`, `/film`, `/achievements`, `/scouting`, `/discipline`.
+
+**What the gate says.** A new `proof-nextstep` runs **6/6**: a live fixture leads and hides the next
+kickoff (live, training, film); with nothing live the next kickoff stands alone; a busy state names
+only the badge that is waiting; every question answered falls back to explore; the list stops at
+three; and the ranking is deterministic and leaves its facts as written. Census pins pay for the
+module: app-tree 119 → 120; coverage 119 → 120 and domain 33 → 34; storage 114 → 115; i18n source
+124 → 125 and walk 127 → 128, literal sites 1,677 → 1,680, expression sites 32 → 33. The dictionary
+grows ten keys a locale (2,377 → 2,387 values) — the panel's title, hint, the "Start here" tag and
+one label per step — and none of them duplicates an existing value, so the duplicate ratchets stay
+at 138 groups and 233 excess keys. The suite now walks **121 scripts**.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **121/121 scripts · 3211/3211 checks**;
+the bundle is **518 KB gzip across 52 assets** (505 JS + 13 CSS), and the baseline is re-recorded at
+514 → 517 → 518 KB. No browser pass this milestone either; the ranking is exercised through its own
+proof, the render matrix and the production build, and the browser evidence debt stays on the ledger.
+
+**Honest reservation.** The precedence is hand-written, not derived from urgency, and "badge within
+reach" means the achievements engine's own nearest locked badge whatever its distance — there is no
+threshold behind the word "near". The fallback assumes training, film and the watchlist are the only
+open loops a reader keeps; someone who works differently will meet the card ledger early. And the
+panel reads the state, not the clock: a fixture tomorrow morning ranks the same as one in an hour.
 
 ### M572 — the card ledger on the club's own page, and a board that points back
 
