@@ -377,6 +377,79 @@ export function pointsScenarios(compId: string, matches: Match[], clubs: Club[])
   });
 }
 
+/** Six fifteen-minute windows a goal can arrive in. The last one absorbs stoppage time: a 97′ goal
+ *  and a 78′ goal are both "late", because the recorded minute can run past 90. */
+const GOAL_BANDS = 6;
+
+function goalBand(minute: number): number {
+  const band = Math.floor((minute - 1) / 15);
+  return band < 0 ? 0 : band > GOAL_BANDS - 1 ? GOAL_BANDS - 1 : band;
+}
+
+export interface GoalTimingRow {
+  clubId: string;
+  scored: number;
+  conceded: number;
+  /** Goals scored in each window, index 0 = 1–15′, index 5 = 76–90+′. */
+  scoredBands: number[];
+  /** Goals conceded in each window. */
+  concededBands: number[];
+  /** Goals scored after the 75th minute (the last window). */
+  lateScored: number;
+  /** Goals conceded after the 75th minute. */
+  lateConceded: number;
+  /** Share of this club's own goals that arrived late, 0–100, 2dp; 0 when it has not scored. */
+  lateShare: number;
+}
+
+/** When each club's goals arrive: every recorded GOAL event in this competition's finished matches,
+ *  folded into six windows for the scoring side and the conceding side. A different question from
+ *  the run-in (what is left), the points scenarios (what can still be reached) and the leaders
+ *  (who scored them) — this one is about the clock. */
+export function goalTiming(compId: string, matches: Match[], clubs: Club[]): GoalTimingRow[] {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const rows = new Map<string, GoalTimingRow>(
+    metrics.map((m) => [
+      m.clubId,
+      {
+        clubId: m.clubId,
+        scored: 0,
+        conceded: 0,
+        scoredBands: Array.from({ length: GOAL_BANDS }, () => 0),
+        concededBands: Array.from({ length: GOAL_BANDS }, () => 0),
+        lateScored: 0,
+        lateConceded: 0,
+        lateShare: 0,
+      },
+    ]),
+  );
+  const lastBand = GOAL_BANDS - 1;
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED") continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "GOAL") continue;
+      const band = goalBand(e.minute);
+      const forId = e.side === "home" ? m.homeClubId : m.awayClubId;
+      const againstId = e.side === "home" ? m.awayClubId : m.homeClubId;
+      const scorer = rows.get(forId);
+      const leaker = rows.get(againstId);
+      if (scorer) {
+        scorer.scored++;
+        scorer.scoredBands[band]++;
+        if (band === lastBand) scorer.lateScored++;
+      }
+      if (leaker) {
+        leaker.conceded++;
+        leaker.concededBands[band]++;
+        if (band === lastBand) leaker.lateConceded++;
+      }
+    }
+  }
+  const list = [...rows.values()];
+  for (const r of list) r.lateShare = r.scored ? round2((r.lateScored / r.scored) * 100) : 0;
+  return list.sort((a, b) => b.lateShare - a.lateShare || b.scored - a.scored || a.clubId.localeCompare(b.clubId));
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

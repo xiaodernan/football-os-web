@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -441,6 +441,51 @@ ok(`venueSplit is deterministic, keeps the table's own order, and a competition 
   venue.rows.length === 3 && JSON.stringify(venue) === JSON.stringify(venueAgain) &&
   venueEmpty.rows.length === 0 && venueEmpty.played === 0 && venueEmpty.homeGoals === 0 &&
   venueEmpty.awayGoals === 0);
+
+// --- goalTiming: when the goals arrive, window by window ---------------------------------------
+// A 2-1 B with goals at 12' (A), 44' (B), 78' (A); C 0-1 A with the goal at 92'; a scheduled
+// fixture carrying a goal, another competition's goals, and a finished match with no events at
+// all are noise. A: 3 scored (bands 0 and 5 twice), 1 conceded (band 2), late share 66.67.
+const goal = (minute, side) => ({ minute, type: "GOAL", side, player: "p" });
+const timingFixtures = [
+  { ...match("g1", "T1", "A", "B", 2, 1, "2026-02-01"), events: [goal(12, "home"), goal(44, "away"), goal(78, "home")] },
+  { ...match("g2", "T1", "C", "A", 0, 1, "2026-02-02"), events: [goal(92, "away")] },
+  { ...match("g3", "T1", "B", "C", 1, 0, "2026-02-03", "SCHEDULED"), events: [goal(10, "home")] },
+  { ...match("g4", "T2", "D", "E", 1, 1, "2026-02-04"), events: [goal(5, "home"), goal(88, "away")] },
+];
+const timing = goalTiming("T1", timingFixtures, clubs);
+const tmg = Object.fromEntries(timing.map((r) => [r.clubId, r]));
+ok(`goalTiming folds only this competition's finished goals into six windows, sorted by how late they come (${timing.map((r) => r.clubId).join(",")}; A ${tmg.A.scored} for ${tmg.A.conceded} against)`,
+  timing.length === 3 && timing.map((r) => r.clubId).join(",") === "A,B,C" &&
+  tmg.A.scored === 3 && tmg.A.conceded === 1 &&
+  tmg.A.scoredBands.join(",") === "1,0,0,0,0,2" && tmg.A.concededBands.join(",") === "0,0,1,0,0,0" &&
+  tmg.A.lateScored === 2 && near(tmg.A.lateShare, 66.67, 0.005));
+ok(`goalTiming reads the conceding side from the same events, and a club that never scored still owns its conceding windows (B conceded ${tmg.B.lateConceded} late, C ${tmg.C.conceded} against and share ${tmg.C.lateShare})`,
+  tmg.B.scored === 1 && tmg.B.conceded === 2 &&
+  tmg.B.scoredBands.join(",") === "0,0,1,0,0,0" && tmg.B.concededBands.join(",") === "1,0,0,0,0,1" &&
+  tmg.B.lateScored === 0 && tmg.B.lateConceded === 1 &&
+  tmg.C.scored === 0 && tmg.C.conceded === 1 && tmg.C.lateConceded === 1 && tmg.C.lateShare === 0);
+// The window edges, measured rather than described: 15/16, 45/46, 75/76 each step one band, and
+// a stoppage-time minute stays in the last window instead of inventing a seventh.
+const edgeClubs = [club("F", "T3"), club("G", "T3")];
+const edge = goalTiming("T3", [
+  { ...match("e1", "T3", "F", "G", 6, 0, "2026-03-01"), events: [15, 16, 45, 46, 75, 76].map((m) => goal(m, "home")) },
+], edgeClubs);
+const edgeBy = Object.fromEntries(edge.map((r) => [r.clubId, r]));
+ok(`goalTiming's six windows are the 15-minute edges (15,16,45,46,75,76 land in ${edgeBy.F.scoredBands.join(",")}; a 97' goal lands in window ${tmg.A.scoredBands.length - 1}, the same one as 78')`,
+  edgeBy.F.scoredBands.join(",") === "1,1,1,1,1,1" &&
+  edgeBy.G.concededBands.join(",") === "1,1,1,1,1,1" &&
+  edgeBy.F.lateScored === 1 && edgeBy.G.lateConceded === 1 &&
+  tmg.A.scoredBands[5] === 2 && tmg.A.scoredBands.length === 6);
+const timingAgain = goalTiming("T1", timingFixtures, clubs);
+const silentClubs = [club("H", "T4"), club("I", "T4")];
+const timingSilent = goalTiming("T4", [
+  { ...match("n1", "T4", "H", "I", 1, 0, "2026-03-02") },
+], silentClubs);
+ok(`goalTiming is deterministic and a match without recorded events contributes no goals (same fold ${JSON.stringify(timing) === JSON.stringify(timingAgain)}, silent rows ${timingSilent.length}, silent goals ${timingSilent.reduce((s, r) => s + r.scored + r.conceded, 0)})`,
+  JSON.stringify(timing) === JSON.stringify(timingAgain) && timingSilent.length === 2 &&
+  timingSilent.every((r) => r.scored === 0 && r.conceded === 0 && r.lateShare === 0));
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

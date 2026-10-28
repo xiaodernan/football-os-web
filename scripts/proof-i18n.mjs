@@ -514,7 +514,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M567: 119 -> 120 — features/analytics/TitleRace.tsx is a new title-race screen.
 // M568: 120 -> 121 — features/analytics/HeadToHead.tsx is a new head-to-head screen.
 // M569: 121 -> 122 — features/analytics/VenueSplit.tsx is a new home/away split screen.
-const APP_SRC_PIN = 122;
+// M570: 122 -> 123 — features/analytics/GoalTiming.tsx is a new goal-timing screen.
+const APP_SRC_PIN = 123;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -530,7 +531,8 @@ const APP_SRC_PIN = 122;
 // M567: 63 -> 64 — TitleRace.tsx is the new .tsx module.
 // M568: 64 -> 65 — HeadToHead.tsx is the new .tsx module.
 // M569: 65 -> 66 — VenueSplit.tsx is the new .tsx module.
-const TSX_PIN = 66;
+// M570: 66 -> 67 — GoalTiming.tsx is the new .tsx module.
+const TSX_PIN = 67;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -548,7 +550,8 @@ const TSX_PIN = 66;
 // M567: 122 -> 123, TitleRace.tsx again.
 // M568: 123 -> 124, HeadToHead.tsx again.
 // M569: 124 -> 125, VenueSplit.tsx again.
-const SRC_PIN = 125;
+// M570: 125 -> 126, GoalTiming.tsx again.
+const SRC_PIN = 126;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -4323,7 +4326,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M567: TitleRace adds its 21 literal t() sites and its nav entry: 1531 -> 1552.
   // M568: HeadToHead adds its 32 literal t() sites and its nav entry: 1552 -> 1585.
   // M569: VenueSplit adds its 32 literal t() sites and its nav entry: 1585 -> 1618.
-  shapeCounts.literal === 1618 && shapeCounts.template === 109 && shapeCounts.expression === 32
+  // M570: GoalTiming adds its 32 literal t() sites and its nav entry: 1618 -> 1651.
+  shapeCounts.literal === 1651 && shapeCounts.template === 109 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4348,7 +4352,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // goalsHint, biggestLine, streakWin, streakDraw) hand over theirs.
   // M569: 180 -> 194 — VenueSplit's fourteen interpolating sites (ofPlayed ×3, goalsSub,
   // fortressLine, travellersLine, record ×4, pts ×4) hand over theirs.
-  litVarSites === 194 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M570: 194 -> 200 — GoalTiming's six interpolating rows (busiestSub, lateSub, latestSub,
+  // leakiestSub, record, lateLine) hand over theirs.
+  litVarSites === 200 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));
