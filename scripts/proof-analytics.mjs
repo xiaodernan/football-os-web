@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -485,6 +485,46 @@ const timingSilent = goalTiming("T4", [
 ok(`goalTiming is deterministic and a match without recorded events contributes no goals (same fold ${JSON.stringify(timing) === JSON.stringify(timingAgain)}, silent rows ${timingSilent.length}, silent goals ${timingSilent.reduce((s, r) => s + r.scored + r.conceded, 0)})`,
   JSON.stringify(timing) === JSON.stringify(timingAgain) && timingSilent.length === 2 &&
   timingSilent.every((r) => r.scored === 0 && r.conceded === 0 && r.lateShare === 0));
+
+// ---- discipline(): cards and fouls read from the stats block, not the events. -------------------
+const statLine = (fouls, yellows, reds) => ({
+  possession: 50, shots: 10, onTarget: 4, xg: 1.2, passes: 400, passAcc: 80,
+  tackles: 15, duels: 20, corners: 4, fouls, yellows, reds,
+});
+const withStats = (m, home, away) => ({ ...m, stats: { home, away } });
+const discClubs = [club("A", "T5"), club("B", "T5"), club("C", "T5"), club("D", "T6"), club("E", "T6"), club("F", "T7"), club("G", "T7")];
+const discFixtures = [
+  withStats(match("d1", "T5", "A", "B", 2, 0, "2026-04-01"), statLine(12, 2, 0), statLine(8, 1, 1)),
+  withStats(match("d2", "T5", "C", "A", 1, 1, "2026-04-02"), statLine(10, 3, 1), statLine(14, 2, 0)),
+  withStats(match("d3", "T5", "B", "C", 0, 2, "2026-04-03"), statLine(6, 1, 0), statLine(9, 2, 0)),
+  withStats(match("d4", "T5", "A", "C", 1, 0, "2026-04-04", "SCHEDULED"), statLine(9, 9, 9), statLine(9, 9, 9)),
+  withStats(match("d5", "T6", "D", "E", 0, 0, "2026-04-05"), statLine(11, 3, 0), statLine(7, 1, 0)),
+  match("d6", "T5", "A", "B", 3, 3, "2026-04-06"),
+];
+const board = discipline("T5", discFixtures, discClubs);
+const byClub = (rows, id) => rows.find((r) => r.clubId === id);
+const rowA = byClub(board.rows, "A"), rowB = byClub(board.rows, "B"), rowC = byClub(board.rows, "C");
+ok(`discipline reads only finished fixtures carrying a stats block (matches ${board.matches}, yellows ${board.yellows}, reds ${board.reds}, fouls ${board.fouls}, cards a match ${board.perMatch})`,
+  board.matches === 3 && board.yellows === 11 && board.reds === 2 && board.fouls === 59 && board.perMatch === 4.33);
+ok(`discipline folds each stats block to its own side and sorts by reds then yellows (rows ${board.rows.map((r) => r.clubId).join("")}; A ${rowA.yellows}Y/${rowA.reds}R/${rowA.fouls}F booked ${rowA.bookings} at ${rowA.bookingsPerMatch}/game, ${rowA.foulsPerMatch} fouls; B ${rowB.bookings} at ${rowB.bookingsPerMatch}; C ${rowC.bookings} at ${rowC.bookingsPerMatch}, ${rowC.foulsPerMatch} fouls)`,
+  board.rows.map((r) => r.clubId).join("") === "CBA" &&
+  rowA.yellows === 4 && rowA.reds === 0 && rowA.fouls === 26 && rowA.bookings === 4 &&
+  rowA.bookingsPerMatch === 2 && rowA.foulsPerMatch === 13 &&
+  rowB.yellows === 2 && rowB.reds === 1 && rowB.fouls === 14 && rowB.bookings === 3 && rowB.bookingsPerMatch === 1.5 &&
+  rowC.yellows === 5 && rowC.reds === 1 && rowC.fouls === 19 && rowC.bookings === 6 &&
+  rowC.bookingsPerMatch === 3 && rowC.foulsPerMatch === 9.5);
+const quiet = discipline("T7", [
+  withStats(match("q1", "T7", "F", "G", 0, 0, "2026-04-07"), statLine(5, 0, 0), statLine(3, 0, 0)),
+], discClubs);
+ok(`a stats block with no cards is a real zero, not an absent reading (matches ${quiet.matches}, cards ${quiet.yellows + quiet.reds}, rows ${quiet.rows.length}, rates ${quiet.rows.map((r) => r.bookingsPerMatch).join(",")}, fouls ${quiet.rows.map((r) => r.foulsPerMatch).join(",")})`,
+  quiet.matches === 1 && quiet.yellows === 0 && quiet.reds === 0 && quiet.rows.length === 2 &&
+  quiet.rows.every((r) => r.played === 1 && r.bookings === 0 && r.bookingsPerMatch === 0) &&
+  quiet.rows.map((r) => r.foulsPerMatch).join(",") === "5,3");
+const discAgain = discipline("T5", discFixtures, discClubs);
+const discEmpty = discipline("T8", [], discClubs);
+ok(`discipline is deterministic and a competition with no fixture reads empty (same fold ${JSON.stringify(board) === JSON.stringify(discAgain)}, empty rows ${discEmpty.rows.length}, matches ${discEmpty.matches}, rate ${discEmpty.perMatch})`,
+  JSON.stringify(board) === JSON.stringify(discAgain) && board.rows.length === 3 && discEmpty.rows.length === 0 &&
+  discEmpty.matches === 0 && discEmpty.perMatch === 0);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

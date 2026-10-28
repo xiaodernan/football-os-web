@@ -53,6 +53,7 @@ const TitleRace = lazy(() => import("@/features/analytics/TitleRace").then((m) =
 const HeadToHead = lazy(() => import("@/features/analytics/HeadToHead").then((m) => ({ default: m.HeadToHead })));
 const VenueSplit = lazy(() => import("@/features/analytics/VenueSplit").then((m) => ({ default: m.VenueSplit })));
 const GoalTiming = lazy(() => import("@/features/analytics/GoalTiming").then((m) => ({ default: m.GoalTiming })));
+const Discipline = lazy(() => import("@/features/analytics/Discipline").then((m) => ({ default: m.Discipline })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
@@ -139,6 +140,7 @@ function Routes() {
   else if (path === "/head-to-head") inner = <HeadToHead />;
   else if (path === "/home-away") inner = <VenueSplit />;
   else if (path === "/timing") inner = <GoalTiming />;
+  else if (path === "/discipline") inner = <Discipline />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 

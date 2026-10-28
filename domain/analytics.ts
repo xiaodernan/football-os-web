@@ -686,3 +686,77 @@ export function venueSplit(compId: string, matches: Match[], clubs: Club[]): Ven
   }
   return { rows, homeWins, draws, awayWins, homeGoals, awayGoals, played: fixtures.length };
 }
+
+export interface DisciplineRow {
+  clubId: string;
+  /** Finished fixtures that carried a stats block — the games these counts were read from. */
+  played: number;
+  yellows: number;
+  reds: number;
+  fouls: number;
+  /** Yellows plus reds: one booking is one card, whatever colour it is. */
+  bookings: number;
+  /** Cards and fouls per counted game, 2dp; 0 while the club has no counted game. */
+  bookingsPerMatch: number;
+  foulsPerMatch: number;
+}
+
+export interface Discipline {
+  /** One row per club, most reds first, then most yellows, then club id. */
+  rows: DisciplineRow[];
+  /** Finished fixtures that carried a stats block; a fixture without one contributes nothing. */
+  matches: number;
+  yellows: number;
+  reds: number;
+  fouls: number;
+  /** Cards both sides combined per counted fixture, 2dp. */
+  perMatch: number;
+}
+
+/** The season's discipline: what the recorded match stats say about cards and fouls, club by club.
+ *
+ *  The match engine already writes a stats block per fixture — fouls, yellows, reds — and the box
+ *  score prints it for the single match, but no screen asks which club is booked most often or
+ *  whether the league's card count is rising with its fouls. This reads the same stats blocks
+ *  `finishedFixtures` and `teamMetrics` read, so a fixture the table does not count cannot count
+ *  here either, and a stats block with no cards is a real zero rather than a missing reading. */
+export function discipline(compId: string, matches: Match[], clubs: Club[]): Discipline {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const rows = new Map<string, DisciplineRow>(metrics.map((m) => [m.clubId, {
+    clubId: m.clubId, played: 0, yellows: 0, reds: 0, fouls: 0,
+    bookings: 0, bookingsPerMatch: 0, foulsPerMatch: 0,
+  }]));
+  let counted = 0;
+  let yellows = 0;
+  let reds = 0;
+  let fouls = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED" || !m.stats) continue;
+    counted++;
+    const home = rows.get(m.homeClubId);
+    const away = rows.get(m.awayClubId);
+    const hs = m.stats.home;
+    const as = m.stats.away;
+    yellows += hs.yellows + as.yellows;
+    reds += hs.reds + as.reds;
+    fouls += hs.fouls + as.fouls;
+    if (home) { home.played = home.played + 1; home.yellows += hs.yellows; home.reds += hs.reds; home.fouls += hs.fouls; }
+    if (away) { away.played = away.played + 1; away.yellows += as.yellows; away.reds += as.reds; away.fouls += as.fouls; }
+  }
+  const list = [...rows.values()];
+  for (const r of list) {
+    r.bookings = r.yellows + r.reds;
+    r.bookingsPerMatch = r.played ? round2(r.bookings / r.played) : 0;
+    r.foulsPerMatch = r.played ? round2(r.fouls / r.played) : 0;
+  }
+  list.sort((a, b) => b.reds - a.reds || b.yellows - a.yellows || a.clubId.localeCompare(b.clubId));
+  return {
+    rows: list,
+    matches: counted,
+    yellows,
+    reds,
+    fouls,
+    perMatch: counted ? round2((yellows + reds) / counted) : 0,
+  };
+}
+

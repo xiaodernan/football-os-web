@@ -196,9 +196,12 @@ const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
 // fortress/traveller lines, and both halves of every club's record and points) read the door.
 // M570 adds the goal-timing screen: four cells (both late-scorer tiles and their absent values,
 // and the two club short names they fall back from) read the same door.
+// M571 adds the discipline screen: two cells (the most-booked tile's short name and its rate
+// fallback) read the same door.
 const expectedUsers = [
   "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
-  "features/analytics/DataRoom.tsx", "features/analytics/GoalTiming.tsx",
+  "features/analytics/DataRoom.tsx", "features/analytics/Discipline.tsx",
+  "features/analytics/GoalTiming.tsx",
   "features/analytics/PointsScenario.tsx",
   "features/analytics/RunIn.tsx", "features/analytics/VenueSplit.tsx",
   "features/compare/ClubCompare.tsx", "features/dashboard/Dashboard.tsx",
@@ -213,7 +216,8 @@ const expectedUsers = [
 ];
 const expectedPerUser = [
   ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
-  ["features/analytics/DataRoom.tsx", 13], ["features/analytics/GoalTiming.tsx", 4],
+  ["features/analytics/DataRoom.tsx", 13], ["features/analytics/Discipline.tsx", 2],
+  ["features/analytics/GoalTiming.tsx", 4],
   ["features/analytics/PointsScenario.tsx", 5],
   ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 14],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
