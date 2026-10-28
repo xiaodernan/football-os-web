@@ -6,8 +6,8 @@
 // means "scores at the league-average rate".
 
 import type { Club, Match } from "@/domain/types";
-import { clamp, round2, round3, indexById } from "@/lib/utils";
-import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally } from "./attributes";
+import { clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
+import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally, maxBy, last } from "./attributes";
 
 // The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
 // domain/attributes.ts (where the letter door and the points ladder live) and re-exported here
@@ -375,4 +375,84 @@ export function pointsScenarios(compId: string, matches: Match[], clubs: Club[])
       canCatchLeader: m.clubId !== leader?.clubId && maxPoints >= leaderPoints,
     };
   });
+}
+
+export interface TitleRaceWeek {
+  /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
+  week: number;
+  /** The bucket's first UTC day, ISO date. */
+  from: string;
+  /** The last UTC day inside the bucket that held a finished fixture, ISO date. */
+  to: string;
+  leaderId: string;
+  leaderPoints: number;
+  secondId: string;
+  secondPoints: number;
+  /** leaderPoints - secondPoints at the end of this bucket. */
+  gap: number;
+  /** Finished fixtures counted so far. */
+  played: number;
+}
+
+export interface TitleRace {
+  weeks: TitleRaceWeek[];
+  /** Weeks whose leader differs from the previous week's. */
+  leadChanges: number;
+  /** The gap after the last finished fixture. */
+  currentGap: number;
+  /** The widest gap any week reached, and the first week that reached it (0 when empty). */
+  biggestGap: number;
+  biggestGapWeek: number;
+}
+
+/** The gap between first and second as the season's finished fixtures accumulate, one point per
+ *  seven-day bucket. This is the backward-looking read the board did not have: the standings show
+ *  today's table, `pointsScenarios` projects it forward, and this says whether the race has
+ *  tightened or opened week by week. Buckets are UTC days from the first kickoff, so the series is
+ *  reproducible from the fixtures alone; a bucket with no finished fixture is skipped rather than
+ *  drawn as a flat week. */
+export function titleRace(compId: string, matches: Match[], clubs: Club[]): TitleRace {
+  const finished = matches
+    .filter((m) => m.competitionId === compId && m.status === "FINISHED")
+    .sort(byKickoff);
+  const empty: TitleRace = { weeks: [], leadChanges: 0, currentGap: 0, biggestGap: 0, biggestGapWeek: 0 };
+  if (finished.length === 0) return empty;
+  const utcDay = (iso: string) => Math.floor(epochMs(iso) / DAY_MS);
+  const isoDay = (day: number) => new Date(day * DAY_MS).toISOString().slice(0, 10);
+  const weekOf = (iso: string, base: number) => Math.floor((utcDay(iso) - base) / 7);
+  const base = utcDay(finished[0].kickoff);
+  const buckets = weekOf(last(finished)!.kickoff, base) + 1;
+  const weeks: TitleRaceWeek[] = [];
+  let leadChanges = 0;
+  for (let w = 0; w < buckets; w++) {
+    const inWeek = finished.filter((m) => weekOf(m.kickoff, base) === w);
+    if (inWeek.length === 0) continue;
+    const soFar = finished.filter((m) => weekOf(m.kickoff, base) <= w);
+    const table = teamMetrics(compId, soFar, clubs);
+    const leader = table[0];
+    const second = table[1];
+    if (!leader || !second) continue;
+    const prev = last(weeks);
+    if (prev && prev.leaderId !== leader.clubId) leadChanges++;
+    weeks.push({
+      week: w + 1,
+      from: isoDay(base + w * 7),
+      to: isoDay(utcDay(last(inWeek)!.kickoff)),
+      leaderId: leader.clubId,
+      leaderPoints: leader.points,
+      secondId: second.clubId,
+      secondPoints: second.points,
+      gap: leader.points - second.points,
+      played: soFar.length,
+    });
+  }
+  const latest = last(weeks);
+  const best = weeks.length ? maxBy(weeks, (week) => week.gap) : null;
+  return {
+    weeks,
+    leadChanges,
+    currentGap: latest?.gap ?? 0,
+    biggestGap: best?.gap ?? 0,
+    biggestGapWeek: best?.week ?? 0,
+  };
 }

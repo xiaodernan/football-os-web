@@ -511,7 +511,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M533: 116 -> 117 — features/player/PlayerProjection.tsx is a new projection screen.
 // M534: 117 -> 118 — features/analytics/RunIn.tsx is a new run-in screen.
 // M559: 118 -> 119 — features/analytics/PointsScenario.tsx is a new points-scenario screen.
-const APP_SRC_PIN = 119;
+// M567: 119 -> 120 — features/analytics/TitleRace.tsx is a new title-race screen.
+const APP_SRC_PIN = 120;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -524,7 +525,8 @@ const APP_SRC_PIN = 119;
 // M533: 60 -> 61 — PlayerProjection.tsx is the new .tsx module.
 // M534: 61 -> 62 — RunIn.tsx is the new .tsx module.
 // M559: 62 -> 63 — PointsScenario.tsx is the new .tsx module.
-const TSX_PIN = 63;
+// M567: 63 -> 64 — TitleRace.tsx is the new .tsx module.
+const TSX_PIN = 64;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -539,7 +541,8 @@ const TSX_PIN = 63;
 // M533: 119 -> 120, PlayerProjection.tsx again.
 // M534: 120 -> 121, RunIn.tsx again.
 // M559: 121 -> 122, PointsScenario.tsx again.
-const SRC_PIN = 122;
+// M567: 122 -> 123, TitleRace.tsx again.
+const SRC_PIN = 123;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -3080,8 +3083,10 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M531: ClubCompare's 16 keys add 1 duplicate value and 4 excess keys (124->125, 206->210).
 // M533: PlayerProjection's 16 keys add 1 duplicate value and 4 excess keys (125->126, 210->214).
 // M534: RunIn's 18 keys add 1 duplicate value and 1 excess key (126->127, 214->215).
-const DUP_VALUES_PIN = 127;
-const DUP_EXCESS_KEYS_PIN = 215;
+// M567: TitleRace's 21 keys add 1 duplicate value ("Title race", shared with mgr.zoneTitle)
+// and 1 excess key (127->128, 215->216).
+const DUP_VALUES_PIN = 128;
+const DUP_EXCESS_KEYS_PIN = 216;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4304,7 +4309,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M533: PlayerProjection adds its 19 literal + 1 template t() sites: 1467 -> 1486, 108 -> 109.
   // M534: RunIn adds its 20 literal t() sites: 1486 -> 1506.
   // M559: PointsScenario adds its 24 literal t() sites and its nav entry: 1506 -> 1531.
-  shapeCounts.literal === 1531 && shapeCounts.template === 109 && shapeCounts.expression === 32
+  // M567: TitleRace adds its 21 literal t() sites and its nav entry: 1531 -> 1552.
+  shapeCounts.literal === 1552 && shapeCounts.template === 109 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4324,7 +4330,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // the two more placeholder sites the run-in screen's tiles read.
   // M559: 160 -> 166 — PointsScenario's six interpolating rows (leaderSub, ceilingSub, chasersSub,
   // open, decided, record) hand over their variables.
-  litVarSites === 166 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M567: 166 -> 170 — TitleRace's four tiles (leaderSub, gapSub, changesSub, widestSub) do too.
+  litVarSites === 170 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));

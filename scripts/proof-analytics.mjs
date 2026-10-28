@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -340,6 +340,37 @@ ok(`a finished fixture is not points left: C's ceiling is its current total, and
   scenarios.every((r) => !["D", "E"].includes(r.clubId)));
 const scenariosAgain = pointsScenarios("T1", fixtures, clubs);
 ok("pointsScenarios is deterministic over the same fixtures", JSON.stringify(scenarios) === JSON.stringify(scenariosAgain));
+
+// --- titleRace: the gap week by week, on a hand-built finish line ------------------------------
+// A wins week 0 (A 3, C second on goal difference), B overtakes in week 1 (4 to A's 3), A takes it
+// back in week 2 (6 to B's 4). The scheduled r5 and the other competition's r6 are noise.
+const raceFixtures = [
+  match("r1", "T1", "A", "B", 2, 0, "2026-01-01T12:00:00.000Z"),
+  match("r2", "T1", "C", "B", 1, 1, "2026-01-01T18:00:00.000Z"),
+  match("r3", "T1", "B", "A", 1, 0, "2026-01-09T12:00:00.000Z"),
+  match("r4", "T1", "A", "C", 3, 0, "2026-01-16T12:00:00.000Z"),
+  match("r5", "T1", "A", "B", 9, 0, "2026-01-10T12:00:00.000Z", "SCHEDULED"),
+  match("r6", "T2", "D", "E", 3, 0, "2026-01-02T12:00:00.000Z"),
+];
+const race = titleRace("T1", raceFixtures, clubs);
+ok(`titleRace buckets the season into weeks and keeps the table as it stood (weeks ${race.weeks.length}, leaders ${race.weeks.map((w) => w.leaderId).join(",")}, gaps ${race.weeks.map((w) => w.gap).join(",")})`,
+  race.weeks.length === 3 && race.weeks.map((w) => w.leaderId).join(",") === "A,B,A" &&
+  race.weeks.map((w) => w.gap).join(",") === "2,1,2" &&
+  race.weeks.map((w) => w.leaderPoints).join(",") === "3,4,6" &&
+  race.weeks.map((w) => w.played).join(",") === "2,3,4");
+ok(`titleRace names the club in second, counts lead changes, and settles on the final gap (second ${race.weeks.map((w) => w.secondId).join(",")}, changes ${race.leadChanges}, current ${race.currentGap}, widest ${race.biggestGap} in week ${race.biggestGapWeek})`,
+  race.weeks.map((w) => w.secondId).join(",") === "C,A,B" && race.leadChanges === 2 &&
+  race.currentGap === 2 && race.biggestGap === 2 && race.biggestGapWeek === 1);
+ok(`titleRace's buckets are seven-day windows from the first kickoff, so the same fixtures always land in the same week (${race.weeks.map((w) => w.from + ".." + w.to).join(", ")})`,
+  race.weeks[0].from === "2026-01-01" && race.weeks[0].to === "2026-01-01" &&
+  race.weeks[1].from === "2026-01-08" && race.weeks[1].to === "2026-01-09" &&
+  race.weeks[2].from === "2026-01-15" && race.weeks[2].to === "2026-01-16");
+const raceAgain = titleRace("T1", raceFixtures, clubs);
+const raceEmpty = titleRace("T3", raceFixtures, clubs);
+ok(`titleRace is deterministic and a competition with no finished fixture charts nothing (same series ${JSON.stringify(race) === JSON.stringify(raceAgain)}, weeks ${race.weeks.length}, empty weeks ${raceEmpty.weeks.length}, empty week ${raceEmpty.biggestGapWeek})`,
+  JSON.stringify(race) === JSON.stringify(raceAgain) && race.weeks.length === 3 &&
+  raceEmpty.weeks.length === 0 &&
+  raceEmpty.biggestGap === 0 && raceEmpty.biggestGapWeek === 0);
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

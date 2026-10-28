@@ -125,6 +125,17 @@
   fmt2 消费 23、absent-glyph 用户 23 且 PointsScenario=5、absent-name 载体 +1）；tsc 干净、120 个 proof 脚本全绿（proof-pwa 需先 build：502KB gzip/47 资产，pin 520）；
   浏览器：生产预览在真实世界数据上渲染并切赛事（PL 8/10 仍可争冠、La Liga 5/9），console 干净；并发 lane 的 17 个未路由 stub 于本提交清除 — pushed
 
+- M567: 争冠走势（TitleRace）——`domain/analytics.ts` 新增 `titleRace(compId, matches, clubs)`：把已赛联赛按"赛季首场已赛起算的 7 天窗口"分桶，
+  每桶用既有 `teamMetrics` 重建当时的积分榜，记录 榜首/次席/积分/差距/已赛场次，并给出 易主次数、最大差距及其周次；SCHEDULED/LIVE 与他赛事一律不进序列；
+  屏幕=赛事 chips + 四块 tile（此刻榜首、当前差距、易主次数、最大差距+周次）+ `ProgressLine` 差距曲线（多于一周才画）+ 逐周倒序表（队徽/榜首/次席/差距，最大差距行加边框，窄屏 pctOf/BAR_FILL 条）+ 方法注 + 空态；
+  日期格式 bag 提到模块级（在渲染洞内写 format specifier 会被 raw-UI 扫描当文案，DataRoom 在 M170 付过同样的两处债）；
+  21 键三语（nav.titleRace + race.*），dup ratchet 127→128（"Title race" 与 mgr.zoneTitle 同词）、excess 215→216；
+  `proof-analytics` 新增 4 条共 88/88（三周手工联赛的 A,B,A 易主/2,1,2 差距/次席序列/最大差距周次、7 天桶边界、已赛过滤与确定性+空赛事对照）；
+  census pin 同步（APP_MODULE 115、POP 115、features 41、DEEP 57、APP_SRC 120、TSX 64、SRC 123、literal 1552、placeholder 170、APP_FILES 110）；
+  tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3187/3187 检查；浏览器：生产预览 PL 七桶 MCI 37 领先 CHE 10 分、易主 3 次、最大差距第 6 周 10 分，
+  切 La Liga 实时重算（BAR 36、差距 0、最大 16 在第 2 周），三语各自渲染，console 干净；
+  README 同时补写 M524 的正式小节（原 gap 条目移除，gap 计数 134→133，账本门 8/8）— pushed
+
 下一条目：继续"真实数据 + 不重叠 + 复用既有 domain"的下一个缺口。候选：Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）；
 或把"上限/按速率"读数下沉到俱乐部详情（同一 domain 读数，另一个读者的入口）。
 编号策略：并发 lane 每秒都在占号（它已用到 M566），本线落地时先查 `git log` 取下一个空号，并在 README 的 gap 账本里为 lane 的每个号写清楚。

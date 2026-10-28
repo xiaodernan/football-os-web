@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M559 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M567 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7098,6 +7098,48 @@ reflects the latest section this file actually carries.
 
 
 
+### M567 — the title race, week by week: how the gap was made
+
+**The question the table cannot answer.** A standings screen shows today's gap and nothing about
+how it got there. `titleRace()` in `domain/analytics.ts` folds a competition's FINISHED fixtures
+into seven-day windows counted from the season's own first kickoff, rebuilds the table after each
+window with the existing `teamMetrics` fold, and records who led, the points of first and second,
+the gap and matches played. It also counts lead changes and names the widest gap and the week it
+came in. Scheduled fixtures, live fixtures and other competitions never enter the series; the
+bucket is a whole-week window, so the same fixtures always land in the same week.
+
+**The screen.** `features/analytics/TitleRace.tsx` at `/title-race` (sidebar `nav.titleRace`):
+competition chips, four tiles (leading club with its points, today's gap and the club it is held
+over, lead changes across the charted weeks, widest gap and its week), a `ProgressLine` of the gap
+once more than one week exists, and a reversed table of every week — crest, leader, second, gap —
+whose widest row carries the primary border and whose narrow layout shows a `pctOf` bar in
+`BAR_FILL` tones. A method note says what the line does not read: who the opponents were (the
+run-in screen) and what comes next (the points-scenario screen). Twenty-one keys in EN / 简体中文
+/ 繁體中文. The date-format bag is hoisted out of the render hole — a format specifier is not a
+word a reader reads, the same two raw-UI hits DataRoom paid at M170.
+
+**What the gate says.** `proof-analytics` gains four clauses and runs **88/88**: a hand-built
+three-club league in which A wins week 0 (3 pts, C second on goal difference), B overtakes in week
+1 (4 to A's 3) and A takes it back in week 2 (6 to B's 4) reads leaders A,B,A; gaps 2,1,2; seconds
+C,A,B; two lead changes; widest gap 2 in week 1; buckets 2026-01-01..01, 01-08..09, 01-15..16. A
+scheduled fixture inside the run and another competition's finished match add nothing. The last
+clause pins the non-empty series at three weeks beside the empty result (a competition with no
+finished fixture charts nothing). The census pins pay for one module: app-tree 115; coverage 115 /
+features 41 / deep 57; i18n 120 / 64 / 123 (1,552 literals, 170 placeholder sites); storage 110.
+The two dictionary ratchets pay their toll — one duplicate English value ("Title race", shared
+with the Manager OS's `mgr.zoneTitle`) and one excess key: 127 -> 128, 215 -> 216.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **120/120 scripts · 3187/3187
+checks**, exit 0. Browser evidence, production preview on the shipped world: Premier League
+renders seven weekly buckets, MCI leading on 37 with a gap of 10 over CHE, three lead changes,
+widest gap 10 in week 6; switching to La Liga recomputes live (BAR 36, gap 0, widest 16 in week 2);
+all three locales render their own words; console clean. The in-app browser still cannot
+screenshot (as since M166), so the structural snapshot and the rendered text are the record.
+
+**Honest reservation.** The line reads the gap only: it does not weigh who the opponents were, and
+a bucket boundary is calendar arithmetic rather than a fixture round — a midweek match and a
+weekend match in the same seven days count as one step. The method note on the screen says so.
+
 ### M559 — the table's arithmetic ahead of time: what each club can still reach
 
 **The question two screens left open.** The run-in screen (M534) says how hard each club's
@@ -7773,6 +7815,35 @@ with it: `domain/worldEngine.ts` derives a whole-run report (per-season rows, dy
 rise and fall, whole-run market and rating growth) from the snapshot the engine already reproduces
 deterministically, `DynamicWorld` renders it, and the bundle grows **475 → 482 KB** gzip, recorded in
 `tests/perf/baseline.json` as a decision rather than a drift. `npm run proof` **118/118 scripts**.
+
+### M524 — the coach's résumé is derived, not stored: CoachProfile resurrected from the drafts
+
+**The first draft to come back.** The quarantine's `CoachProfile` parsed but was wired to nothing.
+It returns as `features/coach/CoachProfile.tsx` with `domain/coachCareer.ts` underneath, and the
+design rule is the point: **everything is derived from the `CareerState` the Manager OS already
+keeps.** `seasonSummary`'s own arithmetic gives the record; a milestone table pins each of nine
+badges to the result that earned it (`BADGE_IDS` is the one declaration of that space); a public
+card renders exactly what the visibility toggles let through. The toggles alone are state —
+`COACH_KEY` through the preference door — so the résumé can never disagree with the career it
+describes.
+
+**What the landing carried.** `scripts/proof-drafts.mjs`, the lane's finished M523 gate, was
+adopted here (a concurrent commit swept the untracked file into this commit before its section
+existed — M525's record explains it): the drafts quarantine is one-way and a resurrection
+announces itself, and both of this milestone's files went back by `git mv`, so their draft copies
+are gone (59 files, from 61). `domain/coachCareer.ts` reads thresholds as spec data rather than
+comparisons, routes last-element reads through the `last()` door, and reads a badge's match index
+instead of carrying it.
+
+**What the gates paid.** app-tree 102 -> 104 (and a ninth root reader for `proof-drafts`),
+coverage 102 -> 104 / 45 -> 46, storage 97 -> 99, the fmt2 roster 21 -> 22, i18n 107 -> 109 / 52 ->
+53 / 110 -> 112, the duplicate ratchets 109 -> 113 / 180 -> 189, the t()-shape counts 1317 -> 1354
+/ 105 -> 108, placeholder var sites 143 -> 146; the badge-name space is declared from `BADGE_IDS`
+rather than typed, and a zh-TW glyph leak (里程碑 -> 階段) was caught by the glyph gate and fixed.
+
+**Honest reservation.** The résumé is a view of one career, not a comparison across managers: the
+badges fire on the results the career recorded, and a career that never reached a competition
+simply shows the badges it did earn. The public card can hide sections but not alter them.
 
 ### M522 — the lane's unshipped batch becomes drafts, and the app's census reads the app again
 
@@ -12586,7 +12657,7 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **127 milestone numbers have no
+later ones as sections, and between the two **133 milestone numbers have no
 section at all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
@@ -12700,7 +12771,6 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M520 — the lane's squad-depth screen
 - M521 — the lane's advanced academy-management screen
 - M523 — the drafts boundary gate (`proof-drafts`), swept into M524's commit
-- M524 — the coach's résumé resurrected from the drafts (`CoachProfile`)
 - M538 — the concurrent line of work's in-flight unit, landed without a section of its own
 - M540 — the lane's academy advanced-report stub, unrouted and swept in M559
 - M541 — the lane's detailed scout-report stub, unrouted and swept in M559
@@ -12721,6 +12791,13 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M556 — the lane's player market-value history stub, unrouted and swept in M559
 - M557 — the lane's second player-value comparison stub, unrouted and swept in M559
 - M558 — the lane's player market-trend stub, unrouted and swept in M559
+- M560 — the lane's SystemOptimization2 screen, committed and swept off the tree at M566
+- M561 — the lane's SeasonDataScreen, committed and swept off the tree at M566
+- M562 — the lane's ContractPrediction, committed and swept off the tree at M566
+- M563 — the lane's SeasonAwards, committed and swept off the tree at M566
+- M564 — the lane's TransferMarket, committed and swept off the tree at M566
+- M565 — the lane's PlayerValueRanking re-add, swept with the batch; the real screen is M528's
+- M566 — the lane's ClubFinancialModel add-and-sweep, removed by M559's cleanup commit
 
 <!-- /gaps -->
 

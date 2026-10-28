@@ -94,6 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/projection", label: t("nav.projection"), icon: I.dev, match: ["/projection"] },
     { to: "/run-in", label: t("nav.runIn"), icon: I.chart, match: ["/run-in"] },
     { to: "/scenarios", label: t("nav.scenario"), icon: I.chart, match: ["/scenarios"] },
+    { to: "/title-race", label: t("nav.titleRace"), icon: I.chart, match: ["/title-race"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },
     { to: "/settings", label: t("nav.settings"), icon: I.settings, match: ["/settings"] },
   ];
