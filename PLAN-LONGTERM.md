@@ -163,9 +163,23 @@
   tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3196/3196 检查；浏览器：PL 83 场 43主胜/32平/8客胜、主场进球 83%、NEW 主客差 2.15、MCI 客场 1.67，
   切 La Liga 重算（66 场·34/24/8·81%·ATM 1.43·RMA 2.00），英文/繁体渲染且语言选择刷新后仍保留，console 干净 — pushed
 
-下一条目：继续"真实数据 + 不重叠 + 复用既有 domain"的下一个缺口。候选：Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）；
-或把"上限/按速率"读数下沉到俱乐部详情（同一 domain 读数，另一个读者的入口）；或"进球时段"（若并发 lane 的 GoalTiming 未落地，则避开该题）。
-编号策略：并发 lane 每秒都在占号（它已用 M566 提交、主树留了未提交的 GoalTiming），本线落地时先查 `git log` 取下一个空号，并在 README 的 gap 账本里为 lane 的每个号写清楚。
+- M570: 进球时间带（GoalTiming）——`domain/analytics.ts` 新增 `GOAL_BANDS = 6`、`goalBand(minute)`（`Math.floor((minute-1)/15)` 夹在 0..5：最后一窗吸收补时，78′ 与 97′ 同属 late）与 `goalTiming(compId, matches, clubs)`：
+  行集取自 `teamMetrics`，只遍历本赛事 FINISHED 场次的 GOAL 事件，按事件 `side` 归进球方/失球方，累计 `scoredBands`/`concededBands`、`lateScored`/`lateConceded` 与 `lateShare`（round2）；
+  排序 = lateShare 降序 → 进球数 → clubId，确定性；无事件场次零贡献但队仍占行；
+  屏幕 `/timing`（nav.timing）= 赛事 chips + 四块 tile（最忙窗口+球数、联赛晚段占比 pctLabel、最晚进球者 s/n、最晚失球者，0 读数走 ABSENT + none）+ 六窗双色柱（scored=BAR_FILL.info、conceded=BAR_FILL.low，高度 pctOf(...,peak)，peak=最忙窗口合计）+ 逐队表（队徽/全名、比分记录、进/失合计、lateShare 条 pctOf(...,100) + lateLine，零事件队降透明 + none）+ 方法注 + 空态；
+  23 键三语（nav.timing + timing.*）；literal t() 站点 1618→1651（屏幕 32 + nav 1）；placeholder 194→200（六条插值）；dup ratchet 实测不动（131 组 / 226 excess keys）；
+  `proof-analytics` 新增 4 条共 100/100（A 2-1 B 的 12′/44′/78′ + C 0-1 A 的 92′：A 进球窗 "1,0,0,0,0,2"、失球窗 "0,0,1,0,0,0"、late 2、share 66.67；B 失球窗 "1,0,0,0,0,1"；C 0 进 1 失 share 0；边界 15/16/45/46/75/76 各落一窗、97′ 与 78′ 同窗；确定性 + 无事件场次零贡献）；
+  census pin 同步（APP_MODULE 118、POP 118、features 44、DEEP 60、APP_SRC 123、TSX 67、SRC 126、APP_FILES 113；absence 门 +4 格 = 14 格/24 文件；name lane folded 9 文件、plain 31 处 = 26 vars + 5 props）；
+  `proof-unused-locals` 抓到屏幕里一个未读的 `getCompetition` 局部（comp 只用了一次就废弃）→ 删除该读与 import，5/5；
+  bundle 510→514 KB gzip / 51 资产（js 501、css 13，记入 tests/perf/baseline.json）；
+  tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3200/3200 检查；本轮未做浏览器复核，证据欠账如实记在 README；
+  下一步（M571 候选）：纪律读数（YELLOW/RED 事件已在 seed 与 MatchStats 里，却没有任何屏幕按俱乐部统计——真实数据、不重叠）；或把六窗读数下沉俱乐部详情；或 Dashboard 下一步建议动作链。
+
+下一条目：M571 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① 纪律读数（YELLOW/RED 事件已在 footballSeed 与 MatchStats 里，但没有任何屏幕按俱乐部统计，且与进球时间带不重叠）；
+② 把六窗读数下沉俱乐部详情（同一个 goalTiming，另一个入口）；
+③ Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）。
+编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线本单元为 M570。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
-并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交——它们在每次推送前用 `git rm`/`rm` 清掉并写明。
+并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

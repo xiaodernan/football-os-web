@@ -7098,6 +7098,55 @@ reflects the latest section this file actually carries.
 
 
 
+### M570 — when the goals arrive, in six windows
+
+**The question the scoreline cannot answer.** A 2-1 can be a match settled in the first quarter-hour or
+one stolen in stoppage time, and the table, the form line and the head-to-head record all print the
+same 2-1. `goalTiming()` in `domain/analytics.ts` reads the one thing that separates the two: the
+events. Six fifteen-minute windows divide a match (`goalBand` put a 97′ goal in the same window as a
+78′ goal — the last window absorbs stoppage time, because the recorded minute runs past 90); every
+FINISHED fixture's GOAL events are folded to the side that scored and the side that conceded, so each
+club ends up with its own scored/conceded windows, its late goals and the share of its goals that
+arrive after 75′. Rows are keyed off `teamMetrics`, so a club with a quiet match still owns a row.
+
+**The screen.** `features/analytics/GoalTiming.tsx` at `/timing` (sidebar `nav.timing`): competition
+chips; four tiles (the busiest window and its goals, the league's late share, the latest scorer with
+his late goals out of his total, the leakiest defence); a six-column bar panel where scored
+(`BAR_FILL.info`) stands beside conceded (`BAR_FILL.low`) at heights `pctOf` against the busiest
+window's combined total; and the club list — crest, record, goals each way, then a late-share bar with
+the late line — ordered by late share so the list reads "who scores latest" first, while the tiles take
+the largest counts the share order does not guarantee. A club with no events dims and reads "none";
+the method note says the windows are the match clock, not a claim about fitness. Twenty-three keys in
+EN / 简体中文 / 繁體中文.
+
+**What the gate says.** `proof-analytics` gains four clauses and runs **100/100**: a four-fixture league
+(A 2-1 B with goals at 12′, 44′, 78′; C 0-1 A with a 92′ goal) reads A's scored windows
+1,0,0,0,0,2 and conceded 0,0,1,0,0,0 — two late goals, share 66.67 — while B's conceded windows read
+1,0,0,0,0,1 and C, which never scored, still owns its conceded window and reads share 0; the window
+edges put 15′, 16′, 45′, 46′, 75′ and 76′ in six different windows and 97′ beside 78′; and the fold is
+deterministic, with a match carrying no recorded events contributing nothing. Census pins pay for one
+module: app-tree 117 → 118; coverage 117 → 118 / features 43 → 44 / deep 59 → 60; i18n 122 → 123 /
+66 → 67 / 125 → 126; storage 112 → 113. The dictionary grows by 23 keys a locale — 2,355 values — and
+the duplicate ratchet does not move: 131 duplicate groups and 226 excess keys, measured unchanged. The
+literal-site census reads 1,618 → 1,651 (the 32 keys printed on the screen plus the nav label) and the
+placeholder census 194 → 200 (the six interpolating rows). Three more gates count the screen instead
+of passing over it: the absence door's user ledger in `proof-absent-glyph` (4 cells, 14 across 24
+files) and the name lane's carrier set in `proof-absent-name` (9 folded files, 3 `?.short`/`?.name`
+fallbacks inside 31 plain-variable sites).
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **120/120 scripts · 3200/3200 checks**;
+the bundle is **514 KB gzip across 51 assets** (501 JS + 13 CSS), recorded in
+`tests/perf/baseline.json` (510 → 514). No browser pass this milestone: the screen was exercised
+through the analytics fold and the production build only, and that debt is carried openly rather than
+claimed as evidence.
+
+**Honest reservation.** The windows read the dataset's own event log — one synthetic season whose
+engine decides when goals fall — so the screen reports the engine's world, not a law of football. A
+club with a single match gets a full six-window row from that one game, and "late" is one window wide:
+the last fifteen minutes plus stoppage time, not a stoppage-time-only read. The late-share sort puts a
+club with one late goal out of one above a club with six out of nine, which the list's own "record"
+line shows but the ordering does not weight.
+
 ### M569 — the season split by venue, and the language choice that did not survive a reload
 
 **The question the table hides.** `teamMetrics` already folds each club's home and away halves — they
