@@ -79,12 +79,13 @@ const FOLDED = [
   "features/football/Details.tsx", "features/football/FootballWorld.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/sim/SimulationLab.tsx",
 ];
-// The five files that already rode the door for a name BEFORE this unit (M394/M395's fold
+// The files that already rode the door for a name BEFORE this unit (M394/M395's fold
 // included some `?? ABSENT` name fallbacks). They are charged apart so this unit's own
 // population is not confused with the ledger it inherited.
 // M559: the points-scenario screen's three short-name tiles and its title-race hint look names
 // up and read the door; they are charged apart because this unit folded no name fallbacks there.
-const PRE_EXISTING = ["domain/scouting.ts", "features/manager/ManagerOS.tsx", "features/analytics/PointsScenario.tsx"];
+// M569: the venue split's two named lines and its competition-name hint do the same.
+const PRE_EXISTING = ["domain/scouting.ts", "features/manager/ManagerOS.tsx", "features/analytics/PointsScenario.tsx", "features/analytics/VenueSplit.tsx"];
 
 // --- 1. Plants: arm every scan, so a "zero"/"every" verdict is measured, never an empty set. ---
 const pNameEmpty = n("const x = getClub(id)?.name ?? \"\";", NAME_EMPTY);

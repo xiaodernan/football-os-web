@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M568 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M569 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,67 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M569 — the season split by venue, and the language choice that did not survive a reload
+
+**The question the table hides.** `teamMetrics` already folds each club's home and away halves — they
+feed its attack and defence ratings — but no screen asks what those halves say on their own: is a
+club's position built at home or on the road, and does this league even have a home advantage?
+`venueSplit()` in `domain/analytics.ts` reads that same fold and adds each half's points, per-game
+rate and the home edge (home ppg − away ppg), plus the competition's finished fixtures counted by
+venue: home wins, draws, away wins, goals each way. Rows keep the table's own order, so the screen
+and the standings cannot disagree about who is where.
+
+**The screen.** `features/analytics/VenueSplit.tsx` at `/home-away` (sidebar `nav.homeAway`):
+competition chips; four tiles (home wins, draws, away wins, home goal share); a line naming the
+biggest home edge and the best travellers; and the club table with each half's points and record
+beside the signed edge in `DELTA_CLASS` tones. Narrow screens keep the club and the edge and fold
+both halves' records into a subline. Twenty-three keys in EN / 简体中文 / 繁體中文.
+
+**The browser pass found a second defect.** Setting a language and reloading reset it: the provider
+persists the choice through `writeJson` (a JSON string), while `detectLocale` compared the raw
+stored text against a locale id — `"zh-CN"` is not `zh-CN` — so every reload fell back to the
+browser. The read now goes through `readJson`, the door that matches the writer; choosing 繁體中文
+and reloading holds it. `proof-storage` gains a round-trip clause: the row the writer stores is the
+row the next mount reads back. It is armed — reverting the reader to a raw `getItem` turned that
+clause red with the saved zh-TW read as en, and took the two saved-choice clauses with it (59/62).
+
+**What the gate says.** `proof-analytics` gains four clauses and runs **96/96**: a four-fixture
+league (A 2-0 B, C 1-1 B, C 1-0 A, B 2-2 A) with a scheduled fixture and another competition as
+noise reads 4 played, 2 home wins, 2 draws, 0 away wins, goals 6-3; A's halves read 3 pts / 3 ppg at
+home against 1 pt / 0.5 ppg away (edge 2.5) and B's edge 0.5; C has not travelled — an unplayed
+half, not a zero record — while its home half reads 2 ppg; rows keep the table's order (A ahead of C
+on goals for) and the fold is deterministic, empty for a competition with no fixture.
+`proof-storage` **62/62**. Census pins pay for one module: app-tree 117; coverage 117 / features 43
+/ deep 59; i18n 122 / 66 / 125 (1,618 literal sites, 194 placeholder sites); storage 112. The
+dictionary ratchets: the 23 keys form two new duplicate groups ("{n} pts" shared with `ai.kg.pts`,
+"Draws" shared with `h2h.draws`) and grow three existing ones (Home, Away, Club): 129 → 131,
+221 → 226. Three more gates count the new screen instead of passing over it: `proof-fmt2`'s
+consumer set (23 → 24), the absence door's user ledger in `proof-absent-glyph` (14 cells, 24
+files), and the name lane's carrier set in `proof-absent-name` (3 `?.short`/`?.name` fallbacks,
+12 files). `proof-quantities` caught the screen's own split — `homeEdge` read through `fmt2` inside
+the fortress sentence and through `signed` in the table cell — and now documents it like the six
+older splits. The locale defect had a test-side half too: the screens harness planted a raw
+`zh-CN`/`zh-TW` where the provider writes JSON, so it had been exercising a storage shape the app
+never writes; it now plants `JSON.stringify(locale)` and the 120-render matrix reads 0
+locale-inert screens, 0 English-only badges. (`proof-localdata`'s dead "bare preference" note,
+which described the old assumption, is gone.)
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **120/120 scripts · 3196/3196 checks**;
+the bundle is **510 KB gzip across 50 assets**, recorded in `tests/perf/baseline.json` (496 → 510
+covers the three screens since the last recording, M567–M569). Browser evidence, production preview
+on the shipped world: the Premier League reads 83 played — 43 home wins, 32 draws, 8 away wins, 83%
+of its goals scored at home; Newcastle United the biggest home edge (2.15 ppg), Manchester City the
+best travellers (1.67); La Liga recomputes live (66 played, 34/24/8, 81%, Atlético Madrid 1.43,
+Real Madrid 2.00); English and 繁體中文 render, and the language choice survives a reload; console
+clean. The in-app browser still cannot screenshot (as since M166).
+
+**Honest reservation.** "Home advantage" here is the dataset's own: the world is one synthetic
+season, and its engine awards home sides far more than real football does (83% of this league's
+goals are scored at home), so the screen reports the engine's world rather than a claim about the
+sport. A half with no matches reads an absent cell, not a zero, but a club with one away match still
+gets a full away column from that single game — the edge is a per-game difference, not a form
+judgement, and the method note says so on the page.
 
 ### M568 — every meeting between two clubs, across competitions
 

@@ -513,7 +513,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M559: 118 -> 119 — features/analytics/PointsScenario.tsx is a new points-scenario screen.
 // M567: 119 -> 120 — features/analytics/TitleRace.tsx is a new title-race screen.
 // M568: 120 -> 121 — features/analytics/HeadToHead.tsx is a new head-to-head screen.
-const APP_SRC_PIN = 121;
+// M569: 121 -> 122 — features/analytics/VenueSplit.tsx is a new home/away split screen.
+const APP_SRC_PIN = 122;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -528,7 +529,8 @@ const APP_SRC_PIN = 121;
 // M559: 62 -> 63 — PointsScenario.tsx is the new .tsx module.
 // M567: 63 -> 64 — TitleRace.tsx is the new .tsx module.
 // M568: 64 -> 65 — HeadToHead.tsx is the new .tsx module.
-const TSX_PIN = 65;
+// M569: 65 -> 66 — VenueSplit.tsx is the new .tsx module.
+const TSX_PIN = 66;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -545,7 +547,8 @@ const TSX_PIN = 65;
 // M559: 121 -> 122, PointsScenario.tsx again.
 // M567: 122 -> 123, TitleRace.tsx again.
 // M568: 123 -> 124, HeadToHead.tsx again.
-const SRC_PIN = 124;
+// M569: 124 -> 125, VenueSplit.tsx again.
+const SRC_PIN = 125;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -3090,8 +3093,11 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // and 1 excess key (127->128, 215->216).
 // M568: HeadToHead's 29 keys form one new duplicate group ("Opponent", shared with
 // player.opponent) and join four existing ones (Goals, Home, Away, Club): 128->129, 216->221.
-const DUP_VALUES_PIN = 129;
-const DUP_EXCESS_KEYS_PIN = 221;
+// M569: VenueSplit's 23 keys form two new duplicate groups ("{n} pts" shared with ai.kg.pts,
+// "Draws" shared with h2h.draws) and grow three existing ones (Home, Away, Club): 129->131,
+// 221->226.
+const DUP_VALUES_PIN = 131;
+const DUP_EXCESS_KEYS_PIN = 226;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4316,7 +4322,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M559: PointsScenario adds its 24 literal t() sites and its nav entry: 1506 -> 1531.
   // M567: TitleRace adds its 21 literal t() sites and its nav entry: 1531 -> 1552.
   // M568: HeadToHead adds its 32 literal t() sites and its nav entry: 1552 -> 1585.
-  shapeCounts.literal === 1585 && shapeCounts.template === 109 && shapeCounts.expression === 32
+  // M569: VenueSplit adds its 32 literal t() sites and its nav entry: 1585 -> 1618.
+  shapeCounts.literal === 1618 && shapeCounts.template === 109 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4339,7 +4346,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M567: 166 -> 170 — TitleRace's four tiles (leaderSub, gapSub, changesSub, widestSub) do too.
   // M568: 170 -> 180 — HeadToHead's ten interpolating rows (meetingsSub, wins ×2, ofPlayed ×3,
   // goalsHint, biggestLine, streakWin, streakDraw) hand over theirs.
-  litVarSites === 180 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M569: 180 -> 194 — VenueSplit's fourteen interpolating sites (ofPlayed ×3, goalsSub,
+  // fortressLine, travellersLine, record ×4, pts ×4) hand over theirs.
+  litVarSites === 194 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));

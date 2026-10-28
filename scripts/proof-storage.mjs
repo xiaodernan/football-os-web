@@ -104,7 +104,8 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // M559: 108 -> 109 — features/analytics/PointsScenario.tsx is a new points-scenario screen.
 // M567: 109 -> 110 — features/analytics/TitleRace.tsx is a new title-race screen.
 // M568: 110 -> 111 — features/analytics/HeadToHead.tsx is a new head-to-head screen.
-const APP_FILES_PIN = 111;
+// M569: 111 -> 112 — features/analytics/VenueSplit.tsx is a new home/away split screen.
+const APP_FILES_PIN = 112;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */
@@ -233,15 +234,25 @@ function renderLocale(rows, navLang) {
   catch (e) { return { html: null, err: e }; }
 }
 
-const l_stored = renderLocale({ [LOCALE_KEY]: "zh-CN" }, "en-US");
+const l_stored = renderLocale({ [LOCALE_KEY]: JSON.stringify("zh-CN") }, "en-US");
 ok(`I18nProvider renders and a saved 简体中文 choice wins over the browser's own language (locale ${localeCap && localeCap.locale}${l_stored.err ? `, threw ${l_stored.err.constructor.name}` : ""})`,
   !l_stored.err && localeCap && localeCap.locale === "zh-CN", l_stored.err && l_stored.err.message);
 
-const l_win = renderLocale({ [LOCALE_KEY]: "zh-TW" }, "zh-CN");
+const l_win = renderLocale({ [LOCALE_KEY]: JSON.stringify("zh-TW") }, "zh-CN");
 ok(`the stored row beats navigator rather than the other way round (stored zh-TW, navigator zh-CN -> ${localeCap && localeCap.locale})`,
   !l_win.err && localeCap.locale === "zh-TW");
 
-const l_unknown = renderLocale({ [LOCALE_KEY]: "fr" }, "zh-HK");
+// M569: the provider reads the row in the format its own write door produces. The writer is
+// writeJson (a JSON string), so a raw getItem compared the quoted text against a locale id, never
+// matched, and the reader's language reset on every reload — found in the browser, pinned here.
+const roundStore = fakeStore({});
+const roundVerdict = LD.writeJson(roundStore, LOCALE_KEY, "zh-TW");
+const l_round = renderLocale(Object.fromEntries(roundStore._rows), "en-US");
+ok(`the row the provider's own write door stores is the row the next mount reads back (wrote ${JSON.stringify(roundStore._rows.get(LOCALE_KEY))}, landed ${roundVerdict.landed}, navigator en-US -> ${localeCap && localeCap.locale})`,
+  roundVerdict.landed && !l_round.err && localeCap && localeCap.locale === "zh-TW",
+  l_round.err && l_round.err.message);
+
+const l_unknown = renderLocale({ [LOCALE_KEY]: JSON.stringify("fr") }, "zh-HK");
 ok(`a locale the app does not ship is not a locale the app renders — detection falls through to the browser (stored fr, navigator zh-HK -> ${localeCap && localeCap.locale})`,
   !l_unknown.err && localeCap.locale === "zh-TW");
 

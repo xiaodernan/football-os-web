@@ -9,7 +9,7 @@ import {
 } from "react";
 import { DICTIONARIES, type Locale, LOCALES } from "./dictionaries";
 import { interpolate } from "./format";
-import { LOCALE_KEY, browserStore, writeJson } from "@/domain/localData";
+import { LOCALE_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 
 export type { Locale } from "./dictionaries";
 
@@ -40,7 +40,10 @@ export function translate(locale: Locale, key: string, vars?: Record<string, str
 export { formatDate, fmtDateTime, relativeDay } from "./format";
 
 function detectLocale(): Locale {
-  const stored = browserStore()?.getItem(STORAGE_KEY) as Locale | null;
+  // Through the reader that matches the writer: the effect below persists the choice with
+  // writeJson, and a raw getItem would compare the JSON text (a quoted string) against a locale
+  // id, never match, and quietly reset the reader's language on every reload.
+  const stored = readJson<Locale | null>(browserStore(), STORAGE_KEY, null).value;
   if (stored && LOCALES.some((l) => l.id === stored)) return stored;
   if (typeof navigator !== "undefined") {
     const n = navigator.language.toLowerCase();

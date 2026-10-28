@@ -23,7 +23,6 @@ class Mem {
   removeItem(k) { this.m.delete(k); }
 }
 
-const BARE = new Set([LOCALE_KEY, THEME_KEY]); // preferences stored as plain strings, not JSON
 const seedFor = (key) => (key === LOCALE_KEY ? "zh-CN" : key === THEME_KEY ? "dark" : '[{"id":"a1"},{"id":"a2"}]');
 const seeded = {};
 for (const spec of LOCAL_KEYS) seeded[spec.key] = seedFor(spec.key);

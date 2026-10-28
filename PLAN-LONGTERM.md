@@ -144,10 +144,28 @@
   census pin 同步（APP_MODULE 116、POP 116、features 42、DEEP 58、APP_SRC 121、TSX 65、SRC 124、literal 1585、placeholder 180、APP_FILES 111）；
   tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3191/3191 检查；浏览器：生产预览默认对局 ARS-MCI 读到跨 2 项赛事 4 场、ARS 0W2D2L、进球 1-4、最大分差 MCI 净胜 2、最近走势 MCI，
   换对手为 Liverpool 实时重算（3 场·1 项赛事），英文与繁体各自渲染，console 干净 — pushed
+  合并注：主树存有并行 lane 未提交的 goalTiming（domain/analytics.ts 追加 + features/analytics/GoalTiming.tsx），
+  用唯一消息 stash 保留 → ff 合并 → 按同一条目 apply 还原，未进入本线提交；推送只含 ffd6963。
+
+- M569: 主客场切面（VenueSplit）——`domain/analytics.ts` 新增 `venueSplit(compId, matches, clubs)`：复用 `teamMetrics` 已算好的主/客两半，
+  给出每队 主场积分/客场积分、场均（主场 ppg、客场 ppg，round2）、主客差（homePpg − awayPpg，可为负 = 客场更强），行序沿用积分榜；
+  另统计本赛事全部已赛的 主胜/平/客胜 与主客进球数；未踢的半程 `played=0`，屏幕显示 ABSENT 而非 0；
+  屏幕=赛事 chips + 四块 tile（主胜/平/客胜/主场进球占比 pctLabel + goalsSub）+ 最大主场优势/最佳客场队两条事实 + 逐队表（主/客两半的积分与 W-D-L、带符号的主客差走 signed + DELTA_CLASS）+ 窄屏两半记录折入副行 + 方法注 + 空态；
+  23 键三语（nav.homeAway + venue.*），dup ratchet 129→131（新组 "{n} pts" 与 ai.kg.pts、"Draws" 与 h2h.draws；Home/Away/Club 三组增长）excess 221→226；
+  `proof-analytics` 新增 4 条共 96/96（四场联赛 2 主胜2平0客胜/6-3 球、A 的两半与主客差 2.5、C 未客场=未赛半程+行序 A,C,B、确定性+空赛事）；
+  浏览器复核时发现并修复第二个缺陷：语言选择存的是 writeJson 的 JSON 字符串，而 detectLocale 用裸 getItem 读原文比较，`"zh-CN"` ≠ `zh-CN`，
+  每次刷新都回落浏览器语言；改为 `readJson` 读取（与写入门配对），`proof-storage` 新增 round-trip 条款共 62/62，并把读取器回退成裸 getItem 验证该条会红（59/62，存 zh-TW 读成 en）；
+  census pin 同步（APP_MODULE 117、POP 117、features 43、DEEP 59、APP_SRC 122、TSX 66、SRC 125、literal 1618、placeholder 194、APP_FILES 112）；
+  新增屏幕还进入三张读数清单：fmt2 消费者 23→24、absence 门用户表 +14 格（24 文件）、name lane 载体 +3 处（12 文件）；
+  `proof-quantities` 抓到本屏自己的双形读数（homeEdge 在句子里走 fmt2、在表格里走 signed），已登记为第 7 个 documented split；
+  语言缺陷也有测试侧一半：`proof-screens` 一直种入裸 `zh-CN`/`zh-TW`（实际写入是 JSON），已改为 `JSON.stringify(locale)`，120 次渲染 0 locale-inert/0 英文徽标，`proof-localdata` 里描述旧假设的死注释删除；
+  bundle 510KB gzip/50 资产（496→510 记入 tests/perf/baseline.json，覆盖 M567–M569 三屏）；
+  tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3196/3196 检查；浏览器：PL 83 场 43主胜/32平/8客胜、主场进球 83%、NEW 主客差 2.15、MCI 客场 1.67，
+  切 La Liga 重算（66 场·34/24/8·81%·ATM 1.43·RMA 2.00），英文/繁体渲染且语言选择刷新后仍保留，console 干净 — pushed
 
 下一条目：继续"真实数据 + 不重叠 + 复用既有 domain"的下一个缺口。候选：Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）；
-或把"上限/按速率"读数下沉到俱乐部详情（同一 domain 读数，另一个读者的入口）。
-编号策略：并发 lane 每秒都在占号（它已用到 M566），本线落地时先查 `git log` 取下一个空号，并在 README 的 gap 账本里为 lane 的每个号写清楚。
+或把"上限/按速率"读数下沉到俱乐部详情（同一 domain 读数，另一个读者的入口）；或"进球时段"（若并发 lane 的 GoalTiming 未落地，则避开该题）。
+编号策略：并发 lane 每秒都在占号（它已用 M566 提交、主树留了未提交的 GoalTiming），本线落地时先查 `git log` 取下一个空号，并在 README 的 gap 账本里为 lane 的每个号写清楚。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交——它们在每次推送前用 `git rm`/`rm` 清掉并写明。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

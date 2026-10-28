@@ -166,7 +166,8 @@ const DEAD_CEILING = 22;
 // M559: 113 -> 114 — features/analytics/PointsScenario.tsx is a new points-scenario screen.
 // M567: 114 -> 115 — features/analytics/TitleRace.tsx is a new title-race screen.
 // M568: 115 -> 116 — features/analytics/HeadToHead.tsx is a new head-to-head screen.
-const POP_PIN = 116;
+// M569: 116 -> 117 — features/analytics/VenueSplit.tsx is a new home/away split screen.
+const POP_PIN = 117;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -193,7 +194,8 @@ const POP_PIN = 116;
 // M559: features 39 -> 40 (PointsScenario).
 // M567: features 40 -> 41 (TitleRace).
 // M568: features 41 -> 42 (HeadToHead).
-const BY_DIR_PIN = { components: 15, data: 7, domain: 33, features: 42, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+// M569: features 42 -> 43 (VenueSplit).
+const BY_DIR_PIN = { components: 15, data: 7, domain: 33, features: 43, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
@@ -201,7 +203,8 @@ const BY_DIR_PIN = { components: 15, data: 7, domain: 33, features: 42, function
 // M559: 55 -> 56. features/analytics/PointsScenario.tsx sits two levels down.
 // M567: 56 -> 57. features/analytics/TitleRace.tsx sits two levels down.
 // M568: 57 -> 58. features/analytics/HeadToHead.tsx sits two levels down.
-const DEEP_PIN = 58;
+// M569: 58 -> 59. features/analytics/VenueSplit.tsx sits two levels down.
+const DEEP_PIN = 59;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

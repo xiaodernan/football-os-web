@@ -545,3 +545,71 @@ export function headToHead(clubA: string, clubB: string, matches: Match[]): Head
     streak,
   };
 }
+
+export interface VenueSplitRow {
+  clubId: string;
+  /** Points won at home and away — the two halves the table's single figure sums. */
+  homePoints: number;
+  awayPoints: number;
+  /** Points per game in each half, 2dp; 0 while that half has not been played. */
+  homePpg: number;
+  awayPpg: number;
+  /** homePpg - awayPpg, 2dp; negative means the club has travelled better than it has hosted. */
+  homeEdge: number;
+  home: Split;
+  away: Split;
+}
+
+export interface VenueSplit {
+  /** One row per club, in table order (the order `teamMetrics` already decided). */
+  rows: VenueSplitRow[];
+  /** League-wide results across every finished fixture — the venue effect the table hides. */
+  homeWins: number;
+  draws: number;
+  awayWins: number;
+  homeGoals: number;
+  awayGoals: number;
+  played: number;
+}
+
+/** The season split by venue: what each club has taken at home and away, and what the league's
+ *  fixtures did as a whole.
+ *
+ *  `teamMetrics` already folds each club's home and away records — they feed its attack and defence
+ *  ratings — but no screen asks the question those halves answer on their own: is this club's
+ *  position built at home or on the road, and does the league even have a home advantage? Reading
+ *  the same fold rather than replaying the fixtures means a correction to what "finished" means
+ *  lands once, and the two screens can never disagree about a club's home record. */
+export function venueSplit(compId: string, matches: Match[], clubs: Club[]): VenueSplit {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const rows = metrics.map((m) => {
+    const homePoints = m.home.won * 3 + m.home.drawn;
+    const awayPoints = m.away.won * 3 + m.away.drawn;
+    const homePpg = m.home.played ? round2(homePoints / m.home.played) : 0;
+    const awayPpg = m.away.played ? round2(awayPoints / m.away.played) : 0;
+    return {
+      clubId: m.clubId,
+      homePoints,
+      awayPoints,
+      homePpg,
+      awayPpg,
+      homeEdge: round2(homePpg - awayPpg),
+      home: m.home,
+      away: m.away,
+    };
+  });
+  const fixtures = finishedFixtures(compId, matches);
+  let homeWins = 0;
+  let draws = 0;
+  let awayWins = 0;
+  let homeGoals = 0;
+  let awayGoals = 0;
+  for (const m of fixtures) {
+    homeGoals += m.homeGoals;
+    awayGoals += m.awayGoals;
+    if (m.homeGoals > m.awayGoals) homeWins++;
+    else if (m.homeGoals < m.awayGoals) awayWins++;
+    else draws++;
+  }
+  return { rows, homeWins, draws, awayWins, homeGoals, awayGoals, played: fixtures.length };
+}

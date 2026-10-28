@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -406,6 +406,41 @@ ok(`headToHead is deterministic and a pair that never met reads empty rather tha
   JSON.stringify(h2h) === JSON.stringify(h2hAgain) && h2h.played === 4 &&
   h2hEmpty.played === 0 && h2hEmpty.biggest === null &&
   h2hEmpty.streak === null && h2hEmpty.goalsA === 0 && h2hEmpty.goalsB === 0 && h2hEmpty.competitions === 0);
+
+// --- venueSplit: the season's two halves, and the league's own venue effect --------------------
+// A wins at home (2-0 B), C draws B at home (1-1) and beats A at home (1-0), B draws A at home
+// (2-2) — four home fixtures, two home wins, two draws, no away win. The scheduled v5 and the
+// other competition's v6 are noise. A and C tie on 4 points and +1 goal difference; A's four
+// goals break the tie ahead of C's two.
+const venueFixtures = [
+  match("v1", "T1", "A", "B", 2, 0, "2026-01-01"),
+  match("v2", "T1", "C", "B", 1, 1, "2026-01-02"),
+  match("v3", "T1", "C", "A", 1, 0, "2026-01-03"),
+  match("v4", "T1", "B", "A", 2, 2, "2026-01-04"),
+  match("v5", "T1", "A", "B", 9, 0, "2026-01-10", "SCHEDULED"),
+  match("v6", "T2", "D", "E", 3, 0, "2026-01-02"),
+];
+const venue = venueSplit("T1", venueFixtures, clubs);
+const vById = Object.fromEntries(venue.rows.map((r) => [r.clubId, r]));
+ok(`venueSplit counts the league's fixtures by venue, and scheduled or other-competition noise stays out (${venue.played} played: ${venue.homeWins} home wins, ${venue.draws} draws, ${venue.awayWins} away wins; goals ${venue.homeGoals}-${venue.awayGoals})`,
+  venue.played === 4 && venue.homeWins === 2 && venue.draws === 2 && venue.awayWins === 0 &&
+  venue.homeGoals === 6 && venue.awayGoals === 3);
+ok(`venueSplit gives each club its two halves: points, per-game rate and the home edge (A home ${vById.A.homePoints} pts / ${vById.A.homePpg} ppg, away ${vById.A.awayPoints} pts / ${vById.A.awayPpg} ppg, edge ${vById.A.homeEdge})`,
+  vById.A.homePoints === 3 && vById.A.awayPoints === 1 &&
+  vById.A.homePpg === 3 && vById.A.awayPpg === 0.5 && vById.A.homeEdge === 2.5 &&
+  vById.A.home.won === 1 && vById.A.home.drawn === 0 && vById.A.home.lost === 0 &&
+  vById.A.away.won === 0 && vById.A.away.drawn === 1 && vById.A.away.lost === 1 &&
+  vById.B.homeEdge === 0.5);
+ok(`a club that has not travelled yet reads an unplayed half rather than a zero record (C away ${vById.C.away.played} played, ${vById.C.awayPoints} pts, ${vById.C.awayPpg} ppg; home ${vById.C.homePpg} ppg; rows ${venue.rows.map((r) => r.clubId).join(",")})`,
+  vById.C.away.played === 0 && vById.C.awayPoints === 0 && vById.C.awayPpg === 0 &&
+  vById.C.home.played === 2 && vById.C.homePpg === 2 && vById.C.homeEdge === 2 &&
+  venue.rows.map((r) => r.clubId).join(",") === "A,C,B");
+const venueAgain = venueSplit("T1", venueFixtures, clubs);
+const venueEmpty = venueSplit("T3", venueFixtures, clubs);
+ok(`venueSplit is deterministic, keeps the table's own order, and a competition with no fixture reads empty (${venue.rows.length} rows, same split ${JSON.stringify(venue) === JSON.stringify(venueAgain)}, empty rows ${venueEmpty.rows.length}, empty played ${venueEmpty.played})`,
+  venue.rows.length === 3 && JSON.stringify(venue) === JSON.stringify(venueAgain) &&
+  venueEmpty.rows.length === 0 && venueEmpty.played === 0 && venueEmpty.homeGoals === 0 &&
+  venueEmpty.awayGoals === 0);
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

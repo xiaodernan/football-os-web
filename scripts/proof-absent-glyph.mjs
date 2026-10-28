@@ -192,10 +192,12 @@ const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
 // opponent-average column) read the door rather than a typed dash.
 // M559 adds the points-scenario screen: five cells (three short-name tiles, the title-race hint
 // and the leader's gap) read the door rather than a typed dash.
+// M569 adds the venue split: fourteen cells (the headline share, the competition-name hint, the
+// fortress/traveller lines, and both halves of every club's record and points) read the door.
 const expectedUsers = [
   "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
   "features/analytics/DataRoom.tsx", "features/analytics/PointsScenario.tsx",
-  "features/analytics/RunIn.tsx",
+  "features/analytics/RunIn.tsx", "features/analytics/VenueSplit.tsx",
   "features/compare/ClubCompare.tsx", "features/dashboard/Dashboard.tsx",
   "features/film/FilmRoom.tsx", "features/football/Details.tsx",
   "features/football/FootballWorld.tsx", "features/load/LoadPage.tsx",
@@ -209,7 +211,7 @@ const expectedUsers = [
 const expectedPerUser = [
   ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
   ["features/analytics/DataRoom.tsx", 13], ["features/analytics/PointsScenario.tsx", 5],
-  ["features/analytics/RunIn.tsx", 5],
+  ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 14],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 5],
   ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],

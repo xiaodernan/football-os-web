@@ -236,7 +236,7 @@ const renders = [];
 const threw = [];
 for (const s of screens) {
   for (const loc of LOCALES) {
-    mem.set(LOCALDATA.mod.LOCALE_KEY, loc);
+    mem.set(LOCALDATA.mod.LOCALE_KEY, JSON.stringify(loc));
     globalThis.window.location.hash = "#" + (ROUTE_OF[s.name] || "/");
     let html;
     try {
@@ -332,7 +332,7 @@ const FOOT = (await tryLoad(() => server.ssrLoadModule("/" + "data/footballServi
 const liveFixtures = DETAILS && FOOT ? FOOT.matchesByStatus("LIVE") : [];
 const livePages = [];
 for (const lm of liveFixtures) {
-  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  mem.set(LOCALDATA.mod.LOCALE_KEY, JSON.stringify("en"));
   globalThis.window.location.hash = "#/matches/" + lm.id;
   let html = "";
   try { html = renderToStaticMarkup(tree(React.createElement(DETAILS.MatchDetail, { id: lm.id }))); } catch { html = ""; }
@@ -366,7 +366,7 @@ for (const lm of liveFixtures) {
 const compPages = [];
 if (FWORLD && ROUTER) {
   for (const [cid, lms] of liveByComp) {
-    mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+    mem.set(LOCALDATA.mod.LOCALE_KEY, JSON.stringify("en"));
     globalThis.window.location.hash = "#/competitions/" + cid;
     let html = "";
     try { html = renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld)))); } catch { html = ""; }
@@ -410,7 +410,7 @@ if (FOOT && METRICS) {
 const clubPages = [];
 if (FWORLD && ROUTER) {
   for (const r of schedNextClubs) {
-    mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+    mem.set(LOCALDATA.mod.LOCALE_KEY, JSON.stringify("en"));
     globalThis.window.location.hash = "#/clubs/" + r.cid;
     let html = "";
     try { html = renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld)))); } catch { html = ""; }
@@ -477,7 +477,7 @@ ok(`the live strip names the world's in-play count and opens the full LIVE tab: 
 // dispatches it), so the render walks the hub itself the way 5c walks it.
 const matchesText = (() => {
   if (!FWORLD || !ROUTER) return "";
-  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  mem.set(LOCALDATA.mod.LOCALE_KEY, JSON.stringify("en"));
   globalThis.window.location.hash = "#/matches";
   try { return nodesOf(renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld))))).join(" "); }
   catch { return ""; }
@@ -505,7 +505,7 @@ const cappedByType = new Map();
 for (const r of searchCapped) cappedByType.set(r.type, (cappedByType.get(r.type) ?? 0) + 1);
 const searchText = (() => {
   if (!FWORLD || !ROUTER) return "";
-  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  mem.set(LOCALDATA.mod.LOCALE_KEY, JSON.stringify("en"));
   globalThis.window.location.hash = `#/search?q=${searchQ}`;
   try { return nodesOf(renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld))))).join(" "); }
   catch { return ""; }
@@ -527,7 +527,7 @@ ok(`the search screen's group counters count the world's uncut family, not the 6
 // world's live count, a population the six-row strip cannot reach.
 const hubText = (() => {
   if (!FWORLD || !ROUTER) return "";
-  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  mem.set(LOCALDATA.mod.LOCALE_KEY, JSON.stringify("en"));
   globalThis.window.location.hash = "#/football";
   try { return nodesOf(renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(FWORLD.FootballWorld))))).join(" "); }
   catch { return ""; }
@@ -567,7 +567,7 @@ const plantedState = {
 mem.set(LOCALDATA.mod.OS_STATE_KEY, JSON.stringify(plantedState));
 const playerText = (() => {
   if (!PLAYER || !ROUTER) return "";
-  mem.set(LOCALDATA.mod.LOCALE_KEY, "en");
+  mem.set(LOCALDATA.mod.LOCALE_KEY, JSON.stringify("en"));
   globalThis.window.location.hash = "#/player/training";
   try { return nodesOf(renderToStaticMarkup(tree(React.createElement(ROUTER.RouterProvider, null, React.createElement(PLAYER.PlayerOS))))).join(" "); }
   catch { return ""; }

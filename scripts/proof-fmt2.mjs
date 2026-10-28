@@ -57,6 +57,8 @@ const CONSUMERS = [
   "features/analytics/RunIn.tsx",
   // M559: the points-scenario table prints its at-current-rate column through the door.
   "features/analytics/PointsScenario.tsx",
+  // M569: the venue split prints five averages (league, two tiles, the fortress edge, the opponent column).
+  "features/analytics/VenueSplit.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the
@@ -242,7 +244,7 @@ const doorBody = (src[HOME].match(/export const fmt2 = [^\n]*/) || [""])[0];
 ok(`the door body IS the toFixed call and it is the sole code-state plain site in lib/utils (home plain ${homeCensus.plain}, body "${doorBody.trim()}")`,
   homeCensus.plain === 1 && doorBody.trim() === "export const fmt2 = (v: number): string => v.toFixed(2);");
 
-// --- All twenty-one consumers read the door, and the USER SET is derived from the tree in BOTH
+// --- All twenty-four consumers read the door, and the USER SET is derived from the tree in BOTH
 // --- directions. M401 removed worldEngine's only fmt2 call (its private euro formatter quoted
 // --- the billions at two decimals), so the file stopped reading the door entirely and left the
 // --- consumer list. The old clause could only see that direction -- it checked that every
@@ -260,7 +262,7 @@ const treeReaders = carriers.filter((f) => f !== HOME && count(src[f], CALL_FMT2
 const listedReaders = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) > 0).sort();
 const unlisted = treeReaders.filter((f) => !CONSUMERS.includes(f));
 const stale = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) === 0);
-ok(`all twenty-three consumers read the door, and the user set is EQUAL to the tree's own (imports ${importing.length}/23, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70; tree readers ${treeReaders.length}, unlisted ${unlisted.length} [${unlisted.join(",")}], stale rows ${stale.length} [${stale.join(",")}])`,
+ok(`all twenty-four consumers read the door, and the user set is EQUAL to the tree's own (imports ${importing.length}/24, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70; tree readers ${treeReaders.length}, unlisted ${unlisted.length} [${unlisted.join(",")}], stale rows ${stale.length} [${stale.join(",")}])`,
   importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 70 &&
   treeReaders.length === CONSUMERS.length && treeReaders.join(",") === listedReaders.join(",") &&
   unlisted.length === 0 && stale.length === 0);
