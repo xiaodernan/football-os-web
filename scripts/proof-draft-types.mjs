@@ -13,8 +13,9 @@
 //      same `paths`, the same `jsx` — so a draft is judged the way the app would judge it;
 //   2. the backlog may not GROW: every family of defects is bounded by the figure measured when
 //      this milestone landed, and a family that appears with no bound is refused;
-//   3. the two families this milestone repaired are bounded at ZERO, so a draft that loses its
-//      `useState` import again, or reaches for `React` without binding it, reddens here;
+//   3. the seven families that have been REPAIRED are bounded at ZERO, so a draft that loses its
+//      `useState` import again, reaches for `React` without binding it, or forgets to import a
+//      name the app exports, reddens here;
 //   4. the reader is armed: a mirror of the quarantine carrying a missing `useState` import, a React
 //      UMD global and a sound draft beside them must name the first two and leave the third alone.
 //
@@ -23,8 +24,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import ts from "typescript";
 import { walkApp } from "./lib/appTree.mjs";
+import { appOptions, signature, census } from "./lib/draftCensus.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const draftsDir = join(root, ".drafts");
@@ -33,42 +34,6 @@ let pass = 0, fail = 0;
 const ok = (name, cond, detail) => {
   if (cond) { pass++; console.log("ok   " + name); }
   else { fail++; console.log("FAIL " + name + (detail ? ` — ${detail}` : "")); }
-};
-
-// --- the app's own compiler options ----------------------------------------------------------------
-// The quarantine is judged by the app's compiler, not by one of its own: the same tsconfig, the same
-// `paths` mapping, the same `jsx` mode. A draft that the app's checker would reject is a draft the
-// app cannot ship, whatever a standalone checker said about it.
-const appOptions = () => {
-  const cfg = ts.readConfigFile(join(root, "tsconfig.json"), ts.sys.readFile);
-  if (cfg.error) throw new Error(`the app's tsconfig does not read: ${ts.flattenDiagnosticMessageText(cfg.error.messageText, " ")}`);
-  const parsed = ts.parseJsonConfigFileContent(cfg.config, ts.sys, root);
-  if (parsed.errors.length) throw new Error(`the app's tsconfig does not parse: ${parsed.errors.length} error(s)`);
-  return { ...parsed.options, noEmit: true };
-};
-
-/**
- * The signature of a diagnostic: its code, plus the NAME it complains about when the code names one.
- * "cannot find name 'useState'" and "cannot find name 'EmptyState'" are the same code and two
- * different families, and a family is what the bounds below are written against.
- */
-const signature = (d) => {
-  const msg = ts.flattenDiagnosticMessageText(d.messageText, " ");
-  const named = /Cannot find name '([^']+)'/.exec(msg);
-  return named ? `${d.code}:${named[1]}` : String(d.code);
-};
-
-/** The census: the files of a population, and the signatures of the defects the checker finds. */
-const census = (files, options, population) => {
-  const program = ts.createProgram(files, options);
-  const prefix = population.replace(/\\/g, "/") + "/";
-  const perFile = new Map();
-  for (const sf of program.getSourceFiles()) {
-    const name = sf.fileName.replace(/\\/g, "/");
-    if (!name.startsWith(prefix)) continue;
-    perFile.set(name.slice(prefix.length), program.getSemanticDiagnostics(sf).map(signature));
-  }
-  return perFile;
 };
 
 // --- the measured census, and the bound each family carries ---------------------------------------
@@ -80,25 +45,38 @@ const TYPE_CEILINGS = {
   "7006": 23,             // parameter implicitly has an 'any' type
   "2307": 8,              // cannot find module
   "2554": 7,              // wrong number of arguments
-  "2304:EmptyState": 4,   // a component the app exports and the draft does not import
   "2551": 4,              // no overlap between the two types
-  "2304:browserStore": 2,
-  "2304:useI18n": 2,
   "2365": 2, "2448": 2, "2454": 2, "7022": 2, "7024": 2,
   "2304:calculateTransferFee": 1, "2304:newsData": 1, "2304:prev": 1,
-  "2304:readJson": 1, "2304:syncedCount": 1, "2304:writeJson": 1,
+  "2304:syncedCount": 1,
   "2345": 1, "2367": 1, "2488": 1, "2538": 1, "2695": 1, "7053": 1,
-  // The two families this milestone repaired. A bound of zero is not a number the census may fall
+  // The families that have been REPAIRED. A bound of zero is not a number the census may fall
   // below — it is a number it may never rise above.
   "2304:useState": 0,     // a draft that calls useState without importing it
   "2686": 0,              // a draft that reaches for React without binding it
+  "2304:EmptyState": 0,   // a draft that renders a component the app exports and never imports
+  "2304:browserStore": 0, // a draft that reads the app's storage and never imports it
+  "2304:readJson": 0,
+  "2304:writeJson": 0,
+  "2304:useI18n": 0,      // a draft that translates and never imports the interpreter
 };
-const TOTAL_CEILING = 423;
+const TOTAL_CEILING = 413;
 const FILES_CEILING = 69;
 const POPULATION_PIN = 79;
 
+/** The families a milestone repaired, and the reason each one was repairable at all. */
+const REPAIRED = {
+  "2304:useState": "a draft that calls useState without importing it",
+  "2686": "a draft that reaches for React without binding it",
+  "2304:EmptyState": "a draft that renders a component the app exports and never imports",
+  "2304:browserStore": "a draft that reads the app's storage and never imports it",
+  "2304:readJson": "a draft that reads the app's storage and never imports it",
+  "2304:writeJson": "a draft that reads the app's storage and never imports it",
+  "2304:useI18n": "a draft that translates and never imports the interpreter",
+};
+
 // --- the census -------------------------------------------------------------------------------------
-const options = appOptions();
+const options = appOptions(root);
 const draftFiles = walkApp(draftsDir, { dirs: null, notApp: [], exts: [".ts", ".tsx"] });
 
 const perFile = census(draftFiles, options, draftsDir);
@@ -120,8 +98,8 @@ ok(`every family of defect is within its bound, and a family with no bound is re
   over.length === 0 && unbound.length === 0,
   `over: ${over.map(([f, n]) => `${f} ${n}`).join(", ")}; unbound: ${unbound.join(", ")}`);
 
-const returned = ["2304:useState", "2686"].filter((f) => (byFamily[f] ?? 0) > 0);
-ok(`the two families this milestone repaired may not come back (useState ${byFamily["2304:useState"] ?? 0}, React UMD ${byFamily["2686"] ?? 0})`,
+const returned = Object.keys(REPAIRED).filter((f) => (byFamily[f] ?? 0) > 0);
+ok(`the ${Object.keys(REPAIRED).length} families that have been repaired may not come back (${Object.keys(REPAIRED).map((f) => `${f.split(":").pop()} ${byFamily[f] ?? 0}`).join(", ")})`,
   returned.length === 0, returned.join(", "));
 
 // The census names the files it read, so the reader can see what it is reading.

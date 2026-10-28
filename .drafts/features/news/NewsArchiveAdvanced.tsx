@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, StatTile, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, CHIP_CLASS, EmptyState } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

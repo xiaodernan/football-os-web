@@ -27,6 +27,16 @@ import { join } from "node:path";
 export const isHiddenName = (name) => name.startsWith(".");
 
 /**
+ * The ten directories the app is made of.
+ *
+ * The rule above decides what a directory *is* — hidden, another repository, or the app's. This
+ * says which ones the app *has*, and it lives here because three gates need the same answer and
+ * three copies of the list are three lists that can disagree: the app-tree census (which pins
+ * the module count), the chips census, and the export index the drafts are measured against.
+ */
+export const APP_DIRS = ["components", "data", "domain", "features", "functions", "i18n", "lib", "src", "store", "ui"];
+
+/**
  * A directory that carries its own `.git` — a file (a worktree/submodule pointer) or a directory
  * (a clone) — is another repository, not a directory of this one.
  */

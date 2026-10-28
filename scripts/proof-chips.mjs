@@ -35,12 +35,11 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "vite";
-import { walkApp } from "./lib/appTree.mjs";
+import { walkApp, APP_DIRS } from "./lib/appTree.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const HOME = "ui/primitives.tsx";
-const APP_DIRS = ["components", "data", "domain", "features", "functions", "i18n", "lib", "src", "store", "ui"];
 
 let pass = 0, fail = 0;
 const ok = (name, cond, detail) => {

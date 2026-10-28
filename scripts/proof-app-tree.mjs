@@ -38,7 +38,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { isHiddenName, carriesOwnRepo, skipReason, appDirsIn, appFilesIn, walkApp } from "./lib/appTree.mjs";
+import { isHiddenName, carriesOwnRepo, skipReason, appDirsIn, appFilesIn, walkApp, APP_DIRS } from "./lib/appTree.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -101,7 +101,9 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // ---------------------------------------------------------------------------
 // 2 · the app's own population, with a clone of the app sitting beside it
 // ---------------------------------------------------------------------------
-const APP_DIRS = ["components", "data", "domain", "features", "functions", "i18n", "lib", "src", "store", "ui"];
+// The ten directories the app is made of live in scripts/lib/appTree.mjs, beside the rule that
+// decides what a directory is. A third copy of the list here would be a third list that can
+// disagree with the other two — the chips census and the export index read the same ten.
 // M444: 98 -> 99. lib/context.ts (the context-guard door) is a new app module; the pin pays in the
 // same commit, which is what makes a lost directory redden instead of shrinking quietly.
 // M453: 99 -> 102. domain/playerCareer.ts, features/player/TrainingTree.tsx and
