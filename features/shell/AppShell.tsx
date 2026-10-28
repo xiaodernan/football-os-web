@@ -99,6 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/home-away", label: t("nav.homeAway"), icon: I.chart, match: ["/home-away"] },
     { to: "/timing", label: t("nav.timing"), icon: I.chart, match: ["/timing"] },
     { to: "/discipline", label: t("nav.discipline"), icon: I.shield, match: ["/discipline"] },
+    { to: "/clock", label: t("nav.clock"), icon: I.timeline, match: ["/clock"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },
     { to: "/settings", label: t("nav.settings"), icon: I.settings, match: ["/settings"] },
   ];

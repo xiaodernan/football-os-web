@@ -81,7 +81,9 @@ const shellOk = ["public/manifest.webmanifest", "public/icon.svg", "public/sw.js
 ok(`the shell ships — the manifest, the icon and the worker are all files in the tree (${shellOk})`, shellOk);
 
 // ---- The bundle budget: what ships, measured in gzip, against a pin. ---------------------------
-const BUDGET_KB = 520;
+// M573: 514 -> 520 after the dashboard's next-step panel; M574: 520 -> 521 after /clock (the
+// screen, its route and its dictionary slice add 3 KB gzip over the M573 build).
+const BUDGET_KB = 521;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

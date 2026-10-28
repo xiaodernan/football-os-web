@@ -760,3 +760,81 @@ export function discipline(compId: string, matches: Match[], clubs: Club[]): Dis
   };
 }
 
+export interface EventClockRow {
+  clubId: string;
+  shots: number;
+  saves: number;
+  vars: number;
+  /** Shots in each window, index 0 = 1–15′, index 5 = 76–90+′. */
+  shotsBands: number[];
+  savesBands: number[];
+  varBands: number[];
+  /** Shots taken after the 75th minute (the last window). */
+  lateShots: number;
+  /** Share of this club's own shots that arrived late, 0–100, 2dp; 0 when it has not shot. */
+  lateShare: number;
+}
+
+export interface EventClock {
+  rows: EventClockRow[];
+  shotsBands: number[];
+  savesBands: number[];
+  varBands: number[];
+  shots: number;
+  saves: number;
+  vars: number;
+  /** Finished fixtures in this competition that carried an event list. */
+  matches: number;
+}
+
+/** When the match's other events arrive: every SHOT, SAVE and VAR in this competition's finished
+ *  matches, folded into the same six windows `goalTiming` uses. The goals screen asks when goals
+ *  land; this asks when the shots, the saves that answered them and the reviews that interrupted
+ *  them land — a different object on the same clock, per club and for the league. */
+export function eventClock(compId: string, matches: Match[], clubs: Club[]): EventClock {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const emptyBands = () => Array.from({ length: GOAL_BANDS }, () => 0);
+  const rows = new Map<string, EventClockRow>(
+    metrics.map((m) => [m.clubId, {
+      clubId: m.clubId, shots: 0, saves: 0, vars: 0,
+      shotsBands: emptyBands(), savesBands: emptyBands(), varBands: emptyBands(),
+      lateShots: 0, lateShare: 0,
+    }]),
+  );
+  const shotsBands = emptyBands();
+  const savesBands = emptyBands();
+  const varBands = emptyBands();
+  let shots = 0; let saves = 0; let vars = 0; let counted = 0;
+  const lastBand = GOAL_BANDS - 1;
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED" || !m.events?.length) continue;
+    counted++;
+    for (const e of m.events) {
+      if (e.type !== "SHOT" && e.type !== "SAVE" && e.type !== "VAR") continue;
+      const band = goalBand(e.minute);
+      const row = rows.get(e.side === "home" ? m.homeClubId : m.awayClubId);
+      if (e.type === "SHOT") {
+        shots++;
+        shotsBands[band]++;
+        if (row) {
+          row.shots++;
+          row.shotsBands[band]++;
+          if (band === lastBand) row.lateShots++;
+        }
+      } else if (e.type === "SAVE") {
+        saves++;
+        savesBands[band]++;
+        if (row) { row.saves++; row.savesBands[band]++; }
+      } else {
+        vars++;
+        varBands[band]++;
+        if (row) { row.vars++; row.varBands[band]++; }
+      }
+    }
+  }
+  const list = [...rows.values()];
+  for (const r of list) r.lateShare = r.shots ? round2((r.lateShots / r.shots) * 100) : 0;
+  list.sort((a, b) => b.shots - a.shots || b.saves - a.saves || a.clubId.localeCompare(b.clubId));
+  return { rows: list, shotsBands, savesBands, varBands, shots, saves, vars, matches: counted };
+}
+

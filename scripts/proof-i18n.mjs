@@ -517,7 +517,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M570: 122 -> 123 — features/analytics/GoalTiming.tsx is a new goal-timing screen.
 // M571: 123 -> 124 — features/analytics/Discipline.tsx is a new cards-and-fouls screen.
 // M573: 124 -> 125 — domain/nextStep.ts is the dashboard's next-step ranking.
-const APP_SRC_PIN = 125;
+// M574: 125 -> 126 — features/analytics/EventClock.tsx is a new shot/save/review clock screen.
+const APP_SRC_PIN = 126;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -535,7 +536,8 @@ const APP_SRC_PIN = 125;
 // M569: 65 -> 66 — VenueSplit.tsx is the new .tsx module.
 // M570: 66 -> 67 — GoalTiming.tsx is the new .tsx module.
 // M571: 67 -> 68 — Discipline.tsx is the new .tsx module.
-const TSX_PIN = 68;
+// M574: 68 -> 69 — EventClock.tsx is the new .tsx module.
+const TSX_PIN = 69;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -556,7 +558,8 @@ const TSX_PIN = 68;
 // M570: 125 -> 126, GoalTiming.tsx again.
 // M571: 126 -> 127, Discipline.tsx again.
 // M573: 127 -> 128, nextStep.ts added to the walk.
-const SRC_PIN = 128;
+// M574: 128 -> 129, EventClock.tsx added to the walk.
+const SRC_PIN = 129;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -3108,8 +3111,10 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // Fouls shares ms.fouls, Yellow cards shares ms.yellows, Red cards shares ms.reds, Most booked
 // shares leaders.bookedTitle, Y shares leaders.yellowShort, R shares leaders.redShort)
 // and 7 excess keys: 131->138, 226->233.
-const DUP_VALUES_PIN = 138;
-const DUP_EXCESS_KEYS_PIN = 233;
+// M574: EventClock's keys add two duplicate values (Shots shares ms.shots, Busiest window shares
+// timing.busiest) and two excess keys: 138->140, 233->235.
+const DUP_VALUES_PIN = 140;
+const DUP_EXCESS_KEYS_PIN = 235;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4340,7 +4345,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M572: the club page reads the same words on its own card ledger (3 labels + the cross-link): 1673 -> 1677.
 // M573: the next-step panel adds three literal sites (title, hint, primary tag) and one expression
 // site (the step's own label looked up in STEP_LABEL): literal 1677 -> 1680, expression 32 -> 33.
-  shapeCounts.literal === 1680 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M574: the event clock adds its 30 literal sites (its six window labels reuse timing.w* as
+// literal sites of their own) and its nav entry: literal 1680 -> 1711, expression unchanged at 33.
+  shapeCounts.literal === 1711 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4369,7 +4376,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // leakiestSub, record, lateLine) hand over theirs.
 // M571: 200 -> 205 — Discipline's five interpolating rows (playedSub, perMatchSub, mostSub,
 // record, rowLine) hand over theirs.
-  litVarSites === 205 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M574: 205 -> 209 — EventClock's four interpolating rows (shotsSub, varsSub, busiestSub, record)
+// hand over theirs.
+  litVarSites === 209 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

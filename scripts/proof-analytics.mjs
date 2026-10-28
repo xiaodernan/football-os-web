@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -533,6 +533,53 @@ const rollH = byClub(roll.rows, "H");
 ok(`the discipline board is a roll-call of the competition — one row per club the table ranks, an unfixtured club at zero (${roll.rows.length} rows, H ${rollH ? `${rollH.played} played at ${rollH.bookingsPerMatch} cards a game` : "missing"}, order ${roll.rows.map((r) => r.clubId).join("")})`,
   roll.rows.length === 4 && rollH !== undefined && rollH.played === 0 && rollH.bookings === 0 &&
   rollH.bookingsPerMatch === 0 && roll.matches === 3 && roll.rows.map((r) => r.clubId).join("") === "CBAH");
+
+// ---- M574: the other events on the same clock ------------------------------------------------
+// The goals screen asks when goals land; this asks when the shots, the saves that answered them
+// and the reviews that interrupted them land. Fixture: c1 A 2-1 B with shots at 12/78 (A) and
+// 30 (B), saves at 12 (B) and 78 (A), a review at 50 (A); c2 C 0-0 A with an A shot at 91' and a
+// C review at 5'; a scheduled fixture carrying all three, another competition's shot, and a
+// finished fixture with no event list at all are noise.
+const clockClubs = [club("A", "T9"), club("B", "T9"), club("C", "T9")];
+const ev = (type, minute, side) => ({ minute, type, side, player: "p" });
+const clockFixtures = [
+  { ...match("c1", "T9", "A", "B", 2, 1, "2026-05-01"), events: [ev("SHOT", 12, "home"), ev("SHOT", 78, "home"), ev("SHOT", 30, "away"), ev("SAVE", 12, "away"), ev("SAVE", 78, "home"), ev("VAR", 50, "home")] },
+  { ...match("c2", "T9", "C", "A", 0, 0, "2026-05-02"), events: [ev("SHOT", 91, "away"), ev("VAR", 5, "home")] },
+  { ...match("c3", "T9", "A", "C", 1, 0, "2026-05-03", "SCHEDULED"), events: [ev("SHOT", 10, "home"), ev("SAVE", 10, "away"), ev("VAR", 10, "home")] },
+  { ...match("c4", "T10", "D", "E", 1, 1, "2026-05-04"), events: [ev("SHOT", 5, "home")] },
+  { ...match("c5", "T9", "B", "C", 0, 0, "2026-05-05") },
+];
+const clock = eventClock("T9", clockFixtures, clockClubs);
+const clk = Object.fromEntries(clock.rows.map((r) => [r.clubId, r]));
+ok(`eventClock folds only this competition's finished fixtures that carry events (matches ${clock.matches}, shots ${clock.shots}, saves ${clock.saves}, reviews ${clock.vars})`,
+  clock.matches === 2 && clock.shots === 4 && clock.saves === 2 && clock.vars === 2);
+ok(`eventClock lands every shot, save and review in the sixth-window clock, stoppage clamps into the last window (shots ${clock.shotsBands.join(",")}, saves ${clock.savesBands.join(",")}, reviews ${clock.varBands.join(",")})`,
+  clock.shotsBands.join(",") === "1,1,0,0,0,2" && clock.savesBands.join(",") === "1,0,0,0,0,1" &&
+  clock.varBands.join(",") === "1,0,0,1,0,0" && clock.shotsBands.length === 6);
+ok(`eventClock keeps a row for every ranked club, sorts by shots then saves, and reads the late share off a club's own shots (order ${clock.rows.map((r) => r.clubId).join("")}; A ${clk.A.lateShots} late of ${clk.A.shots} at ${clk.A.lateShare}%)`,
+  clock.rows.map((r) => r.clubId).join("") === "ABC" && clock.rows.length === 3 &&
+  clk.A.shots === 3 && clk.A.saves === 1 && clk.A.vars === 1 && clk.A.lateShots === 2 &&
+  near(clk.A.lateShare, 66.67, 0.005) && clk.B.shots === 1 && clk.B.saves === 1 && clk.B.vars === 0 &&
+  clk.B.lateShots === 0 && clk.B.lateShare === 0 && clk.C.shots === 0 && clk.C.vars === 1);
+const clockAgain = eventClock("T9", clockFixtures, clockClubs);
+const clockEmpty = eventClock("T11", [], [club("J", "T11"), club("K", "T11")]);
+const clockSilent = eventClock("T5", discFixtures, discClubs);
+ok(`eventClock repeats its fold exactly and an eventless fixture still leaves every ranked club its six windows (same fold ${JSON.stringify(clock) === JSON.stringify(clockAgain)}, silent rows ${clockSilent.rows.length}, empty rows ${clockEmpty.rows.length}, empty windows ${clockEmpty.shotsBands.length})`,
+  JSON.stringify(clock) === JSON.stringify(clockAgain) && clockSilent.matches === 0 &&
+  clockSilent.rows.length === 3 && clockSilent.rows.every((r) => r.shots === 0 && r.vars === 0) &&
+  clockEmpty.rows.length === 2 && clockEmpty.matches === 0 && clockEmpty.shotsBands.length === 6 &&
+  clockEmpty.shotsBands.every((n) => n === 0));
+// The screen is a reader, not a second engine: it must render all three families off the folded
+// clock, and the route must exist for the sidebar entry that names it.
+const CLOCK_SRC = readFileSync(resolve(root, "features/analytics/EventClock.tsx"), "utf8");
+const APP_ROUTE_SRC = readFileSync(resolve(root, "src/App.tsx"), "utf8");
+const SHELL_NAV_SRC = readFileSync(resolve(root, "features/shell/AppShell.tsx"), "utf8");
+ok(`the event clock screen renders all three folded families and both league rows and the board (rows ${["clock.shotsBands", "clock.savesBands", "clock.varBands"].filter((k) => CLOCK_SRC.includes(k)).length})`,
+  ["clock.shotsBands", "clock.savesBands", "clock.varBands"].every((k) => CLOCK_SRC.includes(k)) &&
+  CLOCK_SRC.includes("clock.rows.map(") && CLOCK_SRC.includes("eventClock(compId, matches, clubs)") &&
+  !/GOAL_BANDS|goalBand\(/.test(CLOCK_SRC));
+ok(`the event clock is reachable — the route table and the sidebar both name it (route ${/path === "\/clock"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/clock"/.test(SHELL_NAV_SRC)})`,
+  /path === "\/clock"/.test(APP_ROUTE_SRC) && /to: "\/clock"/.test(SHELL_NAV_SRC));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
