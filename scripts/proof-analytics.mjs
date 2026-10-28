@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -580,6 +580,65 @@ ok(`the event clock screen renders all three folded families and both league row
   !/GOAL_BANDS|goalBand\(/.test(CLOCK_SRC));
 ok(`the event clock is reachable — the route table and the sidebar both name it (route ${/path === "\/clock"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/clock"/.test(SHELL_NAV_SRC)})`,
   /path === "\/clock"/.test(APP_ROUTE_SRC) && /to: "\/clock"/.test(SHELL_NAV_SRC));
+// --- briefing: one club's next fixture, joined with the five season reads -----------------------
+// T1 hand-count: f1 A 2-0 B, f2 B 1-1 A, f3 C 3-1 B finished; s1 A-B (May 10), s2 B-C (May 12),
+// z1 C-A (Jun 1) scheduled; l1 A-C is LIVE and must stay out of the pick, the record and the venue
+// halves. A: 2 played, 4 pts, 2 left, ceiling 10, rate 8; B: 3 played, 1 pt, 2 left, ceiling 7;
+// C: 1 played, 3 pts, 2 left, ceiling 9, one behind A. A's run-in opponents average
+// (B 0.33 + C 3.00) / 2 = 1.67; A's venues are 3.00 home vs 1.00 away, edge 2; the pair's record
+// is 2 finished meetings, A 1W-1D, 3-1 on goals. The race has one week, A one point clear.
+// F (T2) has two booked fixtures on one kickoff, w1 F-A and w2 F-B, so the tie-break is readable;
+// s3 D-A is D's cross-competition next-up.
+const briefingClubs = [...clubs, club("F", "T2")];
+const briefingFixtures = [
+  match("f1", "T1", "A", "B", 2, 0, "2026-04-01"),
+  match("f2", "T1", "B", "A", 1, 1, "2026-04-02"),
+  match("f3", "T1", "C", "B", 3, 1, "2026-04-03"),
+  match("l1", "T1", "A", "C", 0, 0, "2026-04-09", "LIVE"),
+  match("s1", "T1", "A", "B", 0, 0, "2026-05-10", "SCHEDULED"),
+  match("s2", "T1", "B", "C", 0, 0, "2026-05-12", "SCHEDULED"),
+  match("z1", "T1", "C", "A", 0, 0, "2026-06-01", "SCHEDULED"),
+  match("s3", "T2", "D", "A", 0, 0, "2026-05-11", "SCHEDULED"),
+  match("w2", "T2", "F", "B", 0, 0, "2026-07-01", "SCHEDULED"),
+  match("w1", "T2", "F", "A", 0, 0, "2026-07-01", "SCHEDULED"),
+];
+const briefA = briefing("A", briefingFixtures, briefingClubs);
+ok(`briefing picks a club's earliest SCHEDULED fixture across competitions and ignores the live one (A: fixture ${briefA.fixture.id}, side ${briefA.side}, opponent ${briefA.opponentId}; clubId ${briefA.clubId})`,
+  briefA.fixture.id === "s1" && briefA.side === "home" && briefA.opponentId === "B" &&
+  briefA.clubId === "A" && briefA.fixture.status === "SCHEDULED");
+ok(`briefing joins the table-and-ceiling read for both ends (A ${briefA.us.points} pts / ${briefA.us.played} played / ceiling ${briefA.us.maxPoints} / rate ${briefA.us.ratePoints} / behind ${briefA.us.behindLeader}; B ${briefA.them.points} pts / ${briefA.them.played} played / ceiling ${briefA.them.maxPoints} / behind ${briefA.them.behindLeader} / can catch ${briefA.them.canCatchLeader})`,
+  briefA.us.points === 4 && briefA.us.played === 2 && briefA.us.maxPoints === 10 &&
+  briefA.us.ratePoints === 8 && briefA.us.behindLeader === 0 && briefA.us.canCatchLeader === false &&
+  briefA.them.points === 1 && briefA.them.played === 3 && briefA.them.maxPoints === 7 &&
+  briefA.them.behindLeader === 3 && briefA.them.canCatchLeader === true);
+ok(`briefing's run-in row names the opponents in kickoff order and averages their ppg (A: ${briefA.runInRow.remaining} left [${briefA.runInRow.opponents.join(",")}], avg ${briefA.runInRow.avgOppPpg})`,
+  briefA.runInRow.remaining === 2 && briefA.runInRow.opponents.join(",") === "B,C" &&
+  briefA.runInRow.avgOppPpg === 1.67);
+ok(`briefing's venue row counts finished halves only, so the live fixture pays nothing (A home ${briefA.venueRow.homePpg} / away ${briefA.venueRow.awayPpg}, edge ${briefA.venueRow.homeEdge}, halves ${briefA.venueRow.home.played}+${briefA.venueRow.away.played})`,
+  briefA.venueRow.homePpg === 3 && briefA.venueRow.awayPpg === 1 &&
+  briefA.venueRow.homeEdge === 2 && briefA.venueRow.home.played === 1 && briefA.venueRow.away.played === 1);
+ok(`briefing's record reads every finished meeting, the live fixture excluded (${briefA.record.played} played: A ${briefA.record.winsA}W ${briefA.record.draws}D ${briefA.record.winsB}L, ${briefA.record.goalsA}-${briefA.record.goalsB}, ${briefA.record.competitions} competition, widest ${briefA.record.biggest.matchId}, run ${briefA.record.streak.side}×${briefA.record.streak.length})`,
+  briefA.record.played === 2 && briefA.record.winsA === 1 && briefA.record.draws === 1 &&
+  briefA.record.winsB === 0 && briefA.record.goalsA === 3 && briefA.record.goalsB === 1 &&
+  briefA.record.competitions === 1 && briefA.record.biggest.matchId === "f1" &&
+  briefA.record.streak.side === "draw" && briefA.record.streak.length === 1);
+ok(`briefing's race is the fixture competition's own weekly fold (${briefA.race.weeks.length} week, gap ${briefA.race.currentGap}, lead changes ${briefA.race.leadChanges}, widest ${briefA.race.biggestGap} in week ${briefA.race.biggestGapWeek})`,
+  briefA.race.weeks.length === 1 && briefA.race.currentGap === 1 && briefA.race.leadChanges === 0 &&
+  briefA.race.biggestGap === 1 && briefA.race.biggestGapWeek === 1);
+// Two scheduled fixtures on the same kickoff: the pick falls to the smaller id, and reversing the
+// fixture list changes nothing. D's fixture is in a competition where the opponent has no table
+// row, so the opponent join reads null rather than inventing a zero record; a club with nothing
+// booked reads no briefing at all.
+const briefF = briefing("F", briefingFixtures, briefingClubs);
+const briefD = briefing("D", briefingFixtures, briefingClubs);
+const briefARight = briefing("A", [...briefingFixtures].reverse(), briefingClubs);
+ok(`briefing breaks a kickoff tie by id and is order-independent (F ${briefF.fixture.id} vs ${briefF.opponentId}; A reversed ${briefARight.fixture.id}, same fold ${JSON.stringify(briefA) === JSON.stringify(briefARight)})`,
+  briefF.fixture.id === "w1" && briefF.side === "home" && briefF.opponentId === "A" &&
+  briefARight.fixture.id === "s1" && JSON.stringify(briefA) === JSON.stringify(briefARight));
+ok(`briefing reads a competition that has no table row for the opponent as null, not as a zero record (D fixture ${briefD.fixture.id} in ${briefD.fixture.competitionId}: us ${briefD.us.points} pts, them ${briefD.them}, run-in ${briefD.runInRow.remaining} left, record ${briefD.record.played} played; E with nothing booked: ${briefing("E", briefingFixtures, briefingClubs)})`,
+  briefD.fixture.id === "s3" && briefD.opponentId === "A" && briefD.us.points === 0 &&
+  briefD.them === null && briefD.runInRow.remaining === 1 && briefD.record.played === 0 &&
+  briefing("E", briefingFixtures, briefingClubs) === null);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

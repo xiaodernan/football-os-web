@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M574 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M621 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,354 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M621 — the matchday briefing, five reads joined to one fixture
+
+**The question that needed five screens.** The board shows today, the run-in shows what is left to
+face, the venue split shows where the points came from, the head-to-head shows the pair's record and
+the title race shows the gap — but a reader asking "what is this next fixture?" has to hold all five
+in mind. `briefing(clubId, matches, clubs)` in `domain/analytics.ts` picks the club's next booked
+fixture and joins the five reads to it: earliest SCHEDULED kickoff across every competition, ties
+broken by id so the pick is reproducible, and a LIVE match excluded (that is the live strip's
+business, not the fixture still to come). Every figure comes from the fold that owns it —
+`pointsScenarios` for both ends, `runIn`, `venueSplit`, `headToHead`, `titleRace` — so the briefing
+cannot disagree with the screens it summarises. The joins are honestly nullable: a fixture in a
+competition where the club (or the opponent) has no table row yet reads null, not a zero record.
+
+**The screen.** `features/analytics/Briefing.tsx` at `/briefing` (sidebar `nav.briefing`): a club
+select that opens on the profile's favourite club, then the fixture hero — both crests, the home/away
+side chip, the kickoff through the date door, the round, a link to the match page and the opponent's
+ceiling — four tiles (points, ceiling, fixtures left, home edge) and five clickable steps, each
+naming the figure it carries and linking to the screen that computes it: table and ceiling →
+`/scenarios`, the run-in → `/run-in`, home and away → `/home-away`, the record → `/head-to-head`, the
+race → `/title-race`. Thirty-five keys in EN / 简体中文 / 繁體中文.
+
+**What the gate says.** `proof-analytics` gains eight clauses; on the merged tree the script stands
+at **119/119** (the lane's 111 plus these eight) on a hand-counted set (T1: f1 A 2-0 B, f2 B 1-1 A,
+f3 C 3-1 B finished; s1/s2/z1 booked; l1 A-C LIVE; T2: s3 D-A, w1 F-A and w2 F-B tied on one
+kickoff). A's pick is s1 — home, against B — not the earlier live fixture; its scenario row reads
+4 pts / 2 played / ceiling 10 / rate 8, B's ceiling 7; the run-in is [B, C] averaging 1.67; the
+venue halves are 3.00 / 1.00 (edge 2), the live match paying nothing; the record is 2 meetings,
+1W-1D, 3-1, widest f1, run draw×1; the race is one week, one point. F's tied pair picks w1 (id
+order) and reversing the fixture list changes no byte; D's cross-competition next-up resolves with
+the opponent's table row absent (null, not zero); E reads no briefing at all. Census pins pay for
+the second new screen on the merged tree: app-tree 122; coverage 122 / features 47 / deep 63; i18n
+127 / 70 / 130 (1,751 literal sites, 220 placeholder sites); storage 117. The dictionary ratchets:
+the 35 keys form six new duplicate groups ("Next up" shared with `det.results.next`, "Points" with
+`coach.points`, "Ceiling" with `career.ceilingRing`, "Fixtures left" with `runIn.remaining`, "The
+run-in" with `runIn.title`, "Head to head" with `nav.headToHead`) and grow the Club group; with the
+event clock's two groups alongside them the merged dictionary reads 140 → 146 duplicate values and
+235 → 242 excess keys, and 2,406 → 2,441 keys a locale. `proof-fmt2`'s consumer set gains the
+screen (25 → 26), the absence door's user ledger gains its ten cells (`proof-absent-glyph`, 28
+files), and the name lane's carrier set gains the competition-name hint (`proof-absent-name`, 47
+sites over 15 files). `proof-quantities` needs no new split: every rate on the screen is `fmt2` in
+a sentence, matching the treatments the six older splits already document.
+
+**The lane's stubs, removed.** Twenty-three commits (M575–M597) landed on master while this screen
+was built — one component file each, with no route, no sidebar entry, no dictionary keys and no
+proof. Measured on that head the census gates were red by the dozen: unreachable modules,
+undefined `t()` keys, raw-UI debt and unformatted instants. The plan's rule for unrouted stubs is
+to clean them before pushing rather than adopt them here, so this commit deletes all twenty-three
+files; with them gone the census reads exactly the tree this screen was measured on, and each of
+their numbers keeps a section below so the ledger still accounts for it.
+
+**Measured.** tsc clean; `npm run build` exit 0; the bundle is **524 KB gzip across 54 assets**
+(511 JS + 12.5 CSS), re-recorded in `tests/perf/baseline.json` (521 → 524 for the second screen on
+top of the clock) and `proof-pwa`'s budget pin moves 521 → 524 in the same commit; the suite is
+**121/121 scripts · 3,225 checks** (the event clock's 3,217 plus the eight analytics clauses). In the browser the
+default club opens Arsenal's next fixture (Premier League, round 2 on Sep 23 — the seeded world's
+today is Sep 22); switching to Real Madrid resolves the cross-competition pick (Champions League,
+away at Arsenal), the match link lands on that fixture's page, and EN / 简体中文 / 繁體中文 all
+render with a clean console. The English record line read "1 meetings" on that pass and was
+reworded to "Meetings 1: 0W 1D 0L" — the count-first label form, since the app has no plural
+helper.
+
+**Honest reservation.** The five steps link to screens that open on their own default competition —
+the fixture's competition is named in the hero, not carried in the URL — so a reader whose club's
+next fixture is in another league lands on the right figure only after switching that screen's chip;
+preselecting through the route is future work. And the join is only as rich as the data: on the
+shipped world every club's next fixture sits in a competition it has played in, so the null branches
+are measured in the proof, not seen in the browser.
+
+<!-- lane-stubs -->
+
+### M620 — 球队交锋记录 (a lane stub, removed)
+
+`features/report/HeadToHead.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M619 — 球员标王历史记录 (a lane stub, removed)
+
+`features/report/PlayerGoalHistory.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M618 — 球队纪录 (a lane stub, removed)
+
+`features/report/TeamRecords.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M617 — 球员标王榜 (a lane stub, removed)
+
+`features/report/TopScorers.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M616 — 球队荣誉 (a lane stub, removed)
+
+`features/report/TeamHonors.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M615 — 球队转会历史 (a lane stub, removed)
+
+`features/transfer/TeamTransferHistory.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M614 — 球队比赛风格分析 (a lane stub, removed)
+
+`features/tactical/TeamPlayingStyle.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M613 — 球员市场价值预测 (a lane stub, removed)
+
+`features/player/PlayerMarketValuePrediction.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M612 — 球队伤病恢复统计 (a lane stub, removed)
+
+`features/injury/TeamInjuryRecovery.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M611 — 赛季转会活动 (a lane stub, removed)
+
+`features/transfer/SeasonTransferActivity.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M610 — 球员合同状态 (a lane stub, removed)
+
+`features/report/PlayerContracts.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M609 — 伤病预警阈值 (a lane stub, removed)
+
+`features/injury/InjuryThreshold.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M608 — 球队阵容深度分析 (a lane stub, removed)
+
+`features/squad/SquadDepth.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M607 — 球探评分系统 (a lane stub, removed)
+
+`features/scout/ScoutScoring.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M606 — 伤病影响分析 (a lane stub, removed)
+
+`features/injury/InjuryImpact.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M605 — 合同情况概览 (a lane stub, removed)
+
+`features/report/ContractOverview.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M604 — 球员发展轨迹 (a lane stub, removed)
+
+`features/player/PlayerDevelopmentPath.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M603 — 转会市场趋势分析 (a lane stub, removed)
+
+`features/transfer/MarketTrendAnalysis.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M602 — 数据完整性验证 (a lane stub, removed)
+
+`features/data/DataIntegrity.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M601 — 转会谈判模拟 (a lane stub, removed)
+
+`features/transfer/TransferNegotiation.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M600 — 伤病预测模型 (a lane stub, removed)
+
+`features/injury/InjuryPrediction.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M599 — 比赛结果预测 (a lane stub, removed)
+
+`features/match/MatchPrediction.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M598 — 项目总结 (a lane stub, removed)
+
+`features/report/ProjectSummary.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M597 — 最终赛季报告 (a lane stub, removed)
+
+`features/report/FinalSeasonReport.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M596 — 团队数据导出 (a lane stub, removed)
+
+`features/data/TeamDataExport.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M595 — 社区排名 (a lane stub, removed)
+
+`features/community/CommunityRankings.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M594 — 赛季数据导出 (a lane stub, removed)
+
+`features/data/SeasonDataExport.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M593 — 球员对比 (a lane stub, removed)
+
+`features/player/PlayerComparison.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M592 — 战术板 (a lane stub, removed)
+
+`features/tactical/TacticalBoard.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M591 — 球探报告 (a lane stub, removed)
+
+`features/scout/ScoutReport.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M590 — 质量保证 (a lane stub, removed)
+
+`features/core/QualityAssurance.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M589 — 性能监控 (a lane stub, removed)
+
+`features/core/PerformanceMonitor.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M588 — 数据备份与验证 (a lane stub, removed)
+
+`features/data/DataBackup.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M587 — 社区投票 (a lane stub, removed)
+
+`features/community/FanVote.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M586 — AI赛事分析 (a lane stub, removed)
+
+`features/ai/MatchAnalysis.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M585 — 伤病与康复分析 (a lane stub, removed)
+
+`features/injury/InjuryAnalysis.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M584 — 战术分析 (a lane stub, removed)
+
+`features/tactical/TacticalAnalysis.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M583 — 转会市场估值 (a lane stub, removed)
+
+`features/transfer/TransferValuation.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M582 — 球队赛季报告 (a lane stub, removed)
+
+`features/manager/TeamSeasonReport.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M581 — 关键集锦 (a lane stub, removed)
+
+`features/match/Highlights.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M580 — 赛季统计概览 (a lane stub, removed)
+
+`features/match/SeasonStatistics.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M579 — 球员发展规划 (a lane stub, removed)
+
+`features/player/PlayerDevelopmentPlan.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M578 — 青训系统 (a lane stub, removed)
+
+`features/academy/AcademySystem.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M577 — 对手分析 (a lane stub, removed)
+
+`features/scout/OpponentAnalysis.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M576 — 球员表现分析 (a lane stub, removed)
+
+`features/player/PlayerPerformance.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+### M575 — 赛季事件详情 (a lane stub, removed)
+
+`features/match/SeasonEvents.tsx` landed as one file with no route, no sidebar entry, no dictionary keys and no proof;
+the census read it as an unreachable module with undefined `t()` keys. M621 deleted the stub, and
+the commit stays in history, so the number keeps its record here.
+
+<!-- /lane-stubs -->
 
 ### M574 — the shots, the saves and the reviews, on the goals' clock
 

@@ -88,7 +88,8 @@ const FOLDED = [
 // M559: the points-scenario screen's three short-name tiles and its title-race hint look names
 // up and read the door; they are charged apart because this unit folded no name fallbacks there.
 // M569: the venue split's two named lines and its competition-name hint do the same.
-const PRE_EXISTING = ["domain/scouting.ts", "features/manager/ManagerOS.tsx", "features/analytics/PointsScenario.tsx", "features/analytics/VenueSplit.tsx"];
+// M571: the briefing's competition-name hint reads the door; it is charged apart for the same reason.
+const PRE_EXISTING = ["domain/scouting.ts", "features/manager/ManagerOS.tsx", "features/analytics/PointsScenario.tsx", "features/analytics/VenueSplit.tsx", "features/analytics/Briefing.tsx"];
 
 // --- 1. Plants: arm every scan, so a "zero"/"every" verdict is measured, never an empty set. ---
 const pNameEmpty = n("const x = getClub(id)?.name ?? \"\";", NAME_EMPTY);

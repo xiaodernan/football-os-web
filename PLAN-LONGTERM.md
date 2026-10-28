@@ -213,11 +213,38 @@
   bundle 518→521 KB gzip / 53 资产（js 507、css 13，baseline 重记）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3217/3217 检查；
   下一步（M575 候选）：① 纪律榜的赛季趋势（按轮次累计牌数）；② 建议面板的时间维度（把"开球还有多久"读进排序）；③ 事件时钟的对手维度（被射门/被扑救的分侧读数）。
 
-下一条目：M575 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① 纪律榜的赛季趋势（按轮次累计牌数，读同一 fold 的时间序列）；
-② 建议面板的时间维度（把"开球还有多久"读进排序，让同一条建议随时间改变优先级）；
-③ 事件时钟的对手维度（被射门/被扑救按防守方读，补上"谁在挨打"的一侧）。
-编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线已落 M570–M574。
+- M621: 赛前简报（Briefing）——`domain/analytics.ts` 新增 `briefing(clubId, matches, clubs)`：取该队最早的预定（SCHEDULED）比赛，
+  跨全部赛事、按开球时间排序、同刻以 id 兜底；LIVE 归实时条，不进简报；一次 join 五项既有读数——
+  `pointsScenarios` 的双方行、`runIn` 本队行、`venueSplit` 本队行、`headToHead` 与 `titleRace`——屏幕与它们不可能分歧；
+  缺行的 join 为 null 而非 0（对手无表行、球队无赛程各自可空）；
+  屏幕=球队下拉（默认收藏队）+ 比赛 hero（双队徽、主/客 chip、日期门 + 轮次 + 比赛页链接 + 对手上限句，开球句走 formatDate）
+  + 四块 tile（积分/上限/剩余场次/主场优势，各带副行，速率走 fmt2）+ 五条可点击步（积分榜与上限→/scenarios、赛季末赛程→/run-in、
+  主客场→/home-away、交锋记录→/head-to-head、争冠走势→/title-race，各带插值读数句与 ABSENT 兜底）+ 方法注 + 空态；
+  35 键三语（nav.briefing + 34 条 briefing.*）；六个新组："Next up"/det.results.next、"Points"/coach.points、
+  "Ceiling"/career.ceilingRing、"Fixtures left"/runIn.remaining、"The run-in"/runIn.title、"Head to head"/nav.headToHead，
+  并增长 Club 组；与 lane 的事件时钟两组一起，合并树 dup 140→146、excess 235→242；
+  `proof-analytics` 新增 8 条，合并后共 119/119（手算 fixture 集：A 取 s1 而非更早的 LIVE、B 的上限 7、run-in [B,C] 均 1.67、
+  主客两半 3.00/1.00 差 2、交锋 2 场 1胜1平 3-1 最大 f1、争冠 1 周 1 分；F 的同刻一对取 w1 且反转输入逐字节相同；
+  D 的跨赛事选择对手行缺失=null；E 无赛程=null）；
+  浏览器复核：默认 Arsenal→Brighton（PL 第 2 轮，9/23；世界今天=9/22），切 Real Madrid 正确跨赛事到 UCL 客场对 Arsenal，
+  比赛页链接落到对应 fixture，EN/简体/繁体三语渲染、console 干净；英文交锋行读成 "1 meetings" 的单复数缺陷当场改为
+  "Meetings 1: 0W 1D 0L"（计数在前的标签式，应用本无复数助手）；
+  census pin 取合并树实测值（APP_MODULE 122、POP 122、features 47、DEEP 63、APP_SRC 127、TSX 70、SRC 130、literal 1751、placeholder 220、APP_FILES 117）；
+  读数清单：fmt2 消费者 25→26、absence 门用户表 28 文件、name lane 载体 15 文件/47 处；
+  `proof-quantities` 无需新 split（本屏速率全走 fmt2 句子，与既有六个 split 的处置一致）；
+  bundle 521→524KB gzip/54 资产（js 511、css 12.5，记入 tests/perf/baseline.json），`proof-pwa` 预算 pin 521→524；
+  tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3225/3225 检查；
+  合并注：构建期间分析 lane 落了 M574（事件时钟 /clock），本线 rebase 到 cebc990（14 个冲突文件一律"两边都留"，
+  pin 取合并实测值）；随后另一条组件农场 lane 以约 1 分钟一个的速度把 M575–M597 推到 master，每个提交一个组件文件、
+  无路由、无侧栏、无字典键、无证明——在该 head 上 census 门禁大面积红（不可达模块、270 个未定义 t() 键、raw-UI 债、
+  未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
+  （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
+
+下一条目：M599 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① 建议面板的时间维度（把"开球还有多久"读进排序，让同一条建议随时间改变优先级）；
+② 事件时钟的对手维度（被射门/被扑救按防守方读，补上"谁在挨打"的一侧）；
+③ 简报读数下沉比赛页（/matches/:id 带一条 "为什么这场重要" 的链接行，同一 join 的第二个读者入口）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（有两条并发 lane：分析 lane 用 M566–M574，组件农场 lane 用到 M620），本线已落 M621；农场 lane 未路由的 stub 在其每次推送后清理并记入 README。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

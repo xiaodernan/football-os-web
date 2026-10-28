@@ -200,10 +200,12 @@ const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
 // fallback) read the same door.
 // M574 adds the event clock: one cell (the busiest-window tile falls back to the door when the
 // competition has no shot to point at) reads the same door.
+// M575 adds the briefing: ten cells (the competition-name hint, the opponent line, four tiles and
+// four step lines) read the door rather than a typed dash.
 const expectedUsers = [
   "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
-  "features/analytics/DataRoom.tsx", "features/analytics/Discipline.tsx",
-  "features/analytics/EventClock.tsx",
+  "features/analytics/Briefing.tsx", "features/analytics/DataRoom.tsx",
+  "features/analytics/Discipline.tsx", "features/analytics/EventClock.tsx",
   "features/analytics/GoalTiming.tsx",
   "features/analytics/PointsScenario.tsx",
   "features/analytics/RunIn.tsx", "features/analytics/VenueSplit.tsx",
@@ -219,6 +221,7 @@ const expectedUsers = [
 ];
 const expectedPerUser = [
   ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
+  ["features/analytics/Briefing.tsx", 10],
   ["features/analytics/DataRoom.tsx", 13], ["features/analytics/Discipline.tsx", 2],
   ["features/analytics/EventClock.tsx", 1],
   ["features/analytics/GoalTiming.tsx", 4],

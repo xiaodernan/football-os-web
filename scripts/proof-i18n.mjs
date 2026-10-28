@@ -518,7 +518,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M571: 123 -> 124 — features/analytics/Discipline.tsx is a new cards-and-fouls screen.
 // M573: 124 -> 125 — domain/nextStep.ts is the dashboard's next-step ranking.
 // M574: 125 -> 126 — features/analytics/EventClock.tsx is a new shot/save/review clock screen.
-const APP_SRC_PIN = 126;
+// M575: 126 -> 127 — features/analytics/Briefing.tsx is a new matchday-briefing screen.
+const APP_SRC_PIN = 127;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -537,7 +538,8 @@ const APP_SRC_PIN = 126;
 // M570: 66 -> 67 — GoalTiming.tsx is the new .tsx module.
 // M571: 67 -> 68 — Discipline.tsx is the new .tsx module.
 // M574: 68 -> 69 — EventClock.tsx is the new .tsx module.
-const TSX_PIN = 69;
+// M575: 69 -> 70 — Briefing.tsx is the new .tsx module.
+const TSX_PIN = 70;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -558,8 +560,8 @@ const TSX_PIN = 69;
 // M570: 125 -> 126, GoalTiming.tsx again.
 // M571: 126 -> 127, Discipline.tsx again.
 // M573: 127 -> 128, nextStep.ts added to the walk.
-// M574: 128 -> 129, EventClock.tsx added to the walk.
-const SRC_PIN = 129;
+// M574: 128 -> 129, EventClock.tsx added to the walk; M575: 129 -> 130, Briefing.tsx again.
+const SRC_PIN = 130;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -3112,9 +3114,13 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // shares leaders.bookedTitle, Y shares leaders.yellowShort, R shares leaders.redShort)
 // and 7 excess keys: 131->138, 226->233.
 // M574: EventClock's keys add two duplicate values (Shots shares ms.shots, Busiest window shares
-// timing.busiest) and two excess keys: 138->140, 233->235.
-const DUP_VALUES_PIN = 140;
-const DUP_EXCESS_KEYS_PIN = 235;
+// timing.busiest) and two excess keys: 138->140, 233->235. M575: Briefing's 35 keys form six new
+// duplicate groups ("Next up" shared with det.results.next, "Points" with coach.points, "Ceiling"
+// with career.ceilingRing, "Fixtures left" with runIn.remaining, "The run-in" with runIn.title,
+// "Head to head" with nav.headToHead) and grow the existing Club group — measured on the merged
+// dictionary below.
+const DUP_VALUES_PIN = 146;
+const DUP_EXCESS_KEYS_PIN = 242;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4347,7 +4353,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // site (the step's own label looked up in STEP_LABEL): literal 1677 -> 1680, expression 32 -> 33.
 // M574: the event clock adds its 30 literal sites (its six window labels reuse timing.w* as
 // literal sites of their own) and its nav entry: literal 1680 -> 1711, expression unchanged at 33.
-  shapeCounts.literal === 1711 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M575: Briefing adds its 39 literal t() sites and its nav entry on top: 1711 -> 1751.
+  shapeCounts.literal === 1751 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4377,8 +4384,10 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M571: 200 -> 205 — Discipline's five interpolating rows (playedSub, perMatchSub, mostSub,
 // record, rowLine) hand over theirs.
 // M574: 205 -> 209 — EventClock's four interpolating rows (shotsSub, varsSub, busiestSub, record)
-// hand over theirs.
-  litVarSites === 209 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// hand over theirs. M575: 209 -> 220 — Briefing's eleven interpolating sites (round, opponentLine,
+// pointsSub, ceilingSub, leftSub, edgeSub, stepTableLine, stepRunInLine, stepVenueLine,
+// stepRecordLine, stepRaceLine) hand over theirs.
+  litVarSites === 220 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

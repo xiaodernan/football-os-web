@@ -5,7 +5,7 @@
 // and unit-testable. Ratings are relative to league average, so a 1.0 attack
 // means "scores at the league-average rate".
 
-import type { Club, Match } from "@/domain/types";
+import type { Club, Match, Side } from "@/domain/types";
 import { clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
 import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally, maxBy, last } from "./attributes";
 
@@ -838,3 +838,56 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
   return { rows: list, shotsBands, savesBands, varBands, shots, saves, vars, matches: counted };
 }
 
+export interface Briefing {
+  /** The club the briefing is written for. */
+  clubId: string;
+  /** The club's next fixture — the earliest SCHEDULED kickoff across every competition. */
+  fixture: Match;
+  opponentId: string;
+  /** The end of the fixture the briefing club plays. */
+  side: Side;
+  /** The briefing club's table-and-ceiling read in the fixture's competition; null when the
+   *  competition has no table row for it yet (a cross-competition fixture can precede its debut). */
+  us: PointsScenario | null;
+  /** The opponent's read from the same fold — so the two sides of the fixture are measured alike. */
+  them: PointsScenario | null;
+  /** The briefing club's remaining-calendar row; null under the same condition as `us`. */
+  runInRow: RunInRow | null;
+  /** The briefing club's home/away row; null under the same condition as `us`. */
+  venueRow: VenueSplitRow | null;
+  /** Every finished meeting between the two clubs, in kickoff order. */
+  record: HeadToHead;
+  /** The competition's title race as it stands after the last finished fixture. */
+  race: TitleRace;
+}
+
+/** One club's next match, gathered with every season read that explains it.
+ *
+ *  The board shows today, the run-in shows what is left, the venue split shows where the points
+ *  came from — but a reader asking "what is this next fixture?" has to hold five screens in mind.
+ *  This fold picks the club's next booked fixture (earliest SCHEDULED kickoff across every
+ *  competition, ties broken by id so the pick is reproducible; a LIVE match belongs to the live
+ *  strip, not to the fixture still to come) and joins the five reads to it, each computed by the
+ *  screen that owns it rather than recomputed here, so the briefing can never disagree with them. */
+export function briefing(clubId: string, matches: Match[], clubs: Club[]): Briefing | null {
+  const next = matches
+    .filter((m) => m.status === "SCHEDULED" && (m.homeClubId === clubId || m.awayClubId === clubId))
+    .sort((a, b) => byKickoff(a, b) || a.id.localeCompare(b.id))[0];
+  if (!next) return null;
+  const side: Side = next.homeClubId === clubId ? "home" : "away";
+  const opponentId = side === "home" ? next.awayClubId : next.homeClubId;
+  const compId = next.competitionId;
+  const scenarios = pointsScenarios(compId, matches, clubs);
+  return {
+    clubId,
+    fixture: next,
+    opponentId,
+    side,
+    us: scenarios.find((s) => s.clubId === clubId) ?? null,
+    them: scenarios.find((s) => s.clubId === opponentId) ?? null,
+    runInRow: runIn(compId, matches, clubs).find((r) => r.clubId === clubId) ?? null,
+    venueRow: venueSplit(compId, matches, clubs).rows.find((r) => r.clubId === clubId) ?? null,
+    record: headToHead(clubId, opponentId, matches),
+    race: titleRace(compId, matches, clubs),
+  };
+}
