@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M571 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M572 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,36 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M572 — the card ledger on the club's own page, and a board that points back
+
+**The second entry point.** M571 read the season's cards from `/discipline`; the club page — the
+place a reader actually lands when they tap a club — still showed form, ratios and splits but nothing
+about bookings. `ClubDetail` now builds the same `discipline()` fold for the club's competition and
+finds its own row, so the season-analytics panel gains three lines (yellow cards, red cards, cards per
+match) that are the exact row the board prints. No new domain surface: one fold, two readers.
+
+**The way back.** The board's club names were plain text. They are now links to `/clubs/:id`, so the
+ledger and the club page point at each other instead of the board being a dead end.
+
+**What the gate says.** `proof-analytics` gains one clause and runs **105/105**: the board is a
+roll-call — with a fourth club that has no fixture added to the same league, the rows read C, B, A, H,
+H at 0 played and 0 cards a game, because an unfixtured club still has a row rather than a missing
+one. `proof-i18n` reads 1,677 literal sites (1,673 + the four the club page reuses: Yellow cards, Red
+cards, Cards per match, and the cross-link title) and still finds every key the dictionary holds — no
+new key, because the club page borrows the words the board already owns, so the duplicate-value and
+placeholder ratchets do not move. `proof-absent-glyph` moves the Details ledger from 5 to 6 cells:
+the per-game rate falls back to the absence door when the club has no counted game.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **120/120 scripts · 3205/3205 checks**;
+the bundle stays **517 KB gzip across 52 assets** (503 JS + 13 CSS), so the baseline does not move.
+No browser pass this milestone either: the change was exercised through the analytics fold, the
+census gates and the production build, and the browser evidence debt stays on the ledger.
+
+**Honest reservation.** The club page shows the rate as an absence until one counted game exists,
+which reads as "not measured" rather than "zero" — that distinction is intended, but a reader who
+wants the zero sees it on the board, not here. And the link is only between the two card screens:
+neither carries the match list that produced the numbers, so the trail still ends at the box score.
 
 ### M571 — the cards the box score prints and no screen added up
 

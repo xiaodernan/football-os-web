@@ -189,11 +189,19 @@
   tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3204/3204 检查；本轮同样未做浏览器复核，证据欠账如实记在 README；
   下一步（M572 候选）：① 把纪律读数下沉俱乐部详情（同一个 discipline，另一个入口）；② Dashboard 的"下一步建议"动作链；③ 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构但对象不同）。
 
-下一条目：M572 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① 把纪律读数下沉俱乐部详情（同一个 discipline，另一个入口，不新增 domain 表面）；
-② Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）；
-③ 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构，但对象与结论不同）。
-编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线已落 M570/M571。
+- M572: 纪律读数下沉俱乐部详情（第二入口）——`features/football/Details.tsx` 的 `ClubDetail` 复用 `discipline()`（无新 domain 表面）：
+  新增 `cards` memo（同赛事 fold 后按 clubId 取行），赛季分析面板追加黄牌/红牌/场均牌三行，场均牌在 `played=0` 时走 ABSENT；
+  面板底部加 `/discipline` 互链（`disc.title`），纪律榜行内队名改为 `/clubs/:id` 链接，两张卡牌屏幕互相可达；
+  `proof-analytics` 新增 1 条 roll-call 断言（同联赛加入无赛程队 H 后行序 CBAH、H 为 0 场 0 牌/场），105/105；
+  `proof-i18n` literal 1673→1677（复用 disc.yellows/reds/perMatch/title，四站，无新键，键总数仍 2,377，dup/excess 不动）；
+  `proof-absent-glyph` Details 账本 5→6 格；bundle 517 KB gzip/52 资产不变（基线不动）；tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3205/3205 检查；
+  下一步（M573 候选）：① Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）；② 事件里的 SHOT/SAVE/VAR 时段读数；③ 纪律榜的赛季趋势（按轮次累计牌数）。
+
+下一条目：M573 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路，跨屏汇总结论）；
+② 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构，对象与结论不同）；
+③ 纪律榜的赛季趋势（按轮次累计牌数，读同一 fold 的时间序列）。
+编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线已落 M570–M572。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。
