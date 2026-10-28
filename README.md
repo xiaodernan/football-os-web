@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M569 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M571 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,55 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M571 — the cards the box score prints and no screen added up
+
+**The question left in the match page.** Every simulated fixture writes a stats block — fouls,
+yellows, reds — and the box score prints it for that one match. Nothing in the app asked the season's
+side of it: who is booked most, does the league's card count track its fouls, and how many cards does a
+game cost? `discipline()` in `domain/analytics.ts` folds those blocks across a competition's finished
+fixtures, side by side, into each club's yellows, reds, fouls, bookings and per-game rates, plus the
+league's own totals and cards-per-match. A fixture the table does not count cannot count here either:
+only FINISHED fixtures in this competition, and only those carrying a stats block, contribute.
+
+**The screen.** `features/analytics/Discipline.tsx` at `/discipline` (sidebar `nav.discipline`):
+competition chips; four tiles (the league's yellows with the fixtures they came from, its reds, cards
+per match beside fouls a game, and the most-booked club with its split); and the club board — crest,
+games counted, yellows, reds, fouls, then a bookings-per-game bar — ordered by reds and then yellows,
+so the list reads "who has been sent off most" first. A club with no counted fixture dims and reads
+"No counted game"; the method note says the rates are per counted game, not per scheduled one.
+Twenty-two keys in EN / 简体中文 / 繁體中文.
+
+**What the gate says.** `proof-analytics` gains four clauses and runs **104/104**: a three-fixture
+league (A 2-0 B, C 1-1 A, B 0-2 C) with a scheduled fixture, another competition and a stats-less
+finished fixture as noise reads 3 counted games, 11 yellows, 2 reds, 59 fouls and 4.33 cards a match;
+the rows fold each block to its own side and order C, B, A — A 4Y/0R/26F at 2 cards and 13 fouls a
+game, B 3 bookings at 1.5, C 6 at 3 — while a block with no cards reads a real zero, not an absence;
+and the fold is deterministic, with a competition holding no fixture reading empty. Census pins pay
+for one module: app-tree 118 → 119; coverage 118 → 119 / features 44 → 45 / deep 60 → 61; i18n
+123 → 124 / 67 → 68 / 126 → 127; storage 113 → 114. The dictionary grows 22 keys a locale — 2,421
+values — and the ratchet pays for borrowed vocabulary: seven duplicate values appear because the
+screen reuses words the app already owns (Discipline shares `attr.name.discipline`, Fouls shares
+`ms.fouls`, Yellow cards shares `ms.yellows`, Red cards shares `ms.reds`, Most booked shares
+`leaders.bookedTitle`, Y shares `leaders.yellowShort`, R shares `leaders.redShort`), so 131 → 138
+groups and 226 → 233 excess keys. The literal-site census reads 1,651 → 1,673 and the placeholder
+census 200 → 205. Three other gates count the screen instead of passing over it: `proof-fmt2`'s
+consumer set (24 → 25), the absence door's ledger in `proof-absent-glyph` (2 cells, 26 users), and the
+name lane in `proof-absent-name` (a tenth folded file; 46 sites over 14 files, 32 plain-variable sites
+inside the fold).
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **120/120 scripts · 3204/3204 checks**;
+the bundle is **517 KB gzip across 52 assets** (503 JS + 13 CSS), recorded in
+`tests/perf/baseline.json` (514 → 517). No browser pass this milestone either: the screen was
+exercised through the analytics fold, the render matrix and the production build, and the browser
+evidence debt stays on the ledger rather than being claimed.
+
+**Honest reservation.** The counts are the engine's own — one synthetic season whose card totals are
+tuned inside the match engine, so this is not a claim about how often real football books players. A
+red is one card here, not two yellows, so a sending-off weighs the same as a booking in `bookings`;
+the split is in the columns, not in the ordering. And the board's first sort is reds, which means one
+red can outrank a club with twice the yellows — the hint line says so, and the yellow column is right
+there.
 
 ### M570 — when the goals arrive, in six windows
 

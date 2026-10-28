@@ -175,11 +175,25 @@
   tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3200/3200 检查；本轮未做浏览器复核，证据欠账如实记在 README；
   下一步（M571 候选）：纪律读数（YELLOW/RED 事件已在 seed 与 MatchStats 里，却没有任何屏幕按俱乐部统计——真实数据、不重叠）；或把六窗读数下沉俱乐部详情；或 Dashboard 下一步建议动作链。
 
-下一条目：M571 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① 纪律读数（YELLOW/RED 事件已在 footballSeed 与 MatchStats 里，但没有任何屏幕按俱乐部统计，且与进球时间带不重叠）；
-② 把六窗读数下沉俱乐部详情（同一个 goalTiming，另一个入口）；
-③ Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）。
-编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线本单元为 M570。
+- M571: 纪律读数（Discipline）——`domain/analytics.ts` 新增 `DisciplineRow`/`Discipline` 与 `discipline(compId, matches, clubs)`：
+  行集取自 `teamMetrics`，只遍历本赛事 FINISHED 且带 `stats` 的比赛，按主/客侧把 `fouls/yellows/reds` 折叠到各队，
+  给出 `bookings = yellows + reds`、`bookingsPerMatch`/`foulsPerMatch`（round2，`played=0` 时为 0），并汇总联赛 `matches/yellows/reds/fouls/perMatch`；
+  行序 = 红牌降序 → 黄牌降序 → clubId；没有统计块的场次（及 SCHEDULED、他赛事）一律不贡献，零牌统计块是真实 0 而非缺读；
+  屏幕 `/discipline`（nav.discipline）= 赛事 chips + 四块 tile（黄牌+场次、红牌、场均牌数+场均犯规、吃牌最多队及其黄牌数，缺读走 ABSENT）+ 逐队表（队徽/队名、统计场次、黄/红/犯规三列、场均牌条 pctOf + rowLine，零场队降透明 + "无统计"）+ 方法注 + 空态；
+  22 键三语（nav.discipline + disc.*），字典总量 2,421 值；dup ratchet 131→138、excess 226→233（7 组借用既有词：Discipline/attr.name.discipline、Fouls/ms.fouls、Yellow cards/ms.yellows、Red cards/ms.reds、Most booked/leaders.bookedTitle、Y/leaders.yellowShort、R/leaders.redShort）；
+  literal t() 站点 1651→1673（屏幕 21 + nav 1）；placeholder 200→205（playedSub/perMatchSub/mostSub/record/rowLine）；
+  `proof-analytics` 新增 4 条共 104/104（三场联赛 + 计划场/他赛事/无统计场作噪声：matches 3、11Y、2R、59F、4.33/场；C,B,A 行序；A 4Y/0R/26F 2 牌 13 犯规、B 3 牌 1.5、C 6 牌 3；零牌统计块=真实 0；确定性 + 空赛事空读）；
+  census pin 同步（APP_MODULE 119、POP 119、features 45、DEEP 61、APP_SRC 124、TSX 68、SRC 127、APP_FILES 114；fmt2 消费者 24→25；absence 门 +2 格 = 26 用户；name lane folded 10 文件、46 处/14 文件、plain 32 = 26 vars + 6 props）；
+  `proof-i18n` 的 vacuity 条款抓到本屏最后一条断言的细节串含 "no fixture"，且谓词只有 ===0 与 JSON 比较 → 补 `board.rows.length === 3` 的 pin 后 383/383；
+  bundle 514→517 KB gzip / 52 资产（js 503、css 13，记入 tests/perf/baseline.json）；
+  tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3204/3204 检查；本轮同样未做浏览器复核，证据欠账如实记在 README；
+  下一步（M572 候选）：① 把纪律读数下沉俱乐部详情（同一个 discipline，另一个入口）；② Dashboard 的"下一步建议"动作链；③ 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构但对象不同）。
+
+下一条目：M572 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① 把纪律读数下沉俱乐部详情（同一个 discipline，另一个入口，不新增 domain 表面）；
+② Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）；
+③ 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构，但对象与结论不同）。
+编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线已落 M570/M571。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。
