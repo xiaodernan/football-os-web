@@ -136,6 +136,15 @@
   切 La Liga 实时重算（BAR 36、差距 0、最大 16 在第 2 周），三语各自渲染，console 干净；
   README 同时补写 M524 的正式小节（原 gap 条目移除，gap 计数 134→133，账本门 8/8）— pushed
 
+- M568: 交锋记录（HeadToHead）——`domain/analytics.ts` 新增 `headToHead(clubA, clubB, matches)`：把两队之间所有 FINISHED 交手（不论主客、跨全部赛事）按 kickoff 折叠，
+  给出 交手数/涉及赛事数/胜平负/进失球/最大分差场次（并列取最早）/最近一次交锋延续的走势；SCHEDULED 与 LIVE 一律排除（记录只算已赛）；
+  屏幕=两个互斥下拉 + 四块 tile（交手次数与赛事数、双方胜场夹平局）+ 进球面板（pctOf/BAR_FILL 双色条 + 最大分差/当前走势两条事实）+ 由近及远逐场表（日期·赛事/队徽/比分，最大分差行加边框）+ 方法注 + 空态；
+  29 键三语（nav.headToHead + h2h.*），dup ratchet 128→129（"Opponent" 与 player.opponent 同词）且四组已有重复增长（Goals/Home/Away/Club）excess 216→221；
+  `proof-analytics` 新增 4 条共 92/92（跨赛事四场 1W-1D-2L/4-8 球/最大分差取最早/两连胜收尾、换边镜像、确定性+从未交手配对空读）；
+  census pin 同步（APP_MODULE 116、POP 116、features 42、DEEP 58、APP_SRC 121、TSX 65、SRC 124、literal 1585、placeholder 180、APP_FILES 111）；
+  tsc 干净、build exit 0、npm run proof 120/120 脚本 · 3191/3191 检查；浏览器：生产预览默认对局 ARS-MCI 读到跨 2 项赛事 4 场、ARS 0W2D2L、进球 1-4、最大分差 MCI 净胜 2、最近走势 MCI，
+  换对手为 Liverpool 实时重算（3 场·1 项赛事），英文与繁体各自渲染，console 干净 — pushed
+
 下一条目：继续"真实数据 + 不重叠 + 复用既有 domain"的下一个缺口。候选：Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）；
 或把"上限/按速率"读数下沉到俱乐部详情（同一 domain 读数，另一个读者的入口）。
 编号策略：并发 lane 每秒都在占号（它已用到 M566），本线落地时先查 `git log` 取下一个空号，并在 README 的 gap 账本里为 lane 的每个号写清楚。

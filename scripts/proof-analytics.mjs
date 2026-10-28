@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -371,6 +371,41 @@ ok(`titleRace is deterministic and a competition with no finished fixture charts
   JSON.stringify(race) === JSON.stringify(raceAgain) && race.weeks.length === 3 &&
   raceEmpty.weeks.length === 0 &&
   raceEmpty.biggestGap === 0 && raceEmpty.biggestGapWeek === 0);
+
+// --- headToHead: the pair's whole record, across competitions -----------------------------------
+// A 2-0 B, B 1-1 A, A 0-3 B in another competition, B 4-1 A; a third club's match, a scheduled
+// meeting and a live one are all noise. Read from A's side: 1W 1D 2L, 4 goals for, 8 against,
+// two competitions, widest 3 (the first such meeting by kickoff), and the latest two B wins.
+const h2hFixtures = [
+  match("h1", "T1", "A", "B", 2, 0, "2026-01-01T12:00:00.000Z"),
+  match("h4", "T1", "A", "C", 5, 0, "2026-01-03T12:00:00.000Z"),
+  match("h2", "T1", "B", "A", 1, 1, "2026-01-05T12:00:00.000Z"),
+  match("h3", "T2", "A", "B", 0, 3, "2026-01-09T12:00:00.000Z"),
+  match("h5", "T1", "B", "A", 4, 1, "2026-01-13T12:00:00.000Z"),
+  match("h6", "T1", "A", "B", 9, 0, "2026-01-15T12:00:00.000Z", "SCHEDULED"),
+  match("h7", "T1", "A", "B", 1, 0, "2026-01-16T12:00:00.000Z", "LIVE"),
+];
+const h2h = headToHead("A", "B", h2hFixtures);
+ok(`headToHead counts only finished meetings and reads the record from club A's side (played ${h2h.played}, ${h2h.winsA}W ${h2h.draws}D ${h2h.winsB}L, goals ${h2h.goalsA}-${h2h.goalsB}, ${h2h.competitions} competitions)`,
+  h2h.played === 4 && h2h.meetings.map((m) => m.matchId).join(",") === "h1,h2,h3,h5" &&
+  h2h.winsA === 1 && h2h.draws === 1 && h2h.winsB === 2 &&
+  h2h.goalsA === 4 && h2h.goalsB === 8 && h2h.competitions === 2 &&
+  h2h.meetings.map((m) => m.winner).join(",") === "a,,b,b");
+ok(`headToHead names the widest meeting, the latest run, and the two orientations agree (widest ${h2h.biggest?.matchId} by ${h2h.biggest ? Math.abs(h2h.biggest.goalsA - h2h.biggest.goalsB) : "none"}; run ${h2h.streak?.side} ${h2h.streak?.length})`,
+  h2h.biggest?.matchId === "h3" && h2h.biggest?.winner === "b" &&
+  h2h.streak?.side === "b" && h2h.streak?.length === 2 &&
+  h2h.meetings[0].homeGoals === 2 && h2h.meetings[0].awayGoals === 0);
+const mirror = headToHead("B", "A", h2hFixtures);
+ok(`headToHead swapped is the same record seen from the other side (played ${mirror.played}, ${mirror.winsA}W ${mirror.winsB}L, goals ${mirror.goalsA}-${mirror.goalsB})`,
+  mirror.played === h2h.played && mirror.winsA === h2h.winsB && mirror.winsB === h2h.winsA &&
+  mirror.goalsA === h2h.goalsB && mirror.goalsB === h2h.goalsA &&
+  mirror.biggest?.matchId === h2h.biggest?.matchId && mirror.streak?.side === "a");
+const h2hEmpty = headToHead("A", "E", h2hFixtures);
+const h2hAgain = headToHead("A", "B", h2hFixtures);
+ok(`headToHead is deterministic and a pair that never met reads empty rather than a zero record (played ${h2h.played}, same fold ${JSON.stringify(h2h) === JSON.stringify(h2hAgain)}, empty played ${h2hEmpty.played}, empty widest ${h2hEmpty.biggest ? "someone" : "none"}, empty run ${h2hEmpty.streak ? "something" : "none"})`,
+  JSON.stringify(h2h) === JSON.stringify(h2hAgain) && h2h.played === 4 &&
+  h2hEmpty.played === 0 && h2hEmpty.biggest === null &&
+  h2hEmpty.streak === null && h2hEmpty.goalsA === 0 && h2hEmpty.goalsB === 0 && h2hEmpty.competitions === 0);
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

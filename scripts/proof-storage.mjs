@@ -103,7 +103,8 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // M534: 107 -> 108 — features/analytics/RunIn.tsx is a new run-in screen.
 // M559: 108 -> 109 — features/analytics/PointsScenario.tsx is a new points-scenario screen.
 // M567: 109 -> 110 — features/analytics/TitleRace.tsx is a new title-race screen.
-const APP_FILES_PIN = 110;
+// M568: 110 -> 111 — features/analytics/HeadToHead.tsx is a new head-to-head screen.
+const APP_FILES_PIN = 111;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */

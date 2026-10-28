@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M567 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M568 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,48 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M568 — every meeting between two clubs, across competitions
+
+**The question no screen asked.** The table answers "who is above whom", the club comparison
+answers "who is better on averages", and nothing answers "what happens when these two meet". A
+pairing can meet in a league and again in a continental tie, and `headToHead()` in
+`domain/analytics.ts` folds every FINISHED fixture between the pair — whichever end each club
+played — into the record read from club A's side: meetings, competitions, wins/draws, goals for and
+against, the widest-margin meeting, and the run the latest meeting ended. Scheduled and live
+fixtures are excluded: a record is what was played, not what is booked.
+
+**The screen.** `features/analytics/HeadToHead.tsx` at `/head-to-head` (sidebar `nav.headToHead`):
+two club selects that exclude each other, four tiles (meetings and the competitions they span, then
+each side's wins with the draws between them), a goals panel whose two-tone bar is `pctOf` in
+`BAR_FILL` tones and whose facts name the widest meeting and the current run, and the meeting list
+latest-first (date, competition, crests, score) with the widest margin's row carrying the primary
+border. Twenty-nine keys in EN / 简体中文 / 繁體中文. The date-format bag is hoisted out of the
+render hole, the same raw-UI debt DataRoom paid at M170.
+
+**What the gate says.** `proof-analytics` gains four clauses and runs **92/92**: a hand-built pair
+meeting four times across two competitions (A 2-0 B, B 1-1 A, A 0-3 B, B 4-1 A) with a third club's
+match, a scheduled meeting and a live one as noise reads 4 played, 1W-1D-2L, goals 4-8, two
+competitions, widest 3 (the first such meeting by kickoff), and a two-match B run at the end. The
+swap clause reads the same record from B's side (2W-0D-1L, goals 8-4, same widest meeting), and the
+last clause pins the four-meeting fold beside a pair that never met — empty, not a zero record. The
+census pins pay for one module: app-tree 116; coverage 116 / features 42 / deep 58; i18n 121 / 65 /
+124 (1,585 literals, 180 placeholder sites); storage 111. The dictionary ratchets pay the toll: one
+new duplicate group ("Opponent", shared with `player.opponent`) and four grown ones (Goals, Home,
+Away, Club): 128 -> 129, 216 -> 221.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **120/120 scripts · 3191/3191 checks**.
+Browser evidence, production preview on the shipped world: the default pairing (Arsenal vs
+Manchester City) reads 4 meetings across 2 competitions, Arsenal 0W 2D 2L, goals 1-4, widest margin
+MCI by 2, the latest run MCI's; switching the opponent to Liverpool recomputes live (3 meetings in
+one competition, 0W-2D-1L, goals 0-2); English and 繁體中文 render their own words; console clean.
+The in-app browser still cannot screenshot (as since M166), so the structural snapshot and the
+rendered text are the record.
+
+**Honest reservation.** The record covers the dataset's fixture list, not a club's whole history:
+the world is one synthetic season, so "every meeting" means every meeting the world holds. The run
+and the widest margin are read from club A's side, and swapping the two clubs swaps them — the
+screen says nothing about form or venue beyond the date and the competition on each row.
 
 ### M567 — the title race, week by week: how the gap was made
 

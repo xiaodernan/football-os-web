@@ -456,3 +456,92 @@ export function titleRace(compId: string, matches: Match[], clubs: Club[]): Titl
     biggestGapWeek: best?.week ?? 0,
   };
 }
+
+export interface HeadToHeadMeeting {
+  matchId: string;
+  competitionId: string;
+  kickoff: string;
+  homeClubId: string;
+  awayClubId: string;
+  homeGoals: number;
+  awayGoals: number;
+  /** Goals for club A and club B, whichever end of the fixture they played. */
+  goalsA: number;
+  goalsB: number;
+  /** The side that took the meeting; null when it ended level. */
+  winner: "a" | "b" | null;
+}
+
+export interface HeadToHead {
+  /** Finished meetings, in kickoff order. */
+  meetings: HeadToHeadMeeting[];
+  played: number;
+  /** Distinct competitions the pair has met in. */
+  competitions: number;
+  winsA: number;
+  winsB: number;
+  draws: number;
+  goalsA: number;
+  goalsB: number;
+  /** The widest-margin meeting; null while every meeting has been drawn. */
+  biggest: HeadToHeadMeeting | null;
+  /** Who won the run the latest meeting ended, and how long that run is. */
+  streak: { side: "a" | "b" | "draw"; length: number } | null;
+}
+
+/** Every finished meeting between two clubs, read from club A's side.
+ *
+ *  A pair can meet in more than one competition — a league fixture and a continental tie — so the
+ *  fold reads the whole fixture list rather than one competition's, which is the question the
+ *  standings and the club comparison never answer. Scheduled and live fixtures are excluded: a
+ *  record is what was played, not what is booked. */
+export function headToHead(clubA: string, clubB: string, matches: Match[]): HeadToHead {
+  const meetings = matches
+    .filter((m) => m.status === "FINISHED" && m.homeGoals !== null && m.awayGoals !== null)
+    .filter(
+      (m) =>
+        (m.homeClubId === clubA && m.awayClubId === clubB) ||
+        (m.homeClubId === clubB && m.awayClubId === clubA),
+    )
+    .sort(byKickoff)
+    .map((m) => {
+      const aHome = m.homeClubId === clubA;
+      const goalsA = (aHome ? m.homeGoals : m.awayGoals) as number;
+      const goalsB = (aHome ? m.awayGoals : m.homeGoals) as number;
+      return {
+        matchId: m.id,
+        competitionId: m.competitionId,
+        kickoff: m.kickoff,
+        homeClubId: m.homeClubId,
+        awayClubId: m.awayClubId,
+        homeGoals: m.homeGoals as number,
+        awayGoals: m.awayGoals as number,
+        goalsA,
+        goalsB,
+        winner: goalsA > goalsB ? ("a" as const) : goalsB > goalsA ? ("b" as const) : null,
+      };
+    });
+  const decisive = meetings.filter((m) => m.winner !== null);
+  let streak: HeadToHead["streak"] = null;
+  const latest = last(meetings);
+  if (latest) {
+    let n = 0;
+    for (let i = meetings.length - 1; i >= 0; i--) {
+      if (meetings[i].winner !== latest.winner) break;
+      n++;
+    }
+    streak = { side: latest.winner ?? "draw", length: n };
+  }
+  return {
+    meetings,
+    played: meetings.length,
+    competitions: new Set(meetings.map((m) => m.competitionId)).size,
+    winsA: meetings.filter((m) => m.winner === "a").length,
+    winsB: meetings.filter((m) => m.winner === "b").length,
+    draws: meetings.filter((m) => m.winner === null).length,
+    goalsA: sum(meetings, (m) => m.goalsA),
+    goalsB: sum(meetings, (m) => m.goalsB),
+    biggest: decisive.length === 0 ? null : maxBy(decisive, (m) => Math.abs(m.goalsA - m.goalsB)),
+    streak,
+  };
+}
