@@ -115,8 +115,19 @@
   census pin 全同步（APP_SRC 118、TSX 62、SRC 121、literal 1506、placeholder 160、dup 127/215、APP_MODULE 113、POP 113、features 39、DEEP 55、APP_FILES 108、
   last/fmt2/absent-glyph/absent-name 清单各 +1）；tsc 干净、npm run proof 118/118、bundle 496→499KB — pushed
 
-下一条目：M538 继续——编号说明：M534 由本线落地，M535–M537 已被并发 lane 占用（parse backlog / drafts），故下一号取 M538；
-仍是"真实数据 + 不重叠 + 复用既有 domain"；候选：强化 Dashboard 的"下一步建议"（把多屏结论汇成一条可点击的动作链）、
-或"赛季末积分情景"（用 runIn + 剩余赛程做"若全胜/按现速率"的上限下限读数，和 projection 分属不同问题）；
-每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 10 处 census pin 全套门禁；
-并发 lane 的未提交文件（.drafts/*、README 的 M537 段落、proof-drafts.mjs）不要纳入本线提交。
+- 8912ed2 M559: 赛季末积分情景（PointsScenario）——编号说明：本线取 M559 时，并发 lane 的 M550–M558 提交已先行落地，
+  且它随后又用同一号提交了 PlayerDataScreen（13360e20），故历史里有两个 M559；本节是积分情景这一个。
+  `domain/analytics.ts` 新增 `pointsScenarios(compId, matches, clubs)`：复用 runIn 的私有 `remainingOpponents` 折叠（两屏对"还剩几场"不可能有分歧），
+  每队给出 当前积分 / 剩余场次 / 上限（积分+3×剩余）/ 按现速率推演（积分+场均×剩余，走 fmt2）/ 距榜首差距 / 上限是否够得着榜首；
+  屏幕=赛事 chips + 四块 tile（榜首/最高上限/仍有机会/剩余场次）+ 一句"争冠是否已由算术决定" + 表格（队徽/战绩/积分/剩余/上限/按速率/落后，榜首格走 ABSENT）+ 窄屏 pctOf/BAR_FILL 条 + 方法注 + 空态；
+  `proof-analytics` 新增 4 条（顺序与上限/速率、差距与 canCatchLeader、已赛不计剩余且他赛事不入行、确定性）共 84/84；
+  census pin 同步（APP_MODULE 114、POP 114、features 40、DEEP 56、APP_SRC 119、TSX 63、SRC 122、literal 1531、placeholder 166、APP_FILES 109、
+  fmt2 消费 23、absent-glyph 用户 23 且 PointsScenario=5、absent-name 载体 +1）；tsc 干净、120 个 proof 脚本全绿（proof-pwa 需先 build：502KB gzip/47 资产，pin 520）；
+  浏览器：生产预览在真实世界数据上渲染并切赛事（PL 8/10 仍可争冠、La Liga 5/9），console 干净；并发 lane 的 17 个未路由 stub 于本提交清除 — pushed
+
+下一条目：继续"真实数据 + 不重叠 + 复用既有 domain"的下一个缺口。候选：Dashboard 的"下一步建议"动作链（把多屏结论汇成可点击的一条路）；
+或把"上限/按速率"读数下沉到俱乐部详情（同一 domain 读数，另一个读者的入口）。
+编号策略：并发 lane 每秒都在占号（它已用到 M566），本线落地时先查 `git log` 取下一个空号，并在 README 的 gap 账本里为 lane 的每个号写清楚。
+每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交——它们在每次推送前用 `git rm`/`rm` 清掉并写明。
+注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

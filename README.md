@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M539 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M559 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7098,6 +7098,65 @@ reflects the latest section this file actually carries.
 
 
 
+### M559 — the table's arithmetic ahead of time: what each club can still reach
+
+**The question two screens left open.** The run-in screen (M534) says how hard each club's
+remaining fixtures are, and the projection screen (M533) says what a player's attributes could
+become. Neither says what the TABLE can still become. `pointsScenarios()` in
+`domain/analytics.ts` reads the same private `remainingOpponents` fold `runIn()` already uses —
+the remaining fixtures are counted once, by one function, so the two screens cannot disagree
+about what is left to play — and returns, per club: today's points, the fixtures left, the
+ceiling (`points + 3 × left`), the projection at the club's own rate (`points + ppg × left`,
+two decimals through the `fmt2` door), the gap to the leader, and whether the ceiling reaches
+the leader at all.
+
+**The screen.** `features/analytics/PointsScenario.tsx` at `/scenarios` (sidebar
+`nav.scenario`): competition chips, four tiles (leader, highest ceiling, clubs still in reach,
+scheduled fixtures), one sentence that switches between "the title is open" and "no ceiling
+reaches the leader", then a table in the standing order the fold already returns. Each row:
+crest, record, points, left, ceiling, at-rate (`fmt2`), gap (the leader's cell reads `ABSENT`
+through the absence door, so the dash is the app's one absence glyph), and a bar on narrow
+screens whose width is `pctOf` of the highest ceiling with `BAR_FILL` tones — no hand-rolled
+percentage. Twenty-five keys in EN / 简体中文 / 繁體中文; every visible string is in the
+dictionary.
+
+**What the gate says.** `proof-analytics` gains four clauses and runs **84/84**: order and
+ceilings on a hand-built three-club league (A 6 pts, 1 left → 9 / 7.50; B 4 / 1 → 7 / 5.33;
+C 4 / 0 → 4 / 4.00), the gaps and `canCatchLeader` flags (A 0/false, B 2/true, C 2/false — the
+leader is never its own chaser), a finished fixture adding nothing to "left" and the other
+competition never entering the rows, and determinism. The census pins pay for one new module:
+app-tree 114; coverage 114 / features 40 / deep 56; i18n 119 / 63 / 122 (1,531 literals, 166
+placeholder sites); storage 109; fmt2 consumers 23; absence-door users 23 (PointsScenario reads
+it five times); the name-door carrier set +1. `proof-pwa` measures the build at **503 KB gzip
+across 47 assets** (pin 520). tsc is clean; the suite runs **120 scripts**, and every one is
+green once the worktree has a `dist` for `proof-pwa` to measure. Browser evidence: the production
+preview renders the screen on the shipped world — Premier League shows MCI 37 points with 11 to
+play (ceiling 70) and 8 of 10 clubs still able to reach 37, West Ham 5 with 10 left the one out
+of reach; switching to La Liga recomputes live (BAR 36, Atlético's ceiling 62, 5 of 9 in reach);
+console clean. The in-app browser still cannot screenshot (as since M166), so the structural
+snapshot and the rendered text are the browser record.
+
+**The lane's batch, swept once more.** The concurrent line of work landed twenty-seven stub
+commits between M540 and M566 (AcademyReport, ScoutReportDetail, PlayerDevelopmentAssessment,
+PlayerInjuryHistory, BestXI, BestPlayer, PlayerFiveYearPlan, PlayerValueComparison twice,
+PlayerDataViz, SystemOptimization, ModuleRefactoring, UserFeedback, SeasonSchedule,
+TeamDataScreen, ClubComparison, PlayerMarketValueHistory, PlayerMarketTrend, PlayerDataScreen,
+SystemOptimization2, SeasonDataScreen, ContractPrediction, SeasonAwards, TransferMarket,
+PlayerValueRanking, ClubFinancialModel). None is routed from `src/App.tsx`; every one fails the
+tree census. Seventeen of them were on disk at this commit and are removed here — the census is
+green again at 114 modules, and the gap ledger below names each number. The lane's habit of
+re-creating the batch from its generator is recorded, not fixed: the sweep is a command, not a
+mystery. **Number collision, stated:** the lane committed its own "M559" (PlayerDataScreen,
+`13360e20`) minutes before this section's commit (`8912ed2`), so the history carries two M559
+commits; this section is the points-scenario one.
+
+**Honest reservation.** This is arithmetic, not a forecast. The ceiling assumes every remaining
+fixture is won and ignores who the opponents are — that is exactly what the run-in screen
+measures separately — and the at-rate column assumes the season-to-date pace holds. The method
+note on the screen says both, rather than a footnote a reader never sees. And the concurrent
+lane's generator can redden the census again within minutes of this push: the tree was green at
+this commit, and the sweep is repeatable.
+
 ### M539 — the quarantine's type health, and the two cheapest families repaired
 
 **What the gauge says.** `scripts/proof-draft-types.mjs` **5/5** (a new gate). The quarantine holds
@@ -12527,7 +12586,7 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **108 milestone numbers have no
+later ones as sections, and between the two **127 milestone numbers have no
 section at all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
@@ -12643,6 +12702,25 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M523 — the drafts boundary gate (`proof-drafts`), swept into M524's commit
 - M524 — the coach's résumé resurrected from the drafts (`CoachProfile`)
 - M538 — the concurrent line of work's in-flight unit, landed without a section of its own
+- M540 — the lane's academy advanced-report stub, unrouted and swept in M559
+- M541 — the lane's detailed scout-report stub, unrouted and swept in M559
+- M542 — the lane's tactical-notebook stub, which overwrote the routed screen and was rolled back
+- M543 — the lane's player development-assessment stub, unrouted and swept in M559
+- M544 — the lane's player injury-history stub, unrouted and swept in M559
+- M545 — the lane's season best-XI stub, unrouted and swept in M559
+- M546 — the lane's season best-player stub, unrouted and swept in M559
+- M547 — the lane's player five-year-plan stub, unrouted and swept in M559
+- M548 — the lane's first player-value comparison stub, unrouted and swept in M559
+- M549 — the lane's player data-visualisation stub, unrouted and swept in M559
+- M550 — the lane's system-optimisation stub, unrouted and swept in M559
+- M551 — the lane's module-refactoring stub, unrouted and swept in M559
+- M552 — the lane's user-feedback stub, unrouted and swept in M559
+- M553 — the lane's season-schedule stub, unrouted and swept in M559
+- M554 — the lane's team data-screen stub, unrouted and swept in M559
+- M555 — the lane's club-comparison stub, unrouted and swept in M559
+- M556 — the lane's player market-value history stub, unrouted and swept in M559
+- M557 — the lane's second player-value comparison stub, unrouted and swept in M559
+- M558 — the lane's player market-trend stub, unrouted and swept in M559
 
 <!-- /gaps -->
 
