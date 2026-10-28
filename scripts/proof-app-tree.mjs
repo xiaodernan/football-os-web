@@ -131,7 +131,8 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M569: 116 -> 117 — features/analytics/VenueSplit.tsx is a new home/away split screen.
 // M570: 117 -> 118 — features/analytics/GoalTiming.tsx is a new goal-timing screen.
 // M571: 118 -> 119 — features/analytics/Discipline.tsx is a new cards-and-fouls screen.
-const APP_MODULE_PIN = 119;
+// M573: 119 -> 120 — domain/nextStep.ts is the dashboard's next-step ranking.
+const APP_MODULE_PIN = 120;
 const byDir = {};
 for (const d of APP_DIRS) {
   const n = walkApp(root, { dirs: [d], exts: [".ts", ".tsx"] }).length;

@@ -107,7 +107,8 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // M569: 111 -> 112 — features/analytics/VenueSplit.tsx is a new home/away split screen.
 // M570: 112 -> 113 — features/analytics/GoalTiming.tsx is a new goal-timing screen.
 // M571: 113 -> 114 — features/analytics/Discipline.tsx is a new cards-and-fouls screen.
-const APP_FILES_PIN = 114;
+// M573: 114 -> 115 — domain/nextStep.ts is the dashboard's next-step ranking.
+const APP_FILES_PIN = 115;
 
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */

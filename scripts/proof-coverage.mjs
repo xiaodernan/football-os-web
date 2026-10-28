@@ -169,7 +169,9 @@ const DEAD_CEILING = 22;
 // M569: 116 -> 117 — features/analytics/VenueSplit.tsx is a new home/away split screen.
 // M570: 117 -> 118 — features/analytics/GoalTiming.tsx is a new goal-timing screen.
 // M571: 118 -> 119 — features/analytics/Discipline.tsx is a new cards-and-fouls screen.
-const POP_PIN = 119;
+// M571: 118 -> 119, features/analytics/Discipline.tsx joined the population.
+// M573: 119 -> 120, domain/nextStep.ts joined the population.
+const POP_PIN = 120;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -199,7 +201,8 @@ const POP_PIN = 119;
 // M569: features 42 -> 43 (VenueSplit).
 // M570: features 43 -> 44 (GoalTiming).
 // M571: features 44 -> 45 (Discipline).
-const BY_DIR_PIN = { components: 15, data: 7, domain: 33, features: 45, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+// M573: domain 33 -> 34, the next-step ranking.
+const BY_DIR_PIN = { components: 15, data: 7, domain: 34, features: 45, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.

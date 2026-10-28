@@ -516,7 +516,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M569: 121 -> 122 — features/analytics/VenueSplit.tsx is a new home/away split screen.
 // M570: 122 -> 123 — features/analytics/GoalTiming.tsx is a new goal-timing screen.
 // M571: 123 -> 124 — features/analytics/Discipline.tsx is a new cards-and-fouls screen.
-const APP_SRC_PIN = 124;
+// M573: 124 -> 125 — domain/nextStep.ts is the dashboard's next-step ranking.
+const APP_SRC_PIN = 125;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -554,7 +555,8 @@ const TSX_PIN = 68;
 // M569: 124 -> 125, VenueSplit.tsx again.
 // M570: 125 -> 126, GoalTiming.tsx again.
 // M571: 126 -> 127, Discipline.tsx again.
-const SRC_PIN = 127;
+// M573: 127 -> 128, nextStep.ts added to the walk.
+const SRC_PIN = 128;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -4336,7 +4338,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M570: GoalTiming adds its 32 literal t() sites and its nav entry: 1618 -> 1651.
 // M571: Discipline adds its 21 literal t() sites and its nav entry: 1651 -> 1673.
 // M572: the club page reads the same words on its own card ledger (3 labels + the cross-link): 1673 -> 1677.
-  shapeCounts.literal === 1677 && shapeCounts.template === 109 && shapeCounts.expression === 32
+// M573: the next-step panel adds three literal sites (title, hint, primary tag) and one expression
+// site (the step's own label looked up in STEP_LABEL): literal 1677 -> 1680, expression 32 -> 33.
+  shapeCounts.literal === 1680 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4368,7 +4372,7 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   litVarSites === 205 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
-  exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three

@@ -14,6 +14,7 @@ import {
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
+import { nextSteps, type NextStepKind } from "@/domain/nextStep";
 import { newsKindLabel, newsTitle, rowLine } from "@/domain/rowText";
 import { overallRating, byDateDesc } from "@/domain/attributes";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -78,6 +79,26 @@ export function Dashboard() {
     return { next, total: list.length, unlocked: list.filter((a) => a.unlocked).length, last, recovery: load.hasData ? { acwr: load.acwr, zone: load.zone } : null, focusGoals };
   }, [profile, info, state, learn]);
 
+  // M573: the ranked answer to "what now", read straight off the state the page already holds.
+  const facts = {
+    liveMatchId: liveAll[0]?.id ?? null,
+    nextMatchId: upcoming.find((m) => m.status === "SCHEDULED")?.id ?? null,
+    plannedSessions: plannedSessions(state.sessions).length,
+    filmClips: loadFilmClips().length,
+    badgeWaiting: Boolean(growth?.next),
+    watchlist: state.watchlist.length,
+  };
+  const steps = nextSteps(facts);
+  const stepRoute = (kind: NextStepKind): string => {
+    if (kind === "live" && facts.liveMatchId) return `/matches/${facts.liveMatchId}`;
+    if (kind === "fixture" && facts.nextMatchId) return `/matches/${facts.nextMatchId}`;
+    if (kind === "training") return "/development";
+    if (kind === "film") return "/film";
+    if (kind === "badge") return "/achievements";
+    if (kind === "watchlist") return "/scouting";
+    return "/discipline";
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -95,6 +116,27 @@ export function Dashboard() {
           </div>
         )}
       </div>
+
+      <Panel className="p-4">
+        <SectionTitle title={t("dash.nextTitle")} hint={t("dash.nextHint")} />
+        <div className="mt-2 flex flex-col gap-1.5">
+          {steps.map((kind, i) => (
+            <Link
+              key={kind}
+              to={stepRoute(kind)}
+              className={cn(
+                "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/50",
+                i === 0 ? CHIP_CLASS.success : PANEL_CLASS.panelGhost,
+              )}
+            >
+              <span className="grid w-5 place-items-center text-base leading-none text-primary">{STEP_ICON[kind]}</span>
+              <span className="min-w-0 flex-1 truncate">{t(STEP_LABEL[kind])}</span>
+              {i === 0 && <span className="text-[11px] text-muted-foreground">{t("dash.nextPrimary")}</span>}
+              <span className="text-primary">→</span>
+            </Link>
+          ))}
+        </div>
+      </Panel>
 
       {/* live strip */}
       {live.length > 0 && (
@@ -347,6 +389,26 @@ export function Dashboard() {
     </div>
   );
 }
+
+// M573: the ranked steps' copy and glyphs, held as keys so the dictionary owns the words.
+const STEP_LABEL: Record<NextStepKind, string> = {
+  live: "step.live",
+  fixture: "step.fixture",
+  training: "step.training",
+  film: "step.film",
+  badge: "step.badge",
+  watchlist: "step.watchlist",
+  explore: "step.explore",
+};
+const STEP_ICON: Record<NextStepKind, string> = {
+  live: "●",
+  fixture: "▷",
+  training: "✎",
+  film: "✂",
+  badge: "♛",
+  watchlist: "☆",
+  explore: "▨",
+};
 
 const MODULE_LINKS = [
   { to: "/player", labelKey: "nav.player", icon: "●" },
