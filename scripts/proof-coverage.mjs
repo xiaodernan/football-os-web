@@ -163,7 +163,8 @@ const DEAD_CEILING = 22;
 // M532: 110 -> 111 — features/leaders/LeagueLeaders.tsx is a new leaderboard screen.
 // M533: 111 -> 112 — features/player/PlayerProjection.tsx is a new projection screen.
 // M534: 112 -> 113 — features/analytics/RunIn.tsx is a new run-in screen.
-const POP_PIN = 113;
+// M559: 113 -> 114 — features/analytics/PointsScenario.tsx is a new points-scenario screen.
+const POP_PIN = 114;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -187,12 +188,14 @@ const POP_PIN = 113;
 // M532: features 36 -> 37 (LeagueLeaders).
 // M533: features 37 -> 38 (PlayerProjection).
 // M534: features 38 -> 39 (RunIn).
-const BY_DIR_PIN = { components: 15, data: 7, domain: 33, features: 39, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+// M559: features 39 -> 40 (PointsScenario).
+const BY_DIR_PIN = { components: 15, data: 7, domain: 33, features: 40, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
 // M534: 54 -> 55. features/analytics/RunIn.tsx sits two levels down.
-const DEEP_PIN = 55;
+// M559: 55 -> 56. features/analytics/PointsScenario.tsx sits two levels down.
+const DEEP_PIN = 56;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

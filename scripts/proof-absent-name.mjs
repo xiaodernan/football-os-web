@@ -82,7 +82,9 @@ const FOLDED = [
 // The five files that already rode the door for a name BEFORE this unit (M394/M395's fold
 // included some `?? ABSENT` name fallbacks). They are charged apart so this unit's own
 // population is not confused with the ledger it inherited.
-const PRE_EXISTING = ["domain/scouting.ts", "features/manager/ManagerOS.tsx"];
+// M559: the points-scenario screen's three short-name tiles and its title-race hint look names
+// up and read the door; they are charged apart because this unit folded no name fallbacks there.
+const PRE_EXISTING = ["domain/scouting.ts", "features/manager/ManagerOS.tsx", "features/analytics/PointsScenario.tsx"];
 
 // --- 1. Plants: arm every scan, so a "zero"/"every" verdict is measured, never an empty set. ---
 const pNameEmpty = n("const x = getClub(id)?.name ?? \"\";", NAME_EMPTY);

@@ -301,14 +301,7 @@ export interface RunInRow {
 export function runIn(compId: string, matches: Match[], clubs: Club[]): RunInRow[] {
   const metrics = teamMetrics(compId, matches, clubs);
   const ppg = new Map(metrics.map((m) => [m.clubId, m.ppg]));
-  const upcoming = matches
-    .filter((m) => m.competitionId === compId && m.status === "SCHEDULED")
-    .sort(byKickoff);
-  const remaining = new Map<string, string[]>(metrics.map((m) => [m.clubId, []]));
-  for (const m of upcoming) {
-    remaining.get(m.homeClubId)?.push(m.awayClubId);
-    remaining.get(m.awayClubId)?.push(m.homeClubId);
-  }
+  const remaining = remainingOpponents(compId, matches, metrics.map((m) => m.clubId));
   return metrics
     .map((m) => {
       const opponents = remaining.get(m.clubId) ?? [];
@@ -325,4 +318,61 @@ export function runIn(compId: string, matches: Match[], clubs: Club[]): RunInRow
       };
     })
     .sort((a, b) => b.avgOppPpg - a.avgOppPpg || a.clubId.localeCompare(b.clubId));
+}
+
+/** The competition's scheduled fixtures, folded into each club's list of opponents still to play,
+ *  in kickoff order. One fold feeds both reads that need "what is left": the run-in's difficulty
+ *  (it reads the names) and the points scenarios (they read the count), so the two can never
+ *  disagree about how many fixtures remain. */
+function remainingOpponents(compId: string, matches: Match[], clubIds: string[]): Map<string, string[]> {
+  const out = new Map<string, string[]>(clubIds.map((id) => [id, []]));
+  const upcoming = matches
+    .filter((m) => m.competitionId === compId && m.status === "SCHEDULED")
+    .sort(byKickoff);
+  for (const m of upcoming) {
+    out.get(m.homeClubId)?.push(m.awayClubId);
+    out.get(m.awayClubId)?.push(m.homeClubId);
+  }
+  return out;
+}
+
+export interface PointsScenario {
+  clubId: string;
+  played: number;
+  points: number;
+  /** Fixtures still to play in this competition. */
+  remaining: number;
+  /** Points if every fixture left is won. */
+  maxPoints: number;
+  /** Points if the club keeps its current points-per-game over what is left, 2dp. */
+  ratePoints: number;
+  /** Points behind the table's current leader; 0 for the leader itself. */
+  behindLeader: number;
+  /** True while the club's ceiling still reaches the leader's current total — never true for the
+   *  leader itself, which is already there. */
+  canCatchLeader: boolean;
+}
+
+/** What each club can still reach: the ceiling if it wins out, the projection at today's rate, and
+ *  the gap to the leader. A scenario about POINTS, not about the difficulty of the fixtures left
+ *  (that is `runIn`) and not about a player's growth (that is the projection screen). */
+export function pointsScenarios(compId: string, matches: Match[], clubs: Club[]): PointsScenario[] {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const remaining = remainingOpponents(compId, matches, metrics.map((m) => m.clubId));
+  const leader = metrics[0] ?? null;
+  const leaderPoints = leader?.points ?? 0;
+  return metrics.map((m) => {
+    const left = remaining.get(m.clubId)?.length ?? 0;
+    const maxPoints = m.points + left * 3;
+    return {
+      clubId: m.clubId,
+      played: m.played,
+      points: m.points,
+      remaining: left,
+      maxPoints,
+      ratePoints: round2(m.points + m.ppg * left),
+      behindLeader: leaderPoints - m.points,
+      canCatchLeader: m.clubId !== leader?.clubId && maxPoints >= leaderPoints,
+    };
+  });
 }
