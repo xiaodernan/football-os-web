@@ -26,7 +26,7 @@ import { careerArc } from "@/domain/careerArc";
 // an empty group where the domain answers the club's own rating.
 import { clubInput, lineMean, LINE_GROUPS } from "@/domain/career";
 import { playerDna } from "@/domain/playerDna";
-import { teamMetrics, expectedGoals } from "@/domain/analytics";
+import { teamMetrics, expectedGoals, discipline } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
@@ -332,6 +332,12 @@ export function ClubDetail({ id }: { id: string }) {
     () => (c ? teamMetrics(c.competitionId, footballProvider.matches(), footballProvider.clubs()) : []),
     [c],
   );
+  // M572: the discipline fold reads the same competition, so the club page shows the club's own
+  // row of the season's card ledger beside its form — the same object the /discipline board prints.
+  const cards = useMemo(
+    () => (c ? discipline(c.competitionId, footballProvider.matches(), footballProvider.clubs()).rows.find((r) => r.clubId === id) ?? null : null),
+    [c, id],
+  );
   const mine = metrics.find((m) => m.clubId === id) ?? null;
   const preview = useMemo(() => {
     if (!mine || !next) return null;
@@ -409,6 +415,22 @@ export function ClubDetail({ id }: { id: string }) {
                   <Split label={t("data.home")} s={mine.home} />
                   <Split label={t("data.away")} s={mine.away} />
                 </div>
+                {cards && (
+                  <dl className="space-y-1 border-t pt-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <dt className="text-muted-foreground">{t("disc.yellows")}</dt>
+                      <dd className="font-mono">{cards.yellows}</dd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <dt className="text-muted-foreground">{t("disc.reds")}</dt>
+                      <dd className="font-mono">{cards.reds}</dd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <dt className="text-muted-foreground">{t("disc.perMatch")}</dt>
+                      <dd className="font-mono">{cards.played ? fmt2(cards.bookingsPerMatch) : ABSENT}</dd>
+                    </div>
+                  </dl>
+                )}
                 {preview && (
                   <div className={cn("rounded-md px-3 py-2 text-xs", PANEL_CLASS.panelSoft)}>
                     <span className="text-muted-foreground">{t("det.analytics.nextUp", { club: preview.oppName })} </span>
@@ -416,6 +438,7 @@ export function ClubDetail({ id }: { id: string }) {
                   </div>
                 )}
                 <p className="text-[11px] text-muted-foreground">{t("det.analytics.ratioNote")}</p>
+                <Link to="/discipline" className="block text-xs text-primary">{t("disc.title")} →</Link>
               </div>
             ) : (
               <p className="mt-2 text-xs text-muted-foreground">{t("det.analytics.empty")}</p>

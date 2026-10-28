@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
@@ -80,7 +81,9 @@ export function Discipline() {
                     <div className="flex min-w-0 items-center gap-2">
                       <Crest colors={club?.colors} short={club?.short} size={26} />
                       <div className="min-w-0">
-                        <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                        <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                          {club?.name ?? r.clubId}
+                        </Link>
                         <div className="text-xs text-muted-foreground">{t("disc.record", { p: r.played })}</div>
                       </div>
                     </div>

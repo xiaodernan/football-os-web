@@ -4335,7 +4335,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M569: VenueSplit adds its 32 literal t() sites and its nav entry: 1585 -> 1618.
   // M570: GoalTiming adds its 32 literal t() sites and its nav entry: 1618 -> 1651.
 // M571: Discipline adds its 21 literal t() sites and its nav entry: 1651 -> 1673.
-  shapeCounts.literal === 1673 && shapeCounts.template === 109 && shapeCounts.expression === 32
+// M572: the club page reads the same words on its own card ledger (3 labels + the cross-link): 1673 -> 1677.
+  shapeCounts.literal === 1677 && shapeCounts.template === 109 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

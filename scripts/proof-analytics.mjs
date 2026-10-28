@@ -525,6 +525,14 @@ const discEmpty = discipline("T8", [], discClubs);
 ok(`discipline is deterministic and a competition with no fixture reads empty (same fold ${JSON.stringify(board) === JSON.stringify(discAgain)}, empty rows ${discEmpty.rows.length}, matches ${discEmpty.matches}, rate ${discEmpty.perMatch})`,
   JSON.stringify(board) === JSON.stringify(discAgain) && board.rows.length === 3 && discEmpty.rows.length === 0 &&
   discEmpty.matches === 0 && discEmpty.perMatch === 0);
+// M572: the club page reads this same board and finds its own row, so the board has to be a
+// roll-call of the whole competition — an unfixtured club still has a row, at zero rates.
+const rollClubs = [...discClubs, club("H", "T5")];
+const roll = discipline("T5", discFixtures, rollClubs);
+const rollH = byClub(roll.rows, "H");
+ok(`the discipline board is a roll-call of the competition — one row per club the table ranks, an unfixtured club at zero (${roll.rows.length} rows, H ${rollH ? `${rollH.played} played at ${rollH.bookingsPerMatch} cards a game` : "missing"}, order ${roll.rows.map((r) => r.clubId).join("")})`,
+  roll.rows.length === 4 && rollH !== undefined && rollH.played === 0 && rollH.bookings === 0 &&
+  rollH.bookingsPerMatch === 0 && roll.matches === 3 && roll.rows.map((r) => r.clubId).join("") === "CBAH");
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

@@ -221,7 +221,7 @@ const expectedPerUser = [
   ["features/analytics/PointsScenario.tsx", 5],
   ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 14],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
-  ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 5],
+  ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 6],
   ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],
   ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1], ["features/onboarding/Onboarding.tsx", 2],
   ["features/player/PlayerOS.tsx", 5], ["features/review/ReviewPage.tsx", 5],
