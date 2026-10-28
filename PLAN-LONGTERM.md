@@ -204,11 +204,20 @@
   bundle 517→518 KB gzip / 52 资产（js 505、css 13，baseline 重记）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3211/3211 检查；
   下一步（M574 候选）：① 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构、对象不同）；② 纪律榜的赛季趋势（按轮次累计牌数）；③ 建议面板的时间维度（把"开球还有多久"读进排序）。
 
-下一条目：M574 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① 事件里的 SHOT/SAVE/VAR 时段读数（与进球时间带同构，对象与结论不同）；
-② 纪律榜的赛季趋势（按轮次累计牌数，读同一 fold 的时间序列）；
-③ 建议面板的时间维度（把"开球还有多久"读进排序，让同一条建议随时间改变优先级）。
-编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线已落 M570–M573。
+- M574: 事件时钟（SHOT/SAVE/VAR 的时段读数）——`domain/analytics.ts` 新增 `eventClock(compId, matches, clubs)`：
+  复用 `teamMetrics`/`GOAL_BANDS`/`goalBand`/`round2`，只读本赛事 FINISHED 且带 events 的场次，SHOT 归射门方、SAVE/VAR 归事件 side，
+  六窗三族（shots/saves/vars）+ 逐队行（lateShots、lateShare 按本队射门算），行序 shots 降序→saves 降序→clubId；
+  新屏 `features/analytics/EventClock.tsx`（/clock）：四块联赛 tile（射门/扑救/回看/最忙时段，最忙时段复用既有 timing.w* 窗口词）+ 三行六窗柱 + 逐队板（Crest/名/record 行）+ 方法注 + 空态；侧栏在 /discipline 之后加入口；
+  `proof-analytics` 新增 6 条共 111/111（手算 fixture：matches 2、shots 4、saves 2、vars 2；三族窗口 1,1,0,0,0,2 / 1,0,0,0,0,1 / 1,0,0,1,0,0，91' 夹入末窗；A 3 射 2 迟 66.67%、B 1 射 + 1 扑、C 仅 1 回看；确定性 + 无事件场 + 空赛事；屏幕只读 fold、路由与侧栏可达）；
+  census pin：app-tree 120→121、coverage 120→121 / features 45→46 / deep 61→62、storage 115→116、i18n src 125→126 / tsx 68→69 / walk 128→129、literal 1,680→1,711、litVarSites 205→209、dup 138→140 / excess 233→235；absence 26→27 用户；字典 +19 键/语（2,387→2,406 值）；
+  bundle 518→521 KB gzip / 53 资产（js 507、css 13，baseline 重记）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3217/3217 检查；
+  下一步（M575 候选）：① 纪律榜的赛季趋势（按轮次累计牌数）；② 建议面板的时间维度（把"开球还有多久"读进排序）；③ 事件时钟的对手维度（被射门/被扑救的分侧读数）。
+
+下一条目：M575 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① 纪律榜的赛季趋势（按轮次累计牌数，读同一 fold 的时间序列）；
+② 建议面板的时间维度（把"开球还有多久"读进排序，让同一条建议随时间改变优先级）；
+③ 事件时钟的对手维度（被射门/被扑救按防守方读，补上"谁在挨打"的一侧）。
+编号策略：每次落地先 `git log` 取下一个空号；lane 已用 M566–M569，本线已落 M570–M574。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

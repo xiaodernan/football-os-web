@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M573 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M574 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,46 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M574 — the shots, the saves and the reviews, on the goals' clock
+
+**A different object, the same clock.** `goalTiming` answers when goals land. The event list also
+carries SHOT, SAVE and VAR rows, and nothing on the site read them by time. `domain/analytics.ts`
+gains `eventClock(compId, matches, clubs)`: every SHOT, SAVE and VAR in a finished fixture that
+carries an event list is folded into the same six windows, once, per club and for the league. A
+SHOT belongs to the side that took it, a SAVE and a VAR to the side the event names.
+
+**What the screen reads.** `/clock` shows four league tiles — shots, saves, reviews and the
+busiest window — three six-column rows (one per family, each column labelled with the goal
+screen's own window words rather than a second naming scheme) and a per-club board sorted by
+shots then saves, each club's line carrying its late shots and the share of its own shots that
+arrived after the 75th minute.
+
+**What the gate says.** `proof-analytics` grows six clauses, **111/111**: a hand-scored fixture
+(c1 A 2-1 B, c2 C 0-0 A) folds to `matches 2, shots 4, saves 2, vars 2`; the league windows read
+`1,1,0,0,0,2` / `1,0,0,0,0,1` / `1,0,0,1,0,0` with a 91' shot clamped into the last window; club A
+holds 3 shots, 2 late, 66.67%; B holds 1 shot and the save that answered it; C holds only the
+review; the fold repeats byte-for-byte, an eventless fixture contributes no window value and an
+unfixtured competition reads six empty windows; and the screen renders all three folded families
+off `eventClock` rather than re-deriving them, with the route and sidebar both naming `/clock`.
+Census pins pay for the screen: app-tree 120 → 121; coverage 120 → 121, features 45 → 46, deep
+61 → 62; storage 115 → 116; i18n source 125 → 126, .tsx 68 → 69, walk 128 → 129, literal sites
+1,680 → 1,711, interpolating literal sites 205 → 209, duplicate values 138 → 140, excess keys
+233 → 235; the absence door's ledger gains the busiest-window tile (26 → 27 users). The dictionary
+grows nineteen keys a locale (2,387 → 2,406 values). The suite still walks **121 scripts**.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **121/121 scripts · 3217/3217
+checks**; the bundle is **521 KB gzip across 53 assets** (507 JS + 13 CSS), and the baseline is
+re-recorded at 518 → 521 KB. No browser pass this milestone either; the fold is exercised through
+its own fixture and the production build, and the browser evidence debt stays on the ledger.
+
+**Honest reservation.** The event list is as deep as the seed makes it: a fixture with goals but
+no SHOT, SAVE or VAR rows contributes nothing, and the screen's match count is that subset, not
+the competition's finished count. SAVE and VAR are attributed to the side the event names — the
+engine writes them that way, and the screen does not cross-check against the shot that preceded
+them. The last window absorbs stoppage, so "late" means the 76th minute onward, not the last ten
+minutes. And the busiest window is a raw count: a league with more shots in the first window
+simply says so, with no rate or per-match correction.
 
 ### M573 — the dashboard stops listing modules and names the next step
 
