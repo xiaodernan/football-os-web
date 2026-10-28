@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -318,6 +318,28 @@ ok(`a run-in row carries the club's own record beside the opponents it has left,
 // the four finished T1 matches and T2's played match must not appear as opponents anywhere.
 ok(`the run-in counts only the competition's scheduled fixtures — the finished m1-m5 never appear and T2 stays out (opponents: ${runs.map((r) => r.opponents.join("|")).join(" / ")})`,
   runs.every((r) => !r.opponents.includes("C") && !r.opponents.includes("D") && !r.opponents.includes("E")));
+
+// --- The points scenarios: what the table can still become. --------------------------------
+// Same T1 micro-league, one scheduled fixture left (m6: A v B). A has 6 points from 4 games and
+// one to play, so its ceiling is 9 and its at-rate projection is 6 + 1.5 = 7.5. B has 4 from 3 and
+// one to play: ceiling 7, at-rate 4 + 1.33 = 5.33, two behind the leader and still able to reach
+// the leader's current 6. C has 4 from 3 and nothing left: ceiling 4, no way to catch A.
+const scenarios = pointsScenarios("T1", fixtures, clubs);
+const scenarioById = Object.fromEntries(scenarios.map((r) => [r.clubId, r]));
+ok(`the points scenarios keep the table's order and read each club's own ceiling and rate (A ${scenarioById.A.points}→${scenarioById.A.maxPoints}/${scenarioById.A.ratePoints}, B ${scenarioById.B.points}→${scenarioById.B.maxPoints}/${scenarioById.B.ratePoints}, C ${scenarioById.C.points}→${scenarioById.C.maxPoints}/${scenarioById.C.ratePoints})`,
+  scenarios.map((r) => r.clubId).join(",") === "A,B,C" &&
+  scenarioById.A.remaining === 1 && scenarioById.A.maxPoints === 9 && scenarioById.A.ratePoints === 7.5 &&
+  scenarioById.B.remaining === 1 && scenarioById.B.maxPoints === 7 && scenarioById.B.ratePoints === 5.33 &&
+  scenarioById.C.remaining === 0 && scenarioById.C.maxPoints === 4 && scenarioById.C.ratePoints === 4);
+ok(`the leader's gap is zero and only clubs whose ceiling reaches its total are still in reach (leader A ${scenarioById.A.behindLeader}/${scenarioById.A.canCatchLeader}, B ${scenarioById.B.behindLeader}/${scenarioById.B.canCatchLeader}, C ${scenarioById.C.behindLeader}/${scenarioById.C.canCatchLeader})`,
+  scenarioById.A.behindLeader === 0 && scenarioById.A.canCatchLeader === false &&
+  scenarioById.B.behindLeader === 2 && scenarioById.B.canCatchLeader === true &&
+  scenarioById.C.behindLeader === 2 && scenarioById.C.canCatchLeader === false);
+ok(`a finished fixture is not points left: C's ceiling is its current total, and the other competition never enters the rows (rows ${scenarios.length}, C ${scenarioById.C.maxPoints})`,
+  scenarios.length === 3 && scenarioById.C.maxPoints === scenarioById.C.points &&
+  scenarios.every((r) => !["D", "E"].includes(r.clubId)));
+const scenariosAgain = pointsScenarios("T1", fixtures, clubs);
+ok("pointsScenarios is deterministic over the same fixtures", JSON.stringify(scenarios) === JSON.stringify(scenariosAgain));
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

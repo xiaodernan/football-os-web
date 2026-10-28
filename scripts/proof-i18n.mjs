@@ -510,7 +510,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M532: 115 -> 116 — features/leaders/LeagueLeaders.tsx is a new leaderboard screen.
 // M533: 116 -> 117 — features/player/PlayerProjection.tsx is a new projection screen.
 // M534: 117 -> 118 — features/analytics/RunIn.tsx is a new run-in screen.
-const APP_SRC_PIN = 118;
+// M559: 118 -> 119 — features/analytics/PointsScenario.tsx is a new points-scenario screen.
+const APP_SRC_PIN = 119;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -522,7 +523,8 @@ const APP_SRC_PIN = 118;
 // M532: 59 -> 60 — LeagueLeaders.tsx is the new .tsx module.
 // M533: 60 -> 61 — PlayerProjection.tsx is the new .tsx module.
 // M534: 61 -> 62 — RunIn.tsx is the new .tsx module.
-const TSX_PIN = 62;
+// M559: 62 -> 63 — PointsScenario.tsx is the new .tsx module.
+const TSX_PIN = 63;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -536,7 +538,8 @@ const TSX_PIN = 62;
 // M532: 118 -> 119, LeagueLeaders.tsx again.
 // M533: 119 -> 120, PlayerProjection.tsx again.
 // M534: 120 -> 121, RunIn.tsx again.
-const SRC_PIN = 121;
+// M559: 121 -> 122, PointsScenario.tsx again.
+const SRC_PIN = 122;
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -4300,7 +4303,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M532: LeagueLeaders adds its 10 literal t() sites: 1457 -> 1467.
   // M533: PlayerProjection adds its 19 literal + 1 template t() sites: 1467 -> 1486, 108 -> 109.
   // M534: RunIn adds its 20 literal t() sites: 1486 -> 1506.
-  shapeCounts.literal === 1506 && shapeCounts.template === 109 && shapeCounts.expression === 32
+  // M559: PointsScenario adds its 24 literal t() sites and its nav entry: 1506 -> 1531.
+  shapeCounts.literal === 1531 && shapeCounts.template === 109 && shapeCounts.expression === 32
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4318,7 +4322,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M525: 146 -> 149 — the report's exported/avgGrowthSub/prospectsSub rows join them.
   // M534: 156 -> 160 — the run-in rows (ppgSub, record) hand over their variables, along with
   // the two more placeholder sites the run-in screen's tiles read.
-  litVarSites === 160 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M559: 160 -> 166 — PointsScenario's six interpolating rows (leaderSub, ceilingSub, chasersSub,
+  // open, decided, record) hand over their variables.
+  litVarSites === 166 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 32 && exprObjPlant.args[1].trim().startsWith("{"));

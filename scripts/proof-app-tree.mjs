@@ -125,7 +125,8 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M532: 110 -> 111 — features/leaders/LeagueLeaders.tsx is a new leaderboard screen.
 // M533: 111 -> 112 — features/player/PlayerProjection.tsx is a new projection screen.
 // M534: 112 -> 113 — features/analytics/RunIn.tsx is a new run-in screen.
-const APP_MODULE_PIN = 113;
+// M559: 113 -> 114 — features/analytics/PointsScenario.tsx is a new points-scenario screen.
+const APP_MODULE_PIN = 114;
 const byDir = {};
 for (const d of APP_DIRS) {
   const n = walkApp(root, { dirs: [d], exts: [".ts", ".tsx"] }).length;

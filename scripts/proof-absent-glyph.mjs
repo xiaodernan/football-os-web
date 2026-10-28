@@ -190,9 +190,12 @@ const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
 // M394 folded two outlier cells, M395 spent a 13-file ledger, and M400 added the name lane.
 // M534 adds the run-in screen: five cells (the league average, three short-name tiles and the
 // opponent-average column) read the door rather than a typed dash.
+// M559 adds the points-scenario screen: five cells (three short-name tiles, the title-race hint
+// and the leader's gap) read the door rather than a typed dash.
 const expectedUsers = [
   "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
-  "features/analytics/DataRoom.tsx", "features/analytics/RunIn.tsx",
+  "features/analytics/DataRoom.tsx", "features/analytics/PointsScenario.tsx",
+  "features/analytics/RunIn.tsx",
   "features/compare/ClubCompare.tsx", "features/dashboard/Dashboard.tsx",
   "features/film/FilmRoom.tsx", "features/football/Details.tsx",
   "features/football/FootballWorld.tsx", "features/load/LoadPage.tsx",
@@ -205,7 +208,8 @@ const expectedUsers = [
 ];
 const expectedPerUser = [
   ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
-  ["features/analytics/DataRoom.tsx", 13], ["features/analytics/RunIn.tsx", 5],
+  ["features/analytics/DataRoom.tsx", 13], ["features/analytics/PointsScenario.tsx", 5],
+  ["features/analytics/RunIn.tsx", 5],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 5],
   ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],
