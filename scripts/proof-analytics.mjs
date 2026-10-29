@@ -817,6 +817,19 @@ const venueClubScreen = /import \{[^}]*\bdisciplineVenue\b[^}]*\} from "@\/domai
 ok(`the club page reads the venue split off the board's own fold and prints it only for a club that has played both ends (B ${cvB.homePerMatch}/${cvB.awayPerMatch} gap ${cvB.gap}; one-end rows ${quietOneEnd}; screen ${venueClubScreen})`,
   cvB.homePerMatch === 1 && cvB.awayPerMatch === 2 && cvB.gap === 1 &&
   discVenueQuiet.rows.length === 2 && quietOneEnd && venueClubScreen);
+// M631: the club page reads the clock's defending end for this club — B on T9 faces the shot at
+// 12 and the saved shot at 78, so it reads 3 faced, 1 stopped at 33.33%, busiest window 5 (the
+// last one) with 66.67% of the load late. The guard is the same one the clock board uses: a club
+// that faced nothing (T5 carries no events) prints no line rather than a zero share.
+const siegeScreen = /import \{[^}]*\beventClock\b[^}]*\} from "@\/domain\/analytics"/.test(DETAILS_SRC) &&
+  DETAILS_SRC.includes("eventClock(c.competitionId, footballProvider.matches(), footballProvider.clubs())") &&
+  DETAILS_SRC.includes("clockRow && clockRow.faced > 0") &&
+  DETAILS_SRC.includes("clockRow.worstBand") && DETAILS_SRC.includes("det.siege.line") &&
+  DETAILS_SRC.includes("clock.siegeTitle") && DETAILS_SRC.includes("bandLabels[clockRow.worstBand]");
+ok(`the club page reads when it gets hit off the event clock's defending end, labelled with the clock's own windows and silenced when nothing was faced (B ${clk.B.faced} faced, ${clk.B.stops} stopped at ${clk.B.stopShare}%, busiest ${clk.B.worstBand} late ${clk.B.lateFacedShare}%; silent ${clockSilent.rows.every((r) => r.faced === 0)}; screen ${siegeScreen})`,
+  clk.B.faced === 3 && clk.B.stops === 1 && near(clk.B.stopShare, 33.33, 0.005) &&
+  clk.B.worstBand === 5 && near(clk.B.lateFacedShare, 66.67, 0.005) &&
+  clockSilent.rows.every((r) => r.faced === 0) && siegeScreen);
 
 // M630: the briefing's next fixture now carries the fixture's own arithmetic — the same swing the
 // match page prints. s1 is A at home to B, so A's briefing (side home) and B's briefing (side away)

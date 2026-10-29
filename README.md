@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M630 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M631 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7098,6 +7098,45 @@ reflects the latest section this file actually carries.
 
 
 
+### M631 — the club page reads when it gets hit
+
+**The defending end on the club's own page.** The `/clock` board names, club by club, when shots
+arrive and — since M625 and M628 — when the defence faces them: the faced load per window, the
+busiest window, the late share. The club page showed form, the two ratios, the home/away splits and,
+since M629, the card ledger; nothing on it read the clock. M631 folds `eventClock` for the club's
+competition and prints its own row in the season-analytics panel: shots faced, saves made, the stop
+share, the window that carried the most of them and the share that arrived after 75′.
+
+**One line, the board's own vocabulary.** The row is labelled with the clock board's own
+`clock.siegeTitle` label and names its window through the goals board's `timing.w1…w6` keys, so a
+window is called the same thing on the club page as on either analytics screen. Only the line itself
+is new copy (`det.siege.line`), and it is a reader of the fold — `eventClock(...).rows.find(...)` —
+not a second fold over the event list.
+
+**The guard.** A club that faced nothing — no finished fixture carrying an event list — prints no
+line at all, rather than a 0% stop share it has not earned. It is the same `faced > 0` guard the
+clock board applies to its siege rows.
+
+**What the gate says.** `proof-analytics` grows one clause, **143/143**: on the T9 fixture B faces
+three attempts (the shot at 12′, the saved shot at 78′ and the stop itself), stops one at 33.33%,
+with window 5 the busiest at 66.67% late; the silent T5 clock has every row at zero, which is the
+case the guard exists for; and the screen reads the fold, the guard, the band label and the line.
+No domain change — the fold and its fields landed with M628.
+
+**What it cost.** One key in three locales (`det.siege.line`), 2,470 → 2,471 dictionary keys; literal
+sites 1,790 → 1,798 (the six window labels, the reused siege label and the interpolating line) and
+variable-carrying sites 238 → 239. The build measures **529 KB gzip across 54 assets** (js 516,
+css 12.5), so the baseline re-records 528 → 529 and the PWA pin moves with it; tsc clean, build
+exit 0, the suite 121 scripts · 3,254/3,254. The row was checked in a real browser against the
+production preview: `/clubs/ars` renders 防线压力 · 面对 78 次射门，扑出 17 次（21.79%）· 最忙 16–30′ ·
+末段占 19.23% with a clean console. The M630 section's dictionary figure is corrected
+here as well: one key is one ledger row, so that milestone reads 2,469 → 2,470.
+
+**The honest limit.** The clock only counts finished fixtures that carry an event list, so a club
+whose games arrive without one reads no line rather than a zero. The busiest window is a raw count,
+not a rate per fixture, so it says where this dataset's load landed — not that the defence is worse
+late; `lateFacedShare` is printed beside it for the rate reading the board makes.
+
 ### M630 — the briefing carries what its next fixture would change
 
 **The same fixture, the other question.** The briefing screen already picks a club's next booked
@@ -7128,7 +7167,8 @@ no swing; and the screen reads the fold (`brief?.swing`, `signed(swing.lead)`, b
 the hint, both club names) and never calls `pointsScenarios`. The absence door gains the panel's two
 cells (Briefing.tsx 10 → 12).
 
-**What it cost.** One key in three locales (`briefing.swingHint`), 2,469 → 2,472 dictionary values;
+**What it cost.** One key in three locales (`briefing.swingHint`), 2,469 → 2,470 dictionary keys
+(the ledger counts a key once, not once per locale);
 literal sites 1,786 → 1,790 and variable-carrying sites 235 → 238 — the three reused keys are call
 sites of their own, and the hint names both clubs. The build measures **528 KB gzip across 54
 assets** (js 516, css 12.5), so the baseline re-records 529 → 528 and the PWA pin moves with it;
