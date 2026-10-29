@@ -4358,7 +4358,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // row labels read inside the round map): literal 1751 -> 1755, expression unchanged at 33.
 // M623: the stakes panel adds twelve literal sites on the match page (title, hint, the side-row
 // line at each end, the venue, record, no-meeting and race lines, and four link labels): 1755 -> 1767.
-  shapeCounts.literal === 1767 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M624: the next-step panel adds its one interpolating label (the urgent kickoff's minute tag):
+// literal 1767 -> 1768, literal sites with placeholders 227 -> 228.
+  shapeCounts.literal === 1768 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4395,7 +4397,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // hand over their round and cumulative counts.
 // M623: 222 -> 227 — the stakes panel's five interpolating sites (the side-row line at each end,
 // the venue sentence, the record line and the race line) hand over their figures.
-  litVarSites === 227 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M624: 227 -> 228 — the next-step panel's minute tag hands over its figure.
+  litVarSites === 228 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

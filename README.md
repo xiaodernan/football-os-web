@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M623 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M624 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,52 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M624 — the kickoff clock, read against the world's anchor
+
+**The panel that could not tell "now" from "later".** The next-step panel ranks what the state
+already knows, but it ranked a kickoff the same way whether it starts in forty minutes or in four
+days. Between those two the answer to "what now" is different: a training plan can wait three
+hours, a match cannot. The dashboard held the kickoff strings all along; what was missing was the
+distance to them, and a ranking with no clock in it.
+
+**What the ranking does.** `domain/nextStep.ts` gains `nextMatchInMinutes` on `NextStepFacts`
+(the minutes from the demo anchor to that kickoff, `null` when no fixture is scheduled) and
+`NEXT_MATCH_SOON_MINUTES = 180`. The order becomes live > urgent fixture (inside three hours) >
+training > film > non-urgent fixture > badge > watchlist > explore, still cut to three. A fixture
+with no measured distance counts as non-urgent — unknown is not the same as imminent — which keeps
+the old behaviour for any caller that cannot date its kickoff.
+
+**What the screen reads.** The dashboard takes the first `SCHEDULED` fixture out of the club's
+upcoming list and measures it as `epochMs(kickoff) - DEMO_ANCHOR_MS` — never `Date.now()`. That is
+the same lesson M289 wrote down: the demo world has one clock, and a fixture inside its window
+must read the same distance whenever the page is opened. When the fixture is inside the window the
+row carries an extra `dash.stepSoon` tag ("kickoff in 40 min"); outside it the tag stays off,
+because calling a fixture three days away urgent would be the panel lying to earn a tap.
+
+**What the gate says.** `proof-nextstep` grows five clauses, **11/11**: a kickoff forty minutes
+away leads the checklist and hides nothing else; the same fixture ten hours away lets
+`training,film` run first and follows them; a `null` distance ranks exactly like a far one; the
+window is inclusive at 180 and excludes 181; and with everything else answered a distant fixture
+still beats the card ledger. The existing clauses keep their shape — a live match still suppresses
+the next kickoff, and the list still stops at three. Census pins pay for the tag: i18n literal
+sites 1,767 → 1,768, interpolating literal sites 227 → 228. No new module, route or storage key,
+so the tree, coverage and storage doors stay where they were. The dictionary grows one key a
+locale (2,452 → 2,453 values) and the suite still walks **121 scripts**.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **121/121 scripts · 3,239/3,239
+checks** (analytics holds at 128/128); the bundle holds at **526 KB gzip across 54 assets**, so
+`tests/perf/baseline.json` and `proof-pwa`'s budget pin stay where they are. No browser pass this
+milestone either; the ranking is exercised through its own fixture and the production build, and
+the browser evidence debt stays on the ledger.
+
+**Honest reservation.** The clock reads the demo anchor, not the reader's — deliberately, so the
+same fixture ranks the same way tomorrow as today, but it means a real provider will have to swap
+the anchor for `now` when it lands. The urgency is about the favourite club's next scheduled
+fixture (the top three of its upcoming list), not every kickoff in the world: a neutral's thriller
+does not jump the queue. And the tag prints minutes, not a countdown — the page re-renders on
+navigation, so a minute-by-minute ticking figure would be a promise it cannot keep.
 
 
 ### M623 — the stakes, the briefing join read from the match page

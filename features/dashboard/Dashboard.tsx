@@ -14,7 +14,7 @@ import {
 } from "@/data/footballService";
 import type { Match } from "@/domain/types";
 import { buildLoad, ZONE_LABEL, type LoadZone } from "@/domain/load";
-import { nextSteps, type NextStepKind } from "@/domain/nextStep";
+import { nextSteps, NEXT_MATCH_SOON_MINUTES, type NextStepKind } from "@/domain/nextStep";
 import { newsKindLabel, newsTitle, rowLine } from "@/domain/rowText";
 import { overallRating, byDateDesc } from "@/domain/attributes";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { cn, clamp, ABSENT, SEPARATOR, fmtMoney } from "@/lib/utils";
+import { cn, clamp, ABSENT, SEPARATOR, fmtMoney, epochMs } from "@/lib/utils";
 
 const RECOVERY_TONE: Record<LoadZone, string> = {
   none: CHIP_CLASS.muted,
@@ -80,15 +80,24 @@ export function Dashboard() {
   }, [profile, info, state, learn]);
 
   // M573: the ranked answer to "what now", read straight off the state the page already holds.
+  const nextFixture = upcoming.find((m) => m.status === "SCHEDULED") ?? null;
+  // M624: the kickoff is timed against the demo world's anchor, never the reader's clock — the
+  // same fixture must read "in 40 minutes" today and tomorrow (see DEMO_ANCHOR_MS).
+  const kickoffMins = nextFixture
+    ? Math.round((epochMs(nextFixture.kickoff) - DEMO_ANCHOR_MS) / 60000)
+    : null;
   const facts = {
     liveMatchId: liveAll[0]?.id ?? null,
-    nextMatchId: upcoming.find((m) => m.status === "SCHEDULED")?.id ?? null,
+    nextMatchId: nextFixture?.id ?? null,
+    nextMatchInMinutes: kickoffMins,
     plannedSessions: plannedSessions(state.sessions).length,
     filmClips: loadFilmClips().length,
     badgeWaiting: Boolean(growth?.next),
     watchlist: state.watchlist.length,
   };
   const steps = nextSteps(facts);
+  // The label only prints when the fixture is inside the window the ranking acted on.
+  const soonMins = kickoffMins !== null && kickoffMins <= NEXT_MATCH_SOON_MINUTES ? Math.max(0, kickoffMins) : null;
   const stepRoute = (kind: NextStepKind): string => {
     if (kind === "live" && facts.liveMatchId) return `/matches/${facts.liveMatchId}`;
     if (kind === "fixture" && facts.nextMatchId) return `/matches/${facts.nextMatchId}`;
@@ -131,6 +140,9 @@ export function Dashboard() {
             >
               <span className="grid w-5 place-items-center text-base leading-none text-primary">{STEP_ICON[kind]}</span>
               <span className="min-w-0 flex-1 truncate">{t(STEP_LABEL[kind])}</span>
+              {kind === "fixture" && soonMins !== null && (
+                <span className="shrink-0 text-[11px] text-muted-foreground">{t("dash.stepSoon", { m: soonMins })}</span>
+              )}
               {i === 0 && <span className="text-[11px] text-muted-foreground">{t("dash.nextPrimary")}</span>}
               <span className="text-primary">→</span>
             </Link>

@@ -240,6 +240,18 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M624: 建议面板的时间维度——`domain/nextStep.ts` 的 `NextStepFacts` 新增 `nextMatchInMinutes: number | null`（相对 demo 锚点的分钟数，null=没有待开球场次），
+  新增 `NEXT_MATCH_SOON_MINUTES = 180`；排序改为 live > 紧急 fixture（≤180 分钟）> training > film > 非紧急 fixture > badge > watchlist > explore，仍 slice 3；
+  分钟数未知（null）按非紧急读——未知不等于临场；`features/dashboard/Dashboard.tsx` 从 `upcoming` 取第一场 SCHEDULED，
+  用 `epochMs(kickoff) - DEMO_ANCHOR_MS` 量分钟（绝不用 `Date.now()`，见 DEMO_ANCHOR_MS 的注释），紧急时行内加副标签
+  `dash.stepSoon`（{m} 分钟，负值在标签上夹到 0），非紧急不显示；
+  1 键三语（dash.stepSoon）；`proof-nextstep` 新增 5 条共 11/11（40 分钟的开球压过 training；600 分钟时 training,film,fixture；
+  null 同非紧急；窗口 180 含端点、181 不含；其余全答时远场 fixture 仍压过 explore；确定性/入参不改）；
+  census pin：i18n literal 1,767→1,768、litVarSites 227→228（无新模块/路由/存储键，app-tree/coverage/storage/absence 不动）；
+  字典 +1 键/语（2,452→2,453 值）；bundle 保持 526 KB gzip / 54 资产（baseline 与 pwa pin 不动）；
+  tsc 干净、build exit 0、全套 121/121 脚本 · 3239/3239 检查；无浏览器复核（排序由 domain fixture + 生产构建覆盖）；
+  诚实的保留：紧急判断只看收藏球队的下一场 SCHEDULED（最多读前 3 场），不是全世界的开球钟；演示世界的锚点固定，
+  读者的真实时间不改变排序——这是有意的（同一天打开两次读到同一句），真实 provider 接入时需把锚点换成 now。
 - M623: 比赛页的"分量"面板——`domain/analytics.ts` 新增 `matchBrief(matchId, matches, clubs)`：与 `briefing` 同一套五项 fold
   （`pointsScenarios`、`runIn`、`venueSplit`、`headToHead`、`titleRace`），但锚点由"球队的下一场"换成"读者点开的那一场"，
   且两端都量：主客各自的积分/上限/剩余场次、主队的主场半区对客队的客场半区、按本场主队定向的交锋记录（winsA=主队）、
@@ -265,12 +277,11 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M624 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① 建议面板的时间维度（把"开球还有多久"读进排序，让同一条建议随时间改变优先级）；
-② 事件时钟的对手维度（被射门/被扑救按防守方读，补上"谁在挨打"的一侧）；
-③ 纪律榜的主客分侧（按 venue 拆 discipline 同一 fold，读"客场更糙"这类差别）；
-④ 比赛页面板的赛果算术（同一 matchBrief 加一行"这一场能改变什么"，把双方 scenario 的差读成一句）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（分析 lane 用 M566–M574，组件农场 lane 用 M575–M620；本线已落 M621、M623，M622 是分析 lane 的纪律趋势、留在共享树未提交）；农场 lane 未路由的 stub 在其每次推送后清理并记入 README。
+下一条目：M625 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① 事件时钟的对手维度（被射门/被扑救按防守方读，补上"谁在挨打"的一侧）；
+② 纪律榜的主客分侧（按 venue 拆 discipline 同一 fold，读"客场更糙"这类差别）；
+③ 比赛页面板的赛果算术（同一 matchBrief 加一行"这一场能改变什么"，把双方 scenario 的差读成一句）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（分析 lane 用 M566–M574，组件农场 lane 用 M575–M620；本线已落 M621、M623、M624，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub 在其每次推送后清理并记入 README。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。
