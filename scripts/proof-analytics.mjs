@@ -818,6 +818,35 @@ ok(`the club page reads the venue split off the board's own fold and prints it o
   cvB.homePerMatch === 1 && cvB.awayPerMatch === 2 && cvB.gap === 1 &&
   discVenueQuiet.rows.length === 2 && quietOneEnd && venueClubScreen);
 
+// M630: the briefing's next fixture now carries the fixture's own arithmetic — the same swing the
+// match page prints. s1 is A at home to B, so A's briefing (side home) and B's briefing (side away)
+// must read the same object: hosts minus visitors, lead 3, a home win 6 / draw 3 / away win 0,
+// ceilings 10/8/7 against 7/5/4. A "us minus them" reading would flip the sign for B's reader.
+const briefB = briefing("B", briefingFixtures, briefingClubs);
+const briefC = briefing("C", briefingFixtures, briefingClubs);
+const swingDrift = JSON.stringify(briefA.swing) === JSON.stringify(briefB.swing);
+ok(`briefing carries the fixture's swing, oriented by the host rather than by the reader (A lead ${briefA.swing.lead}, B lead ${briefB.swing.lead}, same object ${swingDrift}; home win ${briefA.swing.ifHomeWin}, draw ${briefA.swing.ifDraw}, away win ${briefA.swing.ifAwayWin})`,
+  briefB.fixture.id === "s1" && briefB.side === "away" && briefB.opponentId === "A" &&
+  swingDrift && briefA.swing.lead === 3 && briefA.swing.ifHomeWin === 6 &&
+  briefA.swing.ifDraw === 3 && briefA.swing.ifAwayWin === 0);
+// The orientation survives a negative gap: C's next fixture is s2 at B, so the hosts are two points
+// behind and the same three results read 1 / −2 / −5 while each ceiling loses its own room.
+ok(`briefing keeps a negative host-minus-visitor gap negative and both ceilings in fixture order (C at B: lead ${briefC.swing.lead}, results ${briefC.swing.ifHomeWin}/${briefC.swing.ifDraw}/${briefC.swing.ifAwayWin}; B ceiling ${briefC.swing.homeCeiling.win}/${briefC.swing.homeCeiling.draw}/${briefC.swing.homeCeiling.loss}, C ceiling ${briefC.swing.awayCeiling.win}/${briefC.swing.awayCeiling.draw}/${briefC.swing.awayCeiling.loss})`,
+  briefC.fixture.id === "s2" && briefC.side === "away" && briefC.swing.lead === -2 &&
+  briefC.swing.ifHomeWin === 1 && briefC.swing.ifDraw === -2 && briefC.swing.ifAwayWin === -5 &&
+  briefC.swing.homeCeiling.win === 7 && briefC.swing.homeCeiling.draw === 5 && briefC.swing.homeCeiling.loss === 4 &&
+  briefC.swing.awayCeiling.win === 9 && briefC.swing.awayCeiling.draw === 7 && briefC.swing.awayCeiling.loss === 6);
+// A side with no table row still has nothing to measure from; the screen reads the fold (never
+// pointsScenarios itself) and reuses the match page's two keys, printing the shared absence glyph
+// when the swing is null.
+const BRIEFING_SRC = readFileSync(resolve(root, "features/analytics/Briefing.tsx"), "utf8");
+const briefSwingScreen = BRIEFING_SRC.includes("brief?.swing") && BRIEFING_SRC.includes("signed(swing.lead)") &&
+  BRIEFING_SRC.includes('t("stakes.swingLine"') && BRIEFING_SRC.includes('t("stakes.ceilingLine"') &&
+  BRIEFING_SRC.includes('t("briefing.swingHint"') && BRIEFING_SRC.includes("homeClub?.name") &&
+  BRIEFING_SRC.includes(": ABSENT") && !BRIEFING_SRC.includes("pointsScenarios");
+ok(`the briefing panel reads the swing off the fold and never re-derives it (D's cross-competition brief ${briefD.swing}; screen ${briefSwingScreen})`,
+  briefD.swing === null && briefSwingScreen);
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

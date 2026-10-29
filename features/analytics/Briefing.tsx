@@ -5,7 +5,7 @@ import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { briefing } from "@/domain/analytics";
 import { useOs } from "@/store/useFootballOS";
-import { ABSENT, cn, fmt2 } from "@/lib/utils";
+import { ABSENT, cn, fmt2, signed } from "@/lib/utils";
 
 // A format option bag is not interface copy: inside a render hole the raw-UI scan reads every
 // literal as a word on the page, so the kickoff spec lives here and goes through the date door.
@@ -34,6 +34,9 @@ export function Briefing() {
   const venueRow = brief?.venueRow ?? null;
   const record = brief?.record ?? null;
   const race = brief?.race ?? null;
+  const swing = brief?.swing ?? null;
+  const homeClub = brief ? getClub(brief.fixture.homeClubId) : undefined;
+  const awayClub = brief ? getClub(brief.fixture.awayClubId) : undefined;
 
   return (
     <div className="space-y-5">
@@ -129,6 +132,37 @@ export function Briefing() {
               }
             />
           </div>
+
+          <Panel className="p-4">
+            <SectionTitle
+              title={t("stakes.title")}
+              hint={t("briefing.swingHint", { home: homeClub?.name ?? brief.fixture.homeClubId, away: awayClub?.name ?? brief.fixture.awayClubId })}
+            />
+            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+              <li>
+                {swing
+                  ? t("stakes.swingLine", {
+                      now: signed(swing.lead),
+                      win: signed(swing.ifHomeWin),
+                      draw: signed(swing.ifDraw),
+                      lose: signed(swing.ifAwayWin),
+                    })
+                  : ABSENT}
+              </li>
+              <li>
+                {swing
+                  ? t("stakes.ceilingLine", {
+                      hw: swing.homeCeiling.win,
+                      hd: swing.homeCeiling.draw,
+                      hl: swing.homeCeiling.loss,
+                      aw: swing.awayCeiling.win,
+                      ad: swing.awayCeiling.draw,
+                      al: swing.awayCeiling.loss,
+                    })
+                  : ABSENT}
+              </li>
+            </ul>
+          </Panel>
 
           <Panel className="p-5">
             <SectionTitle title={t("briefing.steps")} hint={t("briefing.stepsHint")} />

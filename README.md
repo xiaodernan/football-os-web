@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M629 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M630 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,47 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M630 — the briefing carries what its next fixture would change
+
+**The same fixture, the other question.** The briefing screen already picks a club's next booked
+fixture and joins five season reads to it; M627 gave the match page the fixture's own arithmetic —
+the gap between the two sides and where each of the three results leaves it. The briefing was the
+one surface holding the fixture without that number. `briefing()` now returns
+`swing: MatchSwing | null` as well, computed by the same private `swingOf` the match page's
+`matchBrief` uses, so the two screens cannot disagree about what a win, a draw or a loss would do.
+
+**Oriented by the host, not the reader.** The swing is hosts minus visitors. A briefing is written
+for one club, which may be the visitor, so the fold orders the two scenario rows by the fixture's
+ends (`side` says which row is the host's) rather than by `us` and `them`; the away reader and the
+home reader of the same game see the same object. A side with no table row in the fixture's
+competition still has nothing to measure from, so the swing is null there rather than an invented
+zero.
+
+**The panel.** Between the four season tiles and the five steps, `features/analytics/Briefing.tsx`
+renders "The stakes": the gap line and the ceiling line, reusing the match page's `stakes.swingLine`
+and `stakes.ceilingLine` keys and the signed door, under one new hint that names both ends so
+"hosts minus visitors" is legible on a screen where the briefing club may be the visitor. Either
+line prints the shared absence glyph when the swing is null.
+
+**What the gate says.** `proof-analytics` grows three clauses, **142/142**: A's s1 briefing reads a
+lead of 3, results +6/+3/0 and ceilings 10/8/7 against 7/5/4; B's briefing of the same fixture is
+byte-identical, so the fold is oriented by the host and not by the reader; C at B reads a negative
+lead of −2, results +1/−2/−5 and ceilings 7/5/4 against 9/7/6; D's cross-competition fixture reads
+no swing; and the screen reads the fold (`brief?.swing`, `signed(swing.lead)`, both stakes keys,
+the hint, both club names) and never calls `pointsScenarios`. The absence door gains the panel's two
+cells (Briefing.tsx 10 → 12).
+
+**What it cost.** One key in three locales (`briefing.swingHint`), 2,469 → 2,472 dictionary values;
+literal sites 1,786 → 1,790 and variable-carrying sites 235 → 238 — the three reused keys are call
+sites of their own, and the hint names both clubs. The build measures **528 KB gzip across 54
+assets** (js 516, css 12.5), so the baseline re-records 529 → 528 and the PWA pin moves with it;
+tsc clean, build exit 0, the suite 121 scripts · 3,253/3,253.
+
+**The honest limit.** The panel states arithmetic, not a forecast: it says where the gap and the
+ceilings would sit after each smallest deciding scoreline, not which result is likely — likelihood
+belongs to the Data Room's model. And the gap is today's points difference, so another fixture
+played before this one moves it; the match page's swing carries the same assumption.
 
 ### M629 — the club page reads the cards where they were earned
 

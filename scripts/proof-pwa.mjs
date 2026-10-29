@@ -91,7 +91,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M627: the pin holds at 528 (the stakes swing lines measure 515 JS + 13 CSS, still 528 KB).
 // M628: 528 -> 529 after the clock's faced row and busiest-window line (measured at 529 KB /
 // 54 assets, JS 515 + CSS 13, recorded in the same commit).
-const BUDGET_KB = 529;
+// M630: the briefing swing panel measures 528 KB / 54 assets (JS 516 + CSS 12.5), so the pin
+// drops 529 -> 528 and the baseline re-records 529 -> 528.
+const BUDGET_KB = 528;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

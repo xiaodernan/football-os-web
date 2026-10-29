@@ -1021,6 +1021,10 @@ export interface Briefing {
   opponentId: string;
   /** The end of the fixture the briefing club plays. */
   side: Side;
+  /** The fixture's own arithmetic for the two sides, hosts minus visitors (M630) — the same read
+   *  the match page's stakes panel prints. Null when either side has no table row in the
+   *  fixture's competition, the same condition the two scenario joins below report. */
+  swing: MatchSwing | null;
   /** The briefing club's table-and-ceiling read in the fixture's competition; null when the
    *  competition has no table row for it yet (a cross-competition fixture can precede its debut). */
   us: PointsScenario | null;
@@ -1134,13 +1138,20 @@ export function briefing(clubId: string, matches: Match[], clubs: Club[]): Brief
   const opponentId = side === "home" ? next.awayClubId : next.homeClubId;
   const compId = next.competitionId;
   const scenarios = pointsScenarios(compId, matches, clubs);
+  const us = scenarios.find((s) => s.clubId === clubId) ?? null;
+  const them = scenarios.find((s) => s.clubId === opponentId) ?? null;
+  // Hosts minus visitors, whoever the briefing is for: a club reading its away game must see the
+  // same number as the opponent reading the same fixture.
+  const home = side === "home" ? us : them;
+  const away = side === "home" ? them : us;
   return {
     clubId,
     fixture: next,
     opponentId,
     side,
-    us: scenarios.find((s) => s.clubId === clubId) ?? null,
-    them: scenarios.find((s) => s.clubId === opponentId) ?? null,
+    us,
+    them,
+    swing: home && away ? swingOf(home, away) : null,
     runInRow: runIn(compId, matches, clubs).find((r) => r.clubId === clubId) ?? null,
     venueRow: venueSplit(compId, matches, clubs).rows.find((r) => r.clubId === clubId) ?? null,
     record: headToHead(clubId, opponentId, matches),
