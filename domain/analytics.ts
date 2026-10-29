@@ -861,6 +861,52 @@ export interface Briefing {
   race: TitleRace;
 }
 
+export interface MatchBrief {
+  /** The fixture this brief is written for. */
+  fixture: Match;
+  /** The home side's table-and-ceiling read in the fixture's competition; null while the
+   *  competition has no table row for it yet (a fixture can precede a club's debut). */
+  home: PointsScenario | null;
+  /** The away side's read from the same fold — both ends measured alike. */
+  away: PointsScenario | null;
+  /** Each side's remaining calendar in the competition; null under the same condition. */
+  homeRunIn: RunInRow | null;
+  awayRunIn: RunInRow | null;
+  /** Each side's own half of the venue split — the hosts' home row and the visitors' away row. */
+  homeVenue: VenueSplitRow | null;
+  awayVenue: VenueSplitRow | null;
+  /** The pair's finished meetings, oriented so `winsA` belongs to this fixture's home club. */
+  record: HeadToHead;
+  /** The competition's title race as it stands after its last finished fixture. */
+  race: TitleRace;
+}
+
+/** The same five-read join as `briefing`, anchored to a fixture the reader already chose rather
+ *  than the club's next one. `briefing` answers "what is next?"; this answers "what does this
+ *  game carry?" about either end, so both sides are measured instead of one. Every figure comes
+ *  from the fold that owns it — `pointsScenarios`, `runIn`, `venueSplit`, `headToHead`,
+ *  `titleRace` — so the match page cannot disagree with the screens it links to. The fixture is
+ *  echoed back rather than looked up again, and an unknown id reads null, not an empty brief. */
+export function matchBrief(matchId: string, matches: Match[], clubs: Club[]): MatchBrief | null {
+  const fixture = matches.find((m) => m.id === matchId);
+  if (!fixture) return null;
+  const compId = fixture.competitionId;
+  const scenarios = pointsScenarios(compId, matches, clubs);
+  const calendar = runIn(compId, matches, clubs);
+  const venues = venueSplit(compId, matches, clubs);
+  return {
+    fixture,
+    home: scenarios.find((s) => s.clubId === fixture.homeClubId) ?? null,
+    away: scenarios.find((s) => s.clubId === fixture.awayClubId) ?? null,
+    homeRunIn: calendar.find((r) => r.clubId === fixture.homeClubId) ?? null,
+    awayRunIn: calendar.find((r) => r.clubId === fixture.awayClubId) ?? null,
+    homeVenue: venues.rows.find((r) => r.clubId === fixture.homeClubId) ?? null,
+    awayVenue: venues.rows.find((r) => r.clubId === fixture.awayClubId) ?? null,
+    record: headToHead(fixture.homeClubId, fixture.awayClubId, matches),
+    race: titleRace(compId, matches, clubs),
+  };
+}
+
 /** One club's next match, gathered with every season read that explains it.
  *
  *  The board shows today, the run-in shows what is left, the venue split shows where the points

@@ -4353,8 +4353,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // site (the step's own label looked up in STEP_LABEL): literal 1677 -> 1680, expression 32 -> 33.
 // M574: the event clock adds its 30 literal sites (its six window labels reuse timing.w* as
 // literal sites of their own) and its nav entry: literal 1680 -> 1711, expression unchanged at 33.
-// M575: Briefing adds its 39 literal t() sites and its nav entry on top: 1711 -> 1751.
-  shapeCounts.literal === 1751 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M621: Briefing adds its 39 literal t() sites and its nav entry on top: 1711 -> 1751.
+// M623: the stakes panel adds twelve literal sites on the match page (title, hint, the side-row
+// line at each end, the venue, record, no-meeting and race lines, and four link labels): 1751 -> 1763.
+  shapeCounts.literal === 1763 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4387,7 +4389,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // hand over theirs. M575: 209 -> 220 — Briefing's eleven interpolating sites (round, opponentLine,
 // pointsSub, ceilingSub, leftSub, edgeSub, stepTableLine, stepRunInLine, stepVenueLine,
 // stepRecordLine, stepRaceLine) hand over theirs.
-  litVarSites === 220 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M623: 220 -> 225 — the stakes panel's five interpolating sites (the side-row line at each end,
+// the venue sentence, the record line and the race line) hand over their figures.
+  litVarSites === 225 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M621 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M623 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7098,6 +7098,50 @@ reflects the latest section this file actually carries.
 
 
 
+### M623 — the stakes, the briefing join read from the match page
+
+**The same join, a second reader.** `briefing` answers "what is next?" for a club: it picks the
+earliest scheduled fixture and joins five season reads to it. The match page is the other end of
+that question — the reader has already chosen a fixture and asks what it carries.
+`matchBrief(matchId, matches, clubs)` in `domain/analytics.ts` takes the same five folds
+(`pointsScenarios`,
+`runIn`, `venueSplit`, `headToHead`, `titleRace`), anchors them on the fixture the reader opened,
+and measures both ends instead of one: each side's points, ceiling and remaining calendar; the
+hosts' half of the venue split against the visitors' half; the pair's finished meetings oriented
+to this fixture's home club; and the competition's title race. Every figure is computed by the
+fold that owns it, so the panel cannot disagree with the screens it links to; an unknown id reads
+null rather than an empty brief, and each join stays nullable on its own line.
+
+**The panel.** `features/football/Details.tsx` gains "The stakes" between the scoreboard and the
+stats: two side rows (points, ceiling, fixtures left each), then the venue sentence for both ends,
+the pair's record and the race's gap and lead changes, and four links into `/scenarios`,
+`/head-to-head`, `/title-race` and `/briefing`. Seven keys in EN / 简体中文 / 繁體中文; the four
+link labels reuse the briefing screen's step words rather than naming the same screens twice.
+
+**What the gate says.** `proof-analytics` gains five clauses, **124/124**: on the briefing fixture
+set s1 (A at home to B) reads A 4 pts / ceiling 10 / 2 left against B 1 pt / ceiling 7 / 2 left,
+the hosts' half 3 points at 3.00 a game against the visitors' 0 at 0.00, the pair's 2 meetings
+1W-1D 3-1 and a one-week race; the reverse fixture f2 flips the record's orientation (0W 1D 1L,
+1-3) and swaps the venue halves (1 point at 1.00 either end); an unknown id reads null; reversing
+the fixture list changes no byte; and the screen reads the fold rather than re-deriving it. Census
+pins pay for the panel: i18n literal sites 1,751 → 1,763 and interpolating sites 220 → 225; the
+dictionary grows seven keys a locale (2,441 → 2,448 values); the absence door gains the panel's
+three cells (Details.tsx 6 → 9). No new module, route or storage key, so the tree, coverage and
+storage doors stay where they were.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **121/121 scripts · 3230/3230
+checks**; the bundle grows to **525 KB gzip across 54 assets** (512 JS + 12.5 CSS), re-recorded in
+`tests/perf/baseline.json` (524 → 525) with `proof-pwa`'s budget pin moving with it. No browser
+pass this milestone; the panel is exercised through the fold's own fixture, the production build
+and the type checker, and the browser evidence debt stays on the ledger.
+
+**Honest reservation.** The links open their screens on that screen's own default competition, so
+a reader whose fixture is in another league lands on the right figure only after switching the
+chip — the same reservation the briefing carries; preselecting through the route is future work.
+And the race sentence is the competition's, not the fixture's: it says how close first and second
+are, not what this game would change — the arithmetic of a particular result belongs to
+`pointsScenarios`, and the panel links there rather than restating it.
+
 ### M621 — the matchday briefing, five reads joined to one fixture
 
 **The question that needed five screens.** The board shows today, the run-in shows what is left to
@@ -13312,7 +13356,7 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **133 milestone numbers have no
+later ones as sections, and between the two **134 milestone numbers have no
 section at all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
@@ -13453,6 +13497,7 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M564 — the lane's TransferMarket, committed and swept off the tree at M566
 - M565 — the lane's PlayerValueRanking re-add, swept with the batch; the real screen is M528's
 - M566 — the lane's ClubFinancialModel add-and-sweep, removed by M559's cleanup commit
+- M622 — the discipline trend panel, worked in the shared tree and recorded there
 
 <!-- /gaps -->
 

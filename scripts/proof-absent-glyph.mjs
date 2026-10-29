@@ -200,7 +200,9 @@ const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
 // fallback) read the same door.
 // M574 adds the event clock: one cell (the busiest-window tile falls back to the door when the
 // competition has no shot to point at) reads the same door.
-// M575 adds the briefing: ten cells (the competition-name hint, the opponent line, four tiles and
+// M623: the match page's stakes panel adds three cells (the two side rows and the venue sentence
+// read the door when a join is null): Details.tsx 6 -> 9.
+// M621 adds the briefing: ten cells (the competition-name hint, the opponent line, four tiles and
 // four step lines) read the door rather than a typed dash.
 const expectedUsers = [
   "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
@@ -228,7 +230,7 @@ const expectedPerUser = [
   ["features/analytics/PointsScenario.tsx", 5],
   ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 14],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
-  ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 6],
+  ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],
   ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],
   ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1], ["features/onboarding/Onboarding.tsx", 2],
   ["features/player/PlayerOS.tsx", 5], ["features/review/ReviewPage.tsx", 5],

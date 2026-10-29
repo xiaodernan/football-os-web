@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -639,6 +639,37 @@ ok(`briefing reads a competition that has no table row for the opponent as null,
   briefD.fixture.id === "s3" && briefD.opponentId === "A" && briefD.us.points === 0 &&
   briefD.them === null && briefD.runInRow.remaining === 1 && briefD.record.played === 0 &&
   briefing("E", briefingFixtures, briefingClubs) === null);
+
+// --- matchBrief: the same join, anchored to the fixture the reader chose ------------------------
+// On the same T1 set: s1 is A at home to B, so the brief must read A's ceiling (10), B's (7), both
+// run-ins (2 left each), A's home half (3 pts at 3.00 a game) against B's away half (0 pts, 0.00),
+// the pair's two meetings A-first (1W 1D, 3-1) and the one-week race. f2 is the reverse fixture,
+// B at home to A, so the record flips to B-first (0W 1D 1L) and the venue halves swap ends.
+const stakeS1 = matchBrief("s1", briefingFixtures, briefingClubs);
+const stakeF2 = matchBrief("f2", briefingFixtures, briefingClubs);
+const stakeRight = matchBrief("s1", [...briefingFixtures].reverse(), briefingClubs);
+ok(`matchBrief anchors on the chosen fixture and joins both ends of the table, the calendar and the venue split (${stakeS1.fixture.id}: home ${stakeS1.home.points} pts / ceiling ${stakeS1.home.maxPoints} / ${stakeS1.homeRunIn.remaining} left, away ${stakeS1.away.points} pts / ceiling ${stakeS1.away.maxPoints} / ${stakeS1.awayRunIn.remaining} left; home half ${stakeS1.homeVenue.homePoints} pts at ${stakeS1.homeVenue.homePpg}, away half ${stakeS1.awayVenue.awayPoints} pts at ${stakeS1.awayVenue.awayPpg})`,
+  stakeS1.fixture.id === "s1" && stakeS1.fixture.homeClubId === "A" && stakeS1.fixture.awayClubId === "B" &&
+  stakeS1.home.points === 4 && stakeS1.home.maxPoints === 10 && stakeS1.homeRunIn.remaining === 2 &&
+  stakeS1.away.points === 1 && stakeS1.away.maxPoints === 7 && stakeS1.awayRunIn.remaining === 2 &&
+  stakeS1.homeVenue.homePoints === 3 && stakeS1.homeVenue.homePpg === 3 &&
+  stakeS1.awayVenue.awayPoints === 0 && stakeS1.awayVenue.awayPpg === 0);
+ok(`matchBrief orients the record and the venue halves to the fixture, not to a club id (f2 ${stakeF2.fixture.homeClubId}-${stakeF2.fixture.awayClubId}: ${stakeF2.record.winsA}W ${stakeF2.record.draws}D ${stakeF2.record.winsB}L, ${stakeF2.record.goalsA}-${stakeF2.record.goalsB}; home half ${stakeF2.homeVenue.homePoints} pts at ${stakeF2.homeVenue.homePpg}, away half ${stakeF2.awayVenue.awayPoints} pts at ${stakeF2.awayVenue.awayPpg})`,
+  stakeF2.fixture.id === "f2" && stakeF2.fixture.homeClubId === "B" && stakeF2.fixture.awayClubId === "A" &&
+  stakeF2.record.played === 2 && stakeF2.record.winsA === 0 && stakeF2.record.draws === 1 &&
+  stakeF2.record.winsB === 1 && stakeF2.record.goalsA === 1 && stakeF2.record.goalsB === 3 &&
+  stakeF2.homeVenue.homePoints === 1 && stakeF2.homeVenue.homePpg === 1 &&
+  stakeF2.awayVenue.awayPoints === 1 && stakeF2.awayVenue.awayPpg === 1);
+ok(`matchBrief's race is the fixture competition's own weekly fold, and an unknown fixture id reads null rather than an empty brief (${stakeS1.race.weeks.length} week, gap ${stakeS1.race.currentGap}, lead changes ${stakeS1.race.leadChanges}; missing ${matchBrief("nope", briefingFixtures, briefingClubs)})`,
+  stakeS1.race.weeks.length === 1 && stakeS1.race.currentGap === 1 && stakeS1.race.leadChanges === 0 &&
+  matchBrief("nope", briefingFixtures, briefingClubs) === null);
+ok(`matchBrief is order-independent byte for byte (reversed fixture list: ${JSON.stringify(stakeS1) === JSON.stringify(stakeRight)})`,
+  JSON.stringify(stakeS1) === JSON.stringify(stakeRight));
+const DETAILS_SRC = readFileSync(resolve(root, "features/football/Details.tsx"), "utf8");
+const MATCH_BRIEF_IMPORT = /import \{[^}]*\bmatchBrief\b[^}]*\} from "@\/domain\/analytics"/.test(DETAILS_SRC);
+ok(`the match page reads the brief off the domain fold rather than re-deriving it (import ${MATCH_BRIEF_IMPORT}, call ${DETAILS_SRC.includes("matchBrief(matchId")}, panel ${DETAILS_SRC.includes('t("stakes.title")')} with the link home ${DETAILS_SRC.includes('to="/briefing"')})`,
+  MATCH_BRIEF_IMPORT && DETAILS_SRC.includes("matchBrief(matchId") &&
+  DETAILS_SRC.includes('t("stakes.title")') && DETAILS_SRC.includes('to="/briefing"'));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

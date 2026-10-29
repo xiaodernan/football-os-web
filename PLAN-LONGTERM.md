@@ -240,11 +240,27 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
-下一条目：M599 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+- M623: 比赛页的"分量"面板——`domain/analytics.ts` 新增 `matchBrief(matchId, matches, clubs)`：与 `briefing` 同一套五项 fold
+  （`pointsScenarios`、`runIn`、`venueSplit`、`headToHead`、`titleRace`），但锚点由"球队的下一场"换成"读者点开的那一场"，
+  且两端都量：主客各自的积分/上限/剩余场次、主队的主场半区对客队的客场半区、按本场主队定向的交锋记录（winsA=主队）、
+  以及本赛事的争冠走势；未知 matchId 读 null 而非空简报，各 join 仍逐行可空；
+  `features/football/Details.tsx` 在比分板与数据面板之间新增 Stakes 面板：两行席位（积分/上限/剩余）、一行主客半区句、
+  一行交锋记录（场次/胜平负/进失球）、一行争冠（分差/易手次数），以及通往 /scenarios、/head-to-head、/title-race、/briefing 的四个链接；
+  7 键三语（stakes.title/hint/homeLine/venueLine/recordLine/noMeetings/raceLine），四个链接标签复用 briefing.step* 既有措辞；
+  `proof-analytics` 新增 5 条共 124/124（s1=A 主场对 B：A 4 分/上限 10/剩 2、B 1 分/上限 7/剩 2、主半区 3 分场均 3.00 对客半区 0 分 0.00、
+  交锋 2 场 1胜1平 3-1、争冠 1 周；反向 fixture f2 使记录定向翻转（0胜1平1负、1-3）并交换主客半区（各 1 分场均 1.00）；
+  未知 id=null；反转赛程列表逐字节相同；屏幕只读 fold）；
+  census pin：i18n literal 1,751→1,763、litVarSites 220→225、字典 +7 键/语（2,441→2,448 值）、absence 门 Details.tsx 6→9（新增三处叶子）；
+  无新模块/路由/存储键，app-tree/coverage/storage 不动；bundle 524→525 KB gzip / 54 资产（js 512、css 12.5，baseline 重记，pwa pin 同步）；
+  tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3230/3230 检查；无浏览器复核（面板由 fold fixture + 生产构建 + 类型检查覆盖，浏览器证据债照旧记账）；
+  诚实的保留：四个链接各按自身默认赛事打开，跨赛事读者需切换 chip 才落到同一读数（与 briefing 同一保留）；争冠句属于赛事而非本场，
+  它说前二差多少、不说这一场会改变什么——具体赛果的算术属于 `pointsScenarios`，面板链接过去而不复述。
+下一条目：M624 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
 ① 建议面板的时间维度（把"开球还有多久"读进排序，让同一条建议随时间改变优先级）；
 ② 事件时钟的对手维度（被射门/被扑救按防守方读，补上"谁在挨打"的一侧）；
-③ 简报读数下沉比赛页（/matches/:id 带一条 "为什么这场重要" 的链接行，同一 join 的第二个读者入口）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（有两条并发 lane：分析 lane 用 M566–M574，组件农场 lane 用到 M620），本线已落 M621；农场 lane 未路由的 stub 在其每次推送后清理并记入 README。
+③ 纪律榜的主客分侧（按 venue 拆 discipline 同一 fold，读"客场更糙"这类差别）；
+④ 比赛页面板的赛果算术（同一 matchBrief 加一行"这一场能改变什么"，把双方 scenario 的差读成一句）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（分析 lane 用 M566–M574，组件农场 lane 用 M575–M620；本线已落 M621、M623，M622 是分析 lane 的纪律趋势、留在共享树未提交）；农场 lane 未路由的 stub 在其每次推送后清理并记入 README。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

@@ -26,7 +26,7 @@ import { careerArc } from "@/domain/careerArc";
 // an empty group where the domain answers the club's own rating.
 import { clubInput, lineMean, LINE_GROUPS } from "@/domain/career";
 import { playerDna } from "@/domain/playerDna";
-import { teamMetrics, expectedGoals, discipline } from "@/domain/analytics";
+import { teamMetrics, expectedGoals, discipline, matchBrief } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
@@ -591,6 +591,8 @@ export function MatchDetail({ id }: { id: string }) {
         {sim && <div className="mt-2 text-center text-[11px] text-muted-foreground">{t(played ? "det.engine.reconNote" : "det.engine.simNote")} · {t("det.engine.seed")} {sim.seed.slice(0, 8)} · {t("det.engine.demoEngine")}</div>}
       </Panel>
 
+      <Stakes matchId={m.id} home={home} away={away} />
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel className="p-4">
           <SectionTitle title={t(sim ? (played ? "det.engine.statsRecon" : "det.engine.statsProj") : recordedStats ? "det.engine.statsRecorded" : "det.engine.statsNone")} />
@@ -628,6 +630,63 @@ export function MatchDetail({ id }: { id: string }) {
         )}
       </Panel>
     </div>
+  );
+}
+
+// M623: the match page is the second reader of the briefing join. `briefing` answers "what is
+// next?" for a club; this panel answers "what does this game carry?" for the fixture the reader
+// chose — the same five folds, both ends instead of one, so the page cannot disagree with the
+// screens the links open.
+function Stakes({ matchId, home, away }: { matchId: string; home: { name: string }; away: { name: string } }) {
+  const { t } = useI18n();
+  const brief = matchBrief(matchId, footballProvider.matches(), footballProvider.clubs());
+  if (!brief) return null;
+  const h = brief.home;
+  const a = brief.away;
+  const hv = brief.homeVenue;
+  const av = brief.awayVenue;
+  const rec = brief.record;
+  return (
+    <Panel className="p-5">
+      <SectionTitle title={t("stakes.title")} hint={t("stakes.hint")} />
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <div className="rounded-lg border px-3 py-2 text-sm">
+          <div className="font-medium">{home.name}</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {h && brief.homeRunIn
+              ? t("stakes.homeLine", { pts: h.points, max: h.maxPoints, left: brief.homeRunIn.remaining })
+              : ABSENT}
+          </div>
+        </div>
+        <div className="rounded-lg border px-3 py-2 text-sm">
+          <div className="font-medium">{away.name}</div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {a && brief.awayRunIn
+              ? t("stakes.homeLine", { pts: a.points, max: a.maxPoints, left: brief.awayRunIn.remaining })
+              : ABSENT}
+          </div>
+        </div>
+      </div>
+      <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+        <li>
+          {hv && av
+            ? t("stakes.venueLine", { home: home.name, hp: hv.homePoints, hpg: fmt2(hv.homePpg), away: away.name, ap: av.awayPoints, apg: fmt2(av.awayPpg) })
+            : ABSENT}
+        </li>
+        <li>
+          {rec.played > 0
+            ? t("stakes.recordLine", { n: rec.played, w: rec.winsA, d: rec.draws, l: rec.winsB, gf: rec.goalsA, ga: rec.goalsB })
+            : t("stakes.noMeetings")}
+        </li>
+        <li>{t("stakes.raceLine", { gap: brief.race.currentGap, changes: brief.race.leadChanges })}</li>
+      </ul>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        <Link to="/scenarios" className="font-medium text-primary hover:underline">{t("briefing.stepTable")}</Link>
+        <Link to="/head-to-head" className="font-medium text-primary hover:underline">{t("briefing.stepRecord")}</Link>
+        <Link to="/title-race" className="font-medium text-primary hover:underline">{t("briefing.stepRace")}</Link>
+        <Link to="/briefing" className="font-medium text-primary hover:underline">{t("nav.briefing")}</Link>
+      </div>
+    </Panel>
   );
 }
 
