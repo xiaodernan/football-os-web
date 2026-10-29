@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { discipline } from "@/domain/analytics";
+import { discipline, disciplineTrend } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ export function Discipline() {
   const [compId, setCompId] = useState(() => competitions[0]?.id ?? "");
 
   const board = useMemo(() => discipline(compId, matches, clubs), [compId, matches, clubs]);
+  const trend = useMemo(() => disciplineTrend(compId, matches), [compId, matches]);
   const counted = board.rows.filter((r) => r.played > 0);
   const most = counted.length ? maxBy(counted, (r) => r.bookings) : null;
   const peak = Math.max(1, ...board.rows.map((r) => r.bookingsPerMatch));
@@ -112,6 +113,25 @@ export function Discipline() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("disc.method")}</p>
+          </Panel>
+
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.trendTitle")} hint={t("disc.trendHint")} />
+            <div className="mt-3 flex items-end gap-1">
+              {trend.rounds.map((r) => (
+                <div key={r.round} className="flex-1 text-center">
+                  <div className="font-mono text-[10px] text-muted-foreground">{r.inRound}</div>
+                  <div className="mx-auto mt-0.5 h-12 w-full">
+                    <div
+                      className={cn("w-full rounded-sm", BAR_FILL.bad)}
+                      style={{ height: pctOf(r.inRound, Math.max(1, trend.peak)) }}
+                    />
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-muted-foreground">{t("disc.round", { r: r.round })}</div>
+                  <div className="text-[10px] text-muted-foreground">{t("disc.trendTotal", { c: r.cards })}</div>
+                </div>
+              ))}
+            </div>
           </Panel>
         </>
       )}

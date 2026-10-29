@@ -83,9 +83,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // ---- The bundle budget: what ships, measured in gzip, against a pin. ---------------------------
 // M573: 514 -> 520 after the dashboard's next-step panel; M574: 520 -> 521 after /clock (the
 // screen, its route and its dictionary slice add 3 KB gzip over the M573 build); M621: 521 -> 524
-// after /briefing on top of /clock; M623: 524 -> 525 after the match page's stakes panel (measured
-// at 525 KB / 54 assets and recorded in tests/perf/baseline.json in the same commit).
-const BUDGET_KB = 525;
+// after /briefing on top of /clock; M622: 524 -> 525 after the discipline trend panel and M623:
+// 525 -> 526 after the match page's stakes panel (measured at 526 KB / 54 assets on the merged tree
+// and recorded in tests/perf/baseline.json in the same commit).
+const BUDGET_KB = 526;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

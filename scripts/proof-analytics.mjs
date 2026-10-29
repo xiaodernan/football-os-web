@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -670,6 +670,48 @@ const MATCH_BRIEF_IMPORT = /import \{[^}]*\bmatchBrief\b[^}]*\} from "@\/domain\
 ok(`the match page reads the brief off the domain fold rather than re-deriving it (import ${MATCH_BRIEF_IMPORT}, call ${DETAILS_SRC.includes("matchBrief(matchId")}, panel ${DETAILS_SRC.includes('t("stakes.title")')} with the link home ${DETAILS_SRC.includes('to="/briefing"')})`,
   MATCH_BRIEF_IMPORT && DETAILS_SRC.includes("matchBrief(matchId") &&
   DETAILS_SRC.includes('t("stakes.title")') && DETAILS_SRC.includes('to="/briefing"'));
+
+// ---- M622: the same stats blocks folded by round --------------------------------------------
+// The discipline board answers who is booked; the trend answers when the bookings arrive. Fixture
+// over T12: round 1 one fixture (4 cards), round 2 one (6), round 3 two (4 combined) — cumulative
+// 4, 10, 14 with round 3 the only two-fixture row. A scheduled round, another competition's
+// stats and a finished fixture with no stats block are noise.
+const trendFixture = (id, home, away, round, hs, as, status = "FINISHED") => ({
+  ...withStats(match(id, "T12", home, away, 1, 0, `2026-06-0${round}`, status), hs, as), round,
+});
+const trendFixtures = [
+  trendFixture("t1", "A", "B", 1, statLine(10, 2, 0), statLine(8, 1, 1)),
+  trendFixture("t2", "C", "A", 2, statLine(9, 3, 1), statLine(7, 2, 0)),
+  trendFixture("t3", "B", "C", 3, statLine(6, 1, 0), statLine(5, 2, 0)),
+  trendFixture("t4", "A", "C", 3, statLine(4, 1, 0), statLine(4, 0, 0)),
+  trendFixture("t5", "A", "B", 4, statLine(9, 9, 9), statLine(9, 9, 9), "SCHEDULED"),
+  withStats(match("t6", "T13", "D", "E", 0, 0, "2026-06-06"), statLine(9, 9, 9), statLine(9, 9, 9)),
+  match("t7", "T12", "B", "A", 2, 1, "2026-06-07"),
+];
+const trend = disciplineTrend("T12", trendFixtures);
+ok(`disciplineTrend folds counting fixtures by round and cumulates in round order (rounds ${trend.rounds.map((r) => r.round).join(",")}, in-round ${trend.rounds.map((r) => r.inRound).join(",")}, cumulative ${trend.rounds.map((r) => r.cards).join(",")}, peak ${trend.peak})`,
+  trend.rounds.length === 3 && trend.rounds.map((r) => r.round).join(",") === "1,2,3" &&
+  trend.rounds.map((r) => r.inRound).join(",") === "4,6,4" &&
+  trend.rounds.map((r) => r.cards).join(",") === "4,10,14" && trend.peak === 6);
+ok(`disciplineTrend counts every fixture in a round and reads cards per fixture off that round (round 3 matches ${trend.rounds[2].matches}, rate ${trend.rounds[2].perMatch}; round 1 rate ${trend.rounds[0].perMatch}, round 2 rate ${trend.rounds[1].perMatch})`,
+  trend.rounds[2].matches === 2 && trend.rounds[2].perMatch === 2 &&
+  trend.rounds[0].matches === 1 && trend.rounds[0].perMatch === 4 &&
+  trend.rounds[1].perMatch === 6 && trend.rounds[2].yellows === 4 && trend.rounds[2].reds === 0);
+// The trend and the board read the same list, so their totals must be the same number: four
+// counted fixtures, 12 yellows, 2 reds, 14 cards at 3.5 a game.
+const trendBoard = discipline("T12", trendFixtures, discClubs);
+const trendEmpty = disciplineTrend("T14", []);
+ok(`disciplineTrend and discipline agree on the same fixtures, and a competition with no round reads an empty trend (board ${trendBoard.matches} matches, ${trendBoard.yellows}Y, ${trendBoard.reds}R, ${trendBoard.perMatch} a game; empty rounds ${trendEmpty.rounds.length}, peak ${trendEmpty.peak})`,
+  trendBoard.matches === 4 && trendBoard.yellows === 12 && trendBoard.reds === 2 && trendBoard.perMatch === 3.5 &&
+  trend.rounds[2].cards === trendBoard.yellows + trendBoard.reds &&
+  trendEmpty.rounds.length === 0 && trendEmpty.peak === 0);
+const trendAgain = disciplineTrend("T12", trendFixtures);
+const DISCIPLINE_SRC = readFileSync(resolve(root, "features/analytics/Discipline.tsx"), "utf8");
+ok(`disciplineTrend is deterministic and the discipline screen reads its rounds off the domain fold rather than re-deriving them (same fold ${JSON.stringify(trend) === JSON.stringify(trendAgain)}, renders ${[...DISCIPLINE_SRC.matchAll(/trend\.rounds/g)].length} round reads)`,
+  JSON.stringify(trend) === JSON.stringify(trendAgain) &&
+  /import \{[^}]*\bdisciplineTrend\b[^}]*\} from "@\/domain\/analytics"/.test(DISCIPLINE_SRC) &&
+  DISCIPLINE_SRC.includes("disciplineTrend(compId, matches)") &&
+  DISCIPLINE_SRC.includes("trend.rounds.map(") && DISCIPLINE_SRC.includes("trend.peak"));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

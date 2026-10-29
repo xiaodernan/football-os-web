@@ -255,6 +255,16 @@
   tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3230/3230 检查；无浏览器复核（面板由 fold fixture + 生产构建 + 类型检查覆盖，浏览器证据债照旧记账）；
   诚实的保留：四个链接各按自身默认赛事打开，跨赛事读者需切换 chip 才落到同一读数（与 briefing 同一保留）；争冠句属于赛事而非本场，
   它说前二差多少、不说这一场会改变什么——具体赛果的算术属于 `pointsScenarios`，面板链接过去而不复述。
+- M622: 纪律榜的赛季趋势（按轮次累计牌数）——`domain/analytics.ts` 新增 `DisciplineRound`/`DisciplineTrend`/`disciplineTrend(compId, matches)`：
+  与 `discipline` 同一 fold（本赛事 FINISHED 且带 stats），按 `round` 聚合 matches/yellows/reds、单轮 inRound(=Y+R)、perMatch(round2)、
+  累计 cards，rounds 升序、peak=最大单轮；`features/analytics/Discipline.tsx` 在 board 面板之后加趋势面板（每柱一轮，柱顶单轮牌数、
+  柱下 `R{r}` 与累计，柱高对 peak 取 pctOf，BAR_FILL.bad；面板在 board 分支内，空赛事仍只有一枚 EmptyState）；
+  `proof-analytics` 新增 4 条，并入 M621 后共 123/123（再并 M623 的 5 条为 128/128）（T12 手算：rounds 1/2/3、单轮 4/6/4、累计 4/10/14、peak 6；round 3 两场 perMatch 2、round 1 4、round 2 6；
+  Scheduled 第 4 轮 / 他赛事 / 无 stats 场作噪声；与 discipline 对账 4 场 12Y 2R 3.5/场；空赛事 0 轮 peak 0；确定性 + 屏幕只读 fold）；
+  census pin 取合并树实测：i18n literal 1,751→1,755、litVarSites 220→222（无新模块/路由/存储键，app-tree/coverage/storage/absence 不动）；
+  字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
+  合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
+
 下一条目：M624 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
 ① 建议面板的时间维度（把"开球还有多久"读进排序，让同一条建议随时间改变优先级）；
 ② 事件时钟的对手维度（被射门/被扑救按防守方读，补上"谁在挨打"的一侧）；

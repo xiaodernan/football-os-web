@@ -760,6 +760,62 @@ export function discipline(compId: string, matches: Match[], clubs: Club[]): Dis
   };
 }
 
+export interface DisciplineRound {
+  round: number;
+  /** Finished fixtures with a stats block in this round. */
+  matches: number;
+  yellows: number;
+  reds: number;
+  /** Cards in this round alone (yellows plus reds). */
+  inRound: number;
+  /** Cards per counted fixture in this round, 2dp. */
+  perMatch: number;
+  /** Cards in every counted round up to and including this one. */
+  cards: number;
+}
+
+export interface DisciplineTrend {
+  /** One row per counted round, in round order. */
+  rounds: DisciplineRound[];
+  /** The largest single-round card count — the bar scale. */
+  peak: number;
+}
+
+/** The same stats blocks `discipline` reads, folded by round instead of by club: whether a league's
+ *  card count is rising, falling or flat as its season runs. A round is counted only when a fixture
+ *  in it carries a stats block, so a round whose fixtures were never recorded is absent rather than
+ *  drawn at zero, and the cumulative column is the season total through that round. */
+export function disciplineTrend(compId: string, matches: Match[]): DisciplineTrend {
+  const byRound = new Map<number, { matches: number; yellows: number; reds: number }>();
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED" || !m.stats) continue;
+    const row = byRound.get(m.round) ?? { matches: 0, yellows: 0, reds: 0 };
+    row.matches++;
+    row.yellows += m.stats.home.yellows + m.stats.away.yellows;
+    row.reds += m.stats.home.reds + m.stats.away.reds;
+    byRound.set(m.round, row);
+  }
+  let cumulative = 0;
+  let peak = 0;
+  const rounds = [...byRound.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([round, r]) => {
+      const inRound = r.yellows + r.reds;
+      cumulative += inRound;
+      peak = Math.max(peak, inRound);
+      return {
+        round,
+        matches: r.matches,
+        yellows: r.yellows,
+        reds: r.reds,
+        inRound,
+        perMatch: round2(inRound / r.matches),
+        cards: cumulative,
+      };
+    });
+  return { rounds, peak };
+}
+
 export interface EventClockRow {
   clubId: string;
   shots: number;

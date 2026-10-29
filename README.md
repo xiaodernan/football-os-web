@@ -7142,6 +7142,56 @@ And the race sentence is the competition's, not the fixture's: it says how close
 are, not what this game would change — the arithmetic of a particular result belongs to
 `pointsScenarios`, and the panel links there rather than restating it.
 
+**Merged.** On the tree that also carries the discipline trend (M622), the same gates read 128/128
+analytics checks, 1,767 literal sites with 227 interpolating, 2,452 dictionary values and 3,234
+checks, and the bundle is 526 KB gzip across 54 assets.
+
+### M622 — the card count by round, and the season total behind it
+
+**What the board could not say.** `discipline` folds a competition's finished fixtures into one
+line per club: cards, cards per fixture, the worst offender. That is a season total with no time
+in it — a side that collected six cards in round two and none since reads exactly like a side that
+has been collecting them all year. `domain/analytics.ts` gains `disciplineTrend(compId, matches)`:
+the same finished fixtures, the same stats block, folded by `round` instead — the round's cards,
+the fixtures it took, cards per fixture in that round, and a running season total that carries
+forward. Rounds read in ascending order and `peak` is the busiest single round.
+
+**What the screen reads.** The discipline screen's board gains a "Cards by round" panel beneath
+it: one bar per counted round, its height measured against the busiest round, the round's own card
+count printed above the bar and the season cumulative under it, labelled with the round number.
+The panel lives inside the board's branch, so a competition with no counted fixture still reads
+the screen's single empty state rather than a bare frame beneath a board with nothing in it.
+
+**What the gate says.** `proof-analytics` grows four clauses, **123/123**: a hand-scored
+competition folds to rounds `1,2,3` with in-round cards `4,6,4`, a running total of `4,10,14` and
+a peak of `6`; round three counts both of its fixtures (2 cards a game) while round one rates 4 and
+round two rates 6; a scheduled fourth round, another competition's card and a finished fixture
+with no stats block stay out of the fold; the trend reconciles with `discipline` on the same
+fixtures (4 matches, 12 yellows, 2 reds, 3.5 a game) and an unfixtured competition reads no rounds
+and a peak of zero; and the fold repeats byte-for-byte, with the screen reading its rounds off the
+domain fold rather than re-deriving them. Census pins pay for the panel: i18n literal sites
+1,751 → 1,755, interpolating literal sites 220 → 222. No new module, route or storage key, so the
+tree, coverage and storage doors stay where they were. The dictionary grows four keys a locale
+(2,441 → 2,445 values). The suite still walks **121 scripts**.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **121/121 scripts · 3229/3229
+checks**; the bundle grows to **525 KB gzip across 54 assets** (512 JS + 13 CSS), re-recorded in
+`tests/perf/baseline.json` (524 → 525) and `proof-pwa`'s budget pin moves with it. No browser pass
+this milestone either; the fold is exercised through its own fixture and the production build, and
+the browser evidence debt stays on the ledger.
+
+**Honest reservation.** A round is whatever `round` the fixture carries — the panel invents no
+calendar and no date axis. Only finished fixtures with a stats block count, so a round whose
+fixtures shipped without stats reads nothing rather than zero. Cards per fixture divides the
+round's cards by the round's fixtures, not by either side. And the bar height is the raw round
+count against the busiest round: a one-fixture round with two reds can stand as tall as a full
+round with the same count, and the panel says so rather than normalising per fixture.
+
+**Merged.** On the tree that also carries the match page's stakes panel (M623), the same gates read
+128/128 analytics checks, 1,767 literal sites with 227 interpolating, 2,452 dictionary values and
+3,234 checks, and the bundle is 526 KB gzip across 54 assets.
+
+
 ### M621 — the matchday briefing, five reads joined to one fixture
 
 **The question that needed five screens.** The board shows today, the run-in shows what is left to
@@ -13356,7 +13406,7 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **134 milestone numbers have no
+later ones as sections, and between the two **133 milestone numbers have no
 section at all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
@@ -13497,7 +13547,6 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M564 — the lane's TransferMarket, committed and swept off the tree at M566
 - M565 — the lane's PlayerValueRanking re-add, swept with the batch; the real screen is M528's
 - M566 — the lane's ClubFinancialModel add-and-sweep, removed by M559's cleanup commit
-- M622 — the discipline trend panel, worked in the shared tree and recorded there
 
 <!-- /gaps -->
 
