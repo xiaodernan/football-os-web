@@ -802,6 +802,21 @@ ok(`the league's faced clock mirrors its shots and saves window for window, and 
   facedMirror && facedSum === clock.shots + clock.saves && facedSum === clock.rows.reduce((s, r) => s + r.faced, 0) &&
   clockSilent.facedBands.every((n) => n === 0) && silentFaced && clockEmpty.facedBands.length === 6 &&
   clockEmpty.facedBands.every((n) => n === 0) && facedScreen);
+// M629: the club page's card ledger gains the same venue split, read off disciplineVenue rather
+// than re-summed from the stats blocks. B's T5 row is 1.00 at home against 2.00 away (+1.00);
+// the quiet T7 fixture gives each club exactly one end, and the screen writes the line only when
+// both ends have been played, so a zero rate it has not earned is never printed.
+const clubVenue = disciplineVenue("T5", discFixtures, discClubs);
+const cvB = byClub(clubVenue.rows, "B");
+const quietOneEnd = discVenueQuiet.rows.every((r) => (r.playedHome > 0) !== (r.playedAway > 0));
+const venueClubScreen = /import \{[^}]*\bdisciplineVenue\b[^}]*\} from "@\/domain\/analytics"/.test(DETAILS_SRC) &&
+  DETAILS_SRC.includes("disciplineVenue(c.competitionId, footballProvider.matches(), footballProvider.clubs())") &&
+  DETAILS_SRC.includes(".rows.find((r) => r.clubId === id)") &&
+  DETAILS_SRC.includes("venue.playedHome > 0 && venue.playedAway > 0") &&
+  DETAILS_SRC.includes("det.cards.venueLine") && DETAILS_SRC.includes("disc.venueTitle");
+ok(`the club page reads the venue split off the board's own fold and prints it only for a club that has played both ends (B ${cvB.homePerMatch}/${cvB.awayPerMatch} gap ${cvB.gap}; one-end rows ${quietOneEnd}; screen ${venueClubScreen})`,
+  cvB.homePerMatch === 1 && cvB.awayPerMatch === 2 && cvB.gap === 1 &&
+  discVenueQuiet.rows.length === 2 && quietOneEnd && venueClubScreen);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

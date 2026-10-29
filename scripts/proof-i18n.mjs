@@ -4369,7 +4369,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M628: the clock's fourth row and its busiest-window line add two literal sites (the row's
 // existing clock.faced key is a new call, and the siege line interpolates band and share):
 // literal 1782 -> 1784, litVarSites 233 -> 234.
-  shapeCounts.literal === 1784 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M629: the club page's venue line adds two literal sites (its label reuses disc.venueTitle and
+// the line itself interpolates three rates): literal 1784 -> 1786, litVarSites 234 -> 235.
+  shapeCounts.literal === 1786 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4411,7 +4413,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M626: 229 -> 231 — the venue split's league line and gap line hand over their rates.
 // M627: 231 -> 233 — the stakes swing and ceiling lines hand over their figures.
 // M628: 233 -> 234 — the siege panel's busiest-window line hands over its band and late share.
-  litVarSites === 234 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M629: 234 -> 235 — the club page's venue line hands over the two rates and the gap.
+  litVarSites === 235 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

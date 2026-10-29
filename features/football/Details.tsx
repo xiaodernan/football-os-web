@@ -26,7 +26,7 @@ import { careerArc } from "@/domain/careerArc";
 // an empty group where the domain answers the club's own rating.
 import { clubInput, lineMean, LINE_GROUPS } from "@/domain/career";
 import { playerDna } from "@/domain/playerDna";
-import { teamMetrics, expectedGoals, discipline, matchBrief } from "@/domain/analytics";
+import { teamMetrics, expectedGoals, discipline, disciplineVenue, matchBrief } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
@@ -338,6 +338,12 @@ export function ClubDetail({ id }: { id: string }) {
     () => (c ? discipline(c.competitionId, footballProvider.matches(), footballProvider.clubs()).rows.find((r) => r.clubId === id) ?? null : null),
     [c, id],
   );
+  // M629: the same ledger split by the end it was earned at — the /discipline board's venue fold,
+  // read for this club rather than re-summed from the stats blocks.
+  const venue = useMemo(
+    () => (c ? disciplineVenue(c.competitionId, footballProvider.matches(), footballProvider.clubs()).rows.find((r) => r.clubId === id) ?? null : null),
+    [c, id],
+  );
   const mine = metrics.find((m) => m.clubId === id) ?? null;
   const preview = useMemo(() => {
     if (!mine || !next) return null;
@@ -429,6 +435,16 @@ export function ClubDetail({ id }: { id: string }) {
                       <dt className="text-muted-foreground">{t("disc.perMatch")}</dt>
                       <dd className="font-mono">{cards.played ? fmt2(cards.bookingsPerMatch) : ABSENT}</dd>
                     </div>
+                    {/* M629: a gap needs both ends — a club that has only hosted reads a zero
+                        away rate it has not earned, so the line waits for both. */}
+                    {venue && venue.playedHome > 0 && venue.playedAway > 0 && (
+                      <div className="flex items-center justify-between">
+                        <dt className="text-muted-foreground">{t("disc.venueTitle")}</dt>
+                        <dd className="font-mono">
+                          {t("det.cards.venueLine", { h: fmt2(venue.homePerMatch), a: fmt2(venue.awayPerMatch), g: fmt2(venue.gap) })}
+                        </dd>
+                      </div>
+                    )}
                   </dl>
                 )}
                 {preview && (

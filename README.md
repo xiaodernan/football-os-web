@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M628 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M629 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,36 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M629 — the club page reads the cards where they were earned
+
+**The ledger said how many, not where.** M572 gave the club page the season's card row, and it
+printed yellows, reds and per-match — all competition-wide. M626 answered the same question by end
+for the league and for the five clubs with the biggest split, but a reader on a club's own page
+could not see that club's split without opening /discipline.
+
+**What the screen reads.** The card ledger gains one row, labelled with the board's own "Cards by
+end" title: the home rate, the away rate and their gap, all from `disciplineVenue`'s row for this
+club. It is written only when the club has played both ends — the same guard the board uses,
+because a club that has only hosted reads a zero away rate it has not earned. No domain code
+changed: the fold is reused, not re-derived from the stats blocks, and the card memo beside it is
+untouched.
+
+**What the gate says.** `proof-analytics` grows one clause, **139/139**: B's T5 row is 1.00 at home
+against 2.00 away for a +1.00 gap; the quiet T7 fixture gives each of its two clubs exactly one
+end, so the screen's both-end guard has a real one-end row to refuse; and the source reads
+`disciplineVenue(...).rows.find(...)` and `venue.playedHome > 0 && venue.playedAway > 0`, so a
+future rewrite that re-sums the stats inside the screen fails the clause.
+
+**What it cost.** One key (`det.cards.venueLine`) and a reused label; literal sites 1,784 → 1,786
+and variable-carrying literal sites 234 → 235; 2,468 → 2,469 dictionary values; the bundle stays
+at 529 KB gzip across 54 assets (js 515, css 13), so the baseline and the PWA pin hold. tsc clean,
+build exit 0, the suite 121 scripts · 3,250/3,250.
+
+**The honest limit.** The line still describes the competition's card ledger, not a referee or
+opponent effect; a club with one end played reads its rates only through /discipline's board, which
+lists both-end clubs for the same reason. The gap is two printed rates subtracted, so it inherits
+their two-decimal rounding.
 
 ### M628 — the clock read from the defending end, window for window
 
