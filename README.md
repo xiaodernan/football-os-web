@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M627 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M628 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,45 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M628 — the clock read from the defending end, window for window
+
+**The clock only said when a side attacked.** M574 built the six-window clock from shots, saves and
+VARs, and M625 added the defending end at the season level — who faces the most, and how much of
+that load arrives late. The band axis and the defending end still had not met: the clock could say
+when the league shoots, but not when the league is shot at.
+
+**What the fold adds.** `EventClockRow` gains `facedBands` (six windows of shots plus saves faced),
+`lateFaced` (the last window alone), `lateFacedShare` and `worstBand` — the window it faces the
+most in, or −1 for a club that has faced nothing. Every SHOT and SAVE already credited the
+opponent's `faced` counter; it now also lands in that opponent's window, and the last window feeds
+`lateFaced`. `EventClock` gains a league-level `facedBands`: the mirror of the two existing series,
+window for window, because every shot and every save is faced by exactly one defence.
+
+**What the screen reads.** The bands panel gets a fourth row — the defending end's own clock, in
+the progress colour so it reads as the counterpart rather than a fourth event family — and each
+siege row gains a busiest-window line ("busiest 76–90′ · 40% late"). The line is written only for a
+club that has faced something; a club that faced nothing has no busiest window to name.
+
+**What the gate says.** `proof-analytics` grows two clauses, **138/138**: on the hand-scored T9
+set B faces A's shot at 12 and the saved A shot at 78 (`1,0,0,0,0,2`, busiest window 5 at 66.67%
+late); A faces B's shot at 30 and the saved B shot at 12 (`1,1,0,0,0,0`, busiest window 0, nothing
+late); C faces the stoppage-time shot (`0,0,0,0,0,1`, busiest 5 at 100%). The league series is
+`2,1,0,0,0,3` and mirrors shots + saves window for window, totalling the same six events the two
+series do. A silent clock and an empty competition both carry six zero windows, every row's busiest
+window is −1 and its late share is 0, and the screen reads `clock.facedBands`, `r.worstBand`,
+`r.lateFacedShare` and the `r.faced > 0` guard rather than deriving any of it twice.
+
+**What it cost.** One key (`clock.siegeBand`) and two rewritten hints; literal sites 1,782 → 1,784
+and variable-carrying literal sites 233 → 234 (the fourth row is a new call to an existing key, and
+the siege line interpolates); 2,467 → 2,468 dictionary values; the bundle measures 529 KB gzip
+across 54 assets (js 515, css 13), so the baseline and the PWA pin both move up one. tsc clean,
+build exit 0, the suite 121 scripts · 3,249/3,249.
+
+**The honest limit.** Faced counts the events the feed carries — a shot or a save — not every
+attempt a defence absorbs: blocks, woodwork and off-target efforts are not in this data. The
+busiest window is the first maximum when two windows tie, and the league's mirror is an aggregate
+of event families rather than a per-club sum that could disagree with it.
 
 ### M627 — the stakes panel, and what the three results do to it
 

@@ -240,6 +240,21 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M628: 事件时钟的防守端窗口轴——`domain/analytics.ts` 的 `EventClockRow` 新增 `facedBands`/`lateFaced`/`lateFacedShare`/`worstBand`，
+  `EventClock` 新增联赛级 `facedBands`：每个 SHOT/SAVE 除了记到对面防守方的 `faced`（M625），还落进对面的六带之一，
+  末带（76–90′）另记 `lateFaced`；后处理给 `lateFacedShare`（round2，faced=0 时 0）与 `worstBand`（首个最大带，faced=0 时 −1）；
+  联赛镜像列 `facedBands = shotsBands + savesBands`，逐窗闭合（每次射门/扑救恰好由一方防守承受）；
+  `features/analytics/EventClock.tsx` 的 bands 面板加第四行（`clock.facedBands`、`BAR_FILL.progress`，peak 纳入该列），
+  siege 行在 `r.faced > 0` 时加"最密 {band} · 末段占 {p}%"一行；
+  1 键三语（clock.siegeBand）+ 两处 hint 扩写（bandsHint/siegeHint）；`proof-analytics` 新增 2 条共 138/138
+  （T9 手算：B 挨 A 12′ 射门与 78′ 被扑射门 → 1,0,0,0,0,2、最密 5、末段 66.67%；A 挨 B 30′ 射门与 12′ 被扑射门 → 1,1,0,0,0,0、最密 0、
+  末段 0；C 挨 91′ 射门 → 0,0,0,0,0,1、最密 5、100%；联赛 2,1,0,0,0,3 逐窗等于 shots+saves 且合计 6；静默/空赛事六带全 0、
+  worst −1、share 0；屏幕只读 fold 且守卫 faced>0）；
+  census pin：i18n literal 1,782→1,784、litVarSites 233→234、字典 +1 键/语（2,467→2,468 值）；
+  无新模块/路由/存储键；bundle 528→529 KB gzip / 54 资产（js 515、css 13，baseline 重记，pwa pin 同步）；
+  tsc 干净、build exit 0、全套 121/121 脚本 · 3,249/3,249 检查；无浏览器复核；
+  诚实的保留：faced 只数数据源里有的事件（射门与扑救），不含封堵/中框/偏出；两窗并列时最密取首个最大值；
+  联赛镜像按事件族相加，不是逐队再求和（两者相等由门禁逐窗对账，不改口径）。
 - M627: 比赛页的赛果算术——`domain/analytics.ts` 新增 `MatchSwing` 与 `swingOf(home, away)`，`MatchBrief` 新增 `swing: MatchSwing | null`：
   读同一对 `PointsScenario`（不新增 fold），给出主队视角的积分差（主减客）与三种赛果后的差（胜 +3、平不变、负 −3），
   以及两队各自的"本场后上限"（胜=不变、平 −2、负 −3，因为这场就是上限所依赖的剩余场之一）；
@@ -320,11 +335,11 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M628 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① 事件时钟的对手分时段（faced/stops 按六带拆开，把"何时挨打"读进时钟——M625 留下的窗口轴缺口，M626/M627 未补）；
-② 主客分侧进俱乐部页（把 disciplineVenue 的该队一行读进 club 页的纪律面板，复用同一 fold 不重算）；
-③ 赛果算术进建议面板（briefing 的下一场把同一 swing 读进"下一场分量"，与比赛页共用 swingOf）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（分析 lane 用 M566–M574，组件农场 lane 用 M575–M620；本线已落 M621、M623、M624、M625、M626、M627，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub 在其每次推送后清理并记入 README。
+下一条目：M629 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① 主客分侧进俱乐部页（把 disciplineVenue 的该队一行读进 club 页的纪律面板，复用同一 fold 不重算）；
+② 赛果算术进建议面板（briefing 的下一场把同一 swing 读进"下一场分量"，与比赛页共用 swingOf）；
+③ 俱乐部页的"何时挨打"（把 eventClock 的该队 facedBands/worstBand 读进 club 页，复用 M628 的 fold 不重算）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（分析 lane 用 M566–M574，组件农场 lane 用 M575–M620；本线已落 M621、M623、M624、M625、M626、M627、M628，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub 在其每次推送后清理并记入 README。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

@@ -785,6 +785,23 @@ const swingScreen = DETAILS_SRC.includes("brief.swing") && DETAILS_SRC.includes(
 ok(`a played fixture and a side with no table row read no swing, and the panel renders the two lines only when the fold has one (f2 ${stakeF2.swing}, s3 ${stakeS3.swing}; screen ${swingScreen})`,
   stakeF2.swing === null && stakeS3.swing === null && swingScreen && swing.homeCeiling.loss === 7 &&
   JSON.stringify(stakeS1) === JSON.stringify(stakeRight));
+// M628: the defending end gets the clock too. On the T9 fixture B faces A's shot at 12 and the
+// saved A shot at 78 (window 0 once, window 5 twice); A faces B's shot at 30 (window 1) and the
+// saved B shot at 12 (window 0); C faces the stoppage-time shot at 91 (window 5). The league's
+// faced series is the mirror of shots + saves: every one of those events faced exactly one club.
+const facedSum = clock.facedBands.reduce((s, n) => s + n, 0);
+ok(`eventClock lands each faced event in its window and names the busiest one (A ${clk.A.facedBands.join(",")} busiest ${clk.A.worstBand} at ${clk.A.lateFacedShare}% late, B ${clk.B.facedBands.join(",")} busiest ${clk.B.worstBand} at ${clk.B.lateFacedShare}%, C ${clk.C.facedBands.join(",")} busiest ${clk.C.worstBand} at ${clk.C.lateFacedShare}%)`,
+  clk.A.facedBands.join(",") === "1,1,0,0,0,0" && clk.A.worstBand === 0 && clk.A.lateFaced === 0 && clk.A.lateFacedShare === 0 &&
+  clk.B.facedBands.join(",") === "1,0,0,0,0,2" && clk.B.worstBand === 5 && clk.B.lateFaced === 2 && near(clk.B.lateFacedShare, 66.67, 0.005) &&
+  clk.C.facedBands.join(",") === "0,0,0,0,0,1" && clk.C.worstBand === 5 && clk.C.lateFaced === 1 && clk.C.lateFacedShare === 100);
+const facedMirror = clock.facedBands.every((n, b) => n === clock.shotsBands[b] + clock.savesBands[b]);
+const silentFaced = clockSilent.rows.every((r) => r.facedBands.every((n) => n === 0) && r.worstBand === -1 && r.lateFacedShare === 0);
+const facedScreen = CLOCK_SRC.includes("clock.facedBands") && CLOCK_SRC.includes("r.worstBand") &&
+  CLOCK_SRC.includes("r.lateFacedShare") && CLOCK_SRC.includes("clock.siegeBand") && CLOCK_SRC.includes("r.faced > 0");
+ok(`the league's faced clock mirrors its shots and saves window for window, and a silent or empty clock still carries six windows (series ${clock.facedBands.join(",")}, mirror ${facedMirror}, total ${facedSum} = shots + saves; silent ${clockSilent.facedBands.join(",")} worst ${clockSilent.rows.map((r) => r.worstBand).join(",")}; empty ${clockEmpty.facedBands.join(",")}; screen ${facedScreen})`,
+  facedMirror && facedSum === clock.shots + clock.saves && facedSum === clock.rows.reduce((s, r) => s + r.faced, 0) &&
+  clockSilent.facedBands.every((n) => n === 0) && silentFaced && clockEmpty.facedBands.length === 6 &&
+  clockEmpty.facedBands.every((n) => n === 0) && facedScreen);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

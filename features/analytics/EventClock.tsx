@@ -17,11 +17,13 @@ export function EventClock() {
   const clock = useMemo(() => eventClock(compId, matches, clubs), [compId, matches, clubs]);
   const bands = clock.shotsBands.map((n, b) => ({ b, n }));
   const busiest = clock.shots ? maxBy(bands, (x) => x.n) : null;
-  const peak = Math.max(1, ...clock.shotsBands, ...clock.savesBands, ...clock.varBands);
+  const peak = Math.max(1, ...clock.shotsBands, ...clock.savesBands, ...clock.varBands, ...clock.facedBands);
   const rows = [
     { label: t("clock.shots"), data: clock.shotsBands, fill: BAR_FILL.info },
     { label: t("clock.saves"), data: clock.savesBands, fill: BAR_FILL.low },
     { label: t("clock.vars"), data: clock.varBands, fill: BAR_FILL.bad },
+    // M628: the same clock read from the defending end, window for window.
+    { label: t("clock.faced"), data: clock.facedBands, fill: BAR_FILL.progress },
   ];
   // M625: the same clock read from the defending end — the five clubs that face the most shots.
   const siege = clock.siege.slice(0, 5);
@@ -141,6 +143,12 @@ export function EventClock() {
                       <div className="min-w-0">
                         <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
                         <div className="text-xs text-muted-foreground">{t("clock.stopLine", { p: r.stopShare })}</div>
+                        {/* A club that faced nothing has no busiest window to name. */}
+                        {r.faced > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            {t("clock.siegeBand", { band: bandLabels[r.worstBand], p: r.lateFacedShare })}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="text-right tabular-nums">
