@@ -767,6 +767,24 @@ ok(`the venue split reads a played end at zero and an empty competition as empty
   DISCIPLINE_SRC.includes("venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0)") &&
   ["venue.home.perMatch", "venue.away.perMatch", "r.homePerMatch", "r.awayPerMatch", "r.gap",
     "disc.venueTitle", "disc.venueLeague", "disc.venueGap", "disc.venueNone"].every((k) => DISCIPLINE_SRC.includes(k)));
+// M627: the fixture's own arithmetic. s1 is A (4 pts, ceiling 10) at home to B (1 pt, ceiling 7),
+// so the hosts lead by 3: a win makes it 6, a draw leaves 3, an away win makes it 0. The fixture is
+// one of the two games each ceiling is built on, so a win keeps the ceiling where it is, a draw
+// costs two points of room and a loss costs three.
+const stakeS3 = matchBrief("s3", briefingFixtures, briefingClubs);
+const swing = stakeS1.swing;
+ok(`matchBrief folds what the fixture can still change for both sides (lead ${swing.lead}; home win ${swing.ifHomeWin}, draw ${swing.ifDraw}, away win ${swing.ifAwayWin}; ceilings A ${swing.homeCeiling.win}/${swing.homeCeiling.draw}/${swing.homeCeiling.loss}, B ${swing.awayCeiling.win}/${swing.awayCeiling.draw}/${swing.awayCeiling.loss})`,
+  swing !== null && swing.lead === 3 && swing.ifHomeWin === 6 && swing.ifDraw === 3 && swing.ifAwayWin === 0 &&
+  swing.homeCeiling.win === 10 && swing.homeCeiling.draw === 8 && swing.homeCeiling.loss === 7 &&
+  swing.awayCeiling.win === 7 && swing.awayCeiling.draw === 5 && swing.awayCeiling.loss === 4);
+// A finished fixture already spent its game, and a side with no table row has nothing to measure
+// from: both read null rather than a swing built on numbers the fold does not have.
+const swingScreen = DETAILS_SRC.includes("brief.swing") && DETAILS_SRC.includes("signed(brief.swing.lead)") &&
+  DETAILS_SRC.includes("stakes.swingLine") && DETAILS_SRC.includes("stakes.ceilingLine") &&
+  DETAILS_SRC.includes("brief.swing &&");
+ok(`a played fixture and a side with no table row read no swing, and the panel renders the two lines only when the fold has one (f2 ${stakeF2.swing}, s3 ${stakeS3.swing}; screen ${swingScreen})`,
+  stakeF2.swing === null && stakeS3.swing === null && swingScreen && swing.homeCeiling.loss === 7 &&
+  JSON.stringify(stakeS1) === JSON.stringify(stakeRight));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

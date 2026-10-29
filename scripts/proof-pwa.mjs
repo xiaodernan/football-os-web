@@ -88,6 +88,7 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // and recorded in tests/perf/baseline.json in the same commit); M625: 526 -> 527 after the event
 // clock's siege panel (measured at 527 KB / 54 assets, JS 513 + CSS 13, recorded the same way);
 // M626: 527 -> 528 after the discipline venue split (measured at 528 KB / 54 assets, JS 514 + CSS 13).
+// M627: the pin holds at 528 (the stakes swing lines measure 515 JS + 13 CSS, still 528 KB).
 const BUDGET_KB = 528;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);

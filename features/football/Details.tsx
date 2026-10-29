@@ -678,6 +678,15 @@ function Stakes({ matchId, home, away }: { matchId: string; home: { name: string
             ? t("stakes.recordLine", { n: rec.played, w: rec.winsA, d: rec.draws, l: rec.winsB, gf: rec.goalsA, ga: rec.goalsB })
             : t("stakes.noMeetings")}
         </li>
+        {/* M627: before kickoff the page can say what the three results do to the two sides;
+            a finished fixture has spent its game, so the fold leaves `swing` null and these
+            lines are not written at all. */}
+        {brief.swing && (
+          <>
+            <li>{t("stakes.swingLine", { now: signed(brief.swing.lead), win: signed(brief.swing.ifHomeWin), draw: signed(brief.swing.ifDraw), lose: signed(brief.swing.ifAwayWin) })}</li>
+            <li>{t("stakes.ceilingLine", { hw: brief.swing.homeCeiling.win, hd: brief.swing.homeCeiling.draw, hl: brief.swing.homeCeiling.loss, aw: brief.swing.awayCeiling.win, ad: brief.swing.awayCeiling.draw, al: brief.swing.awayCeiling.loss })}</li>
+          </>
+        )}
         <li>{t("stakes.raceLine", { gap: brief.race.currentGap, changes: brief.race.leadChanges })}</li>
       </ul>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">

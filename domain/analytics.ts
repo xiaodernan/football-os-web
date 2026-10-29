@@ -1009,6 +1009,35 @@ export interface Briefing {
   race: TitleRace;
 }
 
+/** What a fixture can still change for the two clubs in it (M627). Read only before kickoff:
+ *  a finished fixture already spent its game, so `matchBrief` leaves this null rather than
+ *  pretending the reader can still choose the result. */
+export interface MatchSwing {
+  /** The points gap from the hosts' side (hosts minus visitors) as the table stands now. */
+  lead: number;
+  /** The same gap after each result: a win moves it three, a draw moves both sides one. */
+  ifHomeWin: number;
+  ifDraw: number;
+  ifAwayWin: number;
+  /** Each side's ceiling after the fixture by its own result. The game is one of the games the
+   *  ceiling was built on, so a win leaves it where it is, a draw costs two points of room and a
+   *  loss costs three — arithmetic of the same fold, not a prediction. */
+  homeCeiling: { win: number; draw: number; loss: number };
+  awayCeiling: { win: number; draw: number; loss: number };
+}
+
+const swingOf = (home: PointsScenario, away: PointsScenario): MatchSwing => {
+  const lead = home.points - away.points;
+  return {
+    lead,
+    ifHomeWin: lead + 3,
+    ifDraw: lead,
+    ifAwayWin: lead - 3,
+    homeCeiling: { win: home.maxPoints, draw: home.maxPoints - 2, loss: home.maxPoints - 3 },
+    awayCeiling: { win: away.maxPoints, draw: away.maxPoints - 2, loss: away.maxPoints - 3 },
+  };
+};
+
 export interface MatchBrief {
   /** The fixture this brief is written for. */
   fixture: Match;
@@ -1017,6 +1046,9 @@ export interface MatchBrief {
   home: PointsScenario | null;
   /** The away side's read from the same fold — both ends measured alike. */
   away: PointsScenario | null;
+  /** The fixture's own arithmetic for the two sides; null once it is finished, or when either
+   *  side has no table row to measure from. */
+  swing: MatchSwing | null;
   /** Each side's remaining calendar in the competition; null under the same condition. */
   homeRunIn: RunInRow | null;
   awayRunIn: RunInRow | null;
@@ -1042,10 +1074,13 @@ export function matchBrief(matchId: string, matches: Match[], clubs: Club[]): Ma
   const scenarios = pointsScenarios(compId, matches, clubs);
   const calendar = runIn(compId, matches, clubs);
   const venues = venueSplit(compId, matches, clubs);
+  const home = scenarios.find((s) => s.clubId === fixture.homeClubId) ?? null;
+  const away = scenarios.find((s) => s.clubId === fixture.awayClubId) ?? null;
   return {
     fixture,
-    home: scenarios.find((s) => s.clubId === fixture.homeClubId) ?? null,
-    away: scenarios.find((s) => s.clubId === fixture.awayClubId) ?? null,
+    home,
+    away,
+    swing: fixture.status === "SCHEDULED" && home && away ? swingOf(home, away) : null,
     homeRunIn: calendar.find((r) => r.clubId === fixture.homeClubId) ?? null,
     awayRunIn: calendar.find((r) => r.clubId === fixture.awayClubId) ?? null,
     homeVenue: venues.rows.find((r) => r.clubId === fixture.homeClubId) ?? null,

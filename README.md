@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M626 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M627 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,44 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M627 — the stakes panel, and what the three results do to it
+
+**The page listed the stakes but not the swing.** M623 put the table, the venue halves, the record
+and the race on the match page, and every one of them was a reading of the season as it stands. The
+fixture's own arithmetic was missing: what a home win, a draw and an away win would do to the two
+sides that have to play it.
+
+**What the fold adds.** `MatchBrief` gains `swing: MatchSwing | null`, computed by `swingOf` from the
+same two `PointsScenario` rows the panel above already reads. It carries the points gap from the
+hosts' side (hosts minus visitors) and the same gap after each result — a win moves it three, a
+draw moves both sides one so it stands, an away win moves it back three. It also carries each side's
+ceiling after the fixture by its own result: the game is one of the games the ceiling was built on,
+so a win leaves the ceiling where it is, a draw costs two points of room and a loss costs three.
+`swing` is null whenever the fold has nothing honest to measure — a finished fixture has spent its
+game, and a side with no table row has no ceiling to spend.
+
+**What the screen reads.** Two list rows in the stakes panel, written only when `swing` is non-null:
+the gap line (now, and after each of the three results, formatted through `signed`) and the ceiling
+line (three numbers per side). A played fixture reads the four rows it always did and no swing.
+
+**What the gate says.** `proof-analytics` grows two clauses, **136/136**: on the hand-scored T1 set
+s1 is A (4 pts, ceiling 10) at home to B (1 pt, ceiling 7), so the lead is 3 — 6 on a home win, 3
+on a draw, 0 on an away win — with ceilings A 10/8/7 and B 7/5/4; f2 is finished and s3 has a side
+with no table row, and both read null; the panel is checked to render `brief.swing` and the two
+lines off the fold; the reversed fixture list stays byte-identical. Census pins pay for the rows:
+i18n literal sites 1,780 → 1,782, interpolating sites 231 → 233, the dictionary +2 keys a locale
+(2,465 → 2,467 values). The bundle holds at 528 KB gzip (515 JS + 13 CSS across 54 assets); the JS
+half is re-recorded in `tests/perf/baseline.json` and the budget pin is unchanged at 528.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **121/121 scripts · 3,247/3,247
+checks**. No browser pass; the fold is exercised through its own fixture and the production build.
+
+**Honest reservation.** The gap arithmetic assumes every other fixture stands still: it says what
+this result does to these two clubs' separation, not where either will sit once the rest of the
+round is played. The ceiling line is room, not likelihood — it spends the fixture and nothing else,
+and it is written only for `SCHEDULED` fixtures because a live one is already in play. A club whose
+row is missing from the table gets no swing rather than a zero.
 
 ### M626 — the discipline board, split by the end it was played at
 
