@@ -86,8 +86,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // after /briefing on top of /clock; M622: 524 -> 525 after the discipline trend panel and M623:
 // 525 -> 526 after the match page's stakes panel (measured at 526 KB / 54 assets on the merged tree
 // and recorded in tests/perf/baseline.json in the same commit); M625: 526 -> 527 after the event
-// clock's siege panel (measured at 527 KB / 54 assets, JS 513 + CSS 13, recorded the same way).
-const BUDGET_KB = 527;
+// clock's siege panel (measured at 527 KB / 54 assets, JS 513 + CSS 13, recorded the same way);
+// M626: 527 -> 528 after the discipline venue split (measured at 528 KB / 54 assets, JS 514 + CSS 13).
+const BUDGET_KB = 528;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

@@ -760,6 +760,78 @@ export function discipline(compId: string, matches: Match[], clubs: Club[]): Dis
   };
 }
 
+export interface DisciplineVenueRow {
+  clubId: string;
+  /** Fixtures it played at each end; zero means it has never played there. */
+  playedHome: number;
+  playedAway: number;
+  /** Bookings (yellows plus reds) at each end. */
+  home: number;
+  away: number;
+  /** Cards per game at each end, 2dp; 0 while it has not played there. */
+  homePerMatch: number;
+  awayPerMatch: number;
+  /** awayPerMatch minus homePerMatch, 2dp; positive means rougher on the road. */
+  gap: number;
+}
+
+export interface DisciplineVenue {
+  /** One row per club, the biggest away-minus-home gap first, then the most bookings, then id. */
+  rows: DisciplineVenueRow[];
+  /** Finished fixtures that carried a stats block — each one is one home and one away appearance. */
+  matches: number;
+  home: { bookings: number; perMatch: number };
+  away: { bookings: number; perMatch: number };
+  /** Which end carries the higher league rate; null when nothing is counted or the rates tie. */
+  rougher: Side | null;
+}
+
+/**
+ * The same discipline fold split by venue (M626): each counted fixture books the home side at one
+ * end and the away side at the other, so a club's card rate can be read where it was earned. The
+ * board answers "who is booked most"; this answers "is it rougher on the road" — for the league
+ * (`rougher`) and for each club (`gap`). The gap is the two printed rates subtracted, not a third
+ * number drifting from them, and a club that has not played at an end reads zero there rather
+ * than an invented rate.
+ */
+export function disciplineVenue(compId: string, matches: Match[], clubs: Club[]): DisciplineVenue {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const rows = new Map<string, DisciplineVenueRow>(metrics.map((m) => [m.clubId, {
+    clubId: m.clubId, playedHome: 0, playedAway: 0, home: 0, away: 0,
+    homePerMatch: 0, awayPerMatch: 0, gap: 0,
+  }]));
+  let counted = 0;
+  let homeBookings = 0;
+  let awayBookings = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED" || !m.stats) continue;
+    counted++;
+    const hb = m.stats.home.yellows + m.stats.home.reds;
+    const ab = m.stats.away.yellows + m.stats.away.reds;
+    homeBookings += hb;
+    awayBookings += ab;
+    const home = rows.get(m.homeClubId);
+    const away = rows.get(m.awayClubId);
+    if (home) { home.playedHome++; home.home += hb; }
+    if (away) { away.playedAway++; away.away += ab; }
+  }
+  const list = [...rows.values()];
+  for (const r of list) {
+    r.homePerMatch = r.playedHome ? round2(r.home / r.playedHome) : 0;
+    r.awayPerMatch = r.playedAway ? round2(r.away / r.playedAway) : 0;
+    r.gap = round2(r.awayPerMatch - r.homePerMatch);
+  }
+  list.sort((a, b) =>
+    b.gap - a.gap || (b.home + b.away) - (a.home + a.away) || a.clubId.localeCompare(b.clubId));
+  return {
+    rows: list,
+    matches: counted,
+    home: { bookings: homeBookings, perMatch: counted ? round2(homeBookings / counted) : 0 },
+    away: { bookings: awayBookings, perMatch: counted ? round2(awayBookings / counted) : 0 },
+    rougher: counted === 0 || homeBookings === awayBookings ? null : homeBookings > awayBookings ? "home" : "away",
+  };
+}
+
 export interface DisciplineRound {
   round: number;
   /** Finished fixtures with a stats block in this round. */

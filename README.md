@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M625 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M626 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,54 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M626 — the discipline board, split by the end it was played at
+
+**One column hid two venues.** The discipline board folds every counted fixture into a single rate
+per club, so a side that is booked twice as often on the road as at home reads as an average and
+nothing more. The stats block already records the home and away lines separately; the board was
+adding them before it measured anything.
+
+**What the fold adds.** `disciplineVenue` reads the same finished, stats-carrying fixtures as
+`discipline` and books each one at the end it was played: the home line to the home end, the away
+line to the away end. `DisciplineVenueRow` carries `playedHome`/`playedAway`, the bookings at each
+end, a 2dp rate per game at each end (zero while that end has not been played), and `gap` — the
+away rate minus the home rate, so a positive gap means rougher on the road. Rows sort by gap, then
+by total bookings, then by id. The league half is the same fold without the club split: home and
+away bookings, their rates per game, and `rougher`, which is `null` when nothing is counted or the
+two ends tie. Because every counted fixture contributes one appearance to each end, the two halves
+must add up to the board's own card total, and the proof checks that they do.
+
+**What the screen reads.** A "Cards by end" panel sits between the board and the rounds trend. A
+league line states both rates, then the top five clubs by gap — each row naming the club, the gap
+sentence, the home rate and the away rate with a label at each. The board is filtered to clubs that
+have played both ends: a club with one venue played reads a 1.00 or a 0.00 it has not earned, so
+its gap is not a finding. An empty or one-end-only competition reads the empty line rather than a
+list of zeroes.
+
+**What the gate says.** `proof-analytics` grows three clauses, **134/134**: on the hand-scored
+fixture A is 2.00 at both ends (gap 0), B 1.00 home against 2.00 away (+1.00) and C 4.00 home
+against 2.00 away (−2.00), so the order is BAC; the league reads 7 cards in 3 home games (2.33)
+against 6 in 3 away (2.00), `rougher` is "home", and the halves sum to the board's 13; a silent
+fixture reads a played end at zero with `rougher` null, an empty competition reads no rows, the
+fold repeats byte-identically, and the screen renders off `disciplineVenue(compId, matches, clubs)`
+with the both-end guard in place. The vocabulary gate also caught the first draft: spelling
+`"home" | "away"` again in `analytics.ts` duplicated the union `domain/types.ts` already names, so
+the field now reads `Side | null`. Census pins pay for the panel: i18n literal sites 1,773 → 1,780,
+interpolating literal sites 229 → 231, the dictionary +7 keys a locale (2,458 → 2,465 values). The
+bundle moves 527 → 528 KB gzip (514 JS + 13 CSS across 54 assets), re-recorded in
+`tests/perf/baseline.json` and `proof-pwa`'s budget pin in the same commit.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **121/121 scripts · 3,245/3,245
+checks**. No browser pass this milestone; the fold is exercised through its own fixture and the
+production build, and the browser evidence debt stays on the ledger.
+
+**Honest reservation.** "Home" and "away" here are the ends the fixture records, not pitch, weather
+or crowd — the seed has no split beyond that, and a neutral-venue fixture would be booked as its
+listed home side. The split reads cards only (yellows plus reds); fouls stay league-wide in the
+board above. A one-end club keeps its row in the fold but never reaches this panel, so the screen
+is silent about clubs whose gap the data cannot support. There is no opponent axis — the panel says
+where a club is booked, not by whom — and the list is sliced to five.
 
 ### M625 — the clock's defending end
 

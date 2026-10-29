@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -731,6 +731,42 @@ ok(`disciplineTrend is deterministic and the discipline screen reads its rounds 
   /import \{[^}]*\bdisciplineTrend\b[^}]*\} from "@\/domain\/analytics"/.test(DISCIPLINE_SRC) &&
   DISCIPLINE_SRC.includes("disciplineTrend(compId, matches)") &&
   DISCIPLINE_SRC.includes("trend.rounds.map(") && DISCIPLINE_SRC.includes("trend.peak"));
+// M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
+// 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
+// visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C
+// 4.00 home against 2.00 away (−2.00), and the sort puts B first, then A, then C. The league is
+// 7 cards in 3 home games against 6 in 3 away games, so the home end is the rougher one, and the
+// two halves must add up to the board's own 13 cards.
+const discVenue = disciplineVenue("T5", discFixtures, discClubs);
+const dvA = byClub(discVenue.rows, "A"), dvB = byClub(discVenue.rows, "B"), dvC = byClub(discVenue.rows, "C");
+ok(`disciplineVenue charges each counted fixture's cards to the end they were earned at (order ${discVenue.rows.map((r) => r.clubId).join("")}, ${discVenue.matches} matches; A ${dvA.homePerMatch}/${dvA.awayPerMatch} gap ${dvA.gap}, B ${dvB.homePerMatch}/${dvB.awayPerMatch} gap ${dvB.gap}, C ${dvC.homePerMatch}/${dvC.awayPerMatch} gap ${dvC.gap})`,
+  discVenue.matches === 3 && discVenue.rows.map((r) => r.clubId).join("") === "BAC" &&
+  dvA.playedHome === 1 && dvA.playedAway === 1 && dvA.homePerMatch === 2 && dvA.awayPerMatch === 2 && dvA.gap === 0 &&
+  dvB.playedHome === 1 && dvB.playedAway === 1 && dvB.homePerMatch === 1 && dvB.awayPerMatch === 2 && dvB.gap === 1 &&
+  dvC.playedHome === 1 && dvC.playedAway === 1 && dvC.homePerMatch === 4 && dvC.awayPerMatch === 2 && dvC.gap === -2);
+ok(`the venue split closes on the board's own card count and picks the rougher end (home ${discVenue.home.bookings} at ${discVenue.home.perMatch}, away ${discVenue.away.bookings} at ${discVenue.away.perMatch}, rougher ${discVenue.rougher})`,
+  discVenue.home.bookings === 7 && near(discVenue.home.perMatch, 2.33, 0.005) &&
+  discVenue.away.bookings === 6 && discVenue.away.perMatch === 2 && discVenue.rougher === "home" &&
+  discVenue.matches === board.matches && discVenue.home.bookings + discVenue.away.bookings === board.yellows + board.reds);
+// A club that only played one end has no gap to report, so the screen's board is guarded to
+// both-end clubs; a zero-card game is still a played end read at zero, and nothing counted at
+// all reads empty rather than a tie.
+const discVenueQuiet = disciplineVenue("T7", [
+  withStats(match("q1", "T7", "F", "G", 0, 0, "2026-04-07"), statLine(5, 0, 0), statLine(3, 0, 0)),
+], discClubs);
+const discVenueEmpty = disciplineVenue("T8", [], discClubs);
+const discVenueAgain = disciplineVenue("T5", discFixtures, discClubs);
+const venueDrift = JSON.stringify(discVenue) === JSON.stringify(discVenueAgain);
+ok(`the venue split reads a played end at zero and an empty competition as empty, and the screen renders it off the fold with the both-end guard (quiet rows ${discVenueQuiet.rows.length}, rates ${discVenueQuiet.rows.map((r) => `${r.homePerMatch}/${r.awayPerMatch}`).join(",")}, rougher ${discVenueQuiet.rougher}; empty rows ${discVenueEmpty.rows.length}, matches ${discVenueEmpty.matches}, rougher ${discVenueEmpty.rougher}; same fold ${venueDrift})`,
+  discVenueQuiet.matches === 1 && discVenueQuiet.rows.length === 2 &&
+  discVenueQuiet.rows.every((r) => r.homePerMatch === 0 && r.awayPerMatch === 0 && r.gap === 0) &&
+  discVenueQuiet.rougher === null && discVenueEmpty.rows.length === 0 && discVenueEmpty.matches === 0 &&
+  discVenueEmpty.rougher === null && venueDrift &&
+  /import \{[^}]*\bdisciplineVenue\b[^}]*\} from "@\/domain\/analytics"/.test(DISCIPLINE_SRC) &&
+  DISCIPLINE_SRC.includes("disciplineVenue(compId, matches, clubs)") &&
+  DISCIPLINE_SRC.includes("venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0)") &&
+  ["venue.home.perMatch", "venue.away.perMatch", "r.homePerMatch", "r.awayPerMatch", "r.gap",
+    "disc.venueTitle", "disc.venueLeague", "disc.venueGap", "disc.venueNone"].every((k) => DISCIPLINE_SRC.includes(k)));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

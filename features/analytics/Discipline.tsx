@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { discipline, disciplineTrend } from "@/domain/analytics";
+import { discipline, disciplineTrend, disciplineVenue } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf } from "@/lib/utils";
 
@@ -16,6 +16,9 @@ export function Discipline() {
 
   const board = useMemo(() => discipline(compId, matches, clubs), [compId, matches, clubs]);
   const trend = useMemo(() => disciplineTrend(compId, matches), [compId, matches]);
+  const venue = useMemo(() => disciplineVenue(compId, matches, clubs), [compId, matches, clubs]);
+  // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
+  const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
   const most = counted.length ? maxBy(counted, (r) => r.bookings) : null;
   const peak = Math.max(1, ...board.rows.map((r) => r.bookingsPerMatch));
@@ -113,6 +116,45 @@ export function Discipline() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("disc.method")}</p>
+          </Panel>
+
+          {/* M626: the same cards split by the end they were earned at. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.venueTitle")} hint={t("disc.venueHint")} />
+            <p className="mt-2 text-xs text-muted-foreground">{t("disc.venueLeague", { h: fmt2(venue.home.perMatch), a: fmt2(venue.away.perMatch) })}</p>
+            {split.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.venueNone")}</p>
+            ) : (
+              <ul className="mt-2 space-y-1">
+                {split.map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li
+                      key={r.clubId}
+                      className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={26} />
+                        <div className="min-w-0">
+                          <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                            {club?.name ?? r.clubId}
+                          </Link>
+                          <div className="text-xs text-muted-foreground">{t("disc.venueGap", { g: fmt2(r.gap) })}</div>
+                        </div>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        {fmt2(r.homePerMatch)}
+                        <div className="text-xs text-muted-foreground">{t("disc.venueHome")}</div>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        {fmt2(r.awayPerMatch)}
+                        <div className="text-xs text-muted-foreground">{t("disc.venueAway")}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </Panel>
 
           <Panel className="p-5">
