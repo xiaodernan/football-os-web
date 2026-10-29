@@ -578,6 +578,25 @@ ok(`the event clock screen renders all three folded families and both league row
   ["clock.shotsBands", "clock.savesBands", "clock.varBands"].every((k) => CLOCK_SRC.includes(k)) &&
   CLOCK_SRC.includes("clock.rows.map(") && CLOCK_SRC.includes("eventClock(compId, matches, clubs)") &&
   !/GOAL_BANDS|goalBand\(/.test(CLOCK_SRC));
+// M625: the defending end of the same clock. Every SHOT and SAVE by one side is an attempt the
+// other side faced, and a SAVE is that other side's keeper making the stop. Hand-count on the
+// same fixture: B faces A's two shots and one saved shot (3 faced, 1 stop), A faces B's shot and
+// saved shot (2, 1), C faces the one stoppage-time shot (1, 0). The mirror has to close — the
+// league's faced total is exactly shots + saves, because each of those events faced one club.
+const facedTotal = clock.rows.reduce((s, r) => s + r.faced, 0);
+const stopsTotal = clock.rows.reduce((s, r) => s + r.stops, 0);
+ok(`every shot and save is charged to the defender as well as the shooter — faced ${facedTotal} = ${clock.shots} shots + ${clock.saves} saves, stops ${stopsTotal} = the saves (A ${clk.A.faced}/${clk.A.stops} at ${clk.A.stopShare}%, B ${clk.B.faced}/${clk.B.stops} at ${clk.B.stopShare}%, C ${clk.C.faced}/${clk.C.stops} at ${clk.C.stopShare}%)`,
+  facedTotal === clock.shots + clock.saves && stopsTotal === clock.saves &&
+  clk.A.faced === 2 && clk.A.stops === 1 && near(clk.A.stopShare, 50, 0.005) &&
+  clk.B.faced === 3 && clk.B.stops === 1 && near(clk.B.stopShare, 33.33, 0.005) &&
+  clk.C.faced === 1 && clk.C.stops === 0 && clk.C.stopShare === 0);
+ok(`the defending read has its own order and a club that faced nothing reads zero (siege ${clock.siege.map((r) => r.clubId).join("")}, silent ${clockSilent.siege.length}, empty ${clockEmpty.siege.length})`,
+  clock.siege.map((r) => r.clubId).join("") === "BAC" && clock.siege.length === 3 &&
+  clockSilent.siege.length === 3 && clockSilent.siege.every((r) => r.faced === 0 && r.stops === 0 && r.stopShare === 0) &&
+  clockEmpty.siege.length === 2 && clockEmpty.siege.every((r) => r.faced === 0 && r.stopShare === 0));
+ok(`the event clock screen reads the defending end off the same fold (siege ${CLOCK_SRC.includes("clock.siege")}, faced ${CLOCK_SRC.includes("r.faced")}, stops ${CLOCK_SRC.includes("r.stops")}, share line ${CLOCK_SRC.includes("clock.stopLine")})`,
+  CLOCK_SRC.includes("clock.siege") && CLOCK_SRC.includes("r.faced") && CLOCK_SRC.includes("r.stops") &&
+  CLOCK_SRC.includes("clock.stopLine") && !/SHOT|SAVE/.test(CLOCK_SRC));
 ok(`the event clock is reachable — the route table and the sidebar both name it (route ${/path === "\/clock"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/clock"/.test(SHELL_NAV_SRC)})`,
   /path === "\/clock"/.test(APP_ROUTE_SRC) && /to: "\/clock"/.test(SHELL_NAV_SRC));
 // --- briefing: one club's next fixture, joined with the five season reads -----------------------

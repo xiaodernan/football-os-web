@@ -23,6 +23,8 @@ export function EventClock() {
     { label: t("clock.saves"), data: clock.savesBands, fill: BAR_FILL.low },
     { label: t("clock.vars"), data: clock.varBands, fill: BAR_FILL.bad },
   ];
+  // M625: the same clock read from the defending end — the five clubs that face the most shots.
+  const siege = clock.siege.slice(0, 5);
 
   return (
     <div className="space-y-5">
@@ -122,6 +124,37 @@ export function EventClock() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("clock.method")}</p>
+          </Panel>
+
+          <Panel className="p-5">
+            <SectionTitle title={t("clock.siegeTitle")} hint={t("clock.siegeHint")} />
+            <ul className="mt-2 space-y-1">
+              {siege.map((r) => {
+                const club = getClub(r.clubId);
+                return (
+                  <li
+                    key={r.clubId}
+                    className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Crest colors={club?.colors} short={club?.short} size={26} />
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                        <div className="text-xs text-muted-foreground">{t("clock.stopLine", { p: r.stopShare })}</div>
+                      </div>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      {r.faced}
+                      <div className="text-xs text-muted-foreground">{t("clock.faced")}</div>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      {r.stops}
+                      <div className="text-xs text-muted-foreground">{t("clock.stops")}</div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </Panel>
         </>
       )}

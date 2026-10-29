@@ -829,10 +829,18 @@ export interface EventClockRow {
   lateShots: number;
   /** Share of this club's own shots that arrived late, 0–100, 2dp; 0 when it has not shot. */
   lateShare: number;
+  /** Shots the opponents took at this club — every SHOT and SAVE event by the other side (M625). */
+  faced: number;
+  /** Saves this club's keeper made — the other side's SAVE events, read from the defending end. */
+  stops: number;
+  /** Share of the shots it faced that its keeper stopped, 0–100, 2dp; 0 when it faced none. */
+  stopShare: number;
 }
 
 export interface EventClock {
   rows: EventClockRow[];
+  /** The same rows ordered by shots faced — the defending read of the same clock (M625). */
+  siege: EventClockRow[];
   shotsBands: number[];
   savesBands: number[];
   varBands: number[];
@@ -846,7 +854,9 @@ export interface EventClock {
 /** When the match's other events arrive: every SHOT, SAVE and VAR in this competition's finished
  *  matches, folded into the same six windows `goalTiming` uses. The goals screen asks when goals
  *  land; this asks when the shots, the saves that answered them and the reviews that interrupted
- *  them land — a different object on the same clock, per club and for the league. */
+ *  them land — a different object on the same clock, per club and for the league. M625 adds the
+ *  defending end: the same events are charged to the club that faced them, so the screen can name
+ *  who is under siege as well as who is shooting. */
 export function eventClock(compId: string, matches: Match[], clubs: Club[]): EventClock {
   const metrics = teamMetrics(compId, matches, clubs);
   const emptyBands = () => Array.from({ length: GOAL_BANDS }, () => 0);
@@ -854,7 +864,7 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
     metrics.map((m) => [m.clubId, {
       clubId: m.clubId, shots: 0, saves: 0, vars: 0,
       shotsBands: emptyBands(), savesBands: emptyBands(), varBands: emptyBands(),
-      lateShots: 0, lateShare: 0,
+      lateShots: 0, lateShare: 0, faced: 0, stops: 0, stopShare: 0,
     }]),
   );
   const shotsBands = emptyBands();
@@ -869,6 +879,10 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
       if (e.type !== "SHOT" && e.type !== "SAVE" && e.type !== "VAR") continue;
       const band = goalBand(e.minute);
       const row = rows.get(e.side === "home" ? m.homeClubId : m.awayClubId);
+      // M625: the same event is also a statement about the defence. Every shot is faced by the
+      // other club, and a SAVE is the other club's keeper making the stop — so the defensive
+      // read is the mirror of this one, folded off the same pass rather than a second sweep.
+      const def = rows.get(e.side === "home" ? m.awayClubId : m.homeClubId);
       if (e.type === "SHOT") {
         shots++;
         shotsBands[band]++;
@@ -877,10 +891,12 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
           row.shotsBands[band]++;
           if (band === lastBand) row.lateShots++;
         }
+        if (def) def.faced++;
       } else if (e.type === "SAVE") {
         saves++;
         savesBands[band]++;
         if (row) { row.saves++; row.savesBands[band]++; }
+        if (def) { def.faced++; def.stops++; }
       } else {
         vars++;
         varBands[band]++;
@@ -889,9 +905,13 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
     }
   }
   const list = [...rows.values()];
-  for (const r of list) r.lateShare = r.shots ? round2((r.lateShots / r.shots) * 100) : 0;
+  for (const r of list) {
+    r.lateShare = r.shots ? round2((r.lateShots / r.shots) * 100) : 0;
+    r.stopShare = r.faced ? round2((r.stops / r.faced) * 100) : 0;
+  }
   list.sort((a, b) => b.shots - a.shots || b.saves - a.saves || a.clubId.localeCompare(b.clubId));
-  return { rows: list, shotsBands, savesBands, varBands, shots, saves, vars, matches: counted };
+  const siege = [...list].sort((a, b) => b.faced - a.faced || b.stops - a.stops || a.clubId.localeCompare(b.clubId));
+  return { rows: list, siege, shotsBands, savesBands, varBands, shots, saves, vars, matches: counted };
 }
 
 export interface Briefing {

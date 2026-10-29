@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M624 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M625 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,51 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M625 — the clock's defending end
+
+**The board only counted one end.** Every row of the event clock was the attacking side: how many
+shots a club took, how many of those the other keeper stopped, how many reviews interrupted it.
+Nobody's defensive load was in the fold, so the screen could say who shoots and never who is being
+shot at. `eventClock` charged each SHOT and SAVE to the side that took it — but the same event is
+also a statement about the defence.
+
+**What the fold adds.** `EventClockRow` gains `faced`, `stops` and `stopShare`: every SHOT and SAVE
+by one side is faced by the other, and a SAVE is the other side's keeper making the stop, so the
+defensive read is the mirror of the attacking one. It is folded off the same pass — one event
+charging both ends — rather than a second sweep. `EventClock` gains `siege`, the same rows ordered
+by shots faced (ties by stops, then id), while `rows` keeps its attacking order. The mirror closes
+by construction: the league's faced total is exactly shots + saves, and its stops total is the
+saves, because each of those events was faced by exactly one club.
+
+**What the screen reads.** An "Under siege" panel beneath the board names the five clubs that face
+the most shots: the count faced, the stops their keeper made, and a line under the name giving the
+share — "stopped 33.33% of the shots it faced". It sits in the same branch as the board, so an
+eventless competition still reads the single empty state rather than a bare frame.
+
+**What the gate says.** `proof-analytics` grows three clauses, **131/131**: the hand-scored fixture
+reads B 3 faced / 1 stop, A 2/1 and C 1/0, with stop shares of 33.33, 50 and 0; the mirror totals
+close (faced 6 = 4 shots + 2 saves, stops 2 = saves); a silent fixture and an empty competition
+read zero faced and zero share rather than a missing field; and the screen reads `clock.siege`,
+`r.faced`, `r.stops` and the share line off the fold with no event name in the component. The
+siege order (BAC) is its own, while `rows` keeps ABC. Census pins pay for the panel: i18n literal
+sites 1,768 → 1,773, interpolating literal sites 228 → 229, the dictionary +5 keys a locale
+(2,453 → 2,458 values). The bundle moves 526 → 527 KB gzip (513 JS + 13 CSS across 54 assets),
+re-recorded in `tests/perf/baseline.json` and `proof-pwa`'s budget pin in the same commit.
+
+**Measured.** tsc clean; `npm run build` exit 0; the suite runs **121/121 scripts · 3,242/3,242
+checks**. No browser pass this milestone either; the fold is exercised through its own fixture and
+the production build, and the browser evidence debt stays on the ledger.
+
+**Honest reservation.** The event contract puts `side` on the shooting club — the stats pair
+derives on-target shots from `SAVE` rows the same way — so the keeper who makes the stop is read as
+the opposite side. A seed whose `SAVE` rows named their own keeper instead would credit the wrong
+club; the fold follows the contract the stats and the engine already share. The panel slices the
+top five rather than printing every club, and clubs that faced nothing still sit in `siege` and
+read zero if the competition has fewer than five. And the new end has no window axis: the six
+bands stay league-wide and attacking-side only, so the panel says who is under siege over the
+season, not when in a match it happens.
 
 
 ### M624 — the kickoff clock, read against the world's anchor

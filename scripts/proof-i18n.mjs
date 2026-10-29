@@ -4360,7 +4360,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // line at each end, the venue, record, no-meeting and race lines, and four link labels): 1755 -> 1767.
 // M624: the next-step panel adds its one interpolating label (the urgent kickoff's minute tag):
 // literal 1767 -> 1768, literal sites with placeholders 227 -> 228.
-  shapeCounts.literal === 1768 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M625: the event clock's siege panel adds five literal sites (title, hint, the two column labels
+// and the share line) and one of them interpolates: literal 1768 -> 1773, litVarSites 228 -> 229.
+  shapeCounts.literal === 1773 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4398,7 +4400,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M623: 222 -> 227 — the stakes panel's five interpolating sites (the side-row line at each end,
 // the venue sentence, the record line and the race line) hand over their figures.
 // M624: 227 -> 228 — the next-step panel's minute tag hands over its figure.
-  litVarSites === 228 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M625: 228 -> 229 — the siege panel's share line hands over its percentage.
+  litVarSites === 229 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
