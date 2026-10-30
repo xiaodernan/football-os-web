@@ -95,6 +95,8 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // drops 529 -> 528 and the baseline re-records 529 -> 528.
 // M631: the club page's siege line measures 529 KB / 54 assets (JS 516 + CSS 12.5), so the pin
 // returns 528 -> 529 and the baseline re-records 528 -> 529.
+// M632: the stakes panel's two place lines hold the pin at 529 (JS 517 + CSS 12.5, still 529 KB);
+// the baseline re-records the JS figure only.
 const BUDGET_KB = 529;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);

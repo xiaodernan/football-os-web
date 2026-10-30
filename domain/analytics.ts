@@ -1069,6 +1069,51 @@ const swingOf = (home: PointsScenario, away: PointsScenario): MatchSwing => {
   };
 };
 
+/** The two clubs' 1-based table places in one outcome (M632). */
+export interface RankPlace {
+  home: number;
+  away: number;
+}
+
+/** Where the fixture's three results would leave the two clubs in the table (M632). The points
+ *  swing is `MatchSwing`'s; this is the same question asked of the STANDINGS, which need goal
+ *  difference as well as points. */
+export interface RankSwing {
+  now: RankPlace;
+  ifHomeWin: RankPlace;
+  ifDraw: RankPlace;
+  ifAwayWin: RankPlace;
+}
+
+/** Places each club would hold after this fixture (M632). The scoreline is the smallest deciding
+ *  one — 1-0, 1-1, 0-1 — because a place needs goal difference and only the points are fixed by
+ *  the result; that is the same convention the ceilings state. Ordering is `byTableStanding`, the
+ *  one door the table screens rank through, and the sort is stable, so a club tied on points,
+ *  goal difference and goals for keeps the place it had — the fold does not invent a new
+ *  tie-break. Null when either side has no row to place, the same condition `swing` reports. */
+export function rankSwing(compId: string, homeClubId: string, awayClubId: string, matches: Match[], clubs: Club[]): RankSwing | null {
+  const rows = teamMetrics(compId, matches, clubs);
+  const home = rows.find((r) => r.clubId === homeClubId);
+  const away = rows.find((r) => r.clubId === awayClubId);
+  if (!home || !away) return null;
+  type Delta = [points: number, gf: number, ga: number];
+  const place = (homeDelta: Delta, awayDelta: Delta): RankPlace => {
+    const adjusted = rows.map((r) => {
+      const d: Delta = r.clubId === homeClubId ? homeDelta : r.clubId === awayClubId ? awayDelta : [0, 0, 0];
+      return { clubId: r.clubId, points: r.points + d[0], gf: r.gf + d[1], ga: r.ga + d[2] };
+    });
+    adjusted.sort(byTableStanding);
+    const placeOf = (id: string) => adjusted.findIndex((r) => r.clubId === id) + 1;
+    return { home: placeOf(homeClubId), away: placeOf(awayClubId) };
+  };
+  return {
+    now: place([0, 0, 0], [0, 0, 0]),
+    ifHomeWin: place([3, 1, 0], [0, 0, 1]),
+    ifDraw: place([1, 1, 1], [1, 1, 1]),
+    ifAwayWin: place([0, 0, 1], [3, 1, 0]),
+  };
+}
+
 export interface MatchBrief {
   /** The fixture this brief is written for. */
   fixture: Match;
@@ -1080,6 +1125,9 @@ export interface MatchBrief {
   /** The fixture's own arithmetic for the two sides; null once it is finished, or when either
    *  side has no table row to measure from. */
   swing: MatchSwing | null;
+  /** The same condition and the same question asked of the standings: the two clubs' places now
+   *  and after each result (M632), null under the condition `swing` reports. */
+  rank: RankSwing | null;
   /** Each side's remaining calendar in the competition; null under the same condition. */
   homeRunIn: RunInRow | null;
   awayRunIn: RunInRow | null;
@@ -1112,6 +1160,7 @@ export function matchBrief(matchId: string, matches: Match[], clubs: Club[]): Ma
     home,
     away,
     swing: fixture.status === "SCHEDULED" && home && away ? swingOf(home, away) : null,
+    rank: fixture.status === "SCHEDULED" && home && away ? rankSwing(compId, fixture.homeClubId, fixture.awayClubId, matches, clubs) : null,
     homeRunIn: calendar.find((r) => r.clubId === fixture.homeClubId) ?? null,
     awayRunIn: calendar.find((r) => r.clubId === fixture.awayClubId) ?? null,
     homeVenue: venues.rows.find((r) => r.clubId === fixture.homeClubId) ?? null,

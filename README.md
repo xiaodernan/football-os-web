@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M631 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M632 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,44 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M632 — the stakes panel reads the places, not just the gap
+
+**The other table read.** M627 gave the match page the fixture's points arithmetic and M630 carried
+it into the briefing; both read the table as a gap. A result also moves clubs up and down it, and
+that needs goal difference as well as points — a question no existing fold answered. `rankSwing()` in
+`domain/analytics.ts` places each club before the fixture and after each of its three results, over
+the smallest deciding scoreline (1-0, 1-1, 0-1) the ceilings already assume, and ranks through
+`byTableStanding` — the one door the table screens order by — so a place here and a place there
+cannot disagree.
+
+**Stable on a full tie.** The tie-break chain has three steps; when points, goal difference and goals
+for are all level the sort is stable and the club already higher keeps its place, rather than the
+fold inventing a fourth criterion. A side with no row in the fixture's competition has no place to
+read, and a finished fixture has spent its game: both read null, the same condition `swing` reports.
+
+**The panel.** `MatchBrief` gains `rank: RankSwing | null`, and the match page's stakes list prints
+two lines under the ceiling line — one per club, its place now and after each result — under the
+same before-kickoff gate as the swing.
+
+**What the gate says.** `proof-analytics` grows two clauses, **145/145**. On T1's A-B, A stays first
+in all three outcomes while B's win lifts it from third to second; on B-C the same fixture flips —
+a draw or a C win lifts C from second to first (the 1-1 draw passes A on goals for at equal points
+and difference, the third tie-break doing its job), and B's only climb is its own win. T3's three-way
+1-1 round robin is the tie case: a draw in X-Y leaves the pair level on points, difference and goals
+for, and X keeps first. A club with no T1 row, a finished fixture and a cross-competition fixture all
+read null, and the screen reads the brief without sorting the table itself.
+
+**What it cost.** Two keys in three locales (`stakes.rankHomeLine`, `stakes.rankAwayLine`), 2,471 →
+2,473 dictionary keys; literal sites 1,798 → 1,800 and variable-carrying sites 239 → 241. The build
+measures **529 KB gzip across 54 assets** (js 517, css 12.5); the pin holds at 529 and the baseline
+re-records the JS figure; tsc clean, build exit 0, the suite 121 scripts · 3,256/3,256. Checked in a
+real browser against the production preview: `/matches/M0099` (zh-CN) reads Arsenal 现居第 6——胜则第
+6、平则第 6、负则第 7 and Brighton 现居第 7——主队胜则第 7、平局第 7、本队胜则第 6, console clean.
+
+**The honest limit.** The places assume the smallest deciding scoreline, so a rout would reorder clubs
+on goal difference differently than the 1-0 the fold uses; and the table is today's — other fixtures
+played before this one move both clubs. The fold states arithmetic, not likelihood.
 
 ### M631 — the club page reads when it gets hit
 

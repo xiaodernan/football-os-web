@@ -728,6 +728,14 @@ function Stakes({ matchId, home, away }: { matchId: string; home: { name: string
             <li>{t("stakes.ceilingLine", { hw: brief.swing.homeCeiling.win, hd: brief.swing.homeCeiling.draw, hl: brief.swing.homeCeiling.loss, aw: brief.swing.awayCeiling.win, ad: brief.swing.awayCeiling.draw, al: brief.swing.awayCeiling.loss })}</li>
           </>
         )}
+        {/* M632: the same three results asked of the standings — the places the two clubs would
+            hold, read off the fold that ranks the table rather than a re-sort here. */}
+        {brief.rank && (
+          <>
+            <li>{t("stakes.rankHomeLine", { club: home.name, now: brief.rank.now.home, w: brief.rank.ifHomeWin.home, d: brief.rank.ifDraw.home, l: brief.rank.ifAwayWin.home })}</li>
+            <li>{t("stakes.rankAwayLine", { club: away.name, now: brief.rank.now.away, w: brief.rank.ifHomeWin.away, d: brief.rank.ifDraw.away, l: brief.rank.ifAwayWin.away })}</li>
+          </>
+        )}
         <li>{t("stakes.raceLine", { gap: brief.race.currentGap, changes: brief.race.leadChanges })}</li>
       </ul>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">

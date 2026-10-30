@@ -4376,7 +4376,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // literal 1786 -> 1790, litVarSites 235 -> 238.
 // M631: the club page's siege line adds eight literal sites (the clock's six window labels, the
 // board's own siege label and the line itself): literal 1790 -> 1798.
-  shapeCounts.literal === 1798 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M632: the stakes panel's two place lines: literal 1798 -> 1800.
+  shapeCounts.literal === 1800 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4423,7 +4424,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // their figures.
 // M631: 238 -> 239 — the club page's siege line hands over the faced and stopped counts, the
 // stop share, the window label and the late share.
-  litVarSites === 239 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M632: 239 -> 241 — the two place lines hand over the club name and the four places.
+  litVarSites === 241 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
