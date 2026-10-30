@@ -23,8 +23,8 @@ export function TransferBudget() {
       goalsFor: c.goalsFor || 0,
       goalsAgainst: c.goalsAgainst || 0,
       points: c.points || 0,
-      marketCap: Math.floor(Math.random() * 500000000) + 100000000, // 模拟市值
-      wageBill: Math.floor(Math.random() * 100000000) + 20000000, // 模拟薪资帽
+      marketCap: Math.floor(Math.random() * 500000000) + 100000000,
+      wageBill: Math.floor(Math.random() * 100000000) + 20000000,
     }));
   }, [clubs]);
 
