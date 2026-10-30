@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, rankSwing } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -817,6 +817,19 @@ const venueClubScreen = /import \{[^}]*\bdisciplineVenue\b[^}]*\} from "@\/domai
 ok(`the club page reads the venue split off the board's own fold and prints it only for a club that has played both ends (B ${cvB.homePerMatch}/${cvB.awayPerMatch} gap ${cvB.gap}; one-end rows ${quietOneEnd}; screen ${venueClubScreen})`,
   cvB.homePerMatch === 1 && cvB.awayPerMatch === 2 && cvB.gap === 1 &&
   discVenueQuiet.rows.length === 2 && quietOneEnd && venueClubScreen);
+// M631: the club page reads the clock's defending end for this club — B on T9 faces the shot at
+// 12 and the saved shot at 78, so it reads 3 faced, 1 stopped at 33.33%, busiest window 5 (the
+// last one) with 66.67% of the load late. The guard is the same one the clock board uses: a club
+// that faced nothing (T5 carries no events) prints no line rather than a zero share.
+const siegeScreen = /import \{[^}]*\beventClock\b[^}]*\} from "@\/domain\/analytics"/.test(DETAILS_SRC) &&
+  DETAILS_SRC.includes("eventClock(c.competitionId, footballProvider.matches(), footballProvider.clubs())") &&
+  DETAILS_SRC.includes("clockRow && clockRow.faced > 0") &&
+  DETAILS_SRC.includes("clockRow.worstBand") && DETAILS_SRC.includes("det.siege.line") &&
+  DETAILS_SRC.includes("clock.siegeTitle") && DETAILS_SRC.includes("bandLabels[clockRow.worstBand]");
+ok(`the club page reads when it gets hit off the event clock's defending end, labelled with the clock's own windows and silenced when nothing was faced (B ${clk.B.faced} faced, ${clk.B.stops} stopped at ${clk.B.stopShare}%, busiest ${clk.B.worstBand} late ${clk.B.lateFacedShare}%; silent ${clockSilent.rows.every((r) => r.faced === 0)}; screen ${siegeScreen})`,
+  clk.B.faced === 3 && clk.B.stops === 1 && near(clk.B.stopShare, 33.33, 0.005) &&
+  clk.B.worstBand === 5 && near(clk.B.lateFacedShare, 66.67, 0.005) &&
+  clockSilent.rows.every((r) => r.faced === 0) && siegeScreen);
 
 // M630: the briefing's next fixture now carries the fixture's own arithmetic — the same swing the
 // match page prints. s1 is A at home to B, so A's briefing (side home) and B's briefing (side away)
@@ -846,6 +859,45 @@ const briefSwingScreen = BRIEFING_SRC.includes("brief?.swing") && BRIEFING_SRC.i
   BRIEFING_SRC.includes(": ABSENT") && !BRIEFING_SRC.includes("pointsScenarios");
 ok(`the briefing panel reads the swing off the fold and never re-derives it (D's cross-competition brief ${briefD.swing}; screen ${briefSwingScreen})`,
   briefD.swing === null && briefSwingScreen);
+// M632: the same three results asked of the standings. T1 after f1–f3: A 4 pts (+2), C 3 (+2),
+// B 1 (−4) — so A-B leaves A first whatever happens, while B's win lifts it to second on four
+// points ahead of C's three. B-C is the other way round: B's win lifts it to second, and a draw
+// or a C win lifts C to first — on a 1-1 draw C passes A on goals for at equal points and goal
+// difference, which is `byTableStanding`'s third tie-break, not a new one.
+const rankS1 = rankSwing("T1", "A", "B", briefingFixtures, briefingClubs);
+const rankS2 = rankSwing("T1", "B", "C", briefingFixtures, briefingClubs);
+ok(`rankSwing reads both clubs' places now and after each result off the table's own ordering (A-B: now ${rankS1.now.home}/${rankS1.now.away}, ${rankS1.ifHomeWin.home}/${rankS1.ifHomeWin.away}, ${rankS1.ifDraw.home}/${rankS1.ifDraw.away}, ${rankS1.ifAwayWin.home}/${rankS1.ifAwayWin.away}; B-C: now ${rankS2.now.home}/${rankS2.now.away}, ${rankS2.ifHomeWin.home}/${rankS2.ifHomeWin.away}, ${rankS2.ifDraw.home}/${rankS2.ifDraw.away}, ${rankS2.ifAwayWin.home}/${rankS2.ifAwayWin.away})`,
+  rankS1.now.home === 1 && rankS1.now.away === 3 &&
+  rankS1.ifHomeWin.home === 1 && rankS1.ifHomeWin.away === 3 &&
+  rankS1.ifDraw.home === 1 && rankS1.ifDraw.away === 3 &&
+  rankS1.ifAwayWin.home === 1 && rankS1.ifAwayWin.away === 2 &&
+  rankS2.now.home === 3 && rankS2.now.away === 2 &&
+  rankS2.ifHomeWin.home === 2 && rankS2.ifHomeWin.away === 3 &&
+  rankS2.ifDraw.home === 3 && rankS2.ifDraw.away === 1 &&
+  rankS2.ifAwayWin.home === 3 && rankS2.ifAwayWin.away === 1 &&
+  JSON.stringify(rankS1) === JSON.stringify(rankSwing("T1", "A", "B", briefingFixtures, briefingClubs)));
+// A full tie keeps the incumbent order: T3's X, Y and Z have each drawn every game 1-1, so a 1-1
+// draw in X-Y leaves X and Y level on points, goal difference and goals for — the stable sort
+// keeps X first rather than inventing a fourth tie-break. A club with no row has no place to
+// read, and the match brief gates the fold the same way it gates the points swing.
+const tieClubs = [club("X", "T3"), club("Y", "T3"), club("Z", "T3")];
+const tieFixtures = [
+  match("t1", "T3", "X", "Y", 1, 1, "2026-04-01"),
+  match("t2", "T3", "Y", "Z", 1, 1, "2026-04-02"),
+  match("t3", "T3", "Z", "X", 1, 1, "2026-04-03"),
+  match("t4", "T3", "X", "Y", 0, 0, "2026-05-01", "SCHEDULED"),
+];
+const rankTie = rankSwing("T3", "X", "Y", tieFixtures, tieClubs);
+const rankScreen = DETAILS_SRC.includes("stakes.rankHomeLine") && DETAILS_SRC.includes("stakes.rankAwayLine") &&
+  DETAILS_SRC.includes("brief.rank &&") && DETAILS_SRC.includes("brief.rank.now.home") &&
+  !DETAILS_SRC.includes("rankSwing") && !DETAILS_SRC.includes("byTableStanding");
+ok(`a full tie keeps the incumbent's place, a side without a row reads no places, and the match page prints the two lines off the brief rather than ranking the table itself (tie draw X/Y ${rankTie.ifDraw.home}/${rankTie.ifDraw.away}, away win ${rankTie.ifAwayWin.home}/${rankTie.ifAwayWin.away}; missing ${rankSwing("T1", "A", "Z", briefingFixtures, briefingClubs)}; brief s1 ${stakeS1.rank ? `${stakeS1.rank.now.home}/${stakeS1.rank.now.away}` : "null"}, f2 ${stakeF2.rank}, s3 ${stakeS3.rank}; screen ${rankScreen})`,
+  rankTie.now.home === 1 && rankTie.ifDraw.home === 1 && rankTie.ifDraw.away === 2 &&
+  rankTie.ifAwayWin.home === 3 && rankTie.ifAwayWin.away === 1 &&
+  rankSwing("T1", "A", "Z", briefingFixtures, briefingClubs) === null &&
+  stakeS1.rank !== null && stakeS1.rank.now.home === 1 && stakeS1.rank.now.away === 3 &&
+  JSON.stringify(stakeS1.rank) === JSON.stringify(rankS1) &&
+  stakeF2.rank === null && stakeS3.rank === null && rankScreen);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

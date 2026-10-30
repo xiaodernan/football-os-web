@@ -26,7 +26,7 @@ import { careerArc } from "@/domain/careerArc";
 // an empty group where the domain answers the club's own rating.
 import { clubInput, lineMean, LINE_GROUPS } from "@/domain/career";
 import { playerDna } from "@/domain/playerDna";
-import { teamMetrics, expectedGoals, discipline, disciplineVenue, matchBrief } from "@/domain/analytics";
+import { teamMetrics, expectedGoals, discipline, disciplineVenue, matchBrief, eventClock } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
@@ -344,6 +344,15 @@ export function ClubDetail({ id }: { id: string }) {
     () => (c ? disciplineVenue(c.competitionId, footballProvider.matches(), footballProvider.clubs()).rows.find((r) => r.clubId === id) ?? null : null),
     [c, id],
   );
+  // M631: when it gets hit — the /clock board's defending end, read for this club: shots faced,
+  // saves made and the window that carried the most of them.
+  const clockRow = useMemo(
+    () => (c ? eventClock(c.competitionId, footballProvider.matches(), footballProvider.clubs()).rows.find((r) => r.clubId === id) ?? null : null),
+    [c, id],
+  );
+  // The clock's six windows use the goals board's own labels, so the club page names a window the
+  // same way /clock does rather than inventing a second vocabulary.
+  const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
   const mine = metrics.find((m) => m.clubId === id) ?? null;
   const preview = useMemo(() => {
     if (!mine || !next) return null;
@@ -446,6 +455,22 @@ export function ClubDetail({ id }: { id: string }) {
                       </div>
                     )}
                   </dl>
+                )}
+                {/* M631: a club that faced nothing gets no line rather than a zero share it has
+                    not earned, the same guard the clock board uses on its own siege row. */}
+                {clockRow && clockRow.faced > 0 && (
+                  <div className="flex items-start justify-between gap-2 border-t pt-2 text-xs">
+                    <span className="shrink-0 text-muted-foreground">{t("clock.siegeTitle")}</span>
+                    <span className="text-right font-mono">
+                      {t("det.siege.line", {
+                        n: clockRow.faced,
+                        s: clockRow.stops,
+                        p: fmt2(clockRow.stopShare),
+                        band: bandLabels[clockRow.worstBand],
+                        late: fmt2(clockRow.lateFacedShare),
+                      })}
+                    </span>
+                  </div>
                 )}
                 {preview && (
                   <div className={cn("rounded-md px-3 py-2 text-xs", PANEL_CLASS.panelSoft)}>
@@ -701,6 +726,14 @@ function Stakes({ matchId, home, away }: { matchId: string; home: { name: string
           <>
             <li>{t("stakes.swingLine", { now: signed(brief.swing.lead), win: signed(brief.swing.ifHomeWin), draw: signed(brief.swing.ifDraw), lose: signed(brief.swing.ifAwayWin) })}</li>
             <li>{t("stakes.ceilingLine", { hw: brief.swing.homeCeiling.win, hd: brief.swing.homeCeiling.draw, hl: brief.swing.homeCeiling.loss, aw: brief.swing.awayCeiling.win, ad: brief.swing.awayCeiling.draw, al: brief.swing.awayCeiling.loss })}</li>
+          </>
+        )}
+        {/* M632: the same three results asked of the standings — the places the two clubs would
+            hold, read off the fold that ranks the table rather than a re-sort here. */}
+        {brief.rank && (
+          <>
+            <li>{t("stakes.rankHomeLine", { club: home.name, now: brief.rank.now.home, w: brief.rank.ifHomeWin.home, d: brief.rank.ifDraw.home, l: brief.rank.ifAwayWin.home })}</li>
+            <li>{t("stakes.rankAwayLine", { club: away.name, now: brief.rank.now.away, w: brief.rank.ifHomeWin.away, d: brief.rank.ifDraw.away, l: brief.rank.ifAwayWin.away })}</li>
           </>
         )}
         <li>{t("stakes.raceLine", { gap: brief.race.currentGap, changes: brief.race.leadChanges })}</li>

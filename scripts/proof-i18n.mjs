@@ -4374,7 +4374,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M630: the briefing panel reuses the stakes title, the swing line and the ceiling line, and
 // names both clubs in a new hint — four literal sites, three of them interpolating:
 // literal 1786 -> 1790, litVarSites 235 -> 238.
-  shapeCounts.literal === 1790 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M631: the club page's siege line adds eight literal sites (the clock's six window labels, the
+// board's own siege label and the line itself): literal 1790 -> 1798.
+// M632: the stakes panel's two place lines: literal 1798 -> 1800.
+  shapeCounts.literal === 1800 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4419,7 +4422,10 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M629: 234 -> 235 — the club page's venue line hands over the two rates and the gap.
 // M630: 235 -> 238 — the briefing's hint names both clubs and its two swing lines hand over
 // their figures.
-  litVarSites === 238 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M631: 238 -> 239 — the club page's siege line hands over the faced and stopped counts, the
+// stop share, the window label and the late share.
+// M632: 239 -> 241 — the two place lines hand over the club name and the four places.
+  litVarSites === 241 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
