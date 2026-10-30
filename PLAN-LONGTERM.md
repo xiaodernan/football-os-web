@@ -240,6 +240,40 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M718: 隔离区「找不到模块」的八个站点原来是三件事——`2307` 自 M539 起钉在 8，但那个数字说不清八处各自缺什么。
+  门改问编译器的解析器两次：应用平面（应用自己的 options＋以草稿文件为所在目录，正是 checker 问的那句话）与
+  隔离区平面（同一份 options 把根挪进 `.drafts`）。两答之间八处分了类：七处指的是隔离区原地就有的同路径模块
+  （`@/domain/finance`、`@/domain/league`、`@/domain/sync`、`@/domain/transfer`、`@/features/world/seasonStats`
+  五个应用从未上线的 domain——屏幕与它的 domain 是一起下架的，缺的是决定不是文件），而且这七处要的名字
+  sibling 全都真的导出了（配对检查＝0 处空头承诺，说明 pile 里那几个 domain 是完整的、不是半成品）；
+  第八处是另一位：TransferAnalysis.tsx:7 伸手拿 `@/world/seasonStats`，而 pile 里放着 `features/world/seasonStats.ts`——
+  放错了架子；没有一处是「谁都没有的模块」。修复就一行（改成三个同胞屏幕已在用的拼法），
+  而且它一个诊断都不减：模块仍在应用之外，census 前后都记 2307——这正是它必须现在做的理由：
+  模块缺失时错误路径是不可见的，等模块上线那天它还会再断一次，一个因两种原因失败的站点谁都修不动。
+  新门 `scripts/proof-draft-modules.mjs` 7/7：第一条是反向对照而不是地板——同一个解析器必须答得上
+  应用自己 import 的每一个 `@/…`（122 模块 / 693 站点 / 0 未答），解析器瞎掉就不能报「干净」；
+  第二条让两次读数互相证明：walk 解析不出的站点与 checker 的 2307 按文件逐一比对，两个数各自算出再要求相等，
+  谁也不抄谁；接着三类各配一枚植入草稿（错架／凭空模块／空头承诺），外加一枚 import 应用真有模块的对照草稿，
+  它必须不进任何名单；最后一条把五个未上线 domain 钉成集合——第六个得是有人记下的决定，不是溜进来的站点。
+  写门过程中被臂抓住的坑：用正则读导出（`^export\s+(const|function|…)\b`）看不见 `export async function syncData`，
+  第一版因此把七个 sibling 站点全报成「要了 sibling 没导出的名字」——十八个门自己造出来的假缺陷；
+  分类器改用 parser，并靠植入的 sibling＋空头承诺一对草稿把两个方向都看牢。
+  实测：隔离区仍是 409 诊断 / 69 文件、2307 仍是 8，本轮买的是可读性不是更小的数字；
+  tsc 干净、build exit 0，全套 122/122 脚本 · 3284/3284 查全绿（新门把检查数从 3277 抬到 3284，proof-draft-modules 7/7、proof-draft-types 5/5、proof-draft-imports 3/3）。
+  账本点名的五个决定也写明白：finance——本线 M531 已判定这套数据集身价虚高，不该由它撑起财务模型；
+  sync——还没有一个跨设备故事值得为它建同步 domain；league 与 transfer——应用发的是传闻与要价
+  （`domain/transfers.ts`），不是转会执行引擎，pile 里的 `executeTransfer`/`getFreeAgents` 会是第二个产品面而非同一件事的第二份拷贝；
+  seasonStats——应用已经从世界引擎的运行折出赛季报告（`worldEngine.buildSeasonReport`，M525 上线），
+  而 pile 那份把第二份 tally 缓存进 localStorage 的 `WORLD_KEY`，四块屏幕等它——照原样上线会让产品同时有两套
+  持久化规则不同的赛季统计，比账本记着现状更糟。
+  本轮转绿的一条红是三笔之前欠的：`proof-record` 拿 README 顶部的 roadmap 指针与文件里
+  最新的 `### M###` 标题对账，而 M717 那次落地只加了标题没挪指针（指针当时仍写着 M716）——同一份文件里隔了九千行，谁都没抱怨。
+  教训不是「记得挪指针」，而是「一条门读同一份文档的两处，就只有落地脚本那么可靠」：落地脚本按门自己的读法取
+  全文第一个匹配，并且要求「活的」指针行恰好一行（README 用反引号把自己的历史当散文引了一遍，那不算指针），
+  写完再核一遍自己改的就是门读的那一行，否则不动任何字节。
+  全程在隔离 worktree（milestone-718，基于 M717 之后）落地，未触碰分析 lane 的文件。— pushed
+
+
 - M717: 隔离区的四个「谁都不拥有的名字」——M540 的门只算「应用导出却忘了 import」这一半，把 checker 的 2304 列表里
   应用从不导出的四个名字原样打印成「另一类缺陷」放走；而 2304 说的是「这个名字在任何地方都没有绑定」，应用是否拥有它只决定怎么修、
   不决定哪里错。四处逐一修复：DataSync.tsx:44 读改名前的 memo 名（syncedCount → syncStatus.totalSyncedItems）、

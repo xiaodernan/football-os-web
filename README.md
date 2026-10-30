@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M716 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M718 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,77 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M718 — the quarantine's missing modules turn out to be three facts, not one number
+
+**What the ratchet could not see.** `2307` — "cannot find module" — has been bound at eight since
+M539 counted it, and the bound says nothing about what any of the eight wanted. So this milestone
+asked the compiler's own resolver twice, on two planes: the app's plane (the app's options, the
+draft's own file as the containing directory — precisely the question the checker asks) and the
+PILE's plane (the same options with the root moved into `.drafts`). Between those two answers the
+eight split into classes the flat count cannot tell apart.
+
+**What they were.** Seven reach for a module the quarantine is holding at the mirrored path —
+`@/domain/finance`, `@/domain/league`, `@/domain/sync`, `@/domain/transfer` and
+`@/features/world/seasonStats`, five domains the app has never shipped. Those screens and their
+domains were shelved together; what is missing is a decision, not a file. Every one of the seven
+asks only names the sibling really exports — a pairing check the count has no shape for, and the
+answer is that the pile's domains are internally consistent, not half-written. The eighth was a
+different animal: `features/manager/TransferAnalysis.tsx:7` reached for `@/world/seasonStats`,
+while the pile holds `features/world/seasonStats.ts` — the wrong shelf. Zero sites name a module
+nothing anywhere holds.
+
+**The repair.** One specifier, `@/world/seasonStats` → `@/features/world/seasonStats`, matching
+the spelling its three sibling screens already use. It moves no diagnostic: the module is still
+absent from the app, so the census reads `2307` before and after — and that is exactly why it was
+worth doing now. A wrong path is invisible while its module is missing, and would have been broken
+on the day the module shipped; a site that fails for two reasons is a site nobody can debug.
+
+**The gate.** `scripts/proof-draft-modules.mjs`, 7/7. Its first clause is a reverse control rather
+than a floor: the same resolver must answer every `@/…` the APP's own modules import, so an index
+that went blind cannot report a clean quarantine. The second makes the two readings prove each
+other — the walk's unresolvable sites and the checker's `2307` diagnostics are compared file by
+file, both numbers computed apart and required to agree, so neither is quoted from the other. Then
+the three charged classes, each with a planted draft of its own shape in a mirror of the quarantine
+(wrong shelf, invented module, false promise) beside a planted draft that imports the app's real
+`@/ui/primitives` and must join no list. The last clause pins the five unwritten domains as a SET:
+a sixth is a decision somebody recorded, not a site that slid in beside the others.
+
+**A trap the arm caught while the gate was being written.** Reading a module's exports with a regex
+(`^export\s+(const|function|class|…)\b`) reports nothing for `export async function syncData`, and
+on the first try it claimed all seven sibling sites were asking for names their own module never
+exported — eighteen false defects, invented by the gate rather than found in the drafts. The
+classifier parses, and the planted sibling-and-false-promise pair keeps both directions honest.
+
+**Measured.** The quarantine stays 409 diagnostics over 69 files and `2307` stays at 8 — this
+milestone buys legibility, not a smaller number, and the ledger now says which eight.
+`npx tsc --noEmit` clean, `npm run build` exit 0. The suite, with this milestone's files in place:
+**122/122 proof scripts proven, 3284/3284 checks counted** — and the new gate is what carried the
+count from 3277 to 3284, `proof-draft-modules` 7/7 beside `proof-draft-types` 5/5
+and `proof-draft-imports` 3/3.
+
+**A red this milestone turned, and it was three commits late.** The suite's first M718 run came
+back 121/122 and the failing clause was not the new gate: `proof-record` charges the roadmap
+pointer against the newest heading the file carries, and `M717`'s landing had moved the
+heading without moving the pointer — the same file, nine thousand lines apart, so nothing beside
+the pointer complained. The pointer now reads M718. The lesson is not "remember to bump it":
+it is that a gate which reads two places in one document is only as good as the landing script
+that writes both. The splice that landed this section therefore reads the pointer the way the gate
+does — the first match in the file — refuses to write unless exactly one LIVE pointer line exists
+(the README quotes its own history inside backticks, and a quotation is not a pointer), and checks
+afterwards that the line it edited is the line the gate reads.
+
+**The five decisions the ledger now names, stated rather than parked.** `finance` — the lane already
+declined a fee model on this dataset (M531 records the inflated valuations); `sync` — there is no
+cross-device story to be the subject of a sync domain; `league` and `transfer` — the app ships
+rumours and an asking fee (`domain/transfers.ts`), not a transfer execution engine, and the pile's
+`executeTransfer`/`getFreeAgents` would be a second product surface rather than a second copy of
+one; `seasonStats` — the app already folds a season report out of the world engine's own run
+(`worldEngine.buildSeasonReport`, shipped at M525), while the pile's copy caches a second tally in
+localStorage under `WORLD_KEY`. Four screens wait on that one; shipping it as it stands would give
+the product two season statistics with different persistence rules, which is a worse state than the
+one the ledger records.
 
 
 ### M717 — the quarantine's four invented names, and a gate that stopped asking who owns them

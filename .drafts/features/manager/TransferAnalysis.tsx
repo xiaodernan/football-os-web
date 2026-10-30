@@ -4,7 +4,7 @@ import { Panel, SectionTitle, StatTile, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { footballProvider } from "@/data/footballService";
-import { getSeasonStats, SeasonStats } from "@/world/seasonStats";
+import { getSeasonStats, SeasonStats } from "@/features/world/seasonStats";
 
 export function TransferAnalysis() {
   const { t } = useI18n();
