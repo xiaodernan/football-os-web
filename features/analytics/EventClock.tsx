@@ -27,6 +27,10 @@ export function EventClock() {
   ];
   // M625: the same clock read from the defending end — the five clubs that face the most shots.
   const siege = clock.siege.slice(0, 5);
+  // M712: the defending end at the late window only — the clubs that take the most of the last
+  // fifteen minutes, off the same fold. A club with nothing late has no row here rather than a
+  // zero, so the board names who is actually under late siege.
+  const lateSiege = clock.lateSiege.filter((r) => r.lateFaced > 0).slice(0, 5);
 
   return (
     <div className="space-y-5">
@@ -164,6 +168,38 @@ export function EventClock() {
               })}
             </ul>
           </Panel>
+          {/* M712: nobody was hit late in this competition reads no board rather than five
+              empty rows — the same silence the siege rows keep for a club that faced nothing. */}
+          {lateSiege.length > 0 && (
+            <Panel className="p-5">
+              <SectionTitle title={t("clock.lateSiegeTitle")} hint={t("clock.lateSiegeHint")} />
+              <ul className="mt-2 space-y-1">
+                {lateSiege.map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li
+                      key={r.clubId}
+                      className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={26} />
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t("clock.lateSiegeLine", { n: r.lateFaced, f: r.faced, p: r.lateFacedShare })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        {r.lateFaced}
+                        <div className="text-xs text-muted-foreground">{t("timing.w6")}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Panel>
+          )}
         </>
       )}
     </div>

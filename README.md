@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M711 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M712 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,25 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M712 — the clock's defending end reads its last window on its own
+
+M628 gave the faced load a clock; the board still ranked clubs by the whole ninety. This unit adds
+the late read: `eventClock` now returns `lateSiege`, the same rows ordered by the load they took
+after the 75th minute (ties fall back to the whole faced load, then the club id), folded off the
+same pass rather than a second sweep. On `/clock` the new "hit late" panel lists up to five clubs
+with a non-zero late load — each row names how many of its faced attempts arrived late and what
+share that is (`clock.lateSiegeLine`, new key) — and a competition where nobody was hit late
+renders no panel rather than a column of zeroes; a club with nothing late is filtered out instead
+of printed at zero.
+
+The proof runs on the M575 clock fixture: B took 2 of its 3 faced attempts after the 75th (66.67%),
+C all 1 of 1 (100%), A none of 2, so the order reads B, C, A; a clock with no events still lists
+every ranked club (all zero late, which is why the screen filters), and an empty competition keeps
+its rows too. `proof-analytics` 149 → 151 checks; census pays four literal sites (1803 → 1807) and
+one interpolating site (243 → 244), dictionary 2,474 → 2,477 keys. Bundle moves 529 → 530 KB gzip
+across the same 54 assets (JS 517, CSS 12.4), so the pin and baseline are re-recorded;
+`npm run build` exit 0; full suite 121/121 scripts · 3,262/3,262 checks.
 
 ### M711 — the club page reads its own card curve, not the league's
 

@@ -597,6 +597,20 @@ ok(`the defending read has its own order and a club that faced nothing reads zer
 ok(`the event clock screen reads the defending end off the same fold (siege ${CLOCK_SRC.includes("clock.siege")}, faced ${CLOCK_SRC.includes("r.faced")}, stops ${CLOCK_SRC.includes("r.stops")}, share line ${CLOCK_SRC.includes("clock.stopLine")})`,
   CLOCK_SRC.includes("clock.siege") && CLOCK_SRC.includes("r.faced") && CLOCK_SRC.includes("r.stops") &&
   CLOCK_SRC.includes("clock.stopLine") && !/SHOT|SAVE/.test(CLOCK_SRC));
+// M712: the late read of the defending end — the third ordering of the same rows. B took 2 of its
+// 3 faced attempts after the 75th, C all 1 of 1, A none of 2, so the board reads BCA. A clock where
+// nobody was hit late still lists every club (all zero late), which is why the screen filters those
+// rows out rather than printing a column of zeros.
+ok(`the late siege orders the same rows by the load they took after the 75th (late ${clock.lateSiege.map((r) => r.clubId).join("")}; B ${clk.B.lateFaced} of ${clk.B.faced} at ${clk.B.lateFacedShare}%, C ${clk.C.lateFaced} of ${clk.C.faced}, A ${clk.A.lateFaced} of ${clk.A.faced}; silent ${clockSilent.lateSiege.map((r) => r.clubId).join("")} at ${clockSilent.lateSiege.map((r) => r.lateFaced).join(",")})`,
+  clock.lateSiege.map((r) => r.clubId).join("") === "BCA" && clock.lateSiege.length === 3 &&
+  clk.B.lateFaced === 2 && near(clk.B.lateFacedShare, 66.67, 0.005) &&
+  clk.C.lateFaced === 1 && clk.C.lateFacedShare === 100 && clk.A.lateFaced === 0 &&
+  clockSilent.lateSiege.length === 3 && clockSilent.lateSiege.every((r) => r.lateFaced === 0) &&
+  clockEmpty.lateSiege.length === 2);
+ok(`the event clock screen reads the late siege off the same fold and drops a club that took nothing late (late ${CLOCK_SRC.includes("clock.lateSiege")}, filter ${CLOCK_SRC.includes("r.lateFaced > 0")}, line ${CLOCK_SRC.includes("clock.lateSiegeLine")})`,
+  CLOCK_SRC.includes("clock.lateSiege.filter(") && CLOCK_SRC.includes("r.lateFaced > 0") &&
+  CLOCK_SRC.includes("clock.lateSiegeLine") && CLOCK_SRC.includes("lateSiege.map(") &&
+  CLOCK_SRC.includes("clock.lateSiegeTitle") && !/SHOT|SAVE/.test(CLOCK_SRC));
 ok(`the event clock is reachable — the route table and the sidebar both name it (route ${/path === "\/clock"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/clock"/.test(SHELL_NAV_SRC)})`,
   /path === "\/clock"/.test(APP_ROUTE_SRC) && /to: "\/clock"/.test(SHELL_NAV_SRC));
 // --- briefing: one club's next fixture, joined with the five season reads -----------------------

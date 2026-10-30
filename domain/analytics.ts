@@ -951,6 +951,9 @@ export interface EventClock {
   rows: EventClockRow[];
   /** The same rows ordered by shots faced — the defending read of the same clock (M625). */
   siege: EventClockRow[];
+  /** The same rows ordered by the load they faced after the 75th minute (M712) — the late read of
+   *  the defending end. Ties fall back to the whole faced load, then the club id. */
+  lateSiege: EventClockRow[];
   shotsBands: number[];
   savesBands: number[];
   varBands: number[];
@@ -1037,10 +1040,11 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
   }
   list.sort((a, b) => b.shots - a.shots || b.saves - a.saves || a.clubId.localeCompare(b.clubId));
   const siege = [...list].sort((a, b) => b.faced - a.faced || b.stops - a.stops || a.clubId.localeCompare(b.clubId));
+  const lateSiege = [...list].sort((a, b) => b.lateFaced - a.lateFaced || b.faced - a.faced || a.clubId.localeCompare(b.clubId));
   // The league's faced clock is the mirror of its shots and saves: every one of those events faced
   // exactly one club, so the two series must add up window for window.
   const facedBands = shotsBands.map((n, b) => n + savesBands[b]);
-  return { rows: list, siege, shotsBands, savesBands, varBands, facedBands, shots, saves, vars, matches: counted };
+  return { rows: list, siege, lateSiege, shotsBands, savesBands, varBands, facedBands, shots, saves, vars, matches: counted };
 }
 
 export interface Briefing {
