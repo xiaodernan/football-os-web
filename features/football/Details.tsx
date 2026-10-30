@@ -773,6 +773,14 @@ function Stakes({ matchId, home, away }: { matchId: string; home: { name: string
         {brief.awayCards && (
           <li>{t("stakes.cardsLine", { club: away.name, y: brief.awayCards.yellows, r: brief.awayCards.reds, p: fmt2(brief.awayCards.bookingsPerMatch) })}</li>
         )}
+        {/* M714: how much each end gets hit and how much of it lands late — the clock's defending
+            row. A side that faced nothing keeps the /clock silence rather than a zero line. */}
+        {brief.homeClock && brief.homeClock.faced > 0 && (
+          <li>{t("stakes.siegeLine", { club: home.name, n: brief.homeClock.faced, late: brief.homeClock.lateFaced, p: brief.homeClock.lateFacedShare })}</li>
+        )}
+        {brief.awayClock && brief.awayClock.faced > 0 && (
+          <li>{t("stakes.siegeLine", { club: away.name, n: brief.awayClock.faced, late: brief.awayClock.lateFaced, p: brief.awayClock.lateFacedShare })}</li>
+        )}
         <li>
           {rec.played > 0
             ? t("stakes.recordLine", { n: rec.played, w: rec.winsA, d: rec.draws, l: rec.winsB, gf: rec.goalsA, ga: rec.goalsB })

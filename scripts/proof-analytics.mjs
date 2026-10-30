@@ -719,6 +719,23 @@ ok(`matchBrief joins each end's own card ledger off the discipline fold (d4 A ${
 ok(`the match page's stakes panel prints both card ledgers off the brief rather than re-summing the stats blocks (home ${DETAILS_SRC.includes("brief.homeCards")}, away ${DETAILS_SRC.includes("brief.awayCards")}, line ${DETAILS_SRC.includes("stakes.cardsLine")})`,
   DETAILS_SRC.includes("brief.homeCards") && DETAILS_SRC.includes("brief.awayCards") &&
   DETAILS_SRC.includes("stakes.cardsLine") && DETAILS_SRC.includes("bookingsPerMatch"));
+// M714: the fixture's two defending clocks, joined off the same eventClock fold. c3 is T9's
+// scheduled A-C: A faced 2 attempts (none late), C faced 1 (all late). A cross-competition
+// fixture reads no T2 clock row for the visitor, while the host's row is the real zero the
+// /clock board keeps for a club that has faced nothing.
+const stakeClock = matchBrief("c3", clockFixtures, clockClubs);
+const stakeClockCross = matchBrief("s3", briefingFixtures, briefingClubs);
+ok(`matchBrief joins each end's defending clock off the event fold (c3 A ${stakeClock.homeClock.faced} faced ${stakeClock.homeClock.lateFaced} late; C ${stakeClock.awayClock.faced} faced ${stakeClock.awayClock.lateFaced} late at ${stakeClock.awayClock.lateFacedShare}%; cross host ${stakeClockCross.homeClock ? `${stakeClockCross.homeClock.faced} faced` : "null"}, visitor ${stakeClockCross.awayClock})`,
+  stakeClock.homeClock.faced === 2 && stakeClock.homeClock.lateFaced === 0 &&
+  stakeClock.homeClock.lateFacedShare === 0 &&
+  stakeClock.awayClock.faced === 1 && stakeClock.awayClock.lateFaced === 1 &&
+  stakeClock.awayClock.lateFacedShare === 100 &&
+  stakeClockCross.homeClock !== null && stakeClockCross.homeClock.faced === 0 &&
+  stakeClockCross.awayClock === null);
+ok(`the stakes panel prints the two siege lines off the brief and silences a side that faced nothing (home ${DETAILS_SRC.includes("brief.homeClock")}, away ${DETAILS_SRC.includes("brief.awayClock")}, guard ${DETAILS_SRC.includes("brief.homeClock.faced > 0")}, line ${DETAILS_SRC.includes("stakes.siegeLine")})`,
+  DETAILS_SRC.includes("brief.homeClock") && DETAILS_SRC.includes("brief.awayClock") &&
+  DETAILS_SRC.includes("brief.homeClock.faced > 0") && DETAILS_SRC.includes("brief.awayClock.faced > 0") &&
+  DETAILS_SRC.includes("stakes.siegeLine"));
 
 // ---- M622: the same stats blocks folded by round --------------------------------------------
 // The discipline board answers who is booked; the trend answers when the bookings arrive. Fixture

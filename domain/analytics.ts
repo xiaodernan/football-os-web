@@ -1173,6 +1173,11 @@ export interface MatchBrief {
    *  competition has no row for that club (a cross-competition fixture before its debut). */
   homeCards: DisciplineRow | null;
   awayCards: DisciplineRow | null;
+  /** Each side's row of the clock's defending end — the load it faced and the late part of it
+   *  (M714), off the event clock rather than a second sweep. Null when the competition has no
+   *  clock row for that club, the same condition as the ledger above. */
+  homeClock: EventClockRow | null;
+  awayClock: EventClockRow | null;
   /** The pair's finished meetings, oriented so `winsA` belongs to this fixture's home club. */
   record: HeadToHead;
   /** The competition's title race as it stands after its last finished fixture. */
@@ -1193,6 +1198,7 @@ export function matchBrief(matchId: string, matches: Match[], clubs: Club[]): Ma
   const calendar = runIn(compId, matches, clubs);
   const venues = venueSplit(compId, matches, clubs);
   const ledger = discipline(compId, matches, clubs);
+  const clock = eventClock(compId, matches, clubs);
   const home = scenarios.find((s) => s.clubId === fixture.homeClubId) ?? null;
   const away = scenarios.find((s) => s.clubId === fixture.awayClubId) ?? null;
   return {
@@ -1207,6 +1213,8 @@ export function matchBrief(matchId: string, matches: Match[], clubs: Club[]): Ma
     awayVenue: venues.rows.find((r) => r.clubId === fixture.awayClubId) ?? null,
     homeCards: ledger.rows.find((r) => r.clubId === fixture.homeClubId) ?? null,
     awayCards: ledger.rows.find((r) => r.clubId === fixture.awayClubId) ?? null,
+    homeClock: clock.rows.find((r) => r.clubId === fixture.homeClubId) ?? null,
+    awayClock: clock.rows.find((r) => r.clubId === fixture.awayClubId) ?? null,
     record: headToHead(fixture.homeClubId, fixture.awayClubId, matches),
     race: titleRace(compId, matches, clubs),
   };

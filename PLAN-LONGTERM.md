@@ -240,6 +240,14 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M714: 比赛页打印两端的防守时钟——`domain/analytics.ts` 的 `MatchBrief` 在 `awayCards` 之后新增
+  `homeClock`/`awayClock`（`eventClock` 的两行，直接取 fold，不另扫 stats 块），赛事无该队时钟行时读 null；
+  `features/football/Details.tsx` 的 stakes 列表在牌账行之后按端各加一行 `stakes.siegeLine`
+  （面对 n 次 / 末段 late 次 / 占比 p%），守卫 `faced > 0`（空行不出零列）；1 键三语（字典 2,478→2,479）；
+  `proof-analytics` 新增 2 条共 155/155（T9 c3：主队 faced 2/late 0/0%、客队 1/1/100%；
+  T2 的 D-A：主队真实零行 faced 0、客队 null）；census pin：i18n literal 1,809→1,811、litVarSites 246→248；
+  无新模块/路由/存储键；bundle 保持 530 KB gzip / 54 资产；tsc 干净、build exit 0、全套 121/121 · 3,266/3,266。
+
 - M713: 比赛页打印两端的牌账——`domain/analytics.ts` 的 `MatchBrief` 新增 `homeCards`/`awayCards`：
   直接取 `discipline` 板的两行（不另从 stats 块重算），赛事无该队表行时读 null（跨赛事首秀前）；
   `features/football/Details.tsx` 的 stakes 列表在 venue 行之后按端各加一行 `stakes.cardsLine`（黄牌/红牌/场均张数），
@@ -429,11 +437,11 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M714 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① 俱乐部页牌趋势与联赛趋势的对照（同一 fold 两读：本队曲线叠在联赛曲线上）；
-② 早段/晚段的攻守对照（`shotsBands` 与 `facedBands` 的首窗对末窗，同一 fold 两读）；
-③ 比赛页的两端末段挨打对照（`matchBrief` 加 `eventClock` 的两行：各队 faced/lateFaced）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（组件农场 lane 已占 M633–M709，本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632、M710、M711、M712、M713，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub、`.drafts/` 新增草稿在其每次推送后由本线清理并记入 README。
+下一条目：M715 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① 早段/晚段的攻守对照（`shotsBands` 与 `facedBands` 的首窗对末窗，同一 fold 两读）；
+② 事件时钟的早段挨打 `earlySiege`（`lateSiege` 的镜像：首窗挨打量排序，同一扫描）；
+③ 俱乐部页牌趋势与联赛趋势的对照（同一 fold 两读：本队曲线叠在联赛曲线上）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（组件农场 lane 已占 M633–M709，本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632、M710、M711、M712、M713、M714，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub、`.drafts/` 新增草稿在其每次推送后由本线清理并记入 README。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

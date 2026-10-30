@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M713 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M714 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,22 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M714 — the match page prints both ends' defending clocks
+
+The stakes panel could say how each side had been booked (M713) but not the load either defence had
+taken. `matchBrief` now also carries `homeClock`/`awayClock` — the `/clock` board's own rows for the
+fixture's two clubs, read from that fold rather than re-sweeping the stats blocks — and the panel
+prints one line per side: shots faced, how many of them late, and the late share (`stakes.siegeLine`,
+new key). A side with no clock row (a cross-competition fixture before its debut) is null and a
+row that faced nothing prints no line, the same silence rule the clock board keeps for its empty
+panels.
+
+The proof runs on the T9 fixture c3: the host faced 2 with none late (0%), the visitor 1 of 1 (100%);
+T2's D-A reads the host's real zero row (faced 0) and a null visitor. `proof-analytics` 153 → 155
+checks; census pays two literal sites (1809 → 1811) both interpolating (246 → 248), dictionary
+2,478 → 2,479 keys. Bundle holds at 530 KB gzip / 54 assets; full suite 121/121 scripts ·
+3,266/3,266 checks.
 
 ### M713 — the match page prints both ends' card ledgers
 
