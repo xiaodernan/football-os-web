@@ -206,6 +206,8 @@ const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
 // four step lines) read the door rather than a typed dash.
 // M630: the briefing's swing panel adds two cells (the gap line and the ceiling line fall back
 // to the door when the fixture has no table row to measure): Briefing.tsx 10 -> 12.
+// M715: the same panel asks the standings too, and its two place lines read the door under the
+// same missing-row condition: Briefing.tsx 12 -> 14.
 const expectedUsers = [
   "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
   "features/analytics/Briefing.tsx", "features/analytics/DataRoom.tsx",
@@ -225,7 +227,7 @@ const expectedUsers = [
 ];
 const expectedPerUser = [
   ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
-  ["features/analytics/Briefing.tsx", 12],
+  ["features/analytics/Briefing.tsx", 14],
   ["features/analytics/DataRoom.tsx", 13], ["features/analytics/Discipline.tsx", 2],
   ["features/analytics/EventClock.tsx", 1],
   ["features/analytics/GoalTiming.tsx", 4],

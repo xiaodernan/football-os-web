@@ -35,6 +35,7 @@ export function Briefing() {
   const record = brief?.record ?? null;
   const race = brief?.race ?? null;
   const swing = brief?.swing ?? null;
+  const rank = brief?.rank ?? null;
   const homeClub = brief ? getClub(brief.fixture.homeClubId) : undefined;
   const awayClub = brief ? getClub(brief.fixture.awayClubId) : undefined;
 
@@ -158,6 +159,31 @@ export function Briefing() {
                       aw: swing.awayCeiling.win,
                       ad: swing.awayCeiling.draw,
                       al: swing.awayCeiling.loss,
+                    })
+                  : ABSENT}
+              </li>
+              {/* M715: the same three results asked of the standings — the two clubs' places, read
+                  off the brief and printed with the match page's own two keys. A fixture whose
+                  sides have no table rows reads absent here exactly as it does above. */}
+              <li>
+                {rank
+                  ? t("stakes.rankHomeLine", {
+                      club: homeClub?.name ?? brief.fixture.homeClubId,
+                      now: rank.now.home,
+                      w: rank.ifHomeWin.home,
+                      d: rank.ifDraw.home,
+                      l: rank.ifAwayWin.home,
+                    })
+                  : ABSENT}
+              </li>
+              <li>
+                {rank
+                  ? t("stakes.rankAwayLine", {
+                      club: awayClub?.name ?? brief.fixture.awayClubId,
+                      now: rank.now.away,
+                      w: rank.ifHomeWin.away,
+                      d: rank.ifDraw.away,
+                      l: rank.ifAwayWin.away,
                     })
                   : ABSENT}
               </li>

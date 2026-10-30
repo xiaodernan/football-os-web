@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M714 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M715 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,41 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M715 — the briefing asks the standings too
+
+**One screen away, same answer.** The match page got its places in M632; the briefing is the other
+screen that opens with a fixture in front of the reader, and it was still answering only the gap.
+`Briefing` gains `rank: RankSwing | null`, filled by the same `rankSwing()` — the fold looks the two
+clubs up in the very rows `us` and `them` are read from, so a briefing whose gap is absent has its
+places absent too, and the two readers of one fixture hand the screen byte-identical numbers.
+
+**No new words.** The panel prints the match page's own two keys, so the dictionary stays at 2,479
+keys · 3 locales and only the census sites move: literal 1,811 → 1,813 and variable-carrying
+248 → 250, and its two clauses take `proof-analytics` to 157/157. The two new cells fall back to the
+shared absence glyph the way the gap and ceiling lines above them already do (`Briefing.tsx` 12 → 14
+door cells, 28 users unchanged).
+
+**What the gate says.** On the briefing's own fixture set, A at
+home to B and B reading the same fixture hand over the same object (hosts first whatever happens, an
+away win lifting B to second); C's next fixture is at B, where the hosts sit third and a draw lifts
+the visitor to first on goals for — the third tie-break doing its job again, not a new one; D's
+cross-competition fixture has no table row for its opponent, so the gap and the places go absent
+together. The screen clause demands the two keys and forbids `rankSwing`, `byTableStanding` and
+`teamMetrics` inside the module.
+
+**What it cost.** No new key, module, route or storage key. The build holds at 530 KB gzip across 54
+assets, so neither the budget pin nor the baseline moves; tsc clean, build exit 0, the suite lands at
+121/121 scripts · 3,268/3,268 checks. Checked in a real
+browser against the production preview: `/briefing` (zh-CN, Arsenal) prints Arsenal 现居第 6——胜则第
+6、平则第 6、负则第 7 and Brighton 现居第 7——主队胜则第 7、平局第 7、本队胜则第 6 — the same two
+sentences the match page showed for that fixture under M632, console clean.
+
+**The honest limit.** The briefing reads the club's earliest scheduled kickoff, so these places speak
+about one fixture and not about the run-in, and they keep M632's convention of the smallest deciding
+scoreline; a club whose next game is in a competition it has no row in gets absent lines rather than
+zeros.
 
 
 ### M714 — the match page prints both ends' defending clocks

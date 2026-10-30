@@ -1059,6 +1059,11 @@ export interface Briefing {
    *  the match page's stakes panel prints. Null when either side has no table row in the
    *  fixture's competition, the same condition the two scenario joins below report. */
   swing: MatchSwing | null;
+  /** The same fixture asked of the STANDINGS: the two clubs' places now and after each of its
+   *  three results (M715). `rankSwing` looks its clubs up in the very rows `us` and `them` are
+   *  read from, so the places go absent together with the points swing rather than on a
+   *  condition of their own. */
+  rank: RankSwing | null;
   /** The briefing club's table-and-ceiling read in the fixture's competition; null when the
    *  competition has no table row for it yet (a cross-competition fixture can precede its debut). */
   us: PointsScenario | null;
@@ -1251,6 +1256,7 @@ export function briefing(clubId: string, matches: Match[], clubs: Club[]): Brief
     us,
     them,
     swing: home && away ? swingOf(home, away) : null,
+    rank: rankSwing(compId, next.homeClubId, next.awayClubId, matches, clubs),
     runInRow: runIn(compId, matches, clubs).find((r) => r.clubId === clubId) ?? null,
     venueRow: venueSplit(compId, matches, clubs).rows.find((r) => r.clubId === clubId) ?? null,
     record: headToHead(clubId, opponentId, matches),

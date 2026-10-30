@@ -986,6 +986,26 @@ ok(`a full tie keeps the incumbent's place, a side without a row reads no places
   stakeS1.rank !== null && stakeS1.rank.now.home === 1 && stakeS1.rank.now.away === 3 &&
   JSON.stringify(stakeS1.rank) === JSON.stringify(rankS1) &&
   stakeF2.rank === null && stakeS3.rank === null && rankScreen);
+// M715: the briefing carries the same standing read for the fixture it was written around. A and B
+// read one fixture (s1) from opposite ends, so both must hand the screen the same places, oriented
+// by the host; C's next fixture is s2 at B, where the hosts sit third and the visitor second.
+// D's fixture is in a competition its opponent has no table row in, so the places are absent there
+// exactly as the swing is.
+ok(`briefing carries the fixture's places oriented by the host, not by the reader (A-B ${briefA.rank.now.home}/${briefA.rank.now.away} now, ${briefA.rank.ifAwayWin.home}/${briefA.rank.ifAwayWin.away} on an away win; B reading the same fixture ${JSON.stringify(briefA.rank) === JSON.stringify(briefB.rank)}; C at B ${briefC.rank.now.home}/${briefC.rank.now.away}, on a draw ${briefC.rank.ifDraw.home}/${briefC.rank.ifDraw.away}; D ${briefD.rank})`,
+  JSON.stringify(briefA.rank) === JSON.stringify(rankS1) &&
+  JSON.stringify(briefA.rank) === JSON.stringify(briefB.rank) &&
+  JSON.stringify(briefC.rank) === JSON.stringify(rankS2) &&
+  briefC.rank.now.home === 3 && briefC.rank.now.away === 2 &&
+  briefC.rank.ifDraw.home === 3 && briefC.rank.ifDraw.away === 1 &&
+  briefD.rank === null);
+// The briefing panel prints the places off the brief with the match page's own two keys and never
+// ranks the table itself; a null read falls to the shared absence glyph the other two lines use.
+const briefRankScreen = BRIEFING_SRC.includes("brief?.rank") && BRIEFING_SRC.includes("rank.now.home") &&
+  BRIEFING_SRC.includes('t("stakes.rankHomeLine"') && BRIEFING_SRC.includes('t("stakes.rankAwayLine"') &&
+  !BRIEFING_SRC.includes("rankSwing") && !BRIEFING_SRC.includes("byTableStanding") &&
+  !BRIEFING_SRC.includes("teamMetrics");
+ok(`the briefing panel reads the places off the fold and reuses the match page's two keys (screen ${briefRankScreen})`,
+  briefRankScreen);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
