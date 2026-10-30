@@ -7098,6 +7098,57 @@ reflects the latest section this file actually carries.
 
 
 
+### M717 — the quarantine's four invented names, and a gate that stopped asking who owns them
+
+**What M540 left uncharged.** `proof-draft-imports` closed the class it could name: a draft reads a
+name the APP EXPORTS and never imports it. Nine sites, repaired there, bound at zero. The same run
+printed the rest of its `2304` list — four names the app has never exported — and called it "a
+different defect class". The print was honest about the boundary and silent about the defect:
+`2304` says **this name is bound nowhere**, and whether the app happens to own it is a fact about
+how to FIX it, not about what is WRONG with the draft. A boundary that lets four sites out because
+the app is not their home is a boundary drawn around the repair.
+
+**The four, and what each one actually was.** Two were reads left under a memo's name from before it
+was renamed: `features/community/DataSync.tsx:44` reached for `syncedCount` while the memo above it
+is `syncStatus` and the field it wants is `totalSyncedItems`, and `features/manager/SeasonOps.tsx:33`
+reached for `newsData` beside an `opsData` that carries the `season`. One was a setter's own
+parameter read outside the setter that bound it: `features/league/LeagueManager.tsx` wrote
+`setLeagues(prev => [...prev, league])` and on the next line `writeLeaguesToStorage([...prev, league])`
+— `prev` has no binding there, so the storage write could never have run as written. One called a
+door the app has never had: `calculateTransferFee(overall, age, contractYearsRemaining)` in
+`features/manager/TransferWindow.tsx`, where the app's own estimate is `askingFee(value)` in
+`domain/transfers.ts` — `roundTo100k(value × 1.1)`, the same number the Transfer Centre prints.
+
+**The repairs.** The two renames read the memo that exists. The league site hoists one list —
+`const nextLeagues = [...leagues, league]` — and hands the same array to the setter and to the
+write, which is what the author meant and makes the two reads impossible to diverge. The fee site
+calls the app's door with the player's market value, so the draft stops carrying a second, different
+pricing rule next to the one the product already ships.
+
+**The gate, re-aimed.** Clause 2 charges EVERY `2304` in the quarantine at zero and reports the
+split (forgot-to-import / invented-a-symbol) instead of keying admission on it. The arm plants BOTH
+spellings in a mirror of the quarantine — `EmptyState` used without its import, and
+`ledgerOfUnwrittenNames`, which nobody has ever written — beside a sound draft that imports
+correctly. It must charge the first two, leave the third alone, and put each plant in the right half
+of the split. The invented-symbol plant is the one that proves the boundary moved: under M540's
+clause it walked out uncharged, which is exactly how four sites survived it.
+
+**Measured.** The quarantine reads **409** diagnostics over **69** files (was 413/69: the four
+invented names and no collateral), and the families come down from 21 to **17**, every one within
+its bound and none unbound. `TOTAL_CEILING` 413 → 409, the four names bound at 0 and recorded in
+`REPAIRED` with the reason each was repairable at all. The export index, derived on the same run:
+**122** modules, **676** names, **10** exported from more than one module and therefore not decided
+by this gate. Population pin 79 unchanged. `proof-draft-imports` **3/3**, `proof-draft-types`
+**5/5**, `proof-drafts` **8/8**.
+
+**What this did not fix, and why it stayed.** `TransferWindow.tsx` still imports four names from
+`@/domain/transfer`, a module that is not in the tree (that is the `2307` family, bound 8), and it
+still reads `p.contractYearsRemaining`, a field the app's `Player` does not carry (one of the
+`2339` 71). Closing those means deciding whether the app wants a second transfer domain or whether
+the draft should go — a product decision, not a binding error, and the census already names the file
+that owes it.
+
+
 ### M716 — what the ceilings are worth in places
 
 **The column the points table was missing.** `/scenarios` already printed each club's ceiling in

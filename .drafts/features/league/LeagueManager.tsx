@@ -138,8 +138,9 @@ export function LeagueManager() {
       isActive: true
     };
 
-    setLeagues(prev => [...prev, league]);
-    writeLeaguesToStorage([...prev, league]);
+    const nextLeagues = [...leagues, league];
+    setLeagues(nextLeagues);
+    writeLeaguesToStorage(nextLeagues);
     setNewLeague({
       leagueName: "",
       preferredPointsSystem: "standard",

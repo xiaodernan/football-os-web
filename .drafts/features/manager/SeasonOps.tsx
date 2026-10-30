@@ -30,7 +30,7 @@ export function SeasonOps() {
       <div className="grid grid-cols-2 gap-4 mb-6">
         <StatTile
           title={t("manager.season")}
-          value={newsData.season.toString()}
+          value={opsData.season.toString()}
           subtitle={t("manager.currentSeason")}
         />
         <StatTile

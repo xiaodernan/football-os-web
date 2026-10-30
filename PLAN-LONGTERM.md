@@ -240,6 +240,26 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M717: 隔离区的四个「谁都不拥有的名字」——M540 的门只算「应用导出却忘了 import」这一半，把 checker 的 2304 列表里
+  应用从不导出的四个名字原样打印成「另一类缺陷」放走；而 2304 说的是「这个名字在任何地方都没有绑定」，应用是否拥有它只决定怎么修、
+  不决定哪里错。四处逐一修复：DataSync.tsx:44 读改名前的 memo 名（syncedCount → syncStatus.totalSyncedItems）、
+  SeasonOps.tsx:33 同形（newsData → opsData.season）、LeagueManager.tsx 把 setter 自己的参数在 setter 外面读
+  （prev 未绑定，改为 const nextLeagues = [...leagues, league] 同时交给 setLeagues 与 writeLeaguesToStorage，
+  两次读再不可能分叉）、TransferWindow.tsx 调一个应用从未有过的估价门（calculateTransferFee → 应用自己的
+  askingFee(p.value)，与 Transfer Centre 同一个数）。门重瞄：clause 2 把隔离区全部 2304 钉在 0，
+  并按「忘了导入 / 凭空发明」分类披露；镜像臂同时植入两种拼法（EmptyState 无导入 + 谁都没写过的
+  ledgerOfUnwrittenNames）加一份正确导入的对照，要求前两个被点名、第三个不动、且分类各归其位——
+  植入的「凭空发明」那条正是边界移动的证据（M540 的判据下它是免罚的）。
+  实测：隔离区 413/69 → 409/69（正是那四个名字，无附带损失），族 21 → 17，TOTAL_CEILING 413→409、
+  四名入 REPAIRED 钉 0；导出索引同一轮派生 122 模块 / 676 名 / 10 个歧义；人口钉 79 不变；
+  proof-draft-imports 3/3、proof-draft-types 5/5、proof-drafts 8/8。
+  没修的也写清：TransferWindow.tsx 仍从 @/domain/transfer（树里没有这个模块，属 2307 族，钉 8）导入四个名字，
+  仍读 p.contractYearsRemaining（应用 Player 没有这个字段，属 2339 族 71）——那要决定的是「应用要不要第二套转会
+  domain」还是「这份草稿该删」，是产品判断不是绑定错误。
+  本线在隔离 worktree（milestone-717，基于 origin/master 470c1b9）落地，全程未触碰分析 lane 正在改的
+  domain/analytics.ts / dictionaries.ts / EventClock.tsx。— pushed
+
+
 - M716: 上限的位次读法——`domain/analytics.ts` 新增 `CeilingPlaceRow`/`CeilingPlaces` 与 `ceilingPlaces(compId, matches, clubs)`：
   把 `pointsScenarios` 已经印出的 `maxPoints` 当作输入，每支俱乐部同时抬到自己的上限（不是抬一支冻一支），
   每个剩余场次按 M632 `rankSwing` 的最小决胜比分计分（gf 加剩余场数、ga 不动），再用同一 `byTableStanding` 重排取位次，

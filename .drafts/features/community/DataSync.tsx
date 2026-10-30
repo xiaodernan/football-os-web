@@ -41,7 +41,7 @@ export function DataSync() {
         />
         <StatTile
           title={t("community.totalSyncedItems")}
-          value={syncedCount.toLocaleString()}
+          value={syncStatus.totalSyncedItems.toLocaleString()}
           subtitle={t("community.totalItemsSynced")}
         />
         <StatTile
