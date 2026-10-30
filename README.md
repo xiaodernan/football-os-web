@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M715 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M716 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,49 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M716 — what the ceilings are worth in places
+
+**The column the points table was missing.** `/scenarios` already printed each club's ceiling in
+points (M559's `pointsScenarios`), and a reader could compare 70 with 45 but not with what those
+numbers would DO to the standings. `ceilingPlaces(compId, matches, clubs)` lifts every club to its
+own `maxPoints` at once, scores each of its remaining fixtures the way `rankSwing` scores a win —
+goals for grows by the matches left, goals against does not move — and re-ranks through
+`byTableStanding`, so the column cannot disagree with the table a reader clicks over to.
+
+**Why all the ceilings move together.** Lifting one club and freezing the rest is the unilateral
+arithmetic `maxPoints` is written in, but as a place it says nothing: on the shipped Premier League
+data nine of ten clubs pass a frozen leader that way, so the new column would read `1` down nearly
+its whole length. Compared with each other the ceilings sort into a real table — the top five read
+1 / 6 / 3 / 5 / 4 — and a club whose schedule offers less than its neighbour's loses ground, which
+is the honest half of the answer: a ceiling is what is on the table, not what is coming. The moves
+sum to zero because this is one table re-sorted, not three claims.
+
+**Words and gates.** 3 keys · 3 locales (`scenario.colMaxPlace`, `scenario.climb`,
+`scenario.climbSub`), so the dictionary goes 2,479 → 2,482 keys and the census sites move with them:
+literal 1,813 → 1,816, variable-carrying 250 → 251. The climb tile's club and the ceiling place of a
+row with no table row behind it both fall to the shared absence glyph (`PointsScenario.tsx` 5 → 7
+door cells, 28 users unchanged). `proof-analytics` grows nine clauses to 166/166: T1 shows ceilings
+compared with ceilings (nobody moves, and the peak is the leader at zero rather than a null); TC has
+Q on 9 pts with nothing left and P on 6 with two fixtures left, so P takes first and Q drops; TD is
+the goal half — R reaches S's points AND S's goal difference and passes on goals for, and the clause
+carries its counterfactual, because a points-only lift would have left R second. An empty table
+gives no rows and no peak rather than a `maxBy` over nothing.
+
+**What it cost.** No new module, route or storage key; the tile grid goes four columns to five. The
+build holds at 530 KB gzip across 54 assets (JS 518, CSS 12.4), so the budget pin stays and the
+baseline re-records the JS figure; tsc clean, build exit 0, the suite lands at 121/121 scripts ·
+3,277/3,277 checks. Checked in a real browser against the production preview: `/scenarios` (zh-CN,
+Premier League) prints 位次升幅最大 / ARS / 全员到顶可升 4 位 under the 上限位次 column header, and
+the same screen in English reads BIGGEST CLIMB with "4 place(s) once every ceiling is met" —
+Arsenal is the club the ceilings carry furthest, Chelsea the one they cost the most — console clean
+in both locales.
+
+**The honest limit.** This is arithmetic on the schedule, not a forecast: it assumes every club takes
+every point still on the table and each win arrives by the smallest margin, so goal difference is
+approximated rather than simulated; the club that "climbs 4" is not predicted to finish second, it is
+the club whose remaining fixtures are worth the most ground if all of them are won.
 
 
 ### M715 — the briefing asks the standings too

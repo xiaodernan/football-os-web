@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -340,6 +340,88 @@ ok(`a finished fixture is not points left: C's ceiling is its current total, and
   scenarios.every((r) => !["D", "E"].includes(r.clubId)));
 const scenariosAgain = pointsScenarios("T1", fixtures, clubs);
 ok("pointsScenarios is deterministic over the same fixtures", JSON.stringify(scenarios) === JSON.stringify(scenariosAgain));
+
+// --- M716: what those ceilings are worth in PLACES -------------------------------------------
+// T1 again: A leads on 6 with one fixture left (ceiling 9), B is second on 4 with one left
+// (ceiling 7), C third on 4 with none left (ceiling 4). The ceilings sort against EACH OTHER, so
+// B's sweep to 7 still sits behind A's sweep to 9 and no club moves. Asking the other question —
+// could this club pass a frozen leader — is what maxPoints already answers, and on the shipped
+// Premier League table nine of ten clubs pass a frozen leader that way: a column of 1s.
+const climb = ceilingPlaces("T1", fixtures, clubs);
+const climbById = Object.fromEntries(climb.rows.map((r) => [r.clubId, r]));
+ok(`ceilings are compared with ceilings, not with the table frozen behind them (A ${climbById.A.place}→${climbById.A.ceilingPlace}, B ${climbById.B.place}→${climbById.B.ceilingPlace}, C ${climbById.C.place}→${climbById.C.ceilingPlace})`,
+  climb.rows.map((r) => r.clubId).join(",") === "A,B,C" &&
+  climbById.A.place === 1 && climbById.A.ceilingPlace === 1 && climbById.A.moves === 0 &&
+  climbById.B.place === 2 && climbById.B.ceilingPlace === 2 && climbById.B.moves === 0 &&
+  climbById.C.place === 3 && climbById.C.ceilingPlace === 3 && climbById.C.moves === 0);
+ok(`a table whose ceilings are already in order peaks at the leader with zero to gain, not at a null (peak ${climb.peak.clubId} +${climb.peak.moves})`,
+  climb.peak.clubId === "A" && climb.peak.moves === 0);
+// TC: Q has 9 pts / 3-0 and nothing left to play; P has 6 pts / 3-1 and TWO fixtures left, so its
+// ceiling is 12 against Q's 9. P takes the place and Q loses the one it holds — which is the honest
+// half of the read, and why the moves sum to zero: this is one table re-sorted, not three claims.
+const climbClubs = [club("P", "TC"), club("Q", "TC"), club("N", "TC")];
+const climbFixtures = [
+  match("c1", "TC", "Q", "N", 1, 0, "2026-02-01"),
+  match("c2", "TC", "Q", "N", 1, 0, "2026-02-02"),
+  match("c3", "TC", "Q", "P", 1, 0, "2026-02-03"),
+  match("c4", "TC", "P", "N", 2, 0, "2026-02-04"),
+  match("c5", "TC", "P", "N", 1, 0, "2026-02-05"),
+  match("c6", "TC", "P", "N", 1, 0, "2026-02-06", "SCHEDULED"),
+  match("c7", "TC", "N", "P", 0, 1, "2026-02-07", "SCHEDULED"),
+];
+const climbC = ceilingPlaces("TC", climbFixtures, climbClubs);
+const climbCById = Object.fromEntries(climbC.rows.map((r) => [r.clubId, r]));
+ok(`the club with more left to play takes the place of the club with nothing left (Q ${climbCById.Q.place}→${climbCById.Q.ceilingPlace} on ${climbCById.Q.moves}, P ${climbCById.P.place}→${climbCById.P.ceilingPlace} on ${climbCById.P.moves}, N ${climbCById.N.place}→${climbCById.N.ceilingPlace})`,
+  climbC.rows.map((r) => r.clubId).join(",") === "Q,P,N" &&
+  climbCById.Q.place === 1 && climbCById.Q.ceilingPlace === 2 && climbCById.Q.moves === -1 &&
+  climbCById.P.place === 2 && climbCById.P.ceilingPlace === 1 && climbCById.P.moves === 1 &&
+  climbCById.N.place === 3 && climbCById.N.ceilingPlace === 3 && climbCById.N.moves === 0 &&
+  climbC.rows.reduce((s, r) => s + r.moves, 0) === 0);
+ok(`the tile names the club the ceilings carry furthest (peak ${climbC.peak.clubId} +${climbC.peak.moves})`,
+  climbC.peak.clubId === "P" && climbC.peak.moves === 1);
+// TD is the goal-difference half. S leads on 6 pts / 3-1 (+2) with nothing left; R sits second on
+// 3 pts / 4-3 (+1) with one fixture left, so its ceiling is 6 pts / 5-3: level with S on points AND
+// goal difference, ahead on goals for — the table's third tie-break, reached only because each
+// lifted fixture carries the smallest winning margin rankSwing already uses.
+const sweepClubs = [club("S", "TD"), club("R", "TD"), club("M", "TD")];
+const sweepFixtures = [
+  match("d1", "TD", "S", "M", 2, 1, "2026-03-01"),
+  match("d2", "TD", "S", "M", 1, 0, "2026-03-02"),
+  match("d3", "TD", "R", "M", 4, 3, "2026-03-04"),
+  match("d4", "TD", "R", "M", 1, 0, "2026-03-05", "SCHEDULED"),
+];
+const climbT = ceilingPlaces("TD", sweepFixtures, sweepClubs);
+const climbTById = Object.fromEntries(climbT.rows.map((r) => [r.clubId, r]));
+ok(`a sweep is scored, not just banked: R reaches S's points and S's goal difference and passes on goals for (R ${climbTById.R.place}→${climbTById.R.ceilingPlace} on ${climbTById.R.moves}, S ${climbTById.S.place}→${climbTById.S.ceilingPlace})`,
+  climbT.rows.map((r) => r.clubId).join(",") === "S,R,M" &&
+  climbTById.R.place === 2 && climbTById.R.ceilingPlace === 1 && climbTById.R.moves === 1 &&
+  climbTById.S.place === 1 && climbTById.S.ceilingPlace === 2 && climbTById.S.moves === -1);
+// The counterfactual the clause above needs: with points alone (no goals counted) S and R both sit
+// on 6 and the sort keeps the incumbent, so the pass is the goal convention's doing.
+const tdCeiling = new Map(pointsScenarios("TD", sweepFixtures, sweepClubs).map((s) => [s.clubId, s.maxPoints]));
+const pointsOnly = [...climbT.rows].sort((a, b) => tdCeiling.get(b.clubId) - tdCeiling.get(a.clubId));
+ok(`a points-only lift would leave R behind the incumbent, so the goals the sweep scores are what pass it (points-only first ${pointsOnly[0].clubId}, fold first ${climbTById.R.ceilingPlace === 1 ? "R" : "not R"})`,
+  pointsOnly[0].clubId === "S" && climbTById.R.ceilingPlace === 1);
+// A competition with no rows has no places to lift: the rows are empty and the peak is null rather
+// than a maxBy over nothing; a club outside this competition's table never enters the rows, and the
+// rows that DO exist are the two clubs T2 actually has.
+const climbEmpty = ceilingPlaces("TZ", fixtures, clubs);
+const climbT2 = ceilingPlaces("T2", fixtures, clubs);
+ok(`an empty table gives no rows and no peak rather than a crash, and the other competition keeps its own two rows (${climbEmpty.rows.length} row(s) for a competition with no clubs, peak ${climbEmpty.peak}; T2 ${climbT2.rows.map((r) => r.clubId).join(",")})`,
+  climbEmpty.rows.length === 0 && climbEmpty.peak === null &&
+  climbT2.rows.length === 2 && climbT2.rows.map((r) => r.clubId).join(",") === "D,E" &&
+  climbT2.rows.every((r) => !["A", "B", "C"].includes(r.clubId)));
+ok("ceilingPlaces is deterministic over the same fixtures",
+  JSON.stringify(ceilingPlaces("T1", fixtures, clubs)) === JSON.stringify(climb));
+// The scenarios screen prints the new column and tile off the fold and never ranks the table
+// itself; an absent row falls to the shared absence glyph the other columns use.
+const SCENARIO_SRC = readFileSync(resolve(root, "features/analytics/PointsScenario.tsx"), "utf8");
+const climbScreen = SCENARIO_SRC.includes("ceilingPlaces(") && SCENARIO_SRC.includes("standing ? standing.ceilingPlace : ABSENT") &&
+  SCENARIO_SRC.includes('t("scenario.colMaxPlace")') && SCENARIO_SRC.includes('t("scenario.climb")') &&
+  SCENARIO_SRC.includes('t("scenario.climbSub"') && SCENARIO_SRC.includes("climb.peak &&") &&
+  !SCENARIO_SRC.includes("byTableStanding") && !SCENARIO_SRC.includes(".sort(");
+ok(`the scenarios screen reads the ceiling places off the fold and ranks nothing itself (screen ${climbScreen})`,
+  climbScreen);
 
 // --- titleRace: the gap week by week, on a hand-built finish line ------------------------------
 // A wins week 0 (A 3, C second on goal difference), B overtakes in week 1 (4 to A's 3), A takes it

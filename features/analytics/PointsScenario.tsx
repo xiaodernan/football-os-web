@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { pointsScenarios } from "@/domain/analytics";
+import { pointsScenarios, ceilingPlaces } from "@/domain/analytics";
 import { maxBy, sum } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf } from "@/lib/utils";
 
@@ -15,6 +15,11 @@ export function PointsScenario() {
 
   const comp = getCompetition(compId);
   const rows = useMemo(() => pointsScenarios(compId, matches, clubs), [compId, matches, clubs]);
+  // M716: the same ceilings the points column prints, asked of the standings — what place each club
+  // holds once every club in this table has met its own ceiling, ranked through the door the table
+  // itself uses.
+  const climb = useMemo(() => ceilingPlaces(compId, matches, clubs), [compId, matches, clubs]);
+  const placeBy = useMemo(() => new Map(climb.rows.map((r) => [r.clubId, r])), [climb]);
   const leader = rows[0] ?? null;
   const ceiling = rows.length ? maxBy(rows, (r) => r.maxPoints) : null;
   const chasers = rows.filter((r) => r.canCatchLeader);
@@ -54,7 +59,7 @@ export function PointsScenario() {
         </Panel>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <StatTile
               label={t("scenario.leader")}
               value={getClub(leader.clubId)?.short ?? ABSENT}
@@ -72,6 +77,16 @@ export function PointsScenario() {
               sub={t("scenario.chasersSub", { n: rows.length })}
             />
             <StatTile label={t("scenario.remaining")} value={totalLeft} sub={comp?.name ?? ABSENT} />
+            {/* M716: the club the ceilings carry furthest — the same move the new column prints,
+                named once for the whole table. */}
+            {climb.peak && (
+              <StatTile
+                label={t("scenario.climb")}
+                value={getClub(climb.peak.clubId)?.short ?? ABSENT}
+                sub={t("scenario.climbSub", { n: climb.peak.moves })}
+                tone="up"
+              />
+            )}
           </div>
 
           <Panel className="p-5">
@@ -82,12 +97,13 @@ export function PointsScenario() {
                 : t("scenario.open", { n: chasers.length, pts: leaderPoints })}
             </p>
 
-            <div className="mt-3 hidden grid-cols-[1.5rem_1fr_3rem_3rem_3.5rem_4rem_3.5rem] gap-2 border-b pb-1 text-[11px] uppercase tracking-wide text-muted-foreground sm:grid">
+            <div className="mt-3 hidden grid-cols-[1.5rem_1fr_3rem_3rem_3.5rem_3.5rem_4rem_3.5rem] gap-2 border-b pb-1 text-[11px] uppercase tracking-wide text-muted-foreground sm:grid">
               <span>#</span>
               <span>{t("scenario.colClub")}</span>
               <span className="text-right">{t("scenario.colPoints")}</span>
               <span className="text-right">{t("scenario.colLeft")}</span>
               <span className="text-right">{t("scenario.colCeiling")}</span>
+              <span className="text-right">{t("scenario.colMaxPlace")}</span>
               <span className="text-right">{t("scenario.colRate")}</span>
               <span className="text-right">{t("scenario.colGap")}</span>
             </div>
@@ -97,12 +113,13 @@ export function PointsScenario() {
                 const club = getClub(r.clubId);
                 const isLeader = r.clubId === leader.clubId;
                 const reachable = r.canCatchLeader;
+                const standing = placeBy.get(r.clubId) ?? null;
                 return (
                   <li
                     key={r.clubId}
                     className={cn(
                       "grid items-center gap-2 rounded-lg border px-3 py-2 text-sm",
-                      "grid-cols-[1.5rem_1fr_auto_auto] sm:grid-cols-[1.5rem_1fr_3rem_3rem_3.5rem_4rem_3.5rem]",
+                      "grid-cols-[1.5rem_1fr_auto_auto] sm:grid-cols-[1.5rem_1fr_3rem_3rem_3.5rem_3.5rem_4rem_3.5rem]",
                       !isLeader && !reachable && "opacity-70",
                     )}
                   >
@@ -124,6 +141,10 @@ export function PointsScenario() {
                     <div className="text-right font-semibold tabular-nums">{r.points}</div>
                     <div className="text-right tabular-nums">{r.remaining}</div>
                     <div className="hidden text-right tabular-nums sm:block">{r.maxPoints}</div>
+                    {/* M716: the place that ceiling would buy, ranked with the table's own door. */}
+                    <div className="hidden text-right tabular-nums sm:block">
+                      {standing ? standing.ceilingPlace : ABSENT}
+                    </div>
                     <div className="hidden text-right tabular-nums sm:block">{fmt2(r.ratePoints)}</div>
                     <div className="hidden text-right tabular-nums sm:block">
                       {isLeader ? ABSENT : r.behindLeader}

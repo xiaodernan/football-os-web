@@ -231,7 +231,9 @@ const expectedPerUser = [
   ["features/analytics/DataRoom.tsx", 13], ["features/analytics/Discipline.tsx", 2],
   ["features/analytics/EventClock.tsx", 1],
   ["features/analytics/GoalTiming.tsx", 4],
-  ["features/analytics/PointsScenario.tsx", 5],
+  // M716: the scenarios screen asks the door twice more — a ceiling place with no row behind it
+  // reads the glyph, and so does the climb tile's club when the table has no name for it. 5 -> 7.
+  ["features/analytics/PointsScenario.tsx", 7],
   ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 14],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],

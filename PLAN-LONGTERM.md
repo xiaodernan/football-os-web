@@ -240,6 +240,27 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M716: 上限的位次读法——`domain/analytics.ts` 新增 `CeilingPlaceRow`/`CeilingPlaces` 与 `ceilingPlaces(compId, matches, clubs)`：
+  把 `pointsScenarios` 已经印出的 `maxPoints` 当作输入，每支俱乐部同时抬到自己的上限（不是抬一支冻一支），
+  每个剩余场次按 M632 `rankSwing` 的最小决胜比分计分（gf 加剩余场数、ga 不动），再用同一 `byTableStanding` 重排取位次，
+  因此新列不可能与读者点过去的积分榜打架；并列时保住原有高者的位次（排序稳定，不自造第四条破平规则）；
+  之所以全体同时抬：一队独抬而其余冻住正是 `maxPoints` 的口径，但落到位次上什么也不说——真实英超 10 队里有 9 队都能越过冻住的榜首，
+  整列读 1；同时抬才排出一张真表（前五读 1 / 6 / 3 / 5 / 4），也让"本队上限不如邻队"的俱乐部掉位次，这是答案诚实的一半（moves 合计为 0）；
+  `features/analytics/PointsScenario.tsx` 的上限列（`scenario.colMaxPlace`）与第五块 tile（`scenario.climb` + `climbSub`，`tone="up"`，
+  守卫 `climb.peak &&`）都只读 fold，网格由 `lg:grid-cols-4` 改 5 列，列宽模板同步加一格；无表行的俱乐部读共享缺席字形；
+  3 键三语（字典 2,479→2,482）；`proof-analytics` 新增 9 条共 166/166
+  （T1：上限彼此比较而非与冻住的表比较，故三队全不动、peak 是榜首的 0 而非 null；
+  TC：Q 9 分且无赛可踢、P 6 分还剩两场（上限 12）→ P 取第 1、Q 掉第 2、N 不动，且 moves 合计 0；
+  TD：R 追平 S 的积分与净胜球、凭进球越过——并带反证：只抬积分则 S 仍在前；
+  TZ 无表行 → 0 行且 peak null（不是对空集合跑 maxBy），T2 只留自己的 D,E 两行；确定性；屏幕只读 fold 且组件内无 byTableStanding/`.sort(`）；
+  census pin：i18n literal 1,813→1,816、litVarSites 250→251、absence 门 PointsScenario.tsx 5→7（用户表仍 28 文件）；
+  无新模块/路由/存储键；bundle 保持 530 KB gzip / 54 资产（js 518、css 12.4，pwa pin 不动，baseline 只重记 JS 517→518）；
+  tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3,277/3,277 检查；
+  浏览器复核（production preview、/scenarios、zh-CN 与 en）：中文读 位次升幅最大 / ARS / 全员到顶可升 4 位（上限位次列前五 1/6/3/5/4），
+  英文读 BIGGEST CLIMB 与 "4 place(s) once every ceiling is met"，控制台两端都干净；
+  诚实的保留：这是对赛程的算术不是预测——假定每队拿走全部剩余上限且每场都是最小胜差，净胜球是近似而非模拟；
+  "升 4 位"说的是若全部赢下它值多少地面，不是说它会排名第二。
+
 - M715: 简报页也问位次——`Briefing` 新增 `rank: RankSwing | null`，由 `briefing()` 调 M632 的 `rankSwing(compId, next.homeClubId, next.awayClubId, matches, clubs)`：
   该 fold 查的就是 `us`/`them` 来自的那批 `teamMetrics` 行，因此缺表行时 gap 与位次一起为 null，不是各有一条条件；
   简报的场次由构造保证是 SCHEDULED，故不再另加开门条件；
@@ -455,13 +476,13 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M716 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+下一条目：M717 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
 ① 早段/晚段的攻守对照（`shotsBands` 与 `facedBands` 的首窗对末窗，同一 fold 两读）；
 ② 事件时钟的早段挨打 `earlySiege`（`lateSiege` 的镜像：首窗挨打量排序，同一扫描）；
 ③ 俱乐部页牌趋势与联赛趋势的对照（同一 fold 两读：本队曲线叠在联赛曲线上）；
-④ 上限的位次读法（`pointsScenarios` 已有 maxPoints，把"剩下全胜能排到第几"用同一 `byTableStanding` 折成位次，
-  在 /scenarios 表里加一列并给 tile 一行"全胜可升 n 位"）——已在隔离 worktree 里有未提交实现，含 3 键三语。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（组件农场 lane 已占 M633–M709，本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632、M710、M711、M712、M713、M714、M715，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub、`.drafts/` 新增草稿在其每次推送后由本线清理并记入 README。
+④ 上限位次的落点读法（`ceilingPlaces` 已同时给出升与降：在 /scenarios 的说明行或争冠屏里点名"被上限吃掉位次最多"的队，
+  读同一 fold，不重排、不另起一遍）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（组件农场 lane 已占 M633–M709，本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632、M710、M711、M712、M713、M714、M715、M716，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub、`.drafts/` 新增草稿在其每次推送后由本线清理并记入 README。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。
