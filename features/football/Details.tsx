@@ -765,6 +765,14 @@ function Stakes({ matchId, home, away }: { matchId: string; home: { name: string
             ? t("stakes.venueLine", { home: home.name, hp: hv.homePoints, hpg: fmt2(hv.homePpg), away: away.name, ap: av.awayPoints, apg: fmt2(av.awayPpg) })
             : ABSENT}
         </li>
+        {/* M713: each end's own card ledger, read off the discipline board's fold rather than
+            re-summed from the stats blocks; a side the competition has no row for gets no line. */}
+        {brief.homeCards && (
+          <li>{t("stakes.cardsLine", { club: home.name, y: brief.homeCards.yellows, r: brief.homeCards.reds, p: fmt2(brief.homeCards.bookingsPerMatch) })}</li>
+        )}
+        {brief.awayCards && (
+          <li>{t("stakes.cardsLine", { club: away.name, y: brief.awayCards.yellows, r: brief.awayCards.reds, p: fmt2(brief.awayCards.bookingsPerMatch) })}</li>
+        )}
         <li>
           {rec.played > 0
             ? t("stakes.recordLine", { n: rec.played, w: rec.winsA, d: rec.draws, l: rec.winsB, gf: rec.goalsA, ga: rec.goalsB })

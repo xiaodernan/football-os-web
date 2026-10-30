@@ -1168,6 +1168,11 @@ export interface MatchBrief {
   /** Each side's own half of the venue split — the hosts' home row and the visitors' away row. */
   homeVenue: VenueSplitRow | null;
   awayVenue: VenueSplitRow | null;
+  /** Each side's row of the season's card ledger — the discipline board read for the two clubs in
+   *  this fixture (M713), so the match page can say how each has been booked. Null when the
+   *  competition has no row for that club (a cross-competition fixture before its debut). */
+  homeCards: DisciplineRow | null;
+  awayCards: DisciplineRow | null;
   /** The pair's finished meetings, oriented so `winsA` belongs to this fixture's home club. */
   record: HeadToHead;
   /** The competition's title race as it stands after its last finished fixture. */
@@ -1187,6 +1192,7 @@ export function matchBrief(matchId: string, matches: Match[], clubs: Club[]): Ma
   const scenarios = pointsScenarios(compId, matches, clubs);
   const calendar = runIn(compId, matches, clubs);
   const venues = venueSplit(compId, matches, clubs);
+  const ledger = discipline(compId, matches, clubs);
   const home = scenarios.find((s) => s.clubId === fixture.homeClubId) ?? null;
   const away = scenarios.find((s) => s.clubId === fixture.awayClubId) ?? null;
   return {
@@ -1199,6 +1205,8 @@ export function matchBrief(matchId: string, matches: Match[], clubs: Club[]): Ma
     awayRunIn: calendar.find((r) => r.clubId === fixture.awayClubId) ?? null,
     homeVenue: venues.rows.find((r) => r.clubId === fixture.homeClubId) ?? null,
     awayVenue: venues.rows.find((r) => r.clubId === fixture.awayClubId) ?? null,
+    homeCards: ledger.rows.find((r) => r.clubId === fixture.homeClubId) ?? null,
+    awayCards: ledger.rows.find((r) => r.clubId === fixture.awayClubId) ?? null,
     record: headToHead(fixture.homeClubId, fixture.awayClubId, matches),
     race: titleRace(compId, matches, clubs),
   };

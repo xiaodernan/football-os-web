@@ -703,6 +703,22 @@ const MATCH_BRIEF_IMPORT = /import \{[^}]*\bmatchBrief\b[^}]*\} from "@\/domain\
 ok(`the match page reads the brief off the domain fold rather than re-deriving it (import ${MATCH_BRIEF_IMPORT}, call ${DETAILS_SRC.includes("matchBrief(matchId")}, panel ${DETAILS_SRC.includes('t("stakes.title")')} with the link home ${DETAILS_SRC.includes('to="/briefing"')})`,
   MATCH_BRIEF_IMPORT && DETAILS_SRC.includes("matchBrief(matchId") &&
   DETAILS_SRC.includes('t("stakes.title")') && DETAILS_SRC.includes('to="/briefing"'));
+// M713: the match page's card ledger — the discipline board read for the fixture's two ends. On
+// the T5 fixture d4 (A hosting C, still scheduled) A has 2 counted games for 4Y0R (2.00 a game)
+// and C 2 for 5Y1R (3.00). A cross-competition fixture (T2's D-A) has no T2 row for the visitor
+// yet, so that end reads null rather than a zero ledger, while the host's unfixtured row is real.
+const stakeD4 = matchBrief("d4", discFixtures, discClubs);
+const stakeCross = matchBrief("s3", briefingFixtures, briefingClubs);
+ok(`matchBrief joins each end's own card ledger off the discipline fold (d4 A ${stakeD4.homeCards.played} played, ${stakeD4.homeCards.yellows}Y ${stakeD4.homeCards.reds}R at ${stakeD4.homeCards.bookingsPerMatch}; C ${stakeD4.awayCards.played} played, ${stakeD4.awayCards.yellows}Y ${stakeD4.awayCards.reds}R at ${stakeD4.awayCards.bookingsPerMatch}; cross host ${stakeCross.homeCards ? `${stakeCross.homeCards.played} played` : "null"}, visitor ${stakeCross.awayCards})`,
+  stakeD4.homeCards.played === 2 && stakeD4.homeCards.yellows === 4 && stakeD4.homeCards.reds === 0 &&
+  stakeD4.homeCards.bookingsPerMatch === 2 &&
+  stakeD4.awayCards.played === 2 && stakeD4.awayCards.yellows === 5 && stakeD4.awayCards.reds === 1 &&
+  stakeD4.awayCards.bookingsPerMatch === 3 &&
+  stakeD4.homeCards.bookings === stakeD4.homeCards.yellows + stakeD4.homeCards.reds &&
+  stakeCross.homeCards !== null && stakeCross.homeCards.played === 0 && stakeCross.awayCards === null);
+ok(`the match page's stakes panel prints both card ledgers off the brief rather than re-summing the stats blocks (home ${DETAILS_SRC.includes("brief.homeCards")}, away ${DETAILS_SRC.includes("brief.awayCards")}, line ${DETAILS_SRC.includes("stakes.cardsLine")})`,
+  DETAILS_SRC.includes("brief.homeCards") && DETAILS_SRC.includes("brief.awayCards") &&
+  DETAILS_SRC.includes("stakes.cardsLine") && DETAILS_SRC.includes("bookingsPerMatch"));
 
 // ---- M622: the same stats blocks folded by round --------------------------------------------
 // The discipline board answers who is booked; the trend answers when the bookings arrive. Fixture
