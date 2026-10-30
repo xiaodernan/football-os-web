@@ -1,147 +1,173 @@
-import { useMemo, useState } from "react";
-import { useI18n, formatDate } from "@/i18n";
-import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
-import { ProgressLine } from "@/ui/charts";
-import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { titleRace } from "@/domain/analytics";
-import { last } from "@/domain/attributes";
-import { cn, pctOf } from "@/lib/utils";
-
-// A format specifier is not a word a visitor reads, but written inside a render hole the
-// raw-UI scan reads every literal there as copy — the same two hits DataRoom paid at M170.
-const WEEK_DAY: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+import { useMemo } from "react";
+import { useI18n } from "@/i18n";
+import { Panel, SectionTitle, StatTile, CHIP_CLASS } from "@/ui/primitives";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { footballProvider } from "@/data/footballService";
 
 export function TitleRace() {
-  const { t, locale } = useI18n();
-  const competitions = useMemo(() => footballProvider.competitions(), []);
-  const matches = useMemo(() => footballProvider.matches(), []);
+  const { t } = useI18n();
   const clubs = useMemo(() => footballProvider.clubs(), []);
-  const [compId, setCompId] = useState(() => competitions[0]?.id ?? "");
 
-  const comp = getCompetition(compId);
-  const race = useMemo(() => titleRace(compId, matches, clubs), [compId, matches, clubs]);
-  const latest = last(race.weeks);
-  const leader = latest ? getClub(latest.leaderId) : undefined;
-  const second = latest ? getClub(latest.secondId) : undefined;
-  const chart = race.weeks.map((w) => ({
-    label: formatDate(locale, w.to, WEEK_DAY),
-    value: w.gap,
+  const [selectedView, setSelectedView] = useState<"current" | "remaining">("current");
+
+  const clubData = useMemo(() => {
+    return clubs.map(c => ({
+      id: c.id,
+      name: c.name,
+      position: c.position || 0,
+      points: c.points || 0,
+      played: c.matchesPlayed || 38,
+      goalDifference: (c.goalsFor || 0) - (c.goalsAgainst || 0),
+    }));
+  }, [clubs]);
+
+  const handleSelectView = (view: string) => {
+    setSelectedView(view);
+  };
+
+  // 按积分排序
+  const sortedClubs = [...clubData].sort((a, b) => (b.points || 0) - (a.points || 0));
+
+  // 前四名争冠集团
+  const titleGroup = sortedClubs.slice(0, 4);
+  // 中游集团
+  const middleGroup = sortedClubs.slice(4, 10);
+  // 保级集团
+  const relegationGroup = sortedClubs.slice(17, 20);
+
+  // 计算领头羊
+  const leader = titleGroup[0];
+  // 计算积分差距
+  const gaps = titleGroup.map((club, index) => ({
+    club,
+    gap: (leader.points || 0) - (club.points || 0),
   }));
-  const rows = [...race.weeks].reverse();
+
+  const handleSelectView = (view: string) => {
+    setSelectedView(view);
+  };
+
+  if (!clubData.some(c => c.position <= 4)) {
+    return (
+      <Panel className="p-6">
+        <SectionTitle title={t("titleRace.title")} />
+        <p className="text-muted-foreground mb-4">
+          {t("titleRace.noTitleContenders")}
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {clubs.map(c => (
+            <Button
+              key={c.id}
+              variant="outline"
+              size="sm"
+              onClick={() => {}}
+            >
+              {c.name}
+            </Button>
+          ))}
+        </div>
+      </Panel>
+    );
+  }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold tracking-tight">{t("race.title")}</h1>
-          <DemoBadge />
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">{t("race.subtitle")}</p>
+    <Panel className="p-6">
+      <SectionTitle title={t("titleRace.title")} />
+
+      {/* 视图切换 */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <Button
+          variant={setSelectedView === "current" ? "primary" : "outline"}
+          size="sm"
+          onClick={() => handleSelectView("current")}
+        >
+          {t("titleRace.currentSeason")}
+        </Button>
+        <Button
+          variant={setSelectedView === "remaining" ? "primary" : "outline"}
+          size="sm"
+          onClick={() => handleSelectView("remaining")}
+        >
+          {t("titleRace.remainingFixtures")}
+        </Button>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {competitions.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setCompId(c.id)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs transition-colors",
-              compId === c.id ? CHIP_CLASS.filterOn : CHIP_CLASS.filterOff,
-            )}
-          >
-            {c.name}
-          </button>
-        ))}
-      </div>
+      {/* 争冠组 */}
+      <Panel className="p-4 mb-6">
+        <SectionTitle title={t("titleRace.titleGroup", { group: t("titleRace.titleGroup") })} />
+        <p className="text-sm text-muted-foreground mb-3">
+          {t("titleRace.titleGroupDesc")}</p>
+        <ul className="list-disc list-inside space-y-2 text-sm text-primary">
+          {gaps.map(item => (
+            <li key={item.club.id}>
+              {t(`titleRace.position${item.club.position}`, {
+                position: item.club.position,
+              })} - {item.club.name}: {item.club.points}分
+              {t("titleRace.gap", { gap: item.gap })}</li>
+          ))}
+        </ul>
+        <p className="text-xs text-muted-foreground mt-2">
+          {t("titleRace.leader", { leader: leader.name })}</p>
+      </Panel>
 
-      {!latest ? (
-        <Panel className="p-4">
-          <EmptyState title={t("race.empty")} hint={t("race.emptyHint")} icon="📈" />
+      {/* 中游分析 */}
+      {setSelectedView === "remaining" && (
+        <Panel className="p-4 mb-6">
+          <SectionTitle title={t("titleRace.middleGroup", { group: t("titleRace.middleGroup") })} />
+          <p className="text-sm text-muted-foreground mb-3">
+            {t("titleRace.middleGroupDesc")}</p>
+          <ul className="list-disc list-inside space-y-2 text-sm text-warning">
+            {middleGroup.map(c => (
+              <li key={c.id} className="font-medium text-warning">
+                {c.position}位 - {c.name} ({c.points}分)</li>
+            ))}
+          </ul>
         </Panel>
-      ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <StatTile
-              label={t("race.leader")}
-              value={leader?.short ?? latest.leaderId}
-              sub={t("race.leaderSub", { pts: latest.leaderPoints })}
-            />
-            <StatTile
-              label={t("race.gap")}
-              value={race.currentGap}
-              sub={t("race.gapSub", { second: second?.short ?? latest.secondId })}
-              tone={race.currentGap > 0 ? "up" : undefined}
-            />
-            <StatTile
-              label={t("race.changes")}
-              value={race.leadChanges}
-              sub={t("race.changesSub", { weeks: race.weeks.length })}
-            />
-            <StatTile
-              label={t("race.widest")}
-              value={race.biggestGap}
-              sub={t("race.widestSub", { week: race.biggestGapWeek })}
-            />
-          </div>
-
-          {chart.length > 1 && (
-            <Panel className="p-5">
-              <SectionTitle title={t("race.chart")} hint={t("race.chartHint")} />
-              <div className="mt-3">
-                <ProgressLine points={chart} height={180} />
-              </div>
-            </Panel>
-          )}
-
-          <Panel className="p-5">
-            <SectionTitle title={t("race.table")} hint={comp?.name ?? latest.leaderId} />
-            <div className="mt-3 hidden grid-cols-[7rem_1fr_1fr_4rem] gap-2 border-b pb-1 text-[11px] uppercase tracking-wide text-muted-foreground sm:grid">
-              <span>{t("race.colWeek")}</span>
-              <span>{t("race.colLeader")}</span>
-              <span>{t("race.colSecond")}</span>
-              <span className="text-right">{t("race.colGap")}</span>
-            </div>
-            <ul className="mt-1 space-y-1">
-              {rows.map((w) => {
-                const first = getClub(w.leaderId);
-                const chaser = getClub(w.secondId);
-                const widest = w.week === race.biggestGapWeek;
-                return (
-                  <li
-                    key={w.week}
-                    className={cn(
-                      "grid grid-cols-[1fr_auto] items-center gap-2 rounded-lg border px-3 py-2 text-sm sm:grid-cols-[7rem_1fr_1fr_4rem]",
-                      widest && "border-primary/40",
-                    )}
-                  >
-                    <div className="text-xs text-muted-foreground tabular-nums">
-                      {formatDate(locale, w.to, WEEK_DAY)}
-                    </div>
-                    <div className="flex min-w-0 items-center gap-2">
-                      <Crest colors={first?.colors} short={first?.short} size={22} />
-                      <span className="truncate font-medium">{first?.name ?? w.leaderId}</span>
-                      <span className="text-xs text-muted-foreground tabular-nums">{w.leaderPoints}</span>
-                    </div>
-                    <div className="hidden min-w-0 items-center gap-2 sm:flex">
-                      <Crest colors={chaser?.colors} short={chaser?.short} size={22} />
-                      <span className="truncate text-muted-foreground">{chaser?.name ?? w.secondId}</span>
-                      <span className="text-xs text-muted-foreground tabular-nums">{w.secondPoints}</span>
-                    </div>
-                    <div className="text-right font-semibold tabular-nums">{w.gap}</div>
-                    <div className="col-span-2 h-1.5 w-full rounded-full bg-muted sm:hidden">
-                      <div
-                        className={cn("h-1.5 rounded-full", widest ? BAR_FILL.good : BAR_FILL.info)}
-                        style={{ width: pctOf(w.gap, race.biggestGap || 1) }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="mt-3 text-xs text-muted-foreground">{t("race.method")}</p>
-          </Panel>
-        </>
       )}
-    </div>
+
+      {/* 保级分析 */}
+      {setSelectedView === "remaining" && (
+        <Panel className="p-4">
+          <SectionTitle title={t("titleRace.relegationGroup", { group: t("titleRace.relegationGroup") })} />
+          <p className="text-sm text-danger mb-3">
+            {t("titleRace.relegationGroupDesc")}</p>
+          <ul className="list-disc list-inside space-y-2 text-sm text-danger">
+            {relegationGroup.map(c => (
+              <li key={c.id} className="font-medium text-danger">
+                {c.position}位 - {c.name} ({c.points}分)</li>
+            ))}
+          </ul>
+        </Panel>
+      )}
+
+      {/* 积分差距可视化 */}
+      <Panel className="p-4">
+        <SectionTitle title={t("titleRace.gapVisualization")} />
+        <div className="grid grid-cols-2 gap-3">
+          {gaps.map(item => (
+            <div key={item.club.id} className="border rounded p-3 text-center">
+              <div className="font-medium text-primary">{item.club.name}</div>
+              <div className="text-2xl font-bold text-primary">{item.club.points}分</div>
+              <div className="text-sm text-muted-foreground">{t("titleRace.gapToLeader", { gap: item.gap })}</div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      {/* 争冠形势 */}
+      <Panel className="p-4 mt-6">
+        <SectionTitle title={t("titleRace.situation")} />
+        <p className="text-sm text-muted-foreground mb-3">
+          {t("titleRace.leaderStatus", { leader: leader.name })}</p>
+        <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+          <li>{t("titleRace.hasMathematical Chance")}</li>
+          <li>{t("titleRace.remainedGames", { games: 38 - (leader.played || 0) })}</li>
+          <li>{t("titleRace.pointGap", { gap: gaps[1]?.gap || 0 })}</li>
+        </ul>
+        <p className="text-xs text-primary mt-2">
+          {t("titleRace.nextRoundNote", { round: "下一轮" })}</p>
+      </Panel>
+    </Panel>
   );
 }
