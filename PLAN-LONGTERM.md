@@ -240,6 +240,19 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M710: 清理组件农场 lane 的仓库污染并恢复被覆盖的路由屏（无新功能）——`features/analytics/TitleRace.tsx` 按 M567 原样恢复：
+  M635 的 stub 以 11 条 tsc 错误覆盖了真实屏（未导入 `useState`、在 `Club` 上读 `position`/`points`/`matchesPlayed`/`goalsFor`/`goalsAgainst`、
+  `handleSelectView` 声明两次、`variant="primary"` 不在 Button 变体表）；stub 还拿 `setSelectedView === "current"`（函数与字符串比较）、
+  硬编码"分/位/下一轮"、用 `t(\`titleRace.position${...}\`)` 拼出字典里不存在的键；
+  删除 M633–M709 批次（含重复 M631 SeasonSummary）里 47 个未路由组件：无路由、无侧栏、无字典键、无证明——
+  i18n 读到 814 个未定义 t() 键、raw-UI 债 48 文件 529 处、`SeasonBestXI` 与 `Squad` 重复拼写同一 formation 联合；
+  删除 `.drafts/` 里该批次新增的 28 份草稿（census 107 对 pin 79、21 份不解析对 0 上限）；
+  把 lane 的未跟踪 `features/overview/ProjectOverview.tsx` 移出工作树且不纳入提交；
+  落地后：tsc 干净、build exit 0、bundle 保持 529 KB gzip / 54 资产（JS 517、CSS 12.4——这批文件从未进入入口，删除不改变打包）、
+  全套 121/121 脚本 · 3,256/3,256 检查（i18n 383/383、vocab 7/7、drafts 8/8、draft-types 5/5、app-tree 12/12）；
+  字典 2,473 键不变，无新路由/存储键/模块；README 把 M633–M709 记入 gap 批次；
+  诚实的保留：农场 lane 下一次推送可能把同类 stub 再带回来，本线每次合并后必须重跑同一清理；M633–M709 的编号保留历史但不再有代码。
+
 - M632: 赛果的排名维度——`domain/analytics.ts` 新增 `RankPlace`/`RankSwing` 与 `rankSwing(compId, homeClubId, awayClubId, matches, clubs)`：
   读 `teamMetrics` 的同一批表行，把主客各按胜/平/负的增量（3,1,0 / 1,1,1 / 0,0,1 与镜像）加到 points/gf/ga 上，
   再用 `byTableStanding` 重排整表取 1 基位次，产出 now/ifHomeWin/ifDraw/ifAwayWin 四组 {home, away}；
@@ -385,11 +398,11 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M633 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① 俱乐部页的赛季牌趋势（把 disciplineTrend 的累计与峰值读进同一牌账块，复用同一 fold）；
-② 简报页的位次维度（把刚落的 rankSwing 读进简报的 stakes 面板，读者在开球前就看到双方位次与三种结果后的落点）；
-③ 事件时钟的逐队时段（把联赛级 facedBands 拆到队里，晚段挨打最多者上板，复用 eventClock 的同一次扫描）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（分析 lane 用 M566–M574，组件农场 lane 用 M575–M620；本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub 在其每次推送后清理并记入 README。
+下一条目：M711 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+① 俱乐部页的赛季牌趋势（`disciplineTrend` 的同一 fold 按队读：`clubDisciplineTrend(compId, clubId, matches)`，累计与峰值读进同一牌账块）；
+② 事件时钟的逐队时段（把已落的 `facedBands` 晚段读数上板，晚段挨打最多者，复用 `eventClock` 的同一次扫描）；
+③ 比赛页的纪律维度（`matchBrief` 加两端牌账，读者点开一场就看到两队的牌风）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（组件农场 lane 已占 M633–M709，本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632、M710，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub、`.drafts/` 新增草稿在其每次推送后由本线清理并记入 README。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M632 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M710 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7098,6 +7098,40 @@ reflects the latest section this file actually carries.
 
 
 
+### M710 — the tree reads green again: the farm batch swept, the routed title-race restored
+
+Three pieces of debt from the concurrent component farm, paid before any new feature: the
+tree now type-checks, builds and proofs clean from end to end.
+
+1. **`/title-race` is the M567 screen again.** M635 overwrote `features/analytics/TitleRace.tsx`
+   with a stub that did not compile — `useState` never imported, five fields read off `Club`
+   that the type does not carry (`position`, `points`, `matchesPlayed`, `goalsFor`,
+   `goalsAgainst`), `handleSelectView` declared twice, and `variant="primary"` outside the
+   Button's variant table: eleven `tsc` errors in one file. The stub also compared
+   `setSelectedView === "current"` (a function against a string), printed hardcoded Chinese
+   copy (`分`, `位`, `下一轮`) and called `t(\`titleRace.position${...}\`)` with keys that never
+   existed. The file is restored byte-for-byte from M567, so the route reads the weekly
+   `titleRace` fold again instead of a broken page.
+2. **47 unrouted farm components are gone** (one `features/**` file per commit, M633–M709):
+   no route, no sidebar entry, no dictionary key, no proof. Their `t()` calls named 814 keys
+   the dictionaries never carried, they held 529 raw-UI literals across 48 files, and
+   `features/analytics/SeasonBestXI.tsx` and `features/team/Squad.tsx` spelled the same
+   formation union in two places. With them deleted the i18n walker's population falls back
+   to its pin (175 → 127 modules), and its raw-UI and caption censuses fall back to their own.
+3. **28 quarantined `.drafts/` copies are gone.** The lane had grown the draft census from its
+   pin of 79 to 107 files, 21 of them not parsing against a zero backlog. Deleting that batch
+   restores `proof-drafts` (8/8) and `proof-draft-types` (5/5). The lane's untracked
+   `features/overview/ProjectOverview.tsx` was moved out of the tree, not committed.
+
+No new screen, key, route or store — this unit is cleanup plus one restoration, so the census
+pins stay where they were (dictionary 2,473 keys, i18n 383/383, absence `Details.tsx`
+unchanged). `tsc` clean; `npm run build` exit 0; bundle unchanged at 529 KB gzip / 54 assets
+(JS 517, CSS 12.4 — the batch was never reachable from the entry, so there was nothing in the
+bundle to remove); the suite is 121/121 scripts · 3,256/3,256 checks.
+Honest reservation: the next farm push can re-add the same stubs, so this sweep has to be
+repeated on every lane merge; and M633–M709 keep their history but now have no code — they
+are recorded as gaps below.
+
 ### M632 — the stakes panel reads the places, not just the gap
 
 **The other table read.** M627 gave the match page the fixture's points arithmetic and M630 carried
@@ -7626,6 +7660,316 @@ shipped world every club's next fixture sits in a competition it has played in, 
 are measured in the proof, not seen in the browser.
 
 <!-- lane-stubs -->
+
+### M709 — 俱乐部青训营数据归档 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M708 — 俱乐部青训营数据迁移 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M707 — 俱乐部青训营数据备份 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M706 — 俱乐部青训营数据评估 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M705 — 俱乐部青训营数据报表 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M704 — 俱乐部青训营数据可视化 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M703 — 俱乐部青训营数据大屏 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M702 — 俱乐部青训营未来之星 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M701 — 俱乐部青训营数据分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M700 — 青训营人才梯队 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M699 — 俱乐部青训营年度总结 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M698 — 俱乐部青训营校友会 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M697 — 赛季荣誉榜 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M696 — 赛季颁奖典礼 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M695 — 俱乐部青训营合作 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M694 — 俱乐部青训营设施 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M693 — 俱乐部青训营毕业生去向 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M692 — 赛季结束报告 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M691 — 俱乐部转会预测 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M690 — 俱乐部青训营数据报告 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M689 — 球员伤病恢复 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M688 — 友谊赛 tournament (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M687 — 俱乐部青训营 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M686 — 赛季友谊赛 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M685 — 球员伤病预测 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M684 — 俱乐部财务报告 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M683 — 赛季赛程生成 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M682 — 用户自建联赛 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M681 — 球员发展进阶 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M680 — 联盟统计报告 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M679 — 本赛季MVP (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M678 — 比赛结果预测 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M677 — 球探报告 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M676 — 转会市场分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M675 — 下赛季预测 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M674 — 本赛季亮点 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M673 — 赛季最佳进球 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M672 — 本赛季转会概览 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M671 — 赛季数据大盘 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M670 — 赛季最佳阵容 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M669 — 球员季末评价 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M668 — 赛季总结 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M667 — 球队阵容 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M666 — 转会历史 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M665 — 球员合同 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M664 — 转会谈判 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M663 — 转会预算分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M662 — 球队表现可视化 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M661 — 转会预测引擎 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M660 — 球探标王 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M659 — 球队新闻 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M658 — 赛程表 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M657 — 转会传闻 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M656 — 伤病名单 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M655 — 赛季预测 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M654 — 赛事页面 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M653 — 战术工作室 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M652 — 青训营管理 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M651 — 球迷互动 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M650 — 赛季荣誉 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M649 — 赛季回顾 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M648 — 球员对比 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M647 — 球员评分 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M646 — 比赛数据统计 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M645 — 青训学院 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M644 — 赛程难度分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M643 — 队伍对比分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M642 — 赛事表现分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M641 — 主客场分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M640 — 联赛积分榜 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M639 — 球探报告 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M638 — 转会分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M637 — 赛季数据导出 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M636 — 近期状态分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M635 — 争冠分析 (a lane stub, removed)
+
+The stub overwrote the routed `/title-race` screen with a file that did not compile (eleven tsc errors) and printed hardcoded Chinese copy; M710 rolled the route back to the M567 screen byte for byte and the number keeps its record here.
+
+### M634 — 欧洲资格分析 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+### M633 — 降级保级争夺 (a lane stub, removed)
+
+A `features/**` component landed with no route, no sidebar entry, no dictionary keys and no proof; M710 deleted it, so the number keeps its record here.
+
+
 
 ### M620 — 球队交锋记录 (a lane stub, removed)
 
