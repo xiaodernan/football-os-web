@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M710 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M711 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,30 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M711 — the club page reads its own card curve, not the league's
+
+The discipline board folds every stats block in a competition by round; the club page already read
+its own row of that season ledger but not the shape of it. This unit adds the same fold lifted to
+one side of each fixture: `clubDisciplineTrend(compId, clubId, matches)` in
+`domain/analytics.ts`, and `disciplineTrend` now shares the fold (`foldCardRounds`) rather than
+carrying its own copy of the cumulative/peak loop. A round is counted only when the club appears in
+a finished fixture with a stats block, so a round it sat out is absent from the curve instead of
+drawn at zero, and its cumulative counts only the games it played.
+
+On the club page the trend sits after the siege line: the board's own title (`disc.trendTitle`),
+one sentence naming the peak round and the season total (`det.cards.trendLine` — new key, three
+locales), and a bar per counted round scaled to the peak, with the same round tags the
+`/discipline` panel prints. A club with no counted round renders nothing — the bars need a peak to
+scale against, and the ledger above already says the season is empty.
+
+The proof runs on the M622 T12 fixture: A reads rounds 1,2,3 as 2,2,1 with cumulatives 2,4,5 and a
+peak of 2 reached first in round 1; C skips round 1 entirely and peaks at 4 in round 2; B's round 2
+is absent rather than zero; D, which never appears in T12, reads empty. The three club curves must
+close on the league fold round by round (4, 6, 4) and in total on the board's 12Y + 2R — both ends
+of every fixture are counted exactly once. `proof-analytics` 143 → 149 checks; census pays three
+literal sites (1800 → 1803) and two interpolating ones (241 → 243), dictionary 2,473 → 2,474 keys.
+`tsc` clean; `npm run build` exit 0; bundle unchanged at 529 KB gzip / 54 assets.
 
 ### M710 — the tree reads green again: the farm batch swept, the routed title-race restored
 

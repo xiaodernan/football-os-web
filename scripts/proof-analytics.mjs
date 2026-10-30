@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, rankSwing } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -731,6 +731,47 @@ ok(`disciplineTrend is deterministic and the discipline screen reads its rounds 
   /import \{[^}]*\bdisciplineTrend\b[^}]*\} from "@\/domain\/analytics"/.test(DISCIPLINE_SRC) &&
   DISCIPLINE_SRC.includes("disciplineTrend(compId, matches)") &&
   DISCIPLINE_SRC.includes("trend.rounds.map(") && DISCIPLINE_SRC.includes("trend.peak"));
+// M711: the same round fold read from one side of each stats block — the club page's own curve.
+// On the T12 fixture A hosts t1 (2Y0R = 2), visits C in t2 (2Y0R = 2) and hosts C in t3
+// (1Y0R = 1), so rounds 1,2,3 read 2,2,1 with cumulatives 2,4,5 and a peak of 2 first reached in
+// round 1. C visits A in t2 (3Y1R against it = 4) and hosts B in t3 (2Y0R = 2): rounds 2,3 with
+// peak 4, and it never appears in round 1. B visits A in t1 (1Y1R = 2) and hosts C in t3 (1Y0R =
+// 1), so its round 2 is absent rather than drawn at zero. D never appears in T12 at all, and a
+// competition with no rows is empty.
+const trendA = clubDisciplineTrend("T12", "A", trendFixtures);
+const trendB = clubDisciplineTrend("T12", "B", trendFixtures);
+const trendC = clubDisciplineTrend("T12", "C", trendFixtures);
+const trendD = clubDisciplineTrend("T12", "D", trendFixtures);
+ok(`clubDisciplineTrend lifts one club out of each stats block and folds it by round (A rounds ${trendA.rounds.map((r) => r.round).join(",")}, in-round ${trendA.rounds.map((r) => r.inRound).join(",")}, cumulative ${trendA.rounds.map((r) => r.cards).join(",")}, peak ${trendA.peak})`,
+  trendA.rounds.map((r) => r.round).join(",") === "1,2,3" &&
+  trendA.rounds.map((r) => r.inRound).join(",") === "2,2,1" &&
+  trendA.rounds.map((r) => r.cards).join(",") === "2,4,5" && trendA.peak === 2 &&
+  trendA.rounds.map((r) => r.perMatch).join(",") === "2,2,1" &&
+  trendA.rounds.map((r) => r.matches).join(",") === "1,1,1" &&
+  trendA.rounds[0].yellows === 2 && trendA.rounds[0].reds === 0);
+ok(`a club that sat a counted round out skips it rather than reading a zero, and the peak is the single round not the season (B rounds ${trendB.rounds.map((r) => r.round).join(",")}, in-round ${trendB.rounds.map((r) => r.inRound).join(",")}, cumulative ${trendB.rounds.map((r) => r.cards).join(",")}, peak ${trendB.peak}; C rounds ${trendC.rounds.map((r) => r.round).join(",")}, in-round ${trendC.rounds.map((r) => r.inRound).join(",")}, cumulative ${trendC.rounds.map((r) => r.cards).join(",")}, peak ${trendC.peak})`,
+  trendB.rounds.map((r) => r.round).join(",") === "1,3" &&
+  trendB.rounds.map((r) => r.inRound).join(",") === "2,1" &&
+  trendB.rounds.map((r) => r.cards).join(",") === "2,3" && trendB.peak === 2 &&
+  trendC.rounds.map((r) => r.round).join(",") === "2,3" &&
+  trendC.rounds.map((r) => r.inRound).join(",") === "4,2" &&
+  trendC.rounds.map((r) => r.cards).join(",") === "4,6" && trendC.peak === 4 &&
+  trendD.rounds.length === 0 && trendD.peak === 0);
+// The two ends of each fixture are the league row read separately, so the three clubs above must
+// close on the league fold: per-round the club cards add up to the league's in-round count (4, 6,
+// 4) and in total to the board's 12Y + 2R.
+const trendPerRound = trend.rounds.map((r) =>
+  (trendA.rounds.find((x) => x.round === r.round)?.inRound ?? 0)
+  + (trendB.rounds.find((x) => x.round === r.round)?.inRound ?? 0)
+  + (trendC.rounds.find((x) => x.round === r.round)?.inRound ?? 0));
+ok(`club trends close on the league fold round by round (clubs ${trendPerRound.join(",")} against league ${trend.rounds.map((r) => r.inRound).join(",")}, total ${trendA.rounds[2].cards + trendB.rounds[1].cards + trendC.rounds[1].cards} against ${trendBoard.yellows + trendBoard.reds})`,
+  trendPerRound.join(",") === trend.rounds.map((r) => r.inRound).join(",") &&
+  trendA.rounds[2].cards + trendB.rounds[1].cards + trendC.rounds[1].cards === trendBoard.yellows + trendBoard.reds);
+const trendAgainA = clubDisciplineTrend("T12", "A", trendFixtures);
+ok(`clubDisciplineTrend is deterministic and the club page reads the curve off the domain fold rather than re-deriving it (same fold ${JSON.stringify(trendA) === JSON.stringify(trendAgainA)}, renders ${[...DETAILS_SRC.matchAll(/cardTrend\.rounds/g)].length} round reads)`,
+  JSON.stringify(trendA) === JSON.stringify(trendAgainA) &&
+  DETAILS_SRC.includes("clubDisciplineTrend(c.competitionId") &&
+  DETAILS_SRC.includes("cardTrend.rounds.map(") && DETAILS_SRC.includes("det.cards.trendLine"));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

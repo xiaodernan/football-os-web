@@ -26,7 +26,7 @@ import { careerArc } from "@/domain/careerArc";
 // an empty group where the domain answers the club's own rating.
 import { clubInput, lineMean, LINE_GROUPS } from "@/domain/career";
 import { playerDna } from "@/domain/playerDna";
-import { teamMetrics, expectedGoals, discipline, disciplineVenue, matchBrief, eventClock } from "@/domain/analytics";
+import { teamMetrics, expectedGoals, discipline, disciplineVenue, clubDisciplineTrend, matchBrief, eventClock } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
@@ -350,6 +350,26 @@ export function ClubDetail({ id }: { id: string }) {
     () => (c ? eventClock(c.competitionId, footballProvider.matches(), footballProvider.clubs()).rows.find((r) => r.clubId === id) ?? null : null),
     [c, id],
   );
+  // M711: the season curve this club's own cards make — the /discipline board's round fold read
+  // from one side of each stats block, so a round the club sat out does not enter its cumulatives.
+  // The line names the first round that reached the peak; ties keep the earlier one.
+  const cardTrend = useMemo(() => {
+    if (!c) return null;
+    const trend = clubDisciplineTrend(c.competitionId, id, footballProvider.matches());
+    let peakRound = 0;
+    let counted = 0;
+    let total = 0;
+    let best = -1;
+    for (const r of trend.rounds) {
+      if (r.inRound > best) {
+        best = r.inRound;
+        peakRound = r.round;
+      }
+      counted += r.matches;
+      total += r.inRound;
+    }
+    return { ...trend, peakRound, counted, total };
+  }, [c, id]);
   // The clock's six windows use the goals board's own labels, so the club page names a window the
   // same way /clock does rather than inventing a second vocabulary.
   const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
@@ -470,6 +490,37 @@ export function ClubDetail({ id }: { id: string }) {
                         late: fmt2(clockRow.lateFacedShare),
                       })}
                     </span>
+                  </div>
+                )}
+                {/* M711: a club with no counted round gets no curve — the bars need a peak to
+                    scale against, and the ledger above already says the season is empty. */}
+                {cardTrend && cardTrend.rounds.length > 0 && (
+                  <div className="border-t pt-2 text-xs">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="shrink-0 text-muted-foreground">{t("disc.trendTitle")}</span>
+                      <span className="text-right font-mono">
+                        {t("det.cards.trendLine", {
+                          p: cardTrend.peak,
+                          r: cardTrend.peakRound,
+                          n: cardTrend.total,
+                          m: cardTrend.counted,
+                        })}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-end gap-1">
+                      {cardTrend.rounds.map((r) => (
+                        <div key={r.round} className="flex-1 text-center">
+                          <div className="font-mono text-[10px] text-muted-foreground">{r.inRound}</div>
+                          <div className="mx-auto mt-0.5 h-8 w-full">
+                            <div
+                              className={cn("w-full rounded-sm", BAR_FILL.bad)}
+                              style={{ height: pctOf(r.inRound, Math.max(1, cardTrend.peak)) }}
+                            />
+                          </div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground">{t("disc.round", { r: r.round })}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {preview && (

@@ -858,7 +858,7 @@ export interface DisciplineTrend {
  *  in it carries a stats block, so a round whose fixtures were never recorded is absent rather than
  *  drawn at zero, and the cumulative column is the season total through that round. */
 export function disciplineTrend(compId: string, matches: Match[]): DisciplineTrend {
-  const byRound = new Map<number, { matches: number; yellows: number; reds: number }>();
+  const byRound = new Map<number, RoundCards>();
   for (const m of matches) {
     if (m.competitionId !== compId || m.status !== "FINISHED" || !m.stats) continue;
     const row = byRound.get(m.round) ?? { matches: 0, yellows: 0, reds: 0 };
@@ -867,6 +867,36 @@ export function disciplineTrend(compId: string, matches: Match[]): DisciplineTre
     row.reds += m.stats.home.reds + m.stats.away.reds;
     byRound.set(m.round, row);
   }
+  return foldCardRounds(byRound);
+}
+
+/** `disciplineTrend`'s fold with one side of each fixture lifted: the same season curve for a
+ *  single club. A club that did not play a counted round is absent from that round, so the
+ *  cumulative column counts only games it actually played. */
+export function clubDisciplineTrend(compId: string, clubId: string, matches: Match[]): DisciplineTrend {
+  const byRound = new Map<number, RoundCards>();
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED" || !m.stats) continue;
+    const side = m.homeClubId === clubId ? m.stats.home : m.awayClubId === clubId ? m.stats.away : null;
+    if (!side) continue;
+    const row = byRound.get(m.round) ?? { matches: 0, yellows: 0, reds: 0 };
+    row.matches++;
+    row.yellows += side.yellows;
+    row.reds += side.reds;
+    byRound.set(m.round, row);
+  }
+  return foldCardRounds(byRound);
+}
+
+interface RoundCards {
+  matches: number;
+  yellows: number;
+  reds: number;
+}
+
+/** Both trends above fold the same per-round counts; only the reader differs — every stats block
+ *  in the league, or one club's side of it. */
+function foldCardRounds(byRound: Map<number, RoundCards>): DisciplineTrend {
   let cumulative = 0;
   let peak = 0;
   const rounds = [...byRound.entries()]
