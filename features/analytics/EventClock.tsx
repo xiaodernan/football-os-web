@@ -31,6 +31,10 @@ export function EventClock() {
   // fifteen minutes, off the same fold. A club with nothing late has no row here rather than a
   // zero, so the board names who is actually under late siege.
   const lateSiege = clock.lateSiege.filter((r) => r.lateFaced > 0).slice(0, 5);
+  // M773: the same defending board opened at the other end of the match — the clubs that take the
+  // most of the first fifteen minutes, and each one's late share printed beside it so the two halves
+  // of the clock are read together rather than on separate screens.
+  const earlySiege = clock.earlySiege.filter((r) => r.earlyFaced > 0).slice(0, 5);
 
   return (
     <div className="space-y-5">
@@ -110,6 +114,7 @@ export function EventClock() {
                       <Crest colors={club?.colors} short={club?.short} size={26} />
                       <div className="min-w-0">
                         <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                        <div className="text-xs text-muted-foreground">{t("clock.openRecord", { e: r.earlyShots, p: r.earlyShare })}</div>
                         <div className="text-xs text-muted-foreground">{t("clock.record", { l: r.lateShots, p: r.lateShare })}</div>
                       </div>
                     </div>
@@ -170,6 +175,38 @@ export function EventClock() {
           </Panel>
           {/* M712: nobody was hit late in this competition reads no board rather than five
               empty rows — the same silence the siege rows keep for a club that faced nothing. */}
+          {/* M773: the opening board sits above the late one because that is the order the match
+              arrives in, and it keeps the same silence — a club faced nothing early has no row. */}
+          {earlySiege.length > 0 && (
+            <Panel className="p-5">
+              <SectionTitle title={t("clock.openSiegeTitle")} hint={t("clock.openSiegeHint")} />
+              <ul className="mt-2 space-y-1">
+                {earlySiege.map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li
+                      key={r.clubId}
+                      className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={26} />
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t("clock.openSiegeLine", { n: r.earlyFaced, f: r.faced, p: r.earlyFacedShare, l: r.lateFacedShare })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        {r.earlyFaced}
+                        <div className="text-xs text-muted-foreground">{t("timing.w1")}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Panel>
+          )}
           {lateSiege.length > 0 && (
             <Panel className="p-5">
               <SectionTitle title={t("clock.lateSiegeTitle")} hint={t("clock.lateSiegeHint")} />

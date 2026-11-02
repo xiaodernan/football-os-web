@@ -4386,7 +4386,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M715: the briefing prints the two place keys M632 wrote, for its own fixture: 1811 -> 1813.
 // M716: the scenarios table's ceiling-place column header and the two lines of the new climb tile
 // (its label and its variable-carrying sub): literal 1813 -> 1816.
-  shapeCounts.literal === 1816 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M773: the clock's opening board adds its title, hint and row line, the board's new opening record
+// and the window label that row repeats from timing: literal 1816 -> 1821, litVarSites 251 -> 253
+// (only the opening line and the opening record interpolate).
+  shapeCounts.literal === 1821 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4441,7 +4444,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M714: 246 -> 248 — each end's siege line hands over the faced count, the late count and the share.
 // M715: 248 -> 250 — the briefing hands the same five variables over for its own two clubs.
 // M716: 250 -> 251 — the climb tile's sub line hands over the places its own sweep would buy.
-  litVarSites === 251 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M773: 251 -> 253 — the opening-siege row hands over its early count, the faced load, the early
+// share and the late share beside it; the board's opening record hands over the early count/share.
+  litVarSites === 253 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

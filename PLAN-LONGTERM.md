@@ -240,6 +240,29 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M773: 时钟的开局端——`eventClock` 在既有的单次事件 sweep 里给第一个时段补上末段已有的四个数：
+  `EventClockRow` 新增 `earlyShots`/`earlyShare`/`earlyFaced`/`earlyFacedShare`（band===0 与 band===lastBand 同一条 pass，不开第二次扫描），
+  `EventClock` 新增第四个排序 `earlySiege`（按开局挨打数排，并列回落整场 faced 再到 clubId——逐条照抄 M712 `lateSiege` 的落子规则，不自造新秩序）；
+  守零沿用既有约定：没射过球的队 `earlyShare` 取 0 而非 NaN，没挨过打的队 `earlyFacedShare` 同理。
+  新增值班条款钉「开局计数就是第一个时段本身」：逐队 `shotsBands[0] === earlyShots`、`facedBands[0] === earlyFaced`，全联赛两个求和相等——
+  屏幕印的数必须能被柱状图那一段摸到，否则读者最后才发现的就是它。
+  `features/analytics/EventClock.tsx` 加一块「开局挨打」面板（`clock.openSiegeTitle`/`Hint`/`Line`），沿用 M712 的沉默：
+  `earlySiege.filter(r => r.earlyFaced > 0)`，空则整块不印而不是五行零；各队时钟每行在既有末段行之上多印一行 `clock.openRecord`；
+  行右侧时段标签复用 `timing.w1`，不发明第七个时段名；队名回落仍是 `club?.name ?? r.clubId` 这道门，
+  故 absence 门与用户表不动（`EventClock.tsx` 仍 1 处，28 文件）。
+  4 键三语（字典 2,482→2,486）；census pin 取合并树实测：literal 1,816→1,821（第五处是复用 `timing.w1` 的标签）、litVarSites 251→253；
+  顺手改掉 `clock.boardHint` 三语里「名字下面一行是末段占比」这句已经过期的说明（改值不加键，census 不动）；
+  `proof-analytics` 新增 5 条共 171/171（T9 手算 A 早 1/3 脚 33.33% 且挨 1/2 次 50%、B 无早射却挨 1/3、C 唯一一次挨打在 91 分钟故读 0/1 不是 NaN；
+  并列时 B 靠前靠整场 3&gt;2；静默与空表照样保留开局行；屏幕只读 fold、组件内无 `.sort(` 也无 `band === 0`）；
+  bundle 530→531 KB gzip / 54 资产（js 518、css 12.4），`proof-pwa` 预算 pin 530→531，`tests/perf/baseline.json` 随之重记；
+  tsc 干净、build exit 0、npm run proof 122/122 脚本 · 3,289/3,289 检查；
+  浏览器复核（production preview、/clock、zh-CN 与 en，两端 console 干净）：中文「开局挨打」首行 Chelsea 读 开局挨 32 次，共 163 次（19.63%），末段 13.5%，
+  右侧 32 / 1–15′，各队时钟 Chelsea 行早段 22 脚 · 占本队射门 19.47% 压在既有末段行之上；英文 HIT FIRST 排在 HIT LATE 之上，
+  行读 "32 of 163 faced early · 19.63%, 13.5% late"；真实数据读法：Chelsea 开局挨打最多（32/163），Newcastle 开局占比 20% 为全表最高，
+  曼联 own clock 早 14 脚 14.29% 对晚 20 脚 20.41%，与切尔西反向；
+  诚实的保留：开局=1–15 分钟，说的是带事件列表的已结束场次里最早一刻钟，不是首发姿态，也不覆盖没有事件记录的 5 分钟；
+  没有早段事件的队显示「没有」而不是 0，与 M712 对末段板的处置一致。
+
 - M772: 组件农场未路由 stub 再清一次，census 的人群 pin 回到记录值——`origin/master` 在 `67e9c2b` 是红的：
   `proof-i18n` 读 367/383，16 条失败没有一条来自分析 fold。一批提交（日志里标题占 M711–M771，即青训营/财务/概览组件）
   在 `features/academy/`、`features/finance/`、`features/overview/`、`features/player/` 下落了 62 个 `.tsx`：`src/App.tsx` 无路由、侧栏无入口、
@@ -548,7 +571,15 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M717 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+下一条目：M774 候选按「先修 census 的结构性 hostage，再挑真实数据 + 不重叠 + 复用既有 domain」排：
+①（M772 当场承诺）census 只计「读者能走到的应用」：从 `src/main.tsx`/`src/App.tsx`/侧栏出发按 import 图求可达闭包，
+   把既有人群 pin（127 模块 / 70 个 `.tsx` / 130 个读字典表的文件）改钉在可达集上，另立新条款只**报数**不被任何文件 import 的叶子
+   （文件数、凭空键数、raw-UI 债），并种两枚证明：routed 的仍被计、unrouted 的进隔离账——这样组件农场再推 45 个 stub 也不会把本线门禁按红，
+   也不必每次落地重跑清扫（M598/M710/M772 已累计清掉 23+47+45 个文件）；
+②开局 vs 末段的进攻面对照板（M773 只做了防守端第四排序，攻击端 `earlyShots`/`lateShots` 已在 fold 里，只差一屏读法）；
+③上限位次的落点读法（M716 只说升几位，没说升到哪一行的头上）；
+④牌趋势的开局/收尾对照（`clubDisciplineTrend` 与 M773 的时段口径同源，可复用六窗口）。
+
 ① 早段/晚段的攻守对照（`shotsBands` 与 `facedBands` 的首窗对末窗，同一 fold 两读）；
 ② 事件时钟的早段挨打 `earlySiege`（`lateSiege` 的镜像：首窗挨打量排序，同一扫描）；
 ③ 俱乐部页牌趋势与联赛趋势的对照（同一 fold 两读：本队曲线叠在联赛曲线上）；

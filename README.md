@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M772 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M773 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,62 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M773 — the clock opens at the other end
+
+**The half of the clock M712 left unwritten.** `/clock` had a late read on both ends — each club's own
+`lateShots`/`lateShare` under its name, and `lateSiege`, the defending board of who takes the last
+fifteen minutes — but its opening was only ever a bar in a six-window series. Nobody could ask which
+club strikes first, which one is under strain from the kickoff, or whether a club's pressure is
+front-loaded at all. `eventClock` now folds the first window into the same four numbers the last one
+carries — `earlyShots`, `earlyShare`, `earlyFaced`, `earlyFacedShare` — plus a fourth ordering,
+`earlySiege`, tied the way M712 tied its board: whole faced load first, then the club id. The counters
+arrive in the pass that already walks every event, so the fold stays one sweep.
+
+**The invariant that keeps the two reads honest.** The opening counters are not a second opinion about
+the same facts: `shotsBands[0] === earlyShots` and `facedBands[0] === earlyFaced` for every club, and
+league-wide the summed opening equals window 1 of the series the bar chart draws. A proof clause holds
+all four statements, because a screen printing a number the chart could not reach would be the read a
+reader catches last.
+
+**What the boards say on the shipped data.** Chelsea head the opening siege (32 of 163 faced inside
+fifteen minutes, 19.63%) while their late load is a comparatively light 13.5%, and Newcastle follow on
+24 of 120 — 20%, the highest opening share in the whole table. On the attack end Chelsea's own clock
+now reads 22 early shots (19.47% of 113) above 20 late (17.7%), where Manchester United's reads 14
+early (14.29%) against 20 late (20.41%): two neighbours in the board order, leaning opposite ways. The
+English opening board lists CHE, NEW, AVL, MCI, BHA; the late board a milestone ago opened with WHU.
+Two clubs, two halves of one match.
+
+**Words and gates.** 4 keys · 3 locales (`clock.openSiegeTitle`, `clock.openSiegeHint`,
+`clock.openSiegeLine`, `clock.openRecord`), so the dictionary goes 2,482 → 2,486 keys and the call
+sites move with them: literal 1,816 → 1,821 (the fifth is the board row's own window label, reusing
+`timing.w1` rather than inventing a seventh window name), variable-carrying 251 → 253. The stale hint
+under *Every club's clock* — "the line under the name is the late share" — now says both lines, in all
+three locales, since the cell carries an opening line above it; `clock.boardHint` is edited rather than
+added, so no census moves with it. The new board keeps M712's silence: a competition where nobody was
+hit early prints no board rather than five zero rows, and the club-name fallback is the same
+`club?.name ?? r.clubId` gate, so `proof-absent-glyph` stays at 12/12 with `EventClock.tsx` unchanged
+at its one door cell. `proof-analytics` grows five clauses to 171/171, including a hand-count on the T9
+fixtures (A 1 early shot of 3 at 33.33% and 1 of 2 faced at 50%; B none early but 1 of 3 faced; C's
+single faced attempt arrives at 91', so it reads 0 of 1 rather than NaN) and the tie-break clause that
+puts B ahead of A on the whole faced load.
+
+**What it cost.** No new module, route, screen or storage key — one panel on a screen that already had
+four, one extra line in an existing cell, and four fields on a fold three other screens already read.
+The build goes 530 → 531 KB gzip across the same 54 assets (JS 518, CSS 12.4), so `proof-pwa`'s budget
+pin moves with it and the perf baseline re-records; tsc clean, build exit 0, the suite lands at
+122/122 scripts · 3,289/3,289 checks. Checked in a real browser against a fresh production preview,
+both locales, console clean: `/clock` in zh-CN prints 开局挨打 with Chelsea's row reading 开局挨 32 次，
+共 163 次（19.63%），末段 13.5% beside a right-hand 32 / 1–15′, and the club board under it carries
+早段 22 脚 · 占本队射门 19.47% directly above the existing 末段 line; the same screen in English reads
+HIT FIRST above HIT LATE with "32 of 163 faced early · 19.63%, 13.5% late".
+
+**The honest limit.** The first window is 1–15′, so an opening read is a claim about the earliest
+quarter-hour of finished fixtures that carried events — not about kickoff lineups, and not about the
+5th minute of a match whose events were never recorded. A club with no early events shows nothing
+rather than showing a zero, which is the same choice M712 made for the late board: an absent opening is
+a missing record, not a statement that the club started slowly.
 
 
 ### M772 — the farm's unrouted batch is swept again and the census pins come back

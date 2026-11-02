@@ -695,6 +695,45 @@ ok(`the event clock screen reads the late siege off the same fold and drops a cl
   CLOCK_SRC.includes("clock.lateSiegeTitle") && !/SHOT|SAVE/.test(CLOCK_SRC));
 ok(`the event clock is reachable — the route table and the sidebar both name it (route ${/path === "\/clock"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/clock"/.test(SHELL_NAV_SRC)})`,
   /path === "\/clock"/.test(APP_ROUTE_SRC) && /to: "\/clock"/.test(SHELL_NAV_SRC));
+// M773: the first window gets the four numbers the last one already carries, off the same pass.
+// Hand-count on the T9 fixtures: A shot once inside 15 minutes (1 of its 3, 33.33%) and was faced
+// once there (1 of 2, 50%) by B's save at 12; B took no shot early but faced once early (1 of 3,
+// 33.33%); C's only faced attempt arrived at 91', so its opening reads 0 of 1 rather than NaN.
+// The two ends share a tie-break here exactly as M712's late board does: A and B both faced 1 early,
+// and the whole faced load puts B (3) ahead of A (2), so the opening board reads BAC.
+ok(`the opening window counts the same events at both ends (A ${clk.A.earlyShots} of ${clk.A.shots} shots at ${clk.A.earlyShare}%, faced ${clk.A.earlyFaced} of ${clk.A.faced} at ${clk.A.earlyFacedShare}%; B ${clk.B.earlyShots} shots but ${clk.B.earlyFaced} of ${clk.B.faced} faced at ${clk.B.earlyFacedShare}%; C ${clk.C.earlyFaced} of ${clk.C.faced})`,
+  clk.A.earlyShots === 1 && near(clk.A.earlyShare, 33.33, 0.005) &&
+  clk.A.earlyFaced === 1 && near(clk.A.earlyFacedShare, 50, 0.005) &&
+  clk.B.earlyShots === 0 && clk.B.lateShots === 0 && clk.B.shots === 1 &&
+  clk.B.earlyFaced === 1 && near(clk.B.earlyFacedShare, 33.33, 0.005) &&
+  clk.C.earlyShots === 0 && clk.C.shots === 0 && clk.C.earlyShare === 0 &&
+  clk.C.earlyFaced === 0 && clk.C.faced === 1 && clk.C.earlyFacedShare === 0);
+ok(`the opening siege orders the same rows by the load they took inside fifteen minutes and breaks the tie on the whole faced load (early ${clk.B.earlyFaced} each for B and A, faced B ${clk.B.faced} over A ${clk.A.faced}; order ${clock.earlySiege.map((r) => r.clubId).join("")})`,
+  clock.earlySiege.map((r) => r.clubId).join("") === "BAC" && clock.earlySiege.length === 3 &&
+  clock.earlySiege.every((r) => r.earlyFaced <= r.faced) &&
+  clock.earlySiege.every((r) => r.earlyFaced >= 0) &&
+  clock.rows.length === 3 && clk.B.faced === 3 && clk.A.faced === 2);
+// The opening counters cannot disagree with the window series they were folded out of: window 1 of
+// each club's own shots and of what it faced IS its early counter, and league-wide the two series add
+// up the same way M628 made every window add up — one pass, two reads.
+ok(`the opening counters are the first window itself, per club and league-wide (shots ${clock.shotsBands[0]} league / ${clock.rows.reduce((s, r) => s + r.earlyShots, 0)} summed, faced ${clock.facedBands[0]} league / ${clock.rows.reduce((s, r) => s + r.earlyFaced, 0)} summed)`,
+  clock.rows.every((r) => r.shotsBands[0] === r.earlyShots && r.facedBands[0] === r.earlyFaced) &&
+  clock.shotsBands[0] === clock.rows.reduce((s, r) => s + r.earlyShots, 0) &&
+  clock.facedBands[0] === clock.rows.reduce((s, r) => s + r.earlyFaced, 0) &&
+  clock.facedBands[0] === 2 && clock.shotsBands[0] === 1);
+// A table with no events still gets an opening: every row keeps six windows and two zeroed opening
+// counters, so the screen's board is empty by count rather than by a missing field.
+ok(`a silent and an empty table both keep their opening rows (silent ${clockSilent.earlySiege.length} rows at ${clockSilent.earlySiege.map((r) => r.earlyFaced).join(",")}, empty ${clockEmpty.earlySiege.length} rows, windows ${clockEmpty.rows[0].facedBands.length})`,
+  clockSilent.matches === 0 && clockSilent.earlySiege.length === 3 &&
+  clockSilent.earlySiege.every((r) => r.earlyFaced === 0 && r.earlyFacedShare === 0) &&
+  clockEmpty.earlySiege.length === 2 && clockEmpty.rows.length === 2 &&
+  clockEmpty.rows[0].earlyShare === 0 && clockEmpty.rows[0].facedBands.length === 6);
+ok(`the event clock screen reads the opening off the fold, prints it beside the late line and ranks nothing itself (board ${CLOCK_SRC.includes("clock.earlySiege.filter(")}, gate ${CLOCK_SRC.includes("r.earlyFaced > 0")}, line ${CLOCK_SRC.includes("clock.openSiegeLine")}, record ${CLOCK_SRC.includes("clock.openRecord")}, sorting ${/\.sort\(/.test(CLOCK_SRC)})`,
+  CLOCK_SRC.includes("clock.earlySiege.filter(") && CLOCK_SRC.includes("r.earlyFaced > 0") &&
+  CLOCK_SRC.includes("clock.openSiegeTitle") && CLOCK_SRC.includes("clock.openSiegeLine") &&
+  CLOCK_SRC.includes("earlySiege.map(") && CLOCK_SRC.includes('t("clock.openRecord", { e: r.earlyShots, p: r.earlyShare })') &&
+  CLOCK_SRC.includes('t("clock.record", { l: r.lateShots, p: r.lateShare })') &&
+  !/\.sort\(/.test(CLOCK_SRC) && !/earlyFaced\+\+|band === 0/.test(CLOCK_SRC));
 // --- briefing: one club's next fixture, joined with the five season reads -----------------------
 // T1 hand-count: f1 A 2-0 B, f2 B 1-1 A, f3 C 3-1 B finished; s1 A-B (May 10), s2 B-C (May 12),
 // z1 C-A (Jun 1) scheduled; l1 A-C is LIVE and must stay out of the pick, the record and the venue
