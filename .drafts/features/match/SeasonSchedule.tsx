@@ -20,12 +20,6 @@ export function SeasonSchedule() {
 
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
 
-  const matchStatus = match => {
-    if (match.status === "completed") return t("match.completed");
-    if (match.status === "scheduled") return t("match.scheduled");
-    return t("match.upcoming");
-  };
-
   const handleSelectMatch = (matchId: string) => {
     setSelectedMatch(matchId);
   };

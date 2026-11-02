@@ -240,6 +240,43 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M719: 隔离区 23 个「参数隐式 any」原来是 22 个影子加 1 个真洞——`7006` 自 M539 起钉在 23，那个数字读起来像
+  「还欠 23 处标注」，但参数只能用文件里**叫得出名字**的类型来标注。门换了个问法：给每个隐式 any 参数找到它
+  正在被遍历或被调用的那个表达式，再顺着草稿自己的声明往回走（`campusData`→`campuses`→那个没有符号的门），
+  报告走到哪一步解析不出来。两种答案能免罪，而且两种都真的在场：①应用 provider 根本没声明的门——
+  `footballProvider.campuses()`（AcademyReport 3 处）与 `.coaches()`（CoachCareerProfile＋CoachStatistics 共 6 处），
+  它们被访问的那个表面实际是 `id, mode, clubs, players, competitions, matches, standings`，任何地方都没有
+  campus/coach 类型可写；②从应用不提供的模块里 import 的名字——`League`（LeagueManager 8 处）、
+  `ClubBudget`（ClubFinance 4 处）、`getFreeAgents`（TransferWindow 1 处），正是 M718 记下的五个未上线 domain 里的三个。
+  22 处、5 个名字、6 个文件：这些都不靠「写个类型」能修，写了就是凭空造形状——一份能编译通过的谎言。
+  唯一的真洞与为什么是删除：SeasonSchedule.tsx:23 的答案是「根本没有上游」——同一个文件的 `matches` 元组类型完好，
+  `matchStatus` 的参数却没标注；把文件读回来发现这个 helper 在本文件里没有读者（状态在几行后就地渲染），
+  于是诚实的修复是删掉死代码而不是给它补一份没人调用的标注。`7006` 23→22、`TOTAL_CEILING` 409→408；
+  该文件仍被量着（留下 `2554`/`2322` 两个不属于本族的缺陷），最后一条门把这个钉住——这里归零不能靠把草稿消音买到。
+  另一条决定写进代码而不是写在散文里：走到「谁都没有的名字」（M717 那族）不算免罪，镜像里植入 `UnboundChain.ts`
+  把这条判断量出来。新门 `scripts/proof-draft-any.mjs` 7/7：先让两次读数互相证明——walk 必须为 census 数到的每个
+  `7006` 落到一个参数上（按文件逐一比对），同时把同一个 walk 用在**应用自己**的树上（122 模块 / 0 个隐式 any），
+  这样「没有未免罪的站点」才是关于隔离区的事实而不是一个瞎掉的读数；再钉未免罪桶为 0，并把三种未免罪形状各植入一枚
+  （导出箭头的裸参数、函数声明的裸参数、dead-end 在未绑定名字上的链）；然后每份免罪理由都独立再问一次——门之所以是门，
+  是因为那个「缺门」的表面确实是声明过的类型且真的带着应用已上线的那些门（空表面不能冒充「缺失」），模块之所以是模块，
+  是因为应用自己的解析器确实不答这个 specifier 且草稿确实从它 import 了这个名字；最后一条把五个名字钉成集合：
+  第六个 any 的制造者（新的未上线 domain、新的门）得是有人记下的决定。
+  写门过程中先掉进去的两个坑，都在门被信任之前抓住：把「没有符号的成员访问」当成缺门，对声明过的 `P` 上的 `p.campuses`
+  成立，对 `any` 上的 `c.id` 也成立——第一版某个站点的八条原因全是 `any` 上的门（`campuses.map`、`c.id`、`c.name`、
+  `c.location`、`c.students`、`c.coaches`、`c.graduationRate`、`c.scholarshipRate`），账本键会被它们占掉；
+  修法是问容器的已声明属性，容器是 `any` 就拒答。第二个坑是解构：`const [budget, setBudget] =
+  React.useState<ClubBudget | null>(null)` 里 `setBudget` 是个 BindingElement，既没有类型也没有初始值，
+  第一版因此把 12 处（ClubFinance 的 4 个 `prev` ＋ LeagueManager 的 8 处）报成「没有理由」；
+  把绑定元素回溯到它被解构出来的那个变量，它们才重新变回影子——它们本来就是影子。
+  实测：隔离区 409/69 → **408/69**，`7006` 22；tsc 干净、build exit 0，全套 123/123 proof scripts proven, 3291/3291 checks counted
+  （proof-draft-any 7/7、proof-draft-types 5/5、proof-draft-modules 7/7）。
+  对下一道最有用的话：账本里这五个名字与模块门点名的是同一批，只是从下面看——上线 `@/domain/league` 不只是清掉
+  八处与 `2307` 相邻的站点，它同时让 8 个参数变成「可以标注」，这就是「先上哪个 domain」最尖的论据，而现在它是门读的数。
+  三条臂（把删掉的 helper 放回去／把模块理由指向应用真有的模块／把门的理由指向应用真有的门）各自预测到红，
+  站点全部逐字节还原；其中 ARM-3 第一次多报一条红——1b 那条抄了 1a 的 `sites.length >= 20` 地板，
+  已经把它挪走，让每笔账只有一个主人。全程在隔离 worktree（milestone-719，基于 M718 之后）落地，未触碰分析 lane 的文件。— pushed
+
+
 - M718: 隔离区「找不到模块」的八个站点原来是三件事——`2307` 自 M539 起钉在 8，但那个数字说不清八处各自缺什么。
   门改问编译器的解析器两次：应用平面（应用自己的 options＋以草稿文件为所在目录，正是 checker 问的那句话）与
   隔离区平面（同一份 options 把根挪进 `.drafts`）。两答之间八处分了类：七处指的是隔离区原地就有的同路径模块

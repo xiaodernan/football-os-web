@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M718 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M719 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,72 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M719 — the quarantine's twenty-three implicit-anys are twenty-two shadows and one real hole
+
+**What the ratchet could not see.** `7006` — "parameter implicitly has an 'any' type" — has been bound at
+23 since M539 counted it, and 23 reads like 23 annotations waiting to be written. It is not that. A
+parameter can only be annotated with a type the file can NAME, and this gate asks, for each of the 23,
+what the parameter was depending on: it finds the expression being iterated or called, walks that
+expression back through the draft's own declarations — `campusData` → `campuses` → the door that has no
+symbol — and reports the reference that could not be resolved.
+
+**What the twenty-two were.** Two answers excuse a site, and both were present. A door the app's own
+provider type does not declare: `footballProvider.campuses()` (AcademyReport, 3 sites) and
+`footballProvider.coaches()` (CoachCareerProfile and CoachStatistics, 6) — the surface those calls are
+made against is `id, mode, clubs, players, competitions, matches, standings`, and there is no campus or
+coach type anywhere to write. And a name imported from a module the app does not provide: `League`
+(LeagueManager, 8 sites), `ClubBudget` (ClubFinance, 4), `getFreeAgents` (TransferWindow, 1) — three of
+the five domains M718 recorded as unwritten, reached for by the screens that were shelved with them.
+Twenty-two sites, five names, six files. None of them is fixable by writing a type: the type would have
+to be invented, and an invented shape in a draft is a lie that compiles.
+
+**The repair, and why it is a deletion.** One site answered "there is no upstream at all":
+`.drafts/features/match/SeasonSchedule.tsx:23` handed `matchStatus` an unannotated parameter while the
+same file's `matches` tuple was perfectly typable. Reading the file back, the helper had no reader in
+it — the screen renders the status inline a few lines below — so the honest repair is deleting dead
+code, not inventing an annotation for a function nothing calls. `7006` 23 → 22, `TOTAL_CEILING`
+409 → 408, and the file is still measured: it keeps the two defects that are not this family
+(`2554`, `2322`), which the last clause pins so that a zero here cannot be bought by muting a draft.
+
+**A name that exists nowhere is not a missing type.** The walk could have counted M717's class — an
+identifier with no symbol anywhere — as a third excuse ("the type is missing, isn't it"). It does not:
+a chain that dead-ends in an unbound name stays charged, and `UnboundChain.ts` is planted in the mirror
+to keep that decision measured rather than stated.
+
+**The gate.** `scripts/proof-draft-any.mjs`, 7/7. First the two readings of one population: the walk
+must land on a parameter for every `7006` the type census counts, file by file, and it is run over the
+APP's own tree too — 122 modules, 0 implicit-any — so "no site is left unexcused" is a fact about the
+quarantine rather than what a blind reader prints. Then the charged bucket, pinned at zero with all
+three unexcused shapes planted beside it (a bare parameter of an exported arrow, of a function
+declaration, and the dead-ending chain). Then each excuse is re-asked independently: a door is only an
+excuse if the surface it is missing from is a real declared type that does declare the doors the app
+ships, and a module is only an excuse if the app's resolver really refuses that specifier and the draft
+really imports that name from it. The last clause pins the five names as a set: a sixth producer of
+`any` — a new unwritten domain, a new door — is a decision somebody recorded.
+
+**Two traps the first walk fell into, both caught before the gate was trusted.** Reading a member
+access with no symbol as "a door the surface lacks" is true of `p.campuses` on a declared `P` and also
+of `c.id` on an `any` — on the first pass, eight of a single site's causes were doors on nothing
+(`campuses.map`, `c.id`, `c.name`, `c.location`, `c.students`, `c.coaches`, `c.graduationRate`,
+`c.scholarshipRate`), and the ledger keys would have been those instead of the two real absences. The
+fix is to ask the container for its declared properties and refuse the question when the container is
+`any`. And the walk dead-ended on destructuring: `const [budget, setBudget] =
+React.useState<ClubBudget | null>(null)` binds `setBudget` with a BindingElement, which carries neither
+a type nor an initializer, so twelve sites — the four `prev` parameters in ClubFinance and eight in
+LeagueManager — came back as "no excuse" on the first run. Following a binding back to the variable it
+was destructured from is what makes them shadows again, which is what they are.
+
+**Measured.** The quarantine reads **408 diagnostics over 69 files** (was 409/69); `7006` is 22, its
+bound now written against the twenty-two shadows rather than the 23 that included a real hole.
+`npx tsc --noEmit` clean, `npm run build` exit 0. The suite, with this milestone's files in place:
+**123/123 proof scripts proven, 3291/3291 checks counted** — `proof-draft-any` 7/7 beside `proof-draft-types` 5/5 and `proof-draft-modules` 7/7.
+
+**What this buys the next lane.** The five names in the ledger are the same five the module gate
+names, seen from underneath: shipping `@/domain/league` does not merely clear eight `2307`-adjacent
+sites, it removes `League` from this ledger and re-typable eight parameters at once — which is the
+sharpest argument for which domain to ship first, and it is now a number the gates read.
 
 
 ### M718 — the quarantine's missing modules turn out to be three facts, not one number
