@@ -965,6 +965,10 @@ export interface EventClock {
   /** The same rows ordered by the load they faced inside the first window (M773) — the opening read
    *  of the defending end, the mirror of `lateSiege`. Ties fall back the same way. */
   earlySiege: EventClockRow[];
+  /** The same rows ordered by the shots they took inside the first window (M777) — the attacking
+   *  read of the opening, the mirror of `earlySiege`. Ties fall back to the whole shot load,
+   *  then the club id. */
+  earlyAttack: EventClockRow[];
   shotsBands: number[];
   savesBands: number[];
   varBands: number[];
@@ -986,7 +990,10 @@ export interface EventClock {
  *  event also lands in the window it arrived in, per club and for the league — the M625 gap.
  *  M773 opens the clock at the other end: the first window gets the same four numbers the last one
  *  already carries, so a screen can say who strikes first as well as who is still being hit at the
- *  death, and the two reads of one club sit next to each other instead of on separate screens. */
+ *  death, and the two reads of one club sit next to each other instead of on separate screens.
+ *  M777 mirrors that opening at the attacking end: the first window's shots are named and ranked
+ *  the way the defending end already was, with the closing share printed on the same row, so the
+ *  two halves of one club's attack are a contrast rather than two separate tables. */
 export function eventClock(compId: string, matches: Match[], clubs: Club[]): EventClock {
   const metrics = teamMetrics(compId, matches, clubs);
   const emptyBands = () => Array.from({ length: GOAL_BANDS }, () => 0);
@@ -1062,10 +1069,11 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
   const siege = [...list].sort((a, b) => b.faced - a.faced || b.stops - a.stops || a.clubId.localeCompare(b.clubId));
   const lateSiege = [...list].sort((a, b) => b.lateFaced - a.lateFaced || b.faced - a.faced || a.clubId.localeCompare(b.clubId));
   const earlySiege = [...list].sort((a, b) => b.earlyFaced - a.earlyFaced || b.faced - a.faced || a.clubId.localeCompare(b.clubId));
+  const earlyAttack = [...list].sort((a, b) => b.earlyShots - a.earlyShots || b.shots - a.shots || a.clubId.localeCompare(b.clubId));
   // The league's faced clock is the mirror of its shots and saves: every one of those events faced
   // exactly one club, so the two series must add up window for window.
   const facedBands = shotsBands.map((n, b) => n + savesBands[b]);
-  return { rows: list, siege, lateSiege, earlySiege, shotsBands, savesBands, varBands, facedBands, shots, saves, vars, matches: counted };
+  return { rows: list, siege, lateSiege, earlySiege, earlyAttack, shotsBands, savesBands, varBands, facedBands, shots, saves, vars, matches: counted };
 }
 
 export interface Briefing {

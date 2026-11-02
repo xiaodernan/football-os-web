@@ -734,6 +734,30 @@ ok(`the event clock screen reads the opening off the fold, prints it beside the 
   CLOCK_SRC.includes("earlySiege.map(") && CLOCK_SRC.includes('t("clock.openRecord", { e: r.earlyShots, p: r.earlyShare })') &&
   CLOCK_SRC.includes('t("clock.record", { l: r.lateShots, p: r.lateShare })') &&
   !/\.sort\(/.test(CLOCK_SRC) && !/earlyFaced\+\+|band === 0/.test(CLOCK_SRC));
+// M777: the attacking mirror of M773's opening board. A took one of its three shots inside the
+// first window, B none of its one, C none at all (it never shot), so the board ranked by the
+// opening shots and then the whole shot load reads ABC. The closing counter is the last window of
+// the same series, so a row's two ends cannot disagree with the bars above it.
+ok(`the opening attack orders the same rows by the shots they took inside fifteen minutes and prints the closing counter off the same row (early ${clock.earlyAttack.map((r) => r.clubId).join("")}; A ${clk.A.earlyShots} of ${clk.A.shots} at ${clk.A.earlyShare}% late ${clk.A.lateShots} at ${clk.A.lateShare}%; B ${clk.B.earlyShots} of ${clk.B.shots}; C ${clk.C.earlyShots} of ${clk.C.shots})`,
+  clock.earlyAttack.map((r) => r.clubId).join("") === "ABC" && clock.earlyAttack.length === 3 &&
+  clock.rows.every((r) => r.shotsBands[0] === r.earlyShots && r.shotsBands[5] === r.lateShots) &&
+  clock.rows.every((r) => r.earlyShots + r.lateShots <= r.shots) &&
+  clk.A.shots === 3 && clk.A.earlyShots === 1 && clk.A.lateShots === 2 &&
+  near(clk.A.earlyShare, 33.33, 0.005) && near(clk.A.lateShare, 66.67, 0.005) &&
+  clk.B.earlyShots === 0 && clk.C.earlyShots === 0);
+// A table with no shots at all still keeps a full opening-attack order — every club sits in it at
+// zero, which is why the screen drops those rows instead of printing a column of zeros.
+ok(`a silent and an empty table both keep their opening-attack order (silent ${clockSilent.earlyAttack.length} rows, empty ${clockEmpty.earlyAttack.length} rows)`,
+  clockSilent.matches === 0 && clockSilent.earlyAttack.length === 3 &&
+  clockSilent.earlyAttack.every((r) => r.earlyShots === 0 && r.earlyShare === 0) &&
+  clockEmpty.earlyAttack.length === 2 &&
+  clockEmpty.earlyAttack.every((r) => r.shots === 0 && r.earlyShots === 0 && r.lateShots === 0));
+ok(`the event clock screen reads the opening attack off the fold, prints the closing share on the same row and ranks nothing itself (board ${CLOCK_SRC.includes("clock.earlyAttack.filter(")}, gate ${CLOCK_SRC.includes("r.earlyShots > 0")}, line ${CLOCK_SRC.includes("clock.strikeLine")}, sorting ${/\.sort\(/.test(CLOCK_SRC)})`,
+  CLOCK_SRC.includes("clock.earlyAttack.filter(") && CLOCK_SRC.includes("r.earlyShots > 0") &&
+  CLOCK_SRC.includes("clock.strikeTitle") && CLOCK_SRC.includes("clock.strikeLine") &&
+  CLOCK_SRC.includes("earlyAttack.map(") &&
+  CLOCK_SRC.includes('t("clock.strikeLine", { e: r.earlyShots, p: r.earlyShare, l: r.lateShots, q: r.lateShare })') &&
+  !/\.sort\(/.test(CLOCK_SRC) && !/earlyShots\+\+/.test(CLOCK_SRC));
 // --- briefing: one club's next fixture, joined with the five season reads -----------------------
 // T1 hand-count: f1 A 2-0 B, f2 B 1-1 A, f3 C 3-1 B finished; s1 A-B (May 10), s2 B-C (May 12),
 // z1 C-A (Jun 1) scheduled; l1 A-C is LIVE and must stay out of the pick, the record and the venue

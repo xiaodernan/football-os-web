@@ -35,6 +35,10 @@ export function EventClock() {
   // most of the first fifteen minutes, and each one's late share printed beside it so the two halves
   // of the clock are read together rather than on separate screens.
   const earlySiege = clock.earlySiege.filter((r) => r.earlyFaced > 0).slice(0, 5);
+  // M777: the attacking mirror of that board — the clubs that take the most shots inside the first
+  // quarter-hour, with each one's closing share printed on the same row so the two ends of one
+  // attack are a contrast. A club that took nothing early has no row here rather than a zero.
+  const earlyAttack = clock.earlyAttack.filter((r) => r.earlyShots > 0).slice(0, 5);
 
   return (
     <div className="space-y-5">
@@ -136,6 +140,39 @@ export function EventClock() {
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("clock.method")}</p>
           </Panel>
+
+          {/* M777: the attacking mirror of M773's opening board — who takes the first quarter-hour,
+              with the closing share on the same row. A club that never shot early has no row. */}
+          {earlyAttack.length > 0 && (
+            <Panel className="p-5">
+              <SectionTitle title={t("clock.strikeTitle")} hint={t("clock.strikeHint")} />
+              <ul className="mt-2 space-y-1">
+                {earlyAttack.map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li
+                      key={r.clubId}
+                      className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={26} />
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t("clock.strikeLine", { e: r.earlyShots, p: r.earlyShare, l: r.lateShots, q: r.lateShare })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        {r.shots}
+                        <div className="text-xs text-muted-foreground">{t("clock.shots")}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Panel>
+          )}
 
           <Panel className="p-5">
             <SectionTitle title={t("clock.siegeTitle")} hint={t("clock.siegeHint")} />

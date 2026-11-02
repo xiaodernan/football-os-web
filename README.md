@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M776 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M777 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,45 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M777 — the clock's attack opens too
+
+**The half of the clock M773 still left on one end.** M773 folded the first window for both ends
+and opened the defending board — `earlySiege` ranked the clubs that take the most shots faced
+inside fifteen minutes. The attacking half of that fold (`earlyShots`/`earlyShare`, already on
+every row since M773) had no ordering of its own: a reader could see one club's opening shots on
+the every-club board, but could not ask which clubs strike first. The new `earlyAttack` order
+ranks the same rows by the shots they took in the first window, ties fall back to the whole shot
+load and then the club id, exactly the shape `earlySiege` uses on the defending end; no second
+fold and no new counter.
+
+**The contrast on one row.** The screen's new "Strikes first" panel prints each club's opening
+count and share beside its closing count and share — `{e} early ({p}%) · {l} late ({q}%)` — so
+the two ends of one attack are read together rather than on two screens. Like M712 and M773, a
+club with nothing early has no row rather than a zero: the panel is empty when nobody struck
+early, the same silence the defending boards keep.
+
+**The numbers on the T9 fixtures.** A took one of its three shots inside the first window (1 of 3,
+33.33%) and two after the 75th (2 of 3, 66.67%); B took none of its one at either end; C never
+shot. Ranked by opening shots and then the whole load, the board reads A-B-C. A silent competition
+keeps all three rows in the order at zero, and an empty table keeps its two — the screen drops
+them by `earlyShots > 0` rather than printing zeros, and the proof asserts both.
+
+**Words and gates.** 3 keys · 3 locales (`clock.strikeTitle`, `clock.strikeHint`,
+`clock.strikeLine`), so the dictionary goes 2,487 → 2,490 keys; the panel's four literal sites
+move the census to literal 1,823 → 1,827 and variable-carrying sites 255 → 256 (the title, the
+hint and the repeated shots label pass no variables; the row line hands over the two counts and
+the two shares). `proof-analytics` grows three clauses — the fold hand-count, the silent/empty
+order and a screen clause holding the filter, the line and the no-sorting rule — to 176/176. No
+new module, route, screen or storage key. The build stays at 531 KB gzip across the same 54
+assets (JS 519, CSS 12.4), so the perf baseline and `proof-pwa`'s pin hold. `tsc` clean,
+build exit 0, the suite lands at 123/123 scripts · 3,303/3,303 checks.
+
+**The honest limit.** This is still a read of finished fixtures at this competition's ends, not a
+preview of the current match. The shares are shares of each club's own shots, so a side with a
+single early attempt reads 100% and a side with none is silent rather than zero; the board ranks
+the opening and prints the close, it does not claim the closing end is ranked — a late-attack
+ordering of the same rows is the remaining half, listed as a candidate rather than pretended.
 
 ### M776 — the census counts the app a reader can reach
 
