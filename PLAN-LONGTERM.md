@@ -240,6 +240,24 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M772: 组件农场未路由 stub 再清一次，census 的人群 pin 回到记录值——`origin/master` 在 `67e9c2b` 是红的：
+  `proof-i18n` 读 367/383，16 条失败没有一条来自分析 fold。一批提交（日志里标题占 M711–M771，即青训营/财务/概览组件）
+  在 `features/academy/`、`features/finance/`、`features/overview/`、`features/player/` 下落了 62 个 `.tsx`：`src/App.tsx` 无路由、侧栏无入口、
+  证明脚本无条款、README 无 section，且一个字典键都没写——于是 649 个 `t()` 站点指向三张表里都不存在的键，
+  raw-UI 债在 61 个文件里累计 408 处，`ClubFinancialOverview.tsx` 元素不闭合让中间点字幕探针读成盲区，
+  量到树而非量到代码的 pin 三处漂移（skip-list 审计与人群普查 127→189 模块、字幕 walk 70→132 个 `.tsx`、读字典表的文件 130→192）。
+  处置沿用 M710（47 个组件、814 个凭空键、175→127）与 M598（23 个文件）的先例：删。
+  删前核实无任何引用——`src/`、`features/shell/` 与全部 proof 脚本 grep 既无 importer 也无按文件名的条款，六十二个文件只 import 共享 primitives；
+  删后 `tsc --noEmit` exit 0，字典仍 2,482 键 · 3 语，`proof-i18n` 回到 383/383 且四条 pin 回到记录值；
+  bundle 不动（530 KB / 54 资产）——未路由的组件根本进不了 chunk，这正是它能藏六十三提交的原因。
+  本提交除六十二个删除文件与 README/PLAN 记录外不动任何 fold、屏、键或预算 pin；文本没丢，`67e9c2b` 及其父提交里都在。
+  本提交还补了一次账：本线的 section 写到 M772 之后，README 的编号区间就把农场的 M719–M771（M769 除外——日志里根本没有这个号）
+  暴露成 53 个没有 section 的号，gaps 块因此逐条点名那批提交真正交付的组件、prose 计数 133→186，
+  `proof-ledger-run` 8/8；条目写的是组件名而不是编号，因为光秃秃的号仍是读者要自己挖的洞。
+  这次清扫写进下一条的教训：清扫是机械的，而且树对它是不变的（删一个不被引用的文件不会动其余文件的任何测量），
+  但只要那条 lane 还在推送，每次落地都得重来一遍；根治是"谁都不 import 的文件不再计入应用 census，单独记一本隔离账"，
+  那是下一条里程碑的活；本提交只把桌子清空。
+
 - M718: 隔离区「找不到模块」的八个站点原来是三件事——`2307` 自 M539 起钉在 8，但那个数字说不清八处各自缺什么。
   门改问编译器的解析器两次：应用平面（应用自己的 options＋以草稿文件为所在目录，正是 checker 问的那句话）与
   隔离区平面（同一份 options 把根挪进 `.drafts`）。两答之间八处分了类：七处指的是隔离区原地就有的同路径模块
@@ -536,7 +554,6 @@
 ③ 俱乐部页牌趋势与联赛趋势的对照（同一 fold 两读：本队曲线叠在联赛曲线上）；
 ④ 上限位次的落点读法（`ceilingPlaces` 已同时给出升与降：在 /scenarios 的说明行或争冠屏里点名"被上限吃掉位次最多"的队，
   读同一 fold，不重排、不另起一遍）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（组件农场 lane 已占 M633–M709，本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632、M710、M711、M712、M713、M714、M715、M716，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub、`.drafts/` 新增草稿在其每次推送后由本线清理并记入 README。
-每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于 max(M771) 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

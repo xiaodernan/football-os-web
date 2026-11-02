@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M718 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M772 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,52 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M772 — the farm's unrouted batch is swept again and the census pins come back
+
+**What was found.** `origin/master` at `67e9c2b` was red: `proof-i18n` read 367/383, sixteen checks
+failing, and not one of them about an analytics fold. A run of commits (their titles mint M711 through
+M771 in the log — the 青训营/财务/概览 components) had landed sixty-two `.tsx` files under
+`features/academy/`, `features/finance/`, `features/overview/` and `features/player/` with no route in `src/App.tsx`, no
+sidebar entry, no proof clause, no README section and — the part the census cannot forgive — no
+dictionary keys at all.
+
+**What that cost the suite.** Every failure is those sixty-two files: 649 `t()` call sites naming keys
+none of the three locale tables carry, 408 raw-UI literals across 61 files sitting in the debt ledger
+the tree is held at zero, one caption planted at the midpoint of `features/finance/ClubFinancialOverview.tsx`
+read blind because the file never closes the element it opens, and the population pins that measure the
+tree rather than the code drifted in three places — `127 → 189` modules for the skip-list audit and the
+census, `70 → 132` `.tsx` files for the caption walk, `130 → 192` files reading the dictionary table.
+
+**What this commit does.** The sixty-two files are deleted, exactly as M710 deleted the first batch
+(47 components, 814 invented keys, `175 → 127` modules) and M598 deleted 23. Nothing referenced them:
+`grep` over `src/`, `features/shell/` and every proof script returns no importer and no clause pins one
+by name, and each imports only shared primitives, so no other file loses a line. The text is not gone
+from the project — it is in history at `67e9c2b` and its parents, and the lane can re-land any screen
+it still wants by bringing keys in three locales, a route and proof clauses with it, which is the bar
+every other screen clears.
+
+**Measured after the sweep.** `tsc --noEmit` exits 0, the dictionary still reads 2,482 keys · 3 locales,
+and `proof-i18n` is back at 383/383 with every population pin at its recorded value. No analytics fold,
+screen, key or budget pin moves, and the bundle is unchanged at 530 KB gzip over 54 assets: an unrouted
+component never reaches a chunk, which is why sixty-two of them could sit on master across sixty-three
+commits without anyone noticing the build still worked.
+
+**The ledger this sweep also owes.** Writing a section at M772 moves the README's numbered range past
+the farm's own commits, and `scripts/proof-ledger-run.mjs` then reads fifty-three numbers — M719
+through M771, with M769 missing from the log entirely — as gaps the record must name. The block
+below carries them, each entry naming the component its commit shipped rather than the number alone,
+because a bare number is a hole a reader still has to dig for; the prose count above it moves with it,
+133 to 186, so the two sets the gate compares are equal again. Nothing here is a record of work this
+line did: it is the record that the tree's history is owed regardless of who wrote it.
+
+
+**The lesson this sweep writes into the next milestone.** The sweep is mechanical and the tree is
+invariant under it — deleting an unreferenced file cannot move any measurement of the files that
+remain — but it has to be redone on every landing while the lane keeps pushing. The durable fix is to
+stop charging the app's census for a file nothing imports, and count those leaves in a ledger of their
+own instead. That is the next milestone's job; this commit only clears the desk.
 
 
 ### M718 — the quarantine's missing modules turn out to be three facts, not one number
@@ -14390,7 +14436,7 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **133 milestone numbers have no
+later ones as sections, and between the two **186 milestone numbers have no
 section at all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
@@ -14531,6 +14577,59 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M564 — the lane's TransferMarket, committed and swept off the tree at M566
 - M565 — the lane's PlayerValueRanking re-add, swept with the batch; the real screen is M528's
 - M566 — the lane's ClubFinancialModel add-and-sweep, removed by M559's cleanup commit
+- M719 — the lane's ClubYouthAcademyDataMigration stub, unreached from any entry and swept at M772
+- M720 — the lane's ClubYouthAcademyDataArchive stub, unreached from any entry and swept at M772
+- M721 — the lane's ClubYouthAcademyDataRestore stub, unreached from any entry and swept at M772
+- M722 — the lane's ClubYouthAcademyDataSync stub, unreached from any entry and swept at M772
+- M723 — the lane's ClubYouthAcademyDataClear and ClubYouthAcademyDataDelete stubs (its own M723a reused the number), unreached and swept at M772
+- M724 — the lane's ClubYouthAcademyDataVerify stub, unreached from any entry and swept at M772
+- M725 — the lane's ClubYouthAcademyPlayerDevelopment stub, unreached from any entry and swept at M772
+- M726 — the lane's ClubYouthAcademyDataQuality stub, unreached from any entry and swept at M772
+- M727 — the lane's ClubYouthAcademyComprehensive stub, unreached from any entry and swept at M772
+- M728 — the lane's ClubYouthAcademyDataTemplate stub, unreached from any entry and swept at M772
+- M729 — the lane's ClubYouthAcademyDataInsight stub, unreached from any entry and swept at M772
+- M730 — the lane's ClubYouthAcademyDataStatistics stub, unreached from any entry and swept at M772
+- M731 — the lane's ClubYouthAcademyDataSummary stub, unreached from any entry and swept at M772
+- M732 — the lane's ClubYouthAcademyDataRanking stub, unreached from any entry and swept at M772
+- M733 — the lane's ClubYouthAcademyDataFilter stub, unreached from any entry and swept at M772
+- M734 — the lane's ClubYouthAcademyDataEngine stub, unreached from any entry and swept at M772
+- M735 — the lane's ClubYouthAcademyDataMaster stub, unreached from any entry and swept at M772
+- M736 — the lane's ClubYouthAcademyDataElite stub, unreached from any entry and swept at M772
+- M737 — the lane's ClubYouthAcademyDataCore stub, unreached from any entry and swept at M772
+- M738 — the lane's ClubYouthAcademyDataPro stub, unreached from any entry and swept at M772
+- M739 — the lane's ClubYouthAcademyDataUltimate stub, unreached from any entry and swept at M772
+- M740 — the lane's ClubYouthAcademyDataInfinity stub, unreached from any entry and swept at M772
+- M741 — the lane's ClubYouthAcademyDataNirvana stub, unreached from any entry and swept at M772
+- M742 — the lane's ClubYouthAcademyDataEternity stub, unreached from any entry and swept at M772
+- M743 — the lane's ClubYouthAcademyDataCosmos stub, unreached from any entry and swept at M772
+- M744 — the lane's ClubYouthAcademyDataNebula stub, unreached from any entry and swept at M772
+- M745 — the lane's ClubYouthAcademyDataHorizon stub, unreached from any entry and swept at M772
+- M746 — the lane's ClubYouthAcademyDataVector stub, unreached from any entry and swept at M772
+- M747 — the lane's ClubYouthAcademyDataOrbit stub, unreached from any entry and swept at M772
+- M748 — the lane's ClubYouthAcademyDataSpin stub, unreached from any entry and swept at M772
+- M749 — the lane's ClubYouthAcademyDataFlow stub, unreached from any entry and swept at M772
+- M750 — the lane's ClubYouthAcademyDataPulse stub, unreached from any entry and swept at M772
+- M751 — the lane's ClubYouthAcademyDataEcho stub, unreached from any entry and swept at M772
+- M752 — the lane's ClubYouthAcademyDataBalance stub, unreached from any entry and swept at M772
+- M753 — the lane's ClubYouthAcademyDataHarmony stub, unreached from any entry and swept at M772
+- M754 — the lane's ClubYouthAcademyDataLegend stub, unreached from any entry and swept at M772; this line's sweep first took the number, then renamed itself away from it
+- M755 — the lane's ClubYouthAcademyDataMyth stub, unreached from any entry and swept at M772
+- M756 — the lane's ClubYouthAcademyDataReal stub, unreached from any entry and swept at M772
+- M757 — the lane's ClubYouthAcademyDataGem stub, unreached from any entry and swept at M772
+- M758 — the lane's ClubYouthAcademyDataKey stub, unreached from any entry and swept at M772
+- M759 — the lane's ClubYouthAcademyDataNote stub, unreached from any entry and swept at M772
+- M760 — the lane's ClubYouthAcademyDataTag stub, unreached from any entry and swept at M772
+- M761 — the lane's ClubYouthAcademyDataScore stub, unreached from any entry and swept at M772
+- M762 — the lane's ClubYouthAcademyDataFinal stub, unreached from any entry and swept at M772
+- M763 — the lane's ClubYouthAcademyDataTradition stub, unreached from any entry and swept at M772
+- M764 — the lane's ClubYouthAcademyDataLegacy stub, unreached from any entry and swept at M772
+- M765 — the lane's ClubYouthAcademyDataPresent stub, unreached from any entry and swept at M772
+- M766 — the lane's ClubYouthAcademyDataFuture stub, unreached from any entry and swept at M772
+- M767 — the lane's ClubYouthAcademyDataEvolution stub, unreached from any entry and swept at M772
+- M768 — the lane's ClubYouthAcademyDataJourney stub, unreached from any entry and swept at M772
+- M769 — no commit carries this number: the lane took M768 and then M770, so nothing shipped under it and no section was ever owed
+- M770 — the lane's ClubYouthAcademyDataCompendium stub, unreached from any entry and swept at M772
+- M771 — the lane's PlayerTransferPrediction stub under features/player/, unreached from any entry and swept at M772
 
 <!-- /gaps -->
 
