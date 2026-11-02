@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M718 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M719 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,37 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M719 — the farm's second unrouted batch is swept and the census pins come back
+
+**What was found.** `origin/master` at `65a5836` was red: `proof-i18n` read 367/383, and not one of
+the failing checks was an analytics fold. A run of commits (their titles mint M711 through M738 in the
+log — the 青训营/财务/概览 components) had landed thirty-one `.tsx` files under
+`features/academy/`, `features/finance/` and `features/overview/` with no route in `src/App.tsx`, no
+sidebar entry, no proof clause, no README section and — the part the census cannot forgive — no
+dictionary keys at all.
+
+**What that cost the suite.** Every failure is those thirty-one files: 339 `t()` call sites naming
+keys none of the three locale tables carry, 231 raw-UI literals across 30 files sitting in the debt
+ledger the tree is held at zero, one caption planted at the midpoint of
+`features/finance/ClubFinancialOverview.tsx` read blind because the file never closes the element it
+opens, and four population pins that measure the tree rather than the code — `127 → 158` modules for
+the skip-list audit and the census, `70 → 101` `.tsx` files for the caption walk.
+
+**What this commit does.** The thirty-one files are deleted, exactly as M710 deleted the first batch
+(47 components, 814 invented keys, `175 → 127` modules) and M598 deleted 23. Nothing referenced them:
+`grep` over `src/`, `features/shell/` and every proof script returns no importer and no pin, and each
+imports only shared primitives, so no other file loses a line. The text is not gone from the project —
+it is in history at `65a5836` and its parents, and the lane can re-land any screen it still wants by
+bringing keys in three locales, a route and proof clauses with it, which is the bar every other
+screen clears.
+
+**Measured after the sweep.** `tsc --noEmit` exits 0, the dictionary still reads 2,482 keys · 3
+locales, and `proof-i18n` is back at 383/383 with both population pins at their recorded values. No
+analytics fold, screen, key or budget pin moves, and the bundle is unchanged at 531 KB gzip over 54
+assets: an unrouted component never reaches a chunk, which is why nine of these files could sit on
+master for thirty commits without anyone noticing the build still worked.
 
 
 ### M718 — the quarantine's missing modules turn out to be three facts, not one number
