@@ -163,7 +163,7 @@ const walk = (dir, acc = []) => {
   }
   return acc;
 };
-// M774: the walk is the tree; the population is the app. The difference is one sentence and it
+// M776: the walk is the tree; the population is the app. The difference is one sentence and it
 // cost sixteen red checks at M772: a component the farm lane shipped under `features/` with no
 // route, no importer and no dictionary key is IN the tree, so every whole-tree number this gate
 // pins moved with it — 127 → 189 modules, 70 → 132 `.tsx`, 130 → 192 readers — and the aggregate
@@ -2042,7 +2042,7 @@ ok(`the raw-UI debt outside the covered set has not grown (${openTotal} across $
   openTotal <= RAW_UI_CEILING);
 for (const [p, h] of openRows.sort((a, b) => b[1].length - a[1].length).slice(0, 6)) console.log(`       debt: ${String(h.length).padStart(4)} ${p}`);
 
-// --- M774. The quarantine ledger: what the population filter took out, and what it owes. ---
+// --- M776. The quarantine ledger: what the population filter took out, and what it owes. ---
 // Leaving files out is the dangerous half of this milestone. A filter that drops the app's own
 // screens would make every number above look pristine while the app went untranslated, so the
 // debt is not discarded — it is re-measured here, by name, with the two numbers the farm lane
@@ -2070,7 +2070,7 @@ const PLANT_SRC = [
   'import { t } from "@/i18n";',
   "export const PlantedUnrouted = () => (",
   '  <div title="Planted heading">',
-  '    <p>{t("m774.planted.leaf.key")}</p>',
+  '    <p>{t("m776.planted.leaf.key")}</p>',
   "    <span>Untranslated words</span>",
   "  </div>",
   ");",
@@ -2078,7 +2078,7 @@ const PLANT_SRC = [
 const plantRow = ledgerRow(PLANT_LEAF, PLANT_SRC);
 ok(`the filter bites both ways and the row counts what a leaf owes (${plantKeepsAll} of 2 kept by an empty quarantine, kept under the leaf: ${plantKeepsReached || "none"}; the planted leaf reads ${plantRow.invented.length} invented key [${plantRow.invented}] and ${plantRow.rawUi} raw literal(s) over ${plantRow.tSites} site(s))`,
   plantKeepsAll === 2 && plantKeepsReached === "features/analytics/PlantedReached.tsx" &&
-  plantRow.invented.length === 1 && plantRow.invented[0] === "m774.planted.leaf.key" && plantRow.rawUi === 2 && plantRow.tSites === 1);
+  plantRow.invented.length === 1 && plantRow.invented[0] === "m776.planted.leaf.key" && plantRow.rawUi === 2 && plantRow.tSites === 1);
 // The skip list above is the one thing in this gate that can make a file invisible, so it is
 // policed instead of trusted: if any measured file imports a path that runs through a skipped
 // directory, that directory is app source and the exclusion is void. `dev/function-local.ts` is

@@ -1,4 +1,4 @@
-// M774: the import graph, in one place, so every census that asks "does the reader reach this
+// M776: the import graph, in one place, so every census that asks "does the reader reach this
 // file?" walks the same edges and gets the same answer.
 //
 // The question used to be owned by proof-orphans alone. That was fine while only it asked. When a

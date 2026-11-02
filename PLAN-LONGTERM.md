@@ -240,6 +240,20 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M776: census 只计「读者能走到的应用」——候选 ① 落地（无新屏幕、无新键、bundle 不动）：`scripts/lib/appGraph.mjs` 把 `proof-orphans` 独有的
+  导入图（去注释的 specifier 读取、解析器、由 index.html 的 `type="module"` 与 `functions/` 里 `Deno.serve` 派生的两个入口集、可达闭包）
+  提成共享库，`proof-orphans` 改读它并**逐字输出不变**（5/5，前后输出 diff 为空——这是「搬家不是重写」唯一的证据）；
+  `proof-i18n` 的人群改钉在可达集上：`walk(root)` 仍走整棵树，但没人能走到的文件进「可达隔离区」，三个人群 pin（127 模块 / 70 个 `.tsx` / 130 个读字典表的文件）
+  从此量代码而不是量树；新增账本条款把叶子按名字重算它欠的数（凭空键、raw-UI 字面量、`t()` 站点），天花板 0——已发布却无人能到达的文件不是应用可以有的状态；
+  一枚植物把两件事都量出来：在落地基线上 `features/academy/PlantedUnrouted.tsx`（无路由、无 importer、不写字典键的农场形状）让 `proof-i18n` 红 16/383，
+  其中 11 条只是同一组数字在动（127→128、70→71、130→131）且没有一条说是哪个文件动的，剩下 5 条是叶子真实的债（2 个凭空键、4 个字面量），其中 2 条点了文件名；并上本单元后同一枚叶子只红 1/385，且那条就是账本本身
+  （「1 leaf file(s) of 131 walked, ceiling 0: … — 2 invented key(s) […], 4 raw-UI literal(s), 2 t() site(s)」），人群 pin 全程不动；
+  另三枚植物守新条款：空隔离区两条路径都留（过滤器不是墙）、点名一片只删那一片且保住同形的 routed 文件、行构造函数对植物叶子如实报 1 个凭空键与 2 个字面量；
+  `proof-i18n` 383→385 条，全套 **123/123 scripts · 3,300/3,300 checks**；tsc 干净、build exit 0、bundle 仍 531 KB gzip / 54 资产（无应用文件改动）；
+  诚实的保留：同一枚叶子仍让另外 8 道门变红——`proof-orphans`/`proof-dead-exports`/`proof-unused-locals`/`proof-unused-params`（以及 `proof-coverage` 的「未申报不可达」条款）
+  点的是文件名、本来就红得对；`proof-app-tree`（122→123 模块 pin）、`proof-storage`（117→118 两条）、`proof-coverage`（另外 6 条）仍是「整树人群当代码」的老病，
+  下一道门（M777 候选 ①）把这四道门也改读 `appGraph` 的可达集，本条目的植物正好当它们的武装。
+
 - M775: 隔离区 23 个「参数隐式 any」原来是 22 个影子加 1 个真洞——`7006` 自 M539 起钉在 23，那个数字读起来像
   「还欠 23 处标注」，但参数只能用文件里**叫得出名字**的类型来标注。门换了个问法：给每个隐式 any 参数找到它
   正在被遍历或被调用的那个表达式，再顺着草稿自己的声明往回走（`campusData`→`campuses`→那个没有符号的门），
@@ -620,14 +634,13 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M775 候选按「先修 census 的结构性 hostage，再挑真实数据 + 不重叠 + 复用既有 domain」排：
-①（M772 当场承诺）census 只计「读者能走到的应用」：从 `src/main.tsx`/`src/App.tsx`/侧栏出发按 import 图求可达闭包，
-   把既有人群 pin（127 模块 / 70 个 `.tsx` / 130 个读字典表的文件）改钉在可达集上，另立新条款只**报数**不被任何文件 import 的叶子
-   （文件数、凭空键数、raw-UI 债），并种两枚证明：routed 的仍被计、unrouted 的进隔离账——这样组件农场再推 45 个 stub 也不会把本线门禁按红，
-   也不必每次落地重跑清扫（M598/M710/M772 已累计清掉 23+47+45 个文件）；
+下一条目：M777 候选按「先修 census 的结构性 hostage，再挑真实数据 + 不重叠 + 复用既有 domain」排：
+①（M776 做了一道门，其余三道仍病着）把可达集推广到剩下按整树人群计数的门：`proof-app-tree` 的 122 模块 pin、`proof-storage` 的 117 文件 pin（2 条）、
+   `proof-coverage` 的另外 6 条，都改读 `scripts/lib/appGraph.mjs` 的可达集并各立「叶子清单」条款报数；M776 的植物（一片无路由组件）就是它们的武装——
+   实测同一枚叶子在 M776 之后仍让 8 道门变红，其中 4 道点的是文件名（本来就红得对），其余全是 pin 漂移；
 ②开局 vs 末段的进攻面对照板（M773 只做了防守端第四排序，攻击端 `earlyShots`/`lateShots` 已在 fold 里，只差一屏读法）；
 ③上限位次的落点读法（M716 只说升几位，没说升到哪一行的头上）；
 ④牌趋势的开局/收尾对照（`clubDisciplineTrend` 与 M773 的时段口径同源，可复用六窗口）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、census 的可达人群取 M776；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

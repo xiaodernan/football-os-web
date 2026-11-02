@@ -2,7 +2,7 @@
 // reaches. Both existing censuses are blind to it: its exports are dead and its imports are dead,
 // but neither walks from an entry. The entries are DERIVED (index.html's module script and any
 // Deno.serve module under functions/), so the gate names no app path of its own.
-// M774: the reader, the walker and the walk are scripts/lib/appGraph.mjs now, because a second
+// M776: the reader, the walker and the walk are scripts/lib/appGraph.mjs now, because a second
 // census (proof-i18n's population) charges the same debt and the two gates must not disagree about
 // which files the app is. This gate keeps the claims; the graph lives once.
 import { readFileSync, readdirSync } from "node:fs";

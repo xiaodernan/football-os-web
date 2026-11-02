@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M775 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M776 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,52 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M776 — the census charges the app the reader can reach, not the tree it sits in
+
+**Which number was the problem.** M772 deleted sixty-two components the farm lane had shipped with no route, no importer and
+no dictionary key, and the repair left the gate exactly as unreadable as the defect. `proof-i18n` read 367/383, and not one of
+those sixteen failures told a reader which file to go and delete: three population pins had drifted (127 → 189 modules,
+70 → 132 `.tsx`, 130 → 192 dictionary readers), and every clause that asserts a pin fails with the same cause — the walk
+counts the tree, and the tree had gained neighbours. Sixty-two files were the debt, sixteen verdicts were the report, and the
+two numbers never met.
+
+**One leaf, both ways.** The plant is `features/academy/PlantedUnrouted.tsx`: a screen no route renders, importing the real
+door, inventing two keys and printing four literals — the farm lane's exact shape, one file instead of sixty-two. On the
+landing base it costs **16 of `proof-i18n`'s 383 checks**. Eleven of the sixteen are the same three numbers moving
+(127 → 128 modules, 70 → 71 `.tsx`, 130 → 131 readers), charged once per clause that asserts a pin, and not one of those
+eleven says which file moved them; the other five are the leaf's real debt — two invented keys and four raw literals —
+and two of those five do name it. With this unit's filter the same leaf in the same tree costs **1 of
+385**, and it is the ledger line itself — `nothing sits in the quarantine (1 leaf file(s) of 131 walked, ceiling 0:
+features/academy/PlantedUnrouted.tsx — 2 invented key(s) [planted.ghost.key.one, planted.ghost.key.two], 4 raw-UI literal(s),
+2 t() site(s))` — while the population reports its undisturbed 127/70/130 the whole time.
+
+**What changes.** `proof-i18n`'s population is now the app the reader can reach, not every `.ts`/`.tsx` the tree ships.
+`scripts/lib/appGraph.mjs` holds the import graph `proof-orphans` already built — the comment-stripping specifier reader, the
+resolver, the two derived entry sets (index.html's `type="module"` script and every `functions/` module calling
+`Deno.serve`) and the closure — and both gates walk the same edges. Whatever no entry reaches is *quarantined*: it leaves the
+population, so the pins stop measuring the tree, and the ledger re-measures it on its own line by name, with the two numbers a
+farm stub actually adds — the keys its `t()` sites invent and the literals it renders raw. Nothing is dropped and nothing is
+forgiven: the ceiling is 0, because a shipped file nobody can reach is not a state the app gets to be in.
+
+**The gate.** `proof-i18n` **385/385** (was 383: +2, the ledger and its arming) and `proof-orphans` **5/5** with
+**byte-identical output** — the extraction moved the reader, the walker and the closure into the shared library without
+changing a verdict or a number, which is the only test that says a refactor was a move and not a rewrite. Three plants arm
+the new clauses, because a ceiling of 0 over an empty list proves nothing: an empty quarantine keeps both planted paths (the
+filter is a filter, not a wall); naming one leaf drops exactly that one and keeps the routed file beside it, so a real screen
+under `features/` cannot be lost by this mechanism; and the row builder, run on a fixture leaf, reports its 1 invented key
+and its 2 literals, which is what makes the real zero a measurement rather than a blind spot. `npx tsc --noEmit` clean,
+`npm run build` exit 0, the suite at 123/123 scripts · 3,300/3,300 checks. No app file, no dictionary key and no byte of the bundle moved: the census
+changed, not the product.
+
+**Honest reservation: one gate, not the suite.** The same planted leaf still reddens eight other scripts, and they divide the
+same way. Four name the file and are right to — `proof-orphans` (`1 orphan(s): features/academy/PlantedUnrouted.tsx`),
+`proof-dead-exports` (its export is dead), `proof-unused-locals` and `proof-unused-params` (the program they prove does not
+read a module the walk names) — and `proof-coverage`'s undeclared-module clause names it too, because that gate has kept a
+*declared* unreachable list since M437. The rest are the disease this unit only just cured here: `proof-app-tree` charges a
+module-count pin (122 → 123), `proof-storage` charges two (its census walk goes 117 → 118), and `proof-coverage` charges six
+more beside its honest one. Giving every whole-tree pin the same reach-scoped population is the next unit, and it now has a
+measured plant, a shared library and a ceiling of zero to be armed by.
 
 ### M775 — the quarantine's twenty-three implicit-anys are twenty-two shadows and one real hole
 
