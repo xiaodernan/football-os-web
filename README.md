@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M773 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M774 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,43 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M774 — the match page opens the clock too
+
+**The half the stakes panel still held back.** M714 gave the stakes list one line per side for the
+defending end's last fifteen minutes, and M773 folded the same clock's first window into
+`earlyFaced`/`earlyFacedShare` — but the match page kept printing only the late half. A reader
+deciding whether a fixture starts under pressure or ends under it had to leave the page for
+`/clock` and find both clubs in a league-wide board. The stakes panel now prints the opening line
+per side (`stakes.earlySiegeLine`, new key) directly above the late one, so the two windows of one
+defence sit together under the fixture the reader chose.
+
+**The numbers on the chosen fixture.** The proof runs on the T9 c3 fixture, A hosting C: A faced two
+attempts in all and one of them inside the first window — the 12th-minute save — so its opening
+reads 1 of 2 (50%) beside the late 0 of 2 (0%); C's single faced attempt arrives at 91′, so its
+opening reads a real 0 of 1 (0%) above a late 1 of 1 (100%). The cross-competition D-A fixture keeps
+M714's silence exactly: the host's clock row is the real zero and its visitor has no row, and both
+guards stay `faced > 0`, so a side with nothing to report prints no line rather than a zero one.
+
+**Words and gates.** 1 key · 3 locales (`stakes.earlySiegeLine`), so the dictionary goes 2,486 →
+2,487 keys; the two literal call sites move the census to literal 1,821 → 1,823 and
+variable-carrying sites 251 → 253 → 255 (the line hands over the club, the faced count, the early
+count and the opening share, the same shape M714's late line passes). `proof-analytics` grows two
+clauses — the fold hand-count above and a screen clause holding the line, both early fields and both
+guards — to 173/173. No new module, route, screen or storage key: one key and two `<li>` rows on a
+panel that already had eleven. The build stays at 531 KB gzip across the same 54 assets (JS 519,
+CSS 12.4), so the perf baseline's JS record moves 518 → 519 and `proof-pwa`'s budget pin holds.
+`tsc` clean, build exit 0, the suite lands at 122/122 scripts · 3,291/3,291 checks. Checked in a real
+browser against a fresh production preview (`/matches/M0099`, zh-CN): the stakes panel prints
+Arsenal's opening line "面对 78 次射门，开局 9 次（11.54%）" directly above its late "…末段 15 次
+（19.23%）", and Brighton's "面对 128 次射门，开局 18 次（14.06%）" above "…末段 23 次（17.97%）";
+both sides carry the pair, neither reads a zero line, and the app's console is clean (the only
+messages are the IDE's injected `/api/*` probes timing out, which no page of this app calls).
+
+**The honest limit.** Like M714, this is a read of the events the record actually carries: a club
+whose opening attempts were never logged shows no line, not a zero, and the two windows are claims
+about finished fixtures at this competition's ends rather than about the fixture being previewed —
+the current match's own opening is still unwritten.
 
 ### M773 — the clock opens at the other end
 

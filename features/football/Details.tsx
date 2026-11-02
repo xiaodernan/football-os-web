@@ -773,6 +773,14 @@ function Stakes({ matchId, home, away }: { matchId: string; home: { name: string
         {brief.awayCards && (
           <li>{t("stakes.cardsLine", { club: away.name, y: brief.awayCards.yellows, r: brief.awayCards.reds, p: fmt2(brief.awayCards.bookingsPerMatch) })}</li>
         )}
+        {/* M774: the clock read at its other end — the load each side took inside the opening
+            fifteen minutes, so the panel prints the match's first window beside its last. */}
+        {brief.homeClock && brief.homeClock.faced > 0 && (
+          <li>{t("stakes.earlySiegeLine", { club: home.name, n: brief.homeClock.faced, early: brief.homeClock.earlyFaced, p: brief.homeClock.earlyFacedShare })}</li>
+        )}
+        {brief.awayClock && brief.awayClock.faced > 0 && (
+          <li>{t("stakes.earlySiegeLine", { club: away.name, n: brief.awayClock.faced, early: brief.awayClock.earlyFaced, p: brief.awayClock.earlyFacedShare })}</li>
+        )}
         {/* M714: how much each end gets hit and how much of it lands late — the clock's defending
             row. A side that faced nothing keeps the /clock silence rather than a zero line. */}
         {brief.homeClock && brief.homeClock.faced > 0 && (

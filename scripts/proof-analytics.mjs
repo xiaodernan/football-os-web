@@ -857,6 +857,21 @@ ok(`the stakes panel prints the two siege lines off the brief and silences a sid
   DETAILS_SRC.includes("brief.homeClock") && DETAILS_SRC.includes("brief.awayClock") &&
   DETAILS_SRC.includes("brief.homeClock.faced > 0") && DETAILS_SRC.includes("brief.awayClock.faced > 0") &&
   DETAILS_SRC.includes("stakes.siegeLine"));
+// M774: the same defending clock read at its opening. On c3's two clubs the fold's early window is
+// already counted: A faced two attempts all told and one of them inside the first window (the
+// 12th-minute save), so 1 of 2 is 50%; C's only faced attempt arrived at 91', so its opening is a
+// real 0 of 1 rather than a missing reading. The cross fixture's host has the zero row the /clock
+// board keeps, and its visitor has no row at all.
+ok(`matchBrief hands the opening load through the same clock row as the late one (c3 A ${stakeClock.homeClock.earlyFaced} of ${stakeClock.homeClock.faced} early at ${stakeClock.homeClock.earlyFacedShare}%; C ${stakeClock.awayClock.earlyFaced} of ${stakeClock.awayClock.faced} at ${stakeClock.awayClock.earlyFacedShare}%; cross host ${stakeClockCross.homeClock ? `${stakeClockCross.homeClock.earlyFaced} early` : "null"}, visitor ${stakeClockCross.awayClock})`,
+  stakeClock.homeClock.earlyFaced === 1 && stakeClock.homeClock.earlyFacedShare === 50 &&
+  stakeClock.awayClock.earlyFaced === 0 && stakeClock.awayClock.earlyFacedShare === 0 &&
+  stakeClock.homeClock.earlyFaced <= stakeClock.homeClock.faced &&
+  stakeClockCross.homeClock !== null && stakeClockCross.homeClock.earlyFaced === 0 &&
+  stakeClockCross.homeClock.earlyFacedShare === 0 && stakeClockCross.awayClock === null);
+ok(`the stakes panel prints the opening line too, off the same brief and under the same silence (line ${DETAILS_SRC.includes("stakes.earlySiegeLine")}, home ${DETAILS_SRC.includes("brief.homeClock.earlyFaced")}, away ${DETAILS_SRC.includes("brief.awayClock.earlyFaced")})`,
+  DETAILS_SRC.includes("stakes.earlySiegeLine") &&
+  DETAILS_SRC.includes("brief.homeClock.earlyFaced") && DETAILS_SRC.includes("brief.awayClock.earlyFaced") &&
+  DETAILS_SRC.includes("brief.homeClock.faced > 0") && DETAILS_SRC.includes("brief.awayClock.faced > 0"));
 
 // ---- M622: the same stats blocks folded by round --------------------------------------------
 // The discipline board answers who is booked; the trend answers when the bookings arrive. Fixture
