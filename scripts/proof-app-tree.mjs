@@ -38,7 +38,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { isHiddenName, carriesOwnRepo, skipReason, appDirsIn, appFilesIn, walkApp, APP_DIRS, reachableModulesIn } from "./lib/appTree.mjs";
+import { isHiddenName, carriesOwnRepo, skipReason, appDirsIn, appFilesIn, walkApp, APP_DIRS, appEntriesIn, reachableModulesIn } from "./lib/appTree.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -134,13 +134,18 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M573: 119 -> 120 — domain/nextStep.ts is the dashboard's next-step ranking.
 // M574: 120 -> 121 — features/analytics/EventClock.tsx is a new shot/save/review clock screen.
 // M575: 121 -> 122 — features/analytics/Briefing.tsx is a new matchday-briefing screen.
-// M776: 122 -> 119. The pin counts the modules a READER reaches from src/main.tsx, not every module
-// the ten directories hold: the three files the ledger names are real modules the app never loads
-// (the two Edge Function entries and an ambient declaration), and the farm's unrouted stubs must land
-// in that ledger rather than redden this pin. The ten-directory shape is still charged below.
-const APP_MODULE_PIN = 119;
+// M776: 122 -> 119. The pin counted the modules a READER reaches rather than every module the ten
+// directories hold, so the farm's unrouted stubs land in the ledger instead of reddening this pin.
+// M777: 119 -> 121. The walk now starts at the entries the app DECLARES — index.html's module script
+// and every module under `functions/` that calls Deno.serve — which is how proof-orphans has derived
+// them since M428. M776 handed the walk a remembered `["src/main.tsx"]`, and that retired sight
+// rather than moving it: the Edge Function's two modules read as a quarantine nothing imports, when
+// a reader reaches `functions/index.ts` by URL and `handler.ts` is the module that entry imports.
+// One module stays in the ledger: `src/vite-env.d.ts` is an ambient declaration, a type the compiler
+// reads and no browser loads.
+const APP_MODULE_PIN = 121;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
-const readerReaches = reachableModulesIn(["src/main.tsx"], (p) => readFileSync(join(root, p), "utf8"), treeExists);
+const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");
 const byDir = {};
 const allModules = [];
@@ -149,9 +154,12 @@ for (const d of APP_DIRS) {
   allModules.push(...found);
   if (found.length) byDir[d] = found.length;
 }
+const treeFiles = allModules.map(relOf);
+const treeEntries = appEntriesIn(treeFiles, readTree, readFileSync(join(root, "index.html"), "utf8"));
+const readerReaches = reachableModulesIn(treeEntries, readTree, treeExists);
 const appModules = allModules.filter((p) => readerReaches.has(relOf(p)));
-const unreachedModules = allModules.map(relOf).filter((p) => !readerReaches.has(p));
-ok(`the app the reader reaches from src/main.tsx is ${appModules.length} of the ten directories' ${allModules.length} modules (${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}); the ledger names ${unreachedModules.length} nothing imports [${unreachedModules.join(", ") || "none"}]`,
+const unreachedModules = treeFiles.filter((p) => !readerReaches.has(p));
+ok(`the app the reader reaches from its ${treeEntries.length} declared entr${treeEntries.length === 1 ? "y" : "ies"} [${treeEntries.join(", ")}] is ${appModules.length} of the ten directories' ${allModules.length} modules (${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}); the ledger names ${unreachedModules.length} nothing imports [${unreachedModules.join(", ") || "none"}]`,
   appModules.length === APP_MODULE_PIN && Object.keys(byDir).length === APP_DIRS.length);
 
 // The neighbour that caused this: a clone of this repository, sitting in the root, carrying its
@@ -212,13 +220,37 @@ ok(`every proof that reads the repository's top-level directories imports the ru
 // M776: the reachability question is one rule, like the neighbour rule above. proof-coverage asked
 // it first, privately; proof-i18n and this file now ask the same exported walk. A private copy is
 // the fork this check exists to stop — two copies of the answer is how two censuses describe two trees.
-const REACH_PROOFS = ["proof-coverage.mjs", "proof-i18n.mjs"];
-const reachForks = REACH_PROOFS.filter((f) => {
-  const src = readFileSync(join(root, "scripts", f), "utf8");
-  return !/reachableModulesIn/.test(src) || /function (?:resolveSpec|reach)\(/.test(src);
+// M777: the LIST is discovered, not remembered — the same move M432 made for the neighbour rule.
+// The remembered pair ["proof-coverage", "proof-i18n"] missed the two gates that matter most: this
+// file, which starts a closure two lines above the clause that polices closures, and proof-orphans,
+// which still carried the original reader. A list a fork can join by not being on it is not a gate.
+// The two shapes a fork takes are both charged: a closure started at a path remembered in code
+// instead of at the entries the app declares, and a reader defined beside the shared one.
+const scriptSrc = (f) => readFileSync(join(root, "scripts", f), "utf8");
+// A closure rooted at a literal path inside one of the app's own directories. A fixture rooted at
+// `pkg/` is test data and is not named here, which is what keeps proof-coverage's planted graphs
+// from reading as forks.
+const rootedAtLiteral = (src) => /reachableModulesIn\(\s*\[\s*["'](?:domain|data|lib|features|components|ui|src|store|i18n|functions)\//.test(src);
+// Only the GRAPH shapes are forbidden, because they are the reach answer: a walk, an entry list,
+// an edge reader. A gate that strips comments to read its own source, or resolves a specifier for
+// its own tally, is not answering this question and is not charged here — twenty of them do, and
+// naming them would be a refactor this clause is not for.
+const definesReader = (src) => /(?:const|function)\s+(?:reachableFrom|reachableModules|htmlEntries|denoEntries|appEntries|importEdges)\w*\s*[=(]/.test(src);
+const reachReaders = scriptFiles.filter((f) => /reachableModulesIn\(/.test(scriptSrc(f)));
+const reachForks = reachReaders.filter((f) => {
+  const src = scriptSrc(f);
+  return !importLine.test(src) || rootedAtLiteral(src);
 });
-ok(`the reachability question is answered in one place (${REACH_PROOFS.length} proofs import reachableModulesIn; ${reachForks.length} keep a private copy${reachForks.length ? `: ${reachForks.join(", ")}` : ""})`,
-  reachForks.length === 0);
+const privateWalks = scriptFiles.filter((f) => definesReader(scriptSrc(f)));
+// Both halves armed, because a clause that cannot see a fork is the clause that lets one in. The
+// planted shapes are BUILT at runtime — the same move proof-orphans makes for its planted skip list
+// — so this file does not carry a fork in its own source while still charging the shape.
+const PLANTED_FORK = 'const reach = reachableModulesIn(["' + "src/main.tsx" + '"], read, exists);';
+const PLANTED_CLEAN = "const reach = reachableModulesIn(appEntriesIn(files, read, html), read, exists);";
+const PLANTED_WALK = "const reachable" + "From = (entries, edges) => { const seen = new Set(); return seen; };";
+ok(`the reachability question is answered in one place, and the place is found rather than remembered (${reachReaders.length} proofs ask it: ${reachReaders.join(", ")}; ${reachForks.length} keep a fork${reachForks.length ? `: ${reachForks.join(", ")}` : ""}; ${privateWalks.length} define a reader beside the shared one${privateWalks.length ? `: ${privateWalks.join(", ")}` : ""}; the planted closure at a remembered path is caught ${rootedAtLiteral(PLANTED_FORK)}, the planted one at the derived entries is not ${rootedAtLiteral(PLANTED_CLEAN)}, and a planted private walk is caught ${definesReader(PLANTED_WALK)})`,
+  reachReaders.length >= 3 && reachForks.length === 0 && privateWalks.length === 0
+  && rootedAtLiteral(PLANTED_FORK) && !rootedAtLiteral(PLANTED_CLEAN) && definesReader(PLANTED_WALK));
 
 // ---------------------------------------------------------------------------
 // 4 · the repository points at no other repository
