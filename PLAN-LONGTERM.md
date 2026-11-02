@@ -638,10 +638,18 @@
   复用的射门标签）、litVarSites 255→256；无新模块/路由/存储键；bundle 531 KB / 54 资产不变（baseline 不动）；
   tsc 干净、build exit 0、全套 123/123 · 3,303/3,303；
   诚实的保留：只排开局，末段只印不排；份额是各队自身射门占比，单脚开局读 100%，零开局不印零行；两端都是已结束比赛的读数。
-下一条目：M778 候选按「真实数据 + 不重叠 + 复用既有 domain」排：
-②上限位次的落点读法（M716 只说升几位，没说升到哪一行的头上）；
+- M778: 上限位次的落点读法——把「升几位」变成「升到谁头上」的读法。`CeilingPlaceRow` 新增 `landedOn`：
+  在 `ceilingPlaces` 里把已经算好的 ceiling 行先排序一次，位次与落点都从这一份读出（`ceilingPlace` 有效时取
+  `ceilingRows[ceilingPlace]` 当下一行，末位 null），不二次排名、不新建 fold；`PointsScenario.tsx` 在「上限位次」
+  数字下面印落点小字（`scenario.landedOn` 带 club short，末位 `scenario.landedBottom`），没有行仍走 ABSENT；
+  2 键三语，字典 2,490→2,492；`proof-analytics` 新增 3 条共 179/179（T1 邻行链、TC 升位者压过被取代者与末位、
+  外部重建 ceiling 排序逐行对齐）；census pin：literal 1,827→1,829、litVarSites 256→257；无新模块/路由/存储键；
+  bundle 531 KB / 54 资产不变（baseline 不动）；tsc 干净、build exit 0、全套 123/123 · 3,306/3,306；
+  诚实的保留：落点只说「这一行站在谁上面」，被挤下去的行同样印新邻居，不区分谁赢谁输；并列由 `byTableStanding`
+  的既有 tie-break 定序，落点跟着那一个顺序走。
+下一条目：M779 候选按「真实数据 + 不重叠 + 复用既有 domain」排：
 ③牌趋势的开局/收尾对照（`clubDisciplineTrend` 与 M773 的时段口径同源，可复用六窗口）；
 ④末段进攻的独立排序（M777 只排开局、末段随行印出；`lateShots` 已在 fold 里，是同一块板的另一半）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

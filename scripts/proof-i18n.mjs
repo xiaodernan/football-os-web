@@ -4428,7 +4428,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M774: the match page's opening-siege lines repeat M714's pair for the first window: 1821 -> 1823.
 // M777: the opening-attack panel adds its title, hint and row line plus one repeated shots label
 // (four literal sites; only the row line interpolates): literal 1823 -> 1827, litVarSites 255 -> 256.
-  shapeCounts.literal === 1827 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M778: the ceiling-place cell adds its landing line and the top-row label (two literal sites; the
+// landing line interpolates the club name): literal 1827 -> 1829, litVarSites 256 -> 257.
+  shapeCounts.literal === 1829 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4487,7 +4489,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // share and the late share beside it; the board's opening record hands over the early count/share.
 // M774: 253 -> 255 — each end's opening-siege line hands over the faced count, the early count and
 // the opening share, the same three variables M714's late line passes.
-  litVarSites === 256 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M778: 256 -> 257 — the landing line hands over the club short's name; the top-row label passes none.
+  litVarSites === 257 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

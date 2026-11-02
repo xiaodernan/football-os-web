@@ -1193,6 +1193,11 @@ export interface CeilingPlaceRow {
   /** Places the ceilings move this club; positive is a climb, negative is a club whose ceiling is
    *  smaller than somebody else's, 0 means it holds. */
   moves: number;
+  /** The club this row sits directly above in the ceiling table — the row it lands on, so a move
+   *  ends on a NAME and not just a number (M778); null when it is the bottom row, where there is
+   *  nobody below to land on. A row the ceilings push DOWN still names its new neighbour: "over"
+   *  says where the row stands, not who won the move. */
+  landedOn: string | null;
 }
 
 export interface CeilingPlaces {
@@ -1223,7 +1228,7 @@ export function ceilingPlaces(compId: string, matches: Match[], clubs: Club[]): 
     return new Map(ranked.map((r, i) => [r.clubId, i + 1]));
   };
   const now = placesOf(metrics);
-  const ceiling = placesOf(metrics.map((r) => {
+  const ceilingRows = metrics.map((r) => {
     const left = ceilingOf.get(r.clubId);
     return {
       clubId: r.clubId,
@@ -1231,11 +1236,15 @@ export function ceilingPlaces(compId: string, matches: Match[], clubs: Club[]): 
       gf: r.gf + (left ? left.remaining : 0),
       ga: r.ga,
     };
-  }));
+  }).sort(byTableStanding);
+  const ceiling = placesOf(ceilingRows);
   const rows = metrics.map((r) => {
     const place = now.get(r.clubId) ?? 0;
     const ceilingPlace = ceiling.get(r.clubId) ?? 0;
-    return { clubId: r.clubId, place, ceilingPlace, moves: place - ceilingPlace };
+    // M778: the row directly below in the ceiling table, read off the same sorted fold the places
+    // come from — no second ranking, so the name can never disagree with the number beside it.
+    const landedOn = ceilingPlace > 0 ? ceilingRows[ceilingPlace]?.clubId ?? null : null;
+    return { clubId: r.clubId, place, ceilingPlace, moves: place - ceilingPlace, landedOn };
   });
   return { rows, peak: rows.length ? maxBy(rows, (r) => r.moves) : null };
 }

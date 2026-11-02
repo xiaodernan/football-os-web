@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M777 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M778 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,42 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M778 — the ceiling place lands on a name
+
+**A place is a number until it names somebody.** M716 ranked every club by the table its own ceiling
+would produce and printed how many places the ceiling moves it. That answered "how far", not "to
+where": a reader could see a club climb two places and still have to count rows to learn which club
+it had passed. The ceiling table was computed inside `ceilingPlaces` and thrown away after the places
+were read, so the name the move lands on was not in the fold at all.
+
+**The neighbour, read off the same sort.** `CeilingPlaceRow` now carries `landedOn`: the club ranked
+directly below it in the ceiling table, taken from the same sorted `ceilingRows` the places come
+from. The bottom row names nobody (null), every other row names exactly the club one place behind,
+and the fold does not rank a second time — the same one-door rule the table screens keep. A row the
+ceilings push DOWN still names its new neighbour: "over" says where the row stands, not who won the
+move, and the screen can print it without inventing a winner for every row.
+
+**The numbers on the fixtures.** T1's ceilings are already in order, so A lands on B, B lands on C
+and C lands on nobody — the chain the places already implied, now spelled. On TC, P's sweep takes
+first and lands on Q, the club it displaced, while Q lands on N and N holds the bottom row with no
+name below it. Rebuilding the ceiling order outside the fold and comparing row by row agrees with
+every printed neighbour, which is the clause that keeps the name from drifting away from the number.
+
+**Words and gates.** 2 keys · 3 locales (`scenario.landedOn`, `scenario.landedBottom`), so the
+dictionary goes 2,490 → 2,492 keys. The ceiling-place cell gains its landing line and the bottom-row
+label — two literal sites, only the landing line interpolating — moving the census to literal
+1,827 → 1,829 and variable-carrying sites 256 → 257. `proof-analytics` grows three clauses (the
+neighbour chain, the displaced row on TC, and the outside-order agreement) to 179/179. No new
+module, route, screen or storage key. The build stays at 531 KB gzip across the same 54 assets
+(JS 519, CSS 12.4), so the perf baseline and `proof-pwa`'s pin hold. `tsc` clean, build exit 0,
+the suite lands at 123/123 scripts · 3,306/3,306 checks.
+
+**The honest limit.** "Over" is a statement about order, not about cause: a club that held its
+place also names the club below it, and a club pushed down reads the same label as one that climbed.
+The two clauses that tell a climb from a fall are `moves` and `place`, which the table already
+prints. Ties are broken by `byTableStanding`, so the landing follows that one order and never claims
+a tiebreak of its own.
 
 ### M777 — the clock's attack opens too
 

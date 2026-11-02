@@ -411,12 +411,40 @@ ok(`an empty table gives no rows and no peak rather than a crash, and the other 
   climbEmpty.rows.length === 0 && climbEmpty.peak === null &&
   climbT2.rows.length === 2 && climbT2.rows.map((r) => r.clubId).join(",") === "D,E" &&
   climbT2.rows.every((r) => !["A", "B", "C"].includes(r.clubId)));
+// M778: the place is a number, but the column also names the row it lands on. The landed-on club
+// is the neighbour one place DOWN the ceiling table, read off the same sorted fold: the bottom row
+// has nobody below it, every other row names exactly the club ranked directly behind it, and a row
+// the ceilings push DOWN still names its new neighbour.
+const ceilingRowOf = new Map(climb.rows.map((r) => [r.ceilingPlace, r.clubId]));
+const lastCeilingPlace = Math.max(...climb.rows.map((r) => r.ceilingPlace));
+ok(`every ceiling row names the club it sits directly above, and the bottom row names nobody (A ${climbById.A.landedOn}, B ${climbById.B.landedOn}, C ${climbById.C.landedOn})`,
+  climb.rows.every((r) => (r.ceilingPlace === lastCeilingPlace ? r.landedOn === null : r.landedOn === ceilingRowOf.get(r.ceilingPlace + 1))) &&
+  climbById.A.landedOn === "B" && climbById.B.landedOn === "C" && climbById.C.landedOn === null);
+// TC again: P's sweep takes first, so it lands on Q — the club it displaced — and Q, pushed down
+// to second, lands on N. N holds the bottom row and names nobody.
+ok(`a climb lands on the club it displaced while the displaced club lands on the row below it (P over ${climbCById.P.landedOn}, Q over ${climbCById.Q.landedOn})`,
+  climbCById.P.ceilingPlace === 1 && climbCById.P.landedOn === "Q" &&
+  climbCById.Q.ceilingPlace === 2 && climbCById.Q.landedOn === "N" &&
+  climbCById.N.ceilingPlace === 3 && climbCById.N.landedOn === null);
+// The landing name is a read of the SAME ranking the place came from: rebuilding the ceiling rows
+// outside the fold and sorting them again must agree with the printed neighbour, row by row.
+const ceilingOutside = [...climbC.rows]
+  .sort((a, b) => a.ceilingPlace - b.ceilingPlace)
+  .map((r) => r.clubId);
+ok(`the landing names agree with the ceiling table's own order (${ceilingOutside.join(" ← ")})`,
+  ceilingOutside.join(",") === "P,Q,N" &&
+  climbC.rows.every((r) => {
+    const i = ceilingOutside.indexOf(r.clubId);
+    return r.landedOn === (i >= 0 && i < ceilingOutside.length - 1 ? ceilingOutside[i + 1] : null);
+  }));
 ok("ceilingPlaces is deterministic over the same fixtures",
   JSON.stringify(ceilingPlaces("T1", fixtures, clubs)) === JSON.stringify(climb));
 // The scenarios screen prints the new column and tile off the fold and never ranks the table
 // itself; an absent row falls to the shared absence glyph the other columns use.
 const SCENARIO_SRC = readFileSync(resolve(root, "features/analytics/PointsScenario.tsx"), "utf8");
-const climbScreen = SCENARIO_SRC.includes("ceilingPlaces(") && SCENARIO_SRC.includes("standing ? standing.ceilingPlace : ABSENT") &&
+const climbScreen = SCENARIO_SRC.includes("ceilingPlaces(") && SCENARIO_SRC.includes("standing.ceilingPlace") &&
+  SCENARIO_SRC.includes("standing.landedOn") && SCENARIO_SRC.includes('t("scenario.landedOn"') &&
+  SCENARIO_SRC.includes('t("scenario.landedBottom"') &&
   SCENARIO_SRC.includes('t("scenario.colMaxPlace")') && SCENARIO_SRC.includes('t("scenario.climb")') &&
   SCENARIO_SRC.includes('t("scenario.climbSub"') && SCENARIO_SRC.includes("climb.peak &&") &&
   !SCENARIO_SRC.includes("byTableStanding") && !SCENARIO_SRC.includes(".sort(");
