@@ -2,85 +2,18 @@
 // reaches. Both existing censuses are blind to it: its exports are dead and its imports are dead,
 // but neither walks from an entry. The entries are DERIVED (index.html's module script and any
 // Deno.serve module under functions/), so the gate names no app path of its own.
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, posix, resolve } from "node:path";
+// M774: the reader, the walker and the walk are scripts/lib/appGraph.mjs now, because a second
+// census (proof-i18n's population) charges the same debt and the two gates must not disagree about
+// which files the app is. This gate keeps the claims; the graph lives once.
+import { readFileSync, readdirSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { skipReason } from "./lib/appTree.mjs";
+import { APP_DIRS, skipReason } from "./lib/appTree.mjs";
+import { stripComments, readSpecs, resolveSpec, htmlEntries, denoEntries, reachableFrom, moduleGraph } from "./lib/appGraph.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
-
-const stripComments = (text) => {
-  let out = "", i = 0, mode = null;
-  while (i < text.length) {
-    const c = text[i], d = text[i + 1];
-    if (mode === "line") { if (c === "\n") { mode = null; out += c; } else out += " "; i++; continue; }
-    if (mode === "block") { if (c === "*" && d === "/") { mode = null; out += "  "; i += 2; } else { out += c === "\n" ? "\n" : " "; i++; } continue; }
-    if (mode === "sq" || mode === "dq" || mode === "tpl") {
-      out += c;
-      if (c === "\\") { out += d ?? ""; i += 2; continue; }
-      if ((mode === "sq" && c === "'") || (mode === "dq" && c === '"') || (mode === "tpl" && c === "`")) mode = null;
-      i++; continue;
-    }
-    if (c === "/" && d === "/") { mode = "line"; out += "  "; i += 2; continue; }
-    if (c === "/" && d === "*") { mode = "block"; out += "  "; i += 2; continue; }
-    if (c === "'") mode = "sq"; else if (c === '"') mode = "dq"; else if (c === "`") mode = "tpl";
-    out += c; i++;
-  }
-  return out;
-};
-
-// A specifier is whatever a compiler would follow: any `from "x"` (imports, `import type`,
-// re-export lists and stars), a side-effect import, and a dynamic import's literal.
-const SPEC_RES = [
-  /\bfrom\s+["']([^"']+)["']/g,
-  /\bimport\s+["']([^"']+)["']/g,
-  /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
-];
-const readSpecs = (text) => {
-  const code = stripComments(text);
-  const out = new Set();
-  for (const re of SPEC_RES) for (const m of code.matchAll(re)) out.add(m[1]);
-  return [...out];
-};
-
-const ASSET = /\.(css|json|svg|png|jpe?g|webp|gif|woff2?|ttf|otf|ico|md|txt|wasm|mp3|wav)$/i;
-const resolveSpec = (fromFile, spec, has) => {
-  let base;
-  if (spec.startsWith("@/")) base = spec.slice(2);
-  else if (spec.startsWith("./") || spec.startsWith("../")) base = posix.normalize(posix.join(posix.dirname(fromFile), spec));
-  else return { kind: "package", spec };
-  if (ASSET.test(base)) return { kind: "asset", spec };
-  for (const cand of [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`]) {
-    if (has(cand)) return { kind: "file", target: cand };
-  }
-  return { kind: "unresolved", spec };
-};
-
-const htmlEntries = (html) => {
-  const out = [];
-  for (const m of html.matchAll(/<script\b[^>]*>/gi)) {
-    const tag = m[0];
-    if (!/\btype=["']module["']/i.test(tag)) continue;
-    const src = tag.match(/\bsrc=["']([^"']+)["']/i);
-    if (src) out.push(src[1].replace(/^\.?\//, ""));
-  }
-  return out;
-};
-const denoEntries = (files, raw, dir = "functions") => files.filter((f) => new RegExp(`^${dir}/.*\\.(ts|tsx)$`).test(f) && /\bDeno\.serve\s*\(/.test(raw[f]));
-
-const reachableFrom = (entries, edges) => {
-  const seen = new Set();
-  const queue = [...entries];
-  while (queue.length) {
-    const f = queue.shift();
-    if (seen.has(f)) continue;
-    seen.add(f);
-    for (const t of edges.get(f) ?? []) if (!seen.has(t)) queue.push(t);
-  }
-  return seen;
-};
 
 // --- 1. The reader, armed on fixtures whose paths live under `pkg/` (not a shipped root), so ---
 // --- the gate's own test data cannot be mistaken for a per-file exemption in clause 5. --------
@@ -119,7 +52,6 @@ ok(`the reader resolves @/, relative, extensionless and index specifiers, ignore
   hEntries.join() === "pkg/entry.tsx" && dEntries.join() === "pkg/index.ts");
 
 // --- 2. The walk is the real tree, the roots are derived, and both entries are inside it. -----
-const ROOTS = ["domain", "data", "lib", "features", "components", "ui", "src", "store", "i18n", "functions"];
 // M522: `tests/` carries the Playwright specs — test entry points, not app modules; coverage's
 // POP_SKIP names the same directory.
 const NON_APP = ["scripts", "dev", "dist", "node_modules", "test-results", "vendor", "tests"];
@@ -139,39 +71,23 @@ const carriesTs = (d) => {
     return entries.some((e) => e.isDirectory() && e.name !== "node_modules" && carriesTs(`${d}/${e.name}`));
   } catch { return false; }
 };
-const uncovered = topDirs.filter((d) => !ROOTS.includes(d) && !skipReason(d, join(root, d), NON_APP) && carriesTs(d));
-const files = ROOTS.filter((d) => { try { statSync(join(root, d)); return true; } catch { return false; } })
-  .flatMap((d) => walk(join(root, d))).filter((f) => /\.(ts|tsx)$/.test(f) && !f.endsWith(".d.ts"))
-  .map((f) => f.slice(root.length + 1).split("\\").join("/"));
-const fileSet = new Set(files);
-const raw = Object.fromEntries(files.map((f) => [f, readFileSync(join(root, f), "utf8")]));
-const entries = [...htmlEntries(readFileSync(join(root, "index.html"), "utf8")), ...denoEntries(files, raw)];
+// The claim is about the ROOT: a top-level directory holding TypeScript that no census walks. The
+// graph's own ten directories come from appTree, so this compares the tree against the walk that
+// built it rather than against a second list of the same names.
+const uncovered = topDirs.filter((d) => !APP_DIRS.includes(d) && !skipReason(d, join(root, d), NON_APP) && carriesTs(d));
+const graph = moduleGraph(root);
+const { files, fileSet, entries, edges, unresolved, assets, packageSpecs, edgeCount, reachable } = graph;
 ok(`the walk covers every top-level TypeScript directory and reads the real app (${files.length} files, floor 90; ${uncovered.length} uncovered; entries ${entries.join(", ")}; both inside the walk ${entries.every((e) => fileSet.has(e))})`,
   files.length >= 90 && uncovered.length === 0 && entries.length >= 1 && entries.every((e) => fileSet.has(e)));
 
 // --- 3. Every local specifier resolves. A silently unresolved edge would make the graph lie; ---
 // --- assets are counted apart because a .css file is not a module this census walks. ---------
-const edges = new Map(files.map((f) => [f, new Set()]));
-const unresolved = [];
-const assets = [];
-const packageSpecs = new Set();
-for (const f of files) {
-  for (const spec of readSpecs(raw[f])) {
-    const r = resolveSpec(f, spec, (p) => fileSet.has(p));
-    if (r.kind === "file") edges.get(f).add(r.target);
-    else if (r.kind === "unresolved") unresolved.push(`${f}: ${spec}`);
-    else if (r.kind === "asset") assets.push(`${f}: ${spec}`);
-    else packageSpecs.add(spec);
-  }
-}
-const edgeCount = [...edges.values()].reduce((s, x) => s + x.size, 0);
 ok(`every local specifier resolves (${edgeCount} edges, floor 500; ${unresolved.length} unresolved; ${assets.length} asset import(s) [${assets.join(", ")}]; ${packageSpecs.size} package names)`,
   edgeCount >= 500 && unresolved.length === 0 && assets.length >= 1);
 
 // --- 4. No shipped module is an orphan. A file named only by a proof script is measured apart: ---
 // --- a proof is a consumer, so it is not an orphan, but an app-only reading would not see it. --
-const reachable = reachableFrom(entries, edges);
-const unreachable = files.filter((f) => !reachable.has(f));
+const unreachable = graph.unreached;
 const proofTexts = walk(join(root, "scripts")).filter((f) => /\.(mjs|ts)$/.test(f)).map((f) => readFileSync(f, "utf8"));
 const mentionedByProof = (rel) => proofTexts.some((t) => t.includes(`"/${rel}"`) || t.includes(`'/${rel}'`));
 const proofOnly = unreachable.filter((rel) => mentionedByProof(rel));

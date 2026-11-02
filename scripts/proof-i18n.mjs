@@ -80,6 +80,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { normalize, scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
 import { skipReason } from "./lib/appTree.mjs";
+import { moduleGraph } from "./lib/appGraph.mjs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -162,7 +163,22 @@ const walk = (dir, acc = []) => {
   }
   return acc;
 };
-const files = walk(root);
+// M774: the walk is the tree; the population is the app. The difference is one sentence and it
+// cost sixteen red checks at M772: a component the farm lane shipped under `features/` with no
+// route, no importer and no dictionary key is IN the tree, so every whole-tree number this gate
+// pins moved with it — 127 → 189 modules, 70 → 132 `.tsx`, 130 → 192 readers — and the aggregate
+// debts (invented keys, raw-UI literals) piled onto the same report until no reader could tell
+// which file caused which failure. The tree is not the app, and this gate has a way to tell them
+// apart: `scripts/lib/appGraph.mjs` walks from the entries index.html and Deno.serve declare, and
+// anything shipped that no entry reaches is quarantined. Quarantined files are measured apart, by
+// name and by their own debt (see the ledger below), so a leaf costs one named clause instead of
+// sixteen unreadable ones — and the population pins keep measuring code rather than the tree.
+const graph = moduleGraph(root);
+const QUARANTINE_CEILING = 0;
+const relKey = (f) => f.slice(root.length + 1).split("\\").join("/");
+const outsideQuarantine = (paths, unreached) => paths.filter((f) => !unreached.includes(relKey(f)));
+const walked = walk(root);
+const files = outsideQuarantine(walked, graph.unreached);
 const STATIC = /\bt\(\s*"([^"]+)"/g;
 const DYNAMIC = /\bt\(\s*`([^`]*)\$\{/g;
 const unknown = new Set();
@@ -2025,6 +2041,44 @@ const openTotal = openRows.reduce((s, [, h]) => s + h.length, 0);
 ok(`the raw-UI debt outside the covered set has not grown (${openTotal} across ${openRows.length} files, ceiling ${RAW_UI_CEILING})`,
   openTotal <= RAW_UI_CEILING);
 for (const [p, h] of openRows.sort((a, b) => b[1].length - a[1].length).slice(0, 6)) console.log(`       debt: ${String(h.length).padStart(4)} ${p}`);
+
+// --- M774. The quarantine ledger: what the population filter took out, and what it owes. ---
+// Leaving files out is the dangerous half of this milestone. A filter that drops the app's own
+// screens would make every number above look pristine while the app went untranslated, so the
+// debt is not discarded — it is re-measured here, by name, with the two numbers the farm lane
+// actually adds: the keys its `t()` sites invent, and the literals it renders raw. Ceiling 0
+// because the app ships nothing nobody can reach: proof-orphans clause 4 already says so, and
+// this says it again in the currency a translator can act on.
+const ledgerRow = (p, src) => {
+  const sites = [...src.matchAll(STATIC)].map((m) => m[1]);
+  return { p, tSites: sites.length, invented: sites.filter((k) => !(k in en)), rawUi: scanSource(codeOf(src)).hits.length };
+};
+const LEDGER = graph.unreached.map((p) => ledgerRow(p, graph.raw[p]));
+ok(`nothing sits in the quarantine (${LEDGER.length} leaf file(s) of ${walked.length} walked, ceiling ${QUARANTINE_CEILING}${LEDGER.length ? `: ${LEDGER.map((r) => `${r.p} — ${r.invented.length} invented key(s) [${r.invented.slice(0, 4).join(", ")}]${r.invented.length > 4 ? "…" : ""}, ${r.rawUi} raw-UI literal(s), ${r.tSites} t() site(s)`).join("; ")}` : ""})`,
+  LEDGER.length <= QUARANTINE_CEILING);
+// Three plants, because the ceiling above is 0 and a zero over an empty list proves nothing.
+// (1) the filter is a filter, not a wall: with no leaves named it keeps both planted paths;
+// (2) with one leaf named it drops exactly that one, so a routed file with the same shape — a
+// screen under `features/`, a `.tsx`, an importer of the dictionary — stays charged;
+// (3) the row the ledger prints for a leaf reports its invented key and both of its literals, so
+// the file that would have been invisible is measurable at the moment it is quarantined.
+const PLANT_WALKED = [`${root}\\features\\analytics\\PlantedReached.tsx`, `${root}\\features\\academy\\PlantedUnrouted.tsx`];
+const PLANT_LEAF = "features/academy/PlantedUnrouted.tsx";
+const plantKeepsAll = outsideQuarantine(PLANT_WALKED, []).length;
+const plantKeepsReached = outsideQuarantine(PLANT_WALKED, [PLANT_LEAF]).map(relKey).join(",");
+const PLANT_SRC = [
+  'import { t } from "@/i18n";',
+  "export const PlantedUnrouted = () => (",
+  '  <div title="Planted heading">',
+  '    <p>{t("m774.planted.leaf.key")}</p>',
+  "    <span>Untranslated words</span>",
+  "  </div>",
+  ");",
+].join("\n");
+const plantRow = ledgerRow(PLANT_LEAF, PLANT_SRC);
+ok(`the filter bites both ways and the row counts what a leaf owes (${plantKeepsAll} of 2 kept by an empty quarantine, kept under the leaf: ${plantKeepsReached || "none"}; the planted leaf reads ${plantRow.invented.length} invented key [${plantRow.invented}] and ${plantRow.rawUi} raw literal(s) over ${plantRow.tSites} site(s))`,
+  plantKeepsAll === 2 && plantKeepsReached === "features/analytics/PlantedReached.tsx" &&
+  plantRow.invented.length === 1 && plantRow.invented[0] === "m774.planted.leaf.key" && plantRow.rawUi === 2 && plantRow.tSites === 1);
 // The skip list above is the one thing in this gate that can make a file invisible, so it is
 // policed instead of trusted: if any measured file imports a path that runs through a skipped
 // directory, that directory is app source and the exclusion is void. `dev/function-local.ts` is
