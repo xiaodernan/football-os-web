@@ -99,7 +99,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // the baseline re-records the JS figure only.
 // M712: the late-siege panel measures 530 KB / 54 assets (JS 517 + CSS 12.4), so the pin moves
 // 529 -> 530 and the baseline re-records it.
-const BUDGET_KB = 530;
+// M717: the clock's opening board — twelve dictionary lines, one panel and the board's new opening
+// record — measures 531 KB / 54 assets (JS 518.4 + CSS 12.4), so the pin moves 530 -> 531.
+const BUDGET_KB = 531;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
