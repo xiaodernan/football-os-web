@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -1007,6 +1007,63 @@ ok(`clubDisciplineTrend is deterministic and the club page reads the curve off t
   JSON.stringify(trendA) === JSON.stringify(trendAgainA) &&
   DETAILS_SRC.includes("clubDisciplineTrend(c.competitionId") &&
   DETAILS_SRC.includes("cardTrend.rounds.map(") && DETAILS_SRC.includes("det.cards.trendLine"));
+// --- M779: cards by the minute, on the same six windows as the goal clock ------------------
+// U hosts u1: a yellow on 5' (band 0), a red on 80' (band 5), while V takes a yellow on 76'
+// (band 5). U then visits u2: a yellow on 20' (band 1) for U and one on 75' (band 4) for W,
+// which is exactly the window boundary the last band must NOT swallow. V hosts u3 and takes a
+// red on 90' (band 5). A scheduled u4 and another competition's u5 are noise.
+const cardClubs = [club("U", "TE"), club("V", "TE"), club("W", "TE"), club("X", "TE")];
+const cardEvent = (minute, type, side) => ({ minute, type, side, player: "P" });
+const cardFixture = (id, comp, home, away, events, status = "FINISHED") => ({
+  id, competitionId: comp, homeClubId: home, awayClubId: away, kickoff: "2026-07-01",
+  round: 1, status, homeGoals: status === "FINISHED" ? 0 : null, awayGoals: status === "FINISHED" ? 0 : null,
+  events,
+});
+const cardFixtures = [
+  cardFixture("u1", "TE", "U", "V", [
+    cardEvent(5, "YELLOW", "home"),
+    cardEvent(76, "YELLOW", "away"),
+    cardEvent(80, "RED", "home"),
+  ]),
+  cardFixture("u2", "TE", "W", "U", [
+    cardEvent(20, "YELLOW", "away"),
+    cardEvent(75, "YELLOW", "home"),
+  ]),
+  cardFixture("u3", "TE", "V", "W", [cardEvent(90, "RED", "home")]),
+  cardFixture("u4", "TE", "V", "W", [cardEvent(45, "YELLOW", "away")], "SCHEDULED"),
+  cardFixture("u5", "TF", "V", "W", [cardEvent(45, "YELLOW", "away")]),
+  // X plays and is never booked: a real row with zero cards, not a missing one.
+  cardFixture("u6", "TE", "W", "X", []),
+];
+const cards = cardTiming("TE", cardFixtures, cardClubs);
+const cardById = Object.fromEntries(cards.rows.map((r) => [r.clubId, r]));
+ok(`cardTiming reads every recorded yellow and red in its window and ranks the opening (U ${cardById.U.cards} cards ${cardById.U.bands.join("")}, V ${cardById.V.cards} ${cardById.V.bands.join("")}, W ${cardById.W.cards} ${cardById.W.bands.join("")})`,
+  cards.rows.map((r) => r.clubId).join(",") === "U,V,W,X" &&
+  cardById.U.cards === 3 && cardById.U.yellows === 2 && cardById.U.reds === 1 &&
+  cardById.U.bands.join(",") === "1,1,0,0,0,1" &&
+  cardById.V.cards === 2 && cardById.V.yellows === 1 && cardById.V.reds === 1 &&
+  cardById.V.bands.join(",") === "0,0,0,0,0,2" &&
+  cardById.W.cards === 1 && cardById.W.bands.join(",") === "0,0,0,0,1,0");
+ok(`a 5' card is early and a 20' one is not; 75' is not late and 76' is (U early ${cardById.U.earlyCards} late ${cardById.U.lateCards}, W band ${cardById.W.bands[4]} on 75' but late ${cardById.W.lateCards}, V late ${cardById.V.lateCards} on 76' and 90')`,
+  cardById.U.earlyCards === 1 && cardById.U.lateCards === 1 &&
+  cardById.U.earlyShare === 33.33 && cardById.U.lateShare === 33.33 &&
+  cardById.W.bands[4] === 1 && cardById.W.lateCards === 0 && cardById.W.lateShare === 0 &&
+  cardById.V.lateCards === 2 && cardById.V.lateShare === 100);
+ok(`a scheduled fixture and another competition's events do not enter the clock (total ${cards.rows.reduce((s, r) => s + r.cards, 0)} cards against the three finished fixtures; earliest ${cards.earliest?.clubId})`,
+  cards.rows.reduce((s, r) => s + r.cards, 0) === 6 &&
+  cards.earliest?.clubId === "U" && cards.earliest?.earlyCards === 1);
+ok(`a club that played and was never booked keeps a row with zero cards and zero shares, and a competition with no rows reads an empty clock rather than a crash (X ${cardById.X.cards}/${cardById.X.earlyShare}/${cardById.X.lateShare}; empty rows ${cardTiming("TG", cardFixtures, cardClubs).rows.length}, earliest ${cardTiming("TG", cardFixtures, cardClubs).earliest})`,
+  cardById.X.cards === 0 && cardById.X.earlyShare === 0 && cardById.X.lateShare === 0 &&
+  cardById.X.bands.every((b) => b === 0) &&
+  cardTiming("TG", cardFixtures, cardClubs).rows.length === 0 &&
+  cardTiming("TG", cardFixtures, cardClubs).earliest === null);
+const cardsAgain = cardTiming("TE", cardFixtures, cardClubs);
+const DISC_SRC = readFileSync(resolve(root, "features/analytics/Discipline.tsx"), "utf8");
+ok(`cardTiming is deterministic and the discipline screen prints the clock off the fold, dropping unbooked rows rather than drawing zeros (same fold ${JSON.stringify(cards) === JSON.stringify(cardsAgain)}, renders ${[...DISC_SRC.matchAll(/clock\.rows/g)].length} clock reads)`,
+  JSON.stringify(cards) === JSON.stringify(cardsAgain) &&
+  DISC_SRC.includes("cardTiming(compId, matches, clubs)") && DISC_SRC.includes("clock.rows.filter(") &&
+  DISC_SRC.includes('t("clock.strikeLine"') && DISC_SRC.includes('t("disc.clockNone"') &&
+  !DISC_SRC.includes("byTableStanding") && !DISC_SRC.includes(".sort("));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

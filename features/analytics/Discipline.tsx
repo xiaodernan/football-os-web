@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { discipline, disciplineTrend, disciplineVenue } from "@/domain/analytics";
+import { discipline, disciplineTrend, disciplineVenue, cardTiming } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf } from "@/lib/utils";
 
@@ -17,6 +17,10 @@ export function Discipline() {
   const board = useMemo(() => discipline(compId, matches, clubs), [compId, matches, clubs]);
   const trend = useMemo(() => disciplineTrend(compId, matches), [compId, matches]);
   const venue = useMemo(() => disciplineVenue(compId, matches, clubs), [compId, matches, clubs]);
+  // M779: the same bookings the ledger counts, read by the minute they arrived — the first and
+  // last window of the same six the clock uses.
+  const clock = useMemo(() => cardTiming(compId, matches, clubs), [compId, matches, clubs]);
+  const booked = clock.rows.filter((r) => r.cards > 0);
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -174,6 +178,45 @@ export function Discipline() {
                 </div>
               ))}
             </div>
+          </Panel>
+
+          {/* M779: the bookings by the minute they arrived — the same six windows the event
+              clock folds shots into, read at the card end. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.clockTitle")} hint={t("disc.clockHint")} />
+            {booked.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.clockNone")}</p>
+            ) : (
+              <ul className="mt-2 space-y-1">
+                {booked.map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li key={r.clubId} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={26} />
+                        <div className="min-w-0">
+                          <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                            {club?.name ?? r.clubId}
+                          </Link>
+                          <div className="text-xs text-muted-foreground">
+                            {t("clock.strikeLine", {
+                              e: r.earlyCards,
+                              p: fmt2(r.earlyShare),
+                              l: r.lateCards,
+                              q: fmt2(r.lateShare),
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        {r.cards}
+                        <div className="text-xs text-muted-foreground">{t("disc.clockTotal", { n: r.cards })}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </Panel>
         </>
       )}

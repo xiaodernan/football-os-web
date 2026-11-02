@@ -647,9 +647,23 @@
   bundle 531 KB / 54 资产不变（baseline 不动）；tsc 干净、build exit 0、全套 123/123 · 3,306/3,306；
   诚实的保留：落点只说「这一行站在谁上面」，被挤下去的行同样印新邻居，不区分谁赢谁输；并列由 `byTableStanding`
   的既有 tie-break 定序，落点跟着那一个顺序走。
-下一条目：M779 候选按「真实数据 + 不重叠 + 复用既有 domain」排：
-③牌趋势的开局/收尾对照（`clubDisciplineTrend` 与 M773 的时段口径同源，可复用六窗口）；
-④末段进攻的独立排序（M777 只排开局、末段随行印出；`lateShots` 已在 fold 里，是同一块板的另一半）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+- M779: 牌的时段——把每张牌落在哪个分钟窗读出。`domain/analytics.ts` 新增 `cardTiming(compId, matches, clubs)`：
+  复用 `teamMetrics` 的行骨架与 `goalBand` 的六窗，单遍遍历已结束比赛的 YELLOW/RED 事件，逐队给出
+  yellows/reds/cards、六个窗口的 bands、首窗（band 0）earlyCards 与末窗（band 5）lateCards 及两端份额；
+  排序按首窗牌数、总牌数、clubId，earliest 取首个有首窗牌的队；不新增 fold；`Discipline.tsx` 在趋势面板后
+  加「牌落在哪个时段」面板：每行 Link + 复用 `clock.strikeLine` 的 `{e} early ({p}%) · {l} late ({q}%)` 行、
+  右列总牌数随 `disc.clockTotal`；零牌队不印，空赛事印 `disc.clockNone`；4 键三语
+  （disc.clockTitle/clockHint/clockTotal/clockNone），字典 2,492→2,496；`proof-analytics` 新增 5 条共 184/184
+  （T10 手算：U 三张 bands 1,1,0,0,0,1、首末窗各 33.33%，V 两张都落末窗 100%，W 一张末窗，X 有比赛零牌；
+  5' 进首窗、20' 不进，75' 不算末窗、76' 算；未结束与其他赛事不计；空赛事 0 行、earliest null；屏幕过滤与不排序）；
+  census pin：literal 1,829→1,834、litVarSites 257→259；无新模块/路由/存储键；bundle 531→532 KB / 54 资产
+  （JS 520 + CSS 12.4），pin 531→532 并重录 baseline；tsc 干净、build exit 0、全套 123/123 · 3,311/3,311；
+  诚实的保留：只读记录到分钟的牌，没有分钟的出牌不入任何窗口；份额是各队自身牌的占比，单张首窗读 100%；
+  首末窗是同一个六窗口径的首窗与末窗，不是全场前后半场。
+下一条目：M780 候选按「真实数据 + 不重叠 + 复用既有 domain」排：
+④末段进攻的独立排序（M777 只排开局、末段随行印出；`lateShots` 已在 fold 里，是同一块板的另一半，
+可单独成板或换排序键）；
+⑤红牌窗口的独立读法（`cardTiming` 已把 yellows/reds 分开存放，可加一屏只读红牌的六窗）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

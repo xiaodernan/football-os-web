@@ -450,6 +450,81 @@ export function goalTiming(compId: string, matches: Match[], clubs: Club[]): Goa
   return list.sort((a, b) => b.lateShare - a.lateShare || b.scored - a.scored || a.clubId.localeCompare(b.clubId));
 }
 
+export interface CardTimingRow {
+  clubId: string;
+  yellows: number;
+  reds: number;
+  /** Cards of either colour this club earned (yellows plus reds). */
+  cards: number;
+  /** Cards in each window, index 0 = 1–15′, index 5 = 76–90+′. */
+  bands: number[];
+  /** Cards earned inside the first window. */
+  earlyCards: number;
+  /** Cards earned after the 75th minute (the last window). */
+  lateCards: number;
+  /** Share of this club's cards earned early, 0–100, 2dp; 0 when it was not booked. */
+  earlyShare: number;
+  /** Share of this club's cards earned late, 0–100, 2dp; 0 when it was not booked. */
+  lateShare: number;
+}
+
+export interface CardTiming {
+  /** Every club with a table row, ranked by cards in the first window, then the whole card
+   *  count, then the club id. */
+  rows: CardTimingRow[];
+  /** The club booked most often inside the first window; null when nobody was booked early. */
+  earliest: CardTimingRow | null;
+}
+
+/** When a club's cards arrive: every recorded YELLOW or RED in this competition's finished
+ *  matches, folded into the same six windows `goalTiming` and the event clock use. A different
+ *  question from the season ledger (`discipline`, which counts stats by club) and from the
+ *  round-by-round curve (`disciplineTrend`) — this one reads the minute of each booking, so a
+ *  side that starts rashly and a side that finishes rashly are told apart. */
+export function cardTiming(compId: string, matches: Match[], clubs: Club[]): CardTiming {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const rows = new Map<string, CardTimingRow>(
+    metrics.map((m) => [
+      m.clubId,
+      {
+        clubId: m.clubId,
+        yellows: 0,
+        reds: 0,
+        cards: 0,
+        bands: Array.from({ length: GOAL_BANDS }, () => 0),
+        earlyCards: 0,
+        lateCards: 0,
+        earlyShare: 0,
+        lateShare: 0,
+      },
+    ]),
+  );
+  const lastBand = GOAL_BANDS - 1;
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED") continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "YELLOW" && e.type !== "RED") continue;
+      const clubId = e.side === "home" ? m.homeClubId : m.awayClubId;
+      const row = rows.get(clubId);
+      if (!row) continue;
+      const band = goalBand(e.minute);
+      row.cards++;
+      if (e.type === "YELLOW") row.yellows++;
+      else row.reds++;
+      row.bands[band]++;
+      if (band === 0) row.earlyCards++;
+      if (band === lastBand) row.lateCards++;
+    }
+  }
+  const list = [...rows.values()];
+  for (const r of list) {
+    r.earlyShare = r.cards ? round2((r.earlyCards / r.cards) * 100) : 0;
+    r.lateShare = r.cards ? round2((r.lateCards / r.cards) * 100) : 0;
+  }
+  list.sort((a, b) => b.earlyCards - a.earlyCards || b.cards - a.cards || a.clubId.localeCompare(b.clubId));
+  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

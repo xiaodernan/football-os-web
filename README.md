@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M778 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M779 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,42 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M779 — the card clock reads the minute
+
+**A card has a minute, and the minute is a window.** The discipline page already trends cards week by
+week, but a season's bookings were never placed on the clock. M777 gave shots six windows; yellow
+and red cards arrive in the same event stream with the same `minute`, so those windows can hold them
+without a second definition of "early".
+
+**Read once, bucketed by the same band.** `cardTiming` walks the finished matches once, takes every
+YELLOW and RED event and files it under `goalBand(minute)`. Each club row carries yellows, reds, the
+six bands, the first-window and last-window counts, and both shares of that club's own cards. Rows
+sort by first-window cards, then all cards, then club id; `earliest` is the first row with a booking
+in the opening window. A club with matches but no cards still gets a zero row, so the screen can tell
+"no bookings" from "not in the competition".
+
+**The numbers on the fixtures.** On T10's synthetic season U books the fifth minute and the
+seventy-sixth, V books the seventy-fifth, W books the ninetieth — so U reads one card in each end
+window (33.33% each), V reads both of its cards in the last window (100%), W reads its single card
+there too, and X, which played but never booked, reads zero across all six bands. A twentieth-minute
+card stays out of the first window and a seventy-fifth stays out of the last, which fixes the band
+edges from both sides. Scheduled matches and a second competition's cards are not counted.
+
+**Words and gates.** 4 keys · 3 locales (`disc.clockTitle`, `disc.clockHint`, `disc.clockTotal`,
+`disc.clockNone`), so the dictionary goes 2,492 → 2,496. The panel's rows reuse the existing
+`clock.strikeLine` rather than minting a twin sentence — the duplicate-sentence rule caught the first
+version. That is one title, one hint, one count and one empty line: five literal sites, two of them
+interpolating, moving the census to literal 1,829 → 1,834 and variable-carrying sites 257 → 259.
+`proof-analytics` grows five clauses to 184/184. No new module, route, screen or storage key. The
+build gains one table and a few rows: 532 KB gzip across the same 54 assets (JS 520, CSS 12.4), so
+the pin moves 531 → 532 and the baseline re-records. `tsc` clean, build exit 0, the suite lands at
+123/123 scripts · 3,311/3,311 checks.
+
+**The honest limit.** Only bookings that carry a recorded minute enter a window; an event without
+one is invisible here. Shares are each club's own cards, so a single opening booking reads 100% and
+one card in each end window reads 33.33 / 33.33. The first and last windows are the outer two of six,
+not halves of the match.
 
 ### M778 — the ceiling place lands on a name
 
