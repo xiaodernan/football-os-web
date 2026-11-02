@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M775 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M776 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,47 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M776 — the census counts the app a reader can reach
+
+**The hostage.** The dictionary census walked every `.ts`/`.tsx` file the repository would show git,
+and pinned the population at 127 modules, 70 screens and 130 files. A file under `features/` that
+nothing imports was therefore counted the moment it landed — and the component farm lands exactly
+those: three sweeps (M598, M710, M772) deleted 23 + 47 + 45 unreached components, and every sweep was
+forced by a red pin rather than by a defect. A pin that reddens on a quarantine measures the
+repository, not the product.
+
+**The answer.** The question "what can a reader open?" now has one implementation, beside the
+neighbour rule in `scripts/lib/appTree.mjs`: `reachableModulesIn` walks value imports from
+`src/main.tsx` — static imports, re-exports, bare imports that run a module, and the route table's
+dynamic `import()` — and resolves `@/` aliases and relative paths through an oracle that means a
+file, never a folder. `import type` is not an edge: it is erased before the bundle exists.
+`proof-coverage` asked this question first with a private resolver; it now imports the shared one,
+and its planted graphs (two-hop chain, type-only edge, dynamic import, orphan module) exercise the
+copy every gate reads, so routed modules are counted and unrouted ones are not, both by construction.
+
+**What the pins say now.** `proof-i18n` measures 116 files outside `i18n/` (from 127) and 119 of the
+130 walked files (from 130), while the `.tsx` pin stays 70 because the three unreached modules are
+`.ts` and `.d.ts`. `proof-app-tree` pins the module population at 119 of the ten directories' 122.
+Every screen the router lazy-loads — 41 of them — is inside the closure, asserted on each run.
+
+**The ledger.** Files nothing imports are reported, not charged: three unrouted app modules
+(`functions/handler.ts`, `functions/index.ts`, `src/vite-env.d.ts`) beside eight harness files
+outside the reader's path, carrying 0 `t()` literals, 0 phantom dictionary keys and 0 raw-UI hits.
+The split matters: the first three are the app's dead surface, the last eight are entry points for
+Playwright, not the reader's app. The same read found one population error the old walk had been
+hiding: `foundKeys` left the bare-pool pin, because it is a browser-walk harness array collecting
+raw keys off the page, not a pool any screen hands to `t()`.
+
+**Measured.** `npx tsc --noEmit` clean, `npm run build` exit 0, no bundle change (scripts only,
+baseline stands). The suite reads **123/123 proof scripts proven, 3300/3300 checks counted** — the
+two new checks are the reader's ledger in `proof-i18n` and the one-rule charge in `proof-app-tree`.
+
+**Honest reservation.** The unreached count is deliberately unpinned, so deleting a quarantined
+file moves a reported number and reddens nothing. That is the trade this milestone buys: the farm
+can keep landing stubs without forcing a sweep, and the honest cost is that the dead surface is
+visible rather than gated.
 
 
 ### M775 — the quarantine's twenty-three implicit-anys are twenty-two shadows and one real hole

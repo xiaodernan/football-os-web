@@ -28,8 +28,8 @@
 // comment inside a proof.
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, resolve, posix } from "node:path";
-import { skipReason } from "./lib/appTree.mjs";
+import { dirname, join, resolve } from "node:path";
+import { skipReason, reachableModulesIn, resolveModuleSpec } from "./lib/appTree.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -45,12 +45,13 @@ const read = (p) => readFileSync(resolve(root, p), "utf8");
 const lines = (p) => read(p).split(/\r?\n/).length;
 
 // ---------------------------------------------------------------------------
-// The resolver, as a pure function so it can be tested on made-up graphs.
+// M776. The resolver and the reach walk live in scripts/lib/appTree.mjs. This file asked the
+// question first, privately; proof-i18n and proof-app-tree now ask the same one, and a second
+// copy is how the census population and the dead-module list came to describe different trees.
+// The planted graphs below exercise the shared copy with their own source map and oracle.
 // ---------------------------------------------------------------------------
-const SPEC = /(?:^|\n)\s*(?:import|export)\s+(type\s+)?[^;]*?from\s*["']([^"']+)["']/g;
-const DYNAMIC = /\bimport\(\s*["']([^"']+)["']\s*\)/g;
-// A bare `import "./x";` runs the module too, so it is a value edge as well.
-const BARE = /(?:^|\n)\s*import\s+["']([^"']+)["']/g;
+const reach = (roots, source, exists = realExists) => reachableModulesIn(roots, source, exists);
+const resolveSpec = (spec, fromPath, exists = realExists) => resolveModuleSpec(spec, fromPath, exists);
 
 // The oracle means "a module lives here", not "the path exists". `existsSync` answers yes for
 // `i18n/` as readily as for `i18n/index.tsx`, and `resolveSpec` tries `base` first — so
@@ -63,42 +64,6 @@ const realExists = (rel) => {
 };
 const fakeExists = (rel) => Object.prototype.hasOwnProperty.call(FAKE, rel);
 
-function resolveSpec(spec, fromPath, exists = realExists) {
-  let base;
-  if (spec.startsWith("@/")) base = spec.slice(2);
-  else if (spec.startsWith("./") || spec.startsWith("../")) base = posix.normalize(posix.join(posix.dirname(fromPath), spec));
-  else return null; // a bare package specifier: node_modules, not app code
-  const cand = [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`];
-  return cand.find((c) => exists(c)) ?? null;
-}
-
-/** edges(specs) -> {value:Set, type:Set} */
-function importsOf(src) {
-  const value = new Set();
-  const typeOnly = new Set();
-  for (const m of src.matchAll(SPEC)) {
-    if (m[1]) typeOnly.add(m[2]); else value.add(m[2]);
-  }
-  for (const m of src.matchAll(BARE)) value.add(m[1]);
-  for (const m of src.matchAll(DYNAMIC)) value.add(m[1]);
-  return { value, typeOnly };
-}
-
-/** Reachability from a set of root module paths, over value-imports only. */
-function reach(roots, source, exists = realExists) {
-  const seen = new Set();
-  const stack = [...roots];
-  while (stack.length) {
-    const p = stack.pop();
-    if (!p || seen.has(p)) continue;
-    seen.add(p);
-    for (const spec of importsOf(source(p)).value) {
-      const next = resolveSpec(spec, p, exists);
-      if (next && !seen.has(next)) stack.push(next);
-    }
-  }
-  return seen;
-}
 
 // ---------------------------------------------------------------------------
 // The declared exemptions. Keyed by module path — never by line number — and each one has

@@ -620,14 +620,19 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M775 候选按「先修 census 的结构性 hostage，再挑真实数据 + 不重叠 + 复用既有 domain」排：
-①（M772 当场承诺）census 只计「读者能走到的应用」：从 `src/main.tsx`/`src/App.tsx`/侧栏出发按 import 图求可达闭包，
-   把既有人群 pin（127 模块 / 70 个 `.tsx` / 130 个读字典表的文件）改钉在可达集上，另立新条款只**报数**不被任何文件 import 的叶子
-   （文件数、凭空键数、raw-UI 债），并种两枚证明：routed 的仍被计、unrouted 的进隔离账——这样组件农场再推 45 个 stub 也不会把本线门禁按红，
-   也不必每次落地重跑清扫（M598/M710/M772 已累计清掉 23+47+45 个文件）；
-②开局 vs 末段的进攻面对照板（M773 只做了防守端第四排序，攻击端 `earlyShots`/`lateShots` 已在 fold 里，只差一屏读法）；
-③上限位次的落点读法（M716 只说升几位，没说升到哪一行的头上）；
-④牌趋势的开局/收尾对照（`clubDisciplineTrend` 与 M773 的时段口径同源，可复用六窗口）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+- M776: census 只计「读者能走到的应用」——可达闭包下沉一处。`scripts/lib/appTree.mjs` 新增
+  `importEdgesIn`/`resolveModuleSpec`/`reachableModulesIn`（静态/re-export/bare/dynamic 值边，`import type` 不计；`@/` 与相对路径；
+  oracle 只认文件不认目录）；`proof-coverage` 删掉私有 resolver，改为导入共享实现，既有五条合成图证明（两跳链、type-only、动态导入、孤儿）
+  现在考的就是共享实现；`proof-i18n` 人群改为从 `src/main.tsx` 的闭包：appSrc 127→116、walked 130→119、`.tsx` 仍 70（三个不可达模块是 .ts/.d.ts）；
+  新增账本条款：routed 41 屏全在闭包内（0 lost），3 个 app 模块 + 8 个 harness 文件只报数（0 t() 字面量 / 0 凭空键 / 0 raw-UI）；
+  `proof-app-tree` 模块 pin 122→119（十目录仍逐个计）并加一条「可达性问题只有一处答案」（2 个 proof 导入、0 私有副本）；
+  顺带修一个被旧人群掩盖的误计：裸键池 pin 去掉 `foundKeys`（那是 browser-walk 收集页面原始键的测试数组，不是屏幕喂给 t() 的池）；
+  无字典键/路由/存储键变化，bundle 不变（baseline 不动）；tsc 干净、build exit 0、全套 123/123 · 3,300/3,300（+2 检查，i18n 383→384、app-tree 12→13；并入隔离区 M775 的 proof-draft-any 后总数为 3,300）；
+  诚实的保留：不可达计数故意不 pin，删掉隔离文件只移动报数、不红门禁——这是换农场 stub 不逼清扫的代价，死面可见但不设闸。
+下一条目：M777 候选按「真实数据 + 不重叠 + 复用既有 domain」排：
+①开局 vs 末段的进攻面对照板（M773 只做了防守端第四排序，攻击端 `earlyShots`/`lateShots` 已在 fold 里，只差一屏读法）；
+②上限位次的落点读法（M716 只说升几位，没说升到哪一行的头上）；
+③牌趋势的开局/收尾对照（`clubDisciplineTrend` 与 M773 的时段口径同源，可复用六窗口）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

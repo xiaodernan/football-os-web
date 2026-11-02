@@ -33,12 +33,12 @@
 //   5. the repository carries no pointer to another repository — the defect that started this.
 //
 // Run: node scripts/proof-app-tree.mjs
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { isHiddenName, carriesOwnRepo, skipReason, appDirsIn, appFilesIn, walkApp, APP_DIRS } from "./lib/appTree.mjs";
+import { isHiddenName, carriesOwnRepo, skipReason, appDirsIn, appFilesIn, walkApp, APP_DIRS, reachableModulesIn } from "./lib/appTree.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -134,15 +134,25 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M573: 119 -> 120 — domain/nextStep.ts is the dashboard's next-step ranking.
 // M574: 120 -> 121 — features/analytics/EventClock.tsx is a new shot/save/review clock screen.
 // M575: 121 -> 122 — features/analytics/Briefing.tsx is a new matchday-briefing screen.
-const APP_MODULE_PIN = 122;
+// M776: 122 -> 119. The pin counts the modules a READER reaches from src/main.tsx, not every module
+// the ten directories hold: the three files the ledger names are real modules the app never loads
+// (the two Edge Function entries and an ambient declaration), and the farm's unrouted stubs must land
+// in that ledger rather than redden this pin. The ten-directory shape is still charged below.
+const APP_MODULE_PIN = 119;
+const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
+const readerReaches = reachableModulesIn(["src/main.tsx"], (p) => readFileSync(join(root, p), "utf8"), treeExists);
+const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");
 const byDir = {};
+const allModules = [];
 for (const d of APP_DIRS) {
-  const n = walkApp(root, { dirs: [d], exts: [".ts", ".tsx"] }).length;
-  if (n) byDir[d] = n;
+  const found = walkApp(root, { dirs: [d], exts: [".ts", ".tsx"] });
+  allModules.push(...found);
+  if (found.length) byDir[d] = found.length;
 }
-const appModules = Object.values(byDir).reduce((s, n) => s + n, 0);
-ok(`the app is the ten directories it is made of, and they hold ${appModules} modules (${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")})`,
-  appModules === APP_MODULE_PIN && Object.keys(byDir).length === APP_DIRS.length);
+const appModules = allModules.filter((p) => readerReaches.has(relOf(p)));
+const unreachedModules = allModules.map(relOf).filter((p) => !readerReaches.has(p));
+ok(`the app the reader reaches from src/main.tsx is ${appModules.length} of the ten directories' ${allModules.length} modules (${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}); the ledger names ${unreachedModules.length} nothing imports [${unreachedModules.join(", ") || "none"}]`,
+  appModules.length === APP_MODULE_PIN && Object.keys(byDir).length === APP_DIRS.length);
 
 // The neighbour that caused this: a clone of this repository, sitting in the root, carrying its
 // own copy of the app. M437 removed the clone the milestone found, so the case is PLANTED now —
@@ -198,6 +208,17 @@ const rootReadersMissing = rootReaders.filter((f) => !importLine.test(readFileSy
 ok(`every proof that reads the repository's top-level directories imports the rule, so a new gate cannot forget it (${rootReaders.length} such script(s): ${rootReaders.join(", ")}; ${rootReadersMissing.length} without it [${rootReadersMissing.join(", ")}])`,
   rootReadersMissing.length === 0 && rootReaders.length === 9,
   `without the rule: ${rootReadersMissing.join(", ")}`);
+
+// M776: the reachability question is one rule, like the neighbour rule above. proof-coverage asked
+// it first, privately; proof-i18n and this file now ask the same exported walk. A private copy is
+// the fork this check exists to stop — two copies of the answer is how two censuses describe two trees.
+const REACH_PROOFS = ["proof-coverage.mjs", "proof-i18n.mjs"];
+const reachForks = REACH_PROOFS.filter((f) => {
+  const src = readFileSync(join(root, "scripts", f), "utf8");
+  return !/reachableModulesIn/.test(src) || /function (?:resolveSpec|reach)\(/.test(src);
+});
+ok(`the reachability question is answered in one place (${REACH_PROOFS.length} proofs import reachableModulesIn; ${reachForks.length} keep a private copy${reachForks.length ? `: ${reachForks.join(", ")}` : ""})`,
+  reachForks.length === 0);
 
 // ---------------------------------------------------------------------------
 // 4 · the repository points at no other repository
