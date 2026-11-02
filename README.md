@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M777 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M778 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7098,6 +7098,61 @@ reflects the latest section this file actually carries.
 
 
 
+### M778 — the reader starts where the app says it starts
+
+**What M776 left behind.** The census now counts what a reader reaches, and that is the right
+question. It was answered from a root the gate remembered: two gates wrote
+`reachableModulesIn(["src/main.tsx"], …)` outright, and a third names the same path as its bundle
+entry. The fourth — `proof-orphans` — has been DERIVING its entries since M428 from the two places
+a reader actually starts: the `type="module"` script in `index.html`, and every module under
+`functions/` that calls `Deno.serve`. Two answers to one question is how two censuses describe two
+trees, and here they disagreed about a deployed endpoint.
+
+**The two modules that were never a quarantine.** `functions/index.ts` has no importer because the
+edge runtime is its importer; `functions/handler.ts` is the module that entry imports. Started at
+the SPA entry alone, the closure called both of them dead surface, and the dictionary census stopped
+reading them. Neither carries a `t()` literal today — which is the whole point: the loss was silent,
+and the first string someone adds there would have been guarded by nothing. `appEntriesIn` is now
+the only way any gate starts a closure, and the numbers came back: **118** files outside `i18n/`
+(from 116), **121** of the 130 walked (from 119), **121** of the ten directories' 122 modules (from
+119). The `.tsx` pin stays 70, and every screen the router lazy-loads — 41 of them — is still inside
+the closure. One module stays in the ledger: `src/vite-env.d.ts`, an ambient declaration the
+compiler reads and no browser loads.
+
+**Two blind spots in the shared reader, found by diffing it against the one it replaced.** It
+matched source that was never stripped, so a block comment that puts `import` at the start of a
+line — the shape a dead-code sweep leaves when it wraps an import — read as a live edge.
+`stripCommentsIn` moved into `appTree.mjs`, and the arm now tests both comment shapes and prints the
+witness that the same source *does* match unstripped. And it anchored on a line start, so one line
+in `features/manager/ManagerOS.tsx` that carries three imports contributed one edge and dropped two:
+the graph read 818 edges where the old reader read 820. The anchor is a statement boundary now, with
+the `import`/`export` keyword required so a caption that merely says "from" cannot invent an edge.
+Run both readers over all 121 shipped modules: **0 specifiers lost, 0 gained, 820 edges**. The
+wider anchor moved the capture group, and the type-only test then read `^type` against a clause that
+begins with a space — `proof-coverage`'s planted graph ("a type-only import does NOT count as
+executing the target") went red on it before this shipped, which is what that arm is for.
+
+**The fork clause reads the suite, not a list.** M776 policed `["proof-coverage", "proof-i18n"]` —
+a remembered pair that missed `proof-app-tree`, which starts a closure two lines above the clause,
+and missed `proof-orphans`, which still carried the original reader. The charge is the move M432
+made for the neighbour rule: every proof that calls `reachableModulesIn(` is found (4 of them), must
+import `scripts/lib/appTree.mjs`, must not root a closure at a quoted app path, and must not define a
+walk beside the shared one. Both arms are planted and built at runtime — the idiom `proof-orphans`
+uses for its planted skip list — so this file does not carry a fork in its own source while still
+charging the shape. `proof-orphans` lost its private engine (71 lines: a comment stripper, three
+specifier regexes, a resolver, two entry derivations and a walk) and went from 5 checks to 7.
+
+**Measured.** `npx tsc --noEmit` clean, `npm run build` exit 0, no bundle change (scripts only,
+baseline stands). The suite reads **123/123 proof scripts proven, 3305/3305 checks counted**. No
+display string and no copy changed: `functions/` contributes no dictionary keys, so the 116-to-118
+move is census arithmetic, not product surface.
+
+**Honest reservation.** Two things this milestone does not settle, and says so. `proof-coverage`
+still starts a walk at `src/main.tsx` — that one is right, because it asks a different question,
+"is this module in `dist/`?", and a bundle has exactly one entry; the Edge Function is not in it, and
+this file does not charge another gate's correct answer. And the quarantine stays unpinned:
+`proof-i18n` prints the dead surface by name and asserts nothing about its numbers, so a ledger that
+went blind would print "none" and pass. Arming that ledger is the next milestone, not this one.
 ### M777 — the clock's attack opens too
 
 **The half of the clock M773 still left on one end.** M773 folded the first window for both ends

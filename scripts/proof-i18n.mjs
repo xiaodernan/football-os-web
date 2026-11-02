@@ -79,7 +79,7 @@
 // Run: node scripts/proof-i18n.mjs
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { normalize, scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
-import { skipReason, reachableModulesIn, resolveModuleSpec, APP_DIRS } from "./lib/appTree.mjs";
+import { skipReason, reachableModulesIn, appEntriesIn, resolveModuleSpec, APP_DIRS } from "./lib/appTree.mjs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -483,14 +483,20 @@ ok(`all ${CATEGORY_ORDER.length} categories have attr.* in every locale (${missi
 const rel = (f) => f.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");
 // Comment lines cannot claim a key: prose that quotes a key is not a caller.
 const codeOf = (src) => src.split(/\r?\n/).filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
-// M776. The population is what a READER reaches from the SPA entry, not what the repository holds. A
-// file nothing imports is a quarantine, not a screen: the farm's three sweeps (M598/M710/M772) deleted
-// 115 such components precisely because a pin counted them the moment they landed. The closure is the
-// shared one in scripts/lib/appTree.mjs — proof-coverage and proof-app-tree ask the same question — and
-// the files it leaves out are reported in the ledger below, never charged as population.
+// M776. The population is what a READER reaches, not what the repository holds. A file nothing
+// imports is a quarantine, not a screen: the farm's three sweeps (M598/M710/M772) deleted 115 such
+// components precisely because a pin counted them the moment they landed. The closure is the shared
+// one in scripts/lib/appTree.mjs — proof-coverage, proof-app-tree and proof-orphans ask it there.
+// M777: the walk starts at the entries the app DECLARES (index.html's module script plus every
+// module under `functions/` that calls Deno.serve), which is what proof-orphans has derived since
+// M428. Started at a remembered SPA entry it dropped two modules a reader reaches by URL, and the
+// dictionary keys an Edge Function writes would have left the census that guards them.
 const moduleHere = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
-const readerReaches = reachableModulesIn(["src/main.tsx"], (p) => readFileSync(join(root, p), "utf8"), moduleHere);
-const unreachedFiles = files.map(rel).filter((p) => !readerReaches.has(p));
+const readSource = (p) => readFileSync(join(root, p), "utf8");
+const walkedFiles = files.map(rel);
+const appEntryPaths = appEntriesIn(walkedFiles, readSource, readFileSync(join(root, "index.html"), "utf8"));
+const readerReaches = reachableModulesIn(appEntryPaths, readSource, moduleHere);
+const unreachedFiles = walkedFiles.filter((p) => !readerReaches.has(p));
 const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && readerReaches.has(rel(f))).map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]));
 // Three population pins, each a number measured from this gate's own report at M248 — 95 app
 // modules, 49 of them .tsx, 98 files including i18n/. They are written as literals on purpose.
@@ -527,10 +533,13 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M573: 124 -> 125 — domain/nextStep.ts is the dashboard's next-step ranking.
 // M574: 125 -> 126 — features/analytics/EventClock.tsx is a new shot/save/review clock screen.
 // M575: 126 -> 127 — features/analytics/Briefing.tsx is a new matchday-briefing screen.
-// M776: 127 -> 116. The census counts only files the reader reaches (116 outside i18n/). The eight
-// E2E/config files and the three unrouted modules it used to charge are the ledger below, not the
-// population; the reachable count is the pin, because that is the number a real deletion moves.
-const APP_SRC_PIN = 116;
+// M776: 127 -> 116, the files the reader reached from a remembered SPA entry.
+// M777: 116 -> 118. The walk starts at the entries the app DECLARES (index.html's module script plus
+// every module under functions/ that calls Deno.serve), so the Edge Function rejoins the census that
+// guards its strings: functions/index.ts is an entry with no importer because the runtime is its
+// importer, and functions/handler.ts is the module it imports. Neither carries a t() literal today,
+// which is exactly why the sight matters -- a key added there would have been counted by nothing.
+const APP_SRC_PIN = 118;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -574,10 +583,12 @@ const TSX_PIN = 70;
 // M571: 126 -> 127, Discipline.tsx again.
 // M573: 127 -> 128, nextStep.ts added to the walk.
 // M574: 128 -> 129, EventClock.tsx added to the walk; M575: 129 -> 130, Briefing.tsx again.
-// M776: 130 -> 119. Three walked files are not reachable from src/main.tsx — the two Edge Function
-// modules and the ambient declaration; the eight E2E/config files are not reader-reachable either.
-// The pin is the walked population the reader can open, and the ledger below reports the rest by name.
-const SRC_PIN = 119;
+// M776: 130 -> 119, with the two Edge Function modules in the ledger beside the ambient declaration.
+// M777: 119 -> 121. Those two modules are back in the walked population a reader can open: an entry
+// with no importer is not a leaf when the runtime is what calls it. The ledger now names one app
+// module — src/vite-env.d.ts, an ambient declaration no browser loads — beside the eight harness
+// files that are Playwright's entry points rather than the reader's app.
+const SRC_PIN = 121;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
