@@ -42,7 +42,8 @@ const ok = (name, cond, detail) => {
 const TYPE_CEILINGS = {
   "2322": 280,            // not assignable
   "2339": 71,             // property does not exist on the type
-  "7006": 23,             // parameter implicitly has an 'any' type
+  "7006": 22,             // parameter implicitly has an 'any' type — M775: 23 -> 22, and proof-draft-any
+                          // now says WHY each of the 22 is still there
   "2307": 8,              // cannot find module
   "2554": 7,              // wrong number of arguments
   "2551": 4,              // no overlap between the two types
@@ -63,7 +64,7 @@ const TYPE_CEILINGS = {
   "2304:prev": 0,         // a setter's own parameter read outside the setter
   "2304:calculateTransferFee": 0, // a door the app never had
 };
-const TOTAL_CEILING = 409;
+const TOTAL_CEILING = 408; // M775: 409 -> 408 (the quarantine's one unexcused implicit-any is gone)
 const FILES_CEILING = 69;
 const POPULATION_PIN = 79;
 
