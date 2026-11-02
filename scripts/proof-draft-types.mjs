@@ -47,8 +47,6 @@ const TYPE_CEILINGS = {
   "2554": 7,              // wrong number of arguments
   "2551": 4,              // no overlap between the two types
   "2365": 2, "2448": 2, "2454": 2, "7022": 2, "7024": 2,
-  "2304:calculateTransferFee": 1, "2304:newsData": 1, "2304:prev": 1,
-  "2304:syncedCount": 1,
   "2345": 1, "2367": 1, "2488": 1, "2538": 1, "2695": 1, "7053": 1,
   // The families that have been REPAIRED. A bound of zero is not a number the census may fall
   // below — it is a number it may never rise above.
@@ -59,8 +57,13 @@ const TYPE_CEILINGS = {
   "2304:readJson": 0,
   "2304:writeJson": 0,
   "2304:useI18n": 0,      // a draft that translates and never imports the interpreter
+  // M717: the four names that existed nowhere — not in the app and not in the draft's own scope.
+  "2304:syncedCount": 0,  // a read of a memo under the name it had before the rename
+  "2304:newsData": 0,
+  "2304:prev": 0,         // a setter's own parameter read outside the setter
+  "2304:calculateTransferFee": 0, // a door the app never had
 };
-const TOTAL_CEILING = 413;
+const TOTAL_CEILING = 409;
 const FILES_CEILING = 69;
 const POPULATION_PIN = 79;
 
@@ -73,6 +76,10 @@ const REPAIRED = {
   "2304:readJson": "a draft that reads the app's storage and never imports it",
   "2304:writeJson": "a draft that reads the app's storage and never imports it",
   "2304:useI18n": "a draft that translates and never imports the interpreter",
+  "2304:syncedCount": "a read left under the memo's name before it was renamed",
+  "2304:newsData": "a read left under the memo's name before it was renamed",
+  "2304:prev": "a setter's own parameter read outside the setter that bound it",
+  "2304:calculateTransferFee": "a call to a door the app has never exported",
 };
 
 // --- the census -------------------------------------------------------------------------------------

@@ -240,6 +240,99 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M718: 隔离区「找不到模块」的八个站点原来是三件事——`2307` 自 M539 起钉在 8，但那个数字说不清八处各自缺什么。
+  门改问编译器的解析器两次：应用平面（应用自己的 options＋以草稿文件为所在目录，正是 checker 问的那句话）与
+  隔离区平面（同一份 options 把根挪进 `.drafts`）。两答之间八处分了类：七处指的是隔离区原地就有的同路径模块
+  （`@/domain/finance`、`@/domain/league`、`@/domain/sync`、`@/domain/transfer`、`@/features/world/seasonStats`
+  五个应用从未上线的 domain——屏幕与它的 domain 是一起下架的，缺的是决定不是文件），而且这七处要的名字
+  sibling 全都真的导出了（配对检查＝0 处空头承诺，说明 pile 里那几个 domain 是完整的、不是半成品）；
+  第八处是另一位：TransferAnalysis.tsx:7 伸手拿 `@/world/seasonStats`，而 pile 里放着 `features/world/seasonStats.ts`——
+  放错了架子；没有一处是「谁都没有的模块」。修复就一行（改成三个同胞屏幕已在用的拼法），
+  而且它一个诊断都不减：模块仍在应用之外，census 前后都记 2307——这正是它必须现在做的理由：
+  模块缺失时错误路径是不可见的，等模块上线那天它还会再断一次，一个因两种原因失败的站点谁都修不动。
+  新门 `scripts/proof-draft-modules.mjs` 7/7：第一条是反向对照而不是地板——同一个解析器必须答得上
+  应用自己 import 的每一个 `@/…`（122 模块 / 693 站点 / 0 未答），解析器瞎掉就不能报「干净」；
+  第二条让两次读数互相证明：walk 解析不出的站点与 checker 的 2307 按文件逐一比对，两个数各自算出再要求相等，
+  谁也不抄谁；接着三类各配一枚植入草稿（错架／凭空模块／空头承诺），外加一枚 import 应用真有模块的对照草稿，
+  它必须不进任何名单；最后一条把五个未上线 domain 钉成集合——第六个得是有人记下的决定，不是溜进来的站点。
+  写门过程中被臂抓住的坑：用正则读导出（`^export\s+(const|function|…)\b`）看不见 `export async function syncData`，
+  第一版因此把七个 sibling 站点全报成「要了 sibling 没导出的名字」——十八个门自己造出来的假缺陷；
+  分类器改用 parser，并靠植入的 sibling＋空头承诺一对草稿把两个方向都看牢。
+  实测：隔离区仍是 409 诊断 / 69 文件、2307 仍是 8，本轮买的是可读性不是更小的数字；
+  tsc 干净、build exit 0，全套 122/122 脚本 · 3284/3284 查全绿（新门把检查数从 3277 抬到 3284，proof-draft-modules 7/7、proof-draft-types 5/5、proof-draft-imports 3/3）。
+  账本点名的五个决定也写明白：finance——本线 M531 已判定这套数据集身价虚高，不该由它撑起财务模型；
+  sync——还没有一个跨设备故事值得为它建同步 domain；league 与 transfer——应用发的是传闻与要价
+  （`domain/transfers.ts`），不是转会执行引擎，pile 里的 `executeTransfer`/`getFreeAgents` 会是第二个产品面而非同一件事的第二份拷贝；
+  seasonStats——应用已经从世界引擎的运行折出赛季报告（`worldEngine.buildSeasonReport`，M525 上线），
+  而 pile 那份把第二份 tally 缓存进 localStorage 的 `WORLD_KEY`，四块屏幕等它——照原样上线会让产品同时有两套
+  持久化规则不同的赛季统计，比账本记着现状更糟。
+  本轮转绿的一条红是三笔之前欠的：`proof-record` 拿 README 顶部的 roadmap 指针与文件里
+  最新的 `### M###` 标题对账，而 M717 那次落地只加了标题没挪指针（指针当时仍写着 M716）——同一份文件里隔了九千行，谁都没抱怨。
+  教训不是「记得挪指针」，而是「一条门读同一份文档的两处，就只有落地脚本那么可靠」：落地脚本按门自己的读法取
+  全文第一个匹配，并且要求「活的」指针行恰好一行（README 用反引号把自己的历史当散文引了一遍，那不算指针），
+  写完再核一遍自己改的就是门读的那一行，否则不动任何字节。
+  全程在隔离 worktree（milestone-718，基于 M717 之后）落地，未触碰分析 lane 的文件。— pushed
+
+
+- M717: 隔离区的四个「谁都不拥有的名字」——M540 的门只算「应用导出却忘了 import」这一半，把 checker 的 2304 列表里
+  应用从不导出的四个名字原样打印成「另一类缺陷」放走；而 2304 说的是「这个名字在任何地方都没有绑定」，应用是否拥有它只决定怎么修、
+  不决定哪里错。四处逐一修复：DataSync.tsx:44 读改名前的 memo 名（syncedCount → syncStatus.totalSyncedItems）、
+  SeasonOps.tsx:33 同形（newsData → opsData.season）、LeagueManager.tsx 把 setter 自己的参数在 setter 外面读
+  （prev 未绑定，改为 const nextLeagues = [...leagues, league] 同时交给 setLeagues 与 writeLeaguesToStorage，
+  两次读再不可能分叉）、TransferWindow.tsx 调一个应用从未有过的估价门（calculateTransferFee → 应用自己的
+  askingFee(p.value)，与 Transfer Centre 同一个数）。门重瞄：clause 2 把隔离区全部 2304 钉在 0，
+  并按「忘了导入 / 凭空发明」分类披露；镜像臂同时植入两种拼法（EmptyState 无导入 + 谁都没写过的
+  ledgerOfUnwrittenNames）加一份正确导入的对照，要求前两个被点名、第三个不动、且分类各归其位——
+  植入的「凭空发明」那条正是边界移动的证据（M540 的判据下它是免罚的）。
+  实测：隔离区 413/69 → 409/69（正是那四个名字，无附带损失），族 21 → 17，TOTAL_CEILING 413→409、
+  四名入 REPAIRED 钉 0；导出索引同一轮派生 122 模块 / 676 名 / 10 个歧义；人口钉 79 不变；
+  proof-draft-imports 3/3、proof-draft-types 5/5、proof-drafts 8/8。
+  没修的也写清：TransferWindow.tsx 仍从 @/domain/transfer（树里没有这个模块，属 2307 族，钉 8）导入四个名字，
+  仍读 p.contractYearsRemaining（应用 Player 没有这个字段，属 2339 族 71）——那要决定的是「应用要不要第二套转会
+  domain」还是「这份草稿该删」，是产品判断不是绑定错误。
+  本线在隔离 worktree（milestone-717，基于 origin/master 470c1b9）落地，全程未触碰分析 lane 正在改的
+  domain/analytics.ts / dictionaries.ts / EventClock.tsx。— pushed
+
+
+- M716: 上限的位次读法——`domain/analytics.ts` 新增 `CeilingPlaceRow`/`CeilingPlaces` 与 `ceilingPlaces(compId, matches, clubs)`：
+  把 `pointsScenarios` 已经印出的 `maxPoints` 当作输入，每支俱乐部同时抬到自己的上限（不是抬一支冻一支），
+  每个剩余场次按 M632 `rankSwing` 的最小决胜比分计分（gf 加剩余场数、ga 不动），再用同一 `byTableStanding` 重排取位次，
+  因此新列不可能与读者点过去的积分榜打架；并列时保住原有高者的位次（排序稳定，不自造第四条破平规则）；
+  之所以全体同时抬：一队独抬而其余冻住正是 `maxPoints` 的口径，但落到位次上什么也不说——真实英超 10 队里有 9 队都能越过冻住的榜首，
+  整列读 1；同时抬才排出一张真表（前五读 1 / 6 / 3 / 5 / 4），也让"本队上限不如邻队"的俱乐部掉位次，这是答案诚实的一半（moves 合计为 0）；
+  `features/analytics/PointsScenario.tsx` 的上限列（`scenario.colMaxPlace`）与第五块 tile（`scenario.climb` + `climbSub`，`tone="up"`，
+  守卫 `climb.peak &&`）都只读 fold，网格由 `lg:grid-cols-4` 改 5 列，列宽模板同步加一格；无表行的俱乐部读共享缺席字形；
+  3 键三语（字典 2,479→2,482）；`proof-analytics` 新增 9 条共 166/166
+  （T1：上限彼此比较而非与冻住的表比较，故三队全不动、peak 是榜首的 0 而非 null；
+  TC：Q 9 分且无赛可踢、P 6 分还剩两场（上限 12）→ P 取第 1、Q 掉第 2、N 不动，且 moves 合计 0；
+  TD：R 追平 S 的积分与净胜球、凭进球越过——并带反证：只抬积分则 S 仍在前；
+  TZ 无表行 → 0 行且 peak null（不是对空集合跑 maxBy），T2 只留自己的 D,E 两行；确定性；屏幕只读 fold 且组件内无 byTableStanding/`.sort(`）；
+  census pin：i18n literal 1,813→1,816、litVarSites 250→251、absence 门 PointsScenario.tsx 5→7（用户表仍 28 文件）；
+  无新模块/路由/存储键；bundle 保持 530 KB gzip / 54 资产（js 518、css 12.4，pwa pin 不动，baseline 只重记 JS 517→518）；
+  tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3,277/3,277 检查；
+  浏览器复核（production preview、/scenarios、zh-CN 与 en）：中文读 位次升幅最大 / ARS / 全员到顶可升 4 位（上限位次列前五 1/6/3/5/4），
+  英文读 BIGGEST CLIMB 与 "4 place(s) once every ceiling is met"，控制台两端都干净；
+  诚实的保留：这是对赛程的算术不是预测——假定每队拿走全部剩余上限且每场都是最小胜差，净胜球是近似而非模拟；
+  "升 4 位"说的是若全部赢下它值多少地面，不是说它会排名第二。
+
+- M715: 简报页也问位次——`Briefing` 新增 `rank: RankSwing | null`，由 `briefing()` 调 M632 的 `rankSwing(compId, next.homeClubId, next.awayClubId, matches, clubs)`：
+  该 fold 查的就是 `us`/`them` 来自的那批 `teamMetrics` 行，因此缺表行时 gap 与位次一起为 null，不是各有一条条件；
+  简报的场次由构造保证是 SCHEDULED，故不再另加开门条件；
+  `features/analytics/Briefing.tsx` 的 stakes 面板在分差行与上限行之后加两行，复用比赛页 M632 的两个键
+  （stakes.rankHomeLine/rankAwayLine），队名走 `homeClub?.name ?? fixture.homeClubId` 这道门，位次为空时读共享缺席字形（与上面两行同一处置）；
+  0 新键（字典仍 2,479 键 · 3 语）；`proof-analytics` 新增 2 条共 157/157
+  （A 主场对 B 与 B 读同一场交出逐字节相同的位次对象；C 的下一场在 B 主场——主队现居第 3，平局把客队凭进球抬到第 1；
+  D 的跨赛事场次没有对手的表行，位次与分差同读 null；屏幕两个键都在，且模块内无 rankSwing/byTableStanding/teamMetrics 字样）；
+  census pin：i18n literal 1,811→1,813、litVarSites 248→250、absence 门 Briefing.tsx 12→14（用户表仍 28 文件）；
+  无新模块/路由/存储键；bundle 保持 530 KB gzip / 54 资产（js 517、css 12.4，pwa pin 与 baseline 都不动）；
+  tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3,268/3,268 检查；
+  浏览器复核（production preview、/briefing、zh-CN、默认阿森纳）：Arsenal 现居第 6——胜则第 6、平则第 6、负则第 7 / Brighton 现居第 7——主队胜则第 7、平局第 7、本队胜则第 6，
+  与 M632 的 /matches/M0099 读到同一对句子，控制台干净；
+  合并注：本条以 M633 编号开发，落地时农场 lane 已占满 M633–M714，故按 `git log origin/master` 重编为 M715，
+  所有 pin 与检查数改为合并树实测（analytics 由 M711–M714 推进到 155，literal 到 1,811）；
+  诚实的保留：简报读的是该队最早的一场 SCHEDULED，位次只说这一场而不说整个剩余赛程；仍沿用 M632 的最小决胜比分约定；
+  下一场落在自己没有表行的赛事时，两行读缺席而不是 0。
+
 - M714: 比赛页打印两端的防守时钟——`domain/analytics.ts` 的 `MatchBrief` 在 `awayCards` 之后新增
   `homeClock`/`awayClock`（`eventClock` 的两行，直接取 fold，不另扫 stats 块），赛事无该队时钟行时读 null；
   `features/football/Details.tsx` 的 stakes 列表在牌账行之后按端各加一行 `stakes.siegeLine`
@@ -437,11 +530,13 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M715 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
+下一条目：M717 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
 ① 早段/晚段的攻守对照（`shotsBands` 与 `facedBands` 的首窗对末窗，同一 fold 两读）；
 ② 事件时钟的早段挨打 `earlySiege`（`lateSiege` 的镜像：首窗挨打量排序，同一扫描）；
-③ 俱乐部页牌趋势与联赛趋势的对照（同一 fold 两读：本队曲线叠在联赛曲线上）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（组件农场 lane 已占 M633–M709，本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632、M710、M711、M712、M713、M714，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub、`.drafts/` 新增草稿在其每次推送后由本线清理并记入 README。
+③ 俱乐部页牌趋势与联赛趋势的对照（同一 fold 两读：本队曲线叠在联赛曲线上）；
+④ 上限位次的落点读法（`ceilingPlaces` 已同时给出升与降：在 /scenarios 的说明行或争冠屏里点名"被上限吃掉位次最多"的队，
+  读同一 fold，不重排、不另起一遍）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（组件农场 lane 已占 M633–M709，本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632、M710、M711、M712、M713、M714、M715、M716，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub、`.drafts/` 新增草稿在其每次推送后由本线清理并记入 README。
 每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

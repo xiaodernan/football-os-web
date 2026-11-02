@@ -1059,6 +1059,11 @@ export interface Briefing {
    *  the match page's stakes panel prints. Null when either side has no table row in the
    *  fixture's competition, the same condition the two scenario joins below report. */
   swing: MatchSwing | null;
+  /** The same fixture asked of the STANDINGS: the two clubs' places now and after each of its
+   *  three results (M715). `rankSwing` looks its clubs up in the very rows `us` and `them` are
+   *  read from, so the places go absent together with the points swing rather than on a
+   *  condition of their own. */
+  rank: RankSwing | null;
   /** The briefing club's table-and-ceiling read in the fixture's competition; null when the
    *  competition has no table row for it yet (a cross-competition fixture can precede its debut). */
   us: PointsScenario | null;
@@ -1146,6 +1151,64 @@ export function rankSwing(compId: string, homeClubId: string, awayClubId: string
     ifDraw: place([1, 1, 1], [1, 1, 1]),
     ifAwayWin: place([0, 0, 1], [3, 1, 0]),
   };
+}
+
+/** One club's standing now and in the ceiling table (M716). */
+export interface CeilingPlaceRow {
+  clubId: string;
+  /** Place as the table stands after its last finished fixture. */
+  place: number;
+  /** Place once every club in this competition has taken the ceiling `pointsScenarios` prints for
+   *  it — the table the season can still become. */
+  ceilingPlace: number;
+  /** Places the ceilings move this club; positive is a climb, negative is a club whose ceiling is
+   *  smaller than somebody else's, 0 means it holds. */
+  moves: number;
+}
+
+export interface CeilingPlaces {
+  /** Every club with a row in this competition's table, in standing order. */
+  rows: CeilingPlaceRow[];
+  /** The club the ceilings carry furthest up; null when the table has no row at all. */
+  peak: CeilingPlaceRow | null;
+}
+
+/** What the points ceilings are worth in PLACES (M716). `pointsScenarios` answers "how many points
+ *  can they still reach"; two ceilings are hard to compare in points alone, because a place needs
+ *  goal difference as well — so this re-ranks through `byTableStanding`, the one door the table
+ *  screens order by, and cannot disagree with the table a reader clicks over to.
+ *  Every club is lifted to its OWN ceiling at the same time, which is the reading the column needs:
+ *  lifting one club and freezing the others is the unilateral arithmetic `maxPoints` is written in,
+ *  but as a place it says nothing — on the shipped Premier League data nine of ten clubs sweep to
+ *  first that way, and a column of 1s is not a read. Together, the ceilings sort against each other
+ *  and a club whose schedule offers less than its neighbour's can lose ground, which is the honest
+ *  half of the answer: a ceiling is what is on the table, not what is coming.
+ *  Each lifted fixture is scored the way `rankSwing` scores a win — the smallest margin that
+ *  decides a game, so goals for grows by the matches left and goals against does not move. A tie
+ *  keeps the incumbent's place, exactly as `rankSwing` leaves it. */
+export function ceilingPlaces(compId: string, matches: Match[], clubs: Club[]): CeilingPlaces {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const ceilingOf = new Map(pointsScenarios(compId, matches, clubs).map((s) => [s.clubId, s]));
+  const placesOf = (rows: { clubId: string; points: number; gf: number; ga: number }[]): Map<string, number> => {
+    const ranked = [...rows].sort(byTableStanding);
+    return new Map(ranked.map((r, i) => [r.clubId, i + 1]));
+  };
+  const now = placesOf(metrics);
+  const ceiling = placesOf(metrics.map((r) => {
+    const left = ceilingOf.get(r.clubId);
+    return {
+      clubId: r.clubId,
+      points: left ? left.maxPoints : r.points,
+      gf: r.gf + (left ? left.remaining : 0),
+      ga: r.ga,
+    };
+  }));
+  const rows = metrics.map((r) => {
+    const place = now.get(r.clubId) ?? 0;
+    const ceilingPlace = ceiling.get(r.clubId) ?? 0;
+    return { clubId: r.clubId, place, ceilingPlace, moves: place - ceilingPlace };
+  });
+  return { rows, peak: rows.length ? maxBy(rows, (r) => r.moves) : null };
 }
 
 export interface MatchBrief {
@@ -1251,6 +1314,7 @@ export function briefing(clubId: string, matches: Match[], clubs: Club[]): Brief
     us,
     them,
     swing: home && away ? swingOf(home, away) : null,
+    rank: rankSwing(compId, next.homeClubId, next.awayClubId, matches, clubs),
     runInRow: runIn(compId, matches, clubs).find((r) => r.clubId === clubId) ?? null,
     venueRow: venueSplit(compId, matches, clubs).rows.find((r) => r.clubId === clubId) ?? null,
     record: headToHead(clubId, opponentId, matches),

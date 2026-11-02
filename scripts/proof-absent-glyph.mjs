@@ -206,6 +206,8 @@ const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
 // four step lines) read the door rather than a typed dash.
 // M630: the briefing's swing panel adds two cells (the gap line and the ceiling line fall back
 // to the door when the fixture has no table row to measure): Briefing.tsx 10 -> 12.
+// M715: the same panel asks the standings too, and its two place lines read the door under the
+// same missing-row condition: Briefing.tsx 12 -> 14.
 const expectedUsers = [
   "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
   "features/analytics/Briefing.tsx", "features/analytics/DataRoom.tsx",
@@ -225,11 +227,13 @@ const expectedUsers = [
 ];
 const expectedPerUser = [
   ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
-  ["features/analytics/Briefing.tsx", 12],
+  ["features/analytics/Briefing.tsx", 14],
   ["features/analytics/DataRoom.tsx", 13], ["features/analytics/Discipline.tsx", 2],
   ["features/analytics/EventClock.tsx", 1],
   ["features/analytics/GoalTiming.tsx", 4],
-  ["features/analytics/PointsScenario.tsx", 5],
+  // M716: the scenarios screen asks the door twice more — a ceiling place with no row behind it
+  // reads the glyph, and so does the climb tile's club when the table has no name for it. 5 -> 7.
+  ["features/analytics/PointsScenario.tsx", 7],
   ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 14],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],

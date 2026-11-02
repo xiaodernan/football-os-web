@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
 import { executeTransfer, TransferOffer, TransferResult, getFreeAgents } from "@/domain/transfer";
+import { askingFee } from "@/domain/transfers";
 import { Panel, SectionTitle, EmptyState, StatTile, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ export function TransferWindow() {
       overall: p.overall,
       age: p.age,
       contractYears: p.contractYearsRemaining,
-      currentFee: calculateTransferFee(p.overall, p.age, p.contractYearsRemaining)
+      currentFee: askingFee(p.value)
     }));
   }, [players]);
 

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M714 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M718 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,206 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M718 — the quarantine's missing modules turn out to be three facts, not one number
+
+**What the ratchet could not see.** `2307` — "cannot find module" — has been bound at eight since
+M539 counted it, and the bound says nothing about what any of the eight wanted. So this milestone
+asked the compiler's own resolver twice, on two planes: the app's plane (the app's options, the
+draft's own file as the containing directory — precisely the question the checker asks) and the
+PILE's plane (the same options with the root moved into `.drafts`). Between those two answers the
+eight split into classes the flat count cannot tell apart.
+
+**What they were.** Seven reach for a module the quarantine is holding at the mirrored path —
+`@/domain/finance`, `@/domain/league`, `@/domain/sync`, `@/domain/transfer` and
+`@/features/world/seasonStats`, five domains the app has never shipped. Those screens and their
+domains were shelved together; what is missing is a decision, not a file. Every one of the seven
+asks only names the sibling really exports — a pairing check the count has no shape for, and the
+answer is that the pile's domains are internally consistent, not half-written. The eighth was a
+different animal: `features/manager/TransferAnalysis.tsx:7` reached for `@/world/seasonStats`,
+while the pile holds `features/world/seasonStats.ts` — the wrong shelf. Zero sites name a module
+nothing anywhere holds.
+
+**The repair.** One specifier, `@/world/seasonStats` → `@/features/world/seasonStats`, matching
+the spelling its three sibling screens already use. It moves no diagnostic: the module is still
+absent from the app, so the census reads `2307` before and after — and that is exactly why it was
+worth doing now. A wrong path is invisible while its module is missing, and would have been broken
+on the day the module shipped; a site that fails for two reasons is a site nobody can debug.
+
+**The gate.** `scripts/proof-draft-modules.mjs`, 7/7. Its first clause is a reverse control rather
+than a floor: the same resolver must answer every `@/…` the APP's own modules import, so an index
+that went blind cannot report a clean quarantine. The second makes the two readings prove each
+other — the walk's unresolvable sites and the checker's `2307` diagnostics are compared file by
+file, both numbers computed apart and required to agree, so neither is quoted from the other. Then
+the three charged classes, each with a planted draft of its own shape in a mirror of the quarantine
+(wrong shelf, invented module, false promise) beside a planted draft that imports the app's real
+`@/ui/primitives` and must join no list. The last clause pins the five unwritten domains as a SET:
+a sixth is a decision somebody recorded, not a site that slid in beside the others.
+
+**A trap the arm caught while the gate was being written.** Reading a module's exports with a regex
+(`^export\s+(const|function|class|…)\b`) reports nothing for `export async function syncData`, and
+on the first try it claimed all seven sibling sites were asking for names their own module never
+exported — eighteen false defects, invented by the gate rather than found in the drafts. The
+classifier parses, and the planted sibling-and-false-promise pair keeps both directions honest.
+
+**Measured.** The quarantine stays 409 diagnostics over 69 files and `2307` stays at 8 — this
+milestone buys legibility, not a smaller number, and the ledger now says which eight.
+`npx tsc --noEmit` clean, `npm run build` exit 0. The suite, with this milestone's files in place:
+**122/122 proof scripts proven, 3284/3284 checks counted** — and the new gate is what carried the
+count from 3277 to 3284, `proof-draft-modules` 7/7 beside `proof-draft-types` 5/5
+and `proof-draft-imports` 3/3.
+
+**A red this milestone turned, and it was three commits late.** The suite's first M718 run came
+back 121/122 and the failing clause was not the new gate: `proof-record` charges the roadmap
+pointer against the newest heading the file carries, and `M717`'s landing had moved the
+heading without moving the pointer — the same file, nine thousand lines apart, so nothing beside
+the pointer complained. The pointer now reads M718. The lesson is not "remember to bump it":
+it is that a gate which reads two places in one document is only as good as the landing script
+that writes both. The splice that landed this section therefore reads the pointer the way the gate
+does — the first match in the file — refuses to write unless exactly one LIVE pointer line exists
+(the README quotes its own history inside backticks, and a quotation is not a pointer), and checks
+afterwards that the line it edited is the line the gate reads.
+
+**The five decisions the ledger now names, stated rather than parked.** `finance` — the lane already
+declined a fee model on this dataset (M531 records the inflated valuations); `sync` — there is no
+cross-device story to be the subject of a sync domain; `league` and `transfer` — the app ships
+rumours and an asking fee (`domain/transfers.ts`), not a transfer execution engine, and the pile's
+`executeTransfer`/`getFreeAgents` would be a second product surface rather than a second copy of
+one; `seasonStats` — the app already folds a season report out of the world engine's own run
+(`worldEngine.buildSeasonReport`, shipped at M525), while the pile's copy caches a second tally in
+localStorage under `WORLD_KEY`. Four screens wait on that one; shipping it as it stands would give
+the product two season statistics with different persistence rules, which is a worse state than the
+one the ledger records.
+
+
+### M717 — the quarantine's four invented names, and a gate that stopped asking who owns them
+
+**What M540 left uncharged.** `proof-draft-imports` closed the class it could name: a draft reads a
+name the APP EXPORTS and never imports it. Nine sites, repaired there, bound at zero. The same run
+printed the rest of its `2304` list — four names the app has never exported — and called it "a
+different defect class". The print was honest about the boundary and silent about the defect:
+`2304` says **this name is bound nowhere**, and whether the app happens to own it is a fact about
+how to FIX it, not about what is WRONG with the draft. A boundary that lets four sites out because
+the app is not their home is a boundary drawn around the repair.
+
+**The four, and what each one actually was.** Two were reads left under a memo's name from before it
+was renamed: `features/community/DataSync.tsx:44` reached for `syncedCount` while the memo above it
+is `syncStatus` and the field it wants is `totalSyncedItems`, and `features/manager/SeasonOps.tsx:33`
+reached for `newsData` beside an `opsData` that carries the `season`. One was a setter's own
+parameter read outside the setter that bound it: `features/league/LeagueManager.tsx` wrote
+`setLeagues(prev => [...prev, league])` and on the next line `writeLeaguesToStorage([...prev, league])`
+— `prev` has no binding there, so the storage write could never have run as written. One called a
+door the app has never had: `calculateTransferFee(overall, age, contractYearsRemaining)` in
+`features/manager/TransferWindow.tsx`, where the app's own estimate is `askingFee(value)` in
+`domain/transfers.ts` — `roundTo100k(value × 1.1)`, the same number the Transfer Centre prints.
+
+**The repairs.** The two renames read the memo that exists. The league site hoists one list —
+`const nextLeagues = [...leagues, league]` — and hands the same array to the setter and to the
+write, which is what the author meant and makes the two reads impossible to diverge. The fee site
+calls the app's door with the player's market value, so the draft stops carrying a second, different
+pricing rule next to the one the product already ships.
+
+**The gate, re-aimed.** Clause 2 charges EVERY `2304` in the quarantine at zero and reports the
+split (forgot-to-import / invented-a-symbol) instead of keying admission on it. The arm plants BOTH
+spellings in a mirror of the quarantine — `EmptyState` used without its import, and
+`ledgerOfUnwrittenNames`, which nobody has ever written — beside a sound draft that imports
+correctly. It must charge the first two, leave the third alone, and put each plant in the right half
+of the split. The invented-symbol plant is the one that proves the boundary moved: under M540's
+clause it walked out uncharged, which is exactly how four sites survived it.
+
+**Measured.** The quarantine reads **409** diagnostics over **69** files (was 413/69: the four
+invented names and no collateral), and the families come down from 21 to **17**, every one within
+its bound and none unbound. `TOTAL_CEILING` 413 → 409, the four names bound at 0 and recorded in
+`REPAIRED` with the reason each was repairable at all. The export index, derived on the same run:
+**122** modules, **676** names, **10** exported from more than one module and therefore not decided
+by this gate. Population pin 79 unchanged. `proof-draft-imports` **3/3**, `proof-draft-types`
+**5/5**, `proof-drafts` **8/8**.
+
+**What this did not fix, and why it stayed.** `TransferWindow.tsx` still imports four names from
+`@/domain/transfer`, a module that is not in the tree (that is the `2307` family, bound 8), and it
+still reads `p.contractYearsRemaining`, a field the app's `Player` does not carry (one of the
+`2339` 71). Closing those means deciding whether the app wants a second transfer domain or whether
+the draft should go — a product decision, not a binding error, and the census already names the file
+that owes it.
+
+
+### M716 — what the ceilings are worth in places
+
+**The column the points table was missing.** `/scenarios` already printed each club's ceiling in
+points (M559's `pointsScenarios`), and a reader could compare 70 with 45 but not with what those
+numbers would DO to the standings. `ceilingPlaces(compId, matches, clubs)` lifts every club to its
+own `maxPoints` at once, scores each of its remaining fixtures the way `rankSwing` scores a win —
+goals for grows by the matches left, goals against does not move — and re-ranks through
+`byTableStanding`, so the column cannot disagree with the table a reader clicks over to.
+
+**Why all the ceilings move together.** Lifting one club and freezing the rest is the unilateral
+arithmetic `maxPoints` is written in, but as a place it says nothing: on the shipped Premier League
+data nine of ten clubs pass a frozen leader that way, so the new column would read `1` down nearly
+its whole length. Compared with each other the ceilings sort into a real table — the top five read
+1 / 6 / 3 / 5 / 4 — and a club whose schedule offers less than its neighbour's loses ground, which
+is the honest half of the answer: a ceiling is what is on the table, not what is coming. The moves
+sum to zero because this is one table re-sorted, not three claims.
+
+**Words and gates.** 3 keys · 3 locales (`scenario.colMaxPlace`, `scenario.climb`,
+`scenario.climbSub`), so the dictionary goes 2,479 → 2,482 keys and the census sites move with them:
+literal 1,813 → 1,816, variable-carrying 250 → 251. The climb tile's club and the ceiling place of a
+row with no table row behind it both fall to the shared absence glyph (`PointsScenario.tsx` 5 → 7
+door cells, 28 users unchanged). `proof-analytics` grows nine clauses to 166/166: T1 shows ceilings
+compared with ceilings (nobody moves, and the peak is the leader at zero rather than a null); TC has
+Q on 9 pts with nothing left and P on 6 with two fixtures left, so P takes first and Q drops; TD is
+the goal half — R reaches S's points AND S's goal difference and passes on goals for, and the clause
+carries its counterfactual, because a points-only lift would have left R second. An empty table
+gives no rows and no peak rather than a `maxBy` over nothing.
+
+**What it cost.** No new module, route or storage key; the tile grid goes four columns to five. The
+build holds at 530 KB gzip across 54 assets (JS 518, CSS 12.4), so the budget pin stays and the
+baseline re-records the JS figure; tsc clean, build exit 0, the suite lands at 121/121 scripts ·
+3,277/3,277 checks. Checked in a real browser against the production preview: `/scenarios` (zh-CN,
+Premier League) prints 位次升幅最大 / ARS / 全员到顶可升 4 位 under the 上限位次 column header, and
+the same screen in English reads BIGGEST CLIMB with "4 place(s) once every ceiling is met" —
+Arsenal is the club the ceilings carry furthest, Chelsea the one they cost the most — console clean
+in both locales.
+
+**The honest limit.** This is arithmetic on the schedule, not a forecast: it assumes every club takes
+every point still on the table and each win arrives by the smallest margin, so goal difference is
+approximated rather than simulated; the club that "climbs 4" is not predicted to finish second, it is
+the club whose remaining fixtures are worth the most ground if all of them are won.
+
+
+### M715 — the briefing asks the standings too
+
+**One screen away, same answer.** The match page got its places in M632; the briefing is the other
+screen that opens with a fixture in front of the reader, and it was still answering only the gap.
+`Briefing` gains `rank: RankSwing | null`, filled by the same `rankSwing()` — the fold looks the two
+clubs up in the very rows `us` and `them` are read from, so a briefing whose gap is absent has its
+places absent too, and the two readers of one fixture hand the screen byte-identical numbers.
+
+**No new words.** The panel prints the match page's own two keys, so the dictionary stays at 2,479
+keys · 3 locales and only the census sites move: literal 1,811 → 1,813 and variable-carrying
+248 → 250, and its two clauses take `proof-analytics` to 157/157. The two new cells fall back to the
+shared absence glyph the way the gap and ceiling lines above them already do (`Briefing.tsx` 12 → 14
+door cells, 28 users unchanged).
+
+**What the gate says.** On the briefing's own fixture set, A at
+home to B and B reading the same fixture hand over the same object (hosts first whatever happens, an
+away win lifting B to second); C's next fixture is at B, where the hosts sit third and a draw lifts
+the visitor to first on goals for — the third tie-break doing its job again, not a new one; D's
+cross-competition fixture has no table row for its opponent, so the gap and the places go absent
+together. The screen clause demands the two keys and forbids `rankSwing`, `byTableStanding` and
+`teamMetrics` inside the module.
+
+**What it cost.** No new key, module, route or storage key. The build holds at 530 KB gzip across 54
+assets, so neither the budget pin nor the baseline moves; tsc clean, build exit 0, the suite lands at
+121/121 scripts · 3,268/3,268 checks. Checked in a real
+browser against the production preview: `/briefing` (zh-CN, Arsenal) prints Arsenal 现居第 6——胜则第
+6、平则第 6、负则第 7 and Brighton 现居第 7——主队胜则第 7、平局第 7、本队胜则第 6 — the same two
+sentences the match page showed for that fixture under M632, console clean.
+
+**The honest limit.** The briefing reads the club's earliest scheduled kickoff, so these places speak
+about one fixture and not about the run-in, and they keep M632's convention of the smallest deciding
+scoreline; a club whose next game is in a competition it has no row in gets absent lines rather than
+zeros.
 
 
 ### M714 — the match page prints both ends' defending clocks
