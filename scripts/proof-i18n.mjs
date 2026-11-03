@@ -4434,7 +4434,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M777's strike line for its row: five literal sites (the label and the reused row line each add
 // one call site even though only four keys are new), two of them interpolating: literal 1829 ->
 // 1834, litVarSites 257 -> 259.
-  shapeCounts.literal === 1834 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M780: the closing-attack board adds its title, hint and per-row window label, and reuses
+// M777's strike line at a second call site: four literal sites, one of them interpolating —
+// literal 1834 -> 1838, litVarSites 259 -> 260.
+  shapeCounts.literal === 1838 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4496,7 +4499,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M778: 256 -> 257 — the landing line hands over the club short's name; the bottom-row label passes none.
 // M779: 257 -> 259 — the card clock's total label hands over the count, and the reused strike
 // line hands over the two counts and the two shares at its new call site.
-  litVarSites === 259 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M780: 259 -> 260 — the closing-attack row reuses that strike line at its own call site.
+  litVarSites === 260 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

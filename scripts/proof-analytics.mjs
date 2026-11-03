@@ -786,6 +786,35 @@ ok(`the event clock screen reads the opening attack off the fold, prints the clo
   CLOCK_SRC.includes("earlyAttack.map(") &&
   CLOCK_SRC.includes('t("clock.strikeLine", { e: r.earlyShots, p: r.earlyShare, l: r.lateShots, q: r.lateShare })') &&
   !/\.sort\(/.test(CLOCK_SRC) && !/earlyShots\+\+/.test(CLOCK_SRC));
+// M780: the closing attack read on its own order. T12 gives P no early shot and three late ones,
+// R one at each end and Q one in the middle, so the opening board reads RPQ (early count, then the
+// whole load) while the closing board reads PRQ (late count, then the whole load) — the same fold
+// names a different first club at each end of the match.
+const lateClubs = [club("P", "T12"), club("Q", "T12"), club("R", "T12")];
+const lateFixtures = [
+  { ...match("q1", "T12", "P", "Q", 2, 1, "2026-06-01"), events: [ev("SHOT", 80, "home"), ev("SHOT", 85, "home"), ev("SHOT", 20, "away")] },
+  { ...match("q2", "T12", "R", "P", 1, 3, "2026-06-02"), events: [ev("SHOT", 5, "home"), ev("SHOT", 90, "home"), ev("SHOT", 88, "away")] },
+];
+const lateClock = eventClock("T12", lateFixtures, lateClubs);
+const late = Object.fromEntries(lateClock.rows.map((r) => [r.clubId, r]));
+const lateAgain = eventClock("T12", lateFixtures, lateClubs);
+ok(`the closing attack orders the same rows by the shots they took after the 75th, apart from the opening order (late ${lateClock.lateAttack.map((r) => r.clubId).join("")}; early ${lateClock.earlyAttack.map((r) => r.clubId).join("")}; P ${late.P.lateShots} of ${late.P.shots} at ${late.P.lateShare}%, R ${late.R.lateShots} of ${late.R.shots} at ${late.R.lateShare}%, Q ${late.Q.lateShots} of ${late.Q.shots})`,
+  lateClock.lateAttack.map((r) => r.clubId).join("") === "PRQ" &&
+  lateClock.earlyAttack.map((r) => r.clubId).join("") === "RPQ" && lateClock.lateAttack.length === 3 &&
+  lateClock.rows.every((r) => r.shotsBands[5] === r.lateShots) &&
+  late.P.shots === 3 && late.P.earlyShots === 0 && late.P.lateShots === 3 && near(late.P.lateShare, 100, 0.005) &&
+  late.R.shots === 2 && late.R.earlyShots === 1 && late.R.lateShots === 1 && near(late.R.lateShare, 50, 0.005) &&
+  late.Q.shots === 1 && late.Q.earlyShots === 0 && late.Q.lateShots === 0 && late.Q.lateShare === 0);
+ok(`a silent and an empty table both keep their closing-attack order (silent ${clockSilent.lateAttack.length} rows, empty ${clockEmpty.lateAttack.length} rows)`,
+  clockSilent.matches === 0 && clockSilent.lateAttack.length === 3 &&
+  clockSilent.lateAttack.every((r) => r.lateShots === 0 && r.lateShare === 0) &&
+  clockEmpty.lateAttack.length === 2 && clockEmpty.lateAttack.every((r) => r.lateShots === 0 && r.shots === 0));
+ok(`the closing attack repeats its order on a second read and the screen reads it off the fold without ranking anything itself (repeat ${JSON.stringify(lateAgain.lateAttack) === JSON.stringify(lateClock.lateAttack)}, board ${CLOCK_SRC.includes("clock.lateAttack.filter(")}, gate ${CLOCK_SRC.includes("r.lateShots > 0")})`,
+  JSON.stringify(lateAgain) === JSON.stringify(lateClock) &&
+  CLOCK_SRC.includes("clock.lateAttack.filter(") && CLOCK_SRC.includes("r.lateShots > 0") &&
+  CLOCK_SRC.includes("lateAttack.map(") && CLOCK_SRC.includes("clock.lateStrikeTitle") &&
+  CLOCK_SRC.includes("clock.lateStrikeHint") && CLOCK_SRC.includes('t("timing.w6")') &&
+  !/lateAttack.*\.sort\(/.test(CLOCK_SRC) && !/lateShots\+\+/.test(CLOCK_SRC));
 // --- briefing: one club's next fixture, joined with the five season reads -----------------------
 // T1 hand-count: f1 A 2-0 B, f2 B 1-1 A, f3 C 3-1 B finished; s1 A-B (May 10), s2 B-C (May 12),
 // z1 C-A (Jun 1) scheduled; l1 A-C is LIVE and must stay out of the pick, the record and the venue

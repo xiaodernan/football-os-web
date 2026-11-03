@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M779 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M780 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,46 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M780 — the closing attack ranks itself
+
+**The same rows, the other window.** M777 gave the clock an opening attack board and printed the
+late count beside it; the last fifteen minutes were only a number on someone else's row. `lateAttack`
+now sorts the same `EventClockRow`s by `lateShots`, falling back to the whole shot load and then the
+club id — the exact mirror of `earlyAttack`, one window further on. The board below it is the
+closing read: rows ranked by what they did after the seventy-fifth minute, each still carrying the
+opening share beside it.
+
+**The numbers on the fixtures.** T12 is built so the two ends name different clubs: P takes three
+shots, all after the seventy-fifth and none before the fifteenth; R takes one at each end; Q takes
+one in the middle. The opening board therefore reads R P Q (one early shot beats none, then the
+whole load), while the closing board reads P R Q — P's three late shots, R's one, Q's none — and
+P's late share reads 100%, R's 50%, Q's 0. A silent table keeps zero rows in the same order, an
+empty competition keeps two rows at zero, and a second read returns the identical object.
+
+**The tree this had to land on.** The milestone was first built on M779; by the time it merged, a
+concurrent lane had pushed 124 commits numbered M772-M895 that replaced the four analytics screens
+this work lives in with stubs that do not parse, and added 115 unwired mock screens carrying
+undefined keys and raw UI text. `tsc` refused four files and twenty i18n clauses failed. An
+unnumbered repair commit before this one restores the M779 tree exactly and deletes those 115
+files; the M781-M895 numbers in the history belong to that lane and are withdrawn, and the ledger
+resumes here. The standing rule is unchanged: a milestone lands only on a tree that passes every
+gate, and this one does.
+
+**Words and gates.** 2 keys · 3 locales (`clock.lateStrikeTitle`, `clock.lateStrikeHint`), so the
+dictionary goes 2,496 → 2,498. The board's rows reuse M777's `clock.strikeLine` at a second call
+site, plus a per-row window label: four literal sites, one of them interpolating, moving the census
+to literal 1,834 → 1,838 and variable-carrying sites 259 → 260. One existing zh-TW value is
+corrected on the way (`venue.goalShare`, 占比 → 佔比): the new zh-CN hint lifted 占 into the learned
+glyph set, which is how the old leak became visible. `proof-analytics` grows three clauses to
+187/187. No new module, route, screen or storage key. The build stays at 532 KB gzip across the
+same 54 assets (JS 520, CSS 12.4), so the pin and the baseline do not move. `tsc` clean, build exit
+0, the suite lands at 123/123 scripts · 3,314/3,314 checks.
+
+**The honest limit.** Only shots carrying a recorded minute enter a window; a shot without one
+counts in the load but in no band. Ties fall back to the whole load, then the club id. The board
+prints five rows, so a sixth-placed late side is named nowhere. Shares are each club's own shots,
+so one late shot reads 100% even on a quiet night.
 
 ### M779 — the card clock reads the minute
 

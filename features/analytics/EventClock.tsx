@@ -39,6 +39,10 @@ export function EventClock() {
   // quarter-hour, with each one's closing share printed on the same row so the two ends of one
   // attack are a contrast. A club that took nothing early has no row here rather than a zero.
   const earlyAttack = clock.earlyAttack.filter((r) => r.earlyShots > 0).slice(0, 5);
+  // M780: the other end of that board — the clubs that take the most shots inside the last
+  // window, ranked on its own counter rather than read off the opening order. A club that took
+  // nothing late has no row here rather than a zero, the same silence the opening board keeps.
+  const lateAttack = clock.lateAttack.filter((r) => r.lateShots > 0).slice(0, 5);
 
   return (
     <div className="space-y-5">
@@ -166,6 +170,36 @@ export function EventClock() {
                       <div className="text-right tabular-nums">
                         {r.shots}
                         <div className="text-xs text-muted-foreground">{t("clock.shots")}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Panel>
+          )}
+
+          {/* M780: the closing attack gets its own board and its own ranking — the same rows, the
+              other window, so the last fifteen minutes name their own shooters. */}
+          {lateAttack.length > 0 && (
+            <Panel className="p-5">
+              <SectionTitle title={t("clock.lateStrikeTitle")} hint={t("clock.lateStrikeHint")} />
+              <ul className="mt-2 space-y-1">
+                {lateAttack.map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li key={r.clubId} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={26} />
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t("clock.strikeLine", { e: r.earlyShots, p: r.earlyShare, l: r.lateShots, q: r.lateShare })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        {r.lateShots}
+                        <div className="text-xs text-muted-foreground">{t("timing.w6")}</div>
                       </div>
                     </li>
                   );
