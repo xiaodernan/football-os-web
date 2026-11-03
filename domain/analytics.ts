@@ -458,6 +458,8 @@ export interface CardTimingRow {
   cards: number;
   /** Cards in each window, index 0 = 1–15′, index 5 = 76–90+′. */
   bands: number[];
+  /** Red cards in each window, same six bands — the colour read on its own. */
+  redBands: number[];
   /** Cards earned inside the first window. */
   earlyCards: number;
   /** Cards earned after the 75th minute (the last window). */
@@ -468,12 +470,24 @@ export interface CardTimingRow {
   lateShare: number;
 }
 
+export interface CardRedRow {
+  clubId: string;
+  reds: number;
+  /** The window holding most of this club's reds; the earliest window wins a tie. 0 = 1–15′. */
+  peakBand: number;
+  /** Reds in that window. */
+  peakCount: number;
+}
+
 export interface CardTiming {
   /** Every club with a table row, ranked by cards in the first window, then the whole card
    *  count, then the club id. */
   rows: CardTimingRow[];
   /** The club booked most often inside the first window; null when nobody was booked early. */
   earliest: CardTimingRow | null;
+  /** Clubs shown a red card, ranked by reds, then the peak window's count, then the club id.
+   *  A club with no reds is absent: the panel is about the sendings-off, not about zero rows. */
+  redRows: CardRedRow[];
 }
 
 /** When a club's cards arrive: every recorded YELLOW or RED in this competition's finished
@@ -492,6 +506,7 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
         reds: 0,
         cards: 0,
         bands: Array.from({ length: GOAL_BANDS }, () => 0),
+        redBands: Array.from({ length: GOAL_BANDS }, () => 0),
         earlyCards: 0,
         lateCards: 0,
         earlyShare: 0,
@@ -510,7 +525,10 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       const band = goalBand(e.minute);
       row.cards++;
       if (e.type === "YELLOW") row.yellows++;
-      else row.reds++;
+      else {
+        row.reds++;
+        row.redBands[band]++;
+      }
       row.bands[band]++;
       if (band === 0) row.earlyCards++;
       if (band === lastBand) row.lateCards++;
@@ -522,7 +540,15 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
     r.lateShare = r.cards ? round2((r.lateCards / r.cards) * 100) : 0;
   }
   list.sort((a, b) => b.earlyCards - a.earlyCards || b.cards - a.cards || a.clubId.localeCompare(b.clubId));
-  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null };
+  const redList: CardRedRow[] = list
+    .filter((r) => r.reds > 0)
+    .map((r) => {
+      let peakBand = 0;
+      for (let b = 1; b < GOAL_BANDS; b++) if (r.redBands[b] > r.redBands[peakBand]) peakBand = b;
+      return { clubId: r.clubId, reds: r.reds, peakBand, peakCount: r.redBands[peakBand] };
+    });
+  redList.sort((a, b) => b.reds - a.reds || b.peakCount - a.peakCount || a.clubId.localeCompare(b.clubId));
+  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList };
 }
 
 export interface TitleRaceWeek {

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M782 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M783 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,43 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M783 — the red card gets its own window
+
+**What M779 left flat.** The card clock folds yellows and reds into one count per window, which
+answers when a club is booked but not when it is sent off. A red card is the booking that changes
+a match, and the minute it arrives was averaged away with every routine yellow. The fold already
+separated the two colours on the row (`yellows`, `reds`); what it did not keep was the window of
+each colour.
+
+**The fold keeps a second series.** `CardTimingRow` gains `redBands`, the same six windows as
+`bands`, incremented only for `RED`. `CardTiming` gains `redRows`: one row per club that was
+actually sent off, holding its red count, its peak window and that window's count. A tie on the
+peak count goes to the earliest window, so a side booked off once in each half reads the first.
+The board ranks by reds, then the peak count, then the club id; a club with no red is absent from
+it while keeping its ordinary row.
+
+**The screen prints the peak, not a second series.** The discipline page adds a panel below the
+card clock. Each row prints the club, the peak window with its count (`disc.redLine`), and the
+club's total reds. The six window labels are the clock's own (`timing.w1`…`timing.w6`), read here
+as new literal sites. The panel sorts nothing — the order is the fold's — and a competition with
+no sendings-off prints a one-line empty state.
+
+**Words and gates.** Five keys across three locales (`disc.redTitle`, `disc.redHint`,
+`disc.redLine`, `disc.redNone`, `disc.redTotal`), so the dictionary goes 2,498 → 2,503 keys. The
+census moves literal 1,838 → 1,849 (five new keys plus the six repeated window labels) and
+literal sites with placeholders 260 → 262 (the peak line and the total line each hand over
+variables). `proof-analytics` grows four clauses to 191/191: the hand-counted fold on a dedicated
+fixture, the board's order and peak tie-break, the sums/noise/silent arms, and the screen. No new
+module, route, screen or storage key; the bundle stays at 532 KB gzip across the same 54 assets,
+so the perf baseline and `proof-pwa`'s pin hold. `tsc` clean, build exit 0, the suite lands at
+123/123 scripts · 3,322/3,322 checks.
+
+**The honest limit.** `peakBand` is the window with the most reds, not the window of the first
+red — ties go to the earliest, but a club with one red in each half reads the first as its peak
+rather than as a sequence. The board ranks the sendings-off and prints only the peak window; the
+full six-window red series is kept on the row for a later read, not drawn here. And like the card
+clock it reads finished fixtures, not a live match.
 
 ### M782 — the dead-surface ledger is counted, not captioned
 

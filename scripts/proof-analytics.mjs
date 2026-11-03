@@ -1093,6 +1093,54 @@ ok(`cardTiming is deterministic and the discipline screen prints the clock off t
   DISC_SRC.includes("cardTiming(compId, matches, clubs)") && DISC_SRC.includes("clock.rows.filter(") &&
   DISC_SRC.includes('t("clock.strikeLine"') && DISC_SRC.includes('t("disc.clockNone"') &&
   !DISC_SRC.includes("byTableStanding") && !DISC_SRC.includes(".sort("));
+// --- M783: the red card read on its own six windows ------------------------------------------
+// TE already carries the shared fold: U's red landed on 80' (band 5) and V's on 90' (band 5).
+// TH is the dedicated board: P is sent off at 10' and 20' — a tie on one apiece, so the EARLIEST
+// window wins, band 0; Q twice inside the last window (85', 88'); R on 50' and T on 60', tied on
+// one red and one peak, split by club id. S plays and is never sent off, so it keeps its row and
+// is absent from the red board. A scheduled red on 5' and a red in TI are noise.
+const redClubs = [club("P", "TH"), club("Q", "TH"), club("R", "TH"), club("S", "TH"), club("T", "TH")];
+const redFixtures = [
+  cardFixture("h1", "TH", "P", "Q", [
+    cardEvent(10, "RED", "home"),
+    cardEvent(20, "RED", "home"),
+    cardEvent(85, "RED", "away"),
+    cardEvent(88, "RED", "away"),
+  ]),
+  cardFixture("h2", "TH", "R", "S", [cardEvent(50, "RED", "home")]),
+  cardFixture("h3", "TH", "S", "T", [cardEvent(60, "RED", "away")]),
+  cardFixture("h4", "TH", "R", "T", [cardEvent(5, "RED", "home")], "SCHEDULED"),
+  cardFixture("h5", "TI", "R", "T", [cardEvent(5, "RED", "home")]),
+];
+const reds = cardTiming("TH", redFixtures, redClubs);
+const redById = Object.fromEntries(reds.rows.map((r) => [r.clubId, r]));
+const redPeak = Object.fromEntries(reds.redRows.map((r) => [r.clubId, r]));
+ok(`cardTiming folds reds into their own windows, a tie on the peak count going to the earliest window (P ${redById.P.redBands.join("")} peak ${redPeak.P.peakBand}×${redPeak.P.peakCount}, Q ${redById.Q.redBands.join("")} peak ${redPeak.Q.peakBand}×${redPeak.Q.peakCount}, R ${redById.R.redBands.join("")}, T ${redById.T.redBands.join("")}, S ${redById.S.reds} reds in ${redById.S.redBands.length} windows)`,
+  redById.P.redBands.join(",") === "1,1,0,0,0,0" && redPeak.P.peakBand === 0 && redPeak.P.peakCount === 1 &&
+  redById.Q.redBands.join(",") === "0,0,0,0,0,2" && redPeak.Q.peakBand === 5 && redPeak.Q.peakCount === 2 &&
+  redById.R.redBands.join(",") === "0,0,0,1,0,0" && redById.T.redBands.join(",") === "0,0,0,1,0,0" &&
+  redById.S.reds === 0 && redById.S.redBands.every((n) => n === 0));
+ok(`the red board ranks by reds, then the peak window's count, then the club id, and a club never sent off is absent from it (order ${reds.redRows.map((r) => r.clubId).join("")}; ${reds.redRows.map((r) => `${r.clubId} ${r.reds}/${r.peakCount}@${r.peakBand}`).join(", ")})`,
+  reds.redRows.map((r) => r.clubId).join(",") === "Q,P,R,T" &&
+  reds.redRows.map((r) => r.reds).join(",") === "2,2,1,1" &&
+  reds.redRows.map((r) => r.peakCount).join(",") === "2,1,1,1" &&
+  reds.redRows.map((r) => r.peakBand).join(",") === "5,0,3,3" &&
+  !reds.redRows.some((r) => r.clubId === "S") && reds.rows.some((r) => r.clubId === "S"));
+ok(`redWindows add up to each club's reds, a scheduled red and another competition's red stay out, and a competition with rows but no reds reads an empty board (TE sums ${cards.rows.map((r) => r.redBands.reduce((s, n) => s + n, 0)).join("")} against reds ${cards.rows.map((r) => r.reds).join("")}; TH R ${redById.R.reds} red; silent ${cardTiming("TF", cardFixtures, cardClubs).rows.length} rows/${cardTiming("TF", cardFixtures, cardClubs).redRows.length} reds, empty ${cardTiming("TG", cardFixtures, cardClubs).redRows.length})`,
+  cards.rows.every((r) => r.redBands.reduce((s, n) => s + n, 0) === r.reds) &&
+  redById.R.reds === 1 &&
+  cardTiming("TF", cardFixtures, cardClubs).rows.length === 2 &&
+  cardTiming("TF", cardFixtures, cardClubs).redRows.length === 0 &&
+  cardTiming("TG", cardFixtures, cardClubs).redRows.length === 0);
+const redsAgain = cardTiming("TH", redFixtures, redClubs);
+ok(`the red board is deterministic and the discipline screen reads it off the fold, printing the peak window with the shared band labels and sorting nothing itself (same fold ${JSON.stringify(reds) === JSON.stringify(redsAgain)}; band labels ${["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"].filter((k) => DISC_SRC.includes(`t("${k}")`)).length}/6)`,
+  JSON.stringify(reds) === JSON.stringify(redsAgain) &&
+  DISC_SRC.includes("clock.redRows.map(") && DISC_SRC.includes("clock.redRows.length === 0") &&
+  DISC_SRC.includes('t("disc.redLine", { w: bandLabels[r.peakBand], n: r.peakCount })') &&
+  DISC_SRC.includes('t("disc.redNone"') && DISC_SRC.includes('t("disc.redTotal"') &&
+  ["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"]
+    .every((k) => DISC_SRC.includes(`t("${k}")`)) &&
+  !/\.sort\(/.test(DISC_SRC) && !DISC_SRC.includes("redRows.sort("));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C
