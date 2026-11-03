@@ -109,8 +109,8 @@ export const walkApp = (root, { dirs = null, notApp = [], exts = [".ts", ".tsx"]
 // because a census pin counted them the moment they landed. A pin that reddens on a quarantine
 // is a pin that measures the repository, not the product.
 //
-// So the second question is asked by the same function every gate calls: starting from the
-// SPA's entry, which modules does a reader actually reach? The answer is a closure over VALUE
+// So the second question is asked by the same function every gate calls: starting from the entries
+// the app DECLARES, which modules does a reader actually reach? The answer is a closure over VALUE
 // imports — `import ... from "x"`, `export ... from "x"`, a bare `import "x"` (it runs the
 // module), and `import("x")` (the route table's lazy screens). A `import type` is deliberately
 // NOT an edge: it is erased before the bundle exists, so no reader ever executes it (the
@@ -124,32 +124,103 @@ export const walkApp = (root, { dirs = null, notApp = [], exts = [".ts", ".tsx"]
 //
 // Who reads this: proof-coverage (which asked the question first, privately, and whose
 // planted graphs now exercise this copy), proof-i18n (the population the dictionary census
-// counts), and proof-app-tree (the module pin). One question, one answer.
+// counts), proof-app-tree (the module pin) and proof-orphans (which wrote the first version of
+// this reader at M428 and now reads this one). One question, one answer.
+//
+// M777: the answer used to be two answers. proof-orphans kept its own reader — one that strips
+// comments, matches a `from` clause wherever its statement starts, classifies a specifier as a
+// module, a package, an asset or a miss, and DERIVES the entries from `index.html`'s module script
+// and from any `Deno.serve` module under `functions/`. The M776 copy answered three of those four
+// questions differently: it matched unstripped source, it anchored on a line start (so one line
+// carrying three imports contributed one edge and dropped two), and it was handed a remembered
+// `["src/main.tsx"]` — which made the Edge Function's two modules read as a quarantine nobody
+// imports, when a reader reaches them by URL. The reader here is now the one proof-orphans proved,
+// and every gate starts its closure where the app says the app starts.
 // ---------------------------------------------------------------------------
-const IMPORTED_SPEC = /(?:^|\n)\s*(?:import|export)\s+(type\s+)?[^;]*?from\s*["']([^"']+)["']/g;
-const BARE_IMPORT = /(?:^|\n)\s*import\s+["']([^"']+)["']/g;
+
+/**
+ * Comments struck out of the way are not code. A reader never executes a commented import, so a
+ * gate that walked unstripped source would call a struck-out module reachable forever.
+ */
+export const stripCommentsIn = (text) => {
+  let out = "", i = 0, mode = null;
+  while (i < text.length) {
+    const c = text[i], d = text[i + 1];
+    if (mode === "line") { if (c === "\n") { mode = null; out += c; } else out += " "; i++; continue; }
+    if (mode === "block") { if (c === "*" && d === "/") { mode = null; out += "  "; i += 2; } else { out += c === "\n" ? "\n" : " "; i++; } continue; }
+    if (mode === "sq" || mode === "dq" || mode === "tpl") {
+      out += c;
+      if (c === "\\") { out += d ?? ""; i += 2; continue; }
+      if ((mode === "sq" && c === "'") || (mode === "dq" && c === '"') || (mode === "tpl" && c === "`")) mode = null;
+      i++; continue;
+    }
+    if (c === "/" && d === "/") { mode = "line"; out += "  "; i += 2; continue; }
+    if (c === "/" && d === "*") { mode = "block"; out += "  "; i += 2; continue; }
+    if (c === "'") mode = "sq"; else if (c === '"') mode = "dq"; else if (c === "`") mode = "tpl";
+    out += c; i++;
+  }
+  return out;
+};
+
+// A statement boundary is the anchor, not a line start: `features/manager/ManagerOS.tsx` carries
+// three imports on one line, and an anchored matcher read one of them and dropped two real edges.
+// The keyword is required before the `from`, so a string or a caption that merely says "from"
+// cannot invent an edge — and if one ever did, the resolver would call it unresolved and
+// proof-orphans would charge it, which is the loud half of this design.
+const IMPORTED_SPEC = /(?:^|[\s;}])(import|export)\b([^;]*?)\bfrom\s*["']([^"']+)["']/g;
+const BARE_IMPORT = /(?:^|[\s;}])import\s+["']([^"']+)["']/g;
 const DYNAMIC_IMPORT = /\bimport\(\s*["']([^"']+)["']\s*\)/g;
 
-/** The specifiers one module's source names, split into value edges and type-only edges. */
+/**
+ * The specifiers one module's source names, split into value edges and type-only edges.
+ *
+ * The source is stripped first. A block comment can put `import` at the start of a line — the
+ * shape a dead-code sweep leaves when it wraps an import in a comment block — and a reader that
+ * matched the commented line would keep calling a struck-out module alive forever.
+ */
 export const importEdgesIn = (src) => {
+  const code = stripCommentsIn(src);
   const value = new Set();
   const typeOnly = new Set();
-  for (const m of src.matchAll(IMPORTED_SPEC)) {
-    if (m[1]) typeOnly.add(m[2]);
-    else value.add(m[2]);
+  for (const m of code.matchAll(IMPORTED_SPEC)) {
+    // The clause keeps the space the keyword left behind, so the test is `^\s*type`, not `^type`.
+    if (/^\s*type\b/.test(m[2])) typeOnly.add(m[3]);
+    else value.add(m[3]);
   }
-  for (const m of src.matchAll(BARE_IMPORT)) value.add(m[1]);
-  for (const m of src.matchAll(DYNAMIC_IMPORT)) value.add(m[1]);
+  for (const m of code.matchAll(BARE_IMPORT)) value.add(m[1]);
+  for (const m of code.matchAll(DYNAMIC_IMPORT)) value.add(m[1]);
   return { value, typeOnly };
 };
 
+/** An import of something that is not a module: a stylesheet, a font, a JSON document. */
+const ASSET = /\.(css|json|svg|png|jpe?g|webp|gif|woff2?|ttf|otf|ico|md|txt|wasm|mp3|wav)$/i;
+
 /**
- * The module a specifier names, or `null` for a package or a path the tree does not hold.
+ * What a specifier is, four ways: a module the tree holds, a package, an asset, or a miss.
+ *
+ * The four-way answer is the one proof-orphans needs, because "a bare name" and "a path the tree
+ * does not hold" are different debts — the first is npm's business, the second is a broken edge
+ * that would make the reachability graph lie. `resolveModuleSpec` below is the same resolver read
+ * as a yes/no.
+ */
+export const classifySpecIn = (spec, fromPath, exists) => {
+  let base;
+  if (spec.startsWith("@/")) base = spec.slice(2);
+  else if (spec.startsWith("./") || spec.startsWith("../")) {
+    base = posix.normalize(posix.join(posix.dirname(fromPath), spec));
+  } else return { kind: "package", spec };
+  if (ASSET.test(base)) return { kind: "asset", spec };
+  const target = resolveModuleSpec(spec, fromPath, exists);
+  return target ? { kind: "file", target } : { kind: "unresolved", spec };
+};
+
+/**
+ * The module a specifier names, or `null` for a package, an asset or a path the tree does not hold.
  *
  * `exists` answers "is a module at this path?" — a stat, not `existsSync`, because a folder
  * would otherwise accept `@/i18n` before its index does.
  */
-export const resolveModuleSpec = (spec, fromPath, exists) => {
+export function resolveModuleSpec(spec, fromPath, exists) {
   let base;
   if (spec.startsWith("@/")) base = spec.slice(2);
   else if (spec.startsWith("./") || spec.startsWith("../")) {
@@ -157,7 +228,29 @@ export const resolveModuleSpec = (spec, fromPath, exists) => {
   } else return null;
   const candidates = [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`];
   return candidates.find((c) => exists(c)) ?? null;
+}
+
+/** The module scripts `index.html` loads — the SPA's own entries, named by the document, not by a gate. */
+export const htmlEntriesIn = (html) => {
+  const out = [];
+  for (const m of html.matchAll(/<script\b[^>]*>/gi)) {
+    const tag = m[0];
+    if (!/\btype=["']module["']/i.test(tag)) continue;
+    const src = tag.match(/\bsrc=["']([^"']+)["']/i);
+    if (src) out.push(src[1].replace(/^\.?\//, ""));
+  }
+  return out;
 };
+
+/**
+ * A module under `dir` that calls `Deno.serve` is its own entry: the reader reaches it by URL, so
+ * no import line names it and an import graph alone would call it an orphan.
+ */
+export const denoEntriesIn = (files, readSource, dir = "functions") =>
+  files.filter((f) => new RegExp(`^${dir}/.*\\.(ts|tsx)$`).test(f) && /\bDeno\.serve\s*\(/.test(readSource(f)));
+
+/** Every entry the app declares: the html's module scripts, then the Deno servers. */
+export const appEntriesIn = (files, readSource, html) => [...htmlEntriesIn(html), ...denoEntriesIn(files, readSource)];
 
 /** Every module reachable from `roots` over value imports, `roots` included when they exist. */
 export const reachableModulesIn = (roots, readSource, exists) => {
