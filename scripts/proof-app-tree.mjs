@@ -159,8 +159,14 @@ const treeEntries = appEntriesIn(treeFiles, readTree, readFileSync(join(root, "i
 const readerReaches = reachableModulesIn(treeEntries, readTree, treeExists);
 const appModules = allModules.filter((p) => readerReaches.has(relOf(p)));
 const unreachedModules = treeFiles.filter((p) => !readerReaches.has(p));
-ok(`the app the reader reaches from its ${treeEntries.length} declared entr${treeEntries.length === 1 ? "y" : "ies"} [${treeEntries.join(", ")}] is ${appModules.length} of the ten directories' ${allModules.length} modules (${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}); the ledger names ${unreachedModules.length} nothing imports [${unreachedModules.join(", ") || "none"}]`,
-  appModules.length === APP_MODULE_PIN && Object.keys(byDir).length === APP_DIRS.length);
+// M784: both numbers are printed, because they answer different questions. The tree count is the
+// lost-directory canary; the reached count is the population the censuses charge. A directory whose
+// every module is unrouted stays visible in the first column and reads zero in the second.
+const reachedByDir = {};
+for (const p of appModules.map(relOf)) reachedByDir[p.split("/")[0]] = (reachedByDir[p.split("/")[0]] ?? 0) + 1;
+ok(`the app the reader reaches from its ${treeEntries.length} declared entr${treeEntries.length === 1 ? "y" : "ies"} [${treeEntries.join(", ")}] is ${appModules.length} of the ten directories' ${allModules.length} modules (tree: ${Object.entries(byDir).map(([d, n]) => `${d} ${n}`).join(", ")}; reached: ${Object.entries(reachedByDir).map(([d, n]) => `${d} ${n}`).join(", ")}); the ledger names ${unreachedModules.length} nothing imports [${unreachedModules.join(", ") || "none"}]`,
+  appModules.length === APP_MODULE_PIN && Object.keys(byDir).length === APP_DIRS.length &&
+  Object.values(reachedByDir).reduce((n, k) => n + k, 0) === appModules.length);
 
 // The neighbour that caused this: a clone of this repository, sitting in the root, carrying its
 // own copy of the app. M437 removed the clone the milestone found, so the case is PLANTED now —

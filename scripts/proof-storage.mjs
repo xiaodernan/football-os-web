@@ -30,10 +30,12 @@
 // a read inside it is a render-phase read, not a `later` one.
 import { createServer } from "vite";
 import ts from "typescript";
-import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { normalize } from "./lib/rawUiScan.mjs";
+import { APP_DIRS, appEntriesIn, reachableModulesIn } from "./lib/appTree.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -78,7 +80,20 @@ function walkDir(dir, out = []) {
   }
   return out;
 }
-const APP_FILES = ["features", "src", "components", "store", "data", "domain", "lib", "i18n"].flatMap((d) => walkDir(d));
+// M784: the census walks what a reader reaches, not what the repository contains. The tree is the
+// ten directories the shared rule names, the entries are the app's own declaration, and the eight
+// directories this gate has always charged are its scope. One module in scope is unreachable today
+// and stays named rather than silently dropped: `src/vite-env.d.ts` is an ambient declaration the
+// compiler reads and no browser loads.
+const STORAGE_SCOPE = new Set(["features", "src", "components", "store", "data", "domain", "lib", "i18n"]);
+const TREE_FILES = APP_DIRS.flatMap((d) => walkDir(d));
+const APP_ENTRIES = appEntriesIn(TREE_FILES, read, readFileSync(join(root, "index.html"), "utf8"));
+// A directory is never a module: the oracle answers for files only, or `@/i18n` resolves to the
+// folder and the reader tries to read it (EISDIR).
+const isFileAt = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
+const READER = reachableModulesIn(APP_ENTRIES, read, isFileAt);
+const APP_FILES = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[0]) && READER.has(f));
+const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[0]) && !READER.has(f));
 // Measured at M248 — 93 modules across the eight directories above, the count this gate's own
 // report prints. It is a literal on purpose: M247 landed this guard as
 // `const APP_FILES_PIN = APP_FILES.length; … APP_FILES.length === APP_FILES_PIN`, which is
@@ -110,8 +125,33 @@ const APP_FILES = ["features", "src", "components", "store", "data", "domain", "
 // M573: 114 -> 115 — domain/nextStep.ts is the dashboard's next-step ranking.
 // M574: 115 -> 116 — features/analytics/EventClock.tsx is a new shot/save/review clock screen.
 // M575: 116 -> 117 — features/analytics/Briefing.tsx is a new matchday-briefing screen.
-const APP_FILES_PIN = 117;
+// M784: 117 -> 116. The population is now the reader's: the ten-directory tree closed over the
+// app's declared entries, then cut to this gate's eight. The one module in scope the reader does
+// not reach is `src/vite-env.d.ts`, an ambient declaration no browser loads; it is named in the
+// clause rather than dropped. A farm stub in `features/` no longer moves this pin.
+const APP_FILES_PIN = 116;
 
+// The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
+// stands alone must keep the two a reader reaches and drop the third. The planted files are
+// written to a temp root and read through the same shared reader the census uses.
+const plantedReach = (() => {
+  const dir = mkdtempSync(join(tmpdir(), "storage-reach-"));
+  // A fixture lives under `pkg/`, the name proof-app-tree's fork reader exempts as test data —
+  // a fixture rooted at an app directory would read as a closure at a remembered path.
+  mkdirSync(join(dir, "pkg"), { recursive: true });
+  writeFileSync(join(dir, "pkg", "a.ts"), 'import { b } from "./b";\nexport const a = b;\n');
+  writeFileSync(join(dir, "pkg", "b.ts"), "export const b = 1;\n");
+  writeFileSync(join(dir, "pkg", "c.ts"), "export const c = 1;\n");
+  const readP = (p) => readFileSync(join(dir, p), "utf8");
+  const reachP = reachableModulesIn(["pkg/a.ts"], readP, (p) => { try { return statSync(join(dir, p)).isFile(); } catch { return false; } });
+  const out = { kept: ["pkg/a.ts", "pkg/b.ts"].filter((p) => reachP.has(p)).length, dropped: reachP.has("pkg/c.ts") };
+  rmSync(dir, { recursive: true, force: true });
+  return out;
+})();
+ok(`the storage census reads the reader's population, derived from the app's declared entries rather than from the walk alone (${APP_ENTRIES.length} entries [${APP_ENTRIES.join(", ")}], ${APP_FILES.length} reached in scope, ${UNREACHED_SCOPE.length} unreached in scope [${UNREACHED_SCOPE.join(", ") || "none"}]; a planted sibling imports 2 of 3 modules and drops the third: ${JSON.stringify(plantedReach)})`,
+  APP_ENTRIES.length === 2 && APP_ENTRIES.includes("src/main.tsx") && APP_ENTRIES.includes("functions/index.ts") &&
+  APP_FILES.length === APP_FILES_PIN && UNREACHED_SCOPE.length === 1 && UNREACHED_SCOPE[0] === "src/vite-env.d.ts" &&
+  plantedReach.kept === 2 && plantedReach.dropped === false);
 /** Comment-free text for scanning, from the shared scanner. It is only usable for line numbers if
  *  the stripper keeps every newline, which is measured here instead of assumed. */
 const blankedKeepNewlines = APP_FILES.every((f) => {

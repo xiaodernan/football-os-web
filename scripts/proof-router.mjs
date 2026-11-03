@@ -22,6 +22,7 @@ import { createServer } from "vite";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { APP_DIRS, appEntriesIn, reachableModulesIn } from "./lib/appTree.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -65,7 +66,23 @@ function walk(dir, out = []) {
   }
   return out;
 }
-const APP_FILES = ["features", "src", "components", "store", "data", "domain", "lib"].flatMap((d) => walk(d));
+// M784: the census reads what a reader reaches, not what the repository contains — the ten
+// directories the shared rule names, closed over the app's declared entries, then cut to the
+// seven directories this gate asks about. The one module in scope the reader does not reach is
+// named rather than dropped: `src/vite-env.d.ts`, an ambient declaration no browser loads.
+const ROUTER_SCOPE = new Set(["features", "src", "components", "store", "data", "domain", "lib"]);
+const TREE_FILES = APP_DIRS.flatMap((d) => walk(d));
+const APP_ENTRIES = appEntriesIn(TREE_FILES, read, readFileSync(join(root, "index.html"), "utf8"));
+// Files only: a directory is never a module, and an `existsSync` oracle would hand the reader
+// `i18n/` for `@/i18n` and make it read a folder (EISDIR).
+const isFileAt = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
+const READER = reachableModulesIn(APP_ENTRIES, read, isFileAt);
+const APP_FILES = TREE_FILES.filter((f) => ROUTER_SCOPE.has(f.split("/")[0]) && READER.has(f));
+const UNREACHED_SCOPE = TREE_FILES.filter((f) => ROUTER_SCOPE.has(f.split("/")[0]) && !READER.has(f));
+const ROUTER_POP_PIN = 113;
+ok(`the router census reads the reader's population, derived from the app's declared entries rather than from the walk alone (${APP_ENTRIES.length} entries [${APP_ENTRIES.join(", ")}], ${APP_FILES.length} reached in scope, ${UNREACHED_SCOPE.length} unreached in scope [${UNREACHED_SCOPE.join(", ") || "none"}])`,
+  APP_ENTRIES.length === 2 && APP_ENTRIES.includes("src/main.tsx") && APP_ENTRIES.includes("functions/index.ts") &&
+  APP_FILES.length === ROUTER_POP_PIN && UNREACHED_SCOPE.length === 1 && UNREACHED_SCOPE[0] === "src/vite-env.d.ts");
 
 // ---------------------------------------------------------------------------
 // 1 · the surface: every export has a caller, and nothing else republishes it

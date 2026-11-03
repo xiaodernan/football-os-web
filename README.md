@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M783 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M784 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,50 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M784 — the storage and router censuses read the reader's tree
+
+**What M781 left.** The dictionary census and the app-tree module pin now count the modules a
+reader reaches, but two gates still walked the repository: `proof-storage` walked eight
+directories whole and pinned 117 files, and `proof-router` walked seven. A farm stub under
+`features/` moved both populations, which is the hostage M776 retired for the module pin. This
+was the plan's own next candidate.
+
+**The population is derived, not walked and pinned.** Both gates now start from the ten
+directories the shared rule names, derive the entries with `appEntriesIn` (`index.html`'s module
+script plus every `Deno.serve` module), close over value imports with `reachableModulesIn`, and
+then cut to their own scope: storage's eight directories give 116 modules (pin 117 → 116),
+router's seven give 113. The one in-scope module the reader does not reach is named in each
+clause rather than dropped: `src/vite-env.d.ts`, an ambient declaration the compiler reads and no
+browser loads. The oracle answers for files only — `existsSync` says true for a directory, so
+`@/i18n` resolved to the folder and the reader tried to read it; both gates hit that EISDIR
+before their clauses existed.
+
+**The filter is armed.** The storage gate plants a temporary tree under `pkg/` (the fixture name
+the app-tree fork reader exempts as test data): `a.ts` imports `b.ts`, `c.ts` stands alone. The
+shared reader keeps two and drops the third, so the population is a reading of reachability
+rather than a count of files.
+
+**Both columns, once.** `proof-app-tree`'s module clause now prints the tree's per-directory
+counts beside the reached per-directory counts. The first is the lost-directory canary, the
+second is the population the censuses charge; a directory whose every module is unrouted stays
+visible in the first column and reads zero in the second. Today only `src` differs, 3 → 2.
+
+**Coverage stays bundle-scoped on purpose.** `proof-coverage` asks whether a module is in
+`dist/`, and a bundle has exactly one entry, so `src/main.tsx` remains its root. That was M781's
+honest reservation; this milestone aligns the populations that could be aligned without teaching
+a bundle question a reader answer.
+
+**Measured.** No app module, dictionary key, route or storage key changed, so the bundle stands
+at 532 KB gzip across 54 assets. `proof-storage` 63/63 (+1), `proof-router` 29/29 (+1),
+`proof-app-tree` 13/13 (the same clause, two columns), `proof-coverage` 26/26 untouched. The
+suite lands at 123/123 scripts · 3,324/3,324 checks. `tsc` clean, build exit 0.
+
+**The honest limit.** The two gates still walk their directories with their own walkers and then
+filter by the shared closure, so a directory a walker forgot would not redden in that gate; the
+shared `APP_DIRS` list and app-tree's ten-directory canary are what catch it. And reachability is
+value-import reachability, as everywhere in this line: an asset or a runtime string reference is
+not an edge.
 
 ### M783 — the red card gets its own window
 

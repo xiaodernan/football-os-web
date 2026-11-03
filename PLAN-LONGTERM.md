@@ -720,11 +720,24 @@
   全套 123/123 · 3,322/3,322；
   诚实的保留：peakBand 是「红牌最多的窗」不是「第一张红牌的窗」，并列取最早；红牌板只印峰值窗，完整六窗序列
   留在 redBands 里没画出来；读数仍只覆盖已结束比赛。
-下一条目：M784 候选按「先把量具装稳，再挑真实数据」排：
-①把剩下那些仍按整树答题的量具接到可达人群上（`proof-app-tree` 的逐目录计、`proof-storage` 的两个 117 文件 pin、`proof-coverage` 的 6 个聚合条款）——M781 只把字典普查接上，其余还在按仓库大小答题；
-②红牌板的六窗序列（`redBands` 已在 fold 里，只差一屏逐窗读法）；
-③牌钟与红牌钟的队级对照（同一队全牌与红牌的首窗/末窗份额并排）；
-④联赛级六窗牌曲线（各队 `bands` 求和，与按轮次的 `disciplineTrend` 正交）——`MatchEventType` 只有 GOAL/YELLOW/RED/SHOT/SAVE/VAR 六种，换人事件不存在，原候选②作废。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779、末段进攻取 M780、共享读取器的入口推导取 M781、死面账本的臂取 M782、红牌窗口取 M783；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+- M784: 存储与路由的人口改成读者可达的树。`proof-storage` 原来整树走 8 个目录并 pin 117 个文件，`proof-router` 整树走
+  7 个目录；农场 stub 一落就能推动这两个人口（M776 退休的正是这种 pin）。现在两处都从共享规则的十个目录出发：`appEntriesIn`
+  （index.html 的 module 脚本 + functions 里 `Deno.serve` 的模块）取入口，`reachableModulesIn` 走值导入闭包，再裁到各自范围：
+  存储 8 目录 116（pin 117→116）、路由 7 目录 113；范围内唯一不可达模块在两处都点名而不静默丢弃——`src/vite-env.d.ts`
+  是编译器读、浏览器不加载的环境声明。oracle 只认文件：`existsSync` 对目录也答真，`@/i18n` 会解析成目录让读取器去读，
+  两处都先撞上 EISDIR。存储还种了一棵临时树（`pkg/` 是 app-tree 的 fork 读取器豁免的夹具名）：a.ts 导入 b.ts，c.ts 独立，
+  共享读取器留 2 丢 1——人口是对可达性的读数而不是文件计数。`proof-app-tree` 的模块条款同时印两列：整树逐目录与可达逐目录，
+  前者是丢目录的报警器，后者是普查记账的人口（今天只有 src 3→2）。`proof-coverage` 保持 bundle 口径：它问的是「在不在 dist/」，
+  一个 bundle 只有一个入口——这是 M781 的保留，本线不给另一个正确答案改题。
+  无 app 模块/字典键/路由/存储键变化，bundle 532 KB / 54 资产不变；storage 63/63（+1）、router 29/29（+1）、app-tree 13/13、
+  coverage 26/26；全套 123/123 · 3,324/3,324；tsc 干净、build exit 0；
+  诚实的保留：两处仍用自己的 walker 走目录再按共享闭包过滤，walker 忘了目录不会在自身变红——是共享的 `APP_DIRS` 与 app-tree
+  的十目录报警器在兜底；可达性仍是值导入可达性，资源与运行时字符串引用不是边。
+下一条目：M785 候选优先真实数据（量具已接上）：
+①红牌板的六窗序列（`redBands` 已在 fold 里，面板只印峰值窗）；
+②牌钟与红牌钟的队级对照（同一队全牌与红牌的首窗/末窗份额并排）；
+③联赛级六窗牌曲线（各队 `bands` 求和，与按轮次的 `disciplineTrend` 正交）；
+④换人窗口作废：`MatchEventType` 只有 GOAL/YELLOW/RED/SHOT/SAVE/VAR 六种。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779、末段进攻取 M780、共享读取器的入口推导取 M781、死面账本的臂取 M782、红牌窗口取 M783、存储/路由人口取 M784；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。
