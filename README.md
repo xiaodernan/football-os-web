@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M785 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M786 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,44 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M786 — goals and cards read on one clock
+
+**What the page had.** The event clock showed shots, saves and reviews by fifteen-minute window.
+Goals lived on the goal-timing screen, cards on the discipline screen, each with its own league
+curve — but no screen set the two best-recorded families side by side, so "when does this league
+score" and "when does it get booked" could not be read against each other.
+
+**One fold, two sums.** `clockContrast` returns the league's six-window goal series and card series
+in one shape, each summed from a fold that already exists — goals across `goalTiming`'s scored
+bands, cards off `cardTiming`'s league windows — so the contrast cannot disagree with either
+screen. A peak is `null` when its series has no event: a league without a booking has no busiest
+card window, only six silent ones.
+
+**The screen.** A panel between the event-family chart and the club board: two rows (goals, cards)
+over the same six windows with the clock's labels, bars scaled to the busiest window of the pair,
+and a closing line naming each series' peak window — or the absent glyph where that series has
+nothing. The silent arm reuses the clock's no-events line; nothing is sorted or derived on the
+screen.
+
+**Words and gates.** Five new keys (`clock.crossTitle`, `clock.crossHint`, `clock.crossGoals`,
+`clock.crossCards`, `clock.crossPeak`) across three locales, so the dictionary goes 2,505 → 2,510
+keys; the empty arm reuses `clock.emptyShort` at a new call site. The census moves literal
+1,853 → 1,859 (six new sites, one interpolating) and literal sites with placeholders 263 → 264.
+`proof-analytics` grows three clauses to 197/197: the hand-counted pair of series against the
+two folds' own totals with both peaks in the last window, the goals-only/cards-only/empty arms
+where a silent series reads a null peak, and the screen. The new sums call the shared `sum` door
+rather than an inline fold, so `proof-sum` stays 9/9, and the absence door's per-screen pin on
+the event clock moves 1 → 3 because the peak line asks it once per series. No new module, route
+or storage key; the build stays inside its 533 KB gzip budget across 54 assets (the split
+re-records to JS 521), so the PWA pin holds. `tsc` clean, build exit 0, the suite lands at
+123/123 scripts · 3,330/3,330 checks.
+
+**The honest limit.** Both series count finished fixtures only, and the last window absorbs
+stoppage, so a 90+′ goal and a 76′ goal share a column. The bars are league totals, not rates:
+a quiet window with one goal is a short bar beside a busy card window, not a comparison of
+danger. And the two series are drawn from events, so a match with no event list contributes to
+neither side even if its scoreline says otherwise.
 
 ### M785 — the league's cards get a curve by window
 

@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -1167,6 +1167,64 @@ ok(`the league curve is deterministic and the discipline screen draws it off the
   DISC_SRC.includes('t("disc.windowTitle"') && DISC_SRC.includes('t("disc.windowHint"') &&
   DISC_SRC.includes('t("disc.redTotal", { n: clock.redWindows[i] })') &&
   DISC_SRC.includes("{clock.redWindows[i] > 0 &&") && !/\.sort\(/.test(DISC_SRC));
+// --- M786: goals against cards on the same six windows ----------------------------------------
+// TK carries both families. k1: A 3-1 B — A scores on 10' (band 0), 80' and 90' (band 5); B
+// scores on 50' (band 3); B is booked on 20' (band 1); A is sent off on 85' (band 5). k2: C 0-0 A
+// — C booked on 5' (band 0) and A on 76' (band 5). So the league's goals are 1,0,0,1,0,2 and its
+// cards 1,1,0,0,0,2, both totals 4 and both peaks in the last window. A scheduled goal and another
+// competition's goal and booking are noise.
+const crossClubs = [club("A", "TK"), club("B", "TK"), club("C", "TK")];
+const crossFixtures = [
+  cardFixture("k1", "TK", "A", "B", [
+    cardEvent(10, "GOAL", "home"),
+    cardEvent(20, "YELLOW", "away"),
+    cardEvent(50, "GOAL", "away"),
+    cardEvent(80, "GOAL", "home"),
+    cardEvent(85, "RED", "home"),
+    cardEvent(90, "GOAL", "home"),
+  ]),
+  cardFixture("k2", "TK", "C", "A", [cardEvent(5, "YELLOW", "home"), cardEvent(76, "YELLOW", "away")]),
+  cardFixture("k3", "TK", "B", "C", [cardEvent(10, "GOAL", "home")], "SCHEDULED"),
+  cardFixture("k4", "TL", "A", "B", [cardEvent(50, "GOAL", "home"), cardEvent(60, "YELLOW", "home")]),
+];
+const cross = clockContrast("TK", crossFixtures, crossClubs);
+ok(`clockContrast folds goals and cards into the same six windows, one league series each (goals ${cross.windows.map((w) => w.goals).join("")} against cards ${cross.windows.map((w) => w.cards).join("")}; totals ${cross.goals}/${cross.cards}; peaks ${cross.peakGoal}/${cross.peakCard})`,
+  cross.windows.length === 6 &&
+  cross.windows.map((w) => w.goals).join(",") === "1,0,0,1,0,2" &&
+  cross.windows.map((w) => w.cards).join(",") === "1,1,0,0,0,2" &&
+  cross.goals === 4 && cross.cards === 4 && cross.peakGoal === 5 && cross.peakCard === 5 &&
+  cross.goals === goalTiming("TK", crossFixtures, crossClubs).reduce((s, r) => s + r.scored, 0) &&
+  cross.cards === cardTiming("TK", crossFixtures, crossClubs).rows.reduce((s, r) => s + r.cards, 0));
+// Each series can be silent on its own: T1's goals fixture carries no booking, TE's cards
+// fixture carries no goal, and a competition with no fixture has neither. A silent series is a
+// null peak, not a zero window crowned as busiest.
+const crossGoalsOnly = clockContrast("T1", timingFixtures, clubs);
+const crossCardsOnly = clockContrast("TE", cardFixtures, cardClubs);
+const crossEmpty = clockContrast("TM", crossFixtures, crossClubs);
+ok(`a peak is named only for a series that has an event: a goals-only league has no card peak, a cards-only league no goal peak, and an empty competition six silent windows with neither (T1 goals ${crossGoalsOnly.windows.map((w) => w.goals).join("")} cards ${crossGoalsOnly.windows.map((w) => w.cards).join("")} peaks ${crossGoalsOnly.peakGoal}/${crossGoalsOnly.peakCard}; TE ${crossCardsOnly.goals}/${crossCardsOnly.cards} peaks ${crossCardsOnly.peakGoal}/${crossCardsOnly.peakCard}; empty ${crossEmpty.windows.length} windows ${crossEmpty.goals}/${crossEmpty.cards} peaks ${crossEmpty.peakGoal}/${crossEmpty.peakCard})`,
+  crossGoalsOnly.goals === 4 && crossGoalsOnly.cards === 0 &&
+  crossGoalsOnly.windows.map((w) => w.goals).join(",") === "1,0,1,0,0,2" &&
+  crossGoalsOnly.windows.every((w) => w.cards === 0) &&
+  crossGoalsOnly.peakGoal === 5 && crossGoalsOnly.peakCard === null &&
+  crossCardsOnly.goals === 0 && crossCardsOnly.cards === 6 &&
+  crossCardsOnly.windows.every((w) => w.goals === 0) &&
+  crossCardsOnly.peakGoal === null && crossCardsOnly.peakCard === 5 &&
+  crossEmpty.windows.length === 6 &&
+  crossEmpty.windows.every((w) => w.goals === 0 && w.cards === 0) &&
+  crossEmpty.goals === 0 && crossEmpty.cards === 0 &&
+  crossEmpty.peakGoal === null && crossEmpty.peakCard === null);
+const crossAgain = clockContrast("TK", crossFixtures, crossClubs);
+const EV_CLOCK_SRC = readFileSync(resolve(root, "features/analytics/EventClock.tsx"), "utf8");
+ok(`clockContrast is deterministic and the event clock screen prints both series off the fold, labelling the six windows and naming a peak only for a series that has one (same fold ${JSON.stringify(cross) === JSON.stringify(crossAgain)}; band labels ${["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"].filter((k) => EV_CLOCK_SRC.includes(`t("${k}")`)).length}/6)`,
+  JSON.stringify(cross) === JSON.stringify(crossAgain) &&
+  EV_CLOCK_SRC.includes("clockContrast(compId, matches, clubs)") &&
+  EV_CLOCK_SRC.includes("contrast.windows.map(") && EV_CLOCK_SRC.includes("crossRows.map(") &&
+  EV_CLOCK_SRC.includes('t("clock.crossTitle"') && EV_CLOCK_SRC.includes('t("clock.crossHint"') &&
+  EV_CLOCK_SRC.includes('t("clock.crossGoals"') && EV_CLOCK_SRC.includes('t("clock.crossCards"') &&
+  EV_CLOCK_SRC.includes('t("clock.crossPeak"') && EV_CLOCK_SRC.includes('t("clock.emptyShort"') &&
+  EV_CLOCK_SRC.includes("contrast.peakGoal === null ? ABSENT") &&
+  EV_CLOCK_SRC.includes("contrast.peakCard === null ? ABSENT") &&
+  !/\.sort\(/.test(EV_CLOCK_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

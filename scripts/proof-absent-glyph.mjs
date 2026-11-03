@@ -229,7 +229,9 @@ const expectedPerUser = [
   ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
   ["features/analytics/Briefing.tsx", 14],
   ["features/analytics/DataRoom.tsx", 13], ["features/analytics/Discipline.tsx", 2],
-  ["features/analytics/EventClock.tsx", 1],
+  // M786: the contrast's peak line asks the door once per series — a league with no goal or no
+  // booking reads the glyph where its busiest window would be. 1 -> 3.
+  ["features/analytics/EventClock.tsx", 3],
   ["features/analytics/GoalTiming.tsx", 4],
   // M716: the scenarios screen asks the door twice more — a ceiling place with no row behind it
   // reads the glyph, and so does the climb tile's club when the table has no name for it. 5 -> 7.

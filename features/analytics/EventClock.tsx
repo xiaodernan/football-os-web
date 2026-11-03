@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { eventClock } from "@/domain/analytics";
+import { clockContrast, eventClock } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
 import { ABSENT, cn, pctOf } from "@/lib/utils";
 
@@ -43,6 +43,14 @@ export function EventClock() {
   // window, ranked on its own counter rather than read off the opening order. A club that took
   // nothing late has no row here rather than a zero, the same silence the opening board keeps.
   const lateAttack = clock.lateAttack.filter((r) => r.lateShots > 0).slice(0, 5);
+  // M786: the two families the clock above does not carry — goals and cards, on the same six
+  // windows, each summed from a fold the goal and discipline screens already print.
+  const contrast = useMemo(() => clockContrast(compId, matches, clubs), [compId, matches, clubs]);
+  const crossPeak = Math.max(1, ...contrast.windows.flatMap((w) => [w.goals, w.cards]));
+  const crossRows = [
+    { label: t("clock.crossGoals"), data: contrast.windows.map((w) => w.goals), fill: BAR_FILL.progress },
+    { label: t("clock.crossCards"), data: contrast.windows.map((w) => w.cards), fill: BAR_FILL.bad },
+  ];
 
   return (
     <div className="space-y-5">
@@ -106,6 +114,42 @@ export function EventClock() {
                 </div>
               ))}
             </div>
+          </Panel>
+
+          {/* M786: goals against cards on the same clock — the league's two most-recorded event
+              families side by side, read off the goal and card folds rather than a third pass. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("clock.crossTitle")} hint={t("clock.crossHint")} />
+            {contrast.goals === 0 && contrast.cards === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("clock.emptyShort")}</p>
+            ) : (
+              <>
+                <div className="mt-3 space-y-4">
+                  {crossRows.map((row) => (
+                    <div key={row.label}>
+                      <div className="text-xs text-muted-foreground">{row.label}</div>
+                      <div className="mt-1 flex items-end gap-1">
+                        {row.data.map((n, b) => (
+                          <div key={b} className="flex-1 text-center">
+                            <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                            <div className="mx-auto mt-0.5 h-10 w-full">
+                              <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, crossPeak) }} />
+                            </div>
+                            <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {t("clock.crossPeak", {
+                    g: contrast.peakGoal === null ? ABSENT : bandLabels[contrast.peakGoal],
+                    c: contrast.peakCard === null ? ABSENT : bandLabels[contrast.peakCard],
+                  })}
+                </p>
+              </>
+            )}
           </Panel>
 
           <Panel className="p-5">

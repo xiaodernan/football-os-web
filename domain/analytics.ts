@@ -559,6 +559,48 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
   return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList, windows, redWindows };
 }
 
+export interface ClockContrastWindow {
+  goals: number;
+  cards: number;
+}
+
+export interface ClockContrast {
+  goals: number;
+  cards: number;
+  /** Both series over the same six windows, index 0 = 1–15′, index 5 = 76–90+′. */
+  windows: ClockContrastWindow[];
+  /** The busiest goal window; null when the competition has no recorded goal. */
+  peakGoal: number | null;
+  /** The busiest card window; null when the competition has no recorded booking. */
+  peakCard: number | null;
+}
+
+/** The league's clock read as two series: when goals arrive and when cards arrive. Each side is
+ *  a sum of a fold that already exists — goals across `goalTiming`'s scored bands, cards off
+ *  `cardTiming`'s league windows — so the contrast cannot disagree with either screen. A peak is
+ *  null when its series is empty: a competition with no booking has no busiest card window, only
+ *  six silent ones. */
+export function clockContrast(compId: string, matches: Match[], clubs: Club[]): ClockContrast {
+  const goals = Array.from({ length: GOAL_BANDS }, () => 0);
+  for (const r of goalTiming(compId, matches, clubs)) {
+    for (let b = 0; b < GOAL_BANDS; b++) goals[b] += r.scoredBands[b];
+  }
+  const card = cardTiming(compId, matches, clubs);
+  const peakOf = (counts: number[]): number | null => {
+    if (sum(counts, (n) => n) === 0) return null;
+    let peak = 0;
+    for (let b = 1; b < counts.length; b++) if (counts[b] > counts[peak]) peak = b;
+    return peak;
+  };
+  return {
+    goals: sum(goals, (n) => n),
+    cards: sum(card.windows, (n) => n),
+    windows: goals.map((g, b) => ({ goals: g, cards: card.windows[b] })),
+    peakGoal: peakOf(goals),
+    peakCard: peakOf(card.windows),
+  };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;
