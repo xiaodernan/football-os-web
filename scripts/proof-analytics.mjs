@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -1261,6 +1261,43 @@ ok(`the venue split is deterministic and the discipline screen draws it off the 
   DISC_SRC.includes('t("disc.venueClockTitle"') && DISC_SRC.includes('t("disc.venueClockHint"') &&
   DISC_SRC.includes('t("disc.venueClockHome"') && DISC_SRC.includes('t("disc.venueClockAway"') &&
   DISC_SRC.includes('t("disc.clockNone"') && !/\.sort\(/.test(DISC_SRC));
+// --- M788: the goal clock split by the end that scored ---------------------------------------
+// T1's goals fixture: g1 A hosts B and scores on 12' (band 0) and 78' (band 5) while B scores on
+// 44' (band 2); g2 C hosts A and A scores on 92' (band 5). Home 1,0,0,0,0,1 and away 0,0,1,0,0,1,
+// together the four goals goalTiming reads. The scheduled g3 goal and T2's g4 goals stay out.
+const venueClock = goalVenueClock("T1", timingFixtures, clubs);
+ok(`goalVenueClock splits the league's recorded goals by the side that scored, the two series adding up to the goal fold's total (T1 home ${venueClock.homeWindows.join("")} against away ${venueClock.awayWindows.join("")}; totals ${venueClock.home}/${venueClock.away})`,
+  venueClock.homeWindows.length === 6 && venueClock.awayWindows.length === 6 &&
+  venueClock.homeWindows.join(",") === "1,0,0,0,0,1" &&
+  venueClock.awayWindows.join(",") === "0,0,1,0,0,1" &&
+  venueClock.home === 2 && venueClock.away === 2 &&
+  venueClock.home + venueClock.away === timing.reduce((s, r) => s + r.scored, 0) &&
+  venueClock.homeWindows.every((n, i) => n + venueClock.awayWindows[i] ===
+    timing.reduce((s, r) => s + r.scoredBands[i], 0)));
+// TK is not symmetric: its home goals are the 10', 80' and 90' ones and its one away goal the
+// 50' one, so the split is a real reading rather than the team fold twice. A competition with no
+// fixture reads six silent windows on both sides, and no card is charged to the goal clock.
+const tkVenueClock = goalVenueClock("TK", crossFixtures, crossClubs);
+const venueClockSilent = goalVenueClock("TM", crossFixtures, crossClubs);
+ok(`the goal clock follows the side each GOAL event names and charges no booking to it (TK home ${tkVenueClock.homeWindows.join("")} away ${tkVenueClock.awayWindows.join("")} totals ${tkVenueClock.home}/${tkVenueClock.away}; empty ${venueClockSilent.homeWindows.length}+${venueClockSilent.awayWindows.length} windows ${venueClockSilent.home}/${venueClockSilent.away})`,
+  tkVenueClock.homeWindows.join(",") === "1,0,0,0,0,2" &&
+  tkVenueClock.awayWindows.join(",") === "0,0,0,1,0,0" &&
+  tkVenueClock.home === 3 && tkVenueClock.away === 1 &&
+  tkVenueClock.home + tkVenueClock.away === cross.goals &&
+  venueClockSilent.homeWindows.length === 6 && venueClockSilent.awayWindows.length === 6 &&
+  venueClockSilent.homeWindows.every((n) => n === 0) &&
+  venueClockSilent.awayWindows.every((n) => n === 0) &&
+  venueClockSilent.home === 0 && venueClockSilent.away === 0);
+const venueClockAgain = goalVenueClock("T1", timingFixtures, clubs);
+const VENUE_SRC = readFileSync(resolve(root, "features/analytics/VenueSplit.tsx"), "utf8");
+ok(`the goal clock is deterministic and the venue screen draws it off the fold, labelling the six windows and printing a total per side (same fold ${JSON.stringify(venueClockAgain) === JSON.stringify(venueClock)}; band labels ${["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"].filter((k) => VENUE_SRC.includes(`t("${k}")`)).length}/6)`,
+  JSON.stringify(venueClockAgain) === JSON.stringify(venueClock) &&
+  VENUE_SRC.includes("goalVenueClock(compId, matches, clubs)") &&
+  VENUE_SRC.includes("clock.homeWindows") && VENUE_SRC.includes("clock.awayWindows") &&
+  VENUE_SRC.includes("clockPeak") && VENUE_SRC.includes("pctOf(n, clockPeak)") &&
+  VENUE_SRC.includes('t("venue.clockTitle"') && VENUE_SRC.includes('t("venue.clockHint"') &&
+  VENUE_SRC.includes('t("venue.clockHome"') && VENUE_SRC.includes('t("venue.clockAway"') &&
+  VENUE_SRC.includes('t("timing.emptyHint"') && !/\.sort\(/.test(VENUE_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, DELTA_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, DELTA_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { venueSplit } from "@/domain/analytics";
+import { goalVenueClock, venueSplit } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
-import { ABSENT, cn, fmt2, pctLabel, signed } from "@/lib/utils";
+import { ABSENT, cn, fmt2, pctLabel, pctOf, signed } from "@/lib/utils";
 
 export function VenueSplit() {
   const { t } = useI18n();
+  const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
   const competitions = useMemo(() => footballProvider.competitions(), []);
   const matches = useMemo(() => footballProvider.matches(), []);
   const clubs = useMemo(() => footballProvider.clubs(), []);
@@ -15,6 +16,14 @@ export function VenueSplit() {
 
   const comp = getCompetition(compId);
   const venue = useMemo(() => venueSplit(compId, matches, clubs), [compId, matches, clubs]);
+  // M788: the venue page's goals get a clock — whether the league's home advantage shows up in
+  // the minutes, read off each GOAL event's side rather than the scorelines below.
+  const clock = useMemo(() => goalVenueClock(compId, matches, clubs), [compId, matches, clubs]);
+  const clockPeak = Math.max(1, ...clock.homeWindows, ...clock.awayWindows);
+  const clockRows = [
+    { label: t("venue.clockHome"), data: clock.homeWindows, total: clock.home, fill: BAR_FILL.info },
+    { label: t("venue.clockAway"), data: clock.awayWindows, total: clock.away, fill: BAR_FILL.progress },
+  ];
   const rows = venue.rows;
   const fortress = rows.length ? maxBy(rows, (r) => r.homeEdge) : null;
   const travellers = rows.length ? maxBy(rows, (r) => r.awayPpg) : null;
@@ -160,6 +169,35 @@ export function VenueSplit() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("venue.method")}</p>
+          </Panel>
+
+          <Panel className="p-5">
+            <SectionTitle title={t("venue.clockTitle")} hint={t("venue.clockHint")} />
+            {clock.home + clock.away === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.emptyHint")}</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                {clockRows.map((row) => (
+                  <div key={row.label}>
+                    <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                      <span>{row.label}</span>
+                      <span className="font-mono">{row.total}</span>
+                    </div>
+                    <div className="mt-1 flex items-end gap-1">
+                      {row.data.map((n, b) => (
+                        <div key={b} className="flex-1 text-center">
+                          <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                          <div className="mx-auto mt-0.5 h-10 w-full">
+                            <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, clockPeak) }} />
+                          </div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Panel>
         </>
       )}

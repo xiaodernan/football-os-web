@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M787 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M788 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,40 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M788 — the venue screen's goals get a clock
+
+**What the page had.** The venue split page reads each club's home and away halves off the
+scorelines, and the goal-timing page folds every goal into six windows per club. Neither could
+say whether the league's home advantage shows up in the minutes: the clock had no venue axis on
+the goals side, though M787 had just given the card clock one.
+
+**One pass, two sides.** `goalVenueClock` folds every recorded GOAL in the competition's
+finished matches into the six windows, by the side the event names, gated on the clubs the
+competition ranks the same way `goalTiming` is. The two series sum to the goals `goalTiming`
+counts, so the clock cannot disagree with the goal fold it divides.
+
+**The screen.** A panel under the venue table: two rows (home goals, away goals) over the same
+six windows with the shared labels, a total per side, and bars scaled to the busiest window of
+the pair. The empty arm reuses the goal-timing no-goal line; the screen sorts nothing and
+derives nothing.
+
+**Words and gates.** Four new keys (`venue.clockTitle`, `venue.clockHint`, `venue.clockHome`,
+`venue.clockAway`) across three locales, so the dictionary goes 2,514 → 2,518 keys; the empty
+arm reuses `timing.emptyHint` and the six window labels join the screen as new call sites. The
+census moves literal 1,864 → 1,875 (eleven new sites, none interpolating) and leaves placeholder
+sites at 264. `proof-analytics` grows three clauses to 203/203: the hand-counted T1 split (home
+1,0,0,0,0,1 against away 0,0,1,0,0,1, summing window for window to the goal fold and to its four
+goals), TK's uneven split where the scheduled and other-competition goals stay out, the empty
+competition's six silent windows, and the screen. No new module, route or storage key; the
+panel crosses the bundle's rounding edge at 534 KB gzip across 54 assets (JS 522 + CSS 12.4), so
+the PWA pin moves 533 → 534 and the perf baseline re-records it. `tsc` clean, build exit 0, the
+suite lands at 123/123 scripts · 3,336/3,336 checks.
+
+**The honest limit.** The board above reads scorelines while this panel reads the event list, so
+a fixture whose events disagree with its result moves this clock and not that table. Both series
+count finished fixtures with recorded goals only, and the last window absorbs stoppage. The bars
+are totals, not rates.
 
 ### M787 — the card clock splits by the end that earned it
 

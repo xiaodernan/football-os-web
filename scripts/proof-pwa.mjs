@@ -106,7 +106,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // 531 -> 532 and the baseline re-records it.
 // M785: the league card curve adds its panel and two dictionary lines, measuring 533 KB / 54
 // assets (JS 520 + CSS 12.4), so the pin moves 532 -> 533 and the baseline re-records it.
-const BUDGET_KB = 533;
+// M788: the venue screen's goal clock adds its panel and the shared band labels, crossing the
+// budget's rounding edge — 534 KB / 54 assets (JS 522 + CSS 12.4), pin 533 -> 534, baseline
+// re-recorded in the same commit.
+const BUDGET_KB = 534;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

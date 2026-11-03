@@ -450,6 +450,42 @@ export function goalTiming(compId: string, matches: Match[], clubs: Club[]): Goa
   return list.sort((a, b) => b.lateShare - a.lateShare || b.scored - a.scored || a.clubId.localeCompare(b.clubId));
 }
 
+export interface GoalVenueClock {
+  /** Event-recorded goals by the home side, per window; sums with `awayWindows` to the league's
+   *  recorded goals. These are the event list's goals, not the fixtures' scorelines. */
+  homeWindows: number[];
+  /** Event-recorded goals by the away side, per window. */
+  awayWindows: number[];
+  /** Recorded goals in the two series. */
+  home: number;
+  away: number;
+}
+
+/** When goals arrive, split by the end that scored them. A different question from `venueSplit`
+ *  (the points each half produced, read from scorelines) and from `goalTiming` (each club's own
+ *  clocks): this one asks whether the league's home advantage shows up in the minutes, reading
+ *  the side each GOAL event names. */
+export function goalVenueClock(compId: string, matches: Match[], clubs: Club[]): GoalVenueClock {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const homeWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const awayWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED") continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "GOAL") continue;
+      const scorer = e.side === "home" ? m.homeClubId : m.awayClubId;
+      if (!ranked.has(scorer)) continue;
+      (e.side === "home" ? homeWindows : awayWindows)[goalBand(e.minute)]++;
+    }
+  }
+  return {
+    homeWindows,
+    awayWindows,
+    home: sum(homeWindows, (n) => n),
+    away: sum(awayWindows, (n) => n),
+  };
+}
+
 export interface CardTimingRow {
   clubId: string;
   yellows: number;
