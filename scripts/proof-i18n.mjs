@@ -603,12 +603,61 @@ const lostScreens = routedScreens.filter((p) => !readerReaches.has(p));
 const reachedWalked = files.map(rel).filter((p) => readerReaches.has(p));
 const unreachedApp = unreachedFiles.filter((p) => APP_DIRS.some((d) => p.startsWith(d + "/")));
 const unreachedHarness = unreachedFiles.filter((p) => !unreachedApp.includes(p));
-const unreachedLiterals = unreachedApp.flatMap((p) => [...codeOf(readFileSync(join(root, p), "utf8")).matchAll(STATIC)].map((m) => m[1]));
 const reachableText = [...appSrc.values()].join("\n");
-const phantomKeys = [...new Set(unreachedLiterals)].filter((k) => k in en && !reachableText.includes(`"${k}"`));
-const unreachedRaw = unreachedApp.map((p) => [p, scanSource(codeOf(readFileSync(join(root, p), "utf8"))).hits.length]).filter(([, n]) => n > 0);
-ok(`the reader reaches ${reachedWalked.length} of the ${files.length} walked files (pin ${SRC_PIN}), every screen the router lazy-loads is among them (${routedScreens.length} named, ${lostScreens.length} lost${lostScreens.length ? `: ${lostScreens.join(", ")}` : ""}), and ${unreachedApp.length} unrouted app module(s) sit in the ledger [${unreachedApp.join(", ") || "none"}] beside ${unreachedHarness.length} harness file(s) outside the reader's path, carrying ${unreachedLiterals.length} t() literal(s), ${phantomKeys.length} phantom key(s) [${phantomKeys.slice(0, 4).join(", ") || "none"}], ${unreachedRaw.reduce((n, [, k]) => n + k, 0)} raw-UI hit(s)`,
+
+// The dead-surface arithmetic, as a function over an injected (ledger, reader, live text,
+// dictionary). The real tree is one call to it; a planted leaf is another -- without the second,
+// the four numbers the clause below prints are a caption nobody can see lie.
+const deadSurfaceOf = (ledger, read, liveText, dictionary) => {
+  const literals = ledger.flatMap((p) => [...codeOf(read(p)).matchAll(STATIC)].map((m) => m[1]));
+  const phantoms = [...new Set(literals)].filter((k) => k in dictionary && !liveText.includes(`"${k}"`));
+  const raw = ledger.map((p) => [p, scanSource(codeOf(read(p))).hits.length]).filter(([, n]) => n > 0);
+  return { literals, phantoms, raw, rawHits: raw.reduce((n, [, c]) => n + c, 0) };
+};
+const surface = deadSurfaceOf(unreachedApp, (p) => readFileSync(join(root, p), "utf8"), reachableText, en);
+
+ok(`the reader reaches ${reachedWalked.length} of the ${files.length} walked files (pin ${SRC_PIN}), every screen the router lazy-loads is among them (${routedScreens.length} named, ${lostScreens.length} lost${lostScreens.length ? `: ${lostScreens.join(", ")}` : ""}), and ${unreachedApp.length} unrouted app module(s) sit in the ledger [${unreachedApp.join(", ") || "none"}] beside ${unreachedHarness.length} harness file(s) outside the reader's path, carrying ${surface.literals.length} t() literal(s), ${surface.phantoms.length} phantom key(s) [${surface.phantoms.slice(0, 4).join(", ") || "none"}], ${surface.rawHits} raw-UI hit(s)`,
   routedScreens.length >= 30 && lostScreens.length === 0 && reachedWalked.length === SRC_PIN && appSrc.size === APP_SRC_PIN);
+
+// M782: the ledger's arithmetic is armed on a planted leaf, because a blind ledger would print
+// "none" and pass. The fixture's raw-UI reading was checked against the real scanner (one hit of
+// kind "text"), so the arm agrees with the door it is meant to test, not with itself.
+const PLANT_LEAF = [
+  `import { t } from "@/i18n";`,
+  ``,
+  `export const PlantedLeaf = () => (`,
+  `  <Panel>`,
+  `    <p>Planted raw copy</p>`,
+  `    <span>{t("plant.key")}</span>`,
+  `  </Panel>`,
+  `);`,
+].join("\n");
+const PLANT_CLEAN = `import { t } from "@/i18n";\nexport const PlantedLeaf = () => <span>{t("plant.key")}</span>;`;
+const PLANT_DICT = { "plant.key": "Planted", "plant.live": "Named by a live screen" };
+const plantBlind = deadSurfaceOf(["plant/unrouted.tsx"], () => PLANT_LEAF, "", PLANT_DICT);
+const plantLive = deadSurfaceOf(["plant/unrouted.tsx"], () => PLANT_LEAF, `t("plant.key") and t("plant.live")`, PLANT_DICT);
+const plantAlien = deadSurfaceOf(["plant/unrouted.tsx"], () => PLANT_LEAF, "", { "other.key": "not ours" });
+const plantClean = deadSurfaceOf(["plant/unrouted.tsx"], () => PLANT_CLEAN, "", PLANT_DICT);
+const plantEmpty = deadSurfaceOf([], () => PLANT_LEAF, "", PLANT_DICT);
+ok(`the dead-surface arithmetic is armed on a planted leaf, not read off the tree (${plantBlind.literals.length} literal, ${plantBlind.phantoms.length} phantom [${plantBlind.phantoms}], ${plantBlind.rawHits} raw hit in ${plantBlind.raw.map(([p]) => p)}; the same leaf beside a live screen that names the key reads ${plantLive.phantoms.length}; beside a dictionary that does not hold it ${plantAlien.phantoms.length}; a leaf that only calls t() reads ${plantClean.rawHits}; an empty ledger ${plantEmpty.literals.length}/${plantEmpty.phantoms.length}/${plantEmpty.rawHits})`,
+  plantBlind.literals.length === 1 && plantBlind.phantoms.length === 1 && plantBlind.phantoms[0] === "plant.key"
+  && plantBlind.rawHits === 1 && plantLive.phantoms.length === 0 && plantAlien.phantoms.length === 0
+  && plantClean.literals.length === 1 && plantClean.rawHits === 0 && plantClean.phantoms.length === 1
+  && plantEmpty.literals.length === 0 && plantEmpty.phantoms.length === 0 && plantEmpty.rawHits === 0);
+
+// The real ledger's four numbers are re-derived from the same doors the function reads, and the
+// ledger is a PARTITION of the walk -- a file can neither be counted twice nor be both dead and
+// charged. The count itself stays report-only: the farm's stubs move it, the pins do not.
+const phantomRecheck = surface.phantoms.every((k) => k in en && !reachableText.includes(`"${k}"`));
+const literalRecheck = surface.literals.every((k) => unreachedApp.some((p) => codeOf(readFileSync(join(root, p), "utf8")).includes(`t("${k}"`)));
+const rawRecheck = surface.raw.every(([p, n]) => n > 0 && n === scanSource(codeOf(readFileSync(join(root, p), "utf8"))).hits.length);
+const partitionOk =
+  unreachedApp.length + unreachedHarness.length === unreachedFiles.length
+  && unreachedFiles.length + reachedWalked.length === walkedFiles.length
+  && new Set([...unreachedApp, ...unreachedHarness, ...reachedWalked]).size === walkedFiles.length
+  && unreachedApp.every((p) => !appSrc.has(p) && !readerReaches.has(p))
+ok(`the ledger's numbers are re-derived from the files they name and the ledger is a partition of the walk (${surface.phantoms.length} phantom all in the dictionary and named by none of the ${appSrc.size} charged modules; ${surface.literals.length} literal(s) all read out of a ledger file; ${surface.raw.length} file(s) carrying ${surface.rawHits} raw hit(s) recounted one by one; ${unreachedApp.length} app + ${unreachedHarness.length} harness = ${unreachedFiles.length} unreached, plus ${reachedWalked.length} reached = ${walkedFiles.length} walked, 0 counted twice, 0 of them in the charged population)`,
+  phantomRecheck && literalRecheck && rawRecheck && partitionOk);
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;

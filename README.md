@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M781 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M782 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,49 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M782 — the dead-surface ledger is counted, not captioned
+
+**What M781 left on the table.** The census now asks the right question — what does a reader
+reach — and prints what it does not: the files nothing imports, the `t()` literals they carry, the
+keys the dictionary holds that no charged screen names, and the raw-UI strings that never went
+through `t()`. Every one of those four numbers was printed and none was asserted. A ledger that went
+blind would print "none" and pass, and M781 wrote that down as the reason not to trust it yet.
+
+**The counting becomes a function, and the function gets a planted tree.** `deadSurfaceOf(ledger,
+read, liveText, dictionary)` takes the files, the reader, the text of the charged modules and the
+dictionary, and returns `{ literals, phantoms, raw, rawHits }`. The real tree is one call to it; a
+planted leaf is another. The planted leaf carries two things a quarantine can carry: a dictionary key
+no live screen names, and a JSX text node that never went through `t()`. It reads 1 literal, 1
+phantom, 1 raw-UI hit. Three arms pin down what the numbers mean: the same leaf read beside a live
+screen that names the key reads 0 phantoms (the key is dead because nothing *live* names it, not
+because the file is unrouted); beside a dictionary that does not hold the key it reads 0 (an unknown
+key is a different debt, charged by the dictionary's own parity clauses); and a leaf whose only
+output is `t("…")` reads 0 raw hits, so the raw count is a reading of the source rather than a count
+of files. An empty ledger reads three zeros. The fixture's raw-UI reading was checked against the
+real scanner before it was planted — one hit of kind `text` — so the arm cannot pass by agreeing
+with itself.
+
+**The real ledger is re-derived, key by key.** The four numbers the clause prints are not trusted
+because the function produced them: each phantom is re-checked to be a key the dictionary holds and
+none of the charged modules names; each literal is re-checked to appear as `t("…")` in a ledger file;
+each raw-UI count is recomputed file by file. And the ledger is asserted to be a *partition* of the
+walk — the app files plus the harness files are exactly the unreached files, unreached plus reached
+is exactly the walk, every path is named once, and no ledger path sits inside the population the
+pins measure — so a file can neither be counted twice nor quietly charged as both dead and live.
+
+**Measured.** `npx tsc --noEmit` clean, `npm run build` exit 0, no app module touched and no
+dictionary key, route or storage key changed, so the bundle and its 532 KB pin stand. The suite
+reads **123/123 proof scripts proven, 3,318/3,318 checks counted**; the dictionary census moves
+384 → 386, and both new checks are the ledger's arms.
+
+**Why the size is still not pinned.** The ledger's count is report-only on purpose: the farm lands
+unrouted components faster than a lane can sweep them, and a pin on that number is the hostage M776
+retired. What is pinned now is the partition and the arithmetic — a landed stub moves the ledger's
+names and leaves the population pins standing, which is the behaviour the sweep lanes need. What this
+milestone cannot prove is that the *reader* is right: the planted arms would still pass under a
+reader that reached nothing, because they never consult it. That question is answered by the pins
+above (121 of 130 walked, 118 outside `i18n/`, 41 routed screens with 0 lost), not by this ledger.
 
 ### M781 — the reader starts where the app says it starts
 
