@@ -1141,6 +1141,32 @@ ok(`the red board is deterministic and the discipline screen reads it off the fo
   ["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"]
     .every((k) => DISC_SRC.includes(`t("${k}")`)) &&
   !/\.sort\(/.test(DISC_SRC) && !DISC_SRC.includes("redRows.sort("));
+// --- M785: the league's own card curve, on the same six windows -------------------------------
+// TE's six cards land 5' (band 0), 20' (band 1), 75' (band 4), 76', 80' and 90' (band 5), so the
+// league curve is 1,1,0,0,1,3 and two of the last window's three are red. TH is all red: its six
+// sendings-off make the two series identical. TF has one yellow on 45' (band 2) and no red at all.
+ok(`the league card curve folds every counted card into the clock's six windows, and each window is the sum of the clubs' own window (TE ${cards.windows.join("")} against rows ${cards.windows.map((_, i) => cards.rows.reduce((s, r) => s + r.bands[i], 0)).join("")})`,
+  cards.windows.join(",") === "1,1,0,0,1,3" && cards.windows.length === 6 &&
+  cards.windows.every((n, i) => n === cards.rows.reduce((s, r) => s + r.bands[i], 0)) &&
+  cards.windows.reduce((s, n) => s + n, 0) === cards.rows.reduce((s, r) => s + r.cards, 0));
+ok(`the red curve is the same six windows read on the red count alone, and a league with no sending-off reads six zeros (TE ${cards.redWindows.join("")} = ${cards.rows.reduce((s, r) => s + r.reds, 0)} reds; TH windows ${reds.windows.join("")} equal reds ${reds.redWindows.join("")}; TF ${cardTiming("TF", cardFixtures, cardClubs).windows.join("")} with reds ${cardTiming("TF", cardFixtures, cardClubs).redWindows.join("")}; empty ${cardTiming("TG", cardFixtures, cardClubs).windows.length} windows all ${cardTiming("TG", cardFixtures, cardClubs).windows.every((n) => n === 0)})`,
+  cards.redWindows.join(",") === "0,0,0,0,0,2" &&
+  cards.redWindows.reduce((s, n) => s + n, 0) === cards.rows.reduce((s, r) => s + r.reds, 0) &&
+  reds.windows.join(",") === reds.redWindows.join(",") &&
+  reds.windows.reduce((s, n) => s + n, 0) === reds.rows.reduce((s, r) => s + r.reds, 0) &&
+  cardTiming("TF", cardFixtures, cardClubs).windows.join(",") === "0,0,1,0,0,0" &&
+  cardTiming("TF", cardFixtures, cardClubs).redWindows.every((n) => n === 0) &&
+  cardTiming("TG", cardFixtures, cardClubs).windows.length === 6 &&
+  cardTiming("TG", cardFixtures, cardClubs).windows.every((n) => n === 0));
+const windowsAgain = cardTiming("TE", cardFixtures, cardClubs);
+ok(`the league curve is deterministic and the discipline screen draws it off the fold, labelling the six windows and printing reds only where they land (same fold ${JSON.stringify(windowsAgain.windows) === JSON.stringify(cards.windows)} and ${JSON.stringify(windowsAgain.redWindows) === JSON.stringify(cards.redWindows)})`,
+  JSON.stringify(windowsAgain.windows) === JSON.stringify(cards.windows) &&
+  JSON.stringify(windowsAgain.redWindows) === JSON.stringify(cards.redWindows) &&
+  DISC_SRC.includes("clock.windows.map(") && DISC_SRC.includes("clock.windows.every(") &&
+  DISC_SRC.includes("peakWindow") && DISC_SRC.includes("pctOf(n, peakWindow)") &&
+  DISC_SRC.includes('t("disc.windowTitle"') && DISC_SRC.includes('t("disc.windowHint"') &&
+  DISC_SRC.includes('t("disc.redTotal", { n: clock.redWindows[i] })') &&
+  DISC_SRC.includes("{clock.redWindows[i] > 0 &&") && !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

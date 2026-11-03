@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M784 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M785 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,39 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M785 — the league's cards get a curve by window
+
+**What the page had.** The discipline page could say when in the season cards arrive (the round
+trend) and, since M779, which clubs are booked early or late. It could not say when in a match the
+competition as a whole is booked: the six-window fold existed per club and was only read as each
+club's own share.
+
+**The fold already had the answer.** `cardTiming` now returns `windows` and `redWindows`, the
+league's per-window totals accumulated in the same loop that counts each club's bands. They are
+the same six windows the clock uses, the last one clamping stoppage time, so the curve is a sum of
+the rows the page already prints rather than a second pass over the fixtures.
+
+**The screen.** A bar panel between the round trend and the card clock: one column per window
+with its count, the league's busiest window at full height, and the window's reds printed beneath
+the label only where a red landed. The empty state reuses the card clock's no-booking line. The
+panel sorts nothing and derives nothing — both series come off the fold.
+
+**Words and gates.** Two new keys (`disc.windowTitle`, `disc.windowHint`) across three locales,
+so the dictionary goes 2,503 → 2,505 keys; the empty arm and the red count reuse `disc.clockNone`
+and `disc.redTotal` at new call sites. The census moves literal 1,849 → 1,853 (four new sites,
+two of them reuses) and literal sites with placeholders 262 → 263. `proof-analytics` grows three
+clauses to 194/194: the hand-counted league curve against the club column sums, the red curve and
+its silent/empty arms, and the screen. No new module, route or storage key; the build measures
+533 KB gzip across 54 assets (JS 520 + CSS 12.4), so the PWA pin moves 532 → 533 and the perf
+baseline re-records it. `tsc` clean, build exit 0, the suite lands at 123/123 scripts ·
+3,327/3,327 checks.
+
+**The honest limit.** The curve counts finished fixtures, like the clock; the last window includes
+stoppage time, so a 90+′ booking reads in the same column as a 76′ one. The red count is printed
+only where it is positive, so a window with no sending-off says nothing rather than zero, and the
+bars are league totals — one red in a quiet window is a short bar beside a busy yellow window, not
+a rate.
 
 ### M784 — the storage and router censuses read the reader's tree
 

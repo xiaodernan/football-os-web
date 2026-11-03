@@ -4501,7 +4501,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // reads the six window labels the clock already owns as six literal sites: eleven literal
 // sites, two of them interpolating (the peak line and the total label) — literal 1838 -> 1849,
 // litVarSites 260 -> 262.
-  shapeCounts.literal === 1849 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M785: the league card curve adds its title, hint, and two reused labels at new call sites
+// (the empty arm's no-booking line and the red count under a window): four literal sites, one
+// of them interpolating — literal 1849 -> 1853, litVarSites 262 -> 263.
+  shapeCounts.literal === 1853 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4566,7 +4569,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M780: 259 -> 260 — the closing-attack row reuses that strike line at its own call site.
 // M783: 260 -> 262 — the red board's peak line hands over the window label and its count, and
 // its total label hands over the club's reds.
-  litVarSites === 262 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M785: 262 -> 263 — the curve's red count under a window hands over the window's reds.
+  litVarSites === 263 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

@@ -488,6 +488,10 @@ export interface CardTiming {
   /** Clubs shown a red card, ranked by reds, then the peak window's count, then the club id.
    *  A club with no reds is absent: the panel is about the sendings-off, not about zero rows. */
   redRows: CardRedRow[];
+  /** Every card in this competition, folded into the same six windows. */
+  windows: number[];
+  /** The red cards of `windows`, same length and the same windows. */
+  redWindows: number[];
 }
 
 /** When a club's cards arrive: every recorded YELLOW or RED in this competition's finished
@@ -515,6 +519,8 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
     ]),
   );
   const lastBand = GOAL_BANDS - 1;
+  const windows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const redWindows = Array.from({ length: GOAL_BANDS }, () => 0);
   for (const m of matches) {
     if (m.competitionId !== compId || m.status !== "FINISHED") continue;
     for (const e of m.events ?? []) {
@@ -524,10 +530,12 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       if (!row) continue;
       const band = goalBand(e.minute);
       row.cards++;
+      windows[band]++;
       if (e.type === "YELLOW") row.yellows++;
       else {
         row.reds++;
         row.redBands[band]++;
+        redWindows[band]++;
       }
       row.bands[band]++;
       if (band === 0) row.earlyCards++;
@@ -548,7 +556,7 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       return { clubId: r.clubId, reds: r.reds, peakBand, peakCount: r.redBands[peakBand] };
     });
   redList.sort((a, b) => b.reds - a.reds || b.peakCount - a.peakCount || a.clubId.localeCompare(b.clubId));
-  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList };
+  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList, windows, redWindows };
 }
 
 export interface TitleRaceWeek {

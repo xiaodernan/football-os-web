@@ -22,6 +22,7 @@ export function Discipline() {
   // last window of the same six the clock uses.
   const clock = useMemo(() => cardTiming(compId, matches, clubs), [compId, matches, clubs]);
   const booked = clock.rows.filter((r) => r.cards > 0);
+  const peakWindow = Math.max(1, ...clock.windows);
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -179,6 +180,33 @@ export function Discipline() {
                 </div>
               ))}
             </div>
+          </Panel>
+
+          {/* M785: every card in the competition on the same six windows as a league curve — the
+              round trend above asks when in the season, this one asks when in the match. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.windowTitle")} hint={t("disc.windowHint")} />
+            {clock.windows.every((n) => n === 0) ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.clockNone")}</p>
+            ) : (
+              <div className="mt-3 flex items-end gap-1">
+                {clock.windows.map((n, i) => (
+                  <div key={i} className="flex-1 text-center">
+                    <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                    <div className="mx-auto mt-0.5 h-12 w-full">
+                      <div
+                        className={cn("w-full rounded-sm", BAR_FILL.bad)}
+                        style={{ height: pctOf(n, peakWindow) }}
+                      />
+                    </div>
+                    <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[i]}</div>
+                    {clock.redWindows[i] > 0 && (
+                      <div className="text-[10px] text-muted-foreground">{t("disc.redTotal", { n: clock.redWindows[i] })}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </Panel>
 
           {/* M779: the bookings by the minute they arrived — the same six windows the event
