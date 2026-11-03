@@ -676,9 +676,22 @@
   （M772–M895）已把四个分析屏换成不可解析的桩、并加入 115 个无接线假屏（未定义键、裸文案），
   tsc 与 20 条 i18n 断言同时失败；先以无编号 repair 提交精确恢复 M779 树并删除这 115 个文件，
   M780 才落在全绿的树上。历史里的 M781–M895 属该 lane，已撤回，账本从 M780 续写。
-下一条目：M781 候选按「真实数据 + 不重叠 + 复用既有 domain」排：
-⑤红牌窗口的独立读法（`cardTiming` 已把 yellows/reds 分开存放，可加一屏只读红牌的六窗）；
-⑥换人窗口（若 `SUB` 事件带分钟，可读每队换人集中在哪个窗，与牌窗同源）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779、末段进攻取 M780；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+- M781: 红牌的时段——`cardTiming` 新增联赛级 `redBands`（六窗口里的红牌数），与混合牌钟同源同窗；
+  `Discipline.tsx` 在牌钟之后加红牌条：六格显示每窗红牌数，最集中的一窗用边框强调并印
+  `disc.redClockPeak`；无红牌印 `disc.redClockNone`；4 键三语（disc.redClockTitle/redClockHint/
+  redClockNone/redClockPeak），字典 2,498→2,502；`proof-analytics` 新增 3 条共 190/190
+  （T13：Y 首窗两张、末窗一张，Z 首窗一张，另有黄牌与未开始/别的赛事噪音，条为 2,0,0,0,0,1，
+  峰值 0，两队红牌合计 3；空赛事六零；二次读取逐字段相同；屏幕从 fold 读、不排序）；
+  census pin：literal 1,838→1,848、litVarSites 260→261；无新模块/路由/存储键；
+  bundle 532→533 KB / 54 资产（JS 520 + CSS 12.5），pin 532→533 并重录 baseline；
+  tsc 干净、build exit 0、全套 123/123 · 3,317/3,317；
+  诚实的保留：红牌条只统计记录到分钟的红牌，也不看黄牌；条是联赛级，球队归属仍在牌钟行里；
+  最集中的一窗若有并列，取序号最小的一窗；六格是同一六窗的读法，不是全场前后半场。
+下一条目：M782 候选按「真实数据 + 不重叠 + 复用既有 domain」排：
+⑦主客分窗的牌（`cardTiming` 同一遍可再落 `homeBands`/`awayBands`，把 M626 的主客率与 M779 的
+六窗合起来：主队牌在首窗多还是客队多，一屏两行，不新造口径）；
+⑧红牌的球队归属条（`redBands` 已是联赛级，若需要可按队再落一层，与牌钟行并列读）。
+（换人窗口不成立：`MatchEventType` 只有 GOAL/YELLOW/RED/SHOT/SAVE/VAR，没有 SUB。）
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779、末段进攻取 M780、红牌时段取 M781；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

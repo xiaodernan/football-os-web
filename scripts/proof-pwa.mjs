@@ -104,7 +104,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M779: the card clock panel adds one row per booked club to an existing table and reuses the
 // clock's strike line, measuring 532 KB / 54 assets (JS 520 + CSS 12.4), so the pin moves
 // 531 -> 532 and the baseline re-records it.
-const BUDGET_KB = 532;
+// M781: the red strip adds four sentences and a six-cell grid to the discipline page, measuring
+// 533 KB / 54 assets (JS 520 + CSS 12.5), so the pin moves 532 -> 533.
+const BUDGET_KB = 533;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

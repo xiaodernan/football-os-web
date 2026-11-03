@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M780 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M781 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,36 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M781 — the reds read their own strip
+
+**One colour, one strip.** The card clock asks when a club is booked; it mixes both colours to do
+it. A red card is a different event, and a league's reds have their own rhythm — so `cardTiming`
+now carries `redBands`, six league-wide counters that the same pass fills as it reads every finished
+YELLOW and RED. The discipline page prints them as a six-cell strip under the card clock, the
+busiest window outlined, and names it: "most reds in …". A competition with no reds says so instead
+of drawing six zeros.
+
+**The numbers on the fixtures.** T13's finished fixture books Y twice at the tenth and eleventh
+minute and once at the eightieth, Z once at the tenth, and a yellow at the twelfth that must not
+enter a red strip. The league strip therefore reads 2,0,0,0,0,1: three reds, two of them in the
+opening window, which is also the peak. The two clubs' red counts (2 and 1) add up to the strip.
+A scheduled fixture's red and another competition's red stay out; a competition with no rows reads
+six zeros; a second read returns the identical object.
+
+**Words and gates.** 4 keys · 3 locales (`disc.redClockTitle`, `disc.redClockHint`,
+`disc.redClockNone`, `disc.redClockPeak`), so the dictionary goes 2,498 → 2,502. The strip reuses
+M773's six window labels rather than minting new ones: ten literal sites, one of them interpolating,
+moving the census to literal 1,838 → 1,848 and variable-carrying sites 260 → 261. `proof-analytics`
+grows three clauses to 190/190. No new module, route, screen or storage key. The build gains four
+sentences and a grid: 533 KB gzip across the same 54 assets (JS 520, CSS 12.5), so the pin moves
+532 → 533 and the baseline re-records. `tsc` clean, build exit 0, the suite lands at 123/123
+scripts · 3,317/3,317 checks.
+
+**The honest limit.** Only reds carrying a recorded minute enter the strip, and yellows never do.
+The strip is league-wide: which club earned a red is still the card clock's row, not this panel's.
+When two windows tie for the peak, the earlier one is named. The six cells are windows of the same
+clock, not halves of the match.
 
 ### M780 — the closing attack ranks itself
 

@@ -21,6 +21,11 @@ export function Discipline() {
   // last window of the same six the clock uses.
   const clock = useMemo(() => cardTiming(compId, matches, clubs), [compId, matches, clubs]);
   const booked = clock.rows.filter((r) => r.cards > 0);
+  // M781: the reds read on their own six windows, with the busiest window named rather than
+  // inferred from the mixed card row each club carries.
+  const redTotal = clock.redBands.reduce((a, b) => a + b, 0);
+  const redPeak = redTotal ? clock.redBands.indexOf(Math.max(...clock.redBands)) : -1;
+  const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -216,6 +221,34 @@ export function Discipline() {
                   );
                 })}
               </ul>
+            )}
+          </Panel>
+
+          {/* M781: the reds on their own — same six windows, one colour, the busiest named. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.redClockTitle")} hint={t("disc.redClockHint")} />
+            {redTotal === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.redClockNone")}</p>
+            ) : (
+              <>
+                <div className="mt-3 grid grid-cols-6 gap-2 text-center">
+                  {clock.redBands.map((n, b) => (
+                    <div
+                      key={b}
+                      className={cn(
+                        "rounded-lg border px-2 py-2",
+                        b === redPeak && "border-destructive/60 bg-destructive/5",
+                      )}
+                    >
+                      <div className="text-sm font-medium tabular-nums">{n}</div>
+                      <div className="text-[10px] leading-tight text-muted-foreground">{bandLabels[b]}</div>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.redClockPeak", { band: bandLabels[redPeak] })}
+                </p>
+              </>
             )}
           </Panel>
         </>

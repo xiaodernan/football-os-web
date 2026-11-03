@@ -1093,6 +1093,38 @@ ok(`cardTiming is deterministic and the discipline screen prints the clock off t
   DISC_SRC.includes("cardTiming(compId, matches, clubs)") && DISC_SRC.includes("clock.rows.filter(") &&
   DISC_SRC.includes('t("clock.strikeLine"') && DISC_SRC.includes('t("disc.clockNone"') &&
   !DISC_SRC.includes("byTableStanding") && !DISC_SRC.includes(".sort("));
+// M781: the reds on their own six windows. T13's finished fixture books Y twice inside the first
+// window and once in the last, Z once in the first, plus a yellow that must not enter a red strip;
+// a scheduled fixture and another competition's red are noise. The league strip therefore reads
+// 2,0,0,0,0,1, its busiest window is the first, and the two clubs' reds add up to it.
+const redClubs = [club("Y", "T13"), club("Z", "T13")];
+const redFixtures = [
+  cardFixture("r1", "T13", "Y", "Z", [
+    cardEvent(10, "RED", "home"),
+    cardEvent(11, "RED", "away"),
+    cardEvent(80, "RED", "home"),
+    cardEvent(12, "YELLOW", "away"),
+  ]),
+  cardFixture("r2", "T13", "Y", "Z", [cardEvent(20, "RED", "home")], "SCHEDULED"),
+  cardFixture("r3", "TF", "Y", "Z", [cardEvent(30, "RED", "home")]),
+];
+const reds = cardTiming("T13", redFixtures, redClubs);
+const redById = Object.fromEntries(reds.rows.map((r) => [r.clubId, r]));
+const redsAgain = cardTiming("T13", redFixtures, redClubs);
+ok(`the red strip reads only finished reds, in the same six windows (${reds.redBands.join(",")}; Y ${redById.Y.reds}, Z ${redById.Z.reds}, Z yellows ${redById.Z.yellows})`,
+  reds.redBands.join(",") === "2,0,0,0,0,1" &&
+  reds.redBands.reduce((a, b) => a + b, 0) === 3 &&
+  redById.Y.reds === 2 && redById.Z.reds === 1 && redById.Z.yellows === 1 &&
+  redById.Y.reds + redById.Z.reds === 3);
+ok(`the busiest red window is read from the strip rather than typed, and a competition with no rows still reads six zeros (peak ${reds.redBands.indexOf(Math.max(...reds.redBands))}, empty ${cardTiming("TG2", redFixtures, redClubs).redBands.join(",")})`,
+  reds.redBands.indexOf(Math.max(...reds.redBands)) === 0 &&
+  cardTiming("TG2", redFixtures, redClubs).redBands.join(",") === "0,0,0,0,0,0");
+ok(`the red strip repeats field for field and the discipline screen reads it off the fold without sorting anything itself (repeat ${JSON.stringify(redsAgain) === JSON.stringify(reds)}, strip ${DISC_SRC.includes("clock.redBands.map(")}, peak ${DISC_SRC.includes("clock.redBands.indexOf(")})`,
+  JSON.stringify(redsAgain) === JSON.stringify(reds) &&
+  DISC_SRC.includes("clock.redBands.reduce(") && DISC_SRC.includes("clock.redBands.map(") &&
+  DISC_SRC.includes("clock.redBands.indexOf(") && DISC_SRC.includes('t("disc.redClockPeak"') &&
+  DISC_SRC.includes('t("disc.redClockNone"') && DISC_SRC.includes("bandLabels[b]") &&
+  !/redBands.*\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C
