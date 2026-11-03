@@ -1225,6 +1225,42 @@ ok(`clockContrast is deterministic and the event clock screen prints both series
   EV_CLOCK_SRC.includes("contrast.peakGoal === null ? ABSENT") &&
   EV_CLOCK_SRC.includes("contrast.peakCard === null ? ABSENT") &&
   !/\.sort\(/.test(EV_CLOCK_SRC));
+// --- M787: the league card curve split by the end the card was earned at ---------------------
+// On TE, the home side earns a yellow on 5' (band 0), one on 75' (band 4), a red on 80' and one
+// on 90' (band 5): home 1,0,0,0,1,2. The away side earns a yellow on 20' (band 1) and one on 76'
+// (band 5): away 0,1,0,0,0,1. Summed window for window that is the league curve 1,1,0,0,1,3, and
+// the two totals are the six cards the club rows count. The scheduled card on 45' (u4) and TF's
+// card (u5) stay out.
+ok(`cardTiming splits its league curve by the end the card was earned at, the two sides adding up to the league window for window (TE home ${cards.homeWindows.join("")} against away ${cards.awayWindows.join("")}; totals ${cards.homeWindows.reduce((s, n) => s + n, 0)}/${cards.awayWindows.reduce((s, n) => s + n, 0)})`,
+  cards.homeWindows.length === 6 && cards.awayWindows.length === 6 &&
+  cards.homeWindows.join(",") === "1,0,0,0,1,2" &&
+  cards.awayWindows.join(",") === "0,1,0,0,0,1" &&
+  cards.homeWindows.every((n, i) => n + cards.awayWindows[i] === cards.windows[i]) &&
+  cards.homeWindows.reduce((s, n) => s + n, 0) === 4 &&
+  cards.awayWindows.reduce((s, n) => s + n, 0) === 2 &&
+  cards.homeWindows.reduce((s, n) => s + n, 0) + cards.awayWindows.reduce((s, n) => s + n, 0) ===
+    cards.rows.reduce((s, r) => s + r.cards, 0));
+// TK earns the same shape the other way round: its home cards are the 5' yellow and the 85' red,
+// its away cards the 20' booking and the 76' one — so the split is not the league curve twice. A
+// competition with no fixture reads six silent windows on both sides.
+const tkCards = cardTiming("TK", crossFixtures, crossClubs);
+const venueSilent = cardTiming("TG", cardFixtures, cardClubs);
+ok(`the venue split follows the side each event names rather than the result or the club, and an empty competition reads six silent home and away windows (TK home ${tkCards.homeWindows.join("")} away ${tkCards.awayWindows.join("")}; TG ${venueSilent.homeWindows.length}+${venueSilent.awayWindows.length} windows)`,
+  tkCards.homeWindows.join(",") === "1,0,0,0,0,1" &&
+  tkCards.awayWindows.join(",") === "0,1,0,0,0,1" &&
+  tkCards.homeWindows.every((n, i) => n + tkCards.awayWindows[i] === tkCards.windows[i]) &&
+  venueSilent.homeWindows.length === 6 && venueSilent.awayWindows.length === 6 &&
+  venueSilent.homeWindows.every((n) => n === 0) && venueSilent.awayWindows.every((n) => n === 0) &&
+  venueSilent.windows.every((n) => n === 0));
+const cardsVenueAgain = cardTiming("TE", cardFixtures, cardClubs);
+ok(`the venue split is deterministic and the discipline screen draws it off the fold, labelling the six windows and dropping nothing to its own sort (same fold ${JSON.stringify(cardsVenueAgain.homeWindows) === JSON.stringify(cards.homeWindows)} and ${JSON.stringify(cardsVenueAgain.awayWindows) === JSON.stringify(cards.awayWindows)}; band labels ${["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"].filter((k) => DISC_SRC.includes(`t("${k}")`)).length}/6)`,
+  JSON.stringify(cardsVenueAgain.homeWindows) === JSON.stringify(cards.homeWindows) &&
+  JSON.stringify(cardsVenueAgain.awayWindows) === JSON.stringify(cards.awayWindows) &&
+  DISC_SRC.includes("clock.homeWindows") && DISC_SRC.includes("clock.awayWindows") &&
+  DISC_SRC.includes("venuePeak") && DISC_SRC.includes("pctOf(n, venuePeak)") &&
+  DISC_SRC.includes('t("disc.venueClockTitle"') && DISC_SRC.includes('t("disc.venueClockHint"') &&
+  DISC_SRC.includes('t("disc.venueClockHome"') && DISC_SRC.includes('t("disc.venueClockAway"') &&
+  DISC_SRC.includes('t("disc.clockNone"') && !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

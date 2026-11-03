@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M786 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M787 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,38 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M787 — the card clock splits by the end that earned it
+
+**What the page had.** Since M785 the discipline page draws the league's cards across the six
+windows, and since M626 it shows each club's home and away card rates. It could not say whether
+the league's clock itself leans home or away: the window curve had no venue axis.
+
+**The same loop, split.** `cardTiming` now also accumulates `homeWindows` and `awayWindows`, the
+side each event names, in the loop that already counts the league curve. The two series sum to
+`windows` window for window, so the split cannot disagree with the total it divides — a card is
+counted on exactly one side because every event names one.
+
+**The screen.** A panel under the league curve: two rows (home cards, away cards) over the same
+six windows and the same labels, bars scaled to the busiest window of the pair, and the empty
+arm reusing the card clock's no-booking line. The screen sorts nothing and derives nothing; both
+series come off the fold.
+
+**Words and gates.** Four new keys (`disc.venueClockTitle`, `disc.venueClockHint`,
+`disc.venueClockHome`, `disc.venueClockAway`) across three locales, so the dictionary goes
+2,510 → 2,514 keys; the empty arm reuses `disc.clockNone` at a new call site. The census moves
+literal 1,859 → 1,864 (five new sites, none interpolating) and leaves placeholder sites at 264.
+`proof-analytics` grows three clauses to 200/200: the hand-counted TE split (home 1,0,0,0,1,2
+against away 0,1,0,0,0,1, summing to the league's 1,1,0,0,1,3 and to its six cards), TK's
+opposite shape with the split closing on its own curve, the empty competition's six silent
+windows, and the screen. No new module, route or storage key; the build stays at 533 KB gzip
+across 54 assets, so no pin moves. `tsc` clean, build exit 0, the suite lands at 123/123 scripts ·
+3,333/3,333 checks.
+
+**The honest limit.** This panel reads the event list, like the card clock; the venue board above
+it reads the stats block, and the two sources can disagree about a match's cards. Both series
+count finished fixtures only and the last window absorbs stoppage. Bars are totals, not rates:
+the home row is longer partly because every fixture has a home side.
 
 ### M786 — goals and cards read on one clock
 

@@ -23,6 +23,13 @@ export function Discipline() {
   const clock = useMemo(() => cardTiming(compId, matches, clubs), [compId, matches, clubs]);
   const booked = clock.rows.filter((r) => r.cards > 0);
   const peakWindow = Math.max(1, ...clock.windows);
+  // M787: the league curve split by the end each card was earned at — the venue board below
+  // reads rates by club, this reads the same clock by side.
+  const venuePeak = Math.max(1, ...clock.homeWindows, ...clock.awayWindows);
+  const venueRows = [
+    { label: t("disc.venueClockHome"), data: clock.homeWindows, fill: BAR_FILL.info },
+    { label: t("disc.venueClockAway"), data: clock.awayWindows, fill: BAR_FILL.progress },
+  ];
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -203,6 +210,34 @@ export function Discipline() {
                     {clock.redWindows[i] > 0 && (
                       <div className="text-[10px] text-muted-foreground">{t("disc.redTotal", { n: clock.redWindows[i] })}</div>
                     )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+
+          {/* M787: that same curve split by the end the card was earned at, so a league's home
+              and away clocks can be read against each other rather than only in total. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.venueClockTitle")} hint={t("disc.venueClockHint")} />
+            {clock.windows.every((n) => n === 0) ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.clockNone")}</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                {venueRows.map((row) => (
+                  <div key={row.label}>
+                    <div className="text-xs text-muted-foreground">{row.label}</div>
+                    <div className="mt-1 flex items-end gap-1">
+                      {row.data.map((n, i) => (
+                        <div key={i} className="flex-1 text-center">
+                          <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                          <div className="mx-auto mt-0.5 h-10 w-full">
+                            <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, venuePeak) }} />
+                          </div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[i]}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>

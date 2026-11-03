@@ -4507,7 +4507,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M786: the clock contrast adds its title, hint, the two series labels, the reused no-events
 // line and the peak line: six literal sites, one of them interpolating — literal 1853 -> 1859,
 // litVarSites 263 -> 264.
-  shapeCounts.literal === 1859 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M787: the venue split of the card clock adds its title, hint, two side labels and reuses the
+// no-booking line: five literal sites, none interpolating — literal 1859 -> 1864.
+  shapeCounts.literal === 1864 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

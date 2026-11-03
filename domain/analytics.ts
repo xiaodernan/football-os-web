@@ -492,6 +492,11 @@ export interface CardTiming {
   windows: number[];
   /** The red cards of `windows`, same length and the same windows. */
   redWindows: number[];
+  /** The cards earned by the home side of their fixture, by window; sums with `awayWindows`
+   *  to `windows` window for window. */
+  homeWindows: number[];
+  /** The cards earned by the away side of their fixture, by window. */
+  awayWindows: number[];
 }
 
 /** When a club's cards arrive: every recorded YELLOW or RED in this competition's finished
@@ -521,6 +526,8 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
   const lastBand = GOAL_BANDS - 1;
   const windows = Array.from({ length: GOAL_BANDS }, () => 0);
   const redWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const homeWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const awayWindows = Array.from({ length: GOAL_BANDS }, () => 0);
   for (const m of matches) {
     if (m.competitionId !== compId || m.status !== "FINISHED") continue;
     for (const e of m.events ?? []) {
@@ -531,6 +538,7 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       const band = goalBand(e.minute);
       row.cards++;
       windows[band]++;
+      if (e.side === "home") homeWindows[band]++; else awayWindows[band]++;
       if (e.type === "YELLOW") row.yellows++;
       else {
         row.reds++;
@@ -556,7 +564,7 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       return { clubId: r.clubId, reds: r.reds, peakBand, peakCount: r.redBands[peakBand] };
     });
   redList.sort((a, b) => b.reds - a.reds || b.peakCount - a.peakCount || a.clubId.localeCompare(b.clubId));
-  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList, windows, redWindows };
+  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList, windows, redWindows, homeWindows, awayWindows };
 }
 
 export interface ClockContrastWindow {
