@@ -30,7 +30,7 @@ export function AcademyProgress() {
   }, [clubs]);
 
   const [selectedClub, setSelectedClub] = useState<string | null>(null);
-  const [selectedView, setSelectedView] = useState<"progress" "summary">("progress");
+  const [selectedView, setSelectedView] = useState<"academyProgress" "summary">("academyProgress");
 
   const handleSelectClub = (clubId: string) => {
     setSelectedClub(clubId);
@@ -64,11 +64,11 @@ export function AcademyProgress() {
       {/* 视图切换 */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Button
-          variant={setSelectedView === "progress" ? "primary" : "outline"}
+          variant={setSelectedView === "academyProgress" ? "primary" : "outline"}
           size="sm"
-          onClick={() => handleSelectView("progress")}
+          onClick={() => handleSelectView("academyProgress")}
         >
-          {t("academyProgress.progress")}
+          {t("academyProgress.academyProgress")}
         </Button>
         <Button
           variant={setSelectedView === "summary" ? "primary" : "outline"}
@@ -79,12 +79,12 @@ export function AcademyProgress() {
         </Button>
       </div>
 
-      {/* progress数据 */}
-      {setSelectedView === "progress" && selectedClub && (
+      {/* academyProgress数据 */}
+      {setSelectedView === "academyProgress" && selectedClub && (
         <Panel className="p-4 mb-6">
-          <SectionTitle title={t("academyProgress.progress")} />
+          <SectionTitle title={t("academyProgress.academyProgress")} />
           <p>
-            {t("academyProgress.data progress", {
+            {t("academyProgress.data academyProgress", {
               club: clubs.find(c => c.id === selectedClub)?.name,
             })}
           </p>
