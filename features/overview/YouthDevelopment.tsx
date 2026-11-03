@@ -30,7 +30,7 @@ export function YouthDevelopment() {
   }, [clubs]);
 
   const [selectedClub, setSelectedClub] = useState<string | null>(null);
-  const [selectedView, setSelectedView] = useState<"development" "summary">("development");
+  const [selectedView, setSelectedView] = useState<"youthDevelopment" "summary">("youthDevelopment");
 
   const handleSelectClub = (clubId: string) => {
     setSelectedClub(clubId);
@@ -64,11 +64,11 @@ export function YouthDevelopment() {
       {/* 视图切换 */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Button
-          variant={setSelectedView === "development" ? "primary" : "outline"}
+          variant={setSelectedView === "youthDevelopment" ? "primary" : "outline"}
           size="sm"
-          onClick={() => handleSelectView("development")}
+          onClick={() => handleSelectView("youthDevelopment")}
         >
-          {t("youthDevelopment.development")}
+          {t("youthDevelopment.youthDevelopment")}
         </Button>
         <Button
           variant={setSelectedView === "summary" ? "primary" : "outline"}
@@ -79,12 +79,12 @@ export function YouthDevelopment() {
         </Button>
       </div>
 
-      {/* development数据 */}
-      {setSelectedView === "development" && selectedClub && (
+      {/* youthDevelopment数据 */}
+      {setSelectedView === "youthDevelopment" && selectedClub && (
         <Panel className="p-4 mb-6">
-          <SectionTitle title={t("youthDevelopment.development")} />
+          <SectionTitle title={t("youthDevelopment.youthDevelopment")} />
           <p>
-            {t("youthDevelopment.data development", {
+            {t("youthDevelopment.data youthDevelopment", {
               club: clubs.find(c => c.id === selectedClub)?.name,
             })}
           </p>
