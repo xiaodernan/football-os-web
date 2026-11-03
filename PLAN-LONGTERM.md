@@ -240,6 +240,96 @@
   未格式化时间）。按计划的"未路由 stub 推送前清掉并写明"规则，M598 删除全部 23 个文件，并给每个号在 README 里留一段 stub 记录
   （section 而不是 gap，保住账本"gaps 少数派"的门槛）；删净后的树与本屏实测的树逐字节一致，故 pin 与检查数沿用。
 
+- M775: 隔离区 23 个「参数隐式 any」原来是 22 个影子加 1 个真洞——`7006` 自 M539 起钉在 23，那个数字读起来像
+  「还欠 23 处标注」，但参数只能用文件里**叫得出名字**的类型来标注。门换了个问法：给每个隐式 any 参数找到它
+  正在被遍历或被调用的那个表达式，再顺着草稿自己的声明往回走（`campusData`→`campuses`→那个没有符号的门），
+  报告走到哪一步解析不出来。两种答案能免罪，而且两种都真的在场：①应用 provider 根本没声明的门——
+  `footballProvider.campuses()`（AcademyReport 3 处）与 `.coaches()`（CoachCareerProfile＋CoachStatistics 共 6 处），
+  它们被访问的那个表面实际是 `id, mode, clubs, players, competitions, matches, standings`，任何地方都没有
+  campus/coach 类型可写；②从应用不提供的模块里 import 的名字——`League`（LeagueManager 8 处）、
+  `ClubBudget`（ClubFinance 4 处）、`getFreeAgents`（TransferWindow 1 处），正是 M718 记下的五个未上线 domain 里的三个。
+  22 处、5 个名字、6 个文件：这些都不靠「写个类型」能修，写了就是凭空造形状——一份能编译通过的谎言。
+  唯一的真洞与为什么是删除：SeasonSchedule.tsx:23 的答案是「根本没有上游」——同一个文件的 `matches` 元组类型完好，
+  `matchStatus` 的参数却没标注；把文件读回来发现这个 helper 在本文件里没有读者（状态在几行后就地渲染），
+  于是诚实的修复是删掉死代码而不是给它补一份没人调用的标注。`7006` 23→22、`TOTAL_CEILING` 409→408；
+  该文件仍被量着（留下 `2554`/`2322` 两个不属于本族的缺陷），最后一条门把这个钉住——这里归零不能靠把草稿消音买到。
+  另一条决定写进代码而不是写在散文里：走到「谁都没有的名字」（M717 那族）不算免罪，镜像里植入 `UnboundChain.ts`
+  把这条判断量出来。新门 `scripts/proof-draft-any.mjs` 7/7：先让两次读数互相证明——walk 必须为 census 数到的每个
+  `7006` 落到一个参数上（按文件逐一比对），同时把同一个 walk 用在**应用自己**的树上（122 模块 / 0 个隐式 any），
+  这样「没有未免罪的站点」才是关于隔离区的事实而不是一个瞎掉的读数；再钉未免罪桶为 0，并把三种未免罪形状各植入一枚
+  （导出箭头的裸参数、函数声明的裸参数、dead-end 在未绑定名字上的链）；然后每份免罪理由都独立再问一次——门之所以是门，
+  是因为那个「缺门」的表面确实是声明过的类型且真的带着应用已上线的那些门（空表面不能冒充「缺失」），模块之所以是模块，
+  是因为应用自己的解析器确实不答这个 specifier 且草稿确实从它 import 了这个名字；最后一条把五个名字钉成集合：
+  第六个 any 的制造者（新的未上线 domain、新的门）得是有人记下的决定。
+  写门过程中先掉进去的两个坑，都在门被信任之前抓住：把「没有符号的成员访问」当成缺门，对声明过的 `P` 上的 `p.campuses`
+  成立，对 `any` 上的 `c.id` 也成立——第一版某个站点的八条原因全是 `any` 上的门（`campuses.map`、`c.id`、`c.name`、
+  `c.location`、`c.students`、`c.coaches`、`c.graduationRate`、`c.scholarshipRate`），账本键会被它们占掉；
+  修法是问容器的已声明属性，容器是 `any` 就拒答。第二个坑是解构：`const [budget, setBudget] =
+  React.useState<ClubBudget | null>(null)` 里 `setBudget` 是个 BindingElement，既没有类型也没有初始值，
+  第一版因此把 12 处（ClubFinance 的 4 个 `prev` ＋ LeagueManager 的 8 处）报成「没有理由」；
+  把绑定元素回溯到它被解构出来的那个变量，它们才重新变回影子——它们本来就是影子。
+  实测：隔离区 409/69 → **408/69**，`7006` 22；tsc 干净、build exit 0，全套 123/123 proof scripts proven, 3291/3291 checks counted
+  （proof-draft-any 7/7、proof-draft-types 5/5、proof-draft-modules 7/7）。
+  对下一道最有用的话：账本里这五个名字与模块门点名的是同一批，只是从下面看——上线 `@/domain/league` 不只是清掉
+  八处与 `2307` 相邻的站点，它同时让 8 个参数变成「可以标注」，这就是「先上哪个 domain」最尖的论据，而现在它是门读的数。
+  三条臂（把删掉的 helper 放回去／把模块理由指向应用真有的模块／把门的理由指向应用真有的门）各自预测到红，
+  站点全部逐字节还原；其中 ARM-3 第一次多报一条红——1b 那条抄了 1a 的 `sites.length >= 20` 地板，
+  已经把它挪走，让每笔账只有一个主人。全程在隔离 worktree（milestone-719，基于 M718 之后）落地，未触碰分析 lane 的文件。— pushed
+
+
+
+- M774: 比赛页也打开时钟的开局端（无新 fold）——M773 已把 `earlyFaced`/`earlyFacedShare` 折进 `EventClockRow`，
+  M714 只在 stakes 列表印了末段行；本单元把同一行读数接到比赛页：`features/football/Details.tsx` 在牌账行之后、
+  末段两行之前按端各加一行 `stakes.earlySiegeLine`（面对 n 次 / 开局 early 次 / 占比 p%），守卫仍是 `faced > 0`，
+  空端不出零列、跨赛事仍读 null；1 键三语（字典 2,486→2,487）；
+  `proof-analytics` 新增 2 条共 173/173（c3：主队 A 2 次面对里 1 次在首窗（12′ 的扑救）读 1/2=50%，客队 C 唯一一次在 91′ 读 0/1=0%；
+  交叉场 s3 主队真实零行 0、客队 null；屏幕读 `stakes.earlySiegeLine` 与两个 `earlyFaced` 字段、两条 `faced > 0` 守卫）；
+  census pin：i18n literal 1,821→1,823、litVarSites 253→255；无新模块/路由/存储键；
+  bundle 保持 531 KB gzip / 54 资产（JS 519、CSS 12.4，baseline 只重记 JS 518→519，pwa pin 不动）；
+  tsc 干净、build exit 0、全套 122/122 · 3,291/3,291 检查；
+  诚实的保留：这是已有事件记录的读数，未记录的开局读缺席而不是 0，且说的是本赛事已完赛的两端、不是正在预览的这一场。
+
+- M773: 时钟的开局端——`eventClock` 在既有的单次事件 sweep 里给第一个时段补上末段已有的四个数：
+  `EventClockRow` 新增 `earlyShots`/`earlyShare`/`earlyFaced`/`earlyFacedShare`（band===0 与 band===lastBand 同一条 pass，不开第二次扫描），
+  `EventClock` 新增第四个排序 `earlySiege`（按开局挨打数排，并列回落整场 faced 再到 clubId——逐条照抄 M712 `lateSiege` 的落子规则，不自造新秩序）；
+  守零沿用既有约定：没射过球的队 `earlyShare` 取 0 而非 NaN，没挨过打的队 `earlyFacedShare` 同理。
+  新增值班条款钉「开局计数就是第一个时段本身」：逐队 `shotsBands[0] === earlyShots`、`facedBands[0] === earlyFaced`，全联赛两个求和相等——
+  屏幕印的数必须能被柱状图那一段摸到，否则读者最后才发现的就是它。
+  `features/analytics/EventClock.tsx` 加一块「开局挨打」面板（`clock.openSiegeTitle`/`Hint`/`Line`），沿用 M712 的沉默：
+  `earlySiege.filter(r => r.earlyFaced > 0)`，空则整块不印而不是五行零；各队时钟每行在既有末段行之上多印一行 `clock.openRecord`；
+  行右侧时段标签复用 `timing.w1`，不发明第七个时段名；队名回落仍是 `club?.name ?? r.clubId` 这道门，
+  故 absence 门与用户表不动（`EventClock.tsx` 仍 1 处，28 文件）。
+  4 键三语（字典 2,482→2,486）；census pin 取合并树实测：literal 1,816→1,821（第五处是复用 `timing.w1` 的标签）、litVarSites 251→253；
+  顺手改掉 `clock.boardHint` 三语里「名字下面一行是末段占比」这句已经过期的说明（改值不加键，census 不动）；
+  `proof-analytics` 新增 5 条共 171/171（T9 手算 A 早 1/3 脚 33.33% 且挨 1/2 次 50%、B 无早射却挨 1/3、C 唯一一次挨打在 91 分钟故读 0/1 不是 NaN；
+  并列时 B 靠前靠整场 3&gt;2；静默与空表照样保留开局行；屏幕只读 fold、组件内无 `.sort(` 也无 `band === 0`）；
+  bundle 530→531 KB gzip / 54 资产（js 518、css 12.4），`proof-pwa` 预算 pin 530→531，`tests/perf/baseline.json` 随之重记；
+  tsc 干净、build exit 0、npm run proof 122/122 脚本 · 3,289/3,289 检查；
+  浏览器复核（production preview、/clock、zh-CN 与 en，两端 console 干净）：中文「开局挨打」首行 Chelsea 读 开局挨 32 次，共 163 次（19.63%），末段 13.5%，
+  右侧 32 / 1–15′，各队时钟 Chelsea 行早段 22 脚 · 占本队射门 19.47% 压在既有末段行之上；英文 HIT FIRST 排在 HIT LATE 之上，
+  行读 "32 of 163 faced early · 19.63%, 13.5% late"；真实数据读法：Chelsea 开局挨打最多（32/163），Newcastle 开局占比 20% 为全表最高，
+  曼联 own clock 早 14 脚 14.29% 对晚 20 脚 20.41%，与切尔西反向；
+  诚实的保留：开局=1–15 分钟，说的是带事件列表的已结束场次里最早一刻钟，不是首发姿态，也不覆盖没有事件记录的 5 分钟；
+  没有早段事件的队显示「没有」而不是 0，与 M712 对末段板的处置一致。
+
+- M772: 组件农场未路由 stub 再清一次，census 的人群 pin 回到记录值——`origin/master` 在 `67e9c2b` 是红的：
+  `proof-i18n` 读 367/383，16 条失败没有一条来自分析 fold。一批提交（日志里标题占 M711–M771，即青训营/财务/概览组件）
+  在 `features/academy/`、`features/finance/`、`features/overview/`、`features/player/` 下落了 62 个 `.tsx`：`src/App.tsx` 无路由、侧栏无入口、
+  证明脚本无条款、README 无 section，且一个字典键都没写——于是 649 个 `t()` 站点指向三张表里都不存在的键，
+  raw-UI 债在 61 个文件里累计 408 处，`ClubFinancialOverview.tsx` 元素不闭合让中间点字幕探针读成盲区，
+  量到树而非量到代码的 pin 三处漂移（skip-list 审计与人群普查 127→189 模块、字幕 walk 70→132 个 `.tsx`、读字典表的文件 130→192）。
+  处置沿用 M710（47 个组件、814 个凭空键、175→127）与 M598（23 个文件）的先例：删。
+  删前核实无任何引用——`src/`、`features/shell/` 与全部 proof 脚本 grep 既无 importer 也无按文件名的条款，六十二个文件只 import 共享 primitives；
+  删后 `tsc --noEmit` exit 0，字典仍 2,482 键 · 3 语，`proof-i18n` 回到 383/383 且四条 pin 回到记录值；
+  bundle 不动（530 KB / 54 资产）——未路由的组件根本进不了 chunk，这正是它能藏六十三提交的原因。
+  本提交除六十二个删除文件与 README/PLAN 记录外不动任何 fold、屏、键或预算 pin；文本没丢，`67e9c2b` 及其父提交里都在。
+  本提交还补了一次账：本线的 section 写到 M772 之后，README 的编号区间就把农场的 M719–M771（M769 除外——日志里根本没有这个号）
+  暴露成 53 个没有 section 的号，gaps 块因此逐条点名那批提交真正交付的组件、prose 计数 133→186，
+  `proof-ledger-run` 8/8；条目写的是组件名而不是编号，因为光秃秃的号仍是读者要自己挖的洞。
+  这次清扫写进下一条的教训：清扫是机械的，而且树对它是不变的（删一个不被引用的文件不会动其余文件的任何测量），
+  但只要那条 lane 还在推送，每次落地都得重来一遍；根治是"谁都不 import 的文件不再计入应用 census，单独记一本隔离账"，
+  那是下一条里程碑的活；本提交只把桌子清空。
+
 - M718: 隔离区「找不到模块」的八个站点原来是三件事——`2307` 自 M539 起钉在 8，但那个数字说不清八处各自缺什么。
   门改问编译器的解析器两次：应用平面（应用自己的 options＋以草稿文件为所在目录，正是 checker 问的那句话）与
   隔离区平面（同一份 options 把根挪进 `.drafts`）。两答之间八处分了类：七处指的是隔离区原地就有的同路径模块
@@ -530,13 +620,50 @@
   字典 +4 键/语（2,441→2,445 值）；bundle 524→525 KB gzip / 54 资产（baseline 重记，pwa pin 同步）；tsc 干净、build exit 0、npm run proof 121/121 脚本 · 3229/3229 检查（再并 M623 后 3234/3234）；
   合并注：此条目是分析 lane 在 M621 之上未提交的工作树改动，本线把它并入后重编为 M622（M575 已被农场 stub 占用）。
 
-下一条目：M717 候选按"真实数据 + 不重叠 + 复用既有 domain"排：
-① 早段/晚段的攻守对照（`shotsBands` 与 `facedBands` 的首窗对末窗，同一 fold 两读）；
-② 事件时钟的早段挨打 `earlySiege`（`lateSiege` 的镜像：首窗挨打量排序，同一扫描）；
-③ 俱乐部页牌趋势与联赛趋势的对照（同一 fold 两读：本队曲线叠在联赛曲线上）；
-④ 上限位次的落点读法（`ceilingPlaces` 已同时给出升与降：在 /scenarios 的说明行或争冠屏里点名"被上限吃掉位次最多"的队，
-  读同一 fold，不重排、不另起一遍）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取下一个空号（组件农场 lane 已占 M633–M709，本线已落 M621、M623、M624、M625、M626、M627、M628、M629、M630、M631、M632、M710、M711、M712、M713、M714、M715、M716，M622 的纪律趋势由分析 lane 在合并树上落地）；农场 lane 未路由的 stub、`.drafts/` 新增草稿在其每次推送后由本线清理并记入 README。
-每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+- M776: census 只计「读者能走到的应用」——可达闭包下沉一处。`scripts/lib/appTree.mjs` 新增
+  `importEdgesIn`/`resolveModuleSpec`/`reachableModulesIn`（静态/re-export/bare/dynamic 值边，`import type` 不计；`@/` 与相对路径；
+  oracle 只认文件不认目录）；`proof-coverage` 删掉私有 resolver，改为导入共享实现，既有五条合成图证明（两跳链、type-only、动态导入、孤儿）
+  现在考的就是共享实现；`proof-i18n` 人群改为从 `src/main.tsx` 的闭包：appSrc 127→116、walked 130→119、`.tsx` 仍 70（三个不可达模块是 .ts/.d.ts）；
+  新增账本条款：routed 41 屏全在闭包内（0 lost），3 个 app 模块 + 8 个 harness 文件只报数（0 t() 字面量 / 0 凭空键 / 0 raw-UI）；
+  `proof-app-tree` 模块 pin 122→119（十目录仍逐个计）并加一条「可达性问题只有一处答案」（2 个 proof 导入、0 私有副本）；
+  顺带修一个被旧人群掩盖的误计：裸键池 pin 去掉 `foundKeys`（那是 browser-walk 收集页面原始键的测试数组，不是屏幕喂给 t() 的池）；
+  无字典键/路由/存储键变化，bundle 不变（baseline 不动）；tsc 干净、build exit 0、全套 123/123 · 3,300/3,300（+2 检查，i18n 383→384、app-tree 12→13；并入隔离区 M775 的 proof-draft-any 后总数为 3,300）；
+  诚实的保留：不可达计数故意不 pin，删掉隔离文件只移动报数、不红门禁——这是换农场 stub 不逼清扫的代价，死面可见但不设闸。
+- M777: 时钟的开局进攻端——攻击面的开局排序与末段对照。`EventClock` 新增 `earlyAttack`：与 `earlySiege` 同一批行，
+  按首窗射门数降序、并列取总射门数、再取 clubId，不新增 fold 或计数；`EventClock.tsx` 在「各队的时钟」之后、
+  「防线压力」之前加「开局进攻」面板：每行印 `{e} early ({p}%) · {l} late ({q}%)`，右列总射门数，
+  `r.earlyShots > 0` 过滤（零行不印）；3 键三语（clock.strikeTitle/strikeHint/strikeLine），字典 2,487→2,490；
+  `proof-analytics` 新增 3 条共 176/176（T9 手算：A 首窗 1/3 33.33%、末段 2/3 66.67%，B 0/1，C 0/0，排序 ABC；
+  silent 3 行全零、empty 2 行；屏幕过滤 + 不排序）；census pin：literal 1,823→1,827（四个字面量位：标题、提示、行、
+  复用的射门标签）、litVarSites 255→256；无新模块/路由/存储键；bundle 531 KB / 54 资产不变（baseline 不动）；
+  tsc 干净、build exit 0、全套 123/123 · 3,303/3,303；
+  诚实的保留：只排开局，末段只印不排；份额是各队自身射门占比，单脚开局读 100%，零开局不印零行；两端都是已结束比赛的读数。
+- M778: 上限位次的落点读法——把「升几位」变成「升到谁头上」的读法。`CeilingPlaceRow` 新增 `landedOn`：
+  在 `ceilingPlaces` 里把已经算好的 ceiling 行先排序一次，位次与落点都从这一份读出（`ceilingPlace` 有效时取
+  `ceilingRows[ceilingPlace]` 当下一行，末位 null），不二次排名、不新建 fold；`PointsScenario.tsx` 在「上限位次」
+  数字下面印落点小字（`scenario.landedOn` 带 club short，末位 `scenario.landedBottom`），没有行仍走 ABSENT；
+  2 键三语，字典 2,490→2,492；`proof-analytics` 新增 3 条共 179/179（T1 邻行链、TC 升位者压过被取代者与末位、
+  外部重建 ceiling 排序逐行对齐）；census pin：literal 1,827→1,829、litVarSites 256→257；无新模块/路由/存储键；
+  bundle 531 KB / 54 资产不变（baseline 不动）；tsc 干净、build exit 0、全套 123/123 · 3,306/3,306；
+  诚实的保留：落点只说「这一行站在谁上面」，被挤下去的行同样印新邻居，不区分谁赢谁输；并列由 `byTableStanding`
+  的既有 tie-break 定序，落点跟着那一个顺序走。
+- M779: 牌的时段——把每张牌落在哪个分钟窗读出。`domain/analytics.ts` 新增 `cardTiming(compId, matches, clubs)`：
+  复用 `teamMetrics` 的行骨架与 `goalBand` 的六窗，单遍遍历已结束比赛的 YELLOW/RED 事件，逐队给出
+  yellows/reds/cards、六个窗口的 bands、首窗（band 0）earlyCards 与末窗（band 5）lateCards 及两端份额；
+  排序按首窗牌数、总牌数、clubId，earliest 取首个有首窗牌的队；不新增 fold；`Discipline.tsx` 在趋势面板后
+  加「牌落在哪个时段」面板：每行 Link + 复用 `clock.strikeLine` 的 `{e} early ({p}%) · {l} late ({q}%)` 行、
+  右列总牌数随 `disc.clockTotal`；零牌队不印，空赛事印 `disc.clockNone`；4 键三语
+  （disc.clockTitle/clockHint/clockTotal/clockNone），字典 2,492→2,496；`proof-analytics` 新增 5 条共 184/184
+  （T10 手算：U 三张 bands 1,1,0,0,0,1、首末窗各 33.33%，V 两张都落末窗 100%，W 一张末窗，X 有比赛零牌；
+  5' 进首窗、20' 不进，75' 不算末窗、76' 算；未结束与其他赛事不计；空赛事 0 行、earliest null；屏幕过滤与不排序）；
+  census pin：literal 1,829→1,834、litVarSites 257→259；无新模块/路由/存储键；bundle 531→532 KB / 54 资产
+  （JS 520 + CSS 12.4），pin 531→532 并重录 baseline；tsc 干净、build exit 0、全套 123/123 · 3,311/3,311；
+  诚实的保留：只读记录到分钟的牌，没有分钟的出牌不入任何窗口；份额是各队自身牌的占比，单张首窗读 100%；
+  首末窗是同一个六窗口径的首窗与末窗，不是全场前后半场。
+下一条目：M780 候选按「真实数据 + 不重叠 + 复用既有 domain」排：
+④末段进攻的独立排序（M777 只排开局、末段随行印出；`lateShots` 已在 fold 里，是同一块板的另一半，
+可单独成板或换排序键）；
+⑤红牌窗口的独立读法（`cardTiming` 已把 yellows/reds 分开存放，可加一屏只读红牌的六窗）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

@@ -77,9 +77,9 @@
 //      raw string, so checks 4/16/18 and the UI scan are all silent while a Chinese reader
 //      sees the model's own code (M249).
 // Run: node scripts/proof-i18n.mjs
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { normalize, scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
-import { skipReason } from "./lib/appTree.mjs";
+import { skipReason, reachableModulesIn, resolveModuleSpec, APP_DIRS } from "./lib/appTree.mjs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -483,7 +483,15 @@ ok(`all ${CATEGORY_ORDER.length} categories have attr.* in every locale (${missi
 const rel = (f) => f.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");
 // Comment lines cannot claim a key: prose that quotes a key is not a caller.
 const codeOf = (src) => src.split(/\r?\n/).filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
-const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]));
+// M776. The population is what a READER reaches from the SPA entry, not what the repository holds. A
+// file nothing imports is a quarantine, not a screen: the farm's three sweeps (M598/M710/M772) deleted
+// 115 such components precisely because a pin counted them the moment they landed. The closure is the
+// shared one in scripts/lib/appTree.mjs — proof-coverage and proof-app-tree ask the same question — and
+// the files it leaves out are reported in the ledger below, never charged as population.
+const moduleHere = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
+const readerReaches = reachableModulesIn(["src/main.tsx"], (p) => readFileSync(join(root, p), "utf8"), moduleHere);
+const unreachedFiles = files.map(rel).filter((p) => !readerReaches.has(p));
+const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && readerReaches.has(rel(f))).map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]));
 // Three population pins, each a number measured from this gate's own report at M248 — 95 app
 // modules, 49 of them .tsx, 98 files including i18n/. They are written as literals on purpose.
 // M350: new SimpleSlider component adds one module (components/ui/simple-slider.tsx) and one .tsx file.
@@ -519,7 +527,10 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/")).map((f) 
 // M573: 124 -> 125 — domain/nextStep.ts is the dashboard's next-step ranking.
 // M574: 125 -> 126 — features/analytics/EventClock.tsx is a new shot/save/review clock screen.
 // M575: 126 -> 127 — features/analytics/Briefing.tsx is a new matchday-briefing screen.
-const APP_SRC_PIN = 127;
+// M776: 127 -> 116. The census counts only files the reader reaches (116 outside i18n/). The eight
+// E2E/config files and the three unrouted modules it used to charge are the ledger below, not the
+// population; the reachable count is the pin, because that is the number a real deletion moves.
+const APP_SRC_PIN = 116;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -539,6 +550,8 @@ const APP_SRC_PIN = 127;
 // M571: 67 -> 68 — Discipline.tsx is the new .tsx module.
 // M574: 68 -> 69 — EventClock.tsx is the new .tsx module.
 // M575: 69 -> 70 — Briefing.tsx is the new .tsx module.
+// M776: still 70, now measured over the reachable set — the three unreached modules are .ts and .d.ts,
+// so the .tsx population was already reader-scoped in fact; the pin now says so on purpose.
 const TSX_PIN = 70;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
@@ -561,7 +574,30 @@ const TSX_PIN = 70;
 // M571: 126 -> 127, Discipline.tsx again.
 // M573: 127 -> 128, nextStep.ts added to the walk.
 // M574: 128 -> 129, EventClock.tsx added to the walk; M575: 129 -> 130, Briefing.tsx again.
-const SRC_PIN = 130;
+// M776: 130 -> 119. Three walked files are not reachable from src/main.tsx — the two Edge Function
+// modules and the ambient declaration; the eight E2E/config files are not reader-reachable either.
+// The pin is the walked population the reader can open, and the ledger below reports the rest by name.
+const SRC_PIN = 119;
+
+// The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
+// can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
+// the direction that must hold on every tree: every screen the router lazy-loads is in the closure
+// (routed still counted), and the files nothing imports are named here with the debt they carry
+// (unrouted quarantined) — never folded into the population the pins above measure.
+const routedScreens = [...codeOf(readFileSync(join(root, "src/App.tsx"), "utf8"))
+  .matchAll(/lazy\(\(\)\s*=>\s*import\(\s*["']([^"']+)["']\s*\)/g)]
+  .map((m) => resolveModuleSpec(m[1], "src/App.tsx", moduleHere))
+  .filter((p) => p && !p.startsWith("i18n/"));
+const lostScreens = routedScreens.filter((p) => !readerReaches.has(p));
+const reachedWalked = files.map(rel).filter((p) => readerReaches.has(p));
+const unreachedApp = unreachedFiles.filter((p) => APP_DIRS.some((d) => p.startsWith(d + "/")));
+const unreachedHarness = unreachedFiles.filter((p) => !unreachedApp.includes(p));
+const unreachedLiterals = unreachedApp.flatMap((p) => [...codeOf(readFileSync(join(root, p), "utf8")).matchAll(STATIC)].map((m) => m[1]));
+const reachableText = [...appSrc.values()].join("\n");
+const phantomKeys = [...new Set(unreachedLiterals)].filter((k) => k in en && !reachableText.includes(`"${k}"`));
+const unreachedRaw = unreachedApp.map((p) => [p, scanSource(codeOf(readFileSync(join(root, p), "utf8"))).hits.length]).filter(([, n]) => n > 0);
+ok(`the reader reaches ${reachedWalked.length} of the ${files.length} walked files (pin ${SRC_PIN}), every screen the router lazy-loads is among them (${routedScreens.length} named, ${lostScreens.length} lost${lostScreens.length ? `: ${lostScreens.join(", ")}` : ""}), and ${unreachedApp.length} unrouted app module(s) sit in the ledger [${unreachedApp.join(", ") || "none"}] beside ${unreachedHarness.length} harness file(s) outside the reader's path, carrying ${unreachedLiterals.length} t() literal(s), ${phantomKeys.length} phantom key(s) [${phantomKeys.slice(0, 4).join(", ") || "none"}], ${unreachedRaw.reduce((n, [, k]) => n + k, 0)} raw-UI hit(s)`,
+  routedScreens.length >= 30 && lostScreens.length === 0 && reachedWalked.length === SRC_PIN && appSrc.size === APP_SRC_PIN);
 
 const { ACHIEVEMENTS } = await server.ssrLoadModule("/domain/achievements.ts");
 const quoted = /"([^"]+)"/g;
@@ -2127,7 +2163,7 @@ const MID_CONTROL = [
   "  return <div>{s}</div>;",
   "};",
 ];
-const tsxFiles = files.filter((f) => rel(f).endsWith(".tsx") && !rel(f).startsWith("i18n/"));
+const tsxFiles = files.filter((f) => rel(f).endsWith(".tsx") && !rel(f).startsWith("i18n/") && readerReaches.has(rel(f)));
 // Two selectors over the same walk — `appSrc` minus the non-.tsx, versus `files` filtered on
 // .tsx-and-not-i18n — have to name the same 49 paths. That equality is not a tautology: each
 // side is derived by a different predicate, so a selector that starts skipping a directory
@@ -2433,7 +2469,7 @@ function rowTypedAt(src, at) {
   }
   return { name: null, row: false };
 }
-const allSrc = files.map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]);
+const allSrc = files.filter((f) => readerReaches.has(rel(f))).map((f) => [rel(f), codeOf(readFileSync(f, "utf8"))]);
 // M247: same anti-vacuity rationale — a pin so deleting the budget pile
 // moves the number instead of tripping a floor. SRC_PIN is a literal now (see the
 // population pins beside `appSrc`): as written here it was `X === X`.
@@ -4386,7 +4422,19 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M715: the briefing prints the two place keys M632 wrote, for its own fixture: 1811 -> 1813.
 // M716: the scenarios table's ceiling-place column header and the two lines of the new climb tile
 // (its label and its variable-carrying sub): literal 1813 -> 1816.
-  shapeCounts.literal === 1816 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M773: the clock's opening board adds its title, hint and row line, the board's new opening record
+// and the window label that row repeats from timing: literal 1816 -> 1821, litVarSites 251 -> 253
+// (only the opening line and the opening record interpolate).
+// M774: the match page's opening-siege lines repeat M714's pair for the first window: 1821 -> 1823.
+// M777: the opening-attack panel adds its title, hint and row line plus one repeated shots label
+// (four literal sites; only the row line interpolates): literal 1823 -> 1827, litVarSites 255 -> 256.
+// M778: the ceiling-place cell adds its landing line and the bottom-row label (two literal sites;
+// the landing line interpolates the club name): literal 1827 -> 1829, litVarSites 256 -> 257.
+// M779: the discipline clock adds title, hint, total label and the no-booking line, and leans on
+// M777's strike line for its row: five literal sites (the label and the reused row line each add
+// one call site even though only four keys are new), two of them interpolating: literal 1829 ->
+// 1834, litVarSites 257 -> 259.
+  shapeCounts.literal === 1834 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4441,7 +4489,14 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M714: 246 -> 248 — each end's siege line hands over the faced count, the late count and the share.
 // M715: 248 -> 250 — the briefing hands the same five variables over for its own two clubs.
 // M716: 250 -> 251 — the climb tile's sub line hands over the places its own sweep would buy.
-  litVarSites === 251 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M773: 251 -> 253 — the opening-siege row hands over its early count, the faced load, the early
+// share and the late share beside it; the board's opening record hands over the early count/share.
+// M774: 253 -> 255 — each end's opening-siege line hands over the faced count, the early count and
+// the opening share, the same three variables M714's late line passes.
+// M778: 256 -> 257 — the landing line hands over the club short's name; the bottom-row label passes none.
+// M779: 257 -> 259 — the card clock's total label hands over the count, and the reused strike
+// line hands over the two counts and the two shares at its new call site.
+  litVarSites === 259 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
@@ -4466,7 +4521,10 @@ for (const [, code] of appSrc) {
 const filmKindSrc = appSrc.get("domain/filmInsights.ts") ?? "";
 const filmKindBlock = (/const FILM_KIND_KEY[^=]*=\s*\{([^}]*)\}/.exec(filmKindSrc) ?? [])[1] ?? "";
 const filmKindKeys = [...filmKindBlock.matchAll(/"([A-Za-z0-9_.$-]+)"/g)].map((x) => x[1]);
-const POOL_FIELDS_PIN = ["bodyKeys", "foundKeys", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
+// M776: foundKeys left the pin with the population. It is `scripts/browser-walk.spec.ts`'s collection
+// of raw keys found on the page — a test harness array, not a pool a screen hands to t(); the reader
+// cannot reach that spec, and the pool this clause audits is the pool the app renders.
+const POOL_FIELDS_PIN = ["bodyKeys", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
 const poolFieldsGot = [...poolFields, ...poolArrFields].sort();
 const poolVars = [...poolKeys, ...filmKindKeys].filter((k) => L.some((loc) => phList(D[loc.id][k] ?? "").length > 0));
 const plantPool = L.some((loc) => phList((loc.id === "en" ? D.en["learn.l.xg.title"] + " {n}" : D[loc.id]["learn.l.xg.title"]) ?? "").length > 0);

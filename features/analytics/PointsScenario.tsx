@@ -141,9 +141,20 @@ export function PointsScenario() {
                     <div className="text-right font-semibold tabular-nums">{r.points}</div>
                     <div className="text-right tabular-nums">{r.remaining}</div>
                     <div className="hidden text-right tabular-nums sm:block">{r.maxPoints}</div>
-                    {/* M716: the place that ceiling would buy, ranked with the table's own door. */}
+                    {/* M716: the place that ceiling would buy, ranked with the table's own door.
+                        M778: under the number, the row it lands on — who stands directly below it
+                        in the ceiling table, named so the place is a name and not only a digit. */}
                     <div className="hidden text-right tabular-nums sm:block">
-                      {standing ? standing.ceilingPlace : ABSENT}
+                      {standing ? (
+                        <>
+                          {standing.ceilingPlace}
+                          <div className="text-[10px] leading-tight text-muted-foreground">
+                            {standing.landedOn
+                              ? t("scenario.landedOn", { club: getClub(standing.landedOn)?.short ?? standing.landedOn })
+                              : t("scenario.landedBottom")}
+                          </div>
+                        </>
+                      ) : ABSENT}
                     </div>
                     <div className="hidden text-right tabular-nums sm:block">{fmt2(r.ratePoints)}</div>
                     <div className="hidden text-right tabular-nums sm:block">

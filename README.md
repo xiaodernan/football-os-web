@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M718 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M779 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,364 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M779 — the card clock reads the minute
+
+**A card has a minute, and the minute is a window.** The discipline page already trends cards week by
+week, but a season's bookings were never placed on the clock. M777 gave shots six windows; yellow
+and red cards arrive in the same event stream with the same `minute`, so those windows can hold them
+without a second definition of "early".
+
+**Read once, bucketed by the same band.** `cardTiming` walks the finished matches once, takes every
+YELLOW and RED event and files it under `goalBand(minute)`. Each club row carries yellows, reds, the
+six bands, the first-window and last-window counts, and both shares of that club's own cards. Rows
+sort by first-window cards, then all cards, then club id; `earliest` is the first row with a booking
+in the opening window. A club with matches but no cards still gets a zero row, so the screen can tell
+"no bookings" from "not in the competition".
+
+**The numbers on the fixtures.** On T10's synthetic season U books the fifth minute and the
+seventy-sixth, V books the seventy-fifth, W books the ninetieth — so U reads one card in each end
+window (33.33% each), V reads both of its cards in the last window (100%), W reads its single card
+there too, and X, which played but never booked, reads zero across all six bands. A twentieth-minute
+card stays out of the first window and a seventy-fifth stays out of the last, which fixes the band
+edges from both sides. Scheduled matches and a second competition's cards are not counted.
+
+**Words and gates.** 4 keys · 3 locales (`disc.clockTitle`, `disc.clockHint`, `disc.clockTotal`,
+`disc.clockNone`), so the dictionary goes 2,492 → 2,496. The panel's rows reuse the existing
+`clock.strikeLine` rather than minting a twin sentence — the duplicate-sentence rule caught the first
+version. That is one title, one hint, one count and one empty line: five literal sites, two of them
+interpolating, moving the census to literal 1,829 → 1,834 and variable-carrying sites 257 → 259.
+`proof-analytics` grows five clauses to 184/184. No new module, route, screen or storage key. The
+build gains one table and a few rows: 532 KB gzip across the same 54 assets (JS 520, CSS 12.4), so
+the pin moves 531 → 532 and the baseline re-records. `tsc` clean, build exit 0, the suite lands at
+123/123 scripts · 3,311/3,311 checks.
+
+**The honest limit.** Only bookings that carry a recorded minute enter a window; an event without
+one is invisible here. Shares are each club's own cards, so a single opening booking reads 100% and
+one card in each end window reads 33.33 / 33.33. The first and last windows are the outer two of six,
+not halves of the match.
+
+### M778 — the ceiling place lands on a name
+
+**A place is a number until it names somebody.** M716 ranked every club by the table its own ceiling
+would produce and printed how many places the ceiling moves it. That answered "how far", not "to
+where": a reader could see a club climb two places and still have to count rows to learn which club
+it had passed. The ceiling table was computed inside `ceilingPlaces` and thrown away after the places
+were read, so the name the move lands on was not in the fold at all.
+
+**The neighbour, read off the same sort.** `CeilingPlaceRow` now carries `landedOn`: the club ranked
+directly below it in the ceiling table, taken from the same sorted `ceilingRows` the places come
+from. The bottom row names nobody (null), every other row names exactly the club one place behind,
+and the fold does not rank a second time — the same one-door rule the table screens keep. A row the
+ceilings push DOWN still names its new neighbour: "over" says where the row stands, not who won the
+move, and the screen can print it without inventing a winner for every row.
+
+**The numbers on the fixtures.** T1's ceilings are already in order, so A lands on B, B lands on C
+and C lands on nobody — the chain the places already implied, now spelled. On TC, P's sweep takes
+first and lands on Q, the club it displaced, while Q lands on N and N holds the bottom row with no
+name below it. Rebuilding the ceiling order outside the fold and comparing row by row agrees with
+every printed neighbour, which is the clause that keeps the name from drifting away from the number.
+
+**Words and gates.** 2 keys · 3 locales (`scenario.landedOn`, `scenario.landedBottom`), so the
+dictionary goes 2,490 → 2,492 keys. The ceiling-place cell gains its landing line and the bottom-row
+label — two literal sites, only the landing line interpolating — moving the census to literal
+1,827 → 1,829 and variable-carrying sites 256 → 257. `proof-analytics` grows three clauses (the
+neighbour chain, the displaced row on TC, and the outside-order agreement) to 179/179. No new
+module, route, screen or storage key. The build stays at 531 KB gzip across the same 54 assets
+(JS 519, CSS 12.4), so the perf baseline and `proof-pwa`'s pin hold. `tsc` clean, build exit 0,
+the suite lands at 123/123 scripts · 3,306/3,306 checks.
+
+**The honest limit.** "Over" is a statement about order, not about cause: a club that held its
+place also names the club below it, and a club pushed down reads the same label as one that climbed.
+The two clauses that tell a climb from a fall are `moves` and `place`, which the table already
+prints. Ties are broken by `byTableStanding`, so the landing follows that one order and never claims
+a tiebreak of its own.
+
+### M777 — the clock's attack opens too
+
+**The half of the clock M773 still left on one end.** M773 folded the first window for both ends
+and opened the defending board — `earlySiege` ranked the clubs that take the most shots faced
+inside fifteen minutes. The attacking half of that fold (`earlyShots`/`earlyShare`, already on
+every row since M773) had no ordering of its own: a reader could see one club's opening shots on
+the every-club board, but could not ask which clubs strike first. The new `earlyAttack` order
+ranks the same rows by the shots they took in the first window, ties fall back to the whole shot
+load and then the club id, exactly the shape `earlySiege` uses on the defending end; no second
+fold and no new counter.
+
+**The contrast on one row.** The screen's new "Strikes first" panel prints each club's opening
+count and share beside its closing count and share — `{e} early ({p}%) · {l} late ({q}%)` — so
+the two ends of one attack are read together rather than on two screens. Like M712 and M773, a
+club with nothing early has no row rather than a zero: the panel is empty when nobody struck
+early, the same silence the defending boards keep.
+
+**The numbers on the T9 fixtures.** A took one of its three shots inside the first window (1 of 3,
+33.33%) and two after the 75th (2 of 3, 66.67%); B took none of its one at either end; C never
+shot. Ranked by opening shots and then the whole load, the board reads A-B-C. A silent competition
+keeps all three rows in the order at zero, and an empty table keeps its two — the screen drops
+them by `earlyShots > 0` rather than printing zeros, and the proof asserts both.
+
+**Words and gates.** 3 keys · 3 locales (`clock.strikeTitle`, `clock.strikeHint`,
+`clock.strikeLine`), so the dictionary goes 2,487 → 2,490 keys; the panel's four literal sites
+move the census to literal 1,823 → 1,827 and variable-carrying sites 255 → 256 (the title, the
+hint and the repeated shots label pass no variables; the row line hands over the two counts and
+the two shares). `proof-analytics` grows three clauses — the fold hand-count, the silent/empty
+order and a screen clause holding the filter, the line and the no-sorting rule — to 176/176. No
+new module, route, screen or storage key. The build stays at 531 KB gzip across the same 54
+assets (JS 519, CSS 12.4), so the perf baseline and `proof-pwa`'s pin hold. `tsc` clean,
+build exit 0, the suite lands at 123/123 scripts · 3,303/3,303 checks.
+
+**The honest limit.** This is still a read of finished fixtures at this competition's ends, not a
+preview of the current match. The shares are shares of each club's own shots, so a side with a
+single early attempt reads 100% and a side with none is silent rather than zero; the board ranks
+the opening and prints the close, it does not claim the closing end is ranked — a late-attack
+ordering of the same rows is the remaining half, listed as a candidate rather than pretended.
+
+### M776 — the census counts the app a reader can reach
+
+**The hostage.** The dictionary census walked every `.ts`/`.tsx` file the repository would show git,
+and pinned the population at 127 modules, 70 screens and 130 files. A file under `features/` that
+nothing imports was therefore counted the moment it landed — and the component farm lands exactly
+those: three sweeps (M598, M710, M772) deleted 23 + 47 + 45 unreached components, and every sweep was
+forced by a red pin rather than by a defect. A pin that reddens on a quarantine measures the
+repository, not the product.
+
+**The answer.** The question "what can a reader open?" now has one implementation, beside the
+neighbour rule in `scripts/lib/appTree.mjs`: `reachableModulesIn` walks value imports from
+`src/main.tsx` — static imports, re-exports, bare imports that run a module, and the route table's
+dynamic `import()` — and resolves `@/` aliases and relative paths through an oracle that means a
+file, never a folder. `import type` is not an edge: it is erased before the bundle exists.
+`proof-coverage` asked this question first with a private resolver; it now imports the shared one,
+and its planted graphs (two-hop chain, type-only edge, dynamic import, orphan module) exercise the
+copy every gate reads, so routed modules are counted and unrouted ones are not, both by construction.
+
+**What the pins say now.** `proof-i18n` measures 116 files outside `i18n/` (from 127) and 119 of the
+130 walked files (from 130), while the `.tsx` pin stays 70 because the three unreached modules are
+`.ts` and `.d.ts`. `proof-app-tree` pins the module population at 119 of the ten directories' 122.
+Every screen the router lazy-loads — 41 of them — is inside the closure, asserted on each run.
+
+**The ledger.** Files nothing imports are reported, not charged: three unrouted app modules
+(`functions/handler.ts`, `functions/index.ts`, `src/vite-env.d.ts`) beside eight harness files
+outside the reader's path, carrying 0 `t()` literals, 0 phantom dictionary keys and 0 raw-UI hits.
+The split matters: the first three are the app's dead surface, the last eight are entry points for
+Playwright, not the reader's app. The same read found one population error the old walk had been
+hiding: `foundKeys` left the bare-pool pin, because it is a browser-walk harness array collecting
+raw keys off the page, not a pool any screen hands to `t()`.
+
+**Measured.** `npx tsc --noEmit` clean, `npm run build` exit 0, no bundle change (scripts only,
+baseline stands). The suite reads **123/123 proof scripts proven, 3300/3300 checks counted** — the
+two new checks are the reader's ledger in `proof-i18n` and the one-rule charge in `proof-app-tree`.
+
+**Honest reservation.** The unreached count is deliberately unpinned, so deleting a quarantined
+file moves a reported number and reddens nothing. That is the trade this milestone buys: the farm
+can keep landing stubs without forcing a sweep, and the honest cost is that the dead surface is
+visible rather than gated.
+
+
+### M775 — the quarantine's twenty-three implicit-anys are twenty-two shadows and one real hole
+
+**What the ratchet could not see.** `7006` — "parameter implicitly has an 'any' type" — has been bound at
+23 since M539 counted it, and 23 reads like 23 annotations waiting to be written. It is not that. A
+parameter can only be annotated with a type the file can NAME, and this gate asks, for each of the 23,
+what the parameter was depending on: it finds the expression being iterated or called, walks that
+expression back through the draft's own declarations — `campusData` → `campuses` → the door that has no
+symbol — and reports the reference that could not be resolved.
+
+**What the twenty-two were.** Two answers excuse a site, and both were present. A door the app's own
+provider type does not declare: `footballProvider.campuses()` (AcademyReport, 3 sites) and
+`footballProvider.coaches()` (CoachCareerProfile and CoachStatistics, 6) — the surface those calls are
+made against is `id, mode, clubs, players, competitions, matches, standings`, and there is no campus or
+coach type anywhere to write. And a name imported from a module the app does not provide: `League`
+(LeagueManager, 8 sites), `ClubBudget` (ClubFinance, 4), `getFreeAgents` (TransferWindow, 1) — three of
+the five domains M718 recorded as unwritten, reached for by the screens that were shelved with them.
+Twenty-two sites, five names, six files. None of them is fixable by writing a type: the type would have
+to be invented, and an invented shape in a draft is a lie that compiles.
+
+**The repair, and why it is a deletion.** One site answered "there is no upstream at all":
+`.drafts/features/match/SeasonSchedule.tsx:23` handed `matchStatus` an unannotated parameter while the
+same file's `matches` tuple was perfectly typable. Reading the file back, the helper had no reader in
+it — the screen renders the status inline a few lines below — so the honest repair is deleting dead
+code, not inventing an annotation for a function nothing calls. `7006` 23 → 22, `TOTAL_CEILING`
+409 → 408, and the file is still measured: it keeps the two defects that are not this family
+(`2554`, `2322`), which the last clause pins so that a zero here cannot be bought by muting a draft.
+
+**A name that exists nowhere is not a missing type.** The walk could have counted M717's class — an
+identifier with no symbol anywhere — as a third excuse ("the type is missing, isn't it"). It does not:
+a chain that dead-ends in an unbound name stays charged, and `UnboundChain.ts` is planted in the mirror
+to keep that decision measured rather than stated.
+
+**The gate.** `scripts/proof-draft-any.mjs`, 7/7. First the two readings of one population: the walk
+must land on a parameter for every `7006` the type census counts, file by file, and it is run over the
+APP's own tree too — 122 modules, 0 implicit-any — so "no site is left unexcused" is a fact about the
+quarantine rather than what a blind reader prints. Then the charged bucket, pinned at zero with all
+three unexcused shapes planted beside it (a bare parameter of an exported arrow, of a function
+declaration, and the dead-ending chain). Then each excuse is re-asked independently: a door is only an
+excuse if the surface it is missing from is a real declared type that does declare the doors the app
+ships, and a module is only an excuse if the app's resolver really refuses that specifier and the draft
+really imports that name from it. The last clause pins the five names as a set: a sixth producer of
+`any` — a new unwritten domain, a new door — is a decision somebody recorded.
+
+**Two traps the first walk fell into, both caught before the gate was trusted.** Reading a member
+access with no symbol as "a door the surface lacks" is true of `p.campuses` on a declared `P` and also
+of `c.id` on an `any` — on the first pass, eight of a single site's causes were doors on nothing
+(`campuses.map`, `c.id`, `c.name`, `c.location`, `c.students`, `c.coaches`, `c.graduationRate`,
+`c.scholarshipRate`), and the ledger keys would have been those instead of the two real absences. The
+fix is to ask the container for its declared properties and refuse the question when the container is
+`any`. And the walk dead-ended on destructuring: `const [budget, setBudget] =
+React.useState<ClubBudget | null>(null)` binds `setBudget` with a BindingElement, which carries neither
+a type nor an initializer, so twelve sites — the four `prev` parameters in ClubFinance and eight in
+LeagueManager — came back as "no excuse" on the first run. Following a binding back to the variable it
+was destructured from is what makes them shadows again, which is what they are.
+
+**Measured.** The quarantine reads **408 diagnostics over 69 files** (was 409/69); `7006` is 22, its
+bound now written against the twenty-two shadows rather than the 23 that included a real hole.
+`npx tsc --noEmit` clean, `npm run build` exit 0. The suite, with this milestone's files in place:
+**123/123 proof scripts proven, 3298/3298 checks counted** — `proof-draft-any` 7/7 beside `proof-draft-types` 5/5 and `proof-draft-modules` 7/7.
+
+**What this buys the next lane.** The five names in the ledger are the same five the module gate
+names, seen from underneath: shipping `@/domain/league` does not merely clear eight `2307`-adjacent
+sites, it removes `League` from this ledger and re-typable eight parameters at once — which is the
+sharpest argument for which domain to ship first, and it is now a number the gates read.
+
+
+
+### M774 — the match page opens the clock too
+
+**The half the stakes panel still held back.** M714 gave the stakes list one line per side for the
+defending end's last fifteen minutes, and M773 folded the same clock's first window into
+`earlyFaced`/`earlyFacedShare` — but the match page kept printing only the late half. A reader
+deciding whether a fixture starts under pressure or ends under it had to leave the page for
+`/clock` and find both clubs in a league-wide board. The stakes panel now prints the opening line
+per side (`stakes.earlySiegeLine`, new key) directly above the late one, so the two windows of one
+defence sit together under the fixture the reader chose.
+
+**The numbers on the chosen fixture.** The proof runs on the T9 c3 fixture, A hosting C: A faced two
+attempts in all and one of them inside the first window — the 12th-minute save — so its opening
+reads 1 of 2 (50%) beside the late 0 of 2 (0%); C's single faced attempt arrives at 91′, so its
+opening reads a real 0 of 1 (0%) above a late 1 of 1 (100%). The cross-competition D-A fixture keeps
+M714's silence exactly: the host's clock row is the real zero and its visitor has no row, and both
+guards stay `faced > 0`, so a side with nothing to report prints no line rather than a zero one.
+
+**Words and gates.** 1 key · 3 locales (`stakes.earlySiegeLine`), so the dictionary goes 2,486 →
+2,487 keys; the two literal call sites move the census to literal 1,821 → 1,823 and
+variable-carrying sites 251 → 253 → 255 (the line hands over the club, the faced count, the early
+count and the opening share, the same shape M714's late line passes). `proof-analytics` grows two
+clauses — the fold hand-count above and a screen clause holding the line, both early fields and both
+guards — to 173/173. No new module, route, screen or storage key: one key and two `<li>` rows on a
+panel that already had eleven. The build stays at 531 KB gzip across the same 54 assets (JS 519,
+CSS 12.4), so the perf baseline's JS record moves 518 → 519 and `proof-pwa`'s budget pin holds.
+`tsc` clean, build exit 0, the suite lands at 122/122 scripts · 3,291/3,291 checks. Checked in a real
+browser against a fresh production preview (`/matches/M0099`, zh-CN): the stakes panel prints
+Arsenal's opening line "面对 78 次射门，开局 9 次（11.54%）" directly above its late "…末段 15 次
+（19.23%）", and Brighton's "面对 128 次射门，开局 18 次（14.06%）" above "…末段 23 次（17.97%）";
+both sides carry the pair, neither reads a zero line, and the app's console is clean (the only
+messages are the IDE's injected `/api/*` probes timing out, which no page of this app calls).
+
+**The honest limit.** Like M714, this is a read of the events the record actually carries: a club
+whose opening attempts were never logged shows no line, not a zero, and the two windows are claims
+about finished fixtures at this competition's ends rather than about the fixture being previewed —
+the current match's own opening is still unwritten.
+
+### M773 — the clock opens at the other end
+
+**The half of the clock M712 left unwritten.** `/clock` had a late read on both ends — each club's own
+`lateShots`/`lateShare` under its name, and `lateSiege`, the defending board of who takes the last
+fifteen minutes — but its opening was only ever a bar in a six-window series. Nobody could ask which
+club strikes first, which one is under strain from the kickoff, or whether a club's pressure is
+front-loaded at all. `eventClock` now folds the first window into the same four numbers the last one
+carries — `earlyShots`, `earlyShare`, `earlyFaced`, `earlyFacedShare` — plus a fourth ordering,
+`earlySiege`, tied the way M712 tied its board: whole faced load first, then the club id. The counters
+arrive in the pass that already walks every event, so the fold stays one sweep.
+
+**The invariant that keeps the two reads honest.** The opening counters are not a second opinion about
+the same facts: `shotsBands[0] === earlyShots` and `facedBands[0] === earlyFaced` for every club, and
+league-wide the summed opening equals window 1 of the series the bar chart draws. A proof clause holds
+all four statements, because a screen printing a number the chart could not reach would be the read a
+reader catches last.
+
+**What the boards say on the shipped data.** Chelsea head the opening siege (32 of 163 faced inside
+fifteen minutes, 19.63%) while their late load is a comparatively light 13.5%, and Newcastle follow on
+24 of 120 — 20%, the highest opening share in the whole table. On the attack end Chelsea's own clock
+now reads 22 early shots (19.47% of 113) above 20 late (17.7%), where Manchester United's reads 14
+early (14.29%) against 20 late (20.41%): two neighbours in the board order, leaning opposite ways. The
+English opening board lists CHE, NEW, AVL, MCI, BHA; the late board a milestone ago opened with WHU.
+Two clubs, two halves of one match.
+
+**Words and gates.** 4 keys · 3 locales (`clock.openSiegeTitle`, `clock.openSiegeHint`,
+`clock.openSiegeLine`, `clock.openRecord`), so the dictionary goes 2,482 → 2,486 keys and the call
+sites move with them: literal 1,816 → 1,821 (the fifth is the board row's own window label, reusing
+`timing.w1` rather than inventing a seventh window name), variable-carrying 251 → 253. The stale hint
+under *Every club's clock* — "the line under the name is the late share" — now says both lines, in all
+three locales, since the cell carries an opening line above it; `clock.boardHint` is edited rather than
+added, so no census moves with it. The new board keeps M712's silence: a competition where nobody was
+hit early prints no board rather than five zero rows, and the club-name fallback is the same
+`club?.name ?? r.clubId` gate, so `proof-absent-glyph` stays at 12/12 with `EventClock.tsx` unchanged
+at its one door cell. `proof-analytics` grows five clauses to 171/171, including a hand-count on the T9
+fixtures (A 1 early shot of 3 at 33.33% and 1 of 2 faced at 50%; B none early but 1 of 3 faced; C's
+single faced attempt arrives at 91', so it reads 0 of 1 rather than NaN) and the tie-break clause that
+puts B ahead of A on the whole faced load.
+
+**What it cost.** No new module, route, screen or storage key — one panel on a screen that already had
+four, one extra line in an existing cell, and four fields on a fold three other screens already read.
+The build goes 530 → 531 KB gzip across the same 54 assets (JS 518, CSS 12.4), so `proof-pwa`'s budget
+pin moves with it and the perf baseline re-records; tsc clean, build exit 0, the suite lands at
+122/122 scripts · 3,289/3,289 checks. Checked in a real browser against a fresh production preview,
+both locales, console clean: `/clock` in zh-CN prints 开局挨打 with Chelsea's row reading 开局挨 32 次，
+共 163 次（19.63%），末段 13.5% beside a right-hand 32 / 1–15′, and the club board under it carries
+早段 22 脚 · 占本队射门 19.47% directly above the existing 末段 line; the same screen in English reads
+HIT FIRST above HIT LATE with "32 of 163 faced early · 19.63%, 13.5% late".
+
+**The honest limit.** The first window is 1–15′, so an opening read is a claim about the earliest
+quarter-hour of finished fixtures that carried events — not about kickoff lineups, and not about the
+5th minute of a match whose events were never recorded. A club with no early events shows nothing
+rather than showing a zero, which is the same choice M712 made for the late board: an absent opening is
+a missing record, not a statement that the club started slowly.
+
+
+### M772 — the farm's unrouted batch is swept again and the census pins come back
+
+**What was found.** `origin/master` at `67e9c2b` was red: `proof-i18n` read 367/383, sixteen checks
+failing, and not one of them about an analytics fold. A run of commits (their titles mint M711 through
+M771 in the log — the 青训营/财务/概览 components) had landed sixty-two `.tsx` files under
+`features/academy/`, `features/finance/`, `features/overview/` and `features/player/` with no route in `src/App.tsx`, no
+sidebar entry, no proof clause, no README section and — the part the census cannot forgive — no
+dictionary keys at all.
+
+**What that cost the suite.** Every failure is those sixty-two files: 649 `t()` call sites naming keys
+none of the three locale tables carry, 408 raw-UI literals across 61 files sitting in the debt ledger
+the tree is held at zero, one caption planted at the midpoint of `features/finance/ClubFinancialOverview.tsx`
+read blind because the file never closes the element it opens, and the population pins that measure the
+tree rather than the code drifted in three places — `127 → 189` modules for the skip-list audit and the
+census, `70 → 132` `.tsx` files for the caption walk, `130 → 192` files reading the dictionary table.
+
+**What this commit does.** The sixty-two files are deleted, exactly as M710 deleted the first batch
+(47 components, 814 invented keys, `175 → 127` modules) and M598 deleted 23. Nothing referenced them:
+`grep` over `src/`, `features/shell/` and every proof script returns no importer and no clause pins one
+by name, and each imports only shared primitives, so no other file loses a line. The text is not gone
+from the project — it is in history at `67e9c2b` and its parents, and the lane can re-land any screen
+it still wants by bringing keys in three locales, a route and proof clauses with it, which is the bar
+every other screen clears.
+
+**Measured after the sweep.** `tsc --noEmit` exits 0, the dictionary still reads 2,482 keys · 3 locales,
+and `proof-i18n` is back at 383/383 with every population pin at its recorded value. No analytics fold,
+screen, key or budget pin moves, and the bundle is unchanged at 530 KB gzip over 54 assets: an unrouted
+component never reaches a chunk, which is why sixty-two of them could sit on master across sixty-three
+commits without anyone noticing the build still worked.
+
+**The ledger this sweep also owes.** Writing a section at M772 moves the README's numbered range past
+the farm's own commits, and `scripts/proof-ledger-run.mjs` then reads fifty-three numbers — M719
+through M771, with M769 missing from the log entirely — as gaps the record must name. The block
+below carries them, each entry naming the component its commit shipped rather than the number alone,
+because a bare number is a hole a reader still has to dig for; the prose count above it moves with it,
+133 to 186, so the two sets the gate compares are equal again. Nothing here is a record of work this
+line did: it is the record that the tree's history is owed regardless of who wrote it.
+
+
+**The lesson this sweep writes into the next milestone.** The sweep is mechanical and the tree is
+invariant under it — deleting an unreferenced file cannot move any measurement of the files that
+remain — but it has to be redone on every landing while the lane keeps pushing. The durable fix is to
+stop charging the app's census for a file nothing imports, and count those leaves in a ledger of their
+own instead. That is the next milestone's job; this commit only clears the desk.
 
 
 ### M718 — the quarantine's missing modules turn out to be three facts, not one number
@@ -14390,7 +14748,7 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 <!-- /outstanding -->
 
 The ledger's own record has gaps too. The early milestones are recorded as prose above and the
-later ones as sections, and between the two **133 milestone numbers have no
+later ones as sections, and between the two **186 milestone numbers have no
 section at all** — the work shipped (the commits are in the history) but the record did not. The gate
 `scripts/proof-ledger-run.mjs` compares the numbers named here with the numbers the sections
 themselves leave out, and the two sets must be equal: a gap this list does not name is an
@@ -14531,6 +14889,59 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 - M564 — the lane's TransferMarket, committed and swept off the tree at M566
 - M565 — the lane's PlayerValueRanking re-add, swept with the batch; the real screen is M528's
 - M566 — the lane's ClubFinancialModel add-and-sweep, removed by M559's cleanup commit
+- M719 — the lane's ClubYouthAcademyDataMigration stub, unreached from any entry and swept at M772
+- M720 — the lane's ClubYouthAcademyDataArchive stub, unreached from any entry and swept at M772
+- M721 — the lane's ClubYouthAcademyDataRestore stub, unreached from any entry and swept at M772
+- M722 — the lane's ClubYouthAcademyDataSync stub, unreached from any entry and swept at M772
+- M723 — the lane's ClubYouthAcademyDataClear and ClubYouthAcademyDataDelete stubs (its own M723a reused the number), unreached and swept at M772
+- M724 — the lane's ClubYouthAcademyDataVerify stub, unreached from any entry and swept at M772
+- M725 — the lane's ClubYouthAcademyPlayerDevelopment stub, unreached from any entry and swept at M772
+- M726 — the lane's ClubYouthAcademyDataQuality stub, unreached from any entry and swept at M772
+- M727 — the lane's ClubYouthAcademyComprehensive stub, unreached from any entry and swept at M772
+- M728 — the lane's ClubYouthAcademyDataTemplate stub, unreached from any entry and swept at M772
+- M729 — the lane's ClubYouthAcademyDataInsight stub, unreached from any entry and swept at M772
+- M730 — the lane's ClubYouthAcademyDataStatistics stub, unreached from any entry and swept at M772
+- M731 — the lane's ClubYouthAcademyDataSummary stub, unreached from any entry and swept at M772
+- M732 — the lane's ClubYouthAcademyDataRanking stub, unreached from any entry and swept at M772
+- M733 — the lane's ClubYouthAcademyDataFilter stub, unreached from any entry and swept at M772
+- M734 — the lane's ClubYouthAcademyDataEngine stub, unreached from any entry and swept at M772
+- M735 — the lane's ClubYouthAcademyDataMaster stub, unreached from any entry and swept at M772
+- M736 — the lane's ClubYouthAcademyDataElite stub, unreached from any entry and swept at M772
+- M737 — the lane's ClubYouthAcademyDataCore stub, unreached from any entry and swept at M772
+- M738 — the lane's ClubYouthAcademyDataPro stub, unreached from any entry and swept at M772
+- M739 — the lane's ClubYouthAcademyDataUltimate stub, unreached from any entry and swept at M772
+- M740 — the lane's ClubYouthAcademyDataInfinity stub, unreached from any entry and swept at M772
+- M741 — the lane's ClubYouthAcademyDataNirvana stub, unreached from any entry and swept at M772
+- M742 — the lane's ClubYouthAcademyDataEternity stub, unreached from any entry and swept at M772
+- M743 — the lane's ClubYouthAcademyDataCosmos stub, unreached from any entry and swept at M772
+- M744 — the lane's ClubYouthAcademyDataNebula stub, unreached from any entry and swept at M772
+- M745 — the lane's ClubYouthAcademyDataHorizon stub, unreached from any entry and swept at M772
+- M746 — the lane's ClubYouthAcademyDataVector stub, unreached from any entry and swept at M772
+- M747 — the lane's ClubYouthAcademyDataOrbit stub, unreached from any entry and swept at M772
+- M748 — the lane's ClubYouthAcademyDataSpin stub, unreached from any entry and swept at M772
+- M749 — the lane's ClubYouthAcademyDataFlow stub, unreached from any entry and swept at M772
+- M750 — the lane's ClubYouthAcademyDataPulse stub, unreached from any entry and swept at M772
+- M751 — the lane's ClubYouthAcademyDataEcho stub, unreached from any entry and swept at M772
+- M752 — the lane's ClubYouthAcademyDataBalance stub, unreached from any entry and swept at M772
+- M753 — the lane's ClubYouthAcademyDataHarmony stub, unreached from any entry and swept at M772
+- M754 — the lane's ClubYouthAcademyDataLegend stub, unreached from any entry and swept at M772; this line's sweep first took the number, then renamed itself away from it
+- M755 — the lane's ClubYouthAcademyDataMyth stub, unreached from any entry and swept at M772
+- M756 — the lane's ClubYouthAcademyDataReal stub, unreached from any entry and swept at M772
+- M757 — the lane's ClubYouthAcademyDataGem stub, unreached from any entry and swept at M772
+- M758 — the lane's ClubYouthAcademyDataKey stub, unreached from any entry and swept at M772
+- M759 — the lane's ClubYouthAcademyDataNote stub, unreached from any entry and swept at M772
+- M760 — the lane's ClubYouthAcademyDataTag stub, unreached from any entry and swept at M772
+- M761 — the lane's ClubYouthAcademyDataScore stub, unreached from any entry and swept at M772
+- M762 — the lane's ClubYouthAcademyDataFinal stub, unreached from any entry and swept at M772
+- M763 — the lane's ClubYouthAcademyDataTradition stub, unreached from any entry and swept at M772
+- M764 — the lane's ClubYouthAcademyDataLegacy stub, unreached from any entry and swept at M772
+- M765 — the lane's ClubYouthAcademyDataPresent stub, unreached from any entry and swept at M772
+- M766 — the lane's ClubYouthAcademyDataFuture stub, unreached from any entry and swept at M772
+- M767 — the lane's ClubYouthAcademyDataEvolution stub, unreached from any entry and swept at M772
+- M768 — the lane's ClubYouthAcademyDataJourney stub, unreached from any entry and swept at M772
+- M769 — no commit carries this number: the lane took M768 and then M770, so nothing shipped under it and no section was ever owed
+- M770 — the lane's ClubYouthAcademyDataCompendium stub, unreached from any entry and swept at M772
+- M771 — the lane's PlayerTransferPrediction stub under features/player/, unreached from any entry and swept at M772
 
 <!-- /gaps -->
 

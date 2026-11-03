@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -411,12 +411,40 @@ ok(`an empty table gives no rows and no peak rather than a crash, and the other 
   climbEmpty.rows.length === 0 && climbEmpty.peak === null &&
   climbT2.rows.length === 2 && climbT2.rows.map((r) => r.clubId).join(",") === "D,E" &&
   climbT2.rows.every((r) => !["A", "B", "C"].includes(r.clubId)));
+// M778: the place is a number, but the column also names the row it lands on. The landed-on club
+// is the neighbour one place DOWN the ceiling table, read off the same sorted fold: the bottom row
+// has nobody below it, every other row names exactly the club ranked directly behind it, and a row
+// the ceilings push DOWN still names its new neighbour.
+const ceilingRowOf = new Map(climb.rows.map((r) => [r.ceilingPlace, r.clubId]));
+const lastCeilingPlace = Math.max(...climb.rows.map((r) => r.ceilingPlace));
+ok(`every ceiling row names the club it sits directly above, and the bottom row names nobody (A ${climbById.A.landedOn}, B ${climbById.B.landedOn}, C ${climbById.C.landedOn})`,
+  climb.rows.every((r) => (r.ceilingPlace === lastCeilingPlace ? r.landedOn === null : r.landedOn === ceilingRowOf.get(r.ceilingPlace + 1))) &&
+  climbById.A.landedOn === "B" && climbById.B.landedOn === "C" && climbById.C.landedOn === null);
+// TC again: P's sweep takes first, so it lands on Q — the club it displaced — and Q, pushed down
+// to second, lands on N. N holds the bottom row and names nobody.
+ok(`a climb lands on the club it displaced while the displaced club lands on the row below it (P over ${climbCById.P.landedOn}, Q over ${climbCById.Q.landedOn})`,
+  climbCById.P.ceilingPlace === 1 && climbCById.P.landedOn === "Q" &&
+  climbCById.Q.ceilingPlace === 2 && climbCById.Q.landedOn === "N" &&
+  climbCById.N.ceilingPlace === 3 && climbCById.N.landedOn === null);
+// The landing name is a read of the SAME ranking the place came from: rebuilding the ceiling rows
+// outside the fold and sorting them again must agree with the printed neighbour, row by row.
+const ceilingOutside = [...climbC.rows]
+  .sort((a, b) => a.ceilingPlace - b.ceilingPlace)
+  .map((r) => r.clubId);
+ok(`the landing names agree with the ceiling table's own order (${ceilingOutside.join(" ← ")})`,
+  ceilingOutside.join(",") === "P,Q,N" &&
+  climbC.rows.every((r) => {
+    const i = ceilingOutside.indexOf(r.clubId);
+    return r.landedOn === (i >= 0 && i < ceilingOutside.length - 1 ? ceilingOutside[i + 1] : null);
+  }));
 ok("ceilingPlaces is deterministic over the same fixtures",
   JSON.stringify(ceilingPlaces("T1", fixtures, clubs)) === JSON.stringify(climb));
 // The scenarios screen prints the new column and tile off the fold and never ranks the table
 // itself; an absent row falls to the shared absence glyph the other columns use.
 const SCENARIO_SRC = readFileSync(resolve(root, "features/analytics/PointsScenario.tsx"), "utf8");
-const climbScreen = SCENARIO_SRC.includes("ceilingPlaces(") && SCENARIO_SRC.includes("standing ? standing.ceilingPlace : ABSENT") &&
+const climbScreen = SCENARIO_SRC.includes("ceilingPlaces(") && SCENARIO_SRC.includes("standing.ceilingPlace") &&
+  SCENARIO_SRC.includes("standing.landedOn") && SCENARIO_SRC.includes('t("scenario.landedOn"') &&
+  SCENARIO_SRC.includes('t("scenario.landedBottom"') &&
   SCENARIO_SRC.includes('t("scenario.colMaxPlace")') && SCENARIO_SRC.includes('t("scenario.climb")') &&
   SCENARIO_SRC.includes('t("scenario.climbSub"') && SCENARIO_SRC.includes("climb.peak &&") &&
   !SCENARIO_SRC.includes("byTableStanding") && !SCENARIO_SRC.includes(".sort(");
@@ -695,6 +723,69 @@ ok(`the event clock screen reads the late siege off the same fold and drops a cl
   CLOCK_SRC.includes("clock.lateSiegeTitle") && !/SHOT|SAVE/.test(CLOCK_SRC));
 ok(`the event clock is reachable — the route table and the sidebar both name it (route ${/path === "\/clock"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/clock"/.test(SHELL_NAV_SRC)})`,
   /path === "\/clock"/.test(APP_ROUTE_SRC) && /to: "\/clock"/.test(SHELL_NAV_SRC));
+// M773: the first window gets the four numbers the last one already carries, off the same pass.
+// Hand-count on the T9 fixtures: A shot once inside 15 minutes (1 of its 3, 33.33%) and was faced
+// once there (1 of 2, 50%) by B's save at 12; B took no shot early but faced once early (1 of 3,
+// 33.33%); C's only faced attempt arrived at 91', so its opening reads 0 of 1 rather than NaN.
+// The two ends share a tie-break here exactly as M712's late board does: A and B both faced 1 early,
+// and the whole faced load puts B (3) ahead of A (2), so the opening board reads BAC.
+ok(`the opening window counts the same events at both ends (A ${clk.A.earlyShots} of ${clk.A.shots} shots at ${clk.A.earlyShare}%, faced ${clk.A.earlyFaced} of ${clk.A.faced} at ${clk.A.earlyFacedShare}%; B ${clk.B.earlyShots} shots but ${clk.B.earlyFaced} of ${clk.B.faced} faced at ${clk.B.earlyFacedShare}%; C ${clk.C.earlyFaced} of ${clk.C.faced})`,
+  clk.A.earlyShots === 1 && near(clk.A.earlyShare, 33.33, 0.005) &&
+  clk.A.earlyFaced === 1 && near(clk.A.earlyFacedShare, 50, 0.005) &&
+  clk.B.earlyShots === 0 && clk.B.lateShots === 0 && clk.B.shots === 1 &&
+  clk.B.earlyFaced === 1 && near(clk.B.earlyFacedShare, 33.33, 0.005) &&
+  clk.C.earlyShots === 0 && clk.C.shots === 0 && clk.C.earlyShare === 0 &&
+  clk.C.earlyFaced === 0 && clk.C.faced === 1 && clk.C.earlyFacedShare === 0);
+ok(`the opening siege orders the same rows by the load they took inside fifteen minutes and breaks the tie on the whole faced load (early ${clk.B.earlyFaced} each for B and A, faced B ${clk.B.faced} over A ${clk.A.faced}; order ${clock.earlySiege.map((r) => r.clubId).join("")})`,
+  clock.earlySiege.map((r) => r.clubId).join("") === "BAC" && clock.earlySiege.length === 3 &&
+  clock.earlySiege.every((r) => r.earlyFaced <= r.faced) &&
+  clock.earlySiege.every((r) => r.earlyFaced >= 0) &&
+  clock.rows.length === 3 && clk.B.faced === 3 && clk.A.faced === 2);
+// The opening counters cannot disagree with the window series they were folded out of: window 1 of
+// each club's own shots and of what it faced IS its early counter, and league-wide the two series add
+// up the same way M628 made every window add up — one pass, two reads.
+ok(`the opening counters are the first window itself, per club and league-wide (shots ${clock.shotsBands[0]} league / ${clock.rows.reduce((s, r) => s + r.earlyShots, 0)} summed, faced ${clock.facedBands[0]} league / ${clock.rows.reduce((s, r) => s + r.earlyFaced, 0)} summed)`,
+  clock.rows.every((r) => r.shotsBands[0] === r.earlyShots && r.facedBands[0] === r.earlyFaced) &&
+  clock.shotsBands[0] === clock.rows.reduce((s, r) => s + r.earlyShots, 0) &&
+  clock.facedBands[0] === clock.rows.reduce((s, r) => s + r.earlyFaced, 0) &&
+  clock.facedBands[0] === 2 && clock.shotsBands[0] === 1);
+// A table with no events still gets an opening: every row keeps six windows and two zeroed opening
+// counters, so the screen's board is empty by count rather than by a missing field.
+ok(`a silent and an empty table both keep their opening rows (silent ${clockSilent.earlySiege.length} rows at ${clockSilent.earlySiege.map((r) => r.earlyFaced).join(",")}, empty ${clockEmpty.earlySiege.length} rows, windows ${clockEmpty.rows[0].facedBands.length})`,
+  clockSilent.matches === 0 && clockSilent.earlySiege.length === 3 &&
+  clockSilent.earlySiege.every((r) => r.earlyFaced === 0 && r.earlyFacedShare === 0) &&
+  clockEmpty.earlySiege.length === 2 && clockEmpty.rows.length === 2 &&
+  clockEmpty.rows[0].earlyShare === 0 && clockEmpty.rows[0].facedBands.length === 6);
+ok(`the event clock screen reads the opening off the fold, prints it beside the late line and ranks nothing itself (board ${CLOCK_SRC.includes("clock.earlySiege.filter(")}, gate ${CLOCK_SRC.includes("r.earlyFaced > 0")}, line ${CLOCK_SRC.includes("clock.openSiegeLine")}, record ${CLOCK_SRC.includes("clock.openRecord")}, sorting ${/\.sort\(/.test(CLOCK_SRC)})`,
+  CLOCK_SRC.includes("clock.earlySiege.filter(") && CLOCK_SRC.includes("r.earlyFaced > 0") &&
+  CLOCK_SRC.includes("clock.openSiegeTitle") && CLOCK_SRC.includes("clock.openSiegeLine") &&
+  CLOCK_SRC.includes("earlySiege.map(") && CLOCK_SRC.includes('t("clock.openRecord", { e: r.earlyShots, p: r.earlyShare })') &&
+  CLOCK_SRC.includes('t("clock.record", { l: r.lateShots, p: r.lateShare })') &&
+  !/\.sort\(/.test(CLOCK_SRC) && !/earlyFaced\+\+|band === 0/.test(CLOCK_SRC));
+// M777: the attacking mirror of M773's opening board. A took one of its three shots inside the
+// first window, B none of its one, C none at all (it never shot), so the board ranked by the
+// opening shots and then the whole shot load reads ABC. The closing counter is the last window of
+// the same series, so a row's two ends cannot disagree with the bars above it.
+ok(`the opening attack orders the same rows by the shots they took inside fifteen minutes and prints the closing counter off the same row (early ${clock.earlyAttack.map((r) => r.clubId).join("")}; A ${clk.A.earlyShots} of ${clk.A.shots} at ${clk.A.earlyShare}% late ${clk.A.lateShots} at ${clk.A.lateShare}%; B ${clk.B.earlyShots} of ${clk.B.shots}; C ${clk.C.earlyShots} of ${clk.C.shots})`,
+  clock.earlyAttack.map((r) => r.clubId).join("") === "ABC" && clock.earlyAttack.length === 3 &&
+  clock.rows.every((r) => r.shotsBands[0] === r.earlyShots && r.shotsBands[5] === r.lateShots) &&
+  clock.rows.every((r) => r.earlyShots + r.lateShots <= r.shots) &&
+  clk.A.shots === 3 && clk.A.earlyShots === 1 && clk.A.lateShots === 2 &&
+  near(clk.A.earlyShare, 33.33, 0.005) && near(clk.A.lateShare, 66.67, 0.005) &&
+  clk.B.earlyShots === 0 && clk.C.earlyShots === 0);
+// A table with no shots at all still keeps a full opening-attack order — every club sits in it at
+// zero, which is why the screen drops those rows instead of printing a column of zeros.
+ok(`a silent and an empty table both keep their opening-attack order (silent ${clockSilent.earlyAttack.length} rows, empty ${clockEmpty.earlyAttack.length} rows)`,
+  clockSilent.matches === 0 && clockSilent.earlyAttack.length === 3 &&
+  clockSilent.earlyAttack.every((r) => r.earlyShots === 0 && r.earlyShare === 0) &&
+  clockEmpty.earlyAttack.length === 2 &&
+  clockEmpty.earlyAttack.every((r) => r.shots === 0 && r.earlyShots === 0 && r.lateShots === 0));
+ok(`the event clock screen reads the opening attack off the fold, prints the closing share on the same row and ranks nothing itself (board ${CLOCK_SRC.includes("clock.earlyAttack.filter(")}, gate ${CLOCK_SRC.includes("r.earlyShots > 0")}, line ${CLOCK_SRC.includes("clock.strikeLine")}, sorting ${/\.sort\(/.test(CLOCK_SRC)})`,
+  CLOCK_SRC.includes("clock.earlyAttack.filter(") && CLOCK_SRC.includes("r.earlyShots > 0") &&
+  CLOCK_SRC.includes("clock.strikeTitle") && CLOCK_SRC.includes("clock.strikeLine") &&
+  CLOCK_SRC.includes("earlyAttack.map(") &&
+  CLOCK_SRC.includes('t("clock.strikeLine", { e: r.earlyShots, p: r.earlyShare, l: r.lateShots, q: r.lateShare })') &&
+  !/\.sort\(/.test(CLOCK_SRC) && !/earlyShots\+\+/.test(CLOCK_SRC));
 // --- briefing: one club's next fixture, joined with the five season reads -----------------------
 // T1 hand-count: f1 A 2-0 B, f2 B 1-1 A, f3 C 3-1 B finished; s1 A-B (May 10), s2 B-C (May 12),
 // z1 C-A (Jun 1) scheduled; l1 A-C is LIVE and must stay out of the pick, the record and the venue
@@ -818,6 +909,21 @@ ok(`the stakes panel prints the two siege lines off the brief and silences a sid
   DETAILS_SRC.includes("brief.homeClock") && DETAILS_SRC.includes("brief.awayClock") &&
   DETAILS_SRC.includes("brief.homeClock.faced > 0") && DETAILS_SRC.includes("brief.awayClock.faced > 0") &&
   DETAILS_SRC.includes("stakes.siegeLine"));
+// M774: the same defending clock read at its opening. On c3's two clubs the fold's early window is
+// already counted: A faced two attempts all told and one of them inside the first window (the
+// 12th-minute save), so 1 of 2 is 50%; C's only faced attempt arrived at 91', so its opening is a
+// real 0 of 1 rather than a missing reading. The cross fixture's host has the zero row the /clock
+// board keeps, and its visitor has no row at all.
+ok(`matchBrief hands the opening load through the same clock row as the late one (c3 A ${stakeClock.homeClock.earlyFaced} of ${stakeClock.homeClock.faced} early at ${stakeClock.homeClock.earlyFacedShare}%; C ${stakeClock.awayClock.earlyFaced} of ${stakeClock.awayClock.faced} at ${stakeClock.awayClock.earlyFacedShare}%; cross host ${stakeClockCross.homeClock ? `${stakeClockCross.homeClock.earlyFaced} early` : "null"}, visitor ${stakeClockCross.awayClock})`,
+  stakeClock.homeClock.earlyFaced === 1 && stakeClock.homeClock.earlyFacedShare === 50 &&
+  stakeClock.awayClock.earlyFaced === 0 && stakeClock.awayClock.earlyFacedShare === 0 &&
+  stakeClock.homeClock.earlyFaced <= stakeClock.homeClock.faced &&
+  stakeClockCross.homeClock !== null && stakeClockCross.homeClock.earlyFaced === 0 &&
+  stakeClockCross.homeClock.earlyFacedShare === 0 && stakeClockCross.awayClock === null);
+ok(`the stakes panel prints the opening line too, off the same brief and under the same silence (line ${DETAILS_SRC.includes("stakes.earlySiegeLine")}, home ${DETAILS_SRC.includes("brief.homeClock.earlyFaced")}, away ${DETAILS_SRC.includes("brief.awayClock.earlyFaced")})`,
+  DETAILS_SRC.includes("stakes.earlySiegeLine") &&
+  DETAILS_SRC.includes("brief.homeClock.earlyFaced") && DETAILS_SRC.includes("brief.awayClock.earlyFaced") &&
+  DETAILS_SRC.includes("brief.homeClock.faced > 0") && DETAILS_SRC.includes("brief.awayClock.faced > 0"));
 
 // ---- M622: the same stats blocks folded by round --------------------------------------------
 // The discipline board answers who is booked; the trend answers when the bookings arrive. Fixture
@@ -901,6 +1007,63 @@ ok(`clubDisciplineTrend is deterministic and the club page reads the curve off t
   JSON.stringify(trendA) === JSON.stringify(trendAgainA) &&
   DETAILS_SRC.includes("clubDisciplineTrend(c.competitionId") &&
   DETAILS_SRC.includes("cardTrend.rounds.map(") && DETAILS_SRC.includes("det.cards.trendLine"));
+// --- M779: cards by the minute, on the same six windows as the goal clock ------------------
+// U hosts u1: a yellow on 5' (band 0), a red on 80' (band 5), while V takes a yellow on 76'
+// (band 5). U then visits u2: a yellow on 20' (band 1) for U and one on 75' (band 4) for W,
+// which is exactly the window boundary the last band must NOT swallow. V hosts u3 and takes a
+// red on 90' (band 5). A scheduled u4 and another competition's u5 are noise.
+const cardClubs = [club("U", "TE"), club("V", "TE"), club("W", "TE"), club("X", "TE")];
+const cardEvent = (minute, type, side) => ({ minute, type, side, player: "P" });
+const cardFixture = (id, comp, home, away, events, status = "FINISHED") => ({
+  id, competitionId: comp, homeClubId: home, awayClubId: away, kickoff: "2026-07-01",
+  round: 1, status, homeGoals: status === "FINISHED" ? 0 : null, awayGoals: status === "FINISHED" ? 0 : null,
+  events,
+});
+const cardFixtures = [
+  cardFixture("u1", "TE", "U", "V", [
+    cardEvent(5, "YELLOW", "home"),
+    cardEvent(76, "YELLOW", "away"),
+    cardEvent(80, "RED", "home"),
+  ]),
+  cardFixture("u2", "TE", "W", "U", [
+    cardEvent(20, "YELLOW", "away"),
+    cardEvent(75, "YELLOW", "home"),
+  ]),
+  cardFixture("u3", "TE", "V", "W", [cardEvent(90, "RED", "home")]),
+  cardFixture("u4", "TE", "V", "W", [cardEvent(45, "YELLOW", "away")], "SCHEDULED"),
+  cardFixture("u5", "TF", "V", "W", [cardEvent(45, "YELLOW", "away")]),
+  // X plays and is never booked: a real row with zero cards, not a missing one.
+  cardFixture("u6", "TE", "W", "X", []),
+];
+const cards = cardTiming("TE", cardFixtures, cardClubs);
+const cardById = Object.fromEntries(cards.rows.map((r) => [r.clubId, r]));
+ok(`cardTiming reads every recorded yellow and red in its window and ranks the opening (U ${cardById.U.cards} cards ${cardById.U.bands.join("")}, V ${cardById.V.cards} ${cardById.V.bands.join("")}, W ${cardById.W.cards} ${cardById.W.bands.join("")})`,
+  cards.rows.map((r) => r.clubId).join(",") === "U,V,W,X" &&
+  cardById.U.cards === 3 && cardById.U.yellows === 2 && cardById.U.reds === 1 &&
+  cardById.U.bands.join(",") === "1,1,0,0,0,1" &&
+  cardById.V.cards === 2 && cardById.V.yellows === 1 && cardById.V.reds === 1 &&
+  cardById.V.bands.join(",") === "0,0,0,0,0,2" &&
+  cardById.W.cards === 1 && cardById.W.bands.join(",") === "0,0,0,0,1,0");
+ok(`a 5' card is early and a 20' one is not; 75' is not late and 76' is (U early ${cardById.U.earlyCards} late ${cardById.U.lateCards}, W band ${cardById.W.bands[4]} on 75' but late ${cardById.W.lateCards}, V late ${cardById.V.lateCards} on 76' and 90')`,
+  cardById.U.earlyCards === 1 && cardById.U.lateCards === 1 &&
+  cardById.U.earlyShare === 33.33 && cardById.U.lateShare === 33.33 &&
+  cardById.W.bands[4] === 1 && cardById.W.lateCards === 0 && cardById.W.lateShare === 0 &&
+  cardById.V.lateCards === 2 && cardById.V.lateShare === 100);
+ok(`a scheduled fixture and another competition's events do not enter the clock (total ${cards.rows.reduce((s, r) => s + r.cards, 0)} cards against the three finished fixtures; earliest ${cards.earliest?.clubId})`,
+  cards.rows.reduce((s, r) => s + r.cards, 0) === 6 &&
+  cards.earliest?.clubId === "U" && cards.earliest?.earlyCards === 1);
+ok(`a club that played and was never booked keeps a row with zero cards and zero shares, and a competition with no rows reads an empty clock rather than a crash (X ${cardById.X.cards}/${cardById.X.earlyShare}/${cardById.X.lateShare}; empty rows ${cardTiming("TG", cardFixtures, cardClubs).rows.length}, earliest ${cardTiming("TG", cardFixtures, cardClubs).earliest})`,
+  cardById.X.cards === 0 && cardById.X.earlyShare === 0 && cardById.X.lateShare === 0 &&
+  cardById.X.bands.every((b) => b === 0) &&
+  cardTiming("TG", cardFixtures, cardClubs).rows.length === 0 &&
+  cardTiming("TG", cardFixtures, cardClubs).earliest === null);
+const cardsAgain = cardTiming("TE", cardFixtures, cardClubs);
+const DISC_SRC = readFileSync(resolve(root, "features/analytics/Discipline.tsx"), "utf8");
+ok(`cardTiming is deterministic and the discipline screen prints the clock off the fold, dropping unbooked rows rather than drawing zeros (same fold ${JSON.stringify(cards) === JSON.stringify(cardsAgain)}, renders ${[...DISC_SRC.matchAll(/clock\.rows/g)].length} clock reads)`,
+  JSON.stringify(cards) === JSON.stringify(cardsAgain) &&
+  DISC_SRC.includes("cardTiming(compId, matches, clubs)") && DISC_SRC.includes("clock.rows.filter(") &&
+  DISC_SRC.includes('t("clock.strikeLine"') && DISC_SRC.includes('t("disc.clockNone"') &&
+  !DISC_SRC.includes("byTableStanding") && !DISC_SRC.includes(".sort("));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

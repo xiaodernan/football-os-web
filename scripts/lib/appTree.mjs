@@ -21,7 +21,7 @@
 // skipped, and an ordinary directory is NOT skipped — otherwise "skip the neighbours" would be a
 // name for "skip whatever you did not expect".
 import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 
 /** A name that starts with a dot: the convention the machine and git share. */
 export const isHiddenName = (name) => name.startsWith(".");
@@ -97,4 +97,80 @@ export const walkApp = (root, { dirs = null, notApp = [], exts = [".ts", ".tsx"]
   };
   for (const d of dirs ?? [root]) walk(dirs === null ? root : join(root, d));
   return out;
+};
+
+// ---------------------------------------------------------------------------
+// M776 · the tree the READER can walk, not the tree the repository contains.
+//
+// The gates above answer "what is the app?" by the directory a file sits in. That answer is
+// honest about neighbours, and it is still too broad: a file under `features/` that nothing
+// imports is not a screen a reader can open. The component farm proved it — three sweeps
+// (M598, M710, M772) deleted 23 + 47 + 45 unreached components, and every sweep was forced
+// because a census pin counted them the moment they landed. A pin that reddens on a quarantine
+// is a pin that measures the repository, not the product.
+//
+// So the second question is asked by the same function every gate calls: starting from the
+// SPA's entry, which modules does a reader actually reach? The answer is a closure over VALUE
+// imports — `import ... from "x"`, `export ... from "x"`, a bare `import "x"` (it runs the
+// module), and `import("x")` (the route table's lazy screens). A `import type` is deliberately
+// NOT an edge: it is erased before the bundle exists, so no reader ever executes it (the
+// type-only side is still returned, because a proof may want to ask).
+//
+// The resolver is a pure function over an `exists` oracle, so a proof can run it on a made-up
+// graph. `@/` is the repository's one alias (tsconfig `paths`), relative specifiers normalise
+// against the importing file, and a bare package name is not app code. A directory is never a
+// module: `@/i18n` resolves to `i18n/index.tsx`, and resolving to the folder was a real EISDIR
+// mid-proof at M239.
+//
+// Who reads this: proof-coverage (which asked the question first, privately, and whose
+// planted graphs now exercise this copy), proof-i18n (the population the dictionary census
+// counts), and proof-app-tree (the module pin). One question, one answer.
+// ---------------------------------------------------------------------------
+const IMPORTED_SPEC = /(?:^|\n)\s*(?:import|export)\s+(type\s+)?[^;]*?from\s*["']([^"']+)["']/g;
+const BARE_IMPORT = /(?:^|\n)\s*import\s+["']([^"']+)["']/g;
+const DYNAMIC_IMPORT = /\bimport\(\s*["']([^"']+)["']\s*\)/g;
+
+/** The specifiers one module's source names, split into value edges and type-only edges. */
+export const importEdgesIn = (src) => {
+  const value = new Set();
+  const typeOnly = new Set();
+  for (const m of src.matchAll(IMPORTED_SPEC)) {
+    if (m[1]) typeOnly.add(m[2]);
+    else value.add(m[2]);
+  }
+  for (const m of src.matchAll(BARE_IMPORT)) value.add(m[1]);
+  for (const m of src.matchAll(DYNAMIC_IMPORT)) value.add(m[1]);
+  return { value, typeOnly };
+};
+
+/**
+ * The module a specifier names, or `null` for a package or a path the tree does not hold.
+ *
+ * `exists` answers "is a module at this path?" — a stat, not `existsSync`, because a folder
+ * would otherwise accept `@/i18n` before its index does.
+ */
+export const resolveModuleSpec = (spec, fromPath, exists) => {
+  let base;
+  if (spec.startsWith("@/")) base = spec.slice(2);
+  else if (spec.startsWith("./") || spec.startsWith("../")) {
+    base = posix.normalize(posix.join(posix.dirname(fromPath), spec));
+  } else return null;
+  const candidates = [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`];
+  return candidates.find((c) => exists(c)) ?? null;
+};
+
+/** Every module reachable from `roots` over value imports, `roots` included when they exist. */
+export const reachableModulesIn = (roots, readSource, exists) => {
+  const seen = new Set();
+  const stack = [...roots];
+  while (stack.length) {
+    const p = stack.pop();
+    if (!p || seen.has(p)) continue;
+    seen.add(p);
+    for (const spec of importEdgesIn(readSource(p)).value) {
+      const next = resolveModuleSpec(spec, p, exists);
+      if (next && !seen.has(next)) stack.push(next);
+    }
+  }
+  return seen;
 };

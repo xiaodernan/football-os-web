@@ -450,6 +450,81 @@ export function goalTiming(compId: string, matches: Match[], clubs: Club[]): Goa
   return list.sort((a, b) => b.lateShare - a.lateShare || b.scored - a.scored || a.clubId.localeCompare(b.clubId));
 }
 
+export interface CardTimingRow {
+  clubId: string;
+  yellows: number;
+  reds: number;
+  /** Cards of either colour this club earned (yellows plus reds). */
+  cards: number;
+  /** Cards in each window, index 0 = 1–15′, index 5 = 76–90+′. */
+  bands: number[];
+  /** Cards earned inside the first window. */
+  earlyCards: number;
+  /** Cards earned after the 75th minute (the last window). */
+  lateCards: number;
+  /** Share of this club's cards earned early, 0–100, 2dp; 0 when it was not booked. */
+  earlyShare: number;
+  /** Share of this club's cards earned late, 0–100, 2dp; 0 when it was not booked. */
+  lateShare: number;
+}
+
+export interface CardTiming {
+  /** Every club with a table row, ranked by cards in the first window, then the whole card
+   *  count, then the club id. */
+  rows: CardTimingRow[];
+  /** The club booked most often inside the first window; null when nobody was booked early. */
+  earliest: CardTimingRow | null;
+}
+
+/** When a club's cards arrive: every recorded YELLOW or RED in this competition's finished
+ *  matches, folded into the same six windows `goalTiming` and the event clock use. A different
+ *  question from the season ledger (`discipline`, which counts stats by club) and from the
+ *  round-by-round curve (`disciplineTrend`) — this one reads the minute of each booking, so a
+ *  side that starts rashly and a side that finishes rashly are told apart. */
+export function cardTiming(compId: string, matches: Match[], clubs: Club[]): CardTiming {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const rows = new Map<string, CardTimingRow>(
+    metrics.map((m) => [
+      m.clubId,
+      {
+        clubId: m.clubId,
+        yellows: 0,
+        reds: 0,
+        cards: 0,
+        bands: Array.from({ length: GOAL_BANDS }, () => 0),
+        earlyCards: 0,
+        lateCards: 0,
+        earlyShare: 0,
+        lateShare: 0,
+      },
+    ]),
+  );
+  const lastBand = GOAL_BANDS - 1;
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED") continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "YELLOW" && e.type !== "RED") continue;
+      const clubId = e.side === "home" ? m.homeClubId : m.awayClubId;
+      const row = rows.get(clubId);
+      if (!row) continue;
+      const band = goalBand(e.minute);
+      row.cards++;
+      if (e.type === "YELLOW") row.yellows++;
+      else row.reds++;
+      row.bands[band]++;
+      if (band === 0) row.earlyCards++;
+      if (band === lastBand) row.lateCards++;
+    }
+  }
+  const list = [...rows.values()];
+  for (const r of list) {
+    r.earlyShare = r.cards ? round2((r.earlyCards / r.cards) * 100) : 0;
+    r.lateShare = r.cards ? round2((r.lateCards / r.cards) * 100) : 0;
+  }
+  list.sort((a, b) => b.earlyCards - a.earlyCards || b.cards - a.cards || a.clubId.localeCompare(b.clubId));
+  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;
@@ -945,6 +1020,14 @@ export interface EventClockRow {
   lateFacedShare: number;
   /** The window it faced the most in; -1 when it faced nothing at all. */
   worstBand: number;
+  /** Shots taken inside the first window, 1–15′ (M773) — the opening the late read has no mirror for. */
+  earlyShots: number;
+  /** Share of this club's own shots that arrived in the opening, 0–100, 2dp; 0 when it has not shot. */
+  earlyShare: number;
+  /** Faced inside the first window (M773) — the opening load on the same defending end as `lateFaced`. */
+  earlyFaced: number;
+  /** Share of this club's faced load that arrived in the opening, 0–100, 2dp; 0 when it faced none. */
+  earlyFacedShare: number;
 }
 
 export interface EventClock {
@@ -954,6 +1037,13 @@ export interface EventClock {
   /** The same rows ordered by the load they faced after the 75th minute (M712) — the late read of
    *  the defending end. Ties fall back to the whole faced load, then the club id. */
   lateSiege: EventClockRow[];
+  /** The same rows ordered by the load they faced inside the first window (M773) — the opening read
+   *  of the defending end, the mirror of `lateSiege`. Ties fall back the same way. */
+  earlySiege: EventClockRow[];
+  /** The same rows ordered by the shots they took inside the first window (M777) — the attacking
+   *  read of the opening, the mirror of `earlySiege`. Ties fall back to the whole shot load,
+   *  then the club id. */
+  earlyAttack: EventClockRow[];
   shotsBands: number[];
   savesBands: number[];
   varBands: number[];
@@ -972,7 +1062,13 @@ export interface EventClock {
  *  them land — a different object on the same clock, per club and for the league. M625 adds the
  *  defending end: the same events are charged to the club that faced them, so the screen can name
  *  who is under siege as well as who is shooting. M628 gives that end the clock too: each faced
- *  event also lands in the window it arrived in, per club and for the league — the M625 gap. */
+ *  event also lands in the window it arrived in, per club and for the league — the M625 gap.
+ *  M773 opens the clock at the other end: the first window gets the same four numbers the last one
+ *  already carries, so a screen can say who strikes first as well as who is still being hit at the
+ *  death, and the two reads of one club sit next to each other instead of on separate screens.
+ *  M777 mirrors that opening at the attacking end: the first window's shots are named and ranked
+ *  the way the defending end already was, with the closing share printed on the same row, so the
+ *  two halves of one club's attack are a contrast rather than two separate tables. */
 export function eventClock(compId: string, matches: Match[], clubs: Club[]): EventClock {
   const metrics = teamMetrics(compId, matches, clubs);
   const emptyBands = () => Array.from({ length: GOAL_BANDS }, () => 0);
@@ -982,6 +1078,7 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
       shotsBands: emptyBands(), savesBands: emptyBands(), varBands: emptyBands(),
       lateShots: 0, lateShare: 0, faced: 0, stops: 0, stopShare: 0,
       facedBands: emptyBands(), lateFaced: 0, lateFacedShare: 0, worstBand: -1,
+      earlyShots: 0, earlyShare: 0, earlyFaced: 0, earlyFacedShare: 0,
     }]),
   );
   const shotsBands = emptyBands();
@@ -1007,11 +1104,13 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
           row.shots++;
           row.shotsBands[band]++;
           if (band === lastBand) row.lateShots++;
+          if (band === 0) row.earlyShots++;
         }
         if (def) {
           def.faced++;
           def.facedBands[band]++;
           if (band === lastBand) def.lateFaced++;
+          if (band === 0) def.earlyFaced++;
         }
       } else if (e.type === "SAVE") {
         saves++;
@@ -1021,6 +1120,7 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
           def.faced++;
           def.facedBands[band]++;
           if (band === lastBand) def.lateFaced++;
+          if (band === 0) def.earlyFaced++;
           def.stops++;
         }
       } else {
@@ -1035,16 +1135,20 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
     r.lateShare = r.shots ? round2((r.lateShots / r.shots) * 100) : 0;
     r.stopShare = r.faced ? round2((r.stops / r.faced) * 100) : 0;
     r.lateFacedShare = r.faced ? round2((r.lateFaced / r.faced) * 100) : 0;
+    r.earlyShare = r.shots ? round2((r.earlyShots / r.shots) * 100) : 0;
+    r.earlyFacedShare = r.faced ? round2((r.earlyFaced / r.faced) * 100) : 0;
     // First window holding the maximum, so a tie reads the earlier one; -1 when nothing was faced.
     r.worstBand = r.faced ? r.facedBands.indexOf(Math.max(...r.facedBands)) : -1;
   }
   list.sort((a, b) => b.shots - a.shots || b.saves - a.saves || a.clubId.localeCompare(b.clubId));
   const siege = [...list].sort((a, b) => b.faced - a.faced || b.stops - a.stops || a.clubId.localeCompare(b.clubId));
   const lateSiege = [...list].sort((a, b) => b.lateFaced - a.lateFaced || b.faced - a.faced || a.clubId.localeCompare(b.clubId));
+  const earlySiege = [...list].sort((a, b) => b.earlyFaced - a.earlyFaced || b.faced - a.faced || a.clubId.localeCompare(b.clubId));
+  const earlyAttack = [...list].sort((a, b) => b.earlyShots - a.earlyShots || b.shots - a.shots || a.clubId.localeCompare(b.clubId));
   // The league's faced clock is the mirror of its shots and saves: every one of those events faced
   // exactly one club, so the two series must add up window for window.
   const facedBands = shotsBands.map((n, b) => n + savesBands[b]);
-  return { rows: list, siege, lateSiege, shotsBands, savesBands, varBands, facedBands, shots, saves, vars, matches: counted };
+  return { rows: list, siege, lateSiege, earlySiege, earlyAttack, shotsBands, savesBands, varBands, facedBands, shots, saves, vars, matches: counted };
 }
 
 export interface Briefing {
@@ -1164,6 +1268,11 @@ export interface CeilingPlaceRow {
   /** Places the ceilings move this club; positive is a climb, negative is a club whose ceiling is
    *  smaller than somebody else's, 0 means it holds. */
   moves: number;
+  /** The club this row sits directly above in the ceiling table — the row it lands on, so a move
+   *  ends on a NAME and not just a number (M778); null when it is the bottom row, where there is
+   *  nobody below to land on. A row the ceilings push DOWN still names its new neighbour: "over"
+   *  says where the row stands, not who won the move. */
+  landedOn: string | null;
 }
 
 export interface CeilingPlaces {
@@ -1194,7 +1303,7 @@ export function ceilingPlaces(compId: string, matches: Match[], clubs: Club[]): 
     return new Map(ranked.map((r, i) => [r.clubId, i + 1]));
   };
   const now = placesOf(metrics);
-  const ceiling = placesOf(metrics.map((r) => {
+  const ceilingRows = metrics.map((r) => {
     const left = ceilingOf.get(r.clubId);
     return {
       clubId: r.clubId,
@@ -1202,11 +1311,15 @@ export function ceilingPlaces(compId: string, matches: Match[], clubs: Club[]): 
       gf: r.gf + (left ? left.remaining : 0),
       ga: r.ga,
     };
-  }));
+  }).sort(byTableStanding);
+  const ceiling = placesOf(ceilingRows);
   const rows = metrics.map((r) => {
     const place = now.get(r.clubId) ?? 0;
     const ceilingPlace = ceiling.get(r.clubId) ?? 0;
-    return { clubId: r.clubId, place, ceilingPlace, moves: place - ceilingPlace };
+    // M778: the row directly below in the ceiling table, read off the same sorted fold the places
+    // come from — no second ranking, so the name can never disagree with the number beside it.
+    const landedOn = ceilingPlace > 0 ? ceilingRows[ceilingPlace]?.clubId ?? null : null;
+    return { clubId: r.clubId, place, ceilingPlace, moves: place - ceilingPlace, landedOn };
   });
   return { rows, peak: rows.length ? maxBy(rows, (r) => r.moves) : null };
 }
