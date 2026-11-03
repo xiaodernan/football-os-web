@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M788 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M789 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,39 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M789 — the red board's clubs get their own clock
+
+**What the page had.** The discipline screen's red panel (M783) ranks the clubs shown a red card
+and prints the window that holds most of each club's sendings-off. A club with one red at 10′ and
+another with one at 85′ read the same peak count and were told apart only by the window name; the
+shape of each club's own six windows was folded but never handed to the screen.
+
+**One field, no new fold.** `CardRedRow` gains `bands`, a copied six-window series taken from the
+row's own `redBands` when the board is built. The copy is the row's own array, not the internal
+one, so the screen can draw it without reaching back into `rows` and cannot mutate the fold.
+
+**The screen.** The red list gains a shared six-window header (the same labels the card clock
+uses) and, under each club's name line, a miniature six-column bar row scaled to the busiest
+window across all red rows, with the count printed under each bar. A club whose reds all landed
+in one window now reads as one tall bar; a club split across two windows reads as two. The peak
+line and total stay exactly where they were.
+
+**Words and gates.** No new dictionary keys — the header reuses `timing.w1`–`timing.w6` at no new
+call sites, because the component already holds them in `bandLabels` — so the dictionary holds at
+2,518 keys, literal sites at 1,875 and placeholder sites at 264. `proof-analytics` grows three
+clauses to 206/206: the hand-counted TH series (P 1,1,0,0,0,0; Q 0,0,0,0,0,2; R and T one apiece
+in band 3), each row's series summing to its reds and being a copy rather than the internal array,
+the peak count agreeing with the series maximum, the silent and empty competitions carrying no red
+rows, determinism, and the screen reading `r.bands` and `redPeak` without sorting. No new module,
+route or storage key; the bundle holds at 534 KB gzip across 54 assets (JS 522 + CSS 12.4), so the
+PWA pin and perf baseline stay put. `tsc` clean, build exit 0, the suite lands at 123/123 scripts
+· 3,339/3,339 checks.
+
+**The honest limit.** The bars are totals, not rates, and the shared header means one club's
+series is read against the other red rows' scale rather than its own — a club with a single red
+reads a half-height bar only if another club reached two. Clubs never sent off stay off the board
+entirely, exactly as in M783.
 
 ### M788 — the venue screen's goals get a clock
 

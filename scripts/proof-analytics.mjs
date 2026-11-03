@@ -1298,6 +1298,34 @@ ok(`the goal clock is deterministic and the venue screen draws it off the fold, 
   VENUE_SRC.includes('t("venue.clockTitle"') && VENUE_SRC.includes('t("venue.clockHint"') &&
   VENUE_SRC.includes('t("venue.clockHome"') && VENUE_SRC.includes('t("venue.clockAway"') &&
   VENUE_SRC.includes('t("timing.emptyHint"') && !/\.sort\(/.test(VENUE_SRC));
+// --- M789: each red club's own six-window clock -------------------------------------------------
+// The red board already names each club's peak window; this hands the screen the whole series. On
+// TH, P's two early reds are 1,1,0,0,0,0, Q's pair in the last window 0,0,0,0,0,2, and R and T one
+// apiece in band 3 — the same series each club's row folds, carried onto the board row as a copy so
+// the screen never reaches back into `rows` and never draws a series the fold did not hand it.
+const redBandsCopy = reds.redRows.every((r) => r.bands.join(",") === redById[r.clubId].redBands.join(",") &&
+  r.bands.length === 6 && r.bands !== redById[r.clubId].redBands);
+ok(`each red board row carries its club's own six-window series, a copy that sums to its reds (P ${redPeak.P.bands.join("")}, Q ${redPeak.Q.bands.join("")}, R ${redPeak.R.bands.join("")}, T ${redPeak.T.bands.join("")}; copies ${redBandsCopy})`,
+  redBandsCopy && redPeak.P.bands.join(",") === "1,1,0,0,0,0" &&
+  redPeak.Q.bands.join(",") === "0,0,0,0,0,2" &&
+  redPeak.R.bands.join(",") === "0,0,0,1,0,0" &&
+  redPeak.T.bands.join(",") === "0,0,0,1,0,0" &&
+  reds.redRows.every((r) => r.bands.reduce((s, n) => s + n, 0) === r.reds));
+ok(`the board's peak window is the window its own series peaks in, and a competition with rows but no reds reads no series at all (peaks ${reds.redRows.map((r) => `${r.peakBand}@${Math.max(...r.bands)}`).join(", ")}; silent ${cardTiming("TF", cardFixtures, cardClubs).redRows.length} rows, empty ${cardTiming("TG", cardFixtures, cardClubs).redRows.length})`,
+  reds.redRows.every((r) => r.bands[r.peakBand] === Math.max(...r.bands)) &&
+  reds.redRows.every((r) => r.peakCount === Math.max(...r.bands)) &&
+  cardTiming("TF", cardFixtures, cardClubs).rows.length === 2 &&
+  cardTiming("TF", cardFixtures, cardClubs).redRows.length === 0 &&
+  cardTiming("TG", cardFixtures, cardClubs).redRows.length === 0);
+const redBandsAgain = cardTiming("TH", redFixtures, redClubs);
+ok(`the red series is deterministic and the discipline screen draws each club's own six windows under its row, labelling them with the shared band labels and sorting nothing itself (same fold ${JSON.stringify(redBandsAgain) === JSON.stringify(reds)}; band labels ${["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"].filter((k) => DISC_SRC.includes(`t("${k}")`)).length}/6)`,
+  JSON.stringify(redBandsAgain) === JSON.stringify(reds) &&
+  DISC_SRC.includes("redPeak") && DISC_SRC.includes("pctOf(n, redPeak)") &&
+  DISC_SRC.includes("r.bands.map(") && DISC_SRC.includes("bandLabels[r.peakBand]") &&
+  DISC_SRC.includes('t("disc.redLine", { w: bandLabels[r.peakBand], n: r.peakCount })') &&
+  ["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"]
+    .every((k) => DISC_SRC.includes(`t("${k}")`)) &&
+  !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

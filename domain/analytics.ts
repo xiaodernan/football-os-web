@@ -513,6 +513,8 @@ export interface CardRedRow {
   peakBand: number;
   /** Reds in that window. */
   peakCount: number;
+  /** This club's own six-window red series, a copy of the row's bands. */
+  bands: number[];
 }
 
 export interface CardTiming {
@@ -597,7 +599,7 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
     .map((r) => {
       let peakBand = 0;
       for (let b = 1; b < GOAL_BANDS; b++) if (r.redBands[b] > r.redBands[peakBand]) peakBand = b;
-      return { clubId: r.clubId, reds: r.reds, peakBand, peakCount: r.redBands[peakBand] };
+      return { clubId: r.clubId, reds: r.reds, peakBand, peakCount: r.redBands[peakBand], bands: [...r.redBands] };
     });
   redList.sort((a, b) => b.reds - a.reds || b.peakCount - a.peakCount || a.clubId.localeCompare(b.clubId));
   return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList, windows, redWindows, homeWindows, awayWindows };
