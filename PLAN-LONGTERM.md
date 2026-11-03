@@ -660,10 +660,28 @@
   （JS 520 + CSS 12.4），pin 531→532 并重录 baseline；tsc 干净、build exit 0、全套 123/123 · 3,311/3,311；
   诚实的保留：只读记录到分钟的牌，没有分钟的出牌不入任何窗口；份额是各队自身牌的占比，单张首窗读 100%；
   首末窗是同一个六窗口径的首窗与末窗，不是全场前后半场。
-下一条目：M780 候选按「真实数据 + 不重叠 + 复用既有 domain」排：
-④末段进攻的独立排序（M777 只排开局、末段随行印出；`lateShots` 已在 fold 里，是同一块板的另一半，
-可单独成板或换排序键）；
-⑤红牌窗口的独立读法（`cardTiming` 已把 yellows/reds 分开存放，可加一屏只读红牌的六窗）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+- M780: 共享读取器从「应用自己声明的入口」出发，而不是从 gate 记住的路径。M776 把闭包下沉到 `appTree.mjs` 是对的，但两个 gate 把闭包写死在字面量 `["src/main.tsx"]`，
+  而第四个 `proof-orphans` 自 M428 起一直是**推导**入口（`index.html` 的 `type="module"` 脚本 + `functions/` 里调用 `Deno.serve` 的模块）；两个答案在最要命的地方不一致：
+  `functions/index.ts` 没有 importer，因为调用它的是 edge 运行时，`functions/handler.ts` 正是那个入口 import 的模块——SPA 单入口闭包把两者读成死面，字典普查从此不看它们；
+  今天它们 0 个 `t()` 字面量，所以损失是**静默**的：将来有人在这里加一句用户可见的字符串，没有一道门在看。`appTree.mjs` 新增
+  `stripCommentsIn`/`classifySpecIn`/`htmlEntriesIn`/`denoEntriesIn`/`appEntriesIn`，`appEntriesIn` 成为任何 gate 起闭包的唯一方式；
+  pin 回到人群实测：i18n appSrc 116→118、walked 119→121、`.tsx` 仍 70、routed 41 屏 0 lost；app-tree 模块 119→121（十目录 122），账本只剩 1 个 app 模块
+  （`src/vite-env.d.ts` 是环境声明，编译器读、浏览器不加载）旁 8 个 harness；
+  共享读取器的两处盲区是靠「与被它取代的那个实现逐文件对拍」找出来的：①它从不剥注释，块注释能把 `import` 放到行首（清扫把 import 包进注释块留下的形状），现在 `importEdgesIn` 先 `stripCommentsIn`，
+  证明两种注释形状都考，并且打印「同一份源码不剥注释时确实匹配上」这个见证；②它锚在行首，于是 `features/manager/ManagerOS.tsx` 一行三条 import 只认出 1 条、丢掉 2 条真边（图读成 818 边，旧读取器读成 820）；
+  锚点改为语句边界（` ; } ` 与换行）并要求 `import`/`export` 关键字，这样一句只写着「from」的文案造不出边——真造出来也会被判 unresolved，由 `proof-orphans` 第 3 条当场报出；
+  两个读取器在 121 个模块上对拍：0 丢失、0 新增、820 边。放宽锚点把捕获组挪了位，于是 type-only 判定拿 `^type` 去读一个以空格开头的子句，`proof-coverage` 那条合成图（「type-only import 不算执行目标」）在落地前就按红了它——那正是这条证明存在的用处；
+  `proof-orphans` 删掉私有引擎（71 行：注释剥离、三条 specifier 正则、resolver、两种入口推导、一次图走），条款 5/5→7/7（新两臂：两种注释形状都盲；入口是推导的，且 SPA 单入口会误判 2 个模块）；
+  「可达性只有一处答案」的条款改为**发现**而非记忆（M432 对邻居规则做过的同一个动作）：调用 `reachableModulesIn(` 的 4 个 proof 全部找出、必须导入 `appTree.mjs`、不得用字面量 app 路径作根、不得在共享实现旁边定义 walk；
+  两臂都种下且用运行时拼接构造（`proof-orphans` 种 SKIP_LIST 的同一写法），免得本文件自己在源码里带一个 fork；
+  字典键/路由/存储键无变化，bundle 不变（baseline 不动）；tsc 干净、build exit 0、全套 123/123 · 3,313/3,313（+2 检查全在 orphans；i18n 384→384，人群从 116/119 回到 118/121）；
+  诚实的保留：`proof-coverage` 仍从 `src/main.tsx` 起走——它问的是另一个问题「这个模块在 `dist/` 里吗」，一个 bundle 只有一个入口，Edge Function 不在其中，本线不给别人的正确答案记账；
+  而隔离账本仍然只报数不设闸（那条断言里没有任何关于它的数字），一个瞎掉的账本会打印「none」然后变绿——把它装上证明是下一条目，不是这一条。
+下一条目：M781 候选按「先把量具装稳，再挑真实数据」排：
+①给只报数的隔离账本装上证明——`proof-i18n` 的死面条款今天不在任何断言里，一个瞎掉的账本会打印「none」然后变绿：种一个未路由的叶子（带 1 个凭空键 + 1 个 raw-UI 字面量），断言它被点名、键被计数、人群 pin 一动不动；
+②把剩下那些仍按整树答题的量具接到可达人群上（`proof-app-tree` 的逐目录计、`proof-storage` 的两个 117 文件 pin、`proof-coverage` 的 6 个聚合条款）——M778 只把字典普查接上，其余还在按仓库大小答题；
+③末段进攻的独立排序（M777 只排开局、末段随行印出；`lateShots` 已在 fold 里，是同一块板的另一半，
+④红牌窗口的独立读法（`cardTiming` 已把 yellows/reds 分开存放，可加一屏只读红牌的六窗）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779、共享读取器的入口推导取 M780；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。
