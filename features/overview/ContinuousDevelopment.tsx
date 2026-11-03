@@ -82,9 +82,9 @@ export function ContinuousDevelopment() {
       {/* development数据 */}
       {setSelectedView === "development" && selectedClub && (
         <Panel className="p-4 mb-6">
-          <SectionTitle title={t("development.development")} />
+          <SectionTitle title={t("continuousDevelopment.development")} />
           <p>
-            {t("development.data development", {
+            {t("continuousDevelopment.data development", {
               club: clubs.find(c => c.id === selectedClub)?.name,
             })}
           </p>
@@ -94,7 +94,7 @@ export function ContinuousDevelopment() {
       {/* 摘要 */}
       {setSelectedView === "summary" && selectedClub && (
         <Panel className="p-4">
-          <SectionTitle title={t("development.summary")} />
+          <SectionTitle title={t("continuousDevelopment.summary")} />
           <div className="grid grid-cols-3 gap-3">
             <div>
               <div className="font-medium text-primary">球员总数</div>
