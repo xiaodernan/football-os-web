@@ -4516,7 +4516,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // component's existing bandLabels array — literal holds at 1875.
 // M790: the event clock's venue split adds its title, hint, two side labels and reuses the
 // no-events line: five literal sites, none interpolating — literal 1875 -> 1880.
-  shapeCounts.literal === 1880 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M791: the discipline screen's result split adds its title, hint, three row labels and reuses the
+// no-booking line: six literal sites, none interpolating — literal 1880 -> 1886.
+  shapeCounts.literal === 1886 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

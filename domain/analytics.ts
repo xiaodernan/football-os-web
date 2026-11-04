@@ -605,6 +605,57 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
   return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList, windows, redWindows, homeWindows, awayWindows };
 }
 
+export interface CardResultClock {
+  /** Cards by window in fixtures the booked club went on to win, index 0 = 1–15′. */
+  winWindows: number[];
+  /** Cards by window in fixtures the booked club drew. */
+  drawWindows: number[];
+  /** Cards by window in fixtures the booked club lost. */
+  lossWindows: number[];
+  /** The three series' totals — together they are the cards earned in fixtures that carried a
+   *  scoreline, so the partition is the league clock minus the matches with no score to read. */
+  win: number;
+  draw: number;
+  loss: number;
+}
+
+/** The card clock read through the scoreline: every recorded booking folded by how the match the
+ *  booked side played ended. A different question from the venue split (`cardTiming`'s
+ *  `homeWindows`/`awayWindows`, which asks which end of the fixture earned the card) and from each
+ *  club's own clock — this asks whether a league books earlier on its way to a win than on its way
+ *  to a loss. The result is read from the fixture's own scoreline from the booked club's end, so a
+ *  finished match with no scoreline enters the league clock and none of the three series: there is
+ *  no result to read it through. */
+export function cardResultClock(compId: string, matches: Match[], clubs: Club[]): CardResultClock {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const winWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const drawWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const lossWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED") continue;
+    if (m.homeGoals === null || m.awayGoals === null) continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "YELLOW" && e.type !== "RED") continue;
+      const atHome = e.side === "home";
+      if (!ranked.has(atHome ? m.homeClubId : m.awayClubId)) continue;
+      const forIt = atHome ? m.homeGoals : m.awayGoals;
+      const against = atHome ? m.awayGoals : m.homeGoals;
+      const band = goalBand(e.minute);
+      if (forIt > against) winWindows[band]++;
+      else if (forIt < against) lossWindows[band]++;
+      else drawWindows[band]++;
+    }
+  }
+  return {
+    winWindows,
+    drawWindows,
+    lossWindows,
+    win: sum(winWindows, (n) => n),
+    draw: sum(drawWindows, (n) => n),
+    loss: sum(lossWindows, (n) => n),
+  };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

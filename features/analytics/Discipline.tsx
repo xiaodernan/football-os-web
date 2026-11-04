@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { discipline, disciplineTrend, disciplineVenue, cardTiming } from "@/domain/analytics";
+import { discipline, disciplineTrend, disciplineVenue, cardTiming, cardResultClock } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf } from "@/lib/utils";
 
@@ -29,6 +29,15 @@ export function Discipline() {
   const venueRows = [
     { label: t("disc.venueClockHome"), data: clock.homeWindows, fill: BAR_FILL.info },
     { label: t("disc.venueClockAway"), data: clock.awayWindows, fill: BAR_FILL.progress },
+  ];
+  // M791: the same league curve read through the scoreline of the fixture the card was earned in —
+  // the other axis of the same booking, so "who was playing" and "how it ended" are separate reads.
+  const result = useMemo(() => cardResultClock(compId, matches, clubs), [compId, matches, clubs]);
+  const resultPeak = Math.max(1, ...result.winWindows, ...result.drawWindows, ...result.lossWindows);
+  const resultRows = [
+    { label: t("disc.resultWin"), data: result.winWindows, total: result.win, fill: BAR_FILL.good },
+    { label: t("disc.resultDraw"), data: result.drawWindows, total: result.draw, fill: BAR_FILL.info },
+    { label: t("disc.resultLoss"), data: result.lossWindows, total: result.loss, fill: BAR_FILL.bad },
   ];
   // M789: each red club's own six-window series, read against the other red rows rather than
   // only against the league, so the red board shows where the sendings-off fell.
@@ -236,6 +245,38 @@ export function Discipline() {
                           <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
                           <div className="mx-auto mt-0.5 h-10 w-full">
                             <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, venuePeak) }} />
+                          </div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[i]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+
+          {/* M791: and the same curve split three ways by how the booked side's match ended, so a
+              league that is booked early on its way to a win is not read as one that is booked
+              early overall. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.resultTitle")} hint={t("disc.resultHint")} />
+            {result.win + result.draw + result.loss === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.clockNone")}</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                {resultRows.map((row) => (
+                  <div key={row.label}>
+                    <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                      <span>{row.label}</span>
+                      <span className="font-mono">{row.total}</span>
+                    </div>
+                    <div className="mt-1 flex items-end gap-1">
+                      {row.data.map((n, i) => (
+                        <div key={i} className="flex-1 text-center">
+                          <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                          <div className="mx-auto mt-0.5 h-10 w-full">
+                            <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, resultPeak) }} />
                           </div>
                           <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[i]}</div>
                         </div>

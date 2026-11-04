@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, cardResultClock } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -1367,6 +1367,64 @@ ok(`the venue split is deterministic and the event clock screen draws it off the
   CLOCK_SRC.includes('t("clock.sideTitle"') && CLOCK_SRC.includes('t("clock.sideHint"') &&
   CLOCK_SRC.includes('t("clock.sideHome"') && CLOCK_SRC.includes('t("clock.sideAway"') &&
   CLOCK_SRC.includes('t("clock.emptyShort"') && !/\.sort\(/.test(CLOCK_SRC));
+// --- M791: the card clock read through the scoreline ------------------------------------------
+// TN carries four scored fixtures, one scheduled one and one that finished without a score. n1
+// P 2-0 Q: P is booked on 10' (band 0) and Q on 20' (band 1) — one card in the win series, one in
+// the loss series. n2 R 1-1 S: R on 5' (band 0) and S on 80' (band 5), both draws. n3 S 0-3 P: S on
+// 50' (band 3) lost, P on 60' (band 3) won. n4 Q 1-0 R: R on 90' (band 5) lost. n5 is scheduled;
+// n6 finished with no scoreline, so its two cards (15' and 30') sit in the league clock and in
+// none of the three series — the gap the fold names instead of hiding.
+const resultClubs = [club("P", "TN"), club("Q", "TN"), club("R", "TN"), club("S", "TN")];
+const resultFixture = (id, home, away, score, events, status = "FINISHED") => ({
+  id, competitionId: "TN", homeClubId: home, awayClubId: away, kickoff: "2026-07-03",
+  round: 1, status, homeGoals: score ? score[0] : null, awayGoals: score ? score[1] : null, events,
+});
+const resultFixtures = [
+  resultFixture("n1", "P", "Q", [2, 0], [cardEvent(10, "YELLOW", "home"), cardEvent(20, "YELLOW", "away")]),
+  resultFixture("n2", "R", "S", [1, 1], [cardEvent(5, "YELLOW", "home"), cardEvent(80, "RED", "away")]),
+  resultFixture("n3", "S", "P", [0, 3], [cardEvent(50, "YELLOW", "home"), cardEvent(60, "YELLOW", "away")]),
+  resultFixture("n4", "Q", "R", [1, 0], [cardEvent(90, "YELLOW", "away")]),
+  resultFixture("n5", "P", "R", null, [cardEvent(20, "YELLOW", "home")], "SCHEDULED"),
+  resultFixture("n6", "R", "P", null, [cardEvent(15, "YELLOW", "home"), cardEvent(30, "YELLOW", "away")]),
+];
+const resultClock = cardResultClock("TN", resultFixtures, resultClubs);
+const resultLeague = cardTiming("TN", resultFixtures, resultClubs);
+const resultLeagueTotal = resultLeague.windows.reduce((s, n) => s + n, 0);
+ok(`cardResultClock folds each booking by how the booked side's own fixture ended, from its own end of the scoreline (win ${resultClock.winWindows.join("")}=${resultClock.win}, draw ${resultClock.drawWindows.join("")}=${resultClock.draw}, loss ${resultClock.lossWindows.join("")}=${resultClock.loss})`,
+  resultClock.winWindows.join(",") === "1,0,0,1,0,0" &&
+  resultClock.drawWindows.join(",") === "1,0,0,0,0,1" &&
+  resultClock.lossWindows.join(",") === "0,1,0,1,0,1" &&
+  resultClock.win === 2 && resultClock.draw === 2 && resultClock.loss === 3 &&
+  resultClock.win + resultClock.draw + resultClock.loss === 7);
+// The three series are a partition of the league clock wherever a scoreline exists: on the seeded
+// competitions, whose finished fixtures are all scored, the series and `cardTiming`'s windows agree
+// window for window. On TN the clock holds two cards more than the series, and they are exactly n6's.
+const seededPartition = seededComps.map((id) => {
+  const clubs = seededClubs.filter((c) => c.competitionId === id);
+  const r = cardResultClock(id, seededMatches, clubs);
+  const c = cardTiming(id, seededMatches, clubs);
+  return {
+    id,
+    series: r.win + r.draw + r.loss,
+    league: c.windows.reduce((s, n) => s + n, 0),
+    drift: c.windows.map((n, b) => n - (r.winWindows[b] + r.drawWindows[b] + r.lossWindows[b])).join(","),
+  };
+});
+ok(`the three series partition the league's card clock on every scored fixture and name the unscored one as the gap (TN clock ${resultLeagueTotal} against series ${resultClock.win + resultClock.draw + resultClock.loss}; seeded ${seededPartition.map((p) => `${p.id} ${p.series}/${p.league} drift ${p.drift}`).join(" · ")})`,
+  resultLeagueTotal - (resultClock.win + resultClock.draw + resultClock.loss) === 2 &&
+  seededPartition.length >= 2 &&
+  seededPartition.every((p) => p.series === p.league && p.drift === "0,0,0,0,0,0"));
+const resultAgain = cardResultClock("TN", resultFixtures, resultClubs);
+ok(`cardResultClock is deterministic and the discipline screen draws the three rows off the fold against one shared peak, labelling the six windows and reusing the no-booking line (same fold ${JSON.stringify(resultAgain) === JSON.stringify(resultClock)}; band labels ${["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"].filter((k) => DISC_SRC.includes(`t("${k}")`)).length}/6)`,
+  JSON.stringify(resultAgain) === JSON.stringify(resultClock) &&
+  DISC_SRC.includes("cardResultClock(compId, matches, clubs)") &&
+  DISC_SRC.includes("result.winWindows") && DISC_SRC.includes("result.drawWindows") &&
+  DISC_SRC.includes("result.lossWindows") && DISC_SRC.includes("{row.total}") &&
+  DISC_SRC.includes("resultPeak") && DISC_SRC.includes("pctOf(n, resultPeak)") &&
+  DISC_SRC.includes('t("disc.resultTitle"') && DISC_SRC.includes('t("disc.resultHint"') &&
+  DISC_SRC.includes('t("disc.resultWin"') && DISC_SRC.includes('t("disc.resultDraw"') &&
+  DISC_SRC.includes('t("disc.resultLoss"') && DISC_SRC.includes('t("disc.clockNone"') &&
+  !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

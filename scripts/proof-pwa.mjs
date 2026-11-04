@@ -109,7 +109,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M788: the venue screen's goal clock adds its panel and the shared band labels, crossing the
 // budget's rounding edge — 534 KB / 54 assets (JS 522 + CSS 12.4), pin 533 -> 534, baseline
 // re-recorded in the same commit.
-const BUDGET_KB = 534;
+// M791: the discipline screen's result split adds three rows to the card clock and five dictionary
+// lines — 535 KB / 54 assets (JS 523 + CSS 12.4), pin 534 -> 535, baseline re-recorded alongside.
+const BUDGET_KB = 535;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

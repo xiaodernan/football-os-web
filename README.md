@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M790 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M791 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,56 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M791 — the card clock learns how the match ended
+
+**What the page had.** The discipline screen already reads the league's bookings by the minute they
+arrive (M779), by the end they were earned at (M787) and by the red cards alone (M783/M789). What it
+could not ask is the other half of the same event: a card is booked *while the score is doing
+something*, and every series on the page folded the fixture's clock without folding its result. Two
+leagues whose cards both peak in the 61–75′ window read identically while one is booking sides that
+are winning and the other booking sides that are chasing.
+
+**One pass, three series.** `cardResultClock(compId, matches, clubs)` returns `winWindows`,
+`drawWindows` and `lossWindows` over the same six windows the card clock uses, plus their totals.
+For every `FINISHED` fixture that carries a scoreline it walks the recorded `YELLOW`/`RED` events,
+takes the booked side, and reads the result **from that club's end of the scoreline** — a host
+booked in a 2–0 fixture charges the win series, the visitor in the same fixture charges the loss
+series. `teamMetrics` supplies the ranked-club filter the neighbouring folds use, so a card earned
+by a club outside the competition's table stays out here too. A fixture that finished with `null`
+goals enters `cardTiming`'s league clock and none of the three series: there is no result to read
+it through, and the fold says so through the gap rather than inventing a draw.
+
+**The screen.** A panel between the venue-split clock and the per-club card clock: three rows —
+cards in wins, in draws, in losses — each headed by its label and its total, drawing its six bars on
+the single peak shared by the three series (`resultPeak`), so a row's height means the same thing as
+any other row's. The band labels are the `timing.w1…w6` keys the other clocks already use; the empty
+arm reuses `disc.clockNone`. The screen sorts nothing, and `proof-unused-params` still finds no
+`.sort(` in the file.
+
+**Words and gates.** Five new keys (`disc.resultTitle`, `disc.resultHint`, `disc.resultWin`,
+`disc.resultDraw`, `disc.resultLoss`) across three locales, so the dictionary goes 2,522 → 2,527
+keys; six new literal census sites (the five panel keys plus the reused no-events line), so the
+census moves literal 1,880 → 1,886 and leaves placeholder sites at 264 — nothing here interpolates.
+`proof-analytics` grows three clauses to 212/212: a hand-built four-club competition whose seven
+cards over six scored windows answer win `1,0,0,1,0,0`, draw `1,0,0,0,0,1`, loss `0,1,0,1,0,1`; the
+partition clause, which finds the league clock holding exactly two cards more than the three series
+— the two booked in the fixture that finished scoreless — and then checks that on every seeded
+competition, whose finished fixtures all carry a scoreline, the series and `cardTiming` agree window
+for window with zero drift; and determinism plus the screen. No new module, route or storage key.
+The panel costs a kilobyte: the bundle measures 535 KB gzip across the same 54 assets (JS 523 +
+CSS 12.4), so the PWA pin moves 534 → 535 and `tests/perf/baseline.json` re-records in the same
+commit rather than drifting past a gate that would have had to be explained. `tsc` clean, build exit
+0; the browser read the live tree on a dev server (three rows, eighteen bars, 17 + 13 + 10 = 40
+cards matching the league clock band for band), which is the first console-level confirmation since
+M165's in-app surface stopped committing a tree — the screenshot channel is still unavailable, so the
+suite remains the standing evidence.
+
+**The honest limit.** The three series partition only what the clock already held, so on the seeded
+data the panel's information is the split, not a new count: a competition with no scoreless finished
+fixtures shows a total here identical to the curve above it. The unscored-fixture gap clause is the
+arm that proves the fold is not silently folding those in.
 
 
 ### M790 — the shot clock learns which end was shooting
