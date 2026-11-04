@@ -800,11 +800,38 @@
   tsc 干净、build exit 0、全套 123/123 · 3,339/3,339；
   诚实的保留：柱是总数不是比率；共享表头让每队序列按所有红队同一标尺读，只有一张红牌的队若无人到两张就只半高；
   从未吃红牌的队仍整行缺席（与 M783 一致）。
-下一条目：M790 候选优先真实数据：
-①牌钟与红牌钟的队级对照（同一队全牌与红牌的首窗/末窗份额并排，`cardTiming` 的 rows 与 redRows 已有两端）；
+- M790: 射门钟按起脚一方分侧。事件钟把联赛的射门/扑救/复核/受攻折进六窗，但射门那一行只有一条全联赛序列：
+  主队早射、客队晚射的联赛读成同一条曲线，而牌钟与进球钟刚有场地轴（M787/M788），最忙的事件族反而没有。
+  `eventClock` 在同一个 SHOT 分支里再累加 `homeShotsBands`/`awayShotsBands` 与 `homeShots`/`awayShots` 总数，
+  两列逐窗相加恰等于 `shotsBands`，分侧不可能与总量互相矛盾。面板置于四行联赛钟之下：两行（主队射门/客队射门）
+  × 同样六窗与共享标签，行首印该侧总数，柱高以两侧共同峰值窗为标尺；空态复用 `clock.emptyShort`；屏幕不排序、不推导。
+  4 个新键三语（clock.sideTitle/sideHint/sideHome/sideAway），字典 2,518→2,522；census literal 1,875→1,880
+  （5 个新字面量位：4 个面板字面量 + 复用的无事件行，均不带变量）、litVarSites 保持 264；`proof-analytics` 新增
+  3 条 206→209（T9 手工计数主 1,0,0,0,0,1、客 0,1,0,0,0,1，逐窗和等于 1,1,0,0,0,2 与钟的四脚；T15 两端错时的小
+  fixture、无事件场次不入账、全静赛事两侧六零；确定性；屏幕读两侧序列与总数、六窗标签、空态复用、不排序）；
+  无新模块/路由/存储键；build 仍 534 KB / 54 资产（JS 522 + CSS 12.4），PWA pin 与 perf baseline 不动；
+  tsc 干净、build exit 0、全套 123/123 · 3,342/3,342；
+  诚实的保留：只计已记录的射门——有比分无事件列表的场次对两侧都不贡献；分侧与赛果无关，占住末段射门的一方
+  也可能输球；两行都是总数不是比率。
+  清理：M896–M914 落在 origin 的十九个未路由农场 stub（features/overview/{TeamSelection,SquadBuilder,Captaincy,
+  PlayerAwards,Roster,StaffDirectory,TeamStats,TransferOverview,StadiumOverview,MatchCenter,LeagueTable,
+  PlayerOverview,CoachOverview,CaptainLog,TeamReports,StadiumStats,LeagueFixtures,PlayerStats}.tsx）无任何路由或
+  模块引用、其中之一有语法错误；`proof-unused-params` 的覆盖条款把 tsc 从未编译的 shipped 模块逐个点名，故按
+  M772/M710 先例整批删除，使遍历与编译程序看到同一棵树。同一波农场提交还在根目录留下 `status_report.md`（一个
+  lane 自己的进度 dump，写着「无阻塞问题」却有四个组件根本不通），`proof-app-tree` 把根目录每个可见文件都算成
+  账，故一并删掉：项目的记录只有 README 一份，不在它旁边。
+  编号教训：本条取 M790 而不是「历史最大值 +1」（origin 已到 M914）。`proof-ledger-run` 的空洞集合是按 README
+  自己的 section 区间 [min..max] 算的，农场 lane 只造组件不造记录，M790–M914 这 125 个号全都没有 section；
+  若把本线的 section 写到 M915，区间就一次吞下这 125 个空洞，而 ceiling 要求 gaps*2 ≤ sections（当时 438 个
+  section 只容得下 219 个空洞），要补回绿色得替别人的 60 个号写 60 篇 section。故规则改为：本线的号沿自己的
+  记录段连续取（M772→M773…M790），只在「历史里该号没有活着的文件」时复用；重复在 git log 里是可见的、不是藏
+  起来的，M790 那个 PlayerHallOfFame 组件早在 M772 那波清扫里删掉了。反过来，谁的号谁记录：农场 lane 若要让
+  M896–M914 进记录，得自己带 section、路由与 proof 条款。
+下一条目：M791（沿记录段连续取号，且 M791 那个农场组件在树里已无活文件）候选优先真实数据：
+①牌钟按比赛结果分侧（胜/平/负场次里的牌窗，需先在 fold 里加结果轴）；
 ②进球与牌的节律比（逐窗 进球/牌 比值，或进球窗与牌窗的队级相关，属新统计量需先证口径）；
-③射门与扑救也分主客（`eventClock` 的 shotsBands/savesBands 按 side 拆分，与 M787/M788 同构）；
-④牌钟按比赛结果分侧（胜/平/负场次里的牌窗，需先在 fold 里加结果轴）。
-编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779、末段进攻取 M780、共享读取器的入口推导取 M781、死面账本的臂取 M782、红牌窗口取 M783、存储/路由人口取 M784、联赛牌窗曲线取 M785、进球与牌同钟取 M786、主客场牌窗取 M787、主客场进球窗取 M788、红队自家六窗取 M789；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
+③扑救也分主客（`eventClock` 的 `savesBands` 按 side 拆分，与 M790 同构，一屏两排）；
+④牌钟与红牌钟的队级对照（同一队全牌与红牌的首窗/末窗份额并排，`cardTiming` 的两套行已有两端）。
+编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）——M790 起本线改用沿自己记录段连续的号（见上一条「编号教训」：`proof-ledger-run` 的空洞集合按 README 区间算，跳到农场 max 之后要为别人的 125 个无 section 号补记录，ceiling 立刻红），并仍要求该号在历史里没有活着的文件；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779、末段进攻取 M780、共享读取器的入口推导取 M781、死面账本的臂取 M782、红牌窗口取 M783、存储/路由人口取 M784、联赛牌窗曲线取 M785、进球与牌同钟取 M786、主客场牌窗取 M787、主客场进球窗取 M788、红队自家六窗取 M789、射门分侧取 M790；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

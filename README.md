@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M789 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M790 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,60 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M790 — the shot clock learns which end was shooting
+
+**What the page had.** The event clock folds the league's shots, saves, reviews and faced load into
+six windows. The shots row was a single league series: a competition whose home sides shoot early
+and whose away sides shoot late read one combined curve, and the venue axis the card and goal
+clocks had just gained (M787/M788) was missing on the busiest event family of all.
+
+**One pass, two series.** `eventClock` gains `homeShotsBands` and `awayShotsBands`, incremented in
+the same SHOT branch that already charges `shotsBands`, plus the running totals `homeShots` and
+`awayShots`. The two series add up to the whole shot clock window for window, so the split cannot
+disagree with the row it divides.
+
+**The screen.** A panel under the four-row league clock: home shots and away shots over the same
+six windows, each row headed by its label and total, bars scaled to the busiest window of the pair.
+The empty arm reuses the no-events line. The screen sorts nothing and derives nothing.
+
+**Words and gates.** Four new keys (`clock.sideTitle`, `clock.sideHint`, `clock.sideHome`,
+`clock.sideAway`) across three locales, so the dictionary goes 2,518 → 2,522 keys; five new literal
+sites (the four panel keys plus the reused no-events line), so the census moves literal 1,875 →
+1,880 and leaves placeholder sites at 264. `proof-analytics` grows three clauses to 209/209: T9's
+hand count (home 1,0,0,0,0,1 against away 0,1,0,0,0,1, the two adding to 1,1,0,0,0,2 window for
+window and to the clock's four shots), a small two-end fixture whose hosts shoot twice inside the
+opening while the visitors shoot once in the last window, the eventless fixture staying out and
+the silent competition reading six zeros on both ends, determinism and the screen. No new module,
+route or storage key; the bundle holds at 534 KB gzip across 54 assets (JS 522 + CSS 12.4), so the
+PWA pin and perf baseline stay put. `tsc` clean, build exit 0, the suite lands at 123/123 scripts
+· 3,342/3,342 checks.
+
+**The tree under it.** Origin carried nineteen farm stubs from M896–M914, every one of them in
+`features/overview/` (`TeamSelection`, `SquadBuilder`, `Captaincy`, `PlayerAwards`, `Roster`,
+`StaffDirectory`, `TeamStats`, `TransferOverview`, `StadiumOverview`, `MatchCenter`, `LeagueTable`,
+`PlayerOverview`, `CoachOverview`, `CaptainLog`, `TeamReports`, `StadiumStats`, `LeagueFixtures`,
+`PlayerStats`): no route and no module imports any of them, one does not even parse, and the
+unused-parameter coverage clause charges every shipped module the compiler never gets to read. They
+are swept here, as M772 and M710 swept the earlier waves, so the tree walk and the program agree.
+The same wave left a root-level `status_report.md` — a lane's own progress dump, claiming "no
+blocking issues" while four of its components did not parse — and the root census charges every
+visible file the app does not name, so it goes with them: the record of this project lives in this
+file, not beside it.
+
+**Why this unit is M790 rather than the number the log points at.** The farm lane mints components
+without records — its commits run to M914 — and `proof-ledger-run` builds its gap set from the
+README's own numbered range. A section at M915 would pull M790–M914, a hundred and twenty-five
+numbers with no section, into that range, and the vacuity ceiling (gaps no larger than half the
+sections) would only close again by writing some sixty sections for work this line did not do. The
+record therefore stays contiguous — M772, then M773–M790 with no hole this line owes — and the
+farm's numbers wait in their own range for the lane that minted them. The duplicate is visible, not
+quiet: `git log` also carries an M790 titled `PlayerHallOfFame`, whose file the M772 sweep already
+removed, so no live module answers to that number twice.
+
+**The honest limit.** The split counts recorded shots only — a fixture with a scoreline but no
+event list contributes nothing to either end — and it says nothing about the result: a side can
+own the late shots and still lose. Both rows are totals, not rates.
 
 ### M789 — the red board's clubs get their own clock
 

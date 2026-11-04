@@ -1326,6 +1326,47 @@ ok(`the red series is deterministic and the discipline screen draws each club's 
   ["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"]
     .every((k) => DISC_SRC.includes(`t("${k}")`)) &&
   !/\.sort\(/.test(DISC_SRC));
+// --- M790: the league's shot clock split by the side that took the shot ------------------------
+// On T9 the home side's shots are the 12' and 78' ones (band 0 and band 5) and the away side's the
+// 30' and 91' ones (band 1 and the clamped band 5) — home 1,0,0,0,0,1 against away 0,1,0,0,0,1,
+// together the four shots the clock folds. The scheduled c3 shots and T10's c4 shot stay out.
+ok(`eventClock splits its shot series by the side that took each shot, the two series adding up to the whole window for window (T9 home ${clock.homeShotsBands.join("")} against away ${clock.awayShotsBands.join("")}; totals ${clock.homeShots}/${clock.awayShots})`,
+  clock.homeShotsBands.length === 6 && clock.awayShotsBands.length === 6 &&
+  clock.homeShotsBands.join(",") === "1,0,0,0,0,1" &&
+  clock.awayShotsBands.join(",") === "0,1,0,0,0,1" &&
+  clock.homeShots === 2 && clock.awayShots === 2 &&
+  clock.homeShots + clock.awayShots === clock.shots &&
+  clock.homeShotsBands.every((n, b) => n + clock.awayShotsBands[b] === clock.shotsBands[b]));
+// A small fixture whose two ends shoot at opposite times: v1's hosts shoot on 5' and 10' (band 0
+// twice) while the visitors shoot on 84' (band 5), so the split is a real reading rather than the
+// whole clock twice. v2 is finished but eventless and adds nothing; a competition with rows but
+// no events reads six silent windows on both sides.
+const sideClubs = [club("M", "T15"), club("N", "T15")];
+const sideFixtures = [
+  { ...match("v1", "T15", "M", "N", 2, 0, "2026-06-01"), events: [ev("SHOT", 5, "home"), ev("SHOT", 10, "home"), ev("SHOT", 84, "away"), ev("SAVE", 10, "away")] },
+  { ...match("v2", "T15", "M", "N", 0, 0, "2026-06-02") },
+];
+const sideClock = eventClock("T15", sideFixtures, sideClubs);
+ok(`the venue split follows the side each shot names rather than the result or the club, and an eventless competition reads six silent windows on both ends (T15 home ${sideClock.homeShotsBands.join("")} away ${sideClock.awayShotsBands.join("")} totals ${sideClock.homeShots}/${sideClock.awayShots}; silent ${clockSilent.homeShotsBands.join("")}+${clockSilent.awayShotsBands.join("")})`,
+  sideClock.homeShotsBands.join(",") === "2,0,0,0,0,0" &&
+  sideClock.awayShotsBands.join(",") === "0,0,0,0,0,1" &&
+  sideClock.homeShots === 2 && sideClock.awayShots === 1 &&
+  sideClock.homeShots + sideClock.awayShots === sideClock.shots &&
+  sideClock.homeShotsBands.every((n, b) => n + sideClock.awayShotsBands[b] === sideClock.shotsBands[b]) &&
+  clockSilent.homeShotsBands.length === 6 && clockSilent.awayShotsBands.length === 6 &&
+  clockSilent.homeShotsBands.every((n) => n === 0) &&
+  clockSilent.awayShotsBands.every((n) => n === 0) &&
+  clockSilent.homeShots === 0 && clockSilent.awayShots === 0);
+const sideClockAgain = eventClock("T9", clockFixtures, clockClubs);
+ok(`the venue split is deterministic and the event clock screen draws it off the fold, labelling the six windows and printing a total per side (same fold ${JSON.stringify(sideClockAgain.homeShotsBands) === JSON.stringify(clock.homeShotsBands)} and ${JSON.stringify(sideClockAgain.awayShotsBands) === JSON.stringify(clock.awayShotsBands)}; band labels ${["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"].filter((k) => CLOCK_SRC.includes(`t("${k}")`)).length}/6)`,
+  JSON.stringify(sideClockAgain.homeShotsBands) === JSON.stringify(clock.homeShotsBands) &&
+  JSON.stringify(sideClockAgain.awayShotsBands) === JSON.stringify(clock.awayShotsBands) &&
+  CLOCK_SRC.includes("clock.homeShotsBands") && CLOCK_SRC.includes("clock.awayShotsBands") &&
+  CLOCK_SRC.includes("clock.homeShots") && CLOCK_SRC.includes("clock.awayShots") &&
+  CLOCK_SRC.includes("sidePeak") && CLOCK_SRC.includes("pctOf(n, sidePeak)") &&
+  CLOCK_SRC.includes('t("clock.sideTitle"') && CLOCK_SRC.includes('t("clock.sideHint"') &&
+  CLOCK_SRC.includes('t("clock.sideHome"') && CLOCK_SRC.includes('t("clock.sideAway"') &&
+  CLOCK_SRC.includes('t("clock.emptyShort"') && !/\.sort\(/.test(CLOCK_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

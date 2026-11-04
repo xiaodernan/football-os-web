@@ -51,6 +51,13 @@ export function EventClock() {
     { label: t("clock.crossGoals"), data: contrast.windows.map((w) => w.goals), fill: BAR_FILL.progress },
     { label: t("clock.crossCards"), data: contrast.windows.map((w) => w.cards), fill: BAR_FILL.bad },
   ];
+  // M790: the league's shots split by the side that took them — the venue axis the shots clock
+  // above has no room for, so home pressure and away pressure can be read apart.
+  const sidePeak = Math.max(1, ...clock.homeShotsBands, ...clock.awayShotsBands);
+  const sideRows = [
+    { label: t("clock.sideHome"), data: clock.homeShotsBands, total: clock.homeShots, fill: BAR_FILL.info },
+    { label: t("clock.sideAway"), data: clock.awayShotsBands, total: clock.awayShots, fill: BAR_FILL.progress },
+  ];
 
   return (
     <div className="space-y-5">
@@ -114,6 +121,37 @@ export function EventClock() {
                 </div>
               ))}
             </div>
+          </Panel>
+
+          {/* M790: the same shots split by the side that took them — the venue axis the four
+              league rows above cannot carry, so each end's pressure is read on its own series. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("clock.sideTitle")} hint={t("clock.sideHint")} />
+            {clock.shots === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("clock.emptyShort")}</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                {sideRows.map((row) => (
+                  <div key={row.label}>
+                    <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                      <span>{row.label}</span>
+                      <span className="font-mono">{row.total}</span>
+                    </div>
+                    <div className="mt-1 flex items-end gap-1">
+                      {row.data.map((n, b) => (
+                        <div key={b} className="flex-1 text-center">
+                          <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                          <div className="mx-auto mt-0.5 h-10 w-full">
+                            <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, sidePeak) }} />
+                          </div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Panel>
 
           {/* M786: goals against cards on the same clock — the league's two most-recorded event

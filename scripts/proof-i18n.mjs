@@ -4512,7 +4512,11 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M788: the venue screen's goal clock adds its title, hint, two side labels, the reused no-goal
 // line and the six shared window labels: eleven literal sites, none interpolating — literal
 // 1864 -> 1875.
-  shapeCounts.literal === 1875 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M789: the red board's own series adds no t() site at all — the six-window header reuses the
+// component's existing bandLabels array — literal holds at 1875.
+// M790: the event clock's venue split adds its title, hint, two side labels and reuses the
+// no-events line: five literal sites, none interpolating — literal 1875 -> 1880.
+  shapeCounts.literal === 1880 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

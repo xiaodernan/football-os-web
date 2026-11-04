@@ -1175,9 +1175,16 @@ export interface EventClock {
   varBands: number[];
   /** Faced in each window, league-wide (M628) — the mirror series of shots + saves, folded once. */
   facedBands: number[];
+  /** The league's recorded shots split by the side that took them (M790), on the same six
+   *  windows; the two series add up to `shotsBands` window for window. */
+  homeShotsBands: number[];
+  awayShotsBands: number[];
   shots: number;
   saves: number;
   vars: number;
+  /** Shots the home and the away side of their fixtures took — the totals of the two series. */
+  homeShots: number;
+  awayShots: number;
   /** Finished fixtures in this competition that carried an event list. */
   matches: number;
 }
@@ -1197,7 +1204,8 @@ export interface EventClock {
  *  two halves of one club's attack are a contrast rather than two separate tables.
  *  M780 closes that mirror: the last window's shots get their own ranking too, so a side that
  *  starts fast and one that finishes fast are named by the end they actually own rather than one
- *  being read off the other's board. */
+ *  being read off the other's board. M790 gives the league's shot series a venue axis: the same
+ *  shots split by the side that took them, summing window for window to the whole. */
 export function eventClock(compId: string, matches: Match[], clubs: Club[]): EventClock {
   const metrics = teamMetrics(compId, matches, clubs);
   const emptyBands = () => Array.from({ length: GOAL_BANDS }, () => 0);
@@ -1213,7 +1221,10 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
   const shotsBands = emptyBands();
   const savesBands = emptyBands();
   const varBands = emptyBands();
+  const homeShotsBands = emptyBands();
+  const awayShotsBands = emptyBands();
   let shots = 0; let saves = 0; let vars = 0; let counted = 0;
+  let homeShots = 0; let awayShots = 0;
   const lastBand = GOAL_BANDS - 1;
   for (const m of matches) {
     if (m.competitionId !== compId || m.status !== "FINISHED" || !m.events?.length) continue;
@@ -1229,6 +1240,8 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
       if (e.type === "SHOT") {
         shots++;
         shotsBands[band]++;
+        if (e.side === "home") { homeShots++; homeShotsBands[band]++; }
+        else { awayShots++; awayShotsBands[band]++; }
         if (row) {
           row.shots++;
           row.shotsBands[band]++;
@@ -1278,7 +1291,7 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
   // The league's faced clock is the mirror of its shots and saves: every one of those events faced
   // exactly one club, so the two series must add up window for window.
   const facedBands = shotsBands.map((n, b) => n + savesBands[b]);
-  return { rows: list, siege, lateSiege, earlySiege, earlyAttack, lateAttack, shotsBands, savesBands, varBands, facedBands, shots, saves, vars, matches: counted };
+  return { rows: list, siege, lateSiege, earlySiege, earlyAttack, lateAttack, shotsBands, savesBands, varBands, facedBands, homeShotsBands, awayShotsBands, shots, saves, vars, homeShots, awayShots, matches: counted };
 }
 
 export interface Briefing {
