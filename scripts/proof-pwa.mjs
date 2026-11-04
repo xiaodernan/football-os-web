@@ -111,7 +111,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // re-recorded in the same commit.
 // M791: the discipline screen's result split adds three rows to the card clock and five dictionary
 // lines — 535 KB / 54 assets (JS 523 + CSS 12.4), pin 534 -> 535, baseline re-recorded alongside.
-const BUDGET_KB = 535;
+// M792: the event clock's rhythm panel adds one more six-window chart and a composed fold — 536 KB /
+// 54 assets (JS 523 + CSS 12.4), pin 535 -> 536, baseline re-recorded in the same commit.
+const BUDGET_KB = 536;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

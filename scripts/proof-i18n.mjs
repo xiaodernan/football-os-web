@@ -4518,7 +4518,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // no-events line: five literal sites, none interpolating — literal 1875 -> 1880.
 // M791: the discipline screen's result split adds its title, hint, three row labels and reuses the
 // no-booking line: six literal sites, none interpolating — literal 1880 -> 1886.
-  shapeCounts.literal === 1886 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M792: the event clock's rhythm panel adds its title, hint, no-booking line and the two end
+// lines, then reuses the contrast's two series labels as the count under each window: seven literal
+// sites, two of them interpolating — literal 1886 -> 1893, litVarSites 264 -> 266.
+  shapeCounts.literal === 1893 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4586,7 +4589,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M785: 262 -> 263 — the curve's red count under a window hands over the window's reds.
 // M786: 263 -> 264 — the peak line hands over the two window labels, an absent glyph where a
 // series has none.
-  litVarSites === 264 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M792: 264 -> 266 — the rhythm panel's two end lines each hand over a window label and a rate.
+  litVarSites === 266 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

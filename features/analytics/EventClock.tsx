@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { clockContrast, eventClock } from "@/domain/analytics";
+import { clockContrast, clockRhythm, eventClock } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
-import { ABSENT, cn, pctOf } from "@/lib/utils";
+import { ABSENT, cn, fmt2, pctOf } from "@/lib/utils";
 
 export function EventClock() {
   const { t } = useI18n();
@@ -58,6 +58,18 @@ export function EventClock() {
     { label: t("clock.sideHome"), data: clock.homeShotsBands, total: clock.homeShots, fill: BAR_FILL.info },
     { label: t("clock.sideAway"), data: clock.awayShotsBands, total: clock.awayShots, fill: BAR_FILL.progress },
   ];
+  // M792: that contrast divided — goals per booking inside each window, so the league's open
+  // stretches and its referee-owned stretches read as one series instead of two stacked ones.
+  const rhythm = useMemo(() => clockRhythm(compId, matches, clubs), [compId, matches, clubs]);
+  const rhythmPeak = Math.max(1, ...rhythm.windows.map((w) => w.perCard ?? 0));
+  const rhythmCells = rhythm.windows.map((w, b) => ({
+    band: b,
+    rate: w.perCard,
+    counts: [
+      { label: t("clock.crossGoals"), n: w.goals },
+      { label: t("clock.crossCards"), n: w.cards },
+    ],
+  }));
 
   return (
     <div className="space-y-5">
@@ -186,6 +198,51 @@ export function EventClock() {
                     c: contrast.peakCard === null ? ABSENT : bandLabels[contrast.peakCard],
                   })}
                 </p>
+              </>
+            )}
+          </Panel>
+
+          {/* M792: the two series above read as one rate — what a booking is worth in goals inside
+              the same fifteen minutes. A window with no card has no rate, and says so. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("clock.rhythmTitle")} hint={t("clock.rhythmHint")} />
+            {rhythm.loosest === null ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("clock.rhythmNone")}</p>
+            ) : (
+              <>
+                <div className="mt-3 flex items-end gap-1">
+                  {rhythmCells.map((cell) => (
+                    <div key={cell.band} className="flex-1 text-center">
+                      <div className="font-mono text-[10px] text-muted-foreground">
+                        {cell.rate === null ? ABSENT : fmt2(cell.rate)}
+                      </div>
+                      <div className="mx-auto mt-0.5 h-10 w-full">
+                        {cell.rate !== null && (
+                          <div
+                            className={cn("w-full rounded-sm", BAR_FILL.info)}
+                            style={{ height: pctOf(cell.rate, rhythmPeak) }}
+                          />
+                        )}
+                      </div>
+                      <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[cell.band]}</div>
+                      {cell.counts.map((c) => (
+                        <div key={c.label} className="text-[10px] text-muted-foreground">
+                          {c.label} {c.n}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+                {rhythm.loosest && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {t("clock.rhythmLoose", { w: bandLabels[rhythm.loosest.window], r: fmt2(rhythm.loosest.rate) })}
+                  </p>
+                )}
+                {rhythm.tightest && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t("clock.rhythmTight", { w: bandLabels[rhythm.tightest.window], r: fmt2(rhythm.tightest.rate) })}
+                  </p>
+                )}
               </>
             )}
           </Panel>

@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M791 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M792 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7096,6 +7096,61 @@ reflects the latest section this file actually carries.
 
 
 
+
+
+### M792 — the clock learns what a booking is worth in goals
+
+**What the page had.** The event clock prints goals against cards, six windows, two rows (M786).
+Two leagues can read the same pair of rows and mean opposite things: eight goals and eight bookings
+spread over the evening is open football, while one goal against six cards in the middle window is a
+stretch the referee owns. The reader had to divide the two rows in their head, at every window, on
+one screen while the same numbers sit undivided on another.
+
+**One fold, composed.** `clockRhythm(compId, matches, clubs)` calls `clockContrast` and divides it —
+no fixture walk, so its two counts are the pair the panel above already prints and can never disagree
+with it. Each window carries `goals`, `cards` and `perCard`, the goals a booking is worth in those
+fifteen minutes, **null when the window holds no booking**: three goals against a silent card column
+is not a rate of infinity, it is a window that has nothing to divide by. `loosest` and `tightest`
+name the two ends as `{window, rate}` records, chosen on the rounded rates the screen shows (a fold
+that ranked raw quotients could crown a window whose printed number ties with an earlier one) and
+picking the earliest window on a tie. A league that only books — goals never answer a card — reads
+`0.00` wherever it has a card, and names its first rated window at both ends.
+
+**The screen.** The rhythm row sits under the contrast: six columns, each printing the rate (or
+`ABSENT`, for a card-less window), a bar scaled to the busiest rate among the six, the window label
+from the shared `timing.w1…w6` band labels, and the two counts under it — relabelled with the
+contrast row labels the panel already owns, so the number of sites is not what grows here. Two
+caption lines name the open stretch and the tightest one; when nothing was booked the panel says so
+with its own line (`clock.rhythmNone`) rather than the contrast's "no events", which would be a lie
+in a league that scored freely. The screen sorts nothing and derives nothing beyond the display peak.
+
+**Words and gates.** Five new keys (`clock.rhythmTitle`, `clock.rhythmHint`, `clock.rhythmNone`,
+`clock.rhythmLoose`, `clock.rhythmTight`) across three locales, so the dictionary goes 2,527 → 2,532
+keys; seven new literal census sites (those five plus the two reused series labels), two of them
+interpolating, so the census moves literal 1,886 → 1,893 and placeholder sites 264 → 266.
+`proof-analytics` grows three clauses to 215/215: a hand-built two-club league whose windows read
+3 goals/2 cards, then 1/3, then a goal with no card behind it — `1.5, null, 0.33, null, null, null`
+with the league itself at `1.00`, loosest at window 0 and tightest at window 2; the silent arms (a
+goals-only league has no rate and no ends at all, a cards-only league reads `0,0,null,0,0` and names
+one window twice, an empty competition is all nulls); and the agreement clause, which re-reads the
+contrast's own counts on every seeded competition, checks each rate against the quotient of those
+two numbers, and then the screen. No new module, route or storage key. The panel costs another
+kilobyte: 536 KB gzip across the same 54 assets (JS 523 + CSS 12.4), so the PWA pin moves 535 → 536
+and `tests/perf/baseline.json` re-records with it. `tsc` clean, build exit 0, `proof-screens` renders
+every routed screen in all three locales (31/31) — this unit ships without a live DOM read: the
+browser's script channel timed out on the third attempt, so the render evidence here is the SSR pass
+and the source clause, stated rather than glossed. The two shared doors the panel reaches for each
+carried a roster of the files allowed to read them, and `EventClock` was in neither: `proof-fmt2`
+listed twenty-seven consumers and the tree now has twenty-eight (the panel prints six window rates and
+two end rates through the door), and `proof-absent-glyph` pins uses per file, so the screen's
+card-less window moves its row from 3 to 4. Both rosters moved with the screen rather than being
+loosened — each gate compares its list against the tree for equality, so a file that starts reading a
+door without being listed reddens as an unlisted reader.
+
+**The honest limit.** `perCard` is a ratio of two event-recorded counts, not of the scoreline: a
+fixture whose goals are only in the scoreline and not in its event list contributes cards and no
+goals, which pulls that window's rate down. That is the same limit the contrast above it has had
+since M786, and the reason this fold composes that one instead of inventing a third measure.
 
 
 ### M791 — the card clock learns how the match ended

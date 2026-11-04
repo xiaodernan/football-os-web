@@ -698,6 +698,65 @@ export function clockContrast(compId: string, matches: Match[], clubs: Club[]): 
   };
 }
 
+export interface ClockRhythmWindow {
+  goals: number;
+  cards: number;
+  /** Goals per booking inside this window, two decimals; null when the window holds no booking —
+   *  goals against a silent referee are not a rate, they are a count that has nothing to divide by. */
+  perCard: number | null;
+}
+
+export interface ClockRhythmEnd {
+  /** 0-based window index, index 0 = 1–15′, index 5 = 76–90+′. */
+  window: number;
+  /** The rounded rate printed at that window. */
+  rate: number;
+}
+
+export interface ClockRhythm {
+  /** The six windows, carrying the same two counts `clockContrast` prints above them. */
+  windows: ClockRhythmWindow[];
+  /** The league's own goals per booking across all six windows; null when it booked nobody. */
+  perCard: number | null;
+  /** The window where goals ran furthest ahead of bookings — highest rate, earliest window on a
+   *  tie. Null when no window holds a booking, so there is no rate to rank. */
+  loosest: ClockRhythmEnd | null;
+  /** The window where bookings ran furthest ahead of goals — lowest rate, earliest window on a
+   *  tie. Null on the same condition, so a league whose goals never answer a card names the same
+   *  silent window at both ends. */
+  tightest: ClockRhythmEnd | null;
+}
+
+/** The contrast read as one number per window: how many goals the league scores for every booking
+ *  it shows inside the same fifteen minutes. A high window is open football — goals arriving while
+ *  the whistle stays quiet; a low one is a stretch the referee owns. The fold composes
+ *  `clockContrast` instead of walking the fixtures again, so its two counts are the pair the
+ *  contrast panel already prints and cannot disagree with it, and the two ends are chosen on the
+ *  rounded rates the screen shows rather than on raw quotients the reader cannot see. */
+export function clockRhythm(compId: string, matches: Match[], clubs: Club[]): ClockRhythm {
+  const contrast = clockContrast(compId, matches, clubs);
+  const windows: ClockRhythmWindow[] = contrast.windows.map((w) => ({
+    goals: w.goals,
+    cards: w.cards,
+    perCard: w.cards ? round2(w.goals / w.cards) : null,
+  }));
+  const rates = windows.map((w) => w.perCard);
+  let loosest: ClockRhythmEnd | null = null;
+  let tightest: ClockRhythmEnd | null = null;
+  for (let b = 0; b < rates.length; b++) {
+    const rate = rates[b];
+    if (rate === null) continue;
+    if (loosest === null || rate > loosest.rate) loosest = { window: b, rate };
+    if (tightest === null || rate < tightest.rate) tightest = { window: b, rate };
+  }
+  return {
+    windows,
+    perCard: contrast.cards ? round2(contrast.goals / contrast.cards) : null,
+    loosest,
+    tightest,
+  };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, cardResultClock } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, clockRhythm, goalVenueClock, cardResultClock } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -1224,6 +1224,80 @@ ok(`clockContrast is deterministic and the event clock screen prints both series
   EV_CLOCK_SRC.includes('t("clock.crossPeak"') && EV_CLOCK_SRC.includes('t("clock.emptyShort"') &&
   EV_CLOCK_SRC.includes("contrast.peakGoal === null ? ABSENT") &&
   EV_CLOCK_SRC.includes("contrast.peakCard === null ? ABSENT") &&
+  !/\.sort\(/.test(EV_CLOCK_SRC));
+// --- M792: the contrast divided — goals per booking inside each window --------------------------
+// TP carries three scored fixtures. p1: J 3-0 K — J scores on 5', 10' and 14' (all band 0) and the
+// two bookings in that window (8' home, 12' away) make band 0 three goals against two cards, 1.50.
+// p2: K 1-2 J — a goal on 40' (band 2) against three cards in the same window (32', 36', 44' mixed)
+// gives 0.33. p3: a goal on 88' (band 5) with no card at all, so that window has no rate. p4 is
+// scheduled noise. The league is 5 goals over 5 cards — 1.00 — loosest at band 0, tightest at band 2.
+const rhythmClubs = [club("J", "TP"), club("K", "TP")];
+const rhythmFixtures = [
+  cardFixture("p1", "TP", "J", "K", [
+    cardEvent(5, "GOAL", "home"), cardEvent(8, "YELLOW", "home"), cardEvent(10, "GOAL", "home"),
+    cardEvent(12, "YELLOW", "away"), cardEvent(14, "GOAL", "home"),
+  ]),
+  cardFixture("p2", "TP", "K", "J", [
+    cardEvent(32, "YELLOW", "away"), cardEvent(36, "YELLOW", "home"), cardEvent(40, "GOAL", "home"),
+    cardEvent(44, "RED", "away"),
+  ]),
+  cardFixture("p3", "TP", "J", "K", [cardEvent(88, "GOAL", "home")]),
+  cardFixture("p4", "TP", "K", "J", [cardEvent(10, "GOAL", "home"), cardEvent(12, "YELLOW", "home")], "SCHEDULED"),
+];
+const rhythm = clockRhythm("TP", rhythmFixtures, rhythmClubs);
+const rhythmContrast = clockContrast("TP", rhythmFixtures, rhythmClubs);
+const rateOf = (w) => (w.cards ? Math.round((w.goals / w.cards) * 100) / 100 : null);
+ok(`clockRhythm divides the contrast window by window and leaves a card-less window without a rate (goals ${rhythm.windows.map((w) => w.goals).join("")} against cards ${rhythm.windows.map((w) => w.cards).join("")} read as ${rhythm.windows.map((w) => (w.perCard === null ? "-" : w.perCard)).join(",")} ; league ${rhythm.perCard}; loosest ${rhythm.loosest?.window}=${rhythm.loosest?.rate}; tightest ${rhythm.tightest?.window}=${rhythm.tightest?.rate})`,
+  rhythm.windows.length === 6 &&
+  rhythm.windows.map((w) => w.goals).join(",") === "3,0,1,0,0,1" &&
+  rhythm.windows.map((w) => w.cards).join(",") === "2,0,3,0,0,0" &&
+  rhythm.windows.map((w) => w.perCard).join(",") === "1.5,,0.33,,," &&
+  rhythm.windows.every((w) => w.perCard === rateOf(w)) &&
+  rhythm.perCard === 1 &&
+  rhythm.loosest?.window === 0 && rhythm.loosest?.rate === 1.5 &&
+  rhythm.tightest?.window === 2 && rhythm.tightest?.rate === 0.33);
+// A silent end is not a zero rate. T1 scores four goals and books nobody: six windows with nothing
+// to divide by, and no loose or tight stretch to name. TE is the mirror — six cards, no goal, so
+// every rated window reads 0 and the earliest of them answers both ends. TM has neither family.
+const rhythmGoalsOnly = clockRhythm("T1", timingFixtures, clubs);
+const rhythmCardsOnly = clockRhythm("TE", cardFixtures, cardClubs);
+const rhythmEmpty = clockRhythm("TM", crossFixtures, crossClubs);
+const ratedOf = (r) => r.windows.filter((w) => w.perCard !== null).map((w) => w.perCard).join(",");
+ok(`a card-less window has no rate rather than a zero one, and a league that only books names its earliest rated window at both ends (T1 ${ratedOf(rhythmGoalsOnly) || "none"} loose ${rhythmGoalsOnly.loosest === null ? "null" : "set"}; TE ${ratedOf(rhythmCardsOnly)} loose ${rhythmCardsOnly.loosest?.window}/${rhythmCardsOnly.loosest?.rate} tight ${rhythmCardsOnly.tightest?.window}/${rhythmCardsOnly.tightest?.rate}; TM ${rhythmEmpty.perCard}/${rhythmEmpty.windows.length})`,
+  rhythmGoalsOnly.windows.every((w) => w.perCard === null) &&
+  rhythmGoalsOnly.perCard === null && rhythmGoalsOnly.loosest === null &&
+  rhythmGoalsOnly.tightest === null &&
+  rhythmCardsOnly.windows.map((w) => w.perCard).join(",") === "0,0,,,0,0" &&
+  rhythmCardsOnly.perCard === 0 &&
+  rhythmCardsOnly.loosest?.window === 0 && rhythmCardsOnly.loosest?.rate === 0 &&
+  rhythmCardsOnly.tightest?.window === 0 && rhythmCardsOnly.tightest?.rate === 0 &&
+  rhythmEmpty.windows.every((w) => w.perCard === null) &&
+  rhythmEmpty.perCard === null && rhythmEmpty.loosest === null);
+// The fold composes the contrast, so on every seeded competition the two counts are the pair the
+// panel above already prints — the rate can only be a reading of those numbers, never a third pass.
+const rhythmAgree = seededComps.map((id) => {
+  const r = clockRhythm(id, seededMatches, seededClubs.filter((c) => c.competitionId === id));
+  const c = clockContrast(id, seededMatches, seededClubs.filter((x) => x.competitionId === id));
+  return {
+    id,
+    counts: r.windows.every((w, b) => w.goals === c.windows[b].goals && w.cards === c.windows[b].cards),
+    rates: r.windows.every((w) => w.perCard === rateOf(w)),
+    league: r.perCard === (c.cards ? Math.round((c.goals / c.cards) * 100) / 100 : null),
+  };
+});
+const rhythmAgain = clockRhythm("TP", rhythmFixtures, rhythmClubs);
+ok(`clockRhythm reuses the contrast's own counts on every seeded competition (agreement ${rhythmAgree.filter((a) => a.counts && a.rates && a.league).length}/${rhythmAgree.length}) and is deterministic (same fold ${JSON.stringify(rhythmAgain) === JSON.stringify(rhythm)})`,
+  rhythmAgree.every((a) => a.counts && a.rates && a.league) &&
+  JSON.stringify(rhythmAgain) === JSON.stringify(rhythm) &&
+  EV_CLOCK_SRC.includes("clockRhythm(compId, matches, clubs)") &&
+  EV_CLOCK_SRC.includes("rhythmCells.map(") && EV_CLOCK_SRC.includes("rhythmPeak") &&
+  EV_CLOCK_SRC.includes("pctOf(cell.rate, rhythmPeak)") &&
+  EV_CLOCK_SRC.includes("cell.rate === null ? ABSENT") &&
+  EV_CLOCK_SRC.includes('t("clock.rhythmTitle"') && EV_CLOCK_SRC.includes('t("clock.rhythmHint"') &&
+  EV_CLOCK_SRC.includes('t("clock.rhythmNone"') &&
+  EV_CLOCK_SRC.includes('t("clock.crossGoals")') && EV_CLOCK_SRC.includes('t("clock.crossCards")') &&
+  EV_CLOCK_SRC.includes('t("clock.rhythmLoose", { w: bandLabels[rhythm.loosest.window], r: fmt2(rhythm.loosest.rate) })') &&
+  EV_CLOCK_SRC.includes('t("clock.rhythmTight", { w: bandLabels[rhythm.tightest.window], r: fmt2(rhythm.tightest.rate) })') &&
   !/\.sort\(/.test(EV_CLOCK_SRC));
 // --- M787: the league card curve split by the end the card was earned at ---------------------
 // On TE, the home side earns a yellow on 5' (band 0), one on 75' (band 4), a red on 80' and one
