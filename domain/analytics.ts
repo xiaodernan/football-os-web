@@ -557,6 +557,13 @@ export interface CardTimingRow {
   earlyShare: number;
   /** Share of this club's cards earned late, 0–100, 2dp; 0 when it was not booked. */
   lateShare: number;
+  /** M950: this club's cards earned in a match the booked side went on to win. The three result
+   *  counters add up to `cards` — the same split M945 folds at league level, charged to the club. */
+  wonCards: number;
+  /** ... in a match the booked side drew. */
+  drewCards: number;
+  /** ... in a match the booked side lost. */
+  lostCards: number;
 }
 
 export interface CardRedRow {
@@ -651,6 +658,9 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
         lateCards: 0,
         earlyShare: 0,
         lateShare: 0,
+        wonCards: 0,
+        drewCards: 0,
+        lostCards: 0,
       },
     ]),
   );
@@ -676,10 +686,20 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       windows[band]++;
       if (e.side === "home") homeWindows[band]++; else awayWindows[band]++;
       // M945: the result axis — the receiving side's own outcome of this fixture decides
-      // which of the three series the card lands in.
+      // which of the three series the card lands in. M950 charges the same outcome to the
+      // booked club's own three counters, so its row adds up the way the league's series do.
       const ourGoals = e.side === "home" ? m.homeGoals : m.awayGoals;
       const theirGoals = e.side === "home" ? m.awayGoals : m.homeGoals;
-      (ourGoals > theirGoals ? wonWindows : ourGoals === theirGoals ? drewWindows : lostWindows)[band]++;
+      if (ourGoals > theirGoals) {
+        wonWindows[band]++;
+        row.wonCards++;
+      } else if (ourGoals === theirGoals) {
+        drewWindows[band]++;
+        row.drewCards++;
+      } else {
+        lostWindows[band]++;
+        row.lostCards++;
+      }
       if (e.type === "YELLOW") row.yellows++;
       else {
         row.reds++;
@@ -735,6 +755,72 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       lost: sum(lostWindows, (n) => n),
     },
   };
+}
+
+export interface ClubResultRow {
+  clubId: string;
+  /** The club's recorded cards — the denominator of both shares on this row. */
+  cards: number;
+  won: number;
+  drew: number;
+  lost: number;
+  /** Share of this club's cards earned in a match it went on to lose, 0–100, 2dp. */
+  lostShare: number;
+  /** Share earned in a match it went on to win, 0–100, 2dp. */
+  wonShare: number;
+  /** lostShare minus wonShare in percentage points, 2dp — positive means the club is booked
+   *  more on the losing side of its own matches than the winning one. */
+  edge: number;
+}
+
+export interface ClubResultLeague {
+  won: number;
+  drew: number;
+  lost: number;
+  cards: number;
+  lostShare: number;
+  wonShare: number;
+  edge: number;
+}
+
+export interface ClubResultCards {
+  /** Clubs with at least one recorded card, roughest-when-losing first (lostShare, then the
+   *  lost count, then the whole card count, then the club id). A club nobody booked carries no
+   *  share to rank and stays off the board. */
+  rows: ClubResultRow[];
+  /** The same three counts and the same gap read over the league's whole card clock. */
+  league: ClubResultLeague;
+}
+
+/** M950: the league's result clock (M945) handed to each club — a club's cards split by the
+ *  result the booked side's own match went on to do, with the losing share as the headline and
+ *  the winning share as its counterweight. Composed off `cardTiming`'s rows, so the three
+ *  counters add up to the card count the discipline board already prints. */
+export function clubResultCards(compId: string, matches: Match[], clubs: Club[]): ClubResultCards {
+  const clock = cardTiming(compId, matches, clubs);
+  const share = (n: number, of: number) => (of ? round2((n / of) * 100) : 0);
+  const rows: ClubResultRow[] = clock.rows
+    .filter((r) => r.cards > 0)
+    .map((r) => {
+      const lostShare = share(r.lostCards, r.cards);
+      const wonShare = share(r.wonCards, r.cards);
+      return {
+        clubId: r.clubId,
+        cards: r.cards,
+        won: r.wonCards,
+        drew: r.drewCards,
+        lost: r.lostCards,
+        lostShare,
+        wonShare,
+        edge: round2(lostShare - wonShare),
+      };
+    });
+  rows.sort((a, b) => b.lostShare - a.lostShare || b.lost - a.lost || b.cards - a.cards || a.clubId.localeCompare(b.clubId));
+  const rc = clock.resultClock;
+  const cards = rc.won + rc.drew + rc.lost;
+  const lostShare = share(rc.lost, cards);
+  const wonShare = share(rc.won, cards);
+  return { rows, league: { won: rc.won, drew: rc.drew, lost: rc.lost, cards, lostShare, wonShare, edge: round2(lostShare - wonShare) } };
 }
 
 export interface CardSeverityWorst {

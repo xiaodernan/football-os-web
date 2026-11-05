@@ -142,9 +142,9 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M791 in this file's own record segment (the
+Work ships one milestone per commit and is currently at M792 in this file's own record segment (the
 shared git history has run ahead of the record — its newest commit is numbered higher again, and the
-section for M791 says which commit carries it and why the record continues from M790 instead of
+section for M792 says which commit carries it and why the record continues from M791 instead of
 jumping; the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
@@ -7100,6 +7100,85 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M792 — who gets booked worst while losing (landed in history as commit M950)
+
+**Numbering, still stated plainly.** The shared history carries this unit as commit **M950**; this
+file's own record segment is at M792. Nothing about that arithmetic changed since the entry above: the
+record is continued rather than jumped, so the heading adds a section and no gap — 440 sections against
+the same 186 gaps, where `proof-ledger-run`'s ceiling is half the sections. Minting the heading at the
+commit's number would expose the farm's unscheduled numbers as gaps; the commit subject, the
+`PLAN-LONGTERM` entry and this heading name each other instead.
+
+**What the page had.** M945's result clock put the *league's* cards on three lines — how many of a
+competition's bookings arrived for a side that went on to win, draw or lose. The club rows beside it
+carried their own six windows (M783) and their own red series (M789), but the result axis stopped at the
+league. A reader could learn that Ligue 1 spends nearly half its cards in defeat and that OGC Nice has
+four cards, and still had no way to say whether Nice's four are that kind of card. The difference is not
+cosmetic: a club booked mostly while ahead and one booked mostly while behind print the same cards-per-
+match line.
+
+**The axis moves down a level, no new walk.** `cardTiming`'s per-club loop already knows which side the
+booked club's own match went on to take — it is the same knowledge that fills the league's three series —
+so the rows now carry `wonCards`, `drewCards`, `lostCards` beside the `cards` they total. The three sum
+to that row's `cards`, which is the join M945 asserts at league level, one level down, and the seeded
+clause asserts it for every club on the shipped world. `clubResultCards(compId, matches, clubs)` composes
+those rows and walks no fixture itself, so a share here cannot disagree with the result clock printed
+above it. Each row is the club's own two shares — losing cards over its cards, winning cards over its
+cards — and `edge = lostShare − wonShare`, in percentage points, positive when the club is booked more
+often on the losing side. A club nobody booked has no share to rank and takes no row rather than a 0.00%
+one; the league line re-reads `cardTiming`'s `resultClock` rather than summing the rows, so the panel's
+league numbers *are* the numbers above it.
+
+**Ordering that cannot shuffle.** Losing share first, then the absolute losing count, then the club's
+card total, then its id. The last two arms exist for the tie that the shipped world actually contains:
+several rows read 100.00% on the losing side at different denominators, and a tie broken by nothing would
+trade places between renders.
+
+**The screen.** One panel under the severity board: a league line naming the two shares and their gap,
+then rows of crest, link, "the share of its cards on the losing side, from N bookings", the three counts
+on the labels M945's clock owns, then the winning share; the right column is the signed edge in the
+shared delta colour. The denominator prints beside the share on purpose — see the limit below. A
+competition where nobody was booked says so with the card clock's own empty line, and the screen sorts
+nothing and divides nothing.
+
+**Words and gates.** Five new keys (`disc.resultClubTitle`, `…Hint`, `…League`, `…Row`, `…Gap`) across
+three locales, reusing `disc.resultWon/Drew/Lost` and `disc.clockNone` at new sites: nine literal census
+sites, 1,918 → 1,927, and three placeholder sites — the league line, the row line and the gap line —
+270 → 273. `proof-analytics` grows four clauses to 233/233: a hand-built league whose two booked clubs
+are exact opposites (1/1/0 of 2 at edge −50 against 0/1/1 of 2 at edge +50, the second boarding first,
+while the league's own two shares are both 25 and its edge zero), an unbooked club that stays off the
+board and a cardless competition that has neither board nor share, the seeded agreement clause (12/12
+competitions whose rows are `cardTiming`'s own counters, whose counts rebuild its `resultClock`, and
+whose order holds), and determinism plus the eight screen keys. `proof-absent-glyph`, `proof-fmt2`,
+`proof-sum` and `proof-vocab` need no roster change — every denominator this panel prints belongs to a
+club that was booked, so the panel never reaches for the absence door. The bundle crossed its rounding
+edge: 539 KB gzip over the same 54 assets (JS 526 → 527), so `proof-pwa`'s pin and
+`tests/perf/baseline.json` move together in this commit. `tsc` clean, build exit 0, and the base this
+unit sits on ran green at 123/123 · 3,362/3,362; the landing run is **123/123 · 3,366/3,366** — the four
+new clauses and nothing else.
+
+**What it reads on the shipped world.** Ligue 1 is the sharpest of the five domestic leagues: 39 cards,
+46.15% for a side that goes on to lose against 25.64% for one that wins, 20.51 points apart. The Premier
+League runs the other way — 40 cards, 25.00% in defeat against 42.50% in victory — as does La Liga
+(−18.43); Serie A is nearly level at −2.32 and the Bundesliga slightly the other way at +3.23. At the
+club end five rows read 100% on the losing side: OGC Nice 0/0/4 of 4, Torino 0/0/3, Strasbourg 0/0/3,
+Borussia Dortmund 0/0/2, Santos 0/0/2. The Champions League, by far the biggest population here, is close
+to flat — 231 cards at 29.87% against 32.90%, with Marseille's 0/2/6 of 8 the furthest out at 75.00%.
+
+**The honest limit.** Three of them. First, the result is the match's final scoreline, not the state of
+play when the card fell: a booking in the 85th minute of a 1–0 that is later levelled is charged to the
+draw, so this is a read on *what the club was doing when it was booked*, not on why. Second, shares
+divide the club's own cards, so the 100% rows are samples of two, three and four — which is why the count
+sits inside the same line as the share. Third, a club that simply loses a lot will top this board for
+reasons that are about its record rather than its discipline; the edge column is what separates the two,
+and both are printed so a reader can see which one is doing the work.
+
+**Live read, and M949's.** The venue rhythm panel shipped in the entry above was read back off a live DOM
+on `/#/home-away` across all fifteen competitions: every printed ratio re-derived from the two counts
+printed under it, the three competitions that name no sharper end correctly printing no comparison
+sentence, and the absence glyph standing in for each denominator-less window. This panel's figures above
+are the same kind of read from the fold the screen calls; its own DOM pass follows the landing.
 
 ### M791 — what a booking buys at each end (landed in history as commit M949)
 

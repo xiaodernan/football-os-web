@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, cardSeverity, venueRhythm } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, cardSeverity, venueRhythm, clubResultCards } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 const resultClockSum = (fold) => fold.resultClock.won + fold.resultClock.drew + fold.resultClock.lost;
@@ -1686,6 +1686,78 @@ ok(`the venue rhythm is deterministic and the venue screen reads it off the join
   VENUE_SRC.includes('t("venue.rhythmHomeBetter"') && VENUE_SRC.includes('t("venue.rhythmAwayBetter"') &&
   VENUE_SRC.includes('t("timing.emptyHint"') &&
   !/\.sort\(/.test(VENUE_SRC));
+// --- M950: the result clock handed to each club --------------------------------------------------
+// MR again: r1 A hosts B and wins 2-1, so A's 10' booking is a card in a win and B's 30' red is a
+// card in a loss; r2 draws 1-1, and both the 50' (B) and the 85' (A) bookings are cards in a draw.
+// A is therefore 1/1/0 of 2 cards — 0% on the losing side, 50% on the winning one, edge −50 — while
+// B is 0/1/1 of 2: 50% losing, 0% winning, edge +50, and B boards first. The league is 1 won, 2 drew,
+// 1 lost of 4, so its two shares are both 25 and its own edge is zero.
+const clubResults = clubResultCards("MR", resultFixtures, resultClubs);
+const crA = clubResults.rows.find((r) => r.clubId === "A"), crB = clubResults.rows.find((r) => r.clubId === "B");
+ok(`clubResultCards charges each club the outcome of its own match and ranks the losing share first (order ${clubResults.rows.map((r) => r.clubId).join(",")}; A ${crA.won}/${crA.drew}/${crA.lost} of ${crA.cards} = ${crA.lostShare}/${crA.wonShare} edge ${crA.edge}; B ${crB.won}/${crB.drew}/${crB.lost} = ${crB.lostShare}/${crB.wonShare} edge ${crB.edge}; league ${clubResults.league.lostShare}/${clubResults.league.wonShare} edge ${clubResults.league.edge})`,
+  clubResults.rows.length === 2 && clubResults.rows.map((r) => r.clubId).join(",") === "B,A" &&
+  crA.cards === 2 && crA.won === 1 && crA.drew === 1 && crA.lost === 0 &&
+  crA.lostShare === 0 && crA.wonShare === 50 && crA.edge === -50 &&
+  crB.cards === 2 && crB.won === 0 && crB.drew === 1 && crB.lost === 1 &&
+  crB.lostShare === 50 && crB.wonShare === 0 && crB.edge === 50 &&
+  clubResults.league.won === 1 && clubResults.league.drew === 2 && clubResults.league.lost === 1 &&
+  clubResults.league.cards === 4 && clubResults.league.lostShare === 25 &&
+  clubResults.league.wonShare === 25 && clubResults.league.edge === 0);
+// A club nobody booked carries no share to rank and stays off the board, and a competition with no
+// card at all reads an empty board with a zero league line rather than dividing by nothing.
+const qrResults = clubResultCards("TE", cardFixtures, cardClubs);
+const emptyResults = clubResultCards("TG", cardFixtures, cardClubs);
+ok(`an unbooked club takes no row and a cardless competition has no board and no league share (TE rows ${qrResults.rows.length}/${qrResults.rows.map((r) => r.clubId).join(",")} of ${cardTiming("TE", cardFixtures, cardClubs).rows.length} clubs; TG ${emptyResults.rows.length} rows, league ${emptyResults.league.cards} cards at ${emptyResults.league.lostShare})`,
+  qrResults.rows.length === 3 && qrResults.rows.length < cardTiming("TE", cardFixtures, cardClubs).rows.length &&
+  qrResults.rows.every((r) => r.cards > 0) &&
+  emptyResults.rows.length === 0 && emptyResults.league.cards === 0 &&
+  emptyResults.league.lostShare === 0 && emptyResults.league.wonShare === 0 &&
+  emptyResults.league.edge === 0);
+// On the seeded world the board is the card clock split, not recounted: each row's three counters
+// are the row `cardTiming` already carries and add up to its card total, every club with cards
+// appears exactly once, the rows' own counts rebuild the league's result clock, and the shares are
+// those counts over the denominator the discipline board prints.
+const crSeeded = seededComps.map((id) => {
+  const comps = seededClubs.filter((c) => c.competitionId === id);
+  const f = clubResultCards(id, seededMatches, comps);
+  const c = cardTiming(id, seededMatches, comps);
+  const booked = c.rows.filter((r) => r.cards > 0);
+  return {
+    id,
+    sameSet: f.rows.length === booked.length &&
+      f.rows.every((r) => {
+        const src = booked.find((x) => x.clubId === r.clubId);
+        return src && src.wonCards === r.won && src.drewCards === r.drew && src.lostCards === r.lost &&
+          src.wonCards + src.drewCards + src.lostCards === src.cards &&
+          r.lostShare === Math.round((src.lostCards / src.cards) * 100 * 100) / 100 &&
+          r.wonShare === Math.round((src.wonCards / src.cards) * 100 * 100) / 100 &&
+          r.edge === Math.round((r.lostShare - r.wonShare) * 100) / 100;
+      }),
+    rebuilds: f.rows.reduce((s, r) => s + r.won, 0) === f.league.won &&
+      f.rows.reduce((s, r) => s + r.drew, 0) === f.league.drew &&
+      f.rows.reduce((s, r) => s + r.lost, 0) === f.league.lost &&
+      f.league.won + f.league.drew + f.league.lost === c.resultClock.won + c.resultClock.drew + c.resultClock.lost &&
+      f.league.lostShare === (f.league.cards ? Math.round((f.league.lost / f.league.cards) * 100 * 100) / 100 : 0),
+    ordered: f.rows.every((r, i) => i === 0 || f.rows[i - 1].lostShare >= r.lostShare),
+  };
+});
+ok(`the club result board is cardTiming's own split, rebuilt by its rows and ordered (seeded ${crSeeded.filter((s) => s.sameSet && s.rebuilds && s.ordered).length}/${crSeeded.length}; boards with a row ${crSeeded.filter((s) => s.id).length})`,
+  crSeeded.length >= 2 && crSeeded.every((s) => s.sameSet && s.rebuilds && s.ordered));
+const crAgain = clubResultCards("MR", resultFixtures, resultClubs);
+ok(`clubResultCards is deterministic and the discipline screen ranks off the fold, printing both shares, the three counts and the signed gap (same fold ${JSON.stringify(crAgain) === JSON.stringify(clubResults)}; keys ${[
+  't("disc.resultClubTitle"', 't("disc.resultClubHint"', 't("disc.resultClubLeague"',
+  't("disc.resultClubRow"', 't("disc.resultClubGap"', 't("disc.resultWon"', 't("disc.resultDrew"',
+  't("disc.resultLost"',
+].filter((k) => DISC_SRC.includes(k)).length}/8)`,
+  JSON.stringify(crAgain) === JSON.stringify(clubResults) &&
+  DISC_SRC.includes("clubResultCards(compId, matches, clubs)") &&
+  DISC_SRC.includes("results.rows.length === 0") && DISC_SRC.includes("results.rows.map(") &&
+  DISC_SRC.includes('t("disc.resultClubLeague", {') &&
+  DISC_SRC.includes('t("disc.resultClubRow", { p: fmt2(r.lostShare), c: r.cards })') &&
+  DISC_SRC.includes('t("disc.resultClubGap", { p: fmt2(r.wonShare) })') &&
+  DISC_SRC.includes("DELTA_CLASS[deltaSign(r.edge)]") && DISC_SRC.includes("signed(r.edge)") &&
+  DISC_SRC.includes('t("disc.clockNone"') &&
+  !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

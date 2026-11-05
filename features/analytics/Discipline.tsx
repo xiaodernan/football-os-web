@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { discipline, disciplineTrend, disciplineVenue, cardTiming, cardSeverity } from "@/domain/analytics";
+import { discipline, disciplineTrend, disciplineVenue, cardTiming, cardSeverity, clubResultCards } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
@@ -37,6 +37,8 @@ export function Discipline() {
   // A club never booked has no severity to rank, so it takes no row here rather than a zero one.
   const severity = useMemo(() => cardSeverity(compId, matches, clubs), [compId, matches, clubs]);
   const severe = severity.rows.filter((r) => r.cards > 0);
+  // M950: the result clock above, charged to the club that was booked rather than to the league.
+  const results = useMemo(() => clubResultCards(compId, matches, clubs), [compId, matches, clubs]);
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -461,6 +463,58 @@ export function Discipline() {
                         <div className="text-right tabular-nums">
                           {r.reds}
                           <div className="text-xs text-muted-foreground">{t("disc.redTotal", { n: r.reds })}</div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+          </Panel>
+
+          {/* M950: the league's result clock handed to each club — the same three counts the
+              panel above folds, charged to the club that was booked. The right column is the
+              losing share minus the winning one, in percentage points. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.resultClubTitle")} hint={t("disc.resultClubHint")} />
+            {results.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.clockNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.resultClubLeague", {
+                    l: fmt2(results.league.lostShare),
+                    w: fmt2(results.league.wonShare),
+                    s: signed(results.league.edge),
+                  })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {results.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li key={r.clubId} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={26} />
+                          <div className="min-w-0">
+                            <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                              {club?.name ?? r.clubId}
+                            </Link>
+                            <div className="text-xs text-muted-foreground">
+                              {t("disc.resultClubRow", { p: fmt2(r.lostShare), c: r.cards })}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {t("disc.resultWon")} {r.won} · {t("disc.resultDrew")} {r.drew} ·{" "}
+                              {t("disc.resultLost")} {r.lost} · {t("disc.resultClubGap", { p: fmt2(r.wonShare) })}
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className={cn(
+                            "text-right font-mono text-sm tabular-nums",
+                            DELTA_CLASS[deltaSign(r.edge)],
+                          )}
+                        >
+                          {signed(r.edge)}
                         </div>
                       </li>
                     );

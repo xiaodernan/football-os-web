@@ -121,7 +121,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M949: the venue screen's rhythm panel adds its two rows and seven keys inside the same rounding
 // step — 538 KB / 54 assets (JS 526 + CSS 12.4), so the pin holds at 538 and only the baseline's
 // own JS figure moves, 525 -> 526.
-const BUDGET_KB = 538;
+// M950: the discipline screen's result board adds its ranked list, league line and eight keys,
+// measuring 539 KB / 54 assets (JS 527 + CSS 12.4), pin 538 -> 539, baseline re-recorded in the
+// same commit.
+const BUDGET_KB = 539;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
