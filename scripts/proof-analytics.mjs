@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 const resultClockSum = (fold) => fold.resultClock.won + fold.resultClock.drew + fold.resultClock.lost;
@@ -1494,6 +1494,31 @@ ok(`the event clock screen reads the rhythm row and the sharpest-window sentence
 ].filter((k) => CLOCK_SRC.includes(k)).length}/4)`,
   CLOCK_SRC.includes("contrast.peakRhythm") && CLOCK_SRC.includes("w.goalsPerCard") &&
   CLOCK_SRC.includes('t("clock.crossRhythm"') && CLOCK_SRC.includes('t("clock.crossRhythmPeak"') &&
+  !/\.sort\(/.test(CLOCK_SRC));
+// --- M947: each club's own season rhythm -------------------------------------------------------
+// MR: A scored 2 (12' and the 85' away goal in q2) for 1 card — 2.00; B scored 1 and booked
+// nobody, so it carries no denominator and follows A. TE's clubs booked without scoring: every
+// ratio reads zero and the sharpest seat still exists. A competition with no booking names no
+// sharpest club at all.
+const seasonRhythm = clubRhythm("MR", rhythmFixtures, resultClubs);
+ok(`the club rhythm joins the goal and card folds, sharpest first and denominator-less clubs after (A ${seasonRhythm.rows[0].goals}/${seasonRhythm.rows[0].cards} = ${seasonRhythm.rows[0].goalsPerCard}; B ${seasonRhythm.rows[1].goals}/${seasonRhythm.rows[1].cards} printed ${seasonRhythm.rows[1].goalsPerCard}; order ${seasonRhythm.rows.map((r) => r.clubId).join(",")}; sharpest ${seasonRhythm.sharpest?.clubId})`,
+  seasonRhythm.rows[0].clubId === "A" && seasonRhythm.rows[0].goals === 2 &&
+  seasonRhythm.rows[0].goalsPerCard === 2 && seasonRhythm.rows[1].clubId === "B" &&
+  seasonRhythm.rows[1].goals === 1 && seasonRhythm.rows[1].cards === 0 &&
+  seasonRhythm.sharpest?.clubId === "A");
+const teRhythm = clubRhythm("TE", cardFixtures, cardClubs);
+const silentRhythm = clubRhythm("TG", cardFixtures, cardClubs);
+ok(`a booked-but-scoreless competition reads zero ratios with a sharpest seat, and one with no booking names none (TE sharpest ${teRhythm.sharpest?.clubId}, ratios ${teRhythm.rows.filter((r) => r.cards > 0).map((r) => r.goalsPerCard).join(",")}; TG sharpest ${silentRhythm.sharpest})`,
+  teRhythm.sharpest !== null && teRhythm.rows.every((r) => r.cards === 0 || r.goalsPerCard === 0) &&
+  silentRhythm.sharpest === null);
+ok(`the event clock screen reads the club rhythm off the join, the sharpest club in the primary colour (screen ${[
+  't("clock.clubRhythmTitle"', 't("clock.clubRhythmHint"', 't("clock.rhythmGoals"',
+  't("clock.rhythmCards"', "rhythm.rows.map(", "rhythm.sharpest?.clubId",
+].filter((k) => CLOCK_SRC.includes(k)).length}/6)`,
+  CLOCK_SRC.includes("clubRhythm(compId, matches, clubs)") && CLOCK_SRC.includes("rhythm.rows.map(") &&
+  CLOCK_SRC.includes("rhythm.sharpest?.clubId === r.clubId") &&
+  CLOCK_SRC.includes('t("clock.clubRhythmTitle"') && CLOCK_SRC.includes('t("clock.clubRhythmHint"') &&
+  CLOCK_SRC.includes('t("clock.rhythmGoals"') && CLOCK_SRC.includes('t("clock.rhythmCards"') &&
   !/\.sort\(/.test(CLOCK_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and

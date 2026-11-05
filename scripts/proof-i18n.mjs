@@ -3217,7 +3217,8 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // dictionary below.
 // M944: the contrast board's 7 keys pay their toll (146 -> 147, 242 -> 243).
 const DUP_VALUES_PIN = 147;
-const DUP_EXCESS_KEYS_PIN = 243;
+// M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
+const DUP_EXCESS_KEYS_PIN = 245;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4518,7 +4519,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M944: the contrast panel adds 7 literal sites: 1882 -> 1889.
   // M945: the result clock's panel adds 6 more: 1889 -> 1895.
   // M946: the rhythm row and its sentence add 2 literal sites: 1895 -> 1897.
-  shapeCounts.literal === 1897 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M947: the club rhythm panel adds 4 more: 1897 -> 1901.
+  shapeCounts.literal === 1901 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

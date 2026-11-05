@@ -794,6 +794,45 @@ export function clockContrast(compId: string, matches: Match[], clubs: Club[]): 
   };
 }
 
+export interface ClubRhythmRow {
+  clubId: string;
+  goals: number;
+  cards: number;
+  /** Season goals per card through the safeDiv door — the floor's own figure when the club
+   *  booked nobody, which the screen declines to print rather than state a ratio that has
+   *  no denominator. */
+  goalsPerCard: number;
+}
+
+export interface ClubRhythm {
+  /** Every club with a table row: the clubs with a denominator (at least one booking) first,
+   *  sharpest ratio winning, then the most goals, then the id; the clubs without a booking
+   *  follow by goals, carrying no ratio to rank. */
+  rows: ClubRhythmRow[];
+  /** The sharpest club; null when nobody in the competition was booked. */
+  sharpest: ClubRhythmRow | null;
+}
+
+/** M947: each club's own season rhythm — goals scored per card earned, joined off the goal
+ *  and card folds the screens already read, so no third sweep of the matches exists to
+ *  disagree with either. A discipline that wins the ball without conceding chances reads a
+ *  high ratio; a rash one reads low. */
+export function clubRhythm(compId: string, matches: Match[], clubs: Club[]): ClubRhythm {
+  const goals = new Map(goalTiming(compId, matches, clubs).map((r) => [r.clubId, r.scored]));
+  const cards = new Map(cardTiming(compId, matches, clubs).rows.map((r) => [r.clubId, r.cards]));
+  const rows: ClubRhythmRow[] = [...goals.entries()].map(([clubId, g]) => {
+    const c = cards.get(clubId) ?? 0;
+    return { clubId, goals: g, cards: c, goalsPerCard: safeDiv(g, c) };
+  });
+  rows.sort((a, b) => {
+    if ((a.cards > 0) !== (b.cards > 0)) return a.cards > 0 ? -1 : 1;
+    return a.cards > 0
+      ? b.goalsPerCard - a.goalsPerCard || b.goals - a.goals || a.clubId.localeCompare(b.clubId)
+      : b.goals - a.goals || a.clubId.localeCompare(b.clubId);
+  });
+  return { rows, sharpest: rows.find((r) => r.cards > 0) ?? null };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

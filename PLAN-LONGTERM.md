@@ -809,6 +809,8 @@
 
 - d4fa319 M946: 进球/牌节律比（M790 候选②，口径先证）— clockContrast 逐窗加 goalsPerCard（safeDiv 门的算术：分母封底 1，无分母窗口携带门自身的数字，屏幕以 ABSENT 拒印）+ peakRhythm（有牌窗口中比值最高者，最早窗赢平局，无牌则 null）；EventClock 屏在对比钟下加节律行（锋利窗高亮主色）与锋利窗句子；proof-analytics 3 条新证词 216→219（MR 混合口径含分母封底语义、有牌无球/有球无牌两臂、屏幕读取）；2 个新键×3；census literal 1,895→1,897、litVarSites 264→265；absent-glyph 花名册 EventClock 3→4、fmt2 消费者 26→27。
 
+- M947（本地，待推送）: 队级节律（候选⑤）— clubRhythm 折叠：goalTiming 与 cardTiming 两折叠按 clubId 联结（无第三次扫场），每队整季 goals-perCard 走 safeDiv 门；有分母（至少一张牌）的球队按比值降序排前、最锋利者命名 sharpest，无分母球队按进球数排后；EventClock 屏新增球队节律面板（锋利者主色高亮，无分母印 ABSENT）；proof-analytics 3 条新证词 219→222（MR 手工计数 A 2/1=2.00、TE 有牌无球全零、TG 无牌无名锋利、屏幕读取）；4 个新键×3；census literal 1,897→1,901、excess 243→245；absent-glyph EventClock 4→5、PWA 536→537、baseline 同提交重录。
+
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
 ⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，安全除法门同口径）；
