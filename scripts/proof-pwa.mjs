@@ -115,7 +115,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // 536 KB / 54 assets (JS 523 + CSS 12.4), pin 535 -> 536, baseline re-recorded in the same commit.
 // M947: the event clock screen's club rhythm panel adds its list and four keys, measuring
 // 537 KB / 54 assets (JS 524 + CSS 12.4), pin 536 -> 537, baseline re-recorded in the same commit.
-const BUDGET_KB = 537;
+// M948: the discipline screen's severity board adds a ranked list and a fold that divides the card
+// clock it already draws, measuring 538 KB / 54 assets (JS 525 + CSS 12.4), pin 537 -> 538,
+// baseline re-recorded in the same commit.
+const BUDGET_KB = 538;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

@@ -811,14 +811,15 @@
 
 - M947（本地，待推送）: 队级节律（候选⑤）— clubRhythm 折叠：goalTiming 与 cardTiming 两折叠按 clubId 联结（无第三次扫场），每队整季 goals-perCard 走 safeDiv 门；有分母（至少一张牌）的球队按比值降序排前、最锋利者命名 sharpest，无分母球队按进球数排后；EventClock 屏新增球队节律面板（锋利者主色高亮，无分母印 ABSENT）；proof-analytics 3 条新证词 219→222（MR 手工计数 A 2/1=2.00、TE 有牌无球全零、TG 无牌无名锋利、屏幕读取）；4 个新键×3；census literal 1,897→1,901、excess 243→245；absent-glyph EventClock 4→5、PWA 536→537、baseline 同提交重录。
 
-下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
-⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
-⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，安全除法门同口径）；
-⑦ 队级结果钟（每队自己的 won/drew/lost 三序列，cardTiming rows 已有基础）。
-①牌钟与红牌钟的队级对照（同一队全牌与红牌的首窗/末窗份额并排，`cardTiming` 的 rows 与 redRows 已有两端）；
-②进球与牌的节律比（逐窗 进球/牌 比值，或进球窗与牌窗的队级相关，属新统计量需先证口径）；
-③射门与扑救也分主客（`eventClock` 的 shotsBands/savesBands 按 side 拆分，与 M787/M788 同构）；
-④牌钟按比赛结果分侧（胜/平/负场次里的牌窗，需先在 fold 里加结果轴）。
+- M948（本线，README 记录段取 M790）: 队级红牌烈度（新方向，不在 M790 候选清单里）— cardSeverity 折叠调 cardTiming（无第三次扫场），每队 redShare = 自己的红牌/自己的总牌（0–100，两位小数；被出牌没红读 0，没被出牌从 0 分母读 0），worst 只在该队**真被出过牌**的窗口里取最高份额、平票取更早窗（无牌的窗口没有烈度可言），被出牌无红的队 worst 为 null；联赛行用 clock 两条六窗之和的同一商；排序按 redShare→reds→cards→id，烈度优先而不是数量优先。Discipline 屏在结果钟之下加烈度板（队徽+链接+份额与分母+最重时段与该时段份额+右端复用 disc.redTotal；没牌的队不占行；整场没牌复用 disc.clockNone；屏幕不排序，只滤掉 0 分母）。与 M944 对照板的分工写在 README：M944 答「红牌落在什么时候（相对全牌）」，本条答「多少牌会变红，以及在哪一段」。**编号与记录**：git 历史取大于 max 的 M948；README 记录段仍停在 M789（别的 lane 的 M940–M947 没写 section），若把 section 写成 M948，`proof-ledger-run` 的 gap 集合就按 [167..948] 算，一次把 M790–M947 这 158 个无 section 的号暴露成 gaps，而 ceiling 要 gaps×2 ≤ sections（438 个 section 只容 219 个空洞）会立刻红——所以本条的 section 记为 **M790**（沿本文件自己的记录段连续取号），正文第一句就写明它由 commit M948 承载、为什么两个号并存。5 个新键×3（disc.sevTitle/sevHint/sevLeague/sevRow/sevPeak，EN 值全新，dup 棘轮未动）；census literal 1,901→1,908（5 新键 + 复用 clockNone + 复用 redTotal 的新调用位）、litVarSites 265→269；proof-analytics 3 条新证词 222→225（TQ 手工三队：F 2/3=66.67 两个满红窗取较早、G 1/3=33.33 最重窗 50、H 有牌无红无窗可指，联赛 37.5；空态臂 TG 零行/TF 无红全 null；种子赛事逐队从 cardTiming 两计数重算 + 被点名窗口必须同时有牌有红 + 榜有序 + 确定性 + 屏幕读取）；共用门名单不动（Discipline 自 M571 就在 fmt2 消费者里，面板不读 ABSENT 故 absent-glyph 保持 2）；PWA 537→538、baseline 同提交重录；tsc 干净、build exit 0。基线证明：本条落地前先跑 origin/master（f610c96）全套 123/123 · 3,355/3,355 绿，作为归属对照；落地跑 123/123 · 3,358/3,358（+3 即本条三条证词）。诚实的保留：烈度分母是「被记录的出牌」而不是犯规，小分母能除出大比例，所以行里印分母不画柱；fold 继承 cardTiming 的在册范围。
+
+**本线踩到的共享树事实（M948）**：2026-11-06 推送 M790–M793 时被拒——别的 lane 把 origin/master 重写到 acb4f24（M914）之上并推进到 M947，我的四个提交（旧 M790 射门分侧/M791 结果钟/M792 节律比/M793 烈度）在远端不是祖先，而其 M943（eventVenueClock 射门+扑救分主客）、M945（cardTiming 内的 resultClock）、M946（clockContrast.goalsPerCard + peakRhythm）已经是同四问的更新实现。处理方式：**绝不 force-push 覆盖别人的 38 个提交**，而是 `git switch -c integrate-m947 origin/master` 以远端为基线，只把远端没有的那一件（队级烈度）重落为 M948，旧提交留在本地分支 m782 不再推送。教训入规：落地前先 `git fetch` + `git merge-base --is-ancestor HEAD origin/master`，若远端不是我的后代，就先在远端基线上重跑基线全套，再只补远端缺失的那一件；两个 lane 会实现同一个候选，**候选做完后要立刻写回 PLAN 的候选清单**（本条已把 M943/M944/M945/M946/M947 对应关系写在上面）。
+
+下一条目：M949（git 历史取大于 max 的号；README 记录段取 M791，见上条「编号与记录」）候选优先真实数据：
+⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，safeDiv 门同口径，一屏两排）；
+⑦ 队级结果钟（每队自己的 won/drew/lost 三序列——M945 只做联赛三条，cardTiming rows 已带 bands 与 redBands，缺的是按侧结果归队）；
+⑧ 烈度分主客（同一队主场 redShare 与客场 redShare，需要 cardTiming 的 rows 加按侧牌/红两对分母，M948 的商换成两个）；
+⑨ 扑救也分队级（clubRhythm 已有联结形态，把 eventClock 的 saves/faced 按 clubId 联结成「谁把对方的射门按住」）。
 编号策略：每次落地先 fetch 并 `git log origin/master` 取「大于历史最大值」的下一个号（不是取空号——组件农场 lane 与隔离区 lane 都在低位重号，M711–M718 在日志里各出现两次甚至三次，只有高于历史 max 的号才无人争用）；农场 lane 已把 M711–M771 一路占成青训营/财务/概览组件，本线清扫取 M772、时钟开局端取 M773、比赛页开局端取 M774、可达闭包取 M776、开局进攻端取 M777、上限落点取 M778、牌的时段取 M779、末段进攻取 M780、共享读取器的入口推导取 M781、死面账本的臂取 M782、红牌窗口取 M783、存储/路由人口取 M784、联赛牌窗曲线取 M785、进球与牌同钟取 M786、主客场牌窗取 M787、主客场进球窗取 M788、红队自家六窗取 M789；本线的 section 号一旦高过农场的 max，README 的编号区间就把农场那些没有 section 的号暴露成 gaps（本次 53 个：M719–M771，其中 M769 根本没有提交），所以账本条目必须与清扫删除落在同一个提交里，`proof-ledger-run` 才认；每加一屏都要过 signed/sum/maxby/money/absent-glyph/vocab/ids/rng + 全套 census pin 门禁；
 并发 lane 的未跟踪文件（dev/*、features 里未路由的 stub）不要纳入本线提交。
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。

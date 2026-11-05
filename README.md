@@ -142,7 +142,10 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M789 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M790 in this file's own record segment (the
+shared git history has run ahead of the record — its newest commit is numbered higher again, and the
+section for M790 says which commit carries it and why the record continues from M789 instead of
+jumping; the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7100,67 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M790 — how often a booking ends red (landed in history as commit M948)
+
+**Numbering, stated plainly.** The shared history carries this unit as commit **M948** — the analysis
+lane's own record segment stopped at M789 while the component farm and the other lane ran the history
+up through M947. The section is therefore numbered M790, the next free number in this file's own
+record, rather than M948: `proof-ledger-run` computes its gap set over the range the file itself spans,
+so a heading at M948 would expose the 158 numbers between (M790–M947, most of them farm commits that
+carry no section) as gaps, and its ceiling — gaps × 2 ≤ sections, 438 sections here — would redden on
+a unit that added one section. The commit subject, the `PLAN-LONGTERM` entry and this heading name
+each other; nothing is hidden, one number is chosen per audience.
+
+**What the page had.** The discipline screen counts cards three ways: a board of who books most, a
+clock of when, and a red board of who goes off (M783, M789), with M944 putting each booked club's red
+curve against its own card curve at the two ends of the match. Those are counts and shares of the
+*clock*, never a share of the *booking*: a club with thirty cards and three reds sat above a club
+with three cards and two reds on every board it appeared on, though the first is a long season with a
+lot of yellow and the second loses its head.
+
+**One fold, composed.** `cardSeverity(compId, matches, clubs)` reads `cardTiming` and divides it — no
+fixture walk, so its counts cannot drift from the clocks above it. Each club's `redShare` is its own
+reds over its own cards; `worst` is the window where that share runs highest, **among the windows the
+club was actually booked in** — a window holding no card holds no severity, so it cannot be a club's
+worst hour, and ties go to the earlier window as the clock's peak lines do. A club booked but never
+sent reads `0` from a denominator it has; a club nobody booked reads `0` from a denominator of zero.
+The league line is the same quotient over the clock's two six-window sums. The board ranks by
+severity first (share, then reds, then cards, then club id) rather than by the count that made it.
+M944's contrast answers *when* the reds fall relative to the cards; this answers *how many* of the
+cards turn red, and where.
+
+**The screen.** The panel sits under the result clock: a league line, then one row per club that has
+been booked — crest, link, its share with its denominator, the named window with that window's own
+share, and the club's red total at the right, using the label the red board already owns. A club with
+no cards takes no row; a league with no cards says so with the shared no-booking line rather than an
+empty list. The screen sorts nothing and derives nothing: the fold arrives ranked and the panel only
+filters zero denominators out of view.
+
+**Words and gates.** Five new keys (`disc.sevTitle`, `disc.sevHint`, `disc.sevLeague`, `disc.sevRow`,
+`disc.sevPeak`) across three locales; seven new literal census sites — those five plus the reused
+no-booking line and the reused red count — move the census literal 1,901 → 1,908 and placeholder
+sites 265 → 269, four of them interpolating. `proof-analytics` grows three clauses to 225/225: a
+hand-built three-club league where one club is 2 reds of 3 cards with two fully red windows and takes
+the earlier one, one is 1 of 3 worst in its 50% window, and one has cards but no reds and therefore no
+window to name, with the league at 37.5; the empty arms (no rows for a competition with nothing
+counted, zeros rather than a division by an empty clock where nobody was sent off); and the agreement
+clause, which re-derives every seeded share from `cardTiming`'s own two counts, requires a named window
+to hold both a card and a red, and checks the board is ordered. No new module, route or storage key.
+The two shared doors needed no roster change: `Discipline.tsx` has been a `proof-fmt2` consumer since
+M571, and the panel renders no row where a red is absent rather than printing the glyph, so its
+`proof-absent-glyph` count holds at 2 — both gates compare their list against the tree for equality,
+so this is agreement, not a loosening. One kilobyte: the build measures 538 KB gzip across the same 54
+assets (JS 525 + CSS 12.4), so the PWA pin moves 537 → 538 and `tests/perf/baseline.json` re-records in
+the same commit. `tsc` clean, build exit 0, `proof-i18n` 386/386, and the suite ran green on the base
+commit this unit sits on (123/123 · 3,355/3,355) before these three clauses joined it; the landing run
+is **123/123 · 3,358/3,358**.
+
+**The honest limit.** Severity is a share of *recorded* bookings, not of fouls: a club that commits
+many fouls and is booked rarely, then loses its head once, reads a high share off a small denominator —
+which is why the row prints its denominator beside the percentage instead of drawing a bar. The fold
+also inherits `cardTiming`'s population: only clubs with a row in the standings appear, so a booked
+visitor with no table row is in the league's count and not on the board.
 
 ### M789 — the red board's clubs get their own clock
 
