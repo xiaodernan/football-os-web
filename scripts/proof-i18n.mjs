@@ -4516,7 +4516,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M943: the overview quarantine removed nothing the census read (the 44 were outside the
   // program), and the venue shots/saves panel adds 7 literal sites: 1875 -> 1882.
   // M944: the contrast panel adds 7 literal sites: 1882 -> 1889.
-  shapeCounts.literal === 1889 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M945: the result clock's panel adds 6 more: 1889 -> 1895.
+  shapeCounts.literal === 1895 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

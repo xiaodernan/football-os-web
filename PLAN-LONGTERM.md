@@ -805,7 +805,7 @@
 
 - 423a3b7 M944: 牌钟与红牌钟的队级对照（M790 候选①）— cardTiming 折叠新增 contrast 板：每支吃牌球队的红牌首/末窗份额对自身全牌份额并排（earlyGap/lateGap 带符号，红牌份额减全牌份额），按 |earlyGap| 降序上板，未吃牌球队不占板（无份额可对照）；Discipline 屏新增对照面板（每队两行：首窗/末窗 × 卡份/红份 + 带符号差值，DELTA_CLASS 着色）；proof-analytics 3 条新证词 210→213（TJ 黄红错窗手工计数、TH 全零对照按红数/ID 排序、屏幕读取）；7 个新字典键×3；census literal 1,882→1,889、dup 棘轮 146→147/242→243、PWA 预算 535→536（面板过舍入边缘）、baseline 同提交重录。
 
-- M945（本地，进行中）: 牌钟按比赛结果分侧（M790 候选④）— cardTiming 折叠加结果轴：每张牌按吃牌方在该场的胜负平归入 won/drew/lost 三条六窗序列（league 级，同 goalVenueClock 形态）。
+- M945（本地，待推送）: 牌钟按比赛结果分侧（M790 候选④）— cardTiming 折叠加结果轴：经 isFinished 门收窄比分后，每张牌按吃牌方该场胜负平归入 won/drew/lost 三条六窗序列（与 goalVenueClock 同形态）；Discipline 屏新增结果钟面板（三系列共享 timing 标签）；proof-analytics 3 条新证词 213→216（MR 手工计数、结果轴与主客轴双双逐窗对账到 windows、屏幕读取）；5 个新键×3；census literal 1,889→1,895；PWA 预算 536 不动（复用共享柱形标记）。
 
 下一条目：M790 候选优先真实数据：
 ①牌钟与红牌钟的队级对照（同一队全牌与红牌的首窗/末窗份额并排，`cardTiming` 的 rows 与 redRows 已有两端）；

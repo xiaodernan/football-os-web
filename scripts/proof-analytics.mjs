@@ -16,6 +16,7 @@ const server = await createServer({ server: { middlewareMode: true }, appType: "
 const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
+const resultClockSum = (fold) => fold.resultClock.won + fold.resultClock.drew + fold.resultClock.lost;
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 const near = (a, b, eps = 1e-9) => Math.abs(a - b) <= eps;
@@ -1421,6 +1422,46 @@ ok(`the discipline screen draws the contrast off the fold, shares then the signe
   DISC_SRC.includes('t("disc.contrastTitle"') && DISC_SRC.includes('t("disc.contrastHint"') &&
   DISC_SRC.includes('t("disc.contrastNone"') && DISC_SRC.includes('t("disc.contrastEarly"') &&
   DISC_SRC.includes('t("disc.contrastLate"') && !/\.sort\(/.test(DISC_SRC));
+// --- M945: the same cards split by the receiving side's result ---------------------------------
+// MR: r1 A hosts B and wins 2-1 — A's 10' booking reads won, B's 30' red lost; r2 draws 1-1,
+// B's 50' and A's 85' bookings both read drew; r3 is scheduled and stays out. Won 1,0,0,0,0,0,
+// drew 0,0,0,1,0,1, lost 0,1,0,0,0,0 — and the three series add up to the fold's own windows.
+const resultFixtures = [
+  { ...match("r1", "MR", "A", "B", 2, 1, "2026-08-01"), events: [
+    cardEvent(10, "YELLOW", "home"), cardEvent(30, "RED", "away"),
+  ] },
+  { ...match("r2", "MR", "B", "A", 1, 1, "2026-08-02"), events: [
+    cardEvent(50, "YELLOW", "home"), cardEvent(85, "YELLOW", "away"),
+  ] },
+  { ...match("r3", "MR", "A", "B", 0, 3, "2026-08-03", "SCHEDULED"), events: [
+    cardEvent(5, "RED", "home"),
+  ] },
+];
+const resultClubs = [club("A", "MR"), club("B", "MR")];
+const resultClock = cardTiming("MR", resultFixtures, resultClubs).resultClock;
+ok(`the result clock charges each card to the booked side's own outcome (won ${resultClock.wonWindows.join("")} drew ${resultClock.drewWindows.join("")} lost ${resultClock.lostWindows.join("")}; totals ${resultClock.won}/${resultClock.drew}/${resultClock.lost})`,
+  resultClock.wonWindows.join(",") === "1,0,0,0,0,0" &&
+  resultClock.drewWindows.join(",") === "0,0,0,1,0,1" &&
+  resultClock.lostWindows.join(",") === "0,1,0,0,0,0" &&
+  resultClock.won === 1 && resultClock.drew === 2 && resultClock.lost === 1);
+// One card set, four windows series: the result axis's three series and the venue axis's two
+// must both sum to the fold's own window series, window for window, on the same fixtures.
+const teFold = cardTiming("TE", cardFixtures, cardClubs);
+ok(`the result and venue axes both reconcile with the fold's own window series (TE result ${resultClockSum(teFold)} = windows ${teFold.windows.reduce((a, b) => a + b, 0)}; venue ${teFold.homeWindows.reduce((a, b) => a + b, 0) + teFold.awayWindows.reduce((a, b) => a + b, 0)})`,
+  [0, 1, 2, 3, 4, 5].every((i) =>
+    teFold.resultClock.wonWindows[i] + teFold.resultClock.drewWindows[i] + teFold.resultClock.lostWindows[i] === teFold.windows[i]) &&
+  [0, 1, 2, 3, 4, 5].every((i) => teFold.homeWindows[i] + teFold.awayWindows[i] === teFold.windows[i]) &&
+  resultClockSum(teFold) === teFold.windows.reduce((a, b) => a + b, 0));
+ok(`the discipline screen draws the result clock off the fold, three labelled series over the shared band labels (screen ${[
+  't("disc.resultTitle"', 't("disc.resultHint"', 't("disc.resultWon"',
+  't("disc.resultDrew"', 't("disc.resultLost"', "clock.resultClock.wonWindows",
+  "pctOf(n, peak)",
+].filter((k) => DISC_SRC.includes(k)).length}/7)`,
+  DISC_SRC.includes("clock.resultClock.wonWindows") && DISC_SRC.includes("pctOf(n, peak)") &&
+  DISC_SRC.includes('t("disc.resultTitle"') && DISC_SRC.includes('t("disc.resultHint"') &&
+  DISC_SRC.includes('t("disc.resultWon"') && DISC_SRC.includes('t("disc.resultDrew"') &&
+  DISC_SRC.includes('t("disc.resultLost"') && DISC_SRC.includes('t("disc.contrastNone"') &&
+  !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

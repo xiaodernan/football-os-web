@@ -570,6 +570,18 @@ export interface CardRedRow {
   bands: number[];
 }
 
+export interface CardResultClock {
+  /** Cards earned by a side that went on to win that match, per window. */
+  wonWindows: number[];
+  /** Cards earned by a side that drew that match, per window. */
+  drewWindows: number[];
+  /** Cards earned by a side that lost that match, per window. */
+  lostWindows: number[];
+  won: number;
+  drew: number;
+  lost: number;
+}
+
 export interface CardRedContrastRow {
   clubId: string;
   cards: number;
@@ -611,6 +623,11 @@ export interface CardTiming {
    *  last-window shares side by side, the bigger early skew first. Clubs without a booking
    *  carry no shares to contrast and stay off the board. */
   contrast: CardRedContrastRow[];
+  /** M945: the same cards split by the receiving side's result in that match — a booking in
+   *  a game the side went on to win reads differently from one in a game it lost. The three
+   *  series add up to `windows` window for window, because every counted card belongs to a
+   *  finished fixture with a scoreline. */
+  resultClock: CardResultClock;
 }
 
 /** When a club's cards arrive: every recorded YELLOW or RED in this competition's finished
@@ -642,8 +659,13 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
   const redWindows = Array.from({ length: GOAL_BANDS }, () => 0);
   const homeWindows = Array.from({ length: GOAL_BANDS }, () => 0);
   const awayWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const wonWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const drewWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const lostWindows = Array.from({ length: GOAL_BANDS }, () => 0);
   for (const m of matches) {
-    if (m.competitionId !== compId || m.status !== "FINISHED") continue;
+    // The result axis needs the scoreline, so the guard narrows through the domain's own
+    // isFinished door rather than testing the status alone.
+    if (m.competitionId !== compId || !isFinished(m)) continue;
     for (const e of m.events ?? []) {
       if (e.type !== "YELLOW" && e.type !== "RED") continue;
       const clubId = e.side === "home" ? m.homeClubId : m.awayClubId;
@@ -653,6 +675,11 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       row.cards++;
       windows[band]++;
       if (e.side === "home") homeWindows[band]++; else awayWindows[band]++;
+      // M945: the result axis — the receiving side's own outcome of this fixture decides
+      // which of the three series the card lands in.
+      const ourGoals = e.side === "home" ? m.homeGoals : m.awayGoals;
+      const theirGoals = e.side === "home" ? m.awayGoals : m.homeGoals;
+      (ourGoals > theirGoals ? wonWindows : ourGoals === theirGoals ? drewWindows : lostWindows)[band]++;
       if (e.type === "YELLOW") row.yellows++;
       else {
         row.reds++;
@@ -696,7 +723,18 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       };
     })
     .sort((a, b) => Math.abs(b.earlyGap) - Math.abs(a.earlyGap) || b.reds - a.reds || a.clubId.localeCompare(b.clubId));
-  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList, windows, redWindows, homeWindows, awayWindows, contrast };
+  return {
+    rows: list,
+    earliest: list.find((r) => r.earlyCards > 0) ?? null,
+    redRows: redList,
+    windows, redWindows, homeWindows, awayWindows, contrast,
+    resultClock: {
+      wonWindows, drewWindows, lostWindows,
+      won: sum(wonWindows, (n) => n),
+      drew: sum(drewWindows, (n) => n),
+      lost: sum(lostWindows, (n) => n),
+    },
+  };
 }
 
 export interface ClockContrastWindow {

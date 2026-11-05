@@ -386,6 +386,45 @@ export function Discipline() {
               </ul>
             )}
           </Panel>
+
+          {/* M945: the result clock — the same cards, split by what the booked side's match
+              went on to do. A booking in a lost cause and one in a winning effort land on
+              the same six windows, three series side by side. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.resultTitle")} hint={t("disc.resultHint")} />
+            {clock.resultClock.won + clock.resultClock.drew + clock.resultClock.lost === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.contrastNone")}</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                {[
+                  { label: t("disc.resultWon"), data: clock.resultClock.wonWindows, total: clock.resultClock.won, fill: BAR_FILL.good },
+                  { label: t("disc.resultDrew"), data: clock.resultClock.drewWindows, total: clock.resultClock.drew, fill: BAR_FILL.info },
+                  { label: t("disc.resultLost"), data: clock.resultClock.lostWindows, total: clock.resultClock.lost, fill: BAR_FILL.bad },
+                ].map((row) => {
+                  const peak = Math.max(1, ...clock.resultClock.wonWindows, ...clock.resultClock.drewWindows, ...clock.resultClock.lostWindows);
+                  return (
+                    <div key={row.label}>
+                      <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                        <span>{row.label}</span>
+                        <span className="font-mono">{row.total}</span>
+                      </div>
+                      <div className="mt-1 flex items-end gap-1">
+                        {row.data.map((n, b) => (
+                          <div key={b} className="flex-1 text-center">
+                            <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                            <div className="mx-auto mt-0.5 h-10 w-full">
+                              <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, peak) }} />
+                            </div>
+                            <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Panel>
         </>
       )}
     </div>
