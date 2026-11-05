@@ -118,6 +118,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M948: the discipline screen's severity board adds a ranked list and a fold that divides the card
 // clock it already draws, measuring 538 KB / 54 assets (JS 525 + CSS 12.4), pin 537 -> 538,
 // baseline re-recorded in the same commit.
+// M949: the venue screen's rhythm panel adds its two rows and seven keys inside the same rounding
+// step — 538 KB / 54 assets (JS 526 + CSS 12.4), so the pin holds at 538 and only the baseline's
+// own JS figure moves, 525 -> 526.
 const BUDGET_KB = 538;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);

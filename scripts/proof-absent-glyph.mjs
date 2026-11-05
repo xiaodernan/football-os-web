@@ -238,7 +238,10 @@ const expectedPerUser = [
   // M716: the scenarios screen asks the door twice more — a ceiling place with no row behind it
   // reads the glyph, and so does the climb tile's club when the table has no name for it. 5 -> 7.
   ["features/analytics/PointsScenario.tsx", 7],
-  ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 14],
+  ["features/analytics/RunIn.tsx", 5],
+  // M949: the venue rhythm asks the door twice — once for an end with no booking at all and once
+  // for each window that booked nobody. 14 -> 16.
+  ["features/analytics/VenueSplit.tsx", 16],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],
   ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],

@@ -4522,7 +4522,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M947: the club rhythm panel adds 4 more: 1897 -> 1901.
   // M948: the severity board adds its title, hint, league line, row line and worst-window line,
   // then reuses the no-booking line and the red count at a new call site: 7 more, 1901 -> 1908.
-  shapeCounts.literal === 1908 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M949: the venue rhythm adds title, hint, the two end labels, its sharpest-window line and the
+  // two sharper-end lines (7), and reuses the goals and cards count labels and the empty hint at
+  // new call sites (3): 1908 -> 1918.
+  shapeCounts.literal === 1918 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4593,7 +4596,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M946: the sharpest-window sentence hands over w and n: 264 -> 265.
   // M948: the severity board's league line hands over p, its row line p and c, its worst-window
   // line w and p, and the reused red count hands over n at its new call site: 265 -> 269.
-  litVarSites === 269 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M949: the rhythm panel's one interpolating line is its sharpest-window sentence, handing over
+  // w and n; the end labels and the two count labels are bare: 269 -> 270.
+  litVarSites === 270 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

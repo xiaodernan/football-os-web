@@ -142,9 +142,9 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M790 in this file's own record segment (the
+Work ships one milestone per commit and is currently at M791 in this file's own record segment (the
 shared git history has run ahead of the record — its newest commit is numbered higher again, and the
-section for M790 says which commit carries it and why the record continues from M789 instead of
+section for M791 says which commit carries it and why the record continues from M790 instead of
 jumping; the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
@@ -7100,6 +7100,83 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M791 — what a booking buys at each end (landed in history as commit M949)
+
+**Numbering, still stated plainly.** The shared history carries this unit as commit **M949**; this
+file's own record segment is at M791. `proof-ledger-run` reads its gap set over the range the file
+spans (M167..M791, 439 sections, 186 gaps) and demands gaps × 2 ≤ sections, so a heading minted at
+the commit's number would expose the farm's 158 unscheduled numbers as gaps and redden a unit that
+only added a section. Continuing consecutively is the other way round: M790 was already the file's
+newest number, so this entry adds a section and no gap — 186 against 439 where M948's landing had
+them at 186 against 438 — and the ceiling loosens by one each time the record is continued rather
+than jumped. The commit subject, the `PLAN-LONGTERM` entry and this heading name each other.
+
+**What the page had.** The venue screen already answers the points question (`venueSplit`: records,
+points per game, the home edge), the goal-minute question (M788: `goalVenueClock`, six windows per
+end) and the shot question (M943: `eventVenueClock`, shots and the saves that answer them, per end).
+The card minute lived on the discipline screen (M787) and the league's goals-per-booking rhythm on the
+event clock (M946). Nothing put a goal and a booking on the same side of the same line: a reader could
+see that home teams score more, and that home sides are booked less, and had to do the division in
+their head to find out what that costs.
+
+**One fold, composed.** `venueRhythm(compId, matches, clubs)` takes both series from folds that
+already exist — `goalVenueClock`'s home and away windows over `cardTiming`'s home and away windows —
+and divides them through the `safeDiv` door, window for window. No fixture walk, so a ratio cannot
+disagree with either clock printed beside it. Each end carries its own six cells, its own totals, and
+its own `peakRhythm`: the earliest window holding the most goals per booking, **among the windows that
+booked somebody**. That guard matters because the door reads an empty denominator as one, so a window
+with three goals and no booking comes back as `3.00` — the floor's figure, not a rhythm — and the
+screen withholds it with the absence glyph exactly as M946's contrast row does. `sharper` names the
+end whose bookings bought the more per card and stays `null` in the two cases where there is nothing
+to compare: an end that booked nobody, and two ends reading the same.
+
+**The screen.** One panel under the shot and save clocks: two rows (home, away), each with its season
+ratio in the header and six cells carrying the ratio, then that window's goals and cards using the
+labels the club rhythm panel already owns, then the band label; the sharpest window prints in the
+primary colour and each row names its own sharpest window beneath. A competition where neither end was
+booked says so with the shared empty hint rather than twelve zeroes, and the sharper-end sentence only
+appears when the fold actually names one — the screen sorts nothing and divides nothing.
+
+**Words and gates.** Seven new keys (`venue.rhythmTitle`, `…Hint`, `…HomeRow`, `…AwayRow`, `…Peak`,
+`…HomeBetter`, `…AwayBetter`) across three locales; ten new literal census sites — those seven plus
+the reused goals label, cards label and empty hint — move the census literal 1,908 → 1,918 and
+placeholder sites 269 → 270 (one new interpolating line, the sharpest window's `w` and `n`).
+`proof-analytics` grows four clauses to 229/229: a hand-built league where the home end's two goal
+windows carry no denominator while its booked window carries no goal (so its sharpest window is its
+*dullest*, and its season still reads 2 goals to the card), a symmetric league where neither end is
+sharper, a league that books only one end, and the seeded agreement clause — 12/12 competitions whose
+every cell is the two clocks' own windows, whose totals are those series summed, whose named window was
+booked in and is not beaten by an earlier one, and in 9 of them a sharper end genuinely named.
+`proof-absent-glyph` moves `VenueSplit.tsx` 14 → 16: the panel asks the door once for an end with no
+booking and once for each denominator-less window. `proof-fmt2` and `proof-sum` need no roster change
+(the screen has been a `fmt2` consumer since M571 and the fold sums through the domain's own `sum`),
+and the bundle holds at its pin — 538 KB gzip over the same 54 assets, with the baseline's own JS
+figure re-recording 525 → 526 inside the rounding step. One gate did fire on the way: the first draft
+spelled `sharper` as an inline `"home" | "away" | null`, and `proof-vocab` counts that pair as one
+vocabulary written in two places (51 spellings against 50 vocabularies, its message naming both files)
+— `domain/types.ts` owns `Side`, which `disciplineVenue.rougher` already names, so the field names it
+too. `tsc` clean, build exit 0, and the base this unit sits on ran green at 123/123 · 3,358/3,358; the
+landing run is **123/123 · 3,362/3,362**.
+
+**What it reads on the shipped world.** Premier League: 66 home goals to 23 home bookings (2.87 each)
+against 14 away goals to 17 away bookings (0.82). La Liga 2.55 against 0.81, Serie A 2.91 against 0.19,
+Bundesliga 3.00 against 0.69. Twelve of the fifteen competitions name the home end; three name nobody,
+and every one of the twelve names the *same* end — a first for the venue family on this screen.
+
+**The honest limit.** The quotient inherits the goal asymmetry it is built on: home sides score far
+more of this world's goals, so the ratio mostly restates home advantage in a different unit and should
+be read beside the goal clock above it, not instead of it. A denominator-less window is still carried in
+the fold as the door's floor figure and simply not printed, so the JSON is honest while the screen is
+silent. Population stays `teamMetrics`' clubs with FINISHED fixtures only, and the two series come from
+event sides rather than scorelines, so a fixture whose events disagree with its scoreline would move
+this panel and not the points table.
+
+**Live read, and M948's.** The severity board shipped in the previous entry was read back off a live
+DOM on `/#/discipline` in all three locales' shared structure: nine rows, 40 cards, 6 reds, the printed
+per-row shares re-derived from the rows' own two counts with no mismatch, and the league line reading
+15.00% against 6/40 by hand. This panel's numbers above are the same kind of read — taken from the fold
+the screen calls, not from a screenshot.
 
 ### M790 — how often a booking ends red (landed in history as commit M948)
 

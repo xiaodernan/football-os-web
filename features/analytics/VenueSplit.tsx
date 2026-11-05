@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, DELTA_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { eventVenueClock, goalVenueClock, venueSplit } from "@/domain/analytics";
+import { eventVenueClock, goalVenueClock, venueRhythm, venueSplit } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctLabel, pctOf, signed } from "@/lib/utils";
 
@@ -38,6 +38,13 @@ export function VenueSplit() {
     { label: t("venue.savesAway"), data: evClock.awaySavesWindows, total: evClock.awaySaves, fill: BAR_FILL.low },
   ];
   const rows = venue.rows;
+  // M949: what a booking buys at each end — the two clocks this screen and the discipline screen
+  // already print, divided window for window through the fold rather than here.
+  const rhythm = useMemo(() => venueRhythm(compId, matches, clubs), [compId, matches, clubs]);
+  const rhythmRows = [
+    { label: t("venue.rhythmHomeRow"), end: rhythm.home },
+    { label: t("venue.rhythmAwayRow"), end: rhythm.away },
+  ];
   const fortress = rows.length ? maxBy(rows, (r) => r.homeEdge) : null;
   const travellers = rows.length ? maxBy(rows, (r) => r.awayPpg) : null;
   const totalGoals = venue.homeGoals + venue.awayGoals;
@@ -239,6 +246,65 @@ export function VenueSplit() {
                   </div>
                 ))}
               </div>
+            )}
+          </Panel>
+
+          {/* M949: the venue's own rhythm — goals per booking at each end, window for window.
+              A window that booked nobody carries no ratio, and neither does an end that was
+              never booked; the sharper end is only named when both ends have a denominator. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("venue.rhythmTitle")} hint={t("venue.rhythmHint")} />
+            {rhythm.home.cards + rhythm.away.cards === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.emptyHint")}</p>
+            ) : (
+              <>
+                <div className="mt-3 space-y-4">
+                  {rhythmRows.map((row) => (
+                    <div key={row.label}>
+                      <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                        <span>{row.label}</span>
+                        <span className="font-mono">
+                          {row.end.cards === 0 ? ABSENT : fmt2(row.end.goalsPerCard)}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-end gap-1">
+                        {row.end.windows.map((w, b) => (
+                          <div key={b} className="flex-1 text-center">
+                            <div
+                              className={cn(
+                                "font-mono text-[10px]",
+                                row.end.peakRhythm === b && "font-semibold text-primary",
+                              )}
+                            >
+                              {w.cards === 0 ? ABSENT : fmt2(w.goalsPerCard)}
+                            </div>
+                            <div className="mt-0.5 text-[10px] text-muted-foreground">
+                              {t("clock.rhythmGoals")} {w.goals}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground">
+                              {t("clock.rhythmCards")} {w.cards}
+                            </div>
+                            <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {row.end.peakRhythm !== null && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t("venue.rhythmPeak", {
+                            w: bandLabels[row.end.peakRhythm],
+                            n: fmt2(row.end.windows[row.end.peakRhythm].goalsPerCard),
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {rhythm.sharper !== null && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {rhythm.sharper === "home" ? t("venue.rhythmHomeBetter") : t("venue.rhythmAwayBetter")}
+                  </p>
+                )}
+              </>
             )}
           </Panel>
         </>

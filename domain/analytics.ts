@@ -902,6 +902,63 @@ export function clubRhythm(compId: string, matches: Match[], clubs: Club[]): Clu
   return { rows, sharpest: rows.find((r) => r.cards > 0) ?? null };
 }
 
+export interface VenueRhythmCell {
+  goals: number;
+  cards: number;
+  /** Goals per booking at this end in this window, through the safeDiv door — the floor's
+   *  figure when the end booked nobody here, which the screen declines to print. */
+  goalsPerCard: number;
+}
+
+export interface VenueRhythmEnd {
+  goals: number;
+  cards: number;
+  /** The end's six windows, index 0 = 1–15′, index 5 = 76–90+′. */
+  windows: VenueRhythmCell[];
+  /** The end's whole-season goals per booking. */
+  goalsPerCard: number;
+  /** The end's sharpest window — the earliest holding the most goals per booking; null when
+   *  the end booked nobody, which leaves every window without a denominator. */
+  peakRhythm: number | null;
+}
+
+export interface VenueRhythm {
+  home: VenueRhythmEnd;
+  away: VenueRhythmEnd;
+  /** The end whose bookings bought the more goals per card; null when either end booked
+   *  nobody (so there is no pair of ratios to compare) or when the two read the same. */
+  sharper: Side | null;
+}
+
+/** M949: what a booking buys at each end — the venue's own goals clock divided by the venue's
+ *  own card clock, window for window. Both sides are series the screens already print
+ *  (`goalVenueClock` and `cardTiming`'s home/away windows), so the ratio cannot disagree with
+ *  either; the question it answers is whether home advantage shows in the price of a goal, not
+ *  only in how many goals and cards land where. */
+export function venueRhythm(compId: string, matches: Match[], clubs: Club[]): VenueRhythm {
+  const goals = goalVenueClock(compId, matches, clubs);
+  const cards = cardTiming(compId, matches, clubs);
+  const endOf = (goalWindows: number[], cardWindows: number[]): VenueRhythmEnd => {
+    const windows: VenueRhythmCell[] = goalWindows.map((g, b) => ({
+      goals: g,
+      cards: cardWindows[b],
+      goalsPerCard: safeDiv(g, cardWindows[b]),
+    }));
+    let peakRhythm: number | null = null;
+    for (let b = 0; b < GOAL_BANDS; b++) {
+      if (cardWindows[b] === 0) continue;
+      if (peakRhythm === null || windows[b].goalsPerCard > windows[peakRhythm].goalsPerCard) peakRhythm = b;
+    }
+    const g = sum(goalWindows, (n) => n);
+    const c = sum(cardWindows, (n) => n);
+    return { goals: g, cards: c, windows, goalsPerCard: safeDiv(g, c), peakRhythm };
+  };
+  const home = endOf(goals.homeWindows, cards.homeWindows);
+  const away = endOf(goals.awayWindows, cards.awayWindows);
+  const comparable = home.cards > 0 && away.cards > 0 && home.goalsPerCard !== away.goalsPerCard;
+  return { home, away, sharper: comparable ? (home.goalsPerCard > away.goalsPerCard ? "home" : "away") : null };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

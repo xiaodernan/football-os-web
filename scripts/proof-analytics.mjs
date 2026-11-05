@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, cardSeverity } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, cardSeverity, venueRhythm } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 const resultClockSum = (fold) => fold.resultClock.won + fold.resultClock.drew + fold.resultClock.lost;
@@ -1594,6 +1594,98 @@ ok(`cardSeverity is deterministic and the discipline screen ranks off the fold, 
   DISC_SRC.includes('t("disc.clockNone"') &&
   DISC_SRC.includes('t("disc.redTotal", { n: r.reds })') &&
   !/\.sort\(/.test(DISC_SRC));
+// --- M949: what a booking buys at each end ------------------------------------------------------
+// MS: J hosts K. The home side scores on 10' and 20' (bands 0 and 1) and is booked once, on 82'
+// (band 5) — so both of its goal windows carry no denominator, the door reading each as its own
+// goal count (the same floor the contrast clock reads, and the reason the screen withholds it),
+// while the one window it was booked in reads zero goals per card. Its season still reads 2 goals
+// for 1 card. K scores on 50' and is booked on 5' (a window with no goal) and 55', so band 3 is
+// its sharpest at 1.00 and the end reads 0.50. Home is therefore the sharper end.
+const vrClubs = [club("J", "MS"), club("K", "MS")];
+const vrFixtures = [
+  cardFixture("v1", "MS", "J", "K", [
+    goal(10, "home"), goal(20, "home"), cardEvent(82, "YELLOW", "home"),
+    goal(50, "away"), cardEvent(5, "YELLOW", "away"), cardEvent(55, "RED", "away"),
+  ]),
+];
+const vr = venueRhythm("MS", vrFixtures, vrClubs);
+ok(`venueRhythm divides each end's goal clock by that end's card clock window for window and names the sharper end (home ${vr.home.windows.map((w) => `${w.goals}/${w.cards}`).join(",")} at peak ${vr.home.peakRhythm} = ${vr.home.goalsPerCard}; away ${vr.away.windows.map((w) => `${w.goals}/${w.cards}`).join(",")} at peak ${vr.away.peakRhythm} = ${vr.away.windows[vr.away.peakRhythm].goalsPerCard}; sharper ${vr.sharper})`,
+  vr.home.windows.map((w) => `${w.goals}/${w.cards}`).join(",") === "1/0,1/0,0/0,0/0,0/0,0/1" &&
+  vr.home.windows[0].goalsPerCard === 1 && vr.home.windows[1].goalsPerCard === 1 &&
+  vr.home.windows[2].goalsPerCard === 0 &&
+  vr.home.windows[5].goalsPerCard === 0 &&
+  vr.home.peakRhythm === 5 && vr.home.goals === 2 && vr.home.cards === 1 && vr.home.goalsPerCard === 2 &&
+  vr.away.windows.map((w) => `${w.goals}/${w.cards}`).join(",") === "0/1,0/0,0/0,1/1,0/0,0/0" &&
+  vr.away.peakRhythm === 3 && vr.away.windows[3].goalsPerCard === 1 &&
+  vr.away.goals === 1 && vr.away.cards === 2 && vr.away.goalsPerCard === 0.5 &&
+  vr.sharper === "home");
+// MT is symmetric: both ends score once and are booked once in the same window, so both read 1.00
+// and neither is sharper. MW books only the home end — the away side has no denominator in any
+// window, so it names no sharpest window and the two ends cannot be compared. TG has clubs but no
+// card at all, which the screen reads as an empty panel rather than six zero ratios.
+const vrTie = venueRhythm("MT", [
+  cardFixture("v2", "MT", "L", "M", [
+    goal(10, "home"), cardEvent(12, "YELLOW", "home"),
+    goal(40, "away"), cardEvent(44, "YELLOW", "away"),
+  ]),
+], [club("L", "MT"), club("M", "MT")]);
+const vrQuiet = venueRhythm("MW", [
+  cardFixture("v3", "MW", "N", "O", [goal(12, "home"), cardEvent(10, "YELLOW", "home")]),
+], [club("N", "MW"), club("O", "MW")]);
+const vrEmpty = venueRhythm("TG", cardFixtures, cardClubs);
+ok(`a symmetric venue reads no sharper end, an end booked nowhere names no window, and a cardless competition has no rhythm at all (tie ${vrTie.sharper} at ${vrTie.home.goalsPerCard}/${vrTie.away.goalsPerCard}; quiet away peak ${vrQuiet.away.peakRhythm} sharper ${vrQuiet.sharper}; empty ${vrEmpty.home.cards + vrEmpty.away.cards} cards ${vrEmpty.sharper})`,
+  vrTie.home.goalsPerCard === 1 && vrTie.away.goalsPerCard === 1 &&
+  vrTie.home.peakRhythm === 0 && vrTie.away.peakRhythm === 2 && vrTie.sharper === null &&
+  vrQuiet.away.cards === 0 && vrQuiet.away.peakRhythm === null &&
+  vrQuiet.away.windows.every((w) => w.goalsPerCard === 0) && vrQuiet.sharper === null &&
+  vrEmpty.home.cards === 0 && vrEmpty.away.cards === 0 && vrEmpty.home.goals === 0 &&
+  vrEmpty.away.goals === 0 && vrEmpty.sharper === null);
+// On the seeded world the join is nothing but the two folds it reads: every cell's two counts are
+// the goal clock's and the card clock's own windows, the end's totals are those series summed, the
+// named window is one that was booked in and no booked window beats it, and the sharper end is only
+// named when both ends have a denominator and one genuinely reads higher.
+const vrSeeded = seededComps.map((id) => {
+  const comps = seededClubs.filter((c) => c.competitionId === id);
+  const r = venueRhythm(id, seededMatches, comps);
+  const g = goalVenueClock(id, seededMatches, comps);
+  const c = cardTiming(id, seededMatches, comps);
+  const peakOk = (e, series) => e.peakRhythm === null
+    ? e.cards === 0 && series.every((n) => n === 0)
+    : e.windows[e.peakRhythm].cards > 0 &&
+      e.windows.every((w, i) => w.cards === 0 || w.goalsPerCard <= e.windows[e.peakRhythm].goalsPerCard) &&
+      e.windows.slice(0, e.peakRhythm).every((w) => w.cards === 0 || w.goalsPerCard < e.windows[e.peakRhythm].goalsPerCard);
+  return {
+    id,
+    join: r.home.windows.every((w, i) => w.goals === g.homeWindows[i] && w.cards === c.homeWindows[i]) &&
+      r.away.windows.every((w, i) => w.goals === g.awayWindows[i] && w.cards === c.awayWindows[i]),
+    totals: r.home.goals === g.home && r.away.goals === g.away &&
+      r.home.cards === c.homeWindows.reduce((s, n) => s + n, 0) &&
+      r.away.cards === c.awayWindows.reduce((s, n) => s + n, 0),
+    peak: peakOk(r.home, c.homeWindows) && peakOk(r.away, c.awayWindows),
+    comparable: r.sharper === null || (r.home.cards > 0 && r.away.cards > 0 &&
+      (r.sharper === "home" ? r.home.goalsPerCard > r.away.goalsPerCard : r.away.goalsPerCard > r.home.goalsPerCard)),
+    named: r.sharper !== null,
+  };
+});
+ok(`the venue rhythm is the two venue clocks divided, never a third count (seeded ${vrSeeded.filter((s) => s.join && s.totals && s.peak && s.comparable).length}/${vrSeeded.length}; a sharper end named in ${vrSeeded.filter((s) => s.named).length})`,
+  vrSeeded.length >= 2 && vrSeeded.every((s) => s.join && s.totals && s.peak && s.comparable) &&
+  vrSeeded.some((s) => s.named));
+const vrAgain = venueRhythm("MS", vrFixtures, vrClubs);
+ok(`the venue rhythm is deterministic and the venue screen reads it off the join — a ratio per window, absence where a window booked nobody, the sharpest window in the primary colour, and no sort of its own (same fold ${JSON.stringify(vrAgain) === JSON.stringify(vr)}; keys ${[
+  't("venue.rhythmTitle"', 't("venue.rhythmHint"', 't("venue.rhythmHomeRow"', 't("venue.rhythmAwayRow"',
+  't("venue.rhythmPeak"', 't("venue.rhythmHomeBetter"', 't("venue.rhythmAwayBetter"',
+].filter((k) => VENUE_SRC.includes(k)).length}/7)`,
+  JSON.stringify(vrAgain) === JSON.stringify(vr) &&
+  VENUE_SRC.includes("venueRhythm(compId, matches, clubs)") &&
+  VENUE_SRC.includes("rhythmRows.map(") && VENUE_SRC.includes("row.end.windows.map(") &&
+  VENUE_SRC.includes("w.cards === 0 ? ABSENT : fmt2(w.goalsPerCard)") &&
+  VENUE_SRC.includes('row.end.peakRhythm === b && "font-semibold text-primary"') &&
+  VENUE_SRC.includes('t("venue.rhythmTitle"') && VENUE_SRC.includes('t("venue.rhythmHint"') &&
+  VENUE_SRC.includes('t("venue.rhythmHomeRow"') && VENUE_SRC.includes('t("venue.rhythmAwayRow"') &&
+  VENUE_SRC.includes('t("venue.rhythmPeak"') &&
+  VENUE_SRC.includes('t("venue.rhythmHomeBetter"') && VENUE_SRC.includes('t("venue.rhythmAwayBetter"') &&
+  VENUE_SRC.includes('t("timing.emptyHint"') &&
+  !/\.sort\(/.test(VENUE_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C
