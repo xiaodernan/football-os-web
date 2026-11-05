@@ -4,7 +4,7 @@ import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS
 import { footballProvider, getClub } from "@/data/footballService";
 import { clockContrast, eventClock } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
-import { ABSENT, cn, pctOf } from "@/lib/utils";
+import { fmt2, ABSENT, cn, pctOf } from "@/lib/utils";
 
 export function EventClock() {
   const { t } = useI18n();
@@ -142,10 +142,25 @@ export function EventClock() {
                     </div>
                   ))}
                 </div>
+                <div className="mt-3 flex items-end gap-1">
+                  <div className="flex-1 text-[10px] uppercase tracking-wider text-muted-foreground">{t("clock.crossRhythm")}</div>
+                  {contrast.windows.map((w, b) => (
+                    <div key={b} className="flex-1 text-center">
+                      <div className={cn("font-mono text-[10px]", contrast.peakRhythm === b && "font-semibold text-primary")}>
+                        {w.cards === 0 ? ABSENT : fmt2(w.goalsPerCard)}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                    </div>
+                  ))}
+                </div>
                 <p className="mt-3 text-xs text-muted-foreground">
                   {t("clock.crossPeak", {
                     g: contrast.peakGoal === null ? ABSENT : bandLabels[contrast.peakGoal],
                     c: contrast.peakCard === null ? ABSENT : bandLabels[contrast.peakCard],
+                  })}
+                  {contrast.peakRhythm !== null && " " + t("clock.crossRhythmPeak", {
+                    w: bandLabels[contrast.peakRhythm],
+                    n: fmt2(contrast.windows[contrast.peakRhythm].goalsPerCard),
                   })}
                 </p>
               </>

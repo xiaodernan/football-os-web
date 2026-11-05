@@ -231,7 +231,8 @@ const expectedPerUser = [
   ["features/analytics/DataRoom.tsx", 13], ["features/analytics/Discipline.tsx", 2],
   // M786: the contrast's peak line asks the door once per series — a league with no goal or no
   // booking reads the glyph where its busiest window would be. 1 -> 3.
-  ["features/analytics/EventClock.tsx", 3],
+  // M946: the rhythm row declines to print a denominator-less window.
+  ["features/analytics/EventClock.tsx", 4],
   ["features/analytics/GoalTiming.tsx", 4],
   // M716: the scenarios screen asks the door twice more — a ceiling place with no row behind it
   // reads the glyph, and so does the climb tile's club when the table has no name for it. 5 -> 7.

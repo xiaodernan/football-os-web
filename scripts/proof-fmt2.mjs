@@ -63,6 +63,8 @@ const CONSUMERS = [
   "features/analytics/Discipline.tsx",
   // M574: the briefing prints its three per-game rates (the run-in average, the venue pair) through the door.
   "features/analytics/Briefing.tsx",
+  // M946: the contrast clock's rhythm row prints its ratio through the door.
+  "features/analytics/EventClock.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the
@@ -266,7 +268,7 @@ const treeReaders = carriers.filter((f) => f !== HOME && count(src[f], CALL_FMT2
 const listedReaders = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) > 0).sort();
 const unlisted = treeReaders.filter((f) => !CONSUMERS.includes(f));
 const stale = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) === 0);
-ok(`all twenty-six consumers read the door, and the user set is EQUAL to the tree's own (imports ${importing.length}/26, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70; tree readers ${treeReaders.length}, unlisted ${unlisted.length} [${unlisted.join(",")}], stale rows ${stale.length} [${stale.join(",")}])`,
+ok(`all twenty-seven consumers read the door, and the user set is EQUAL to the tree's own (imports ${importing.length}/27, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70; tree readers ${treeReaders.length}, unlisted ${unlisted.length} [${unlisted.join(",")}], stale rows ${stale.length} [${stale.join(",")}])`,
   importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 70 &&
   treeReaders.length === CONSUMERS.length && treeReaders.join(",") === listedReaders.join(",") &&
   unlisted.length === 0 && stale.length === 0);

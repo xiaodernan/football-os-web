@@ -1462,6 +1462,39 @@ ok(`the discipline screen draws the result clock off the fold, three labelled se
   DISC_SRC.includes('t("disc.resultWon"') && DISC_SRC.includes('t("disc.resultDrew"') &&
   DISC_SRC.includes('t("disc.resultLost"') && DISC_SRC.includes('t("disc.contrastNone"') &&
   !/\.sort\(/.test(DISC_SRC));
+// --- M946: the rhythm ratio — goals per card on the contrast clock -----------------------------
+// MR again, where goals and cards share fixtures: r1's 12' goal and 10' booking land together in
+// band 0 (1 goal / 1 card = 1.00), r1's 44' goal sits alone in band 2 and r2's 85' goal in band 5
+// — windows that booked nobody read zero through the door and the screen says so with the shared
+// absence glyph. The sharpest window is band 0, the only one with a denominator.
+const rhythmFixtures = [
+  { ...match("q1", "MR", "A", "B", 2, 1, "2026-08-01"), events: [
+    { minute: 12, type: "GOAL", side: "home", player: "p" }, cardEvent(10, "YELLOW", "home"),
+    { minute: 44, type: "GOAL", side: "away", player: "p" },
+  ] },
+  { ...match("q2", "MR", "B", "A", 1, 1, "2026-08-02"), events: [
+    { minute: 85, type: "GOAL", side: "away", player: "p" },
+  ] },
+];
+const rhythm = clockContrast("MR", rhythmFixtures, resultClubs);
+ok(`the contrast clock reads goals per card through the safeDiv door — a denominator-less window carries the floor's own figure, which the screen declines to print — and names the sharpest window (band 0: ${rhythm.windows[0].goalsPerCard}; band 2: ${rhythm.windows[2].goalsPerCard} on ${rhythm.windows[2].goals} goals and ${rhythm.windows[2].cards} cards; peak ${rhythm.peakRhythm})`,
+  rhythm.windows[0].goalsPerCard === 1 && rhythm.windows[2].goalsPerCard === 1 &&
+  rhythm.windows[2].goals === 1 && rhythm.windows[2].cards === 0 &&
+  rhythm.windows[5].goalsPerCard === 1 && rhythm.peakRhythm === 0);
+// A competition with bookings but no goals reads 0.00 everywhere it booked, and one with goals
+// but no bookings names no sharpest window at all.
+const rhythmDark = clockContrast("TE", cardFixtures, cardClubs);
+const rhythmQuiet = clockContrast("T1", timingFixtures, clubs);
+ok(`a booked but scoreless competition reads zero rhythm and a scoreline-only one names no sharpest window (TE peak ${rhythmDark.peakRhythm}, ratios ${rhythmDark.windows.filter((w) => w.cards > 0).map((w) => w.goalsPerCard).join(",")}; T1 peak ${rhythmQuiet.peakRhythm})`,
+  rhythmDark.peakRhythm !== null && rhythmDark.windows.every((w) => w.cards === 0 || w.goalsPerCard === 0) &&
+  rhythmQuiet.peakRhythm === null);
+ok(`the event clock screen reads the rhythm row and the sharpest-window sentence off the fold (screen ${[
+  't("clock.crossRhythm"', 't("clock.crossRhythmPeak"', "contrast.peakRhythm",
+  "w.goalsPerCard",
+].filter((k) => CLOCK_SRC.includes(k)).length}/4)`,
+  CLOCK_SRC.includes("contrast.peakRhythm") && CLOCK_SRC.includes("w.goalsPerCard") &&
+  CLOCK_SRC.includes('t("clock.crossRhythm"') && CLOCK_SRC.includes('t("clock.crossRhythmPeak"') &&
+  !/\.sort\(/.test(CLOCK_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

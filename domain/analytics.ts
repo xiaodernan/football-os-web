@@ -6,7 +6,7 @@
 // means "scores at the league-average rate".
 
 import type { Club, Match, Side } from "@/domain/types";
-import { clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
+import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
 import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally, maxBy, last } from "./attributes";
 
 // The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
@@ -740,6 +740,9 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
 export interface ClockContrastWindow {
   goals: number;
   cards: number;
+  /** M946: goals per card in this window, 2dp through the safeDiv door — 0 when the window
+   *  booked nobody, which the screen reads as no ratio to state rather than an empty one. */
+  goalsPerCard: number;
 }
 
 export interface ClockContrast {
@@ -751,6 +754,9 @@ export interface ClockContrast {
   peakGoal: number | null;
   /** The busiest card window; null when the competition has no recorded booking. */
   peakCard: number | null;
+  /** M946: the sharpest window — the highest goals-per-card ratio among the windows that
+   *  booked somebody; null when the competition has no recorded booking at all. */
+  peakRhythm: number | null;
 }
 
 /** The league's clock read as two series: when goals arrive and when cards arrive. Each side is
@@ -770,12 +776,21 @@ export function clockContrast(compId: string, matches: Match[], clubs: Club[]): 
     for (let b = 1; b < counts.length; b++) if (counts[b] > counts[peak]) peak = b;
     return peak;
   };
+  const windows = goals.map((g, b) => ({ goals: g, cards: card.windows[b], goalsPerCard: safeDiv(g, card.windows[b]) }));
+  // The sharpest window is the one whose bookings were most productive — the earliest window
+  // holding the maximum, and no window at all when nobody was booked.
+  let peakRhythm: number | null = null;
+  for (let b = 0; b < GOAL_BANDS; b++) {
+    if (card.windows[b] === 0) continue;
+    if (peakRhythm === null || windows[b].goalsPerCard > windows[peakRhythm].goalsPerCard) peakRhythm = b;
+  }
   return {
     goals: sum(goals, (n) => n),
     cards: sum(card.windows, (n) => n),
-    windows: goals.map((g, b) => ({ goals: g, cards: card.windows[b] })),
+    windows,
     peakGoal: peakOf(goals),
     peakCard: peakOf(card.windows),
+    peakRhythm,
   };
 }
 
