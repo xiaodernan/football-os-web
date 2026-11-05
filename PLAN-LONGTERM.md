@@ -803,7 +803,9 @@
 - f04b7f2 M943: 射门与扑救也分主客（M790 候选③，与 M787/M788 同构）— domain/analytics.ts 新增 eventVenueClock 折叠：SHOT 记射门端、SAVE 记扑救方门将端（引擎的 SAVE 以被扑一方命名，与 eventClock 的 stops 记账规则一致），四条六窗序列与 eventClock 的 shotsBands/savesBands 逐窗可对账；VenueSplit 屏新增射门/扑救分窗面板（四条迷你柱、共享 timing.w1–w6 标签）；proof-analytics 4 条新证词 206→210（手工计数 T5 序列、与 eventClock 逐窗对账、未知赛事静默 + 确定性、屏幕读取）；6 个新字典键×3；census literal 1,875→1,882、litVarSites 264 不动；无新模块/路由/存储键。
 - M943 同提交清扫: 农场 M936–M942 写入的 features/overview/ 44 屏全部无法解析（44/44 parse diagnostics，单一缺陷形态 useState<"v" "summary"> 缺 `|`），未被任何路由/import 可达，且 583 个 t() 调用无一有字典行——按 M522/M525 先例 git mv 隔离至 .drafts/features/overview/ 并修复解析使其满足零破损棘轮（0 broken <= 0）；根杂物 status_report.md（农场状态报告）移入 dev/。proof-unused-locals 程序普查 163→119 全覆盖。
 
-- M944（本地，待推送）: 牌钟与红牌钟的队级对照（M790 候选①）— cardTiming 折叠新增 contrast 板：每支吃牌球队的红牌首/末窗份额对自身全牌份额并排（earlyGap/lateGap 带符号，红牌份额减全牌份额），按 |earlyGap| 降序上板，未吃牌球队不占板（无份额可对照）；Discipline 屏新增对照面板（每队两行：首窗/末窗 × 卡份/红份 + 带符号差值，DELTA_CLASS 着色）；proof-analytics 3 条新证词 210→213（TJ 黄红错窗手工计数、TH 全零对照按红数/ID 排序、屏幕读取）；7 个新字典键×3；census literal 1,882→1,889、dup 棘轮 146→147/242→243、PWA 预算 535→536（面板过舍入边缘）、baseline 同提交重录。
+- 423a3b7 M944: 牌钟与红牌钟的队级对照（M790 候选①）— cardTiming 折叠新增 contrast 板：每支吃牌球队的红牌首/末窗份额对自身全牌份额并排（earlyGap/lateGap 带符号，红牌份额减全牌份额），按 |earlyGap| 降序上板，未吃牌球队不占板（无份额可对照）；Discipline 屏新增对照面板（每队两行：首窗/末窗 × 卡份/红份 + 带符号差值，DELTA_CLASS 着色）；proof-analytics 3 条新证词 210→213（TJ 黄红错窗手工计数、TH 全零对照按红数/ID 排序、屏幕读取）；7 个新字典键×3；census literal 1,882→1,889、dup 棘轮 146→147/242→243、PWA 预算 535→536（面板过舍入边缘）、baseline 同提交重录。
+
+- M945（本地，进行中）: 牌钟按比赛结果分侧（M790 候选④）— cardTiming 折叠加结果轴：每张牌按吃牌方在该场的胜负平归入 won/drew/lost 三条六窗序列（league 级，同 goalVenueClock 形态）。
 
 下一条目：M790 候选优先真实数据：
 ①牌钟与红牌钟的队级对照（同一队全牌与红牌的首窗/末窗份额并排，`cardTiming` 的 rows 与 redRows 已有两端）；
