@@ -142,7 +142,7 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M792 (the numbers whose commits are in the
+Work ships one milestone per commit and is currently at M793 (the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
 M322 in commits that carried no README section, and M323 is the first unit to land with one since
@@ -7097,6 +7097,55 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M793 — how often a booking ends red
+
+**What the page had.** The discipline screen counts cards three ways: a board of who books most, a
+clock of when, and a red board of who goes off (M783, M789). Those are two counts and the screen
+never divides them, so a club with thirty bookings and three sendings-off sits above a club with
+three bookings and two reds on every board it appears on — the first is a long season with a lot of
+yellow, the second loses its head. Volume was the only thing the page could rank.
+
+**One fold, composed.** `cardSeverity(compId, matches, clubs)` reads `cardTiming` and divides it:
+each club's `redShare` is its own reds over its own cards, and `worst` is the window where that
+share runs highest, **among the windows the club was actually booked in** — a window holding no card
+holds no severity, so it cannot be the club's worst hour. Ties go to the earlier window, exactly as
+the clock's peak lines do. A club booked but never sent reads `0` from a denominator it has, and a
+club nobody booked reads `0` from a denominator of zero; both are honest because the row prints its
+own denominator. The league line is the same quotient over the clock's two six-window sums, so the
+header and the rows cannot disagree with the curve above them. The board ranks by severity first
+(share, then reds, then cards, then club id) rather than by the count that made it.
+
+**The screen.** The panel sits under the result split: a league line, then one row per club that has
+been booked — crest, link, its share with its denominator, the named window with that window's own
+share, and the club's red total at the right, using the red count label the red board already owns.
+A club with no cards takes no row, and a league with no cards says so with the shared no-booking
+line rather than an empty list. Nothing is sorted or derived in the screen: the fold arrives ranked
+and the panel only filters the zero denominators out of view.
+
+**Words and gates.** Five new keys (`disc.sevTitle`, `disc.sevHint`, `disc.sevLeague`,
+`disc.sevRow`, `disc.sevPeak`) across three locales take the dictionary from 2,532 to 2,537 keys;
+seven new literal census sites — those five plus the reused no-booking line and the reused red
+count — move the census literal 1,893 → 1,900 and placeholder sites 266 → 270, three of the four
+being new (the league share, the row pair, the worst-window pair) and one the red count at its new
+call site. `proof-analytics` grows three clauses to 218/218: a hand-built three-club league where
+one club is 2 reds of 3 cards with two fully red windows and takes the earlier one, one is 1 of 3
+worst in its 50% window, and one has cards but no reds and therefore no window to name, with the
+league at 37.5; the empty arms (a competition with no row in the standings contributes nothing, a
+league that never sends anybody off reads zeros rather than dividing by an empty clock); and the
+agreement clause, which re-derives every seeded share from `cardTiming`'s own two counts, checks
+that a named window really holds both a card and a red, checks the board is ordered, and then the
+screen. No new module, route or storage key. One kilobyte: the build measures 537 KB gzip across the
+same 54 assets (JS 524 + CSS 12.4), so the PWA pin moves 536 → 537 and `tests/perf/baseline.json`
+re-records in the same commit rather than letting the gate drift. `tsc` clean, build exit 0,
+`proof-i18n` 386/386, `proof-ledger-run` 8/8, and the standing suite 123/123 · 3,351/3,351 (33 checks
+were counted before this unit and 36 after, the three new clauses being the difference).
+
+**The honest limit.** Severity is a share of recorded bookings, not of fouls: a club that commits
+many fouls and is booked rarely, then loses its head once, reads a high share off a small
+denominator — which is why the row prints its denominator next to the percentage instead of a bar.
+The fold also inherits `cardTiming`'s population: only clubs with a row in the standings appear, so
+a booked visitor with no table row is in the league's count and not on the board.
 
 ### M792 — the clock learns what a booking is worth in goals
 

@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, clockRhythm, goalVenueClock, cardResultClock } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, clockRhythm, goalVenueClock, cardResultClock, cardSeverity } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -1498,6 +1498,80 @@ ok(`cardResultClock is deterministic and the discipline screen draws the three r
   DISC_SRC.includes('t("disc.resultTitle"') && DISC_SRC.includes('t("disc.resultHint"') &&
   DISC_SRC.includes('t("disc.resultWin"') && DISC_SRC.includes('t("disc.resultDraw"') &&
   DISC_SRC.includes('t("disc.resultLoss"') && DISC_SRC.includes('t("disc.clockNone"') &&
+  !/\.sort\(/.test(DISC_SRC));
+// --- M793: how often a booking ends red, by club ------------------------------------------------
+// TQ carries three clubs. q1: F hosts G — F takes a yellow on 10' (band 0) and a red on 20' (band
+// 1); G takes a red on 47' and a yellow on 50' (both band 3) and a yellow on 35' (band 2). q2: H
+// hosts F — H takes two yellows inside band 0 (5', 8') and F is sent on 70' (band 4). So F is 2 reds
+// of 3 cards (66.67) with bands 1 and 4 both fully red and the earlier one named, G is 1 of 3
+// (33.33) worst in band 3 at 50, and H is 0 of 2 with no red anywhere and therefore no window to
+// name. q3 is scheduled noise, q4 belongs to another competition. The league is 3 reds of 8 cards.
+const sevClubs = [club("F", "TQ"), club("G", "TQ"), club("H", "TQ")];
+const sevFixtures = [
+  cardFixture("q1", "TQ", "F", "G", [
+    cardEvent(10, "YELLOW", "home"), cardEvent(20, "RED", "home"),
+    cardEvent(35, "YELLOW", "away"), cardEvent(47, "RED", "away"), cardEvent(50, "YELLOW", "away"),
+  ]),
+  cardFixture("q2", "TQ", "H", "F", [
+    cardEvent(5, "YELLOW", "home"), cardEvent(8, "YELLOW", "home"), cardEvent(70, "RED", "away"),
+  ]),
+  cardFixture("q3", "TQ", "G", "H", [cardEvent(10, "YELLOW", "home")], "SCHEDULED"),
+  cardFixture("q4", "TR", "F", "G", [cardEvent(15, "RED", "home")]),
+];
+const sev = cardSeverity("TQ", sevFixtures, sevClubs);
+const sevOf = (r) => `${r.clubId} ${r.reds}/${r.cards}=${r.redShare}${r.worst === null ? " none" : `@${r.worst.band}:${r.worst.share}`}`;
+ok(`cardSeverity divides each club's reds by its own cards and names the window where that share runs highest, earliest on a tie (${sev.rows.map(sevOf).join(" · ")})`,
+  sev.rows.length === 3 &&
+  sev.rows.map((r) => r.clubId).join(",") === "F,G,H" &&
+  sev.rows[0].redShare === 66.67 && sev.rows[0].cards === 3 && sev.rows[0].reds === 2 &&
+  sev.rows[0].worst?.band === 1 && sev.rows[0].worst?.share === 100 &&
+  sev.rows[1].redShare === 33.33 && sev.rows[1].worst?.band === 3 && sev.rows[1].worst?.share === 50 &&
+  sev.rows[2].redShare === 0 && sev.rows[2].cards === 2 && sev.rows[2].reds === 0 &&
+  sev.rows[2].worst === null &&
+  sev.league === 37.5);
+// A club with no fixture in the competition has no row at all, and a league that never sends
+// anybody off reads zero rather than dividing by an empty clock. On the seeded world the shares
+// are exactly the two counts the card clocks already print, the named window is a window the club
+// was booked in with a red inside it, and the board is ordered.
+const sevEmpty = cardSeverity("TG", cardFixtures, cardClubs);
+const sevNoReds = cardSeverity("TF", cardFixtures, cardClubs);
+const sevSeeded = seededComps.map((id) => {
+  const comps = seededClubs.filter((c) => c.competitionId === id);
+  const s = cardSeverity(id, seededMatches, comps);
+  const c = cardTiming(id, seededMatches, comps);
+  return {
+    id,
+    match: s.rows.every((row) => {
+      const src = c.rows.find((r) => r.clubId === row.clubId);
+      const share = src.cards ? Math.round((src.reds / src.cards) * 100 * 100) / 100 : 0;
+      const worstOk = row.worst === null
+        ? src.reds === 0
+        : src.bands[row.worst.band] > 0 && src.redBands[row.worst.band] > 0
+          && row.worst.share === Math.round((src.redBands[row.worst.band] / src.bands[row.worst.band]) * 100 * 100) / 100;
+      return row.redShare === share && row.cards === src.cards && row.reds === src.reds && worstOk;
+    }),
+    ordered: s.rows.every((row, i) => i === 0 || s.rows[i - 1].redShare >= row.redShare),
+    league: s.league === (c.windows.every((n) => n === 0) ? 0
+      : Math.round((c.redWindows.reduce((t, n) => t + n, 0) / c.windows.reduce((t, n) => t + n, 0)) * 100 * 100) / 100),
+  };
+});
+ok(`the severity board is the card clock divided, never a third count (TG rows ${sevEmpty.rows.length} league ${sevEmpty.league}; TF ${cardSeverity("TF", cardFixtures, cardClubs).rows.map(sevOf).join(" · ")}; seeded ${sevSeeded.filter((s) => s.match && s.ordered && s.league).length}/${sevSeeded.length})`,
+  sevEmpty.rows.length === 0 && sevEmpty.league === 0 &&
+  cardSeverity("TF", cardFixtures, cardClubs).rows.every((r) => r.reds === 0 && r.worst === null) &&
+  sevSeeded.length >= 2 && sevSeeded.every((s) => s.match && s.ordered && s.league));
+const sevAgain = cardSeverity("TQ", sevFixtures, sevClubs);
+ok(`cardSeverity is deterministic and the discipline screen ranks off the fold, printing the share, its denominator and the worst window only where a red exists (same fold ${JSON.stringify(sevAgain) === JSON.stringify(sev)})`,
+  JSON.stringify(sevAgain) === JSON.stringify(sev) &&
+  DISC_SRC.includes("cardSeverity(compId, matches, clubs)") &&
+  DISC_SRC.includes("severity.rows.filter((r) => r.cards > 0)") &&
+  DISC_SRC.includes("severe.length === 0") && DISC_SRC.includes("severe.map(") &&
+  DISC_SRC.includes("{r.worst && (") &&
+  DISC_SRC.includes('t("disc.sevTitle"') && DISC_SRC.includes('t("disc.sevHint"') &&
+  DISC_SRC.includes('t("disc.sevLeague", { p: fmt2(severity.league) })') &&
+  DISC_SRC.includes('t("disc.sevRow", { p: fmt2(r.redShare), c: r.cards })') &&
+  DISC_SRC.includes('t("disc.sevPeak", { w: bandLabels[r.worst.band], p: fmt2(r.worst.share) })') &&
+  DISC_SRC.includes('t("disc.clockNone"') &&
+  DISC_SRC.includes('t("disc.redTotal", { n: r.reds })') &&
   !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and

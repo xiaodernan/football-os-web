@@ -656,6 +656,75 @@ export function cardResultClock(compId: string, matches: Match[], clubs: Club[])
   };
 }
 
+export interface CardSeverityWorst {
+  /** 0-based window index, index 0 = 1–15′, index 5 = 76–90+′. */
+  band: number;
+  /** The club's red share inside that window, on the same 0–100 scale as the row's own. */
+  share: number;
+}
+
+export interface CardSeverityRow {
+  clubId: string;
+  /** The club's recorded cards — the denominator of every share on this row. */
+  cards: number;
+  yellows: number;
+  reds: number;
+  /** Sendings-off as a share of this club's own cards, 0–100, 2dp. 0 when it was booked without
+   *  ever going off: the volume the ledger counts and the severity this row reads are different
+   *  numbers, and a club nobody booked reads 0 from a denominator of 0. */
+  redShare: number;
+  /** The window where this club's bookings turned red most often — highest per-window share among
+   *  the windows it was actually booked in, earliest on a tie. Null when the club has no red or no
+   *  card, so there is no window to point at. */
+  worst: CardSeverityWorst | null;
+}
+
+export interface CardSeverity {
+  /** Every club with a table row, ranked by severity — red share, then reds, then cards, then the
+   *  club id — so the club that turns most of its bookings red leads regardless of how many it got. */
+  rows: CardSeverityRow[];
+  /** The competition's own sendings-off as a share of its cards, 0–100, 2dp. */
+  league: number;
+}
+
+/** How often a booking ends red. `cardTiming` counts the cards and the reds of every club in the
+ *  same six windows; this fold divides one by the other, which is a different question from either
+ *  board that prints those counts: a club with thirty cards and three reds is a disciplined side
+ *  with a long season, while one card in two is a club that loses its head. Composed on that fold
+ *  rather than walking the fixtures, so no count here can disagree with the clocks above it, and
+ *  the per-window share is taken only over windows the club was booked in — a window holding no
+ *  card holds no severity either. */
+export function cardSeverity(compId: string, matches: Match[], clubs: Club[]): CardSeverity {
+  const clock = cardTiming(compId, matches, clubs);
+  const rows: CardSeverityRow[] = clock.rows.map((r) => {
+    const bandShares = r.bands.map((n, b) => (n && r.redBands[b] ? round2((r.redBands[b] / n) * 100) : null));
+    let worst: CardSeverityWorst | null = null;
+    for (let b = 0; b < bandShares.length; b++) {
+      const share = bandShares[b];
+      if (share === null) continue;
+      if (worst === null || share > worst.share) worst = { band: b, share };
+    }
+    return {
+      clubId: r.clubId,
+      cards: r.cards,
+      yellows: r.yellows,
+      reds: r.reds,
+      redShare: r.cards ? round2((r.reds / r.cards) * 100) : 0,
+      worst,
+    };
+  });
+  rows.sort(
+    (a, b) =>
+      b.redShare - a.redShare ||
+      b.reds - a.reds ||
+      b.cards - a.cards ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  const leagueCards = sum(clock.windows, (n) => n);
+  const leagueReds = sum(clock.redWindows, (n) => n);
+  return { rows, league: leagueCards ? round2((leagueReds / leagueCards) * 100) : 0 };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

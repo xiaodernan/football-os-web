@@ -4521,7 +4521,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M792: the event clock's rhythm panel adds its title, hint, no-booking line and the two end
 // lines, then reuses the contrast's two series labels as the count under each window: seven literal
 // sites, two of them interpolating — literal 1886 -> 1893, litVarSites 264 -> 266.
-  shapeCounts.literal === 1893 && shapeCounts.template === 109 && shapeCounts.expression === 33
+// M793: the discipline screen's severity board adds its title, hint, league line, row line and
+// worst-window line, then reuses the no-booking line and the red count beside each row: seven
+// literal sites, four of them interpolating — literal 1893 -> 1900, litVarSites 266 -> 270.
+  shapeCounts.literal === 1900 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4590,7 +4593,10 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M786: 263 -> 264 — the peak line hands over the two window labels, an absent glyph where a
 // series has none.
 // M792: 264 -> 266 — the rhythm panel's two end lines each hand over a window label and a rate.
-  litVarSites === 266 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+// M793: 266 -> 270 — the severity board's league line hands over its share, its row line the
+// share and the denominator, its worst-window line the label and the window's share, and the
+// reused red count hands over the club's reds at its new call site.
+  litVarSites === 270 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
