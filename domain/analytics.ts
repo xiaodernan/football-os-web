@@ -486,6 +486,59 @@ export function goalVenueClock(compId: string, matches: Match[], clubs: Club[]):
   };
 }
 
+export interface EventVenueClock {
+  /** Event-recorded shots by the home side, per window; sums with `awayShotsWindows` to the
+   *  league's recorded shots — the same events `eventClock` folds, split by the end. */
+  homeShotsWindows: number[];
+  /** Event-recorded shots by the away side, per window. */
+  awayShotsWindows: number[];
+  /** Event-recorded saves MADE by each end's keeper, per window. The engine names a SAVE event
+   *  after the side whose move was saved, so the save belongs to the other end — the crediting
+   *  rule `eventClock`'s `stops` already reads from the defending end. */
+  homeSavesWindows: number[];
+  /** Saves made by the away side's keeper, per window. */
+  awaySavesWindows: number[];
+  homeShots: number;
+  awayShots: number;
+  homeSaves: number;
+  awaySaves: number;
+}
+
+/** When the shots and the saves that answer them arrive, split by the end. The goals clock above
+ *  asks whether home advantage shows in the minutes goals land; this asks the same question of
+ *  the shot events and of the keepers answering them — which end takes its shots where, and
+ *  which end's keepers do their work where. A SHOT is charged to the side that took it; a SAVE
+ *  is charged to the keeper who made it, the other end from the one the event names. */
+export function eventVenueClock(compId: string, matches: Match[], clubs: Club[]): EventVenueClock {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const homeShotsWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const awayShotsWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const homeSavesWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const awaySavesWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  for (const m of matches) {
+    if (m.competitionId !== compId || m.status !== "FINISHED") continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "SHOT" && e.type !== "SAVE") continue;
+      const actor = e.side === "home" ? m.homeClubId : m.awayClubId;
+      if (!ranked.has(actor)) continue;
+      const windows = e.type === "SHOT"
+        ? (e.side === "home" ? homeShotsWindows : awayShotsWindows)
+        : (e.side === "home" ? awaySavesWindows : homeSavesWindows);
+      windows[goalBand(e.minute)]++;
+    }
+  }
+  return {
+    homeShotsWindows,
+    awayShotsWindows,
+    homeSavesWindows,
+    awaySavesWindows,
+    homeShots: sum(homeShotsWindows, (n) => n),
+    awayShots: sum(awayShotsWindows, (n) => n),
+    homeSaves: sum(homeSavesWindows, (n) => n),
+    awaySaves: sum(awaySavesWindows, (n) => n),
+  };
+}
+
 export interface CardTimingRow {
   clubId: string;
   yellows: number;

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, DELTA_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { goalVenueClock, venueSplit } from "@/domain/analytics";
+import { eventVenueClock, goalVenueClock, venueSplit } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctLabel, pctOf, signed } from "@/lib/utils";
 
@@ -23,6 +23,19 @@ export function VenueSplit() {
   const clockRows = [
     { label: t("venue.clockHome"), data: clock.homeWindows, total: clock.home, fill: BAR_FILL.info },
     { label: t("venue.clockAway"), data: clock.awayWindows, total: clock.away, fill: BAR_FILL.progress },
+  ];
+  // M943: the venue page's shots and saves get the same clock — which end takes its shots
+  // where, and whose keeper answers there, read off the same six windows.
+  const evClock = useMemo(() => eventVenueClock(compId, matches, clubs), [compId, matches, clubs]);
+  const evPeak = Math.max(
+    1, ...evClock.homeShotsWindows, ...evClock.awayShotsWindows,
+    ...evClock.homeSavesWindows, ...evClock.awaySavesWindows,
+  );
+  const evRows = [
+    { label: t("venue.shotsHome"), data: evClock.homeShotsWindows, total: evClock.homeShots, fill: BAR_FILL.info },
+    { label: t("venue.shotsAway"), data: evClock.awayShotsWindows, total: evClock.awayShots, fill: BAR_FILL.progress },
+    { label: t("venue.savesHome"), data: evClock.homeSavesWindows, total: evClock.homeSaves, fill: BAR_FILL.good },
+    { label: t("venue.savesAway"), data: evClock.awaySavesWindows, total: evClock.awaySaves, fill: BAR_FILL.low },
   ];
   const rows = venue.rows;
   const fortress = rows.length ? maxBy(rows, (r) => r.homeEdge) : null;
@@ -189,6 +202,35 @@ export function VenueSplit() {
                           <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
                           <div className="mx-auto mt-0.5 h-10 w-full">
                             <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, clockPeak) }} />
+                          </div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+
+          <Panel className="p-5">
+            <SectionTitle title={t("venue.clockShotsTitle")} hint={t("venue.clockShotsHint")} />
+            {evClock.homeShots + evClock.awayShots + evClock.homeSaves + evClock.awaySaves === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.emptyHint")}</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                {evRows.map((row) => (
+                  <div key={row.label}>
+                    <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                      <span>{row.label}</span>
+                      <span className="font-mono">{row.total}</span>
+                    </div>
+                    <div className="mt-1 flex items-end gap-1">
+                      {row.data.map((n, b) => (
+                        <div key={b} className="flex-1 text-center">
+                          <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                          <div className="mx-auto mt-0.5 h-10 w-full">
+                            <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, evPeak) }} />
                           </div>
                           <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
                         </div>

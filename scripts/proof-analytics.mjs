@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
@@ -1297,6 +1297,62 @@ ok(`the goal clock is deterministic and the venue screen draws it off the fold, 
   VENUE_SRC.includes("clockPeak") && VENUE_SRC.includes("pctOf(n, clockPeak)") &&
   VENUE_SRC.includes('t("venue.clockTitle"') && VENUE_SRC.includes('t("venue.clockHint"') &&
   VENUE_SRC.includes('t("venue.clockHome"') && VENUE_SRC.includes('t("venue.clockAway"') &&
+  VENUE_SRC.includes('t("timing.emptyHint"') && !/\.sort\(/.test(VENUE_SRC));
+// --- M943: the shot and save clocks split by the end ------------------------------------------
+// The engine names a SAVE after the side whose move was saved, so the save belongs to the
+// OTHER end's keeper. v1: A shoots on 12' (band 0) and 78' (band 5), B on 30' (band 1); B's
+// keeper answers on 44' (band 2, a home-side SAVE event), A's on 80' (band 5, away side). v2:
+// A shoots on 90' (band 5), B on 5' (band 0) and 92' (band 5). The scheduled v3 SHOT and the
+// eventless v4 stay out.
+const vs = (minute, side, type) => ({ minute, type, side, player: "p" });
+const venueEventFixtures = [
+  { ...match("v1", "T5", "A", "B", 1, 0, "2026-05-01"), events: [
+    vs(12, "home", "SHOT"), vs(30, "away", "SHOT"), vs(44, "home", "SAVE"), vs(78, "home", "SHOT"), vs(80, "away", "SAVE"),
+  ] },
+  { ...match("v2", "T5", "B", "A", 0, 2, "2026-05-02"), events: [
+    vs(5, "away", "SHOT"), vs(90, "home", "SHOT"), vs(92, "away", "SHOT"),
+  ] },
+  { ...match("v3", "T5", "A", "B", 2, 1, "2026-05-03", "SCHEDULED"), events: [vs(10, "home", "SHOT")] },
+  { ...match("v4", "T5", "A", "B", 1, 1, "2026-05-04") },
+];
+const venueEventClubs = [club("A", "T5"), club("B", "T5")];
+const evVenue = eventVenueClock("T5", venueEventFixtures, venueEventClubs);
+ok(`eventVenueClock charges each shot to the end that took it and each save to the keeper's end (home shots ${evVenue.homeShotsWindows.join("")} against away ${evVenue.awayShotsWindows.join("")}; home saves ${evVenue.homeSavesWindows.join("")} against away ${evVenue.awaySavesWindows.join("")})`,
+  evVenue.homeShotsWindows.join(",") === "1,0,0,0,0,2" &&
+  evVenue.awayShotsWindows.join(",") === "1,1,0,0,0,1" &&
+  evVenue.homeSavesWindows.join(",") === "0,0,0,0,0,1" &&
+  evVenue.awaySavesWindows.join(",") === "0,0,1,0,0,0" &&
+  evVenue.homeShots === 3 && evVenue.awayShots === 3 &&
+  evVenue.homeSaves === 1 && evVenue.awaySaves === 1);
+// One event set, two folds: the venue split's four series add up, window for window, to the
+// league bands eventClock reads off the same fixtures — the reconciliation that keeps the two
+// screens from disagreeing about the same match.
+const evFold = eventClock("T5", venueEventFixtures, venueEventClubs);
+ok(`the venue split reconciles with the event clock window for window (shots ${evVenue.homeShots + evVenue.awayShots} = fold ${evFold.shots}; saves ${evVenue.homeSaves + evVenue.awaySaves} = fold ${evFold.saves})`,
+  evVenue.homeShotsWindows.every((n, i) => n + evVenue.awayShotsWindows[i] === evFold.shotsBands[i]) &&
+  evVenue.homeSavesWindows.every((n, i) => n + evVenue.awaySavesWindows[i] === evFold.savesBands[i]) &&
+  evVenue.homeShots + evVenue.awayShots === evFold.shots &&
+  evVenue.homeSaves + evVenue.awaySaves === evFold.saves);
+// A competition with no fixture reads eight silent windows, a SAVE charged to nobody's goal
+// columns stays out, and the fold is deterministic.
+const evSilent = eventVenueClock("TM", venueEventFixtures, venueEventClubs);
+const evAgain = eventVenueClock("T5", venueEventFixtures, venueEventClubs);
+const crossEv = eventVenueClock("TK", crossFixtures, crossClubs);
+ok(`the event venue clock is silent on an unknown competition, deterministic on a rerun, and charges no goal or card to itself (silent ${evSilent.homeShots + evSilent.awayShots + evSilent.homeSaves + evSilent.awaySaves}; TK shots ${crossEv.homeShots + crossEv.awayShots}; same fold ${JSON.stringify(evAgain) === JSON.stringify(evVenue)})`,
+  evSilent.homeShotsWindows.length === 6 && evSilent.awaySavesWindows.length === 6 &&
+  evSilent.homeShots + evSilent.awayShots + evSilent.homeSaves + evSilent.awaySaves === 0 &&
+  crossEv.homeShots + crossEv.awayShots === 0 && crossEv.homeSaves + crossEv.awaySaves === 0 &&
+  JSON.stringify(evAgain) === JSON.stringify(evVenue));
+ok(`the venue screen draws the shot/save clock off the same fold, four labelled series over the shared band labels (screen ${[
+  't("venue.clockShotsTitle"', 't("venue.shotsHome"', 't("venue.shotsAway"',
+  't("venue.savesHome"', 't("venue.savesAway"', "eventVenueClock(compId, matches, clubs)",
+  "pctOf(n, evPeak)",
+].filter((k) => VENUE_SRC.includes(k)).length}/7)`,
+  VENUE_SRC.includes("eventVenueClock(compId, matches, clubs)") &&
+  VENUE_SRC.includes("evClock.homeShotsWindows") && VENUE_SRC.includes("pctOf(n, evPeak)") &&
+  VENUE_SRC.includes('t("venue.clockShotsTitle"') && VENUE_SRC.includes('t("venue.clockShotsHint"') &&
+  VENUE_SRC.includes('t("venue.shotsHome"') && VENUE_SRC.includes('t("venue.shotsAway"') &&
+  VENUE_SRC.includes('t("venue.savesHome"') && VENUE_SRC.includes('t("venue.savesAway"') &&
   VENUE_SRC.includes('t("timing.emptyHint"') && !/\.sort\(/.test(VENUE_SRC));
 // --- M789: each red club's own six-window clock -------------------------------------------------
 // The red board already names each club's peak window; this hands the screen the whole series. On

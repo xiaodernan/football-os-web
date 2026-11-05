@@ -79,3 +79,16 @@ names as text, so before the fix `bg-blue-500` — used only by three drafts —
 
 The lane's generator writes to the original `features/...` paths, so a later lane commit may
 re-create a file that is drafted here. Check `git status` for duplicates after a rebase.
+
+
+## The fourth wave (M943): the overview batch, all 44 unparseable
+
+The component-farm lane's M936–M942 run wrote a whole `features/overview/` directory — 44
+screens from `Captaincy` to `TransferStats` — that nothing routes, nothing imports and nothing
+reaches: `proof-unused-locals`' program census found all 44 outside the tsconfig program at
+M942, the same shape M522 quarantined and M525 re-quarantined. Measured on 2026-11-05 with the
+TypeScript parser: **44 of 44 produce parse diagnostics**, worse than the first wave's 39/48.
+They reach for `ui/primitives` and `lib/utils` only — both stay reachable, so no module follows
+them here — and none of their 583 `t()` calls has a dictionary row in any locale (the farm has
+never authored one), so the quarantine removes no keys. They sit here at their original paths;
+a resurrection follows the same four steps as above, starting from a parse fix.

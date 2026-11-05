@@ -66,7 +66,10 @@ const TYPE_CEILINGS = {
 };
 const TOTAL_CEILING = 408; // M775: 409 -> 408 (the quarantine's one unexcused implicit-any is gone)
 const FILES_CEILING = 69;
-const POPULATION_PIN = 79;
+// M943: 79 -> 123. The overview batch joined the quarantine parse-clean, so the census reads
+// every one of the drafts for the first time — and the overview repairs below keep the totals
+// inside the ceilings the pin existed to protect.
+const POPULATION_PIN = 123;
 
 /** The families a milestone repaired, and the reason each one was repairable at all. */
 const REPAIRED = {

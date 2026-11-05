@@ -800,6 +800,9 @@
   tsc 干净、build exit 0、全套 123/123 · 3,339/3,339；
   诚实的保留：柱是总数不是比率；共享表头让每队序列按所有红队同一标尺读，只有一张红牌的队若无人到两张就只半高；
   从未吃红牌的队仍整行缺席（与 M783 一致）。
+- M943（本地，待推送）: 射门与扑救也分主客（M790 候选③，与 M787/M788 同构）— domain/analytics.ts 新增 eventVenueClock 折叠：SHOT 记射门端、SAVE 记扑救方门将端（引擎的 SAVE 以被扑一方命名，与 eventClock 的 stops 记账规则一致），四条六窗序列与 eventClock 的 shotsBands/savesBands 逐窗可对账；VenueSplit 屏新增射门/扑救分窗面板（四条迷你柱、共享 timing.w1–w6 标签）；proof-analytics 4 条新证词 206→210（手工计数 T5 序列、与 eventClock 逐窗对账、未知赛事静默 + 确定性、屏幕读取）；6 个新字典键×3；census literal 1,875→1,882、litVarSites 264 不动；无新模块/路由/存储键。
+- M943 同提交清扫: 农场 M936–M942 写入的 features/overview/ 44 屏全部无法解析（44/44 parse diagnostics，单一缺陷形态 useState<"v" "summary"> 缺 `|`），未被任何路由/import 可达，且 583 个 t() 调用无一有字典行——按 M522/M525 先例 git mv 隔离至 .drafts/features/overview/ 并修复解析使其满足零破损棘轮（0 broken <= 0）；根杂物 status_report.md（农场状态报告）移入 dev/。proof-unused-locals 程序普查 163→119 全覆盖。
+
 下一条目：M790 候选优先真实数据：
 ①牌钟与红牌钟的队级对照（同一队全牌与红牌的首窗/末窗份额并排，`cardTiming` 的 rows 与 redRows 已有两端）；
 ②进球与牌的节律比（逐窗 进球/牌 比值，或进球窗与牌窗的队级相关，属新统计量需先证口径）；
