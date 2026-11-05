@@ -807,9 +807,12 @@
 
 - c078611 M945: 牌钟按比赛结果分侧（M790 候选④）— cardTiming 折叠加结果轴：经 isFinished 门收窄比分后，每张牌按吃牌方该场胜负平归入 won/drew/lost 三条六窗序列（与 goalVenueClock 同形态）；Discipline 屏新增结果钟面板（三系列共享 timing 标签）；proof-analytics 3 条新证词 213→216（MR 手工计数、结果轴与主客轴双双逐窗对账到 windows、屏幕读取）；5 个新键×3；census literal 1,889→1,895；PWA 预算 536 不动（复用共享柱形标记）。
 
-- M946（本地，待推送）: 进球/牌节律比（M790 候选②，口径先证）— clockContrast 逐窗加 goalsPerCard（safeDiv 门的算术：分母封底 1，无分母窗口携带门自身的数字，屏幕以 ABSENT 拒印）+ peakRhythm（有牌窗口中比值最高者，最早窗赢平局，无牌则 null）；EventClock 屏在对比钟下加节律行（锋利窗高亮主色）与锋利窗句子；proof-analytics 3 条新证词 216→219（MR 混合口径含分母封底语义、有牌无球/有球无牌两臂、屏幕读取）；2 个新键×3；census literal 1,895→1,897、litVarSites 264→265；absent-glyph 花名册 EventClock 3→4、fmt2 消费者 26→27。
+- d4fa319 M946: 进球/牌节律比（M790 候选②，口径先证）— clockContrast 逐窗加 goalsPerCard（safeDiv 门的算术：分母封底 1，无分母窗口携带门自身的数字，屏幕以 ABSENT 拒印）+ peakRhythm（有牌窗口中比值最高者，最早窗赢平局，无牌则 null）；EventClock 屏在对比钟下加节律行（锋利窗高亮主色）与锋利窗句子；proof-analytics 3 条新证词 216→219（MR 混合口径含分母封底语义、有牌无球/有球无牌两臂、屏幕读取）；2 个新键×3；census literal 1,895→1,897、litVarSites 264→265；absent-glyph 花名册 EventClock 3→4、fmt2 消费者 26→27。
 
-下一条目：M790 候选优先真实数据：
+下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
+⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
+⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，安全除法门同口径）；
+⑦ 队级结果钟（每队自己的 won/drew/lost 三序列，cardTiming rows 已有基础）。
 ①牌钟与红牌钟的队级对照（同一队全牌与红牌的首窗/末窗份额并排，`cardTiming` 的 rows 与 redRows 已有两端）；
 ②进球与牌的节律比（逐窗 进球/牌 比值，或进球窗与牌窗的队级相关，属新统计量需先证口径）；
 ③射门与扑救也分主客（`eventClock` 的 shotsBands/savesBands 按 side 拆分，与 M787/M788 同构）；
