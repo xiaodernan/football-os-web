@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { discipline, disciplineTrend, disciplineVenue, cardTiming } from "@/domain/analytics";
-import { maxBy } from "@/domain/attributes";
-import { ABSENT, cn, fmt2, pctOf } from "@/lib/utils";
+import { deltaSign, maxBy } from "@/domain/attributes";
+import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
 export function Discipline() {
   const { t } = useI18n();
@@ -337,6 +337,53 @@ export function Discipline() {
                   })}
                 </ul>
               </>
+            )}
+          </Panel>
+
+          {/* M944: the contrast board — where a club's sendings-off land against where its
+              own bookings land, the first and last window shares side by side with the gap
+              the two reads leave between them. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.contrastTitle")} hint={t("disc.contrastHint")} />
+            {clock.contrast.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.contrastNone")}</p>
+            ) : (
+              <ul className="mt-3 space-y-1">
+                {clock.contrast.map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li key={r.clubId} className="rounded-lg border px-3 py-2 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={26} />
+                          <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                            {club?.name ?? r.clubId}
+                          </Link>
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground tabular-nums">
+                          {t("disc.contrastCards")} {r.cards} · {t("disc.contrastReds")} {r.reds}
+                        </div>
+                      </div>
+                      <div className="mt-1.5 space-y-0.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">{t("disc.contrastEarly")}</span>
+                          <span className="font-mono tabular-nums">
+                            {fmt2(r.earlyCardShare)}% / {fmt2(r.earlyRedShare)}%
+                            <span className={cn("ml-2", DELTA_CLASS[deltaSign(r.earlyGap)])}>{signed(r.earlyGap)}</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">{t("disc.contrastLate")}</span>
+                          <span className="font-mono tabular-nums">
+                            {fmt2(r.lateCardShare)}% / {fmt2(r.lateRedShare)}%
+                            <span className={cn("ml-2", DELTA_CLASS[deltaSign(r.lateGap)])}>{signed(r.lateGap)}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </Panel>
         </>

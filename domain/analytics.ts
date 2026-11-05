@@ -570,6 +570,25 @@ export interface CardRedRow {
   bands: number[];
 }
 
+export interface CardRedContrastRow {
+  clubId: string;
+  cards: number;
+  reds: number;
+  /** Share of this club's cards earned in the first window, 0–100, 2dp. */
+  earlyCardShare: number;
+  /** Share of this club's cards earned in the last window, 0–100, 2dp. */
+  lateCardShare: number;
+  /** Share of this club's reds earned in the first window, 0–100, 2dp. */
+  earlyRedShare: number;
+  /** Share of this club's reds earned in the last window, 0–100, 2dp. */
+  lateRedShare: number;
+  /** earlyRedShare minus earlyCardShare, 2dp — positive means the sendings-off skew earlier
+   *  than the bookings that surround them. */
+  earlyGap: number;
+  /** lateRedShare minus lateCardShare, 2dp. */
+  lateGap: number;
+}
+
 export interface CardTiming {
   /** Every club with a table row, ranked by cards in the first window, then the whole card
    *  count, then the club id. */
@@ -588,6 +607,10 @@ export interface CardTiming {
   homeWindows: number[];
   /** The cards earned by the away side of their fixture, by window. */
   awayWindows: number[];
+  /** M944: each booked club's red clock read against its own card clock — the first- and
+   *  last-window shares side by side, the bigger early skew first. Clubs without a booking
+   *  carry no shares to contrast and stay off the board. */
+  contrast: CardRedContrastRow[];
 }
 
 /** When a club's cards arrive: every recorded YELLOW or RED in this competition's finished
@@ -655,7 +678,25 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       return { clubId: r.clubId, reds: r.reds, peakBand, peakCount: r.redBands[peakBand], bands: [...r.redBands] };
     });
   redList.sort((a, b) => b.reds - a.reds || b.peakCount - a.peakCount || a.clubId.localeCompare(b.clubId));
-  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList, windows, redWindows, homeWindows, awayWindows };
+  const contrast: CardRedContrastRow[] = list
+    .filter((r) => r.cards > 0)
+    .map((r) => {
+      const earlyRedShare = r.reds ? round2((r.redBands[0] / r.reds) * 100) : 0;
+      const lateRedShare = r.reds ? round2((r.redBands[lastBand] / r.reds) * 100) : 0;
+      return {
+        clubId: r.clubId,
+        cards: r.cards,
+        reds: r.reds,
+        earlyCardShare: r.earlyShare,
+        lateCardShare: r.lateShare,
+        earlyRedShare,
+        lateRedShare,
+        earlyGap: round2(earlyRedShare - r.earlyShare),
+        lateGap: round2(lateRedShare - r.lateShare),
+      };
+    })
+    .sort((a, b) => Math.abs(b.earlyGap) - Math.abs(a.earlyGap) || b.reds - a.reds || a.clubId.localeCompare(b.clubId));
+  return { rows: list, earliest: list.find((r) => r.earlyCards > 0) ?? null, redRows: redList, windows, redWindows, homeWindows, awayWindows, contrast };
 }
 
 export interface ClockContrastWindow {

@@ -1382,6 +1382,45 @@ ok(`the red series is deterministic and the discipline screen draws each club's 
   ["timing.w1", "timing.w2", "timing.w3", "timing.w4", "timing.w5", "timing.w6"]
     .every((k) => DISC_SRC.includes(`t("${k}")`)) &&
   !/\.sort\(/.test(DISC_SRC));
+// --- M944: each booked club's red clock read against its own card clock ------------------------
+// TJ: Y's bookings are early (10', 30') while its red lands late (80'); Z mirrors it — a late
+// booking (70') and a late red (90'). Y reads 33.33% early cards against 0% early reds (gap
+// -33.33) and 33.33% late cards against 100% late reds (+66.67); Z reads 0/0 early and 50%
+// against 100% late (+50). The bigger early skew boards first: Y, then Z.
+const contrastFixtures = [
+  cardFixture("j1", "TJ", "Y", "Z", [
+    cardEvent(10, "YELLOW", "home"), cardEvent(30, "YELLOW", "home"), cardEvent(80, "RED", "home"),
+    cardEvent(70, "YELLOW", "away"), cardEvent(90, "RED", "away"),
+  ]),
+];
+const contrastClubs = [club("Y", "TJ"), club("Z", "TJ")];
+const redContrast = cardTiming("TJ", contrastFixtures, contrastClubs);
+const cby = Object.fromEntries(redContrast.contrast.map((r) => [r.clubId, r]));
+ok(`the contrast board reads each club's red shares against its own card shares, the early skew boarding first (Y cards ${cby.Y.earlyCardShare}/${cby.Y.lateCardShare} against reds ${cby.Y.earlyRedShare}/${cby.Y.lateRedShare}, gaps ${cby.Y.earlyGap}/${cby.Y.lateGap}; Z gaps ${cby.Z.earlyGap}/${cby.Z.lateGap}; order ${redContrast.contrast.map((r) => r.clubId).join(",")})`,
+  cby.Y.earlyCardShare === 33.33 && cby.Y.lateCardShare === 33.33 &&
+  cby.Y.earlyRedShare === 0 && cby.Y.lateRedShare === 100 &&
+  cby.Y.earlyGap === -33.33 && cby.Y.lateGap === 66.67 &&
+  cby.Z.earlyGap === 0 && cby.Z.lateGap === 50 &&
+  redContrast.contrast.map((r) => r.clubId).join(",") === "Y,Z" &&
+  redContrast.contrast.every((r) => r.cards > 0));
+// TH's reds are its only cards, so every share pair reads the same number and every gap sits at
+// zero — the tiebreak falls to the red count, then the id. A competition with rows but no cards
+// boards nobody at all.
+const thContrast = cardTiming("TH", redFixtures, redClubs);
+ok(`a club whose reds are its only cards reads zero gaps everywhere, ranked by reds then id (order ${thContrast.contrast.map((r) => r.clubId).join(",")}; gaps ${thContrast.contrast.map((r) => r.earlyGap).join(",")}; silent ${cardTiming("TG", cardFixtures, cardClubs).contrast.length})`,
+  thContrast.contrast.map((r) => r.clubId).join(",") === "P,Q,R,T" &&
+  thContrast.contrast.every((r) => r.earlyGap === 0 && r.lateGap === 0) &&
+  cardTiming("TG", cardFixtures, cardClubs).contrast.length === 0);
+ok(`the discipline screen draws the contrast off the fold, shares then the signed gap per end (screen ${[
+  't("disc.contrastTitle"', 't("disc.contrastHint"', 't("disc.contrastNone"',
+  't("disc.contrastEarly"', 't("disc.contrastLate"', 't("disc.contrastCards"',
+  't("disc.contrastReds"', "clock.contrast", "DELTA_CLASS[deltaSign(r.earlyGap)]",
+].filter((k) => DISC_SRC.includes(k)).length}/9)`,
+  DISC_SRC.includes("clock.contrast") && DISC_SRC.includes("r.earlyCardShare") &&
+  DISC_SRC.includes("DELTA_CLASS[deltaSign(r.earlyGap)]") && DISC_SRC.includes("signed(r.earlyGap)") &&
+  DISC_SRC.includes('t("disc.contrastTitle"') && DISC_SRC.includes('t("disc.contrastHint"') &&
+  DISC_SRC.includes('t("disc.contrastNone"') && DISC_SRC.includes('t("disc.contrastEarly"') &&
+  DISC_SRC.includes('t("disc.contrastLate"') && !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

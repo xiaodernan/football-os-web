@@ -111,7 +111,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // re-recorded in the same commit.
 // M943: the venue screen's shot/save clock adds its panel and six keys, measuring 535 KB /
 // 54 assets, pin 534 -> 535, baseline re-recorded in the same commit.
-const BUDGET_KB = 535;
+// M944: the discipline screen's contrast board adds its panel and seven keys, measuring
+// 536 KB / 54 assets (JS 523 + CSS 12.4), pin 535 -> 536, baseline re-recorded in the same commit.
+const BUDGET_KB = 536;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

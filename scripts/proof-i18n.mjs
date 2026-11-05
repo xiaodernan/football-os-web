@@ -3215,8 +3215,9 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // with career.ceilingRing, "Fixtures left" with runIn.remaining, "The run-in" with runIn.title,
 // "Head to head" with nav.headToHead) and grow the existing Club group — measured on the merged
 // dictionary below.
-const DUP_VALUES_PIN = 146;
-const DUP_EXCESS_KEYS_PIN = 242;
+// M944: the contrast board's 7 keys pay their toll (146 -> 147, 242 -> 243).
+const DUP_VALUES_PIN = 147;
+const DUP_EXCESS_KEYS_PIN = 243;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4514,7 +4515,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // 1864 -> 1875.
   // M943: the overview quarantine removed nothing the census read (the 44 were outside the
   // program), and the venue shots/saves panel adds 7 literal sites: 1875 -> 1882.
-  shapeCounts.literal === 1882 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M944: the contrast panel adds 7 literal sites: 1882 -> 1889.
+  shapeCounts.literal === 1889 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
