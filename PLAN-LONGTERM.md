@@ -835,6 +835,8 @@
 
 - M959（本地，待推送）: E2E 层复活验证——M459 的四个核心路径 spec 在旧端口/语言下从未真正测过本应用（5173 被外来项目占用 + 环境语言为中文），M958 的两处基础设施修复后全套 12/12 通过（onboarding、command-center、player-training ×2、manager-match、coach CV、leads、timing、home-away、discipline、clock）。
 
+- 9d06d95 M965: 全路由冒烟网——tests/e2e/all-routes.spec.ts 遍历路由表全部 20 个路由（阵容规划到连胜纪录），断言壳挂载且页面是屏幕本身而非“构建队列”回退；渲染抛错或未挂载都在每次运行失败；全套 E2E 32/32。
+
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
 ⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，安全除法门同口径）；
