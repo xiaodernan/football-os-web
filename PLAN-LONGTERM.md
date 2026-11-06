@@ -817,7 +817,7 @@
 ⑨ 节律可信度（每队节律的样本量读数：卡数即 n，低样本在屏上标注而非伪装成稳定比值）；
 ⑩ 主客桌的牌对照（venueSplit 行已有主客积分边——把 disciplineVenue 的主客牌率并排同一行）。
 
-- M949（本地，待推送）: 节律可信度（候选⑨）— clubRhythm 每行加 sampled（cards >= 3，阈值字面量写在折叠内一处，thresholds 声明同步 5→6）；屏幕在样本不足的比值旁印“样本不足”（clock.rhythmThin ×3），一片牌的 2.00 不再伪装成稳定比率；proof-analytics 2 条新证词 228→230（MR 一牌 thin、TE 三牌 settled、TG 全 thin、屏幕读取）；census literal 1,919。
+- 34523f2 M949: 节律可信度（候选⑨）— clubRhythm 每行加 sampled（cards >= 3，阈值字面量写在折叠内一处，thresholds 声明同步 5→6）；屏幕在样本不足的比值旁印“样本不足”（clock.rhythmThin ×3），一片牌的 2.00 不再伪装成稳定比率；proof-analytics 2 条新证词 228→230（MR 一牌 thin、TE 三牌 settled、TG 全 thin、屏幕读取）；census literal 1,919。
 
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
