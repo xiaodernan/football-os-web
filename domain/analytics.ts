@@ -1193,6 +1193,10 @@ export interface ComebackRow {
   lost: number;
   /** Points earned in the matches it trailed: three for a win, one for a draw. */
   points: number;
+  /** Goals for and against across the trailed fixtures — the standing fields the board's own
+   *  ranking door reads, accumulated by the same replay that counts the trails. */
+  gf: number;
+  ga: number;
   /** Share of those matches that ended level or better, 0–100, 2dp; 0 when it never trailed. */
   rescueShare: number;
 }
@@ -1218,7 +1222,7 @@ export interface ComebackPoints {
 export function comebackPoints(compId: string, matches: Match[], clubs: Club[]): ComebackPoints {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
   const rows = new Map<string, ComebackRow>(
-    [...ranked].map((id) => [id, { clubId: id, trailed: 0, won: 0, drawn: 0, lost: 0, points: 0, rescueShare: 0 }]),
+    [...ranked].map((id) => [id, { clubId: id, trailed: 0, won: 0, drawn: 0, lost: 0, points: 0, rescueShare: 0, gf: 0, ga: 0 }]),
   );
   let counted = 0;
   let trailedTotal = 0; let wonTotal = 0; let drawnTotal = 0; let lostTotal = 0; let pointsTotal = 0;
@@ -1245,12 +1249,16 @@ export function comebackPoints(compId: string, matches: Match[], clubs: Club[]):
       const points = won * 3 + drawn;
       const row = rows.get(clubId)!;
       row.trailed += 1; row.won += won; row.drawn += drawn; row.lost += lost; row.points += points;
+      row.gf += ours; row.ga += theirs;
       trailedTotal++; wonTotal += won; drawnTotal += drawn; lostTotal += lost; pointsTotal += points;
     }
   }
   const list = [...rows.values()].filter((r) => r.trailed > 0);
   for (const r of list) r.rescueShare = round2(safeDiv(r.won + r.drawn, r.trailed) * 100);
-  list.sort((a, b) => b.points - a.points || b.trailed - a.trailed || a.clubId.localeCompare(b.clubId));
+  // The rescue board is a sub-table — the fixtures where the club trailed — and ranks the way
+  // every table here ranks: through the standing door, points first, then the goal difference
+  // those same fixtures produced.
+  list.sort((a, b) => byTableStanding(a, b));
   return {
     rows: list, trailed: trailedTotal, won: wonTotal, drawn: drawnTotal, lost: lostTotal,
     points: pointsTotal, rescueShare: round2(safeDiv(wonTotal + drawnTotal, trailedTotal) * 100),

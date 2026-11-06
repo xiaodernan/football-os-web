@@ -70,11 +70,13 @@ ok(`comebackPoints reads the deficit from the side that was behind (trailed ${co
   comebacks.matches === 5 && comebacks.trailed === 6 && comebacks.won === 1 &&
   comebacks.drawn === 1 && comebacks.lost === 4 && comebacks.points === 4 &&
   near(comebacks.rescueShare, 33.33, 0.005));
-ok(`comebackPoints ranks the rescued points first and lets one fixture charge both folds (rows ${comebacks.rows.map((r) => r.clubId).join("")}; H ${comeback.H.points} from ${comeback.H.trailed}, D ${comeback.D.points}, G both led and trailed: ${lead.G.led === 1 && comeback.G.trailed === 1})`,
-  comebacks.rows.map((r) => r.clubId).join("") === "HDBEGJ" && comebacks.rows.length === 6 &&
-  comeback.H.points === 3 && comeback.H.rescueShare === 100 && comeback.D.points === 1 &&
-  comeback.D.rescueShare === 100 && comeback.B.points === 0 && comeback.B.rescueShare === 0 &&
+ok(`comebackPoints ranks the rescued points first, then the goal difference those same fixtures produced, and lets one fixture charge both folds (rows ${comebacks.rows.map((r) => r.clubId).join("")}; H ${comeback.H.points} from ${comeback.H.trailed} at ${comeback.H.gf}:${comeback.H.ga}, D ${comeback.D.points}, B ${comeback.B.gf}:${comeback.B.ga}, G both led and trailed: ${lead.G.led === 1 && comeback.G.trailed === 1})`,
+  comebacks.rows.map((r) => r.clubId).join("") === "HDBGEJ" && comebacks.rows.length === 6 &&
+  comeback.H.points === 3 && comeback.H.rescueShare === 100 && comeback.H.gf === 3 && comeback.H.ga === 1 &&
+  comeback.D.points === 1 && comeback.D.rescueShare === 100 && comeback.D.gf === 1 && comeback.D.ga === 1 &&
+  comeback.B.points === 0 && comeback.B.rescueShare === 0 && comeback.B.gf === 1 && comeback.B.ga === 2 &&
   lead.G.led === 1 && comeback.G.trailed === 1 && comeback.G.points === 0 &&
+  comeback.G.gf === 1 && comeback.G.ga === 3 &&
   JSON.stringify(comebacks) === JSON.stringify(comebackPoints("T12", leadFixtures, leadClubs)));
 
 // The screen is a reader, not a second engine: it must render the folded board, and the route must
