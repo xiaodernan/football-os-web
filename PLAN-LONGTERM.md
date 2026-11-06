@@ -846,3 +846,4 @@
 注意：lane 的自动化会周期性 `git stash`/恢复工作树，可能把你未提交的改动回滚；所有编辑要么在隔离 worktree 里做，要么编辑后立刻提交推送。
 - c64f0c8 M948: the venue rhythm reads each end's goals per card, joined off the venue clocks
 - d9fdc79 M950: the club-level result clock each club's own cards split by the result its fixture went on to produce
+- 4bce82d M956: 领先保持（leadRetention 重放每场带事件的已结束比赛，记录任何时刻领先过的一方，再对照终场结果——领先后打平丢 2 分、落败丢 3 分；无事件比赛不可重放、不计入并在折叠里报数）+ /leads 屏（取得领先/守住/丢掉的分/最会浪费 四块牌 + 按丢分排序的榜 + 守住率条）+ 21 键×3 + nav.leads + 独立证词脚本 proof-leadretention 6/6（手工计数 5 场/6 次领先/4 胜 1 平 1 负/丢 5 分；只记领先方；重放确定；空集有对照）；census app-tree 122、coverage 123（features 48、deep 64）、storage 117、i18n 119/71/122、literal 1971、litVar 280、PWA 543、baseline 重录；同提交携带 lane 的 M955 先得分面板与其两条证词（同树测试：analytics 244/244、screens 31/31、i18n 386/386）
