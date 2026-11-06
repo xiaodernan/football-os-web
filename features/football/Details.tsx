@@ -26,7 +26,7 @@ import { careerArc } from "@/domain/careerArc";
 // an empty group where the domain answers the club's own rating.
 import { clubInput, lineMean, LINE_GROUPS } from "@/domain/career";
 import { playerDna } from "@/domain/playerDna";
-import { teamMetrics, expectedGoals, discipline, disciplineVenue, clubDisciplineTrend, matchBrief, eventClock } from "@/domain/analytics";
+import { teamMetrics, expectedGoals, discipline, disciplineVenue, clubDisciplineTrend, matchBrief, eventClock , matchClock } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
@@ -464,8 +464,7 @@ export function ClubDetail({ id }: { id: string }) {
                       <dt className="text-muted-foreground">{t("disc.perMatch")}</dt>
                       <dd className="font-mono">{cards.played ? fmt2(cards.bookingsPerMatch) : ABSENT}</dd>
                     </div>
-                    {/* M629: a gap needs both ends — a club that has only hosted reads a zero
-                        away rate it has not earned, so the line waits for both. */}
+                    {/* M629: a gap needs both ends — a hosted-only club reads an away rate it has not earned, so the line waits for both. */}
                     {venue && venue.playedHome > 0 && venue.playedAway > 0 && (
                       <div className="flex items-center justify-between">
                         <dt className="text-muted-foreground">{t("disc.venueTitle")}</dt>
@@ -630,6 +629,11 @@ export function MatchDetail({ id }: { id: string }) {
   const usingRecorded = started && !!m.events?.length;
   const recordedStats = started && m.stats ? m.stats : null;
   const events: MatchEvent[] = usingRecorded ? m.events! : sim?.timeline ?? [];
+  // M953: the same events, folded into the six windows the league clocks read — null when
+  // the fixture has no recorded events to clock.
+  const clock = matchClock(m);
+  const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
+  const clockPeak = clock ? Math.max(1, ...clock.goals, ...clock.cards) : 1;
 
   const runSim = () => {
     const r = simulateMatch({ seed: `${m.id}:${m.round}`, home: clubTeamInput(home.id), away: clubTeamInput(away.id) });
@@ -702,6 +706,36 @@ export function MatchDetail({ id }: { id: string }) {
             </ul>
           ) : <EmptyState title={t("det.timeline.emptyTitle")} hint={played ? t("det.timeline.emptyHint") : undefined} />}
         </Panel>
+
+        {/* M953: the same events, aggregated into the shared six windows — the timeline lists
+            what happened, the clock shows when. A fixture with no recorded events has no
+            clock to draw. */}
+        {clock && (
+          <Panel className="p-4">
+            <SectionTitle title={t("det.clock.title")} hint={t("det.clock.hint")} />
+            <div className="mt-2 space-y-3">
+              {[
+                { label: t("det.clock.goals"), data: clock.goals, fill: BAR_FILL.progress },
+                { label: t("det.clock.cards"), data: clock.cards, fill: BAR_FILL.bad },
+              ].map((row) => (
+                <div key={row.label}>
+                  <div className="text-xs text-muted-foreground">{row.label}</div>
+                  <div className="mt-1 flex items-end gap-1">
+                    {row.data.map((n, b) => (
+                      <div key={b} className="flex-1 text-center">
+                        <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                        <div className="mx-auto mt-0.5 h-8 w-full">
+                          <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, clockPeak) }} />
+                        </div>
+                        <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Panel>
+        )}
       </div>
 
       <Panel className="p-4">

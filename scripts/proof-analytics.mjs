@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, venueRhythm, clubResultClock } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, venueRhythm, clubResultClock, matchClock } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 const resultClockSum = (fold) => fold.resultClock.won + fold.resultClock.drew + fold.resultClock.lost;
@@ -1596,6 +1596,27 @@ ok(`the drawn share reads the opponents' fraction of each club's own bookings (U
   shareBy.U.drawnShare === 40 && shareBy.V.drawnShare === 50 && shareBy.W.drawnShare === 66.67);
 ok(`the drawn board prints the share beside the count (screen ${['t("disc.drawnShare"', "fmt2(r.drawnShare)"].filter((k) => DISC_SRC.includes(k)).length}/2)`,
   DISC_SRC.includes('t("disc.drawnShare"') && DISC_SRC.includes("fmt2(r.drawnShare)"));
+// --- M953: one fixture's own clock -------------------------------------------------------------
+// MR's q1: a 12' goal and a 10' booking in the opening, a 44' goal in band 2 — goals 1,0,1,0,0,0,
+// cards 1,0,0,0,0,0. The scheduled r3 carries events but no clock, and an eventless finished
+// fixture clocks nothing either.
+const q1Match = rhythmFixtures[0];
+const q1Clock = matchClock(q1Match);
+ok(`the match clock folds one fixture's own events into the shared windows (goals ${q1Clock ? q1Clock.goals.join("") : "null"}; cards ${q1Clock ? q1Clock.cards.join("") : "null"})`,
+  q1Clock !== null && q1Clock.goals.join(",") === "1,0,1,0,0,0" &&
+  q1Clock.cards.join(",") === "1,0,0,0,0,0" &&
+  q1Clock.reds.every((n) => n === 0));
+ok(`a scheduled or eventless fixture clocks nothing (scheduled ${matchClock(resultFixtures[2]) === null}; eventless ${matchClock({ ...match("me", "MR", "A", "B", 1, 0, "2026-08-05") }) === null})`,
+  matchClock(resultFixtures[2]) === null &&
+  matchClock({ ...match("me", "MR", "A", "B", 1, 0, "2026-08-05") }) === null);
+ok(`the match page draws the fixture clock off the fold over the shared band labels (screen ${[
+  't("det.clock.title"', 't("det.clock.hint"', 't("det.clock.goals"', 't("det.clock.cards"',
+  "matchClock(m)", "pctOf(n, clockPeak)",
+].filter((k) => DETAILS_SRC.includes(k)).length}/6)`,
+  DETAILS_SRC.includes("matchClock(m)") && DETAILS_SRC.includes("pctOf(n, clockPeak)") &&
+  DETAILS_SRC.includes('t("det.clock.title"') && DETAILS_SRC.includes('t("det.clock.hint"') &&
+  DETAILS_SRC.includes('t("det.clock.goals"') && DETAILS_SRC.includes('t("det.clock.cards"') &&
+  DETAILS_SRC.includes('t("timing.w1"'));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

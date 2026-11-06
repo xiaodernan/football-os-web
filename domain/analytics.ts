@@ -1039,6 +1039,35 @@ export function clubDisciplineResultClock(compId: string, matches: Match[], club
   return list;
 }
 
+export interface MatchClock {
+  /** Goals in each window, index 0 = 1–15′, index 5 = 76–90+′. */
+  goals: number[];
+  /** Bookings (yellows plus reds) in each window. */
+  cards: number[];
+  /** The red cards of `cards`, same length and the same windows. */
+  reds: number[];
+}
+
+/** M953: one fixture's own clock — the same six windows the league folds read, read off the
+ *  match's recorded events. Null when the fixture has nothing to clock: not finished, or no
+ *  event list recorded. */
+export function matchClock(m: Match): MatchClock | null {
+  if (!isFinished(m) || !m.events?.length) return null;
+  const goals = Array.from({ length: GOAL_BANDS }, () => 0);
+  const cards = Array.from({ length: GOAL_BANDS }, () => 0);
+  const reds = Array.from({ length: GOAL_BANDS }, () => 0);
+  for (const e of m.events) {
+    if (e.type !== "GOAL" && e.type !== "YELLOW" && e.type !== "RED") continue;
+    const band = goalBand(e.minute);
+    if (e.type === "GOAL") goals[band]++;
+    else {
+      cards[band]++;
+      if (e.type === "RED") reds[band]++;
+    }
+  }
+  return { goals, cards, reds };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

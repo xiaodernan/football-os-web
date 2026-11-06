@@ -3216,9 +3216,10 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // "Head to head" with nav.headToHead) and grow the existing Club group — measured on the merged
 // dictionary below.
 // M944: the contrast board's 7 keys pay their toll (146 -> 147, 242 -> 243).
-const DUP_VALUES_PIN = 147;
+// M953: the match clock keys pay their toll (147 -> 148, 245 -> 247).
+const DUP_VALUES_PIN = 148;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
-const DUP_EXCESS_KEYS_PIN = 245;
+const DUP_EXCESS_KEYS_PIN = 247;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4528,7 +4529,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M951: the drawn board adds 3 literal sites (title, hint, word): 1920 -> 1924 (the farm's
   // own additions ride the same census).
   // M952: the drawn share's sentence adds 1 literal site: 1924 -> 1925.
-  shapeCounts.literal === 1925 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M953: the match page's clock adds 4 keys as sites and the lane rides the census: 1925 -> 1935.
+  shapeCounts.literal === 1935 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
