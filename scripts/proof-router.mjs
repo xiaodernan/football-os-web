@@ -79,7 +79,8 @@ const isFileAt = (p) => { try { return statSync(join(root, p)).isFile(); } catch
 const READER = reachableModulesIn(APP_ENTRIES, read, isFileAt);
 const APP_FILES = TREE_FILES.filter((f) => ROUTER_SCOPE.has(f.split("/")[0]) && READER.has(f));
 const UNREACHED_SCOPE = TREE_FILES.filter((f) => ROUTER_SCOPE.has(f.split("/")[0]) && !READER.has(f));
-const ROUTER_POP_PIN = 113;
+// M956: 113 -> 114 — the /leads screen joins the reader population.
+const ROUTER_POP_PIN = 114;
 ok(`the router census reads the reader's population, derived from the app's declared entries rather than from the walk alone (${APP_ENTRIES.length} entries [${APP_ENTRIES.join(", ")}], ${APP_FILES.length} reached in scope, ${UNREACHED_SCOPE.length} unreached in scope [${UNREACHED_SCOPE.join(", ") || "none"}])`,
   APP_ENTRIES.length === 2 && APP_ENTRIES.includes("src/main.tsx") && APP_ENTRIES.includes("functions/index.ts") &&
   APP_FILES.length === ROUTER_POP_PIN && UNREACHED_SCOPE.length === 1 && UNREACHED_SCOPE[0] === "src/vite-env.d.ts");

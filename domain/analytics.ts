@@ -8,6 +8,7 @@
 import type { Club, Match, Side } from "@/domain/types";
 import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
 import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally, maxBy, last, tally } from "./attributes";
+import { byMinute } from "./matchEngine";
 
 // The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
 // domain/attributes.ts (where the letter door and the points ladder live) and re-exported here
@@ -1150,7 +1151,7 @@ export function leadRetention(compId: string, matches: Match[], clubs: Club[]): 
   for (const m of matches) {
     if (m.competitionId !== compId || !isFinished(m) || !m.events?.length) continue;
     counted++;
-    const goals = m.events.filter((e) => e.type === "GOAL").slice().sort((a, b) => a.minute - b.minute);
+    const goals = m.events.filter((e) => e.type === "GOAL").slice().sort(byMinute);
     let home = 0; let away = 0; let homeLed = false; let awayLed = false;
     for (const g of goals) {
       if (g.side === "home") home++; else away++;
@@ -1163,12 +1164,15 @@ export function leadRetention(compId: string, matches: Match[], clubs: Club[]): 
     ];
     for (const [clubId, didLead, ours, theirs] of sides) {
       if (!didLead || !ranked.has(clubId)) continue;
+      // The replay settles the outcome in locals and the row is written once — the credit
+      // vocabulary stays in the door, the counters stay private to the replay.
+      const won = ours > theirs ? 1 : 0;
+      const drawn = ours === theirs ? 1 : 0;
+      const lost = ours < theirs ? 1 : 0;
+      const dropped = drawn * 2 + lost * 3;
       const row = rows.get(clubId)!;
-      row.led++;
-      ledTotal++;
-      if (ours > theirs) { row.won++; wonTotal++; }
-      else if (ours === theirs) { row.drawn++; drawnTotal++; row.dropped += 2; droppedTotal += 2; }
-      else { row.lost++; lostTotal++; row.dropped += 3; droppedTotal += 3; }
+      row.led += 1; row.won += won; row.drawn += drawn; row.lost += lost; row.dropped += dropped;
+      ledTotal++; wonTotal += won; drawnTotal += drawn; lostTotal += lost; droppedTotal += dropped;
     }
   }
   const list = [...rows.values()].filter((r) => r.led > 0);
@@ -1177,6 +1181,80 @@ export function leadRetention(compId: string, matches: Match[], clubs: Club[]): 
   return {
     rows: list, led: ledTotal, won: wonTotal, drawn: drawnTotal, lost: lostTotal, dropped: droppedTotal,
     keepShare: round2(safeDiv(wonTotal, ledTotal) * 100), matches: counted,
+  };
+}
+
+export interface ComebackRow {
+  clubId: string;
+  /** Finished fixtures with an event list in which this club was behind at any point. */
+  trailed: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  /** Points earned in the matches it trailed: three for a win, one for a draw. */
+  points: number;
+  /** Share of those matches that ended level or better, 0–100, 2dp; 0 when it never trailed. */
+  rescueShare: number;
+}
+
+export interface ComebackPoints {
+  /** Clubs that trailed at least once, the most points rescued first, then the most deficits. */
+  rows: ComebackRow[];
+  trailed: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  points: number;
+  /** League rescue share: (won + drawn) / trailed, 0–100, 2dp. */
+  rescueShare: number;
+  /** Finished fixtures with an event list that could be replayed. */
+  matches: number;
+}
+
+/** The other half of the lead ledger: what a deficit bought. The same replay as `leadRetention`,
+ *  read from the side that was behind — a club that came from 0-1 to win has rescued three points
+ *  from a losing position. A single fixture can charge both folds: a side that led, was pegged
+ *  back and then lost both held a lead and trailed in it, and both reads are true of it. */
+export function comebackPoints(compId: string, matches: Match[], clubs: Club[]): ComebackPoints {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const rows = new Map<string, ComebackRow>(
+    [...ranked].map((id) => [id, { clubId: id, trailed: 0, won: 0, drawn: 0, lost: 0, points: 0, rescueShare: 0 }]),
+  );
+  let counted = 0;
+  let trailedTotal = 0; let wonTotal = 0; let drawnTotal = 0; let lostTotal = 0; let pointsTotal = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m) || !m.events?.length) continue;
+    counted++;
+    const goals = m.events.filter((e) => e.type === "GOAL").slice().sort(byMinute);
+    let home = 0; let away = 0; let homeTrailed = false; let awayTrailed = false;
+    for (const g of goals) {
+      if (g.side === "home") home++; else away++;
+      if (home < away) homeTrailed = true;
+      else if (away < home) awayTrailed = true;
+    }
+    const sides: Array<[string, boolean, number, number]> = [
+      [m.homeClubId, homeTrailed, m.homeGoals, m.awayGoals],
+      [m.awayClubId, awayTrailed, m.awayGoals, m.homeGoals],
+    ];
+    for (const [clubId, didTrail, ours, theirs] of sides) {
+      if (!didTrail || !ranked.has(clubId)) continue;
+      // Single writer again: the rescue replay settles its outcome in locals, the row reads it.
+      const won = ours > theirs ? 1 : 0;
+      const drawn = ours === theirs ? 1 : 0;
+      const lost = ours < theirs ? 1 : 0;
+      const points = won * 3 + drawn;
+      const row = rows.get(clubId)!;
+      row.trailed += 1; row.won += won; row.drawn += drawn; row.lost += lost; row.points += points;
+      trailedTotal++; wonTotal += won; drawnTotal += drawn; lostTotal += lost; pointsTotal += points;
+    }
+  }
+  const list = [...rows.values()].filter((r) => r.trailed > 0);
+  for (const r of list) r.rescueShare = round2(safeDiv(r.won + r.drawn, r.trailed) * 100);
+  list.sort((a, b) => b.points - a.points || b.trailed - a.trailed || a.clubId.localeCompare(b.clubId));
+  return {
+    rows: list, trailed: trailedTotal, won: wonTotal, drawn: drawnTotal, lost: lostTotal,
+    points: pointsTotal, rescueShare: round2(safeDiv(wonTotal + drawnTotal, trailedTotal) * 100),
+    matches: counted,
   };
 }
 

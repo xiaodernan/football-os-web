@@ -213,6 +213,8 @@ const expectedUsers = [
   "features/analytics/Briefing.tsx", "features/analytics/DataRoom.tsx",
   "features/analytics/Discipline.tsx", "features/analytics/EventClock.tsx",
   "features/analytics/GoalTiming.tsx",
+  // M956: the lead board renders absent edges too.
+  "features/analytics/LeadRetention.tsx",
   "features/analytics/PointsScenario.tsx",
   "features/analytics/RunIn.tsx", "features/analytics/VenueSplit.tsx",
   "features/compare/ClubCompare.tsx", "features/dashboard/Dashboard.tsx",
@@ -236,6 +238,8 @@ const expectedPerUser = [
   // M948: the screen's growing family of denominator-less reads charges one more.
   ["features/analytics/EventClock.tsx", 6],
   ["features/analytics/GoalTiming.tsx", 4],
+  // M956: the lead board's absent edges read the door.
+  ["features/analytics/LeadRetention.tsx", 2],
   // M716: the scenarios screen asks the door twice more — a ceiling place with no row behind it
   // reads the glyph, and so does the climb tile's club when the table has no name for it. 5 -> 7.
   ["features/analytics/PointsScenario.tsx", 7],

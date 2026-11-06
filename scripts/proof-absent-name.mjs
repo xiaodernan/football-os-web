@@ -77,6 +77,8 @@ const FOLDED = [
   "data/footballService.ts", "data/intelligence.ts", "features/analytics/DataRoom.tsx",
   "features/analytics/Discipline.tsx",
   "features/analytics/GoalTiming.tsx",
+  // M956: the lead board's club names ride the door.
+  "features/analytics/LeadRetention.tsx",
   "features/analytics/RunIn.tsx",
   "features/football/Details.tsx", "features/football/FootballWorld.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/sim/SimulationLab.tsx",
@@ -130,7 +132,8 @@ ok(`every name fallback now reads the door, and the carrier set is exactly the f
 const foldedImport = FOLDED.map((f) => [f, n(raw[f], IMPORT_ABSENT)]);
 const importOk = foldedImport.every(([, c]) => c === 1);
 ok(`all ten folded files import the door exactly once, and no file outside the fold grew one (${foldedImport.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")})`,
-  importOk && foldedImport.length === 10);
+  // M956: the lead board joins the fold — eleven files, each importing the door once.
+  importOk && foldedImport.length === 11);
 
 // --- 6. The CONTROL LANE survived: a control value is still "", and the fold did not sweep it.
 // --- This is the clause that keeps the census honest in the other direction: a census that
@@ -142,7 +145,7 @@ ok(`all ten folded files import the door exactly once, and no file outside the f
 const controlByFile = carriers.map((f) => [f, n(raw[f], CONTROL_EMPTY) - n(raw[f], NAME_EMPTY)]).filter(([, c]) => c > 0).sort();
 const controlTotal = controlByFile.reduce((a, [, c]) => a + c, 0);
 ok(`the control lane survived the fold: an id default, a record field and a filter value still read "" (${controlTotal} sites over ${controlByFile.length} files [${controlByFile.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")}]; floor 15 sites / 12 files — the URL parameters left this lane at M409 for their own door)`,
-  controlTotal >= 15 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/analytics/GoalTiming.tsx" && f !== "features/analytics/Discipline.tsx" && f !== "features/analytics/RunIn.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx"));
+  controlTotal >= 15 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/analytics/GoalTiming.tsx" && f !== "features/analytics/Discipline.tsx" && f !== "features/analytics/RunIn.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx" && f !== "features/analytics/LeadRetention.tsx"));
 
 // --- 7. The marker is the ABSENCE DOOR's own glyph, not a new character and not a hole. ------
 // --- The lane's whole claim is that a missing name now reads the em dash. If the door's value

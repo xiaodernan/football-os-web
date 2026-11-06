@@ -3222,7 +3222,7 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M953: the match clock keys pay their toll (147 -> 148, 245 -> 247).
 const DUP_VALUES_PIN = 152;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
-const DUP_EXCESS_KEYS_PIN = 251;
+const DUP_EXCESS_KEYS_PIN = 252;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4534,7 +4534,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M952: the drawn share's sentence adds 1 literal site: 1924 -> 1925.
   // M953: the match page's clock adds 4 keys as sites and the lane rides the census: 1925 -> 1935.
   // M956: the lead board adds 20 literal sites: 1942 -> 1971 (the lane's scoring-first panel rides the same census).
-  shapeCounts.literal === 1971 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M957: the deficit board adds 8 literal sites: 1971 -> 1979.
+  shapeCounts.literal === 1979 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4607,7 +4608,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M948: the red-result line hands over w, d and l: 269 -> 270.
   // M952: the share sentence hands over n: 270 -> 271.
   // M956: the lead board hands over its variables at 8 sites: 272 -> 280.
-  litVarSites === 280 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M957: the deficit rows hand over their variables at 3 sites: 280 -> 283.
+  litVarSites === 283 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

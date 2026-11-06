@@ -122,7 +122,8 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M954: the event clock's venue panel measures 540 KB / 54 assets (JS 527 + CSS 12.5),
 // pin 539 -> 540, baseline re-recorded in the same commit.
 // M956: the lead board measures 543 KB / 55 assets (JS 530 + CSS 12.5), pin 540 -> 543.
-const BUDGET_KB = 543;
+// M957: the deficit board measures 544 KB / 55 assets (JS 531 + CSS 12.5), pin 543 -> 544.
+const BUDGET_KB = 544;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

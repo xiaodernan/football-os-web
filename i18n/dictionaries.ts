@@ -2725,12 +2725,20 @@ const en: Dict = {
   "leads.none": "No lead dropped",
   "leads.boardTitle": "Every club's leads",
   "leads.boardHint": "Sorted by the points a lead cost; the bar is the share of leads held to a win.",
-  "leads.rowLine": "won {w} · drawn {d} · lost {l}",
+  "leads.rowLine": "held {w} · drew {d} · lost {l}",
   "leads.colLed": "Led",
   "leads.colDropped": "Dropped",
   "leads.colKeep": "{n}% kept",
   "leads.method": "Read from {n} finished fixtures that carry an event list; a fixture without one cannot be replayed and contributes nothing.",
   "nav.leads": "Leads kept",
+  "leads.comebackTitle": "Deficits rescued",
+  "leads.comebackHint": "The same replay read from the side that was behind: points taken from a losing position.",
+  "leads.comebackColTrailed": "Trailed",
+  "leads.comebackColPoints": "Points",
+  "leads.comebackRowLine": "won {w} · drawn {d} · lost {l}",
+  "leads.comebackBar": "{n}% rescued",
+  "leads.comebackNone": "No deficit was rescued.",
+  "leads.comebackMethod": "Read from {n} replayed fixtures; {p} points came from losing positions. A club that led and lost appears here as well as on the board above.",
 };
 
 const zhCN: Dict = {
@@ -5350,6 +5358,14 @@ const zhCN: Dict = {
   "leads.colKeep": "守住 {n}%",
   "leads.method": "读取 {n} 场带事件记录的已结束比赛；没有事件记录的比赛无法重放，不计入。",
   "nav.leads": "领先保持",
+  "leads.comebackTitle": "逆转拿分",
+  "leads.comebackHint": "同一遍重放，从落后的一方读：从落后局面里拿到的积分。",
+  "leads.comebackColTrailed": "落后",
+  "leads.comebackColPoints": "积分",
+  "leads.comebackRowLine": "胜 {w} · 平 {d} · 负 {l}",
+  "leads.comebackBar": "逆转 {n}%",
+  "leads.comebackNone": "没有从落后中拿分。",
+  "leads.comebackMethod": "读取 {n} 场重放的比赛；其中 {p} 分来自落后局面。领先过又输掉的球队会同时出现在上面那张榜。",
 };
 
 const zhTW: Dict = {
@@ -7974,6 +7990,14 @@ const zhTW: Dict = {
   "leads.colKeep": "守住 {n}%",
   "leads.method": "讀取 {n} 場帶事件記錄的已結束比賽；沒有事件記錄的比賽無法重放，不計入。",
   "nav.leads": "領先保持",
+  "leads.comebackTitle": "逆轉拿分",
+  "leads.comebackHint": "同一遍重放，從落後的一方讀：從落後局面裡拿到的積分。",
+  "leads.comebackColTrailed": "落後",
+  "leads.comebackColPoints": "積分",
+  "leads.comebackRowLine": "勝 {w} · 平 {d} · 負 {l}",
+  "leads.comebackBar": "逆轉 {n}%",
+  "leads.comebackNone": "沒有從落後中拿分。",
+  "leads.comebackMethod": "讀取 {n} 場重放的比賽；其中 {p} 分來自落後局面。領先過又輸掉的球隊會同時出現在上面那張榜。",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {
