@@ -56,6 +56,7 @@ const GoalTiming = lazy(() => import("@/features/analytics/GoalTiming").then((m)
 const Discipline = lazy(() => import("@/features/analytics/Discipline").then((m) => ({ default: m.Discipline })));
 const EventClock = lazy(() => import("@/features/analytics/EventClock").then((m) => ({ default: m.EventClock })));
 const LeadRetention = lazy(() => import("@/features/analytics/LeadRetention").then((m) => ({ default: m.LeadRetention })));
+const Streaks = lazy(() => import("@/features/analytics/Streaks").then((m) => ({ default: m.Streaks })));
 const Briefing = lazy(() => import("@/features/analytics/Briefing").then((m) => ({ default: m.Briefing })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
@@ -146,6 +147,7 @@ function Routes() {
   else if (path === "/discipline") inner = <Discipline />;
   else if (path === "/clock") inner = <EventClock />;
   else if (path === "/leads") inner = <LeadRetention />;
+  else if (path === "/streaks") inner = <Streaks />;
   else if (path === "/briefing") inner = <Briefing />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;

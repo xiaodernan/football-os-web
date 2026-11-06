@@ -1345,6 +1345,72 @@ export function collapses(compId: string, matches: Match[], clubs: Club[]): Coll
   return { rows, count: rows.length, biggest, matches: counted };
 }
 
+export interface StreakRow {
+  clubId: string;
+  /** The longest run of wins this club put together in the competition. */
+  longestWin: number;
+  /** The longest run without defeat — wins and draws, broken only by a loss. */
+  longestUnbeaten: number;
+  /** The run it is on now: wins in a row, 0 when its last match was not a win. */
+  currentWin: number;
+  /** Matches since it last lost; 0 when its last match was a loss. */
+  currentUnbeaten: number;
+  played: number;
+}
+
+export interface Streaks {
+  /** Every ranked club, the longest unbeaten run first, then the longest winning run. */
+  rows: StreakRow[];
+  /** The league's best runs (0 when nothing has been played). */
+  longestWin: number;
+  longestUnbeaten: number;
+  /** The club holding each best run; the first in board order when two are tied. */
+  winHolder: string | null;
+  unbeatenHolder: string | null;
+  /** Finished fixtures read. */
+  matches: number;
+}
+
+/** Runs, not averages: every finished fixture in the competition, ordered by kickoff for each club,
+ *  walked once to find the longest winning and unbeaten runs it has put together and the run it is
+ *  on now. Form letters read the last five results; this reads the shape of the whole season, and
+ *  it needs no event list — a final score is enough. */
+export function streaks(compId: string, matches: Match[], clubs: Club[]): Streaks {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const byClub = new Map<string, Array<{ kickoff: string; gf: number; ga: number }>>(
+    [...ranked].map((id) => [id, []]),
+  );
+  let counted = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    counted++;
+    byClub.get(m.homeClubId)?.push({ kickoff: m.kickoff, gf: m.homeGoals, ga: m.awayGoals });
+    byClub.get(m.awayClubId)?.push({ kickoff: m.kickoff, gf: m.awayGoals, ga: m.homeGoals });
+  }
+  const rows: StreakRow[] = [];
+  for (const [clubId, list] of byClub) {
+    list.sort((x, y) => x.kickoff.localeCompare(y.kickoff));
+    let win = 0; let unbeaten = 0; let bestWin = 0; let bestUnbeaten = 0;
+    for (const r of list) {
+      if (r.gf > r.ga) { win++; unbeaten++; }
+      else if (r.gf === r.ga) { win = 0; unbeaten++; }
+      else { win = 0; unbeaten = 0; }
+      if (win > bestWin) bestWin = win;
+      if (unbeaten > bestUnbeaten) bestUnbeaten = unbeaten;
+    }
+    rows.push({ clubId, longestWin: bestWin, longestUnbeaten: bestUnbeaten, currentWin: win, currentUnbeaten: unbeaten, played: list.length });
+  }
+  rows.sort((x, y) => y.longestUnbeaten - x.longestUnbeaten || y.longestWin - x.longestWin || x.clubId.localeCompare(y.clubId));
+  const longestWin = rows.length ? Math.max(...rows.map((r) => r.longestWin)) : 0;
+  const longestUnbeaten = rows.length ? Math.max(...rows.map((r) => r.longestUnbeaten)) : 0;
+  return {
+    rows, longestWin, longestUnbeaten,
+    winHolder: longestWin > 0 ? (rows.find((r) => r.longestWin === longestWin)?.clubId ?? null) : null,
+    unbeatenHolder: longestUnbeaten > 0 ? (rows.find((r) => r.longestUnbeaten === longestUnbeaten)?.clubId ?? null) : null,
+    matches: counted,
+  };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

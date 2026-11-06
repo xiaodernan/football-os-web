@@ -1,9 +1,9 @@
 {
   "build": {
     "recordedAt": "2026-11-06",
-    "totalGzipKB": 545,
-    "jsGzipKB": 532,
+    "totalGzipKB": 547,
+    "jsGzipKB": 535,
     "cssGzipKB": 12,
-    "fileCount": 55
+    "fileCount": 56
   }
 }

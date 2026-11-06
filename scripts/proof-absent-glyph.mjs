@@ -216,7 +216,9 @@ const expectedUsers = [
   // M956: the lead board renders absent edges too.
   "features/analytics/LeadRetention.tsx",
   "features/analytics/PointsScenario.tsx",
-  "features/analytics/RunIn.tsx", "features/analytics/VenueSplit.tsx",
+  "features/analytics/RunIn.tsx",
+  // M962: the runs screen falls back to the door on its three holder tiles.
+  "features/analytics/Streaks.tsx", "features/analytics/VenueSplit.tsx",
   "features/compare/ClubCompare.tsx", "features/dashboard/Dashboard.tsx",
   "features/film/FilmRoom.tsx", "features/football/Details.tsx",
   "features/football/FootballWorld.tsx", "features/load/LoadPage.tsx",
@@ -244,6 +246,8 @@ const expectedPerUser = [
   // reads the glyph, and so does the climb tile's club when the table has no name for it. 5 -> 7.
   ["features/analytics/PointsScenario.tsx", 7],
   ["features/analytics/RunIn.tsx", 5],
+  // M962: the runs screen reads the door on its three holder tiles (each with a fallback arm).
+  ["features/analytics/Streaks.tsx", 5],
   // M950: the venue table's roughness cell declines to print a club with no bookings.
   ["features/analytics/VenueSplit.tsx", 16],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],

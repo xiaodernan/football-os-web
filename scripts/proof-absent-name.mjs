@@ -80,6 +80,8 @@ const FOLDED = [
   // M956: the lead board's club names ride the door.
   "features/analytics/LeadRetention.tsx",
   "features/analytics/RunIn.tsx",
+  // M962: the runs screen names each club and falls back to the door.
+  "features/analytics/Streaks.tsx",
   "features/football/Details.tsx", "features/football/FootballWorld.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/sim/SimulationLab.tsx",
 ];
@@ -131,9 +133,10 @@ ok(`every name fallback now reads the door, and the carrier set is exactly the f
 // --- import line, or imported a DIFFERENT door's name, would compile and still be wrong. ------
 const foldedImport = FOLDED.map((f) => [f, n(raw[f], IMPORT_ABSENT)]);
 const importOk = foldedImport.every(([, c]) => c === 1);
-ok(`all ten folded files import the door exactly once, and no file outside the fold grew one (${foldedImport.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")})`,
+ok(`all twelve folded files import the door exactly once, and no file outside the fold grew one (${foldedImport.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")})`,
   // M956: the lead board joins the fold — eleven files, each importing the door once.
-  importOk && foldedImport.length === 11);
+  // M962: the runs screen makes it twelve.
+  importOk && foldedImport.length === 12);
 
 // --- 6. The CONTROL LANE survived: a control value is still "", and the fold did not sweep it.
 // --- This is the clause that keeps the census honest in the other direction: a census that
@@ -145,7 +148,7 @@ ok(`all ten folded files import the door exactly once, and no file outside the f
 const controlByFile = carriers.map((f) => [f, n(raw[f], CONTROL_EMPTY) - n(raw[f], NAME_EMPTY)]).filter(([, c]) => c > 0).sort();
 const controlTotal = controlByFile.reduce((a, [, c]) => a + c, 0);
 ok(`the control lane survived the fold: an id default, a record field and a filter value still read "" (${controlTotal} sites over ${controlByFile.length} files [${controlByFile.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")}]; floor 15 sites / 12 files — the URL parameters left this lane at M409 for their own door)`,
-  controlTotal >= 15 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/analytics/GoalTiming.tsx" && f !== "features/analytics/Discipline.tsx" && f !== "features/analytics/RunIn.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx" && f !== "features/analytics/LeadRetention.tsx"));
+  controlTotal >= 15 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/analytics/GoalTiming.tsx" && f !== "features/analytics/Discipline.tsx" && f !== "features/analytics/RunIn.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx" && f !== "features/analytics/LeadRetention.tsx" && f !== "features/analytics/Streaks.tsx"));
 
 // --- 7. The marker is the ABSENCE DOOR's own glyph, not a new character and not a hole. ------
 // --- The lane's whole claim is that a missing name now reads the em dash. If the door's value
@@ -232,7 +235,8 @@ const routedProps = laneProps.filter(([, v]) => CODE_VARS.includes(v) || KEY_VAR
 const pRouted = CODE_VARS.includes("group") ? 1 : 0;
 const laneTotal = laneVars.length + laneProps.length;
 ok(`every name-lane var is PLAIN, so the marker prints itself instead of being routed through a translator (${laneTotal} sites over ${FOLDED.length} files: ${laneVars.length} in a vars object + ${laneProps.length} as a JSX prop [${laneProps.map(([, p]) => p).join(",")}]; routed vars ${routedVars.length} [${routedVars.map(([, v]) => v).join(",")}], routed props ${routedProps.length}; the plant reads ${pRouted} on a var name that IS in the code set)`,
-  laneTotal === 32 && laneVars.length === 26 && laneProps.length === 6 &&
+  // M962: the runs screen adds three vars objects (its three holder tiles): 32 -> 35, 26 -> 29.
+  laneTotal === 35 && laneVars.length === 29 && laneProps.length === 6 &&
   routedVars.length === 0 && routedProps.length === 0 && pRouted === 1);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
