@@ -827,6 +827,8 @@
 ⑬ 节律的时间稳定性（同队跨赛季的节律漂移——world 引擎推进后的对比，两折叠都可复算）；
 ⑭ 清扫 lane 周期性产物（农场活跃，隔离线保持值勤：跑 unused-locals 程序普查即测）。
 
+- M952（本地，待推送）: 造牌分解（候选⑫）— drawners 板每行加 drawnShare（该队比赛中对手所吃牌占全部牌的份额，safeDiv 门，U 40 / V 50 / W 66.67 手工计数）；行同时保留造牌词与份额句；proof-analytics 2 条新证词 233→235；1 个新键×3；census literal 1,925、litVarSites 271。
+
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
 ⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，安全除法门同口径）；

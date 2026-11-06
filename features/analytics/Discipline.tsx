@@ -449,7 +449,7 @@ export function Discipline() {
                       </div>
                       <div className="text-right tabular-nums">
                         {r.drawn}
-                        <div className="text-xs text-muted-foreground">{t("disc.drawnWord")}</div>
+                        <div className="text-xs text-muted-foreground">{t("disc.drawnWord")} · {t("disc.drawnShare", { n: fmt2(r.drawnShare) })}</div>
                       </div>
                     </li>
                   );

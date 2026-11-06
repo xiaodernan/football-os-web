@@ -1585,6 +1585,17 @@ ok(`the discipline screen draws the drawn board off the fold (screen ${[
   DISC_SRC.includes("clock.drawners.map(") && DISC_SRC.includes('t("disc.drawnTitle"') &&
   DISC_SRC.includes('t("disc.drawnHint"') && DISC_SRC.includes('t("disc.drawnWord"') &&
   !/\.sort\(/.test(DISC_SRC));
+// --- M952: the drawn share — what fraction of a club's bookings the opponents earned ------------
+// TE: U drew 2 of the 5 bookings its own fixtures saw (40.00); V and W each drew half of four
+// (50.00). The door floors the denominator, and a club with no bookings in its fixtures has no
+// share to read — but every club on the drawn board has at least one, so the board never prints
+// an empty one.
+const shares = cardTiming("TE", cardFixtures, cardClubs);
+const shareBy = Object.fromEntries(shares.drawners.map((r) => [r.clubId, r]));
+ok(`the drawn share reads the opponents' fraction of each club's own bookings (U ${shareBy.U.drawnShare} on drawn ${shareBy.U.drawn} against cards ${Object.fromEntries(shares.rows.map((r) => [r.clubId, r])).U.cards}; V ${shareBy.V.drawnShare}; W ${shareBy.W.drawnShare})`,
+  shareBy.U.drawnShare === 40 && shareBy.V.drawnShare === 50 && shareBy.W.drawnShare === 66.67);
+ok(`the drawn board prints the share beside the count (screen ${['t("disc.drawnShare"', "fmt2(r.drawnShare)"].filter((k) => DISC_SRC.includes(k)).length}/2)`,
+  DISC_SRC.includes('t("disc.drawnShare"') && DISC_SRC.includes("fmt2(r.drawnShare)"));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

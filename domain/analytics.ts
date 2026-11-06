@@ -569,6 +569,11 @@ export interface CardTimingRow {
 export interface CardDrawnRow {
   clubId: string;
   drawn: number;
+  /** M952: the drawn share — of every booking in this club's own fixtures, the fraction the
+   *  opponents earned, 0–100, 2dp through the safeDiv door. Fifty reads a club whose matches
+   *  split evenly between its own indiscipline and its opponents'; above reads a side that
+   *  makes the other team's discipline the problem. */
+  drawnShare: number;
 }
 
 export interface CardRedRow {
@@ -748,7 +753,11 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
   for (const r of list) r.drawn = drawnMap.get(r.clubId) ?? 0;
   const drawners: CardDrawnRow[] = list
     .filter((r) => r.drawn > 0)
-    .map((r) => ({ clubId: r.clubId, drawn: r.drawn }))
+    .map((r) => ({
+      clubId: r.clubId,
+      drawn: r.drawn,
+      drawnShare: round2(safeDiv(r.drawn, r.cards + r.drawn) * 100),
+    }))
     .sort((a, b) => b.drawn - a.drawn || a.clubId.localeCompare(b.clubId));
   return {
     rows: list,
