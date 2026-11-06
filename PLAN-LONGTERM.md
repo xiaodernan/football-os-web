@@ -829,7 +829,7 @@
 
 - b25c143 M952: 造牌分解（候选⑫）— drawners 板每行加 drawnShare（该队比赛中对手所吃牌占全部牌的份额，safeDiv 门，U 40 / V 50 / W 66.67 手工计数）；行同时保留造牌词与份额句；proof-analytics 2 条新证词 233→235；1 个新键×3；census literal 1,925、litVarSites 271。
 
-- M953（本地，待推送）: 单场时钟（候选⑬改向）— matchClock 单场折叠（GOAL/YELLOW/RED 六窗序列，未完场或无事件返回 null）；比赛页时间线下新增分窗面板（进球/吃牌两行共享 timing 标签）；proof-analytics 3 条新证词 235→238（MR 手工计数、未完场/无事件两臂、屏幕读取）；4 个新键×3；census literal 1,935、dup 棘轮 148/247；Details 中点恰好落进 M629 双行 JSX 注释的开口行触发盲区门——注释并为单行（永不跨行）诚实修复。
+- 52bde0f M953: 单场时钟（候选⑬改向）— matchClock 单场折叠（GOAL/YELLOW/RED 六窗序列，未完场或无事件返回 null）；比赛页时间线下新增分窗面板（进球/吃牌两行共享 timing 标签）；proof-analytics 3 条新证词 235→238（MR 手工计数、未完场/无事件两臂、屏幕读取）；4 个新键×3；census literal 1,935、dup 棘轮 148/247；Details 中点恰好落进 M629 双行 JSX 注释的开口行触发盲区门——注释并为单行（永不跨行）诚实修复。
 
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
