@@ -15,13 +15,17 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"]],
   use: {
-    baseURL: "http://127.0.0.1:5173",
+    baseURL: "http://127.0.0.1:5199",
+    // The suite's anchors are the English dictionary's words; a browser whose own language
+    // the i18n detection would follow gets pinned here, so the spec reads the same app in
+    // every environment.
+    locale: "en-US",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
   webServer: {
     command: "npm run dev",
-    url: "http://127.0.0.1:5173",
+    url: "http://127.0.0.1:5199",
     reuseExistingServer: true,
     timeout: 90_000,
   },
