@@ -819,6 +819,8 @@
 
 - 34523f2 M949: 节律可信度（候选⑨）— clubRhythm 每行加 sampled（cards >= 3，阈值字面量写在折叠内一处，thresholds 声明同步 5→6）；屏幕在样本不足的比值旁印“样本不足”（clock.rhythmThin ×3），一片牌的 2.00 不再伪装成稳定比率；proof-analytics 2 条新证词 228→230（MR 一牌 thin、TE 三牌 settled、TG 全 thin、屏幕读取）；census literal 1,919。
 
+- M950（本地，待推送）: 主客桌牌率并排（候选⑩）— VenueSplit 各队行新增“牌率 主/客”列，联结 disciplineVenue 既有折叠（两屏共享同一数字），正差着色；无需新折叠（两折叠按 clubId 在屏上联结，同 Details 的先例）；1 个新键×3；proof-analytics 1 条屏幕证词 230→231；census literal 1,920、absent-glyph VenueSplit 16 + JSX 门文件表、quantities gap 拆分声明。
+
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
 ⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，安全除法门同口径）；

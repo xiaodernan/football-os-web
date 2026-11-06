@@ -239,7 +239,9 @@ const expectedPerUser = [
   // M716: the scenarios screen asks the door twice more — a ceiling place with no row behind it
   // reads the glyph, and so does the climb tile's club when the table has no name for it. 5 -> 7.
   ["features/analytics/PointsScenario.tsx", 7],
-  ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 15],
+  ["features/analytics/RunIn.tsx", 5],
+  // M950: the venue table's roughness cell declines to print a club with no bookings.
+  ["features/analytics/VenueSplit.tsx", 16],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],
   ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],
@@ -286,7 +288,8 @@ const reconciles = doorBody + dataValueTotal + residueTotal === totalStandalone;
 const jsxDoorTotal = carriers.reduce((a, f) => a + n(code[f], JSX_DOOR), 0);
 const jsxDoorFiles = carriers.filter((f) => n(code[f], JSX_DOOR) > 0).sort();
 const expectedJsxDoorFiles = [
-  "features/analytics/DataRoom.tsx", "features/football/Details.tsx",
+  "features/analytics/DataRoom.tsx", "features/analytics/VenueSplit.tsx",
+  "features/football/Details.tsx",
   "features/onboarding/Onboarding.tsx", "features/scouting/ScoutingPanel.tsx",
 ].sort().join(",");
 const pJsxDoor = n('<span className="muted">{ABSENT}</span>', JSX_DOOR);

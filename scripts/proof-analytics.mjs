@@ -1553,6 +1553,17 @@ ok(`the rhythm names its own sample: one booking is thin, three are settled, non
   clubRhythm("TG", cardFixtures, cardClubs).rows.every((r) => !r.sampled));
 ok(`the event clock screen prints the thin word beside a ratio its sample cannot settle (screen ${['t("clock.rhythmThin"', "!r.sampled && r.cards > 0"].filter((k) => CLOCK_SRC.includes(k)).length}/2)`,
   CLOCK_SRC.includes("!r.sampled && r.cards > 0") && CLOCK_SRC.includes('t("clock.rhythmThin"'));
+// --- M950: the venue table's roughness column --------------------------------------------------
+// The venue screen's table joins the discipline venue fold by club id, so a club's bookings per
+// game read the same on both screens. One fold, one number, two readers.
+ok(`the venue table draws each club's card rates off the discipline venue fold, the gap signed (screen ${[
+  "disciplineVenue(compId, matches, clubs)", "cardBy.get(r.clubId)", "fmt2(cv.homePerMatch)",
+  't("venue.colCardRate"', "DELTA_CLASS[deltaSign(cv.gap)]",
+].filter((k) => VENUE_SRC.includes(k)).length}/5)`,
+  VENUE_SRC.includes("disciplineVenue(compId, matches, clubs)") && VENUE_SRC.includes("cardBy.get(r.clubId)") &&
+  VENUE_SRC.includes("fmt2(cv.homePerMatch)") && VENUE_SRC.includes("fmt2(cv.awayPerMatch)") &&
+  VENUE_SRC.includes('t("venue.colCardRate"') && VENUE_SRC.includes("DELTA_CLASS[deltaSign(cv.gap)]") &&
+  !/\.sort\(/.test(VENUE_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

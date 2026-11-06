@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, DELTA_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { eventVenueClock, goalVenueClock, venueRhythm, venueSplit } from "@/domain/analytics";
+import { disciplineVenue, eventVenueClock, goalVenueClock, venueRhythm, venueSplit } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctLabel, pctOf, signed } from "@/lib/utils";
 
@@ -30,6 +30,11 @@ export function VenueSplit() {
   // M948: the venue rhythm — each end's goals per card, window for window, joined off the
   // goal clock and the card clock this screen already draws.
   const rhythm = useMemo(() => venueRhythm(compId, matches, clubs), [compId, matches, clubs]);
+  // M950: the table's roughness read — each club's bookings per game at each end, joined off
+  // the discipline venue fold the discipline screen already draws, so one club's card rates
+  // cannot disagree between the two screens.
+  const venueCards = useMemo(() => disciplineVenue(compId, matches, clubs), [compId, matches, clubs]);
+  const cardBy = useMemo(() => new Map(venueCards.rows.map((row) => [row.clubId, row])), [venueCards]);
   const evPeak = Math.max(
     1, ...evClock.homeShotsWindows, ...evClock.awayShotsWindows,
     ...evClock.homeSavesWindows, ...evClock.awaySavesWindows,
@@ -122,12 +127,13 @@ export function VenueSplit() {
               </div>
             </div>
 
-            <div className="hidden grid-cols-[1.5rem_1fr_6.5rem_6.5rem_4.5rem] gap-2 border-b pb-1 text-[11px] uppercase tracking-wide text-muted-foreground sm:grid">
+            <div className="hidden grid-cols-[1.5rem_1fr_6.5rem_6.5rem_4.5rem_5.5rem] gap-2 border-b pb-1 text-[11px] uppercase tracking-wide text-muted-foreground sm:grid">
               <span>#</span>
               <span>{t("venue.colClub")}</span>
               <span className="text-right">{t("venue.colHome")}</span>
               <span className="text-right">{t("venue.colAway")}</span>
               <span className="text-right">{t("venue.colEdge")}</span>
+              <span className="text-right">{t("venue.colCardRate")}</span>
             </div>
 
             <ul className="mt-1 space-y-1">
@@ -136,7 +142,7 @@ export function VenueSplit() {
                 return (
                   <li
                     key={r.clubId}
-                    className="grid grid-cols-[1.5rem_1fr_auto] items-center gap-2 rounded-lg border px-3 py-2 text-sm sm:grid-cols-[1.5rem_1fr_6.5rem_6.5rem_4.5rem]"
+                    className="grid grid-cols-[1.5rem_1fr_auto] items-center gap-2 rounded-lg border px-3 py-2 text-sm sm:grid-cols-[1.5rem_1fr_6.5rem_6.5rem_4.5rem_5.5rem]"
                   >
                     <div className="tabular-nums text-muted-foreground">{i + 1}</div>
                     <div className="flex min-w-0 items-center gap-2">
@@ -179,6 +185,18 @@ export function VenueSplit() {
                       )}
                     >
                       {signed(r.homeEdge)}
+                    </div>
+                    <div className="hidden text-right tabular-nums sm:block">
+                      {(() => {
+                        const cv = cardBy.get(r.clubId);
+                        if (!cv || cv.playedHome + cv.playedAway === 0) return <span className="text-xs text-muted-foreground">{ABSENT}</span>;
+                        return (
+                          <>
+                            <div className="text-xs">{fmt2(cv.homePerMatch)} / {fmt2(cv.awayPerMatch)}</div>
+                            <div className={cn("text-[10px] font-mono", DELTA_CLASS[deltaSign(cv.gap)])}>{signed(cv.gap)}</div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </li>
                 );

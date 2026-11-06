@@ -32,6 +32,7 @@ const SPLITS = {
   scanTrend: "a raw sign that follows the number (signed) beside the padded fixed-two-decimal cell (signed2)",
   skill: "a fraction shown as a decimal (fmt2) beside the same scale as a percentage (pct)",
   homeEdge: "the venue edge inside a translated sentence (fmt2) beside the signed table cell (signed) -- the sentence names who holds the bigger half, the cell says by how much",
+  gap: "a club's away-minus-home card rate as a labelled cell (fmt2) beside the signed edge on the venue table (signed)",
   marketGrowth: "the run's market movement as a bare integer inside an evidence row (pct) beside the labelled tile (pctLabel)",
 };
 
