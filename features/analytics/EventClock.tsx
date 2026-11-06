@@ -194,6 +194,9 @@ export function EventClock() {
                     </div>
                     <div className="text-right font-mono text-sm tabular-nums">
                       {r.cards === 0 ? ABSENT : fmt2(r.goalsPerCard)}
+                      {!r.sampled && r.cards > 0 && (
+                        <div className="text-[10px] font-normal text-muted-foreground">{t("clock.rhythmThin")}</div>
+                      )}
                     </div>
                   </li>
                 );

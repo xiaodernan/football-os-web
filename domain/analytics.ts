@@ -830,6 +830,10 @@ export interface ClubRhythmRow {
   clubId: string;
   goals: number;
   cards: number;
+  /** M949: whether the ratio rests on at least three bookings. One card making a 2.00 is a
+   *  real reading of one card, not a stable rate — the fold names the sample so the screen
+   *  can say so instead of letting a thin figure dress as a settled one. */
+  sampled: boolean;
   /** Season goals per card through the safeDiv door — the floor's own figure when the club
    *  booked nobody, which the screen declines to print rather than state a ratio that has
    *  no denominator. */
@@ -854,7 +858,7 @@ export function clubRhythm(compId: string, matches: Match[], clubs: Club[]): Clu
   const cards = new Map(cardTiming(compId, matches, clubs).rows.map((r) => [r.clubId, r.cards]));
   const rows: ClubRhythmRow[] = [...goals.entries()].map(([clubId, g]) => {
     const c = cards.get(clubId) ?? 0;
-    return { clubId, goals: g, cards: c, goalsPerCard: safeDiv(g, c) };
+    return { clubId, goals: g, cards: c, goalsPerCard: safeDiv(g, c), sampled: c >= 3 };
   });
   rows.sort((a, b) => {
     if ((a.cards > 0) !== (b.cards > 0)) return a.cards > 0 ? -1 : 1;

@@ -4523,7 +4523,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M950: the club result panel adds six literal sites and three placeholder rows: 1901 -> 1914.
   // M948: the venue rhythm (7) and the red-result board (4) literal sites: 1914 -> 1918... the
   // farm's own red-result keys ride the same census; measured 1918.
-  shapeCounts.literal === 1918 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M949: the thin-sample word adds 1 literal site: 1918 -> 1919.
+  shapeCounts.literal === 1919 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
