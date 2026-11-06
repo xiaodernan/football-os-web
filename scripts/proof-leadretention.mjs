@@ -91,6 +91,20 @@ ok(`comebackPoints ranks the rescued points first, then the goal difference thos
   lead.G.led === 1 && comeback.G.trailed === 1 && comeback.G.points === 0 &&
   comeback.G.gf === 1 && comeback.G.ga === 3 &&
   JSON.stringify(comebacks) === JSON.stringify(comebackPoints("T12", leadFixtures, leadClubs)));
+// M960: the same split for the deficit board. E and G trailed at home and rescued nothing; B, D, H
+// and J trailed away, and only D (a draw) and H (a win) took anything from it.
+const homeTrailed = comebacks.rows.reduce((s, r) => s + r.homeTrailed, 0);
+const homePoints = comebacks.rows.reduce((s, r) => s + r.homePoints, 0);
+const awayTrailed = comebacks.rows.reduce((s, r) => s + r.awayTrailed, 0);
+const awayPoints = comebacks.rows.reduce((s, r) => s + r.awayPoints, 0);
+ok(`comebackPoints splits each deficit by the end it was trailed at (home ${homeTrailed} trailed / ${homePoints} pts, away ${awayTrailed} / ${awayPoints}; E ${comeback.E.homeTrailed}/${comeback.E.homePoints}, G ${comeback.G.homeTrailed}/${comeback.G.homePoints}, H ${comeback.H.awayTrailed}/${comeback.H.awayPoints}, D ${comeback.D.awayTrailed}/${comeback.D.awayPoints})`,
+  homeTrailed === 2 && homePoints === 0 && awayTrailed === 4 && awayPoints === 4 &&
+  homeTrailed + awayTrailed === comebacks.trailed && homePoints + awayPoints === comebacks.points &&
+  comeback.E.homeTrailed === 1 && comeback.E.homePoints === 0 &&
+  comeback.G.homeTrailed === 1 && comeback.G.homePoints === 0 &&
+  comeback.H.awayTrailed === 1 && comeback.H.awayPoints === 3 &&
+  comeback.D.awayTrailed === 1 && comeback.D.awayPoints === 1 &&
+  comeback.B.awayTrailed === 1 && comeback.B.awayPoints === 0);
 
 // The screen is a reader, not a second engine: it must render the folded board, and the route must
 // exist for the sidebar entry that names it.

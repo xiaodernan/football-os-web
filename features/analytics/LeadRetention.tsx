@@ -154,6 +154,9 @@ export function LeadRetention() {
                             <div className="text-xs text-muted-foreground">
                               {t("leads.comebackRowLine", { w: r.won, d: r.drawn, l: r.lost })}
                             </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {t("leads.comebackHomeLine", { hp: r.homePoints, ht: r.homeTrailed, ap: r.awayPoints, at: r.awayTrailed })}
+                            </div>
                           </div>
                         </div>
                         <div className="text-right tabular-nums">

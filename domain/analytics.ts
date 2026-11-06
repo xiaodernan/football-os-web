@@ -1207,6 +1207,12 @@ export interface ComebackRow {
   ga: number;
   /** Share of those matches that ended level or better, 0–100, 2dp; 0 when it never trailed. */
   rescueShare: number;
+  /** M960: the same count split by the end the club played at — deficits trailed and points
+   *  rescued at home, and the same two away. */
+  homeTrailed: number;
+  homePoints: number;
+  awayTrailed: number;
+  awayPoints: number;
 }
 
 export interface ComebackPoints {
@@ -1230,7 +1236,7 @@ export interface ComebackPoints {
 export function comebackPoints(compId: string, matches: Match[], clubs: Club[]): ComebackPoints {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
   const rows = new Map<string, ComebackRow>(
-    [...ranked].map((id) => [id, { clubId: id, trailed: 0, won: 0, drawn: 0, lost: 0, points: 0, rescueShare: 0, gf: 0, ga: 0 }]),
+    [...ranked].map((id) => [id, { clubId: id, trailed: 0, won: 0, drawn: 0, lost: 0, points: 0, rescueShare: 0, gf: 0, ga: 0, homeTrailed: 0, homePoints: 0, awayTrailed: 0, awayPoints: 0 }]),
   );
   let counted = 0;
   let trailedTotal = 0; let wonTotal = 0; let drawnTotal = 0; let lostTotal = 0; let pointsTotal = 0;
@@ -1257,6 +1263,8 @@ export function comebackPoints(compId: string, matches: Match[], clubs: Club[]):
       const points = won * 3 + drawn;
       const row = rows.get(clubId)!;
       row.trailed += 1; row.won += won; row.drawn += drawn; row.lost += lost; row.points += points;
+      if (clubId === m.homeClubId) { row.homeTrailed += 1; row.homePoints += points; }
+      else { row.awayTrailed += 1; row.awayPoints += points; }
       row.gf += ours; row.ga += theirs;
       trailedTotal++; wonTotal += won; drawnTotal += drawn; lostTotal += lost; pointsTotal += points;
     }
