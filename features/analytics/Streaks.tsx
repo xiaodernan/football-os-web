@@ -102,6 +102,9 @@ export function Streaks() {
                             ? t("streaks.none")
                             : t("streaks.currentLine", { w: r.currentWin, u: r.currentUnbeaten })}
                         </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {t("streaks.venueLine", { hw: r.homeWin, hu: r.homeUnbeaten, aw: r.awayWin, au: r.awayUnbeaten })}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right tabular-nums">

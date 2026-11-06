@@ -56,6 +56,29 @@ ok(`streaks answers an empty competition with no runs and no holder (rows ${runs
   runsEmpty.rows.length === 1 && runsEmpty.longestWin === 0 && runsEmpty.longestUnbeaten === 0 &&
   runsEmpty.winHolder === null && runsEmpty.unbeatenHolder === null && runsEmpty.matches === 0);
 
+// ---- M963: the same runs at each end ---------------------------------------------------------
+// Hand count for A: at home it won, won, lost (a two-run and a two-unbeaten); away it drew then won
+// (one win, two unbeaten). The season run is W,D,W,W,L — four unbeaten, the current run zero.
+const venueClubs = ["A", "B", "C", "D", "E", "F"].map((id) => club(id, "T17"));
+const venueFixtures = [
+  match("v1", "T17", "A", "B", 2, 0, "2026-09-01"),
+  match("v2", "T17", "C", "A", 1, 1, "2026-09-02"),
+  match("v3", "T17", "A", "D", 3, 0, "2026-09-03"),
+  match("v4", "T17", "E", "A", 0, 1, "2026-09-04"),
+  match("v5", "T17", "A", "F", 1, 2, "2026-09-05"),
+];
+const venueRuns = streaks("T17", venueFixtures, venueClubs);
+const vrow = Object.fromEntries(venueRuns.rows.map((r) => [r.clubId, r]));
+ok(`streaks reads each run again inside the home matches and inside the away matches (A home ${vrow.A.homeWin}/${vrow.A.homeUnbeaten}, away ${vrow.A.awayWin}/${vrow.A.awayUnbeaten}, season ${vrow.A.longestWin}/${vrow.A.longestUnbeaten} current ${vrow.A.currentWin}/${vrow.A.currentUnbeaten})`,
+  vrow.A.homeWin === 2 && vrow.A.homeUnbeaten === 2 &&
+  vrow.A.awayWin === 1 && vrow.A.awayUnbeaten === 2 &&
+  vrow.A.longestWin === 2 && vrow.A.longestUnbeaten === 4 &&
+  vrow.A.currentWin === 0 && vrow.A.currentUnbeaten === 0 &&
+  vrow.C.homeUnbeaten === 1 && vrow.C.awayUnbeaten === 0 &&
+  vrow.F.awayWin === 1 && vrow.F.awayUnbeaten === 1 && vrow.F.homeUnbeaten === 0 &&
+  vrow.B.homeUnbeaten === 0 &&
+  JSON.stringify(venueRuns) === JSON.stringify(streaks("T17", venueFixtures, venueClubs)));
+
 // The screen is a reader, not a second engine: it must render the folded board, and the route must
 // exist for the sidebar entry that names it.
 const SCREEN_SRC = readFileSync(resolve(root, "features/analytics/Streaks.tsx"), "utf8");
@@ -63,7 +86,8 @@ const APP_ROUTE_SRC = readFileSync(resolve(root, "src/App.tsx"), "utf8");
 const SHELL_NAV_SRC = readFileSync(resolve(root, "features/shell/AppShell.tsx"), "utf8");
 ok(`the runs screen reads the fold and its own board (fold call ${SCREEN_SRC.includes("streaks(compId, matches, clubs)")}, rows ${SCREEN_SRC.includes("runs.rows")}, bars ${SCREEN_SRC.includes("pctOf(r.longestUnbeaten, peak)")})`,
   SCREEN_SRC.includes("streaks(compId, matches, clubs)") && SCREEN_SRC.includes("runs.rows") &&
-  SCREEN_SRC.includes("pctOf(r.longestUnbeaten, peak)") && !SCREEN_SRC.includes("GOAL_BANDS"));
+  SCREEN_SRC.includes("pctOf(r.longestUnbeaten, peak)") && !SCREEN_SRC.includes("GOAL_BANDS") &&
+  SCREEN_SRC.includes("streaks.venueLine") && SCREEN_SRC.includes("r.homeUnbeaten"));
 ok(`the runs screen is reachable — the route table and the sidebar both name it (route ${/path === "\/streaks"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/streaks"/.test(SHELL_NAV_SRC)})`,
   /path === "\/streaks"/.test(APP_ROUTE_SRC) && /to: "\/streaks"/.test(SHELL_NAV_SRC));
 

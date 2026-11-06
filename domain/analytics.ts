@@ -52,7 +52,9 @@ const isFinished = (m: Match): m is Match & { homeGoals: number; awayGoals: numb
  *  readers order the same list: the competition's finished fixtures, the data room's forecast, and
  *  three service functions. A kickoff is this app's clock, and five copies of the ordering rule are
  *  five chances for one of them to drift into a different order than the rest. */
-export function byKickoff(a: Match, b: Match): number {
+export function byKickoff(a: { kickoff: string }, b: { kickoff: string }): number {
+  // The contract is the timestamp, so the door takes anything that carries one — the replay
+  // folds order lighter records by the same rule without pretending they are full matches.
   return a.kickoff.localeCompare(b.kickoff);
 }
 
@@ -1320,7 +1322,7 @@ export function collapses(compId: string, matches: Match[], clubs: Club[]): Coll
   for (const m of matches) {
     if (m.competitionId !== compId || !isFinished(m) || !m.events?.length) continue;
     counted++;
-    const goals = m.events.filter((e) => e.type === "GOAL").slice().sort((a, b) => a.minute - b.minute);
+    const goals = m.events.filter((e) => e.type === "GOAL").slice().sort(byMinute);
     let home = 0; let away = 0;
     let homeLead = 0; let homeMinute = 0; let awayLead = 0; let awayMinute = 0;
     for (const g of goals) {
@@ -1356,6 +1358,12 @@ export interface StreakRow {
   /** Matches since it last lost; 0 when its last match was a loss. */
   currentUnbeaten: number;
   played: number;
+  /** M963: the same two runs read inside the club's home matches only, and inside its away
+   *  matches only — a home fortress and an away record are different sequences of the same season. */
+  homeWin: number;
+  homeUnbeaten: number;
+  awayWin: number;
+  awayUnbeaten: number;
 }
 
 export interface Streaks {
@@ -1377,19 +1385,21 @@ export interface Streaks {
  *  it needs no event list — a final score is enough. */
 export function streaks(compId: string, matches: Match[], clubs: Club[]): Streaks {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
-  const byClub = new Map<string, Array<{ kickoff: string; gf: number; ga: number }>>(
+  const byClub = new Map<string, Array<{ kickoff: string; gf: number; ga: number; home: boolean }>>(
     [...ranked].map((id) => [id, []]),
   );
   let counted = 0;
   for (const m of matches) {
     if (m.competitionId !== compId || !isFinished(m)) continue;
     counted++;
-    byClub.get(m.homeClubId)?.push({ kickoff: m.kickoff, gf: m.homeGoals, ga: m.awayGoals });
-    byClub.get(m.awayClubId)?.push({ kickoff: m.kickoff, gf: m.awayGoals, ga: m.homeGoals });
+    byClub.get(m.homeClubId)?.push({ kickoff: m.kickoff, gf: m.homeGoals, ga: m.awayGoals, home: true });
+    byClub.get(m.awayClubId)?.push({ kickoff: m.kickoff, gf: m.awayGoals, ga: m.homeGoals, home: false });
   }
   const rows: StreakRow[] = [];
-  for (const [clubId, list] of byClub) {
-    list.sort((x, y) => x.kickoff.localeCompare(y.kickoff));
+  // One walk per sequence: the whole season, the home matches only, the away matches only. The
+  // reader is the same three lines of arithmetic, so the three runs cannot disagree about what a
+  // win, a draw and a loss do to a run.
+  const runsOf = (list: Array<{ gf: number; ga: number }>) => {
     let win = 0; let unbeaten = 0; let bestWin = 0; let bestUnbeaten = 0;
     for (const r of list) {
       if (r.gf > r.ga) { win++; unbeaten++; }
@@ -1398,7 +1408,20 @@ export function streaks(compId: string, matches: Match[], clubs: Club[]): Streak
       if (win > bestWin) bestWin = win;
       if (unbeaten > bestUnbeaten) bestUnbeaten = unbeaten;
     }
-    rows.push({ clubId, longestWin: bestWin, longestUnbeaten: bestUnbeaten, currentWin: win, currentUnbeaten: unbeaten, played: list.length });
+    return { bestWin, bestUnbeaten, win, unbeaten };
+  };
+  for (const [clubId, list] of byClub) {
+    list.sort(byKickoff);
+    const all = runsOf(list);
+    const home = runsOf(list.filter((r) => r.home));
+    const away = runsOf(list.filter((r) => !r.home));
+    rows.push({
+      clubId,
+      longestWin: all.bestWin, longestUnbeaten: all.bestUnbeaten,
+      currentWin: all.win, currentUnbeaten: all.unbeaten, played: list.length,
+      homeWin: home.bestWin, homeUnbeaten: home.bestUnbeaten,
+      awayWin: away.bestWin, awayUnbeaten: away.bestUnbeaten,
+    });
   }
   rows.sort((x, y) => y.longestUnbeaten - x.longestUnbeaten || y.longestWin - x.longestWin || x.clubId.localeCompare(y.clubId));
   const longestWin = rows.length ? Math.max(...rows.map((r) => r.longestWin)) : 0;

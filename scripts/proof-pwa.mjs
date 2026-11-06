@@ -125,7 +125,8 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M957: the deficit board measures 544 KB / 55 assets (JS 531 + CSS 12.5), pin 543 -> 544.
 // M961: the collapse list measures 545 KB / 55 assets (JS 532 + CSS 12.5), pin 544 -> 545.
 // M962: the runs board measures 547 KB / 56 assets (JS 535 + CSS 12.5), pin 545 -> 547.
-const BUDGET_KB = 547;
+// M963: the venue run line measures 548 KB / 56 assets (JS 535 + CSS 12.5), pin 547 -> 548.
+const BUDGET_KB = 548;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
