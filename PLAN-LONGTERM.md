@@ -831,7 +831,7 @@
 
 - 52bde0f M953: 单场时钟（候选⑬改向）— matchClock 单场折叠（GOAL/YELLOW/RED 六窗序列，未完场或无事件返回 null）；比赛页时间线下新增分窗面板（进球/吃牌两行共享 timing 标签）；proof-analytics 3 条新证词 235→238（MR 手工计数、未完场/无事件两臂、屏幕读取）；4 个新键×3；census literal 1,935、dup 棘轮 148/247；Details 中点恰好落进 M629 双行 JSX 注释的开口行触发盲区门——注释并为单行（永不跨行）诚实修复。
 
-- M954（本地，待推送）: 采纳农场 M954——eventClock 折叠直接加分端射门/扑救窗（与 M943 eventVenueClock 平行实现，两者由既有对账证词钉住一致），EventClock 屏新增分端面板（四行），农场自行支付 i18n pin；本次落地支付 PWA 539→540、baseline 重录。
+- c007df0 M954: 采纳农场 M954——eventClock 折叠直接加分端射门/扑救窗（与 M943 eventVenueClock 平行实现，两者由既有对账证词钉住一致），EventClock 屏新增分端面板（四行），农场自行支付 i18n pin；本次落地支付 PWA 539→540、baseline 重录。
 
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
