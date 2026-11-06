@@ -821,7 +821,11 @@
 
 - 920b542 M950: 主客桌牌率并排（候选⑩）— VenueSplit 各队行新增“牌率 主/客”列，联结 disciplineVenue 既有折叠（两屏共享同一数字），正差着色；无需新折叠（两折叠按 clubId 在屏上联结，同 Details 的先例）；1 个新键×3；proof-analytics 1 条屏幕证词 230→231；census literal 1,920、absent-glyph VenueSplit 16 + JSX 门文件表、quantities gap 拆分声明。
 
-- (本地) M951: 造牌榜（M625 镜像应用于牌钟）— cardTiming 收集造牌方序列并走 tally 门计数（累加器写法先撞了 tally 门，收集-计数两步才是门的契约），行读取 drawn 值 + drawners 排行板（造牌降序、无造牌者缺席）；Discipline 屏新增造牌面板；镜像恒等式（造牌总和=吃牌总和）入证词；proof-analytics 2 条新证词 231→233；3 个新键×3；census literal 1,924、PWA 538→539、baseline 重录。
+- 3690188 M951: 造牌榜（M625 镜像应用于牌钟）— cardTiming 收集造牌方序列并走 tally 门计数（累加器写法先撞了 tally 门，收集-计数两步才是门的契约），行读取 drawn 值 + drawners 排行板（造牌降序、无造牌者缺席）；Discipline 屏新增造牌面板；镜像恒等式（造牌总和=吃牌总和）入证词；proof-analytics 2 条新证词 231→233；3 个新键×3；census literal 1,924、PWA 538→539、baseline 重录。
+
+续选方向（M952+）：⑫ 造牌的造牌者分解（每队的牌里有多少来自对手造牌 vs 自身纪律——drawn/cards 比值，team 级）；
+⑬ 节律的时间稳定性（同队跨赛季的节律漂移——world 引擎推进后的对比，两折叠都可复算）；
+⑭ 清扫 lane 周期性产物（农场活跃，隔离线保持值勤：跑 unused-locals 程序普查即测）。
 
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
