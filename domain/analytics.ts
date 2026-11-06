@@ -1068,6 +1068,118 @@ export function matchClock(m: Match): MatchClock | null {
   return { goals, cards, reds };
 }
 
+export interface ScoringFirst {
+  /** Fixtures with at least one recorded goal — the ones this read can judge. */
+  scoredFirst: number;
+  /** What happened to the side that scored first: the win, the draw or the loss. */
+  wonAfter: number;
+  drawnAfter: number;
+  lostAfter: number;
+  /** wonAfter / scoredFirst through the safeDiv door, 0–100, 2dp — the classic scoring-first
+   *  conversion. Zero when no fixture has a recorded goal yet. */
+  conversion: number;
+}
+
+/** M955: does scoring first win? The classic question, read honestly off the event record:
+ *  a fixture counts only when it is finished with at least one recorded GOAL, and the first
+ *  scorer's own final result is what the three counters judge. Fixtures whose goals are not
+ *  recorded stay out — a scoreline alone cannot say who scored first. */
+export function scoringFirst(compId: string, matches: Match[], clubs: Club[]): ScoringFirst {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  let scoredFirst = 0, wonAfter = 0, drawnAfter = 0, lostAfter = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    const first = (m.events ?? []).find((e) => e.type === "GOAL" &&
+      ranked.has(e.side === "home" ? m.homeClubId : m.awayClubId));
+    if (!first) continue;
+    const ourGoals = first.side === "home" ? m.homeGoals : m.awayGoals;
+    const theirGoals = first.side === "home" ? m.awayGoals : m.homeGoals;
+    scoredFirst++;
+    if (ourGoals > theirGoals) wonAfter++;
+    else if (ourGoals === theirGoals) drawnAfter++;
+    else lostAfter++;
+  }
+  return {
+    scoredFirst,
+    wonAfter,
+    drawnAfter,
+    lostAfter,
+    conversion: round2(safeDiv(wonAfter, scoredFirst) * 100),
+  };
+}
+
+export interface LeadRetentionRow {
+  clubId: string;
+  /** Finished fixtures with an event list in which this club was ahead at any point. */
+  led: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  /** 3 - points earned, summed over the matches it led: a draw drops two, a defeat three. */
+  dropped: number;
+  /** Share of those matches won, 0–100, 2dp; 0 when it never led. */
+  keepShare: number;
+}
+
+export interface LeadRetention {
+  /** Clubs that led at least once, the most points dropped first, then the most leads. */
+  rows: LeadRetentionRow[];
+  led: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  dropped: number;
+  /** League keep share: won / led, 0–100, 2dp; 0 when no lead was taken. */
+  keepShare: number;
+  /** Finished fixtures with an event list that could be replayed. */
+  matches: number;
+}
+
+/** Whether a lead survives: replay every goal in order, note each side that was ahead at any
+ *  point, and read the final result against it. `scoringFirst` asks what the FIRST goal bought;
+ *  this asks what ANY lead bought — a side that led three times and drew has still dropped two
+ *  points. Only fixtures with a recorded event list can be replayed, and the fold reports how
+ *  many it read rather than guessing at the rest. */
+export function leadRetention(compId: string, matches: Match[], clubs: Club[]): LeadRetention {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const rows = new Map<string, LeadRetentionRow>(
+    [...ranked].map((id) => [id, { clubId: id, led: 0, won: 0, drawn: 0, lost: 0, dropped: 0, keepShare: 0 }]),
+  );
+  let counted = 0;
+  let ledTotal = 0; let wonTotal = 0; let drawnTotal = 0; let lostTotal = 0; let droppedTotal = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m) || !m.events?.length) continue;
+    counted++;
+    const goals = m.events.filter((e) => e.type === "GOAL").slice().sort((a, b) => a.minute - b.minute);
+    let home = 0; let away = 0; let homeLed = false; let awayLed = false;
+    for (const g of goals) {
+      if (g.side === "home") home++; else away++;
+      if (home > away) homeLed = true;
+      else if (away > home) awayLed = true;
+    }
+    const sides: Array<[string, boolean, number, number]> = [
+      [m.homeClubId, homeLed, m.homeGoals, m.awayGoals],
+      [m.awayClubId, awayLed, m.awayGoals, m.homeGoals],
+    ];
+    for (const [clubId, didLead, ours, theirs] of sides) {
+      if (!didLead || !ranked.has(clubId)) continue;
+      const row = rows.get(clubId)!;
+      row.led++;
+      ledTotal++;
+      if (ours > theirs) { row.won++; wonTotal++; }
+      else if (ours === theirs) { row.drawn++; drawnTotal++; row.dropped += 2; droppedTotal += 2; }
+      else { row.lost++; lostTotal++; row.dropped += 3; droppedTotal += 3; }
+    }
+  }
+  const list = [...rows.values()].filter((r) => r.led > 0);
+  for (const r of list) r.keepShare = round2(safeDiv(r.won, r.led) * 100);
+  list.sort((a, b) => b.dropped - a.dropped || b.led - a.led || a.clubId.localeCompare(b.clubId));
+  return {
+    rows: list, led: ledTotal, won: wonTotal, drawn: drawnTotal, lost: lostTotal, dropped: droppedTotal,
+    keepShare: round2(safeDiv(wonTotal, ledTotal) * 100), matches: counted,
+  };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

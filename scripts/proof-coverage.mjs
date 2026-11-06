@@ -138,7 +138,8 @@ const DEAD_CEILING = 22;
 // M573: 119 -> 120, domain/nextStep.ts joined the population.
 // M574: 120 -> 121, features/analytics/EventClock.tsx joined the population.
 // M575: 121 -> 122, features/analytics/Briefing.tsx joined the population.
-const POP_PIN = 122;
+// M956: 122 -> 123 — features/analytics/LeadRetention.tsx is a new screen.
+const POP_PIN = 123;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -171,7 +172,8 @@ const POP_PIN = 122;
 // M574: features 45 -> 46 (EventClock).
 // M573: domain 33 -> 34, the next-step ranking.
 // M574: features 45 -> 46 (EventClock); M575: 46 -> 47 (Briefing).
-const BY_DIR_PIN = { components: 15, data: 7, domain: 34, features: 47, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+// M956: features 47 -> 48 (LeadRetention).
+const BY_DIR_PIN = { components: 15, data: 7, domain: 34, features: 48, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
@@ -183,7 +185,8 @@ const BY_DIR_PIN = { components: 15, data: 7, domain: 34, features: 47, function
 // M570: 59 -> 60. features/analytics/GoalTiming.tsx sits two levels down.
 // M571: 60 -> 61. features/analytics/Discipline.tsx sits two levels down.
 // M574: 61 -> 62 (EventClock). M575: 62 -> 63 (Briefing) — both sit two levels down.
-const DEEP_PIN = 63;
+// M956: 63 -> 64 — LeadRetention sits two levels down.
+const DEEP_PIN = 64;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

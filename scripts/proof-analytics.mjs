@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, venueRhythm, clubResultClock, matchClock } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, venueRhythm, clubResultClock, matchClock, scoringFirst } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 const resultClockSum = (fold) => fold.resultClock.won + fold.resultClock.drew + fold.resultClock.lost;
@@ -1114,6 +1114,7 @@ ok(`a club that played and was never booked keeps a row with zero cards and zero
   cardTiming("TG", cardFixtures, cardClubs).earliest === null);
 const cardsAgain = cardTiming("TE", cardFixtures, cardClubs);
 const DISC_SRC = readFileSync(resolve(root, "features/analytics/Discipline.tsx"), "utf8");
+const GOAL_SRC = readFileSync(resolve(root, "features/analytics/GoalTiming.tsx"), "utf8");
 ok(`cardTiming is deterministic and the discipline screen prints the clock off the fold, dropping unbooked rows rather than drawing zeros (same fold ${JSON.stringify(cards) === JSON.stringify(cardsAgain)}, renders ${[...DISC_SRC.matchAll(/clock\.rows/g)].length} clock reads)`,
   JSON.stringify(cards) === JSON.stringify(cardsAgain) &&
   DISC_SRC.includes("cardTiming(compId, matches, clubs)") && DISC_SRC.includes("clock.rows.filter(") &&
@@ -1642,6 +1643,36 @@ ok(`the match page draws the fixture clock off the fold over the shared band lab
   DETAILS_SRC.includes('t("det.clock.title"') && DETAILS_SRC.includes('t("det.clock.hint"') &&
   DETAILS_SRC.includes('t("det.clock.goals"') && DETAILS_SRC.includes('t("det.clock.cards"') &&
   DETAILS_SRC.includes('t("timing.w1"'));
+// --- M955: does scoring first win? -------------------------------------------------------------
+// MR: q1's first goal is A's 12' strike and A wins 2-1 — a win after scoring first; q2's first
+// (and only) goal is A's 85' away strike and the match finishes 1-1 — a draw after. MD adds the
+// comeback arm: B concedes first at home and still... no — MD's md1 has A scoring first and
+// winning; the loss arm comes from a fixture where the first scorer finishes second: mf1's home
+// side scores first and loses 1-2. Conversion 1/2 = 50 on MR; the loss arm reads on mf1's fold.
+const mf1 = { ...match("mf1", "MG", "A", "B", 1, 2, "2026-10-01"), events: [
+  { minute: 10, type: "GOAL", side: "home", player: "p" },
+  { minute: 60, type: "GOAL", side: "away", player: "p" },
+  { minute: 80, type: "GOAL", side: "away", player: "p" },
+] };
+const mfClubs = [club("A", "MG"), club("B", "MG")];
+const mgFirst = scoringFirst("MG", [mf1], mfClubs);
+ok(`scoring first reads the first recorded goal's own final result, the comeback arm included (MG scored-first ${mgFirst.scoredFirst}, won ${mgFirst.wonAfter}, drawn ${mgFirst.drawnAfter}, lost ${mgFirst.lostAfter}, conversion ${mgFirst.conversion})`,
+  mgFirst.scoredFirst === 1 && mgFirst.wonAfter === 0 && mgFirst.drawnAfter === 0 &&
+  mgFirst.lostAfter === 1 && mgFirst.conversion === 0);
+const mrFirst = scoringFirst("MR", rhythmFixtures, resultClubs);
+const teFirst = scoringFirst("TE", cardFixtures, cardClubs);
+ok(`the conversion reads through the safeDiv door on two fixtures, and a competition with no recorded goal names no first scorer (MR conversion ${mrFirst.conversion} on ${mrFirst.scoredFirst}; TE ${teFirst.scoredFirst})`,
+  mrFirst.scoredFirst === 2 && mrFirst.wonAfter === 1 && mrFirst.drawnAfter === 1 &&
+  mrFirst.conversion === 50 &&
+  teFirst.scoredFirst === 0 && teFirst.conversion === 0);
+ok(`the goal timing screen draws the scoring-first panel off the fold (screen ${[
+  't("timing.firstTitle"', 't("timing.firstHint"', 't("timing.firstNone"',
+  't("timing.firstConversion"', "scoringFirst(compId, matches, clubs)",
+].filter((k) => GOAL_SRC.includes(k)).length}/5)`,
+  GOAL_SRC.includes("scoringFirst(compId, matches, clubs)") &&
+  GOAL_SRC.includes('t("timing.firstTitle"') && GOAL_SRC.includes('t("timing.firstHint"') &&
+  GOAL_SRC.includes('t("timing.firstNone"') && GOAL_SRC.includes('t("timing.firstConversion"') &&
+  !/\.sort\(/.test(GOAL_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

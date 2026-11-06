@@ -143,7 +143,8 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // a reader reaches `functions/index.ts` by URL and `handler.ts` is the module that entry imports.
 // One module stays in the ledger: `src/vite-env.d.ts` is an ambient declaration, a type the compiler
 // reads and no browser loads.
-const APP_MODULE_PIN = 121;
+// M956: 121 -> 122 — features/analytics/LeadRetention.tsx is a new screen.
+const APP_MODULE_PIN = 122;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

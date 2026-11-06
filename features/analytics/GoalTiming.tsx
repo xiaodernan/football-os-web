@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { goalTiming } from "@/domain/analytics";
+import { goalTiming , scoringFirst } from "@/domain/analytics";
 import { maxBy, sum } from "@/domain/attributes";
-import { ABSENT, cn, pctLabel, pctOf } from "@/lib/utils";
+import { ABSENT, cn, pctLabel, pctOf , fmt2} from "@/lib/utils";
 
 const BANDS = [0, 1, 2, 3, 4, 5];
 
@@ -16,6 +16,8 @@ export function GoalTiming() {
   const [compId, setCompId] = useState(() => competitions[0]?.id ?? "");
 
   const rows = useMemo(() => goalTiming(compId, matches, clubs), [compId, matches, clubs]);
+  // M955: does scoring first win? The classic conversion, read off the event record.
+  const first = useMemo(() => scoringFirst(compId, matches, clubs), [compId, matches, clubs]);
   // The six window labels are read once, so the bars, the tiles and the list all name a window the
   // same way — and a dictionary that is missing one of the six fails here rather than printing a key.
   const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
@@ -117,6 +119,27 @@ export function GoalTiming() {
                 {t("timing.colConceded")}
               </span>
             </div>
+          </Panel>
+
+          {/* M955: the scoring-first conversion — what the first goal bought the side that
+              scored it, read off the event record rather than the scoreline alone. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("timing.firstTitle")} hint={t("timing.firstHint")} />
+            {first.scoredFirst === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.firstNone")}</p>
+            ) : (
+              <>
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <StatTile label={t("timing.firstScored")} value={first.scoredFirst} />
+                  <StatTile label={t("timing.firstWon")} value={first.wonAfter} tone="up" />
+                  <StatTile label={t("timing.firstDrawn")} value={first.drawnAfter} />
+                  <StatTile label={t("timing.firstLost")} value={first.lostAfter} tone="down" />
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {t("timing.firstConversion", { n: fmt2(first.conversion) })}
+                </p>
+              </>
+            )}
           </Panel>
 
           <Panel className="p-5">

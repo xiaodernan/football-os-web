@@ -539,7 +539,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // guards its strings: functions/index.ts is an entry with no importer because the runtime is its
 // importer, and functions/handler.ts is the module it imports. Neither carries a t() literal today,
 // which is exactly why the sight matters -- a key added there would have been counted by nothing.
-const APP_SRC_PIN = 118;
+// M956: 118 -> 119 — features/analytics/LeadRetention.tsx is a new app module.
+const APP_SRC_PIN = 119;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -561,7 +562,8 @@ const APP_SRC_PIN = 118;
 // M575: 69 -> 70 — Briefing.tsx is the new .tsx module.
 // M776: still 70, now measured over the reachable set — the three unreached modules are .ts and .d.ts,
 // so the .tsx population was already reader-scoped in fact; the pin now says so on purpose.
-const TSX_PIN = 70;
+// M956: 70 -> 71 — LeadRetention.tsx is a new .tsx module.
+const TSX_PIN = 71;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -588,7 +590,8 @@ const TSX_PIN = 70;
 // with no importer is not a leaf when the runtime is what calls it. The ledger now names one app
 // module — src/vite-env.d.ts, an ambient declaration no browser loads — beside the eight harness
 // files that are Playwright's entry points rather than the reader's app.
-const SRC_PIN = 121;
+// M956: 121 -> 122 — LeadRetention.tsx again.
+const SRC_PIN = 122;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4530,7 +4533,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // own additions ride the same census).
   // M952: the drawn share's sentence adds 1 literal site: 1924 -> 1925.
   // M953: the match page's clock adds 4 keys as sites and the lane rides the census: 1925 -> 1935.
-  shapeCounts.literal === 1942 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M956: the lead board adds 20 literal sites: 1942 -> 1971 (the lane's scoring-first panel rides the same census).
+  shapeCounts.literal === 1971 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4602,7 +4606,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M950: the club result rows hand over n at their three call sites: 265 -> 269.
   // M948: the red-result line hands over w, d and l: 269 -> 270.
   // M952: the share sentence hands over n: 270 -> 271.
-  litVarSites === 272 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M956: the lead board hands over its variables at 8 sites: 272 -> 280.
+  litVarSites === 280 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
