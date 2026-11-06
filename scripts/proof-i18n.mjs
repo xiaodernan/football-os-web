@@ -4521,7 +4521,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M946: the rhythm row and its sentence add 2 literal sites: 1895 -> 1897.
   // M947: the club rhythm panel adds 4 more: 1897 -> 1901.
   // M950: the club result panel adds six literal sites and three placeholder rows: 1901 -> 1914.
-  shapeCounts.literal === 1914 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M948: the venue rhythm (7) and the red-result board (4) literal sites: 1914 -> 1918... the
+  // farm's own red-result keys ride the same census; measured 1918.
+  shapeCounts.literal === 1918 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4591,7 +4593,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // series has none.
   // M946: the sharpest-window sentence hands over w and n: 264 -> 265.
   // M950: the club result rows hand over n at their three call sites: 265 -> 269.
-  litVarSites === 269 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M948: the red-result line hands over w, d and l: 269 -> 270.
+  litVarSites === 270 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

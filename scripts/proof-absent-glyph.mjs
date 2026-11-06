@@ -233,12 +233,13 @@ const expectedPerUser = [
   // booking reads the glyph where its busiest window would be. 1 -> 3.
   // M946: the rhythm row declines to print a denominator-less window.
   // M947: the club rhythm's ratio column reads the same way.
-  ["features/analytics/EventClock.tsx", 5],
+  // M948: the screen's growing family of denominator-less reads charges one more.
+  ["features/analytics/EventClock.tsx", 6],
   ["features/analytics/GoalTiming.tsx", 4],
   // M716: the scenarios screen asks the door twice more — a ceiling place with no row behind it
   // reads the glyph, and so does the climb tile's club when the table has no name for it. 5 -> 7.
   ["features/analytics/PointsScenario.tsx", 7],
-  ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 14],
+  ["features/analytics/RunIn.tsx", 5], ["features/analytics/VenueSplit.tsx", 15],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],
   ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],

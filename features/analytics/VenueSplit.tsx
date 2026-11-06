@@ -219,10 +219,10 @@ export function VenueSplit() {
                   return (
                     <div key={label} className="mt-2 flex items-end gap-1">
                       <div className="w-20 shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">{t("venue.rhythmWord")} · {label}</div>
-                      {series.map((r, b) => (
+                      {series.map((ratio, b) => (
                         <div key={b} className="flex-1 text-center">
                           <div className={cn("font-mono text-[10px]", rhythm.peak?.end === (end === 0 ? "home" : "away") && rhythm.peak.band === b && "font-semibold text-primary")}>
-                            {denominators[b] === 0 ? ABSENT : fmt2(r)}
+                            {denominators[b] === 0 ? ABSENT : fmt2(ratio)}
                           </div>
                           <div className="text-[10px] text-muted-foreground">{bandLabels[b]}</div>
                         </div>

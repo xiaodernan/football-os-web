@@ -911,19 +911,89 @@ export function clubResultClock(compId: string, matches: Match[], clubs: Club[])
       const ourGoals = e.side === "home" ? m.homeGoals : m.awayGoals;
       const theirGoals = e.side === "home" ? m.awayGoals : m.homeGoals;
       const band = goalBand(e.minute);
-      if (ourGoals > theirGoals) {
-        row.wonWindows[band]++;
-        row.won++;
-      } else if (ourGoals === theirGoals) {
-        row.drewWindows[band]++;
-        row.drew++;
-      } else {
-        row.lostWindows[band]++;
-        row.lost++;
-      }
+      // The window series is the only thing the pass mutates; the totals derive from it, so
+      // the fold's counts cannot drift from its own series.
+      if (ourGoals > theirGoals) row.wonWindows[band]++;
+      else if (ourGoals === theirGoals) row.drewWindows[band]++;
+      else row.lostWindows[band]++;
     }
   }
-  const list = [...rows.values()];
+  const list = [...rows.values()].map((r) => ({
+    ...r,
+    won: sum(r.wonWindows, (n) => n),
+    drew: sum(r.drewWindows, (n) => n),
+    lost: sum(r.lostWindows, (n) => n),
+  }));
+  list.sort((a, b) => b.won + b.drew + b.lost - (a.won + a.drew + a.lost) || a.clubId.localeCompare(b.clubId));
+  return list;
+}
+
+/** Each club's own red cards, split by the result its fixture went on to produce.
+ *  Same family as `clubResultClock` (cards per club) and the venue rhythm (per end),
+ *  but the axis is the result rather than the ratio: a red in a won match and a red
+ *  in a lost match are different events even when the minute count agrees. The three
+ *  series add up to the club red count, because every counted red belongs to a
+ *  finished fixture with a scoreline. */
+export interface ClubDisciplineResultClockRow {
+  clubId: string;
+  /** Red cards this club earned in matches it went on to win, per window. */
+  wonWindows: number[];
+  /** Red cards this club earned in matches it drew, per window. */
+  drewWindows: number[];
+  /** Red cards this club earned in matches it lost, per window. */
+  lostWindows: number[];
+  /** Red cards this club earned in won matches. */
+  won: number;
+  /** Red cards this club earned in drew matches. */
+  drew: number;
+  /** Red cards this club earned in lost matches. */
+  lost: number;
+}
+
+/** The club-level discipline result clock: each club's own red cards, split by the result
+ *  that its fixture went on to produce. Same family as `clubResultClock` (cards per club) and
+ *  the venue rhythm (per end), but the axis is the result rather than the ratio: a red in a
+ *  won match and a red in a lost match are different events even when the minute count agrees.
+ *  The three series add up to the club red count, because every counted red belongs to a finished
+ *  fixture with a scoreline. */
+export function clubDisciplineResultClock(compId: string, matches: Match[], clubs: Club[]): ClubDisciplineResultClockRow[] {
+  const rows = new Map<string, ClubDisciplineResultClockRow>(
+    clubs.map((c) => [
+      c.id,
+      {
+        clubId: c.id,
+        wonWindows: Array.from({ length: GOAL_BANDS }, () => 0),
+        drewWindows: Array.from({ length: GOAL_BANDS }, () => 0),
+        lostWindows: Array.from({ length: GOAL_BANDS }, () => 0),
+        won: 0,
+        drew: 0,
+        lost: 0,
+      },
+    ]),
+  );
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "RED") continue;
+      const clubId = e.side === "home" ? m.homeClubId : m.awayClubId;
+      const row = rows.get(clubId);
+      if (!row) continue;
+      const ourGoals = e.side === "home" ? m.homeGoals : m.awayGoals;
+      const theirGoals = e.side === "home" ? m.awayGoals : m.homeGoals;
+      const band = goalBand(e.minute);
+      // The window series is the only thing the pass mutates; the totals derive from it, so
+      // the fold's counts cannot drift from its own series.
+      if (ourGoals > theirGoals) row.wonWindows[band]++;
+      else if (ourGoals === theirGoals) row.drewWindows[band]++;
+      else row.lostWindows[band]++;
+    }
+  }
+  const list = [...rows.values()].map((r) => ({
+    ...r,
+    won: sum(r.wonWindows, (n) => n),
+    drew: sum(r.drewWindows, (n) => n),
+    lost: sum(r.lostWindows, (n) => n),
+  }));
   list.sort((a, b) => b.won + b.drew + b.lost - (a.won + a.drew + a.lost) || a.clubId.localeCompare(b.clubId));
   return list;
 }

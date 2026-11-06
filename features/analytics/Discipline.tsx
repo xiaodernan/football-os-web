@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { discipline, disciplineTrend, disciplineVenue, cardTiming } from "@/domain/analytics";
+import { clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, cardTiming } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
@@ -21,6 +21,9 @@ export function Discipline() {
   // M779: the same bookings the ledger counts, read by the minute they arrived — the first and
   // last window of the same six the clock uses.
   const clock = useMemo(() => cardTiming(compId, matches, clubs), [compId, matches, clubs]);
+  // M948: each club's own red cards, split by the result its fixture went on to produce —
+  // a sending-off in a winning cause and one in a lost one are different events.
+  const redResult = useMemo(() => clubDisciplineResultClock(compId, matches, clubs), [compId, matches, clubs]);
   const booked = clock.rows.filter((r) => r.cards > 0);
   const peakWindow = Math.max(1, ...clock.windows);
   // M787: the league curve split by the end each card was earned at — the venue board below
@@ -423,6 +426,35 @@ export function Discipline() {
                   );
                 })}
               </div>
+            )}
+          </Panel>
+
+          {/* M948: the club red-result board — each club's own sendings-off, split by what
+              its fixture went on to do. A red in a winning cause and one in a lost one are
+              different events even when the minute agrees. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.redResultTitle")} hint={t("disc.redResultHint")} />
+            {redResult.every((r) => r.won + r.drew + r.lost === 0) ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.redNone")}</p>
+            ) : (
+              <ul className="mt-2 space-y-1">
+                {redResult.filter((r) => r.won + r.drew + r.lost > 0).map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li key={r.clubId} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={26} />
+                        <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                          {club?.name ?? r.clubId}
+                        </Link>
+                      </div>
+                      <div className="text-right text-xs text-muted-foreground tabular-nums">
+                        {t("disc.redResultLine", { w: r.won, d: r.drew, l: r.lost })}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </Panel>
         </>
