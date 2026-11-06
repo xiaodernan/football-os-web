@@ -429,6 +429,35 @@ export function Discipline() {
             )}
           </Panel>
 
+          {/* M951: the drawn-foul board — the mirror read of the card clock. Every booking
+              has two clubs; this board names the club the booking was drawn against. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.drawnTitle")} hint={t("disc.drawnHint")} />
+            {clock.drawners.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.clockNone")}</p>
+            ) : (
+              <ul className="mt-2 space-y-1">
+                {clock.drawners.map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li key={r.clubId} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={26} />
+                        <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                          {club?.name ?? r.clubId}
+                        </Link>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        {r.drawn}
+                        <div className="text-xs text-muted-foreground">{t("disc.drawnWord")}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
+
           {/* M948: the club red-result board — each club's own sendings-off, split by what
               its fixture went on to do. A red in a winning cause and one in a lost one are
               different events even when the minute agrees. */}

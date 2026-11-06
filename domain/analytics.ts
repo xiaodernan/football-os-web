@@ -7,7 +7,7 @@
 
 import type { Club, Match, Side } from "@/domain/types";
 import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
-import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally, maxBy, last } from "./attributes";
+import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally, maxBy, last, tally } from "./attributes";
 
 // The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
 // domain/attributes.ts (where the letter door and the points ladder live) and re-exported here
@@ -557,6 +557,18 @@ export interface CardTimingRow {
   earlyShare: number;
   /** Share of this club's cards earned late, 0–100, 2dp; 0 when it was not booked. */
   lateShare: number;
+  /** M951: cards the OPPONENT earned while facing this club — the drawn-foul read the
+   *  earning side's own fold never states. A booking has two clubs, and the mirror identity
+   *  holds by construction: the drawn column sums to the card column across the league. */
+  drawn: number;
+}
+
+/** M951: the drawn-foul board — the clubs whose opponents were booked most while facing
+ *  them, biggest draw first. A club with nothing drawn is absent, exactly like the red
+ *  board's zero rows. */
+export interface CardDrawnRow {
+  clubId: string;
+  drawn: number;
 }
 
 export interface CardRedRow {
@@ -607,6 +619,9 @@ export interface CardTiming {
   rows: CardTimingRow[];
   /** The club booked most often inside the first window; null when nobody was booked early. */
   earliest: CardTimingRow | null;
+  /** M951: the drawn-foul board, biggest draw first. A club whose opponents were never
+   *  booked while facing it is absent. */
+  drawners: CardDrawnRow[];
   /** Clubs shown a red card, ranked by reds, then the peak window's count, then the club id.
    *  A club with no reds is absent: the panel is about the sendings-off, not about zero rows. */
   redRows: CardRedRow[];
@@ -651,10 +666,14 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
         lateCards: 0,
         earlyShare: 0,
         lateShare: 0,
+        drawn: 0,
       },
     ]),
   );
   const lastBand = GOAL_BANDS - 1;
+  // The drawn read collects the club each booking was drawn against and counts it through the
+  // tally door — the same one-thing-counted-many-times contract the other folds use.
+  const drawnSides: string[] = [];
   const windows = Array.from({ length: GOAL_BANDS }, () => 0);
   const redWindows = Array.from({ length: GOAL_BANDS }, () => 0);
   const homeWindows = Array.from({ length: GOAL_BANDS }, () => 0);
@@ -675,6 +694,8 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       row.cards++;
       windows[band]++;
       if (e.side === "home") homeWindows[band]++; else awayWindows[band]++;
+      // M951: the same booking, read from the other end — the opponent drew it.
+      drawnSides.push(e.side === "home" ? m.awayClubId : m.homeClubId);
       // M945: the result axis — the receiving side's own outcome of this fixture decides
       // which of the three series the card lands in.
       const ourGoals = e.side === "home" ? m.homeGoals : m.awayGoals;
@@ -723,9 +744,16 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       };
     })
     .sort((a, b) => Math.abs(b.earlyGap) - Math.abs(a.earlyGap) || b.reds - a.reds || a.clubId.localeCompare(b.clubId));
+  const drawnMap = tally(drawnSides, (id) => id);
+  for (const r of list) r.drawn = drawnMap.get(r.clubId) ?? 0;
+  const drawners: CardDrawnRow[] = list
+    .filter((r) => r.drawn > 0)
+    .map((r) => ({ clubId: r.clubId, drawn: r.drawn }))
+    .sort((a, b) => b.drawn - a.drawn || a.clubId.localeCompare(b.clubId));
   return {
     rows: list,
     earliest: list.find((r) => r.earlyCards > 0) ?? null,
+    drawners,
     redRows: redList,
     windows, redWindows, homeWindows, awayWindows, contrast,
     resultClock: {

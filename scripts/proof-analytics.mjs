@@ -1564,6 +1564,27 @@ ok(`the venue table draws each club's card rates off the discipline venue fold, 
   VENUE_SRC.includes("fmt2(cv.homePerMatch)") && VENUE_SRC.includes("fmt2(cv.awayPerMatch)") &&
   VENUE_SRC.includes('t("venue.colCardRate"') && VENUE_SRC.includes("DELTA_CLASS[deltaSign(cv.gap)]") &&
   !/\.sort\(/.test(VENUE_SRC));
+// --- M951: the drawn-foul board — the card clock's mirror --------------------------------------
+// TE: every booking names two clubs. U's three cards were all drawn by opponents (V twice, W
+// once), V drew U's two and W drew one apiece off U and V, and X — who played and was never
+// booked, and whose own visit drew nothing — stays off the board. The mirror identity holds:
+// the drawn column sums to the card column across the league.
+const drawn = cardTiming("TE", cardFixtures, cardClubs);
+const drawnBy = Object.fromEntries(drawn.drawners.map((r) => [r.clubId, r]));
+ok(`the drawn board reads each club's opponents' bookings, the mirror identity holding (U ${drawnBy.U.drawn}, V ${drawnBy.V.drawn}, W ${drawnBy.W.drawn}; drawn total ${drawn.drawners.reduce((a, r) => a + r.drawn, 0)} = card total ${drawn.cards}; order ${drawn.drawners.map((r) => r.clubId).join(",")})`,
+  drawnBy.U.drawn === 2 && drawnBy.V.drawn === 2 && drawnBy.W.drawn === 2 &&
+  drawn.drawners.every((r) => r.drawn > 0) &&
+  !drawn.drawners.some((r) => r.clubId === "X") &&
+  drawn.drawners.map((r) => r.clubId).join(",") === "U,V,W" &&
+  drawn.drawners.reduce((a, r) => a + r.drawn, 0) === drawn.rows.reduce((a, r) => a + r.cards, 0) &&
+  drawn.rows.reduce((a, r) => a + r.drawn, 0) === drawn.rows.reduce((a, r) => a + r.cards, 0));
+ok(`the discipline screen draws the drawn board off the fold (screen ${[
+  't("disc.drawnTitle"', 't("disc.drawnHint"', 't("disc.drawnWord"',
+  "clock.drawners.map(",
+].filter((k) => DISC_SRC.includes(k)).length}/4)`,
+  DISC_SRC.includes("clock.drawners.map(") && DISC_SRC.includes('t("disc.drawnTitle"') &&
+  DISC_SRC.includes('t("disc.drawnHint"') && DISC_SRC.includes('t("disc.drawnWord"') &&
+  !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

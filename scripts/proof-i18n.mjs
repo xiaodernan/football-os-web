@@ -4525,7 +4525,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // farm's own red-result keys ride the same census; measured 1918.
   // M949: the thin-sample word adds 1 literal site: 1918 -> 1919.
   // M950: the venue table's roughness header adds 1 more: 1919 -> 1920.
-  shapeCounts.literal === 1920 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M951: the drawn board adds 3 literal sites (title, hint, word): 1920 -> 1924 (the farm's
+  // own additions ride the same census).
+  shapeCounts.literal === 1924 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

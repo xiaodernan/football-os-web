@@ -117,7 +117,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // 537 KB / 54 assets (JS 524 + CSS 12.4), pin 536 -> 537, baseline re-recorded in the same commit.
 // M948: the venue rhythm rows and the two red-result boards measure 538 KB / 54 assets
 // (JS 526 + CSS 12.4), pin 537 -> 538, baseline re-recorded in the same commit.
-const BUDGET_KB = 538;
+// M951: the drawn board measures 539 KB / 54 assets (JS 526 + CSS 12.5), pin 538 -> 539,
+// baseline re-recorded in the same commit.
+const BUDGET_KB = 539;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
