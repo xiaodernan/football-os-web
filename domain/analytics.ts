@@ -865,6 +865,69 @@ export function clubRhythm(compId: string, matches: Match[], clubs: Club[]): Clu
   return { rows, sharpest: rows.find((r) => r.cards > 0) ?? null };
 }
 
+export interface ClubResultClockRow {
+  clubId: string;
+  /** Cards this club earned in matches it went on to win, per window. */
+  wonWindows: number[];
+  /** Cards this club earned in matches it drew, per window. */
+  drewWindows: number[];
+  /** Cards this club earned in matches it lost, per window. */
+  lostWindows: number[];
+  /** Cards this club earned in won matches. */
+  won: number;
+  /** Cards this club earned in drew matches. */
+  drew: number;
+  /** Cards this club earned in lost matches. */
+  lost: number;
+}
+
+/** The club-level result clock: each club's own cards, split by the result that club's fixture went
+ *  on to produce. Same family as `clubRhythm` (goals per card, per club) and the venue rhythm (per
+ *  end), but the axis is the result rather than the ratio: a booking in a won match and a booking in
+ *  a lost match are different events even when the minute count agrees. The three series add up to
+ *  the club card count, because every counted card belongs to a finished fixture with a scoreline. */
+export function clubResultClock(compId: string, matches: Match[], clubs: Club[]): ClubResultClockRow[] {
+  const rows = new Map<string, ClubResultClockRow>(
+    clubs.map((c) => [
+      c.id,
+      {
+        clubId: c.id,
+        wonWindows: Array.from({ length: GOAL_BANDS }, () => 0),
+        drewWindows: Array.from({ length: GOAL_BANDS }, () => 0),
+        lostWindows: Array.from({ length: GOAL_BANDS }, () => 0),
+        won: 0,
+        drew: 0,
+        lost: 0,
+      },
+    ]),
+  );
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "YELLOW" && e.type !== "RED") continue;
+      const clubId = e.side === "home" ? m.homeClubId : m.awayClubId;
+      const row = rows.get(clubId);
+      if (!row) continue;
+      const ourGoals = e.side === "home" ? m.homeGoals : m.awayGoals;
+      const theirGoals = e.side === "home" ? m.awayGoals : m.homeGoals;
+      const band = goalBand(e.minute);
+      if (ourGoals > theirGoals) {
+        row.wonWindows[band]++;
+        row.won++;
+      } else if (ourGoals === theirGoals) {
+        row.drewWindows[band]++;
+        row.drew++;
+      } else {
+        row.lostWindows[band]++;
+        row.lost++;
+      }
+    }
+  }
+  const list = [...rows.values()];
+  list.sort((a, b) => b.won + b.drew + b.lost - (a.won + a.drew + a.lost) || a.clubId.localeCompare(b.clubId));
+  return list;
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, venueRhythm } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, venueRhythm, clubResultClock } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 const resultClockSum = (fold) => fold.resultClock.won + fold.resultClock.drew + fold.resultClock.lost;
@@ -1578,6 +1578,36 @@ ok(`the venue split reads a played end at zero and an empty competition as empty
   DISCIPLINE_SRC.includes("venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0)") &&
   ["venue.home.perMatch", "venue.away.perMatch", "r.homePerMatch", "r.awayPerMatch", "r.gap",
     "disc.venueTitle", "disc.venueLeague", "disc.venueGap", "disc.venueNone"].every((k) => DISCIPLINE_SRC.includes(k)));
+// --- M950: the club-level result clock — each club's own cards under the result its fixtures went on to produce ----
+// MR: r1 A hosted B and won 2-1 — A's 10' yellow is a won-match card (band 0), B's 30' red a lost one
+// (band 1); r2 drew 1-1 — B's 50' yellow and A's 85' yellow both read drew (bands 3 and 5). r3 is
+// scheduled and stays out, so the red nobody should count does not land. The three series add up to
+// the club's own card count: A's won+drew = 2 = A's cards, B's lost+drew = 2 = B's cards.
+const clubResult = clubResultClock("MR", resultFixtures, resultClubs);
+const crA = clubResult[0], crB = clubResult[1];
+ok(`the club result clock splits each club's cards by the result its own fixtures went on to produce (A won ${crA.won} at ${crA.wonWindows.join(",")}; drew ${crA.drew} at ${crA.drewWindows.join(",")}; B lost ${crB.lost} at ${crB.lostWindows.join(",")}; drew ${crB.drew} at ${crB.drewWindows.join(",")})`,
+  clubResult.length === 2 && clubResult.map((r) => r.clubId).join(",") === "A,B" &&
+  crA.clubId === "A" && crA.won === 1 && crA.drew === 1 && crA.lost === 0 &&
+  crA.wonWindows.join(",") === "1,0,0,0,0,0" && crA.drewWindows.join(",") === "0,0,0,0,0,1" &&
+  crA.lostWindows.join(",") === "0,0,0,0,0,0" &&
+  crB.clubId === "B" && crB.won === 0 && crB.drew === 1 && crB.lost === 1 &&
+  crB.wonWindows.join(",") === "0,0,0,0,0,0" && crB.drewWindows.join(",") === "0,0,0,1,0,0" &&
+  crB.lostWindows.join(",") === "0,1,0,0,0,0" &&
+  crA.won + crA.drew + crA.lost === 2 && crB.won + crB.drew + crB.lost === 2);
+const clubResultSilent = clubResultClock("TG", cardFixtures, cardClubs);
+ok(`the club result clock reads no card that never happened (TG rows ${clubResultSilent.length}, cards ${clubResultSilent.reduce((s, r) => s + r.won + r.drew + r.lost, 0)})`,
+  clubResultSilent.length === cardClubs.length &&
+  clubResultSilent.every((r) => r.won + r.drew + r.lost === 0));
+ok(`the event clock screen reads the club result clock off the fold, the three result series under the labels (screen ${[
+  't("clock.resultTitle"', 't("clock.resultHint"', 't("clock.resultWon"', 't("clock.resultDrew"',
+  't("clock.resultLost"', 't("clock.resultMethod"', "clubResultClock(compId, matches, clubs)",
+  "r.won + r.drew + r.lost",
+].filter((k) => CLOCK_SRC.includes(k)).length}/8)`,
+  CLOCK_SRC.includes("clubResultClock(compId, matches, clubs)") && CLOCK_SRC.includes("r.won + r.drew + r.lost") &&
+  CLOCK_SRC.includes('t("clock.resultTitle"') && CLOCK_SRC.includes('t("clock.resultHint"') &&
+  CLOCK_SRC.includes('t("clock.resultWon"') && CLOCK_SRC.includes('t("clock.resultDrew"') &&
+  CLOCK_SRC.includes('t("clock.resultLost"') && CLOCK_SRC.includes('t("clock.resultMethod"') &&
+  !/\.sort\(/.test(CLOCK_SRC));
 // M627: the fixture's own arithmetic. s1 is A (4 pts, ceiling 10) at home to B (1 pt, ceiling 7),
 // so the hosts lead by 3: a win makes it 6, a draw leaves 3, an away win makes it 0. The fixture is
 // one of the two games each ceiling is built on, so a win keeps the ceiling where it is, a draw

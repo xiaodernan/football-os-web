@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { clubRhythm, clockContrast, eventClock } from "@/domain/analytics";
+import { clubRhythm, clockContrast, clubResultClock, eventClock } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
 import { fmt2, ABSENT, cn, pctOf } from "@/lib/utils";
 
@@ -47,6 +47,7 @@ export function EventClock() {
   // windows, each summed from a fold the goal and discipline screens already print.
   const contrast = useMemo(() => clockContrast(compId, matches, clubs), [compId, matches, clubs]);
   const rhythm = useMemo(() => clubRhythm(compId, matches, clubs), [compId, matches, clubs]);
+  const clubResults = useMemo(() => clubResultClock(compId, matches, clubs), [compId, matches, clubs]);
   const crossPeak = Math.max(1, ...contrast.windows.flatMap((w) => [w.goals, w.cards]));
   const crossRows = [
     { label: t("clock.crossGoals"), data: contrast.windows.map((w) => w.goals), fill: BAR_FILL.progress },
@@ -198,6 +199,39 @@ export function EventClock() {
                 );
               })}
             </ul>
+          </Panel>
+
+          {/* M950: the club-level result clock — each club's own cards, split by the result its
+              fixture went on to produce. The three series add up to the club's card count, because
+              every counted card belongs to a finished fixture with a scoreline; the roll-up is a
+              roll-call of the competition's clubs, so a club that played without being booked reads
+              its zero series rather than being absent. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("clock.resultTitle")} hint={t("clock.resultHint")} />
+            <ul className="mt-2 space-y-1">
+              {clubResults.map((r) => {
+                const club = getClub(r.clubId);
+                const total = r.won + r.drew + r.lost;
+                return (
+                  <li
+                    key={r.clubId}
+                    className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Crest colors={club?.colors} short={club?.short} size={26} />
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {t("clock.resultWon", { n: r.won })} · {t("clock.resultDrew", { n: r.drew })} · {t("clock.resultLost", { n: r.lost })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right font-mono text-sm tabular-nums">{total > 0 ? fmt2(total) : ABSENT}</div>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("clock.resultMethod")}</p>
           </Panel>
 
           <Panel className="p-5">
