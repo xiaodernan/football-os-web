@@ -811,7 +811,11 @@
 
 - M947（本地，待推送）: 队级节律（候选⑤）— clubRhythm 折叠：goalTiming 与 cardTiming 两折叠按 clubId 联结（无第三次扫场），每队整季 goals-perCard 走 safeDiv 门；有分母（至少一张牌）的球队按比值降序排前、最锋利者命名 sharpest，无分母球队按进球数排后；EventClock 屏新增球队节律面板（锋利者主色高亮，无分母印 ABSENT）；proof-analytics 3 条新证词 219→222（MR 手工计数 A 2/1=2.00、TE 有牌无球全零、TG 无牌无名锋利、屏幕读取）；4 个新键×3；census literal 1,897→1,901、excess 243→245；absent-glyph EventClock 4→5、PWA 536→537、baseline 同提交重录。
 
-- M948（本地，待推送）: 候选⑥主客节律（venueRhythm 折叠：goalVenueClock 与 cardTiming 的主客窗口序列逐窗比值，safeDiv 门，锋利端-窗口命名，无分母端无比值）+ VenueSplit 屏进球钟下双节律行与锋利句；并采纳并行 lane 在 analytics.ts 的两个半成品折叠（clubResultClock / clubDisciplineResultClock，队级红/全牌按结果分侧，候选⑦），修复其孤立注释终止符与 4 处裸自增（改为窗口序列派生总数，creditresult 门归零），补齐 Discipline 屏红牌结果板与 3 个键×3；proof-analytics 228 证词全绿；census literal 1,918、litVarSites 270；absent-glyph EventClock 6/VenueSplit 15；PWA 537→538、baseline 同提交重录。
+- 57c0b09 M948: 候选⑥主客节律（venueRhythm 折叠：goalVenueClock 与 cardTiming 的主客窗口序列逐窗比值，safeDiv 门，锋利端-窗口命名，无分母端无比值）+ VenueSplit 屏进球钟下双节律行与锋利句；并采纳并行 lane 在 analytics.ts 的两个半成品折叠（clubResultClock / clubDisciplineResultClock，队级红/全牌按结果分侧，候选⑦），修复其孤立注释终止符与 4 处裸自增（改为窗口序列派生总数，creditresult 门归零），补齐 Discipline 屏红牌结果板与 3 个键×3；proof-analytics 228 证词全绿；census literal 1,918、litVarSites 270；absent-glyph EventClock 6/VenueSplit 15；PWA 537→538、baseline 同提交重录。
+
+⑧ eventClock 的 VAR 钟上屏（varBands 已折叠——若屏幕未读即是真实缺口）；
+⑨ 节律可信度（每队节律的样本量读数：卡数即 n，低样本在屏上标注而非伪装成稳定比值）；
+⑩ 主客桌的牌对照（venueSplit 行已有主客积分边——把 disciplineVenue 的主客牌率并排同一行）。
 
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
