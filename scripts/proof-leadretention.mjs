@@ -11,7 +11,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // as a reader of the fold rather than a second engine.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { leadRetention, comebackPoints } = await server.ssrLoadModule("/domain/analytics.ts");
+const { leadRetention, comebackPoints, collapses } = await server.ssrLoadModule("/domain/analytics.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -106,6 +106,32 @@ ok(`comebackPoints splits each deficit by the end it was trailed at (home ${home
   comeback.D.awayTrailed === 1 && comeback.D.awayPoints === 1 &&
   comeback.B.awayTrailed === 1 && comeback.B.awayPoints === 0);
 
+// ---- M961: the matches behind the board ------------------------------------------------------
+// Hand count: A led 2-0 at 20' and drew 2-2; C led 1-0 at 5' and drew 1-1; G led 1-0 at 3' and lost
+// 1-3. F (won from 0-1), I (won from 2-0) and the sides that never led are absent, and the
+// eventless fixture is not replayed at all.
+const collapseClubs = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].map((id) => club(id, "T14"));
+const collapseFixtures = [
+  { ...match("k1", "T14", "A", "B", 2, 2, "2026-07-01"), events: [goal(10, "home"), goal(20, "home"), goal(70, "away"), goal(80, "away")] },
+  { ...match("k2", "T14", "C", "D", 1, 1, "2026-07-02"), events: [goal(5, "home"), goal(90, "away")] },
+  { ...match("k3", "T14", "E", "F", 0, 2, "2026-07-03"), events: [goal(30, "away"), goal(60, "away")] },
+  { ...match("k4", "T14", "G", "H", 1, 3, "2026-07-04"), events: [goal(3, "home"), goal(40, "away"), goal(50, "away"), goal(80, "away")] },
+  { ...match("k5", "T14", "I", "J", 2, 0, "2026-07-05") },
+];
+const thrown = collapses("T14", collapseFixtures, collapseClubs);
+ok(`collapses names every lead that did not survive, the biggest first (matches ${thrown.matches}, thrown ${thrown.count}, biggest ${thrown.biggest}, rows ${thrown.rows.map((r) => r.clubId).join("")})`,
+  thrown.matches === 4 && thrown.count === 3 && thrown.biggest === 2 &&
+  thrown.rows.map((r) => r.clubId).join("") === "ACG");
+ok(`collapses records how far ahead the side got, in which minute it peaked and what the fixture ended as (A ${thrown.rows[0].lead}@${thrown.rows[0].minute} ${thrown.rows[0].outcome} ${thrown.rows[0].goalsFor}-${thrown.rows[0].goalsAgainst}; C ${thrown.rows[1].lead}@${thrown.rows[1].minute}; G ${thrown.rows[2].lead}@${thrown.rows[2].minute} ${thrown.rows[2].outcome})`,
+  thrown.rows[0].clubId === "A" && thrown.rows[0].lead === 2 && thrown.rows[0].minute === 20 &&
+  thrown.rows[0].outcome === "drawn" && thrown.rows[0].goalsFor === 2 && thrown.rows[0].goalsAgainst === 2 &&
+  thrown.rows[1].clubId === "C" && thrown.rows[1].lead === 1 && thrown.rows[1].minute === 5 &&
+  thrown.rows[1].outcome === "drawn" &&
+  thrown.rows[2].clubId === "G" && thrown.rows[2].lead === 1 && thrown.rows[2].minute === 3 &&
+  thrown.rows[2].outcome === "lost" && thrown.rows[2].goalsFor === 1 && thrown.rows[2].goalsAgainst === 3 &&
+  !thrown.rows.some((r) => r.clubId === "F" || r.clubId === "I" || r.clubId === "B" || r.clubId === "H") &&
+  JSON.stringify(thrown) === JSON.stringify(collapses("T14", collapseFixtures, collapseClubs)));
+
 // The screen is a reader, not a second engine: it must render the folded board, and the route must
 // exist for the sidebar entry that names it.
 const SCREEN_SRC = readFileSync(resolve(root, "features/analytics/LeadRetention.tsx"), "utf8");
@@ -115,7 +141,9 @@ ok(`the lead-retention screen reads both folds and its own boards (fold calls ${
   SCREEN_SRC.includes("leadRetention(compId, matches, clubs)") && SCREEN_SRC.includes("retention.rows") &&
   SCREEN_SRC.includes("pctOf(r.keepShare, 100)") && !SCREEN_SRC.includes("GOAL_BANDS") &&
   SCREEN_SRC.includes("comebackPoints(compId, matches, clubs)") && SCREEN_SRC.includes("comeback.rows") &&
-  SCREEN_SRC.includes("pctOf(r.rescueShare, 100)"));
+  SCREEN_SRC.includes("pctOf(r.rescueShare, 100)") &&
+  SCREEN_SRC.includes("collapses(compId, matches, clubs)") && SCREEN_SRC.includes("thrown.rows.slice(0, 8)") &&
+  SCREEN_SRC.includes("leads.collapseRow"));
 ok(`the lead-retention screen is reachable — the route table and the sidebar both name it (route ${/path === "\/leads"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/leads"/.test(SHELL_NAV_SRC)})`,
   /path === "\/leads"/.test(APP_ROUTE_SRC) && /to: "\/leads"/.test(SHELL_NAV_SRC));
 

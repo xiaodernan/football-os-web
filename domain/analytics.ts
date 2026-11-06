@@ -1282,6 +1282,69 @@ export function comebackPoints(compId: string, matches: Match[], clubs: Club[]):
   };
 }
 
+export interface CollapseRow {
+  matchId: string;
+  kickoff: string;
+  /** The side that held the lead and did not win it. */
+  clubId: string;
+  opponentId: string;
+  /** The biggest lead it held, in goals (always at least one). */
+  lead: number;
+  /** The minute that lead reached its peak — the last goal that put the side that far ahead. */
+  minute: number;
+  /** What the fixture ended as, from the leading side's point of view. */
+  outcome: "drawn" | "lost";
+  goalsFor: number;
+  goalsAgainst: number;
+}
+
+export interface Collapses {
+  /** Every lead that was thrown away, the biggest first, then the latest it peaked. */
+  rows: CollapseRow[];
+  /** Leads thrown away in this competition. */
+  count: number;
+  /** The biggest lead thrown away (0 when none was). */
+  biggest: number;
+  /** Finished fixtures with an event list that could be replayed. */
+  matches: number;
+}
+
+/** The matches behind the lead board: every fixture where a side got ahead and did not win it.
+ *  The aggregate says how often a lead survives; this names the ones that did not — how far ahead
+ *  the side got, and in which minute the peak arrived. Only fixtures with a recorded event list
+ *  can be replayed, so the fold reports how many it read rather than implying it saw them all. */
+export function collapses(compId: string, matches: Match[], clubs: Club[]): Collapses {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const rows: CollapseRow[] = [];
+  let counted = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m) || !m.events?.length) continue;
+    counted++;
+    const goals = m.events.filter((e) => e.type === "GOAL").slice().sort((a, b) => a.minute - b.minute);
+    let home = 0; let away = 0;
+    let homeLead = 0; let homeMinute = 0; let awayLead = 0; let awayMinute = 0;
+    for (const g of goals) {
+      if (g.side === "home") home++; else away++;
+      if (home - away > homeLead) { homeLead = home - away; homeMinute = g.minute; }
+      if (away - home > awayLead) { awayLead = away - home; awayMinute = g.minute; }
+    }
+    const sides: Array<[string, string, number, number, number, number]> = [
+      [m.homeClubId, m.awayClubId, homeLead, homeMinute, m.homeGoals, m.awayGoals],
+      [m.awayClubId, m.homeClubId, awayLead, awayMinute, m.awayGoals, m.homeGoals],
+    ];
+    for (const [clubId, opponentId, lead, minute, ours, theirs] of sides) {
+      if (lead <= 0 || ours > theirs || !ranked.has(clubId)) continue;
+      rows.push({
+        matchId: m.id, kickoff: m.kickoff, clubId, opponentId, lead, minute,
+        outcome: ours === theirs ? "drawn" : "lost", goalsFor: ours, goalsAgainst: theirs,
+      });
+    }
+  }
+  rows.sort((a, b) => b.lead - a.lead || b.minute - a.minute || a.matchId.localeCompare(b.matchId));
+  const biggest = rows.length ? rows[0].lead : 0;
+  return { rows, count: rows.length, biggest, matches: counted };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

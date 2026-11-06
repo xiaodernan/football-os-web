@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { leadRetention, comebackPoints } from "@/domain/analytics";
+import { leadRetention, comebackPoints, collapses } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
 import { ABSENT, cn, pctLabel, pctOf } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ export function LeadRetention() {
 
   const retention = useMemo(() => leadRetention(compId, matches, clubs), [compId, matches, clubs]);
   const comeback = useMemo(() => comebackPoints(compId, matches, clubs), [compId, matches, clubs]);
+  const thrown = useMemo(() => collapses(compId, matches, clubs), [compId, matches, clubs]);
   const rows = retention.rows;
   const worst = rows.length ? maxBy(rows, (r) => r.dropped) : null;
 
@@ -184,6 +185,55 @@ export function LeadRetention() {
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">
                   {t("leads.comebackMethod", { n: comeback.matches, p: comeback.points })}
+                </p>
+              </>
+            )}
+          </Panel>
+
+          {/* M961: the fixtures behind the board — the leads that did not survive, named one by
+              one with how far ahead the side got and when the peak arrived. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("leads.collapseTitle")} hint={t("leads.collapseHint")} />
+            {thrown.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("leads.collapseNone")}</p>
+            ) : (
+              <>
+                <ul className="mt-2 space-y-1">
+                  {thrown.rows.slice(0, 8).map((r) => {
+                    const club = getClub(r.clubId);
+                    const opponent = getClub(r.opponentId);
+                    return (
+                      <li
+                        key={`${r.matchId}-${r.clubId}`}
+                        className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm"
+                      >
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={24} />
+                          <div className="min-w-0">
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              <span className="truncate font-medium">{club?.name ?? r.clubId}</span>
+                              <span className="text-xs text-muted-foreground">{t("common.vs")}</span>
+                              <span className="truncate text-muted-foreground">{opponent?.name ?? r.opponentId}</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {t("leads.collapseRow", { n: r.lead, m: r.minute, gf: r.goalsFor, ga: r.goalsAgainst })}
+                            </div>
+                          </div>
+                        </div>
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-full border px-1.5 py-0.5 text-[10px]",
+                            r.outcome === "drawn" ? CHIP_CLASS.muted : CHIP_CLASS.destructive,
+                          )}
+                        >
+                          {r.outcome === "drawn" ? t("leads.collapseDrawn") : t("leads.collapseLost")}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {t("leads.collapseMethod", { n: thrown.matches, c: thrown.count })}
                 </p>
               </>
             )}
