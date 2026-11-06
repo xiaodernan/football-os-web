@@ -689,6 +689,31 @@ ok(`the event clock screen renders all three folded families and both league row
   ["clock.shotsBands", "clock.savesBands", "clock.varBands"].every((k) => CLOCK_SRC.includes(k)) &&
   CLOCK_SRC.includes("clock.rows.map(") && CLOCK_SRC.includes("eventClock(compId, matches, clubs)") &&
   !/GOAL_BANDS|goalBand\(/.test(CLOCK_SRC));
+// M954: the same clock at each end. Every shot and save carries the side it came from, so the home
+// and away series must add up to the league's own series window for window, and the two shot totals
+// to the league's shots — a split that loses or double-counts an event cannot close.
+const homeShotSum = clock.homeShotsBands.reduce((s, n) => s + n, 0);
+const awayShotSum = clock.awayShotsBands.reduce((s, n) => s + n, 0);
+ok(`eventClock's venue split closes on the league clock (home ${clock.homeShots} + away ${clock.awayShots} = ${clock.shots} shots; shots ${clock.homeShotsBands.map((n, b) => n + clock.awayShotsBands[b]).join(",")} vs ${clock.shotsBands.join(",")}; saves ${clock.homeSavesBands.map((n, b) => n + clock.awaySavesBands[b]).join(",")} vs ${clock.savesBands.join(",")})`,
+  clock.homeShots + clock.awayShots === clock.shots && homeShotSum === clock.homeShots &&
+  awayShotSum === clock.awayShots &&
+  clock.shotsBands.every((n, b) => clock.homeShotsBands[b] + clock.awayShotsBands[b] === n) &&
+  clock.savesBands.every((n, b) => clock.homeSavesBands[b] + clock.awaySavesBands[b] === n) &&
+  clockEmpty.homeShotsBands.length === 6 && clockEmpty.homeShotsBands.every((n) => n === 0));
+ok(`the event clock screen reads the venue split off the fold rather than a second pass (home shots ${CLOCK_SRC.includes("clock.homeShotsBands")}, away saves ${CLOCK_SRC.includes("clock.awaySavesBands")}, share line ${CLOCK_SRC.includes("clock.venueLine")})`,
+  CLOCK_SRC.includes("clock.homeShotsBands") && CLOCK_SRC.includes("clock.awayShotsBands") &&
+  CLOCK_SRC.includes("clock.homeSavesBands") && CLOCK_SRC.includes("clock.awaySavesBands") &&
+  CLOCK_SRC.includes("clock.venueLine") && CLOCK_SRC.includes("safeDiv(clock.homeShots, clock.shots)"));
+// M954: the two folds read the same events, so the parallel venue series must agree with
+// eventVenueClock (M943) window for window — including the save's crediting end, which is the
+// keeper's, not the side the event names. A drift in either fold reddens this line.
+const evVenueOfClock = eventVenueClock("T9", clockFixtures, clockClubs);
+ok(`eventClock's venue series and eventVenueClock's windows are the same read (home shots ${evVenueOfClock.homeShotsWindows.join(",")} vs ${clock.homeShotsBands.join(",")}; away shots ${evVenueOfClock.awayShotsWindows.join(",")} vs ${clock.awayShotsBands.join(",")}; home saves ${evVenueOfClock.homeSavesWindows.join(",")} vs ${clock.homeSavesBands.join(",")}; away saves ${evVenueOfClock.awaySavesWindows.join(",")} vs ${clock.awaySavesBands.join(",")})`,
+  evVenueOfClock.homeShotsWindows.join(",") === clock.homeShotsBands.join(",") &&
+  evVenueOfClock.awayShotsWindows.join(",") === clock.awayShotsBands.join(",") &&
+  evVenueOfClock.homeSavesWindows.join(",") === clock.homeSavesBands.join(",") &&
+  evVenueOfClock.awaySavesWindows.join(",") === clock.awaySavesBands.join(",") &&
+  evVenueOfClock.homeShots === clock.homeShots && evVenueOfClock.awayShots === clock.awayShots);
 // M625: the defending end of the same clock. Every SHOT and SAVE by one side is an attempt the
 // other side faced, and a SAVE is that other side's keeper making the stop. Hand-count on the
 // same fixture: B faces A's two shots and one saved shot (3 faced, 1 stop), A faces B's shot and

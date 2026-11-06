@@ -4,7 +4,7 @@ import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS
 import { footballProvider, getClub } from "@/data/footballService";
 import { clubRhythm, clockContrast, clubResultClock, eventClock } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
-import { fmt2, ABSENT, cn, pctOf } from "@/lib/utils";
+import { fmt2, ABSENT, cn, pctLabel, pctOf, safeDiv } from "@/lib/utils";
 
 export function EventClock() {
   const { t } = useI18n();
@@ -52,6 +52,18 @@ export function EventClock() {
   const crossRows = [
     { label: t("clock.crossGoals"), data: contrast.windows.map((w) => w.goals), fill: BAR_FILL.progress },
     { label: t("clock.crossCards"), data: contrast.windows.map((w) => w.cards), fill: BAR_FILL.bad },
+  ];
+  // M954: the same six windows read at each end — shots and saves split by the venue the event
+  // came from, so the home clock and the away clock are a contrast rather than one league number.
+  const venuePeak = Math.max(
+    1,
+    ...clock.homeShotsBands, ...clock.awayShotsBands, ...clock.homeSavesBands, ...clock.awaySavesBands,
+  );
+  const venueRows = [
+    { label: t("clock.venueHomeShots"), data: clock.homeShotsBands, fill: BAR_FILL.info },
+    { label: t("clock.venueAwayShots"), data: clock.awayShotsBands, fill: BAR_FILL.low },
+    { label: t("clock.venueHomeSaves"), data: clock.homeSavesBands, fill: BAR_FILL.info },
+    { label: t("clock.venueAwaySaves"), data: clock.awaySavesBands, fill: BAR_FILL.low },
   ];
 
   return (
@@ -116,6 +128,33 @@ export function EventClock() {
                 </div>
               ))}
             </div>
+          </Panel>
+
+          {/* M954: the league's clock at each end — the same six windows for the shots and the
+              saves, split by the venue the event came from. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("clock.venueTitle")} hint={t("clock.venueHint")} />
+            <div className="mt-3 space-y-3">
+              {venueRows.map((row) => (
+                <div key={row.label}>
+                  <div className="text-xs text-muted-foreground">{row.label}</div>
+                  <div className="mt-1 flex items-end gap-1">
+                    {row.data.map((n, b) => (
+                      <div key={b} className="flex-1 text-center">
+                        <div className="font-mono text-[10px] text-muted-foreground">{n}</div>
+                        <div className="mx-auto mt-0.5 h-8 w-full">
+                          <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, venuePeak) }} />
+                        </div>
+                        <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {t("clock.venueLine", { n: pctLabel(safeDiv(clock.homeShots, clock.shots)) })}
+            </p>
           </Panel>
 
           {/* M786: goals against cards on the same clock — the league's two most-recorded event

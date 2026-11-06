@@ -2695,6 +2695,13 @@ const en: Dict = {
   "briefing.method": "The next fixture is the earliest scheduled kickoff across every competition — a match already in play belongs to the live strip, not here. Each step is a figure the named screen computes from the same fixtures, so this page can never disagree with it.",
   "briefing.empty": "No fixture booked",
   "briefing.emptyHint": "This club has no scheduled fixture left in the dataset.",
+  "clock.venueTitle": "The clock at each end",
+  "clock.venueHint": "The same six windows split by the venue the event came from — the home clock and the away clock side by side.",
+  "clock.venueHomeShots": "Home shots",
+  "clock.venueAwayShots": "Away shots",
+  "clock.venueHomeSaves": "Home saves",
+  "clock.venueAwaySaves": "Away saves",
+  "clock.venueLine": "{n}% of this competition's shots came at home.",
 };
 
 const zhCN: Dict = {
@@ -5278,6 +5285,13 @@ const zhCN: Dict = {
   "briefing.method": "下一场取全部赛事中最早开球的预定比赛——已开打的比赛属于实时条，不在这里。每一步都是同名界面用同一批赛程算出的数字，因此本页与它们不会出现分歧。",
   "briefing.empty": "没有预定的比赛",
   "briefing.emptyHint": "该球队在数据集中已没有预定比赛。",
+  "clock.venueTitle": "两端各自的钟",
+  "clock.venueHint": "同一副六窗，按事件发生的一端拆开——主场的钟与客场的钟并排。",
+  "clock.venueHomeShots": "主场射门",
+  "clock.venueAwayShots": "客场射门",
+  "clock.venueHomeSaves": "主场扑救",
+  "clock.venueAwaySaves": "客场扑救",
+  "clock.venueLine": "本项赛事 {n}% 的射门发生在主场。",
 };
 
 const zhTW: Dict = {
@@ -7866,6 +7880,13 @@ const zhTW: Dict = {
   "briefing.method": "下一場取全部賽事中最早開球的預定比賽——已開打的比賽屬於即時條，不在這裡。每一步都是同名介面用同一批賽程算出的數字，因此本頁與它們不會出現分歧。",
   "briefing.empty": "沒有預定的比賽",
   "briefing.emptyHint": "該球隊在資料集中已沒有預定比賽。",
+  "clock.venueTitle": "兩端各自的鐘",
+  "clock.venueHint": "同一副六窗，按事件發生的一端拆開——主場的鐘與客場的鐘並排。",
+  "clock.venueHomeShots": "主場射門",
+  "clock.venueAwayShots": "客場射門",
+  "clock.venueHomeSaves": "主場撲救",
+  "clock.venueAwaySaves": "客場撲救",
+  "clock.venueLine": "本項賽事 {n}% 的射門發生在主場。",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = {
