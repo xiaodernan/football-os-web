@@ -1364,6 +1364,9 @@ export interface StreakRow {
   homeUnbeaten: number;
   awayWin: number;
   awayUnbeaten: number;
+  /** M964: the other side of the record — the longest run without a win, and the one it is on. */
+  longestWinless: number;
+  currentWinless: number;
 }
 
 export interface Streaks {
@@ -1400,15 +1403,17 @@ export function streaks(compId: string, matches: Match[], clubs: Club[]): Streak
   // reader is the same three lines of arithmetic, so the three runs cannot disagree about what a
   // win, a draw and a loss do to a run.
   const runsOf = (list: Array<{ gf: number; ga: number }>) => {
-    let win = 0; let unbeaten = 0; let bestWin = 0; let bestUnbeaten = 0;
+    let win = 0; let unbeaten = 0; let winless = 0;
+    let bestWin = 0; let bestUnbeaten = 0; let bestWinless = 0;
     for (const r of list) {
-      if (r.gf > r.ga) { win++; unbeaten++; }
-      else if (r.gf === r.ga) { win = 0; unbeaten++; }
-      else { win = 0; unbeaten = 0; }
+      if (r.gf > r.ga) { win++; unbeaten++; winless = 0; }
+      else if (r.gf === r.ga) { win = 0; unbeaten++; winless++; }
+      else { win = 0; unbeaten = 0; winless++; }
       if (win > bestWin) bestWin = win;
       if (unbeaten > bestUnbeaten) bestUnbeaten = unbeaten;
+      if (winless > bestWinless) bestWinless = winless;
     }
-    return { bestWin, bestUnbeaten, win, unbeaten };
+    return { bestWin, bestUnbeaten, bestWinless, win, unbeaten, winless };
   };
   for (const [clubId, list] of byClub) {
     list.sort(byKickoff);
@@ -1421,6 +1426,7 @@ export function streaks(compId: string, matches: Match[], clubs: Club[]): Streak
       currentWin: all.win, currentUnbeaten: all.unbeaten, played: list.length,
       homeWin: home.bestWin, homeUnbeaten: home.bestUnbeaten,
       awayWin: away.bestWin, awayUnbeaten: away.bestUnbeaten,
+      longestWinless: all.bestWinless, currentWinless: all.winless,
     });
   }
   rows.sort((x, y) => y.longestUnbeaten - x.longestUnbeaten || y.longestWin - x.longestWin || x.clubId.localeCompare(y.clubId));

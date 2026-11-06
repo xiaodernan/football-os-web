@@ -44,6 +44,13 @@ ok(`streaks finds the longest winning and unbeaten runs and the run each club is
   row.D.longestWin === 1 && row.D.longestUnbeaten === 1 && row.D.currentWin === 1 &&
   row.E.longestUnbeaten === 1 && row.E.currentUnbeaten === 1 && row.E.currentWin === 0 &&
   row.B.longestUnbeaten === 0 && row.B.currentUnbeaten === 0 && row.B.played === 1);
+// M964: the other record. A lost once and then drew, so its drought is two and it is still in it;
+// D won its only match, so it has none.
+ok(`streaks reads the longest run without a win and the one a club is in now (A ${row.A.longestWinless} longest / ${row.A.currentWinless} now; B ${row.B.longestWinless}, E ${row.E.currentWinless}, D ${row.D.longestWinless})`,
+  row.A.longestWinless === 2 && row.A.currentWinless === 2 &&
+  row.B.longestWinless === 1 && row.B.currentWinless === 1 &&
+  row.E.longestWinless === 1 && row.E.currentWinless === 1 &&
+  row.D.longestWinless === 0 && row.D.currentWinless === 0);
 ok(`streaks names the holders and repeats exactly (win ${runs.longestWin} by ${runs.winHolder}, unbeaten ${runs.longestUnbeaten} by ${runs.unbeatenHolder})`,
   runs.longestWin === 2 && runs.winHolder === "A" && runs.longestUnbeaten === 2 &&
   runs.unbeatenHolder === "A" &&
@@ -76,7 +83,7 @@ ok(`streaks reads each run again inside the home matches and inside the away mat
   vrow.A.currentWin === 0 && vrow.A.currentUnbeaten === 0 &&
   vrow.C.homeUnbeaten === 1 && vrow.C.awayUnbeaten === 0 &&
   vrow.F.awayWin === 1 && vrow.F.awayUnbeaten === 1 && vrow.F.homeUnbeaten === 0 &&
-  vrow.B.homeUnbeaten === 0 &&
+  vrow.B.homeUnbeaten === 0 && vrow.A.longestWinless === 1 && vrow.A.currentWinless === 1 &&
   JSON.stringify(venueRuns) === JSON.stringify(streaks("T17", venueFixtures, venueClubs)));
 
 // The screen is a reader, not a second engine: it must render the folded board, and the route must
@@ -87,7 +94,8 @@ const SHELL_NAV_SRC = readFileSync(resolve(root, "features/shell/AppShell.tsx"),
 ok(`the runs screen reads the fold and its own board (fold call ${SCREEN_SRC.includes("streaks(compId, matches, clubs)")}, rows ${SCREEN_SRC.includes("runs.rows")}, bars ${SCREEN_SRC.includes("pctOf(r.longestUnbeaten, peak)")})`,
   SCREEN_SRC.includes("streaks(compId, matches, clubs)") && SCREEN_SRC.includes("runs.rows") &&
   SCREEN_SRC.includes("pctOf(r.longestUnbeaten, peak)") && !SCREEN_SRC.includes("GOAL_BANDS") &&
-  SCREEN_SRC.includes("streaks.venueLine") && SCREEN_SRC.includes("r.homeUnbeaten"));
+  SCREEN_SRC.includes("streaks.venueLine") && SCREEN_SRC.includes("r.homeUnbeaten") &&
+  SCREEN_SRC.includes("streaks.droughtLine") && SCREEN_SRC.includes("streaks.drought"));
 ok(`the runs screen is reachable — the route table and the sidebar both name it (route ${/path === "\/streaks"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/streaks"/.test(SHELL_NAV_SRC)})`,
   /path === "\/streaks"/.test(APP_ROUTE_SRC) && /to: "\/streaks"/.test(SHELL_NAV_SRC));
 

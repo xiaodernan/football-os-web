@@ -236,7 +236,8 @@ const pRouted = CODE_VARS.includes("group") ? 1 : 0;
 const laneTotal = laneVars.length + laneProps.length;
 ok(`every name-lane var is PLAIN, so the marker prints itself instead of being routed through a translator (${laneTotal} sites over ${FOLDED.length} files: ${laneVars.length} in a vars object + ${laneProps.length} as a JSX prop [${laneProps.map(([, p]) => p).join(",")}]; routed vars ${routedVars.length} [${routedVars.map(([, v]) => v).join(",")}], routed props ${routedProps.length}; the plant reads ${pRouted} on a var name that IS in the code set)`,
   // M962: the runs screen adds three vars objects (its three holder tiles): 32 -> 35, 26 -> 29.
-  laneTotal === 35 && laneVars.length === 29 && laneProps.length === 6 &&
+  // M964: the drought tile adds one vars object: 35 -> 36, 29 -> 30.
+  laneTotal === 36 && laneVars.length === 30 && laneProps.length === 6 &&
   routedVars.length === 0 && routedProps.length === 0 && pRouted === 1);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);

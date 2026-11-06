@@ -17,6 +17,8 @@ export function Streaks() {
   const rows = runs.rows;
   // The longest run still alive: the board is about history, this tile is about right now.
   const alive = rows.length ? maxBy(rows, (r) => r.currentUnbeaten) : null;
+  // M964: the drought is the other record — who went longest without a win, and who is in one now.
+  const drought = rows.length ? maxBy(rows, (r) => r.longestWinless) : null;
   const peak = runs.longestUnbeaten > 0 ? runs.longestUnbeaten : 1;
 
   return (
@@ -50,7 +52,7 @@ export function Streaks() {
         </Panel>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatTile
               label={t("streaks.bestWin")}
               value={runs.longestWin}
@@ -75,6 +77,16 @@ export function Streaks() {
                   ? t("streaks.aliveSub", { c: getClub(alive.clubId)?.short ?? ABSENT })
                   : t("streaks.none")
               }
+            />
+            <StatTile
+              label={t("streaks.drought")}
+              value={drought ? drought.longestWinless : 0}
+              sub={
+                drought && drought.longestWinless > 0
+                  ? t("streaks.droughtSub", { c: getClub(drought.clubId)?.short ?? ABSENT })
+                  : t("streaks.none")
+              }
+              tone="down"
             />
           </div>
 
@@ -104,6 +116,9 @@ export function Streaks() {
                         </div>
                         <div className="text-[11px] text-muted-foreground">
                           {t("streaks.venueLine", { hw: r.homeWin, hu: r.homeUnbeaten, aw: r.awayWin, au: r.awayUnbeaten })}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {t("streaks.droughtLine", { n: r.longestWinless, m: r.currentWinless })}
                         </div>
                       </div>
                     </div>
