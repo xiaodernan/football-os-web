@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, DELTA_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { eventVenueClock, goalVenueClock, venueSplit } from "@/domain/analytics";
+import { eventVenueClock, goalVenueClock, venueRhythm, venueSplit } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctLabel, pctOf, signed } from "@/lib/utils";
 
@@ -27,6 +27,9 @@ export function VenueSplit() {
   // M943: the venue page's shots and saves get the same clock — which end takes its shots
   // where, and whose keeper answers there, read off the same six windows.
   const evClock = useMemo(() => eventVenueClock(compId, matches, clubs), [compId, matches, clubs]);
+  // M948: the venue rhythm — each end's goals per card, window for window, joined off the
+  // goal clock and the card clock this screen already draws.
+  const rhythm = useMemo(() => venueRhythm(compId, matches, clubs), [compId, matches, clubs]);
   const evPeak = Math.max(
     1, ...evClock.homeShotsWindows, ...evClock.awayShotsWindows,
     ...evClock.homeSavesWindows, ...evClock.awaySavesWindows,
@@ -209,8 +212,35 @@ export function VenueSplit() {
                     </div>
                   </div>
                 ))}
+                {[0, 1].map((end) => {
+                  const label = end === 0 ? t("venue.clockHome") : t("venue.clockAway");
+                  const series = end === 0 ? rhythm.home : rhythm.away;
+                  const denominators = end === 0 ? clock.homeWindows : clock.awayWindows;
+                  return (
+                    <div key={label} className="mt-2 flex items-end gap-1">
+                      <div className="w-20 shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">{t("venue.rhythmWord")} · {label}</div>
+                      {series.map((r, b) => (
+                        <div key={b} className="flex-1 text-center">
+                          <div className={cn("font-mono text-[10px]", rhythm.peak?.end === (end === 0 ? "home" : "away") && rhythm.peak.band === b && "font-semibold text-primary")}>
+                            {denominators[b] === 0 ? ABSENT : fmt2(r)}
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             )}
+            <p className="mt-2 text-xs text-muted-foreground">
+              {rhythm.peak
+                ? t("venue.rhythmPeak", {
+                    end: rhythm.peak.end === "home" ? t("venue.clockHome") : t("venue.clockAway"),
+                    w: bandLabels[rhythm.peak.band],
+                    n: fmt2((rhythm.peak.end === "home" ? rhythm.home : rhythm.away)[rhythm.peak.band]),
+                  })
+                : t("venue.rhythmQuiet")}
+            </p>
           </Panel>
 
           <Panel className="p-5">

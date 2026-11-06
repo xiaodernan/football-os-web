@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, venueRhythm } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 const resultClockSum = (fold) => fold.resultClock.won + fold.resultClock.drew + fold.resultClock.lost;
@@ -1520,6 +1520,28 @@ ok(`the event clock screen reads the club rhythm off the join, the sharpest club
   CLOCK_SRC.includes('t("clock.clubRhythmTitle"') && CLOCK_SRC.includes('t("clock.clubRhythmHint"') &&
   CLOCK_SRC.includes('t("clock.rhythmGoals"') && CLOCK_SRC.includes('t("clock.rhythmCards"') &&
   !/\.sort\(/.test(CLOCK_SRC));
+// --- M948: the venue rhythm — each end's goals per card ----------------------------------------
+// MR: the home sides scored once (12') and booked once (10') in band 0 — 1.00; the away sides
+// scored twice (44', 85') and booked nobody, so their windows carry the door's floor figure and
+// the screen declines them. The sharpest end-window is home band 0, the only one with a
+// denominator. T1's fixtures have goals and no cards: no end-window to name. TE's have cards and
+// no goals: every ratio reads zero.
+const venueR = venueRhythm("MR", rhythmFixtures, resultClubs);
+ok(`the venue rhythm reads each end's goals per card, sharpest end-window named (home ${venueR.home.join(",")}; away ${venueR.away.join(",")}; peak ${venueR.peak ? venueR.peak.end + "@" + venueR.peak.band : "none"})`,
+  venueR.home.join(",") === "1,0,0,0,0,0" && venueR.away.join(",") === "0,0,1,0,0,1" &&
+  venueR.peak !== null && venueR.peak.end === "home" && venueR.peak.band === 0);
+const venueRDark = venueRhythm("TE", cardFixtures, cardClubs);
+const venueRQuiet = venueRhythm("T1", timingFixtures, clubs);
+ok(`a booked-but-scoreless competition reads zero ratios with a peak, and a scoreline-only one names none (TE peak ${venueRDark.peak ? venueRDark.peak.end + "@" + venueRDark.peak.band : "none"}; T1 peak ${venueRQuiet.peak})`,
+  venueRDark.peak !== null && venueRDark.home.every((r) => r === 0) &&
+  venueRQuiet.peak === null);
+ok(`the venue screen draws the rhythm under its goal clock, both ends over the shared labels (screen ${[
+  't("venue.rhythmWord"', 't("venue.rhythmPeak"', 't("venue.rhythmQuiet"',
+  "venueRhythm(compId, matches, clubs)", "rhythm.peak?.end",
+].filter((k) => VENUE_SRC.includes(k)).length}/5)`,
+  VENUE_SRC.includes("venueRhythm(compId, matches, clubs)") && VENUE_SRC.includes("rhythm.peak?.end") &&
+  VENUE_SRC.includes('t("venue.rhythmWord"') && VENUE_SRC.includes('t("venue.rhythmPeak"') &&
+  VENUE_SRC.includes('t("venue.rhythmQuiet"') && !/\.sort\(/.test(VENUE_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and
 // visited d3 for 2. So A is 2.00 both ends (gap 0), B 1.00 home against 2.00 away (+1.00), C

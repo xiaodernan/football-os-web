@@ -794,6 +794,38 @@ export function clockContrast(compId: string, matches: Match[], clubs: Club[]): 
   };
 }
 
+export interface VenueRhythm {
+  /** Goals per card, per window, read off the home sides' own goal and card series — the
+   *  safeDiv door's figure where the window booked nobody, which the screen declines to print. */
+  home: number[];
+  /** The away sides' rhythm, the same read. */
+  away: number[];
+  /** The sharpest end-and-window among those with a denominator; the earliest wins a tie.
+   *  Null when no end booked anybody in any window. */
+  peak: { end: Side; band: number } | null;
+}
+
+/** M948: the venue rhythm — whether the home advantage that shows in the minutes (M788) also
+ *  shows in the exchange rate between what a side's attack earns and what its discipline costs.
+ *  Both series are sums of folds that already exist, so the rhythm cannot disagree with the
+ *  venue screen's own clocks. */
+export function venueRhythm(compId: string, matches: Match[], clubs: Club[]): VenueRhythm {
+  const goals = goalVenueClock(compId, matches, clubs);
+  const cards = cardTiming(compId, matches, clubs);
+  const home = goals.homeWindows.map((g, b) => safeDiv(g, cards.homeWindows[b]));
+  const away = goals.awayWindows.map((g, b) => safeDiv(g, cards.awayWindows[b]));
+  let peak: VenueRhythm["peak"] = null;
+  const sharpest = (end: Side, series: number[], denominators: number[]) => {
+    for (let b = 0; b < GOAL_BANDS; b++) {
+      if (denominators[b] === 0) continue;
+      if (peak === null || series[b] > (peak.end === "home" ? home : away)[peak.band]) peak = { end, band: b };
+    }
+  };
+  sharpest("home", home, cards.homeWindows);
+  sharpest("away", away, cards.awayWindows);
+  return { home, away, peak };
+}
+
 export interface ClubRhythmRow {
   clubId: string;
   goals: number;
