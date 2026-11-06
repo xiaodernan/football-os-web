@@ -96,6 +96,9 @@ export function LeadRetention() {
                         <div className="text-xs text-muted-foreground">
                           {t("leads.rowLine", { w: r.won, d: r.drawn, l: r.lost })}
                         </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {t("leads.homeLine", { h: r.homeWon, hl: r.homeLed, a: r.awayWon, al: r.awayLed })}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right tabular-nums">

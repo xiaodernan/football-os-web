@@ -1120,6 +1120,12 @@ export interface LeadRetentionRow {
   dropped: number;
   /** Share of those matches won, 0–100, 2dp; 0 when it never led. */
   keepShare: number;
+  /** M959: the same count split by the end the club played at — leads taken and kept at home,
+   *  and the same two away. A club that only ever led at home reads zeros on the away side. */
+  homeLed: number;
+  homeWon: number;
+  awayLed: number;
+  awayWon: number;
 }
 
 export interface LeadRetention {
@@ -1144,7 +1150,7 @@ export interface LeadRetention {
 export function leadRetention(compId: string, matches: Match[], clubs: Club[]): LeadRetention {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
   const rows = new Map<string, LeadRetentionRow>(
-    [...ranked].map((id) => [id, { clubId: id, led: 0, won: 0, drawn: 0, lost: 0, dropped: 0, keepShare: 0 }]),
+    [...ranked].map((id) => [id, { clubId: id, led: 0, won: 0, drawn: 0, lost: 0, dropped: 0, keepShare: 0, homeLed: 0, homeWon: 0, awayLed: 0, awayWon: 0 }]),
   );
   let counted = 0;
   let ledTotal = 0; let wonTotal = 0; let drawnTotal = 0; let lostTotal = 0; let droppedTotal = 0;
@@ -1172,6 +1178,8 @@ export function leadRetention(compId: string, matches: Match[], clubs: Club[]): 
       const dropped = drawn * 2 + lost * 3;
       const row = rows.get(clubId)!;
       row.led += 1; row.won += won; row.drawn += drawn; row.lost += lost; row.dropped += dropped;
+      if (clubId === m.homeClubId) { row.homeLed += 1; row.homeWon += won; }
+      else { row.awayLed += 1; row.awayWon += won; }
       ledTotal++; wonTotal += won; drawnTotal += drawn; lostTotal += lost; droppedTotal += dropped;
     }
   }

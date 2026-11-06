@@ -53,6 +53,19 @@ ok(`leadRetention's keep share is won over led, 2dp (${leads.keepShare}%), and a
   near(leads.keepShare, 66.67, 0.005) &&
   JSON.stringify(leads) === JSON.stringify(leadRetention("T12", leadFixtures, leadClubs)));
 
+// M959: the same count at each end. Hand count: A, C, G and I led at home (A and I kept it, C and
+// G did not), F and H led away and both kept it. The two sides must add up to the whole.
+const homeLed = leads.rows.reduce((s, r) => s + r.homeLed, 0);
+const homeWon = leads.rows.reduce((s, r) => s + r.homeWon, 0);
+const awayLed = leads.rows.reduce((s, r) => s + r.awayLed, 0);
+const awayWon = leads.rows.reduce((s, r) => s + r.awayWon, 0);
+ok(`leadRetention splits each lead by the end it was taken at (home ${homeLed} led / ${homeWon} kept, away ${awayLed} / ${awayWon}; A ${lead.A.homeLed}/${lead.A.homeWon}, C ${lead.C.homeLed}/${lead.C.homeWon}, F ${lead.F.awayLed}/${lead.F.awayWon}, H ${lead.H.awayLed}/${lead.H.awayWon})`,
+  homeLed === 4 && homeWon === 2 && awayLed === 2 && awayWon === 2 &&
+  homeLed + awayLed === leads.led && homeWon + awayWon === leads.won &&
+  lead.A.homeLed === 1 && lead.A.homeWon === 1 && lead.C.homeLed === 1 && lead.C.homeWon === 0 &&
+  lead.G.homeLed === 1 && lead.G.homeWon === 0 && lead.F.awayLed === 1 && lead.F.awayWon === 1 &&
+  lead.H.awayLed === 1 && lead.H.awayWon === 1 && !lead.B && !lead.D && !lead.E && !lead.J);
+
 // A competition with no fixture at all: no rows, no leads, and a keep share of zero rather than a
 // division by zero.
 const leadEmpty = leadRetention("T99", [], [club("Q", "T99")]);
