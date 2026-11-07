@@ -129,10 +129,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M971: the other lane's form table shipped a new screen and a new chunk without pricing them
 // (its own tree measures 551 KB / 56 assets against the 548 pin), and this lane's severity board
 // adds its panel and five keys on top — measured 552 KB / 57 assets (JS 539 + CSS 12.5), pin
-// 548 -> 552, baseline re-recorded in the same commit.
 // M972: the severity board by end adds its panel, six keys per locale and four counters on the
 // card clock's own rows — measured 553 KB / 57 assets (JS 540 + CSS 12.5), pin 552 -> 553,
-// baseline re-recorded in the same commit.
+// baseline re-recorded in the same commit. This tree also carries the venue-split columns and
+// their two keys; the total is measured after the build, not guessed.
 const BUDGET_KB = 553;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);

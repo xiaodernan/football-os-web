@@ -69,16 +69,32 @@ ok(`the window re-ranks the field against each club's season place (${table.rows
   row.B.climb === 1 && row.A.climb === -1 &&
   row.E.climb === 0 && row.C.climb === 0 && row.D.climb === 0 && row.F.climb === 0 &&
   row.F.seasonPosition === 6);
+
+// The screen is a reader: it renders the folded table and the route table names it.
+const SCREEN_SRC = readFileSync(resolve(root, "features/analytics/FormTable.tsx"), "utf8");
+const APP_ROUTE_SRC = readFileSync(resolve(root, "src/App.tsx"), "utf8");
+const SHELL_NAV_SRC = readFileSync(resolve(root, "features/shell/AppShell.tsx"), "utf8");
+ok(`the window's points split cleanly by venue — every played fixture belongs to exactly one half (A home ${row.A.homePlayed}pld/${row.A.homePoints}pts away ${row.A.awayPlayed}/${row.A.awayPoints}; B ${row.B.homePoints}+${row.B.awayPoints}=${row.B.points}; D ${row.D.homePoints}+${row.D.awayPoints}=${row.D.points}; F home ${row.F.homePoints} away ${row.F.awayPlayed}pld)`,
+  row.A.homePlayed === 2 && row.A.homePoints === 1 &&
+  row.A.awayPlayed === 3 && row.A.awayPoints === 7 &&
+  row.B.homePlayed === 3 && row.B.homePoints === 4 &&
+  row.B.awayPlayed === 2 && row.B.awayPoints === 6 &&
+  row.D.homePlayed === 2 && row.D.homePoints === 1 &&
+  row.D.awayPlayed === 3 && row.D.awayPoints === 2 &&
+  row.E.homePlayed === 1 && row.E.homePoints === 0 &&
+  row.E.awayPlayed === 2 && row.E.awayPoints === 4 &&
+  row.F.homePlayed === 0 && row.F.awayPlayed === 1 && row.F.homePoints === 0 && row.F.awayPoints === 0 &&
+  row.G.homePlayed === 0 && row.G.awayPoints === 0 &&
+  table.rows.every((r) => r.homePlayed + r.awayPlayed === r.played && r.homePoints + r.awayPoints === r.points));
+ok(`the form screen reads the venue split straight off the fold (home ${SCREEN_SRC.includes("r.homePoints")}, away ${SCREEN_SRC.includes("r.awayPoints")}, keys ${SCREEN_SRC.includes("form.homePld")}/${SCREEN_SRC.includes("form.awayPld")})`,
+  SCREEN_SRC.includes("r.homePoints") && SCREEN_SRC.includes("r.awayPoints") &&
+  SCREEN_SRC.includes("form.homePld") && SCREEN_SRC.includes("form.awayPld"));
 ok(`an empty competition answers with its one idle club, no ranked cohort and no matches (rows ${formTable("T99", [], [club("Q", "T99")]).rows.length}), and this fold repeats exactly`,
   formTable("T99", [], [club("Q", "T99")]).rows.length === 1 &&
   formTable("T99", [], [club("Q", "T99")]).ranked === 0 &&
   formTable("T99", [], [club("Q", "T99")]).matches === 0 &&
   JSON.stringify(table) === JSON.stringify(formTable("T18", formFixtures, formClubs)));
 
-// The screen is a reader: it renders the folded table and the route table names it.
-const SCREEN_SRC = readFileSync(resolve(root, "features/analytics/FormTable.tsx"), "utf8");
-const APP_ROUTE_SRC = readFileSync(resolve(root, "src/App.tsx"), "utf8");
-const SHELL_NAV_SRC = readFileSync(resolve(root, "features/shell/AppShell.tsx"), "utf8");
 ok(`the form screen reads the fold and its own board (fold call ${SCREEN_SRC.includes("formTable(compId, matches, clubs)")}, rows ${SCREEN_SRC.includes("rows.map")}, pips ${SCREEN_SRC.includes("<FormPips form={r.form} />")})`,
   SCREEN_SRC.includes("formTable(compId, matches, clubs)") && SCREEN_SRC.includes("table.rows") &&
   SCREEN_SRC.includes("<FormPips form={r.form} />") && SCREEN_SRC.includes("form.recordLine") &&

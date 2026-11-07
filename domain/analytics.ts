@@ -7,7 +7,7 @@
 
 import type { Club, Match, Side } from "@/domain/types";
 import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
-import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, FORM_WINDOW, creditRecord, ResultTally, maxBy, last, tally } from "./attributes";
+import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, resultPoints, FORM_WINDOW, creditRecord, ResultTally, maxBy, last, tally } from "./attributes";
 import { byMinute } from "./matchEngine";
 
 // The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
@@ -1643,6 +1643,12 @@ export interface FormRow {
   formPosition: number;
   /** seasonPosition - formPosition; positive when the window lifts the club above its season place. */
   climb: number;
+  /** M971: the window's fixtures split by venue — every played fixture belongs to exactly one of
+   *  the two halves, so the two add up to `played` and to `points`. */
+  homePlayed: number;
+  homePoints: number;
+  awayPlayed: number;
+  awayPoints: number;
 }
 
 export interface FormTable {
@@ -1677,15 +1683,15 @@ export function formTable(compId: string, matches: Match[], clubs: Club[]): Form
       seasonPosition.set(m.clubId, 0);
     }
   }
-  const byClub = new Map<string, Array<{ kickoff: string; gf: number; ga: number }>>(
-    [...seasonPosition.keys()].map((id) => [id, [] as Array<{ kickoff: string; gf: number; ga: number }>]),
+  const byClub = new Map<string, Array<{ kickoff: string; gf: number; ga: number; home: boolean }>>(
+    [...seasonPosition.keys()].map((id) => [id, [] as Array<{ kickoff: string; gf: number; ga: number; home: boolean }>]),
   );
   let counted = 0;
   for (const m of matches) {
     if (m.competitionId !== compId || !isFinished(m)) continue;
     counted++;
-    byClub.get(m.homeClubId)?.push({ kickoff: m.kickoff, gf: m.homeGoals, ga: m.awayGoals });
-    byClub.get(m.awayClubId)?.push({ kickoff: m.kickoff, gf: m.awayGoals, ga: m.homeGoals });
+    byClub.get(m.homeClubId)?.push({ kickoff: m.kickoff, gf: m.homeGoals, ga: m.awayGoals, home: true });
+    byClub.get(m.awayClubId)?.push({ kickoff: m.kickoff, gf: m.awayGoals, ga: m.homeGoals, home: false });
   }
   const out: FormRow[] = [];
   for (const [clubId, list] of byClub) {
@@ -1693,10 +1699,18 @@ export function formTable(compId: string, matches: Match[], clubs: Club[]): Form
     const club: FormRow = {
       clubId, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0,
       form: [], seasonPosition: seasonPosition.get(clubId) ?? 0, formPosition: 0, climb: 0,
+      homePlayed: 0, homePoints: 0, awayPlayed: 0, awayPoints: 0,
     };
     for (const r of recentResults(list)) {
       creditResult(club, r.gf, r.ga);
       club.form.push(formLetter(r.gf, r.ga));
+      if (r.home) {
+        club.homePlayed++;
+        club.homePoints += resultPoints(r.gf, r.ga);
+      } else {
+        club.awayPlayed++;
+        club.awayPoints += resultPoints(r.gf, r.ga);
+      }
     }
     out.push(club);
   }

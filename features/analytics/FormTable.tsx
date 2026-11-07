@@ -111,7 +111,7 @@ export function FormTable() {
                     key={r.clubId}
                     className={cn(
                       "grid items-center gap-3 rounded-lg border px-3 py-2 text-sm",
-                      "grid-cols-[1.6rem_1fr_auto] sm:grid-cols-[1.6rem_1fr_auto_auto_auto_auto]",
+                      "grid-cols-[1.6rem_1fr_auto] sm:grid-cols-[1.6rem_1fr_auto_auto_auto_auto_auto_auto]",
                       idle && "opacity-60",
                     )}
                   >
@@ -131,6 +131,14 @@ export function FormTable() {
                     </div>
                     <div className="hidden text-right tabular-nums text-xs text-muted-foreground sm:block">
                       {idle ? ABSENT : `${r.gf}${SEPARATOR}${r.ga}`}
+                    </div>
+                    <div className="hidden text-right tabular-nums sm:block">
+                      {idle ? ABSENT : r.homePoints}
+                      <div className="text-[10px] text-muted-foreground">{idle ? ABSENT : t("form.homePld", { n: r.homePlayed })}</div>
+                    </div>
+                    <div className="hidden text-right tabular-nums sm:block">
+                      {idle ? ABSENT : r.awayPoints}
+                      <div className="text-[10px] text-muted-foreground">{idle ? ABSENT : t("form.awayPld", { n: r.awayPlayed })}</div>
                     </div>
                     <div className="hidden text-right tabular-nums sm:block">
                       {r.points}

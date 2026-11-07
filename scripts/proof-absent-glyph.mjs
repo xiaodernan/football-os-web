@@ -245,7 +245,8 @@ const expectedPerUser = [
   ["features/analytics/EventClock.tsx", 6],
   // M970: the window, the scorer tile, the pips, the idle row's four ABSENT cells and the two
   // clubs' fallbacks — the form table declines to print a number it does not have. 9 sites.
-  ["features/analytics/FormTable.tsx", 9],
+  // M971: the venue-split columns add four more (two ABSENT arms in each cell). 9 -> 13.
+  ["features/analytics/FormTable.tsx", 13],
   ["features/analytics/GoalTiming.tsx", 4],
   // M956: the lead board's absent edges read the door.
   ["features/analytics/LeadRetention.tsx", 2],

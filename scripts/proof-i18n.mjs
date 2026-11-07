@@ -4558,7 +4558,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 7 more, 2044 -> 2051.
   // M972: this lane's severity-by-end board adds its title, hint, league line, row line,
   // nothing-to-compare line and one-end count: 6 more, 2051 -> 2057.
-  shapeCounts.literal === 2057 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M971: the venue-split cells add 2 literal sites on top of the merged tree: 2057 -> 2059.
+  shapeCounts.literal === 2059 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4647,7 +4648,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // 305 -> 309.
   // M972: the board by end hands over its league line h, a and s, its row line h, hc, a and ac,
   // and its one-end count n: 3 sites, 309 -> 312.
-  litVarSites === 312 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M971: the two venue columns hand over their played counts: 312 -> 314.
+  litVarSites === 314 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
