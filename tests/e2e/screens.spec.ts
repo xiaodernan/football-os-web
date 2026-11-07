@@ -53,6 +53,17 @@ test("the discipline screen draws the severity by result board", async ({ page }
   await expect(page.getByText("Which result turns the same club redder")).toBeVisible();
 });
 
+test("the leaders screen draws the scorer and wall boards", async ({ page }) => {
+  await page.goto("/#/leaders");
+  await expect(page.getByText("Top scorers").first()).toBeVisible();
+  await expect(page.getByText("The wall")).toBeVisible();
+});
+
+test("the timing screen draws the lethal read", async ({ page }) => {
+  await page.goto("/#/timing");
+  await expect(page.getByText("The lethal read")).toBeVisible();
+});
+
 test("the form table ranks the clubs and the chips switch the competition", async ({ page }) => {
   await page.goto("/#/form");
   await expect(page.getByRole("heading", { name: "The last five, ranked" })).toBeVisible();
