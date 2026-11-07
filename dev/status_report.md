@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `a5aed66f M971: the last five at each end - home and away points split across the form window`
-**总提交数**: 1234
+**当前HEAD**: `30a68c1 M973: severity by result - which result turns the same club redder`
+**总提交数**: 1235
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -18,15 +18,16 @@
 - **M968 纪录的断点**：`streaks` 的同一次走读记下最长不败在哪一场结束——`runsOf` 记最佳不败终点下标，终点后的那场按构造必是失利，`StreakBreak` 随行返回，仍在延续时为 null；/streaks 新面板「纪录的断点」按榜单原有不败序读折叠，2 场以上的纪录才上板，活着印「仍在延续」，被终结则印对手、比分与日期。
 - **M969 冒烟网从路由表派生**：tests/e2e/all-routes.spec.ts 的路由列表直接读 `src/App.tsx` 的 `path ===` 分支与 `FOOTBALL_PREFIXES`（43 + 7 = 50 条），多一条覆盖度断言防静默漏测；E2E 65/65。
 - **M970 近五轮，重排**：`formTable` 折叠（每队最近五场按开球时间，复用 `recentResults`/`creditResult`/`byTableStanding` 门）；新屏 features/analytics/FormTable.tsx（/form + nav.form）：四块牌（已读场次/涨得最多/跌得最多/窗口内最高）+ 近五轮表；proof-formtable 7/7；126/126 全套证词、E2E 66/66（派生网自动覆盖 /form）。
-- **M971 近五轮，两端分读**：`formTable` 的每条行按半场拆窗口（FormRow 加 homePlayed/homePoints/awayPlayed/awayPoints，与窗口同源、同遍推导，两端相加恒等于 played 与 points）；/form 每行加「H · n / A · n」列；proof-formtable 9/9；与别线 cardSeverity/venueSeverity（ba16121 M971、afca431 M972）同树合入并重跑全套：126/126 · 3,417 检查、E2E 66/66。
+- **M971 近五轮，两端分读**：`formTable` 的每条行按半场拆窗口（FormRow 加 homePlayed/homePoints/awayPlayed/awayPoints，与窗口同源、同遍推导，两端相加恒等于 played 与 points）；/form 每行加「H · n / A · n」列；proof-formtable 9/9；与别线 cardSeverity/venueSeverity（ba16121 M971、afca431 M972）同树合入并重跑全套。
+- **M973 按结果看烈度**：`resultSeverity` 折叠（联结 clubResultClock 与 clubDisciplineResultClock，不重走赛程）——只留赢/负两头都有牌的队上板，`tilt` = lostShare − wonShare，按 |tilt| 降序；Discipline 屏新面板「哪种赛果更容易把同一支队罚红」（联赛句 + 单边队计数 + W/D/L 两轴分母句 + 倾斜列）；proof-result-severity 7/7（含 15 个种子赛事 seeded arm）；6 键×3；全套 127/127 · 3,424 检查、E2E 66/66。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**126/126 脚本、3,417/3,417 检查**
+- 全套证词：**127/127 脚本、3,424/3,424 检查**
 - E2E：**66/66**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,059、litVarSites 314
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,065、litVarSites 317
 
 ## 🧭 下一步方向
 
