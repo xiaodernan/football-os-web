@@ -135,7 +135,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // their two keys; the total is measured after the build, not guessed.
 // M975: the save-quality panel adds its panel, four keys and a new chunk — measured 554 KB /
 // 57 assets (JS 541 + CSS 12.5), pin 553 -> 554, baseline re-recorded in the same commit.
-const BUDGET_KB = 554;
+// M976: the wall panel rides the same bundle — measured 555 KB / 57 assets (JS 542 + CSS 12.5),
+// pin 554 -> 555, baseline re-recorded in the same commit.
+const BUDGET_KB = 555;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

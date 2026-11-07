@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, EmptyState, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, Crest } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
+import { leagueWall } from "@/domain/analytics";
+import { fmt2 } from "@/lib/utils";
 
 interface ScorerRow {
   key: string;
@@ -25,6 +27,7 @@ export function LeagueLeaders() {
 
   // Every goal and card in the seeded fixtures is a match event with a player name and a side,
   // so the board is a fold over the fixtures — never a stored table that could drift from them.
+  const wall = useMemo(() => leagueWall(footballProvider.matches(), footballProvider.clubs()), []);
   const { scorers, booked } = useMemo(() => {
     const goals = new Map<string, { name: string; clubId: string; n: number }>();
     const cards = new Map<string, { name: string; clubId: string; yellow: number; red: number }>();
@@ -127,6 +130,45 @@ export function LeagueLeaders() {
             </li>
           ))}
         </ul>
+      </Panel>
+
+      {/* M976: the wall — the clean sheet record, with its denominator beside it. The scorer and
+          booking boards above read players; this one ranks the clubs whose defence held. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.sheetsTitle")} hint={t("leaders.sheetsHint")} />
+        {wall.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.sheetsNone")}</p>
+        ) : (
+          <>
+            <ul className="mt-2 space-y-1">
+              {wall.rows.map((r, i) => {
+                const club = getClub(r.clubId);
+                return (
+                  <li
+                    key={r.clubId}
+                    className="grid grid-cols-[2rem_1fr_auto] items-center gap-2 rounded-lg border px-2 py-2 text-sm"
+                  >
+                    <span className="text-muted-foreground">{i + 1}</span>
+                    <span className="min-w-0">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={22} />
+                        <span className="truncate font-medium">{club?.name ?? r.clubId}</span>
+                      </span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {t("leaders.sheetsLine", { c: r.cleanSheets, p: fmt2(r.rate) })}
+                      </span>
+                    </span>
+                    <span className="text-right">
+                      <span className="font-semibold text-primary">{r.cleanSheets}</span>
+                      <span className="ml-1 text-xs text-muted-foreground">{t("leaders.colSheets")}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("leaders.sheetsMethod", { n: wall.matches })}</p>
+          </>
+        )}
       </Panel>
 
       <DemoBadge />

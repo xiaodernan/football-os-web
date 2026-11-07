@@ -7,7 +7,7 @@
 
 import type { Club, Match, Side } from "@/domain/types";
 import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
-import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, resultPoints, FORM_WINDOW, creditRecord, ResultTally, maxBy, last, tally } from "./attributes";
+import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, resultPoints, FORM_WINDOW, creditRecord, ResultTally, SeasonRowFields, maxBy, last, tally } from "./attributes";
 import { byMinute } from "./matchEngine";
 
 // The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
@@ -1060,6 +1060,65 @@ export function saveSeverity(compId: string, matches: Match[], clubs: Club[]): S
       a.clubId.localeCompare(b.clubId),
   );
   return { rows, league: faced ? round2((stops / faced) * 100) : 0 };
+}
+
+export interface CleanSheetRow {
+  clubId: string;
+  played: number;
+  cleanSheets: number;
+  /** Clean sheets as a share of the club's own finished fixtures, 0–100, 2dp. */
+  rate: number;
+}
+
+export interface CleanSheets {
+  /** Every club with at least one finished fixture here, ranked by the clean sheet rate, then the
+   *  sheets themselves, then the club id. */
+  rows: CleanSheetRow[];
+  /** Finished fixtures read. */
+  matches: number;
+  /** The teams' own clean sheet rate — sheets per club-fixture played. */
+  league: number;
+}
+
+/** M976: the wall. The table fold already counts every clean sheet — the table pages print each
+ *  club's number beside it, but nowhere does the club with the best defensive record get named
+ *  as the defensive record. Because it reads the world's own matches rather than one competition,
+ *  every club walks one fixture once; no third sweep of the fixtures happens anywhere. */
+export function leagueWall(matches: Match[], clubs: Club[]): CleanSheets {
+  const byClub = new Map<string, SeasonRowFields & { cleanSheets: number }>(
+    clubs.map((c) => [
+      c.id,
+      { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0, cleanSheets: 0 },
+    ]),
+  );
+  let counted = 0;
+  for (const m of matches) {
+    if (!isFinished(m)) continue;
+    counted++;
+    const h = byClub.get(m.homeClubId);
+    const a = byClub.get(m.awayClubId);
+    if (h) creditRecord(h, m.homeGoals, m.awayGoals);
+    if (a) creditRecord(a, m.awayGoals, m.homeGoals);
+    if (h && m.awayGoals === 0) h.cleanSheets++;
+    if (a && m.homeGoals === 0) a.cleanSheets++;
+  }
+  const rows = [...byClub.entries()]
+    .filter(([, r]) => r.played > 0)
+    .map(([clubId, r]) => ({
+      clubId,
+      played: r.played,
+      cleanSheets: r.cleanSheets,
+      rate: r.played ? round2((r.cleanSheets / r.played) * 100) : 0,
+    }))
+    .sort(
+      (a, b) =>
+        b.rate - a.rate ||
+        b.cleanSheets - a.cleanSheets ||
+        a.clubId.localeCompare(b.clubId),
+    );
+  const appearances = sum(rows, (r) => r.played);
+  const sheets = sum(rows, (r) => r.cleanSheets);
+  return { rows, matches: counted, league: appearances ? round2((sheets / appearances) * 100) : 0 };
 }
 
 export interface ClockContrastWindow {
