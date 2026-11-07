@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `235ce45 M975: the fort - every club that faced a shot, ranked by the share its keeper stopped`
-**总提交数**: 1239
+**当前HEAD**: `88d4f2f M976: the wall - clubs ranked by the share of their matches they were not scored in`
+**总提交数**: 1240
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -22,14 +22,15 @@
 - **M973 按结果看烈度**：`resultSeverity` 折叠（联结 clubResultClock 与 clubDisciplineResultClock，不重走赛程）——只留赢/负两头都有牌的队上板，`tilt` = lostShare − wonShare，按 |tilt| 降序；Discipline 屏新面板「哪种赛果更容易把同一支队罚红」（联赛句 + 单边队计数 + W/D/L 两轴分母句 + 倾斜列）；proof-result-severity 7/7（含 15 个种子赛事 seeded arm）；6 键×3；全套 127/127 · 3,424 检查、E2E 66/66。
 - **M974 新面板走读**：tests/e2e/screens.spec.ts 两条补充——/discipline 的 M973 面板与 /form 表与 chip 切换都有端到端锚；E2E 68/68。
 - **M975 扑救质量**：`saveSeverity` 折叠（组合自 eventClock 的已有行，不重走赛程）——只留 faced > 0 的队上板，按 stopShare 降序；EventClock 屏新面板「扑救质量」；proof-save-severity 6/6（含 15 个种子赛事 seeded arm）；4 键×3；PWA 554（JS 541）重录；全套 128/128 · 3,430 检查、E2E 68/68。
+- **M976 钢墙**：`leagueWall` 折叠（复用 isFinished 与 creditRecord 门，零封数与表折叠同源）——/leaders 新增「钢墙」面板，按零封占比（分母 = 踢过的比赛）排俱乐部；联赛数 = 全部 CS 数 / 球队-场次数；proof-leaders-wall 6/6（15 联赛全世界 seeded arm 与 independent recount 对账）；6 键×3；PWA 555；全套 129/129 · 3,436 检查、E2E 68/68。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**128/128 脚本、3,430/3,430 检查**
+- 全套证词：**129/129 脚本、3,436/3,436 检查**
 - E2E：**68/68**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、两条 screens 新面板走读）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,072、litVarSites 319
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,078、litVarSites 321
 
 ## 🧭 下一步方向
 
