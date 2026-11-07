@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `30a68c1 M973: severity by result - which result turns the same club redder`
-**总提交数**: 1235
+**当前HEAD**: `235ce45 M975: the fort - every club that faced a shot, ranked by the share its keeper stopped`
+**总提交数**: 1239
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -20,14 +20,16 @@
 - **M970 近五轮，重排**：`formTable` 折叠（每队最近五场按开球时间，复用 `recentResults`/`creditResult`/`byTableStanding` 门）；新屏 features/analytics/FormTable.tsx（/form + nav.form）：四块牌（已读场次/涨得最多/跌得最多/窗口内最高）+ 近五轮表；proof-formtable 7/7；126/126 全套证词、E2E 66/66（派生网自动覆盖 /form）。
 - **M971 近五轮，两端分读**：`formTable` 的每条行按半场拆窗口（FormRow 加 homePlayed/homePoints/awayPlayed/awayPoints，与窗口同源、同遍推导，两端相加恒等于 played 与 points）；/form 每行加「H · n / A · n」列；proof-formtable 9/9；与别线 cardSeverity/venueSeverity（ba16121 M971、afca431 M972）同树合入并重跑全套。
 - **M973 按结果看烈度**：`resultSeverity` 折叠（联结 clubResultClock 与 clubDisciplineResultClock，不重走赛程）——只留赢/负两头都有牌的队上板，`tilt` = lostShare − wonShare，按 |tilt| 降序；Discipline 屏新面板「哪种赛果更容易把同一支队罚红」（联赛句 + 单边队计数 + W/D/L 两轴分母句 + 倾斜列）；proof-result-severity 7/7（含 15 个种子赛事 seeded arm）；6 键×3；全套 127/127 · 3,424 检查、E2E 66/66。
+- **M974 新面板走读**：tests/e2e/screens.spec.ts 两条补充——/discipline 的 M973 面板与 /form 表与 chip 切换都有端到端锚；E2E 68/68。
+- **M975 扑救质量**：`saveSeverity` 折叠（组合自 eventClock 的已有行，不重走赛程）——只留 faced > 0 的队上板，按 stopShare 降序；EventClock 屏新面板「扑救质量」；proof-save-severity 6/6（含 15 个种子赛事 seeded arm）；4 键×3；PWA 554（JS 541）重录；全套 128/128 · 3,430 检查、E2E 68/68。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**127/127 脚本、3,424/3,424 检查**
-- E2E：**66/66**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,065、litVarSites 317
+- 全套证词：**128/128 脚本、3,430/3,430 检查**
+- E2E：**68/68**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、两条 screens 新面板走读）
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,072、litVarSites 319
 
 ## 🧭 下一步方向
 
