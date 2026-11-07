@@ -4553,7 +4553,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M968: the record's edge panel adds 6 literal sites (title, hint, run word, ended sentence,
   // alive word, method): 2014 -> 2020.
   // M970: the form table adds 24 literal sites: 2020 -> 2044.
-  shapeCounts.literal === 2044 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M971: this lane's severity board adds its title, hint, league line, row line and
+  // worst-window line, then reuses the no-booking line and the red count at a new call site:
+  // 7 more, 2044 -> 2051.
+  shapeCounts.literal === 2051 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4637,7 +4640,10 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M968: the ended sentence hands over the breaker's name and both goals: 296 -> 297.
   // M970: the form table hands over eight interpolating sites (window, both sub lines, both
   // move lines, the clipboard, sharpest and method): 297 -> 305.
-  litVarSites === 305 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M971: this lane's severity board's league line hands over p, its row line p and c, its
+  // worst-window line w and p, and the reused red count hands over n at its new call site:
+  // 305 -> 309.
+  litVarSites === 309 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

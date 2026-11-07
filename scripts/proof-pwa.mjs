@@ -126,7 +126,11 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M961: the collapse list measures 545 KB / 55 assets (JS 532 + CSS 12.5), pin 544 -> 545.
 // M962: the runs board measures 547 KB / 56 assets (JS 535 + CSS 12.5), pin 545 -> 547.
 // M963: the venue run line measures 548 KB / 56 assets (JS 535 + CSS 12.5), pin 547 -> 548.
-const BUDGET_KB = 548;
+// M971: the other lane's form table shipped a new screen and a new chunk without pricing them
+// (its own tree measures 551 KB / 56 assets against the 548 pin), and this lane's severity board
+// adds its panel and five keys on top — measured 552 KB / 57 assets (JS 539 + CSS 12.5), pin
+// 548 -> 552, baseline re-recorded in the same commit.
+const BUDGET_KB = 552;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
