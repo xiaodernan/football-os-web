@@ -142,9 +142,9 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M790 in this file's own record segment (the
+Work ships one milestone per commit and is currently at M791 in this file's own record segment (the
 shared git history has run ahead of the record — its newest commit is numbered higher again, and the
-section for M790 says which commit carries it and why the record continues from M789 instead of
+section for M791 says which commit carries it and why the record continues from M790 instead of
 jumping; the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
@@ -7100,6 +7100,65 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M791 — the same severity read at each end (landed in history as commit M972)
+
+**Numbering, stated again.** The shared history carries this unit as commit **M972**; this file's own
+record segment continues at **M791**, for the reason M790 stayed at M790: `proof-ledger-run` computes
+its gap set over the range the file itself spans, so a heading numbered with the commit would expose
+the 182 numbers between as gaps — most of them commits of other lanes that carry no section here —
+and redden on a unit that added one section. The commit subject, the `PLAN-LONGTERM` entry and this
+heading name each other; one number is chosen per audience, nothing is hidden.
+
+**What the page had.** The board M971 put on the discipline screen answers "how often does this club's
+booking end red" with one number per club, and that number cannot hold the question a row asks about
+its two ends: a side that turns one card in five red in front of its own crowd and one in two away is
+not the same disciplinary problem twice over, and its single share says nothing about which end to
+look at. The venue boards beside it do split by end — in cards a match, which is volume, not severity.
+
+**What landed.** Four counters on `CardTimingRow` — `homeCards`, `awayCards`, `homeReds`, `awayReds` —
+incremented inside the walk that already counted each card into its window, so a row still closes:
+the two card counters add to `cards` and the two red counters to `reds`. `venueSeverity` composes
+`cardTiming` and divides each end by itself. A `VenueSeverityRow` carries both ends' counts, both
+shares and `shareGap`, taken from the two **rounded** shares so the gap is exactly the distance
+between the figures the row prints; it is named for the quantity it is, because the venue board's
+`gap` on the same screen is cards a match. Only a club booked at **both** ends has a pair to compare,
+so the others are counted in `singleVenue` rather than vanishing or being padded with a share they
+never earned, and the board ranks by the size of the gap, then total cards, then id — it exists to
+find the split, not to re-rank the volume. The league lines divide the same way over every row the
+card clock produced, including the clubs the board left off.
+
+**What the screen shows.** A board under the severity one: the league's home red share against its
+away share and the points between them, how many clubs had nothing to compare, and per club its two
+shares printed beside their own denominators, the gap in the signed colour the other delta columns
+already use. Six keys in EN, zh-CN and zh-TW.
+
+**The seams.** `proof-analytics` gains four clauses (247 → 251). The TE hand numbers: V is 1/1 = 100
+at home against 0/1 = 0 away, U is 1/2 = 50 against 0/1 = 0, so V ranks first on a wider gap while
+carrying fewer cards — the board ranks distance, not volume — and W, booked only at home, is the one
+club counted aside, while X, never booked, is neither. TF and TG: a one-end club counts, an empty
+competition reads no board and no leftovers. The seeded arm over all 12 competitions, where each row's
+two counters add up to the card clock's own totals, the board plus the clubs left off is exactly the
+booked set (41 rows, 23 one-end clubs across the world), every share is that end's reds over that
+end's cards, the league shares are the sum over every row, and the ordering holds. Then determinism
+plus the screen: the fold call, the six keys, the empty arm, the signed gap, and no `.sort(` anywhere
+in the component.
+
+**Measured.** `proof-analytics` **251/251**; `proof-i18n` **386/386** with the census pins moved
+literally — 2,051 → 2,057 call sites and 309 → 312 variable-filling sites, no new duplicate values;
+`proof-fmt2` 12/12, `proof-quantities` 5/5, `proof-sum` 9/9, `proof-vocab` 7/7, `proof-div-guard`
+10/10, `proof-absent-glyph` 12/12; `tsc --noEmit` and the build clean; the bundle measures **553 KB**
+across 57 assets (JS 540 + CSS 12.5), so the pin goes 552 → 553 and `tests/perf/baseline.json` is
+re-recorded in the same commit rather than left to drift. Landing run: **126/126 scripts,
+3,415/3,415 checks**. The base was not run separately again; the four clauses above are additive, the
+tree M971 landed on counted 3,411, and `proof-analytics` alone reads 247 there and 251 here — the
+same script keeps its own book.
+
+**Not claimed.** No browser check, per the standing rule from M166 on: the evidence is the suite plus
+the strings the i18n gate reads out of a server-rendered tree in all three locales. What the fold does
+guarantee is arithmetic, not presentation — a club's share here and the same club's share on the
+board directly above it cannot disagree, because both divide the very same two counters, and neither
+walks the fixtures a third time.
 
 ### M790 — how often a booking ends red (landed in history as commit M971)
 

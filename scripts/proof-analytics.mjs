@@ -13,7 +13,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // outcomeOdds normalisation, leaders directionality). Deterministic, no browser.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, venueRhythm, clubResultClock, matchClock, scoringFirst, cardSeverity } =
+const { teamMetrics, expectedGoals, outcomeOdds, oddsPercents, leaders, formPoints, finishedCount, byKickoff, runIn, pointsScenarios, ceilingPlaces, titleRace, headToHead, venueSplit, goalTiming, discipline, eventClock, briefing, matchBrief, disciplineTrend, disciplineVenue, clubDisciplineTrend, rankSwing, cardTiming, clockContrast, goalVenueClock, eventVenueClock, clubRhythm, venueRhythm, clubResultClock, matchClock, scoringFirst, cardSeverity, venueSeverity } =
   await server.ssrLoadModule("/domain/analytics.ts");
 
 const resultClockSum = (fold) => fold.resultClock.won + fold.resultClock.drew + fold.resultClock.lost;
@@ -1746,6 +1746,87 @@ ok(`cardSeverity is deterministic and the discipline screen ranks off the fold, 
   DISC_SRC.includes('t("disc.sevPeak", { w: bandLabels[r.worst.band], p: fmt2(r.worst.share) })') &&
   DISC_SRC.includes('t("disc.clockNone"') &&
   DISC_SRC.includes('t("disc.redTotal", { n: r.reds })') &&
+  !/\.sort\(/.test(DISC_SRC));
+// --- M972: how often a booking ends red, at each end -------------------------------------------
+// The card clock already splits its own counts by end, so dividing them twice costs no third walk.
+// U took a 5' yellow and an 80' red at home and a 20' yellow away: 50 in front of its own crowd
+// against 0 on the road. V took its only home card as a red and its only away card as a yellow:
+// 100 against 0 — the wider gap even though it carried fewer cards, because this board ranks the
+// distance, not the volume. W was booked only at home, so it has no pair of shares to compare and
+// is counted aside rather than padded with a zero it never earned; X was booked nowhere at all.
+// The league reads 2 reds of 4 home cards against none of 2 away, so the home end is the redder.
+const cardEnds = venueSeverity("TE", cardFixtures, cardClubs);
+const endsById = Object.fromEntries(cardEnds.rows.map((r) => [r.clubId, r]));
+ok(`venueSeverity divides each club's own card clock by the end the cards were earned at (${cardEnds.rows.map((r) => `${r.clubId} ${r.homeReds}/${r.homeCards}=${r.homeShare} home, ${r.awayReds}/${r.awayCards}=${r.awayShare} away, gap ${r.shareGap}`).join(" · ")}; one end only ${cardEnds.singleVenue}; league ${cardEnds.homeLeague}/${cardEnds.awayLeague})`,
+  cardEnds.rows.map((r) => r.clubId).join(",") === "V,U" &&
+  endsById.V.homeCards === 1 && endsById.V.homeReds === 1 && endsById.V.homeShare === 100 &&
+  endsById.V.awayCards === 1 && endsById.V.awayReds === 0 && endsById.V.awayShare === 0 &&
+  endsById.V.shareGap === 100 &&
+  endsById.U.homeCards === 2 && endsById.U.homeReds === 1 && endsById.U.homeShare === 50 &&
+  endsById.U.awayCards === 1 && endsById.U.awayReds === 0 && endsById.U.awayShare === 0 &&
+  endsById.U.shareGap === 50 &&
+  cardEnds.singleVenue === 1 &&
+  cardEnds.homeLeague === 50 && cardEnds.awayLeague === 0 && cardEnds.leagueShareGap === 50);
+// A club booked at one end cannot be compared against itself; a competition with no cards at all
+// reads an empty board and nothing left off it.
+const endsTF = venueSeverity("TF", cardFixtures, cardClubs);
+const endsTG = venueSeverity("TG", cardFixtures, cardClubs);
+ok(`a one-end club is counted, not ranked, and an empty competition reads no board and no leftovers (TF ${endsTF.rows.length} rows ${endsTF.singleVenue} aside league ${endsTF.homeLeague}/${endsTF.awayLeague}; TG ${endsTG.rows.length}/${endsTG.singleVenue})`,
+  endsTF.rows.length === 0 && endsTF.singleVenue === 1 &&
+  endsTF.homeLeague === 0 && endsTF.awayLeague === 0 && endsTF.leagueShareGap === 0 &&
+  endsTG.rows.length === 0 && endsTG.singleVenue === 0);
+// On the seeded world the per-end counters are the same row split, never a second count: each
+// pair adds up to the card clock's own totals, the board plus the one-end clubs is exactly the set
+// of booked clubs, every share is that end's reds over that end's cards, and the league shares are
+// summed over every club — including the ones the board had to leave off.
+const endsSeeded = seededComps.map((id) => {
+  const comps = seededClubs.filter((c) => c.competitionId === id);
+  const v = venueSeverity(id, seededMatches, comps);
+  const c = cardTiming(id, seededMatches, comps);
+  const bookedEnds = c.rows.filter((r) => r.cards > 0);
+  const atEnd = (redKey, cardKey) => {
+    const cards = c.rows.reduce((t, r) => t + r[cardKey], 0);
+    return cards ? Math.round((c.rows.reduce((t, r) => t + r[redKey], 0) / cards) * 100 * 100) / 100 : 0;
+  };
+  return {
+    id,
+    n: v.rows.length,
+    aside: v.singleVenue,
+    closes: v.rows.every((row) => {
+      const src = c.rows.find((r) => r.clubId === row.clubId);
+      return row.homeCards + row.awayCards === src.cards &&
+        row.homeReds + row.awayReds === src.reds &&
+        row.homeShare === Math.round((row.homeReds / row.homeCards) * 100 * 100) / 100 &&
+        row.awayShare === Math.round((row.awayReds / row.awayCards) * 100 * 100) / 100 &&
+        row.shareGap === Math.round((row.homeShare - row.awayShare) * 100) / 100;
+    }),
+    whole: v.rows.length + v.singleVenue === bookedEnds.length,
+    league: v.homeLeague === atEnd("homeReds", "homeCards") && v.awayLeague === atEnd("awayReds", "awayCards"),
+    ordered: v.rows.every((row, i) => i === 0
+      || Math.abs(v.rows[i - 1].shareGap) > Math.abs(row.shareGap)
+      || (Math.abs(v.rows[i - 1].shareGap) === Math.abs(row.shareGap)
+        && v.rows[i - 1].homeCards + v.rows[i - 1].awayCards >= row.homeCards + row.awayCards)),
+  };
+});
+ok(`the board by end is the card clock divided twice, never counted a third time (${endsSeeded.filter((s) => s.closes && s.whole && s.league && s.ordered).length}/${endsSeeded.length} competitions close; ${endsSeeded.reduce((t, s) => t + s.n, 0)} rows and ${endsSeeded.reduce((t, s) => t + s.aside, 0)} one-end clubs across them)`,
+  endsSeeded.length >= 2 && endsSeeded.every((s) => s.closes && s.whole && s.league && s.ordered));
+const endsAgain = venueSeverity("TE", cardFixtures, cardClubs);
+ok(`venueSeverity is deterministic and the discipline screen ranks each club's two ends off the fold (same fold ${JSON.stringify(endsAgain) === JSON.stringify(cardEnds)})`,
+  JSON.stringify(endsAgain) === JSON.stringify(cardEnds) &&
+  DISC_SRC.includes("venueSeverity(compId, matches, clubs)") &&
+  DISC_SRC.includes("severityEnds.rows.length === 0") &&
+  DISC_SRC.includes("severityEnds.rows.map(") &&
+  DISC_SRC.includes('t("disc.sevVenueTitle"') && DISC_SRC.includes('t("disc.sevVenueHint"') &&
+  DISC_SRC.includes('t("disc.sevVenueNone"') &&
+  DISC_SRC.includes('t("disc.sevVenueLeague", {') &&
+  DISC_SRC.includes("h: fmt2(severityEnds.homeLeague)") &&
+  DISC_SRC.includes("a: fmt2(severityEnds.awayLeague)") &&
+  DISC_SRC.includes("s: signed(severityEnds.leagueShareGap)") &&
+  DISC_SRC.includes('t("disc.sevVenueSingle", { n: severityEnds.singleVenue })') &&
+  DISC_SRC.includes('t("disc.sevVenueRow", {') &&
+  DISC_SRC.includes("h: fmt2(r.homeShare)") && DISC_SRC.includes("hc: r.homeCards") &&
+  DISC_SRC.includes("a: fmt2(r.awayShare)") && DISC_SRC.includes("ac: r.awayCards") &&
+  DISC_SRC.includes("DELTA_CLASS[deltaSign(r.shareGap)]") &&
   !/\.sort\(/.test(DISC_SRC));
 // M626: the same cards split by the end they were earned at. On the T5 fixture A hosted d1 for
 // 2 cards and visited d2 for 2; B hosted d3 for 1 and visited d1 for 2; C hosted d2 for 4 and

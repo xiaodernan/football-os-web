@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, cardTiming } from "@/domain/analytics";
+import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, venueSeverity, cardTiming } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
@@ -36,10 +36,13 @@ export function Discipline() {
   // M789: each red club's own six-window series, read against the other red rows rather than
   // only against the league, so the red board shows where the sendings-off fell.
   const redPeak = Math.max(1, ...clock.redRows.map((r) => Math.max(...r.bands)));
-  // M970: the two counts the clocks already print, divided — how often a club's booking ends red.
+  // M971: the two counts the clocks already print, divided — how often a club's booking ends red.
   // A club never booked has no severity to rank, so it takes no row here rather than a zero one.
   const severity = useMemo(() => cardSeverity(compId, matches, clubs), [compId, matches, clubs]);
   const severe = severity.rows.filter((r) => r.cards > 0);
+  // M972: the same two counts divided once per end — a club booked at only one end has no pair
+  // of shares to compare, so the fold counts it aside instead of ranking a one-sided gap.
+  const severityEnds = useMemo(() => venueSeverity(compId, matches, clubs), [compId, matches, clubs]);
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -522,6 +525,58 @@ export function Discipline() {
                         <div className="text-right tabular-nums">
                           {r.reds}
                           <div className="text-xs text-muted-foreground">{t("disc.redTotal", { n: r.reds })}</div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+          </Panel>
+
+          {/* M972: the board above gives each club one red share; this divides the same two counts
+              at each end, for the clubs booked at both. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.sevVenueTitle")} hint={t("disc.sevVenueHint")} />
+            {severityEnds.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.sevVenueNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.sevVenueLeague", {
+                    h: fmt2(severityEnds.homeLeague),
+                    a: fmt2(severityEnds.awayLeague),
+                    s: signed(severityEnds.leagueShareGap),
+                  })}
+                </p>
+                {severityEnds.singleVenue > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t("disc.sevVenueSingle", { n: severityEnds.singleVenue })}
+                  </p>
+                )}
+                <ul className="mt-2 space-y-1">
+                  {severityEnds.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li key={r.clubId} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={26} />
+                          <div className="min-w-0">
+                            <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                              {club?.name ?? r.clubId}
+                            </Link>
+                            <div className="text-xs text-muted-foreground">
+                              {t("disc.sevVenueRow", {
+                                h: fmt2(r.homeShare),
+                                hc: r.homeCards,
+                                a: fmt2(r.awayShare),
+                                ac: r.awayCards,
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                        <div className={cn("text-right tabular-nums", DELTA_CLASS[deltaSign(r.shareGap)])}>
+                          {signed(r.shareGap)}
                         </div>
                       </li>
                     );

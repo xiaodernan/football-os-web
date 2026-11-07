@@ -564,6 +564,13 @@ export interface CardTimingRow {
    *  earning side's own fold never states. A booking has two clubs, and the mirror identity
    *  holds by construction: the drawn column sums to the card column across the league. */
   drawn: number;
+  /** M972: this club's cards earned at its own end of the fixture, and the sendings-off among
+   *  them. The two card counters add up to `cards` and the two red counters to `reds`, so a
+   *  club's severity can be read at each end without a third walk of the fixtures. */
+  homeCards: number;
+  awayCards: number;
+  homeReds: number;
+  awayReds: number;
 }
 
 /** M951: the drawn-foul board — the clubs whose opponents were booked most while facing
@@ -675,6 +682,10 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
         earlyShare: 0,
         lateShare: 0,
         drawn: 0,
+        homeCards: 0,
+        awayCards: 0,
+        homeReds: 0,
+        awayReds: 0,
       },
     ]),
   );
@@ -701,7 +712,13 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
       const band = goalBand(e.minute);
       row.cards++;
       windows[band]++;
-      if (e.side === "home") homeWindows[band]++; else awayWindows[band]++;
+      if (e.side === "home") {
+        homeWindows[band]++;
+        row.homeCards++;
+      } else {
+        awayWindows[band]++;
+        row.awayCards++;
+      }
       // M951: the same booking, read from the other end — the opponent drew it.
       drawnSides.push(e.side === "home" ? m.awayClubId : m.homeClubId);
       // M945: the result axis — the receiving side's own outcome of this fixture decides
@@ -714,6 +731,7 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
         row.reds++;
         row.redBands[band]++;
         redWindows[band]++;
+        if (e.side === "home") row.homeReds++; else row.awayReds++;
       }
       row.bands[band]++;
       if (band === 0) row.earlyCards++;
@@ -844,6 +862,79 @@ export function cardSeverity(compId: string, matches: Match[], clubs: Club[]): C
   const leagueCards = sum(clock.windows, (n) => n);
   const leagueReds = sum(clock.redWindows, (n) => n);
   return { rows, league: leagueCards ? round2((leagueReds / leagueCards) * 100) : 0 };
+}
+
+export interface VenueSeverityRow {
+  clubId: string;
+  /** Cards and sendings-off at this club's own end of the fixture... */
+  homeCards: number;
+  homeReds: number;
+  /** ... and at the end it visited. */
+  awayCards: number;
+  awayReds: number;
+  /** Sendings-off as a share of that end's own cards, 0–100, 2dp. */
+  homeShare: number;
+  awayShare: number;
+  /** `homeShare` minus `awayShare` in percentage points: positive when this club's bookings turn
+   *  red more often in front of its own crowd. Taken from the two rounded shares, so the gap is
+   *  exactly the distance between the figures the row prints. Named for the quantity it is — the
+   *  venue board's `gap` is cards a game, a different unit on the same screen. */
+  shareGap: number;
+}
+
+export interface VenueSeverity {
+  /** Only the clubs booked at **both** ends: a club booked at one end has no pair of shares to
+   *  compare, so it stays off the board and is counted in `singleVenue` instead of vanishing.
+   *  Ranked by the size of the gap, then by the club's total cards, then by id. */
+  rows: VenueSeverityRow[];
+  /** Clubs carrying at least one card but booked at only one end. */
+  singleVenue: number;
+  /** The competition's own red share at each end, over every card its clubs were booked for. */
+  homeLeague: number;
+  awayLeague: number;
+  /** `homeLeague` minus `awayLeague`, in percentage points. */
+  leagueShareGap: number;
+}
+
+/** M972: severity by end. The board above divides a club's reds by its cards and gets one number;
+ *  this divides each end separately, which is the question that number cannot hold — a club that
+ *  turns one card in five red at home and one in two away is not the same disciplinary problem twice
+ *  over, and the volume boards cannot tell the two apart at all. Composed on `cardTiming`'s own rows,
+ *  so no share here can disagree with the clocks and the severity board printed beside it. */
+export function venueSeverity(compId: string, matches: Match[], clubs: Club[]): VenueSeverity {
+  const clock = cardTiming(compId, matches, clubs);
+  const share = (reds: number, cards: number) => (cards ? round2((reds / cards) * 100) : 0);
+  const rows: VenueSeverityRow[] = [];
+  let singleVenue = 0;
+  for (const r of clock.rows) {
+    if (r.homeCards === 0 || r.awayCards === 0) {
+      if (r.cards > 0) singleVenue++;
+      continue;
+    }
+    const homeShare = share(r.homeReds, r.homeCards);
+    const awayShare = share(r.awayReds, r.awayCards);
+    rows.push({
+      clubId: r.clubId,
+      homeCards: r.homeCards,
+      homeReds: r.homeReds,
+      awayCards: r.awayCards,
+      awayReds: r.awayReds,
+      homeShare,
+      awayShare,
+      shareGap: round2(homeShare - awayShare),
+    });
+  }
+  rows.sort(
+    (a, b) =>
+      Math.abs(b.shareGap) - Math.abs(a.shareGap) ||
+      b.homeCards + b.awayCards - (a.homeCards + a.awayCards) ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  const homeCards = sum(clock.rows, (r) => r.homeCards);
+  const awayCards = sum(clock.rows, (r) => r.awayCards);
+  const homeLeague = share(sum(clock.rows, (r) => r.homeReds), homeCards);
+  const awayLeague = share(sum(clock.rows, (r) => r.awayReds), awayCards);
+  return { rows, singleVenue, homeLeague, awayLeague, leagueShareGap: round2(homeLeague - awayLeague) };
 }
 
 export interface ClockContrastWindow {
