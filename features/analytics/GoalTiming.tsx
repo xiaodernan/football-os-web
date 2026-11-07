@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { goalTiming , scoringFirst } from "@/domain/analytics";
+import { goalTiming , scoringFirst, finishingRate } from "@/domain/analytics";
 import { maxBy, sum } from "@/domain/attributes";
 import { ABSENT, cn, pctLabel, pctOf , fmt2} from "@/lib/utils";
 
@@ -18,6 +18,9 @@ export function GoalTiming() {
   const rows = useMemo(() => goalTiming(compId, matches, clubs), [compId, matches, clubs]);
   // M955: does scoring first win? The classic conversion, read off the event record.
   const first = useMemo(() => scoringFirst(compId, matches, clubs), [compId, matches, clubs]);
+  // M977: the lethal read — who punishes chances, joined off the two clocks above rather than a
+  // third walk of the fixtures.
+  const lethal = useMemo(() => finishingRate(compId, matches, clubs), [compId, matches, clubs]);
   // The six window labels are read once, so the bars, the tiles and the list all name a window the
   // same way — and a dictionary that is missing one of the six fails here rather than printing a key.
   const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
@@ -138,6 +141,40 @@ export function GoalTiming() {
                 <p className="mt-3 text-sm text-muted-foreground">
                   {t("timing.firstConversion", { n: fmt2(first.conversion) })}
                 </p>
+              </>
+            )}
+          </Panel>
+
+          {/* M977: the lethal read — every club that took a recorded shot, ranked by conversion.
+              The denominator travels with each row, so a five-shot wonder is read as one. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("timing.lethalTitle")} hint={t("timing.lethalHint")} />
+            {lethal.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.none")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">{t("timing.lethalLeague", { p: fmt2(lethal.league) })}</p>
+                <ul className="mt-2 space-y-1">
+                  {lethal.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li key={r.clubId} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={26} />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                            <div className="text-xs text-muted-foreground">{t("timing.lethalRow", { g: r.goals, s: r.shots, p: fmt2(r.rate) })}</div>
+                          </div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          {r.goals}
+                          <div className="text-xs text-muted-foreground">{t("timing.colScored")}</div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("timing.lethalMethod")}</p>
               </>
             )}
           </Panel>

@@ -1121,6 +1121,51 @@ export function leagueWall(matches: Match[], clubs: Club[]): CleanSheets {
   return { rows, matches: counted, league: appearances ? round2((sheets / appearances) * 100) : 0 };
 }
 
+export interface FinishingRow {
+  clubId: string;
+  shots: number;
+  goals: number;
+  /** Goals as a share of this club's recorded shots, 0–100, 2dp. */
+  rate: number;
+}
+
+export interface FinishingRate {
+  /** Every club taking at least one recorded shot here, ranked by conversion, then the goals,
+   *  then the shots, then the club id. */
+  rows: FinishingRow[];
+  /** The competition's own conversion across all its recorded shots. */
+  league: number;
+}
+
+/** M977: the lethal read. Every board on this page tells a reader when the goals arrive or who
+ *  scored them; none of them says how often an attempt became one. The two event streams the app
+ *  prints are disjoint — every attempt is either a SHOT that did not score or a GOAL — so the
+ *  board's denominator is all such attempts, computed from folds the app already carries and
+ *  dividing nothing new. A zero-attempts club takes no row. */
+export function finishingRate(compId: string, matches: Match[], clubs: Club[]): FinishingRate {
+  const clock = eventClock(compId, matches, clubs);
+  const goals = goalTiming(compId, matches, clubs);
+  const scored = new Map(goals.map((r) => [r.clubId, r.scored]));
+  const rows = clock.rows
+    .filter((r) => r.shots + (scored.get(r.clubId) ?? 0) > 0)
+    .map((r) => {
+      const g = scored.get(r.clubId) ?? 0;
+      const attempts = r.shots + g;
+      return { clubId: r.clubId, shots: r.shots, goals: g, rate: round2((g / attempts) * 100) };
+    });
+  rows.sort(
+    (a, b) =>
+      b.rate - a.rate ||
+      b.goals - a.goals ||
+      b.shots - a.shots ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  const shots = sum(clock.rows, (r) => r.shots);
+  const total = sum(goals, (r) => r.scored);
+  const attempts = shots + total;
+  return { rows, league: attempts ? round2((total / attempts) * 100) : 0 };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;
