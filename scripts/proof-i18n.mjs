@@ -4564,7 +4564,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // call: 2065 -> 2072.
   // M976: the wall panel adds its five keys as sites: 2072 -> 2078.
   // M977: the lethal read panel adds its five keys as sites: 2078 -> 2085.
-  shapeCounts.literal === 2085 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M979: the honesty report panel adds its eight keys as sites: 2085 -> 2093.
+  shapeCounts.literal === 2093 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4662,7 +4663,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // 319 -> 321.
   // M977: the league share and each row's interpolating line hand over their variables at two
   // call sites: 321 -> 323.
-  litVarSites === 323 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M979: the favorite-distribution line hands over its three counts: 323 -> 324.
+  litVarSites === 324 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

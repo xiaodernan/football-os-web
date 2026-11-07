@@ -137,7 +137,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // 57 assets (JS 541 + CSS 12.5), pin 553 -> 554, baseline re-recorded in the same commit.
 // M976: the wall panel rides the same bundle — measured 555 KB / 57 assets (JS 542 + CSS 12.5),
 // pin 554 -> 555, baseline re-recorded in the same commit.
-const BUDGET_KB = 555;
+// M979: the honesty report rides the simulation lab's chunk — measured 557 KB / 57 assets
+// (JS 544 + CSS 12.5), pin 555 -> 557, baseline re-recorded in the same commit.
+const BUDGET_KB = 557;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

@@ -6,8 +6,10 @@ import { simulateMatch, EVENT_GLYPH, type TeamInput, type SimResult } from "@/do
 import { matchProbability, type MatchProbability } from "@/domain/matchProbability";
 import { rowLine, tempoLevel, pressLevel } from "@/domain/rowText";
 import { clubInput } from "@/domain/career";
-import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
+import { Panel, SectionTitle, Crest, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS, BAR_FILL, StatTile } from "@/ui/primitives";
+import { predictionAudit } from "@/domain/analytics";
 import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/ui/badge";
 import { SimpleSlider } from "@/components/ui/simple-slider";
 import { clamp, cn, pctLabel, pctOf, fmt2, SEPARATOR, ABSENT } from "@/lib/utils";
@@ -42,6 +44,8 @@ export function SimulationLab() {
   const { query } = useRouter();
   const { t } = useI18n();
   const clubs = useMemo(() => [...footballProvider.clubs()].sort(byOverall), []);
+  const [auditCompId, setAuditCompId] = useState(() => footballProvider.competitions()[0]?.id ?? "");
+  const audit = useMemo(() => predictionAudit(auditCompId, footballProvider.matches(), footballProvider.clubs()), [auditCompId]);
   const [homeId, setHomeId] = useState(clubs.find((c) => c.name.includes("City"))?.id ?? clubs[0].id);
   const [awayId, setAwayId] = useState(clubs.find((c) => c.name.includes("Madrid"))?.id ?? clubs[1].id);
   // Tactical Studio's "Take to Simulation Lab" carries the mentality you set there
@@ -140,6 +144,31 @@ export function SimulationLab() {
           ))}
         </div>
         {season && <SeasonTable rows={season.table} name={getCompetition(season.compId)?.name ?? ABSENT} />}
+      </Panel>
+
+      {/* M979: the honesty report — the same pre-match read the engine prints, walked backwards
+          over every finished fixture in this competition, scored against what actually happened. */}
+      <Panel className="p-4">
+        <SectionTitle title={t("sim.auditTitle")} hint={t("sim.auditHint")} />
+        <div className="mt-2 flex flex-wrap gap-2">
+          {footballProvider.competitions().slice(0, 8).map((c) => (
+            <Button key={c.id} size="sm" variant={auditCompId === c.id ? "default" : "outline"} onClick={() => setAuditCompId(c.id)}>{c.name}</Button>
+          ))}
+        </div>
+        {audit.matches === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("sim.auditNone")}</p>
+        ) : (
+          <>
+            <div className="mt-3 grid gap-3 grid-cols-2 sm:grid-cols-3">
+              <StatTile label={t("sim.auditMatches")} value={audit.matches} />
+              <StatTile label={t("sim.auditBrier")} value={fmt2(audit.brier)} sub={t("sim.auditBrierSub")} />
+              <StatTile label={t("sim.auditAccuracy")} value={`${fmt2(audit.accuracy)}%`} />
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {t("sim.auditCalls", { h: audit.predictedHome, d: audit.predictedDraw, a: audit.predictedAway })}
+            </p>
+          </>
+        )}
       </Panel>
     </div>
   );

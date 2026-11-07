@@ -1166,6 +1166,72 @@ export function finishingRate(compId: string, matches: Match[], clubs: Club[]): 
   return { rows, league: attempts ? round2((total / attempts) * 100) : 0 };
 }
 
+export interface PredictionAudit {
+  /** Finished fixtures the audit covered (in kickoff order, each with only what was known before). */
+  matches: number;
+  /** The Brier score: mean of the per-match (p - o)² summed over the three outcome classes, /3,
+   *  0.001 rounded. 0 reads perfect; above 0.345 reads a drunk dartboard. */
+  brier: number;
+  /** How often the favorite (the outcome class the model gave the best odds) was the one that
+   *  happened, 0–100, 2dp. */
+  accuracy: number;
+  /** The favorite calls, one per axis. */
+  predictedHome: number;
+  predictedDraw: number;
+  predictedAway: number;
+  /** The favorites the audit can prove right. */
+  homeCorrect: number;
+  drawCorrect: number;
+  awayCorrect: number;
+}
+
+/** M979: the honesty report. The model here is a single closed-form Poisson read of each club's
+ *  shrinkage-adjusted attack against the opponent's. Every number it produces is deterministic,
+ *  so the claim it makes to a visitor ("this is what the odds show") can be tested rather than
+ *  trusted: for each finished match, compare the model's pre-match probability split against
+ *  the outcome, with NO part of the finished result in the model's inputs. Metrics are rebuilt
+ *  for each fixture from only the fixtures that kicked off earlier — the audit cannot see the
+ *  future it scores. The question is not whether the engine wins, but whether it was honest. */
+export function predictionAudit(compId: string, matches: Match[], clubs: Club[]): PredictionAudit {
+  const finished = finishedFixtures(compId, matches).slice().sort(byKickoff);
+  const prior: Match[] = [];
+  let squared = 0;
+  let correct = 0;
+  let matchesRead = 0;
+  let predictedHome = 0, predictedDraw = 0, predictedAway = 0;
+  let homeCorrect = 0, drawCorrect = 0, awayCorrect = 0;
+  for (const m of finished) {
+    const metrics = teamMetrics(compId, prior, clubs);
+    const home = metrics.find((x) => x.clubId === m.homeClubId);
+    const away = metrics.find((x) => x.clubId === m.awayClubId);
+    // League average carried per club-game before this match kicked off; the door has the same
+    // fallback the live model uses. An average with two matches is worse than none, not better.
+    const appearances = sum(metrics, (r) => r.played);
+    const goals = sum(metrics, (r) => r.gf);
+    const leagueAvg = appearances > 0 ? goals / appearances : undefined;
+    if (!home || !away) {
+      prior.push(m);
+      continue;
+    }
+    const odds = outcomeOdds(home, away, leagueAvg);
+    const actual = m.homeGoals > m.awayGoals ? "home" : m.homeGoals === m.awayGoals ? "draw" : "away";
+    const ph = odds.home, pd = odds.draw, pa = odds.away;
+    squared +=
+      (ph - (actual === "home" ? 1 : 0)) ** 2 +
+      (pd - (actual === "draw" ? 1 : 0)) ** 2 +
+      (pa - (actual === "away" ? 1 : 0)) ** 2;
+    const fav = ph >= pd && ph >= pa ? "home" : pd >= pa ? "draw" : "away";
+    if (fav === "home") { predictedHome++; if (actual === "home") { correct++; homeCorrect++; } }
+    else if (fav === "draw") { predictedDraw++; if (actual === "draw") { correct++; drawCorrect++; } }
+    else { predictedAway++; if (actual === "away") { correct++; awayCorrect++; } }
+    matchesRead++;
+    prior.push(m);
+  }
+  const brier = matchesRead ? round3(squared / matchesRead / 3) : 0;
+  const accuracy = matchesRead ? round2((correct / matchesRead) * 100) : 0;
+  return { matches: matchesRead, brier, accuracy, predictedHome, predictedDraw, predictedAway, homeCorrect, drawCorrect, awayCorrect };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;
