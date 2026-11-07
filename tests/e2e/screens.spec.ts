@@ -47,3 +47,20 @@ test("the event clock screen renders the club rhythm family", async ({ page }) =
   await expect(page.getByText("Club rhythm")).toBeVisible();
   await expect(page.getByText("Goals per card").first()).toBeVisible();
 });
+
+test("the discipline screen draws the severity by result board", async ({ page }) => {
+  await page.goto("/#/discipline");
+  await expect(page.getByText("Which result turns the same club redder")).toBeVisible();
+});
+
+test("the form table ranks the clubs and the chips switch the competition", async ({ page }) => {
+  await page.goto("/#/form");
+  await expect(page.getByRole("heading", { name: "The last five, ranked" })).toBeVisible();
+  await expect(page.getByText("Fixtures read")).toBeVisible();
+  await expect(page.getByText("The form table").first()).toBeVisible();
+  // The second chip belongs to a different competition, so clicking it re-anchors the board.
+  const chips = page.locator("button.rounded-full");
+  await expect(chips).not.toHaveCount(1);
+  await chips.nth(1).click();
+  await expect(page.getByText("The form table").first()).toBeVisible();
+});
