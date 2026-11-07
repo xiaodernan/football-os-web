@@ -5,7 +5,7 @@
 // and unit-testable. Ratings are relative to league average, so a 1.0 attack
 // means "scores at the league-average rate".
 
-import type { Club, Match, Side } from "@/domain/types";
+import type { Club, Match, Side, MatchEvent } from "@/domain/types";
 import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
 import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, resultPoints, FORM_WINDOW, creditRecord, ResultTally, SeasonRowFields, maxBy, last, tally } from "./attributes";
 import { byMinute } from "./matchEngine";
@@ -1230,6 +1230,94 @@ export function predictionAudit(compId: string, matches: Match[], clubs: Club[])
   const brier = matchesRead ? round3(squared / matchesRead / 3) : 0;
   const accuracy = matchesRead ? round2((correct / matchesRead) * 100) : 0;
   return { matches: matchesRead, brier, accuracy, predictedHome, predictedDraw, predictedAway, homeCorrect, drawCorrect, awayCorrect };
+}
+
+/** Read the xg the seeded engine writes on every GOAL event; a missing or unparseable value is
+ *  reported to the fold rather than absorbed as a zero, the same way `xgScanned` counts the rest. */
+const xgOf = (e: MatchEvent): number => {
+  if (!e.detail) return NaN;
+  if (!("vars" in e.detail)) return NaN;
+  const raw = e.detail.vars?.xg;
+  const n = typeof raw === "number" ? raw : Number(typeof raw === "string" ? raw.trim() : "");
+  return Number.isFinite(n) ? n : NaN;
+};
+
+export interface XgRow {
+  clubId: string;
+  /** xG scored by the club — the sum of every GOAL event it owns in this competition, 2dp. */
+  xgFor: number;
+  /** xG conceded — the sum of every GOAL event the opponents own, 2dp. */
+  xgAgainst: number;
+  /** xG difference, 2dp — positive reads a club creating more than it concedes. */
+  xgDiff: number;
+  /** Actual goals minus xG for, 2dp — positive reads a club finishing better than chance;
+   *  the scoreboard is telling a truer story than the xG is, which is the whole question. */
+  outshine: number;
+}
+
+export interface XgTable {
+  /** Every club with at least one finished fixture here, ranked by the xG difference, then the xG
+   *  for, then the club id. */
+  rows: XgRow[];
+  /** GOAL events the fold considered — events with a parseable xg plus missing, counted, not hidden. */
+  scannedGoals: number;
+  /** GOAL events without a parseable xg — the corruptor the fold reports instead of absorbing. */
+  missingXg: number;
+  /** The league's own xG sum — total banked by every club in this competition. */
+  leagueXg: number;
+}
+
+/** M980: the xG table. Chance creation is the one thing this page never divided against the
+ *  outcome — the league leaders tell you who ended with the most, the timing page tells you when
+ *  they ended. The scoreboard lies to exactly the degree xG catches: a club outscoring its xG is
+ *  finishing better than chance (or getting lucky), and this table puts both ends on one line. */
+export function xgTable(compId: string, matches: Match[], clubs: Club[]): XgTable {
+  const metrics = teamMetrics(compId, matches, clubs);
+  const ranked = new Set(metrics.filter((m) => m.played > 0).map((m) => m.clubId));
+  const stats = new Map<string, { for: number; against: number }>();
+  let scanned = 0, missing = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "GOAL") continue;
+      scanned++;
+      const parsed = xgOf(e);
+      if (!Number.isFinite(parsed)) { missing++; continue; }
+      const forId = e.side === "home" ? m.homeClubId : m.awayClubId;
+      const againstId = e.side === "home" ? m.awayClubId : m.homeClubId;
+      if (!ranked.has(forId) || !ranked.has(againstId)) continue;
+      const a = stats.get(forId) ?? { for: 0, against: 0 };
+      a.for += parsed;
+      stats.set(forId, a);
+      const b = stats.get(againstId) ?? { for: 0, against: 0 };
+      b.against += parsed;
+      stats.set(againstId, b);
+    }
+  }
+  const rows = metrics
+    .filter((m) => m.played > 0)
+    .map((m) => {
+      const s = stats.get(m.clubId) ?? { for: 0, against: 0 };
+      return {
+        clubId: m.clubId,
+        xgFor: round2(s.for),
+        xgAgainst: round2(s.against),
+        xgDiff: round2(s.for - s.against),
+        outshine: round2(m.gf - s.for),
+      };
+    });
+  rows.sort(
+    (a, b) =>
+      b.xgDiff - a.xgDiff ||
+      b.xgFor - a.xgFor ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  return {
+    rows,
+    scannedGoals: scanned,
+    missingXg: missing,
+    leagueXg: round2(sum(rows, (r) => r.xgFor)),
+  };
 }
 
 export interface ClockContrastWindow {

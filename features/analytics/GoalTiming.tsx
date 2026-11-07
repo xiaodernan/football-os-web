@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { goalTiming , scoringFirst, finishingRate } from "@/domain/analytics";
-import { maxBy, sum } from "@/domain/attributes";
-import { ABSENT, cn, pctLabel, pctOf , fmt2} from "@/lib/utils";
+import { goalTiming , scoringFirst, finishingRate, xgTable } from "@/domain/analytics";
+import { maxBy, sum, deltaSign } from "@/domain/attributes";
+import { ABSENT, cn, pctLabel, pctOf , fmt2, signed } from "@/lib/utils";
 
 const BANDS = [0, 1, 2, 3, 4, 5];
 
@@ -21,6 +21,8 @@ export function GoalTiming() {
   // M977: the lethal read — who punishes chances, joined off the two clocks above rather than a
   // third walk of the fixtures.
   const lethal = useMemo(() => finishingRate(compId, matches, clubs), [compId, matches, clubs]);
+  // M980: the xG table — every goal with its chance attached, summed per club.
+  const xg = useMemo(() => xgTable(compId, matches, clubs), [compId, matches, clubs]);
   // The six window labels are read once, so the bars, the tiles and the list all name a window the
   // same way — and a dictionary that is missing one of the six fails here rather than printing a key.
   const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
@@ -175,6 +177,48 @@ export function GoalTiming() {
                   })}
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">{t("timing.lethalMethod")}</p>
+              </>
+            )}
+          </Panel>
+
+          {/* M980: the xG table — how the chances measured up against what went. Negative xGD reads
+              a fixture-starving club; a positive outshine means the scoreboard outruns the odds. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("timing.xgTitle")} hint={t("timing.xgHint")} />
+            {xg.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.empty")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">{t("timing.xgLeague", { n: xg.scannedGoals, m: xg.missingXg })}</p>
+                <ul className="mt-2 space-y-1">
+                  {xg.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li key={r.clubId} className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[1fr_auto_auto_auto_auto]">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0 truncate font-medium">{club?.name ?? r.clubId}</div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          {fmt2(r.xgFor)}
+                          <div className="text-[10px] text-muted-foreground">{t("timing.xgColFor")}</div>
+                        </div>
+                        <div className="text-right tabular-nums text-muted-foreground">
+                          {fmt2(r.xgAgainst)}
+                          <div className="text-[10px] text-muted-foreground">{t("timing.xgColAgainst")}</div>
+                        </div>
+                        <div className={cn("text-right tabular-nums", DELTA_CLASS[deltaSign(r.xgDiff)])}>
+                          {signed(r.xgDiff)}
+                          <div className="text-[10px] text-muted-foreground">{t("timing.xgColDiff")}</div>
+                        </div>
+                        <div className={cn("text-right tabular-nums", DELTA_CLASS[deltaSign(r.outshine)])}>
+                          {signed(r.outshine)}
+                          <div className="text-[10px] text-muted-foreground">{t("timing.xgColOutshine")}</div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               </>
             )}
           </Panel>
