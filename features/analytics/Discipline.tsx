@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { discipline, disciplineTrend, disciplineVenue, cardTiming, cardSeverity, clubResultCards } from "@/domain/analytics";
+import { discipline, disciplineTrend, disciplineVenue, cardTiming, cardSeverity, clubResultCards, venueSeverity } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
@@ -39,6 +39,8 @@ export function Discipline() {
   const severe = severity.rows.filter((r) => r.cards > 0);
   // M950: the result clock above, charged to the club that was booked rather than to the league.
   const results = useMemo(() => clubResultCards(compId, matches, clubs), [compId, matches, clubs]);
+  // M951: the severity board's own quotient, divided once more — by the end the club was playing at.
+  const severityEnds = useMemo(() => venueSeverity(compId, matches, clubs), [compId, matches, clubs]);
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -515,6 +517,64 @@ export function Discipline() {
                           )}
                         >
                           {signed(r.edge)}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+          </Panel>
+
+          {/* M951: the severity board above divided once more — each end on its own denominator.
+              Only a club booked at both ends has a comparison, so the fold drops the rest and the
+              note below says how many. The right column is the home share minus the away share. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.sevVenueTitle")} hint={t("disc.sevVenueHint")} />
+            {severityEnds.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.sevVenueNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.sevVenueLeague", {
+                    h: fmt2(severityEnds.homeLeague),
+                    a: fmt2(severityEnds.awayLeague),
+                    s: signed(severityEnds.leagueShareGap),
+                  })}
+                </p>
+                {severityEnds.singleVenue > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t("disc.sevVenueSingle", { n: severityEnds.singleVenue })}
+                  </p>
+                )}
+                <ul className="mt-2 space-y-1">
+                  {severityEnds.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li key={r.clubId} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={26} />
+                          <div className="min-w-0">
+                            <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                              {club?.name ?? r.clubId}
+                            </Link>
+                            <div className="text-xs text-muted-foreground">
+                              {t("disc.sevVenueRow", {
+                                h: fmt2(r.homeShare),
+                                hc: r.homeCards,
+                                a: fmt2(r.awayShare),
+                                ac: r.awayCards,
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className={cn(
+                            "text-right font-mono text-sm tabular-nums",
+                            DELTA_CLASS[deltaSign(r.shareGap)],
+                          )}
+                        >
+                          {signed(r.shareGap)}
                         </div>
                       </li>
                     );

@@ -142,9 +142,9 @@ demand.
 
 ## Roadmap status
 
-Work ships one milestone per commit and is currently at M792 in this file's own record segment (the
+Work ships one milestone per commit and is currently at M793 in this file's own record segment (the
 shared git history has run ahead of the record — its newest commit is numbered higher again, and the
-section for M792 says which commit carries it and why the record continues from M791 instead of
+section for M793 says which commit carries it and why the record continues from M792 instead of
 jumping; the numbers whose commits are in the
 history but whose sections were skipped are listed as gaps below; M238, M239 and M241 had no
 sections when M240's was written, and a later sync added all three; the proof scripts advanced to
@@ -7100,6 +7100,88 @@ reflects the latest section this file actually carries.
 
 
 
+
+### M793 — which end turns the same club redder (landed in history as commit M951)
+
+**Numbering, as ever.** The shared history carries this unit as commit **M951**; this file's record
+segment continues to M793, which adds a section and no gap — 441 sections against the same 186 gaps.
+
+**What the page had.** M948 divided a club's reds by its cards and printed one number per club; M787
+divided the league's cards by the end they were earned at. Nobody divided a club's reds by *its own*
+end-cards, so the two halves of the same question sat on different panels: a club that turns one card in
+five red at home and one in two away showed a single blended share, and the volume boards above it could
+not tell that club apart from the disciplined one with the same season total. "Is this side worse in front
+of its own crowd, or on the road?" had no answer anywhere in the tree.
+
+**Four counters, then a quotient.** `cardTiming`'s per-club loop already knows which end the booked club
+was playing at — it is the same test that fills the league's `homeWindows`/`awayWindows` — so its rows now
+carry `homeCards`, `awayCards`, `homeReds`, `awayReds`. The two card counters add to the row's `cards` and
+the two red counters to its `reds`, which the seeded clause checks club by club, so the new axis cannot
+lose or invent a booking. `venueSeverity(compId, matches, clubs)` composes those rows and walks no fixture
+itself. A row exists only for a club booked at **both** ends: one denominator is enough to state a share
+and not enough to compare one, so a single-venue club is counted in `singleVenue` instead of boarding with
+a blank half — the same rule `disciplineVenue` has used since M626, now applied to a quotient rather than
+a rate. `shareGap` is the home share minus the away share, in percentage points, and it is taken from the
+two **rounded** shares, so the number in the right column is exactly the distance between the two figures
+the row prints (a reader who subtracts the printed pair gets the printed gap). The name is the unit's: the
+venue board on this same screen has carried a field called `gap` since M626, in cards a game and printed
+through `fmt2`, and `proof-quantities` charges any field name that two doors share — the choice was to
+register the collision or to name the quantity, and naming won, so the second gate fired and was answered
+without a new exception rather than a new line in a list.
+
+**Ordering.** Absolute `shareGap` first — the direction is the column's business, not the ranking's — then the
+club's total cards, then its id, which is what keeps two clubs at the same |gap| in the same order between
+renders.
+
+**The screen.** One panel under the result board: a league line naming the two shares and their gap, a
+note naming how many clubs the board had to leave off, then rows of crest, link, "so many home cards of
+which so many red, so many away", and the signed gap in the shared delta colour. The league line prints
+only beside a board: a competition whose bookings all came at one end would otherwise advertise a 0% share
+for an end that never happened. A club with no card at all is neither ranked nor counted.
+
+**Words and gates.** Six new keys (`disc.sevVenueTitle`, `…Hint`, `…League`, `…Row`, `…None`, `…Single`)
+across three locales — 1,927 → 1,933 literal census sites and 273 → 276 placeholder sites (league `h`/`a`/
+`s`, row `h`/`hc`/`a`/`ac`, note `n`). `proof-analytics` grows four clauses to 237/237: the TE league read
+by hand (V 1-of-1 home against 0-of-1 away is +100 and boards first, U 1-of-2 against 0-of-1 is +50, W was
+booked only at home so it is the one club left off, X was booked nowhere so it is not even left off, and
+the league divides four home cards with two reds by two away cards with none), the TF/TG arms (a one-venue
+league boards nobody and a cardless league has no shares), the seeded clause (12/12 competitions whose rows
+join to `cardTiming`'s own four counters, whose board plus its left-off clubs is exactly the booked
+population, whose league shares are summed over every booked club rather than the ranked ones, and whose
+order holds), and determinism plus the six screen keys. `proof-absent-glyph` stays at its roster: every
+denominator this panel prints is one the club actually earned, so the panel never reaches for the absence
+door. `proof-fmt2`, `proof-sum`, `proof-vocab` and `proof-div-guard` need no change — the fold divides
+through the domain's `sum` and `round2`, names no new vocabulary, and takes its guard from `cardTiming`.
+The bundle crossed its rounding edge again: 540 KB gzip over the same 54 assets (JS 528), so
+`proof-pwa`'s pin and `tests/perf/baseline.json` move in this commit. `tsc` clean, build exit 0, and the
+base this unit sits on ran green at 123/123 · 3,366/3,366; the landing run is **123/123 · 3,370/3,370** —
+the four new clauses and nothing else.
+
+**What it reads on the shipped world.** Ten of the fifteen competitions board at least one club; five have
+nothing to compare at all, because every booking in them came at a single end. The Bundesliga's league line
+is the steepest home end — 27.78% of its home bookings turn red against 7.69% away, +20.09 — while La Liga
+runs the other way (4.55 against 18.75, −14.20) and Ligue 1 follows it (−8.95); the Premier League is
+mildly home-ward at +5.63 (17.39 against 11.76). Four league lines name home as the redder house, eight
+name away, three are level. At the club end the widest rows are the small-denominator ones — Bayer
+Leverkusen 2-of-2 at home against 0-of-2 away, Athletic Club 0-of-2 against 1-of-1, Borussia
+Mönchengladbach 0-of-1 against 1-of-1 — and the Champions League, with 21 rows, is nearly flat as a league
+(+3.83) while carrying the most individual spread: Liverpool 1-of-3 at home against 1-of-1 away, Marseille
+0-of-2 against 3-of-6.
+
+**The honest limit.** Denominators this thin do not carry a claim: 2-of-2 against 0-of-2 is four cards, and
+the panel prints the counts inside the same line as the shares for exactly that reason. The gap is a
+difference of two rounded shares, so a row can read a gap of −33.33 whose true fractions differ by a third
+of a point more; it is the distance between the printed figures, not a fourth decimal. Population is the
+same as the card clock's — `teamMetrics` clubs with FINISHED fixtures and recorded bookings — and a club
+whose away bookings all came in one fixture is being compared across one opponent, which the board cannot
+see and the fixture list would have to say.
+
+**Live read.** The result board shipped in the entry above was read back off a live DOM on `/#/discipline`:
+nine Premier League rows whose printed shares re-derived from their own printed triples (BHA 0/2/3 of 5 at
+60.00/0.00/+60 through ARS and MUN 2/0/0 of 2 at 0.00/100.00/−100), the 0.00% tie broken by the club's card
+total then its id exactly as the fold documents, and the league line's 25.00/42.50 rebuilt from the rows'
+own columns (10 won + 11 drew + 18 lost = 39 for Ligue 1, whose 18/39 is the 46.15% printed). This panel's
+figures above are the same kind of read from the fold it calls; its DOM pass follows the landing.
 
 ### M792 — who gets booked worst while losing (landed in history as commit M950)
 

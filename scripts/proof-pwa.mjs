@@ -124,7 +124,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M950: the discipline screen's result board adds its ranked list, league line and eight keys,
 // measuring 539 KB / 54 assets (JS 527 + CSS 12.4), pin 538 -> 539, baseline re-recorded in the
 // same commit.
-const BUDGET_KB = 539;
+// M951: the discipline screen's venue severity board adds its ranked list, its two notes and six
+// keys, measuring 540 KB / 54 assets (JS 528 + CSS 12.4), pin 539 -> 540, baseline re-recorded in
+// the same commit.
+const BUDGET_KB = 540;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
