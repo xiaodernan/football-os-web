@@ -131,7 +131,8 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[
 // clause rather than dropped. A farm stub in `features/` no longer moves this pin.
 // M956: 116 -> 117 — features/analytics/LeadRetention.tsx is a new app file.
 // M962: 117 -> 118 — features/analytics/Streaks.tsx is a new app file.
-const APP_FILES_PIN = 118;
+// M970: 118 -> 119 — features/analytics/FormTable.tsx is a new app file.
+const APP_FILES_PIN = 119;
 
 // The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
 // stands alone must keep the two a reader reaches and drop the third. The planted files are

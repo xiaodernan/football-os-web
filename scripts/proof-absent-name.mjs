@@ -82,6 +82,8 @@ const FOLDED = [
   "features/analytics/RunIn.tsx",
   // M962: the runs screen names each club and falls back to the door.
   "features/analytics/Streaks.tsx",
+  // M970: the form table names its two climber/slide tiles' clubs and falls back to the door.
+  "features/analytics/FormTable.tsx",
   "features/football/Details.tsx", "features/football/FootballWorld.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/sim/SimulationLab.tsx",
 ];
@@ -133,10 +135,11 @@ ok(`every name fallback now reads the door, and the carrier set is exactly the f
 // --- import line, or imported a DIFFERENT door's name, would compile and still be wrong. ------
 const foldedImport = FOLDED.map((f) => [f, n(raw[f], IMPORT_ABSENT)]);
 const importOk = foldedImport.every(([, c]) => c === 1);
-ok(`all twelve folded files import the door exactly once, and no file outside the fold grew one (${foldedImport.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")})`,
+ok(`all thirteen folded files import the door exactly once, and no file outside the fold grew one (${foldedImport.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")})`,
   // M956: the lead board joins the fold — eleven files, each importing the door once.
   // M962: the runs screen makes it twelve.
-  importOk && foldedImport.length === 12);
+  // M970: the form table makes it thirteen.
+  importOk && foldedImport.length === 13);
 
 // --- 6. The CONTROL LANE survived: a control value is still "", and the fold did not sweep it.
 // --- This is the clause that keeps the census honest in the other direction: a census that
@@ -148,7 +151,7 @@ ok(`all twelve folded files import the door exactly once, and no file outside th
 const controlByFile = carriers.map((f) => [f, n(raw[f], CONTROL_EMPTY) - n(raw[f], NAME_EMPTY)]).filter(([, c]) => c > 0).sort();
 const controlTotal = controlByFile.reduce((a, [, c]) => a + c, 0);
 ok(`the control lane survived the fold: an id default, a record field and a filter value still read "" (${controlTotal} sites over ${controlByFile.length} files [${controlByFile.map(([f, c]) => `${f.split("/").pop()}=${c}`).join(", ")}]; floor 15 sites / 12 files — the URL parameters left this lane at M409 for their own door)`,
-  controlTotal >= 15 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/analytics/GoalTiming.tsx" && f !== "features/analytics/Discipline.tsx" && f !== "features/analytics/RunIn.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx" && f !== "features/analytics/LeadRetention.tsx" && f !== "features/analytics/Streaks.tsx"));
+  controlTotal >= 15 && controlByFile.length >= 12 && !controlByFile.some(([f]) => FOLDED.includes(f) && f !== "features/analytics/DataRoom.tsx" && f !== "features/analytics/GoalTiming.tsx" && f !== "features/analytics/Discipline.tsx" && f !== "features/analytics/RunIn.tsx" && f !== "features/football/Details.tsx" && f !== "features/football/FootballWorld.tsx" && f !== "features/manager/ManagerOS.tsx" && f !== "features/analytics/LeadRetention.tsx" && f !== "features/analytics/Streaks.tsx" && f !== "features/analytics/FormTable.tsx"));
 
 // --- 7. The marker is the ABSENCE DOOR's own glyph, not a new character and not a hole. ------
 // --- The lane's whole claim is that a missing name now reads the em dash. If the door's value
@@ -238,7 +241,9 @@ ok(`every name-lane var is PLAIN, so the marker prints itself instead of being r
   // M962: the runs screen adds three vars objects (its three holder tiles): 32 -> 35, 26 -> 29.
   // M964: the drought tile adds one vars object: 35 -> 36, 29 -> 30.
   // M968: the record's edge adds one vars object (the breaker's name): 36 -> 37, 30 -> 31.
-  laneTotal === 37 && laneVars.length === 31 && laneProps.length === 6 &&
+  // M970: the form table's two tiles add two vars objects (climber and slide's clubs):
+  // 37 -> 39, 31 -> 33.
+  laneTotal === 39 && laneVars.length === 33 && laneProps.length === 6 &&
   routedVars.length === 0 && routedProps.length === 0 && pRouted === 1);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);

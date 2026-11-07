@@ -541,7 +541,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // which is exactly why the sight matters -- a key added there would have been counted by nothing.
 // M956: 118 -> 119 — features/analytics/LeadRetention.tsx is a new app module.
 // M962: 119 -> 120 — features/analytics/Streaks.tsx is a new app module.
-const APP_SRC_PIN = 120;
+// M970: 120 -> 121 — FormTable.tsx is the new app module.
+const APP_SRC_PIN = 121;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -565,7 +566,8 @@ const APP_SRC_PIN = 120;
 // so the .tsx population was already reader-scoped in fact; the pin now says so on purpose.
 // M956: 70 -> 71 — LeadRetention.tsx is a new .tsx module.
 // M962: 71 -> 72 — Streaks.tsx is a new .tsx module.
-const TSX_PIN = 72;
+// M970: 72 -> 73 — FormTable.tsx is a new .tsx module.
+const TSX_PIN = 73;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -594,7 +596,8 @@ const TSX_PIN = 72;
 // files that are Playwright's entry points rather than the reader's app.
 // M956: 121 -> 122 — LeadRetention.tsx again.
 // M962: 122 -> 123 — Streaks.tsx again.
-const SRC_PIN = 123;
+// M970: 123 -> 124 — FormTable.tsx again.
+const SRC_PIN = 124;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -3223,9 +3226,11 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // dictionary below.
 // M944: the contrast board's 7 keys pay their toll (146 -> 147, 242 -> 243).
 // M953: the match clock keys pay their toll (147 -> 148, 245 -> 247).
-const DUP_VALUES_PIN = 152;
+// M970: the form table pays its toll (form.colPoints joins the shared "Pts" header): 152 -> 153.
+const DUP_VALUES_PIN = 153;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
-const DUP_EXCESS_KEYS_PIN = 252;
+// M970: the same "Pts" join pays its excess: 252 -> 254.
+const DUP_EXCESS_KEYS_PIN = 254;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4547,7 +4552,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M963: the lane's lead/streak families ride the census; measured 2018.
   // M968: the record's edge panel adds 6 literal sites (title, hint, run word, ended sentence,
   // alive word, method): 2014 -> 2020.
-  shapeCounts.literal === 2020 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M970: the form table adds 24 literal sites: 2020 -> 2044.
+  shapeCounts.literal === 2044 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4629,7 +4635,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M964: the drought sub and line hand over three variables at two sites: 294 -> 296.
   // M963: measured 296.
   // M968: the ended sentence hands over the breaker's name and both goals: 296 -> 297.
-  litVarSites === 297 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M970: the form table hands over eight interpolating sites (window, both sub lines, both
+  // move lines, the clipboard, sharpest and method): 297 -> 305.
+  litVarSites === 305 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

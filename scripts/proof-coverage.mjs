@@ -140,7 +140,9 @@ const DEAD_CEILING = 22;
 // M575: 121 -> 122, features/analytics/Briefing.tsx joined the population.
 // M956: 122 -> 123 — features/analytics/LeadRetention.tsx is a new screen.
 // M962: 123 -> 124 — features/analytics/Streaks.tsx is a new screen.
-const POP_PIN = 124;
+// M962: same again — the /streaks screen.
+// M970: 124 -> 125 — the /form screen.
+const POP_PIN = 125;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -174,7 +176,7 @@ const POP_PIN = 124;
 // M573: domain 33 -> 34, the next-step ranking.
 // M574: features 45 -> 46 (EventClock); M575: 46 -> 47 (Briefing).
 // M956: features 47 -> 48 (LeadRetention).
-const BY_DIR_PIN = { components: 15, data: 7, domain: 34, features: 49, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+const BY_DIR_PIN = { components: 15, data: 7, domain: 34, features: 50, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
@@ -188,7 +190,8 @@ const BY_DIR_PIN = { components: 15, data: 7, domain: 34, features: 49, function
 // M574: 61 -> 62 (EventClock). M575: 62 -> 63 (Briefing) — both sit two levels down.
 // M956: 63 -> 64 — LeadRetention sits two levels down.
 // M962: 64 -> 65 — Streaks sits two levels down.
-const DEEP_PIN = 65;
+// M970: 65 -> 66 — features/analytics/FormTable.tsx is three levels down too.
+const DEEP_PIN = 66;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

@@ -212,6 +212,10 @@ const expectedUsers = [
   "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
   "features/analytics/Briefing.tsx", "features/analytics/DataRoom.tsx",
   "features/analytics/Discipline.tsx", "features/analytics/EventClock.tsx",
+  // M970: the form table asks the door everywhere a fixture count or a position could be 0 —
+  // the pips, the two tiles' absent arms, the idle row's four cells and the two club-name
+  // fallbacks.
+  "features/analytics/FormTable.tsx",
   "features/analytics/GoalTiming.tsx",
   // M956: the lead board renders absent edges too.
   "features/analytics/LeadRetention.tsx",
@@ -239,6 +243,9 @@ const expectedPerUser = [
   // M947: the club rhythm's ratio column reads the same way.
   // M948: the screen's growing family of denominator-less reads charges one more.
   ["features/analytics/EventClock.tsx", 6],
+  // M970: the window, the scorer tile, the pips, the idle row's four ABSENT cells and the two
+  // clubs' fallbacks — the form table declines to print a number it does not have. 9 sites.
+  ["features/analytics/FormTable.tsx", 9],
   ["features/analytics/GoalTiming.tsx", 4],
   // M956: the lead board's absent edges read the door.
   ["features/analytics/LeadRetention.tsx", 2],
@@ -295,10 +302,13 @@ const reconciles = doorBody + dataValueTotal + residueTotal === totalStandalone;
 // --- the render population. The scan now refuses a brace introduced by a `$`; `pJsxDoorInterp` is the ---
 // --- plant that proves the discriminator bites — it read 1 before the lookbehind and 0 after, while the ---
 // --- JSX child keeps reading 1 and the carrier set stays at four files. ---
+// M970: the form table's pips print the door as a JSX child twice more (the empty-form read and
+// the idle row's position cell): floor 5 -> 7, carrier set gains FormTable.tsx.
 const jsxDoorTotal = carriers.reduce((a, f) => a + n(code[f], JSX_DOOR), 0);
 const jsxDoorFiles = carriers.filter((f) => n(code[f], JSX_DOOR) > 0).sort();
 const expectedJsxDoorFiles = [
-  "features/analytics/DataRoom.tsx", "features/analytics/VenueSplit.tsx",
+  "features/analytics/DataRoom.tsx", "features/analytics/FormTable.tsx",
+  "features/analytics/VenueSplit.tsx",
   "features/football/Details.tsx",
   "features/onboarding/Onboarding.tsx", "features/scouting/ScoutingPanel.tsx",
 ].sort().join(",");
@@ -310,7 +320,7 @@ ok(`the standalone-dash census reconciles on the spent ledger and both its bucke
   reconciles && doorBody === 1 && dataValueTotal === 2 && residueTotal === 0 &&
   residueFiles.length === 0 && totalStandalone >= 3 && emJsxTotal === 0 &&
   pJsxDoor === 1 && pJsxDoorOld === 0 && pJsxDoorExprSlot === 0 && pJsxDoorInterp === 0 &&
-  jsxDoorTotal >= 5 &&
+  jsxDoorTotal >= 7 &&
   jsxDoorFiles.join(",") === expectedJsxDoorFiles);
 
 // --- 8. The generate-time values are charged by their EXACT shipped line, so a fold of either onto the ---

@@ -7,7 +7,7 @@
 
 import type { Club, Match, Side } from "@/domain/types";
 import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
-import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditRecord, ResultTally, maxBy, last, tally } from "./attributes";
+import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, FORM_WINDOW, creditRecord, ResultTally, maxBy, last, tally } from "./attributes";
 import { byMinute } from "./matchEngine";
 
 // The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
@@ -1460,6 +1460,94 @@ export function streaks(compId: string, matches: Match[], clubs: Club[]): Streak
     unbeatenHolder: longestUnbeaten > 0 ? (rows.find((r) => r.longestUnbeaten === longestUnbeaten)?.clubId ?? null) : null,
     matches: counted,
   };
+}
+
+/** One row of the last-five table: the window every club's season is actually decided in.
+ *  Positions are 1-based inside the window; clubs with no finished fixture in the window are
+ *  appended after the ranked rows with `formPosition` 0 and `climb` 0, so no season place is
+ *  invented for them. */
+export interface FormRow {
+  clubId: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  points: number;
+  /** The window's results in kickoff order, oldest first. */
+  form: FormLetter[];
+  /** The club's season place (1-based); 0 when it has no finished fixture. */
+  seasonPosition: number;
+  /** The club's place inside this window (1-based); 0 when it has no finished fixture. */
+  formPosition: number;
+  /** seasonPosition - formPosition; positive when the window lifts the club above its season place. */
+  climb: number;
+}
+
+export interface FormTable {
+  /** Ranked rows first (points, goal difference, goals for), then the idle clubs in season order. */
+  rows: FormRow[];
+  /** Clubs with at least one finished fixture in the window. */
+  ranked: number;
+  /** Finished fixtures read in this competition. */
+  matches: number;
+  /** The window size used, in matches. */
+  window: number;
+}
+
+/** The last five, ranked: every club's last `FORM_WINDOW` finished fixtures, scored as their own
+ *  mini-league. New analytics, not a re-read — `teamMetrics`' `form` is only each club's own letters;
+ *  this sorts the whole field on the window. Reuses the `recentResults` door for the window, the
+ *  `creditResult` door for the tally and `byTableStanding` for the ranking, so no arithmetic is
+ *  re-spelled here. */
+export function formTable(compId: string, matches: Match[], clubs: Club[]): FormTable {
+  const season = teamMetrics(compId, matches, clubs);
+  // Season places are numbered only over the cohort that actually plays finished fixtures — the
+  // same cohort the window ranks, so `climb` compares like with like. A club with no finished
+  // fixture holds no season place on this screen (it holds season place 0 and the screen prints
+  // the absence glyph).
+  const seasonPosition = new Map<string, number>();
+  let seasonRank = 0;
+  for (const m of season) {
+    if (m.played > 0) {
+      seasonRank++;
+      seasonPosition.set(m.clubId, seasonRank);
+    } else {
+      seasonPosition.set(m.clubId, 0);
+    }
+  }
+  const byClub = new Map<string, Array<{ kickoff: string; gf: number; ga: number }>>(
+    [...seasonPosition.keys()].map((id) => [id, [] as Array<{ kickoff: string; gf: number; ga: number }>]),
+  );
+  let counted = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    counted++;
+    byClub.get(m.homeClubId)?.push({ kickoff: m.kickoff, gf: m.homeGoals, ga: m.awayGoals });
+    byClub.get(m.awayClubId)?.push({ kickoff: m.kickoff, gf: m.awayGoals, ga: m.homeGoals });
+  }
+  const out: FormRow[] = [];
+  for (const [clubId, list] of byClub) {
+    list.sort(byKickoff);
+    const club: FormRow = {
+      clubId, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0,
+      form: [], seasonPosition: seasonPosition.get(clubId) ?? 0, formPosition: 0, climb: 0,
+    };
+    for (const r of recentResults(list)) {
+      creditResult(club, r.gf, r.ga);
+      club.form.push(formLetter(r.gf, r.ga));
+    }
+    out.push(club);
+  }
+  const active = out.filter((r) => r.played > 0);
+  active.sort((x, y) => byTableStanding(x, y) || x.clubId.localeCompare(y.clubId));
+  active.forEach((r, i) => {
+    r.formPosition = i + 1;
+    r.climb = r.seasonPosition - (i + 1);
+  });
+  const idle = out.filter((r) => r.played === 0).sort((x, y) => x.seasonPosition - y.seasonPosition);
+  return { rows: [...active, ...idle], ranked: active.length, matches: counted, window: FORM_WINDOW };
 }
 
 export interface TitleRaceWeek {
