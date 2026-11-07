@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `88d4f2f M976: the wall - clubs ranked by the share of their matches they were not scored in`
-**总提交数**: 1240
+**当前HEAD**: `5a964ba M977: the lethal read - which club converts the attempts it takes`
+**总提交数**: 1242
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -23,14 +23,15 @@
 - **M974 新面板走读**：tests/e2e/screens.spec.ts 两条补充——/discipline 的 M973 面板与 /form 表与 chip 切换都有端到端锚；E2E 68/68。
 - **M975 扑救质量**：`saveSeverity` 折叠（组合自 eventClock 的已有行，不重走赛程）——只留 faced > 0 的队上板，按 stopShare 降序；EventClock 屏新面板「扑救质量」；proof-save-severity 6/6（含 15 个种子赛事 seeded arm）；4 键×3；PWA 554（JS 541）重录；全套 128/128 · 3,430 检查、E2E 68/68。
 - **M976 钢墙**：`leagueWall` 折叠（复用 isFinished 与 creditRecord 门，零封数与表折叠同源）——/leaders 新增「钢墙」面板，按零封占比（分母 = 踢过的比赛）排俱乐部；联赛数 = 全部 CS 数 / 球队-场次数；proof-leaders-wall 6/6（15 联赛全世界 seeded arm 与 independent recount 对账）；6 键×3；PWA 555；全套 129/129 · 3,436 检查、E2E 68/68。
+- **M977 致命一击**：`finishingRate` 折叠（联合 eventClock 的 shots 与 goalTiming 的 scored，两条事件流互斥）——/timing 新增「致命一击」面板，按转化率排各队（分母 = 全部尝试）；联赛数 = 全部 GOAL / 全部尝试；proof-finishing 6/6（15 联赛 seeded arm）；5 键×3；PWA 555（JS 543）；全套 130/130 · 3,442 检查、E2E 68/68。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**129/129 脚本、3,436/3,436 检查**
+- 全套证词：**130/130 脚本、3,442/3,442 检查**
 - E2E：**68/68**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、两条 screens 新面板走读）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,078、litVarSites 321
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,085、litVarSites 323
 
 ## 🧭 下一步方向
 
