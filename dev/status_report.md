@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `3f26ecd M968: the record's edge - the fixture that ended each club's longest unbeaten run`
-**总提交数**: 1227
+**当前HEAD**: `4461713 M970: the last five, ranked - a form table that re-ranks the field on each club's most recent matches`
+**总提交数**: 1230
 **开发状态**: 持续进行中，无阻塞问题
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -16,14 +16,16 @@
 - **M966 教练简历端到端**：`tests/e2e/coach-cv.spec.ts` 真的在浏览器里踢一场比赛，任期、赛季记录、首秀徽章与公开名片全部由这次点击长出来。
 - **M967 世界与设置端到端**：`tests/e2e/state.spec.ts` 走两季模拟并读赛季报告与冠军榜，再走设置页的 JSON 导出、重置确认与活动存储清空，并断言语言偏好行仍在。
 - **M968 纪录的断点**：`streaks` 的同一次走读记下最长不败在哪一场结束——`runsOf` 记最佳不败终点下标，终点后的那场按构造必是失利，`StreakBreak` 随行返回，仍在延续时为 null；/streaks 新面板「纪录的断点」按榜单原有不败序读折叠，2 场以上的纪录才上板，活着印「仍在延续」，被终结则印对手、比分与日期。
+- **M969 冒烟网从路由表派生**：tests/e2e/all-routes.spec.ts 的路由列表直接读 `src/App.tsx` 的 `path ===` 分支与 `FOOTBALL_PREFIXES`（43 + 7 = 50 条），多一条覆盖度断言防静默漏测；E2E 65/65。
+- **M970 近五轮，重排**：`formTable` 折叠（每队最近五场按开球时间，复用 `recentResults`/`creditResult`/`byTableStanding` 门）；新屏 features/analytics/FormTable.tsx（/form + nav.form）：四块牌（已读场次/涨得最多/跌得最多/窗口内最高）+ 近五轮表；proof-formtable 7/7；126/126 全套证词、E2E 66/66（派生网自动覆盖 /form）。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**125/125 脚本、3,401/3,401 检查**
-- E2E：**35/35**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、all-routes、state）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,020、litVarSites 297
+- 全套证词：**126/126 脚本、3,408/3,408 检查**
+- E2E：**66/66**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由）
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,044、litVarSites 305
 
 ## 🧭 下一步方向
 
