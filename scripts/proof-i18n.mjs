@@ -4545,7 +4545,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M963: the venue run line adds 1 literal site: 2009 -> 2010.
   // M964: the drought tile and its two lines add 4 literal sites: 2010 -> 2014.
   // M963: the lane's lead/streak families ride the census; measured 2018.
-  shapeCounts.literal === 2014 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M968: the record's edge panel adds 6 literal sites (title, hint, run word, ended sentence,
+  // alive word, method): 2014 -> 2020.
+  shapeCounts.literal === 2020 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4626,7 +4628,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M963: that line hands over four variables: 293 -> 294.
   // M964: the drought sub and line hand over three variables at two sites: 294 -> 296.
   // M963: measured 296.
-  litVarSites === 296 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M968: the ended sentence hands over the breaker's name and both goals: 296 -> 297.
+  litVarSites === 297 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

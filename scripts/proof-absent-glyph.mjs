@@ -248,7 +248,8 @@ const expectedPerUser = [
   ["features/analytics/RunIn.tsx", 5],
   // M962: the runs screen reads the door on its three holder tiles (each with a fallback arm).
   // M964: the drought tile reads the door as well.
-  ["features/analytics/Streaks.tsx", 6],
+  // M968: the record's edge reads the door for the breaker's club name. 6 -> 7.
+  ["features/analytics/Streaks.tsx", 7],
   // M950: the venue table's roughness cell declines to print a club with no bookings.
   ["features/analytics/VenueSplit.tsx", 16],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],

@@ -1347,6 +1347,15 @@ export function collapses(compId: string, matches: Match[], clubs: Club[]): Coll
   return { rows, count: rows.length, biggest, matches: counted };
 }
 
+/** M968: the fixture that ended a record — who broke it, and by what score. */
+export interface StreakBreak {
+  matchId: string;
+  kickoff: string;
+  opponentId: string;
+  goalsFor: number;
+  goalsAgainst: number;
+}
+
 export interface StreakRow {
   clubId: string;
   /** The longest run of wins this club put together in the competition. */
@@ -1367,6 +1376,9 @@ export interface StreakRow {
   /** M964: the other side of the record — the longest run without a win, and the one it is on. */
   longestWinless: number;
   currentWinless: number;
+  /** M968: the record's edge — the fixture that ended the longest unbeaten run. Null while the
+   *  run is still alive, because the best run ends at the club's last finished match. */
+  unbeatenBreak: StreakBreak | null;
 }
 
 export interface Streaks {
@@ -1388,15 +1400,15 @@ export interface Streaks {
  *  it needs no event list — a final score is enough. */
 export function streaks(compId: string, matches: Match[], clubs: Club[]): Streaks {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
-  const byClub = new Map<string, Array<{ kickoff: string; gf: number; ga: number; home: boolean }>>(
+  const byClub = new Map<string, Array<{ matchId: string; kickoff: string; gf: number; ga: number; home: boolean; opponentId: string }>>(
     [...ranked].map((id) => [id, []]),
   );
   let counted = 0;
   for (const m of matches) {
     if (m.competitionId !== compId || !isFinished(m)) continue;
     counted++;
-    byClub.get(m.homeClubId)?.push({ kickoff: m.kickoff, gf: m.homeGoals, ga: m.awayGoals, home: true });
-    byClub.get(m.awayClubId)?.push({ kickoff: m.kickoff, gf: m.awayGoals, ga: m.homeGoals, home: false });
+    byClub.get(m.homeClubId)?.push({ matchId: m.id, kickoff: m.kickoff, gf: m.homeGoals, ga: m.awayGoals, home: true, opponentId: m.awayClubId });
+    byClub.get(m.awayClubId)?.push({ matchId: m.id, kickoff: m.kickoff, gf: m.awayGoals, ga: m.homeGoals, home: false, opponentId: m.homeClubId });
   }
   const rows: StreakRow[] = [];
   // One walk per sequence: the whole season, the home matches only, the away matches only. The
@@ -1405,21 +1417,26 @@ export function streaks(compId: string, matches: Match[], clubs: Club[]): Streak
   const runsOf = (list: Array<{ gf: number; ga: number }>) => {
     let win = 0; let unbeaten = 0; let winless = 0;
     let bestWin = 0; let bestUnbeaten = 0; let bestWinless = 0;
-    for (const r of list) {
+    // The index of the match that completed the best unbeaten run so far; the fixture after it is
+    // the one that ended the record. Ties keep the earliest run, so the board is deterministic.
+    let bestUnbeatenEnd = -1;
+    for (let i = 0; i < list.length; i++) {
+      const r = list[i];
       if (r.gf > r.ga) { win++; unbeaten++; winless = 0; }
       else if (r.gf === r.ga) { win = 0; unbeaten++; winless++; }
       else { win = 0; unbeaten = 0; winless++; }
       if (win > bestWin) bestWin = win;
-      if (unbeaten > bestUnbeaten) bestUnbeaten = unbeaten;
+      if (unbeaten > bestUnbeaten) { bestUnbeaten = unbeaten; bestUnbeatenEnd = i; }
       if (winless > bestWinless) bestWinless = winless;
     }
-    return { bestWin, bestUnbeaten, bestWinless, win, unbeaten, winless };
+    return { bestWin, bestUnbeaten, bestWinless, win, unbeaten, winless, bestUnbeatenEnd };
   };
   for (const [clubId, list] of byClub) {
     list.sort(byKickoff);
     const all = runsOf(list);
     const home = runsOf(list.filter((r) => r.home));
     const away = runsOf(list.filter((r) => !r.home));
+    const edge = all.bestUnbeatenEnd >= 0 ? list[all.bestUnbeatenEnd + 1] : undefined;
     rows.push({
       clubId,
       longestWin: all.bestWin, longestUnbeaten: all.bestUnbeaten,
@@ -1427,6 +1444,11 @@ export function streaks(compId: string, matches: Match[], clubs: Club[]): Streak
       homeWin: home.bestWin, homeUnbeaten: home.bestUnbeaten,
       awayWin: away.bestWin, awayUnbeaten: away.bestUnbeaten,
       longestWinless: all.bestWinless, currentWinless: all.winless,
+      // The match after the best run is a loss by construction: anything else would have extended
+      // the run. While the run is alive there is no next match to name.
+      unbeatenBreak: edge
+        ? { matchId: edge.matchId, kickoff: edge.kickoff, opponentId: edge.opponentId, goalsFor: edge.gf, goalsAgainst: edge.ga }
+        : null,
     });
   }
   rows.sort((x, y) => y.longestUnbeaten - x.longestUnbeaten || y.longestWin - x.longestWin || x.clubId.localeCompare(y.clubId));

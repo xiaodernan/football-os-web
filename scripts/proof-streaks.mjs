@@ -86,6 +86,25 @@ ok(`streaks reads each run again inside the home matches and inside the away mat
   vrow.B.homeUnbeaten === 0 && vrow.A.longestWinless === 1 && vrow.A.currentWinless === 1 &&
   JSON.stringify(venueRuns) === JSON.stringify(streaks("T17", venueFixtures, venueClubs)));
 
+// ---- M968: the record's edge -----------------------------------------------------------------
+// Hand count for A: it won s1 and s2, so its best unbeaten run is two and ends at s2; the next
+// fixture (s3, A 0-3 D) is the one that broke the record. D, E and the two losers either never
+// had a run or reached their last finished match with it, so they have no breaker to name.
+ok(`streaks names the fixture that ended each longest unbeaten run (A's record broken by ${row.A.unbeatenBreak?.opponentId ?? "none"} ${row.A.unbeatenBreak?.goalsFor ?? 0}-${row.A.unbeatenBreak?.goalsAgainst ?? 0} in ${row.A.unbeatenBreak?.matchId ?? "none"}; D ${row.D.unbeatenBreak ?? "none"}, E ${row.E.unbeatenBreak ?? "none"}, B ${row.B.unbeatenBreak ?? "none"})`,
+  row.A.unbeatenBreak?.matchId === "s3" && row.A.unbeatenBreak?.opponentId === "D" &&
+  row.A.unbeatenBreak?.goalsFor === 0 && row.A.unbeatenBreak?.goalsAgainst === 3 &&
+  row.A.unbeatenBreak?.kickoff === "2026-08-03" &&
+  row.D.unbeatenBreak === null && row.E.unbeatenBreak === null && row.B.unbeatenBreak === null);
+// The same edge read inside the venue fixture: A's four-match unbeaten run ends at v4 and v5
+// (A 1-2 F) is the breaker; F itself won its only fixture, so its run is alive.
+ok(`the breaker is the fixture after the best run, and a run that reaches the last match has none (A ${vrow.A.unbeatenBreak?.matchId ?? "none"} ${vrow.A.unbeatenBreak?.goalsFor ?? 0}-${vrow.A.unbeatenBreak?.goalsAgainst ?? 0} vs ${vrow.A.unbeatenBreak?.opponentId ?? "none"}; F ${vrow.F.unbeatenBreak ?? "none"})`,
+  vrow.A.unbeatenBreak?.matchId === "v5" && vrow.A.unbeatenBreak?.opponentId === "F" &&
+  vrow.A.unbeatenBreak?.goalsFor === 1 && vrow.A.unbeatenBreak?.goalsAgainst === 2 &&
+  vrow.F.unbeatenBreak === null && vrow.B.unbeatenBreak === null &&
+  JSON.stringify(venueRuns) === JSON.stringify(streaks("T17", venueFixtures, venueClubs)));
+ok(`every named breaker is a match the club lost, and the fold never names a breaker without a run (${runs.rows.filter((r) => r.unbeatenBreak).map((r) => `${r.clubId}:${r.unbeatenBreak.goalsFor}-${r.unbeatenBreak.goalsAgainst}`).join(" ")})`,
+  runs.rows.every((r) => !r.unbeatenBreak || (r.unbeatenBreak.goalsFor < r.unbeatenBreak.goalsAgainst && r.longestUnbeaten >= 2)));
+
 // The screen is a reader, not a second engine: it must render the folded board, and the route must
 // exist for the sidebar entry that names it.
 const SCREEN_SRC = readFileSync(resolve(root, "features/analytics/Streaks.tsx"), "utf8");
@@ -96,6 +115,11 @@ ok(`the runs screen reads the fold and its own board (fold call ${SCREEN_SRC.inc
   SCREEN_SRC.includes("pctOf(r.longestUnbeaten, peak)") && !SCREEN_SRC.includes("GOAL_BANDS") &&
   SCREEN_SRC.includes("streaks.venueLine") && SCREEN_SRC.includes("r.homeUnbeaten") &&
   SCREEN_SRC.includes("streaks.droughtLine") && SCREEN_SRC.includes("streaks.drought"));
+ok(`the runs screen reads the breaker off the fold rather than rebuilding it (edge ${SCREEN_SRC.includes("r.unbeatenBreak")}, alive ${SCREEN_SRC.includes("streaks.edgeAlive")}, ended ${SCREEN_SRC.includes("streaks.edgeEnded")}, date ${SCREEN_SRC.includes("formatDate(locale, r.unbeatenBreak.kickoff)")})`,
+  SCREEN_SRC.includes("r.unbeatenBreak") && SCREEN_SRC.includes("streaks.edgeAlive") &&
+  SCREEN_SRC.includes("streaks.edgeEnded") && SCREEN_SRC.includes("streaks.edgeRun") &&
+  SCREEN_SRC.includes("formatDate(locale, r.unbeatenBreak.kickoff)") &&
+  SCREEN_SRC.includes("r.longestUnbeaten >= 2") && !SCREEN_SRC.includes("byKickoff"));
 ok(`the runs screen is reachable — the route table and the sidebar both name it (route ${/path === "\/streaks"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/streaks"/.test(SHELL_NAV_SRC)})`,
   /path === "\/streaks"/.test(APP_ROUTE_SRC) && /to: "\/streaks"/.test(SHELL_NAV_SRC));
 
