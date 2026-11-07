@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { clubRhythm, clockContrast, clubResultClock, eventClock } from "@/domain/analytics";
+import { clubRhythm, clockContrast, clubResultClock, eventClock, saveSeverity } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
 import { fmt2, ABSENT, cn, pctLabel, pctOf, safeDiv } from "@/lib/utils";
 
@@ -48,6 +48,9 @@ export function EventClock() {
   const contrast = useMemo(() => clockContrast(compId, matches, clubs), [compId, matches, clubs]);
   const rhythm = useMemo(() => clubRhythm(compId, matches, clubs), [compId, matches, clubs]);
   const clubResults = useMemo(() => clubResultClock(compId, matches, clubs), [compId, matches, clubs]);
+  // M975: the fort — every club that faced at least one shot, ranked by the share its keeper
+  // stopped, not by the load it sat under.
+  const forts = useMemo(() => saveSeverity(compId, matches, clubs), [compId, matches, clubs]);
   const crossPeak = Math.max(1, ...contrast.windows.flatMap((w) => [w.goals, w.cards]));
   const crossRows = [
     { label: t("clock.crossGoals"), data: contrast.windows.map((w) => w.goals), fill: BAR_FILL.progress },
@@ -476,6 +479,43 @@ export function EventClock() {
               </ul>
             </Panel>
           )}
+          {/* M975: the fort — who faced the least business and who made the most of it. The
+              siege board ranks by the load; this one divides the load by what the keeper did
+              with it. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("clock.fortTitle")} hint={t("clock.fortHint")} />
+            {forts.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("clock.emptyShort")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">{t("clock.fortLeague", { p: fmt2(forts.league) })}</p>
+                <ul className="mt-2 space-y-1">
+                  {forts.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li key={r.clubId} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={26} />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                            <div className="text-xs text-muted-foreground">{t("clock.fortRow", { p: fmt2(r.stopShare), n: r.stops, f: r.faced })}</div>
+                          </div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          {r.stops}
+                          <div className="text-xs text-muted-foreground">{t("clock.stops")}</div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          {r.faced}
+                          <div className="text-xs text-muted-foreground">{t("clock.faced")}</div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+          </Panel>
         </>
       )}
     </div>

@@ -1024,6 +1024,44 @@ export function resultSeverity(compId: string, matches: Match[], clubs: Club[]):
   return { rows, singleResult, wonLeague, drewLeague, lostLeague, leagueTilt: round2(lostLeague - wonLeague) };
 }
 
+export interface SaveSeverityRow {
+  clubId: string;
+  faced: number;
+  stops: number;
+  /** Share of the shots this club faced that its keeper stopped, 0–100, 2dp. A club that faced
+   *  nothing reads 0 from a denominator of zero; it takes no row instead of a zero rate. */
+  stopShare: number;
+}
+
+export interface SaveSeverity {
+  /** Clubs that faced at least one shot here — anything else has no rate to print. Ranked by the
+   *  stop share, then the stops made, then the faced load, then the id. */
+  rows: SaveSeverityRow[];
+  /** The competition's own stop share — as a share of everything the league faced. */
+  league: number;
+}
+
+/** M975: the fort. Every board on the event clock ranks by what the club did with the ball or by
+ *  the load it sat under; this divides the load by what the keeper made of it, which is the one
+ *  question none of them asks. Composed on `eventClock`'s own rows rather than walking the
+ *  fixtures, so no share here can disagree with the siege board printed beside it. */
+export function saveSeverity(compId: string, matches: Match[], clubs: Club[]): SaveSeverity {
+  const clock = eventClock(compId, matches, clubs);
+  const faced = sum(clock.rows, (r) => r.faced);
+  const stops = sum(clock.rows, (r) => r.stops);
+  const rows = clock.rows
+    .filter((r) => r.faced > 0)
+    .map((r) => ({ clubId: r.clubId, faced: r.faced, stops: r.stops, stopShare: r.stopShare }));
+  rows.sort(
+    (a, b) =>
+      b.stopShare - a.stopShare ||
+      b.stops - a.stops ||
+      b.faced - a.faced ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  return { rows, league: faced ? round2((stops / faced) * 100) : 0 };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

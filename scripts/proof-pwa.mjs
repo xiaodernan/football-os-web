@@ -133,7 +133,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // card clock's own rows — measured 553 KB / 57 assets (JS 540 + CSS 12.5), pin 552 -> 553,
 // baseline re-recorded in the same commit. This tree also carries the venue-split columns and
 // their two keys; the total is measured after the build, not guessed.
-const BUDGET_KB = 553;
+// M975: the save-quality panel adds its panel, four keys and a new chunk — measured 554 KB /
+// 57 assets (JS 541 + CSS 12.5), pin 553 -> 554, baseline re-recorded in the same commit.
+const BUDGET_KB = 554;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

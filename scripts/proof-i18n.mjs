@@ -4560,7 +4560,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // nothing-to-compare line and one-end count: 6 more, 2051 -> 2057.
   // M971: the venue-split cells add 2 literal sites on top of the merged tree: 2057 -> 2059.
   // M973: the severity-by-result panel adds 6 keys as sites: 2059 -> 2065.
-  shapeCounts.literal === 2065 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M975: the save-quality panel adds its four keys as sites and the shared empty line at a new
+  // call: 2065 -> 2072.
+  shapeCounts.literal === 2072 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4652,7 +4654,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M971: the two venue columns hand over their played counts: 312 -> 314.
   // M973: the severity-by-result panel hands over league shares, single arms and each row's six
   // figures at three call sites: 314 -> 317.
-  litVarSites === 317 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M975: the league share and each row's stopped-of-faced line hand over two interpolating
+  // sites: 317 -> 319.
+  litVarSites === 319 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
