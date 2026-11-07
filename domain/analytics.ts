@@ -937,6 +937,93 @@ export function venueSeverity(compId: string, matches: Match[], clubs: Club[]): 
   return { rows, singleVenue, homeLeague, awayLeague, leagueShareGap: round2(homeLeague - awayLeague) };
 }
 
+export interface ResultSeverityRow {
+  clubId: string;
+  /** Cards earned in matches the club won, and the sendings-off among them — the same way the
+   *  result clock splits each window, but as a pair counted once per fixture. */
+  wonCards: number;
+  wonReds: number;
+  /** The same pair for matches the club drew. */
+  drewCards: number;
+  drewReds: number;
+  /** The same pair for matches the club lost. */
+  lostCards: number;
+  lostReds: number;
+  /** Sendings-off as a share of that result's own cards, 0–100, 2dp. */
+  wonShare: number;
+  drewShare: number;
+  lostShare: number;
+  /** `lostShare` minus `wonShare`, percentage points. Positive reads a club that loses its head
+   *  when it loses the match. Taken from the two rounded shares, so the figure the row prints
+   *  and the gap are the same subtraction. */
+  tilt: number;
+}
+
+export interface ResultSeverity {
+  /** Only the clubs booked in a won match AND a lost match — a club without both has no pair of
+   *  rates to compare, so it stays off the board and is counted in `singleResult` instead of
+   *  reading a zero it has not earned. Ranked by the size of the gap, then the whole card load,
+   *  then the id. */
+  rows: ResultSeverityRow[];
+  /** Clubs carrying at least one card but not in both a won and a lost match. */
+  singleResult: number;
+  /** The competition's own red share in each result, over every card its clubs were booked for. */
+  wonLeague: number;
+  drewLeague: number;
+  lostLeague: number;
+  /** `lostLeague` minus `wonLeague`, percentage points. */
+  leagueTilt: number;
+}
+
+/** M973: severity by result. The board above divides a club's reds by its cards once per end;
+ *  this divides the same two counts once per result — a club that keeps its head while it wins
+ *  and loses it when behind is not the same problem twice over, and neither of the end or volume
+ *  boards can hold that question. Composed on the two result clocks (`clubResultClock`'s cards,
+ *  `clubDisciplineResultClock`'s reds) joined by club id, so no rate here can disagree with the
+ *  panels that print the raw counts. The draw axis is printed but does not enter the tilt: the
+ *  question is winning-hours against losing-hours, and a drawn fixture has no loser to point at. */
+export function resultSeverity(compId: string, matches: Match[], clubs: Club[]): ResultSeverity {
+  const cards = clubResultClock(compId, matches, clubs);
+  const reds = clubDisciplineResultClock(compId, matches, clubs);
+  const redById = new Map(reds.map((r) => [r.clubId, r]));
+  const share = (n: number, d: number) => (d ? round2((n / d) * 100) : 0);
+  const rows: ResultSeverityRow[] = [];
+  let singleResult = 0;
+  let wonCards = 0, drewCards = 0, lostCards = 0, wonReds = 0, drewReds = 0, lostReds = 0;
+  for (const c of cards) {
+    const r = redById.get(c.clubId);
+    const wr = r?.won ?? 0, dr = r?.drew ?? 0, lr = r?.lost ?? 0;
+    wonCards += c.won; drewCards += c.drew; lostCards += c.lost;
+    wonReds += wr; drewReds += dr; lostReds += lr;
+    if (c.won === 0 || c.lost === 0) {
+      if (c.won + c.drew + c.lost > 0) singleResult++;
+      continue;
+    }
+    const wonShare = share(wr, c.won);
+    const lostShare = share(lr, c.lost);
+    rows.push({
+      clubId: c.clubId,
+      wonCards: c.won, wonReds: wr,
+      drewCards: c.drew, drewReds: dr,
+      lostCards: c.lost, lostReds: lr,
+      wonShare,
+      drewShare: share(dr, c.drew),
+      lostShare,
+      tilt: round2(lostShare - wonShare),
+    });
+  }
+  rows.sort(
+    (a, b) =>
+      Math.abs(b.tilt) - Math.abs(a.tilt) ||
+      (b.wonCards + b.drewCards + b.lostCards) - (a.wonCards + a.drewCards + a.lostCards) ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  const wonLeague = share(wonReds, wonCards);
+  const drewLeague = share(drewReds, drewCards);
+  const lostLeague = share(lostReds, lostCards);
+  return { rows, singleResult, wonLeague, drewLeague, lostLeague, leagueTilt: round2(lostLeague - wonLeague) };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

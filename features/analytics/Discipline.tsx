@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, venueSeverity, cardTiming } from "@/domain/analytics";
+import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, resultSeverity, venueSeverity, cardTiming } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
@@ -43,6 +43,9 @@ export function Discipline() {
   // M972: the same two counts divided once per end — a club booked at only one end has no pair
   // of shares to compare, so the fold counts it aside instead of ranking a one-sided gap.
   const severityEnds = useMemo(() => venueSeverity(compId, matches, clubs), [compId, matches, clubs]);
+  // M973: the same two counts divided once per result — a club with no cards in both a won and a
+  // lost match has no pair of rates to compare, so it takes no row and is counted aside instead.
+  const severityResult = useMemo(() => resultSeverity(compId, matches, clubs), [compId, matches, clubs]);
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -577,6 +580,60 @@ export function Discipline() {
                         </div>
                         <div className={cn("text-right tabular-nums", DELTA_CLASS[deltaSign(r.shareGap)])}>
                           {signed(r.shareGap)}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
+          </Panel>
+          {/* M973: the same two counts divided once per result — a club with no cards in both a
+              won and a lost match has no pair of rates to compare. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.sevResultTitle")} hint={t("disc.sevResultHint")} />
+            {severityResult.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.sevResultNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.sevResultLeague", {
+                    w: fmt2(severityResult.wonLeague),
+                    d: fmt2(severityResult.drewLeague),
+                    l: fmt2(severityResult.lostLeague),
+                    s: signed(severityResult.leagueTilt),
+                  })}
+                </p>
+                {severityResult.singleResult > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t("disc.sevResultSingle", { n: severityResult.singleResult })}
+                  </p>
+                )}
+                <ul className="mt-2 space-y-1">
+                  {severityResult.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li key={r.clubId} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={26} />
+                          <div className="min-w-0">
+                            <Link to={`/clubs/${r.clubId}`} className="block truncate font-medium hover:text-primary">
+                              {club?.name ?? r.clubId}
+                            </Link>
+                            <div className="text-xs text-muted-foreground">
+                              {t("disc.sevResultRow", {
+                                w: fmt2(r.wonShare),
+                                wc: r.wonCards,
+                                d: fmt2(r.drewShare),
+                                dc: r.drewCards,
+                                l: fmt2(r.lostShare),
+                                lc: r.lostCards,
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                        <div className={cn("text-right tabular-nums", DELTA_CLASS[deltaSign(r.tilt)])}>
+                          {signed(r.tilt)}
                         </div>
                       </li>
                     );
