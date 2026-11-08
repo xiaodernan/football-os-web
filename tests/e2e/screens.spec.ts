@@ -202,6 +202,21 @@ test("the knowledge academy renders its curriculum home", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Knowledge Academy" })).toBeVisible();
 });
 
+test("the briefing renders its matchday title", async ({ page }) => {
+  await page.goto("/#/briefing");
+  await expect(page.getByRole("heading", { name: "Matchday briefing" })).toBeVisible();
+});
+
+test("the run-in page renders its weekly digest heading", async ({ page }) => {
+  await page.goto("/#/run-in");
+  await expect(page.getByRole("heading", { name: "The run-in" })).toBeVisible();
+});
+
+test("the title race page renders its weekly-ladder heading", async ({ page }) => {
+  await page.goto("/#/title-race");
+  await expect(page.getByRole("heading", { name: "The title race, week by week" })).toBeVisible();
+});
+
 test("the weekly review renders its digest heading", async ({ page }) => {
   await page.goto("/#/review");
   await expect(page.getByRole("heading", { name: "Weekly Review" })).toBeVisible();
