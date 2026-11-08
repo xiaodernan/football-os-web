@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `4e695a2`（提交信息写坏了；内容是 PLAN-LONGTERM.md 补录 M998 和 M999 两条的账本同步提交。上一里程碑：`b1dfc92 M999: the world's under-fire squads - the injury ladder`）
-**总提交数**: 1281
+**当前HEAD**: `e2787f7 M1000: the xG family walked end to end - table, margins, closing time, venue clock, save quality`
+**总提交数**: 1283
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -46,13 +46,14 @@
 - **M997 /streaks 走读**：/streaks 页面断言 heading 与最长不胜 tile；E2E 78/78。
 - **M998 传球手**：`passingAccuracy` 折叠——/leaders 新增「The passers」面板：按每场 finished fixture 的 stats 块算各 club 的传球成功率平均（rankly sorted，world 均值作对照）；proof-passing 7/7（T40 fixture solver；15 联赛 seeded arm 全部对账）；7 键×3；PWA 566（JS 554）；全套 144/144 · 3,524 检查、E2E 78/78。
 - **M999 伤病最严重的球队**：`squadAvailability` 折叠——/injuries 新增「伤病最严重的球队」阶梯面板：本周按 club 走完世世界场均出场队伍，按 injuries 降序排（fitness 低优先；ID 做最后的 tiebreak）；proof-squad-availability 7/7（T41 fixture 手算 + world arm 对全部 73 clubs 的 independent 复核）；5 键×3；PWA 567（JS 555）；全套 145/145 · 3,531 检查、E2E 81/81。
+- **M1000 xG 家族走读**：tests/e2e/screens.spec.ts 三条补充锚住 M980 xG 表、M983 亏欠分差、M989 后 15 分钟、M982 分端 xG 钟与 M975 扑救质量在真实浏览器里渲染；E2E 84/84。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
 - 全套证词：**145/145 脚本、3,531/3,531 检查**
-- E2E：**81/81**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks、injuries-M999 ladder）
+- E2E：**84/84**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks、injuries M999 ladder、xG family M1000）
 - 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,184、litVarSites 345
 
 ## 🧭 下一步方向
