@@ -2064,6 +2064,61 @@ export function cornerKings(matches: Match[], clubs: Club[]): CornerKings {
   return { rows, league: totalGames ? round2(totalCorners / totalGames) : 0 };
 }
 
+/** M1011: the world's outshine — every club producing goals above their recorded xG at world
+ *  scale, ranked by how far the scoreboard runs past the chances. The league xG table settles
+ *  who creates most in one competition; this answers who punishes the most across the board. */
+export interface OutshineRow {
+  clubId: string;
+  /** xG for across the whole world, 2dp. */
+  xgFor: number;
+  /** Actual goals minus xG for, 2dp — positive reads a club finishing better than chance. */
+  outshine: number;
+}
+
+export interface OutshineWorld {
+  /** Clubs ranked by outshine, then xG for, then club id; xG-less clubs excluded — there
+   *  is nothing for the fold to outflank them with. */
+  rows: OutshineRow[];
+}
+
+export function worldOutshine(matches: Match[], clubs: Club[]): OutshineWorld {
+  const ranked = indexById(clubs);
+  const appeared: Set<string> = new Set();
+  for (const m of matches) {
+    if (!isFinished(m)) continue;
+    if (ranked.has(m.homeClubId)) appeared.add(m.homeClubId);
+    if (ranked.has(m.awayClubId)) appeared.add(m.awayClubId);
+  }
+  const goals = new Map<string, number>();
+  const xg = new Map<string, number>();
+  for (const m of matches) {
+    if (!isFinished(m)) continue;
+    goals.set(m.homeClubId, (goals.get(m.homeClubId) ?? 0) + m.homeGoals);
+    goals.set(m.awayClubId, (goals.get(m.awayClubId) ?? 0) + m.awayGoals);
+    for (const e of m.events ?? []) {
+      if (e.type !== "GOAL") continue;
+      const parsed = xgOf(e);
+      if (!Number.isFinite(parsed)) continue;
+      const id = e.side === "home" ? m.homeClubId : m.awayClubId;
+      xg.set(id, (xg.get(id) ?? 0) + parsed);
+    }
+  }
+  const rows = [...appeared]
+    .map((clubId) => ({
+      clubId,
+      xgFor: round2(xg.get(clubId) ?? 0),
+      outshine: round2((goals.get(clubId) ?? 0) - (xg.get(clubId) ?? 0)),
+    }))
+    .filter((r) => r.xgFor > 0)
+    .sort(
+      (a, b) =>
+        b.outshine - a.outshine ||
+        b.xgFor - a.xgFor ||
+        a.clubId.localeCompare(b.clubId),
+    );
+  return { rows };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

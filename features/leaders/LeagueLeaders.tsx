@@ -3,8 +3,8 @@ import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
-import { leagueWall, records, scorelessStreaks, passingAccuracy, cornerKings, type RecordRow } from "@/domain/analytics";
-import { fmt2, SEPARATOR, cn, pctOf } from "@/lib/utils";
+import { leagueWall, records, scorelessStreaks, passingAccuracy, cornerKings, worldOutshine, type RecordRow } from "@/domain/analytics";
+import { fmt2, SEPARATOR, cn, pctOf, signed } from "@/lib/utils";
 
 interface ScorerRow {
   key: string;
@@ -39,6 +39,9 @@ export function LeagueLeaders() {
   // M1010: the corner kings — most corners per match, no overall theme of who wins them.
   const cornerBoard = useMemo(() => cornerKings(footballProvider.matches(), footballProvider.clubs()), []);
   const cornerPeak = cornerBoard.rows.length ? cornerBoard.rows[0].perMatch : 1;
+  // M1011: the world's outshine — the outperformers of the scored dead.
+  const outshineBoard = useMemo(() => worldOutshine(footballProvider.matches(), footballProvider.clubs()), []);
+  const outshines = useMemo(() => outshineBoard.rows.slice(0, 3), [outshineBoard.rows]);
   const { scorers, booked } = useMemo(() => {
     const goals = new Map<string, { name: string; clubId: string; n: number }>();
     const cards = new Map<string, { name: string; clubId: string; yellow: number; red: number }>();
@@ -373,6 +376,36 @@ export function LeagueLeaders() {
             <p className="mt-3 text-xs text-muted-foreground">{t("leaders.cornerMethod")}</p>
           </>
         )}
+      </Panel>
+
+      {/* M1011: the world's outshine — three clubs the scoreboard handed more than their chances got. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.outshineTitle")} hint={t("leaders.outshineHint")} />
+        {outshines.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.outshineNone")}</p>
+        ) : (
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {outshines.map((r) => {
+              const club = getClub(r.clubId);
+              return (
+                <div key={r.clubId} className="rounded-lg border p-3">
+                  <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("leaders.outshineLabel")}</div>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Crest colors={club?.colors} short={club?.short} size={24} />
+                    <span className="min-w-0 truncate text-sm font-medium">{club?.name ?? r.clubId}</span>
+                  </div>
+                  <div className="mt-2 font-mono text-3xl font-bold tabular-nums">
+                    {signed(r.outshine)}
+                  </div>
+                  <div className="mt-1 text-[11px] text-muted-foreground">
+                    {t("leaders.outshineSub", { n: fmt2(r.xgFor) })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <p className="mt-3 text-xs text-muted-foreground">{t("leaders.outshineMethod")}</p>
       </Panel>
 
       <DemoBadge />
