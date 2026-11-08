@@ -80,6 +80,16 @@ test("the leaders screen draws the blank runs board", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "The blank runs" })).toBeVisible();
 });
 
+test("the world page draws the three new boards after a season is simulated", async ({ page }) => {
+  await page.goto("/#/world");
+  // The three new panels live inside the simulated-world branch — press Simulate once to populate it.
+  await page.getByRole("button", { name: /Simulate next season/ }).click();
+  await page.waitForTimeout(600);
+  await expect(page.getByText("Which league plays the most open games")).toBeVisible();
+  await expect(page.getByText("The wildest of away wins")).toBeVisible();
+  await expect(page.getByText("The league leaders")).toBeVisible();
+});
+
 test("the discipline screen draws the strictness board", async ({ page }) => {
   await page.goto("/#/discipline");
   await expect(page.getByText("Which league lets the game breathe")).toBeVisible();
