@@ -70,6 +70,17 @@ test("the match page prints this fixture's xG and its six-window clock", async (
   await expect(page.getByText("xG scored").first()).toBeVisible();
 });
 
+test("the discipline screen draws the strictness board", async ({ page }) => {
+  await page.goto("/#/discipline");
+  await expect(page.getByText("Which league lets the game breathe")).toBeVisible();
+});
+
+test("the leaders screen draws the wildest results board", async ({ page }) => {
+  await page.goto("/#/leaders");
+  await expect(page.getByText("The wildest results")).toBeVisible();
+  await expect(page.getByText("Biggest rout").first()).toBeVisible();
+});
+
 test("the form table ranks the clubs and the chips switch the competition", async ({ page }) => {
   await page.goto("/#/form");
   await expect(page.getByRole("heading", { name: "The last five, ranked" })).toBeVisible();
