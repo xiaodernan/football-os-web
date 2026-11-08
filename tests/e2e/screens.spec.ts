@@ -90,6 +90,12 @@ test("the world page draws the three new boards after a season is simulated", as
   await expect(page.getByText("The league leaders")).toBeVisible();
 });
 
+test("the projection page walks its three blocks", async ({ page }) => {
+  await page.goto("/#/projection");
+  await expect(page.getByText("Player growth projection").first()).toBeVisible();
+  await expect(page.getByText("Where a player lands if they keep training their weakest traits", { exact: false })).toBeVisible();
+});
+
 test("the discipline screen draws the strictness board", async ({ page }) => {
   await page.goto("/#/discipline");
   await expect(page.getByText("Which league lets the game breathe")).toBeVisible();
