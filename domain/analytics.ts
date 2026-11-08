@@ -1520,6 +1520,62 @@ export function strictness(matches: Match[]): Strictness {
   return { rows, matches: counted, globalPerMatch: counted ? round2(bookings / counted) : 0 };
 }
 
+export interface RecordRow {
+  matchId: string;
+  kickoff: string;
+  homeClubId: string;
+  awayClubId: string;
+  homeGoals: number;
+  awayGoals: number;
+}
+
+export interface Records {
+  /** The fixture with the widest scoreline, earliest on a tie — the league's truest rout. */
+  biggestWin: (RecordRow & { margin: number }) | null;
+  /** The draw with the most goals inside it, earliest on a tie; null when no draw has happened. */
+  highestScoringDraw: (RecordRow & { total: number }) | null;
+  /** The fixture with the most goals in it, earliest on a tie. */
+  highestScoring: (RecordRow & { total: number }) | null;
+  /** Finished fixtures read. */
+  matches: number;
+}
+
+/** M985: the wildest results. The seed places a scoreline on every fixture and the app prints the
+ *  thousand of them across two pages; this names the ones that carry a kind of weather. Playfully
+ *  written but plainly one pass — every fixture walked once, three banners kept. */
+export function records(matches: Match[]): Records {
+  const finished = matches.filter((m): m is Match & { homeGoals: number; awayGoals: number } => isFinished(m));
+  const earlierThan = (m: Match, r: RecordRow) =>
+    m.kickoff.localeCompare(r.kickoff) || m.id.localeCompare(r.matchId);
+  const base = (m: Match & { homeGoals: number; awayGoals: number }): RecordRow => ({
+    matchId: m.id, kickoff: m.kickoff, homeClubId: m.homeClubId, awayClubId: m.awayClubId,
+    homeGoals: m.homeGoals, awayGoals: m.awayGoals,
+  });
+  let biggestWin: (RecordRow & { margin: number }) | null = null;
+  let highestScoringDraw: (RecordRow & { total: number }) | null = null;
+  let highestScoring: (RecordRow & { total: number }) | null = null;
+  let counted = 0;
+  for (const m of finished) {
+    counted++;
+    const margin = Math.abs(m.homeGoals - m.awayGoals);
+    const total = m.homeGoals + m.awayGoals;
+    if (biggestWin === null || margin > biggestWin.margin ||
+        (margin === biggestWin.margin && earlierThan(m, biggestWin) < 0)) {
+      biggestWin = { ...base(m), margin };
+    }
+    if (highestScoring === null || total > highestScoring.total ||
+        (total === highestScoring.total && earlierThan(m, highestScoring) < 0)) {
+      highestScoring = { ...base(m), total };
+    }
+    if (m.homeGoals === m.awayGoals &&
+        (highestScoringDraw === null || total > highestScoringDraw.total ||
+          (total === highestScoringDraw.total && earlierThan(m, highestScoringDraw) < 0))) {
+      highestScoringDraw = { ...base(m), total };
+    }
+  }
+  return { biggestWin, highestScoringDraw, highestScoring, matches: counted };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

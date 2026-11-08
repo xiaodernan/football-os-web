@@ -145,7 +145,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 547 + CSS 12.5), pin 558 -> 559, baseline re-recorded in the same commit.
 // M984: the strictness board rides the discipline screen's chunk — measured 560 KB / 57 assets
 // (JS 547 + CSS 12.5), pin 559 -> 560, baseline re-recorded in the same commit.
-const BUDGET_KB = 560;
+// M985: the wildest results panel rides the leaders chunk — measured 561 KB / 57 assets
+// (JS 549 + CSS 12.5), pin 560 -> 561, baseline re-recorded in the same commit.
+const BUDGET_KB = 561;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

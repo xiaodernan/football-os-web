@@ -3,8 +3,8 @@ import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
-import { leagueWall } from "@/domain/analytics";
-import { fmt2 } from "@/lib/utils";
+import { leagueWall, records, type RecordRow } from "@/domain/analytics";
+import { fmt2, SEPARATOR } from "@/lib/utils";
 
 interface ScorerRow {
   key: string;
@@ -28,6 +28,8 @@ export function LeagueLeaders() {
   // Every goal and card in the seeded fixtures is a match event with a player name and a side,
   // so the board is a fold over the fixtures — never a stored table that could drift from them.
   const wall = useMemo(() => leagueWall(footballProvider.matches(), footballProvider.clubs()), []);
+  // M985: the wildest results — the seed's biggest rout, its most explosive game and its widest draw.
+  const recordsBoard = useMemo(() => records(footballProvider.matches()), []);
   const { scorers, booked } = useMemo(() => {
     const goals = new Map<string, { name: string; clubId: string; n: number }>();
     const cards = new Map<string, { name: string; clubId: string; yellow: number; red: number }>();
@@ -168,6 +170,59 @@ export function LeagueLeaders() {
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("leaders.sheetsMethod", { n: wall.matches })}</p>
           </>
+        )}
+      </Panel>
+
+      {/* M985: the wildest results — the seed's biggest rout, its most explosive game and its
+          widest draw, ranked over every finished fixture in the dataset. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.recordsTitle")} hint={t("leaders.recordsHint")} />
+        {!recordsBoard.biggestWin ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.recordsNone")}</p>
+        ) : (
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {(() => {
+              const win = recordsBoard.biggestWin;
+              const goalsT = recordsBoard.highestScoring;
+              const draw = recordsBoard.highestScoringDraw;
+              const wHome = win.homeGoals >= win.awayGoals;
+              const tiles: Array<{ label: string; firstId: string; secondId: string; row: RecordRow; caption: string }> = [
+                { label: t("leaders.recordsWin"), firstId: wHome ? win.homeClubId : win.awayClubId, secondId: wHome ? win.awayClubId : win.homeClubId, row: win, caption: t("leaders.recordsWinSub", { n: win.margin }) },
+                ...(goalsT
+                  ? [{ label: t("leaders.recordsGoals"), firstId: goalsT.homeClubId, secondId: goalsT.awayClubId, row: goalsT, caption: t("leaders.recordsTotalSub", { n: goalsT.total }) }]
+                  : []),
+                ...(draw
+                  ? [{ label: t("leaders.recordsDraw"), firstId: draw.homeClubId, secondId: draw.awayClubId, row: draw, caption: t("leaders.recordsTotalSub", { n: draw.total }) }]
+                  : []),
+              ];
+              return tiles.map((tile, tileIndex) => {
+                const first = getClub(tile.firstId);
+                const second = getClub(tile.secondId);
+                const firstGoals = tile.firstId === tile.row.homeClubId ? tile.row.homeGoals : tile.row.awayGoals;
+                const secondGoals = tile.firstId === tile.row.homeClubId ? tile.row.awayGoals : tile.row.homeGoals;
+                return (
+                  <div key={tileIndex} className="rounded-lg border p-3">
+                    <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{tile.label}</div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <Crest colors={first?.colors} short={first?.short} size={24} />
+                      <span className="min-w-0 truncate text-sm font-medium">{first?.name ?? tile.firstId}</span>
+                    </div>
+                    <div className="mt-1 text-center font-mono text-3xl font-bold tabular-nums">
+                      {firstGoals}{SEPARATOR}{secondGoals}
+                    </div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <Crest colors={second?.colors} short={second?.short} size={18} />
+                      <span className="min-w-0 truncate text-xs text-muted-foreground">{second?.name ?? tile.secondId}</span>
+                    </div>
+                    <div className="mt-2 text-[11px] text-primary">{tile.caption}</div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        )}
+        {recordsBoard.biggestWin && (
+          <p className="mt-3 text-xs text-muted-foreground">{t("leaders.recordsMethod")}</p>
         )}
       </Panel>
 
