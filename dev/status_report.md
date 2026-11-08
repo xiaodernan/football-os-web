@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `b4d40c2 M1013: the watchlist, compare, scouting and value routes walked end to end`
-**总提交数**: 1309
+**当前HEAD**: `6dbb806 M1014: the duel kings - the world's friction, ranked; one stats-block fold shared with corners`
+**总提交数**: 1311
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -59,15 +59,16 @@
 - **M1011 超常发挥榜**：`worldOutshine` 折叠——/leaders 新增「The outshine board」面板：world-scale 排出超出机会值最多的进球兑现（crest + signed + xG 子句 + method 句）；proof-world-outshine 5/5（seeded arm 对 65 clubs 独立复核 inside/order/2dp）；6 键×3；PWA 569（JS 557）；全套 148/148 · 3,551 检查、E2E 93/93。
 - **M1012 简报·赛程·争冠走势**：tests/e2e/screens.spec.ts 补 /briefing、/run-in、/title-race 三条 heading 断言；E2E 96/96。
 - **M1013 关注列表·对比·球探·身价榜**：tests/e2e/screens.spec.ts 补 /watchlist（Watchlist）、/compare（Compare Players）、/scouting（Scouting）、/value（Player value board）四条 heading 断言；E2E 100/100。
+- **M1014 对抗大亨**：折叠共用化——`cornerKings` 和 `tacticalDuelKings` 合并为 `statsBlockKings(matches, clubs, metric)` 单门；proof-duels 6/6；/leaders 新增「The duel kings」面板；PWA 570（JS 557）；全套 149/149 · 3,557 检查、E2E 101/101。
 - **M1007 纪录边 · 对手声名**：/streaks 的 edge rules 行附「· {n} OVR opponent」，仅当 break 的 opponentOverall 非 null；`overallOf` 门惰性取俱乐部 OVR；proof-streaks 16/16（T15 D=81、T17 F=88）；全套 146/146 · 3,540 检查、E2E 87/87。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**148/148 脚本、3,551/3,551 检查**
-- E2E：**100/100**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks、injuries M999 ladder、xG family M1000、transfers、poll、club compare、edge reputation M1007、history、film room、learn、review、corner kings、outshine board、briefing、run-in、title race、watchlist、compare、scouting、value board）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,204、litVarSites 350
+- 全套证词：**149/149 脚本、3,557/3,557 检查**
+- E2E：**101/101**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks、injuries M999 ladder、xG family M1000、transfers、poll、club compare、edge reputation M1007、history、film room、learn、review、corner kings、outshine board、briefing、run-in、title race、watchlist、compare、scouting、value board、duel kings）
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,210、litVarSites 351
 
 ## 🧭 下一步方向
 
