@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `a9cd735 M990: the most open leagues on the world pages - how the world plays its football`
-**总提交数**: 1265
+**当前HEAD**: `2585aa3 M991: the world's widest away win, its strength-order break and its openest league`
+**总提交数**: 1267
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -37,12 +37,13 @@
 - **M988 走读**：/timing「After a defeat」端到端断言；E2E 74/74。
 - **M989 还有 15 分钟**：`lateXg` 折叠——GoalTiming 新增「Closing time」面板：每支球队已记录 xG 中有多少发生在最后 15 分钟，按降序排；league-world 均值作对照；proof-late-xg 6/6（15 联赛 seeded arm）；6 键×3；PWA 563（JS 550）；全套 139/139 · 3,493 检查、E2E 74/74。
 - **M990 最开放的联赛**：`leagueOpenness` 折叠——/world 新增「Which league plays the most open games」面板：按每场已结束比赛算几个进球排所有赛事（world 行作对照）；proof-league-openness 6/6（15 联赛 seeded arm）；5 键×3；PWA 563（JS 551）；全套 140/140 · 3,499 检查、E2E 74/74。
+- **M991 客场最夸张胜利**：`worldUpsets` 折叠——/world 新增「最夸张的客场胜利」横幅：rating-gap upset + widest away win，按实力缺口+进球数排序（ties on earliest kickoff）；proof-world-upsets 6/6（15 联赛 seeded arm 70/70 全部对账）；10 键×3；PWA 564（JS 552）；全套 141/141 · 3,505 检查、E2E 74/74。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**140/140 脚本、3,499/3,499 检查**
+- 全套证词：**141/141 脚本、3,505/3,505 检查**
 - E2E：**71/71**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、五条 screens 走读：wall、lethal read、match xG、sevResult、form）
 - 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,107、litVarSites 326
 
