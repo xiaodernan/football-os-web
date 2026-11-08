@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `6c4e2ed M997: the streaks page walked end to end`
-**总提交数**: 1277
+**当前HEAD**: `d561ce9 M998: the passers - who controls the ball, averaged over the world`
+**总提交数**: 1279
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -44,12 +44,13 @@
 - **M995 /world 三块新榜走读**：/world E2E 模拟赛季后断言「最开放的联赛」「The wildest of away wins」「联赛之首」都可见；E2E 76/76。
 - **M996 /projection 走读**：/projection 页面断言「Player growth projection」与副句；E2E 77/77。
 - **M997 /streaks 走读**：/streaks 页面断言 heading 与最长不胜 tile；E2E 78/78。
+- **M998 传球手**：`passingAccuracy` 折叠——/leaders 新增「The passers」面板：按每场 finished fixture 的 stats 块算各 club 的传球成功率平均（rankly sorted，world 均值作对照）；proof-passing 7/7（T40 fixture solver；15 联赛 seeded arm 全部对账）；7 键×3；PWA 566（JS 554）；全套 144/144 · 3,524 检查、E2E 78/78。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**143/143 脚本、3,517/3,517 检查**
+- 全套证词：**144/144 脚本、3,524/3,524 检查**
 - E2E：**78/78**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks）
 - 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,169、litVarSites 342
 

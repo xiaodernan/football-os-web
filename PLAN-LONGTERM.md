@@ -917,3 +917,5 @@
 - 4a2aee8 M995 文档落地——PLAN-LONGTERM.md 补 M995；状态报告 HEAD 更新。
 - 0540098 M996: /projection 走读——tests/e2e/screens.spec.ts 补：验证「Player growth projection」标题与副句；E2E 77/77；tsc 干净、build exit 0。
 - 6c4e2ed M997: /streaks 走读——tests/e2e/screens.spec.ts 补：「Runs, not averages」heading +「Longest unbeaten run」tile 存在；E2E 78/78；tsc 干净、build exit 0。
+- 589fe58 M996-M997 文档落地——PLAN-LONGTERM.md 补 M995、M996、M997；状态报告 HEAD 更新。
+- d561ce9 M998: 传球手（the passers）——`passingAccuracy` 折叠（domain/analytics.ts）：每 club 按 finished fixtures 的 stats 块累加 passAcc/passes/duels/games（复用 indexById 门处理 by-club map）；rows 按 accuracy 降序 → passes → id；league 行 = 全部 rows 的 mean passAcc；/leaders 新面板「传球手」（leader crest、acc/Duel/Passes 行 + bar vs 联赛之首 BAR_FILL.good）；D 无 finished fixture 不上榜；proof-passing 7/7（T40 手工：A 83.33/490/78.33/3 played、B 57.5/470/115/2 played、C 40/396.67/140/3、D absent、league 60.28、seeded arm 对全部世界 73 个 club 严格对账 with accuracy bounds 与 ordering）；7 键×3；census literal 2,172→2,179、litVarSites 342→344、creditresult 门 9/9（games 改名）过关、uniq 门 indexById 共享；PWA 565→566（JS 554）、baseline 同提交重录；tsc 干净、build exit 0、全套 144/144 · 3,524/3,524 检查、E2E 78/78。
