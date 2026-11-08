@@ -33,6 +33,7 @@ test("the venue screen draws the clocks and the roughness column", async ({ page
   await expect(page.getByText("Goals by end and window")).toBeVisible();
   await expect(page.getByText("Shots and saves by end and window")).toBeVisible();
   await expect(page.getByText("Goals/card").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Bookings by end and window" })).toBeVisible();
 });
 
 test("the discipline screen draws the whole clock family", async ({ page }) => {
