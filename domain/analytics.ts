@@ -2585,6 +2585,8 @@ export function collapses(compId: string, matches: Match[], clubs: Club[]): Coll
 }
 
 /** M968: the fixture that ended a record — who broke it, and by what score. */
+/** M1007: the opposition's overall for the breaking fixture, when the club row answers — the
+ *  strength read the record's edge was missing. Null when the opponent has no row in `clubs`. */
 export interface StreakBreak {
   matchId: string;
   kickoff: string;
@@ -2593,6 +2595,8 @@ export interface StreakBreak {
   goalsAgainst: number;
   /** M1005: the end the breaking fixture belonged to — a run measured at home ends against the home record. */
   venue: Side;
+  /** M1007: the reputation of the side that ended the run — overall from the club row. */
+  opponentOverall: number | null;
 }
 
 export interface StreakRow {
@@ -2644,6 +2648,8 @@ export interface Streaks {
  *  it needs no event list — a final score is enough. */
 export function streaks(compId: string, matches: Match[], clubs: Club[]): Streaks {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const clubById = indexById(clubs);
+  const overallOf = (id: string) => clubById.get(id)?.overall ?? null;
   const byClub = new Map<string, Array<{ matchId: string; kickoff: string; gf: number; ga: number; home: boolean; opponentId: string }>>(
     [...ranked].map((id) => [id, []]),
   );
@@ -2696,13 +2702,13 @@ export function streaks(compId: string, matches: Match[], clubs: Club[]): Streak
       // The match after the best run is a loss by construction: anything else would have extended
       // the run. While the run is alive there is no next match to name.
       unbeatenBreak: edge
-        ? { matchId: edge.matchId, kickoff: edge.kickoff, opponentId: edge.opponentId, goalsFor: edge.gf, goalsAgainst: edge.ga, venue: edge.home ? "home" : "away" }
+        ? { matchId: edge.matchId, kickoff: edge.kickoff, opponentId: edge.opponentId, goalsFor: edge.gf, goalsAgainst: edge.ga, venue: edge.home ? "home" : "away", opponentOverall: overallOf(edge.opponentId) }
         : null,
       homeBreak: homeEdge
-        ? { matchId: homeEdge.matchId, kickoff: homeEdge.kickoff, opponentId: homeEdge.opponentId, goalsFor: homeEdge.gf, goalsAgainst: homeEdge.ga, venue: "home" }
+        ? { matchId: homeEdge.matchId, kickoff: homeEdge.kickoff, opponentId: homeEdge.opponentId, goalsFor: homeEdge.gf, goalsAgainst: homeEdge.ga, venue: "home", opponentOverall: overallOf(homeEdge.opponentId) }
         : null,
       awayBreak: awayEdge
-        ? { matchId: awayEdge.matchId, kickoff: awayEdge.kickoff, opponentId: awayEdge.opponentId, goalsFor: awayEdge.gf, goalsAgainst: awayEdge.ga, venue: "away" }
+        ? { matchId: awayEdge.matchId, kickoff: awayEdge.kickoff, opponentId: awayEdge.opponentId, goalsFor: awayEdge.gf, goalsAgainst: awayEdge.ga, venue: "away", opponentOverall: overallOf(awayEdge.opponentId) }
         : null,
     });
   }

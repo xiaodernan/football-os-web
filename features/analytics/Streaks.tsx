@@ -178,6 +178,9 @@ export function Streaks() {
                         {r.unbeatenBreak && (
                           <div className="text-[11px] text-muted-foreground">
                             {formatDate(locale, r.unbeatenBreak.kickoff)}
+                            {r.unbeatenBreak.opponentOverall !== null && (
+                              <span className="text-muted-foreground"> · {t("streaks.edgeStrength", { n: r.unbeatenBreak.opponentOverall })}</span>
+                            )}
                           </div>
                         )}
                         {/* M1005: the same edge read once per end — the home run ending at home, the away run ending away. */}

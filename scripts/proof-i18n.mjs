@@ -4587,7 +4587,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M999: the under-fire squads ladder adds its five keys as sites: 2179 -> 2184.
   // M1003: the cards by end and window panel adds its keys as sites: 2184 -> 2189.
   // M1005: the two venue-edge lines add their call sites: 2189 -> 2191.
-  shapeCounts.literal === 2191 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M1007: the opponent-OVR line adds its call site: 2191 -> 2192.
+  shapeCounts.literal === 2192 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4700,7 +4701,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M998: the league line and each row each hand over their variables: 342 -> 344.
   // M999: the ladder line hands over its out / players / fitness at one call site: 344 -> 345.
   // M1005: the two venue-edge lines each hand over c, gf, ga: 345 -> 347.
-  litVarSites === 347 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1007: the opponent-OVR line hands over n: 347 -> 348.
+  litVarSites === 348 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
