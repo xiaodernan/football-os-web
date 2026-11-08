@@ -49,6 +49,11 @@ test("the event clock screen renders the club rhythm family", async ({ page }) =
   await expect(page.getByText("Goals per card").first()).toBeVisible();
 });
 
+test("the discipline screen draws the leading foulers board", async ({ page }) => {
+  await page.goto("/#/discipline");
+  await expect(page.getByRole("heading", { name: "The world's leading foulers" })).toBeVisible();
+});
+
 test("the discipline screen draws the most loaded yellows board", async ({ page }) => {
   await page.goto("/#/discipline");
   await expect(page.getByRole("heading", { name: "The world's most loaded for yellows" })).toBeVisible();

@@ -4603,7 +4603,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1020: the five-moments panel adds its literal sites (storyTitle, storyHint, storyNone,
   // storyWin, storyGoals, storyLapse, storyLate, storyRun, storyMethod, common.vs, storyRunSub):
   // 2229 -> 2244.
-  shapeCounts.literal === 2244 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M1021: the leading foulers panel adds its six sites (title, hint, none, world, share, method):
+  // 2244 -> 2250.
+  shapeCounts.literal === 2250 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4725,7 +4727,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1019: the most loaded world line hands over its variables at one call site: 354 -> 355.
   // M1020: the five-moments panel hands over six variable bodies (the five chip captions and the
   // method line): 355 -> 361.
-  litVarSites === 361 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1021: the leading foulers world line hands over its variables at one call site: 361 -> 362.
+  litVarSites === 362 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
