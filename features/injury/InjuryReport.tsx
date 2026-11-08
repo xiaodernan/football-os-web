@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, Crest } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
 import type { PositionCode } from "@/domain/types";
-import { injuryFor, fitnessFor, weekIndexOf, type InjuryDef } from "@/domain/playerCareer";
+import { injuryFor, fitnessFor, weekIndexOf, squadAvailability, type InjuryDef } from "@/domain/playerCareer";
 import { sum, byOverall } from "@/domain/attributes";
-import { pctLabel, pctOf, cn } from "@/lib/utils";
+import { pctLabel, pctOf, cn, fmt2 } from "@/lib/utils";
 
 interface AvailabilityRow {
   id: string;
@@ -28,6 +28,10 @@ export function InjuryReport() {
   // Availability is derived from the career engine's own deterministic injury/fitness model,
   // seeded by player id and the current week — no stored injury state, no clock-built ids.
   const week = useMemo(() => weekIndexOf(new Date().toISOString()), []);
+
+  // M999: the world's squads each club entered this week with — every player walked across the whole
+  // world, so the world's most-fired-upon side names itself rather than the writer having to pick one.
+  const squadBoard = useMemo(() => squadAvailability(footballProvider.players(), footballProvider.clubs(), week), [week]);
 
   const rows = useMemo<AvailabilityRow[]>(() => {
     return footballProvider.players().map((p) => {
@@ -79,6 +83,44 @@ export function InjuryReport() {
             {t("squad.availability.fitness")}: {pctLabel(avgFitness)}
           </span>
         </div>
+      </Panel>
+
+      {/* M999: the world's under-fire squads — every player walked through every club this week. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("injuries.ladderTitle")} hint={t("injuries.ladderHint")} />
+        {(() => {
+          const hit = squadBoard.rows.filter((r) => r.injured > 0);
+          if (hit.length === 0) {
+            return <p className="mt-3 text-sm text-muted-foreground">{t("injuries.ladderNone")}</p>;
+          }
+          return (
+            <>
+              <ul className="mt-2 space-y-1">
+                {hit.map((r) => {
+                  const club = getClub(r.clubId);
+                  return (
+                    <li
+                      key={r.clubId}
+                      className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[1fr_auto]"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={22} />
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                          <div className="text-xs text-muted-foreground">{t("injuries.ladderLine", { out: r.injured, n: r.players, f: fmt2(r.fitness) })}</div>
+                        </div>
+                      </div>
+                      <div className="text-right tabular-nums text-destructive">
+                        {r.injured}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p className="mt-3 text-xs text-muted-foreground">{t("injuries.ladderMethod")}</p>
+            </>
+          );
+        })()}
       </Panel>
 
       <Panel className="p-5">

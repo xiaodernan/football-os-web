@@ -10,9 +10,9 @@
 //   2. Everything is seeded. `injuryFor` / `fitnessFor` take (seed, week) and answer the same
 //      pair the same way forever, so a career replays identically on any device and the proof
 //      can pin the distribution without a clock.
-import type { Attributes } from "./types";
+import type { Attributes, PlayerRef, Club } from "./types";
 import { makeRng } from "@/lib/rng";
-import { clamp, epochMs } from "@/lib/utils";
+import { clamp, epochMs, round2 } from "@/lib/utils";
 import { ATTRIBUTE_KEYS, capRound } from "./attributes";
 import { round1 } from "./scouting";
 import { perSessionGain } from "./training";
@@ -158,6 +158,57 @@ export interface InjuryDef {
   weeks: number;
   /** The attributes training cannot touch while it lasts. */
   attrs: string[];
+}
+export interface ClubAvailabilityRow {
+  clubId: string;
+  players: number;
+  injured: number;
+  /** Mean fitness across the squad, round2 — 0..1, clamped honest. */
+  fitness: number;
+}
+export interface WorldAvailability {
+  /** Clubs with at least one player, ordered by injured desc, then lowest fitness, then club id. */
+  rows: ClubAvailabilityRow[];
+  /** Players that missed a match under the current week, summed over every club listed. */
+  injured: number;
+  /** Mean fitness across the whole player population, round2 of 0..1. */
+  averageFitness: number;
+}
+
+/** The same injury mechanics the squad-availability page applies to one player, walked once over
+ *  the whole world so the manager can see which club is under the most fire right now. Empty
+ *  squads read as absence to this fold — a club with no players is dropped, not zero-filled. */
+export function squadAvailability(players: PlayerRef[], clubs: Club[], week: number): WorldAvailability {
+  const byClub = new Map<string, { players: number; injured: number; fitness: number }>();
+  for (const c of clubs) byClub.set(c.id, { players: 0, injured: 0, fitness: 0 });
+  let counted = 0, totalFitness = 0, totalInjured = 0;
+  for (const p of players) {
+    const cur = byClub.get(p.clubId);
+    if (!cur) continue;
+    cur.players++;
+    counted++;
+    const fitness = fitnessFor(p.id, week);
+    const injured = injuryFor(p.id, week) !== null;
+    cur.fitness += fitness;
+    if (injured) cur.injured++;
+    totalFitness += fitness;
+    if (injured) totalInjured++;
+  }
+  const rows = [...byClub.entries()]
+    .filter(([, v]) => v.players > 0)
+    .map(([clubId, v]) => ({
+      clubId,
+      players: v.players,
+      injured: v.injured,
+      fitness: round1(v.fitness / v.players),
+    }));
+  rows.sort(
+    (a, b) =>
+      b.injured - a.injured ||
+      a.fitness - b.fitness ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  return { rows, injured: totalInjured, averageFitness: counted ? round2(totalFitness / counted) : 0 };
 }
 
 export const INJURIES: InjuryDef[] = [
