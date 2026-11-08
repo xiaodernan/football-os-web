@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `1bf0935 M1002: the venue-split columns walked end to end - the form table shows H and A games per end`
-**总提交数**: 1287
+**当前HEAD**: `f0b2276 M1003: cards by end and window - where the bookings land by side minute by minute`
+**总提交数**: 1289
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -49,14 +49,15 @@
 - **M1000 xG 家族走读**：tests/e2e/screens.spec.ts 三条补充锚住 M980 xG 表、M983 亏欠分差、M989 后 15 分钟、M982 分端 xG 钟与 M975 扑救质量在真实浏览器里渲染；E2E 84/84。
 - **M1001 别线两张烈度板走读**：/discipline 断言「Which end turns the same club redder」（M972）与「Which result turns the same club redder」（M973）；E2E 84/84。
 - **M1002 /form 两列半场分读走读**：/form 走读新增 `H · <n>` 与 `A · <n>` 正则断言（form.homePld / form.awayPld 在 EN shell 里原样可见）；E2E 84/84。
+- **M1003 各时间段的牌分布**：`cardVenueClock` 折叠——/home-away 新增「Bookings by end and window」面板（主客分侧 × 六窗的牌）；proof-card-venue-clock 5/5；4 键×3（零共享值）；PWA 568（JS 555）；全套 146/146 · 3,536 检查、E2E 84/84。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**145/145 脚本、3,531/3,531 检查**
+- 全套证词：**146/146 脚本、3,536/3,536 检查**
 - E2E：**84/84**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks、injuries M999 ladder、xG family M1000）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,184、litVarSites 345
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,189、litVarSites 345
 
 ## 🧭 下一步方向
 
