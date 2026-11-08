@@ -137,14 +137,21 @@ ok(`the runs screen reads the fold and its own board (fold call ${SCREEN_SRC.inc
   SCREEN_SRC.includes("pctOf(r.longestUnbeaten, peak)") && !SCREEN_SRC.includes("GOAL_BANDS") &&
   SCREEN_SRC.includes("streaks.venueLine") && SCREEN_SRC.includes("r.homeUnbeaten") &&
   SCREEN_SRC.includes("streaks.droughtLine") && SCREEN_SRC.includes("streaks.drought"));
-ok(`the runs screen reads the breaker off the fold rather than rebuilding it (edge ${SCREEN_SRC.includes("r.unbeatenBreak")}, alive ${SCREEN_SRC.includes("streaks.edgeAlive")}, ended ${SCREEN_SRC.includes("streaks.edgeEnded")}, date ${SCREEN_SRC.includes("formatDate(locale, r.unbeatenBreak.kickoff)")}, venue edges ${SCREEN_SRC.includes("r.homeBreak")}/${SCREEN_SRC.includes("r.awayBreak")})`,
+ok(`the runs screen reads the breaker off the fold rather than rebuilding it (edge ${SCREEN_SRC.includes("r.unbeatenBreak")}, alive ${SCREEN_SRC.includes("streaks.edgeAlive")}, ended ${SCREEN_SRC.includes("streaks.edgeEnded")}, date ${SCREEN_SRC.includes("formatDate(locale, r.unbeatenBreak.kickoff)")}, venue edges ${SCREEN_SRC.includes("r.homeBreak")}/${SCREEN_SRC.includes("r.awayBreak")}, season story ${SCREEN_SRC.includes("seasonStory(compId, matches, clubs)")}/${SCREEN_SRC.includes("MomentTile")})`,
   SCREEN_SRC.includes("r.unbeatenBreak") && SCREEN_SRC.includes("streaks.edgeAlive") &&
   SCREEN_SRC.includes("streaks.edgeEnded") && SCREEN_SRC.includes("streaks.edgeRun") &&
   SCREEN_SRC.includes("formatDate(locale, r.unbeatenBreak.kickoff)") &&
   SCREEN_SRC.includes("r.longestUnbeaten >= 2") && !SCREEN_SRC.includes("byKickoff") &&
   SCREEN_SRC.includes("r.homeBreak") && SCREEN_SRC.includes("r.awayBreak") &&
   SCREEN_SRC.includes("streaks.edgeHomeEnd") && SCREEN_SRC.includes("streaks.edgeAwayEnd") &&
-  SCREEN_SRC.includes("streaks.edgeStrength"));
+  SCREEN_SRC.includes("seasonStory(compId, matches, clubs)") && SCREEN_SRC.includes("MomentTile") &&
+  SCREEN_SRC.includes("streaks.storyTitle") && SCREEN_SRC.includes("streaks.storyHint") &&
+  SCREEN_SRC.includes("streaks.storyNone") && SCREEN_SRC.includes("streaks.storyWin") &&
+  SCREEN_SRC.includes("streaks.storyGoals") && SCREEN_SRC.includes("streaks.storyLapse") &&
+  SCREEN_SRC.includes("streaks.storyLate") && SCREEN_SRC.includes("streaks.storyRun") &&
+  SCREEN_SRC.includes("streaks.storyMethod") && SCREEN_SRC.includes("story.biggestWin") &&
+  SCREEN_SRC.includes("story.highestScoring") && SCREEN_SRC.includes("story.biggestCollapse") &&
+  SCREEN_SRC.includes("story.latestGoal") && SCREEN_SRC.includes("story.longestRun"));
 ok(`the runs screen is reachable — the route table and the sidebar both name it (route ${/path === "\/streaks"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/streaks"/.test(SHELL_NAV_SRC)})`,
   /path === "\/streaks"/.test(APP_ROUTE_SRC) && /to: "\/streaks"/.test(SHELL_NAV_SRC));
 

@@ -3227,10 +3227,13 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M944: the contrast board's 7 keys pay their toll (146 -> 147, 242 -> 243).
 // M953: the match clock keys pay their toll (147 -> 148, 245 -> 247).
 // M970: the form table pays its toll (form.colPoints joins the shared "Pts" header): 152 -> 153.
-const DUP_VALUES_PIN = 153;
+// M1020: the five-moments panel's streaks.storyWinSub repeats the shared "won by {n}" idiom
+// leaders.recordsWinSub already carries — one more shared value: 153 -> 154.
+const DUP_VALUES_PIN = 154;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
 // M970: the same "Pts" join pays its excess: 252 -> 254.
-const DUP_EXCESS_KEYS_PIN = 254;
+// M1020: the same shared idiom join pays its excess: 254 -> 255.
+const DUP_EXCESS_KEYS_PIN = 255;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4592,11 +4595,15 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1011: the outshine banner adds its six keys as sites: 2198 -> 2204.
   // M1014: the duel kings panel adds its six keys as sites: 2204 -> 2210.
   // M1016: the world lethal panel adds its six keys as sites: 2210 -> 2216.
+  // M1017 shipped no new literal sites; the red card kings panel measured 2223.
   // M1018: the red card kings panel adds its seven sites (title, hint, none, world, line, reds, method):
   // 2216 -> 2223.
   // M1019: the most loaded yellows panel adds its six sites (title, hint, none, world, share, method):
   // 2223 -> 2229.
-  shapeCounts.literal === 2229 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M1020: the five-moments panel adds its literal sites (storyTitle, storyHint, storyNone,
+  // storyWin, storyGoals, storyLapse, storyLate, storyRun, storyMethod, common.vs, storyRunSub):
+  // 2229 -> 2244.
+  shapeCounts.literal === 2244 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4716,7 +4723,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1016: the world lethal line hands over two variables: 351 -> 352.
   // M1018: the red card kings world and line hand over their variables at two call sites: 352 -> 354.
   // M1019: the most loaded world line hands over its variables at one call site: 354 -> 355.
-  litVarSites === 355 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1020: the five-moments panel hands over six variable bodies (the five chip captions and the
+  // method line): 355 -> 361.
+  litVarSites === 361 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

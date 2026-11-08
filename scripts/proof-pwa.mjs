@@ -170,7 +170,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 558).
 // M1018: the red card kings panel rides the discipline chunk — measured 571 KB / 57 assets
 // (JS 558 + CSS 12.5), pin 570 -> 571, baseline re-recorded in the same commit.
-const BUDGET_KB = 571;
+// M1019: the five-moments panel rides the streaks chunk — measured 573 KB / 57 assets
+// (JS 560 + CSS 12.5), pin 571 -> 573, baseline re-recorded in the same commit.
+const BUDGET_KB = 573;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

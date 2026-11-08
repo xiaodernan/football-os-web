@@ -2,9 +2,32 @@ import { useMemo, useState } from "react";
 import { useI18n, formatDate } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { streaks } from "@/domain/analytics";
+import { streaks, seasonStory, type StoryMoment } from "@/domain/analytics";
 import { maxBy } from "@/domain/attributes";
-import { ABSENT, cn, pctOf } from "@/lib/utils";
+import { ABSENT, cn, pctOf, SEPARATOR } from "@/lib/utils";
+
+function MomentTile({ title, moment, chip, noScore = false }: { title: string; moment: StoryMoment; chip: string; noScore?: boolean }) {
+  const { t, locale } = useI18n();
+  const main = getClub(moment.clubId);
+  const opp = getClub(moment.opponentId);
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{title}</div>
+      <div className="mt-2 flex items-center gap-2">
+        <Crest colors={main?.colors} short={main?.short} size={24} />
+        <span className="min-w-0 truncate text-sm font-medium">{main?.name ?? moment.clubId}</span>
+        <span className="text-muted-foreground">{t("common.vs")}</span>
+        <Crest colors={opp?.colors} short={opp?.short} size={24} />
+        <span className="min-w-0 truncate text-sm font-medium">{opp?.name ?? moment.opponentId}</span>
+      </div>
+      <div className="mt-1 text-[11px] text-muted-foreground">{formatDate(locale, moment.kickoff)}</div>
+      <div className="mt-2 font-mono text-2xl font-bold tabular-nums">
+        {noScore ? `${moment.value}′` : `${moment.goalsFor}${SEPARATOR}${moment.goalsAgainst}`}
+      </div>
+      <div className="mt-1 text-[11px] text-primary">{chip}</div>
+    </div>
+  );
+}
 
 export function Streaks() {
   const { t, locale } = useI18n();
@@ -14,6 +37,9 @@ export function Streaks() {
   const [compId, setCompId] = useState(() => competitions[0]?.id ?? "");
 
   const runs = useMemo(() => streaks(compId, matches, clubs), [compId, matches, clubs]);
+  // M1020: the season's five moments — composed off the same fixture walk, so a panel built here
+  // cannot disagree with the boards the streak fold owns.
+  const story = useMemo(() => seasonStory(compId, matches, clubs), [compId, matches, clubs]);
   const rows = runs.rows;
   // The longest run still alive: the board is about history, this tile is about right now.
   const alive = rows.length ? maxBy(rows, (r) => r.currentUnbeaten) : null;
@@ -154,8 +180,7 @@ export function Streaks() {
           <Panel className="p-5">
             <SectionTitle title={t("streaks.edgeTitle")} hint={t("streaks.edgeHint")} />
             <ul className="mt-2 space-y-1">
-              {edges.map((r) => {
-                const club = getClub(r.clubId);
+              {edges.map((r) => {                const club = getClub(r.clubId);
                 const breaker = r.unbeatenBreak ? getClub(r.unbeatenBreak.opponentId) : null;
                 return (
                   <li
@@ -217,6 +242,66 @@ export function Streaks() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("streaks.edgeMethod")}</p>
+          </Panel>
+
+          {/* M1020: the season's five moments — one walk, five kinds of weather; the widest win, the
+              wildest scoreline, the lead that got away, the latest goal, the longest run. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("streaks.storyTitle")} hint={t("streaks.storyHint")} />
+            {!story.biggestWin ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("streaks.storyNone")}</p>
+            ) : (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {story.biggestWin && (
+                  <MomentTile
+                    title={t("streaks.storyWin")}
+                    moment={story.biggestWin}
+                    chip={t("streaks.storyWinSub", { n: story.biggestWin.value })}
+                  />
+                )}
+                {story.highestScoring && (
+                  <MomentTile
+                    title={t("streaks.storyGoals")}
+                    moment={story.highestScoring}
+                    chip={t("streaks.storyGoalsSub", { n: story.highestScoring.value })}
+                  />
+                )}
+                {story.biggestCollapse && (
+                  <MomentTile
+                    title={t("streaks.storyLapse")}
+                    moment={story.biggestCollapse}
+                    chip={t("streaks.storyLapseSub", { n: story.biggestCollapse.value })}
+                  />
+                )}
+                {story.latestGoal && (
+                  <MomentTile
+                    title={t("streaks.storyLate")}
+                    moment={story.latestGoal}
+                    chip={t("streaks.storyLateSub", { n: story.latestGoal.value })}
+                    noScore
+                  />
+                )}
+                {story.longestRun && (
+                  <div className="rounded-lg border p-3">
+                    <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{t("streaks.storyRun")}</div>
+                    {(() => {
+                      const club = getClub(story.longestRun.clubId);
+                      return (
+                        <>
+                          <div className="mt-2 flex items-center gap-2">
+                            <Crest colors={club?.colors} short={club?.short} size={24} />
+                            <span className="min-w-0 truncate text-sm font-medium">{club?.name ?? story.longestRun.clubId}</span>
+                          </div>
+                          <div className="mt-2 font-mono text-3xl font-bold tabular-nums">{story.longestRun.length}</div>
+                          <div className="mt-1 text-[11px] text-primary">{t("streaks.storyRunSub", { n: story.longestRun.length })}</div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+            {story.biggestWin && <p className="mt-3 text-xs text-muted-foreground">{t("streaks.storyMethod", { n: story.matches })}</p>}
           </Panel>
         </>
       )}

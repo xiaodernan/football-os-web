@@ -3038,6 +3038,84 @@ export function formTable(compId: string, matches: Match[], clubs: Club[]): Form
   return { rows: [...active, ...idle], ranked: active.length, matches: counted, window: FORM_WINDOW };
 }
 
+export interface StoryMoment {
+  matchId: string;
+  kickoff: string;
+  /** The side the moment belongs to. */
+  clubId: string;
+  opponentId: string;
+  /** The number that makes it a moment: the margin, the total goals, the lead surrendered, or the
+   *  minute the last goal landed. */
+  value: number;
+  goalsFor: number;
+  goalsAgainst: number;
+}
+
+export interface SeasonStory {
+  /** The widest winning margin in the competition, first by margin then by the earlier kickoff. */
+  biggestWin: StoryMoment | null;
+  /** The fixture with the most goals in it, the earlier kickoff first on a tie. */
+  highestScoring: StoryMoment | null;
+  /** The biggest lead that did not survive — read off `collapses`, not re-derived here. */
+  biggestCollapse: StoryMoment | null;
+  /** The latest goal in the competition, the earlier kickoff first on a tie. */
+  latestGoal: StoryMoment | null;
+  /** The longest winning run — read off `streaks`. */
+  longestRun: { clubId: string; length: number } | null;
+  /** Finished fixtures read (all of them: a score is enough for four of the five moments). */
+  matches: number;
+}
+
+/** The season told as five moments rather than as tables: the widest win, the wildest scoreline,
+ *  the lead that got away, the latest goal and the longest run. It composes `collapses` and
+ *  `streaks` rather than re-deriving them, so a screen built on this cannot disagree with the
+ *  boards those folds already own. */
+export function seasonStory(compId: string, matches: Match[], clubs: Club[]): SeasonStory {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  let counted = 0;
+  let biggestWin: StoryMoment | null = null;
+  let highestScoring: StoryMoment | null = null;
+  let latestGoal: StoryMoment | null = null;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    counted++;
+    const sides: Array<[string, string, number, number]> = [
+      [m.homeClubId, m.awayClubId, m.homeGoals, m.awayGoals],
+      [m.awayClubId, m.homeClubId, m.awayGoals, m.homeGoals],
+    ];
+    for (const [clubId, opponentId, ours, theirs] of sides) {
+      if (!ranked.has(clubId)) continue;
+      const margin = ours - theirs;
+      if (margin > 0 && (!biggestWin || margin > biggestWin.value ||
+        (margin === biggestWin.value && m.kickoff < biggestWin.kickoff))) {
+        biggestWin = { matchId: m.id, kickoff: m.kickoff, clubId, opponentId, value: margin, goalsFor: ours, goalsAgainst: theirs };
+      }
+    }
+    const total = m.homeGoals + m.awayGoals;
+    if (total > 0 && (!highestScoring || total > highestScoring.value ||
+      (total === highestScoring.value && m.kickoff < highestScoring.kickoff))) {
+      highestScoring = { matchId: m.id, kickoff: m.kickoff, clubId: m.homeClubId, opponentId: m.awayClubId, value: total, goalsFor: m.homeGoals, goalsAgainst: m.awayGoals };
+    }
+    for (const e of m.events ?? []) {
+      if (e.type !== "GOAL") continue;
+      const clubId = e.side === "home" ? m.homeClubId : m.awayClubId;
+      const opponentId = e.side === "home" ? m.awayClubId : m.homeClubId;
+      if (!ranked.has(clubId)) continue;
+      if (!latestGoal || e.minute > latestGoal.value ||
+        (e.minute === latestGoal.value && m.kickoff < latestGoal.kickoff)) {
+        latestGoal = { matchId: m.id, kickoff: m.kickoff, clubId, opponentId, value: e.minute, goalsFor: 0, goalsAgainst: 0 };
+      }
+    }
+  }
+  const thrown = collapses(compId, matches, clubs).rows[0];
+  const biggestCollapse: StoryMoment | null = thrown
+    ? { matchId: thrown.matchId, kickoff: thrown.kickoff, clubId: thrown.clubId, opponentId: thrown.opponentId, value: thrown.lead, goalsFor: thrown.goalsFor, goalsAgainst: thrown.goalsAgainst }
+    : null;
+  const run = streaks(compId, matches, clubs);
+  const longestRun = run.longestWin > 0 && run.winHolder ? { clubId: run.winHolder, length: run.longestWin } : null;
+  return { biggestWin, highestScoring, biggestCollapse, latestGoal, longestRun, matches: counted };
+}
+
 export interface TitleRaceWeek {
   /** 1-based week index, counted in seven-day buckets from the first finished fixture's UTC day. */
   week: number;

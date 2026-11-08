@@ -129,6 +129,11 @@ test("the streaks page draws the records and the four tiles", async ({ page }) =
   await expect(page.getByText("Longest unbeaten run").first()).toBeVisible();
 });
 
+test("the streaks page draws the season's five moments", async ({ page }) => {
+  await page.goto("/#/streaks");
+  await expect(page.getByRole("heading", { name: "The season's five moments" })).toBeVisible();
+});
+
 test("the injuries page draws its availability list and the under-fire ladder", async ({ page }) => {
   await page.goto("/#/injuries");
   await expect(page.getByRole("heading", { name: "Squad availability" })).toBeVisible();
