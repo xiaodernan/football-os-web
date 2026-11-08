@@ -163,6 +163,19 @@ test("the transfers route renders its heading and fit-target tile", async ({ pag
   await expect(page.getByText("Linked rumours")).toBeVisible();
 });
 
+test("the history page renders its honest empty timeline on a fresh device", async ({ page }) => {
+  await page.goto("/#/history");
+  await expect(page.getByRole("heading", { name: "Activity History" })).toBeVisible();
+  await expect(page.getByText("No activity yet")).toBeVisible();
+});
+
+test("the film room renders its empty library shell", async ({ page }) => {
+  await page.goto("/#/film");
+  await expect(page.getByRole("heading", { name: "Film Room" })).toBeVisible();
+  await expect(page.getByText("Your clips")).toBeVisible();
+  await expect(page.getByText("Drop a video here")).toBeVisible();
+});
+
 test("the community poll renders its title and five candidates", async ({ page }) => {
   await page.goto("/#/poll");
   await expect(page.getByText("Community poll").first()).toBeVisible();
