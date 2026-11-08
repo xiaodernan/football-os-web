@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `f7cb6ca M982: xG by end and window - where the chances land by side minute by minute`
-**总提交数**: 1253
+**当前HEAD**: `a12471a M983: the owed margins - the fixtures the scoreboard stole from the xG`
+**总提交数**: 1255
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -29,12 +29,13 @@
 - **M980 xG 榜**：`xgTable` 折叠——GoalTiming 新增 xG 表（每粒 GOAL 的 xG 汇总到球队，按 xGD 降序）+ outshine（GF − xGF）列；proof-xgtable 6/6（15 联赛 seeded arm：outshine 对 metrics gf、xgDiff、ordering、2dp）；7 键×3；PWA 557（JS 545）；全套 132/132 · 3,454 检查、E2E 70/70。
 - **M981 本场 xG**：`matchXg(m)` 折叠（复用同一 parser）——Details 各侧加 xG 大号数 + xG 面板（含 missing 句）；E2E /matches/M0991 走读；proof-match-xg 6/6（world-scope seeded arm 严格对账 408.17 == 联赛 leagueXg）；4 键×3；PWA 558；全套 133/133 · 3,460 检查、E2E 71/71。
 - **M982 xG 分端钟**：`xgVenueClock` 折叠——VenueSplit 新增「各时间段的 xG 分布」面板（主客分侧 × 六窗 xG 抗柱共享标签）；proof-xg-venue-clock 5/5（15 联赛 seeded arm、空窗遵循 ABSENT 门）；4 键×3；PWA 558（JS 546）；全套 134/134 · 3,465 检查、E2E 71/71。
+- **M983 亏欠的分差**：`xgRobberies` 折叠——GoalTiming 新面板：比分盘白白赢的比赛，按 loser-xG − winner-xG 降序排列（margin ≥ 1.5 上板，最宽 8 场）；proof-xg-robberies 5/5（15 联赛 seeded arm）；5 键×3；PWA 559（JS 547）；全套 135/135 · 3,470 检查、E2E 71/71。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**134/134 脚本、3,465/3,465 检查**
+- 全套证词：**135/135 脚本、3,470/3,470 检查**
 - E2E：**71/71**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、五条 screens 走读：wall、lethal read、match xG、sevResult、form）
 - 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,107、litVarSites 326
 
