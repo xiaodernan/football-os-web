@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `a9ee6e2 M1020: the season's five moments - one fixtures walk told as five recorded moments, wired to the streaks screen`
-**总提交数**: 1322
+**当前HEAD**: `82284a5 M1021: the world's leading foulers - the stats-block fold takes its fourth metric`
+**总提交数**: 1324
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -65,15 +65,16 @@
 - **M1018 红牌大亨**：`redCardKings` 折叠——/discipline 新增「The world's red card kings」面板：世界全部已结束 fixtures × side 累计 reds（至少一张才上板，按 reds desc；黄牌作为对照印出不参与排序），world 行 = club-fixture 总数与场均红牌数；proof-red-kings 6/6（world arm 独立 recount 对 15 联赛合计 40 家 club 与 100 张红牌完全对账）；6 键×3；PWA 571（JS 558）、baseline 同提交重录；全套 151/151 · 3,569 检查、E2E 110/110。
 - **M1019 黄牌大亨**：`statsBlockKings` 的 metric 门扩至第三个键 `yellows`（corners/duels/yellows 共用同一遍 stats-block 走读与 games 计数器）；/discipline 新增「The world's most loaded for yellows」面板；proof-yellows-kings 6/6（T51 手工数、联赛行场次加权均值 2.83、world arm 对 15 联赛 73 家俱乐部 2,030 场对账完整性与顺序）；6 键×3；PWA 571（JS 559）、baseline 同提交重录；E2E +1。
 - **M1020 季内五大时刻**：`seasonStory` 折叠（domain/analytics.ts）——同一条 fixture 走读给出最宽胜仗、最疯狂的一场、没守住的领先（读 `collapses` 的首行）、最晚进球（读 GOAL 事件的分钟）与最长连胜（读 `streaks` 的 winHolder）；/streaks 新面板「The season's five moments」（MomentTile 组件 + vs 对手 + formatDate + 分钟带 ′ 印出 + 连胜 tile）；此前 `seasonStory` 的导出与 SeasonStory 的三个字段 `biggestCollapse`/`latestGoal`/`longestRun` 全部未被读取（proof:dead-exports / proof:model-fields 真红）——本提交把它们接上屏幕，两个门禁同步转绿；proof-streaks 增补对 story 的走读断言（story* 键、MomentTile、五组 story.* 读与 seasonStory 调用）；14 键×3；census literal 2,229→2,244、litVarSites 355→361、dup 153→154、excess 254→255；PWA 573（JS 560）、baseline 同提交重录；E2E +1（season's five moments heading）→112/112；全套 152/152 · 3,575/3,575 检查。
+- **M1021 世界最凶的犯规手**：`statsBlockKings` 的 metric 门扩至第四键 `fouls`；/discipline 新增「The world's leading foulers」面板（crest + 场均犯规 + bar + world 行）；proof-fouls-kings 6/6（T52 手工数、联赛行场次加权均值 3.5、world arm 对 15 联赛 73 家俱乐部独立 recount 26,651 球、顺序/对折对账）；6 键×3；census literal 2,244→2,250、litVarSites 361→362；PWA 573（JS 560，未增字节）不变；E2E +1（leading foulers heading）→113/113；全套 153/153 · 3,581/3,581 检查。
 - **M1007 纪录边 · 对手声名**：/streaks 的 edge rules 行附「· {n} OVR opponent」，仅当 break 的 opponentOverall 非 null；`overallOf` 门惰性取俱乐部 OVR；proof-streaks 16/16（T15 D=81、T17 F=88）；全套 146/146 · 3,540 检查、E2E 87/87。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**152/152 脚本、3,575/3,575 检查**
-- E2E：**112/112**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks、injuries M999 ladder、xG family M1000、transfers、poll、club compare、edge reputation M1007、history、film room、learn、review、corner kings、outshine board、briefing、run-in、title race、watchlist、compare、scouting、value board、duel kings、world lethal board、manager OS、football AI、knowledge graph、tactical studio、data room、development、head-to-head、red card kings、most loaded yellows board、the season's five moments）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,244、litVarSites 361
+- 全套证词：**153/153 脚本、3,581/3,581 检查**
+- E2E：**113/113**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks、injuries M999 ladder、xG family M1000、transfers、poll、club compare、edge reputation M1007、history、film room、learn、review、corner kings、outshine board、briefing、run-in、title race、watchlist、compare、scouting、value board、duel kings、world lethal board、manager OS、football AI、knowledge graph、tactical studio、data room、development、head-to-head、red card kings、most loaded yellows board、the season's five moments、leading foulers board）
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,250、litVarSites 362
 
 ## 🧭 下一步方向
 
