@@ -161,6 +161,9 @@ test("the form table ranks the clubs and the chips switch the competition", asyn
   await expect(page.getByRole("heading", { name: "The last five, ranked" })).toBeVisible();
   await expect(page.getByText("Fixtures read")).toBeVisible();
   await expect(page.getByText("The form table").first()).toBeVisible();
+  // The venue-split columns under the H and A cells print the played count per end.
+  await expect(page.getByText(/H · \d+/).first()).toBeVisible();
+  await expect(page.getByText(/A · \d+/).first()).toBeVisible();
   // The second chip belongs to a different competition, so clicking it re-anchors the board.
   const chips = page.locator("button.rounded-full");
   await expect(chips).not.toHaveCount(1);
