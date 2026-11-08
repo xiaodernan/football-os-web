@@ -135,6 +135,42 @@ test("the leaders screen draws the corner kings board", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "The corner kings" })).toBeVisible();
 });
 
+test("the manager OS renders its section for the seeded favorite club", async ({ page }) => {
+  await page.goto("/#/manager");
+  await expect(page.getByRole("heading", { name: "Manager OS" })).toBeVisible();
+});
+
+test("the football AI page renders its chat-first heading", async ({ page }) => {
+  await page.goto("/#/ai");
+  await expect(page.getByRole("heading", { name: "Football AI" })).toBeVisible();
+});
+
+test("the knowledge graph page renders the AI graph tab active", async ({ page }) => {
+  await page.goto("/#/knowledge");
+  await expect(page.getByRole("heading", { name: "Football AI" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Knowledge Graph" })).toBeVisible();
+});
+
+test("the tactical studio renders its training heading", async ({ page }) => {
+  await page.goto("/#/tactical-studio");
+  await expect(page.getByRole("heading", { name: "Tactical Studio" })).toBeVisible();
+});
+
+test("the data room renders its tables heading", async ({ page }) => {
+  await page.goto("/#/data");
+  await expect(page.getByRole("heading", { name: "Data Room" })).toBeVisible();
+});
+
+test("the development page renders its role gap heading", async ({ page }) => {
+  await page.goto("/#/development");
+  await expect(page.getByRole("heading", { name: "Role Gap Analysis" })).toBeVisible();
+});
+
+test("the head-to-head page renders every meeting between the picked clubs", async ({ page }) => {
+  await page.goto("/#/head-to-head");
+  await expect(page.getByRole("heading", { name: "Head to head: every meeting" })).toBeVisible();
+});
+
 test("the leaders screen draws the world lethal board", async ({ page }) => {
   await page.goto("/#/leaders");
   await expect(page.getByRole("heading", { name: "The world's killers" })).toBeVisible();
