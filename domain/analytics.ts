@@ -1643,6 +1643,75 @@ export function bounceBack(compId: string, matches: Match[], clubs: Club[]): Bou
   return { rows, underpowered, world: worldSamples ? round2(worldPoints / worldSamples) : 0 };
 }
 
+export interface LateXgRow {
+  clubId: string;
+  /** Finished fixtures with recorded events. */
+  played: number;
+  /** xG this club banked in the last window or beyond (76+). */
+  xgLate: number;
+  /** All xG this club banked — the late share's denominator. */
+  xgAll: number;
+  /** Late xG as a share of all xG, 0–100, 2dp. */
+  lateShare: number;
+}
+
+export interface LateXg {
+  /** Clubs that banked at least one xG in this competition, ranked by late share, then late xG. */
+  rows: LateXgRow[];
+  /** The league's own late share across every xG it counted — a league-wide line, not a mean. */
+  leagueLate: number;
+  /** World or league-wide xG counted — the denominator of `leagueLate`. */
+  matches: number;
+}
+
+/** M989: closing time — where each club's xG arrives in the last window. The clock reads when
+ *  the goals arrive; this reads how much of the chance comes with them. Late-minute xG is the
+ *  proof of a club's sustained pressure; it either arrives or it doesn't. */
+export function lateXg(compId: string, matches: Match[], clubs: Club[]): LateXg {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const byClub = new Map<string, { games: number; all: number; late: number }>();
+  for (const id of ranked) byClub.set(id, { games: 0, all: 0, late: 0 });
+  let matchesCounted = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m) || !m.events?.length) continue;
+    matchesCounted++;
+    for (const id of [m.homeClubId, m.awayClubId]) {
+      if (!ranked.has(id)) continue;
+      const cur = byClub.get(id);
+      if (cur) cur.games++;
+    }
+    for (const e of m.events ?? []) {
+      if (e.type !== "GOAL") continue;
+      const parsed = xgOf(e);
+      if (!Number.isFinite(parsed)) continue;
+      const id = e.side === "home" ? m.homeClubId : m.awayClubId;
+      if (!ranked.has(id)) continue;
+      const cur = byClub.get(id);
+      if (!cur) continue;
+      cur.all += parsed;
+      if (e.minute >= 76) cur.late += parsed;
+    }
+  }
+  const rows = [...byClub.entries()]
+    .filter(([, v]) => v.all > 0)
+    .map(([clubId, v]) => ({
+      clubId,
+      played: v.games,
+      xgLate: round2(v.late),
+      xgAll: round2(v.all),
+      lateShare: round2((v.late / v.all) * 100),
+    }));
+  rows.sort(
+    (a, b) =>
+      b.lateShare - a.lateShare ||
+      b.xgLate - a.xgLate ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  const all = sum(rows, (r) => r.xgAll);
+  const late = sum(rows, (r) => r.xgLate);
+  return { rows, leagueLate: all ? round2((late / all) * 100) : 0, matches: matchesCounted };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

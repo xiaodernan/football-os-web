@@ -149,7 +149,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 549 + CSS 12.5), pin 560 -> 561, baseline re-recorded in the same commit.
 // M987: the after-a-defeat board rides the timing screen's chunk — measured 562 KB / 57 assets
 // (JS 549 + CSS 12.5), pin 561 -> 562, baseline re-recorded in the same commit.
-const BUDGET_KB = 562;
+// M989: the closing-time xG board rides the timing chunk — measured 563 KB / 57 assets
+// (JS 550 + CSS 12.5), pin 562 -> 563, baseline re-recorded in the same commit.
+const BUDGET_KB = 563;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

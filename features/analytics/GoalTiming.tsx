@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { goalTiming , scoringFirst, finishingRate, xgTable, xgRobberies, bounceBack } from "@/domain/analytics";
+import { goalTiming , scoringFirst, finishingRate, xgTable, xgRobberies, bounceBack, lateXg } from "@/domain/analytics";
 import { maxBy, sum, deltaSign } from "@/domain/attributes";
 import { ABSENT, cn, pctLabel, pctOf , fmt2, signed } from "@/lib/utils";
 
@@ -27,6 +27,8 @@ export function GoalTiming() {
   const robberies = useMemo(() => xgRobberies(compId, matches, clubs), [compId, matches, clubs]);
   // M987: after a defeat — the response to losing.
   const bounce = useMemo(() => bounceBack(compId, matches, clubs), [compId, matches, clubs]);
+  // M989: closing time — who banks their xG late and who doesn't.
+  const lateXgBoard = useMemo(() => lateXg(compId, matches, clubs), [compId, matches, clubs]);
   // The six window labels are read once, so the bars, the tiles and the list all name a window the
   // same way — and a dictionary that is missing one of the six fails here rather than printing a key.
   const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
@@ -262,6 +264,36 @@ export function GoalTiming() {
                   })}
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">{t("timing.owedMethod", { n: robberies.count })}</p>
+              </>
+            )}
+          </Panel>
+
+          {/* M989: closing time — how much of each club's xG arrives in the last quarter-hour. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("timing.lateXgTitle")} hint={t("timing.lateXgHint")} />
+            {lateXgBoard.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.lateXgNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">{t("timing.lateXgWorld", { n: fmt2(lateXgBoard.leagueLate) })}</p>
+                <ul className="mt-2 space-y-1">
+                  {lateXgBoard.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li key={r.clubId} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                            <div className="text-xs text-muted-foreground">{t("timing.lateXgRow", { l: fmt2(r.xgLate), a: fmt2(r.xgAll), p: fmt2(r.lateShare) })}</div>
+                          </div>
+                        </div>
+                        <div className="text-right tabular-nums font-semibold text-primary">{fmt2(r.lateShare)}</div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("timing.lateXgMethod")}</p>
               </>
             )}
           </Panel>
