@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `9b77116 M992: the blank runs - every stretch without scoring, walked in order`
-**总提交数**: 1269
+**当前HEAD**: `4748b10 M993: the blank runs walked end to end - the leaders page is truly carrying it`
+**总提交数**: 1271
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -39,14 +39,15 @@
 - **M990 最开放的联赛**：`leagueOpenness` 折叠——/world 新增「Which league plays the most open games」面板：按每场已结束比赛算几个进球排所有赛事（world 行作对照）；proof-league-openness 6/6（15 联赛 seeded arm）；5 键×3；PWA 563（JS 551）；全套 140/140 · 3,499 检查、E2E 74/74。
 - **M991 客场最夸张胜利**：`worldUpsets` 折叠——/world 新增「最夸张的客场胜利」横幅：rating-gap upset + widest away win，按实力缺口+进球数排序（ties on earliest kickoff）；proof-world-upsets 6/6（15 联赛 seeded arm 70/70 全部对账）；10 键×3；PWA 564（JS 552）；全套 141/141 · 3,505 检查、E2E 74/74。
 - **M992 连续哑火**：`scorelessStreaks` 折叠——/leaders 新增「The blank runs」面板：按最长连续未进球（walked in order）排名；rows 只列有 blank 的 club；proof-scoreless-streaks 6/6（15 联赛 seeded arm）；8 键×3；PWA 565（JS 553）；全套 142/142 · 3,511 检查、E2E 74/74。
+- **M993 连续哑火走读**：/leaders E2E 走读，「The blank runs」标题锚定位；E2E 75/75。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
 - 全套证词：**142/142 脚本、3,511/3,511 检查**
-- E2E：**71/71**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、五条 screens 走读：wall、lethal read、match xG、sevResult、form）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,107、litVarSites 326
+- E2E：**75/75**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs）
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,169、litVarSites 342
 
 ## 🧭 下一步方向
 
