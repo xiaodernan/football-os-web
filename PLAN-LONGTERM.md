@@ -926,3 +926,5 @@
 - e2787f7 M1000: xG 家族走读——tests/e2e/screens.spec.ts 补三条：/timing 出现「The xG table」「The owed margins」「Closing time」的 heading 断言（M980 / M983 / M989 面板落在真实页面）、/home-away 出现「xG by end and window」（M982 面板）、/clock 出现「Save quality」（M975 面板）；全套 E2E 84/84；tsc 干净、build exit 0、全套证词不变（145/145 · 3,531）。
 - d0b02c6 M1000 文档落地——PLAN-LONGTERM.md 补录 M1000 与 M999 Ledger；状态报告 HEAD 更新至通过 commit。
 - 56f82eb M1001: 别线两张烈度板走读——tests/e2e/screens.spec.ts 把 M973 单板断言换成「between the two farm-lane severity boards」：/discipline 出现「Which end turns the same club redder」（M972，别线）与「Which result turns the same club redder」（M973，本线）；断言为 heading 级；全套 E2E 84/84、tsc 干净、build exit 0、全套证词不变（145/145 · 3,531）。
+- 03644d5 M1001 文档落地——PLAN-LONGTERM.md 补录 M1000 / M1001；状态报告 HEAD 更新。
+- 1bf0935 M1002: /form 的两列半场分读走读——tests/e2e/screens.spec.ts 在 form 走读器中加两条正则断言：页面出现 `H · <num>` 与 `A · <num>`（form.homePld / form.awayPld 翻译键与 EN 同一页即 match）；全套 E2E 84/84、tsc 干净、build exit 0、全套证词不变（145/145 · 3,531）。
