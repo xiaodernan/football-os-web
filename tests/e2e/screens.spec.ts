@@ -90,6 +90,12 @@ test("the world page draws the three new boards after a season is simulated", as
   await expect(page.getByText("The league leaders")).toBeVisible();
 });
 
+test("the streaks page draws the records and the four tiles", async ({ page }) => {
+  await page.goto("/#/streaks");
+  await expect(page.getByRole("heading", { name: "Runs, not averages" })).toBeVisible();
+  await expect(page.getByText("Longest unbeaten run").first()).toBeVisible();
+});
+
 test("the projection page walks its three blocks", async ({ page }) => {
   await page.goto("/#/projection");
   await expect(page.getByText("Player growth projection").first()).toBeVisible();
