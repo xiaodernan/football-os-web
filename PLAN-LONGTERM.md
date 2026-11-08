@@ -924,3 +924,5 @@
 - 4e695a2 M999 文档落地——PLAN-LONGTERM.md 补录 M998 与 M999（本条 commit 信息填坏：内容就是常规 M-里程碑文档同步提交，状态报告写明但不涂改历史）。
 - dec8a7a M999 状态报告同步——dev/status_report.md HEAD/总量修到 1281；145/145 全套检查和 E2E 81/81 写入状态门禁栏。
 - e2787f7 M1000: xG 家族走读——tests/e2e/screens.spec.ts 补三条：/timing 出现「The xG table」「The owed margins」「Closing time」的 heading 断言（M980 / M983 / M989 面板落在真实页面）、/home-away 出现「xG by end and window」（M982 面板）、/clock 出现「Save quality」（M975 面板）；全套 E2E 84/84；tsc 干净、build exit 0、全套证词不变（145/145 · 3,531）。
+- d0b02c6 M1000 文档落地——PLAN-LONGTERM.md 补录 M1000 与 M999 Ledger；状态报告 HEAD 更新至通过 commit。
+- 56f82eb M1001: 别线两张烈度板走读——tests/e2e/screens.spec.ts 把 M973 单板断言换成「between the two farm-lane severity boards」：/discipline 出现「Which end turns the same club redder」（M972，别线）与「Which result turns the same club redder」（M973，本线）；断言为 heading 级；全套 E2E 84/84、tsc 干净、build exit 0、全套证词不变（145/145 · 3,531）。

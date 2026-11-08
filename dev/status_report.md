@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `e2787f7 M1000: the xG family walked end to end - table, margins, closing time, venue clock, save quality`
-**总提交数**: 1283
+**当前HEAD**: `56f82eb M1001: the farm lane severity boards walked end to end - which end, which result`
+**总提交数**: 1285
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -47,6 +47,7 @@
 - **M998 传球手**：`passingAccuracy` 折叠——/leaders 新增「The passers」面板：按每场 finished fixture 的 stats 块算各 club 的传球成功率平均（rankly sorted，world 均值作对照）；proof-passing 7/7（T40 fixture solver；15 联赛 seeded arm 全部对账）；7 键×3；PWA 566（JS 554）；全套 144/144 · 3,524 检查、E2E 78/78。
 - **M999 伤病最严重的球队**：`squadAvailability` 折叠——/injuries 新增「伤病最严重的球队」阶梯面板：本周按 club 走完世世界场均出场队伍，按 injuries 降序排（fitness 低优先；ID 做最后的 tiebreak）；proof-squad-availability 7/7（T41 fixture 手算 + world arm 对全部 73 clubs 的 independent 复核）；5 键×3；PWA 567（JS 555）；全套 145/145 · 3,531 检查、E2E 81/81。
 - **M1000 xG 家族走读**：tests/e2e/screens.spec.ts 三条补充锚住 M980 xG 表、M983 亏欠分差、M989 后 15 分钟、M982 分端 xG 钟与 M975 扑救质量在真实浏览器里渲染；E2E 84/84。
+- **M1001 别线两张烈度板走读**：/discipline 断言「Which end turns the same club redder」（M972）与「Which result turns the same club redder」（M973）；E2E 84/84。
 
 ## ✅ 质量门禁（每次提交）
 
