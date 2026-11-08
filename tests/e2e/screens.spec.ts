@@ -48,9 +48,12 @@ test("the event clock screen renders the club rhythm family", async ({ page }) =
   await expect(page.getByText("Goals per card").first()).toBeVisible();
 });
 
-test("the discipline screen draws the severity by result board", async ({ page }) => {
+test("the discipline screen draws the two farm-lane severity boards", async ({ page }) => {
   await page.goto("/#/discipline");
-  await expect(page.getByText("Which result turns the same club redder")).toBeVisible();
+  // M972 （别线）: the severity by end.
+  await expect(page.getByRole("heading", { name: "Which end turns the same club redder" })).toBeVisible();
+  // M973 （本线）: the severity by result.
+  await expect(page.getByRole("heading", { name: "Which result turns the same club redder" })).toBeVisible();
 });
 
 test("the leaders screen draws the scorer and wall boards", async ({ page }) => {
