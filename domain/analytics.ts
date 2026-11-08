@@ -1816,6 +1816,68 @@ export function worldUpsets(matches: Match[], clubs: Club[]): WorldUpsets {
   return { biggestUpset, biggestAwayWin, matches: counted };
 }
 
+export interface ScorelessRow {
+  clubId: string;
+  /** The longest run of fixtures without a goal, walked in kickoff order. */
+  longestScoreless: number;
+  /** The blank the club is on right now — 0 when its last fixture found the net. */
+  currentScoreless: number;
+  played: number;
+}
+
+export interface ScorelessStreaks {
+  /** Clubs that have had at least one blank, ordered by the longest run, then current run, then id. */
+  rows: ScorelessRow[];
+  /** Finished fixtures read. */
+  matches: number;
+  /** The league's own longest blank — the longest run over every club. */
+  leagueLongest: number;
+  /** The club holding that longest blank — the first of the rows that shows it, null when nobody has one. */
+  leagueHolder: string | null;
+}
+
+/** M992: the blank runs. Every club that has spent a finished fixture without scoring is displayed —
+ *  scored once or never, the count is the same walked in order. The red board is the mirror — it
+ *  absent-clubs instead of zero-clubs, so a blank run only exists when at least one is zero. */
+export function scorelessStreaks(matches: Match[], clubs: Club[]): ScorelessStreaks {
+  const byClub = new Map<string, Array<{ kickoff: string; gf: number }>>();
+  const ranked = new Set(clubs.map((c) => c.id));
+  for (const id of ranked) byClub.set(id, []);
+  let counted = 0;
+  for (const m of matches) {
+    if (!isFinished(m)) continue;
+    counted++;
+    byClub.get(m.homeClubId)?.push({ kickoff: m.kickoff, gf: m.homeGoals });
+    byClub.get(m.awayClubId)?.push({ kickoff: m.kickoff, gf: m.awayGoals });
+  }
+  const rows: ScorelessRow[] = [];
+  for (const [clubId, list] of byClub) {
+    if (list.length === 0) continue;
+    list.sort(byKickoff);
+    let best = 0, cur = 0;
+    for (const r of list) {
+      if (r.gf === 0) cur++;
+      else cur = 0;
+      if (cur > best) best = cur;
+    }
+    if (best === 0) continue;
+    rows.push({ clubId, longestScoreless: best, currentScoreless: cur, played: list.length });
+  }
+  rows.sort(
+    (a, b) =>
+      b.longestScoreless - a.longestScoreless ||
+      b.currentScoreless - a.currentScoreless ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  const leagueLongest = rows.length ? rows[0].longestScoreless : 0;
+  return {
+    rows,
+    matches: counted,
+    leagueLongest,
+    leagueHolder: leagueLongest > 0 ? rows[0].clubId : null,
+  };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

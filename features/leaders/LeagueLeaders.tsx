@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, EmptyState, DemoBadge, Crest } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
-import { leagueWall, records, type RecordRow } from "@/domain/analytics";
-import { fmt2, SEPARATOR } from "@/lib/utils";
+import { leagueWall, records, scorelessStreaks, type RecordRow } from "@/domain/analytics";
+import { fmt2, SEPARATOR, cn, pctOf } from "@/lib/utils";
 
 interface ScorerRow {
   key: string;
@@ -30,6 +30,9 @@ export function LeagueLeaders() {
   const wall = useMemo(() => leagueWall(footballProvider.matches(), footballProvider.clubs()), []);
   // M985: the wildest results — the seed's biggest rout, its most explosive game and its widest draw.
   const recordsBoard = useMemo(() => records(footballProvider.matches()), []);
+  // M992: the blank runs — the longest stretch each club went without scoring, walked in order.
+  const blanks = useMemo(() => scorelessStreaks(footballProvider.matches(), footballProvider.clubs()), []);
+  const blanksPeak = blanks.leagueLongest || 1;
   const { scorers, booked } = useMemo(() => {
     const goals = new Map<string, { name: string; clubId: string; n: number }>();
     const cards = new Map<string, { name: string; clubId: string; yellow: number; red: number }>();
@@ -223,6 +226,55 @@ export function LeagueLeaders() {
         )}
         {recordsBoard.biggestWin && (
           <p className="mt-3 text-xs text-muted-foreground">{t("leaders.recordsMethod")}</p>
+        )}
+      </Panel>
+
+      {/* M992: every club's blank — the longest stretch without scoring, walked in order. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.blanksTitle")} hint={t("leaders.blanksHint")} />
+        {blanks.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.blanksNone")}</p>
+        ) : (
+          <>
+            {blanks.leagueHolder ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {t("leaders.blanksLeague", { n: blanks.leagueLongest, c: getClub(blanks.leagueHolder)?.short ?? blanks.leagueHolder })}
+              </p>
+            ) : null}
+            <ul className="mt-2 space-y-1">
+              {blanks.rows.map((r) => {
+                const club = getClub(r.clubId);
+                return (
+                  <li
+                    key={r.clubId}
+                    className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_minmax(90px,180px)]"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Crest colors={club?.colors} short={club?.short} size={22} />
+                      <span className="min-w-0 truncate font-medium">{club?.name ?? r.clubId}</span>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      {r.longestScoreless}
+                      <div className="text-xs text-muted-foreground">{t("leaders.blanksColLongest")}</div>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      {r.currentScoreless}
+                      <div className="text-xs text-muted-foreground">{t("leaders.blanksColNow")}</div>
+                    </div>
+                    <div className="hidden sm:block">
+                      <div className="h-2 w-full rounded-full bg-muted">
+                        <div
+                          className={cn("h-2 rounded-full", r.longestScoreless === blanks.leagueLongest ? BAR_FILL.bad : BAR_FILL.info)}
+                          style={{ width: pctOf(r.longestScoreless, blanksPeak) }}
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("leaders.blanksMethod")}</p>
+          </>
         )}
       </Panel>
 

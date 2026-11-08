@@ -154,7 +154,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M990: the openness board rides the world chunk, unchanged at 563 KB / 57 assets.
 // M991: the widest-away-win panels ride the world chunk — measured 564 KB / 57 assets
 // (JS 552 + CSS 12.5), pin 563 -> 564, baseline re-recorded in the same commit.
-const BUDGET_KB = 564;
+// M992: the blank runs panel rides the leaders chunk — measured 565 KB / 57 assets
+// (JS 553 + CSS 12.5), pin 564 -> 565, baseline re-recorded in the same commit.
+const BUDGET_KB = 565;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

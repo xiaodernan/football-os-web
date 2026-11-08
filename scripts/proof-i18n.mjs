@@ -4581,7 +4581,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M989: the closing-time xG board adds its six keys as sites: 2143 -> 2149.
   // M990: the openness board adds its five keys as sites: 2149 -> 2154.
   // M991: the widest-away-win panels add their seven keys as sites: 2154 -> 2162.
-  shapeCounts.literal === 2162 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M992: the blank runs panel adds its seven keys as sites: 2162 -> 2169.
+  shapeCounts.literal === 2169 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4690,7 +4691,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M989: the world line and each row's interpolating line hand over variables: 335 -> 337.
   // M990: the world line and each row's line each hand over variables: 337 -> 339.
   // M991: the two caption lines each hand over their variables: 339 -> 341.
-  litVarSites === 341 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M992: the league holder line hands over its two variables: 341 -> 342.
+  litVarSites === 342 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
