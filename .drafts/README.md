@@ -92,3 +92,18 @@ They reach for `ui/primitives` and `lib/utils` only — both stay reachable, so 
 them here — and none of their 583 `t()` calls has a dictionary row in any locale (the farm has
 never authored one), so the quarantine removes no keys. They sit here at their original paths;
 a resurrection follows the same four steps as above, starting from a parse fix.
+
+## Resurrections (the ledger, newest last)
+
+- **M1022: `domain/finance.ts` and `features/manager/ClubFinance.tsx` → `features/finance/FinanceBoard.tsx`.**
+  The drafted fold hand-keyed a calculator (manual budget inputs the app had no door to fill,
+  hardcoded Chinese messages, a State that could never be populated, `Math.random(...)`-free but
+  useless without a host club context). Resurrected as the world-scale board the plan always
+  promised: a single deterministic fold `clubFinance(clubs, players)` in house style, mounted as
+  `/finance` with a nav entry; the screen reads the fold, the world refolded every read; the
+  drafted StatTile import/labels mis-typed were rewritten to the fork's real doors
+  (`fmtMoney`, `StatTile{label,value,sub,tone}`, `TileTone`); 15 `fin.*` keys ×3 locales;
+  `scripts/proof-finance.mjs` charges the fixture's hand-count, the seeded arm independent
+  recount over all 73 clubs (squad book €86.03B, wage ratio 0.95) and the screen's stranger-arm
+  reader. The old screen moved to `features/finance/FinanceBoard.tsx` per the git-mv discipline;
+  the empty budget surface is gone — the board is read-only by design.

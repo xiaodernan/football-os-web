@@ -146,7 +146,8 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M956: 121 -> 122 — features/analytics/LeadRetention.tsx is a new screen.
 // M962: 122 -> 123 — features/analytics/Streaks.tsx is a new screen.
 // M970: 123 -> 124 — features/analytics/FormTable.tsx is a new screen.
-const APP_MODULE_PIN = 124;
+// M1022: 124 -> 126 — domain/finance.ts and features/finance/FinanceBoard.tsx resurrected.
+const APP_MODULE_PIN = 126;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

@@ -58,6 +58,7 @@ const EventClock = lazy(() => import("@/features/analytics/EventClock").then((m)
 const LeadRetention = lazy(() => import("@/features/analytics/LeadRetention").then((m) => ({ default: m.LeadRetention })));
 const Streaks = lazy(() => import("@/features/analytics/Streaks").then((m) => ({ default: m.Streaks })));
 const Briefing = lazy(() => import("@/features/analytics/Briefing").then((m) => ({ default: m.Briefing })));
+const FinanceBoard = lazy(() => import("@/features/finance/FinanceBoard").then((m) => ({ default: m.FinanceBoard })));
 const FormTable = lazy(() => import("@/features/analytics/FormTable").then((m) => ({ default: m.FormTable })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
@@ -121,6 +122,7 @@ function Routes() {
   else if (path === "/film") inner = <FilmRoom />;
   else if (path === "/data") inner = <DataRoom />;
   else if (path === "/transfers") inner = <TransferCentre />;
+  else if (path === "/finance") inner = <FinanceBoard />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

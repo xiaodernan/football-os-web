@@ -308,6 +308,11 @@ test("the weekly review renders its digest heading", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Weekly Review" })).toBeVisible();
 });
 
+test("the balance sheet screen draws the world board", async ({ page }) => {
+  await page.goto("/#/finance");
+  await expect(page.getByRole("heading", { name: "The world's balance sheet" })).toBeVisible();
+});
+
 test("the form table ranks the clubs and the chips switch the competition", async ({ page }) => {
   await page.goto("/#/form");
   await expect(page.getByRole("heading", { name: "The last five, ranked" })).toBeVisible();

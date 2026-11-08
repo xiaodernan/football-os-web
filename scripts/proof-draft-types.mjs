@@ -69,7 +69,9 @@ const FILES_CEILING = 69;
 // M943: 79 -> 123. The overview batch joined the quarantine parse-clean, so the census reads
 // every one of the drafts for the first time — and the overview repairs below keep the totals
 // inside the ceilings the pin existed to protect.
-const POPULATION_PIN = 123;
+// M1022: 123 -> 121. Two finance drafts (domain/finance.ts, features/manager/ClubFinance.tsx)
+// were resurrected into the app and left the quarantine.
+const POPULATION_PIN = 121;
 
 /** The families a milestone repaired, and the reason each one was repairable at all. */
 const REPAIRED = {
