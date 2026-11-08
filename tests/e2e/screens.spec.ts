@@ -217,6 +217,26 @@ test("the title race page renders its weekly-ladder heading", async ({ page }) =
   await expect(page.getByRole("heading", { name: "The title race, week by week" })).toBeVisible();
 });
 
+test("the watchlist page renders its saved board heading", async ({ page }) => {
+  await page.goto("/#/watchlist");
+  await expect(page.getByRole("heading", { name: "Watchlist" })).toBeVisible();
+});
+
+test("the compare page renders its side-by-side heading", async ({ page }) => {
+  await page.goto("/#/compare");
+  await expect(page.getByRole("heading", { name: "Compare Players" })).toBeVisible();
+});
+
+test("the scouting page renders its needs heading", async ({ page }) => {
+  await page.goto("/#/scouting");
+  await expect(page.getByRole("heading", { name: "Scouting" })).toBeVisible();
+});
+
+test("the value board renders its section title", async ({ page }) => {
+  await page.goto("/#/value");
+  await expect(page.getByRole("heading", { name: "Player value board" })).toBeVisible();
+});
+
 test("the weekly review renders its digest heading", async ({ page }) => {
   await page.goto("/#/review");
   await expect(page.getByRole("heading", { name: "Weekly Review" })).toBeVisible();
