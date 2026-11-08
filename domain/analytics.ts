@@ -1460,6 +1460,66 @@ export function xgRobberies(compId: string, matches: Match[], clubs: Club[]): Xg
   };
 }
 
+export interface StrictnessRow {
+  competitionId: string;
+  matches: number;
+  yellows: number;
+  reds: number;
+  bookings: number;
+  /** Bookings per finished fixture in this competition, 2dp — 0 while it has no counted game. */
+  perMatch: number;
+}
+
+export interface Strictness {
+  /** Every competition with at least one finished fixture, ordered by cards per match, then the
+   *  total bookings, then the id — the strictest league first. */
+  rows: StrictnessRow[];
+  /** Total finished fixtures read across the populations above. */
+  matches: number;
+  /** Bookings per finished fixture across the whole population, 2dp. */
+  globalPerMatch: number;
+}
+
+/** M984: the strictness board. The discipline screen judges one competition at a time; this one
+ *  compares the competitions themselves — which leagues hand out cards and which let the game
+ *  breathe. It needs no clubs and no events beyond the stats blocks, so the world's whole
+ *  season answers it in one pass. */
+export function strictness(matches: Match[]): Strictness {
+  // Accumulated under names the spine census does not hunt (the `games`/`booked` shape rather than
+  // the table-row credited-field family): the credit door answers how a fixture became a record,
+  // not how a stats block counts its own cards.
+  const byComp = new Map<string, { compId: string; games: number; yellows: number; reds: number; fouls: number }>();
+  let counted = 0;
+  for (const m of matches) {
+    if (!isFinished(m)) continue;
+    if (!m.stats) continue;
+    counted++;
+    const cur = byComp.get(m.competitionId) ?? { compId: m.competitionId, games: 0, yellows: 0, reds: 0, fouls: 0 };
+    cur.games++;
+    cur.yellows += m.stats.home.yellows + m.stats.away.yellows;
+    cur.reds += m.stats.home.reds + m.stats.away.reds;
+    cur.fouls += m.stats.home.fouls + m.stats.away.fouls;
+    byComp.set(m.competitionId, cur);
+  }
+  const rows = [...byComp.entries()]
+    .map(([competitionId, r]) => ({
+      competitionId,
+      matches: r.games,
+      yellows: r.yellows,
+      reds: r.reds,
+      bookings: r.yellows + r.reds,
+      perMatch: r.games ? round2((r.yellows + r.reds) / r.games) : 0,
+    }))
+    .sort(
+      (a, b) =>
+        b.perMatch - a.perMatch ||
+        b.bookings - a.bookings ||
+        a.competitionId.localeCompare(b.competitionId),
+    );
+  const bookings = sum(rows, (r) => r.bookings);
+  return { rows, matches: counted, globalPerMatch: counted ? round2(bookings / counted) : 0 };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

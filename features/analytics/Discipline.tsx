@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, resultSeverity, venueSeverity, cardTiming } from "@/domain/analytics";
+import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, resultSeverity, strictness, venueSeverity, cardTiming } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
@@ -46,6 +46,9 @@ export function Discipline() {
   // M973: the same two counts divided once per result — a club with no cards in both a won and a
   // lost match has no pair of rates to compare, so it takes no row and is counted aside instead.
   const severityResult = useMemo(() => resultSeverity(compId, matches, clubs), [compId, matches, clubs]);
+  // M984: the strictness board reads the whole world, not one competition — no compId axis here.
+  const strict = useMemo(() => strictness(matches), [matches]);
+  const strictPeak = strict.rows.length ? Math.max(...strict.rows.map((r) => r.perMatch), 0.01) : 1;
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -639,6 +642,51 @@ export function Discipline() {
                     );
                   })}
                 </ul>
+              </>
+            )}
+          </Panel>
+          {/* M984: the strictness board — the competitions ranked against each other by the cards
+              their referees hand out per finished match. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.strictTitle")} hint={t("disc.strictHint")} />
+            {strict.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.clockNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.strictWorld", { n: strict.matches, p: fmt2(strict.globalPerMatch) })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {strict.rows.map((r, i) => {
+                    const comp = competitions.find((c) => c.id === r.competitionId);
+                    return (
+                      <li
+                        key={r.competitionId}
+                        className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto_auto] sm:grid-cols-[2rem_1fr_auto_auto_minmax(90px,180px)]"
+                      >
+                        <span className="text-muted-foreground">{i + 1}</span>
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{comp?.name ?? r.competitionId}</div>
+                          <div className="text-xs text-muted-foreground">{t("disc.strictLine", { y: r.yellows, r: r.reds })}</div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          {fmt2(r.perMatch)}
+                          <div className="text-xs text-muted-foreground">{t("disc.perMatch")}</div>
+                        </div>
+                        <div className="text-right tabular-nums text-muted-foreground">
+                          {r.bookings}
+                          <div className="text-xs text-muted-foreground">{t("disc.strictCards")}</div>
+                        </div>
+                        <div className="hidden sm:block">
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div className={cn("h-2 rounded-full", BAR_FILL.info)} style={{ width: pctOf(r.perMatch, strictPeak) }} />
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("disc.strictMethod")}</p>
               </>
             )}
           </Panel>

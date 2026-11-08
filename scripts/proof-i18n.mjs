@@ -4573,7 +4573,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M981: the match-page xG panel adds its five keys as sites: 2101 -> 2107.
   // M982: the xG venue clock adds its four keys as sites and the reused empty line: 2107 -> 2112.
   // M983: the owed margins adds its five keys as sites and the shared vs connector: 2112 -> 2119.
-  shapeCounts.literal === 2119 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M984: the strictness board adds its six keys as sites and reuses disc.perMatch and disc.clockNone:
+  // 2119 -> 2127.
+  shapeCounts.literal === 2127 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4675,7 +4677,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M980: the scan line hands over its two counts (goals read and unmeasured): 324 -> 325.
   // M981: the unmeasured line hands over its single count: 325 -> 326.
   // M983: the margin and method sentences each hand over variables: 326 -> 328.
-  litVarSites === 328 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M984: the world line and the per-card line each hand over variables: 328 -> 330.
+  litVarSites === 330 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

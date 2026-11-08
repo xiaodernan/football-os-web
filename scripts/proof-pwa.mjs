@@ -143,7 +143,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 545 + CSS 12.5), pin 557 -> 558, baseline re-recorded in the same commit.
 // M983: the owed margins panel rides the timing screen's chunk — measured 559 KB / 57 assets
 // (JS 547 + CSS 12.5), pin 558 -> 559, baseline re-recorded in the same commit.
-const BUDGET_KB = 559;
+// M984: the strictness board rides the discipline screen's chunk — measured 560 KB / 57 assets
+// (JS 547 + CSS 12.5), pin 559 -> 560, baseline re-recorded in the same commit.
+const BUDGET_KB = 560;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
