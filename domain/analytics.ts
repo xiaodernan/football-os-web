@@ -1712,6 +1712,56 @@ export function lateXg(compId: string, matches: Match[], clubs: Club[]): LateXg 
   return { rows, leagueLate: all ? round2((late / all) * 100) : 0, matches: matchesCounted };
 }
 
+export interface LeagueOpennessRow {
+  competitionId: string;
+  matches: number;
+  goals: number;
+  /** Goals per match here, 2dp — the openness of the league. */
+  perMatch: number;
+}
+
+export interface LeagueOpenness {
+  /** Every competition with at least one finished fixture, ordered by goals per match. */
+  rows: LeagueOpennessRow[];
+  /** Finished fixtures the world counts across them all. */
+  matches: number;
+  /** Goals across them all — the numerator of `global`. */
+  goals: number;
+  /** The world's own rate: goals everywhere / fixtures everywhere, 2dp. */
+  global: number;
+}
+
+/** M990: which leagues play the most open games. The world is fifteen leagues and two cups wrapped
+ *  into the same fixtures — this reads them against each other on the one axis that crosses every
+ *  league every week: scoreline inflation. */
+export function leagueOpenness(matches: Match[]): LeagueOpenness {
+  const byComp = new Map<string, { matches: number; goals: number }>();
+  for (const m of matches) {
+    if (!isFinished(m)) continue;
+    const comp = m.competitionId;
+    const cur = byComp.get(comp) ?? { matches: 0, goals: 0 };
+    cur.matches++;
+    cur.goals += m.homeGoals + m.awayGoals;
+    byComp.set(comp, cur);
+  }
+  const rows = [...byComp.entries()]
+    .map(([competitionId, v]) => ({
+      competitionId,
+      matches: v.matches,
+      goals: v.goals,
+      perMatch: round2(v.goals / v.matches),
+    }))
+    .sort(
+      (a, b) =>
+        b.perMatch - a.perMatch ||
+        b.goals - a.goals ||
+        a.competitionId.localeCompare(b.competitionId),
+    );
+  const totalGoals = sum(rows, (r) => r.goals);
+  const totalMatches = sum(rows, (r) => r.matches);
+  return { rows, matches: totalMatches, goals: totalGoals, global: totalMatches ? round2(totalGoals / totalMatches) : 0 };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

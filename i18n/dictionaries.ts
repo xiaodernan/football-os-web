@@ -773,6 +773,11 @@ const en: Dict = {
   "world.history.hint": "Average overall and aggregate market value across simulated seasons",
   "world.history.champions": "Champions by season",
   "world.history.empty": "Simulate seasons to build the arc.",
+  "world.opennessTitle": "Which league plays the most open games",
+  "world.opennessHint": "Goals per finished match, every competition in the world ranked against the rest.",
+  "world.opennessWorld": "{g} goals in {n} fixtures — {p} a game across the world",
+  "world.opennessLine": "{n} fixtures · {g} goals",
+  "world.opennessPerMatch": "goals a game",
 
   // M525 — the season report: the whole run, read across every simulated season.
   "world.report.title": "Season report",
@@ -3644,6 +3649,11 @@ const zhCN: Dict = {
   "world.history.hint": "模拟赛季中的平均综合与市场总值",
   "world.history.champions": "历届冠军",
   "world.history.empty": "模拟赛季以生成演变曲线。",
+  "world.opennessTitle": "哪家联赛踢得最开放",
+  "world.opennessHint": "按每场已结束比赛的进球数把世界每项赛事排个序。",
+  "world.opennessWorld": "全世界 {n} 场比赛，{g} 个进球——场均 {p} 球",
+  "world.opennessLine": "{n} 场 · {g} 球",
+  "world.opennessPerMatch": "场均进球",
 
   // M525 — 赛季报告：跨全部已模拟赛季通读整段运行。
   "world.report.title": "赛季报告",
@@ -6419,6 +6429,11 @@ const zhTW: Dict = {
   "world.history.hint": "模擬賽季中的平均綜合與市場總值",
   "world.history.champions": "歷屆冠軍",
   "world.history.empty": "模擬賽季以生成演變曲線。",
+  "world.opennessTitle": "哪家聯賽踢得最開放",
+  "world.opennessHint": "按每場已結束比賽的進球數把世界每項賽事排個序。",
+  "world.opennessWorld": "全世界 {n} 場比賽，{g} 個進球——場均 {p} 球",
+  "world.opennessLine": "{n} 場 · {g} 球",
+  "world.opennessPerMatch": "場均進球",
 
   // M525 — 賽季報告：跨全部已模擬賽季通讀整段執行。
   "world.report.title": "賽季報告",

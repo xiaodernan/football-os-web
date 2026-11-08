@@ -3,14 +3,15 @@ import { toast } from "sonner";
 import { positionLabel } from "@/domain/rowText";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
-import { footballProvider, getClub } from "@/data/footballService";
-import { fmtMoney, pctLabel, signed, ABSENT } from "@/lib/utils";
+import { footballProvider, getClub, getCompetition } from "@/data/footballService";
+import { fmtMoney, pctLabel, signed, ABSENT, fmt2, pctOf, cn } from "@/lib/utils";
 import { runWorld, seasonLabel, buildSeasonReport, seasonReportPayload, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
 import { sum, last } from "@/domain/attributes";
+import { leagueOpenness } from "@/domain/analytics";
 import { rowLine } from "@/domain/rowText";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
-import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, StatTile, Crest, EmptyState, LoadingBlock, ErrorState, DemoBadge, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,11 @@ export function DynamicWorld() {
     }),
     [],
   );
+
+  const worldMatches = useMemo(() => footballProvider.matches(), []);
+  // M990: the world's most open leagues, ranked over every fixture the seed carries.
+  const openness = useMemo(() => leagueOpenness(worldMatches), [worldMatches]);
+  const opennessPeak = openness.rows.length ? Math.max(...openness.rows.map((r) => r.perMatch)) : 1;
 
   const snapshot = useMemo(() => {
     try {
@@ -236,6 +242,38 @@ export function DynamicWorld() {
             ) : (
               <p className="text-sm text-muted-foreground">{t("world.history.empty")}</p>
             )}
+          </Panel>
+
+          {/* M990: which leagues are decided in the open — goals per finished fixture, every
+              competition ranked against every other, with the world's own rate printed first. */}
+          <Panel className="p-4 lg:col-span-2">
+            <SectionTitle title={t("world.opennessTitle")} hint={t("world.opennessHint")} />
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("world.opennessWorld", { g: openness.goals, n: openness.matches, p: fmt2(openness.global) })}
+            </p>
+            <ul className="mt-2 grid gap-2">
+              {openness.rows.map((r, i) => (
+                <li
+                  key={r.competitionId}
+                  className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto_auto] sm:grid-cols-[2rem_1fr_auto_auto_minmax(90px,180px)]"
+                >
+                  <span className="text-muted-foreground">{i + 1}</span>
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{getCompetition(r.competitionId)?.name ?? r.competitionId}</div>
+                    <div className="text-xs text-muted-foreground">{t("world.opennessLine", { n: r.matches, g: r.goals })}</div>
+                  </div>
+                  <div className="text-right tabular-nums">
+                    {fmt2(r.perMatch)}
+                    <div className="text-xs text-muted-foreground">{t("world.opennessPerMatch")}</div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <div className="h-2 w-full rounded-full bg-muted">
+                      <div className={cn("h-2 rounded-full", BAR_FILL.info)} style={{ width: pctOf(r.perMatch, opennessPeak) }} />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </Panel>
 
           {report && (
