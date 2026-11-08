@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `4b8a6b4 M980: the xG table - how the chances measured up against what went in`
-**总提交数**: 1249
+**当前HEAD**: `cd8f8a4 M981: this match's xG - the fixture reads its recorded chances end to end`
+**总提交数**: 1251
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -27,14 +27,15 @@
 - **M978 两块新榜走读**：/leaders（The wall）与 /timing（The lethal read）E2E 走读；E2E 70/70。
 - **M979 诚实报告**：`predictionAudit` 折叠——SimulationLab 新面板：对每个比赛重放一遍（当时刻只算此前的 teamMetrics + outcomeOdds），打 Brier 分与 favorite 命中率；SimulationLab 新增竞赛 chip + 三块牌 + 模型看好分布句；proof-prediction-audit 6/6（含 15 联赛 seeded arm，门禁指出的两次红都在本提交前修复：根目录 scratch cork、sum 门手撸 reduce→sum 门、compare→byKickoff 门）；8 键×3；PWA 557；全套 131/131 · 3,448 检查、E2E 70/70。
 - **M980 xG 榜**：`xgTable` 折叠——GoalTiming 新增 xG 表（每粒 GOAL 的 xG 汇总到球队，按 xGD 降序）+ outshine（GF − xGF）列；proof-xgtable 6/6（15 联赛 seeded arm：outshine 对 metrics gf、xgDiff、ordering、2dp）；7 键×3；PWA 557（JS 545）；全套 132/132 · 3,454 检查、E2E 70/70。
+- **M981 本场 xG**：`matchXg(m)` 折叠（复用同一 parser）——Details 各侧加 ×Go 大号数 + xG 面板（含 missing 句）；E2E /matches/M0991 走读；proof-match-xg 6/6（world-scope seeded arm 严格对账 408.17 == 联赛 leagueXg）；4 键×3；PWA 558；全套 133/133 · 3,460 检查、E2E 71/71。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**132/132 脚本、3,454/3,454 检查**
-- E2E：**70/70**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、四条 screens 走读：wall、lethal read、sevResult、form、leaders）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,101、litVarSites 325
+- 全套证词：**133/133 脚本、3,460/3,460 检查**
+- E2E：**71/71**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、五条 screens 走读：wall、lethal read、match xG、sevResult、form）
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,107、litVarSites 326
 
 ## 🧭 下一步方向
 
