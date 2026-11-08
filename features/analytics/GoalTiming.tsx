@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { goalTiming , scoringFirst, finishingRate, xgTable, xgRobberies } from "@/domain/analytics";
+import { goalTiming , scoringFirst, finishingRate, xgTable, xgRobberies, bounceBack } from "@/domain/analytics";
 import { maxBy, sum, deltaSign } from "@/domain/attributes";
 import { ABSENT, cn, pctLabel, pctOf , fmt2, signed } from "@/lib/utils";
 
@@ -25,6 +25,8 @@ export function GoalTiming() {
   const xg = useMemo(() => xgTable(compId, matches, clubs), [compId, matches, clubs]);
   // M983: the owed margins — fixtures won by the side that created less.
   const robberies = useMemo(() => xgRobberies(compId, matches, clubs), [compId, matches, clubs]);
+  // M987: after a defeat — the response to losing.
+  const bounce = useMemo(() => bounceBack(compId, matches, clubs), [compId, matches, clubs]);
   // The six window labels are read once, so the bars, the tiles and the list all name a window the
   // same way — and a dictionary that is missing one of the six fails here rather than printing a key.
   const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
@@ -260,6 +262,36 @@ export function GoalTiming() {
                   })}
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">{t("timing.owedMethod", { n: robberies.count })}</p>
+              </>
+            )}
+          </Panel>
+
+          {/* M987: after a defeat — the response to losing, walked from every loss. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("timing.bbTitle")} hint={t("timing.bbHint")} />
+            {bounce.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.bbNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">{t("timing.bbWorld", { n: fmt2(bounce.world) })}</p>
+                <ul className="mt-2 space-y-1">
+                  {bounce.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li key={r.clubId} className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border px-3 py-2 text-sm">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                            <div className="text-xs text-muted-foreground">{t("timing.bbRow", { n: r.points, m: r.afterLoss, r: fmt2(r.rate) })}</div>
+                          </div>
+                        </div>
+                        <div className="text-right tabular-nums font-semibold text-primary">{fmt2(r.rate)}</div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("timing.bbMethod")}</p>
               </>
             )}
           </Panel>

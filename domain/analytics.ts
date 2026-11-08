@@ -1576,6 +1576,73 @@ export function records(matches: Match[]): Records {
   return { biggestWin, highestScoringDraw, highestScoring, matches: counted };
 }
 
+export interface BounceBackRow {
+  clubId: string;
+  /** Fixtures this club played directly following a defeat. */
+  afterLoss: number;
+  /** League points from those fixtures — win 3, draw 1, loss 0. */
+  points: number;
+  /** Points per after-loss fixture, 2dp. */
+  rate: number;
+}
+
+export interface BounceBack {
+  /** Clubs with at least two after-loss fixtures, ranked by rate, then sample, then club id. */
+  rows: BounceBackRow[];
+  /** Clubs with fewer situations — counted, never printed. */
+  underpowered: number;
+  /** The world's own rate — points from after-loss fixtures over after-loss fixtures, across everyone. */
+  world: number;
+}
+
+const minimumSample = 2;
+
+/** M987: after a defeat. Replaying each club's results in kickoff order, this reads what happened in
+ *  the fixture immediately after every loss — the league's honest answer to "does this side turn it
+ *  around?". Two after-loss fixtures is the smallest sample the board prints, per the shared
+ *  sample-floor declaration rather than a new bound of its own. */
+export function bounceBack(compId: string, matches: Match[], clubs: Club[]): BounceBack {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const byClub = new Map<string, Array<{ kickoff: string; result: FormLetter }>>();
+  for (const id of ranked) byClub.set(id, []);
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    const sides: Array<[string, FormLetter]> = [
+      [m.homeClubId, formLetter(m.homeGoals, m.awayGoals)],
+      [m.awayClubId, formLetter(m.awayGoals, m.homeGoals)],
+    ];
+    for (const [id, result] of sides) byClub.get(id)?.push({ kickoff: m.kickoff, result });
+  }
+  const rows: BounceBackRow[] = [];
+  let underpowered = 0;
+  let worldPoints = 0, worldSamples = 0;
+  for (const [clubId, list] of byClub) {
+    if (list.length < 2) continue;
+    list.sort(byKickoff);
+    let points = 0, samples = 0;
+    for (let i = 1; i < list.length; i++) {
+      if (list[i - 1].result !== "L") continue;
+      samples++;
+      if (list[i].result === "W") points += 3;
+      else if (list[i].result === "D") points += 1;
+    }
+    worldPoints += points;
+    worldSamples += samples;
+    if (samples < minimumSample) {
+      underpowered++;
+      continue;
+    }
+    rows.push({ clubId, afterLoss: samples, points, rate: round2(points / samples) });
+  }
+  rows.sort(
+    (a, b) =>
+      b.rate - a.rate ||
+      b.afterLoss - a.afterLoss ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  return { rows, underpowered, world: worldSamples ? round2(worldPoints / worldSamples) : 0 };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;
