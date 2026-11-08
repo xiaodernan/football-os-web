@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, DELTA_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { disciplineVenue, eventVenueClock, goalVenueClock, venueRhythm, venueSplit } from "@/domain/analytics";
+import { disciplineVenue, eventVenueClock, goalVenueClock, xgVenueClock, venueRhythm, venueSplit } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctLabel, pctOf, signed } from "@/lib/utils";
 
@@ -20,6 +20,13 @@ export function VenueSplit() {
   // the minutes, read off each GOAL event's side rather than the scorelines below.
   const clock = useMemo(() => goalVenueClock(compId, matches, clubs), [compId, matches, clubs]);
   const clockPeak = Math.max(1, ...clock.homeWindows, ...clock.awayWindows);
+  // M982: the same split with the chance attached — home-end xG and away-end xG by window.
+  const xgClock = useMemo(() => xgVenueClock(compId, matches, clubs), [compId, matches, clubs]);
+  const xgPeak = Math.max(0.01, ...xgClock.homeWindows, ...xgClock.awayWindows);
+  const xgRows = [
+    { label: t("venue.xgClockHome"), data: xgClock.homeWindows, total: xgClock.home, fill: BAR_FILL.info },
+    { label: t("venue.xgClockAway"), data: xgClock.awayWindows, total: xgClock.away, fill: BAR_FILL.progress },
+  ];
   const clockRows = [
     { label: t("venue.clockHome"), data: clock.homeWindows, total: clock.home, fill: BAR_FILL.info },
     { label: t("venue.clockAway"), data: clock.awayWindows, total: clock.away, fill: BAR_FILL.progress },
@@ -259,6 +266,36 @@ export function VenueSplit() {
                   })
                 : t("venue.rhythmQuiet")}
             </p>
+          </Panel>
+
+          {/* M982: the same split with the chance attached — where the xG lands by end and window. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("venue.xgClockTitle")} hint={t("venue.xgClockHint")} />
+            {xgClock.home + xgClock.away === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.emptyHint")}</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                {xgRows.map((row) => (
+                  <div key={row.label}>
+                    <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                      <span>{row.label}</span>
+                      <span className="font-mono">{fmt2(row.total)}</span>
+                    </div>
+                    <div className="mt-1 flex items-end gap-1">
+                      {row.data.map((n, b) => (
+                        <div key={b} className="flex-1 text-center">
+                          <div className="font-mono text-[10px] text-muted-foreground">{n ? fmt2(n) : ABSENT}</div>
+                          <div className="mx-auto mt-0.5 h-10 w-full">
+                            <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, xgPeak) }} />
+                          </div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Panel>
 
           <Panel className="p-5">

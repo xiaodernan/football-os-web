@@ -1344,6 +1344,43 @@ export function matchXg(m: Match): MatchXg | null {
   return { home: round2(home), away: round2(away), missing };
 }
 
+export interface XgVenueClock {
+  /** Total recorded xG by END the goal went in for, per six windows — home end then away end. */
+  homeWindows: number[];
+  awayWindows: number[];
+  /** The two series' totals. */
+  home: number;
+  away: number;
+}
+
+/** M982: the xG venue clock. The crowd gets told who carries the game between the boxes; this
+ *  asks where the chances actually land by end, off the same detail.vars.xg the xG table sums,
+ *  split by the end the GOAL EVENT names — not by the scoreline. */
+export function xgVenueClock(compId: string, matches: Match[], clubs: Club[]): XgVenueClock {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const homeWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const awayWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "GOAL") continue;
+      const parsed = xgOf(e);
+      if (!Number.isFinite(parsed)) continue;
+      const band = goalBand(e.minute);
+      const scorer = e.side === "home" ? m.homeClubId : m.awayClubId;
+      if (!ranked.has(scorer)) continue;
+      if (e.side === "home") homeWindows[band] += parsed;
+      else awayWindows[band] += parsed;
+    }
+  }
+  return {
+    homeWindows: homeWindows.map((n) => round2(n)),
+    awayWindows: awayWindows.map((n) => round2(n)),
+    home: round2(sum(homeWindows, (n) => n)),
+    away: round2(sum(awayWindows, (n) => n)),
+  };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

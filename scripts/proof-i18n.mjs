@@ -4571,7 +4571,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M979: the honesty report panel adds its eight keys as sites: 2085 -> 2093.
   // M980: the xG table panel adds its eight keys as sites: 2093 -> 2101.
   // M981: the match-page xG panel adds its five keys as sites: 2101 -> 2107.
-  shapeCounts.literal === 2107 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M982: the xG venue clock adds its four keys as sites and the reused empty line: 2107 -> 2112.
+  shapeCounts.literal === 2112 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
