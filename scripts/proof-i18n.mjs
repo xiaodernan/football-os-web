@@ -4570,7 +4570,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M977: the lethal read panel adds its five keys as sites: 2078 -> 2085.
   // M979: the honesty report panel adds its eight keys as sites: 2085 -> 2093.
   // M980: the xG table panel adds its eight keys as sites: 2093 -> 2101.
-  shapeCounts.literal === 2101 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M981: the match-page xG panel adds its five keys as sites: 2101 -> 2107.
+  shapeCounts.literal === 2107 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4670,7 +4671,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // call sites: 321 -> 323.
   // M979: the favorite-distribution line hands over its three counts: 323 -> 324.
   // M980: the scan line hands over its two counts (goals read and unmeasured): 324 -> 325.
-  litVarSites === 325 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M981: the unmeasured line hands over its single count: 325 -> 326.
+  litVarSites === 326 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

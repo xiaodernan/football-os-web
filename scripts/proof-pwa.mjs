@@ -139,7 +139,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // pin 554 -> 555, baseline re-recorded in the same commit.
 // M979: the honesty report rides the simulation lab's chunk — measured 557 KB / 57 assets
 // (JS 544 + CSS 12.5), pin 555 -> 557, baseline re-recorded in the same commit.
-const BUDGET_KB = 557;
+// M981: the match-page xG panel rides the football world's chunk — measured 558 KB / 57 assets
+// (JS 545 + CSS 12.5), pin 557 -> 558, baseline re-recorded in the same commit.
+const BUDGET_KB = 558;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

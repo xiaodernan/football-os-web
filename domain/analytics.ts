@@ -1320,6 +1320,30 @@ export function xgTable(compId: string, matches: Match[], clubs: Club[]): XgTabl
   };
 }
 
+export interface MatchXg {
+  /** The home side's xG from its own GOAL events, 2dp. */
+  home: number;
+  /** The away side's xG from its own GOAL events, 2dp. */
+  away: number;
+  /** GOAL events that went in without a parseable xg — counted, never absorbed. */
+  missing: number;
+}
+
+/** M981: this fixture's xG — every GOAL this match's event list recorded, its chance values summed
+ *  per side. A 0-0 still reads 0.00 – 0.00 — the fixture is real and its record is empty; the null
+ *  arm is the absence of the event list entirely. */
+export function matchXg(m: Match): MatchXg | null {
+  if (!m.events?.length) return null;
+  let home = 0, away = 0, missing = 0;
+  for (const e of m.events) {
+    if (e.type !== "GOAL") continue;
+    const parsed = xgOf(e);
+    if (!Number.isFinite(parsed)) { missing++; continue; }
+    if (e.side === "home") home += parsed; else away += parsed;
+  }
+  return { home: round2(home), away: round2(away), missing };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

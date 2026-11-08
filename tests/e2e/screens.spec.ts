@@ -64,6 +64,12 @@ test("the timing screen draws the lethal read", async ({ page }) => {
   await expect(page.getByText("The lethal read")).toBeVisible();
 });
 
+test("the match page prints this fixture's xG and its six-window clock", async ({ page }) => {
+  await page.goto("/#/matches/M0991");
+  await expect(page.getByText("This match in xG")).toBeVisible();
+  await expect(page.getByText("xG scored").first()).toBeVisible();
+});
+
 test("the form table ranks the clubs and the chips switch the competition", async ({ page }) => {
   await page.goto("/#/form");
   await expect(page.getByRole("heading", { name: "The last five, ranked" })).toBeVisible();

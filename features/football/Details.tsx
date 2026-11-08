@@ -26,7 +26,7 @@ import { careerArc } from "@/domain/careerArc";
 // an empty group where the domain answers the club's own rating.
 import { clubInput, lineMean, LINE_GROUPS } from "@/domain/career";
 import { playerDna } from "@/domain/playerDna";
-import { teamMetrics, expectedGoals, discipline, disciplineVenue, clubDisciplineTrend, matchBrief, eventClock , matchClock } from "@/domain/analytics";
+import { teamMetrics, expectedGoals, discipline, disciplineVenue, clubDisciplineTrend, matchBrief, eventClock , matchClock, matchXg } from "@/domain/analytics";
 import { askFootballAI, type AiAnswer } from "@/data/ai";
 import type { MatchEvent, MatchStats, PlayerRef } from "@/domain/types";
 import { Panel, SectionTitle, StatTile, Crest, PositionTag, EmptyState, DemoBadge, AttributeBar, DnaCard, DELTA_CLASS, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
@@ -632,6 +632,8 @@ export function MatchDetail({ id }: { id: string }) {
   // M953: the same events, folded into the six windows the league clocks read — null when
   // the fixture has no recorded events to clock.
   const clock = matchClock(m);
+  // M981: this fixture's xG — every GOAL the event list recorded, summed per side.
+  const xg = matchXg(m);
   const bandLabels = [t("timing.w1"), t("timing.w2"), t("timing.w3"), t("timing.w4"), t("timing.w5"), t("timing.w6")];
   const clockPeak = clock ? Math.max(1, ...clock.goals, ...clock.cards) : 1;
 
@@ -736,6 +738,31 @@ export function MatchDetail({ id }: { id: string }) {
             </div>
           </Panel>
         )}
+         {/* M981: this fixture's xG — a side's chance attached to every goal it actually scored. */}
+         {xg && (
+           <Panel className="p-4">
+             <SectionTitle title={t("det.xgTitle")} hint={t("det.xgHint")} />
+             <div className="mt-3 grid grid-cols-3 items-center gap-2">
+               <div className="text-center">
+                 <div className="truncate text-sm font-medium">{home.short}</div>
+                 <div className="font-mono text-4xl font-bold text-primary">{fmt2(xg.home)}</div>
+                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("det.xgSide")}</div>
+               </div>
+               <div className="text-center">
+                 <div className="text-xs font-mono text-muted-foreground">{t("common.xg")}</div>
+                 <div className="font-mono text-lg">{SEPARATOR}</div>
+               </div>
+               <div className="text-center">
+                 <div className="truncate text-sm font-medium">{away.short}</div>
+                 <div className="font-mono text-4xl font-bold text-primary">{fmt2(xg.away)}</div>
+                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("det.xgSide")}</div>
+               </div>
+             </div>
+             {xg.missing > 0 && (
+               <p className="mt-2 text-xs text-muted-foreground">{t("det.xgMissing", { m: xg.missing })}</p>
+             )}
+           </Panel>
+         )}
       </div>
 
       <Panel className="p-4">
