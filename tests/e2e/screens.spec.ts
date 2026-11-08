@@ -135,6 +135,11 @@ test("the leaders screen draws the corner kings board", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "The corner kings" })).toBeVisible();
 });
 
+test("the leaders screen draws the duel kings board", async ({ page }) => {
+  await page.goto("/#/leaders");
+  await expect(page.getByRole("heading", { name: "The duel kings" })).toBeVisible();
+});
+
 test("the leaders screen draws the outshine board", async ({ page }) => {
   await page.goto("/#/leaders");
   await expect(page.getByRole("heading", { name: "The outshine board" })).toBeVisible();

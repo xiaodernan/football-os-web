@@ -2014,54 +2014,57 @@ export function cardVenueClock(compId: string, matches: Match[], clubs: Club[]):
   };
 }
 
-export interface CornerRow {
+export interface StatsKingRow {
   clubId: string;
   /** Finished fixtures counted. */
   played: number;
-  /** Corners per finished fixture here, 2dp — the pressure metric. */
+  /** The selected stats-block metric per fixture, 2dp. */
   perMatch: number;
 }
 
-export interface CornerKings {
-  /** Every club with at least one finished fixture here, ordered by corners per match, then the
-   *  id. The table is about pressure, not about how the side does with the pressure — the xG
-   *  table has the latter. */
-  rows: CornerRow[];
-  /** Goals counted in the bucket per club-fixture, 2dp. */
+export type StatKingMetric = "corners" | "duels";
+
+export interface StatsKingBoard {
+  /** Every club with at least one finished fixture here, ordered by the selected stat per
+   *  match desc, then the id. The fold knows nothing of what the stat BECAME — pair it with
+   *  this fold's siblings for xG, shots and passes if the reader wants the conversion half. */
+  rows: StatsKingRow[];
+  /** The fixture-count-weighted mean of the metric, 2dp. */
   league: number;
 }
 
-/** M1010: corner pressure. The seed's stats block carries corners for both sides in every finished
- *  fixture and no screen reads them — the world's most fertile territorial signal, behind the
- *  card stations but ahead of raw possession colours. */
-export function cornerKings(matches: Match[], clubs: Club[]): CornerKings {
+/** M1010/M1014: the stats-block kings. The counters the seed's stat block carries that no engineer
+ *  ever spent — corners for territorial pressure, duels for friction; one walk both. Other fields
+ *  in the same block (shots, onTarget, passes, passAcc, tackles, fouls, yellows, reds) ride this
+ *  same shape if a reader wants them later — one fold, not one per metric. */
+export function statsBlockKings(matches: Match[], clubs: Club[], metric: StatKingMetric): StatsKingBoard {
+  const pick = metric === "corners" ? (s: { corners: number }) => s.corners : (s: { duels: number }) => s.duels;
   const ranked = indexById(clubs);
-  const acc = new Map<string, { corners: number; games: number }>();
+  const acc = new Map<string, { total: number; games: number }>();
   for (const m of matches) {
     if (!isFinished(m) || !m.stats) continue;
-    const tallySide = (id: string, s: { corners: number }) => {
-      if (!ranked.has(id)) return;
-      const cur = acc.get(id) ?? { corners: 0, games: 0 };
-      cur.corners += s.corners;
+    for (const side of [m.homeClubId, m.awayClubId] as const) {
+      if (!ranked.has(side)) continue;
+      const s = side === m.homeClubId ? (m.stats.home as typeof m.stats.home) : (m.stats.away as typeof m.stats.away);
+      const cur = acc.get(side) ?? { total: 0, games: 0 };
+      cur.total += pick(s);
       cur.games++;
-      acc.set(id, cur);
-    };
-    tallySide(m.homeClubId, m.stats.home);
-    tallySide(m.awayClubId, m.stats.away);
+      acc.set(side, cur);
+    }
   }
   const rows = [...acc.entries()].map(([clubId, v]) => ({
     clubId,
     played: v.games,
-    perMatch: round2(v.corners / v.games),
+    perMatch: round2(v.total / v.games),
   }));
   rows.sort(
     (a, b) =>
       b.perMatch - a.perMatch ||
       a.clubId.localeCompare(b.clubId),
   );
-  const totalCorners = sum([...acc.values()], (v) => v.corners);
+  const total = sum([...acc.values()], (v) => v.total);
   const totalGames = sum([...acc.values()], (v) => v.games);
-  return { rows, league: totalGames ? round2(totalCorners / totalGames) : 0 };
+  return { rows, league: totalGames ? round2(total / totalGames) : 0 };
 }
 
 /** M1011: the world's outshine — every club producing goals above their recorded xG at world

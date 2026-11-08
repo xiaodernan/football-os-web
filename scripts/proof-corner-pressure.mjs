@@ -9,7 +9,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // Ranked by raw pressure, not by what it became; the xG table settles whether it converted.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { cornerKings } = await server.ssrLoadModule("/domain/analytics.ts");
+const { statsBlockKings } = await server.ssrLoadModule("/domain/analytics.ts");
 const SVC = await server.ssrLoadModule("/data/footballService.ts");
 
 let pass = 0, fail = 0;
@@ -32,7 +32,7 @@ const fx = [
   match("f4", "T44", "D", "A", 0, 2, "2026-10-19", 2, 6),
   match("f5", "T44", "C", "D", 1, 1, "2026-10-24", 4, 2),
 ];
-const board = cornerKings(fx, clubs);
+const board = statsBlockKings(fx, clubs, "corners");
 const row = Object.fromEntries(board.rows.map((r) => [r.clubId, r]));
 
 ok(`every club with a finished fixture is listed once, ordered by corners per match (${board.rows.map((r) => r.clubId).join(",")})`,
@@ -45,15 +45,15 @@ ok(`the averages are computed over what the provider actually recorded (${board.
 ok(`the league line is the fixture-count-weighted mean (${board.league})`,
   Math.abs(board.league - Math.round(((9 + 8 + 12 + 5 + 7 + 3 + 2 + 6 + 4 + 2) / 10) * 100) / 100) < 1e-9);
 ok(`an empty world reads no rows, a measured zero, and the same fold repeats exactly`,
-  cornerKings([], []).rows.length === 0 &&
-  cornerKings([], []).league === 0 &&
-  JSON.stringify(board) === JSON.stringify(cornerKings(fx, clubs)));
+  statsBlockKings([], [], "corners").rows.length === 0 &&
+  statsBlockKings([], [], "corners").league === 0 &&
+  JSON.stringify(board) === JSON.stringify(statsBlockKings(fx, clubs, "corners")));
 
 // Seeded arm: every club in the world with a finished stat-blocked fixture shows up with a rate
 // inside accuracy's own floor and ceiling, and the ordering holds.
 const seededClubs = SVC.footballProvider.clubs();
 const world = SVC.footballProvider.matches();
-const seeded = cornerKings(world, seededClubs);
+const seeded = statsBlockKings(world, seededClubs, "corners");
 let inside = true, ordered = true;
 for (const r of seeded.rows) if (!(r.perMatch >= 0)) inside = false;
 for (let i = 1; i < seeded.rows.length; i++) if (seeded.rows[i - 1].perMatch < seeded.rows[i].perMatch) ordered = false;
@@ -62,8 +62,8 @@ ok(`over the shipped world the board is complete, in order, and closes to its ow
 
 // The screen is a reader: it renders the folded board and nothing else divides.
 const SCREEN_SRC = readFileSync(resolve(root, "features/leaders/LeagueLeaders.tsx"), "utf8");
-ok(`the leaders screen renders the fold and its own board (fold call ${SCREEN_SRC.includes("cornerKings(footballProvider.matches(), footballProvider.clubs())")}, rows ${SCREEN_SRC.includes("cornerBoard.rows.map")}, keys ${SCREEN_SRC.includes("leaders.cornerTitle")}/${SCREEN_SRC.includes("leaders.cornerMethod")})`,
-  SCREEN_SRC.includes("cornerKings(footballProvider.matches(), footballProvider.clubs())") &&
+ok(`the leaders screen renders the fold and its own board (fold call ${SCREEN_SRC.includes('statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "corners")')}, rows ${SCREEN_SRC.includes("cornerBoard.rows.map")}, keys ${SCREEN_SRC.includes("leaders.cornerTitle")}/${SCREEN_SRC.includes("leaders.cornerMethod")})`,
+  SCREEN_SRC.includes('statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "corners")') &&
   SCREEN_SRC.includes("cornerBoard.rows.map") && SCREEN_SRC.includes("cornerBoard.league") &&
   SCREEN_SRC.includes("cornerPeak") &&
   SCREEN_SRC.includes("leaders.cornerTitle") && SCREEN_SRC.includes("leaders.cornerHint") &&

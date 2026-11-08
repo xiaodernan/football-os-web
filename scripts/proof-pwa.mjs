@@ -164,7 +164,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 555 + CSS 12.5), pin 567 -> 568, baseline re-recorded in the same commit.
 // M1010: the corner pressure panel rides the leaders chunk — measured 569 KB / 57 assets
 // (JS 556 + CSS 12.5), pin 568 -> 569, baseline re-recorded in the same commit.
-const BUDGET_KB = 569;
+// M1014: the duel kings panel rides the leaders chunk — measured 570 KB / 57 assets
+// (JS 557 + CSS 12.5), pin 569 -> 570, baseline re-recorded in the same commit.
+const BUDGET_KB = 570;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

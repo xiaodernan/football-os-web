@@ -4590,7 +4590,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1007: the opponent-OVR line adds its call site: 2191 -> 2192.
   // M1010: the corner pressure panel adds its six keys as sites: 2192 -> 2198.
   // M1011: the outshine banner adds its six keys as sites: 2198 -> 2204.
-  shapeCounts.literal === 2204 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M1014: the duel kings panel adds its six keys as sites: 2204 -> 2210.
+  shapeCounts.literal === 2210 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4706,7 +4707,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1007: the opponent-OVR line hands over n: 347 -> 348.
   // M1010: the corner pressure world line hands over two variables: 348 -> 349.
   // M1011: the outshine sub-line hands over its xG figure: 349 -> 350.
-  litVarSites === 350 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1014: the duel kings world line hands over two variables: 350 -> 351.
+  litVarSites === 351 && computedVarSites === 8 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));

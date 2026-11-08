@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
-import { leagueWall, records, scorelessStreaks, passingAccuracy, cornerKings, worldOutshine, type RecordRow } from "@/domain/analytics";
+import { leagueWall, records, scorelessStreaks, passingAccuracy, statsBlockKings, worldOutshine, type RecordRow } from "@/domain/analytics";
 import { fmt2, SEPARATOR, cn, pctOf, signed } from "@/lib/utils";
 
 interface ScorerRow {
@@ -37,11 +37,14 @@ export function LeagueLeaders() {
   const passBoard = useMemo(() => passingAccuracy(footballProvider.matches(), footballProvider.clubs()), []);
   const passPeak = passBoard.rows.length ? Math.max(...passBoard.rows.map((r) => r.passAcc)) : 1;
   // M1010: the corner kings — most corners per match, no overall theme of who wins them.
-  const cornerBoard = useMemo(() => cornerKings(footballProvider.matches(), footballProvider.clubs()), []);
+  const cornerBoard = useMemo(() => statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "corners"), []);
   const cornerPeak = cornerBoard.rows.length ? cornerBoard.rows[0].perMatch : 1;
   // M1011: the world's outshine — the outperformers of the scored dead.
   const outshineBoard = useMemo(() => worldOutshine(footballProvider.matches(), footballProvider.clubs()), []);
   const outshines = useMemo(() => outshineBoard.rows.slice(0, 3), [outshineBoard.rows]);
+  // M1014: the duel kings — who fights for possession more per fixture, world over.
+  const duelBoard = useMemo(() => statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "duels"), []);
+  const duelPeak = duelBoard.rows.length ? duelBoard.rows[0].perMatch : 1;
   const { scorers, booked } = useMemo(() => {
     const goals = new Map<string, { name: string; clubId: string; n: number }>();
     const cards = new Map<string, { name: string; clubId: string; yellow: number; red: number }>();
@@ -406,6 +409,50 @@ export function LeagueLeaders() {
           </div>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{t("leaders.outshineMethod")}</p>
+      </Panel>
+
+      {/* M1014: the duel kings — who fights for possession more per match, world over. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.duelTitle")} hint={t("leaders.duelHint")} />
+        {duelBoard.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.duelNone")}</p>
+        ) : (
+          <>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("leaders.duelLeague", { p: fmt2(duelBoard.league), n: duelBoard.rows.length })}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {duelBoard.rows.map((r, i) => {
+                const club = getClub(r.clubId);
+                return (
+                  <li
+                    key={r.clubId}
+                    className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(90px,180px)]"
+                  >
+                    <span className="text-muted-foreground">{i + 1}</span>
+                    <div className="min-w-0 flex items-center gap-2">
+                      <Crest colors={club?.colors} short={club?.short} size={22} />
+                      <div className="min-w-0 truncate font-medium">{club?.name ?? r.clubId}</div>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      {fmt2(r.perMatch)}
+                      <div className="text-xs text-muted-foreground">{t("leaders.duelShare")}</div>
+                    </div>
+                    <div className="hidden sm:block">
+                      <div className="h-2 w-full rounded-full bg-muted">
+                        <div
+                          className={cn("h-2 rounded-full", BAR_FILL.progress)}
+                          style={{ width: pctOf(r.perMatch, duelPeak) }}
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("leaders.duelMethod")}</p>
+          </>
+        )}
       </Panel>
 
       <DemoBadge />
