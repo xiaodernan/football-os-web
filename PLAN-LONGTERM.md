@@ -940,3 +940,5 @@
 - 28e4b51 M1008: 活动流与录像室走读——tests/e2e/screens.spec.ts 补两条：/history 出现「Activity History」h1 与「No activity yet」EmptyState、/film 出现「Film Room」 h1、「Your clips」SectionTitle 与「Drop a video here」提示 trio；empty arm 按新鲜设备走；全套 E2E 89/89、tsc 干净、build exit 0、全套证词不变（146/146 · 3,540）。
 - f7172ae M1008 文档落地——PLAN-LONGTERM.md 补录 M1008；状态报告 HEAD 更新。
 - 32467c6 M1009: 知识学院与每周复盘走读——tests/e2e/screens.spec.ts 补两条：/learn 出现「Knowledge Academy」h1（布局区分）、/review 出现「Weekly Review」h1；全套 E2E 91/91、tsc 干净、build exit 0、全套证词不变（146/146 · 3,540）。
+- 89b2bba M1009 文档落地——PLAN-LONGTERM.md 补录 M1009；状态报告 HEAD 更新。
+- 9bb27c2 M1010: 角球大亨（the corner kings）——`cornerKings` 折叠（domain/analytics.ts）：每俱乐部按 stats-block corners 累计总数 ÷ 踢过的比赛（games 门）；按 perMatch 降序 → id；/leaders 新面板「角球大亨」（crest + corners/game + bar，世界均值作对照）；proof-corner-pressure 6/6（T44 手工 fixture；world arm 对 73 clubs 独立复核）；6 键×3；census literal 2,192→2,198、litVarSites 348→349；PWA 568→569（JS 556）、baseline 同提交重录；E2E +1 → 92/92；tsc 干净、build exit 0、全套 147/147 · 3,546/3,546 检查。
