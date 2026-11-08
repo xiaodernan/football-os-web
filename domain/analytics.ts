@@ -2591,6 +2591,8 @@ export interface StreakBreak {
   opponentId: string;
   goalsFor: number;
   goalsAgainst: number;
+  /** M1005: the end the breaking fixture belonged to — a run measured at home ends against the home record. */
+  venue: Side;
 }
 
 export interface StreakRow {
@@ -2616,6 +2618,11 @@ export interface StreakRow {
   /** M968: the record's edge — the fixture that ended the longest unbeaten run. Null while the
    *  run is still alive, because the best run ends at the club's last finished match. */
   unbeatenBreak: StreakBreak | null;
+  /** M1005: the same edge read once per end — the fixture that ended the longest HOME unbeaten
+   *  run, and the fixture that ended the longest AWAY run. Null when the run reached the end of
+   *  its home/away sequence unbroken, or when the club had no fixture at that end. */
+  homeBreak: StreakBreak | null;
+  awayBreak: StreakBreak | null;
 }
 
 export interface Streaks {
@@ -2671,9 +2678,14 @@ export function streaks(compId: string, matches: Match[], clubs: Club[]): Streak
   for (const [clubId, list] of byClub) {
     list.sort(byKickoff);
     const all = runsOf(list);
-    const home = runsOf(list.filter((r) => r.home));
-    const away = runsOf(list.filter((r) => !r.home));
+    const homeList = list.filter((r) => r.home);
+    const awayList = list.filter((r) => !r.home);
+    const home = runsOf(homeList);
+    const away = runsOf(awayList);
     const edge = all.bestUnbeatenEnd >= 0 ? list[all.bestUnbeatenEnd + 1] : undefined;
+    const edgeFor = (seq: typeof list, end: number) => (end >= 0 ? seq[end + 1] : undefined);
+    const homeEdge = edgeFor(homeList, home.bestUnbeatenEnd);
+    const awayEdge = edgeFor(awayList, away.bestUnbeatenEnd);
     rows.push({
       clubId,
       longestWin: all.bestWin, longestUnbeaten: all.bestUnbeaten,
@@ -2684,7 +2696,13 @@ export function streaks(compId: string, matches: Match[], clubs: Club[]): Streak
       // The match after the best run is a loss by construction: anything else would have extended
       // the run. While the run is alive there is no next match to name.
       unbeatenBreak: edge
-        ? { matchId: edge.matchId, kickoff: edge.kickoff, opponentId: edge.opponentId, goalsFor: edge.gf, goalsAgainst: edge.ga }
+        ? { matchId: edge.matchId, kickoff: edge.kickoff, opponentId: edge.opponentId, goalsFor: edge.gf, goalsAgainst: edge.ga, venue: edge.home ? "home" : "away" }
+        : null,
+      homeBreak: homeEdge
+        ? { matchId: homeEdge.matchId, kickoff: homeEdge.kickoff, opponentId: homeEdge.opponentId, goalsFor: homeEdge.gf, goalsAgainst: homeEdge.ga, venue: "home" }
+        : null,
+      awayBreak: awayEdge
+        ? { matchId: awayEdge.matchId, kickoff: awayEdge.kickoff, opponentId: awayEdge.opponentId, goalsFor: awayEdge.gf, goalsAgainst: awayEdge.ga, venue: "away" }
         : null,
     });
   }

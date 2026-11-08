@@ -257,7 +257,8 @@ const expectedPerUser = [
   // M962: the runs screen reads the door on its three holder tiles (each with a fallback arm).
   // M964: the drought tile reads the door as well.
   // M968: the record's edge reads the door for the breaker's club name. 6 -> 7.
-  ["features/analytics/Streaks.tsx", 7],
+  // M1005: the two venue-edge lines each read the door for the breaking club's short. 7 -> 9.
+  ["features/analytics/Streaks.tsx", 9],
   // M950: the venue table's roughness cell declines to print a club with no bookings.
   // M982: a zero xG window keeps the field printing the door rather than a flat 0.00. 16 -> 17.
   // M1003: the zero-cards window cell keeps that same habit of printing the door. 17 -> 18.

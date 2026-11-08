@@ -243,7 +243,9 @@ ok(`every name-lane var is PLAIN, so the marker prints itself instead of being r
   // M968: the record's edge adds one vars object (the breaker's name): 36 -> 37, 30 -> 31.
   // M970: the form table's two tiles add two vars objects (climber and slide's clubs):
   // 37 -> 39, 31 -> 33.
-  laneTotal === 39 && laneVars.length === 33 && laneProps.length === 6 &&
+  // M1005: the two venue-edge lines add two vars objects each carrying a club short:
+  // 39 -> 41, 33 -> 35.
+  laneTotal === 41 && laneVars.length === 35 && laneProps.length === 6 &&
   routedVars.length === 0 && routedProps.length === 0 && pRouted === 1);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);

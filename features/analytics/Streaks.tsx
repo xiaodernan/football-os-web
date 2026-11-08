@@ -180,6 +180,29 @@ export function Streaks() {
                             {formatDate(locale, r.unbeatenBreak.kickoff)}
                           </div>
                         )}
+                        {/* M1005: the same edge read once per end — the home run ending at home, the away run ending away. */}
+                        {(r.homeBreak || r.awayBreak) && (
+                          <div className="text-[11px] text-muted-foreground">
+                            {r.homeBreak && (
+                              <div>
+                                {t("streaks.edgeHomeEnd", {
+                                  c: getClub(r.homeBreak.opponentId)?.short ?? ABSENT,
+                                  gf: r.homeBreak.goalsFor,
+                                  ga: r.homeBreak.goalsAgainst,
+                                })}
+                              </div>
+                            )}
+                            {r.awayBreak && (
+                              <div>
+                                {t("streaks.edgeAwayEnd", {
+                                  c: getClub(r.awayBreak.opponentId)?.short ?? ABSENT,
+                                  gf: r.awayBreak.goalsFor,
+                                  ga: r.awayBreak.goalsAgainst,
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="text-right tabular-nums">

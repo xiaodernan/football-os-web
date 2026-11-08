@@ -95,6 +95,14 @@ ok(`streaks names the fixture that ended each longest unbeaten run (A's record b
   row.A.unbeatenBreak?.goalsFor === 0 && row.A.unbeatenBreak?.goalsAgainst === 3 &&
   row.A.unbeatenBreak?.kickoff === "2026-08-03" &&
   row.D.unbeatenBreak === null && row.E.unbeatenBreak === null && row.B.unbeatenBreak === null);
+// M1005: the same break read once per end. A's record is home, so the away run is alive; the home
+// edge names the losing fixture at home. D, E and B carry no venue edge either.
+ok(`M1005: the venue split of the edge (A's break ${row.A.unbeatenBreak?.venue ?? "none"}, home ${row.A.homeBreak?.matchId ?? "none"} ${row.A.homeBreak?.venue ?? "none"} vs D-${row.A.homeBreak?.opponentId ?? "none"}, away ${row.A.awayBreak ?? "none"}, D ${row.D.homeBreak ?? "null"}, E ${row.E.homeBreak ?? "null"}, B ${row.B.homeBreak ?? "null"})`,
+  row.A.unbeatenBreak?.venue === "home" &&
+  row.A.homeBreak?.matchId === "s3" && row.A.homeBreak?.venue === "home" &&
+  row.A.homeBreak?.opponentId === "D" && row.A.homeBreak?.goalsFor === 0 &&
+  row.A.homeBreak?.goalsAgainst === 3 &&
+  row.A.awayBreak === null && row.D.homeBreak === null && row.E.homeBreak === null && row.B.homeBreak === null);
 // The same edge read inside the venue fixture: A's four-match unbeaten run ends at v4 and v5
 // (A 1-2 F) is the breaker; F itself won its only fixture, so its run is alive.
 ok(`the breaker is the fixture after the best run, and a run that reaches the last match has none (A ${vrow.A.unbeatenBreak?.matchId ?? "none"} ${vrow.A.unbeatenBreak?.goalsFor ?? 0}-${vrow.A.unbeatenBreak?.goalsAgainst ?? 0} vs ${vrow.A.unbeatenBreak?.opponentId ?? "none"}; F ${vrow.F.unbeatenBreak ?? "none"})`,
@@ -102,6 +110,14 @@ ok(`the breaker is the fixture after the best run, and a run that reaches the la
   vrow.A.unbeatenBreak?.goalsFor === 1 && vrow.A.unbeatenBreak?.goalsAgainst === 2 &&
   vrow.F.unbeatenBreak === null && vrow.B.unbeatenBreak === null &&
   JSON.stringify(venueRuns) === JSON.stringify(streaks("T17", venueFixtures, venueClubs)));
+// M1005, venue fixture: A's home record broke at v5 (1-2 F) and names itself the home edge; the away
+// sequence never broke, so it has nothing to name; F's lone fixture reached the last match alive.
+ok(`M1005: the venue records name their own breaks (A home ${vrow.A.homeBreak?.matchId ?? "none"} ${vrow.A.homeBreak?.venue ?? "none"} vs ${vrow.A.homeBreak?.opponentId ?? "none"} ${vrow.A.homeBreak?.goalsFor ?? 0}-${vrow.A.homeBreak?.goalsAgainst ?? 0}, away ${vrow.A.awayBreak ?? "none"}, overall ${vrow.A.unbeatenBreak?.venue ?? "none"}, F ${vrow.F.awayBreak ?? "none"})`,
+  vrow.A.unbeatenBreak?.venue === "home" &&
+  vrow.A.homeBreak?.matchId === "v5" && vrow.A.homeBreak?.venue === "home" &&
+  vrow.A.homeBreak?.opponentId === "F" && vrow.A.homeBreak?.goalsFor === 1 &&
+  vrow.A.homeBreak?.goalsAgainst === 2 &&
+  vrow.A.awayBreak === null && vrow.F.homeBreak === null && vrow.F.awayBreak === null);
 ok(`every named breaker is a match the club lost, and the fold never names a breaker without a run (${runs.rows.filter((r) => r.unbeatenBreak).map((r) => `${r.clubId}:${r.unbeatenBreak.goalsFor}-${r.unbeatenBreak.goalsAgainst}`).join(" ")})`,
   runs.rows.every((r) => !r.unbeatenBreak || (r.unbeatenBreak.goalsFor < r.unbeatenBreak.goalsAgainst && r.longestUnbeaten >= 2)));
 
@@ -115,11 +131,13 @@ ok(`the runs screen reads the fold and its own board (fold call ${SCREEN_SRC.inc
   SCREEN_SRC.includes("pctOf(r.longestUnbeaten, peak)") && !SCREEN_SRC.includes("GOAL_BANDS") &&
   SCREEN_SRC.includes("streaks.venueLine") && SCREEN_SRC.includes("r.homeUnbeaten") &&
   SCREEN_SRC.includes("streaks.droughtLine") && SCREEN_SRC.includes("streaks.drought"));
-ok(`the runs screen reads the breaker off the fold rather than rebuilding it (edge ${SCREEN_SRC.includes("r.unbeatenBreak")}, alive ${SCREEN_SRC.includes("streaks.edgeAlive")}, ended ${SCREEN_SRC.includes("streaks.edgeEnded")}, date ${SCREEN_SRC.includes("formatDate(locale, r.unbeatenBreak.kickoff)")})`,
+ok(`the runs screen reads the breaker off the fold rather than rebuilding it (edge ${SCREEN_SRC.includes("r.unbeatenBreak")}, alive ${SCREEN_SRC.includes("streaks.edgeAlive")}, ended ${SCREEN_SRC.includes("streaks.edgeEnded")}, date ${SCREEN_SRC.includes("formatDate(locale, r.unbeatenBreak.kickoff)")}, venue edges ${SCREEN_SRC.includes("r.homeBreak")}/${SCREEN_SRC.includes("r.awayBreak")})`,
   SCREEN_SRC.includes("r.unbeatenBreak") && SCREEN_SRC.includes("streaks.edgeAlive") &&
   SCREEN_SRC.includes("streaks.edgeEnded") && SCREEN_SRC.includes("streaks.edgeRun") &&
   SCREEN_SRC.includes("formatDate(locale, r.unbeatenBreak.kickoff)") &&
-  SCREEN_SRC.includes("r.longestUnbeaten >= 2") && !SCREEN_SRC.includes("byKickoff"));
+  SCREEN_SRC.includes("r.longestUnbeaten >= 2") && !SCREEN_SRC.includes("byKickoff") &&
+  SCREEN_SRC.includes("r.homeBreak") && SCREEN_SRC.includes("r.awayBreak") &&
+  SCREEN_SRC.includes("streaks.edgeHomeEnd") && SCREEN_SRC.includes("streaks.edgeAwayEnd"));
 ok(`the runs screen is reachable — the route table and the sidebar both name it (route ${/path === "\/streaks"/.test(APP_ROUTE_SRC)}, nav ${/to: "\/streaks"/.test(SHELL_NAV_SRC)})`,
   /path === "\/streaks"/.test(APP_ROUTE_SRC) && /to: "\/streaks"/.test(SHELL_NAV_SRC));
 
