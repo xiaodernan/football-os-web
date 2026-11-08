@@ -157,6 +157,23 @@ test("the leaders screen draws the wildest results board", async ({ page }) => {
   await expect(page.getByText("Biggest rout").first()).toBeVisible();
 });
 
+test("the transfers route renders its heading and fit-target tile", async ({ page }) => {
+  await page.goto("/#/transfers");
+  await expect(page.getByRole("heading", { name: "Transfer Centre" })).toBeVisible();
+  await expect(page.getByText("Linked rumours")).toBeVisible();
+});
+
+test("the community poll renders its title and five candidates", async ({ page }) => {
+  await page.goto("/#/poll");
+  await expect(page.getByText("Community poll").first()).toBeVisible();
+  await expect(page.getByText("Pick one of the five strongest players to cast your vote.").first()).toBeVisible();
+});
+
+test("the club compare route renders two-club comparison panel", async ({ page }) => {
+  await page.goto("/#/club-compare");
+  await expect(page.getByRole("heading", { name: "Compare two clubs" })).toBeVisible();
+});
+
 test("the form table ranks the clubs and the chips switch the competition", async ({ page }) => {
   await page.goto("/#/form");
   await expect(page.getByRole("heading", { name: "The last five, ranked" })).toBeVisible();
