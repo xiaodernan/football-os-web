@@ -166,7 +166,11 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 556 + CSS 12.5), pin 568 -> 569, baseline re-recorded in the same commit.
 // M1014: the duel kings panel rides the leaders chunk — measured 570 KB / 57 assets
 // (JS 557 + CSS 12.5), pin 569 -> 570, baseline re-recorded in the same commit.
-const BUDGET_KB = 570;
+// M1016: the world lethal panel rides the leaders chunk — unchanged at 570 KB, baseline re-recorded
+// (JS 558).
+// M1018: the red card kings panel rides the discipline chunk — measured 571 KB / 57 assets
+// (JS 558 + CSS 12.5), pin 570 -> 571, baseline re-recorded in the same commit.
+const BUDGET_KB = 571;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

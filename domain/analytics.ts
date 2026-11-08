@@ -2067,6 +2067,58 @@ export function statsBlockKings(matches: Match[], clubs: Club[], metric: StatKin
   return { rows, league: totalGames ? round2(total / totalGames) : 0 };
 }
 
+/** M1018: the world's red card kings — the club sent off most often across every competition of
+ *  the seeded world. Only cards from the stats block count; event-list red cards would double it.
+ *  Ranked by total reds, then id; a club that was never booked does not appear. */
+export interface RedKingRow {
+  clubId: string;
+  /** Every red recorded in the seeded fixtures here, by stat-block booking. */
+  reds: number;
+  /** Every yellow recorded here. Pairs with reds for the board. */
+  yellows: number;
+  /** Finished fixtures counted. */
+  played: number;
+}
+
+export interface RedKings {
+  rows: RedKingRow[];
+  /** Finished fixtures across the population — the numerator the board prints. */
+  matches: number;
+  /** The world's own reds per club-fixture here, 2dp. */
+  perMatch: number;
+}
+
+export function redCardKings(matches: Match[], clubs: Club[]): RedKings {
+  const ranked = indexById(clubs);
+  const acc = new Map<string, { reds: number; yellows: number; games: number }>();
+  let games = 0;
+  let totalReds = 0;
+  for (const m of matches) {
+    if (!isFinished(m) || !m.stats) continue;
+    for (const side of [m.homeClubId, m.awayClubId] as const) {
+      if (!ranked.has(side)) continue;
+      const s = side === m.homeClubId ? m.stats.home : m.stats.away;
+      games++;
+      totalReds += s.reds;
+      const cur = acc.get(side) ?? { reds: 0, yellows: 0, games: 0 };
+      cur.reds += s.reds;
+      cur.yellows += s.yellows;
+      cur.games++;
+      acc.set(side, cur);
+    }
+  }
+  const rows = [...acc.entries()]
+    .map(([clubId, v]) => ({ clubId, played: v.games, reds: v.reds, yellows: v.yellows }))
+    .filter((r) => r.reds > 0)
+    .sort(
+      (a, b) =>
+        b.reds - a.reds ||
+        b.yellows - a.yellows ||
+        a.clubId.localeCompare(b.clubId),
+    );
+  return { rows, matches: games, perMatch: games ? round2(totalReds / games) : 0 };
+}
+
 /** M1016: the lethal read, the world over — the same one-attempt-per-attempt math as the timing
  *  seam, summed across the whole seed instead of one competition. Every attempt is either a SHOT
  *  that did not score or a GOAL; a fooled read would be a shot counted nowhere. Zero-attempts clubs

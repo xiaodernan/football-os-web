@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, resultSeverity, strictness, venueSeverity, cardTiming } from "@/domain/analytics";
+import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, resultSeverity, strictness, redCardKings, venueSeverity, cardTiming } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
@@ -49,6 +49,8 @@ export function Discipline() {
   // M984: the strictness board reads the whole world, not one competition — no compId axis here.
   const strict = useMemo(() => strictness(matches), [matches]);
   const strictPeak = strict.rows.length ? Math.max(...strict.rows.map((r) => r.perMatch), 0.01) : 1;
+  // M1018: the world's red card kings — the clubs sent off the most across every finished fixture.
+  const redKingsBoard = useMemo(() => redCardKings(matches, clubs), [matches, clubs]);
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -687,6 +689,45 @@ export function Discipline() {
                   })}
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">{t("disc.strictMethod")}</p>
+              </>
+            )}
+          </Panel>
+
+          {/* M1018: the world's red card kings — every club sent off across every finished fixture. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.redKingsTitle")} hint={t("disc.redKingsHint")} />
+            {redKingsBoard.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.redKingsNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.redKingsWorld", { n: redKingsBoard.matches, p: fmt2(redKingsBoard.perMatch) })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {redKingsBoard.rows.map((r, i) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li
+                        key={r.clubId}
+                        className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto]"
+                      >
+                        <span className="text-muted-foreground">{i + 1}</span>
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                            <div className="text-xs text-muted-foreground">{t("disc.redKingsLine", { y: r.yellows })}</div>
+                          </div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          {r.reds}
+                          <div className="text-xs text-muted-foreground">{t("disc.reds")}</div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("disc.redKingsMethod")}</p>
               </>
             )}
           </Panel>
