@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `922a5aa M1007: the record's edge, in reputation - the overall of the club that ended the run`
-**总提交数**: 1297
+**当前HEAD**: `28e4b51 M1008: the history and film-room shells walked end to end - empty states verified honest on a fresh device`
+**总提交数**: 1299
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -53,6 +53,7 @@
 - **M1004 别页面板走读**：/home-away E2E 锚住「Bookings by end and window」heading；E2E 84/84。
 - **M1005 纪录边的分走读**：/streaks 纪录边面板追加 venue 分拆：`homeBreak`（主场序列最长不胜纪录止于哪场）与 `awayBreak`（客场序列的相同纪录）各自指名其终结夹；fixture 手工对账 v5=F 1-2、home sec ends 于 v5、away 序列完整延续至季末未打破；vocab 门把 `venue` 收回 `Side`（指向 domain/types，复用消除双声明）；全套 146/146 · 3,538 检查。
 - **M1006 三条 route 走读**：tests/e2e/screens.spec.ts 补 /transfers（heading + Linked rumours tile）、/poll（Community poll + 五位候选文案）与 /club-compare（Compare two clubs heading）；E2E 87/87。
+- **M1008 历史与录像室走读**：tests/e2e/screens.spec.ts 补 /history（heading + 诚实空状态）和 /film（heading + 面板 trio）；E2E 89/89。
 - **M1007 纪录边 · 对手声名**：/streaks 的 edge rules 行附「· {n} OVR opponent」，仅当 break 的 opponentOverall 非 null；`overallOf` 门惰性取俱乐部 OVR；proof-streaks 16/16（T15 D=81、T17 F=88）；全套 146/146 · 3,540 检查、E2E 87/87。
 
 ## ✅ 质量门禁（每次提交）
@@ -60,7 +61,7 @@
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
 - 全套证词：**146/146 脚本、3,540/3,540 检查**
-- E2E：**87/87**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks、injuries M999 ladder、xG family M1000、transfers、poll、club compare、edge reputation M1007）
+- E2E：**89/89**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards、projection、streaks、injuries M999 ladder、xG family M1000、transfers、poll、club compare、edge reputation M1007、history、film room）
 - 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,192、litVarSites 348
 
 ## 🧭 下一步方向
