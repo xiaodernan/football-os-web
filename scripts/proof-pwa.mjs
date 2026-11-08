@@ -160,7 +160,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 554 + CSS 12.5), pin 565 -> 566, baseline re-recorded in the same commit.
 // M999: the under-fire squads ladder rides the injuries chunk — measured 567 KB / 57 assets
 // (JS 555 + CSS 12.5), pin 566 -> 567, baseline re-recorded in the same commit.
-const BUDGET_KB = 567;
+// M1003: the cards by end and window panel rides the venue chunk — measured 568 KB / 57 assets
+// (JS 555 + CSS 12.5), pin 567 -> 568, baseline re-recorded in the same commit.
+const BUDGET_KB = 568;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

@@ -1979,6 +1979,41 @@ export function passingAccuracy(matches: Match[], clubs: Club[]): PassingAccurac
   return { rows, league: rows.length ? round2(registry / rows.length) : 0 };
 }
 
+export interface CardVenueClock {
+  /** Bookings of either colour per six windows, split by the end that earned them. */
+  homeWindows: number[];
+  awayWindows: number[];
+  /** The two series' totals — every YELLOW and every RED with a side, no fouls, no free kicks. */
+  home: number;
+  away: number;
+}
+
+/** M1003: the card venue clock — every booking in the seeded world, by end and by minute, in the
+ *  same six windows the xG clock prints. The discipline page answers who got booked; this asks
+ *  where and when — off the same event list, gated the same way. */
+export function cardVenueClock(compId: string, matches: Match[], clubs: Club[]): CardVenueClock {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const homeWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  const awayWindows = Array.from({ length: GOAL_BANDS }, () => 0);
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "YELLOW" && e.type !== "RED") continue;
+      const band = goalBand(e.minute);
+      const booked = e.side === "home" ? m.homeClubId : m.awayClubId;
+      if (!ranked.has(booked)) continue;
+      if (e.side === "home") homeWindows[band]++;
+      else awayWindows[band]++;
+    }
+  }
+  return {
+    homeWindows,
+    awayWindows,
+    home: sum(homeWindows, (n) => n),
+    away: sum(awayWindows, (n) => n),
+  };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

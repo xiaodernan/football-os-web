@@ -260,7 +260,8 @@ const expectedPerUser = [
   ["features/analytics/Streaks.tsx", 7],
   // M950: the venue table's roughness cell declines to print a club with no bookings.
   // M982: a zero xG window keeps the field printing the door rather than a flat 0.00. 16 -> 17.
-  ["features/analytics/VenueSplit.tsx", 17],
+  // M1003: the zero-cards window cell keeps that same habit of printing the door. 17 -> 18.
+  ["features/analytics/VenueSplit.tsx", 18],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],
   ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],

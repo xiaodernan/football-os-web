@@ -4585,7 +4585,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M994: the league leaders tiles add their three keys as sites: 2169 -> 2172.
   // M998: the passers board adds its seven keys as sites: 2172 -> 2179.
   // M999: the under-fire squads ladder adds its five keys as sites: 2179 -> 2184.
-  shapeCounts.literal === 2184 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M1003: the cards by end and window panel adds its keys as sites: 2184 -> 2189.
+  shapeCounts.literal === 2189 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

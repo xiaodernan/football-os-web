@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, DELTA_CLASS, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { disciplineVenue, eventVenueClock, goalVenueClock, xgVenueClock, venueRhythm, venueSplit } from "@/domain/analytics";
+import { disciplineVenue, eventVenueClock, goalVenueClock, cardVenueClock, xgVenueClock, venueRhythm, venueSplit } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctLabel, pctOf, signed } from "@/lib/utils";
 
@@ -26,6 +26,13 @@ export function VenueSplit() {
   const xgRows = [
     { label: t("venue.xgClockHome"), data: xgClock.homeWindows, total: xgClock.home, fill: BAR_FILL.info },
     { label: t("venue.xgClockAway"), data: xgClock.awayWindows, total: xgClock.away, fill: BAR_FILL.progress },
+  ];
+  // M1003: the same split for bookings — by end the booking was earned, in the same six windows.
+  const cardClock = useMemo(() => cardVenueClock(compId, matches, clubs), [compId, matches, clubs]);
+  const cardPeak = Math.max(1, ...cardClock.homeWindows, ...cardClock.awayWindows);
+  const cardRows = [
+    { label: t("venue.cardClockHome"), data: cardClock.homeWindows, total: cardClock.home, fill: BAR_FILL.good },
+    { label: t("venue.cardClockAway"), data: cardClock.awayWindows, total: cardClock.away, fill: BAR_FILL.info },
   ];
   const clockRows = [
     { label: t("venue.clockHome"), data: clock.homeWindows, total: clock.home, fill: BAR_FILL.info },
@@ -268,7 +275,7 @@ export function VenueSplit() {
             </p>
           </Panel>
 
-          {/* M982: the same split with the chance attached — where the xG lands by end and window. */}
+           {/* M982: the same split with the chance attached — where the xG lands by end and window. */}
           <Panel className="p-5">
             <SectionTitle title={t("venue.xgClockTitle")} hint={t("venue.xgClockHint")} />
             {xgClock.home + xgClock.away === 0 ? (
@@ -287,6 +294,36 @@ export function VenueSplit() {
                           <div className="font-mono text-[10px] text-muted-foreground">{n ? fmt2(n) : ABSENT}</div>
                           <div className="mx-auto mt-0.5 h-10 w-full">
                             <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, xgPeak) }} />
+                          </div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+
+          {/* M1003: the same split for bookings — cards by end and window, home against away. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("venue.cardClockTitle")} hint={t("venue.cardClockHint")} />
+            {cardClock.home + cardClock.away === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("timing.emptyHint")}</p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                {cardRows.map((row) => (
+                  <div key={row.label}>
+                    <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                      <span>{row.label}</span>
+                      <span className="font-mono">{row.total}</span>
+                    </div>
+                    <div className="mt-1 flex items-end gap-1">
+                      {row.data.map((n, b) => (
+                        <div key={b} className="flex-1 text-center">
+                          <div className="font-mono text-[10px] text-muted-foreground">{n ? n : ABSENT}</div>
+                          <div className="mx-auto mt-0.5 h-10 w-full">
+                            <div className={cn("w-full rounded-sm", row.fill)} style={{ height: pctOf(n, cardPeak) }} />
                           </div>
                           <div className="mt-0.5 text-[10px] text-muted-foreground">{bandLabels[b]}</div>
                         </div>
