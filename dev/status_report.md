@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `c1b8d35 M984: the strictness board - which league lets the game breathe`
-**总提交数**: 1257
+**当前HEAD**: `d3f7f7d M985: the wildest results - the world's biggest rout, its widest draw and its most explosive game`
+**总提交数**: 1259
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -31,12 +31,13 @@
 - **M982 xG 分端钟**：`xgVenueClock` 折叠——VenueSplit 新增「各时间段的 xG 分布」面板（主客分侧 × 六窗 xG 抗柱共享标签）；proof-xg-venue-clock 5/5（15 联赛 seeded arm、空窗遵循 ABSENT 门）；4 键×3；PWA 558（JS 546）；全套 134/134 · 3,465 检查、E2E 71/71。
 - **M983 亏欠的分差**：`xgRobberies` 折叠——GoalTiming 新面板：比分盘白白赢的比赛，按 loser-xG − winner-xG 降序排列（margin ≥ 1.5 上板，最宽 8 场）；proof-xg-robberies 5/5（15 联赛 seeded arm）；5 键×3；PWA 559（JS 547）；全套 135/135 · 3,470 检查、E2E 71/71。
 - **M984 最严的联赛**：`strictness` 折叠——Discipline 新增「哪家联赛更放得开」面板：把所有赛事按每场已结束的比赛算几张牌排序（世界均值作对照）；proof-strictness 5/5（15 联赛 seeded arm）；6 键×3；PWA 560（JS 547）；全套 136/136 · 3,475 检查、E2E 71/71。
+- **M985 最夸张的赛果**：`records` 折叠——/leaders 新增「The wildest results」面板：Biggest rout、Most goals 与 Biggest draw 三张 banner（并列以最早 kickoff 定）；数据遍布全世界；proof-leaders-records 6/6（15 联赛 world seeded arm）；9 键×3；PWA 561（JS 549）；全套 137/137 · 3,481 检查、E2E 71/71。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**136/136 脚本、3,475/3,475 检查**
+- 全套证词：**137/137 脚本、3,481/3,481 检查**
 - E2E：**71/71**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、五条 screens 走读：wall、lethal read、match xG、sevResult、form）
 - 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,107、litVarSites 326
 
