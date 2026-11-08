@@ -4,10 +4,10 @@ import { positionLabel } from "@/domain/rowText";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
-import { fmtMoney, pctLabel, signed, ABSENT, fmt2, pctOf, cn } from "@/lib/utils";
+import { fmtMoney, pctLabel, signed, ABSENT, fmt2, pctOf, cn, SEPARATOR } from "@/lib/utils";
 import { runWorld, seasonLabel, buildSeasonReport, seasonReportPayload, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
 import { sum, last } from "@/domain/attributes";
-import { leagueOpenness } from "@/domain/analytics";
+import { leagueOpenness, worldUpsets } from "@/domain/analytics";
 import { rowLine } from "@/domain/rowText";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
@@ -53,6 +53,8 @@ export function DynamicWorld() {
   // M990: the world's most open leagues, ranked over every fixture the seed carries.
   const openness = useMemo(() => leagueOpenness(worldMatches), [worldMatches]);
   const opennessPeak = openness.rows.length ? Math.max(...openness.rows.map((r) => r.perMatch)) : 1;
+  // M991: the widest away win of the world, read off the same finished matches.
+  const upsets = useMemo(() => worldUpsets(worldMatches, footballProvider.clubs()), [worldMatches]);
 
   const snapshot = useMemo(() => {
     try {
@@ -274,6 +276,44 @@ export function DynamicWorld() {
                 </li>
               ))}
             </ul>
+          </Panel>
+
+          {/* M991: the widest away win of the world, and the strength-order break — the
+              away end's two wildest escapes, drawn from the same finished fixtures. */}
+          <Panel className="p-4 lg:col-span-2">
+            <SectionTitle title={t("world.upsTitle")} hint={t("world.upsHint")} />
+            {!upsets.biggestUpset && <p className="mt-3 text-sm text-muted-foreground">{t("world.upsNone")}</p>}
+            {upsets.biggestUpset && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: t("world.upsUpset"), row: upsets.biggestUpset, caption: t("world.upsUpsetSub", { n: Math.max(0, upsets.biggestUpset.deficit) }) },
+                  { label: t("world.upsAway"), row: upsets.biggestAwayWin!, caption: t("world.upsAwaySub", { n: upsets.biggestAwayWin!.margin }) },
+                ].map((tile, tileIndex) => {
+                  const home = getClub(tile.row.homeClubId);
+                  const away = getClub(tile.row.awayClubId);
+                  return (
+                    <div key={tileIndex} className="rounded-lg border p-3">
+                      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{tile.label}</div>
+                      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Crest colors={home?.colors} short={home?.short} size={24} />
+                          <span className="min-w-0 truncate text-sm font-medium">{home?.name ?? tile.row.homeClubId}</span>
+                        </div>
+                        <div className="font-mono text-2xl font-bold tabular-nums">
+                          {tile.row.homeGoals}{SEPARATOR}{tile.row.awayGoals}
+                        </div>
+                        <div className="flex min-w-0 items-center justify-end gap-2">
+                          <span className="min-w-0 truncate text-sm font-medium">{away?.name ?? tile.row.awayClubId}</span>
+                          <Crest colors={away?.colors} short={away?.short} size={24} />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-[11px] text-primary">{tile.caption}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {upsets.biggestUpset && <p className="mt-3 text-xs text-muted-foreground">{t("world.upsMethod")}</p>}
           </Panel>
 
           {report && (

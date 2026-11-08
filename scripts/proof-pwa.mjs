@@ -151,7 +151,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 549 + CSS 12.5), pin 561 -> 562, baseline re-recorded in the same commit.
 // M989: the closing-time xG board rides the timing chunk — measured 563 KB / 57 assets
 // (JS 550 + CSS 12.5), pin 562 -> 563, baseline re-recorded in the same commit.
-const BUDGET_KB = 563;
+// M990: the openness board rides the world chunk, unchanged at 563 KB / 57 assets.
+// M991: the widest-away-win panels ride the world chunk — measured 564 KB / 57 assets
+// (JS 552 + CSS 12.5), pin 563 -> 564, baseline re-recorded in the same commit.
+const BUDGET_KB = 564;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

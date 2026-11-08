@@ -1540,6 +1540,13 @@ export interface Records {
   matches: number;
 }
 
+/** The one body both record folds lean on — moved to module scope so the two never spell the same
+ *  object in two places. Callers narrow every match through `isFinished` before it reaches it. */
+const recordFor = (m: Match & { homeGoals: number; awayGoals: number }): RecordRow => ({
+  matchId: m.id, kickoff: m.kickoff, homeClubId: m.homeClubId, awayClubId: m.awayClubId,
+  homeGoals: m.homeGoals, awayGoals: m.awayGoals,
+});
+
 /** M985: the wildest results. The seed places a scoreline on every fixture and the app prints the
  *  thousand of them across two pages; this names the ones that carry a kind of weather. Playfully
  *  written but plainly one pass — every fixture walked once, three banners kept. */
@@ -1547,10 +1554,6 @@ export function records(matches: Match[]): Records {
   const finished = matches.filter((m): m is Match & { homeGoals: number; awayGoals: number } => isFinished(m));
   const earlierThan = (m: Match, r: RecordRow) =>
     m.kickoff.localeCompare(r.kickoff) || m.id.localeCompare(r.matchId);
-  const base = (m: Match & { homeGoals: number; awayGoals: number }): RecordRow => ({
-    matchId: m.id, kickoff: m.kickoff, homeClubId: m.homeClubId, awayClubId: m.awayClubId,
-    homeGoals: m.homeGoals, awayGoals: m.awayGoals,
-  });
   let biggestWin: (RecordRow & { margin: number }) | null = null;
   let highestScoringDraw: (RecordRow & { total: number }) | null = null;
   let highestScoring: (RecordRow & { total: number }) | null = null;
@@ -1561,16 +1564,16 @@ export function records(matches: Match[]): Records {
     const total = m.homeGoals + m.awayGoals;
     if (biggestWin === null || margin > biggestWin.margin ||
         (margin === biggestWin.margin && earlierThan(m, biggestWin) < 0)) {
-      biggestWin = { ...base(m), margin };
+      biggestWin = { ...recordFor(m), margin };
     }
     if (highestScoring === null || total > highestScoring.total ||
         (total === highestScoring.total && earlierThan(m, highestScoring) < 0)) {
-      highestScoring = { ...base(m), total };
+      highestScoring = { ...recordFor(m), total };
     }
     if (m.homeGoals === m.awayGoals &&
         (highestScoringDraw === null || total > highestScoringDraw.total ||
           (total === highestScoringDraw.total && earlierThan(m, highestScoringDraw) < 0))) {
-      highestScoringDraw = { ...base(m), total };
+      highestScoringDraw = { ...recordFor(m), total };
     }
   }
   return { biggestWin, highestScoringDraw, highestScoring, matches: counted };
@@ -1760,6 +1763,57 @@ export function leagueOpenness(matches: Match[]): LeagueOpenness {
   const totalGoals = sum(rows, (r) => r.goals);
   const totalMatches = sum(rows, (r) => r.matches);
   return { rows, matches: totalMatches, goals: totalGoals, global: totalMatches ? round2(totalGoals / totalMatches) : 0 };
+}
+
+export interface WorldUpsetRow {
+  matchId: string;
+  kickoff: string;
+  homeClubId: string;
+  awayClubId: string;
+  homeGoals: number;
+  awayGoals: number;
+}
+
+export interface WorldUpsets {
+  /** The away fixture where the winning side held the biggest club-ratings deficit against the
+   *  host. Null when no away win exists. */
+  biggestUpset: (WorldUpsetRow & { deficit: number }) | null;
+  /** The away fixture with the widest scoreline. Null when no away win exists. */
+  biggestAwayWin: (WorldUpsetRow & { margin: number }) | null;
+  /** Finished fixtures read. */
+  matches: number;
+}
+
+/** M991: the world's upsets, read straight off the away end — the seeded world's widest-away-wins,
+ *  and the one that broke the strength order by the largest margin. Clubs carry `overall` through
+ *  the dataset, so the deficit is measured, not narrated. */
+export function worldUpsets(matches: Match[], clubs: Club[]): WorldUpsets {
+  const byId = indexById(clubs);
+  let biggestUpset: (WorldUpsetRow & { deficit: number }) | null = null;
+  let biggestAwayWin: (WorldUpsetRow & { margin: number }) | null = null;
+  let counted = 0;
+  for (const m of matches) {
+    if (!isFinished(m)) continue;
+    if (m.awayGoals <= m.homeGoals) continue;
+    const home = byId.get(m.homeClubId);
+    const away = byId.get(m.awayClubId);
+    if (!home || !away) continue;
+    counted++;
+    const deficit = home.overall - away.overall;
+    const margin = m.awayGoals - m.homeGoals;
+    const earlierThan = (a: WorldUpsetRow, b: WorldUpsetRow) =>
+      a.kickoff.localeCompare(b.kickoff) || a.matchId.localeCompare(b.matchId);
+    if (biggestUpset === null || deficit > biggestUpset.deficit ||
+        (deficit === biggestUpset.deficit && margin > (biggestUpset.awayGoals - biggestUpset.homeGoals)) ||
+        (deficit === biggestUpset.deficit && margin === (biggestUpset.awayGoals - biggestUpset.homeGoals) && earlierThan(recordFor(m), biggestUpset) < 0)) {
+      biggestUpset = { ...recordFor(m), deficit };
+    }
+    if (biggestAwayWin === null || margin > biggestAwayWin.margin ||
+        (margin === biggestAwayWin.margin && earlierThan(recordFor(m), biggestAwayWin) < 0)) {
+      biggestAwayWin = { ...recordFor(m), margin };
+    }
+  }
+  return { biggestUpset, biggestAwayWin, matches: counted };
 }
 
 export interface ClockContrastWindow {

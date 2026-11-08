@@ -778,6 +778,14 @@ const en: Dict = {
   "world.opennessWorld": "{g} goals in {n} fixtures — {p} a game across the world",
   "world.opennessLine": "{n} fixtures · {g} goals",
   "world.opennessPerMatch": "goals a game",
+  "world.upsTitle": "The wildest of away wins",
+  "world.upsHint": "The fixture where the away club broke the strength order, and the widest away win in the set — read from the same finished fixtures.",
+  "world.upsUpset": "The ratings-gap upset",
+  "world.upsUpsetSub": "{n} OVR the weaker away side, won anyway",
+  "world.upsAway": "The widest away win",
+  "world.upsAwaySub": "won by {n} goals",
+  "world.upsMethod": "A tie goes to the fixture played first.",
+  "world.upsNone": "No away win has happened in the dataset yet.",
 
   // M525 — the season report: the whole run, read across every simulated season.
   "world.report.title": "Season report",
@@ -3654,6 +3662,14 @@ const zhCN: Dict = {
   "world.opennessWorld": "全世界 {n} 场比赛，{g} 个进球——场均 {p} 球",
   "world.opennessLine": "{n} 场 · {g} 球",
   "world.opennessPerMatch": "场均进球",
+  "world.upsTitle": "最夸张的客场胜利",
+  "world.upsHint": "客场一方打破实力秩序的那一场，以及本数据集客场赢得最大的一场——从同一批已结束比赛里读出来。",
+  "world.upsUpset": "实力差距最大的爆冷",
+  "world.upsUpsetSub": "客队低 {n} OVR，赢了",
+  "world.upsAway": "客场最大胜利",
+  "world.upsAwaySub": "赢了 {n} 球",
+  "world.upsMethod": "出现并列时取最早开赛的一场。",
+  "world.upsNone": "本数据集里还没有一场客场胜利。",
 
   // M525 — 赛季报告：跨全部已模拟赛季通读整段运行。
   "world.report.title": "赛季报告",
@@ -6434,6 +6450,14 @@ const zhTW: Dict = {
   "world.opennessWorld": "全世界 {n} 場比賽，{g} 個進球——場均 {p} 球",
   "world.opennessLine": "{n} 場 · {g} 球",
   "world.opennessPerMatch": "場均進球",
+  "world.upsTitle": "最誇張的客場勝利",
+  "world.upsHint": "客場一方打破實力秩序的那一場，以及本資料集客場贏得最大的一場——從同一批已結束比賽裡讀出來。",
+  "world.upsUpset": "實力差距最大的爆冷",
+  "world.upsUpsetSub": "客隊低 {n} OVR，贏了",
+  "world.upsAway": "客場最大勝利",
+  "world.upsAwaySub": "贏了 {n} 球",
+  "world.upsMethod": "出現並列時取最早開賽的一場。",
+  "world.upsNone": "本資料集裡還沒有一場客場勝利。",
 
   // M525 — 賽季報告：跨全部已模擬賽季通讀整段執行。
   "world.report.title": "賽季報告",
