@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `4cca90b`（M1007 文档落地提交在 mas-table 上；综合整理提交为本轮的新提交 M1015）
-**总提交数**: 1312
+**当前HEAD**: `a340c57 M1015: the house is in order - stale lanes archived, worktrees retired, the one tree stands on its own`
+**总提交数**: 1313
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
