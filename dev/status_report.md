@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `1b095cd M994: the world's league leaders - every competition's current top spot named`
-**总提交数**: 1273
+**当前HEAD**: `374d1a8 M995: the world page's three new boards walked end to end`
+**总提交数**: 1275
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
@@ -41,13 +41,14 @@
 - **M992 连续哑火**：`scorelessStreaks` 折叠——/leaders 新增「The blank runs」面板：按最长连续未进球（walked in order）排名；rows 只列有 blank 的 club；proof-scoreless-streaks 6/6（15 联赛 seeded arm）；8 键×3；PWA 565（JS 553）；全套 142/142 · 3,511 检查、E2E 74/74。
 - **M993 连续哑火走读**：/leaders E2E 走读，「The blank runs」标题锚定位；E2E 75/75。
 - **M994 联赛之首**：`worldLeaders` 折叠——/world 新增「联赛之首」（15 个 league top tiles, grid 显示）；proof-world-leaders 6/6（15 联赛 seeded arm）；3 键×3；PWA 565（JS 553）；全套 143/143 · 3,517 检查、E2E 75/75。
+- **M995 /world 三块新榜走读**：/world E2E 模拟赛季后断言「最开放的联赛」「The wildest of away wins」「联赛之首」都可见；E2E 76/76。
 
 ## ✅ 质量门禁（每次提交）
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
 - 全套证词：**143/143 脚本、3,517/3,517 检查**
-- E2E：**75/75**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs）
+- E2E：**76/76**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 50 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page three boards）
 - 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,169、litVarSites 342
 
 ## 🧭 下一步方向

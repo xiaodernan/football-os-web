@@ -912,3 +912,5 @@
 - 4748b10 M993: 连续哑火走读——tests/e2e/screens.spec.ts 补：/leaders 出现「The blank runs」；全套 E2E 75/75；tsc 干净、build exit 0、全套证词不变。
 - b518142 M993 文档落地——PLAN-LONGTERM.md 补 M993；状态报告 HEAD 更新。
 - 1b095cd M994: 联赛之首（the league leaders）——`worldLeaders(matches, clubs)` 折叠（domain/analytics.ts）：每个有已结束比赛的赛事一行；先 `teamMetrics` 算赛事对照矩阵、找played>0首名；sort by competitionId；/world 新面板「联赛之首」（grid of 15 tiles: crest + club short + comp name + link → /clubs/{id}）；世界种子里可能不存在赛事（无finished→跳过本项赛事不上榜）；proof-world-leaders 6/6（T39 fixture solver：pl-like A 3-0 清空赢、liga-like D GD+1 胜出；empty arm 全部跳过；seeded arm 对全部 15 联赛独立 teamMetrics 对照无误）；3 键×3（用 t() 调 `world.leadersTitle/Hint/None`）；census literal 2,169→2,172、unique 门改为 `indexById` 共享；PWA 565 不动（JS 553）；tsc 干净、build exit 0、全套 143/143 · 3,517/3,517 检查、E2E 75/75。
+- 29900bc M994 文档落地——PLAN-LONGTERM.md 补 M994；状态报告 HEAD 更新。
+- 374d1a8 M995: /world 的三块新榜走读——tests/e2e/screens.spec.ts 补：模拟一次赛季后断言「Which league plays the most open games」「The wildest of away wins」「The league leaders」都可见（snapshot 分支可见）；全套 E2E 76/76；tsc 干净、build exit 0、全套证词不变。
