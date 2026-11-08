@@ -70,6 +70,25 @@ test("the match page prints this fixture's xG and its six-window clock", async (
   await expect(page.getByText("xG scored").first()).toBeVisible();
 });
 
+// M1000: the xG family folded over the timing page and the venue page — every panel the proofs
+// count also has a real browser check now, so a render regression on these exact panels is caught here.
+test("the timing screen draws its xG table, owed margins and closing time", async ({ page }) => {
+  await page.goto("/#/timing");
+  await expect(page.getByRole("heading", { name: "The xG table" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The owed margins" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Closing time" })).toBeVisible();
+});
+
+test("the venue screen draws the xG clock by end and window", async ({ page }) => {
+  await page.goto("/#/home-away");
+  await expect(page.getByRole("heading", { name: "xG by end and window" })).toBeVisible();
+});
+
+test("the event clock screen draws the save-quality ladder", async ({ page }) => {
+  await page.goto("/#/clock");
+  await expect(page.getByRole("heading", { name: "Save quality" })).toBeVisible();
+});
+
 test("the timing screen draws the after-a-defeat board", async ({ page }) => {
   await page.goto("/#/timing");
   await expect(page.getByRole("heading", { name: "After a defeat" })).toBeVisible();
