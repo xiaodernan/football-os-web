@@ -96,6 +96,21 @@ test("the streaks page draws the records and the four tiles", async ({ page }) =
   await expect(page.getByText("Longest unbeaten run").first()).toBeVisible();
 });
 
+test("the leaders screen draws the passers board", async ({ page }) => {
+  await page.goto("/#/leaders");
+  await expect(page.getByRole("heading", { name: "The passers" })).toBeVisible();
+});
+
+test("the tactical notebook saves a note and reads it back after a reload", async ({ page }) => {
+  await page.goto("/#/notebook");
+  await page.getByPlaceholder("Note title").fill("E2E tactical lesson");
+  await page.getByPlaceholder("What to remember…").fill("Ref picks up the offside early — M998.");
+  await page.getByRole("button", { name: /Add note/ }).click();
+  await expect(page.getByText("E2E tactical lesson")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("E2E tactical lesson")).toBeVisible();
+});
+
 test("the projection page walks its three blocks", async ({ page }) => {
   await page.goto("/#/projection");
   await expect(page.getByText("Player growth projection").first()).toBeVisible();
