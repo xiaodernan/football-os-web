@@ -2067,6 +2067,59 @@ export function statsBlockKings(matches: Match[], clubs: Club[], metric: StatKin
   return { rows, league: totalGames ? round2(total / totalGames) : 0 };
 }
 
+/** M1016: the lethal read, the world over — the same one-attempt-per-attempt math as the timing
+ *  seam, summed across the whole seed instead of one competition. Every attempt is either a SHOT
+ *  that did not score or a GOAL; a fooled read would be a shot counted nowhere. Zero-attempts clubs
+ *  take no row, sorted by conversion, goals, shots, id. */
+export interface WorldLethalRow {
+  clubId: string;
+  shots: number;
+  goals: number;
+  /** Rate of attempts that became goals, 0–100, 2dp. */
+  rate: number;
+}
+
+export interface WorldLethal {
+  /** Every club with at least one attempt here, ranked by conversion, then goals, then shots, then id. */
+  rows: WorldLethalRow[];
+  /** The world's own conversion — every goal / every attempt, 2dp. */
+  league: number;
+}
+
+export function worldLethal(matches: Match[], clubs: Club[]): WorldLethal {
+  const ranked = indexById(clubs);
+  const acc = new Map<string, { shots: number; goals: number }>();
+  for (const m of matches) {
+    if (!isFinished(m)) continue;
+    for (const e of m.events ?? []) {
+      if (e.type !== "SHOT" && e.type !== "GOAL") continue;
+      const id = e.side === "home" ? m.homeClubId : m.awayClubId;
+      if (!ranked.has(id)) continue;
+      const cur = acc.get(id) ?? { shots: 0, goals: 0 };
+      if (e.type === "SHOT") cur.shots++;
+      else cur.goals++;
+      acc.set(id, cur);
+    }
+  }
+  const rows = [...acc.entries()].map(([clubId, v]) => ({
+    clubId,
+    shots: v.shots,
+    goals: v.goals,
+    rate: v.shots + v.goals === 0 ? 0 : round2((v.goals / (v.shots + v.goals)) * 100),
+  }));
+  rows.sort(
+    (a, b) =>
+      b.rate - a.rate ||
+      b.goals - a.goals ||
+      b.shots - a.shots ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  const shots = sum(rows, (r) => r.shots);
+  const total = sum(rows, (r) => r.goals);
+  const attempts = shots + total;
+  return { rows, league: attempts ? round2((total / attempts) * 100) : 0 };
+}
+
 /** M1011: the world's outshine — every club producing goals above their recorded xG at world
  *  scale, ranked by how far the scoreboard runs past the chances. The league xG table settles
  *  who creates most in one competition; this answers who punishes the most across the board. */

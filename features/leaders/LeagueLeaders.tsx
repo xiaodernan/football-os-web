@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
-import { leagueWall, records, scorelessStreaks, passingAccuracy, statsBlockKings, worldOutshine, type RecordRow } from "@/domain/analytics";
+import { leagueWall, records, scorelessStreaks, passingAccuracy, statsBlockKings, worldOutshine, worldLethal, type RecordRow } from "@/domain/analytics";
 import { fmt2, SEPARATOR, cn, pctOf, signed } from "@/lib/utils";
 
 interface ScorerRow {
@@ -45,6 +45,8 @@ export function LeagueLeaders() {
   // M1014: the duel kings — who fights for possession more per fixture, world over.
   const duelBoard = useMemo(() => statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "duels"), []);
   const duelPeak = duelBoard.rows.length ? duelBoard.rows[0].perMatch : 1;
+  // M1016: the lethal read, the world over — which club punishes its chances with the biggest yield.
+  const lethalWorld = useMemo(() => worldLethal(footballProvider.matches(), footballProvider.clubs()), []);
   const { scorers, booked } = useMemo(() => {
     const goals = new Map<string, { name: string; clubId: string; n: number }>();
     const cards = new Map<string, { name: string; clubId: string; yellow: number; red: number }>();
@@ -451,6 +453,47 @@ export function LeagueLeaders() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("leaders.duelMethod")}</p>
+          </>
+        )}
+      </Panel>
+
+      {/* M1016: the lethal read, the world over — the world's own conversion across every fixture. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.lethalTitle")} hint={t("leaders.lethalHint")} />
+        {lethalWorld.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.lethalNone")}</p>
+        ) : (
+          <>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("leaders.lethalLeague", { p: fmt2(lethalWorld.league), n: lethalWorld.rows.length })}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {lethalWorld.rows.map((r, i) => (
+                <li
+                  key={r.clubId}
+                  className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(90px,180px)]"
+                >
+                  <span className="text-muted-foreground">{i + 1}</span>
+                  <div className="min-w-0 flex items-center gap-2">
+                    <Crest colors={getClub(r.clubId)?.colors} short={getClub(r.clubId)?.short} size={22} />
+                    <div className="min-w-0 truncate font-medium">{getClub(r.clubId)?.name ?? r.clubId}</div>
+                  </div>
+                  <div className="text-right tabular-nums">
+                    {fmt2(r.rate)}
+                    <div className="text-xs text-muted-foreground">{t("leaders.lethalShare")}</div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <div className="h-2 w-full rounded-full bg-muted">
+                      <div
+                        className={cn("h-2 rounded-full", BAR_FILL.good)}
+                        style={{ width: pctOf(r.rate, 100) }}
+                      />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("leaders.lethalMethod")}</p>
           </>
         )}
       </Panel>
