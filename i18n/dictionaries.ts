@@ -786,6 +786,9 @@ const en: Dict = {
   "world.upsAwaySub": "won by {n} goals",
   "world.upsMethod": "A tie goes to the fixture played first.",
   "world.upsNone": "No away win has happened in the dataset yet.",
+  "world.leadersTitle": "The league leaders",
+  "world.leadersHint": "Every competition has a table in the world seed; this names who stands at the top today.",
+  "world.leadersNone": "No league has held a finished fixture yet.",
 
   // M525 — the season report: the whole run, read across every simulated season.
   "world.report.title": "Season report",
@@ -3677,6 +3680,9 @@ const zhCN: Dict = {
   "world.upsAwaySub": "赢了 {n} 球",
   "world.upsMethod": "出现并列时取最早开赛的一场。",
   "world.upsNone": "本数据集里还没有一场客场胜利。",
+  "world.leadersTitle": "联赛之首",
+  "world.leadersHint": "每项赛事在世界种子里都有一张积分表；本条只点名每个表上此刻谁坐在第一。",
+  "world.leadersNone": "还没有一项联赛有已结束的比赛。",
 
   // M525 — 赛季报告：跨全部已模拟赛季通读整段运行。
   "world.report.title": "赛季报告",
@@ -6472,6 +6478,9 @@ const zhTW: Dict = {
   "world.upsAwaySub": "贏了 {n} 球",
   "world.upsMethod": "出現並列時取最早開賽的一場。",
   "world.upsNone": "本資料集裡還沒有一場客場勝利。",
+  "world.leadersTitle": "聯賽之首",
+  "world.leadersHint": "每項賽事在世界種子裡都有一張積分表；本條只點名每個表上此刻誰坐在第一。",
+  "world.leadersNone": "還沒有一項聯賽有已結束的比賽。",
 
   // M525 — 賽季報告：跨全部已模擬賽季通讀整段執行。
   "world.report.title": "賽季報告",

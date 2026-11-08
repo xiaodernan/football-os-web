@@ -7,7 +7,7 @@ import { footballProvider, getClub, getCompetition } from "@/data/footballServic
 import { fmtMoney, pctLabel, signed, ABSENT, fmt2, pctOf, cn, SEPARATOR } from "@/lib/utils";
 import { runWorld, seasonLabel, buildSeasonReport, seasonReportPayload, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
 import { sum, last } from "@/domain/attributes";
-import { leagueOpenness, worldUpsets } from "@/domain/analytics";
+import { leagueOpenness, worldUpsets, worldLeaders } from "@/domain/analytics";
 import { rowLine } from "@/domain/rowText";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
@@ -55,6 +55,8 @@ export function DynamicWorld() {
   const opennessPeak = openness.rows.length ? Math.max(...openness.rows.map((r) => r.perMatch)) : 1;
   // M991: the widest away win of the world, read off the same finished matches.
   const upsets = useMemo(() => worldUpsets(worldMatches, footballProvider.clubs()), [worldMatches]);
+  // M994: the world's league leaders — every competition has a table; name who stands first.
+  const leaders = useMemo(() => worldLeaders(worldMatches, footballProvider.clubs()), [worldMatches]);
 
   const snapshot = useMemo(() => {
     try {
@@ -314,6 +316,35 @@ export function DynamicWorld() {
               </div>
             )}
             {upsets.biggestUpset && <p className="mt-3 text-xs text-muted-foreground">{t("world.upsMethod")}</p>}
+          </Panel>
+
+          {/* M994: the world's league leaders — every competition has a table; name who stands first. */}
+          <Panel className="p-4 lg:col-span-2">
+            <SectionTitle title={t("world.leadersTitle")} hint={t("world.leadersHint")} />
+            {leaders.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("world.leadersNone")}</p>
+            ) : (
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+                {leaders.rows.map((r) => {
+                  const comp = getCompetition(r.competitionId);
+                  const club = r.leaderId ? getClub(r.leaderId) : null;
+                  if (!club) return null;
+                  return (
+                    <Link
+                      key={r.competitionId}
+                      to={`/clubs/${club.id}`}
+                      className="flex items-center gap-2 rounded-md border px-2 py-1.5 text-xs hover:border-primary/40"
+                    >
+                      <Crest colors={club.colors} short={club.short} size={22} />
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">{club.short}</span>
+                        <span className="block text-[10px] text-muted-foreground">{comp?.name ?? r.competitionId}</span>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </Panel>
 
           {report && (

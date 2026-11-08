@@ -7,7 +7,7 @@
 
 import type { Club, Match, Side, MatchEvent } from "@/domain/types";
 import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
-import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, resultPoints, FORM_WINDOW, creditRecord, ResultTally, SeasonRowFields, maxBy, last, tally } from "./attributes";
+import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, resultPoints, FORM_WINDOW, creditRecord, ResultTally, SeasonRowFields, maxBy, last, tally, unique } from "./attributes";
 import { byMinute } from "./matchEngine";
 
 // The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
@@ -1876,6 +1876,43 @@ export function scorelessStreaks(matches: Match[], clubs: Club[]): ScorelessStre
     leagueLongest,
     leagueHolder: leagueLongest > 0 ? rows[0].clubId : null,
   };
+}
+
+export interface WorldLeader {
+  competitionId: string;
+  /** The club leading the competition — the first metrics row of the competition, which is the table's own order. */
+  leaderId: string | null;
+  /** Points the leader banked. */
+  points: number;
+  /** Games played. */
+  played: number;
+}
+
+export interface WorldLeaders {
+  /** One entry per competition with at least one finished fixture, sorted by competition id. */
+  rows: WorldLeader[];
+  /** Competition tallies — nothing new from the world itself, kept for callers that want one line. */
+  leaderCount: number;
+}
+
+/** M994: the world's league leaders, read before the season ends. Every competition here has
+ *  finished fixtures in the seeded world, so every one of them already has a table; this names
+ *  the club standing first at it. */
+export function worldLeaders(matches: Match[], clubs: Club[]): WorldLeaders {
+  const compIds = unique(matches.filter((m) => isFinished(m)).map((m) => m.competitionId)).sort();
+  const rows: WorldLeader[] = [];
+  for (const compId of compIds) {
+    const metrics = teamMetrics(compId, matches, clubs);
+    const first = metrics.find((m) => m.played > 0) ?? null;
+    rows.push({
+      competitionId: compId,
+      leaderId: first?.clubId ?? null,
+      points: first?.points ?? 0,
+      played: first?.played ?? 0,
+    });
+  }
+  const leaderCount = rows.filter((r) => r.leaderId !== null).length;
+  return { rows, leaderCount };
 }
 
 export interface ClockContrastWindow {

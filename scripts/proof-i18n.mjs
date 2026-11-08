@@ -4582,7 +4582,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M990: the openness board adds its five keys as sites: 2149 -> 2154.
   // M991: the widest-away-win panels add their seven keys as sites: 2154 -> 2162.
   // M992: the blank runs panel adds its seven keys as sites: 2162 -> 2169.
-  shapeCounts.literal === 2169 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M994: the league leaders tiles add their three keys as sites: 2169 -> 2172.
+  shapeCounts.literal === 2172 && shapeCounts.template === 109 && shapeCounts.expression === 33
     && shapeCounts.computed === 23 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
