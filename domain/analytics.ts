@@ -1381,6 +1381,85 @@ export function xgVenueClock(compId: string, matches: Match[], clubs: Club[]): X
   };
 }
 
+export interface XgRobberyRow {
+  matchId: string;
+  kickoff: string;
+  homeClubId: string;
+  awayClubId: string;
+  homeGoals: number;
+  awayGoals: number;
+  homeXg: number;
+  awayXg: number;
+  /** The xG the losing side banked minus what the winner banked, 2dp — at least 1.5 by construction. */
+  margin: number;
+  /** The club that won the fixture while losing the xG battle. */
+  winnerId: string;
+}
+
+export interface XgRobberies {
+  /** Fixtures where the losing side's xG beat the winner's by at least 1.5, worst first. Top eight —
+   *  the shape of the collapse list, one fixture per line, no season-long aggregates. */
+  rows: XgRobberyRow[];
+  /** How many fixtures qualified (before the eight-row cap). */
+  count: number;
+  /** The widest margin owed, 2dp — 0 when nothing qualifies. */
+  biggest: number;
+  /** Finished fixtures read. */
+  matches: number;
+}
+
+const ROBBERY_THRESHOLD = 1.5;
+
+/** M983: the owed margins. The xG table settles who has banked more chances across a season and
+ *  the timing clock shows when; this names the fixtures where the scoreboard and the chances tell
+ *  opposite stories — the losing side far outcreated the winner, and the winner won anyway. The
+ *  threshold is 1.5 goals of accumulated chance, in the same unit the xG table prints. */
+export function xgRobberies(compId: string, matches: Match[], clubs: Club[]): XgRobberies {
+  const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
+  const rows: XgRobberyRow[] = [];
+  let counted = 0;
+  for (const m of matches) {
+    if (m.competitionId !== compId || !isFinished(m)) continue;
+    counted++;
+    let home = 0, away = 0;
+    for (const e of m.events ?? []) {
+      if (e.type !== "GOAL") continue;
+      const parsed = xgOf(e);
+      if (!Number.isFinite(parsed)) continue;
+      if (e.side === "home") home += parsed; else away += parsed;
+    }
+    const winnerId = m.homeGoals > m.awayGoals ? m.homeClubId : m.awayGoals > m.homeGoals ? m.awayClubId : null;
+    if (!winnerId || !ranked.has(winnerId)) continue;
+    const winnerXg = winnerId === m.homeClubId ? home : away;
+    const loserXg = winnerId === m.homeClubId ? away : home;
+    if (loserXg - winnerXg < ROBBERY_THRESHOLD) continue;
+    rows.push({
+      matchId: m.id,
+      kickoff: m.kickoff,
+      homeClubId: m.homeClubId,
+      awayClubId: m.awayClubId,
+      homeGoals: m.homeGoals,
+      awayGoals: m.awayGoals,
+      homeXg: round2(home),
+      awayXg: round2(away),
+      margin: round2(loserXg - winnerXg),
+      winnerId,
+    });
+  }
+  rows.sort(
+    (a, b) =>
+      b.margin - a.margin ||
+      a.kickoff.localeCompare(b.kickoff) ||
+      a.matchId.localeCompare(b.matchId),
+  );
+  return {
+    rows: rows.slice(0, 8),
+    count: rows.length,
+    biggest: rows.length ? rows[0].margin : 0,
+    matches: counted,
+  };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;

@@ -141,7 +141,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 544 + CSS 12.5), pin 555 -> 557, baseline re-recorded in the same commit.
 // M981: the match-page xG panel rides the football world's chunk — measured 558 KB / 57 assets
 // (JS 545 + CSS 12.5), pin 557 -> 558, baseline re-recorded in the same commit.
-const BUDGET_KB = 558;
+// M983: the owed margins panel rides the timing screen's chunk — measured 559 KB / 57 assets
+// (JS 547 + CSS 12.5), pin 558 -> 559, baseline re-recorded in the same commit.
+const BUDGET_KB = 559;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
