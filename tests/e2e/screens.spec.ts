@@ -75,6 +75,11 @@ test("the timing screen draws the after-a-defeat board", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "After a defeat" })).toBeVisible();
 });
 
+test("the leaders screen draws the blank runs board", async ({ page }) => {
+  await page.goto("/#/leaders");
+  await expect(page.getByRole("heading", { name: "The blank runs" })).toBeVisible();
+});
+
 test("the discipline screen draws the strictness board", async ({ page }) => {
   await page.goto("/#/discipline");
   await expect(page.getByText("Which league lets the game breathe")).toBeVisible();
