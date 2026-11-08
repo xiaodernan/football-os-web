@@ -130,6 +130,11 @@ test("the leaders screen draws the passers board", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "The passers" })).toBeVisible();
 });
 
+test("the leaders screen draws the corner kings board", async ({ page }) => {
+  await page.goto("/#/leaders");
+  await expect(page.getByRole("heading", { name: "The corner kings" })).toBeVisible();
+});
+
 test("the tactical notebook saves a note and reads it back after a reload", async ({ page }) => {
   await page.goto("/#/notebook");
   await page.getByPlaceholder("Note title").fill("E2E tactical lesson");

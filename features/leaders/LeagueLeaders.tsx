@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
-import { leagueWall, records, scorelessStreaks, passingAccuracy, type RecordRow } from "@/domain/analytics";
+import { leagueWall, records, scorelessStreaks, passingAccuracy, cornerKings, type RecordRow } from "@/domain/analytics";
 import { fmt2, SEPARATOR, cn, pctOf } from "@/lib/utils";
 
 interface ScorerRow {
@@ -36,6 +36,9 @@ export function LeagueLeaders() {
   // M998: the passers — accuracy that travels from fixture to fixture, averaged with care.
   const passBoard = useMemo(() => passingAccuracy(footballProvider.matches(), footballProvider.clubs()), []);
   const passPeak = passBoard.rows.length ? Math.max(...passBoard.rows.map((r) => r.passAcc)) : 1;
+  // M1010: the corner kings — most corners per match, no overall theme of who wins them.
+  const cornerBoard = useMemo(() => cornerKings(footballProvider.matches(), footballProvider.clubs()), []);
+  const cornerPeak = cornerBoard.rows.length ? cornerBoard.rows[0].perMatch : 1;
   const { scorers, booked } = useMemo(() => {
     const goals = new Map<string, { name: string; clubId: string; n: number }>();
     const cards = new Map<string, { name: string; clubId: string; yellow: number; red: number }>();
@@ -324,6 +327,50 @@ export function LeagueLeaders() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("leaders.passMethod")}</p>
+          </>
+        )}
+      </Panel>
+
+      {/* M1010: the corner kings — most corners per match, regardless of how that pressure converts. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.cornerTitle")} hint={t("leaders.cornerHint")} />
+        {cornerBoard.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.cornerNone")}</p>
+        ) : (
+          <>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("leaders.cornerLeague", { p: fmt2(cornerBoard.league), n: cornerBoard.rows.length })}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {cornerBoard.rows.map((r, i) => {
+                const club = getClub(r.clubId);
+                return (
+                  <li
+                    key={r.clubId}
+                    className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(90px,180px)]"
+                  >
+                    <span className="text-muted-foreground">{i + 1}</span>
+                    <div className="min-w-0 flex items-center gap-2">
+                      <Crest colors={club?.colors} short={club?.short} size={22} />
+                      <div className="min-w-0 truncate font-medium">{club?.name ?? r.clubId}</div>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      {fmt2(r.perMatch)}
+                      <div className="text-xs text-muted-foreground">{t("leaders.cornerShare")}</div>
+                    </div>
+                    <div className="hidden sm:block">
+                      <div className="h-2 w-full rounded-full bg-muted">
+                        <div
+                          className={cn("h-2 rounded-full", BAR_FILL.progress)}
+                          style={{ width: pctOf(r.perMatch, cornerPeak) }}
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("leaders.cornerMethod")}</p>
           </>
         )}
       </Panel>
