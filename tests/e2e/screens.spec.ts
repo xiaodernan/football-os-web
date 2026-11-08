@@ -187,6 +187,16 @@ test("the club compare route renders two-club comparison panel", async ({ page }
   await expect(page.getByRole("heading", { name: "Compare two clubs" })).toBeVisible();
 });
 
+test("the knowledge academy renders its curriculum home", async ({ page }) => {
+  await page.goto("/#/learn");
+  await expect(page.getByRole("heading", { name: "Knowledge Academy" })).toBeVisible();
+});
+
+test("the weekly review renders its digest heading", async ({ page }) => {
+  await page.goto("/#/review");
+  await expect(page.getByRole("heading", { name: "Weekly Review" })).toBeVisible();
+});
+
 test("the form table ranks the clubs and the chips switch the competition", async ({ page }) => {
   await page.goto("/#/form");
   await expect(page.getByRole("heading", { name: "The last five, ranked" })).toBeVisible();
