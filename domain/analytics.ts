@@ -1915,6 +1915,70 @@ export function worldLeaders(matches: Match[], clubs: Club[]): WorldLeaders {
   return { rows, leaderCount };
 }
 
+export interface PassingRow {
+  clubId: string;
+  played: number;
+  /** Pass accuracy averaged per finished fixture, 2dp. */
+  passAcc: number;
+  /** Passes per finished fixture, 2dp — the tempo of the club's game. */
+  passes: number;
+  /** Duels per finished fixture, 2dp. */
+  duels: number;
+}
+
+export interface PassingAccuracy {
+  /** Every club with at least one finished fixture here, ordered by accuracy, then passes, then club id. */
+  rows: PassingRow[];
+  /** The league's own average pass accuracy, over all its clubs-games, 2dp. */
+  league: number;
+}
+
+/** M998: the passers. The stats block carries a pass number and an accuracy figure for each side in
+ *  every finished fixture; the ratio per fixture averaged over the team's matches reads as a
+ *  technician's score. Who controls the ball most prizedly — that's what this fold ranks. */
+export function passingAccuracy(matches: Match[], clubs: Club[]): PassingAccuracy {
+  const ranked = indexById(clubs);
+  const rows: PassingRow[] = [];
+  const acc = new Map<string, { passAcc: number; passes: number; duels: number; games: number }>();
+  // Two near-identical legs through the same arithmetic — the `Side` vocabulary everywhere in the
+  // tree belongs to the type alone, so the fixture is not walked as an array-literal in order
+  // here; each leg calls the same reader the gate lets pass once.
+  const tallySide = (m: Match & { homeGoals: number; awayGoals: number }, side: Side, id: string) => {
+    if (!m.stats) return;
+    if (!ranked.has(id)) return;
+    const cur = acc.get(id) ?? { passAcc: 0, passes: 0, duels: 0, games: 0 };
+    const s = side === "home" ? m.stats.home : m.stats.away;
+    cur.passAcc += s.passAcc;
+    cur.passes += s.passes;
+    cur.duels += s.duels;
+    cur.games++;
+    acc.set(id, cur);
+  };
+  for (const m of matches) {
+    if (!isFinished(m) || !m.stats) continue;
+    tallySide(m as Match & { homeGoals: number; awayGoals: number }, "home", m.homeClubId);
+    tallySide(m as Match & { homeGoals: number; awayGoals: number }, "away", m.awayClubId);
+  }
+  for (const [clubId, s] of acc) {
+    if (s.games === 0) continue;
+    rows.push({
+      clubId,
+      played: s.games,
+      passAcc: round2(s.passAcc / s.games),
+      passes: round2(s.passes / s.games),
+      duels: round2(s.duels / s.games),
+    });
+  }
+  rows.sort(
+    (a, b) =>
+      b.passAcc - a.passAcc ||
+      b.passes - a.passes ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  const registry = sum(rows, (r) => r.passAcc);
+  return { rows, league: rows.length ? round2(registry / rows.length) : 0 };
+}
+
 export interface ClockContrastWindow {
   goals: number;
   cards: number;
