@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, resultSeverity, strictness, redCardKings, venueSeverity, cardTiming } from "@/domain/analytics";
+import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, resultSeverity, strictness, redCardKings, statsBlockKings, venueSeverity, cardTiming } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
@@ -51,6 +51,9 @@ export function Discipline() {
   const strictPeak = strict.rows.length ? Math.max(...strict.rows.map((r) => r.perMatch), 0.01) : 1;
   // M1018: the world's red card kings — the clubs sent off the most across every finished fixture.
   const redKingsBoard = useMemo(() => redCardKings(matches, clubs), [matches, clubs]);
+  // M1019: the world's most loaded — clubs by yellows per match across every finished fixture, ranked.
+  const yellowBoard = useMemo(() => statsBlockKings(matches, clubs, "yellows"), [matches, clubs]);
+  const yellowPeak = yellowBoard.rows.length ? yellowBoard.rows[0].perMatch : 1;
   // A gap needs both ends: a club with one venue played reads a zero rate it has not earned.
   const split = venue.rows.filter((r) => r.playedHome > 0 && r.playedAway > 0).slice(0, 5);
   const counted = board.rows.filter((r) => r.played > 0);
@@ -689,6 +692,47 @@ export function Discipline() {
                   })}
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">{t("disc.strictMethod")}</p>
+              </>
+            )}
+          </Panel>
+
+          {/* M1019: the world's most loaded — yellows per match, every club tallied from its own stats block. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.yellowTitle")} hint={t("disc.yellowHint")} />
+            {yellowBoard.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.yellowNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.yellowWorld", { p: fmt2(yellowBoard.league), n: yellowBoard.rows.length })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {yellowBoard.rows.map((r, i) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li
+                        key={r.clubId}
+                        className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(90px,180px)]"
+                      >
+                        <span className="text-muted-foreground">{i + 1}</span>
+                        <div className="min-w-0 flex items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0 truncate font-medium">{club?.name ?? r.clubId}</div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          {fmt2(r.perMatch)}
+                          <div className="text-xs text-muted-foreground">{t("disc.yellowShare")}</div>
+                        </div>
+                        <div className="hidden sm:block">
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div className={cn("h-2 rounded-full", BAR_FILL.low)} style={{ width: pctOf(r.perMatch, yellowPeak) }} />
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("disc.yellowMethod")}</p>
               </>
             )}
           </Panel>
