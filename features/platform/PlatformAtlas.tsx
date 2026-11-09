@@ -1,7 +1,7 @@
 import { useI18n } from "@/i18n";
 import { CHIP_CLASS, Panel, SectionTitle } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
-import { GATEWAY_ROUTES, PLATFORM_LIVE, PLATFORM_SERVICES, type ServiceId } from "@/domain/platform";
+import { GATEWAY_ROUTES, LEAGUE_CONTRACT, PLATFORM_LIVE, PLATFORM_SERVICES, type ServiceId } from "@/domain/platform";
 
 /**
  * M1036: the platform atlas — the Spring Cloud skeleton the repository declares, drawn from
@@ -97,6 +97,10 @@ export function PlatformAtlas() {
           <li className="rounded-lg border px-3 py-2">{t("platform.realCompose")}</li>
           <li className="rounded-lg border px-3 py-2">{t("platform.notStarted")}</li>
           <li className="rounded-lg border px-3 py-2">{t("platform.notData")}</li>
+          <li className="rounded-lg border px-3 py-2">
+            <span className="block">{t("platform.contractLine")}</span>
+            <span className="mt-1 block truncate font-mono text-xs">{LEAGUE_CONTRACT.path}</span>
+          </li>
         </ul>
       </Panel>
     </div>

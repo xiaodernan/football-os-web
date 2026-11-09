@@ -2,6 +2,12 @@ import { createServer } from "vite";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  buildWorldContract,
+  contractDigest,
+  serializeContract,
+  CONTRACT_PATH as WORLD_CONTRACT_PATH,
+} from "./lib/world-contract.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(resolve(root, p), "utf8");
@@ -13,8 +19,9 @@ const has = (p) => existsSync(resolve(root, p));
 // only. It also holds the honesty line: the SPA does not call any of these services.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { PLATFORM_SERVICES, GATEWAY_ROUTES, PLATFORM_LIVE } = await server.ssrLoadModule("/domain/platform.ts");
+const { PLATFORM_SERVICES, GATEWAY_ROUTES, PLATFORM_LIVE, LEAGUE_CONTRACT } = await server.ssrLoadModule("/domain/platform.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
+const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -94,8 +101,8 @@ ok("the gateway has one Spring Boot entry point and its pom carries the gateway 
   read("services/gateway/pom.xml").includes("spring-cloud-starter-gateway"));
 ok("the league service has one entry point and one read-only summary controller",
   (leagueSrc.match(/@SpringBootApplication/g) || []).length === 1 &&
-  leagueSrc.includes("@RestController") && leagueSrc.includes("@GetMapping(\"/summary\")") &&
-  leagueSrc.includes("\"wired\", false"));
+  leagueSrc.includes("@RestController") && leagueSrc.includes("@RequestMapping(\"/api/league\")") &&
+  leagueSrc.includes("@GetMapping(\"/summary\")") && !leagueSrc.includes("@PostMapping"));
 
 // ---- 4 · ports and application names in the ymls ---------------------------------------
 const ymlFails = [];
@@ -146,12 +153,47 @@ for (const s of PLATFORM_SERVICES) {
 ok(`the compose file maps the descriptor's ports, honours the dependency edges and has one Dockerfile per module (${composeFails.join(" / ") || "clean"})`,
   composeFails.length === 0);
 
+// ---- 6b · the world contract the league service serves ---------------------------------
+const contractFile = read(WORLD_CONTRACT_PATH);
+const contract = JSON.parse(contractFile);
+const allMatches = footballProvider.matches();
+const recounted = {
+  clubs: footballProvider.clubs().length,
+  players: footballProvider.players().length,
+  competitions: footballProvider.competitions().length,
+  matches: allMatches.length,
+  finishedMatches: allMatches.filter((m) => m.status === "FINISHED" && m.homeGoals != null && m.awayGoals != null).length,
+};
+ok(`the checked-in contract recounts the provider independently (${JSON.stringify(contract.snapshot)})`,
+  JSON.stringify(contract.snapshot) === JSON.stringify(recounted) &&
+  recounted.clubs > 0 && recounted.players > 0 && recounted.matches > recounted.finishedMatches);
+const rebuiltContract = await buildWorldContract(server);
+ok(`the contract file is byte-for-byte what the exporter would write now (a sha256 over the counts)`,
+  contractFile === serializeContract(rebuiltContract) &&
+  contract.digest === contractDigest(recounted) && /^sha256-[0-9a-f]{64}$/.test(contract.digest));
+ok(`the contract is a pure function of its snapshot (a repeated call agrees; one count moves the digest)`,
+  contractDigest({ clubs: 1, players: 1, competitions: 1, matches: 1, finishedMatches: 0 }) ===
+    contractDigest({ clubs: 1, players: 1, competitions: 1, matches: 1, finishedMatches: 0 }) &&
+  contractDigest({ clubs: 2, players: 1, competitions: 1, matches: 1, finishedMatches: 0 }) !==
+    contractDigest({ clubs: 1, players: 1, competitions: 1, matches: 1, finishedMatches: 0 }));
+ok("the descriptor names the same resource, path and exporter the proof reads",
+  LEAGUE_CONTRACT.path === WORLD_CONTRACT_PATH &&
+  LEAGUE_CONTRACT.resource === "league-summary.json" &&
+  LEAGUE_CONTRACT.exporter === "scripts/export-service-contract.mjs" &&
+  has(LEAGUE_CONTRACT.exporter));
+ok("the league controller loads that resource through Jackson and types no counts of its own",
+  leagueSrc.includes("new ClassPathResource(\"league-summary.json\")") &&
+  leagueSrc.includes("TypeReference<Map<String, Object>>") &&
+  !leagueSrc.includes("\"clubs\"") && !leagueSrc.includes("\"players\"") &&
+  !leagueSrc.includes("\"matches\""));
+
 // ---- 7 · the screen reads the descriptor, and the app never calls a service -----------
 const SCREEN_PATH = "features/platform/PlatformAtlas.tsx";
 const SCREEN = read(SCREEN_PATH);
 ok("the atlas renders both descriptor arrays and never types a port itself",
   SCREEN.includes("from \"@/domain/platform\"") &&
   SCREEN.includes("PLATFORM_SERVICES.map") && SCREEN.includes("GATEWAY_ROUTES.map") &&
+  SCREEN.includes("LEAGUE_CONTRACT.path") &&
   SCREEN.includes("PLATFORM_LIVE") && !/\b(8761|8080|8081)\b/.test(SCREEN) &&
   SCREEN.includes("t(\"platform.title\")") && SCREEN.includes("platform.boundaryTitle"));
 const appFiles = ["src", "features", "domain", "data", "lib", "ui", "store", "i18n", "components"]
@@ -177,7 +219,7 @@ for (const key of [...screenKeys, "nav.platform"]) {
   for (const id of localeIds) if (!(key in DICTIONARIES[id])) missingKeys.push(`${id}:${key}`);
 }
 ok(`every key the atlas reads exists in all ${localeIds.length} locales (${screenKeys.length} screen keys + nav.platform; ${missingKeys.join(" / ") || "clean"})`,
-  localeIds.length === 3 && screenKeys.length === 31 && missingKeys.length === 0);
+  localeIds.length === 3 && screenKeys.length === 32 && missingKeys.length === 0);
 ok("the two interpolating rows hand their placeholders to every locale",
   localeIds.every((id) => /\{n\}/.test(DICTIONARIES[id]["platform.portLine"]) &&
     /\{n\}/.test(DICTIONARIES[id]["platform.stripPrefix"]) &&

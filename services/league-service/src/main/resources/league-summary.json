@@ -1,0 +1,12 @@
+{
+  "generatedBy": "scripts/export-service-contract.mjs",
+  "dataset": "football-os/world",
+  "snapshot": {
+    "clubs": 73,
+    "players": 610,
+    "competitions": 15,
+    "matches": 1566,
+    "finishedMatches": 1015
+  },
+  "digest": "sha256-0a35d37acda86a4273f9077e48adc8759d7a6fae66b90145838d096561213ee2"
+}

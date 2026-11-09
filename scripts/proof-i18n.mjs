@@ -4650,7 +4650,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // reads 31 keys in the screen; AppShell adds t("nav.platform")): the header block, three service
   // cards built from two literal records, the kind ternary, the route row and the four honesty
   // lines: 2390 -> 2422.
-  shapeCounts.literal === 2422 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1037: the atlas gains one more honesty line (the exported world contract): 2422 -> 2423.
+  shapeCounts.literal === 2423 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

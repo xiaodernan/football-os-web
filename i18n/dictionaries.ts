@@ -3149,6 +3149,7 @@ const en: Dict = {
   "platform.realCompose": "Real: a compose file that maps those same ports, plus one Dockerfile per module.",
   "platform.notStarted": "Not done: nothing starts with the web build, and no screen calls a service.",
   "platform.notData": "Not done: the league service answers a skeleton, not the seeded world.",
+  "platform.contractLine": "Real: that answer is a frozen snapshot exported from this world — counts plus a digest, not a hand-written payload. Refresh it with the exporter below.",
   "platform.liveOn": "A gateway is reachable from this build.",
   "platform.liveOff": "No gateway is reachable from this build.",
 };
@@ -6187,6 +6188,7 @@ const zhCN: Dict = {
   "platform.realCompose": "真的：一份把这些端口原样映射的 compose 文件，外加每个模块一个 Dockerfile。",
   "platform.notStarted": "没做：网页构建不会启动任何服务，也没有屏幕调用服务。",
   "platform.notData": "没做：联赛服务只回骨架，不回种子世界的数据。",
+  "platform.contractLine": "真的：那份回复是从这个世界导出的冻结快照——计数加摘要，不是手写负载；用下面的导出器刷新。",
   "platform.liveOn": "这个构建能连到网关。",
   "platform.liveOff": "这个构建连不到网关。",
 };
@@ -9231,6 +9233,7 @@ const zhTW: Dict = {
   "platform.realCompose": "真的：一份把這些連接埠原樣對映的 compose 檔，外加每個模組一個 Dockerfile。",
   "platform.notStarted": "沒做：網頁建置不會啟動任何服務，也沒有畫面呼叫服務。",
   "platform.notData": "沒做：聯賽服務只回骨架，不回種子世界的資料。",
+  "platform.contractLine": "真的：那份回覆是從這個世界匯出的凍結快照——計數加摘要，不是手寫負載；用下面的匯出器更新。",
   "platform.liveOn": "這個建置能連到閘道。",
   "platform.liveOff": "這個建置連不到閘道。",
 };

@@ -49,3 +49,11 @@ export const GATEWAY_ROUTES: readonly GatewayRoute[] = [
 
 /** The SPA does not call the gateway yet; the atlas prints this instead of a fake green dot. */
 export const PLATFORM_LIVE = false;
+
+/** The league service's read is an exported snapshot of this world, not a hand-written payload.
+ *  scripts/export-service-contract.mjs writes it; proof-services.mjs refuses it when stale. */
+export const LEAGUE_CONTRACT = {
+  resource: "league-summary.json",
+  path: "services/league-service/src/main/resources/league-summary.json",
+  exporter: "scripts/export-service-contract.mjs",
+} as const;
