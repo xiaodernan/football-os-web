@@ -54,6 +54,9 @@ export function Discipline() {
   // M1021: the world's foulingest — clubs by fouls committed per fixture at world scale, same door.
   const foulBoard = useMemo(() => statsBlockKings(matches, clubs, "fouls"), [matches, clubs]);
   const foulPeak = foulBoard.rows.length ? foulBoard.rows[0].perMatch : 1;
+  // M1032: the world's tackling kings — clubs by tackles won per fixture at world scale, same door.
+  const tackleBoard = useMemo(() => statsBlockKings(matches, clubs, "tackles"), [matches, clubs]);
+  const tacklePeak = tackleBoard.rows.length ? tackleBoard.rows[0].perMatch : 1;
   // M1019: the world's most loaded — clubs by yellows per match across every finished fixture, ranked.
   const yellowBoard = useMemo(() => statsBlockKings(matches, clubs, "yellows"), [matches, clubs]);
   const yellowPeak = yellowBoard.rows.length ? yellowBoard.rows[0].perMatch : 1;
@@ -777,6 +780,47 @@ export function Discipline() {
                   })}
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">{t("disc.foulMethod")}</p>
+              </>
+            )}
+          </Panel>
+
+          {/* M1032: the world's tackling kings — tackles won per fixture, every side from its own stats block. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.tackleTitle")} hint={t("disc.tackleHint")} />
+            {tackleBoard.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.tackleNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.tackleWorld", { p: fmt2(tackleBoard.league), n: tackleBoard.rows.length })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {tackleBoard.rows.map((r, i) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li
+                        key={r.clubId}
+                        className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(90px,180px)]"
+                      >
+                        <span className="text-muted-foreground">{i + 1}</span>
+                        <div className="min-w-0 flex items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0 truncate font-medium">{club?.name ?? r.clubId}</div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          {fmt2(r.perMatch)}
+                          <div className="text-xs text-muted-foreground">{t("disc.tackleShare")}</div>
+                        </div>
+                        <div className="hidden sm:block">
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div className={cn("h-2 rounded-full", BAR_FILL.good)} style={{ width: pctOf(r.perMatch, tacklePeak) }} />
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("disc.tackleMethod")}</p>
               </>
             )}
           </Panel>

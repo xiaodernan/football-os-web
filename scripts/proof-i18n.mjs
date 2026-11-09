@@ -4633,7 +4633,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2323 -> 2360.
   // M1031: the dynasties panel adds its five sites (title, hint, none, world, method):
   // 2360 -> 2365.
-  shapeCounts.literal === 2365 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1032: the tackling kings panel adds its six sites (title, hint, none, world, share, method):
+  // 2365 -> 2371.
+  shapeCounts.literal === 2371 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4767,7 +4769,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1030: the cabinet hands over its variables at thirteen call sites (subtitle, conversionLine,
   // wildestLine, highestScoringLine, passLine, redLine, linePlayed ×5, wallLine, blankRunLine): 376 -> 389.
   // M1031: the dynasties world line hands over its variables at one call site: 389 -> 390.
-  litVarSites === 390 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1032: the tackling kings world line hands over its variables at one call site: 390 -> 391.
+  litVarSites === 391 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

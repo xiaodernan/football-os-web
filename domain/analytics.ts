@@ -2023,7 +2023,7 @@ export interface StatsKingRow {
   perMatch: number;
 }
 
-export type StatKingMetric = "corners" | "duels" | "yellows" | "fouls" | "shots";
+export type StatKingMetric = "corners" | "duels" | "yellows" | "fouls" | "shots" | "tackles";
 
 export interface StatsKingBoard {
   /** Every club with at least one finished fixture here, ordered by the selected stat per
@@ -2044,7 +2044,8 @@ export function statsBlockKings(matches: Match[], clubs: Club[], metric: StatKin
       : metric === "duels" ? (s: { duels: number }) => s.duels
         : metric === "yellows" ? (s: { yellows: number }) => s.yellows
           : metric === "fouls" ? (s: { fouls: number }) => s.fouls
-            : (s: { shots: number }) => s.shots;
+            : metric === "shots" ? (s: { shots: number }) => s.shots
+              : (s: { tackles: number }) => s.tackles;
   const ranked = indexById(clubs);
   const acc = new Map<string, { total: number; games: number }>();
   for (const m of matches) {
