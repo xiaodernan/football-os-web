@@ -144,7 +144,8 @@ const DEAD_CEILING = 22;
 // M970: 124 -> 125 — the /form screen.
 // M1022: 125 -> 127 — domain/finance.ts and features/finance/FinanceBoard.tsx resurrected.
 // M1023: 127 -> 129 — domain/league.ts and features/league/LeagueRules.tsx resurrected.
-const POP_PIN = 129;
+// M1028: 129 -> 131 — domain/academy.ts and features/academy/AcademyPage.tsx.
+const POP_PIN = 131;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -178,7 +179,7 @@ const POP_PIN = 129;
 // M573: domain 33 -> 34, the next-step ranking.
 // M574: features 45 -> 46 (EventClock); M575: 46 -> 47 (Briefing).
 // M956: features 47 -> 48 (LeadRetention).
-const BY_DIR_PIN = { components: 15, data: 7, domain: 36, features: 52, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+const BY_DIR_PIN = { components: 15, data: 7, domain: 37, features: 53, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
@@ -195,7 +196,8 @@ const BY_DIR_PIN = { components: 15, data: 7, domain: 36, features: 52, function
 // M970: 65 -> 66 — features/analytics/FormTable.tsx is three levels down too.
 // M1022: 66 -> 67 — features/finance/FinanceBoard.tsx sits two levels down.
 // M1023: 67 -> 68 — features/league/LeagueRules.tsx sits two levels down.
-const DEEP_PIN = 68;
+// M1028: 68 -> 69 — features/academy/AcademyPage.tsx sits two levels down.
+const DEEP_PIN = 69;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

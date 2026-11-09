@@ -544,7 +544,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M970: 120 -> 121 — FormTable.tsx is the new app module.
 // M1022: 121 -> 123 — domain/finance.ts and features/finance/FinanceBoard.tsx.
 // M1023: 123 -> 125 — domain/league.ts and features/league/LeagueRules.tsx.
-const APP_SRC_PIN = 125;
+// M1028: 125 -> 127 — domain/academy.ts and features/academy/AcademyPage.tsx.
+const APP_SRC_PIN = 127;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -571,7 +572,8 @@ const APP_SRC_PIN = 125;
 // M970: 72 -> 73 — FormTable.tsx is a new .tsx module.
 // M1022: 73 -> 74 — FinanceBoard.tsx is a new .tsx module.
 // M1023: 74 -> 75 — LeagueRules.tsx is a new .tsx module.
-const TSX_PIN = 75;
+// M1028: 75 -> 76 — AcademyPage.tsx is a new .tsx module.
+const TSX_PIN = 76;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -603,7 +605,8 @@ const TSX_PIN = 75;
 // M970: 123 -> 124 — FormTable.tsx again.
 // M1022: 124 -> 126 — domain/finance.ts and features/finance/FinanceBoard.tsx.
 // M1023: 126 -> 128 — domain/league.ts and features/league/LeagueRules.tsx.
-const SRC_PIN = 128;
+// M1028: 128 -> 130 — domain/academy.ts and features/academy/AcademyPage.tsx.
+const SRC_PIN = 130;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4617,7 +4620,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2267 -> 2284, and the t() expression shape gains the preset key-pick: 33 -> 34.
   // M1027: the trigger fingers panel adds its six sites (title, hint, none, world, share, method):
   // 2284 -> 2290.
-  shapeCounts.literal === 2290 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1028: the academy adds its twenty-five literal sites (nav.academy + acad.* block):
+  // 2290 -> 2315.
+  shapeCounts.literal === 2315 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4746,7 +4751,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1023: the rules board hands over its variables at three call sites (boardTitle, boardHint,
   // stdLine): 368 -> 371.
   // M1027: the trigger fingers world line hands over its variables at one call site: 371 -> 372.
-  litVarSites === 372 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1028: the academy hands over its variables at two call sites (rowLine, eliteLine): 372 -> 374.
+  litVarSites === 374 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));
@@ -5596,7 +5602,7 @@ const psTyped = [...appSrc].reduce((n, [, c]) => n + (c.match(/position: Positio
 const psUntyped = [...appSrc].filter(([, c]) => /position: string;/.test(c)).map(([p]) => p);
 const PS_STRAY = [...appSrc].filter(([, c]) => /"(RB|RW|CDM|CAM)"/.test(c)).map(([p]) => p);
 ok(`exactly 1 module declares the position space (${psUnionDecls.join(", ") || "none"}), ${psTyped} fields are typed with it and ${psUntyped.length} still take any string (pin 0; ${psUntyped.join(", ") || "none"}), and no module abbreviates a position with one of the four spellings only the engine's retired hand copy used (${PS_STRAY.join(", ") || "none"})`,
-  psUnionDecls.length === 1 && psUnionDecls[0] === "domain/types.ts" && psTyped === 7 && psUntyped.length === 0 && PS_STRAY.length === 0);
+  psUnionDecls.length === 1 && psUnionDecls[0] === "domain/types.ts" && psTyped === 8 && psUntyped.length === 0 && PS_STRAY.length === 0);
 
 // The witness for the gate fix this family forced. Sections 41 and 42 counted a composer's
 // switch cases by scanning the WHOLE of domain/rowText.ts, which was harmless while no two
