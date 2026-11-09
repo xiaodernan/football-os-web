@@ -39,8 +39,8 @@ const NOT_APP = ["node_modules", "dist", "coverage", "test-results", "vendor", "
 const appDirs = appDirsIn(root, { notApp: [...NOT_APP, "scripts"] });
 const hiddenReason = skipReason(".drafts", draftsDir);
 const ordinaryReason = skipReason("features", join(root, "features"));
-ok(`the shared rule reports .drafts as hidden (${hiddenReason ?? "not skipped"}) and an ordinary directory as app (${ordinaryReason ?? "app"}); the app's directories are [${appDirs.join(", ")}]`,
-  hiddenReason === "hidden" && ordinaryReason === null && !appDirs.includes(".drafts") && existsSync(draftsDir));
+ok(`the shared rule reports .drafts as hidden (${hiddenReason ?? "not skipped"}) and an ordinary directory as app (${ordinaryReason ?? "app"}), the app's directories name no .drafts, and the quarantine is closed (${existsSync(draftsDir) ? "present" : "absent"}) [${appDirs.join(", ")}]`,
+  hiddenReason === "hidden" && ordinaryReason === null && !appDirs.includes(".drafts") && !existsSync(draftsDir));
 
 // --- 2. A plant inside the quarantine stays out of the population. -----------
 const planted = mkdtempSync(join(tmpdir(), "drafts-plant-"));
@@ -126,21 +126,24 @@ ok(`no shipped source imports across the .drafts boundary (${appSources.length} 
   crossings.length === 0 && fixtureOk && appSources.length > 80);
 
 // --- 4. Every draft is at .drafts/<its original path>. ------------------------
-const draftFiles = walkApp(draftsDir, { dirs: null, notApp: [], exts: APP_EXTS })
-  .map((f) => relative(draftsDir, f).split(sep).join("/"));
+const draftFiles = existsSync(draftsDir) ? walkApp(draftsDir, { dirs: null, notApp: [], exts: APP_EXTS })
+  .map((f) => relative(draftsDir, f).split(sep).join("/")) : [];
 const malformed = draftFiles.filter((rel) => rel.split("/").includes(".drafts") || rel.split("/").length < 2);
 const topLevelDirs = new Set(appDirs);
 topLevelDirs.add("scripts");
 const orphanTops = [...new Set(draftFiles.map((rel) => rel.split("/")[0]))].filter((top) => !topLevelDirs.has(top));
-ok(`every draft mirrors its original path (${draftFiles.length} file(s) under ${[...new Set(draftFiles.map((r) => r.split("/")[0]))].sort().join(", ") || "none"}; malformed ${malformed.length}; unknown top-level ${orphanTops.join(", ") || "none"})`,
-  draftFiles.length > 0 && malformed.length === 0 && orphanTops.length === 0);
+// M1026: the quarantine closed; the paths-and-mirrors question is vacuous at zero files, so the
+// clause now holds the directory OUT rather than listing it — the mirror property re-arms the
+// moment a future wave lands.
+ok(`every draft mirrors its original path (${draftFiles.length} file(s); malformed ${malformed.length}; unknown top-level ${orphanTops.join(", ") || "none"})`,
+  draftFiles.length === 0 && malformed.length === 0 && orphanTops.length === 0);
 
-// --- 5. The README carries the two mechanisms. -------------------------------
-const readmePath = join(draftsDir, "README.md");
+// --- 5. The closure record carries the two mechanisms. ----------------------
+const readmePath = join(root, "dev", "quarantine-closed.md");
 const readme = existsSync(readmePath) ? readFileSync(readmePath, "utf8") : "";
 const carriesGitMv = /\bgit mv\b/.test(readme);
 const carriesSourceRule = /@source not\s+"\.\.\/\.drafts"/.test(readme);
-ok(`the drafts README carries the resurrection path and the stylesheet exclusion (${readme.length} chars; git mv ${carriesGitMv}; @source not ${carriesSourceRule})`,
+ok(`the closure record (dev/quarantine-closed.md) carries the resurrection path and the stylesheet exclusion (${readme.length} chars; git mv ${carriesGitMv}; @source not ${carriesSourceRule})`,
   readme.length > 500 && carriesGitMv && carriesSourceRule);
 
 // --- 6. The parse backlog is measured, named, and may not grow. ---------------

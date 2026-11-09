@@ -37,7 +37,7 @@
 //      invented-symbol plant walk out uncharged.
 //
 // Run: node scripts/proof-draft-imports.mjs
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -101,7 +101,7 @@ ok(`the export index is derived from the app's own modules and is not empty (${m
 
 // --- the quarantine's reading -----------------------------------------------------------------------
 const options = appOptions(root);
-const draftFiles = walkApp(draftsDir, { dirs: null, notApp: [], exts: [".ts", ".tsx"] });
+const draftFiles = existsSync(draftsDir) ? walkApp(draftsDir, { dirs: null, notApp: [], exts: [".ts", ".tsx"] }) : [];
 const perFile = census(draftFiles, options, draftsDir);
 
 // Every name the checker says is bound nowhere, split by the repair each one needs. The split is

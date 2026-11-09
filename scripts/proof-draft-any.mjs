@@ -1,35 +1,35 @@
 // M775. Why an implicit `any` cannot be annotated.
 //
-// The ratchet counts `7006` â€” "parameter implicitly has an 'any' type" â€” as a backlog of 23 sites in
+// The ratchet counts `7006` â€?"parameter implicitly has an 'any' type" â€?as a backlog of 23 sites in
 // 7 files, and a backlog of 23 reads like 23 annotations waiting to be written. They are not. A
 // parameter can only be annotated with a type the file can NAME, and 22 of the 23 sit downstream of
 // a name the quarantine cannot resolve: a screen that maps `footballProvider.campuses()` has no
 // campus type to write, because the app has never declared that door; a screen whose array is the
 // return of `useState<ClubBudget | null>` has no budget type to write, because `@/domain/finance` is
 // one of the five domains M718 recorded as unwritten. Deleting those counts would mean inventing a
-// shape the data does not have â€” a lie with an annotation on it.
+// shape the data does not have â€?a lie with an annotation on it.
 //
 // One site was different, and this milestone repairs it: `.drafts/features/match/SeasonSchedule.tsx`
 // handed `matchStatus` a parameter with no annotation while the file's own `matches` tuple was
-// perfectly typable. The helper turned out to have no reader in its own file â€” the screen renders
-// the status inline beside it â€” so the repair is the deletion of dead code, not an annotation for it.
+// perfectly typable. The helper turned out to have no reader in its own file â€?the screen renders
+// the status inline beside it â€?so the repair is the deletion of dead code, not an annotation for it.
 //
 // So this gate stops asking HOW MANY and asks WHAT EACH SITE DEPENDS ON. For every implicit-any
 // parameter it finds the expression that was being iterated or called, walks that expression back
 // through the draft's own declarations, and reports the reference that could not be resolved. Two
-// answers excuse a site â€” a door the app's provider type does not declare, and a name imported from
+// answers excuse a site â€?a door the app's provider type does not declare, and a name imported from
 // a module the app does not provide. A third answer excuses nothing: a chain that runs into a name
 // that exists NOWHERE (the class M717 bounded at zero) is not a missing type, it is a made-up one,
 // and the site stays charged.
 //
 // What it charges:
 //   1. the walk and the checker's `7006` are the same population, file by file, and the app's own
-//      tree â€” read the same way â€” has none, so "no unexcused site" is a fact about the quarantine
+//      tree â€?read the same way â€?has none, so "no unexcused site" is a fact about the quarantine
 //      rather than a reader that finds nothing anywhere;
 //   2. NO site is left unexcused, with planted drafts of all three unexcused shapes (an unannotated
 //      parameter of an exported arrow, of a function declaration, and of a chain that dead-ends in
 //      an unbound name) measured beside it;
-//   3. every door excuse is a property a REAL declared type lacks â€” and that same type does declare
+//   3. every door excuse is a property a REAL declared type lacks â€?and that same type does declare
 //      the doors the app ships, so an empty surface cannot pass as an absence;
 //   4. every module excuse is a specifier the app's own resolver does not answer, reached under the
 //      name the draft really imports from it;
@@ -37,7 +37,7 @@
 //      producer of `any` is a decision somebody recorded rather than a site that slipped in.
 //
 // Run: node scripts/proof-draft-any.mjs
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -51,14 +51,14 @@ const draftsDir = join(root, ".drafts");
 let pass = 0, fail = 0;
 const ok = (name, cond, detail) => {
   if (cond) { pass++; console.log("ok   " + name); }
-  else { fail++; console.log("FAIL " + name + (detail ? ` â€” ${detail}` : "")); }
+  else { fail++; console.log("FAIL " + name + (detail ? ` â€?${detail}` : "")); }
 };
 
 const options = appOptions(root);
 const rel = (p, base) => relative(base, p).split("\\").join("/");
 const fwd = (p) => p.replace(/\\/g, "/");
 
-/** The leftmost identifier of `a.b(x).y` â€” `a`. */
+/** The leftmost identifier of `a.b(x).y` â€?`a`. */
 const leftmost = (node) => {
   let cur = node;
   while (cur) {
@@ -70,7 +70,7 @@ const leftmost = (node) => {
   return null;
 };
 
-/** The call this arrow is an ARGUMENT of â€” `setBudget(prev => â€¦)`, `xs.map(c => â€¦)`. */
+/** The call this arrow is an ARGUMENT of â€?`setBudget(prev => â€?`, `xs.map(c => â€?`. */
 const callAround = (node) => (ts.isCallExpression(node.parent) ? node.parent : null);
 
 /** The declarations a symbol was written by, following a destructured binding back to its variable. */
@@ -79,10 +79,10 @@ const declarationsOf = (sym) => (sym.declarations ?? []).map((d) => (ts.isBindin
 /**
  * Walk an expression back to the references that could not be resolved.
  *
- * `door` â€” a property the container type does not declare, where the container IS a declared type
+ * `door` â€?a property the container type does not declare, where the container IS a declared type
  * (so `xs.campuses` on an `any` is not a door: there is no surface there to lack a door);
- * `module` â€” a name whose import the checker could not bind to a declaration;
- * `unbound` â€” a name with no symbol at all: M717's class, recorded here but NOT an excuse.
+ * `module` â€?a name whose import the checker could not bind to a declaration;
+ * `unbound` â€?a name with no symbol at all: M717's class, recorded here but NOT an excuse.
  */
 const walkChain = (checker, startNode, sf, isMember) => {
   const causes = [];
@@ -132,8 +132,8 @@ const walkChain = (checker, startNode, sf, isMember) => {
 /**
  * Every implicit-any parameter in a population, with the reference its own file could not resolve.
  *
- * A site is EXCUSED when the walk found a door or a module for it â€” the file holds no name that
- * would type the parameter â€” and charged otherwise. Two shapes have no upstream at all: a parameter
+ * A site is EXCUSED when the walk found a door or a module for it â€?the file holds no name that
+ * would type the parameter â€?and charged otherwise. Two shapes have no upstream at all: a parameter
  * of an arrow that is not an argument, and a parameter of a function declaration. Both are the
  * author's own hole, and both are planted below so the charge is measured.
  */
@@ -165,7 +165,7 @@ const traceSites = (program, files, base) => {
 };
 
 // --- the quarantine, walked ---------------------------------------------------------------------
-const DRAFT_FILES = walkApp(draftsDir, { dirs: null, notApp: [], exts: [".ts", ".tsx"] });
+const DRAFT_FILES = existsSync(draftsDir) ? walkApp(draftsDir, { dirs: null, notApp: [], exts: [".ts", ".tsx"] }) : [];
 const program = ts.createProgram(DRAFT_FILES, options);
 const sites = traceSites(program, DRAFT_FILES, draftsDir);
 
@@ -180,10 +180,10 @@ const walkCount = new Map();
 for (const s of sites) walkCount.set(s.where, (walkCount.get(s.where) ?? 0) + 1);
 const disagree = [...checkerCount].filter(([r, n]) => (walkCount.get(r) ?? 0) !== n).map(([r, n]) => `${r} checker ${n} vs walk ${walkCount.get(r) ?? 0}`);
 const totalChecker = [...checkerCount.values()].reduce((a, n) => a + n, 0);
-ok(`the walk lands on a parameter for every \`7006\` the census counts and on no more (${totalChecker} counted by the checker, ${sites.length} landed by the walk, over ${[...checkerCount.values()].filter((n) => n > 0).length} file(s); sites.length >= 9${disagree.length ? "; disagreement: " + disagree.join("; ") : ""})`,
-  disagree.length === 0 && totalChecker === sites.length && sites.length >= 9, disagree.join("; "));
+ok(`the walk lands on a parameter for every \`7006\` the census counts and on no more (${totalChecker} counted by the checker, ${sites.length} landed by the walk, over ${[...checkerCount.values()].filter((n) => n > 0).length} file(s); sites.length === 0${disagree.length ? "; disagreement: " + disagree.join("; ") : ""})`,
+  disagree.length === 0 && totalChecker === sites.length && sites.length === 0, disagree.join("; "));
 // Clause 1b. The same walk over the app's own modules: the app compiles under these options, so it
-// has no implicit-any parameter â€” and the reader that reports that has just reported 22 next door.
+// has no implicit-any parameter â€?and the reader that reports that has just reported 22 next door.
 const appFiles = APP_DIRS.flatMap((d) => walkApp(join(root, d), { exts: [".ts", ".tsx"] }));
 const appProgram = ts.createProgram(appFiles, options);
 const appAny = appFiles
@@ -242,7 +242,7 @@ for (const s of sites) for (const c of s.causes) {
 }
 
 // Clause 3. A door is only an excuse if the thing it is missing FROM is a real declared type that
-// does have doors â€” otherwise "absent" is what an empty or `any`-typed surface also reports.
+// does have doors â€?otherwise "absent" is what an empty or `any`-typed surface also reports.
 const doorTruth = [...doorCauses.values()].map((c) => ({
   key: c.key, lacks: !c.declared.includes(c.name), surfaceHasDoors: c.declared.length >= 1, usedBy: c.sites.length,
 }));
@@ -264,34 +264,33 @@ const moduleTruth = [...moduleCauses.values()].map((c) => {
   }
   return { key: c.key, spec: c.spec, name: c.name, answered, imported: importers.has(c.name), usedBy: c.sites.length };
 });
-ok(`every module excuse is a specifier the app's own resolver does not answer, reached under a name the draft really imports from it (${moduleTruth.map((m) => `${m.spec} â†’ ${m.name}, ${m.usedBy} site(s)`).join("; ")}), while the planted unwritten module is caught (${plant.module})`,
+ok(`every module excuse is a specifier the app's own resolver does not answer, reached under a name the draft really imports from it (${moduleTruth.map((m) => `${m.spec} â†?${m.name}, ${m.usedBy} site(s)`).join("; ")}), while the planted unwritten module is caught (${plant.module})`,
   moduleTruth.every((m) => !m.answered && m.imported && m.usedBy >= 1) && plant.module === true,
   moduleTruth.filter((m) => m.answered || !m.imported).map((m) => m.key).join(", "));
 
 // --- the ledger ---------------------------------------------------------------------------------
-// The producers of `any` are not a count; they are five names. Pinning the set means a sixth â€” a new
-// unwritten domain, or a new door the app does not have â€” is a decision somebody recorded, and so is
+// The producers of `any` are not a count; they are five names. Pinning the set means a sixth â€?a new
+// unwritten domain, or a new door the app does not have â€?is a decision somebody recorded, and so is
 // a seventh site hanging off a cause that is already here.
-// M1023: 10 â€” the League#League sites retired with the league's resurrection.
-// M1024: 2 named â€” the transfer#getFreeAgents site retired with the transfer draft's retirement.
-// (campuses 3, coaches 6 = 9 sites.)
-const LEDGER = [
-  "FootballDataProvider.campuses", "FootballDataProvider.coaches",
-];
+// M1026: the quarantine closed â€?with zero drafts there is nothing to name, and the census has to
+// see zero of everything rather than quietly skip out.
+const LEDGER = [];
 const found = [...new Set([...doorCauses.keys(), ...moduleCauses.keys()])].sort();
 const retired = LEDGER.filter((k) => !found.includes(k));
 const unlisted = found.filter((k) => !LEDGER.includes(k));
 const ledgerFiles = new Set(sites.map((s) => s.where));
-ok(`the names behind the ${sites.length} site(s) are a ledger of ${LEDGER.length} over ${ledgerFiles.size} file(s): ${found.join(", ")} (sites.length >= 9, ceiling 20)${retired.length ? "; NO SITE any more: " + retired.join(", ") : ""}${unlisted.length ? "; UNLISTED: " + unlisted.join(", ") : ""}`,
-  retired.length === 0 && unlisted.length === 0 && found.length === LEDGER.length && sites.length >= 9 && sites.length <= 20,
+ok(`the names behind the ${sites.length} site(s) are a ledger of ${LEDGER.length} over ${ledgerFiles.size} file(s): ${found.join(", ")} (sites.length === 0, ceiling 20)${retired.length ? "; NO SITE any more: " + retired.join(", ") : ""}${unlisted.length ? "; UNLISTED: " + unlisted.join(", ") : ""}`,
+  retired.length === 0 && unlisted.length === 0 && found.length === LEDGER.length && sites.length === 0 && sites.length <= 20,
   `${unlisted.length} unlisted, ${retired.length} retired`);
 
-// And the repair itself: the file that lost its site still carries the defects that are NOT this
-// family, so the zero came from deleting a helper nothing in the file read, not from muting the file.
-const schedule = perFile.get("features/match/SeasonSchedule.tsx") ?? [];
-ok(`the repaired draft is still measured, not muted â€” SeasonSchedule.tsx has 0 \`7006\` but ${schedule.length} defect(s) of the other families left in it (${schedule.join(", ") || "none"}), while the planted sound draft â€” annotated parameter, typed array, contextual callback â€” joins no list at all (${plant.soundSites} site(s))`,
-  !schedule.includes("7006") && schedule.length >= 1 && plant.soundSites === 0,
-  `schedule: ${schedule.join(", ")}`);
+// M1026: the broken-draft registry retired with the quarantine. The clause that proved the census
+// honestly measured the repaired SeasonSchedule.tsx while refusing to mute it is retired with its
+// subject â€?the file itself is gone from the tree, along with everything the quarantine held. The
+// plant arm below still has to behave (it lives outside the tree on a mirror), so the check keeps
+// the gold arm that cannot be fooled by the closure.
+ok(`the quarantine closed out â€?the census measures zero sites in zero files, and the planted sound draft â€?annotated parameter, typed array, contextual callback â€?joins no list (${plant.soundSites} site(s))`,
+  plant.soundSites === 0 && sites.length === 0,
+  `sound draft ${plant.soundSites}, sites ${sites.length}`);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);

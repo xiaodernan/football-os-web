@@ -32,7 +32,7 @@
 //      the pile holds, so a sixth one is a decision somebody took, not a site that slipped in.
 //
 // Run: node scripts/proof-draft-modules.mjs
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -130,10 +130,10 @@ const appFiles = APP_DIRS.flatMap((d) => walkApp(join(root, d), { exts: [".ts", 
 const appSites = importSites(appFiles).filter((s) => s.spec.startsWith("@/"));
 const appUnanswered = appSites.filter((s) => !appPlane(s.spec, s.file));
 
-const DRAFT_FILES = walkApp(draftsDir, { dirs: null, notApp: [], exts: [".ts", ".tsx"] });
-const PILE_FLOOR = 50, APP_SITE_FLOOR = 400;
+const DRAFT_FILES = existsSync(draftsDir) ? walkApp(draftsDir, { dirs: null, notApp: [], exts: [".ts", ".tsx"] }) : [];
+const APP_SITE_FLOOR = 400;
 ok(`the resolver is the compiler's own and the app passes it (${appFiles.length} app module(s) read, ${appSites.length} \`@/…\` site(s) the app answers, ${appUnanswered.length} it does not; the quarantine holds ${DRAFT_FILES.length} file(s))`,
-  appUnanswered.length === 0 && appSites.length >= APP_SITE_FLOOR && appFiles.length >= PILE_FLOOR && DRAFT_FILES.length >= PILE_FLOOR,
+  appUnanswered.length === 0 && appSites.length >= APP_SITE_FLOOR && appFiles.length >= 129 && DRAFT_FILES.length === 0,
   `unanswered: ${appUnanswered.map((s) => `${rel(s.file, root)} ${s.spec}`).join(", ") || "none"}`);
 
 // --- the quarantine's reaches, classified ----------------------------------------------------------
@@ -142,6 +142,7 @@ const reaches = draftSites
   .map((s) => ({ ...s, ...classify(s, draftsDir) }))
   .filter((s) => s.kind !== "provided")
   .sort((a, b) => rel(a.file, draftsDir).localeCompare(rel(b.file, draftsDir)) || a.spec.localeCompare(b.spec));
+
 
 // The same population, read by the type census rather than by this walk. Two independent readings
 // of one fact; if they disagree, one of them is blind, and the disagreement says which.

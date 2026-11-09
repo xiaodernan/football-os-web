@@ -20,7 +20,7 @@
 //      UMD global and a sound draft beside them must name the first two and leave the third alone.
 //
 // Run: node scripts/proof-draft-types.mjs
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -75,12 +75,9 @@ const FILES_CEILING = 69;
 // features/league/LeagueRules.tsx) were resurrected into the app and left the quarantine.
 // M1024: 119 -> 114 -> 112. Two more drafts retired with the same sweep — ManagerAgent.tsx and
 // TransferAnalysis.tsx — both consumers of the deleted seasonStats stub with no resolvable door.
-// M1025: 112 -> 106. Six more parseable-but-hollow drafts retired: PluginSystem.tsx (mock list
-// with invented t() keys), SeasonSchedule.tsx (fake Team A / Team B games), InjuryTracker.tsx
-// (client-only CRUD with no seed, no storage door, no game), TacticalEditor.tsx (window.alert
-// masquerading as a save; Tactical Studio already ships drag boards, presets and replay),
-// SyncManager.tsx + domain/sync.ts (a fake sync that returns true and never calls a back-end).
-const POPULATION_PIN = 106;
+// M1025: 112 -> 106. Six retired drafts closed out the parseable nine.
+// M1026: 106 -> 0. The quarantine closed — every file retired or resurrected; nothing waits.
+const POPULATION_PIN = 0;
 
 /** The families a milestone repaired, and the reason each one was repairable at all. */
 const REPAIRED = {
@@ -99,7 +96,7 @@ const REPAIRED = {
 
 // --- the census -------------------------------------------------------------------------------------
 const options = appOptions(root);
-const draftFiles = walkApp(draftsDir, { dirs: null, notApp: [], exts: [".ts", ".tsx"] });
+const draftFiles = existsSync(draftsDir) ? walkApp(draftsDir, { dirs: null, notApp: [], exts: [".ts", ".tsx"] }) : [];
 
 const perFile = census(draftFiles, options, draftsDir);
 const defective = [...perFile].filter(([, sigs]) => sigs.length > 0);
