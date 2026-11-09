@@ -308,9 +308,12 @@ test("the weekly review renders its digest heading", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Weekly Review" })).toBeVisible();
 });
 
-test("the youth academy draws the intake boards", async ({ page }) => {
+test("the youth academy draws the intake boards and the age pyramid", async ({ page }) => {
   await page.goto("/#/academy");
   await expect(page.getByRole("heading", { name: "The academy line" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The supply line" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The world's U-21 elite" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Squads by age" })).toBeVisible();
 });
 
 test("the balance sheet screen draws the world board", async ({ page }) => {

@@ -4622,7 +4622,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2284 -> 2290.
   // M1028: the academy adds its twenty-five literal sites (nav.academy + acad.* block):
   // 2290 -> 2315.
-  shapeCounts.literal === 2315 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1029: the age pyramid adds its eight literal sites (title, hint, world, line, share,
+  // method and the two EmptyState reuses): 2315 -> 2323.
+  shapeCounts.literal === 2323 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4752,7 +4754,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // stdLine): 368 -> 371.
   // M1027: the trigger fingers world line hands over its variables at one call site: 371 -> 372.
   // M1028: the academy hands over its variables at two call sites (rowLine, eliteLine): 372 -> 374.
-  litVarSites === 374 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1029: the age pyramid hands over its variables at two call sites (ageWorld, ageLine): 374 -> 376.
+  litVarSites === 376 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

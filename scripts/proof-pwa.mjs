@@ -182,7 +182,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 567 + CSS 12.6), pin 579 -> 580, baseline re-recorded in the same commit.
 // M1028: the /academy route rides its own chunk — measured 583 KB / 60 assets
 // (JS 570 + CSS 12.6), pin 580 -> 583, baseline re-recorded in the same commit.
-const BUDGET_KB = 583;
+// M1029: the age pyramid panel rides the academy chunk — measured 584 KB / 60 assets
+// (JS 571 + CSS 12.6), pin 583 -> 584, baseline re-recorded in the same commit.
+const BUDGET_KB = 584;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

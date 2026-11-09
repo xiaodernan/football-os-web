@@ -9,7 +9,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // (clubs ranked by summed headroom under the cut-off) and the world's U-21 elite.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { academyIntake } = await server.ssrLoadModule("/domain/academy.ts");
+const { academyIntake, ageCurve } = await server.ssrLoadModule("/domain/academy.ts");
 const SVC = await server.ssrLoadModule("/data/footballService.ts");
 
 let pass = 0, fail = 0;
@@ -80,17 +80,65 @@ for (let i = 1; i < seeded.elite.length; i++) if (seeded.elite[i - 1].potential 
 ok(`over the seeded world the board closes on an independent recount (${seen} U-21 players seen; order holds ${ordered}; completeness and ledger ${matched && complete})`,
   complete && matched && ordered && seeded.players === 125 && seeded.supply.length === byClub.size);
 
+// M1029: the squads-by-age pyramid — same population, three buckets.
 const SCREEN_SRC = readFileSync(resolve(root, "features/academy/AcademyPage.tsx"), "utf8");
-ok(`the academy screen renders the fold and its own boards (fold call ${SCREEN_SRC.includes("academyIntake(clubs, players)")}, supply ${SCREEN_SRC.includes("board.supply.map")}, elite ${SCREEN_SRC.includes("board.elite.map")}, keys ${SCREEN_SRC.includes("acad.supplyTitle")}/${SCREEN_SRC.includes("acad.eliteTitle")})`,
-  SCREEN_SRC.includes("academyIntake(clubs, players)") &&
-  SCREEN_SRC.includes("board.supply.map") && SCREEN_SRC.includes("board.elite.map") && SCREEN_SRC.includes("board.supply.map") &&
-  SCREEN_SRC.includes("board.elite[0]") && SCREEN_SRC.includes("elitePeak") && SCREEN_SRC.includes("supplyPeak") &&
+const pyramid = ageCurve(clubs, players);
+const ageRow = Object.fromEntries(pyramid.rows.map((r) => [r.clubId, r]));
+ok(`the age pyramid hand-counts (${pyramid.rows.map((r) => `${r.clubId}:${r.u19}/${r.u24}/${r.vets}`).join(" ")})`,
+  pyramid.rows.length === 3 &&
+  ageRow.A.u19 === 3 && ageRow.A.u24 === 1 && ageRow.A.vets === 0 &&
+  Math.abs(ageRow.A.youthShare - 1) < 1e-9 && ageRow.A.avgOverall === 62.25 &&
+  ageRow.B.u19 === 1 && ageRow.B.u24 === 1 && ageRow.B.vets === 1 &&
+  Math.abs(ageRow.B.youthShare - Math.round((2 / 3) * 100) / 100) < 1e-9 && ageRow.B.avgOverall === 71 &&
+  ageRow.C.u19 === 1 && ageRow.C.u24 === 0 && ageRow.C.vets === 0);
+ok(`rows open by youth share, ties by club id (${pyramid.rows.map((r) => r.clubId).join(",")})`,
+  pyramid.rows.map((r) => r.clubId).join(",") === "A,C,B");
+ok(`the world's own totals are exact (${pyramid.world.u19}/${pyramid.world.u24}/${pyramid.world.vets} · ${pyramid.world.avgOverall})`,
+  pyramid.world.u19 === 5 && pyramid.world.u24 === 2 && pyramid.world.vets === 1 &&
+  Math.abs(pyramid.world.avgOverall - Math.round((517 / 8) * 100) / 100) < 1e-9);
+
+// Same three buckets, recounted from the raw population with plain loops.
+const seededPyramid = ageCurve(seededClubs, seededPlayers);
+const seededSet = new Set(seededClubs.map((c) => c.id));
+const recount = new Map();
+let wu19 = 0, wu24 = 0, wvets = 0, wall = 0, wOverall = 0;
+for (const p of seededPlayers) {
+  if (!seededSet.has(p.clubId)) continue;
+  const cur = recount.get(p.clubId) ?? { u19: 0, u24: 0, vets: 0, n: 0, overall: 0 };
+  cur.n++;
+  cur.overall += p.overall;
+  wOverall += p.overall; wall++;
+  if (p.age <= 19) { cur.u19++; wu19++; }
+  else if (p.age <= 24) { cur.u24++; wu24++; }
+  else { cur.vets++; wvets++; }
+  recount.set(p.clubId, cur);
+}
+let ageMatched = true, ageOrdered = true;
+for (let i = 1; i < seededPyramid.rows.length; i++) if (seededPyramid.rows[i - 1].youthShare < seededPyramid.rows[i].youthShare) ageOrdered = false;
+const ageRows = new Map(seededPyramid.rows.map((r) => [r.clubId, r]));
+for (const [clubId, want] of recount) {
+  const r = ageRows.get(clubId);
+  if (!r) { ageMatched = false; continue; }
+  if (r.u19 !== want.u19 || r.u24 !== want.u24 || r.vets !== want.vets) ageMatched = false;
+  if (r.youthShare !== (want.n ? Math.round(((want.u19 + want.u24) / want.n) * 100) / 100 : 0)) ageMatched = false;
+}
+ok(`over the seeded world the pyramid closes on an independent recount (order ${ageOrdered}, buckets ${ageMatched}, world ${wu19}/${wu24}/${wvets})`,
+  ageMatched && ageOrdered &&
+  seededPyramid.world.u19 === wu19 && seededPyramid.world.u24 === wu24 && seededPyramid.world.vets === wvets &&
+  Math.abs(seededPyramid.world.avgOverall - Math.round((wOverall / wall) * 100) / 100) < 1e-9);
+
+ok(`the academy screen renders the fold and its own boards (fold call ${SCREEN_SRC.includes("academyIntake(clubs, players)")}, pyramid ${SCREEN_SRC.includes("ageCurve(clubs, players)")}, supply ${SCREEN_SRC.includes("board.supply.map")}, elite ${SCREEN_SRC.includes("board.elite.map")}, keys ${SCREEN_SRC.includes("acad.supplyTitle")}/${SCREEN_SRC.includes("acad.eliteTitle")}/${SCREEN_SRC.includes("acad.ageTitle")})`,
+  SCREEN_SRC.includes("academyIntake(clubs, players)") && SCREEN_SRC.includes("ageCurve(clubs, players)") &&
+  SCREEN_SRC.includes("board.supply.map") && SCREEN_SRC.includes("board.elite.map") && SCREEN_SRC.includes("pyramid.rows.map") &&
+  SCREEN_SRC.includes("board.elite[0]") && SCREEN_SRC.includes("elitePeak") && SCREEN_SRC.includes("supplyPeak") && SCREEN_SRC.includes("agePeak") &&
   SCREEN_SRC.includes("acad.title") && SCREEN_SRC.includes("acad.subtitle") && SCREEN_SRC.includes("acad.tileClubs") &&
   SCREEN_SRC.includes("acad.tilePlayers") && SCREEN_SRC.includes("acad.tileUpside") && SCREEN_SRC.includes("acad.tileJewel") &&
   SCREEN_SRC.includes("acad.noJewel") && SCREEN_SRC.includes("acad.worldLine") && SCREEN_SRC.includes("acad.supplyTitle") &&
   SCREEN_SRC.includes("acad.supplyHint") && SCREEN_SRC.includes("acad.rowLine") && SCREEN_SRC.includes("acad.supplyMethod") &&
   SCREEN_SRC.includes("acad.eliteTitle") && SCREEN_SRC.includes("acad.eliteHint") && SCREEN_SRC.includes("acad.eliteLine") &&
-  SCREEN_SRC.includes("acad.eliteMethod") && SCREEN_SRC.includes("acad.noneTitle") && SCREEN_SRC.includes("acad.noneHint"));
+  SCREEN_SRC.includes("acad.eliteMethod") && SCREEN_SRC.includes("acad.noneTitle") && SCREEN_SRC.includes("acad.noneHint") &&
+  SCREEN_SRC.includes("acad.ageTitle") && SCREEN_SRC.includes("acad.ageHint") && SCREEN_SRC.includes("acad.ageWorld") &&
+  SCREEN_SRC.includes("acad.ageLine") && SCREEN_SRC.includes("acad.ageShare") && SCREEN_SRC.includes("acad.ageMethod"));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
