@@ -545,7 +545,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1022: 121 -> 123 — domain/finance.ts and features/finance/FinanceBoard.tsx.
 // M1023: 123 -> 125 — domain/league.ts and features/league/LeagueRules.tsx.
 // M1028: 125 -> 127 — domain/academy.ts and features/academy/AcademyPage.tsx.
-const APP_SRC_PIN = 127;
+// M1030: 127 -> 128 — features/records/RecordsCabinet.tsx.
+const APP_SRC_PIN = 128;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -573,7 +574,8 @@ const APP_SRC_PIN = 127;
 // M1022: 73 -> 74 — FinanceBoard.tsx is a new .tsx module.
 // M1023: 74 -> 75 — LeagueRules.tsx is a new .tsx module.
 // M1028: 75 -> 76 — AcademyPage.tsx is a new .tsx module.
-const TSX_PIN = 76;
+// M1030: 76 -> 77 — RecordsCabinet.tsx is a new .tsx module.
+const TSX_PIN = 77;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -606,7 +608,8 @@ const TSX_PIN = 76;
 // M1022: 124 -> 126 — domain/finance.ts and features/finance/FinanceBoard.tsx.
 // M1023: 126 -> 128 — domain/league.ts and features/league/LeagueRules.tsx.
 // M1028: 128 -> 130 — domain/academy.ts and features/academy/AcademyPage.tsx.
-const SRC_PIN = 130;
+// M1030: 130 -> 131 — features/records/RecordsCabinet.tsx.
+const SRC_PIN = 131;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4624,7 +4627,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2290 -> 2315.
   // M1029: the age pyramid adds its eight literal sites (title, hint, world, line, share,
   // method and the two EmptyState reuses): 2315 -> 2323.
-  shapeCounts.literal === 2323 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1030: the cabinet adds its thirty-seven literal sites (nav.records + 36 rec.* calls):
+  // 2323 -> 2360.
+  shapeCounts.literal === 2360 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4755,7 +4760,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1027: the trigger fingers world line hands over its variables at one call site: 371 -> 372.
   // M1028: the academy hands over its variables at two call sites (rowLine, eliteLine): 372 -> 374.
   // M1029: the age pyramid hands over its variables at two call sites (ageWorld, ageLine): 374 -> 376.
-  litVarSites === 376 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1030: the cabinet hands over its variables at thirteen call sites (subtitle, conversionLine,
+  // wildestLine, highestScoringLine, passLine, redLine, linePlayed ×5, wallLine, blankRunLine): 376 -> 389.
+  litVarSites === 389 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

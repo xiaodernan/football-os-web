@@ -308,6 +308,11 @@ test("the weekly review renders its digest heading", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Weekly Review" })).toBeVisible();
 });
 
+test("the cabinet of records draws its three shelves", async ({ page }) => {
+  await page.goto("/#/records");
+  await expect(page.getByRole("heading", { name: "The cabinet of records" })).toBeVisible();
+});
+
 test("the youth academy draws the intake boards and the age pyramid", async ({ page }) => {
   await page.goto("/#/academy");
   await expect(page.getByRole("heading", { name: "The academy line" })).toBeVisible();
