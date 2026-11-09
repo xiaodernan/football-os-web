@@ -180,8 +180,8 @@ const walkCount = new Map();
 for (const s of sites) walkCount.set(s.where, (walkCount.get(s.where) ?? 0) + 1);
 const disagree = [...checkerCount].filter(([r, n]) => (walkCount.get(r) ?? 0) !== n).map(([r, n]) => `${r} checker ${n} vs walk ${walkCount.get(r) ?? 0}`);
 const totalChecker = [...checkerCount.values()].reduce((a, n) => a + n, 0);
-ok(`the walk lands on a parameter for every \`7006\` the census counts and on no more (${totalChecker} counted by the checker, ${sites.length} landed by the walk, over ${[...checkerCount.values()].filter((n) => n > 0).length} file(s); sites.length >= 18${disagree.length ? "; disagreement: " + disagree.join("; ") : ""})`,
-  disagree.length === 0 && totalChecker === sites.length && sites.length >= 18, disagree.join("; "));
+ok(`the walk lands on a parameter for every \`7006\` the census counts and on no more (${totalChecker} counted by the checker, ${sites.length} landed by the walk, over ${[...checkerCount.values()].filter((n) => n > 0).length} file(s); sites.length >= 10${disagree.length ? "; disagreement: " + disagree.join("; ") : ""})`,
+  disagree.length === 0 && totalChecker === sites.length && sites.length >= 10, disagree.join("; "));
 // Clause 1b. The same walk over the app's own modules: the app compiles under these options, so it
 // has no implicit-any parameter — and the reader that reports that has just reported 22 next door.
 const appFiles = APP_DIRS.flatMap((d) => walkApp(join(root, d), { exts: [".ts", ".tsx"] }));
@@ -272,16 +272,17 @@ ok(`every module excuse is a specifier the app's own resolver does not answer, r
 // The producers of `any` are not a count; they are five names. Pinning the set means a sixth — a new
 // unwritten domain, or a new door the app does not have — is a decision somebody recorded, and so is
 // a seventh site hanging off a cause that is already here.
+// M1023: 10 — the League#League sites retired with the league's resurrection.
 const LEDGER = [
   "FootballDataProvider.campuses", "FootballDataProvider.coaches",
-  "module:@/domain/league#League", "module:@/domain/transfer#getFreeAgents",
+  "module:@/domain/transfer#getFreeAgents",
 ];
 const found = [...new Set([...doorCauses.keys(), ...moduleCauses.keys()])].sort();
 const retired = LEDGER.filter((k) => !found.includes(k));
 const unlisted = found.filter((k) => !LEDGER.includes(k));
 const ledgerFiles = new Set(sites.map((s) => s.where));
-ok(`the names behind the ${sites.length} site(s) are a ledger of ${LEDGER.length} over ${ledgerFiles.size} file(s): ${found.join(", ")} (sites.length >= 18, ceiling 20)${retired.length ? "; NO SITE any more: " + retired.join(", ") : ""}${unlisted.length ? "; UNLISTED: " + unlisted.join(", ") : ""}`,
-  retired.length === 0 && unlisted.length === 0 && found.length === LEDGER.length && sites.length >= 18 && sites.length <= 20,
+ok(`the names behind the ${sites.length} site(s) are a ledger of ${LEDGER.length} over ${ledgerFiles.size} file(s): ${found.join(", ")} (sites.length >= 10, ceiling 20)${retired.length ? "; NO SITE any more: " + retired.join(", ") : ""}${unlisted.length ? "; UNLISTED: " + unlisted.join(", ") : ""}`,
+  retired.length === 0 && unlisted.length === 0 && found.length === LEDGER.length && sites.length >= 10 && sites.length <= 20,
   `${unlisted.length} unlisted, ${retired.length} retired`);
 
 // And the repair itself: the file that lost its site still carries the defects that are NOT this

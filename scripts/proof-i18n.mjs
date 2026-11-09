@@ -543,7 +543,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M962: 119 -> 120 — features/analytics/Streaks.tsx is a new app module.
 // M970: 120 -> 121 — FormTable.tsx is the new app module.
 // M1022: 121 -> 123 — domain/finance.ts and features/finance/FinanceBoard.tsx.
-const APP_SRC_PIN = 123;
+// M1023: 123 -> 125 — domain/league.ts and features/league/LeagueRules.tsx.
+const APP_SRC_PIN = 125;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -569,7 +570,8 @@ const APP_SRC_PIN = 123;
 // M962: 71 -> 72 — Streaks.tsx is a new .tsx module.
 // M970: 72 -> 73 — FormTable.tsx is a new .tsx module.
 // M1022: 73 -> 74 — FinanceBoard.tsx is a new .tsx module.
-const TSX_PIN = 74;
+// M1023: 74 -> 75 — LeagueRules.tsx is a new .tsx module.
+const TSX_PIN = 75;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -600,7 +602,8 @@ const TSX_PIN = 74;
 // M962: 122 -> 123 — Streaks.tsx again.
 // M970: 123 -> 124 — FormTable.tsx again.
 // M1022: 124 -> 126 — domain/finance.ts and features/finance/FinanceBoard.tsx.
-const SRC_PIN = 126;
+// M1023: 126 -> 128 — domain/league.ts and features/league/LeagueRules.tsx.
+const SRC_PIN = 128;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4610,7 +4613,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2244 -> 2250.
   // M1022: the balance sheet adds its seventeen sites (nav.finance + 16 fin.* reads):
   // 2250 -> 2267, and computed-with-literals gains the netPlus/netMinus key-pick shape: 23 -> 24.
-  shapeCounts.literal === 2267 && shapeCounts.template === 109 && shapeCounts.expression === 33
+  // M1023: the league rules board adds its seventeen sites (nav.leagueRules + 16 literal reads):
+  // 2267 -> 2284, and the t() expression shape gains the preset key-pick: 33 -> 34.
+  shapeCounts.literal === 2284 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4736,10 +4741,12 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1022: the balance sheet hands over its variables at six call sites (tileRevenueSub,
   // tileWagesSub, tileNetSub, boardHint, rowLine, wageShare): 362 -> 368; and the netPlus/netMinus
   // key pick hands over its variable at one of the computed sites: 8 -> 9.
-  litVarSites === 368 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1023: the rules board hands over its variables at three call sites (boardTitle, boardHint,
+  // stdLine): 368 -> 371.
+  litVarSites === 371 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
-  exprWithObj.length === 0 && shapeCounts.expression === 33 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three

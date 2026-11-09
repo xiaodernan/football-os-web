@@ -71,7 +71,9 @@ const FILES_CEILING = 69;
 // inside the ceilings the pin existed to protect.
 // M1022: 123 -> 121. Two finance drafts (domain/finance.ts, features/manager/ClubFinance.tsx)
 // were resurrected into the app and left the quarantine.
-const POPULATION_PIN = 121;
+// M1023: 121 -> 119. Two league drafts (domain/league.ts, features/league/LeagueManager.tsx as
+// features/league/LeagueRules.tsx) were resurrected into the app and left the quarantine.
+const POPULATION_PIN = 119;
 
 /** The families a milestone repaired, and the reason each one was repairable at all. */
 const REPAIRED = {

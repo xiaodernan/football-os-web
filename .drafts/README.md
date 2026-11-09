@@ -107,3 +107,17 @@ a resurrection follows the same four steps as above, starting from a parse fix.
   recount over all 73 clubs (squad book €86.03B, wage ratio 0.95) and the screen's stranger-arm
   reader. The old screen moved to `features/finance/FinanceBoard.tsx` per the git-mv discipline;
   the empty budget surface is gone — the board is read-only by design.
+- **M1023: `domain/league.ts` and `features/league/LeagueManager.tsx` → new `domain/league.ts`,
+  `features/league/LeagueRules.tsx`.** The drafted league module was interface-only (a
+  multi-user `League`/`LeagueCreationForm` for a fantasy-style hosted league — no doors, no
+  persistence, empty bodies); the drafted screen was a `localStorage`-backed fake of the same
+  idea with Chinese strings and a non-existent `footballProvider.teams()` call. Resurrected in
+  spirit as the seed-scale thought experiment the world can actually answer: fold
+  `customPointsTable(compId, matches, clubs, rules)` — the same fixtures read two ladders
+  (the standard 3/1/0 the standings use, and the reader's vector), rows carry both point sets
+  and both positions plus sway; mounted as `/league-rules` with a nav entry; table replicates
+  the seed's standings on the standard triplet (the seeded arm cross-checks points identity
+  over the 12 seeded competitions); 17 `rules.*` keys ×3 locales; `scripts/proof-league-rules.mjs`
+  charges the tie-rule order, the two-arm fixture hand-count (positions flip under 3-0-0) and
+  the screen's stranger-arm reader. The fantasy-league entry itself remains out of scope for the
+  demo until a live back-end exists; nothing about the fold pretends otherwise.

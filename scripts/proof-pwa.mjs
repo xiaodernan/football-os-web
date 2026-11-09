@@ -176,7 +176,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 560).
 // M1022: the /finance route rides its own chunk — measured 576 KB / 58 assets
 // (JS 564 + CSS 12.6), pin 573 -> 576, baseline re-recorded in the same commit.
-const BUDGET_KB = 576;
+// M1023: the /league-rules route rides its own chunk — measured 579 KB / 59 assets
+// (JS 567 + CSS 12.6), pin 576 -> 579, baseline re-recorded in the same commit.
+const BUDGET_KB = 579;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

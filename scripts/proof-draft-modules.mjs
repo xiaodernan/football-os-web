@@ -216,7 +216,7 @@ ok(`and the planted sound draft — one that imports what the app really exports
 // ledger. Pinning the exact set of specifiers means a sixth unwritten domain is a decision someone
 // recorded rather than a site that entered the census beside the others.
 const unwritten = [...new Set(siblings.map((s) => s.spec))].sort();
-const LEDGER = ["@/domain/league", "@/domain/sync", "@/domain/transfer", "@/features/world/seasonStats"];
+const LEDGER = ["@/domain/sync", "@/domain/transfer", "@/features/world/seasonStats"];
 const added = unwritten.filter((s) => !LEDGER.includes(s));
 const retired = LEDGER.filter((s) => !unwritten.includes(s));
 ok(`the domains the app has never shipped, and the screens waiting on them, are a named ledger (${unwritten.length} specifier(s) over ${siblings.length} site(s): ${unwritten.join(", ")}; ${retired.length ? "no site reaches for " + retired.join(", ") + " any more" : "every entry still reached for"}${added.length ? "; UNLISTED: " + added.join(", ") : ""})`,

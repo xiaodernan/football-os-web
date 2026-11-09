@@ -45,7 +45,8 @@ function emptySplit(): Split {
   return { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0 };
 }
 
-const isFinished = (m: Match): m is Match & { homeGoals: number; awayGoals: number } =>
+/** The one finished-fixtures predicate every fold narrows with before it reads goals. */
+export const isFinished = (m: Match): m is Match & { homeGoals: number; awayGoals: number } =>
   m.status === "FINISHED" && m.homeGoals != null && m.awayGoals != null;
 
 /** Chronological by kickoff — the ISO timestamp, compared as text. One comparator, because five
