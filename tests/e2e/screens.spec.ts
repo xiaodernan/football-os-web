@@ -332,6 +332,11 @@ test("the balance sheet screen draws the world board", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "The world's balance sheet" })).toBeVisible();
 });
 
+test("the leaders screen draws the sharpest aim board", async ({ page }) => {
+  await page.goto("/#/leaders");
+  await expect(page.getByRole("heading", { name: "The world's sharpest aim" })).toBeVisible();
+});
+
 test("the leaders screen draws the workhorses board", async ({ page }) => {
   await page.goto("/#/leaders");
   await expect(page.getByRole("heading", { name: "The world's workhorses" })).toBeVisible();
