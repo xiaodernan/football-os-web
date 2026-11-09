@@ -123,7 +123,7 @@ test("the leaders screen draws the blank runs board", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "The blank runs" })).toBeVisible();
 });
 
-test("the world page draws the four boards after a season is simulated", async ({ page }) => {
+test("the world page draws the five boards after a season is simulated", async ({ page }) => {
   await page.goto("/#/world");
   await page.getByRole("button", { name: /Simulate next season/ }).click();
   await page.waitForTimeout(600);
@@ -131,6 +131,7 @@ test("the world page draws the four boards after a season is simulated", async (
   await expect(page.getByText("The wildest of away wins")).toBeVisible();
   await expect(page.getByText("The league leaders")).toBeVisible();
   await expect(page.getByRole("heading", { name: "The dynasties" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The coaching council" })).toBeVisible();
 });
 
 test("the streaks page draws the records and the four tiles", async ({ page }) => {

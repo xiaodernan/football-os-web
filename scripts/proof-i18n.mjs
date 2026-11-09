@@ -547,7 +547,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1028: 125 -> 127 — domain/academy.ts and features/academy/AcademyPage.tsx.
 // M1030: 127 -> 128 — features/records/RecordsCabinet.tsx.
 // M1031: 128 -> 129 — domain/dynasty.ts.
-const APP_SRC_PIN = 129;
+// M1033: 129 -> 130 — domain/devCouncil.ts.
+const APP_SRC_PIN = 130;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -611,7 +612,8 @@ const TSX_PIN = 77;
 // M1028: 128 -> 130 — domain/academy.ts and features/academy/AcademyPage.tsx.
 // M1030: 130 -> 131 — features/records/RecordsCabinet.tsx.
 // M1031: 131 -> 132 — domain/dynasty.ts.
-const SRC_PIN = 132;
+// M1033: 132 -> 133 — domain/devCouncil.ts.
+const SRC_PIN = 133;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4635,7 +4637,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2360 -> 2365.
   // M1032: the tackling kings panel adds its six sites (title, hint, none, world, share, method):
   // 2365 -> 2371.
-  shapeCounts.literal === 2371 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1033: the coaching council panel adds its seven sites (title, hint, none, world, line, up, method):
+  // 2371 -> 2378.
+  shapeCounts.literal === 2378 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4770,7 +4774,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // wildestLine, highestScoringLine, passLine, redLine, linePlayed ×5, wallLine, blankRunLine): 376 -> 389.
   // M1031: the dynasties world line hands over its variables at one call site: 389 -> 390.
   // M1032: the tackling kings world line hands over its variables at one call site: 390 -> 391.
-  litVarSites === 391 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1033: the coaching council world and line hands over its variables at two call sites: 391 -> 393.
+  litVarSites === 393 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

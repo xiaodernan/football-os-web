@@ -137,7 +137,8 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[
 // M1028: 123 -> 125 — domain/academy.ts and features/academy/AcademyPage.tsx.
 // M1030: 125 -> 126 — features/records/RecordsCabinet.tsx.
 // M1031: 126 -> 127 — domain/dynasty.ts.
-const APP_FILES_PIN = 127;
+// M1033: 127 -> 128 — domain/devCouncil.ts.
+const APP_FILES_PIN = 128;
 
 // The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
 // stands alone must keep the two a reader reaches and drop the third. The planted files are

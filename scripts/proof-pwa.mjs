@@ -192,7 +192,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 575 + CSS 12.6), pin 587 -> 588, baseline re-recorded in the same commit.
 // M1032: the tackling kings panel rides the discipline chunk — measured 589 KB / 61 assets
 // (JS 576 + CSS 12.6), pin 588 -> 589, baseline re-recorded in the same commit.
-const BUDGET_KB = 589;
+// M1033: the coaching council panel rides the world chunk — measured 590 KB / 61 assets
+// (JS 577 + CSS 12.6), pin 589 -> 590, baseline re-recorded in the same commit.
+const BUDGET_KB = 590;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

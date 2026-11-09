@@ -9,6 +9,7 @@ import { runWorld, seasonLabel, buildSeasonReport, seasonReportPayload, type Wor
 import { sum, last } from "@/domain/attributes";
 import { leagueOpenness, worldUpsets, worldLeaders } from "@/domain/analytics";
 import { dynastyTable } from "@/domain/dynasty";
+import { devCouncil } from "@/domain/devCouncil";
 import { rowLine } from "@/domain/rowText";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
@@ -88,6 +89,9 @@ export function DynamicWorld() {
   );
   // M1031: the counting houses — every champion crown counted per (club, competition) pair.
   const dynasties = useMemo(() => dynastyTable(history), [history]);
+  // M1033: the coaching council — which clubs' squads actually grew across the simulated run.
+  const council = useMemo(() => devCouncil(history), [history]);
+  const councilPeak = council.rows.length ? council.rows[0].upDelta : 1;
 
   const exportReport = useCallback(() => {
     if (!snapshot) return;
@@ -282,6 +286,52 @@ export function DynamicWorld() {
                   })}
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">{t("world.dynastyMethod")}</p>
+              </>
+            )}
+          </Panel>
+
+          {/* M1033: the coaching council — which clubs' squads actually grew across the simulated run. */}
+          <Panel className="p-4 lg:col-span-2">
+            <SectionTitle title={t("world.coachCouncilTitle")} hint={t("world.coachCouncilHint")} />
+            {council.seasons === 0 || council.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("world.coachCouncilNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("world.coachCouncilWorld", { seasons: council.seasons, n: council.totalUp, clubs: council.rows.length })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {council.rows.map((r, i) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li
+                        key={r.clubId}
+                        className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(110px,200px)]"
+                      >
+                        <span className="text-muted-foreground">{i + 1}</span>
+                        <Link to={`/clubs/${r.clubId}`} className="flex min-w-0 items-center gap-2 hover:underline">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {t("world.coachLine", { p: r.developed, a: r.avgDelta, g: r.bestName, d: r.bestDelta })}
+                            </div>
+                          </div>
+                        </Link>
+                        <div className="text-right tabular-nums">
+                          <div className="font-semibold">+{r.upDelta}</div>
+                          <div className="text-xs text-muted-foreground">{t("world.coachUp")}</div>
+                        </div>
+                        <div className="hidden sm:block">
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div className={cn("h-2 rounded-full", BAR_FILL.good)} style={{ width: pctOf(r.upDelta, councilPeak) }} />
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("world.coachCouncilMethod")}</p>
               </>
             )}
           </Panel>
