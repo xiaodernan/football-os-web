@@ -117,7 +117,25 @@ a resurrection follows the same four steps as above, starting from a parse fix.
   (the standard 3/1/0 the standings use, and the reader's vector), rows carry both point sets
   and both positions plus sway; mounted as `/league-rules` with a nav entry; table replicates
   the seed's standings on the standard triplet (the seeded arm cross-checks points identity
-  over the 12 seeded competitions); 17 `rules.*` keys ×3 locales; `scripts/proof-league-rules.mjs`
+  over the 15 seeded competitions); 17 `rules.*` keys ×3 locales; `scripts/proof-league-rules.mjs`
   charges the tie-rule order, the two-arm fixture hand-count (positions flip under 3-0-0) and
   the screen's stranger-arm reader. The fantasy-league entry itself remains out of scope for the
   demo until a live back-end exists; nothing about the fold pretends otherwise.
+
+## Retirements (the ledger, newest last)
+
+- **M1024: eight retired drafts — content the app had already shipped better, or content that could
+  not compile against any real door.** `features/world/SeasonReport.tsx`, `features/world/SeasonAwards.tsx`
+  and `features/world/seasonStats.ts` are a hollow re-creation of what `/world` already renders and exports
+  (the `buildSeasonReport`/`seasonReportPayload` panel — dynasties, rise/fall, export to JSON — shipped with
+  its own proofs and E2E coverage). `scripts/backup-season-data.mjs` was a CommonJS script written as ESM that
+  nothing invoked or could. `features/manager/TransferWindow.tsx` and `domain/transfer.ts` are superseded on
+  both sides: the manager-side transfers ride `domain/career` (budget, morale, fatigue, marketTargets) in
+  `/manager`'s transfers tab, and the world's targets board rides `domain/transfers.ts` in `/transfers`
+  (rumours, fit scores, asking fees) — their hand-keyed `calculateTransferFee` was a toy, their
+  `footballProvider.teams()`/`contractYearsRemaining` never existed, and `getFreeAgents` was an empty body
+  with a comment promising code. `features/ai/ManagerAgent.tsx` and `features/manager/TransferAnalysis.tsx`
+  are retired with the same stroke: both imported the deleted `seasonStats` stub and
+  `footballProvider.teams()` — the app has no such door, and no editor of theirs could resolve them.
+  The quarantine's proof pins recount in the same commit (proof-draft-any 10→9 & ledger 4→2,
+  proof-draft-modules 4→1 specifiers, proof-draft-types 119→112).

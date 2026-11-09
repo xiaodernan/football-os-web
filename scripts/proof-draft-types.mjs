@@ -73,7 +73,9 @@ const FILES_CEILING = 69;
 // were resurrected into the app and left the quarantine.
 // M1023: 121 -> 119. Two league drafts (domain/league.ts, features/league/LeagueManager.tsx as
 // features/league/LeagueRules.tsx) were resurrected into the app and left the quarantine.
-const POPULATION_PIN = 119;
+// M1024: 119 -> 114 -> 112. Two more drafts retired with the same sweep — ManagerAgent.tsx and
+// TransferAnalysis.tsx — both consumers of the deleted seasonStats stub with no resolvable door.
+const POPULATION_PIN = 112;
 
 /** The families a milestone repaired, and the reason each one was repairable at all. */
 const REPAIRED = {
