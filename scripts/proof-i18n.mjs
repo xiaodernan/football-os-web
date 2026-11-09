@@ -546,7 +546,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1023: 123 -> 125 — domain/league.ts and features/league/LeagueRules.tsx.
 // M1028: 125 -> 127 — domain/academy.ts and features/academy/AcademyPage.tsx.
 // M1030: 127 -> 128 — features/records/RecordsCabinet.tsx.
-const APP_SRC_PIN = 128;
+// M1031: 128 -> 129 — domain/dynasty.ts.
+const APP_SRC_PIN = 129;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -609,7 +610,8 @@ const TSX_PIN = 77;
 // M1023: 126 -> 128 — domain/league.ts and features/league/LeagueRules.tsx.
 // M1028: 128 -> 130 — domain/academy.ts and features/academy/AcademyPage.tsx.
 // M1030: 130 -> 131 — features/records/RecordsCabinet.tsx.
-const SRC_PIN = 131;
+// M1031: 131 -> 132 — domain/dynasty.ts.
+const SRC_PIN = 132;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4629,7 +4631,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // method and the two EmptyState reuses): 2315 -> 2323.
   // M1030: the cabinet adds its thirty-seven literal sites (nav.records + 36 rec.* calls):
   // 2323 -> 2360.
-  shapeCounts.literal === 2360 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1031: the dynasties panel adds its five sites (title, hint, none, world, method):
+  // 2360 -> 2365.
+  shapeCounts.literal === 2365 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4762,7 +4766,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1029: the age pyramid hands over its variables at two call sites (ageWorld, ageLine): 374 -> 376.
   // M1030: the cabinet hands over its variables at thirteen call sites (subtitle, conversionLine,
   // wildestLine, highestScoringLine, passLine, redLine, linePlayed ×5, wallLine, blankRunLine): 376 -> 389.
-  litVarSites === 389 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1031: the dynasties world line hands over its variables at one call site: 389 -> 390.
+  litVarSites === 390 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

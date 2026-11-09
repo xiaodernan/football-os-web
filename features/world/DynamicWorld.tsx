@@ -8,6 +8,7 @@ import { fmtMoney, pctLabel, signed, ABSENT, fmt2, pctOf, cn, SEPARATOR } from "
 import { runWorld, seasonLabel, buildSeasonReport, seasonReportPayload, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
 import { sum, last } from "@/domain/attributes";
 import { leagueOpenness, worldUpsets, worldLeaders } from "@/domain/analytics";
+import { dynastyTable } from "@/domain/dynasty";
 import { rowLine } from "@/domain/rowText";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { round1 } from "@/domain/scouting";
@@ -85,6 +86,8 @@ export function DynamicWorld() {
     () => (snapshot && snapshot.history.length ? buildSeasonReport(base, snapshot) : null),
     [base, snapshot],
   );
+  // M1031: the counting houses — every champion crown counted per (club, competition) pair.
+  const dynasties = useMemo(() => dynastyTable(history), [history]);
 
   const exportReport = useCallback(() => {
     if (!snapshot) return;
@@ -245,6 +248,41 @@ export function DynamicWorld() {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">{t("world.history.empty")}</p>
+            )}
+          </Panel>
+
+          {/* M1031: the counting houses — every champion crown counted per (club, competition) pair. */}
+          <Panel className="p-4 lg:col-span-2">
+            <SectionTitle title={t("world.dynastyTitle")} hint={t("world.dynastyHint")} />
+            {dynasties.seasons === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("world.dynastyNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("world.dynastyWorld", { seasons: dynasties.seasons, n: dynasties.titles, clubs: dynasties.rows.length })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {dynasties.rows.map((r) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li
+                        key={`${r.clubId}|${r.compId}`}
+                        className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto]"
+                      >
+                        <Link to={`/clubs/${r.clubId}`} className="flex min-w-0 items-center gap-2 hover:underline">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{club?.name ?? r.clubName}</div>
+                            <div className="text-xs text-muted-foreground">{getCompetition(r.compId)?.name ?? r.compName}</div>
+                          </div>
+                        </Link>
+                        <div className="text-right font-mono text-lg font-bold tabular-nums">{r.titles}</div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("world.dynastyMethod")}</p>
+              </>
             )}
           </Panel>
 

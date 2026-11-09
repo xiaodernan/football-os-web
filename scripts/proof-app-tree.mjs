@@ -150,7 +150,8 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1023: 126 -> 128 — domain/league.ts and features/league/LeagueRules.tsx resurrected.
 // M1028: 128 -> 130 — domain/academy.ts and features/academy/AcademyPage.tsx.
 // M1030: 130 -> 131 — features/records/RecordsCabinet.tsx.
-const APP_MODULE_PIN = 131;
+// M1031: 131 -> 132 — domain/dynasty.ts.
+const APP_MODULE_PIN = 132;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

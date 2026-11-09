@@ -86,7 +86,8 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => ROUTER_SCOPE.has(f.split("/")[0
 // M1023: 118 -> 120 — domain/league.ts and features/league/LeagueRules.tsx join the reader population.
 // M1028: 120 -> 122 — domain/academy.ts and features/academy/AcademyPage.tsx join the reader population.
 // M1030: 122 -> 123 — features/records/RecordsCabinet.tsx joins the reader population.
-const ROUTER_POP_PIN = 123;
+// M1031: 123 -> 124 — domain/dynasty.ts joins the reader population.
+const ROUTER_POP_PIN = 124;
 ok(`the router census reads the reader's population, derived from the app's declared entries rather than from the walk alone (${APP_ENTRIES.length} entries [${APP_ENTRIES.join(", ")}], ${APP_FILES.length} reached in scope, ${UNREACHED_SCOPE.length} unreached in scope [${UNREACHED_SCOPE.join(", ") || "none"}])`,
   APP_ENTRIES.length === 2 && APP_ENTRIES.includes("src/main.tsx") && APP_ENTRIES.includes("functions/index.ts") &&
   APP_FILES.length === ROUTER_POP_PIN && UNREACHED_SCOPE.length === 1 && UNREACHED_SCOPE[0] === "src/vite-env.d.ts");
