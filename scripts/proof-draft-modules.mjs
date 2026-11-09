@@ -156,7 +156,7 @@ for (const s of reaches) {
 const checkerOnly = [...checkerCount].filter(([r, n]) => (walkCount.get(r) ?? 0) !== n).map(([r, n]) => `${r} checker ${n} vs walk ${walkCount.get(r) ?? 0}`);
 const totalChecker = [...checkerCount.values()].reduce((a, n) => a + n, 0);
 ok(`this walk's unresolvable sites and the checker's \`2307\` are the same population, file by file (${totalChecker} counted by the checker, ${reaches.length} classified by the walk, over ${perFile.size} file(s); ${checkerOnly.length ? "disagreement: " + checkerOnly.join("; ") : "no file disagrees"})`,
-  checkerOnly.length === 0 && totalChecker === reaches.length && reaches.length >= 1,
+  checkerOnly.length === 0 && totalChecker === reaches.length,
   checkerOnly.join("; "));
 
 const wrongShelf = reaches.filter((s) => s.kind === "wrong-shelf");
@@ -216,11 +216,13 @@ ok(`and the planted sound draft — one that imports what the app really exports
 // ledger. Pinning the exact set of specifiers means a sixth unwritten domain is a decision someone
 // recorded rather than a site that entered the census beside the others.
 const unwritten = [...new Set(siblings.map((s) => s.spec))].sort();
-const LEDGER = ["@/domain/sync"];
+// Everything in the parseable nine is now resolved — five resurrected or retired with M1022-M1025.
+// The unwritten domains this ledger named are all gone from the tree; nothing waits any more.
+const LEDGER = [];
 const added = unwritten.filter((s) => !LEDGER.includes(s));
 const retired = LEDGER.filter((s) => !unwritten.includes(s));
 ok(`the domains the app has never shipped, and the screens waiting on them, are a named ledger (${unwritten.length} specifier(s) over ${siblings.length} site(s): ${unwritten.join(", ")}; ${retired.length ? "no site reaches for " + retired.join(", ") + " any more" : "every entry still reached for"}${added.length ? "; UNLISTED: " + added.join(", ") : ""})`,
-  added.length === 0 && retired.length === 0 && unwritten.length === LEDGER.length && siblings.length >= 1,
+  added.length === 0 && retired.length === 0 && unwritten.length === LEDGER.length && siblings.length >= 0,
   added.length ? `${added.join(", ")} not in the ledger` : retired.length ? `${retired.join(", ")} gone from the quarantine` : "ledger holds");
 
 console.log(`\n${pass}/${pass + fail} checks passed`);

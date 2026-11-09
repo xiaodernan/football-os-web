@@ -139,3 +139,17 @@ a resurrection follows the same four steps as above, starting from a parse fix.
   `footballProvider.teams()` — the app has no such door, and no editor of theirs could resolve them.
   The quarantine's proof pins recount in the same commit (proof-draft-any 10→9 & ledger 4→2,
   proof-draft-modules 4→1 specifiers, proof-draft-types 119→112).
+- **M1025: six more retired drafts — the parseable nine closed out.** `features/community/PluginSystem.tsx`
+  (a mock list with invented `plugin.*`/`category.*` dictionary keys that never existed anywhere), 
+  `features/schedule/SeasonSchedule.tsx` (fake "Team A … Team F" fixtures on fabricated dates), 
+  `features/injury/InjuryTracker.tsx` (a client-only CRUD of invented injury types with no seed, no
+  store and no career wiring — nothing in it tied to the world the app runs on), 
+  `features/tactical/TacticalEditor.tsx` (pure React state + a `window.alert` masquerading as a save;
+  the shipped Tactical Studio already does drag boards, presets and replay), 
+  `features/sync/SyncManager.tsx` and `domain/sync.ts` (a fake sync that always "succeeded" against a
+  back-end that does not exist; the settings page already exports/imports the store as JSON, which is
+  the app's honest sync story until a server exists). The parseable-nine list from the M527-era
+  ledger is now closed: three resurrected (M1022/M1023), six retired, and this milestone retired
+  the rest. The quarantine's proof pins recount in the same commit (proof-draft-types 112→106;
+  proof-draft-modules specimen now stands at zero sibling doors — the endstate the quarantine was
+  built to reach, witnessed by the planted arms rather than by a floor).
