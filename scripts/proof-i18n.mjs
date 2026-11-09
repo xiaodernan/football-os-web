@@ -4651,7 +4651,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // cards built from two literal records, the kind ternary, the route row and the four honesty
   // lines: 2390 -> 2422.
   // M1037: the atlas gains one more honesty line (the exported world contract): 2422 -> 2423.
-  shapeCounts.literal === 2423 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1038: the atlas prints the contract's counts and digest in two interpolating lines:
+  // 2423 -> 2425.
+  shapeCounts.literal === 2425 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4791,7 +4793,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1035: the sharpest aim league line hands over its variables at one call site: 394 -> 395.
   // M1036: the atlas hands over placeholders at three call sites (portLine's port, stripPrefix's
   // count and plannedConsumers' route list): 395 -> 398.
-  litVarSites === 398 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1038: the contract counts and digest lines hand over four numbers and a digest: 398 -> 400.
+  litVarSites === 400 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

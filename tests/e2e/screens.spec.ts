@@ -374,4 +374,5 @@ test("the platform atlas draws the three services", async ({ page }) => {
   await expect(page.getByText("Eureka registry", { exact: true })).toBeVisible();
   await expect(page.getByText("No gateway is reachable from this build.")).toBeVisible();
   await expect(page.getByText(/frozen snapshot exported from this world/)).toBeVisible();
+  await expect(page.getByText(/\d+ clubs · \d+ players · \d+ matches/)).toBeVisible();
 });

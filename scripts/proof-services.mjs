@@ -117,7 +117,7 @@ for (const s of PLATFORM_SERVICES) {
 }
 ok(`each application.yml listens on the descriptor's port and registers under its app name (${ymlFails.join(" / ") || "clean"})`,
   ymlFails.length === 0);
-ok(`the registry is the services' eureka default zone (${PLATFORM_SERVICES[0].port})`,
+ok(`the registry is the services' eureka default zone (${PLATFORM_SERVICES.find((s) => s.id === "registry").port})`,
   ["gateway", "league-service"].every((m) =>
     read(`services/${m}/src/main/resources/application.yml`).includes(`http://localhost:${PLATFORM_SERVICES[0].port}/eureka/`)));
 
@@ -181,7 +181,7 @@ ok("the descriptor names the same resource, path and exporter the proof reads",
   LEAGUE_CONTRACT.resource === "league-summary.json" &&
   LEAGUE_CONTRACT.exporter === "scripts/export-service-contract.mjs" &&
   has(LEAGUE_CONTRACT.exporter));
-ok("the league controller loads that resource through Jackson and types no counts of its own",
+ok("the league controller loads that resource through Jackson and keeps the counts in the JSON",
   leagueSrc.includes("new ClassPathResource(\"league-summary.json\")") &&
   leagueSrc.includes("TypeReference<Map<String, Object>>") &&
   !leagueSrc.includes("\"clubs\"") && !leagueSrc.includes("\"players\"") &&
@@ -196,6 +196,10 @@ ok("the atlas renders both descriptor arrays and never types a port itself",
   SCREEN.includes("LEAGUE_CONTRACT.path") &&
   SCREEN.includes("PLATFORM_LIVE") && !/\b(8761|8080|8081)\b/.test(SCREEN) &&
   SCREEN.includes("t(\"platform.title\")") && SCREEN.includes("platform.boundaryTitle"));
+ok("the atlas reads the exported contract file itself, not a second copy of the counts",
+  SCREEN.includes("services/league-service/src/main/resources/league-summary.json") &&
+  ["snapshot.clubs", "snapshot.players", "snapshot.matches", "snapshot.finishedMatches", "digest"]
+    .every((field) => SCREEN.includes(field)));
 const appFiles = ["src", "features", "domain", "data", "lib", "ui", "store", "i18n", "components"]
   .flatMap((d) => walk(d)).filter((f) => /\.(ts|tsx)$/.test(f) && f !== SCREEN_PATH);
 const callers = appFiles.filter((f) => {
@@ -219,11 +223,14 @@ for (const key of [...screenKeys, "nav.platform"]) {
   for (const id of localeIds) if (!(key in DICTIONARIES[id])) missingKeys.push(`${id}:${key}`);
 }
 ok(`every key the atlas reads exists in all ${localeIds.length} locales (${screenKeys.length} screen keys + nav.platform; ${missingKeys.join(" / ") || "clean"})`,
-  localeIds.length === 3 && screenKeys.length === 32 && missingKeys.length === 0);
-ok("the two interpolating rows hand their placeholders to every locale",
+  localeIds.length === 3 && screenKeys.length === 34 && missingKeys.length === 0);
+ok("the interpolating rows hand their placeholders to every locale",
   localeIds.every((id) => /\{n\}/.test(DICTIONARIES[id]["platform.portLine"]) &&
     /\{n\}/.test(DICTIONARIES[id]["platform.stripPrefix"]) &&
-    /\{list\}/.test(DICTIONARIES[id]["platform.plannedConsumers"])));
+    /\{list\}/.test(DICTIONARIES[id]["platform.plannedConsumers"]) &&
+    /\{clubs\}/.test(DICTIONARIES[id]["platform.contractCounts"]) &&
+    /\{finished\}/.test(DICTIONARIES[id]["platform.contractCounts"]) &&
+    /\{digest\}/.test(DICTIONARIES[id]["platform.contractDigest"])));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

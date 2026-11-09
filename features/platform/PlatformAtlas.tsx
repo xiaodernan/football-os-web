@@ -2,6 +2,7 @@ import { useI18n } from "@/i18n";
 import { CHIP_CLASS, Panel, SectionTitle } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 import { GATEWAY_ROUTES, LEAGUE_CONTRACT, PLATFORM_LIVE, PLATFORM_SERVICES, type ServiceId } from "@/domain/platform";
+import leagueContract from "../../services/league-service/src/main/resources/league-summary.json";
 
 /**
  * M1036: the platform atlas — the Spring Cloud skeleton the repository declares, drawn from
@@ -100,6 +101,17 @@ export function PlatformAtlas() {
           <li className="rounded-lg border px-3 py-2">
             <span className="block">{t("platform.contractLine")}</span>
             <span className="mt-1 block truncate font-mono text-xs">{LEAGUE_CONTRACT.path}</span>
+            <span className="mt-1 block font-mono text-xs text-foreground">
+              {t("platform.contractCounts", {
+                clubs: leagueContract.snapshot.clubs,
+                players: leagueContract.snapshot.players,
+                matches: leagueContract.snapshot.matches,
+                finished: leagueContract.snapshot.finishedMatches,
+              })}
+            </span>
+            <span className="mt-0.5 block truncate font-mono text-[11px] text-muted-foreground">
+              {t("platform.contractDigest", { digest: leagueContract.digest })}
+            </span>
           </li>
         </ul>
       </Panel>

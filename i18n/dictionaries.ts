@@ -3150,6 +3150,8 @@ const en: Dict = {
   "platform.notStarted": "Not done: nothing starts with the web build, and no screen calls a service.",
   "platform.notData": "Not done: the league service answers a skeleton, not the seeded world.",
   "platform.contractLine": "Real: that answer is a frozen snapshot exported from this world — counts plus a digest, not a hand-written payload. Refresh it with the exporter below.",
+  "platform.contractCounts": "{clubs} clubs · {players} players · {matches} matches ({finished} finished)",
+  "platform.contractDigest": "digest {digest}",
   "platform.liveOn": "A gateway is reachable from this build.",
   "platform.liveOff": "No gateway is reachable from this build.",
 };
@@ -6189,6 +6191,8 @@ const zhCN: Dict = {
   "platform.notStarted": "没做：网页构建不会启动任何服务，也没有屏幕调用服务。",
   "platform.notData": "没做：联赛服务只回骨架，不回种子世界的数据。",
   "platform.contractLine": "真的：那份回复是从这个世界导出的冻结快照——计数加摘要，不是手写负载；用下面的导出器刷新。",
+  "platform.contractCounts": "{clubs} 家俱乐部 · {players} 名球员 · {matches} 场比赛（{finished} 场已完赛）",
+  "platform.contractDigest": "摘要 {digest}",
   "platform.liveOn": "这个构建能连到网关。",
   "platform.liveOff": "这个构建连不到网关。",
 };
@@ -9234,6 +9238,8 @@ const zhTW: Dict = {
   "platform.notStarted": "沒做：網頁建置不會啟動任何服務，也沒有畫面呼叫服務。",
   "platform.notData": "沒做：聯賽服務只回骨架，不回種子世界的資料。",
   "platform.contractLine": "真的：那份回覆是從這個世界匯出的凍結快照——計數加摘要，不是手寫負載；用下面的匯出器更新。",
+  "platform.contractCounts": "{clubs} 家俱樂部 · {players} 名球員 · {matches} 場比賽（{finished} 場已完賽）",
+  "platform.contractDigest": "摘要 {digest}",
   "platform.liveOn": "這個建置能連到閘道。",
   "platform.liveOff": "這個建置連不到閘道。",
 };
