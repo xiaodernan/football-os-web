@@ -313,6 +313,11 @@ test("the balance sheet screen draws the world board", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "The world's balance sheet" })).toBeVisible();
 });
 
+test("the leaders screen draws the trigger fingers board", async ({ page }) => {
+  await page.goto("/#/leaders");
+  await expect(page.getByRole("heading", { name: "The world's trigger fingers" })).toBeVisible();
+});
+
 test("the league rules screen draws the table under different rules", async ({ page }) => {
   await page.goto("/#/league-rules");
   await expect(page.getByRole("heading", { name: "The table, under different rules" })).toBeVisible();

@@ -36,6 +36,9 @@ export function LeagueLeaders() {
   // M998: the passers — accuracy that travels from fixture to fixture, averaged with care.
   const passBoard = useMemo(() => passingAccuracy(footballProvider.matches(), footballProvider.clubs()), []);
   const passPeak = passBoard.rows.length ? Math.max(...passBoard.rows.map((r) => r.passAcc)) : 1;
+  // M1027: the world's trigger fingers — raw shots per fixture, every finished fixture summed to its side.
+  const shotBoard = useMemo(() => statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "shots"), []);
+  const shotPeak = shotBoard.rows.length ? shotBoard.rows[0].perMatch : 1;
   // M1010: the corner kings — most corners per match, no overall theme of who wins them.
   const cornerBoard = useMemo(() => statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "corners"), []);
   const cornerPeak = cornerBoard.rows.length ? cornerBoard.rows[0].perMatch : 1;
@@ -379,6 +382,50 @@ export function LeagueLeaders() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("leaders.cornerMethod")}</p>
+          </>
+        )}
+      </Panel>
+
+      {/* M1027: the world's trigger fingers — most shots per fixture, the honest tap-shoot that precedes the target talk */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.shotTitle")} hint={t("leaders.shotHint")} />
+        {shotBoard.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.shotNone")}</p>
+        ) : (
+          <>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("leaders.shotLeague", { p: fmt2(shotBoard.league), n: shotBoard.rows.length })}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {shotBoard.rows.map((r, i) => {
+                const club = getClub(r.clubId);
+                return (
+                  <li
+                    key={r.clubId}
+                    className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(90px,180px)]"
+                  >
+                    <span className="text-muted-foreground">{i + 1}</span>
+                    <div className="min-w-0 flex items-center gap-2">
+                      <Crest colors={club?.colors} short={club?.short} size={22} />
+                      <div className="min-w-0 truncate font-medium">{club?.name ?? r.clubId}</div>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      {fmt2(r.perMatch)}
+                      <div className="text-xs text-muted-foreground">{t("leaders.shotShare")}</div>
+                    </div>
+                    <div className="hidden sm:block">
+                      <div className="h-2 w-full rounded-full bg-muted">
+                        <div
+                          className={cn("h-2 rounded-full", BAR_FILL.progress)}
+                          style={{ width: pctOf(r.perMatch, shotPeak) }}
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("leaders.shotMethod")}</p>
           </>
         )}
       </Panel>

@@ -178,7 +178,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // (JS 564 + CSS 12.6), pin 573 -> 576, baseline re-recorded in the same commit.
 // M1023: the /league-rules route rides its own chunk — measured 579 KB / 59 assets
 // (JS 567 + CSS 12.6), pin 576 -> 579, baseline re-recorded in the same commit.
-const BUDGET_KB = 579;
+// M1027: the trigger fingers panel rides the leaders chunk — measured 580 KB / 59 assets
+// (JS 567 + CSS 12.6), pin 579 -> 580, baseline re-recorded in the same commit.
+const BUDGET_KB = 580;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

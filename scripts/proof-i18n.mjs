@@ -4615,7 +4615,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2250 -> 2267, and computed-with-literals gains the netPlus/netMinus key-pick shape: 23 -> 24.
   // M1023: the league rules board adds its seventeen sites (nav.leagueRules + 16 literal reads):
   // 2267 -> 2284, and the t() expression shape gains the preset key-pick: 33 -> 34.
-  shapeCounts.literal === 2284 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1027: the trigger fingers panel adds its six sites (title, hint, none, world, share, method):
+  // 2284 -> 2290.
+  shapeCounts.literal === 2290 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4743,7 +4745,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // key pick hands over its variable at one of the computed sites: 8 -> 9.
   // M1023: the rules board hands over its variables at three call sites (boardTitle, boardHint,
   // stdLine): 368 -> 371.
-  litVarSites === 371 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1027: the trigger fingers world line hands over its variables at one call site: 371 -> 372.
+  litVarSites === 372 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));
