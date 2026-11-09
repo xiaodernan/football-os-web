@@ -1,0 +1,25 @@
+# Port pinned by domain/platform.ts (gateway: 8080) and read back by proof-services.mjs.
+server:
+  port: 8080
+
+spring:
+  application:
+    name: football-os-gateway
+  cloud:
+    gateway:
+      routes:
+        # Mirrors GATEWAY_ROUTES in domain/platform.ts: id, Path predicate, lb:// target
+        # (the league service's spring.application.name, upper-cased by Eureka) and StripPrefix.
+        - id: league-summary
+          uri: lb://LEAGUE-SERVICE
+          predicates:
+            - Path=/api/league/**
+          filters:
+            - StripPrefix=1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true

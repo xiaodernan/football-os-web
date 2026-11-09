@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  M1036: the service side of Football OS. This reactor is a skeleton, not a second backend:
+  three modules (a registry, an edge gateway and one read-only domain service) whose ports,
+  names and routes are mirrored in domain/platform.ts. scripts/proof-services.mjs reads both
+  sides, so a port or route that moves here without moving there is a red gate.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.4.1</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.footballos</groupId>
+  <artifactId>football-os-services</artifactId>
+  <version>0.1.0</version>
+  <packaging>pom</packaging>
+  <name>Football OS Services</name>
+  <description>Spring Cloud skeleton: Eureka registry, API gateway, league service</description>
+
+  <modules>
+    <module>eureka-server</module>
+    <module>gateway</module>
+    <module>league-service</module>
+  </modules>
+
+  <properties>
+    <java.version>21</java.version>
+    <spring-cloud.version>2024.0.0</spring-cloud.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>

@@ -1,0 +1,15 @@
+# Port pinned by domain/platform.ts (league: 8081) and read back by proof-services.mjs.
+server:
+  port: 8081
+
+spring:
+  application:
+    # Eureka registers the upper-cased form; the gateway route targets lb://LEAGUE-SERVICE.
+    name: league-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true

@@ -548,7 +548,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1030: 127 -> 128 — features/records/RecordsCabinet.tsx.
 // M1031: 128 -> 129 — domain/dynasty.ts.
 // M1033: 129 -> 130 — domain/devCouncil.ts.
-const APP_SRC_PIN = 130;
+// M1036: 130 -> 132 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
+const APP_SRC_PIN = 132;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -577,7 +578,8 @@ const APP_SRC_PIN = 130;
 // M1023: 74 -> 75 — LeagueRules.tsx is a new .tsx module.
 // M1028: 75 -> 76 — AcademyPage.tsx is a new .tsx module.
 // M1030: 76 -> 77 — RecordsCabinet.tsx is a new .tsx module.
-const TSX_PIN = 77;
+// M1036: 77 -> 78 — PlatformAtlas.tsx is a new .tsx module.
+const TSX_PIN = 78;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -613,7 +615,8 @@ const TSX_PIN = 77;
 // M1030: 130 -> 131 — features/records/RecordsCabinet.tsx.
 // M1031: 131 -> 132 — domain/dynasty.ts.
 // M1033: 132 -> 133 — domain/devCouncil.ts.
-const SRC_PIN = 133;
+// M1036: 133 -> 135 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
+const SRC_PIN = 135;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4643,7 +4646,11 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2378 -> 2384.
   // M1035: the sharpest aim panel adds its six sites (title, hint, none, league, share, method):
   // 2384 -> 2390.
-  shapeCounts.literal === 2390 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1036: the platform atlas adds its thirty-one sites plus the sidebar's nav label (the atlas
+  // reads 31 keys in the screen; AppShell adds t("nav.platform")): the header block, three service
+  // cards built from two literal records, the kind ternary, the route row and the four honesty
+  // lines: 2390 -> 2422.
+  shapeCounts.literal === 2422 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4781,7 +4788,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1033: the coaching council world and line hands over its variables at two call sites: 391 -> 393.
   // M1034: the workhorses league line hands over its variables at one call site: 393 -> 394.
   // M1035: the sharpest aim league line hands over its variables at one call site: 394 -> 395.
-  litVarSites === 395 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1036: the atlas hands over placeholders at three call sites (portLine's port, stripPrefix's
+  // count and plannedConsumers' route list): 395 -> 398.
+  litVarSites === 398 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

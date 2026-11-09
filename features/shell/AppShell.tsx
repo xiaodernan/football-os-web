@@ -46,6 +46,7 @@ const I = {
   review: "◷",
   load: "◔",
   dev: "◈",
+  server: "▣",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -95,6 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/injuries", label: t("nav.availability"), icon: I.shield, match: ["/injuries"] },
     { to: "/club-compare", label: t("nav.clubCompare"), icon: I.compare, match: ["/club-compare"] },
     { to: "/leaders", label: t("nav.leaders"), icon: I.trophy, match: ["/leaders"] },
+    { to: "/platform", label: t("nav.platform"), icon: I.server, match: ["/platform"] },
     { to: "/projection", label: t("nav.projection"), icon: I.dev, match: ["/projection"] },
     { to: "/run-in", label: t("nav.runIn"), icon: I.chart, match: ["/run-in"] },
     { to: "/scenarios", label: t("nav.scenario"), icon: I.chart, match: ["/scenarios"] },

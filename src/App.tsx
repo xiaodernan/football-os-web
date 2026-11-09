@@ -46,6 +46,7 @@ const CommunityPoll = lazy(() => import("@/features/community/CommunityPoll").th
 const InjuryReport = lazy(() => import("@/features/injury/InjuryReport").then((m) => ({ default: m.InjuryReport })));
 const ClubCompare = lazy(() => import("@/features/compare/ClubCompare").then((m) => ({ default: m.ClubCompare })));
 const LeagueLeaders = lazy(() => import("@/features/leaders/LeagueLeaders").then((m) => ({ default: m.LeagueLeaders })));
+const PlatformAtlas = lazy(() => import("@/features/platform/PlatformAtlas").then((m) => ({ default: m.PlatformAtlas })));
 const PlayerProjection = lazy(() => import("@/features/player/PlayerProjection").then((m) => ({ default: m.PlayerProjection })));
 const RunIn = lazy(() => import("@/features/analytics/RunIn").then((m) => ({ default: m.RunIn })));
 const PointsScenario = lazy(() => import("@/features/analytics/PointsScenario").then((m) => ({ default: m.PointsScenario })));
@@ -146,6 +147,7 @@ function Routes() {
   else if (path === "/injuries") inner = <InjuryReport />;
   else if (path === "/club-compare") inner = <ClubCompare />;
   else if (path === "/leaders") inner = <LeagueLeaders />;
+  else if (path === "/platform") inner = <PlatformAtlas />;
   else if (path === "/projection") inner = <PlayerProjection />;
   else if (path === "/run-in") inner = <RunIn />;
   else if (path === "/scenarios") inner = <PointsScenario />;

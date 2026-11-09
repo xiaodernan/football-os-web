@@ -22,3 +22,6 @@ football-os/
 
 # Local agent/tool state (memory, session logs) — not part of the shipped app.
 .workbuddy-ai/
+
+# Maven build output for the Spring Cloud skeleton under services/ (M1036).
+services/**/target/
