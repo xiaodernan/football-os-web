@@ -35,6 +35,7 @@ const SPLITS = {
   gap: "a club's away-minus-home card rate as a labelled cell (fmt2) beside the signed edge on the venue table (signed)",
   marketGrowth: "the run's market movement as a bare integer inside an evidence row (pct) beside the labelled tile (pctLabel)",
   fitness: "the bare decimal inside the ladder sentence (fmt2) beside the labelled fitness slots (pctLabel)",
+  shift: "the metronome's weighted-minus-plain accuracy delta as a raw sign (signed2) beside the same figure handed a bare integer elsewhere (signed)",
 };
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>

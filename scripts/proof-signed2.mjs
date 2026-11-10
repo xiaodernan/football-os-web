@@ -5,7 +5,9 @@
 // and would show "+1.5" where the reader is shown "+1.50". M393 put the two spellings behind one door
 // and folded the Film Room's tile onto it; M399 folded career's cell too, which is what this file
 // predicted would have to come back and edit the census — the residue was charged BY NAME, so its
-// disappearance is a measured event here, not a silent one. Nothing is a named residue now.
+// disappearance is a measured event here, not a silent one. Nothing is a named residue now. M1039
+// folds the leaders screen's metronome shift into the same door as a third caller — a padded sign in
+// front of a two-decimal figure, the shape this door owns.
 //
 // Three shapes sit next to each other and must NOT be unified, which is why each scan is planted both
 // ways:
@@ -44,7 +46,7 @@ const HOME = "lib/utils.ts";
 // hand-spelled cell has to be added to, and it is empty on purpose — every carrier below is required
 // to be a CALLER of the door, so a cell that vanished instead of folding cannot satisfy this census.
 const RESIDUE = [];
-const FOLDED = ["features/film/FilmRoom.tsx", "domain/career.ts"];
+const FOLDED = ["features/film/FilmRoom.tsx", "domain/career.ts", "features/leaders/LeagueLeaders.tsx"];
 // The boolean sibling, deliberately outside this door's population.
 const BOOLEAN_SITE = "features/world/DynamicWorld.tsx";
 
@@ -131,7 +133,7 @@ const callerSpelling = callers.filter((f) => f !== HOME && count(src[f], PADDED_
 // The caller set is DERIVED and pinned to the folded carriers, so the two claims cannot drift: a cell
 // that was deleted instead of folded leaves no caller, and a new hand-spelled cell is a caller-with-inline.
 const foldedCalls = FOLDED.map((f) => [f, count(src[f], CALL_SIGNED2)]);
-ok(`signed2's callers are exactly its two folded cells and every one imports the door and spells nothing by hand (callers ${callers.join(",")}, importers ${callerImports.length}/${callers.length}, callers-with-inline ${callerSpelling.length}, ${foldedCalls.map(([f, c]) => `${f.split("/").pop()} calls ${c}`).join(", ")}, floor 1)`,
+ok(`signed2's callers are exactly its folded cells and every one imports the door and spells nothing by hand (callers ${callers.join(",")}, importers ${callerImports.length}/${callers.length}, callers-with-inline ${callerSpelling.length}, ${foldedCalls.map(([f, c]) => `${f.split("/").pop()} calls ${c}`).join(", ")}, floor 1)`,
   callers.length >= 1 && callerImports.length === callers.length && callerSpelling.length === 0 &&
   callers.join(",") === FOLDED.slice().sort().join(",") && foldedCalls.every(([, c]) => c >= 1));
 
@@ -144,9 +146,9 @@ const expectedPadded = [HOME, ...RESIDUE].sort();
 const docQuote = count(src[HOME].split("\n").filter((l) => /^\s*\/\//.test(l)).join("\n"), PADDED_SIGN);
 const foldedSites = FOLDED.map((f) => [f, count(src[f], PADDED_SIGN)]);
 const residueSites = RESIDUE.map((f) => [f, count(src[f], PADDED_SIGN)]);
-ok(`the padded sign spelling survives only in the door body — both cells folded (${paddedByFile.join(",")}; expected ${expectedPadded.join(",")}; ${foldedSites.map(([f, c]) => `${f.split("/").pop()} ${c}`).join(", ")}; named residues ${residueSites.length}; door docstring quotes it ${docQuote} and is read by line; planted padded ${plantPadded})`,
+ok(`the padded sign spelling survives only in the door body — every cell folded (${paddedByFile.join(",")}; expected ${expectedPadded.join(",")}; ${foldedSites.map(([f, c]) => `${f.split("/").pop()} ${c}`).join(", ")}; named residues ${residueSites.length}; door docstring quotes it ${docQuote} and is read by line; planted padded ${plantPadded})`,
   plantPadded === 1 && paddedByFile.length === expectedPadded.length && paddedByFile.every((f, i) => f === expectedPadded[i]) &&
-  foldedSites.length === 2 && foldedSites.every(([, c]) => c === 0) && residueSites.length === 0 && docQuote === 1);
+  foldedSites.length === FOLDED.length && foldedSites.every(([, c]) => c === 0) && residueSites.length === 0 && docQuote === 1);
 
 // --- Must-not-unify, behavioural, against the RAW sibling: both doors are the SHIPPED ones here, not ---
 // --- a re-spelling of mine. A fold onto `signed` would move the figure the reader sees. ---

@@ -1980,6 +1980,92 @@ export function passingAccuracy(matches: Match[], clubs: Club[]): PassingAccurac
   return { rows, league: rows.length ? round2(registry / rows.length) : 0 };
 }
 
+export interface MetronomeRow {
+  clubId: string;
+  played: number;
+  /** Pass accuracy weighted by volume — every pass of every fixture counted once, 2dp. */
+  weighted: number;
+  /** The plain per-fixture average, the reading `passingAccuracy` ranks, 2dp. */
+  plain: number;
+  /** weighted − plain, 2dp — positive when the high-volume nights carried the better days. */
+  shift: number;
+  /** Total passes across every finished fixture — the weight behind `weighted`. */
+  passes: number;
+}
+
+export interface MetronomeBoard {
+  /** Every club with at least one finished fixture carrying stats, ordered by weighted, then
+   *  passes, then club id. */
+  rows: MetronomeRow[];
+  /** League accuracy weighted by every pass in every finished fixture, 2dp. */
+  leagueWeighted: number;
+  /** League plain average over every club-fixture reading, 2dp. */
+  leaguePlain: number;
+}
+
+/** M1039: the metronomes — pass accuracy weighted by volume. `passingAccuracy` gives every
+ *  fixture one vote; this fold multiplies each reading by the passes behind it, so a 92% night
+ *  on 200 passes outweighs a 92% night on 20. The gap prints as `shift`, and the league row
+ *  carries both readings — the difference is the whole point of the board. */
+export function passingMetronomes(matches: Match[], clubs: Club[]): MetronomeBoard {
+  const ranked = indexById(clubs);
+  const acc = new Map<
+    string,
+    { weightedPasses: number; accuracySum: number; passes: number; games: number }
+  >();
+  const tallySide = (m: Match & { homeGoals: number; awayGoals: number }, side: Side, id: string) => {
+    if (!m.stats) return;
+    if (!ranked.has(id)) return;
+    const cur = acc.get(id) ?? { weightedPasses: 0, accuracySum: 0, passes: 0, games: 0 };
+    const s = side === "home" ? m.stats.home : m.stats.away;
+    cur.weightedPasses += s.passAcc * s.passes;
+    cur.accuracySum += s.passAcc;
+    cur.passes += s.passes;
+    cur.games++;
+    acc.set(id, cur);
+  };
+  for (const m of matches) {
+    if (!isFinished(m) || !m.stats) continue;
+    tallySide(m as Match & { homeGoals: number; awayGoals: number }, "home", m.homeClubId);
+    tallySide(m as Match & { homeGoals: number; awayGoals: number }, "away", m.awayClubId);
+  }
+  const rows: MetronomeRow[] = [];
+  for (const [clubId, s] of acc) {
+    if (s.games === 0 || s.passes === 0) continue;
+    const weighted = round2(s.weightedPasses / s.passes);
+    const plain = round2(s.accuracySum / s.games);
+    rows.push({
+      clubId,
+      played: s.games,
+      weighted,
+      plain,
+      shift: round2(weighted - plain),
+      passes: s.passes,
+    });
+  }
+  rows.sort(
+    (a, b) =>
+      b.weighted - a.weighted ||
+      b.passes - a.passes ||
+      a.clubId.localeCompare(b.clubId),
+  );
+  let weightedPasses = 0;
+  let accuracySum = 0;
+  let passes = 0;
+  let games = 0;
+  for (const s of acc.values()) {
+    weightedPasses += s.weightedPasses;
+    accuracySum += s.accuracySum;
+    passes += s.passes;
+    games += s.games;
+  }
+  return {
+    rows,
+    leagueWeighted: passes > 0 ? round2(weightedPasses / passes) : 0,
+    leaguePlain: games > 0 ? round2(accuracySum / games) : 0,
+  };
+}
+
 export interface CardVenueClock {
   /** Bookings of either colour per six windows, split by the end that earned them. */
   homeWindows: number[];

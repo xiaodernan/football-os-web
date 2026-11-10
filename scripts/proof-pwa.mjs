@@ -197,7 +197,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1036: the platform atlas rides its own lazy chunk — 594 KB / 62 assets (JS 582 + CSS 12.6),
 // pin 590 -> 594, baseline re-recorded in the same commit.
 // M1037: the atlas gains the world-contract line — 595 KB, pin 594 -> 595.
-const BUDGET_KB = 595;
+// M1039: the metronomes panel grows the leaders chunk by one KB — 596 KB, pin 595 -> 596,
+// baseline re-recorded in the same commit (JS 583, CSS 12.6).
+const BUDGET_KB = 596;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
