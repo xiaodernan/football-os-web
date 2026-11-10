@@ -26,7 +26,25 @@ mvn -DskipTests package -f services/pom.xml
 Four fat jars land in `services/*/target/` (roughly 47–58 MB each). The Dockerfiles in each
 module build the same reactor from the same poms (`docker build -f services/<module>/Dockerfile services/`),
 and `services/docker-compose.yml` wires the same four services with the same ports in
-dependency order.
+dependency order — with the environment overrides below, which are mandatory inside containers
+(localhost would point each service at itself):
+
+```sh
+docker compose -f services/docker-compose.yml up --build
+```
+
+> **Honest Docker status on this machine (2026-11-10).** `docker compose -f services/docker-compose.yml config`
+> validates. The full `up --build` was attempted twice on this machine (30- and 40-minute windows):
+> every image pull stalled and even a local, cached `alpine:3` `docker run` did not finish inside
+> its timeout on 2026-11-10 (the host's other containers — Career OS on 3000/8000/8080 and a
+> pgvector database — keep running; the registry path for new images is the thing that is
+> impaired). `8080` on this host is also occupied by that Career OS backend, which is a second,
+> unrelated reason the gateway was moved to `8087`. The compose stack is therefore **statically
+> validated and structurally current but not container-executed on this machine** — treat the
+> Dockerfiles as correct-by-construction (all four poms copied, `-pl <module> -am`, one entrypoint)
+> and exercise the stack with `node scripts/verify-services.mjs`, which boots the four jars on the
+> host and is the runnable truth for this environment. If a registry-healthy machine is available,
+> `docker compose -f services/docker-compose.yml up --build` is the one-command equivalent.
 
 ## Boot by hand (dependency order)
 
