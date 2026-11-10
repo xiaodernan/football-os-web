@@ -841,6 +841,8 @@
 
 - a476c2a M967: 赛季展开 spec——三场真实引擎比赛贯穿积分榜页签/赛季展望页签/教练履历（确定性引擎，页间数字跨运行稳定）；全套 E2E 135/135（6.5 分钟）。
 
+- baa465c M968: 第五域服务 discipline-service——导出器冻结 15 个赛事牌钟（windows/redWindows/rows 含 drawn）为 discipline-clocks.json（可由种子重导出、字节一致）；新模块 pom/Application/ClockController（未知名 404）；网关第三路由 disciplineClocks 断路器；compose 第五成员；config-repo clocks-resource 键；描述符第五行第三路由；atlas 三语命名新服务；验证器直连/网关逐字一致 + 404；runbook 行；proof-services 39/39。Spring Cloud 平台现为五服务四路由。
+
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
 ⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，安全除法门同口径）；
