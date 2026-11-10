@@ -1916,6 +1916,101 @@ export function worldLeaders(matches: Match[], clubs: Club[]): WorldLeaders {
   return { rows, leaderCount };
 }
 
+export interface RescueRow {
+  matchId: string;
+  kickoff: string;
+  competitionId: string;
+  homeClubId: string;
+  awayClubId: string;
+  homeGoals: number;
+  awayGoals: number;
+  /** The end that was behind and still took something from the fixture. */
+  rescuer: Side;
+  /** The widest margin the rescuer was behind by on the recorded goal clock. */
+  deficit: number;
+  /** Minute of the goal that drew the rescuer level after that widest deficit. */
+  turnMinute: number;
+  /** True when the fightback only held the draw; false when it went on to win. */
+  held: boolean;
+}
+
+export interface WorldRescues {
+  /** Every rescued fixture, widest deficit first, then the earlier turn, then kickoff, then id. */
+  rows: RescueRow[];
+  /** Finished fixtures whose recorded goal clock replays to exactly the printed scoreline. */
+  replayed: number;
+  /** Of those, the fixtures a side rescued from behind. */
+  rescued: number;
+  /** rescued over replayed through the safeDiv door, 0–100, 2dp. */
+  share: number;
+}
+
+/** The widest margin `side` was behind by, walked in minute order over the goal record. */
+function widestDeficit(goals: MatchEvent[], side: Side): number {
+  let own = 0, opp = 0, widest = 0;
+  for (const e of goals) {
+    if (e.side === side) own++;
+    else opp++;
+    widest = Math.max(widest, opp - own);
+  }
+  return widest;
+}
+
+/** M1041: the rescued results. The seed writes a scoreline and a goal clock for every fixture;
+ *  this replays that clock and names the fixtures a side took from behind — the widest hole it
+ *  faced and the minute it climbed out. A decided fixture belongs to its winner whenever the
+ *  winner trailed; a drawn fixture belongs to one end only when the other end was never behind
+ *  (a match with swings on both sides has no single rescuer to name). Fixtures whose goal events
+ *  do not replay to the printed scoreline are not judged at all. */
+export function worldRescues(matches: Match[]): WorldRescues {
+  const rows: RescueRow[] = [];
+  let replayed = 0, rescued = 0;
+  for (const m of matches.filter((x): x is Match & { homeGoals: number; awayGoals: number } => isFinished(x))) {
+    const goals = (m.events ?? []).filter((e) => e.type === "GOAL").sort(byMinute);
+    if (goals.filter((e) => e.side === "home").length !== m.homeGoals) continue;
+    if (goals.filter((e) => e.side === "away").length !== m.awayGoals) continue;
+    replayed++;
+    const homeWide = widestDeficit(goals, "home");
+    const awayWide = widestDeficit(goals, "away");
+    let rescuer: Side | null = null;
+    if (m.homeGoals > m.awayGoals) rescuer = homeWide > 0 ? "home" : null;
+    else if (m.awayGoals > m.homeGoals) rescuer = awayWide > 0 ? "away" : null;
+    else if (homeWide > 0 && awayWide === 0) rescuer = "home";
+    else if (awayWide > 0 && homeWide === 0) rescuer = "away";
+    if (rescuer === null) continue;
+    const widest = rescuer === "home" ? homeWide : awayWide;
+    // Second walk: the minute of the first level-or-better rescuer goal after the last time the
+    // hole stood at its deepest. A rescuer that did not lose must cross level again, so the turn
+    // exists whenever the row does.
+    let own = 0, opp = 0, turn: number | null = null;
+    for (const e of goals) {
+      if (e.side === rescuer) own++;
+      else opp++;
+      if (opp - own >= widest) turn = null;
+      else if (turn === null && own >= opp) turn = e.minute;
+    }
+    if (turn === null) continue;
+    rescued++;
+    rows.push({
+      matchId: m.id,
+      kickoff: m.kickoff,
+      competitionId: m.competitionId,
+      homeClubId: m.homeClubId,
+      awayClubId: m.awayClubId,
+      homeGoals: m.homeGoals,
+      awayGoals: m.awayGoals,
+      rescuer,
+      deficit: widest,
+      turnMinute: turn,
+      held: m.homeGoals === m.awayGoals,
+    });
+  }
+  rows.sort((a, b) =>
+    b.deficit - a.deficit || a.turnMinute - b.turnMinute ||
+    a.kickoff.localeCompare(b.kickoff) || a.matchId.localeCompare(b.matchId));
+  return { rows, replayed, rescued, share: round2(safeDiv(rescued, replayed) * 100) };
+}
+
 export interface PassingRow {
   clubId: string;
   played: number;

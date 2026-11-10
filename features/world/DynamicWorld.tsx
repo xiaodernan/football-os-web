@@ -7,7 +7,7 @@ import { footballProvider, getClub, getCompetition } from "@/data/footballServic
 import { fmtMoney, pctLabel, signed, ABSENT, fmt2, pctOf, cn, SEPARATOR } from "@/lib/utils";
 import { runWorld, seasonLabel, buildSeasonReport, seasonReportPayload, type WorldInput, type SeasonStep } from "@/domain/worldEngine";
 import { sum, last } from "@/domain/attributes";
-import { leagueOpenness, worldUpsets, worldLeaders } from "@/domain/analytics";
+import { leagueOpenness, worldUpsets, worldLeaders, worldRescues } from "@/domain/analytics";
 import { dynastyTable } from "@/domain/dynasty";
 import { devCouncil } from "@/domain/devCouncil";
 import { rowLine } from "@/domain/rowText";
@@ -59,6 +59,8 @@ export function DynamicWorld() {
   const upsets = useMemo(() => worldUpsets(worldMatches, footballProvider.clubs()), [worldMatches]);
   // M994: the world's league leaders — every competition has a table; name who stands first.
   const leaders = useMemo(() => worldLeaders(worldMatches, footballProvider.clubs()), [worldMatches]);
+  // M1041: the rescued results — the fixtures a side took from behind on the recorded goal clock.
+  const rescues = useMemo(() => worldRescues(worldMatches), [worldMatches]);
 
   const snapshot = useMemo(() => {
     try {
@@ -432,6 +434,55 @@ export function DynamicWorld() {
                   );
                 })}
               </div>
+            )}
+          </Panel>
+
+          {/* M1041: the rescued results — the fixtures a side took from behind on the recorded
+              goal clock, widest hole first, then the earlier escape. */}
+          <Panel className="p-4 lg:col-span-2">
+            <SectionTitle title={t("world.rescuesTitle")} hint={t("world.rescuesHint")} />
+            {rescues.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("world.rescuesNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("world.rescuesWorld", { n: rescues.replayed, r: rescues.rescued, p: fmt2(rescues.share) })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {rescues.rows.map((r) => {
+                    const home = getClub(r.homeClubId);
+                    const away = getClub(r.awayClubId);
+                    const rescuerName = r.rescuer === "home"
+                      ? (home?.name ?? r.homeClubId)
+                      : (away?.name ?? r.awayClubId);
+                    return (
+                      <li key={r.matchId} className="rounded-lg border px-3 py-2">
+                        <Link to={`/matches/${r.matchId}`} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 hover:underline">
+                          <span className="flex min-w-0 items-center gap-2">
+                            <Crest colors={home?.colors} short={home?.short} size={22} />
+                            <span className="truncate text-sm font-medium">{home?.name ?? r.homeClubId}</span>
+                          </span>
+                          <span className="font-mono text-lg font-bold tabular-nums">
+                            {r.homeGoals}{SEPARATOR}{r.awayGoals}
+                          </span>
+                          <span className="flex min-w-0 items-center justify-end gap-2">
+                            <span className="truncate text-sm font-medium">{away?.name ?? r.awayClubId}</span>
+                            <Crest colors={away?.colors} short={away?.short} size={22} />
+                          </span>
+                        </Link>
+                        <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                          <span className="truncate text-muted-foreground">{getCompetition(r.competitionId)?.name ?? r.competitionId}</span>
+                          <span className="text-primary">{t("world.rescuesRow", { s: rescuerName, n: r.deficit, m: r.turnMinute })}</span>
+                          <Badge variant="outline" className={r.held ? CHIP_CLASS.muted : CHIP_CLASS.badgeSuccess}>
+                            {r.held ? t("world.rescuesDrew") : t("world.rescuesWon")}
+                          </Badge>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("world.rescuesMethod")}</p>
+              </>
             )}
           </Panel>
 

@@ -134,6 +134,13 @@ test("the world page draws the five boards after a season is simulated", async (
   await expect(page.getByRole("heading", { name: "The coaching council" })).toBeVisible();
 });
 
+test("the world page draws the rescued results board", async ({ page }) => {
+  await page.goto("/#/world");
+  await page.getByRole("button", { name: /Simulate next season/ }).click();
+  await page.waitForTimeout(600);
+  await expect(page.getByText("The rescued results").first()).toBeVisible();
+});
+
 test("the streaks page draws the records and the four tiles", async ({ page }) => {
   await page.goto("/#/streaks");
   await expect(page.getByRole("heading", { name: "Runs, not averages" })).toBeVisible();

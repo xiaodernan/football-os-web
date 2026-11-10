@@ -199,7 +199,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1037: the atlas gains the world-contract line — 595 KB, pin 594 -> 595.
 // M1039: the metronomes panel grows the leaders chunk by one KB — 596 KB, pin 595 -> 596,
 // baseline re-recorded in the same commit (JS 583, CSS 12.6).
-const BUDGET_KB = 596;
+// M1041: the rescued results panel grows the world chunk by two KB — 598 KB, pin 596 -> 598,
+// baseline re-recorded in the same commit (JS 586, CSS 12.6).
+const BUDGET_KB = 598;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
