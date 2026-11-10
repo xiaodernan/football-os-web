@@ -139,7 +139,8 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[
 // M1031: 126 -> 127 — domain/dynasty.ts.
 // M1033: 127 -> 128 — domain/devCouncil.ts.
 // M1036: 128 -> 130 — the atlas screen and its descriptor join the entry's closure.
-const APP_FILES_PIN = 130;
+// M1056: 130 -> 131 — domain/rockets.ts joins it.
+const APP_FILES_PIN = 131;
 
 // The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
 // stands alone must keep the two a reader reaches and drop the third. The planted files are

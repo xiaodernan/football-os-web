@@ -38,6 +38,16 @@ spring:
               args:
                 name: leagueSummary
                 fallbackUri: forward:/fallback
+  - id: discipline-clocks
+    uri: lb://DISCIPLINE-SERVICE
+    predicates:
+      - Path=/api/discipline/**
+    filters:
+      - StripPrefix=1
+      - name: CircuitBreaker
+        args:
+          name: disciplineClocks
+          fallbackUri: forward:/fallback
 
 info:
   app:
@@ -66,6 +76,10 @@ resilience4j:
         sliding-window-type: COUNT_BASED
         sliding-window-size: 3
         minimum-number-of-calls: 2
+        failure-rate-threshold: 50
+      disciplineClocks:
+        sliding-window-size: 3
+        minimum-number-of-calls: 5
         failure-rate-threshold: 50
         wait-duration-in-open-state: 1000
         permitted-number-of-calls-in-half-open-state: 1

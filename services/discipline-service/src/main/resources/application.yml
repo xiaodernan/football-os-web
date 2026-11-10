@@ -1,0 +1,39 @@
+# Port pinned by domain/platform.ts (discipline: 8082) and read back by proof-services.mjs.
+server:
+  port: 8082
+
+spring:
+  application:
+    name: discipline-service
+  config:
+    # Optional: the discipline service still boots alone (stand-alone) when the config server
+    # is not running; when it is, @Value picks up the resource name from here instead of the
+    # default.
+    import: optional:configserver:http://localhost:8888
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: 0.1.0
+    world: ${footballos.world.label:Demo World R1}
+    description: The read-only discipline service — serves a frozen snapshot, never the seed live
+
+management:
+  info:
+    env:
+      enabled: true
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true

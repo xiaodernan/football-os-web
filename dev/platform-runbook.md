@@ -13,6 +13,7 @@
 | `services/config-server` | `config-server` | **8888** | yes | a native classpath repository (`config-repo/application.yml`) |
 | `services/league-service` | `league-service` | **8081** | yes | `GET /league/summary` — the frozen counts contract; `GET /league/table(/{comp})` — the frozen tables |
 | `services/gateway` | `gateway` | **8087** | yes | the edge: `/api/league/**` → `lb://LEAGUE-SERVICE` |
+| `services/discipline-service` | `discipline-service` | **8082** | yes | `GET /discipline/clock(/{comp})` — the frozen card clocks |
 
 The gateway cannot live on 8080 on this machine — `com.docker.backend.exe` (Docker Desktop)
 binds that port (PID 19388 observed). Everything else is stock.

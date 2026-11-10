@@ -8,7 +8,7 @@ import { createServer } from "vite";
 import { writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildWorldContract, buildWorldTables, serializeContract, serializeTables, CONTRACT_PATH, TABLES_PATH } from "./lib/world-contract.mjs";
+import { buildWorldContract, buildWorldDiscipline, buildWorldTables, serializeContract, serializeDiscipline, serializeTables, CONTRACT_PATH, DISCIPLINE_PATH, TABLES_PATH } from "./lib/world-contract.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
@@ -23,6 +23,9 @@ try {
   const doc = await buildWorldTables(server);
   writeFileSync(resolve(root, TABLES_PATH), serializeTables(doc));
   console.log(`wrote ${TABLES_PATH} — ${doc.leagues} standard tables, ${Object.keys(doc.tables).length} competitions`);
+  const clocks = await buildWorldDiscipline(server);
+  writeFileSync(resolve(root, DISCIPLINE_PATH), serializeDiscipline(clocks));
+  console.log(`wrote ${DISCIPLINE_PATH} — ${clocks.competitions} card clocks, ${Object.values(clocks.clocks).reduce((a, c) => a + c.rows.length, 0)} club rows`);
 } finally {
   await server.close();
 }

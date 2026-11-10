@@ -91,3 +91,54 @@ export async function buildWorldTables(server) {
 
 /** One serializer for the writer and the proof: byte-identical files. */
 export const serializeTables = (doc) => `${JSON.stringify(doc, null, 2)}\n`;
+
+export const DISCIPLINE_RESOURCE = "discipline-clocks.json";
+export const DISCIPLINE_PATH = "services/discipline-service/src/main/resources/discipline-clocks.json";
+export const DISCIPLINE_DATASET = "football-os/world";
+
+/** Freeze every competition's card clock — the same frozen-contract discipline as the tables:
+ *  byte-identity, re-derivable from the seed, nothing hand-written. The discipline service
+ *  serves one competition's clock per call; the snapshot file is refreshed by the exporter. */
+export async function buildWorldDiscipline(server) {
+  const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
+  const { cardTiming } = await server.ssrLoadModule("/domain/analytics.ts");
+  const competitions = footballProvider.competitions();
+  const matches = footballProvider.matches();
+  const clubs = footballProvider.clubs();
+  const clocks = {};
+  for (const competition of competitions) {
+    const t = cardTiming(competition.id, matches, clubs);
+    clocks[competition.id] = {
+      competitionId: competition.id,
+      name: competition.name,
+      matches: competitionMatches(matches, competition.id),
+      windows: t.windows,
+      redWindows: t.redWindows,
+      rows: t.rows.map((r) => ({
+        clubId: r.clubId,
+        cards: r.cards,
+        yellows: r.yellows,
+        reds: r.reds,
+        drawn: r.drawn,
+        earlyCards: r.earlyCards,
+        lateCards: r.lateCards,
+      })),
+    };
+  }
+  return {
+    generatedBy: CONTRACT_EXPORTER,
+    dataset: DISCIPLINE_DATASET,
+    competitions: Object.keys(clocks).length,
+    clocks,
+  };
+}
+
+/** The finished fixtures the competition's clock counted — the honest "matches" figure the
+ *  summary line prints, re-derived from the same list the fold walked. */
+function competitionMatches(matches, compId) {
+  return matches.filter((m) => m.competitionId === compId && m.status === "FINISHED" && (m.events?.length ?? 0) > 0).length;
+}
+
+/** One serializer for the writer and the proof: byte-identical files. */
+export const serializeDiscipline = (doc) => `${JSON.stringify(doc, null, 2)}
+`;

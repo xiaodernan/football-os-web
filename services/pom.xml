@@ -29,6 +29,7 @@
     <module>config-server</module>
     <module>gateway</module>
     <module>league-service</module>
+    <module>discipline-service</module>
   </modules>
 
   <properties>

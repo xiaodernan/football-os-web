@@ -1,0 +1,1342 @@
+{
+  "generatedBy": "scripts/export-service-contract.mjs",
+  "dataset": "football-os/world",
+  "competitions": 15,
+  "clocks": {
+    "pl": {
+      "competitionId": "pl",
+      "name": "Premier League",
+      "matches": 83,
+      "windows": [
+        7,
+        4,
+        7,
+        7,
+        10,
+        5
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        4,
+        2
+      ],
+      "rows": [
+        {
+          "clubId": "new",
+          "cards": 5,
+          "yellows": 4,
+          "reds": 1,
+          "drawn": 5,
+          "earlyCards": 3,
+          "lateCards": 0
+        },
+        {
+          "clubId": "mci",
+          "cards": 10,
+          "yellows": 8,
+          "reds": 2,
+          "drawn": 2,
+          "earlyCards": 2,
+          "lateCards": 1
+        },
+        {
+          "clubId": "liv",
+          "cards": 4,
+          "yellows": 4,
+          "reds": 0,
+          "drawn": 3,
+          "earlyCards": 1,
+          "lateCards": 1
+        },
+        {
+          "clubId": "mun",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "bha",
+          "cards": 5,
+          "yellows": 4,
+          "reds": 1,
+          "drawn": 2,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "che",
+          "cards": 4,
+          "yellows": 4,
+          "reds": 0,
+          "drawn": 6,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "tot",
+          "cards": 4,
+          "yellows": 3,
+          "reds": 1,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "whu",
+          "cards": 4,
+          "yellows": 4,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 0,
+          "lateCards": 2
+        },
+        {
+          "clubId": "ars",
+          "cards": 2,
+          "yellows": 1,
+          "reds": 1,
+          "drawn": 4,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "avl",
+          "cards": 0,
+          "yellows": 0,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "liga": {
+      "competitionId": "liga",
+      "name": "La Liga",
+      "matches": 66,
+      "windows": [
+        7,
+        9,
+        4,
+        6,
+        8,
+        4
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        3
+      ],
+      "rows": [
+        {
+          "clubId": "atm",
+          "cards": 4,
+          "yellows": 4,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 2,
+          "lateCards": 0
+        },
+        {
+          "clubId": "vil",
+          "cards": 4,
+          "yellows": 3,
+          "reds": 1,
+          "drawn": 2,
+          "earlyCards": 2,
+          "lateCards": 1
+        },
+        {
+          "clubId": "bar",
+          "cards": 6,
+          "yellows": 5,
+          "reds": 1,
+          "drawn": 2,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "rma",
+          "cards": 5,
+          "yellows": 5,
+          "reds": 0,
+          "drawn": 4,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "bet",
+          "cards": 3,
+          "yellows": 3,
+          "reds": 0,
+          "drawn": 3,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "val",
+          "cards": 5,
+          "yellows": 5,
+          "reds": 0,
+          "drawn": 6,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "rso",
+          "cards": 4,
+          "yellows": 3,
+          "reds": 1,
+          "drawn": 8,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "sev",
+          "cards": 4,
+          "yellows": 4,
+          "reds": 0,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "ath",
+          "cards": 3,
+          "yellows": 2,
+          "reds": 1,
+          "drawn": 5,
+          "earlyCards": 0,
+          "lateCards": 1
+        }
+      ]
+    },
+    "seriea": {
+      "competitionId": "seriea",
+      "name": "Serie A",
+      "matches": 76,
+      "windows": [
+        8,
+        8,
+        8,
+        6,
+        8,
+        5
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        1,
+        3,
+        1
+      ],
+      "rows": [
+        {
+          "clubId": "fio",
+          "cards": 7,
+          "yellows": 7,
+          "reds": 0,
+          "drawn": 6,
+          "earlyCards": 3,
+          "lateCards": 0
+        },
+        {
+          "clubId": "ata",
+          "cards": 6,
+          "yellows": 6,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 2,
+          "lateCards": 1
+        },
+        {
+          "clubId": "mil",
+          "cards": 5,
+          "yellows": 4,
+          "reds": 1,
+          "drawn": 5,
+          "earlyCards": 1,
+          "lateCards": 1
+        },
+        {
+          "clubId": "nap",
+          "cards": 5,
+          "yellows": 4,
+          "reds": 1,
+          "drawn": 4,
+          "earlyCards": 1,
+          "lateCards": 2
+        },
+        {
+          "clubId": "rom",
+          "cards": 5,
+          "yellows": 4,
+          "reds": 1,
+          "drawn": 3,
+          "earlyCards": 1,
+          "lateCards": 1
+        },
+        {
+          "clubId": "int",
+          "cards": 6,
+          "yellows": 6,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "juv",
+          "cards": 3,
+          "yellows": 2,
+          "reds": 1,
+          "drawn": 5,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "laz",
+          "cards": 3,
+          "yellows": 2,
+          "reds": 1,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "tor",
+          "cards": 3,
+          "yellows": 3,
+          "reds": 0,
+          "drawn": 7,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "bundes": {
+      "competitionId": "bundes",
+      "name": "Bundesliga",
+      "matches": 69,
+      "windows": [
+        3,
+        5,
+        6,
+        2,
+        8,
+        7
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        3,
+        3
+      ],
+      "rows": [
+        {
+          "clubId": "sge",
+          "cards": 7,
+          "yellows": 6,
+          "reds": 1,
+          "drawn": 0,
+          "earlyCards": 2,
+          "lateCards": 3
+        },
+        {
+          "clubId": "fcb",
+          "cards": 5,
+          "yellows": 5,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 1,
+          "lateCards": 1
+        },
+        {
+          "clubId": "vfb",
+          "cards": 6,
+          "yellows": 4,
+          "reds": 2,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 2
+        },
+        {
+          "clubId": "b04",
+          "cards": 4,
+          "yellows": 2,
+          "reds": 2,
+          "drawn": 5,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "bmg",
+          "cards": 2,
+          "yellows": 1,
+          "reds": 1,
+          "drawn": 6,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "bvb",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "fcu",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 2,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "wob",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "rbl",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 2,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "ligue1": {
+      "competitionId": "ligue1",
+      "name": "Ligue 1",
+      "matches": 68,
+      "windows": [
+        7,
+        3,
+        1,
+        4,
+        13,
+        11
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        7,
+        3
+      ],
+      "rows": [
+        {
+          "clubId": "rcl",
+          "cards": 6,
+          "yellows": 5,
+          "reds": 1,
+          "drawn": 5,
+          "earlyCards": 3,
+          "lateCards": 3
+        },
+        {
+          "clubId": "ol",
+          "cards": 6,
+          "yellows": 4,
+          "reds": 2,
+          "drawn": 4,
+          "earlyCards": 1,
+          "lateCards": 1
+        },
+        {
+          "clubId": "om",
+          "cards": 6,
+          "yellows": 6,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "asm",
+          "cards": 5,
+          "yellows": 3,
+          "reds": 2,
+          "drawn": 6,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "ren",
+          "cards": 4,
+          "yellows": 3,
+          "reds": 1,
+          "drawn": 1,
+          "earlyCards": 1,
+          "lateCards": 1
+        },
+        {
+          "clubId": "nic",
+          "cards": 4,
+          "yellows": 3,
+          "reds": 1,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 2
+        },
+        {
+          "clubId": "psg",
+          "cards": 3,
+          "yellows": 0,
+          "reds": 3,
+          "drawn": 4,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "str",
+          "cards": 3,
+          "yellows": 3,
+          "reds": 0,
+          "drawn": 9,
+          "earlyCards": 0,
+          "lateCards": 2
+        },
+        {
+          "clubId": "losc",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 2,
+          "earlyCards": 0,
+          "lateCards": 1
+        }
+      ]
+    },
+    "eredivisie": {
+      "competitionId": "eredivisie",
+      "name": "Eredivisie",
+      "matches": 4,
+      "windows": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "rows": [
+        {
+          "clubId": "fey",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "psv",
+          "cards": 1,
+          "yellows": 0,
+          "reds": 1,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "aja",
+          "cards": 0,
+          "yellows": 0,
+          "reds": 0,
+          "drawn": 0,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "liga1": {
+      "competitionId": "liga1",
+      "name": "Primeira Liga",
+      "matches": 5,
+      "windows": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": [
+        {
+          "clubId": "scp",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 0,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "por",
+          "cards": 0,
+          "yellows": 0,
+          "reds": 0,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "slb",
+          "cards": 0,
+          "yellows": 0,
+          "reds": 0,
+          "drawn": 0,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "spl": {
+      "competitionId": "spl",
+      "name": "Saudi Pro League",
+      "matches": 3,
+      "windows": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": [
+        {
+          "clubId": "hil",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 0,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "ahl",
+          "cards": 0,
+          "yellows": 0,
+          "reds": 0,
+          "drawn": 0,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "nsr",
+          "cards": 0,
+          "yellows": 0,
+          "reds": 0,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "mls": {
+      "competitionId": "mls",
+      "name": "Major League Soccer",
+      "matches": 17,
+      "windows": [
+        4,
+        1,
+        0,
+        1,
+        2,
+        3
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      "rows": [
+        {
+          "clubId": "atl",
+          "cards": 3,
+          "yellows": 2,
+          "reds": 1,
+          "drawn": 1,
+          "earlyCards": 2,
+          "lateCards": 1
+        },
+        {
+          "clubId": "sea",
+          "cards": 3,
+          "yellows": 3,
+          "reds": 0,
+          "drawn": 2,
+          "earlyCards": 2,
+          "lateCards": 0
+        },
+        {
+          "clubId": "nyrb",
+          "cards": 3,
+          "yellows": 2,
+          "reds": 1,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "lag",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 4,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "mia",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 1
+        }
+      ]
+    },
+    "brasileirao": {
+      "competitionId": "brasileirao",
+      "name": "Brasileirão Série A",
+      "matches": 16,
+      "windows": [
+        1,
+        1,
+        1,
+        2,
+        2,
+        0
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        2,
+        0
+      ],
+      "rows": [
+        {
+          "clubId": "sao",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 2,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "cor",
+          "cards": 3,
+          "yellows": 1,
+          "reds": 2,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "san",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 2,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "fla",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "pal",
+          "cards": 0,
+          "yellows": 0,
+          "reds": 0,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "jleague": {
+      "competitionId": "jleague",
+      "name": "J1 League",
+      "matches": 12,
+      "windows": [
+        0,
+        2,
+        0,
+        1,
+        3,
+        1
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": [
+        {
+          "clubId": "kaw",
+          "cards": 3,
+          "yellows": 3,
+          "reds": 0,
+          "drawn": 0,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "yfm",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "urd",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 2,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "vis",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 4,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "superlig": {
+      "competitionId": "superlig",
+      "name": "Süper Lig",
+      "matches": 10,
+      "windows": [
+        1,
+        1,
+        0,
+        0,
+        1,
+        2
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      "rows": [
+        {
+          "clubId": "fen",
+          "cards": 3,
+          "yellows": 2,
+          "reds": 1,
+          "drawn": 1,
+          "earlyCards": 1,
+          "lateCards": 1
+        },
+        {
+          "clubId": "tra",
+          "cards": 2,
+          "yellows": 1,
+          "reds": 1,
+          "drawn": 0,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "bes",
+          "cards": 0,
+          "yellows": 0,
+          "reds": 0,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "gal",
+          "cards": 0,
+          "yellows": 0,
+          "reds": 0,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "ucl": {
+      "competitionId": "ucl",
+      "name": "UEFA Champions League",
+      "matches": 465,
+      "windows": [
+        21,
+        30,
+        32,
+        38,
+        58,
+        52
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        7,
+        26,
+        19
+      ],
+      "rows": [
+        {
+          "clubId": "int",
+          "cards": 10,
+          "yellows": 10,
+          "reds": 0,
+          "drawn": 10,
+          "earlyCards": 4,
+          "lateCards": 1
+        },
+        {
+          "clubId": "b04",
+          "cards": 17,
+          "yellows": 11,
+          "reds": 6,
+          "drawn": 10,
+          "earlyCards": 3,
+          "lateCards": 6
+        },
+        {
+          "clubId": "psg",
+          "cards": 14,
+          "yellows": 12,
+          "reds": 2,
+          "drawn": 8,
+          "earlyCards": 3,
+          "lateCards": 3
+        },
+        {
+          "clubId": "juv",
+          "cards": 14,
+          "yellows": 12,
+          "reds": 2,
+          "drawn": 13,
+          "earlyCards": 2,
+          "lateCards": 6
+        },
+        {
+          "clubId": "che",
+          "cards": 9,
+          "yellows": 9,
+          "reds": 0,
+          "drawn": 14,
+          "earlyCards": 2,
+          "lateCards": 3
+        },
+        {
+          "clubId": "nap",
+          "cards": 15,
+          "yellows": 10,
+          "reds": 5,
+          "drawn": 12,
+          "earlyCards": 1,
+          "lateCards": 4
+        },
+        {
+          "clubId": "atm",
+          "cards": 12,
+          "yellows": 11,
+          "reds": 1,
+          "drawn": 5,
+          "earlyCards": 1,
+          "lateCards": 2
+        },
+        {
+          "clubId": "losc",
+          "cards": 11,
+          "yellows": 9,
+          "reds": 2,
+          "drawn": 11,
+          "earlyCards": 1,
+          "lateCards": 1
+        },
+        {
+          "clubId": "asm",
+          "cards": 6,
+          "yellows": 6,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "bar",
+          "cards": 6,
+          "yellows": 5,
+          "reds": 1,
+          "drawn": 12,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "bvb",
+          "cards": 5,
+          "yellows": 3,
+          "reds": 2,
+          "drawn": 14,
+          "earlyCards": 1,
+          "lateCards": 1
+        },
+        {
+          "clubId": "liv",
+          "cards": 4,
+          "yellows": 2,
+          "reds": 2,
+          "drawn": 13,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "mil",
+          "cards": 16,
+          "yellows": 12,
+          "reds": 4,
+          "drawn": 10,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "mci",
+          "cards": 14,
+          "yellows": 10,
+          "reds": 4,
+          "drawn": 13,
+          "earlyCards": 0,
+          "lateCards": 3
+        },
+        {
+          "clubId": "rbl",
+          "cards": 13,
+          "yellows": 8,
+          "reds": 5,
+          "drawn": 13,
+          "earlyCards": 0,
+          "lateCards": 4
+        },
+        {
+          "clubId": "ars",
+          "cards": 12,
+          "yellows": 10,
+          "reds": 2,
+          "drawn": 10,
+          "earlyCards": 0,
+          "lateCards": 4
+        },
+        {
+          "clubId": "slb",
+          "cards": 11,
+          "yellows": 9,
+          "reds": 2,
+          "drawn": 10,
+          "earlyCards": 0,
+          "lateCards": 4
+        },
+        {
+          "clubId": "fcb",
+          "cards": 10,
+          "yellows": 7,
+          "reds": 3,
+          "drawn": 7,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "rso",
+          "cards": 10,
+          "yellows": 8,
+          "reds": 2,
+          "drawn": 13,
+          "earlyCards": 0,
+          "lateCards": 3
+        },
+        {
+          "clubId": "om",
+          "cards": 8,
+          "yellows": 5,
+          "reds": 3,
+          "drawn": 9,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "psv",
+          "cards": 8,
+          "yellows": 6,
+          "reds": 2,
+          "drawn": 8,
+          "earlyCards": 0,
+          "lateCards": 3
+        },
+        {
+          "clubId": "rma",
+          "cards": 6,
+          "yellows": 4,
+          "reds": 2,
+          "drawn": 11,
+          "earlyCards": 0,
+          "lateCards": 1
+        }
+      ]
+    },
+    "uel": {
+      "competitionId": "uel",
+      "name": "UEFA Europa League",
+      "matches": 105,
+      "windows": [
+        7,
+        4,
+        9,
+        8,
+        11,
+        12
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        3,
+        3,
+        3
+      ],
+      "rows": [
+        {
+          "clubId": "tot",
+          "cards": 5,
+          "yellows": 5,
+          "reds": 0,
+          "drawn": 6,
+          "earlyCards": 2,
+          "lateCards": 0
+        },
+        {
+          "clubId": "ren",
+          "cards": 9,
+          "yellows": 8,
+          "reds": 1,
+          "drawn": 6,
+          "earlyCards": 1,
+          "lateCards": 3
+        },
+        {
+          "clubId": "fen",
+          "cards": 6,
+          "yellows": 3,
+          "reds": 3,
+          "drawn": 3,
+          "earlyCards": 1,
+          "lateCards": 2
+        },
+        {
+          "clubId": "mun",
+          "cards": 4,
+          "yellows": 4,
+          "reds": 0,
+          "drawn": 4,
+          "earlyCards": 1,
+          "lateCards": 2
+        },
+        {
+          "clubId": "vfb",
+          "cards": 3,
+          "yellows": 3,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "ath",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 4,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "ol",
+          "cards": 7,
+          "yellows": 5,
+          "reds": 2,
+          "drawn": 4,
+          "earlyCards": 0,
+          "lateCards": 2
+        },
+        {
+          "clubId": "rom",
+          "cards": 6,
+          "yellows": 4,
+          "reds": 2,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "sge",
+          "cards": 5,
+          "yellows": 4,
+          "reds": 1,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "ata",
+          "cards": 3,
+          "yellows": 3,
+          "reds": 0,
+          "drawn": 5,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "vil",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 8,
+          "earlyCards": 0,
+          "lateCards": 0
+        }
+      ]
+    },
+    "libertadores": {
+      "competitionId": "libertadores",
+      "name": "Copa Libertadores",
+      "matches": 16,
+      "windows": [
+        1,
+        1,
+        0,
+        0,
+        3,
+        2
+      ],
+      "redWindows": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "rows": [
+        {
+          "clubId": "cor",
+          "cards": 1,
+          "yellows": 1,
+          "reds": 0,
+          "drawn": 1,
+          "earlyCards": 1,
+          "lateCards": 0
+        },
+        {
+          "clubId": "fla",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 2,
+          "earlyCards": 0,
+          "lateCards": 1
+        },
+        {
+          "clubId": "pal",
+          "cards": 2,
+          "yellows": 2,
+          "reds": 0,
+          "drawn": 3,
+          "earlyCards": 0,
+          "lateCards": 0
+        },
+        {
+          "clubId": "sao",
+          "cards": 2,
+          "yellows": 1,
+          "reds": 1,
+          "drawn": 1,
+          "earlyCards": 0,
+          "lateCards": 1
+        }
+      ]
+    }
+  }
+}

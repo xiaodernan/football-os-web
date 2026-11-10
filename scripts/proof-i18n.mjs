@@ -549,7 +549,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1031: 128 -> 129 — domain/dynasty.ts.
 // M1033: 129 -> 130 — domain/devCouncil.ts.
 // M1036: 130 -> 132 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
-const APP_SRC_PIN = 132;
+// M1056: 132 -> 133 — domain/rockets.ts (the breakthroughs panel's fold).
+const APP_SRC_PIN = 133;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -616,7 +617,8 @@ const TSX_PIN = 78;
 // M1031: 131 -> 132 — domain/dynasty.ts.
 // M1033: 132 -> 133 — domain/devCouncil.ts.
 // M1036: 133 -> 135 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
-const SRC_PIN = 135;
+// M1056: 135 -> 136 — domain/rockets.ts.
+const SRC_PIN = 136;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4674,7 +4676,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // minute, two badge branches, method): 2461 -> 2469.
   // M1054: the monks panel is six literal t() calls (title, hint, none, world, share,
   // method): 2469 -> 2475.
-  shapeCounts.literal === 2475 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1056: the breakthroughs panel is seven literal t() calls (title, hint, none, world, line,
+  // up, method): 2475 -> 2482.
+  shapeCounts.literal === 2484 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4824,7 +4828,10 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1050: the squanderers world line hands over the rows count and the walked fixtures, the minute tag hands over the minute: 408 -> 410.
   // M1050: the squanderers' world line hands across rows and fixtures and the minute line hands over the minute: 408 -> 410.
   // M1054: the monks' world line hands over the league rate and the club count: 410 -> 411.
-  litVarSites === 411 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1056: the breakthroughs world and line rows hand over three placeholder sets of variables —
+  // the world line prints n, b, seasons and the row line prints p, a, s, f, t — and both figure in
+  // front of the census: 411 -> 413.
+  litVarSites === 413 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));
@@ -5674,7 +5681,7 @@ const psTyped = [...appSrc].reduce((n, [, c]) => n + (c.match(/position: Positio
 const psUntyped = [...appSrc].filter(([, c]) => /position: string;/.test(c)).map(([p]) => p);
 const PS_STRAY = [...appSrc].filter(([, c]) => /"(RB|RW|CDM|CAM)"/.test(c)).map(([p]) => p);
 ok(`exactly 1 module declares the position space (${psUnionDecls.join(", ") || "none"}), ${psTyped} fields are typed with it and ${psUntyped.length} still take any string (pin 0; ${psUntyped.join(", ") || "none"}), and no module abbreviates a position with one of the four spellings only the engine's retired hand copy used (${PS_STRAY.join(", ") || "none"})`,
-  psUnionDecls.length === 1 && psUnionDecls[0] === "domain/types.ts" && psTyped === 8 && psUntyped.length === 0 && PS_STRAY.length === 0);
+  psUnionDecls.length === 1 && psUnionDecls[0] === "domain/types.ts" && psTyped === 9 && psUntyped.length === 0 && PS_STRAY.length === 0);
 
 // The witness for the gate fix this family forced. Sections 41 and 42 counted a composer's
 // switch cases by scanning the WHOLE of domain/rowText.ts, which was harmless while no two

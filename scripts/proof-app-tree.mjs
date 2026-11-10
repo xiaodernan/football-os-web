@@ -152,8 +152,10 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1030: 130 -> 131 — features/records/RecordsCabinet.tsx.
 // M1031: 131 -> 132 — domain/dynasty.ts.
 // M1033: 132 -> 133 — domain/devCouncil.ts.
+// M1056: 135 -> 136 — domain/rockets.ts.
 // M1036: 133 -> 135 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
-const APP_MODULE_PIN = 135;
+// M1056: 135 -> 136 — domain/rockets.ts (it ships in the reader's path).
+const APP_MODULE_PIN = 136;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

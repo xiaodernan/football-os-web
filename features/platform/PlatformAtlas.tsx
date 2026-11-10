@@ -18,6 +18,7 @@ export function PlatformAtlas() {
     config: { name: t("platform.svcConfig"), role: t("platform.svcConfigRole") },
     gateway: { name: t("platform.svcGateway"), role: t("platform.svcGatewayRole") },
     league: { name: t("platform.svcLeague"), role: t("platform.svcLeagueRole") },
+    discipline: { name: t("platform.svcDiscipline"), role: t("platform.svcDisciplineRole") },
   };
 
   const kindFor = (id: ServiceId) =>

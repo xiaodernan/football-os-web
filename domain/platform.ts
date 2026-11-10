@@ -5,7 +5,7 @@
 // modules, the compose ports and the gateway routes in step: a port that moves in a pom or in
 // docker-compose.yml without moving here is a red gate, not a stale diagram.
 
-export type ServiceId = "registry" | "config" | "gateway" | "league";
+export type ServiceId = "registry" | "config" | "gateway" | "league" | "discipline";
 
 export interface PlatformService {
   id: ServiceId;
@@ -33,11 +33,16 @@ export interface GatewayRoute {
 /** Registry first, then the config server, then the edge, then the domain service — the
  *  dependency order. The config server registers with Eureka like the other two does, so the
  *  registry stays the healthiest dead-simple thing to depend on. */
+/** The two edges every domain service reads through — written once, because the order the
+ *  registry and the config server are named in is a decision, not a list to re-type per row. */
+const DOMAIN_EDGES: readonly ServiceId[] = ["registry", "config"];
+
 export const PLATFORM_SERVICES: readonly PlatformService[] = [
   { id: "registry", module: "eureka-server", appName: "football-os-registry", port: 8761, dependsOn: [] },
   { id: "config", module: "config-server", appName: "football-os-config", port: 8888, dependsOn: ["registry"] },
   { id: "gateway", module: "gateway", appName: "football-os-gateway", port: 8087, dependsOn: ["registry"] },
-  { id: "league", module: "league-service", appName: "league-service", port: 8081, dependsOn: ["registry", "config"] },
+  { id: "league", module: "league-service", appName: "league-service", port: 8081, dependsOn: DOMAIN_EDGES },
+  { id: "discipline", module: "discipline-service", appName: "discipline-service", port: 8082, dependsOn: DOMAIN_EDGES },
 ];
 
 /** Two routes, both StripPrefix=1, both breaking the same leagueSummary circuit. The table route
@@ -57,6 +62,13 @@ export const GATEWAY_ROUTES: readonly GatewayRoute[] = [
     target: "league",
     stripPrefix: 1,
     consumers: ["/leaders", "/data", "/run-in"],
+  },
+  {
+    id: "discipline-clocks",
+    path: "/api/discipline/**",
+    target: "discipline",
+    stripPrefix: 1,
+    consumers: ["/discipline", "/leaders"],
   },
 ];
 
@@ -78,5 +90,14 @@ export const CIRCUIT_BREAKER = {
 export const LEAGUE_CONTRACT = {
   resource: "league-summary.json",
   path: "services/league-service/src/main/resources/league-summary.json",
+  exporter: "scripts/export-service-contract.mjs",
+} as const;
+
+/** The discipline service's read is an exported snapshot of this world, not a hand-written
+ *  payload. scripts/export-service-contract.mjs writes it; proof-services.mjs refuses it when
+ *  stale — the same frozen-contract discipline the league service runs under. */
+export const DISCIPLINE_CONTRACT = {
+  resource: "discipline-clocks.json",
+  path: "services/discipline-service/src/main/resources/discipline-clocks.json",
   exporter: "scripts/export-service-contract.mjs",
 } as const;

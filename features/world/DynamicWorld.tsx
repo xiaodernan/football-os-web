@@ -9,6 +9,7 @@ import { runWorld, seasonLabel, buildSeasonReport, seasonReportPayload, type Wor
 import { sum, last } from "@/domain/attributes";
 import { leagueOpenness, worldUpsets, worldLeaders, worldRescues } from "@/domain/analytics";
 import { dynastyTable } from "@/domain/dynasty";
+import { rocketRises } from "@/domain/rockets";
 import { devCouncil } from "@/domain/devCouncil";
 import { rowLine } from "@/domain/rowText";
 import { WORLD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
@@ -94,6 +95,9 @@ export function DynamicWorld() {
   // M1033: the coaching council — which clubs' squads actually grew across the simulated run.
   const council = useMemo(() => devCouncil(history), [history]);
   const councilPeak = council.rows.length ? council.rows[0].upDelta : 1;
+  // M1056: the breakthroughs — the world's biggest single-season jumps.
+  const rockets = useMemo(() => rocketRises(history), [history]);
+  const rocketPeak = rockets.rows.length ? rockets.rows[0].delta : 1;
 
   const exportReport = useCallback(() => {
     if (!snapshot) return;
@@ -334,6 +338,52 @@ export function DynamicWorld() {
                   })}
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">{t("world.coachCouncilMethod")}</p>
+              </>
+            )}
+          </Panel>
+
+          {/* M1056: the breakthroughs — the biggest single-season jumps in the simulated world. */}
+          <Panel className="p-4 lg:col-span-2">
+            <SectionTitle title={t("world.rocketTitle")} hint={t("world.rocketHint")} />
+            {rockets.seasons === 0 || rockets.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("world.rocketNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("world.rocketWorld", { n: rockets.built, b: rockets.best, seasons: rockets.seasons })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {rockets.rows.map((r, i) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li
+                        key={r.id}
+                        className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(110px,200px)]"
+                      >
+                        <span className="text-muted-foreground">{i + 1}</span>
+                        <Link to={`/players/${r.id}`} className="flex min-w-0 items-center gap-2 hover:underline">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{r.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {t("world.rocketLine", { p: r.position, a: r.age, s: r.season, f: r.from, t: r.to })}
+                            </div>
+                          </div>
+                        </Link>
+                        <div className="text-right tabular-nums">
+                          <div className="font-semibold">+{r.delta}</div>
+                          <div className="text-xs text-muted-foreground">{t("world.rocketUp")}</div>
+                        </div>
+                        <div className="hidden sm:block">
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div className={cn("h-2 rounded-full", BAR_FILL.good)} style={{ width: pctOf(r.delta, rocketPeak) }} />
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("world.rocketMethod")}</p>
               </>
             )}
           </Panel>

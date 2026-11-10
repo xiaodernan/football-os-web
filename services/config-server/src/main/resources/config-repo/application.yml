@@ -8,3 +8,4 @@ footballos:
   league:
     contract-resource: league-summary.json
     tables-resource: league-tables.json
+        clocks-resource: discipline-clocks.json

@@ -24,6 +24,7 @@ const SERVICES = [
   { id: "registry", module: "eureka-server", jar: "eureka-server/target/eureka-server-0.1.0.jar", port: 8761, health: "http://localhost:8761/actuator/health" },
   { id: "config", module: "config-server", jar: "config-server/target/config-server-0.1.0.jar", port: 8888, health: "http://localhost:8888/actuator/health" },
   { id: "league", module: "league-service", jar: "league-service/target/league-service-0.1.0.jar", port: 8081, health: "http://localhost:8081/actuator/health" },
+  { id: "discipline", module: "discipline-service", jar: "discipline-service/target/discipline-service-0.1.0.jar", port: 8082, health: "http://localhost:8082/actuator/health" },
   { id: "gateway", module: "gateway", jar: "gateway/target/gateway-0.1.0.jar", port: 8087, health: "http://localhost:8087/actuator/health" },
 ];
 
@@ -120,6 +121,21 @@ const info = await fetch("http://localhost:8081/actuator/info", { signal: AbortS
 const infoBody = await info.json();
 if (infoBody?.app?.world !== "Demo World R1") fail(`league-service /actuator/info did not print the config-supplied world label (got ${JSON.stringify(infoBody?.app?.world)})`);
 pass("league-service /actuator/info prints world=Demo World R1, taken from the config server");
+
+// M968: the discipline service's frozen clocks, direct and through the gateway — the same
+// bytes both ways, an unknown competition a 404, exactly like the league table reads.
+const discDirect = await fetch("http://localhost:8082/discipline/clock/ucl", { signal: AbortSignal.timeout(8000) });
+if (!discDirect.ok) fail(`discipline-service /discipline/clock/ucl did not answer 200 (got ${discDirect.status})`);
+else {
+  const disc = await discDirect.json();
+  const discGw = await fetch("http://localhost:8087/api/discipline/clock/ucl", { signal: AbortSignal.timeout(8000) });
+  const gwBody = discGw.ok ? JSON.stringify(await discGw.json()) : null;
+  if (JSON.stringify(disc) !== gwBody) fail("the gateway's discipline clock differs from the direct read");
+  else pass("the discipline clock reads the same direct and through the gateway (ucl)");
+  const discMiss = await fetch("http://localhost:8082/discipline/clock/nowhere", { signal: AbortSignal.timeout(8000) });
+  if (discMiss.status !== 404) fail(`an unknown competition answered ${discMiss.status}, not 404`);
+  else pass("an unknown competition reads 404 from the discipline service");
+}
 
 // The frozen contract, read three ways: off disk, direct, and through the gateway's lb:// route.
 const contract = JSON.parse(readFileSync(join(root, "services/league-service/src/main/resources/league-summary.json"), "utf8"));

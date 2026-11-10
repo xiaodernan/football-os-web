@@ -22,7 +22,7 @@ const has = (p) => existsSync(resolve(root, p));
 // only. It also holds the honesty line: the SPA does not call any of these services.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { PLATFORM_SERVICES, GATEWAY_ROUTES, PLATFORM_LIVE, LEAGUE_CONTRACT, CIRCUIT_BREAKER } = await server.ssrLoadModule("/domain/platform.ts");
+const { PLATFORM_SERVICES, GATEWAY_ROUTES, PLATFORM_LIVE, LEAGUE_CONTRACT, DISCIPLINE_CONTRACT, CIRCUIT_BREAKER } = await server.ssrLoadModule("/domain/platform.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
 
@@ -64,8 +64,9 @@ ok("the compose reader reads one planted service block and stops at the next",
 const ids = PLATFORM_SERVICES.map((s) => s.id);
 const ports = PLATFORM_SERVICES.map((s) => s.port);
 ok(`the descriptor names four services in dependency order with unique ids and ports (${PLATFORM_SERVICES.map((s) => `${s.id}:${s.port}`).join(" ")})`,
-  PLATFORM_SERVICES.length === 4 && new Set(ids).size === 4 && new Set(ports).size === 4 &&
-  ids.join(",") === "registry,config,gateway,league" && ports.join(",") === "8761,8888,8087,8081");
+  // M968: the discipline service joins the reactor — five services, one more domain reader.
+  PLATFORM_SERVICES.length === 5 && new Set(ids).size === 5 && new Set(ports).size === 5 &&
+  ids.join(",") === "registry,config,gateway,league,discipline" && ports.join(",") === "8761,8888,8087,8081,8082");
 ok("every non-registry service registers with the registry and none depends on itself",
   PLATFORM_SERVICES.filter((s) => s.id !== "registry").every((s) => s.dependsOn.includes("registry")) &&
   PLATFORM_SERVICES.every((s) => !s.dependsOn.includes(s.id)));
@@ -73,7 +74,7 @@ ok("the gateway descriptor and the circuit breaker agree with the gateway's own 
   CIRCUIT_BREAKER.name === "leagueSummary" &&
   CIRCUIT_BREAKER.fallbackPath === "/fallback" &&
   CIRCUIT_BREAKER.waitSeconds === 1 &&
-  GATEWAY_ROUTES.length === 2);
+  GATEWAY_ROUTES.length === 3);
 
 // ---- 2 · the reactor -------------------------------------------------------------------
 const parentPom = read("services/pom.xml");
@@ -96,7 +97,7 @@ for (const s of PLATFORM_SERVICES) {
   if (!/<groupId>com\.footballos<\/groupId>/.test(xml)) pomFails.push(`${s.module}: groupId`);
 }
 ok(`every module has a pom that names itself and points at the shared parent (${pomFails.join(" / ") || "clean"})`,
-  pomFails.length === 0 && PLATFORM_SERVICES.length === 4);
+  pomFails.length === 0 && PLATFORM_SERVICES.length === 5);
 
 // ---- 3 · the application classes -------------------------------------------------------
 const registrySrc = walk("services/eureka-server/src").filter((f) => f.endsWith(".java")).map(read).join("\n");
@@ -145,7 +146,7 @@ for (const s of PLATFORM_SERVICES) {
   if (/^\s*include:\s*.*(metrics|env|shutdown|beans|heapdump|loggers)/m.test(yml)) actuatorFails.push(`${s.module}: richer endpoint`);
 }
 ok(`every service exposes exactly health,info and nothing richer (${actuatorFails.join(" / ") || "clean"})`,
-  actuatorFails.length === 0 && PLATFORM_SERVICES.length === 4);
+  actuatorFails.length === 0 && PLATFORM_SERVICES.length === 5);
 
 // ---- 5 · the gateway's own routes ------------------------------------------------------
 const gatewayYml = read("services/gateway/src/main/resources/application.yml");
@@ -160,7 +161,14 @@ for (const r of GATEWAY_ROUTES) {
   // The CircuitBreaker must be written as structured YAML args — the inline `CircuitBreaker=name=x,
   // fallbackUri=...` shorthand makes the filter treat the whole string as the circuit's name
   // (fallback ends up null and every dead upstream surfaces as a bare 504 instead of /fallback).
-  if (!/\n\s+filters:[^]*?- name: CircuitBreaker\n\s+args:\n\s+name: leagueSummary\n\s+fallbackUri: forward:\/fallback/.test(block)) routeFails.push(`${r.id}: circuit breaker`);
+  // Each route names its own breaker: the league family shares leagueSummary, the discipline
+  // route carries disciplineClocks. Read as trimmed lines — no whitespace assumptions.
+  const breakerFor = r.target === "discipline" ? "disciplineClocks" : CIRCUIT_BREAKER.name;
+  const trimmed = block.split("\n").map((l) => l.trim());
+  const breakerOk = trimmed.includes("- name: CircuitBreaker") && trimmed.includes("args:") &&
+    trimmed.includes("name: " + breakerFor) && trimmed.includes("fallbackUri: forward:/fallback") &&
+    trimmed.indexOf("name: " + breakerFor) > trimmed.indexOf("- name: CircuitBreaker");
+  if (!breakerOk) routeFails.push(`${r.id}: circuit breaker`);
 }
 ok(`every descriptor route is written the same way in the gateway yml (${GATEWAY_ROUTES.map((r) => r.id).join(", ")}; ${routeFails.join(" / ") || "clean"})`,
   GATEWAY_ROUTES.length >= 1 && routeFails.length === 0);
@@ -239,6 +247,14 @@ ok("the descriptor names the same resource, path and exporter the proof reads",
   LEAGUE_CONTRACT.resource === "league-summary.json" &&
   LEAGUE_CONTRACT.exporter === "scripts/export-service-contract.mjs" &&
   has(LEAGUE_CONTRACT.exporter));
+// M968: the discipline contract is named the same way its sibling is — same resource, same
+// path, same exporter, read back from the descriptor rather than a hand copy.
+const DISCIPLINE_CLOCKS_PATH = "services/discipline-service/src/main/resources/discipline-clocks.json";
+ok("the descriptor names the discipline resource, path and exporter the proof reads",
+  DISCIPLINE_CONTRACT.path === DISCIPLINE_CLOCKS_PATH &&
+  DISCIPLINE_CONTRACT.resource === "discipline-clocks.json" &&
+  DISCIPLINE_CONTRACT.exporter === "scripts/export-service-contract.mjs" &&
+  has(DISCIPLINE_CONTRACT.exporter) && has(DISCIPLINE_CONTRACT.path));
 const tablesFile = read(TABLES_PATH);
 const tablesDoc = JSON.parse(tablesFile);
 const rebuiltTables = await buildWorldTables(server);
@@ -314,7 +330,7 @@ for (const key of [...screenKeys, "nav.platform"]) {
   for (const id of localeIds) if (!(key in DICTIONARIES[id])) missingKeys.push(`${id}:${key}`);
 }
 ok(`every key the atlas reads exists in all ${localeIds.length} locales (${screenKeys.length} screen keys + nav.platform; ${missingKeys.join(" / ") || "clean"})`,
-  localeIds.length === 3 && screenKeys.length === 42 && missingKeys.length === 0);
+  localeIds.length === 3 && screenKeys.length === 44 && missingKeys.length === 0);
 ok("the interpolating rows hand their placeholders to every locale",
   localeIds.every((id) => /\{n\}/.test(DICTIONARIES[id]["platform.portLine"]) &&
     /\{n\}/.test(DICTIONARIES[id]["platform.stripPrefix"]) &&
