@@ -2355,7 +2355,10 @@ export interface StatsKingBoard {
  *  ever spent 鈥?corners for territorial pressure, duels for friction; one walk both. Other fields
  *  in the same block (shots, onTarget, passes, passAcc, tackles, fouls, yellows, reds) ride this
  *  same shape if a reader wants them later 鈥?one fold, not one per metric. */
-export function statsBlockKings(matches: Match[], clubs: Club[], metric: StatKingMetric): StatsKingBoard {
+/** M1054: the mirror of the kings — `order` lets the same door answer the other half of the
+ *  question: who carries the FEWEST per-match. Defaults to descending so every existing board is
+ *  untouched byte for byte; the monks board reads the ascending arm. */
+export function statsBlockKings(matches: Match[], clubs: Club[], metric: StatKingMetric, order: "desc" | "asc" = "desc"): StatsKingBoard {
   const pick =
     metric === "corners" ? (s: { corners: number }) => s.corners
       : metric === "duels" ? (s: { duels: number }) => s.duels
@@ -2385,7 +2388,7 @@ export function statsBlockKings(matches: Match[], clubs: Club[], metric: StatKin
   }));
   rows.sort(
     (a, b) =>
-      b.perMatch - a.perMatch ||
+      (order === "asc" ? a.perMatch - b.perMatch : b.perMatch - a.perMatch) ||
       a.clubId.localeCompare(b.clubId),
   );
   const total = sum([...acc.values()], (v) => v.total);

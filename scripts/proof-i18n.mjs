@@ -4672,7 +4672,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // method): 2455 -> 2461.
   // M1050: the squanderers panel is eight literal t() calls (title, hint, none, world,
   // minute, two badge branches, method): 2461 -> 2469.
-  shapeCounts.literal === 2469 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1054: the monks panel is six literal t() calls (title, hint, none, world, share,
+  // method): 2469 -> 2475.
+  shapeCounts.literal === 2475 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4820,7 +4822,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1044: the last-gasp kings league line hands over the last-gasp count, the replayed count and the share: 406 -> 407.
   // M1049: the taxmen world line hands over the measured world rate and the club count: 407 -> 408.
   // M1050: the squanderers world line hands over the rows count and the walked fixtures, the minute tag hands over the minute: 408 -> 410.
-  litVarSites === 410 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1050: the squanderers' world line hands across rows and fixtures and the minute line hands over the minute: 408 -> 410.
+  // M1054: the monks' world line hands over the league rate and the club count: 410 -> 411.
+  litVarSites === 411 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

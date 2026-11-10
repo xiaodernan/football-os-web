@@ -64,6 +64,11 @@ test("the discipline screen draws the most loaded yellows board", async ({ page 
   await expect(page.getByRole("heading", { name: "The world's most loaded for yellows" })).toBeVisible();
 });
 
+test("the discipline screen draws the monks board", async ({ page }) => {
+  await page.goto("/#/discipline");
+  await expect(page.getByRole("heading", { name: "The monks" })).toBeVisible();
+});
+
 test("the discipline screen draws the taxmen board", async ({ page }) => {
   await page.goto("/#/discipline");
   await expect(page.getByRole("heading", { name: "The taxmen" })).toBeVisible();
