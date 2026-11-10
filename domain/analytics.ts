@@ -5,7 +5,7 @@
 // and unit-testable. Ratings are relative to league average, so a 1.0 attack
 // means "scores at the league-average rate".
 
-import type { Club, Match, Side, MatchEvent } from "@/domain/types";
+import { SIDES, type Club, type Match, type Side, type MatchEvent } from "@/domain/types";
 import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/lib/utils";
 import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, resultPoints, FORM_WINDOW, creditRecord, ResultTally, SeasonRowFields, maxBy, last, tally, unique } from "./attributes";
 import { byMinute } from "./matchEngine";
@@ -2062,6 +2062,57 @@ export function lastGaspKings(matches: Match[]): LastGaspBoard {
   }
   const list = [...rows.values()].sort((a, b) => b.lastGasp - a.lastGasp || a.clubId.localeCompare(b.clubId));
   return { rows: list, replayed, lastGasp, share: round2(safeDiv(lastGasp, replayed) * 100) };
+}
+
+export interface TaxRow {
+  clubId: string;
+  /** Fouls committed across the club's finished fixtures, both ends. */
+  fouls: number;
+  /** Yellow plus red cards, both ends, same fixtures. */
+  cards: number;
+  /** Cards per 100 fouls, 2dp — the rate the referee charges for a rough-tackling side. */
+  perFoul: number;
+}
+
+export interface TaxBoard {
+  /** Every club with at least one committed foul, ranked by cards per 100 fouls, then fouls, then id. */
+  rows: TaxRow[];
+  /** Total cards across the world. */
+  cards: number;
+  /** Total fouls across the world. */
+  fouls: number;
+  /** World cards per 100 fouls, 2dp. */
+  world: number;
+}
+
+/** M1049: the taxmen — cards per foul. The fouls board tells you who plays it rough; this board
+ *  tells you who PAYS for it, an independent rate doors onto the same stats blocks. A club that
+ *  never fouled has no rate and no row — absence is information. */
+export function cardPerFoulKings(matches: Match[]): TaxBoard {
+  const acc = new Map<string, { fouls: number; cards: number }>();
+  let worldFouls = 0, worldCards = 0;
+  for (const m of matches.filter(isFinished)) {
+    const stats = (m as Match & { stats?: Record<string, { fouls?: number; yellows?: number; reds?: number }> }).stats;
+    if (!stats) continue;
+    for (const side of SIDES) {
+      const s = stats[side];
+      if (!s) continue;
+      const fouls = s.fouls ?? 0;
+      const cards = (s.yellows ?? 0) + (s.reds ?? 0);
+      const clubId = side === "home" ? m.homeClubId : m.awayClubId;
+      const cur = acc.get(clubId) ?? { fouls: 0, cards: 0 };
+      cur.fouls += fouls;
+      cur.cards += cards;
+      acc.set(clubId, cur);
+      worldFouls += fouls;
+      worldCards += cards;
+    }
+  }
+  const rows = [...acc.entries()]
+    .filter(([, v]) => v.fouls > 0)
+    .map(([clubId, v]) => ({ clubId, fouls: v.fouls, cards: v.cards, perFoul: round2(safeDiv(v.cards * 100, v.fouls)) }))
+    .sort((a, b) => b.perFoul - a.perFoul || b.fouls - a.fouls || a.clubId.localeCompare(b.clubId));
+  return { rows, cards: worldCards, fouls: worldFouls, world: round2(safeDiv(worldCards * 100, worldFouls)) };
 }
 
 export interface PassingRow {

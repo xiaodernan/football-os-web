@@ -3,7 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, StatTile, Crest, EmptyState, DemoBadge, CHIP_CLASS, BAR_FILL, DELTA_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
-import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, resultSeverity, strictness, redCardKings, statsBlockKings, venueSeverity, cardTiming } from "@/domain/analytics";
+import { cardSeverity, clubDisciplineResultClock, discipline, disciplineTrend, disciplineVenue, resultSeverity, strictness, redCardKings, statsBlockKings, venueSeverity, cardTiming, cardPerFoulKings } from "@/domain/analytics";
 import { deltaSign, maxBy } from "@/domain/attributes";
 import { ABSENT, cn, fmt2, pctOf, signed } from "@/lib/utils";
 
@@ -54,6 +54,8 @@ export function Discipline() {
   // M1021: the world's foulingest — clubs by fouls committed per fixture at world scale, same door.
   const foulBoard = useMemo(() => statsBlockKings(matches, clubs, "fouls"), [matches, clubs]);
   const foulPeak = foulBoard.rows.length ? foulBoard.rows[0].perMatch : 1;
+  const taxBoard = useMemo(() => cardPerFoulKings(matches), [matches]);
+  const taxPeak = taxBoard.rows.length ? taxBoard.rows[0].perFoul : 1;
   // M1032: the world's tackling kings — clubs by tackles won per fixture at world scale, same door.
   const tackleBoard = useMemo(() => statsBlockKings(matches, clubs, "tackles"), [matches, clubs]);
   const tacklePeak = tackleBoard.rows.length ? tackleBoard.rows[0].perMatch : 1;
@@ -780,6 +782,47 @@ export function Discipline() {
                   })}
                 </ul>
                 <p className="mt-3 text-xs text-muted-foreground">{t("disc.foulMethod")}</p>
+              </>
+            )}
+          </Panel>
+
+          {/* M1049: the taxmen — cards per 100 fouls, who pays for playing it rough. */}
+          <Panel className="p-5">
+            <SectionTitle title={t("disc.taxTitle")} hint={t("disc.taxHint")} />
+            {taxBoard.rows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("disc.taxNone")}</p>
+            ) : (
+              <>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("disc.taxWorld", { p: fmt2(taxBoard.world), n: taxBoard.rows.length })}
+                </p>
+                <ul className="mt-2 space-y-1">
+                  {taxBoard.rows.slice(0, 8).map((r, i) => {
+                    const club = getClub(r.clubId);
+                    return (
+                      <li
+                        key={r.clubId}
+                        className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(90px,180px)]"
+                      >
+                        <span className="text-muted-foreground">{i + 1}</span>
+                        <div className="min-w-0 flex items-center gap-2">
+                          <Crest colors={club?.colors} short={club?.short} size={22} />
+                          <div className="min-w-0 truncate font-medium">{club?.name ?? r.clubId}</div>
+                        </div>
+                        <div className="text-right tabular-nums">
+                          {fmt2(r.perFoul)}
+                          <div className="text-xs text-muted-foreground">{t("disc.taxShare")}</div>
+                        </div>
+                        <div className="hidden sm:block">
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div className={cn("h-2 rounded-full", BAR_FILL.low)} style={{ width: pctOf(r.perFoul, taxPeak) }} />
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t("disc.taxMethod")}</p>
               </>
             )}
           </Panel>

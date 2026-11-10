@@ -4664,11 +4664,13 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1041 (landed on the farm lane's behalf, see M1041's own commit): the rescued results panel is
   // eight literal t() calls (title, hint, none, world, row, two badge branches, method):
   // 2439 -> 2447.
-  // M1044: the last-gasp kings panel is six literal t() calls (title, hint, none, league, share,
-  // method): 2447 -> 2453.
+  // M1044: the last-gasp kings panel is six literal t() calls (title, hint, none, league,
+  // method, plus the interpolating league line): 2447 -> 2453.
   // M1045: the atlas prints its witness — the witness line and the witness command verbatim:
   // 2453 -> 2455.
-  shapeCounts.literal === 2455 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1049: the taxmen panel is six literal t() calls (title, hint, none, world, share,
+  // method): 2455 -> 2461.
+  shapeCounts.literal === 2461 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4814,7 +4816,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1041 (the farm lane's, landed on its behalf): the rescuesWorld line hands over three and the
   // rescuesRow one hands over three: 404 -> 406.
   // M1044: the last-gasp kings league line hands over the last-gasp count, the replayed count and the share: 406 -> 407.
-  litVarSites === 407 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1049: the taxmen world line hands over the measured world rate and the club count: 407 -> 408.
+  litVarSites === 408 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

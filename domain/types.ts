@@ -79,7 +79,10 @@ export type Tone = "good" | "mixed" | "bad";
 
 // Which side of a fixture a thing belongs to. The match event carries it, the engine picks it and
 // the seed counts it, so the two words are named once.
-export type Side = "home" | "away";
+/** The two ends, written once as a list so the type derives from the list, not the other way
+ *  round — proof-vocab refuses a vocabulary spelled as both a union and a list. */
+export const SIDES = ["home", "away"] as const;
+export type Side = typeof SIDES[number];
 
 // One row of the capability model. The interface lives here rather than in
 // domain/attributes.ts because the English label table it is paired with now sits in
