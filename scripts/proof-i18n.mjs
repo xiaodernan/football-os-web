@@ -4655,7 +4655,14 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2423 -> 2425.
   // M1039: the metronomes panel is eight literal t() calls (title, hint, none, league, share,
   // plain, shift, method): 2425 -> 2433.
-  shapeCounts.literal === 2433 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1040: the Spring Cloud completeness — the atlas's four service cards swap the three-arm copy
+  // record for a four-arm one (+2 sites: svcConfig, svcConfigRole), the kind ternary gains the
+  // config branch (+1: kindConfig), the boundary list gains two honesty rows (+2: circuitFallback,
+  // configWiring) and the breaker line (+1, interpolating): 2433 -> 2439.
+  // M1041 (landed on the farm lane's behalf, see M1041's own commit): the rescued results panel is
+  // eight literal t() calls (title, hint, none, world, row, two badge branches, method):
+  // 2439 -> 2447.
+  shapeCounts.literal === 2447 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4797,7 +4804,10 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // count and plannedConsumers' route list): 395 -> 398.
   // M1038: the contract counts and digest lines hand over four numbers and a digest: 398 -> 400.
   // M1039: the metronomes league, plain and shift lines hand over three names: 400 -> 403.
-  litVarSites === 403 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1040: the atlas's breaker line hands over the breaker name, its fallback path and its wait: 403 -> 404.
+  // M1041 (the farm lane's, landed on its behalf): the rescuesWorld line hands over three and the
+  // rescuesRow one hands over three: 404 -> 406.
+  litVarSites === 406 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

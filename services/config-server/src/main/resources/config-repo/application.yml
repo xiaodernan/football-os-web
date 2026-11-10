@@ -1,0 +1,9 @@
+# The native "repository" the config server serves. Two keys, both demo-shaped and both
+# honest: a world label the info endpoint prints and the resource name the league service
+# resolves its statement of truth through @Value. Nothing here carries production meaning.
+footballos:
+  world:
+    label: Demo World R1
+    seasons: 0
+  league:
+    contract-resource: league-summary.json

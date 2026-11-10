@@ -15,8 +15,18 @@ services:
       dockerfile: gateway/Dockerfile
     depends_on:
       - eureka-server
+      - config-server
     ports:
-      - "8080:8080"
+      - "8087:8087"
+
+  config-server:
+    build:
+      context: .
+      dockerfile: config-server/Dockerfile
+    ports:
+      - "8888:8888"
+    depends_on:
+      - eureka-server
 
   league-service:
     build:
@@ -24,5 +34,6 @@ services:
       dockerfile: league-service/Dockerfile
     depends_on:
       - eureka-server
+      - config-server
     ports:
       - "8081:8081"

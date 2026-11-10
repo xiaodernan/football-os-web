@@ -5,7 +5,7 @@
 // modules, the compose ports and the gateway routes in step: a port that moves in a pom or in
 // docker-compose.yml without moving here is a red gate, not a stale diagram.
 
-export type ServiceId = "registry" | "gateway" | "league";
+export type ServiceId = "registry" | "config" | "gateway" | "league";
 
 export interface PlatformService {
   id: ServiceId;
@@ -30,11 +30,14 @@ export interface GatewayRoute {
   consumers: readonly string[];
 }
 
-/** Registry first, then the edge, then the domain service — the dependency order. */
+/** Registry first, then the config server, then the edge, then the domain service — the
+ *  dependency order. The config server registers with Eureka like the other two does, so the
+ *  registry stays the healthiest dead-simple thing to depend on. */
 export const PLATFORM_SERVICES: readonly PlatformService[] = [
   { id: "registry", module: "eureka-server", appName: "football-os-registry", port: 8761, dependsOn: [] },
-  { id: "gateway", module: "gateway", appName: "football-os-gateway", port: 8080, dependsOn: ["registry"] },
-  { id: "league", module: "league-service", appName: "league-service", port: 8081, dependsOn: ["registry"] },
+  { id: "config", module: "config-server", appName: "football-os-config", port: 8888, dependsOn: ["registry"] },
+  { id: "gateway", module: "gateway", appName: "football-os-gateway", port: 8087, dependsOn: ["registry"] },
+  { id: "league", module: "league-service", appName: "league-service", port: 8081, dependsOn: ["registry", "config"] },
 ];
 
 export const GATEWAY_ROUTES: readonly GatewayRoute[] = [
@@ -49,6 +52,16 @@ export const GATEWAY_ROUTES: readonly GatewayRoute[] = [
 
 /** The SPA does not call the gateway yet; the atlas prints this instead of a fake green dot. */
 export const PLATFORM_LIVE = false;
+
+/** The gateway's circuit breaker — what the atlas prints in place of a "status: ok".
+ *  The league route carries a Resilience4j instance (name leagueSummary); when the circuit opens
+ *  the request is forwarded to /fallback, where a canned 503 body stands until the league
+ *  service comes back. */
+export const CIRCUIT_BREAKER = {
+  name: "leagueSummary",
+  fallbackPath: "/fallback",
+  waitSeconds: 1,
+} as const;
 
 /** The league service's read is an exported snapshot of this world, not a hand-written payload.
  *  scripts/export-service-contract.mjs writes it; proof-services.mjs refuses it when stale. */

@@ -372,12 +372,12 @@ test("the form table ranks the clubs and the chips switch the competition", asyn
   await expect(page.getByText("The form table").first()).toBeVisible();
 });
 
-test("the platform atlas draws the three services", async ({ page }) => {
+test("the platform atlas draws the four services and the breaker", async ({ page }) => {
   await page.goto("/#/platform");
   await expect(page.getByRole("heading", { name: "The platform beneath the pitch" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "The three services" })).toBeVisible();
+  await expect(page.getByText("Football OS Config", { exact: true })).toBeVisible();
   await expect(page.getByText("Eureka registry", { exact: true })).toBeVisible();
   await expect(page.getByText("No gateway is reachable from this build.")).toBeVisible();
   await expect(page.getByText(/frozen snapshot exported from this world/)).toBeVisible();
-  await expect(page.getByText(/\d+ clubs · \d+ players · \d+ matches/)).toBeVisible();
+  await expect(page.getByText(/Resilience4j: leagueSummary/)).toBeVisible();
 });

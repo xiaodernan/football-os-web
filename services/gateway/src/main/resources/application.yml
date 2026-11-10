@@ -1,6 +1,7 @@
-# Port pinned by domain/platform.ts (gateway: 8080) and read back by proof-services.mjs.
+# Port pinned by domain/platform.ts (gateway: 8087) and read back by proof-services.mjs.
+# The gateway is the only edge; nothing in the SPA talks to it today.
 server:
-  port: 8080
+  port: 8087
 
 spring:
   application:
@@ -10,12 +11,50 @@ spring:
       routes:
         # Mirrors GATEWAY_ROUTES in domain/platform.ts: id, Path predicate, lb:// target
         # (the league service's spring.application.name, upper-cased by Eureka) and StripPrefix.
+        # The circuit breaker is the resilience element this milestone adds: when the league
+        # service goes quiet, the gateway forwards the call to /fallback and answers itself a
+        # small canned 503 instead of hanging or spraying 5xx at the browser.
         - id: league-summary
           uri: lb://LEAGUE-SERVICE
           predicates:
             - Path=/api/league/**
           filters:
             - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: leagueSummary
+                fallbackUri: forward:/fallback
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: 0.1.0
+    world: Demo World R1
+    description: The edge - it routes, it breaks open, it answers itself
+
+management:
+  info:
+    env:
+      enabled: true
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      leagueSummary:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 3
+        minimum-number-of-calls: 2
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 1000
+        permitted-number-of-calls-in-half-open-state: 1
 
 eureka:
   client:

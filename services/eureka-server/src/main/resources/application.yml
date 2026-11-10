@@ -6,6 +6,26 @@ spring:
   application:
     name: football-os-registry
 
+info:
+  app:
+    name: ${spring.application.name}
+    version: 0.1.0
+    world: Demo World R1
+    description: The registry �?the one everyone dials into, the only one that never registers
+
+management:
+  info:
+    env:
+      enabled: true
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
 eureka:
   client:
     # The registry is the one service that does not register with itself.
@@ -13,3 +33,4 @@ eureka:
     fetch-registry: false
   server:
     enable-self-preservation: false
+

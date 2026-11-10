@@ -1,0 +1,42 @@
+# Port pinned by domain/platform.ts (config: 8888) and read back by proof-services.mjs.
+server:
+  port: 8888
+
+spring:
+  application:
+    name: football-os-config
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config-repo/
+
+info:
+  app:
+    name: ${spring.application.name}
+    version: 0.1.0
+    world: ${footballos.world.label}
+    description: The config server �?a native repository packaged in the jar
+
+management:
+  info:
+    env:
+      enabled: true
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+

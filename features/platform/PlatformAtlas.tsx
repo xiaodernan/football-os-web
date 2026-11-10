@@ -1,7 +1,7 @@
 import { useI18n } from "@/i18n";
 import { CHIP_CLASS, Panel, SectionTitle } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
-import { GATEWAY_ROUTES, LEAGUE_CONTRACT, PLATFORM_LIVE, PLATFORM_SERVICES, type ServiceId } from "@/domain/platform";
+import { GATEWAY_ROUTES, LEAGUE_CONTRACT, PLATFORM_LIVE, PLATFORM_SERVICES, CIRCUIT_BREAKER, type ServiceId } from "@/domain/platform";
 import leagueContract from "../../services/league-service/src/main/resources/league-summary.json";
 
 /**
@@ -15,9 +15,16 @@ export function PlatformAtlas() {
 
   const copy: Record<ServiceId, { name: string; role: string }> = {
     registry: { name: t("platform.svcRegistry"), role: t("platform.svcRegistryRole") },
+    config: { name: t("platform.svcConfig"), role: t("platform.svcConfigRole") },
     gateway: { name: t("platform.svcGateway"), role: t("platform.svcGatewayRole") },
     league: { name: t("platform.svcLeague"), role: t("platform.svcLeagueRole") },
   };
+
+  const kindFor = (id: ServiceId) =>
+    id === "registry" ? t("platform.kindRegistry")
+      : id === "config" ? t("platform.kindConfig")
+        : id === "gateway" ? t("platform.kindEdge")
+          : t("platform.kindDomain");
 
   return (
     <div className="space-y-5">
@@ -36,17 +43,13 @@ export function PlatformAtlas() {
 
       <Panel className="p-5">
         <SectionTitle title={t("platform.topoTitle")} hint={t("platform.topoHint")} />
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {PLATFORM_SERVICES.map((service) => (
             <div key={service.id} className="rounded-lg border p-3">
               <div className="flex items-start justify-between gap-2">
                 <span className="min-w-0 text-sm font-medium">{copy[service.id].name}</span>
                 <span className={cn(CHIP_CLASS.muted, "shrink-0 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest")}>
-                  {service.id === "registry"
-                    ? t("platform.kindRegistry")
-                    : service.id === "gateway"
-                      ? t("platform.kindEdge")
-                      : t("platform.kindDomain")}
+                  {kindFor(service.id)}
                 </span>
               </div>
               <div className="mt-2 truncate font-mono text-xs text-muted-foreground">{service.appName}</div>
@@ -113,7 +116,12 @@ export function PlatformAtlas() {
               {t("platform.contractDigest", { digest: leagueContract.digest })}
             </span>
           </li>
+          <li className="rounded-lg border px-3 py-2">{t("platform.circuitFallback")}</li>
+          <li className="rounded-lg border px-3 py-2">{t("platform.configWiring")}</li>
         </ul>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          {t("platform.breakerLine", { name: CIRCUIT_BREAKER.name, path: CIRCUIT_BREAKER.fallbackPath, s: CIRCUIT_BREAKER.waitSeconds })}
+        </p>
       </Panel>
     </div>
   );

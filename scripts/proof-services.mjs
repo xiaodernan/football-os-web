@@ -19,7 +19,7 @@ const has = (p) => existsSync(resolve(root, p));
 // only. It also holds the honesty line: the SPA does not call any of these services.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { PLATFORM_SERVICES, GATEWAY_ROUTES, PLATFORM_LIVE, LEAGUE_CONTRACT } = await server.ssrLoadModule("/domain/platform.ts");
+const { PLATFORM_SERVICES, GATEWAY_ROUTES, PLATFORM_LIVE, LEAGUE_CONTRACT, CIRCUIT_BREAKER } = await server.ssrLoadModule("/domain/platform.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
 
@@ -60,12 +60,17 @@ ok("the compose reader reads one planted service block and stops at the next",
 // ---- 1 · the descriptor ----------------------------------------------------------------
 const ids = PLATFORM_SERVICES.map((s) => s.id);
 const ports = PLATFORM_SERVICES.map((s) => s.port);
-ok(`the descriptor names three services in dependency order with unique ids and ports (${PLATFORM_SERVICES.map((s) => `${s.id}:${s.port}`).join(" ")})`,
-  PLATFORM_SERVICES.length === 3 && new Set(ids).size === 3 && new Set(ports).size === 3 &&
-  ids.join(",") === "registry,gateway,league" && ports.join(",") === "8761,8080,8081");
-ok("both non-registry services register with the registry and none depends on itself",
-  PLATFORM_SERVICES.filter((s) => s.id !== "registry").every((s) => s.dependsOn.join(",") === "registry") &&
+ok(`the descriptor names four services in dependency order with unique ids and ports (${PLATFORM_SERVICES.map((s) => `${s.id}:${s.port}`).join(" ")})`,
+  PLATFORM_SERVICES.length === 4 && new Set(ids).size === 4 && new Set(ports).size === 4 &&
+  ids.join(",") === "registry,config,gateway,league" && ports.join(",") === "8761,8888,8087,8081");
+ok("every non-registry service registers with the registry and none depends on itself",
+  PLATFORM_SERVICES.filter((s) => s.id !== "registry").every((s) => s.dependsOn.includes("registry")) &&
   PLATFORM_SERVICES.every((s) => !s.dependsOn.includes(s.id)));
+ok("the gateway descriptor and the circuit breaker agree with the gateway's own routing table",
+  CIRCUIT_BREAKER.name === "leagueSummary" &&
+  CIRCUIT_BREAKER.fallbackPath === "/fallback" &&
+  CIRCUIT_BREAKER.waitSeconds === 1 &&
+  GATEWAY_ROUTES.length === 1);
 
 // ---- 2 · the reactor -------------------------------------------------------------------
 const parentPom = read("services/pom.xml");
@@ -88,7 +93,7 @@ for (const s of PLATFORM_SERVICES) {
   if (!/<groupId>com\.footballos<\/groupId>/.test(xml)) pomFails.push(`${s.module}: groupId`);
 }
 ok(`every module has a pom that names itself and points at the shared parent (${pomFails.join(" / ") || "clean"})`,
-  pomFails.length === 0 && PLATFORM_SERVICES.length === 3);
+  pomFails.length === 0 && PLATFORM_SERVICES.length === 4);
 
 // ---- 3 · the application classes -------------------------------------------------------
 const registrySrc = walk("services/eureka-server/src").filter((f) => f.endsWith(".java")).map(read).join("\n");
@@ -99,10 +104,14 @@ ok("the registry has one Spring Boot entry point and enables the Eureka server",
 ok("the gateway has one Spring Boot entry point and its pom carries the gateway starter",
   (gatewaySrc.match(/@SpringBootApplication/g) || []).length === 1 &&
   read("services/gateway/pom.xml").includes("spring-cloud-starter-gateway"));
+const configSrc = walk("services/config-server/src").filter((f) => f.endsWith(".java")).map(read).join("\n");
+// The gateway strips exactly one segment, so the direct mapping is /league, not /api/league.
 ok("the league service has one entry point and one read-only summary controller",
   (leagueSrc.match(/@SpringBootApplication/g) || []).length === 1 &&
-  leagueSrc.includes("@RestController") && leagueSrc.includes("@RequestMapping(\"/api/league\")") &&
+  leagueSrc.includes("@RestController") && leagueSrc.includes("@RequestMapping(\"/league\")") &&
   leagueSrc.includes("@GetMapping(\"/summary\")") && !leagueSrc.includes("@PostMapping"));
+ok("the config server has one entry point and enables the config server",
+  (configSrc.match(/@SpringBootApplication/g) || []).length === 1 && configSrc.includes("@EnableConfigServer"));
 
 // ---- 4 · ports and application names in the ymls ---------------------------------------
 const ymlFails = [];
@@ -118,8 +127,22 @@ for (const s of PLATFORM_SERVICES) {
 ok(`each application.yml listens on the descriptor's port and registers under its app name (${ymlFails.join(" / ") || "clean"})`,
   ymlFails.length === 0);
 ok(`the registry is the services' eureka default zone (${PLATFORM_SERVICES.find((s) => s.id === "registry").port})`,
-  ["gateway", "league-service"].every((m) =>
+  ["config-server", "gateway", "league-service"].every((m) =>
     read(`services/${m}/src/main/resources/application.yml`).includes(`http://localhost:${PLATFORM_SERVICES[0].port}/eureka/`)));
+
+// ---- 4b · the actuator line: every service exposes health,info and nothing else ----------------------------
+const actuatorInclude = (yml) => {
+  const m = /^\s*include:\s*([\w,\s]+)\s*$/m.exec(yml);
+  return m ? m[1].split(/[\s,]+/).filter(Boolean).sort().join(",") : "";
+};
+const actuatorFails = [];
+for (const s of PLATFORM_SERVICES) {
+  const yml = read(`services/${s.module}/src/main/resources/application.yml`);
+  if (actuatorInclude(yml) !== "health,info") actuatorFails.push(`${s.module}: include ${actuatorInclude(yml) || "missing"}`);
+  if (/^\s*include:\s*.*(metrics|env|shutdown|beans|heapdump|loggers)/m.test(yml)) actuatorFails.push(`${s.module}: richer endpoint`);
+}
+ok(`every service exposes exactly health,info and nothing richer (${actuatorFails.join(" / ") || "clean"})`,
+  actuatorFails.length === 0 && PLATFORM_SERVICES.length === 4);
 
 // ---- 5 · the gateway's own routes ------------------------------------------------------
 const gatewayYml = read("services/gateway/src/main/resources/application.yml");
@@ -131,9 +154,20 @@ for (const r of GATEWAY_ROUTES) {
   if (!block.includes(`uri: lb://${target.appName.toUpperCase()}`)) routeFails.push(`${r.id}: uri`);
   if (!block.includes(`- Path=${r.path}`)) routeFails.push(`${r.id}: path`);
   if (!block.includes(`- StripPrefix=${r.stripPrefix}`)) routeFails.push(`${r.id}: strip`);
+  // The CircuitBreaker must be written as structured YAML args — the inline `CircuitBreaker=name=x,
+  // fallbackUri=...` shorthand makes the filter treat the whole string as the circuit's name
+  // (fallback ends up null and every dead upstream surfaces as a bare 504 instead of /fallback).
+  if (!/\n\s+filters:[^]*?- name: CircuitBreaker\n\s+args:\n\s+name: leagueSummary\n\s+fallbackUri: forward:\/fallback/.test(block)) routeFails.push(`${r.id}: circuit breaker`);
 }
 ok(`every descriptor route is written the same way in the gateway yml (${GATEWAY_ROUTES.map((r) => r.id).join(", ")}; ${routeFails.join(" / ") || "clean"})`,
   GATEWAY_ROUTES.length >= 1 && routeFails.length === 0);
+ok("the gateway carries the resilience4j breaker the descriptor names, and its fallback path exists as a route in the gateway's own namespace",
+  read("services/gateway/pom.xml").includes("spring-cloud-starter-circuitbreaker-reactor-resilience4j") &&
+  read("services/gateway/src/main/java/com/footballos/gateway/FallbackRouter.java").includes(`"${CIRCUIT_BREAKER.fallbackPath}"`) &&
+  read("services/gateway/src/main/java/com/footballos/gateway/FallbackRouter.java").includes("SERVICE_UNAVAILABLE") &&
+  gatewayYml.includes(`instances:\n      ${CIRCUIT_BREAKER.name}:`) &&
+  gatewayYml.includes("sliding-window-size: 3") &&
+  gatewayYml.includes("failure-rate-threshold: 50"));
 
 // ---- 6 · compose and Dockerfiles -------------------------------------------------------
 const compose = read("services/docker-compose.yml");
@@ -152,6 +186,21 @@ for (const s of PLATFORM_SERVICES) {
 }
 ok(`the compose file maps the descriptor's ports, honours the dependency edges and has one Dockerfile per module (${composeFails.join(" / ") || "clean"})`,
   composeFails.length === 0);
+
+// ---- 6a · the config server and the league's config wiring -----------------------------------
+ok("the config server enables the config server and serves a native classpath repository whose two keys are what the league service reads",
+  has("services/config-server/src/main/java/com/footballos/config/ConfigApplication.java") &&
+  has("services/config-server/src/main/resources/config-repo/application.yml") &&
+  read("services/config-server/src/main/java/com/footballos/config/ConfigApplication.java").includes("@EnableConfigServer") &&
+  read("services/config-server/src/main/resources/application.yml").includes("active: native") &&
+  read("services/config-server/src/main/resources/application.yml").includes("search-locations: classpath:/config-repo/") &&
+  read("services/config-server/src/main/resources/config-repo/application.yml").includes("contract-resource: league-summary.json") &&
+  read("services/config-server/src/main/resources/config-repo/application.yml").includes("label: Demo World R1"));
+ok("the league service imports the optional config server and takes the resource name from its own property instead of a hard-coded string",
+  read("services/league-service/pom.xml").includes("spring-cloud-starter-config") &&
+  read("services/league-service/pom.xml").includes("spring-boot-starter-actuator") &&
+  read("services/league-service/src/main/resources/application.yml").includes("optional:configserver:http://localhost:8888") &&
+  read("services/league-service/src/main/java/com/footballos/league/LeagueSummaryController.java").includes("@Value(\"${footballos.league.contract-resource:league-summary.json}\")"));
 
 // ---- 6b · the world contract the league service serves ---------------------------------
 const contractFile = read(WORLD_CONTRACT_PATH);
@@ -182,7 +231,7 @@ ok("the descriptor names the same resource, path and exporter the proof reads",
   LEAGUE_CONTRACT.exporter === "scripts/export-service-contract.mjs" &&
   has(LEAGUE_CONTRACT.exporter));
 ok("the league controller loads that resource through Jackson and keeps the counts in the JSON",
-  leagueSrc.includes("new ClassPathResource(\"league-summary.json\")") &&
+  leagueSrc.includes("new ClassPathResource(contractResource)") &&
   leagueSrc.includes("TypeReference<Map<String, Object>>") &&
   !leagueSrc.includes("\"clubs\"") && !leagueSrc.includes("\"players\"") &&
   !leagueSrc.includes("\"matches\""));
@@ -194,7 +243,7 @@ ok("the atlas renders both descriptor arrays and never types a port itself",
   SCREEN.includes("from \"@/domain/platform\"") &&
   SCREEN.includes("PLATFORM_SERVICES.map") && SCREEN.includes("GATEWAY_ROUTES.map") &&
   SCREEN.includes("LEAGUE_CONTRACT.path") &&
-  SCREEN.includes("PLATFORM_LIVE") && !/\b(8761|8080|8081)\b/.test(SCREEN) &&
+  SCREEN.includes("PLATFORM_LIVE") && !/\b(8761|8888|8087|8081)\b/.test(SCREEN) &&
   SCREEN.includes("t(\"platform.title\")") && SCREEN.includes("platform.boundaryTitle"));
 ok("the atlas reads the exported contract file itself, not a second copy of the counts",
   SCREEN.includes("services/league-service/src/main/resources/league-summary.json") &&
@@ -204,7 +253,7 @@ const appFiles = ["src", "features", "domain", "data", "lib", "ui", "store", "i1
   .flatMap((d) => walk(d)).filter((f) => /\.(ts|tsx)$/.test(f) && f !== SCREEN_PATH);
 const callers = appFiles.filter((f) => {
   const src = read(f);
-  return src.includes("localhost:8080") || src.includes("localhost:8081") || src.includes("localhost:8761");
+  return src.includes("localhost:8087") || src.includes("localhost:8081") || src.includes("localhost:8761") || src.includes("localhost:8888");
 });
 ok(`no app module reaches for a service port — the map is a descriptor, not a client (${callers.join(", ") || "none"})`,
   callers.length === 0 && appFiles.length > 100 && PLATFORM_LIVE === false);
@@ -223,7 +272,7 @@ for (const key of [...screenKeys, "nav.platform"]) {
   for (const id of localeIds) if (!(key in DICTIONARIES[id])) missingKeys.push(`${id}:${key}`);
 }
 ok(`every key the atlas reads exists in all ${localeIds.length} locales (${screenKeys.length} screen keys + nav.platform; ${missingKeys.join(" / ") || "clean"})`,
-  localeIds.length === 3 && screenKeys.length === 34 && missingKeys.length === 0);
+  localeIds.length === 3 && screenKeys.length === 40 && missingKeys.length === 0);
 ok("the interpolating rows hand their placeholders to every locale",
   localeIds.every((id) => /\{n\}/.test(DICTIONARIES[id]["platform.portLine"]) &&
     /\{n\}/.test(DICTIONARIES[id]["platform.stripPrefix"]) &&

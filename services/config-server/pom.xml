@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  M1040: the config server — the one piece the skeleton was missing to behave like a small
+  Spring Cloud ecosystem. It serves the property tree the league service imports (its contract's
+  resource name, the demo world's label) from a committed native repo instead of a string
+  compiled into code, and exposes the same /actuator/health + /actuator/info every other service
+  exposes, now also a four-service reactor. Portfolio view, not a deployed system: nothing in
+  the SPA calls it, and proof-services.mjs reads its yml like it reads the others'.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.footballos</groupId>
+    <artifactId>football-os-services</artifactId>
+    <version>0.1.0</version>
+  </parent>
+
+  <artifactId>config-server</artifactId>
+  <name>Football OS Config Server</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-config-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>
