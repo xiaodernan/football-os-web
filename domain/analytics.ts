@@ -2064,6 +2064,38 @@ export function lastGaspKings(matches: Match[]): LastGaspBoard {
   return { rows: list, replayed, lastGasp, share: round2(safeDiv(lastGasp, replayed) * 100) };
 }
 
+export interface WorldCollapseRow extends CollapseRow {
+  /** The competition this fixture belongs to, carried for the screen's sub-line. */
+  competitionId: string;
+}
+
+export interface WorldCollapses {
+  /** Every lead thrown away anywhere in the world, widest hole first — the same order the per-
+   *  competition fold prints, walked once for the whole world. */
+  rows: WorldCollapseRow[];
+  /** Fixtures with a replayable clock across the whole world. */
+  matches: number;
+}
+
+/** M1050: the squanderers. `collapses` reads one competition at a time; the world page wants
+ *  the league-agnostic ladder — every club, every competition, the ones who had the game and
+ *  did not bank it. The union of the per-competition folds, re-ordered, nothing re-derived. */
+export function worldCollapses(matches: Match[], clubs: Club[]): WorldCollapses {
+  const compIds = new Set<string>();
+  for (const m of matches) compIds.add(m.competitionId);
+  const rows: WorldCollapseRow[] = [];
+  let replayed = 0;
+  for (const compId of [...compIds].sort()) {
+    const board = collapses(compId, matches, clubs);
+    replayed += board.matches;
+    for (const r of board.rows) rows.push({ ...r, competitionId: compId });
+  }
+  rows.sort((a, b) =>
+    b.lead - a.lead || byMinute(a, b) ||
+    a.kickoff.localeCompare(b.kickoff) || a.matchId.localeCompare(b.matchId));
+  return { rows, matches: replayed };
+}
+
 export interface TaxRow {
   clubId: string;
   /** Fouls committed across the club's finished fixtures, both ends. */

@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL } from "@/ui/primitives";
-import { footballProvider, getClub } from "@/data/footballService";
+import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL, CHIP_CLASS } from "@/ui/primitives";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "@/lib/router";
+import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
-import { leagueWall, records, scorelessStreaks, passingAccuracy, passingMetronomes, statsBlockKings, worldOutshine, worldLethal, lastGaspKings, type RecordRow } from "@/domain/analytics";
+import { leagueWall, records, scorelessStreaks, passingAccuracy, passingMetronomes, statsBlockKings, worldOutshine, worldLethal, lastGaspKings, worldCollapses, type RecordRow } from "@/domain/analytics";
 import { fmt2, SEPARATOR, cn, pctOf, signed, signed2 } from "@/lib/utils";
 
 interface ScorerRow {
@@ -50,6 +52,8 @@ export function LeagueLeaders() {
   // M1044: the last-gasp kings — winners who did it at the end of the clock.
   const gaspBoard = useMemo(() => lastGaspKings(footballProvider.matches()), []);
   const gaspPeak = gaspBoard.rows.length ? gaspBoard.rows[0].lastGasp : 1;
+  // M1050: the squanderers — leads thrown away anywhere in the world.
+  const squanderBoard = useMemo(() => worldCollapses(footballProvider.matches(), footballProvider.clubs()), []);
   // M1010: the corner kings — most corners per match, no overall theme of who wins them.
   const cornerBoard = useMemo(() => statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "corners"), []);
   const cornerPeak = cornerBoard.rows.length ? cornerBoard.rows[0].perMatch : 1;
@@ -653,8 +657,7 @@ export function LeagueLeaders() {
       </Panel>
 
       {/* M1044: the last-gasp kings — winners who did it at the end of the clock. */}
-      <Panel className="p-5">
-        <SectionTitle title={t("leaders.gaspTitle")} hint={t("leaders.gaspHint")} />
+      <Panel className="p-5">        <SectionTitle title={t("leaders.gaspTitle")} hint={t("leaders.gaspHint")} />
         {gaspBoard.rows.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">{t("leaders.gaspNone")}</p>
         ) : (
@@ -692,6 +695,54 @@ export function LeagueLeaders() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("leaders.gaspMethod")}</p>
+          </>
+        )}
+      </Panel>
+
+      {/* M1050: the squanderers — leads thrown away anywhere in the world, biggest holes first. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.squTitle")} hint={t("leaders.squHint")} />
+        {squanderBoard.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.squNone")}</p>
+        ) : (
+          <>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("leaders.squWorld", { r: squanderBoard.rows.length, n: squanderBoard.matches })}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {squanderBoard.rows.slice(0, 6).map((r) => {
+                const club = getClub(r.clubId);
+                const opponent = getClub(r.opponentId);
+                const comp = getCompetition(r.competitionId);
+                return (
+                  <li
+                    key={`${r.matchId}-${r.clubId}`}
+                    className="rounded-lg border px-3 py-2"
+                  >
+                    <Link to={`/matches/${r.matchId}`} className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 hover:underline">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={22} />
+                        <span className="truncate text-sm font-medium">{club?.name ?? r.clubId}</span>
+                      </span>
+                      <span className="font-mono text-lg font-bold tabular-nums">{r.goalsFor}{SEPARATOR}{r.goalsAgainst}</span>
+                      <span className="flex min-w-0 items-center justify-end gap-2">
+                        <span className="truncate text-sm font-medium">{opponent?.name ?? r.opponentId}</span>
+                        <Crest colors={opponent?.colors} short={opponent?.short} size={22} />
+                      </span>
+                    </Link>
+                    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                      <span className="truncate text-muted-foreground">
+                        {comp?.name ?? r.competitionId} · {t("leaders.squMinute", { m: r.minute })}
+                      </span>
+                      <Badge variant="outline" className={r.outcome === "lost" ? CHIP_CLASS.badgeWarning : CHIP_CLASS.muted}>
+                        {r.outcome === "lost" ? t("leaders.squLost") : t("leaders.squDrew")}
+                      </Badge>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("leaders.squMethod")}</p>
           </>
         )}
       </Panel>
