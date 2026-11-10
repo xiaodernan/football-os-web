@@ -392,4 +392,5 @@ test("the platform atlas draws the four services and the breaker", async ({ page
   await expect(page.getByText("No gateway is reachable from this build.")).toBeVisible();
   await expect(page.getByText(/frozen snapshot exported from this world/)).toBeVisible();
   await expect(page.getByText(/Resilience4j: leagueSummary/)).toBeVisible();
+  await expect(page.getByText("node scripts/verify-services.mjs")).toBeVisible();
 });

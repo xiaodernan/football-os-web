@@ -4332,16 +4332,18 @@ ok(`every value carries the same set of template variables in all three locales,
 // half must redden this clause, not just a change to its filter line.
 // The brand, and the three-letter football notation the xG table prints under its columns —
 // xGF / xGA / xGD — are identical in every script anywhere the game is written, in all three
-// scripts alike. They are named rather than counted one by one, so a fourth untranslated value
-// still cannot arrive without a line here saying why.
-const ENGLISH_OK = new Set(["brand.name", "timing.xgColFor", "timing.xgColAgainst", "timing.xgColDiff"]);
+// scripts alike. So is the verbatim shell command the platform atlas prints as its witness:
+// `node scripts/verify-services.mjs` — a program name, not a sentence. They are named rather
+// than counted one by one, so a fourth untranslated value still cannot arrive without a line
+// here saying why.
+const ENGLISH_OK = new Set(["brand.name", "timing.xgColFor", "timing.xgColAgainst", "timing.xgColDiff", "platform.witnessCmd"]);
 const stillEnglishBy = (enVal, cnVal) => cnVal === enVal && /[A-Za-z]{3,}/.test(String(enVal).replace(/\{\w+\}/g, ""));
 const stillEnglish = zhKeys.filter((k) => stillEnglishBy(en[k], D["zh-CN"][k]));
 const plantedEn = stillEnglishBy("Click here {n}", "Click here {n}")
   && !stillEnglishBy("完成 {n}", "完成 {n}")
   && !stillEnglishBy("Click here", "完成");
 ok(`a 简体中文 value that is still English is named, not waved through (${stillEnglish.join(", ") || "none"}; planted arrangements: ${plantedEn})`,
-  stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 4 && plantedEn);
+  stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 5 && plantedEn);
 
 // 37. The shapes a t() call takes that the checks above were never looking at. Check 4 reads
 //     `t("literal")` and check 16/24 audit declared dynamic sites, so between them every key a
@@ -4664,7 +4666,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // 2439 -> 2447.
   // M1044: the last-gasp kings panel is six literal t() calls (title, hint, none, league, share,
   // method): 2447 -> 2453.
-  shapeCounts.literal === 2453 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1045: the atlas prints its witness — the witness line and the witness command verbatim:
+  // 2453 -> 2455.
+  shapeCounts.literal === 2455 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

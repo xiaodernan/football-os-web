@@ -122,6 +122,10 @@ export function PlatformAtlas() {
         <p className="mt-2 text-[11px] text-muted-foreground">
           {t("platform.breakerLine", { name: CIRCUIT_BREAKER.name, path: CIRCUIT_BREAKER.fallbackPath, s: CIRCUIT_BREAKER.waitSeconds })}
         </p>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          {t("platform.witnessLine")}
+        </p>
+        <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">{t("platform.witnessCmd")}</p>
       </Panel>
     </div>
   );
