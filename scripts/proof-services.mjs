@@ -236,6 +236,18 @@ ok("the league controller loads that resource through Jackson and keeps the coun
   !leagueSrc.includes("\"clubs\"") && !leagueSrc.includes("\"players\"") &&
   !leagueSrc.includes("\"matches\""));
 
+// ---- 8 · the operator's half: the verifier and the runbook -----------------------------------
+const VERIFY_SRC = read("scripts/verify-services.mjs");
+const RUNBOOK_SRC = read("dev/platform-runbook.md");
+ok("the Spring Cloud stack has a runnable witness and a runbook that name the same four ports, the same lb target, the same canned fallback and the same config value the live run printed",
+  VERIFY_SRC.includes("lb://LEAGUE-SERVICE") && RUNBOOK_SRC.includes("lb://LEAGUE-SERVICE") &&
+  ["8761", "8888", "8081", "8087"].every((p) => VERIFY_SRC.includes(p) && RUNBOOK_SRC.includes(p)) &&
+  VERIFY_SRC.includes("league-service is quiet") && RUNBOOK_SRC.includes("league-service is quiet") &&
+  VERIFY_SRC.includes("Demo World R1") && RUNBOOK_SRC.includes("Demo World R1") &&
+  VERIFY_SRC.includes("scripts/verify-services.mjs") &&
+  RUNBOOK_SRC.includes("PLATFORM_LIVE") && RUNBOOK_SRC.includes("health,info") &&
+  /\/actuator\/health/.test(RUNBOOK_SRC));
+
 // ---- 7 · the screen reads the descriptor, and the app never calls a service -----------
 const SCREEN_PATH = "features/platform/PlatformAtlas.tsx";
 const SCREEN = read(SCREEN_PATH);
