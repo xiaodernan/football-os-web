@@ -837,6 +837,8 @@
 
 - 9d06d95 M965: 全路由冒烟网——tests/e2e/all-routes.spec.ts 遍历路由表全部 20 个路由（阵容规划到连胜纪录），断言壳挂载且页面是屏幕本身而非“构建队列”回退；渲染抛错或未挂载都在每次运行失败；全套 E2E 32/32。
 
+- 归档分支审计与关闭（本日）: 14 条 archive/* 分支逐一 git cherry 验证——backup-m500-work/2 与 milestone-550 补丁等价（已在 master）；integrate-m947 为 M943–M951 时代的预集成快照（其四个主题——分端红牌、落后出牌、节律、分侧——正是此后落地的 M943–M948）；keep-wip 的 31 屏清扫被 M719 落地、其 clock WIP 被后续时钟家族取代；m719-backup 的 proof-draft-any 门变体被零破损纪律否决；m774/777/778/780 为 i18n/orphans 重构的四个迭代（被 M522+ 隔离纪律取代）；m782/backup-633/milestone-633/sweep-719 为旧清扫线；football-os-work 的 M781 红牌条被 M783/M789 落地。全部以 `git merge -s ours` 关闭（祖先并入、树不变），判定与证据入本条目。
+
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
 ⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，安全除法门同口径）；
