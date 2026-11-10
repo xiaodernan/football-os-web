@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
-import { leagueWall, records, scorelessStreaks, passingAccuracy, passingMetronomes, statsBlockKings, worldOutshine, worldLethal, type RecordRow } from "@/domain/analytics";
+import { leagueWall, records, scorelessStreaks, passingAccuracy, passingMetronomes, statsBlockKings, worldOutshine, worldLethal, lastGaspKings, type RecordRow } from "@/domain/analytics";
 import { fmt2, SEPARATOR, cn, pctOf, signed, signed2 } from "@/lib/utils";
 
 interface ScorerRow {
@@ -47,6 +47,9 @@ export function LeagueLeaders() {
   const aimPeak = aimBoard.rows.length ? aimBoard.rows[0].perMatch : 1;
   // M1039: the metronomes — the same accuracy readings, weighted by the passes behind them.
   const metroBoard = useMemo(() => passingMetronomes(footballProvider.matches(), footballProvider.clubs()), []);
+  // M1044: the last-gasp kings — winners who did it at the end of the clock.
+  const gaspBoard = useMemo(() => lastGaspKings(footballProvider.matches()), []);
+  const gaspPeak = gaspBoard.rows.length ? gaspBoard.rows[0].lastGasp : 1;
   // M1010: the corner kings — most corners per match, no overall theme of who wins them.
   const cornerBoard = useMemo(() => statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "corners"), []);
   const cornerPeak = cornerBoard.rows.length ? cornerBoard.rows[0].perMatch : 1;
@@ -645,6 +648,50 @@ export function LeagueLeaders() {
               })}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("leaders.metroMethod")}</p>
+          </>
+        )}
+      </Panel>
+
+      {/* M1044: the last-gasp kings — winners who did it at the end of the clock. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.gaspTitle")} hint={t("leaders.gaspHint")} />
+        {gaspBoard.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.gaspNone")}</p>
+        ) : (
+          <>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("leaders.gaspLeague", { r: gaspBoard.lastGasp, n: gaspBoard.replayed, p: fmt2(gaspBoard.share) })}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {gaspBoard.rows.slice(0, 6).map((r, i) => {
+                const club = getClub(r.clubId);
+                return (
+                  <li
+                    key={r.clubId}
+                    className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(90px,180px)]"
+                  >
+                    <span className="text-muted-foreground">{i + 1}</span>
+                    <div className="min-w-0 flex items-center gap-2">
+                      <Crest colors={club?.colors} short={club?.short} size={22} />
+                      <div className="min-w-0 truncate font-medium">{club?.name ?? r.clubId}</div>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      {r.lastGasp}
+                      <div className="text-xs text-muted-foreground">{t("leaders.gaspShare")}</div>
+                    </div>
+                    <div className="hidden sm:block">
+                      <div className="h-2 w-full rounded-full bg-muted">
+                        <div
+                          className={cn("h-2 rounded-full", BAR_FILL.progress)}
+                          style={{ width: pctOf(r.lastGasp, gaspPeak) }}
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("leaders.gaspMethod")}</p>
           </>
         )}
       </Panel>

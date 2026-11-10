@@ -201,7 +201,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // baseline re-recorded in the same commit (JS 583, CSS 12.6).
 // M1041: the rescued results panel grows the world chunk by two KB — 598 KB, pin 596 -> 598,
 // baseline re-recorded in the same commit (JS 586, CSS 12.6).
-const BUDGET_KB = 598;
+// M1044: the last-gasp kings panel grows the leaders chunk by one KB — 599 KB, pin 598 -> 599,
+// baseline re-recorded in the same commit (JS 587, CSS 12.6).
+const BUDGET_KB = 599;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

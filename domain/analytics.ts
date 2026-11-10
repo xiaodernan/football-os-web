@@ -1,7 +1,7 @@
-// Data Room analytics (spec §"player & club analytics"). Pure, deterministic
+// Data Room analytics (spec 搂"player & club analytics"). Pure, deterministic
 // derivations over a set of finished matches so the UI can surface form,
 // attack/defence strength and expected-goals style numbers that the raw tables
-// don't show. No I/O, no React — every function is reproducible from its inputs
+// don't show. No I/O, no React 鈥?every function is reproducible from its inputs
 // and unit-testable. Ratings are relative to league average, so a 1.0 attack
 // means "scores at the league-average rate".
 
@@ -10,7 +10,7 @@ import { safeDiv, clamp, round2, round3, indexById, epochMs, DAY_MS } from "@/li
 import { byTableStanding, sum, leaguePoints, recentResults, formLetter, creditResult, resultPoints, FORM_WINDOW, creditRecord, ResultTally, SeasonRowFields, maxBy, last, tally, unique } from "./attributes";
 import { byMinute } from "./matchEngine";
 
-// The form letter — W, D or L — is the league ladder's own vocabulary, so it is named in
+// The form letter 鈥?W, D or L 鈥?is the league ladder's own vocabulary, so it is named in
 // domain/attributes.ts (where the letter door and the points ladder live) and re-exported here
 // for the callers that already import this module's types.
 export type { FormLetter } from "./attributes";
@@ -36,7 +36,7 @@ export interface TeamMetrics {
   away: Split;
   attack: number;
   defence: number;
-  /** Goals per team per game in this competition — the denominator `attack`
+  /** Goals per team per game in this competition 鈥?the denominator `attack`
    *  and `defence` were measured against, so projections stay in the same units. */
   leagueAvg: number;
 }
@@ -49,21 +49,21 @@ function emptySplit(): Split {
 export const isFinished = (m: Match): m is Match & { homeGoals: number; awayGoals: number } =>
   m.status === "FINISHED" && m.homeGoals != null && m.awayGoals != null;
 
-/** Chronological by kickoff — the ISO timestamp, compared as text. One comparator, because five
+/** Chronological by kickoff 鈥?the ISO timestamp, compared as text. One comparator, because five
  *  readers order the same list: the competition's finished fixtures, the data room's forecast, and
  *  three service functions. A kickoff is this app's clock, and five copies of the ordering rule are
  *  five chances for one of them to drift into a different order than the rest. */
 export function byKickoff(a: { kickoff: string }, b: { kickoff: string }): number {
-  // The contract is the timestamp, so the door takes anything that carries one — the replay
+  // The contract is the timestamp, so the door takes anything that carries one 鈥?the replay
   // folds order lighter records by the same rule without pretending they are full matches.
   return a.kickoff.localeCompare(b.kickoff);
 }
 
-/** The competition's finished matches, in kickoff order — the one list every figure here is
+/** The competition's finished matches, in kickoff order 鈥?the one list every figure here is
  *  measured over.
  *
  *  M336: the count of this list was private (it fed `leagueAvg` and nothing else), so the data
- *  room re-derived the same number on the page as `Σ per-team played / 2 | 0`. That derivation
+ *  room re-derived the same number on the page as `危 per-team played / 2 | 0`. That derivation
  *  is right only while the sum is even: a competition mid-round has one team a match ahead of
  *  another, an odd total floors to one less than the truth, and the page quietly reports a
  *  match that was never played. The count is exported now, and the page reads it. */
@@ -73,7 +73,7 @@ export function finishedFixtures(compId: string, matches: Match[]): (Match & { h
     .sort(byKickoff);
 }
 
-/** How many matches this competition has actually finished — a count of the list above, not a
+/** How many matches this competition has actually finished 鈥?a count of the list above, not a
  *  sum the caller has to halve. */
 export function finishedCount(compId: string, matches: Match[]): number {
   return finishedFixtures(compId, matches).length;
@@ -157,14 +157,13 @@ export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): Te
 }
 
 // Attack/defence are ratios against THIS competition's average goals per team
-// per game, so the projection must use that same denominator — a hardcoded 1.4
+// per game, so the projection must use that same denominator 鈥?a hardcoded 1.4
 // on a league averaging 0.5 inflates every scoreline.
 //
 // Those ratios are also noisy at this sample size: seven games can produce a
 // 0.27 defence rating, and multiplying two such extremes together yields
 // absurd lines (71% draw odds in a derby). Ratings are therefore regressed
-// toward the league mean in proportion to how many matches back them —
-// played/(played+k), the standard shrinkage-toward-the-mean correction. With
+// toward the league mean in proportion to how many matches back them 鈥?// played/(played+k), the standard shrinkage-toward-the-mean correction. With
 // k=6 a 7-game sample keeps 54% of its deviation and a 38-game sample 86%.
 const SHRINK_K = 6;
 const LAMBDA_MIN = 0.15;
@@ -235,7 +234,7 @@ export function outcomeOdds(home: TeamMetrics, away: TeamMetrics, leagueAvg?: nu
     away: round3(pa / total),
     mostLikelyScore: bestScore,
     mostLikelyPct: round3(best / total),
-    // Sums the two λ figures this is displayed beside, so the line can never
+    // Sums the two 位 figures this is displayed beside, so the line can never
     // contradict the arithmetic a visitor does on screen. expectedGoals already
     // hands back 2-dp lambdas today; this keeps that true if it ever stops.
     expectedTotalGoals: round2(lambdaHome + lambdaAway),
@@ -247,7 +246,7 @@ export function outcomeOdds(home: TeamMetrics, away: TeamMetrics, leagueAvg?: nu
 /**
  * Whole-number percentages that always total 100. Rounding each outcome
  * independently can leave 99% or 101% rows, which reads as a bug even when the
- * underlying model is fine — so the largest remainder absorbs the difference.
+ * underlying model is fine 鈥?so the largest remainder absorbs the difference.
  */
 export function oddsPercents(odds: { home: number; draw: number; away: number }): { home: number; draw: number; away: number } {
   const raw: [number, number, number] = [odds.home * 100, odds.draw * 100, odds.away * 100];
@@ -287,7 +286,7 @@ export function formPoints(m: TeamMetrics): number {
 }
 
 // The run-in: what each club still has to face. Difficulty is the average points-per-game of
-// the clubs left on its calendar — a club's own record says how good it has been, not how hard
+// the clubs left on its calendar 鈥?a club's own record says how good it has been, not how hard
 // the fixtures in front of it are. A club with nothing left reads zero and sorts last, so an
 // idle calendar cannot masquerade as the easiest run.
 export interface RunInRow {
@@ -352,7 +351,7 @@ export interface PointsScenario {
   ratePoints: number;
   /** Points behind the table's current leader; 0 for the leader itself. */
   behindLeader: number;
-  /** True while the club's ceiling still reaches the leader's current total — never true for the
+  /** True while the club's ceiling still reaches the leader's current total 鈥?never true for the
    *  leader itself, which is already there. */
   canCatchLeader: boolean;
 }
@@ -381,9 +380,15 @@ export function pointsScenarios(compId: string, matches: Match[], clubs: Club[])
   });
 }
 
-/** Six fifteen-minute windows a goal can arrive in. The last one absorbs stoppage time: a 97′ goal
- *  and a 78′ goal are both "late", because the recorded minute can run past 90. */
+/** Six fifteen-minute windows a goal can arrive in. The last one absorbs stoppage time: a 97鈥?goal
+ *  and a 78鈥?goal are both "late", because the recorded minute can run past 90. */
 const GOAL_BANDS = 6;
+
+/** The late window: minute 76 and after, stoppage included. Every reader that asks "was it
+ *  late?" goes through this door 鈥?never an inline comparison 鈥?so the bound is written once. */
+export function isLateWindow(minute: number): boolean {
+  return minute >= 76;
+}
 
 function goalBand(minute: number): number {
   const band = Math.floor((minute - 1) / 15);
@@ -394,7 +399,7 @@ export interface GoalTimingRow {
   clubId: string;
   scored: number;
   conceded: number;
-  /** Goals scored in each window, index 0 = 1–15′, index 5 = 76–90+′. */
+  /** Goals scored in each window, index 0 = 1鈥?5鈥? index 5 = 76鈥?0+鈥? */
   scoredBands: number[];
   /** Goals conceded in each window. */
   concededBands: number[];
@@ -402,14 +407,14 @@ export interface GoalTimingRow {
   lateScored: number;
   /** Goals conceded after the 75th minute. */
   lateConceded: number;
-  /** Share of this club's own goals that arrived late, 0–100, 2dp; 0 when it has not scored. */
+  /** Share of this club's own goals that arrived late, 0鈥?00, 2dp; 0 when it has not scored. */
   lateShare: number;
 }
 
 /** When each club's goals arrive: every recorded GOAL event in this competition's finished matches,
  *  folded into six windows for the scoring side and the conceding side. A different question from
  *  the run-in (what is left), the points scenarios (what can still be reached) and the leaders
- *  (who scored them) — this one is about the clock. */
+ *  (who scored them) 鈥?this one is about the clock. */
 export function goalTiming(compId: string, matches: Match[], clubs: Club[]): GoalTimingRow[] {
   const metrics = teamMetrics(compId, matches, clubs);
   const rows = new Map<string, GoalTimingRow>(
@@ -492,12 +497,12 @@ export function goalVenueClock(compId: string, matches: Match[], clubs: Club[]):
 
 export interface EventVenueClock {
   /** Event-recorded shots by the home side, per window; sums with `awayShotsWindows` to the
-   *  league's recorded shots — the same events `eventClock` folds, split by the end. */
+   *  league's recorded shots 鈥?the same events `eventClock` folds, split by the end. */
   homeShotsWindows: number[];
   /** Event-recorded shots by the away side, per window. */
   awayShotsWindows: number[];
   /** Event-recorded saves MADE by each end's keeper, per window. The engine names a SAVE event
-   *  after the side whose move was saved, so the save belongs to the other end — the crediting
+   *  after the side whose move was saved, so the save belongs to the other end 鈥?the crediting
    *  rule `eventClock`'s `stops` already reads from the defending end. */
   homeSavesWindows: number[];
   /** Saves made by the away side's keeper, per window. */
@@ -510,7 +515,7 @@ export interface EventVenueClock {
 
 /** When the shots and the saves that answer them arrive, split by the end. The goals clock above
  *  asks whether home advantage shows in the minutes goals land; this asks the same question of
- *  the shot events and of the keepers answering them — which end takes its shots where, and
+ *  the shot events and of the keepers answering them 鈥?which end takes its shots where, and
  *  which end's keepers do their work where. A SHOT is charged to the side that took it; a SAVE
  *  is charged to the keeper who made it, the other end from the one the event names. */
 export function eventVenueClock(compId: string, matches: Match[], clubs: Club[]): EventVenueClock {
@@ -549,19 +554,19 @@ export interface CardTimingRow {
   reds: number;
   /** Cards of either colour this club earned (yellows plus reds). */
   cards: number;
-  /** Cards in each window, index 0 = 1–15′, index 5 = 76–90+′. */
+  /** Cards in each window, index 0 = 1鈥?5鈥? index 5 = 76鈥?0+鈥? */
   bands: number[];
-  /** Red cards in each window, same six bands — the colour read on its own. */
+  /** Red cards in each window, same six bands 鈥?the colour read on its own. */
   redBands: number[];
   /** Cards earned inside the first window. */
   earlyCards: number;
   /** Cards earned after the 75th minute (the last window). */
   lateCards: number;
-  /** Share of this club's cards earned early, 0–100, 2dp; 0 when it was not booked. */
+  /** Share of this club's cards earned early, 0鈥?00, 2dp; 0 when it was not booked. */
   earlyShare: number;
-  /** Share of this club's cards earned late, 0–100, 2dp; 0 when it was not booked. */
+  /** Share of this club's cards earned late, 0鈥?00, 2dp; 0 when it was not booked. */
   lateShare: number;
-  /** M951: cards the OPPONENT earned while facing this club — the drawn-foul read the
+  /** M951: cards the OPPONENT earned while facing this club 鈥?the drawn-foul read the
    *  earning side's own fold never states. A booking has two clubs, and the mirror identity
    *  holds by construction: the drawn column sums to the card column across the league. */
   drawn: number;
@@ -574,14 +579,14 @@ export interface CardTimingRow {
   awayReds: number;
 }
 
-/** M951: the drawn-foul board — the clubs whose opponents were booked most while facing
+/** M951: the drawn-foul board 鈥?the clubs whose opponents were booked most while facing
  *  them, biggest draw first. A club with nothing drawn is absent, exactly like the red
  *  board's zero rows. */
 export interface CardDrawnRow {
   clubId: string;
   drawn: number;
-  /** M952: the drawn share — of every booking in this club's own fixtures, the fraction the
-   *  opponents earned, 0–100, 2dp through the safeDiv door. Fifty reads a club whose matches
+  /** M952: the drawn share 鈥?of every booking in this club's own fixtures, the fraction the
+   *  opponents earned, 0鈥?00, 2dp through the safeDiv door. Fifty reads a club whose matches
    *  split evenly between its own indiscipline and its opponents'; above reads a side that
    *  makes the other team's discipline the problem. */
   drawnShare: number;
@@ -590,7 +595,7 @@ export interface CardDrawnRow {
 export interface CardRedRow {
   clubId: string;
   reds: number;
-  /** The window holding most of this club's reds; the earliest window wins a tie. 0 = 1–15′. */
+  /** The window holding most of this club's reds; the earliest window wins a tie. 0 = 1鈥?5鈥? */
   peakBand: number;
   /** Reds in that window. */
   peakCount: number;
@@ -614,15 +619,15 @@ export interface CardRedContrastRow {
   clubId: string;
   cards: number;
   reds: number;
-  /** Share of this club's cards earned in the first window, 0–100, 2dp. */
+  /** Share of this club's cards earned in the first window, 0鈥?00, 2dp. */
   earlyCardShare: number;
-  /** Share of this club's cards earned in the last window, 0–100, 2dp. */
+  /** Share of this club's cards earned in the last window, 0鈥?00, 2dp. */
   lateCardShare: number;
-  /** Share of this club's reds earned in the first window, 0–100, 2dp. */
+  /** Share of this club's reds earned in the first window, 0鈥?00, 2dp. */
   earlyRedShare: number;
-  /** Share of this club's reds earned in the last window, 0–100, 2dp. */
+  /** Share of this club's reds earned in the last window, 0鈥?00, 2dp. */
   lateRedShare: number;
-  /** earlyRedShare minus earlyCardShare, 2dp — positive means the sendings-off skew earlier
+  /** earlyRedShare minus earlyCardShare, 2dp 鈥?positive means the sendings-off skew earlier
    *  than the bookings that surround them. */
   earlyGap: number;
   /** lateRedShare minus lateCardShare, 2dp. */
@@ -650,11 +655,11 @@ export interface CardTiming {
   homeWindows: number[];
   /** The cards earned by the away side of their fixture, by window. */
   awayWindows: number[];
-  /** M944: each booked club's red clock read against its own card clock — the first- and
+  /** M944: each booked club's red clock read against its own card clock 鈥?the first- and
    *  last-window shares side by side, the bigger early skew first. Clubs without a booking
    *  carry no shares to contrast and stay off the board. */
   contrast: CardRedContrastRow[];
-  /** M945: the same cards split by the receiving side's result in that match — a booking in
+  /** M945: the same cards split by the receiving side's result in that match 鈥?a booking in
    *  a game the side went on to win reads differently from one in a game it lost. The three
    *  series add up to `windows` window for window, because every counted card belongs to a
    *  finished fixture with a scoreline. */
@@ -664,7 +669,7 @@ export interface CardTiming {
 /** When a club's cards arrive: every recorded YELLOW or RED in this competition's finished
  *  matches, folded into the same six windows `goalTiming` and the event clock use. A different
  *  question from the season ledger (`discipline`, which counts stats by club) and from the
- *  round-by-round curve (`disciplineTrend`) — this one reads the minute of each booking, so a
+ *  round-by-round curve (`disciplineTrend`) 鈥?this one reads the minute of each booking, so a
  *  side that starts rashly and a side that finishes rashly are told apart. */
 export function cardTiming(compId: string, matches: Match[], clubs: Club[]): CardTiming {
   const metrics = teamMetrics(compId, matches, clubs);
@@ -692,7 +697,7 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
   );
   const lastBand = GOAL_BANDS - 1;
   // The drawn read collects the club each booking was drawn against and counts it through the
-  // tally door — the same one-thing-counted-many-times contract the other folds use.
+  // tally door 鈥?the same one-thing-counted-many-times contract the other folds use.
   const drawnSides: string[] = [];
   const windows = Array.from({ length: GOAL_BANDS }, () => 0);
   const redWindows = Array.from({ length: GOAL_BANDS }, () => 0);
@@ -720,9 +725,9 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
         awayWindows[band]++;
         row.awayCards++;
       }
-      // M951: the same booking, read from the other end — the opponent drew it.
+      // M951: the same booking, read from the other end 鈥?the opponent drew it.
       drawnSides.push(e.side === "home" ? m.awayClubId : m.homeClubId);
-      // M945: the result axis — the receiving side's own outcome of this fixture decides
+      // M945: the result axis 鈥?the receiving side's own outcome of this fixture decides
       // which of the three series the card lands in.
       const ourGoals = e.side === "home" ? m.homeGoals : m.awayGoals;
       const theirGoals = e.side === "home" ? m.awayGoals : m.homeGoals;
@@ -797,33 +802,33 @@ export function cardTiming(compId: string, matches: Match[], clubs: Club[]): Car
 }
 
 export interface CardSeverityWorst {
-  /** 0-based window index, index 0 = 1–15′, index 5 = 76–90+′. */
+  /** 0-based window index, index 0 = 1鈥?5鈥? index 5 = 76鈥?0+鈥? */
   band: number;
-  /** The club's red share inside that window, on the same 0–100 scale as the row's own. */
+  /** The club's red share inside that window, on the same 0鈥?00 scale as the row's own. */
   share: number;
 }
 
 export interface CardSeverityRow {
   clubId: string;
-  /** The club's recorded cards — the denominator of every share on this row. */
+  /** The club's recorded cards 鈥?the denominator of every share on this row. */
   cards: number;
   yellows: number;
   reds: number;
-  /** Sendings-off as a share of this club's own cards, 0–100, 2dp. A club booked but never sent
+  /** Sendings-off as a share of this club's own cards, 0鈥?00, 2dp. A club booked but never sent
    *  reads 0 from a denominator it has, and a club nobody booked reads 0 from a denominator of
-   *  zero — the volume the board counts and the severity this row reads are different numbers. */
+   *  zero 鈥?the volume the board counts and the severity this row reads are different numbers. */
   redShare: number;
-  /** The window where this club's bookings turned red most often — the highest per-window share
+  /** The window where this club's bookings turned red most often 鈥?the highest per-window share
    *  among the windows it was actually booked in, earliest on a tie. Null when it has no red or no
    *  card, so there is no window to point at. */
   worst: CardSeverityWorst | null;
 }
 
 export interface CardSeverity {
-  /** Every club with a table row, ranked by severity — red share, then reds, then cards, then the
-   *  club id — so the club that turns most of its bookings red leads regardless of how many it got. */
+  /** Every club with a table row, ranked by severity 鈥?red share, then reds, then cards, then the
+   *  club id 鈥?so the club that turns most of its bookings red leads regardless of how many it got. */
   rows: CardSeverityRow[];
-  /** The competition's own sendings-off as a share of its cards, 0–100, 2dp. */
+  /** The competition's own sendings-off as a share of its cards, 0鈥?00, 2dp. */
   league: number;
 }
 
@@ -833,7 +838,7 @@ export interface CardSeverity {
  *  thirty cards and three reds is a disciplined side with a long season, while one card in two is a
  *  club that loses its head. Composed on that fold rather than walking the fixtures, so no count
  *  here can disagree with the clocks above it, and the per-window share is taken only over windows
- *  the club was booked in — a window holding no card holds no severity either. */
+ *  the club was booked in 鈥?a window holding no card holds no severity either. */
 export function cardSeverity(compId: string, matches: Match[], clubs: Club[]): CardSeverity {
   const clock = cardTiming(compId, matches, clubs);
   const rows: CardSeverityRow[] = clock.rows.map((r) => {
@@ -873,12 +878,12 @@ export interface VenueSeverityRow {
   /** ... and at the end it visited. */
   awayCards: number;
   awayReds: number;
-  /** Sendings-off as a share of that end's own cards, 0–100, 2dp. */
+  /** Sendings-off as a share of that end's own cards, 0鈥?00, 2dp. */
   homeShare: number;
   awayShare: number;
   /** `homeShare` minus `awayShare` in percentage points: positive when this club's bookings turn
    *  red more often in front of its own crowd. Taken from the two rounded shares, so the gap is
-   *  exactly the distance between the figures the row prints. Named for the quantity it is — the
+   *  exactly the distance between the figures the row prints. Named for the quantity it is 鈥?the
    *  venue board's `gap` is cards a game, a different unit on the same screen. */
   shareGap: number;
 }
@@ -898,7 +903,7 @@ export interface VenueSeverity {
 }
 
 /** M972: severity by end. The board above divides a club's reds by its cards and gets one number;
- *  this divides each end separately, which is the question that number cannot hold — a club that
+ *  this divides each end separately, which is the question that number cannot hold 鈥?a club that
  *  turns one card in five red at home and one in two away is not the same disciplinary problem twice
  *  over, and the volume boards cannot tell the two apart at all. Composed on `cardTiming`'s own rows,
  *  so no share here can disagree with the clocks and the severity board printed beside it. */
@@ -940,7 +945,7 @@ export function venueSeverity(compId: string, matches: Match[], clubs: Club[]): 
 
 export interface ResultSeverityRow {
   clubId: string;
-  /** Cards earned in matches the club won, and the sendings-off among them — the same way the
+  /** Cards earned in matches the club won, and the sendings-off among them 鈥?the same way the
    *  result clock splits each window, but as a pair counted once per fixture. */
   wonCards: number;
   wonReds: number;
@@ -950,7 +955,7 @@ export interface ResultSeverityRow {
   /** The same pair for matches the club lost. */
   lostCards: number;
   lostReds: number;
-  /** Sendings-off as a share of that result's own cards, 0–100, 2dp. */
+  /** Sendings-off as a share of that result's own cards, 0鈥?00, 2dp. */
   wonShare: number;
   drewShare: number;
   lostShare: number;
@@ -961,7 +966,7 @@ export interface ResultSeverityRow {
 }
 
 export interface ResultSeverity {
-  /** Only the clubs booked in a won match AND a lost match — a club without both has no pair of
+  /** Only the clubs booked in a won match AND a lost match 鈥?a club without both has no pair of
    *  rates to compare, so it stays off the board and is counted in `singleResult` instead of
    *  reading a zero it has not earned. Ranked by the size of the gap, then the whole card load,
    *  then the id. */
@@ -977,7 +982,7 @@ export interface ResultSeverity {
 }
 
 /** M973: severity by result. The board above divides a club's reds by its cards once per end;
- *  this divides the same two counts once per result — a club that keeps its head while it wins
+ *  this divides the same two counts once per result 鈥?a club that keeps its head while it wins
  *  and loses it when behind is not the same problem twice over, and neither of the end or volume
  *  boards can hold that question. Composed on the two result clocks (`clubResultClock`'s cards,
  *  `clubDisciplineResultClock`'s reds) joined by club id, so no rate here can disagree with the
@@ -1029,16 +1034,16 @@ export interface SaveSeverityRow {
   clubId: string;
   faced: number;
   stops: number;
-  /** Share of the shots this club faced that its keeper stopped, 0–100, 2dp. A club that faced
+  /** Share of the shots this club faced that its keeper stopped, 0鈥?00, 2dp. A club that faced
    *  nothing reads 0 from a denominator of zero; it takes no row instead of a zero rate. */
   stopShare: number;
 }
 
 export interface SaveSeverity {
-  /** Clubs that faced at least one shot here — anything else has no rate to print. Ranked by the
+  /** Clubs that faced at least one shot here 鈥?anything else has no rate to print. Ranked by the
    *  stop share, then the stops made, then the faced load, then the id. */
   rows: SaveSeverityRow[];
-  /** The competition's own stop share — as a share of everything the league faced. */
+  /** The competition's own stop share 鈥?as a share of everything the league faced. */
   league: number;
 }
 
@@ -1067,7 +1072,7 @@ export interface CleanSheetRow {
   clubId: string;
   played: number;
   cleanSheets: number;
-  /** Clean sheets as a share of the club's own finished fixtures, 0–100, 2dp. */
+  /** Clean sheets as a share of the club's own finished fixtures, 0鈥?00, 2dp. */
   rate: number;
 }
 
@@ -1077,11 +1082,11 @@ export interface CleanSheets {
   rows: CleanSheetRow[];
   /** Finished fixtures read. */
   matches: number;
-  /** The teams' own clean sheet rate — sheets per club-fixture played. */
+  /** The teams' own clean sheet rate 鈥?sheets per club-fixture played. */
   league: number;
 }
 
-/** M976: the wall. The table fold already counts every clean sheet — the table pages print each
+/** M976: the wall. The table fold already counts every clean sheet 鈥?the table pages print each
  *  club's number beside it, but nowhere does the club with the best defensive record get named
  *  as the defensive record. Because it reads the world's own matches rather than one competition,
  *  every club walks one fixture once; no third sweep of the fixtures happens anywhere. */
@@ -1126,7 +1131,7 @@ export interface FinishingRow {
   clubId: string;
   shots: number;
   goals: number;
-  /** Goals as a share of this club's recorded shots, 0–100, 2dp. */
+  /** Goals as a share of this club's recorded shots, 0鈥?00, 2dp. */
   rate: number;
 }
 
@@ -1140,7 +1145,7 @@ export interface FinishingRate {
 
 /** M977: the lethal read. Every board on this page tells a reader when the goals arrive or who
  *  scored them; none of them says how often an attempt became one. The two event streams the app
- *  prints are disjoint — every attempt is either a SHOT that did not score or a GOAL — so the
+ *  prints are disjoint 鈥?every attempt is either a SHOT that did not score or a GOAL 鈥?so the
  *  board's denominator is all such attempts, computed from folds the app already carries and
  *  dividing nothing new. A zero-attempts club takes no row. */
 export function finishingRate(compId: string, matches: Match[], clubs: Club[]): FinishingRate {
@@ -1170,11 +1175,11 @@ export function finishingRate(compId: string, matches: Match[], clubs: Club[]): 
 export interface PredictionAudit {
   /** Finished fixtures the audit covered (in kickoff order, each with only what was known before). */
   matches: number;
-  /** The Brier score: mean of the per-match (p - o)² summed over the three outcome classes, /3,
+  /** The Brier score: mean of the per-match (p - o)虏 summed over the three outcome classes, /3,
    *  0.001 rounded. 0 reads perfect; above 0.345 reads a drunk dartboard. */
   brier: number;
   /** How often the favorite (the outcome class the model gave the best odds) was the one that
-   *  happened, 0–100, 2dp. */
+   *  happened, 0鈥?00, 2dp. */
   accuracy: number;
   /** The favorite calls, one per axis. */
   predictedHome: number;
@@ -1191,7 +1196,7 @@ export interface PredictionAudit {
  *  so the claim it makes to a visitor ("this is what the odds show") can be tested rather than
  *  trusted: for each finished match, compare the model's pre-match probability split against
  *  the outcome, with NO part of the finished result in the model's inputs. Metrics are rebuilt
- *  for each fixture from only the fixtures that kicked off earlier — the audit cannot see the
+ *  for each fixture from only the fixtures that kicked off earlier 鈥?the audit cannot see the
  *  future it scores. The question is not whether the engine wins, but whether it was honest. */
 export function predictionAudit(compId: string, matches: Match[], clubs: Club[]): PredictionAudit {
   const finished = finishedFixtures(compId, matches).slice().sort(byKickoff);
@@ -1245,13 +1250,13 @@ const xgOf = (e: MatchEvent): number => {
 
 export interface XgRow {
   clubId: string;
-  /** xG scored by the club — the sum of every GOAL event it owns in this competition, 2dp. */
+  /** xG scored by the club 鈥?the sum of every GOAL event it owns in this competition, 2dp. */
   xgFor: number;
-  /** xG conceded — the sum of every GOAL event the opponents own, 2dp. */
+  /** xG conceded 鈥?the sum of every GOAL event the opponents own, 2dp. */
   xgAgainst: number;
-  /** xG difference, 2dp — positive reads a club creating more than it concedes. */
+  /** xG difference, 2dp 鈥?positive reads a club creating more than it concedes. */
   xgDiff: number;
-  /** Actual goals minus xG for, 2dp — positive reads a club finishing better than chance;
+  /** Actual goals minus xG for, 2dp 鈥?positive reads a club finishing better than chance;
    *  the scoreboard is telling a truer story than the xG is, which is the whole question. */
   outshine: number;
 }
@@ -1260,16 +1265,16 @@ export interface XgTable {
   /** Every club with at least one finished fixture here, ranked by the xG difference, then the xG
    *  for, then the club id. */
   rows: XgRow[];
-  /** GOAL events the fold considered — events with a parseable xg plus missing, counted, not hidden. */
+  /** GOAL events the fold considered 鈥?events with a parseable xg plus missing, counted, not hidden. */
   scannedGoals: number;
-  /** GOAL events without a parseable xg — the corruptor the fold reports instead of absorbing. */
+  /** GOAL events without a parseable xg 鈥?the corruptor the fold reports instead of absorbing. */
   missingXg: number;
-  /** The league's own xG sum — total banked by every club in this competition. */
+  /** The league's own xG sum 鈥?total banked by every club in this competition. */
   leagueXg: number;
 }
 
 /** M980: the xG table. Chance creation is the one thing this page never divided against the
- *  outcome — the league leaders tell you who ended with the most, the timing page tells you when
+ *  outcome 鈥?the league leaders tell you who ended with the most, the timing page tells you when
  *  they ended. The scoreboard lies to exactly the degree xG catches: a club outscoring its xG is
  *  finishing better than chance (or getting lucky), and this table puts both ends on one line. */
 export function xgTable(compId: string, matches: Match[], clubs: Club[]): XgTable {
@@ -1326,12 +1331,12 @@ export interface MatchXg {
   home: number;
   /** The away side's xG from its own GOAL events, 2dp. */
   away: number;
-  /** GOAL events that went in without a parseable xg — counted, never absorbed. */
+  /** GOAL events that went in without a parseable xg 鈥?counted, never absorbed. */
   missing: number;
 }
 
-/** M981: this fixture's xG — every GOAL this match's event list recorded, its chance values summed
- *  per side. A 0-0 still reads 0.00 – 0.00 — the fixture is real and its record is empty; the null
+/** M981: this fixture's xG 鈥?every GOAL this match's event list recorded, its chance values summed
+ *  per side. A 0-0 still reads 0.00 鈥?0.00 鈥?the fixture is real and its record is empty; the null
  *  arm is the absence of the event list entirely. */
 export function matchXg(m: Match): MatchXg | null {
   if (!m.events?.length) return null;
@@ -1346,7 +1351,7 @@ export function matchXg(m: Match): MatchXg | null {
 }
 
 export interface XgVenueClock {
-  /** Total recorded xG by END the goal went in for, per six windows — home end then away end. */
+  /** Total recorded xG by END the goal went in for, per six windows 鈥?home end then away end. */
   homeWindows: number[];
   awayWindows: number[];
   /** The two series' totals. */
@@ -1356,7 +1361,7 @@ export interface XgVenueClock {
 
 /** M982: the xG venue clock. The crowd gets told who carries the game between the boxes; this
  *  asks where the chances actually land by end, off the same detail.vars.xg the xG table sums,
- *  split by the end the GOAL EVENT names — not by the scoreline. */
+ *  split by the end the GOAL EVENT names 鈥?not by the scoreline. */
 export function xgVenueClock(compId: string, matches: Match[], clubs: Club[]): XgVenueClock {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
   const homeWindows = Array.from({ length: GOAL_BANDS }, () => 0);
@@ -1391,19 +1396,18 @@ export interface XgRobberyRow {
   awayGoals: number;
   homeXg: number;
   awayXg: number;
-  /** The xG the losing side banked minus what the winner banked, 2dp — at least 1.5 by construction. */
+  /** The xG the losing side banked minus what the winner banked, 2dp 鈥?at least 1.5 by construction. */
   margin: number;
   /** The club that won the fixture while losing the xG battle. */
   winnerId: string;
 }
 
 export interface XgRobberies {
-  /** Fixtures where the losing side's xG beat the winner's by at least 1.5, worst first. Top eight —
-   *  the shape of the collapse list, one fixture per line, no season-long aggregates. */
+  /** Fixtures where the losing side's xG beat the winner's by at least 1.5, worst first. Top eight 鈥?   *  the shape of the collapse list, one fixture per line, no season-long aggregates. */
   rows: XgRobberyRow[];
   /** How many fixtures qualified (before the eight-row cap). */
   count: number;
-  /** The widest margin owed, 2dp — 0 when nothing qualifies. */
+  /** The widest margin owed, 2dp 鈥?0 when nothing qualifies. */
   biggest: number;
   /** Finished fixtures read. */
   matches: number;
@@ -1413,7 +1417,7 @@ const ROBBERY_THRESHOLD = 1.5;
 
 /** M983: the owed margins. The xG table settles who has banked more chances across a season and
  *  the timing clock shows when; this names the fixtures where the scoreboard and the chances tell
- *  opposite stories — the losing side far outcreated the winner, and the winner won anyway. The
+ *  opposite stories 鈥?the losing side far outcreated the winner, and the winner won anyway. The
  *  threshold is 1.5 goals of accumulated chance, in the same unit the xG table prints. */
 export function xgRobberies(compId: string, matches: Match[], clubs: Club[]): XgRobberies {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
@@ -1467,13 +1471,13 @@ export interface StrictnessRow {
   yellows: number;
   reds: number;
   bookings: number;
-  /** Bookings per finished fixture in this competition, 2dp — 0 while it has no counted game. */
+  /** Bookings per finished fixture in this competition, 2dp 鈥?0 while it has no counted game. */
   perMatch: number;
 }
 
 export interface Strictness {
   /** Every competition with at least one finished fixture, ordered by cards per match, then the
-   *  total bookings, then the id — the strictest league first. */
+   *  total bookings, then the id 鈥?the strictest league first. */
   rows: StrictnessRow[];
   /** Total finished fixtures read across the populations above. */
   matches: number;
@@ -1482,7 +1486,7 @@ export interface Strictness {
 }
 
 /** M984: the strictness board. The discipline screen judges one competition at a time; this one
- *  compares the competitions themselves — which leagues hand out cards and which let the game
+ *  compares the competitions themselves 鈥?which leagues hand out cards and which let the game
  *  breathe. It needs no clubs and no events beyond the stats blocks, so the world's whole
  *  season answers it in one pass. */
 export function strictness(matches: Match[]): Strictness {
@@ -1531,7 +1535,7 @@ export interface RecordRow {
 }
 
 export interface Records {
-  /** The fixture with the widest scoreline, earliest on a tie — the league's truest rout. */
+  /** The fixture with the widest scoreline, earliest on a tie 鈥?the league's truest rout. */
   biggestWin: (RecordRow & { margin: number }) | null;
   /** The draw with the most goals inside it, earliest on a tie; null when no draw has happened. */
   highestScoringDraw: (RecordRow & { total: number }) | null;
@@ -1541,7 +1545,7 @@ export interface Records {
   matches: number;
 }
 
-/** The one body both record folds lean on — moved to module scope so the two never spell the same
+/** The one body both record folds lean on 鈥?moved to module scope so the two never spell the same
  *  object in two places. Callers narrow every match through `isFinished` before it reaches it. */
 const recordFor = (m: Match & { homeGoals: number; awayGoals: number }): RecordRow => ({
   matchId: m.id, kickoff: m.kickoff, homeClubId: m.homeClubId, awayClubId: m.awayClubId,
@@ -1550,7 +1554,7 @@ const recordFor = (m: Match & { homeGoals: number; awayGoals: number }): RecordR
 
 /** M985: the wildest results. The seed places a scoreline on every fixture and the app prints the
  *  thousand of them across two pages; this names the ones that carry a kind of weather. Playfully
- *  written but plainly one pass — every fixture walked once, three banners kept. */
+ *  written but plainly one pass 鈥?every fixture walked once, three banners kept. */
 export function records(matches: Match[]): Records {
   const finished = matches.filter((m): m is Match & { homeGoals: number; awayGoals: number } => isFinished(m));
   const earlierThan = (m: Match, r: RecordRow) =>
@@ -1584,7 +1588,7 @@ export interface BounceBackRow {
   clubId: string;
   /** Fixtures this club played directly following a defeat. */
   afterLoss: number;
-  /** League points from those fixtures — win 3, draw 1, loss 0. */
+  /** League points from those fixtures 鈥?win 3, draw 1, loss 0. */
   points: number;
   /** Points per after-loss fixture, 2dp. */
   rate: number;
@@ -1593,16 +1597,16 @@ export interface BounceBackRow {
 export interface BounceBack {
   /** Clubs with at least two after-loss fixtures, ranked by rate, then sample, then club id. */
   rows: BounceBackRow[];
-  /** Clubs with fewer situations — counted, never printed. */
+  /** Clubs with fewer situations 鈥?counted, never printed. */
   underpowered: number;
-  /** The world's own rate — points from after-loss fixtures over after-loss fixtures, across everyone. */
+  /** The world's own rate 鈥?points from after-loss fixtures over after-loss fixtures, across everyone. */
   world: number;
 }
 
 const minimumSample = 2;
 
 /** M987: after a defeat. Replaying each club's results in kickoff order, this reads what happened in
- *  the fixture immediately after every loss — the league's honest answer to "does this side turn it
+ *  the fixture immediately after every loss 鈥?the league's honest answer to "does this side turn it
  *  around?". Two after-loss fixtures is the smallest sample the board prints, per the shared
  *  sample-floor declaration rather than a new bound of its own. */
 export function bounceBack(compId: string, matches: Match[], clubs: Club[]): BounceBack {
@@ -1653,22 +1657,22 @@ export interface LateXgRow {
   played: number;
   /** xG this club banked in the last window or beyond (76+). */
   xgLate: number;
-  /** All xG this club banked — the late share's denominator. */
+  /** All xG this club banked 鈥?the late share's denominator. */
   xgAll: number;
-  /** Late xG as a share of all xG, 0–100, 2dp. */
+  /** Late xG as a share of all xG, 0鈥?00, 2dp. */
   lateShare: number;
 }
 
 export interface LateXg {
   /** Clubs that banked at least one xG in this competition, ranked by late share, then late xG. */
   rows: LateXgRow[];
-  /** The league's own late share across every xG it counted — a league-wide line, not a mean. */
+  /** The league's own late share across every xG it counted 鈥?a league-wide line, not a mean. */
   leagueLate: number;
-  /** World or league-wide xG counted — the denominator of `leagueLate`. */
+  /** World or league-wide xG counted 鈥?the denominator of `leagueLate`. */
   matches: number;
 }
 
-/** M989: closing time — where each club's xG arrives in the last window. The clock reads when
+/** M989: closing time 鈥?where each club's xG arrives in the last window. The clock reads when
  *  the goals arrive; this reads how much of the chance comes with them. Late-minute xG is the
  *  proof of a club's sustained pressure; it either arrives or it doesn't. */
 export function lateXg(compId: string, matches: Match[], clubs: Club[]): LateXg {
@@ -1693,7 +1697,7 @@ export function lateXg(compId: string, matches: Match[], clubs: Club[]): LateXg 
       const cur = byClub.get(id);
       if (!cur) continue;
       cur.all += parsed;
-      if (e.minute >= 76) cur.late += parsed;
+      if (isLateWindow(e.minute)) cur.late += parsed;
     }
   }
   const rows = [...byClub.entries()]
@@ -1720,7 +1724,7 @@ export interface LeagueOpennessRow {
   competitionId: string;
   matches: number;
   goals: number;
-  /** Goals per match here, 2dp — the openness of the league. */
+  /** Goals per match here, 2dp 鈥?the openness of the league. */
   perMatch: number;
 }
 
@@ -1729,14 +1733,14 @@ export interface LeagueOpenness {
   rows: LeagueOpennessRow[];
   /** Finished fixtures the world counts across them all. */
   matches: number;
-  /** Goals across them all — the numerator of `global`. */
+  /** Goals across them all 鈥?the numerator of `global`. */
   goals: number;
   /** The world's own rate: goals everywhere / fixtures everywhere, 2dp. */
   global: number;
 }
 
 /** M990: which leagues play the most open games. The world is fifteen leagues and two cups wrapped
- *  into the same fixtures — this reads them against each other on the one axis that crosses every
+ *  into the same fixtures 鈥?this reads them against each other on the one axis that crosses every
  *  league every week: scoreline inflation. */
 export function leagueOpenness(matches: Match[]): LeagueOpenness {
   const byComp = new Map<string, { matches: number; goals: number }>();
@@ -1785,7 +1789,7 @@ export interface WorldUpsets {
   matches: number;
 }
 
-/** M991: the world's upsets, read straight off the away end — the seeded world's widest-away-wins,
+/** M991: the world's upsets, read straight off the away end 鈥?the seeded world's widest-away-wins,
  *  and the one that broke the strength order by the largest margin. Clubs carry `overall` through
  *  the dataset, so the deficit is measured, not narrated. */
 export function worldUpsets(matches: Match[], clubs: Club[]): WorldUpsets {
@@ -1821,7 +1825,7 @@ export interface ScorelessRow {
   clubId: string;
   /** The longest run of fixtures without a goal, walked in kickoff order. */
   longestScoreless: number;
-  /** The blank the club is on right now — 0 when its last fixture found the net. */
+  /** The blank the club is on right now 鈥?0 when its last fixture found the net. */
   currentScoreless: number;
   played: number;
 }
@@ -1831,14 +1835,13 @@ export interface ScorelessStreaks {
   rows: ScorelessRow[];
   /** Finished fixtures read. */
   matches: number;
-  /** The league's own longest blank — the longest run over every club. */
+  /** The league's own longest blank 鈥?the longest run over every club. */
   leagueLongest: number;
-  /** The club holding that longest blank — the first of the rows that shows it, null when nobody has one. */
+  /** The club holding that longest blank 鈥?the first of the rows that shows it, null when nobody has one. */
   leagueHolder: string | null;
 }
 
-/** M992: the blank runs. Every club that has spent a finished fixture without scoring is displayed —
- *  scored once or never, the count is the same walked in order. The red board is the mirror — it
+/** M992: the blank runs. Every club that has spent a finished fixture without scoring is displayed 鈥? *  scored once or never, the count is the same walked in order. The red board is the mirror 鈥?it
  *  absent-clubs instead of zero-clubs, so a blank run only exists when at least one is zero. */
 export function scorelessStreaks(matches: Match[], clubs: Club[]): ScorelessStreaks {
   const byClub = new Map<string, Array<{ kickoff: string; gf: number }>>();
@@ -1881,7 +1884,7 @@ export function scorelessStreaks(matches: Match[], clubs: Club[]): ScorelessStre
 
 export interface WorldLeader {
   competitionId: string;
-  /** The club leading the competition — the first metrics row of the competition, which is the table's own order. */
+  /** The club leading the competition 鈥?the first metrics row of the competition, which is the table's own order. */
   leaderId: string | null;
   /** Points the leader banked. */
   points: number;
@@ -1892,7 +1895,7 @@ export interface WorldLeader {
 export interface WorldLeaders {
   /** One entry per competition with at least one finished fixture, sorted by competition id. */
   rows: WorldLeader[];
-  /** Competition tallies — nothing new from the world itself, kept for callers that want one line. */
+  /** Competition tallies 鈥?nothing new from the world itself, kept for callers that want one line. */
   leaderCount: number;
 }
 
@@ -1941,7 +1944,7 @@ export interface WorldRescues {
   replayed: number;
   /** Of those, the fixtures a side rescued from behind. */
   rescued: number;
-  /** rescued over replayed through the safeDiv door, 0–100, 2dp. */
+  /** rescued over replayed through the safeDiv door, 0鈥?00, 2dp. */
   share: number;
 }
 
@@ -1957,7 +1960,7 @@ function widestDeficit(goals: MatchEvent[], side: Side): number {
 }
 
 /** M1041: the rescued results. The seed writes a scoreline and a goal clock for every fixture;
- *  this replays that clock and names the fixtures a side took from behind — the widest hole it
+ *  this replays that clock and names the fixtures a side took from behind 鈥?the widest hole it
  *  faced and the minute it climbed out. A decided fixture belongs to its winner whenever the
  *  winner trailed; a drawn fixture belongs to one end only when the other end was never behind
  *  (a match with swings on both sides has no single rescuer to name). Fixtures whose goal events
@@ -2011,12 +2014,62 @@ export function worldRescues(matches: Match[]): WorldRescues {
   return { rows, replayed, rescued, share: round2(safeDiv(rescued, replayed) * 100) };
 }
 
+export interface LastGaspRow {
+  clubId: string;
+  /** Finished fixtures where the winner of this club scored or equalized at minute 鈮?76 and kept
+   *  the points 鈥?one count per fixture, regardless of how many late goals the winner had. */
+  lastGasp: number;
+}
+
+export interface LastGaspBoard {
+  /** Every club with at least one last-gasp winner, ordered by lastGasp, then club id. */
+  rows: LastGaspRow[];
+  /** Finished fixtures whose recorded goal clock replays to exactly the printed scoreline. */
+  replayed: number;
+  /** Of those, the decided fixtures a side won with a 76+ goal of the winner. */
+  lastGasp: number;
+  /** lastGasp over replayed through the safeDiv door, 0鈥?00, 2dp. */
+  share: number;
+}
+
+/** M1044: the last-gasp kings. The same replay discipline as the rescued results 鈥?a fixture is
+ *  judged only when the per-side GOAL events match the printed scoreline. A decided fixture
+ *  belongs to its winner; of those, the fixtures where the winner scored or drew level at minute
+ *  鈮?76 (the same sixth window the clocks print, stoppage included) mint one last-gasp count for
+ *  the winning club. Unreplayable fixtures are not judged at all. */
+export function lastGaspKings(matches: Match[]): LastGaspBoard {
+  const rows = new Map<string, LastGaspRow>();
+  let replayed = 0, lastGasp = 0;
+  for (const m of matches.filter((x): x is Match & { homeGoals: number; awayGoals: number } => isFinished(x))) {
+    const goals = (m.events ?? []).filter((e) => e.type === "GOAL").sort(byMinute);
+    if (goals.filter((e) => e.side === "home").length !== m.homeGoals) continue;
+    if (goals.filter((e) => e.side === "away").length !== m.awayGoals) continue;
+    replayed++;
+    const winner: Side | null = m.homeGoals > m.awayGoals ? "home" : m.awayGoals > m.homeGoals ? "away" : null;
+    if (winner === null) continue;
+    let own = 0, opp = 0, struck = false;
+    for (const e of goals) {
+      if (e.side === winner) own++;
+      else opp++;
+      if (e.side === winner && isLateWindow(e.minute) && own >= opp) { struck = true; break; }
+    }
+    if (!struck) continue;
+    lastGasp++;
+    const clubId = winner === "home" ? m.homeClubId : m.awayClubId;
+    const row = rows.get(clubId) ?? { clubId, lastGasp: 0 };
+    row.lastGasp++;
+    rows.set(clubId, row);
+  }
+  const list = [...rows.values()].sort((a, b) => b.lastGasp - a.lastGasp || a.clubId.localeCompare(b.clubId));
+  return { rows: list, replayed, lastGasp, share: round2(safeDiv(lastGasp, replayed) * 100) };
+}
+
 export interface PassingRow {
   clubId: string;
   played: number;
   /** Pass accuracy averaged per finished fixture, 2dp. */
   passAcc: number;
-  /** Passes per finished fixture, 2dp — the tempo of the club's game. */
+  /** Passes per finished fixture, 2dp 鈥?the tempo of the club's game. */
   passes: number;
   /** Duels per finished fixture, 2dp. */
   duels: number;
@@ -2031,12 +2084,12 @@ export interface PassingAccuracy {
 
 /** M998: the passers. The stats block carries a pass number and an accuracy figure for each side in
  *  every finished fixture; the ratio per fixture averaged over the team's matches reads as a
- *  technician's score. Who controls the ball most prizedly — that's what this fold ranks. */
+ *  technician's score. Who controls the ball most prizedly 鈥?that's what this fold ranks. */
 export function passingAccuracy(matches: Match[], clubs: Club[]): PassingAccuracy {
   const ranked = indexById(clubs);
   const rows: PassingRow[] = [];
   const acc = new Map<string, { passAcc: number; passes: number; duels: number; games: number }>();
-  // Two near-identical legs through the same arithmetic — the `Side` vocabulary everywhere in the
+  // Two near-identical legs through the same arithmetic 鈥?the `Side` vocabulary everywhere in the
   // tree belongs to the type alone, so the fixture is not walked as an array-literal in order
   // here; each leg calls the same reader the gate lets pass once.
   const tallySide = (m: Match & { homeGoals: number; awayGoals: number }, side: Side, id: string) => {
@@ -2078,13 +2131,13 @@ export function passingAccuracy(matches: Match[], clubs: Club[]): PassingAccurac
 export interface MetronomeRow {
   clubId: string;
   played: number;
-  /** Pass accuracy weighted by volume — every pass of every fixture counted once, 2dp. */
+  /** Pass accuracy weighted by volume 鈥?every pass of every fixture counted once, 2dp. */
   weighted: number;
   /** The plain per-fixture average, the reading `passingAccuracy` ranks, 2dp. */
   plain: number;
-  /** weighted − plain, 2dp — positive when the high-volume nights carried the better days. */
+  /** weighted 鈭?plain, 2dp 鈥?positive when the high-volume nights carried the better days. */
   shift: number;
-  /** Total passes across every finished fixture — the weight behind `weighted`. */
+  /** Total passes across every finished fixture 鈥?the weight behind `weighted`. */
   passes: number;
 }
 
@@ -2098,10 +2151,10 @@ export interface MetronomeBoard {
   leaguePlain: number;
 }
 
-/** M1039: the metronomes — pass accuracy weighted by volume. `passingAccuracy` gives every
+/** M1039: the metronomes 鈥?pass accuracy weighted by volume. `passingAccuracy` gives every
  *  fixture one vote; this fold multiplies each reading by the passes behind it, so a 92% night
  *  on 200 passes outweighs a 92% night on 20. The gap prints as `shift`, and the league row
- *  carries both readings — the difference is the whole point of the board. */
+ *  carries both readings 鈥?the difference is the whole point of the board. */
 export function passingMetronomes(matches: Match[], clubs: Club[]): MetronomeBoard {
   const ranked = indexById(clubs);
   const acc = new Map<
@@ -2165,14 +2218,14 @@ export interface CardVenueClock {
   /** Bookings of either colour per six windows, split by the end that earned them. */
   homeWindows: number[];
   awayWindows: number[];
-  /** The two series' totals — every YELLOW and every RED with a side, no fouls, no free kicks. */
+  /** The two series' totals 鈥?every YELLOW and every RED with a side, no fouls, no free kicks. */
   home: number;
   away: number;
 }
 
-/** M1003: the card venue clock — every booking in the seeded world, by end and by minute, in the
+/** M1003: the card venue clock 鈥?every booking in the seeded world, by end and by minute, in the
  *  same six windows the xG clock prints. The discipline page answers who got booked; this asks
- *  where and when — off the same event list, gated the same way. */
+ *  where and when 鈥?off the same event list, gated the same way. */
 export function cardVenueClock(compId: string, matches: Match[], clubs: Club[]): CardVenueClock {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
   const homeWindows = Array.from({ length: GOAL_BANDS }, () => 0);
@@ -2208,7 +2261,7 @@ export type StatKingMetric = "corners" | "duels" | "yellows" | "fouls" | "shots"
 
 export interface StatsKingBoard {
   /** Every club with at least one finished fixture here, ordered by the selected stat per
-   *  match desc, then the id. The fold knows nothing of what the stat BECAME — pair it with
+   *  match desc, then the id. The fold knows nothing of what the stat BECAME 鈥?pair it with
    *  this fold's siblings for xG, shots and passes if the reader wants the conversion half. */
   rows: StatsKingRow[];
   /** The fixture-count-weighted mean of the metric, 2dp. */
@@ -2216,9 +2269,9 @@ export interface StatsKingBoard {
 }
 
 /** M1010/M1014: the stats-block kings. The counters the seed's stat block carries that no engineer
- *  ever spent — corners for territorial pressure, duels for friction; one walk both. Other fields
+ *  ever spent 鈥?corners for territorial pressure, duels for friction; one walk both. Other fields
  *  in the same block (shots, onTarget, passes, passAcc, tackles, fouls, yellows, reds) ride this
- *  same shape if a reader wants them later — one fold, not one per metric. */
+ *  same shape if a reader wants them later 鈥?one fold, not one per metric. */
 export function statsBlockKings(matches: Match[], clubs: Club[], metric: StatKingMetric): StatsKingBoard {
   const pick =
     metric === "corners" ? (s: { corners: number }) => s.corners
@@ -2257,7 +2310,7 @@ export function statsBlockKings(matches: Match[], clubs: Club[], metric: StatKin
   return { rows, league: totalGames ? round2(total / totalGames) : 0 };
 }
 
-/** M1018: the world's red card kings — the club sent off most often across every competition of
+/** M1018: the world's red card kings 鈥?the club sent off most often across every competition of
  *  the seeded world. Only cards from the stats block count; event-list red cards would double it.
  *  Ranked by total reds, then id; a club that was never booked does not appear. */
 export interface RedKingRow {
@@ -2272,7 +2325,7 @@ export interface RedKingRow {
 
 export interface RedKings {
   rows: RedKingRow[];
-  /** Finished fixtures across the population — the numerator the board prints. */
+  /** Finished fixtures across the population 鈥?the numerator the board prints. */
   matches: number;
   /** The world's own reds per club-fixture here, 2dp. */
   perMatch: number;
@@ -2309,7 +2362,7 @@ export function redCardKings(matches: Match[], clubs: Club[]): RedKings {
   return { rows, matches: games, perMatch: games ? round2(totalReds / games) : 0 };
 }
 
-/** M1016: the lethal read, the world over — the same one-attempt-per-attempt math as the timing
+/** M1016: the lethal read, the world over 鈥?the same one-attempt-per-attempt math as the timing
  *  seam, summed across the whole seed instead of one competition. Every attempt is either a SHOT
  *  that did not score or a GOAL; a fooled read would be a shot counted nowhere. Zero-attempts clubs
  *  take no row, sorted by conversion, goals, shots, id. */
@@ -2317,14 +2370,14 @@ export interface WorldLethalRow {
   clubId: string;
   shots: number;
   goals: number;
-  /** Rate of attempts that became goals, 0–100, 2dp. */
+  /** Rate of attempts that became goals, 0鈥?00, 2dp. */
   rate: number;
 }
 
 export interface WorldLethal {
   /** Every club with at least one attempt here, ranked by conversion, then goals, then shots, then id. */
   rows: WorldLethalRow[];
-  /** The world's own conversion — every goal / every attempt, 2dp. */
+  /** The world's own conversion 鈥?every goal / every attempt, 2dp. */
   league: number;
 }
 
@@ -2362,19 +2415,19 @@ export function worldLethal(matches: Match[], clubs: Club[]): WorldLethal {
   return { rows, league: attempts ? round2((total / attempts) * 100) : 0 };
 }
 
-/** M1011: the world's outshine — every club producing goals above their recorded xG at world
+/** M1011: the world's outshine 鈥?every club producing goals above their recorded xG at world
  *  scale, ranked by how far the scoreboard runs past the chances. The league xG table settles
  *  who creates most in one competition; this answers who punishes the most across the board. */
 export interface OutshineRow {
   clubId: string;
   /** xG for across the whole world, 2dp. */
   xgFor: number;
-  /** Actual goals minus xG for, 2dp — positive reads a club finishing better than chance. */
+  /** Actual goals minus xG for, 2dp 鈥?positive reads a club finishing better than chance. */
   outshine: number;
 }
 
 export interface OutshineWorld {
-  /** Clubs ranked by outshine, then xG for, then club id; xG-less clubs excluded — there
+  /** Clubs ranked by outshine, then xG for, then club id; xG-less clubs excluded 鈥?there
    *  is nothing for the fold to outflank them with. */
   rows: OutshineRow[];
 }
@@ -2420,7 +2473,7 @@ export function worldOutshine(matches: Match[], clubs: Club[]): OutshineWorld {
 export interface ClockContrastWindow {
   goals: number;
   cards: number;
-  /** M946: goals per card in this window, 2dp through the safeDiv door — 0 when the window
+  /** M946: goals per card in this window, 2dp through the safeDiv door 鈥?0 when the window
    *  booked nobody, which the screen reads as no ratio to state rather than an empty one. */
   goalsPerCard: number;
 }
@@ -2428,20 +2481,20 @@ export interface ClockContrastWindow {
 export interface ClockContrast {
   goals: number;
   cards: number;
-  /** Both series over the same six windows, index 0 = 1–15′, index 5 = 76–90+′. */
+  /** Both series over the same six windows, index 0 = 1鈥?5鈥? index 5 = 76鈥?0+鈥? */
   windows: ClockContrastWindow[];
   /** The busiest goal window; null when the competition has no recorded goal. */
   peakGoal: number | null;
   /** The busiest card window; null when the competition has no recorded booking. */
   peakCard: number | null;
-  /** M946: the sharpest window — the highest goals-per-card ratio among the windows that
+  /** M946: the sharpest window 鈥?the highest goals-per-card ratio among the windows that
    *  booked somebody; null when the competition has no recorded booking at all. */
   peakRhythm: number | null;
 }
 
 /** The league's clock read as two series: when goals arrive and when cards arrive. Each side is
- *  a sum of a fold that already exists — goals across `goalTiming`'s scored bands, cards off
- *  `cardTiming`'s league windows — so the contrast cannot disagree with either screen. A peak is
+ *  a sum of a fold that already exists 鈥?goals across `goalTiming`'s scored bands, cards off
+ *  `cardTiming`'s league windows 鈥?so the contrast cannot disagree with either screen. A peak is
  *  null when its series is empty: a competition with no booking has no busiest card window, only
  *  six silent ones. */
 export function clockContrast(compId: string, matches: Match[], clubs: Club[]): ClockContrast {
@@ -2457,7 +2510,7 @@ export function clockContrast(compId: string, matches: Match[], clubs: Club[]): 
     return peak;
   };
   const windows = goals.map((g, b) => ({ goals: g, cards: card.windows[b], goalsPerCard: safeDiv(g, card.windows[b]) }));
-  // The sharpest window is the one whose bookings were most productive — the earliest window
+  // The sharpest window is the one whose bookings were most productive 鈥?the earliest window
   // holding the maximum, and no window at all when nobody was booked.
   let peakRhythm: number | null = null;
   for (let b = 0; b < GOAL_BANDS; b++) {
@@ -2475,7 +2528,7 @@ export function clockContrast(compId: string, matches: Match[], clubs: Club[]): 
 }
 
 export interface VenueRhythm {
-  /** Goals per card, per window, read off the home sides' own goal and card series — the
+  /** Goals per card, per window, read off the home sides' own goal and card series 鈥?the
    *  safeDiv door's figure where the window booked nobody, which the screen declines to print. */
   home: number[];
   /** The away sides' rhythm, the same read. */
@@ -2485,7 +2538,7 @@ export interface VenueRhythm {
   peak: { end: Side; band: number } | null;
 }
 
-/** M948: the venue rhythm — whether the home advantage that shows in the minutes (M788) also
+/** M948: the venue rhythm 鈥?whether the home advantage that shows in the minutes (M788) also
  *  shows in the exchange rate between what a side's attack earns and what its discipline costs.
  *  Both series are sums of folds that already exist, so the rhythm cannot disagree with the
  *  venue screen's own clocks. */
@@ -2511,10 +2564,10 @@ export interface ClubRhythmRow {
   goals: number;
   cards: number;
   /** M949: whether the ratio rests on at least three bookings. One card making a 2.00 is a
-   *  real reading of one card, not a stable rate — the fold names the sample so the screen
+   *  real reading of one card, not a stable rate 鈥?the fold names the sample so the screen
    *  can say so instead of letting a thin figure dress as a settled one. */
   sampled: boolean;
-  /** Season goals per card through the safeDiv door — the floor's own figure when the club
+  /** Season goals per card through the safeDiv door 鈥?the floor's own figure when the club
    *  booked nobody, which the screen declines to print rather than state a ratio that has
    *  no denominator. */
   goalsPerCard: number;
@@ -2529,7 +2582,7 @@ export interface ClubRhythm {
   sharpest: ClubRhythmRow | null;
 }
 
-/** M947: each club's own season rhythm — goals scored per card earned, joined off the goal
+/** M947: each club's own season rhythm 鈥?goals scored per card earned, joined off the goal
  *  and card folds the screens already read, so no third sweep of the matches exists to
  *  disagree with either. A discipline that wins the ball without conceding chances reads a
  *  high ratio; a rash one reads low. */
@@ -2683,7 +2736,7 @@ export function clubDisciplineResultClock(compId: string, matches: Match[], club
 }
 
 export interface MatchClock {
-  /** Goals in each window, index 0 = 1–15′, index 5 = 76–90+′. */
+  /** Goals in each window, index 0 = 1鈥?5鈥? index 5 = 76鈥?0+鈥? */
   goals: number[];
   /** Bookings (yellows plus reds) in each window. */
   cards: number[];
@@ -2691,7 +2744,7 @@ export interface MatchClock {
   reds: number[];
 }
 
-/** M953: one fixture's own clock — the same six windows the league folds read, read off the
+/** M953: one fixture's own clock 鈥?the same six windows the league folds read, read off the
  *  match's recorded events. Null when the fixture has nothing to clock: not finished, or no
  *  event list recorded. */
 export function matchClock(m: Match): MatchClock | null {
@@ -2712,13 +2765,13 @@ export function matchClock(m: Match): MatchClock | null {
 }
 
 export interface ScoringFirst {
-  /** Fixtures with at least one recorded goal — the ones this read can judge. */
+  /** Fixtures with at least one recorded goal 鈥?the ones this read can judge. */
   scoredFirst: number;
   /** What happened to the side that scored first: the win, the draw or the loss. */
   wonAfter: number;
   drawnAfter: number;
   lostAfter: number;
-  /** wonAfter / scoredFirst through the safeDiv door, 0–100, 2dp — the classic scoring-first
+  /** wonAfter / scoredFirst through the safeDiv door, 0鈥?00, 2dp 鈥?the classic scoring-first
    *  conversion. Zero when no fixture has a recorded goal yet. */
   conversion: number;
 }
@@ -2726,7 +2779,7 @@ export interface ScoringFirst {
 /** M955: does scoring first win? The classic question, read honestly off the event record:
  *  a fixture counts only when it is finished with at least one recorded GOAL, and the first
  *  scorer's own final result is what the three counters judge. Fixtures whose goals are not
- *  recorded stay out — a scoreline alone cannot say who scored first. */
+ *  recorded stay out 鈥?a scoreline alone cannot say who scored first. */
 export function scoringFirst(compId: string, matches: Match[], clubs: Club[]): ScoringFirst {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
   let scoredFirst = 0, wonAfter = 0, drawnAfter = 0, lostAfter = 0;
@@ -2760,9 +2813,9 @@ export interface LeadRetentionRow {
   lost: number;
   /** 3 - points earned, summed over the matches it led: a draw drops two, a defeat three. */
   dropped: number;
-  /** Share of those matches won, 0–100, 2dp; 0 when it never led. */
+  /** Share of those matches won, 0鈥?00, 2dp; 0 when it never led. */
   keepShare: number;
-  /** M959: the same count split by the end the club played at — leads taken and kept at home,
+  /** M959: the same count split by the end the club played at 鈥?leads taken and kept at home,
    *  and the same two away. A club that only ever led at home reads zeros on the away side. */
   homeLed: number;
   homeWon: number;
@@ -2778,7 +2831,7 @@ export interface LeadRetention {
   drawn: number;
   lost: number;
   dropped: number;
-  /** League keep share: won / led, 0–100, 2dp; 0 when no lead was taken. */
+  /** League keep share: won / led, 0鈥?00, 2dp; 0 when no lead was taken. */
   keepShare: number;
   /** Finished fixtures with an event list that could be replayed. */
   matches: number;
@@ -2786,7 +2839,7 @@ export interface LeadRetention {
 
 /** Whether a lead survives: replay every goal in order, note each side that was ahead at any
  *  point, and read the final result against it. `scoringFirst` asks what the FIRST goal bought;
- *  this asks what ANY lead bought — a side that led three times and drew has still dropped two
+ *  this asks what ANY lead bought 鈥?a side that led three times and drew has still dropped two
  *  points. Only fixtures with a recorded event list can be replayed, and the fold reports how
  *  many it read rather than guessing at the rest. */
 export function leadRetention(compId: string, matches: Match[], clubs: Club[]): LeadRetention {
@@ -2812,7 +2865,7 @@ export function leadRetention(compId: string, matches: Match[], clubs: Club[]): 
     ];
     for (const [clubId, didLead, ours, theirs] of sides) {
       if (!didLead || !ranked.has(clubId)) continue;
-      // The replay settles the outcome in locals and the row is written once — the credit
+      // The replay settles the outcome in locals and the row is written once 鈥?the credit
       // vocabulary stays in the door, the counters stay private to the replay.
       const won = ours > theirs ? 1 : 0;
       const drawn = ours === theirs ? 1 : 0;
@@ -2843,13 +2896,13 @@ export interface ComebackRow {
   lost: number;
   /** Points earned in the matches it trailed: three for a win, one for a draw. */
   points: number;
-  /** Goals for and against across the trailed fixtures — the standing fields the board's own
+  /** Goals for and against across the trailed fixtures 鈥?the standing fields the board's own
    *  ranking door reads, accumulated by the same replay that counts the trails. */
   gf: number;
   ga: number;
-  /** Share of those matches that ended level or better, 0–100, 2dp; 0 when it never trailed. */
+  /** Share of those matches that ended level or better, 0鈥?00, 2dp; 0 when it never trailed. */
   rescueShare: number;
-  /** M960: the same count split by the end the club played at — deficits trailed and points
+  /** M960: the same count split by the end the club played at 鈥?deficits trailed and points
    *  rescued at home, and the same two away. */
   homeTrailed: number;
   homePoints: number;
@@ -2865,14 +2918,14 @@ export interface ComebackPoints {
   drawn: number;
   lost: number;
   points: number;
-  /** League rescue share: (won + drawn) / trailed, 0–100, 2dp. */
+  /** League rescue share: (won + drawn) / trailed, 0鈥?00, 2dp. */
   rescueShare: number;
   /** Finished fixtures with an event list that could be replayed. */
   matches: number;
 }
 
 /** The other half of the lead ledger: what a deficit bought. The same replay as `leadRetention`,
- *  read from the side that was behind — a club that came from 0-1 to win has rescued three points
+ *  read from the side that was behind 鈥?a club that came from 0-1 to win has rescued three points
  *  from a losing position. A single fixture can charge both folds: a side that led, was pegged
  *  back and then lost both held a lead and trailed in it, and both reads are true of it. */
 export function comebackPoints(compId: string, matches: Match[], clubs: Club[]): ComebackPoints {
@@ -2913,7 +2966,7 @@ export function comebackPoints(compId: string, matches: Match[], clubs: Club[]):
   }
   const list = [...rows.values()].filter((r) => r.trailed > 0);
   for (const r of list) r.rescueShare = round2(safeDiv(r.won + r.drawn, r.trailed) * 100);
-  // The rescue board is a sub-table — the fixtures where the club trailed — and ranks the way
+  // The rescue board is a sub-table 鈥?the fixtures where the club trailed 鈥?and ranks the way
   // every table here ranks: through the standing door, points first, then the goal difference
   // those same fixtures produced.
   list.sort((a, b) => byTableStanding(a, b));
@@ -2932,7 +2985,7 @@ export interface CollapseRow {
   opponentId: string;
   /** The biggest lead it held, in goals (always at least one). */
   lead: number;
-  /** The minute that lead reached its peak — the last goal that put the side that far ahead. */
+  /** The minute that lead reached its peak 鈥?the last goal that put the side that far ahead. */
   minute: number;
   /** What the fixture ended as, from the leading side's point of view. */
   outcome: "drawn" | "lost";
@@ -2952,7 +3005,7 @@ export interface Collapses {
 }
 
 /** The matches behind the lead board: every fixture where a side got ahead and did not win it.
- *  The aggregate says how often a lead survives; this names the ones that did not — how far ahead
+ *  The aggregate says how often a lead survives; this names the ones that did not 鈥?how far ahead
  *  the side got, and in which minute the peak arrived. Only fixtures with a recorded event list
  *  can be replayed, so the fold reports how many it read rather than implying it saw them all. */
 export function collapses(compId: string, matches: Match[], clubs: Club[]): Collapses {
@@ -2987,8 +3040,8 @@ export function collapses(compId: string, matches: Match[], clubs: Club[]): Coll
   return { rows, count: rows.length, biggest, matches: counted };
 }
 
-/** M968: the fixture that ended a record — who broke it, and by what score. */
-/** M1007: the opposition's overall for the breaking fixture, when the club row answers — the
+/** M968: the fixture that ended a record 鈥?who broke it, and by what score. */
+/** M1007: the opposition's overall for the breaking fixture, when the club row answers 鈥?the
  *  strength read the record's edge was missing. Null when the opponent has no row in `clubs`. */
 export interface StreakBreak {
   matchId: string;
@@ -2996,9 +3049,9 @@ export interface StreakBreak {
   opponentId: string;
   goalsFor: number;
   goalsAgainst: number;
-  /** M1005: the end the breaking fixture belonged to — a run measured at home ends against the home record. */
+  /** M1005: the end the breaking fixture belonged to 鈥?a run measured at home ends against the home record. */
   venue: Side;
-  /** M1007: the reputation of the side that ended the run — overall from the club row. */
+  /** M1007: the reputation of the side that ended the run 鈥?overall from the club row. */
   opponentOverall: number | null;
 }
 
@@ -3006,7 +3059,7 @@ export interface StreakRow {
   clubId: string;
   /** The longest run of wins this club put together in the competition. */
   longestWin: number;
-  /** The longest run without defeat — wins and draws, broken only by a loss. */
+  /** The longest run without defeat 鈥?wins and draws, broken only by a loss. */
   longestUnbeaten: number;
   /** The run it is on now: wins in a row, 0 when its last match was not a win. */
   currentWin: number;
@@ -3014,18 +3067,18 @@ export interface StreakRow {
   currentUnbeaten: number;
   played: number;
   /** M963: the same two runs read inside the club's home matches only, and inside its away
-   *  matches only — a home fortress and an away record are different sequences of the same season. */
+   *  matches only 鈥?a home fortress and an away record are different sequences of the same season. */
   homeWin: number;
   homeUnbeaten: number;
   awayWin: number;
   awayUnbeaten: number;
-  /** M964: the other side of the record — the longest run without a win, and the one it is on. */
+  /** M964: the other side of the record 鈥?the longest run without a win, and the one it is on. */
   longestWinless: number;
   currentWinless: number;
-  /** M968: the record's edge — the fixture that ended the longest unbeaten run. Null while the
+  /** M968: the record's edge 鈥?the fixture that ended the longest unbeaten run. Null while the
    *  run is still alive, because the best run ends at the club's last finished match. */
   unbeatenBreak: StreakBreak | null;
-  /** M1005: the same edge read once per end — the fixture that ended the longest HOME unbeaten
+  /** M1005: the same edge read once per end 鈥?the fixture that ended the longest HOME unbeaten
    *  run, and the fixture that ended the longest AWAY run. Null when the run reached the end of
    *  its home/away sequence unbroken, or when the club had no fixture at that end. */
   homeBreak: StreakBreak | null;
@@ -3048,7 +3101,7 @@ export interface Streaks {
 /** Runs, not averages: every finished fixture in the competition, ordered by kickoff for each club,
  *  walked once to find the longest winning and unbeaten runs it has put together and the run it is
  *  on now. Form letters read the last five results; this reads the shape of the whole season, and
- *  it needs no event list — a final score is enough. */
+ *  it needs no event list 鈥?a final score is enough. */
 export function streaks(compId: string, matches: Match[], clubs: Club[]): Streaks {
   const ranked = new Set(teamMetrics(compId, matches, clubs).map((m) => m.clubId));
   const clubById = indexById(clubs);
@@ -3147,7 +3200,7 @@ export interface FormRow {
   formPosition: number;
   /** seasonPosition - formPosition; positive when the window lifts the club above its season place. */
   climb: number;
-  /** M971: the window's fixtures split by venue — every played fixture belongs to exactly one of
+  /** M971: the window's fixtures split by venue 鈥?every played fixture belongs to exactly one of
    *  the two halves, so the two add up to `played` and to `points`. */
   homePlayed: number;
   homePoints: number;
@@ -3167,13 +3220,13 @@ export interface FormTable {
 }
 
 /** The last five, ranked: every club's last `FORM_WINDOW` finished fixtures, scored as their own
- *  mini-league. New analytics, not a re-read — `teamMetrics`' `form` is only each club's own letters;
+ *  mini-league. New analytics, not a re-read 鈥?`teamMetrics`' `form` is only each club's own letters;
  *  this sorts the whole field on the window. Reuses the `recentResults` door for the window, the
  *  `creditResult` door for the tally and `byTableStanding` for the ranking, so no arithmetic is
  *  re-spelled here. */
 export function formTable(compId: string, matches: Match[], clubs: Club[]): FormTable {
   const season = teamMetrics(compId, matches, clubs);
-  // Season places are numbered only over the cohort that actually plays finished fixtures — the
+  // Season places are numbered only over the cohort that actually plays finished fixtures 鈥?the
   // same cohort the window ranks, so `climb` compares like with like. A club with no finished
   // fixture holds no season place on this screen (it holds season place 0 and the screen prints
   // the absence glyph).
@@ -3246,11 +3299,11 @@ export interface SeasonStory {
   biggestWin: StoryMoment | null;
   /** The fixture with the most goals in it, the earlier kickoff first on a tie. */
   highestScoring: StoryMoment | null;
-  /** The biggest lead that did not survive — read off `collapses`, not re-derived here. */
+  /** The biggest lead that did not survive 鈥?read off `collapses`, not re-derived here. */
   biggestCollapse: StoryMoment | null;
   /** The latest goal in the competition, the earlier kickoff first on a tie. */
   latestGoal: StoryMoment | null;
-  /** The longest winning run — read off `streaks`. */
+  /** The longest winning run 鈥?read off `streaks`. */
   longestRun: { clubId: string; length: number } | null;
   /** Finished fixtures read (all of them: a score is enough for four of the five moments). */
   matches: number;
@@ -3420,7 +3473,7 @@ export interface HeadToHead {
 
 /** Every finished meeting between two clubs, read from club A's side.
  *
- *  A pair can meet in more than one competition — a league fixture and a continental tie — so the
+ *  A pair can meet in more than one competition 鈥?a league fixture and a continental tie 鈥?so the
  *  fold reads the whole fixture list rather than one competition's, which is the question the
  *  standings and the club comparison never answer. Scheduled and live fixtures are excluded: a
  *  record is what was played, not what is booked. */
@@ -3477,7 +3530,7 @@ export function headToHead(clubA: string, clubB: string, matches: Match[]): Head
 
 export interface VenueSplitRow {
   clubId: string;
-  /** Points won at home and away — the two halves the table's single figure sums. */
+  /** Points won at home and away 鈥?the two halves the table's single figure sums. */
   homePoints: number;
   awayPoints: number;
   /** Points per game in each half, 2dp; 0 while that half has not been played. */
@@ -3492,7 +3545,7 @@ export interface VenueSplitRow {
 export interface VenueSplit {
   /** One row per club, in table order (the order `teamMetrics` already decided). */
   rows: VenueSplitRow[];
-  /** League-wide results across every finished fixture — the venue effect the table hides. */
+  /** League-wide results across every finished fixture 鈥?the venue effect the table hides. */
   homeWins: number;
   draws: number;
   awayWins: number;
@@ -3504,8 +3557,8 @@ export interface VenueSplit {
 /** The season split by venue: what each club has taken at home and away, and what the league's
  *  fixtures did as a whole.
  *
- *  `teamMetrics` already folds each club's home and away records — they feed its attack and defence
- *  ratings — but no screen asks the question those halves answer on their own: is this club's
+ *  `teamMetrics` already folds each club's home and away records 鈥?they feed its attack and defence
+ *  ratings 鈥?but no screen asks the question those halves answer on their own: is this club's
  *  position built at home or on the road, and does the league even have a home advantage? Reading
  *  the same fold rather than replaying the fixtures means a correction to what "finished" means
  *  lands once, and the two screens can never disagree about a club's home record. */
@@ -3545,7 +3598,7 @@ export function venueSplit(compId: string, matches: Match[], clubs: Club[]): Ven
 
 export interface DisciplineRow {
   clubId: string;
-  /** Finished fixtures that carried a stats block — the games these counts were read from. */
+  /** Finished fixtures that carried a stats block 鈥?the games these counts were read from. */
   played: number;
   yellows: number;
   reds: number;
@@ -3571,7 +3624,7 @@ export interface Discipline {
 
 /** The season's discipline: what the recorded match stats say about cards and fouls, club by club.
  *
- *  The match engine already writes a stats block per fixture — fouls, yellows, reds — and the box
+ *  The match engine already writes a stats block per fixture 鈥?fouls, yellows, reds 鈥?and the box
  *  score prints it for the single match, but no screen asks which club is booked most often or
  *  whether the league's card count is rising with its fouls. This reads the same stats blocks
  *  `finishedFixtures` and `teamMetrics` read, so a fixture the table does not count cannot count
@@ -3634,7 +3687,7 @@ export interface DisciplineVenueRow {
 export interface DisciplineVenue {
   /** One row per club, the biggest away-minus-home gap first, then the most bookings, then id. */
   rows: DisciplineVenueRow[];
-  /** Finished fixtures that carried a stats block — each one is one home and one away appearance. */
+  /** Finished fixtures that carried a stats block 鈥?each one is one home and one away appearance. */
   matches: number;
   home: { bookings: number; perMatch: number };
   away: { bookings: number; perMatch: number };
@@ -3645,7 +3698,7 @@ export interface DisciplineVenue {
 /**
  * The same discipline fold split by venue (M626): each counted fixture books the home side at one
  * end and the away side at the other, so a club's card rate can be read where it was earned. The
- * board answers "who is booked most"; this answers "is it rougher on the road" — for the league
+ * board answers "who is booked most"; this answers "is it rougher on the road" 鈥?for the league
  * (`rougher`) and for each club (`gap`). The gap is the two printed rates subtracted, not a third
  * number drifting from them, and a club that has not played at an end reads zero there rather
  * than an invented rate.
@@ -3705,7 +3758,7 @@ export interface DisciplineRound {
 export interface DisciplineTrend {
   /** One row per counted round, in round order. */
   rounds: DisciplineRound[];
-  /** The largest single-round card count — the bar scale. */
+  /** The largest single-round card count 鈥?the bar scale. */
   peak: number;
 }
 
@@ -3750,7 +3803,7 @@ interface RoundCards {
   reds: number;
 }
 
-/** Both trends above fold the same per-round counts; only the reader differs — every stats block
+/** Both trends above fold the same per-round counts; only the reader differs 鈥?every stats block
  *  in the league, or one club's side of it. */
 function foldCardRounds(byRound: Map<number, RoundCards>): DisciplineTrend {
   let cumulative = 0;
@@ -3779,65 +3832,65 @@ export interface EventClockRow {
   shots: number;
   saves: number;
   vars: number;
-  /** Shots in each window, index 0 = 1–15′, index 5 = 76–90+′. */
+  /** Shots in each window, index 0 = 1鈥?5鈥? index 5 = 76鈥?0+鈥? */
   shotsBands: number[];
   savesBands: number[];
   varBands: number[];
   /** Shots taken after the 75th minute (the last window). */
   lateShots: number;
-  /** Share of this club's own shots that arrived late, 0–100, 2dp; 0 when it has not shot. */
+  /** Share of this club's own shots that arrived late, 0鈥?00, 2dp; 0 when it has not shot. */
   lateShare: number;
-  /** Shots the opponents took at this club — every SHOT and SAVE event by the other side (M625). */
+  /** Shots the opponents took at this club 鈥?every SHOT and SAVE event by the other side (M625). */
   faced: number;
-  /** Saves this club's keeper made — the other side's SAVE events, read from the defending end. */
+  /** Saves this club's keeper made 鈥?the other side's SAVE events, read from the defending end. */
   stops: number;
-  /** Share of the shots it faced that its keeper stopped, 0–100, 2dp; 0 when it faced none. */
+  /** Share of the shots it faced that its keeper stopped, 0鈥?00, 2dp; 0 when it faced none. */
   stopShare: number;
-  /** Shots plus saves this club's defence faced in each window (M628), index 0 = 1–15′. */
+  /** Shots plus saves this club's defence faced in each window (M628), index 0 = 1鈥?5鈥? */
   facedBands: number[];
   /** Faced after the 75th minute (the last window). */
   lateFaced: number;
-  /** Share of this club's faced load that arrived late, 0–100, 2dp; 0 when it faced nothing. */
+  /** Share of this club's faced load that arrived late, 0鈥?00, 2dp; 0 when it faced nothing. */
   lateFacedShare: number;
   /** The window it faced the most in; -1 when it faced nothing at all. */
   worstBand: number;
-  /** Shots taken inside the first window, 1–15′ (M773) — the opening the late read has no mirror for. */
+  /** Shots taken inside the first window, 1鈥?5鈥?(M773) 鈥?the opening the late read has no mirror for. */
   earlyShots: number;
-  /** Share of this club's own shots that arrived in the opening, 0–100, 2dp; 0 when it has not shot. */
+  /** Share of this club's own shots that arrived in the opening, 0鈥?00, 2dp; 0 when it has not shot. */
   earlyShare: number;
-  /** Faced inside the first window (M773) — the opening load on the same defending end as `lateFaced`. */
+  /** Faced inside the first window (M773) 鈥?the opening load on the same defending end as `lateFaced`. */
   earlyFaced: number;
-  /** Share of this club's faced load that arrived in the opening, 0–100, 2dp; 0 when it faced none. */
+  /** Share of this club's faced load that arrived in the opening, 0鈥?00, 2dp; 0 when it faced none. */
   earlyFacedShare: number;
 }
 
 export interface EventClock {
   rows: EventClockRow[];
-  /** The same rows ordered by shots faced — the defending read of the same clock (M625). */
+  /** The same rows ordered by shots faced 鈥?the defending read of the same clock (M625). */
   siege: EventClockRow[];
-  /** The same rows ordered by the load they faced after the 75th minute (M712) — the late read of
+  /** The same rows ordered by the load they faced after the 75th minute (M712) 鈥?the late read of
    *  the defending end. Ties fall back to the whole faced load, then the club id. */
   lateSiege: EventClockRow[];
-  /** The same rows ordered by the load they faced inside the first window (M773) — the opening read
+  /** The same rows ordered by the load they faced inside the first window (M773) 鈥?the opening read
    *  of the defending end, the mirror of `lateSiege`. Ties fall back the same way. */
   earlySiege: EventClockRow[];
-  /** The same rows ordered by the shots they took inside the first window (M777) — the attacking
+  /** The same rows ordered by the shots they took inside the first window (M777) 鈥?the attacking
    *  read of the opening, the mirror of `earlySiege`. Ties fall back to the whole shot load,
    *  then the club id. */
   earlyAttack: EventClockRow[];
-  /** The same rows ordered by the shots they took inside the last window (M780) — the closing
+  /** The same rows ordered by the shots they took inside the last window (M780) 鈥?the closing
    *  read of the attack, the mirror of `lateSiege` and the other end of `earlyAttack`. Ties fall
    *  back to the whole shot load, then the club id. */
   lateAttack: EventClockRow[];
   shotsBands: number[];
   savesBands: number[];
   varBands: number[];
-  /** Faced in each window, league-wide (M628) — the mirror series of shots + saves, folded once. */
+  /** Faced in each window, league-wide (M628) 鈥?the mirror series of shots + saves, folded once. */
   facedBands: number[];
   shots: number;
   saves: number;
   vars: number;
-  /** M954: the same six windows split by the end the shot came from — the league's own clock read
+  /** M954: the same six windows split by the end the shot came from 鈥?the league's own clock read
    *  at each venue. The two series add up to `shotsBands` / `savesBands` window for window. */
   homeShotsBands: number[];
   awayShotsBands: number[];
@@ -3853,10 +3906,10 @@ export interface EventClock {
 /** When the match's other events arrive: every SHOT, SAVE and VAR in this competition's finished
  *  matches, folded into the same six windows `goalTiming` uses. The goals screen asks when goals
  *  land; this asks when the shots, the saves that answered them and the reviews that interrupted
- *  them land — a different object on the same clock, per club and for the league. M625 adds the
+ *  them land 鈥?a different object on the same clock, per club and for the league. M625 adds the
  *  defending end: the same events are charged to the club that faced them, so the screen can name
  *  who is under siege as well as who is shooting. M628 gives that end the clock too: each faced
- *  event also lands in the window it arrived in, per club and for the league — the M625 gap.
+ *  event also lands in the window it arrived in, per club and for the league 鈥?the M625 gap.
  *  M773 opens the clock at the other end: the first window gets the same four numbers the last one
  *  already carries, so a screen can say who strikes first as well as who is still being hit at the
  *  death, and the two reads of one club sit next to each other instead of on separate screens.
@@ -3896,7 +3949,7 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
       const band = goalBand(e.minute);
       const row = rows.get(e.side === "home" ? m.homeClubId : m.awayClubId);
       // M625: the same event is also a statement about the defence. Every shot is faced by the
-      // other club, and a SAVE is the other club's keeper making the stop — so the defensive
+      // other club, and a SAVE is the other club's keeper making the stop 鈥?so the defensive
       // read is the mirror of this one, folded off the same pass rather than a second sweep.
       const def = rows.get(e.side === "home" ? m.awayClubId : m.homeClubId);
       if (e.type === "SHOT") {
@@ -3918,8 +3971,8 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
       } else if (e.type === "SAVE") {
         saves++;
         savesBands[band]++;
-        // M954: the save belongs to the keeper who made it — the other end from the one the event
-        // names — the same crediting `eventVenueClock` and this fold's `stops` already read.
+        // M954: the save belongs to the keeper who made it 鈥?the other end from the one the event
+        // names 鈥?the same crediting `eventVenueClock` and this fold's `stops` already read.
         if (e.side === "home") awaySavesBands[band]++; else homeSavesBands[band]++;
         if (row) { row.saves++; row.savesBands[band]++; }
         if (def) {
@@ -3961,12 +4014,12 @@ export function eventClock(compId: string, matches: Match[], clubs: Club[]): Eve
 export interface Briefing {
   /** The club the briefing is written for. */
   clubId: string;
-  /** The club's next fixture — the earliest SCHEDULED kickoff across every competition. */
+  /** The club's next fixture 鈥?the earliest SCHEDULED kickoff across every competition. */
   fixture: Match;
   opponentId: string;
   /** The end of the fixture the briefing club plays. */
   side: Side;
-  /** The fixture's own arithmetic for the two sides, hosts minus visitors (M630) — the same read
+  /** The fixture's own arithmetic for the two sides, hosts minus visitors (M630) 鈥?the same read
    *  the match page's stakes panel prints. Null when either side has no table row in the
    *  fixture's competition, the same condition the two scenario joins below report. */
   swing: MatchSwing | null;
@@ -3978,7 +4031,7 @@ export interface Briefing {
   /** The briefing club's table-and-ceiling read in the fixture's competition; null when the
    *  competition has no table row for it yet (a cross-competition fixture can precede its debut). */
   us: PointsScenario | null;
-  /** The opponent's read from the same fold — so the two sides of the fixture are measured alike. */
+  /** The opponent's read from the same fold 鈥?so the two sides of the fixture are measured alike. */
   them: PointsScenario | null;
   /** The briefing club's remaining-calendar row; null under the same condition as `us`. */
   runInRow: RunInRow | null;
@@ -4002,7 +4055,7 @@ export interface MatchSwing {
   ifAwayWin: number;
   /** Each side's ceiling after the fixture by its own result. The game is one of the games the
    *  ceiling was built on, so a win leaves it where it is, a draw costs two points of room and a
-   *  loss costs three — arithmetic of the same fold, not a prediction. */
+   *  loss costs three 鈥?arithmetic of the same fold, not a prediction. */
   homeCeiling: { win: number; draw: number; loss: number };
   awayCeiling: { win: number; draw: number; loss: number };
 }
@@ -4036,10 +4089,10 @@ export interface RankSwing {
 }
 
 /** Places each club would hold after this fixture (M632). The scoreline is the smallest deciding
- *  one — 1-0, 1-1, 0-1 — because a place needs goal difference and only the points are fixed by
+ *  one 鈥?1-0, 1-1, 0-1 鈥?because a place needs goal difference and only the points are fixed by
  *  the result; that is the same convention the ceilings state. Ordering is `byTableStanding`, the
  *  one door the table screens rank through, and the sort is stable, so a club tied on points,
- *  goal difference and goals for keeps the place it had — the fold does not invent a new
+ *  goal difference and goals for keeps the place it had 鈥?the fold does not invent a new
  *  tie-break. Null when either side has no row to place, the same condition `swing` reports. */
 export function rankSwing(compId: string, homeClubId: string, awayClubId: string, matches: Match[], clubs: Club[]): RankSwing | null {
   const rows = teamMetrics(compId, matches, clubs);
@@ -4070,12 +4123,12 @@ export interface CeilingPlaceRow {
   /** Place as the table stands after its last finished fixture. */
   place: number;
   /** Place once every club in this competition has taken the ceiling `pointsScenarios` prints for
-   *  it — the table the season can still become. */
+   *  it 鈥?the table the season can still become. */
   ceilingPlace: number;
   /** Places the ceilings move this club; positive is a climb, negative is a club whose ceiling is
    *  smaller than somebody else's, 0 means it holds. */
   moves: number;
-  /** The club this row sits directly above in the ceiling table — the row it lands on, so a move
+  /** The club this row sits directly above in the ceiling table 鈥?the row it lands on, so a move
    *  ends on a NAME and not just a number (M778); null when it is the bottom row, where there is
    *  nobody below to land on. A row the ceilings push DOWN still names its new neighbour: "over"
    *  says where the row stands, not who won the move. */
@@ -4091,15 +4144,15 @@ export interface CeilingPlaces {
 
 /** What the points ceilings are worth in PLACES (M716). `pointsScenarios` answers "how many points
  *  can they still reach"; two ceilings are hard to compare in points alone, because a place needs
- *  goal difference as well — so this re-ranks through `byTableStanding`, the one door the table
+ *  goal difference as well 鈥?so this re-ranks through `byTableStanding`, the one door the table
  *  screens order by, and cannot disagree with the table a reader clicks over to.
  *  Every club is lifted to its OWN ceiling at the same time, which is the reading the column needs:
  *  lifting one club and freezing the others is the unilateral arithmetic `maxPoints` is written in,
- *  but as a place it says nothing — on the shipped Premier League data nine of ten clubs sweep to
+ *  but as a place it says nothing 鈥?on the shipped Premier League data nine of ten clubs sweep to
  *  first that way, and a column of 1s is not a read. Together, the ceilings sort against each other
  *  and a club whose schedule offers less than its neighbour's can lose ground, which is the honest
  *  half of the answer: a ceiling is what is on the table, not what is coming.
- *  Each lifted fixture is scored the way `rankSwing` scores a win — the smallest margin that
+ *  Each lifted fixture is scored the way `rankSwing` scores a win 鈥?the smallest margin that
  *  decides a game, so goals for grows by the matches left and goals against does not move. A tie
  *  keeps the incumbent's place, exactly as `rankSwing` leaves it. */
 export function ceilingPlaces(compId: string, matches: Match[], clubs: Club[]): CeilingPlaces {
@@ -4124,7 +4177,7 @@ export function ceilingPlaces(compId: string, matches: Match[], clubs: Club[]): 
     const place = now.get(r.clubId) ?? 0;
     const ceilingPlace = ceiling.get(r.clubId) ?? 0;
     // M778: the row directly below in the ceiling table, read off the same sorted fold the places
-    // come from — no second ranking, so the name can never disagree with the number beside it.
+    // come from 鈥?no second ranking, so the name can never disagree with the number beside it.
     const landedOn = ceilingPlace > 0 ? ceilingRows[ceilingPlace]?.clubId ?? null : null;
     return { clubId: r.clubId, place, ceilingPlace, moves: place - ceilingPlace, landedOn };
   });
@@ -4137,7 +4190,7 @@ export interface MatchBrief {
   /** The home side's table-and-ceiling read in the fixture's competition; null while the
    *  competition has no table row for it yet (a fixture can precede a club's debut). */
   home: PointsScenario | null;
-  /** The away side's read from the same fold — both ends measured alike. */
+  /** The away side's read from the same fold 鈥?both ends measured alike. */
   away: PointsScenario | null;
   /** The fixture's own arithmetic for the two sides; null once it is finished, or when either
    *  side has no table row to measure from. */
@@ -4148,15 +4201,15 @@ export interface MatchBrief {
   /** Each side's remaining calendar in the competition; null under the same condition. */
   homeRunIn: RunInRow | null;
   awayRunIn: RunInRow | null;
-  /** Each side's own half of the venue split — the hosts' home row and the visitors' away row. */
+  /** Each side's own half of the venue split 鈥?the hosts' home row and the visitors' away row. */
   homeVenue: VenueSplitRow | null;
   awayVenue: VenueSplitRow | null;
-  /** Each side's row of the season's card ledger — the discipline board read for the two clubs in
+  /** Each side's row of the season's card ledger 鈥?the discipline board read for the two clubs in
    *  this fixture (M713), so the match page can say how each has been booked. Null when the
    *  competition has no row for that club (a cross-competition fixture before its debut). */
   homeCards: DisciplineRow | null;
   awayCards: DisciplineRow | null;
-  /** Each side's row of the clock's defending end — the load it faced and the late part of it
+  /** Each side's row of the clock's defending end 鈥?the load it faced and the late part of it
    *  (M714), off the event clock rather than a second sweep. Null when the competition has no
    *  clock row for that club, the same condition as the ledger above. */
   homeClock: EventClockRow | null;
@@ -4170,8 +4223,8 @@ export interface MatchBrief {
 /** The same five-read join as `briefing`, anchored to a fixture the reader already chose rather
  *  than the club's next one. `briefing` answers "what is next?"; this answers "what does this
  *  game carry?" about either end, so both sides are measured instead of one. Every figure comes
- *  from the fold that owns it — `pointsScenarios`, `runIn`, `venueSplit`, `headToHead`,
- *  `titleRace` — so the match page cannot disagree with the screens it links to. The fixture is
+ *  from the fold that owns it 鈥?`pointsScenarios`, `runIn`, `venueSplit`, `headToHead`,
+ *  `titleRace` 鈥?so the match page cannot disagree with the screens it links to. The fixture is
  *  echoed back rather than looked up again, and an unknown id reads null, not an empty brief. */
 export function matchBrief(matchId: string, matches: Match[], clubs: Club[]): MatchBrief | null {
   const fixture = matches.find((m) => m.id === matchId);
@@ -4206,7 +4259,7 @@ export function matchBrief(matchId: string, matches: Match[], clubs: Club[]): Ma
 /** One club's next match, gathered with every season read that explains it.
  *
  *  The board shows today, the run-in shows what is left, the venue split shows where the points
- *  came from — but a reader asking "what is this next fixture?" has to hold five screens in mind.
+ *  came from 鈥?but a reader asking "what is this next fixture?" has to hold five screens in mind.
  *  This fold picks the club's next booked fixture (earliest SCHEDULED kickoff across every
  *  competition, ties broken by id so the pick is reproducible; a LIVE match belongs to the live
  *  strip, not to the fixture still to come) and joins the five reads to it, each computed by the

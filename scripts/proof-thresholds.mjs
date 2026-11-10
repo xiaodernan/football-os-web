@@ -134,6 +134,7 @@ const DECLARED = {
   "< 60": { kind: "split", sites: 2, files: 2, why: "an hour's minutes: the community says minutes ago below sixty, and the dynamic world counts a minute below sixty" },
   "< 1024": { kind: "split", sites: 2, files: 1, why: "one formatter's own ladder — the settings page's byte formatter draws its two lines from the same kilobyte bound" },
   "< 0.01": { kind: "split", sites: 2, files: 1, why: "one decision asked of two quantities in one expression: the tolerance that says a tactic already matches the recommendation, asked of the press and of the tempo" },
+  ">= 76": { kind: "one", home: "domain/analytics.ts", door: "isLateWindow", why: "the late window's opening - minute 76 and after, stoppage included. written once, in the one door both the late-xG family and the last-gasp strike ask, so the sixth window cannot drift between the two readers" },
 };
 
 // ---------------------------------------------------------------------------
@@ -171,7 +172,7 @@ const oneBad = oneEntries.filter((k) => {
   return rows.length !== 1 || rows[0].file !== DECLARED[k].home;
 });
 ok(`every decision that lives in a door is written once, in that door's home (${oneEntries.length} door bound(s): ${oneEntries.map((k) => `${k} → ${DECLARED[k].door}`).join(", ")}; ${oneBad.length} out of place [${oneBad.join(", ")}])`,
-  oneEntries.length === 5 && oneBad.length === 0,
+  oneEntries.length === 6 && oneBad.length === 0,
   `out of place: ${oneBad.join(", ")}`);
 
 // A `split` entry is two different decisions sharing a number: the site count and the file count
@@ -189,7 +190,7 @@ ok(`every split keeps its shape: the sites and the files are pinned, and the rea
 // Every declaration says WHY, in a sentence a reader can weigh.
 const thin = declaredKeys.filter((k) => typeof DECLARED[k].why !== "string" || DECLARED[k].why.length < 40);
 ok(`every declaration says why, in a sentence a reader can weigh (${declaredKeys.length} declarations, ${thin.length} too short [${thin.join(", ")}])`,
-  thin.length === 0 && declaredKeys.length === 18,
+  thin.length === 0 && declaredKeys.length === 19,
   `too short: ${thin.join(", ")}`);
 
 // The doors behave like the inline forms they replaced, on every sample a reader could meet.
