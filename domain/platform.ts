@@ -40,7 +40,17 @@ export const PLATFORM_SERVICES: readonly PlatformService[] = [
   { id: "league", module: "league-service", appName: "league-service", port: 8081, dependsOn: ["registry", "config"] },
 ];
 
+/** Two routes, both StripPrefix=1, both breaking the same leagueSummary circuit. The table route
+ *  shares the league service's frozen tables dump; the summary route serves the counts digest.
+ *  Planned readers are plans, not call sites: nothing in the SPA fetches these today. */
 export const GATEWAY_ROUTES: readonly GatewayRoute[] = [
+  {
+    id: "league-table",
+    path: "/api/league/table/**",
+    target: "league",
+    stripPrefix: 1,
+    consumers: ["/league-rules", "/run-in", "/title-race"],
+  },
   {
     id: "league-summary",
     path: "/api/league/**",

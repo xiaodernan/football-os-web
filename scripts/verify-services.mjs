@@ -127,6 +127,44 @@ const direct = await fetch("http://localhost:8081/league/summary", { signal: Abo
 if (JSON.stringify(direct) !== JSON.stringify(contract)) fail("the direct league read diverges from the frozen contract on disk");
 pass("league-service /league/summary answers identical bytes to the frozen contract");
 
+// The tables read: the list, one known competition through the gateway and through the direct
+// mapping, and an unknown competition forced through the same path — both must land on 404.
+const tables = JSON.parse(readFileSync(join(root, "services/league-service/src/main/resources/league-tables.json"), "utf8"));
+const tableList = await fetch("http://localhost:8081/league/table", { signal: AbortSignal.timeout(8000) }).then((r) => r.json());
+const frozenVenue = Object.keys(tables.tables).sort().join(",");
+const servedVenue = Array.isArray(tableList?.competitions) ? tableList.competitions.slice().sort().join(",") : "";
+if (frozenVenue !== servedVenue) {
+  fail("the tables list endpoint does not enumerate the exact competitions in the frozen file");
+}
+pass("league-service /league/table lists exactly the 15 competitions in the frozen tables file");
+
+const tableUcl = await fetch("http://localhost:8081/league/table/ucl", { signal: AbortSignal.timeout(8000) }).then((r) => r.json());
+if (JSON.stringify(tableUcl) !== JSON.stringify(tables.tables.ucl)) fail("the direct table read diverges from the frozen tables file");
+pass("league-service /league/table/ucl answers identical rows to the frozen champions-league table");
+
+const tableGatewayProbe = await fetchUntil(
+  "http://localhost:8087/api/league/table/ucl",
+  (r, text) => r.ok && text.length > 2 && text.includes('"competitionId"'),
+  18,
+  5000,
+);
+if (!tableGatewayProbe || !tableGatewayProbe.r || !tableGatewayProbe.r.ok ||
+    JSON.stringify(JSON.parse(tableGatewayProbe.text)) !== JSON.stringify(tables.tables.ucl)) {
+  fail(`the gateway table round-trip does not return the frozen table (last probe: status ${tableGatewayProbe?.r?.status ?? "n/a"})`);
+}
+pass("the gateway round-trip (lb://LEAGUE-SERVICE, table route, ordered ahead of the catch-all) returns the frozen table rows");
+
+const tableUnknownProbe = await fetchUntil(
+  "http://localhost:8087/api/league/table/notacompetition",
+  (r) => r.status === 404,
+  8,
+  5000,
+);
+if (!tableUnknownProbe || tableUnknownProbe.r?.status !== 404) {
+  fail(`an unknown competition through the gateway answered ${tableUnknownProbe?.r?.status ?? "n/a"}, wanted 404`);
+}
+pass("an unknown competition through the gateway answers 404 from the league service");
+
 const gatewayProbe = await fetchUntil(
   "http://localhost:8087/api/league/summary",
   (r, text) => r.ok && text.length > 2 && text.includes("\"digest\""),

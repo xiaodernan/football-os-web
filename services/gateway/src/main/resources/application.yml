@@ -11,13 +11,27 @@ spring:
       routes:
         # Mirrors GATEWAY_ROUTES in domain/platform.ts: id, Path predicate, lb:// target
         # (the league service's spring.application.name, upper-cased by Eureka) and StripPrefix.
-        # The circuit breaker is the resilience element this milestone adds: when the league
-        # service goes quiet, the gateway forwards the call to /fallback and answers itself a
-        # small canned 503 instead of hanging or spraying 5xx at the browser.
+        # The order field disambiguates the two overlapping predicates: the table route wins
+        # over the catch-all summary route for /api/league/table/**.
+        - id: league-table
+          uri: lb://LEAGUE-SERVICE
+          predicates:
+            - Path=/api/league/table/**
+          order: 0
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: leagueSummary
+                fallbackUri: forward:/fallback
+        # The summary route: everything else under /api/league/. The circuit breaker is the
+        # resilience element: when the league service goes quiet, the gateway forwards the
+        # call to /fallback and answers itself a canned 503 instead of hanging.
         - id: league-summary
           uri: lb://LEAGUE-SERVICE
           predicates:
             - Path=/api/league/**
+          order: 1
           filters:
             - StripPrefix=1
             - name: CircuitBreaker

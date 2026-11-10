@@ -13,6 +13,9 @@ export const CONTRACT_RESOURCE = "league-summary.json";
 export const CONTRACT_PATH = "services/league-service/src/main/resources/league-summary.json";
 export const CONTRACT_EXPORTER = "scripts/export-service-contract.mjs";
 export const CONTRACT_DATASET = "football-os/world";
+export const TABLES_RESOURCE = "league-tables.json";
+export const TABLES_PATH = "services/league-service/src/main/resources/league-tables.json";
+export const TABLES_DATASET = "football-os/world"
 
 /** A pure function of the snapshot: same counts in, same digest out. */
 export function contractDigest(snapshot) {
@@ -47,3 +50,44 @@ export async function buildWorldContract(server) {
 
 /** One serializer for the writer and the proof: byte-identical files, two-space JSON. */
 export const serializeContract = (contract) => `${JSON.stringify(contract, null, 2)}\n`;
+
+/** Freeze every competition's standard table from the TypeScript world — the same discipline
+ *  as the summary contract: byte-identity, re-derivable from the seed, nothing hand-written.
+ *  The league service serves one of these tables per call; the snapshot file stays frozen
+ *  like its sibling (`league-summary.json`) and is refreshed the same way, by the exporter. */
+export async function buildWorldTables(server) {
+  const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
+  const { customPointsTable, STANDARD_RULES } = await server.ssrLoadModule("/domain/league.ts");
+  const clubs = footballProvider.clubs();
+  const competitions = footballProvider.competitions();
+  const matches = footballProvider.matches();
+  const tables = {};
+  for (const competition of competitions) {
+    const { rows, matches: played } = customPointsTable(competition.id, matches, clubs, STANDARD_RULES);
+    tables[competition.id] = {
+      competitionId: competition.id,
+      name: competition.name,
+      played,
+      rows: rows.map((r, i) => ({
+        position: i + 1,
+        clubId: r.clubId,
+        played: r.played,
+        won: r.won,
+        drawn: r.drawn,
+        lost: r.lost,
+        gf: r.gf,
+        ga: r.ga,
+        points: r.standardPoints,
+      })),
+    };
+  }
+  return {
+    generatedBy: CONTRACT_EXPORTER,
+    dataset: TABLES_DATASET,
+    leagues: Object.keys(tables).length,
+    tables,
+  };
+}
+
+/** One serializer for the writer and the proof: byte-identical files. */
+export const serializeTables = (doc) => `${JSON.stringify(doc, null, 2)}\n`;

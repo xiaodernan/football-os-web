@@ -7,6 +7,9 @@ import {
   contractDigest,
   serializeContract,
   CONTRACT_PATH as WORLD_CONTRACT_PATH,
+  buildWorldTables,
+  serializeTables,
+  TABLES_PATH,
 } from "./lib/world-contract.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -70,7 +73,7 @@ ok("the gateway descriptor and the circuit breaker agree with the gateway's own 
   CIRCUIT_BREAKER.name === "leagueSummary" &&
   CIRCUIT_BREAKER.fallbackPath === "/fallback" &&
   CIRCUIT_BREAKER.waitSeconds === 1 &&
-  GATEWAY_ROUTES.length === 1);
+  GATEWAY_ROUTES.length === 2);
 
 // ---- 2 · the reactor -------------------------------------------------------------------
 const parentPom = read("services/pom.xml");
@@ -195,12 +198,16 @@ ok("the config server enables the config server and serves a native classpath re
   read("services/config-server/src/main/resources/application.yml").includes("active: native") &&
   read("services/config-server/src/main/resources/application.yml").includes("search-locations: classpath:/config-repo/") &&
   read("services/config-server/src/main/resources/config-repo/application.yml").includes("contract-resource: league-summary.json") &&
+  read("services/config-server/src/main/resources/config-repo/application.yml").includes("tables-resource: league-tables.json") &&
   read("services/config-server/src/main/resources/config-repo/application.yml").includes("label: Demo World R1"));
 ok("the league service imports the optional config server and takes the resource name from its own property instead of a hard-coded string",
   read("services/league-service/pom.xml").includes("spring-cloud-starter-config") &&
   read("services/league-service/pom.xml").includes("spring-boot-starter-actuator") &&
   read("services/league-service/src/main/resources/application.yml").includes("optional:configserver:http://localhost:8888") &&
   read("services/league-service/src/main/java/com/footballos/league/LeagueSummaryController.java").includes("@Value(\"${footballos.league.contract-resource:league-summary.json}\")"));
+ok("the tables controller takes its resource name from the same optional-import door, not a compiled-in constant",
+  read("services/league-service/src/main/java/com/footballos/league/LeagueTableController.java")
+    .includes("@Value(\"${footballos.league.tables-resource:league-tables.json}\")"));
 
 // ---- 6b · the world contract the league service serves ---------------------------------
 const contractFile = read(WORLD_CONTRACT_PATH);
@@ -230,6 +237,27 @@ ok("the descriptor names the same resource, path and exporter the proof reads",
   LEAGUE_CONTRACT.resource === "league-summary.json" &&
   LEAGUE_CONTRACT.exporter === "scripts/export-service-contract.mjs" &&
   has(LEAGUE_CONTRACT.exporter));
+const tablesFile = read(TABLES_PATH);
+const tablesDoc = JSON.parse(tablesFile);
+const rebuiltTables = await buildWorldTables(server);
+const clubCounts = footballProvider.clubs().length;
+ok(`the frozen tables recompute from the provider and match the checked-in file byte for byte (${tablesDoc.leagues} leagues, ${tablesDoc.leagues === Object.keys(tablesDoc.tables).length} tables, club rows from ${clubCounts})`,
+  tablesFile === serializeTables(rebuiltTables) &&
+  tablesDoc.leagues > 0 && tablesDoc.leagues === Object.keys(tablesDoc.tables).length &&
+  tablesDoc.tables.ucl !== undefined && tablesDoc.tables.ucl.rows.length > 0 &&
+  JSON.stringify(tablesDoc.tables.ucl.rows[0]) !== JSON.stringify(tablesDoc.tables.ucl.rows[1] ?? {}));
+ok("the tables resource is served by the league service through the same frozen-contract discipline as the summary",
+  rebuiltTables.tables.ucl.rows.length === tablesDoc.tables.ucl.rows.length &&
+  rebuiltTables.tables.ucl.rows.every((r, i) => r.position === i + 1) &&
+  Object.values(rebuiltTables.tables).every((t) => t.name.length > 0 && t.rows.length >= 2));
+const leagueTableSrc = walk("services/league-service/src").filter((f) => f.endsWith(".java")).map(read).join("\n");
+ok("the league service carries a read-only table controller and the gateway routes it under the same breaker",
+  leagueTableSrc.includes("LeagueTableController") &&
+  leagueTableSrc.includes("/league/table") &&
+  leagueTableSrc.includes("@PathVariable") &&
+  leagueTableSrc.includes("ResponseStatusException(HttpStatus.NOT_FOUND") &&
+  !leagueTableSrc.includes("@PostMapping") &&
+  read("services/gateway/src/main/resources/application.yml").includes("- Path=/api/league/table/**"));
 ok("the league controller loads that resource through Jackson and keeps the counts in the JSON",
   leagueSrc.includes("new ClassPathResource(contractResource)") &&
   leagueSrc.includes("TypeReference<Map<String, Object>>") &&

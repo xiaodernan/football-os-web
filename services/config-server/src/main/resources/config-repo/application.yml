@@ -7,3 +7,4 @@ footballos:
     seasons: 0
   league:
     contract-resource: league-summary.json
+    tables-resource: league-tables.json

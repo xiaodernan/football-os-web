@@ -11,7 +11,7 @@
 |---|---|---|---|---|
 | `services/eureka-server` | `eureka-server` | **8761** | no — the registry never registers itself | the registry |
 | `services/config-server` | `config-server` | **8888** | yes | a native classpath repository (`config-repo/application.yml`) |
-| `services/league-service` | `league-service` | **8081** | yes | `GET /league/summary` — the frozen contract |
+| `services/league-service` | `league-service` | **8081** | yes | `GET /league/summary` — the frozen counts contract; `GET /league/table(/{comp})` — the frozen tables |
 | `services/gateway` | `gateway` | **8087** | yes | the edge: `/api/league/**` → `lb://LEAGUE-SERVICE` |
 
 The gateway cannot live on 8080 on this machine — `com.docker.backend.exe` (Docker Desktop)
@@ -78,7 +78,7 @@ below automatically.
    service imports, served from `config-repo/application.yml`:
 
    ```json
-   {"name":"league-service","profiles":["default"],"propertySources":[{"name":"classpath:/config-repo/application.yml","source":{"footballos.world.label":"Demo World R1","footballos.world.seasons":0,"footballos.league.contract-resource":"league-summary.json"}}]}
+   {"name":"league-service","profiles":["default"],"propertySources":[{"name":"classpath:/config-repo/application.yml","source":{"footballos.world.label":"Demo World R1","footballos.world.seasons":0,"footballos.league.contract-resource":"league-summary.json","footballos.league.tables-resource":"league-tables.json"}}]}
    ```
 
 4. `GET http://localhost:8081/actuator/info` → `app.world` must print `Demo World R1` —
@@ -92,10 +92,21 @@ below automatically.
    (counts + sha256 digest), identical bytes to
    `services/league-service/src/main/resources/league-summary.json`.
 
-6. Through the edge: `GET http://localhost:8087/api/league/summary` → the same bytes. The
-   route strips exactly one segment (`StripPrefix=1`), which is why the controller maps
-   `/league`, not `/api/league`. The Eureka application is `LEAGUE-SERVICE`
-   (upper-cased by the registry) and `lb://LEAGUE-SERVICE` resolves it at request time.
+5a. Tables: `GET http://localhost:8081/league/table` → which frozen tables exist; the file
+    behind it is `services/league-service/src/main/resources/league-tables.json` (15 standard
+    3-1-0 tables, one per competition, computed by `scripts/export-service-contract.mjs`
+    from the same provider). One competition: `GET http://localhost:8081/league/table/ucl` →
+    the rows, byte-identical to that file. Unknown competition: 404.
+
+6. Through the edge: `GET http://localhost:8087/api/league/summary` → the same summary bytes;
+   `GET http://localhost:8087/api/league/table/ucl` → the same table rows. Two routes share
+   `LEAGUE-SERVICE` (upper-cased by the registry; `lb://LEAGUE-SERVICE` resolves it at request
+   time), and both strip exactly one segment (`StripPrefix=1`), which is why the controllers
+   map `/league` and `/league/table`, not `/api/league`. The table route matches
+   `/api/league/table/**` and is ordered `order: 0` ahead of the `/api/league/**` summary
+   route (`order: 1`), so the more specific predicate wins regardless of declaration order.
+   Both routes carry the same `leagueSummary` circuit — one domain service, one breaker —
+   and both forward to `/fallback` when it opens.
 
 7. Tearing the stack down: stop `league-service`, then call `/api/league/summary` again.
    The gateway's circuit (sliding window 3, minimum 2 calls, open for 1s) forwards the call
@@ -127,9 +138,11 @@ pkill -f league-service-0.1.0.jar; pkill -f gateway-0.1.0.jar
   and never calls them. The platform atlas says so on the screen and `proof-services.mjs`
   reddens the gate if any `localhost:87xx`/`localhost:8888`/`localhost:8081` appears inside
   the app.
-- The league service serves a frozen export of this world (counts + digest), never the live
-  seed, and never a hand-written payload. Refresh the export with
-  `node scripts/export-service-contract.mjs` and commit the JSON.
+- The league service serves frozen exports of this world — the counts + digest contract and
+  the fifteen standard tables (`league-tables.json`) — never the live seed and never a
+  hand-written payload. Refresh the exports with `node scripts/export-service-contract.mjs`
+  and commit both JSON files. The two dedicated routes (`/league/summary` and
+  `/league/table/**`) read two dedicated frozen files; neither route reaches beyond them.
 - `PLATFORM_LIVE` in `domain/platform.ts` is false and stays false until something in the SPA
   is entitled to call the gateway.
 - The actuator surface on all four services is exactly `health,info`. Do not widen it "for
