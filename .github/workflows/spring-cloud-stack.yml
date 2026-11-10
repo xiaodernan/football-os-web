@@ -5,9 +5,9 @@
 # This workflow runs the same checklist on a registry-healthy runner, then the full web
 # build + proof suite, on every push or PR that touches the service side of the repo.
 #
-# Honesty line: this file has NOT been executed in the authoring session (no GitHub Actions
-# access there); it runs the same steps the runbook documents by hand. If it goes red, the
-# failing step is the truth about that commit — it is not decorative.
+# M1048: the same workflow now also runs the browser floor — the Playwright suite, the
+# web build, and the PWA budget gate — so a service-side change that silently breaks a
+# screen goes red as well. Same honesty line: never executed in the authoring session.
 
 name: spring-cloud-stack
 
@@ -67,3 +67,9 @@ jobs:
 
       - name: Run the full proof suite
         run: npm run proof
+
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run the browser floor
+        run: npx playwright test --reporter=list
