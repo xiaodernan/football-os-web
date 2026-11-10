@@ -15460,6 +15460,28 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 
 <!-- /gaps -->
 
+## The platform beneath (optional, Spring Cloud)
+
+The web app itself is a static SPA — nothing in it calls a service, and it boots without any
+backend. Next to it, in `services/`, lives a small Spring Cloud reactor: a Eureka registry, a
+Spring Cloud Config server (serving `world.label=Demo World R1`), a reactive API gateway
+with a Resilience4j circuit breaker, and a read-only league service that serves a frozen,
+byte-exact export of the same synthetic world the app simulates (the counts digest) plus the
+fifteen standard 3-1-0 league tables, one per competition.
+
+- Build: `mvn -DskipTests package -f services/pom.xml`
+- Verify everything live, from a cold machine: `node scripts/verify-services.mjs` —
+  it boots the four services, asserts config round-trip, the digest contract, both gateway
+  routes (ordered: the table route wins over the catch-all), and the canned 503 fallback.
+- What is and is not real, and how to boot each piece by hand: **`dev/platform-runbook.md`**
+- Ports: eureka `8761` / config `8888` / gateway `8087` / league `8081`
+- The screen `/platform` draws the same map — it is a descriptor, not a status board;
+  the SPA never calls these services and the web build never boots them.
+- CI: `.github/workflows/spring-cloud-stack.yml` (boot the stack + proof + browser floor) and
+  `.github/workflows/spring-cloud-matrix.yml` (the reactor on two runner OSs) — both are
+  written for a healthy registry and have not been executed in the authoring environment;
+  this project boots nothing remote.
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a
