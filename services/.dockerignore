@@ -1,0 +1,21 @@
+# M1055: keep the docker build context honest.
+#
+# Every module Dockerfile COPYs the whole services/ reactor then builds it again inside the
+# image — by design (the reactor needs the parent pom and the sibling poms). Without this
+# file, the context also carries the already-built fat jars and class files from a previous
+# host-side mvn run, making docker build slower and the temporary image fatter for no reason.
+# The reactor itself rebuilds inside the container; nothing of the host's target/ is needed.
+
+target/
+*.class
+.idea/
+.vscode/
+.classpath
+.project
+.settings/
+out/
+
+# The build context reaches this directory's root: never ship the host's own notes or scratch.
+*.log
+*.tmp
+scratch-*

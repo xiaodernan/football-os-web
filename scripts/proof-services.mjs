@@ -189,6 +189,8 @@ for (const s of PLATFORM_SERVICES) {
 }
 ok(`the compose file maps the descriptor's ports, honours the dependency edges and has one Dockerfile per module (${composeFails.join(" / ") || "clean"})`,
   composeFails.length === 0);
+ok("the reactor's build context carries a .dockerignore that excludes every module's target/ — the image rebuilds from poms alone",
+  has("services/.dockerignore") && read("services/.dockerignore").includes("target/"));
 
 // ---- 6a · the config server and the league's config wiring -----------------------------------
 ok("the config server enables the config server and serves a native classpath repository whose two keys are what the league service reads",

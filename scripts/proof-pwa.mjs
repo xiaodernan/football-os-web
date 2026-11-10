@@ -207,9 +207,11 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // baseline re-recorded in the same commit (JS 587, CSS 12.6).
 // M1049: the taxmen panel grows the discipline chunk by one KB — 600 KB, pin 600 stands,
 // baseline re-recorded in the same commit (JS 588, CSS 12.6).
-// M1051: the leaders chunk crosses the 600 KB line as measured by the gate — 601 KB, pin 600 -> 601,
+// M1051: the leaders chunk crosses the 600 KB line as measured — 601 KB, pin 600 -> 601,
+// baseline re-recorded in the fix commit (JS 589, CSS 12.6).
+// M1055: the discipline chunk's monks panel nudges the total one KB more — 602 KB, pin 601 -> 602,
 // baseline re-recorded in this commit (JS 589, CSS 12.6).
-const BUDGET_KB = 601;
+const BUDGET_KB = 602;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
