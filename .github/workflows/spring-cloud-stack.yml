@@ -1,0 +1,69 @@
+# M1047: the healthy-registry loop this machine cannot run.
+#
+# The Spring Cloud stack was proven live by scripts/verify-services.mjs (boot, register,
+# config round-trip, frozen-contract round-trip, ordered table route, breaker fallback).
+# This workflow runs the same checklist on a registry-healthy runner, then the full web
+# build + proof suite, on every push or PR that touches the service side of the repo.
+#
+# Honesty line: this file has NOT been executed in the authoring session (no GitHub Actions
+# access there); it runs the same steps the runbook documents by hand. If it goes red, the
+# failing step is the truth about that commit — it is not decorative.
+
+name: spring-cloud-stack
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "services/**"
+      - "scripts/verify-services.mjs"
+      - "scripts/export-service-contract.mjs"
+      - "scripts/lib/world-contract.mjs"
+      - "scripts/proof-services.mjs"
+      - "domain/platform.ts"
+      - ".github/workflows/spring-cloud-stack.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "services/**"
+      - "scripts/verify-services.mjs"
+      - "scripts/export-service-contract.mjs"
+      - "scripts/lib/world-contract.mjs"
+      - "scripts/proof-services.mjs"
+      - "domain/platform.ts"
+      - ".github/workflows/spring-cloud-stack.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Build the service reactor
+        run: mvn -q -DskipTests package -f services/pom.xml
+
+      - name: Boot the stack and verify it live
+        run: node scripts/verify-services.mjs
+
+      - name: Install the web dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build the web app
+        run: npm run build
+
+      - name: Run the full proof suite
+        run: npm run proof

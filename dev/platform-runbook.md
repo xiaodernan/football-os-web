@@ -132,6 +132,17 @@ pkill -f eureka-server-0.1.0.jar; pkill -f config-server-0.1.0.jar
 pkill -f league-service-0.1.0.jar; pkill -f gateway-0.1.0.jar
 ```
 
+## Continuous integration
+
+`.github/workflows/spring-cloud-stack.yml` is the registry-healthy mirror of this runbook:
+on every push or pull request touching the service side it (1) builds the Maven reactor on
+ubuntu-latest with a cached JDK, (2) boots all four services with
+`node scripts/verify-services.mjs` — the same checklist this file walks by hand — and
+(3) builds the web app and runs the full proof suite. It is deliberately NOT executed by
+this author's local machine (no Actions access here); it is the same steps, aimed at a
+registry GitHub runners can reach. If it goes red, the failing step is the truth about
+that commit.
+
 ## Honesty boundaries — what this stack is NOT
 
 - The web build (`npm run dev`, `npm run build`, the E2E suite) never boots these services
