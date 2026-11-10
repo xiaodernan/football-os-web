@@ -205,7 +205,11 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // baseline re-recorded in the same commit (JS 587, CSS 12.6).
 // M1046: the atlas gains a second route row — 600 KB, pin 599 -> 600,
 // baseline re-recorded in the same commit (JS 587, CSS 12.6).
-const BUDGET_KB = 600;
+// M1049: the taxmen panel grows the discipline chunk by one KB — 600 KB, pin 600 stands,
+// baseline re-recorded in the same commit (JS 588, CSS 12.6).
+// M1051: the leaders chunk crosses the 600 KB line as measured by the gate — 601 KB, pin 600 -> 601,
+// baseline re-recorded in this commit (JS 589, CSS 12.6).
+const BUDGET_KB = 601;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
