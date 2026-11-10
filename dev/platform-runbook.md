@@ -144,6 +144,13 @@ this author's local machine (no Actions access here); it is the same steps, aime
 registry GitHub runners can reach. If it goes red, the failing step is the truth about
 that commit.
 
+`.github/workflows/spring-cloud-matrix.yml` is the same family with a narrower promise: a
+fail-fast-off matrix over ubuntu-latest and windows-latest (Temurin 21) builds the reactor
+on both OSs, then an ubuntu-latest job boots all four services and runs the same
+`verify-services.mjs` checklist — service-side breakage that is OS-specific shows up on
+whichever OS it chokes on. It exercises the registry-to-artifact path CI runners legitimately
+provide; it does not, and cannot, prove anything about this author's impaired Docker Desktop.
+
 ## Honesty boundaries — what this stack is NOT
 
 - The web build (`npm run dev`, `npm run build`, the E2E suite) never boots these services

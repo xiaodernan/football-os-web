@@ -1,0 +1,72 @@
+# M1051: the reactor matrix — both runner families, one promise.
+#
+# The reactor must build the same way on the two OSs that develop this repository: the
+# author's Windows loop and the Linux runners GitHub ships. Two jobs:
+#   1. a matrix over ubuntu-latest and windows-latest, JDK 21 (Temurin), maven package —
+#      fail-fast is off, so an OS-specific break names itself;
+#   2. an ubuntu-latest full verification (verify-services boots the four services and
+#      walks the same checklist the runbook documents by hand).
+#
+# What this file is not: it does not, cannot, and does not claim to exercise the author's
+# broken-on-this-machine Docker Desktop path; it exercises the same registry-to-rubber path
+# CI runners legitimately use. Same honesty line as M1047/M1048: never executed in this
+# authoring session; it adds no app code, routes, or screens.
+
+name: spring-cloud-matrix
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "services/**"
+      - "pom.xml"
+      - "scripts/verify-services.mjs"
+      - ".github/workflows/spring-cloud-matrix.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "services/**"
+      - "pom.xml"
+      - "scripts/verify-services.mjs"
+      - ".github/workflows/spring-cloud-matrix.yml"
+
+jobs:
+  reactor:
+    name: "${{ matrix.os }} reactor (JDK 21)"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Build the service reactor
+        run: mvn -q -B -DskipTests package -f services/pom.xml
+      - name: List the four jars
+        shell: bash
+        run: ls -lh services/*/target/*.jar | awk '{print $5, $NF}'
+
+  verify:
+    name: ubuntu-latest full verification
+    needs: reactor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Build the service reactor
+        run: mvn -q -B -DskipTests package -f services/pom.xml
+      - name: Boot the stack and verify it live
+        run: node scripts/verify-services.mjs
