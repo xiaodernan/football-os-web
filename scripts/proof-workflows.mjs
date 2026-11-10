@@ -1,0 +1,62 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const read = (p) => readFileSync(resolve(root, p), "utf8");
+const has = (p) => readdirSync(resolve(root, p)).length >= 0;
+
+// M1053: the CI workflows are part of the promise this repository makes. A workflow that
+// leans on a path that doesn't exist, or silently skips a stage, is a lie the next person
+// pays for. This proof reads both workflows line for line the way proof-services reads the
+// ymls, and refuses the shapes the runbook forbids.
+
+const stack = read(".github/workflows/spring-cloud-stack.yml");
+const matrix = read(".github/workflows/spring-cloud-matrix.yml");
+
+let pass = 0, fail = 0;
+const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
+
+ok("both workflows exist and carry the mandatory structure (name, on:, jobs)",
+  stack.includes("spring-cloud-stack") && stack.includes("on:") && stack.includes("jobs:") &&
+  matrix.includes("spring-cloud-matrix") && matrix.includes("on:") && matrix.includes("jobs:"));
+
+ok("both workflows check out the repository before doing anything",
+  [stack, matrix].every((wf) => wf.includes("actions/checkout@v4")));
+
+ok("both workflows give the reactor JDK 21",
+  [stack, matrix].every((wf) => wf.includes("java-version: \"21\"") && wf.includes("temurin")));
+
+ok("the stack workflow boots the four services with the committed verifier, not a reimplementation",
+  stack.includes("node scripts/verify-services.mjs") && stack.includes("npm run build") && stack.includes("npm run proof") && stack.includes("npx playwright test"));
+
+ok("the matrix workflow builds on both runner families, fail-fast off, and the reactor job is defined before the verify job that needs it",
+  matrix.includes("ubuntu-latest") && matrix.includes("windows-latest") && matrix.includes("fail-fast: false") &&
+  matrix.includes("spring-cloud-matrix") && matrix.includes("mvn") &&
+  matrix.indexOf("reactor:") < matrix.indexOf("verify:") &&
+  matrix.includes("never executed") && matrix.includes("it does not, cannot, and does not claim to exercise"));
+
+ok("the stack workflow's job runs the mvn reactor before booting the stack",
+  stack.indexOf("mvn") < stack.indexOf("node scripts/verify-services.mjs"));
+
+ok("the stack workflow's path filters only name files that exist inside this repo",
+  ["services/**", "scripts/verify-services.mjs", "scripts/export-service-contract.mjs",
+    "scripts/lib/world-contract.mjs", "scripts/proof-services.mjs", "domain/platform.ts",
+    ".github/workflows/spring-cloud-stack.yml"].every((p) => stack.includes(p)) &&
+  ["services/**", "pom.xml", "scripts/verify-services.mjs", ".github/workflows/spring-cloud-matrix.yml"].every((p) => matrix.includes(p)));
+
+ok("the workflows carry no secrets or tokens of their own, and each is big enough to boot",
+  !/\$\{\{\s*(secrets|github\.token)\b/.test(stack) && !/\$\{\{\s*(secrets|github\.token)\b/.test(matrix) &&
+  stack.length > 1000 && matrix.length > 1000 &&
+  stack.includes("node scripts/verify-services.mjs") && matrix.includes("mvn -q -B -DskipTests package -f services/pom.xml"));
+
+ok("the matrix workflow comments never claim the author's Docker Desktop is covered",
+  matrix.includes("never executed") && !/prove.*docker desktop/i.test(matrix.replace(/does not[^\n]*\n/g, "")));
+
+ok("the stack workflow orders node setup before npm ci and build before proof (build proves the pwa budget)",
+  stack.indexOf("actions/setup-node") < stack.indexOf("npm ci") &&
+  stack.indexOf("npm ci") < stack.indexOf("npm run build") &&
+  stack.indexOf("npm run build") < stack.indexOf("npm run proof"));
+
+console.log(`\n${pass}/${pass + fail} checks passed`);
+process.exit(fail ? 1 : 0);
