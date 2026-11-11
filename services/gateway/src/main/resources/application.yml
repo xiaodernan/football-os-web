@@ -38,26 +38,36 @@ spring:
               args:
                 name: leagueSummary
                 fallbackUri: forward:/fallback
-  - id: discipline-clocks
-    uri: lb://DISCIPLINE-SERVICE
-    predicates:
-      - Path=/api/discipline/**
-    filters:
-      - StripPrefix=1
-      - name: CircuitBreaker
-        args:
-          name: disciplineClocks
-          fallbackUri: forward:/fallback
-  - id: cache-league
-    uri: lb://FOOTBALL-OS-CACHE
-    predicates:
-      - Path=/api/cache/**
-    filters:
-      - StripPrefix=1
-      - name: CircuitBreaker
-        args:
-          name: leagueSummary
-          fallbackUri: forward:/fallback
+        - id: discipline-clocks
+          uri: lb://DISCIPLINE-SERVICE
+          predicates:
+            - Path=/api/discipline/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: disciplineClocks
+                fallbackUri: forward:/fallback
+        - id: cache-league
+          uri: lb://FOOTBALL-OS-CACHE
+          predicates:
+            - Path=/api/cache/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: leagueSummary
+                fallbackUri: forward:/fallback
+        - id: messaging-pipeline
+          uri: lb://FOOTBALL-OS-MESSAGING
+          predicates:
+            - Path=/api/messaging/**
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: leagueSummary
+                fallbackUri: forward:/fallback
 
 info:
   app:

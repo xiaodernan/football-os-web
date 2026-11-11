@@ -94,6 +94,10 @@ const { createServer } = await import("vite");
 const server = await createServer({ root, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const dict = await server.ssrLoadModule("/i18n/dictionaries.ts");
 const { DICTIONARIES: D, LOCALES: L } = dict;
+// M1059: the message pipeline's six mechanism ids are one exported list, read by the screen to
+// draw its cards and here to verify every messaging.mech.<id>.{title,body} row exists in all
+// three locales. Loading the list (rather than re-spelling it) is what keeps the two in step.
+const { MECH_KEYS } = await server.ssrLoadModule("/domain/queue.ts");
 
 const en = D.en;
 const enKeys = Object.keys(en).sort();
@@ -551,7 +555,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1036: 130 -> 132 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
 // M1056: 132 -> 133 — domain/rockets.ts (the breakthroughs panel's fold).
 // M1057: 133 -> 135 — domain/graph.ts and lib/structures.ts (the fixture-graph fold + its DS floor).
-const APP_SRC_PIN = 135;
+// M1059: 135 -> 137 — domain/queue.ts and features/messaging/QueueObservatory.tsx.
+const APP_SRC_PIN = 137;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -581,7 +586,8 @@ const APP_SRC_PIN = 135;
 // M1028: 75 -> 76 — AcademyPage.tsx is a new .tsx module.
 // M1030: 76 -> 77 — RecordsCabinet.tsx is a new .tsx module.
 // M1036: 77 -> 78 — PlatformAtlas.tsx is a new .tsx module.
-const TSX_PIN = 78;
+// M1059: 78 -> 79 — QueueObservatory.tsx is a new .tsx module.
+const TSX_PIN = 79;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -620,7 +626,8 @@ const TSX_PIN = 78;
 // M1036: 133 -> 135 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
 // M1056: 135 -> 136 — domain/rockets.ts.
 // M1057: 136 -> 138 — domain/graph.ts and lib/structures.ts.
-const SRC_PIN = 138;
+// M1059: 138 -> 140 — domain/queue.ts and features/messaging/QueueObservatory.tsx.
+const SRC_PIN = 140;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -922,9 +929,16 @@ DYN_SITES.push(
   { path: "features/coach/CoachProfile.tsx", expr: "id", prefix: "coach.badge.", suffix: ".name" },
   { path: "features/coach/CoachProfile.tsx", expr: "id", prefix: "coach.badge.", suffix: ".name" },
   { path: "features/coach/CoachProfile.tsx", expr: "b.id", prefix: "coach.badge.", suffix: ".name" },
+  // M1059: the message pipeline's boundary cards walk one exported id list (domain/queue.ts's
+  // MECH_KEYS) to build their title and body keys. Two sites, one per text row; the value space
+  // below is read from that same list, so a card cannot be added without its three-locale copy.
+  { path: "features/messaging/QueueObservatory.tsx", expr: "key", prefix: "messaging.mech.", suffix: ".title" },
+  { path: "features/messaging/QueueObservatory.tsx", expr: "key", prefix: "messaging.mech.", suffix: ".body" },
 );
 
 const SPACES = new Map([
+  // M1059: the six mechanism ids are one exported list; both card rows (title/body) share it.
+  ["messaging.mech.|key", { name: "pipeline mechanisms", values: MECH_KEYS }],
   ["ach.name.|a.id", S_ACH],
   ["ach.name.|growth.next.id", S_ACH],
   ["ach.desc.|a.id", S_ACH],
@@ -4336,18 +4350,19 @@ ok(`every value carries the same set of template variables in all three locales,
 // half must redden this clause, not just a change to its filter line.
 // The brand, and the three-letter football notation the xG table prints under its columns —
 // xGF / xGA / xGD — are identical in every script anywhere the game is written, in all three
-// scripts alike. So is the verbatim shell command the platform atlas prints as its witness:
-// `node scripts/verify-services.mjs` — a program name, not a sentence. They are named rather
-// than counted one by one, so a fourth untranslated value still cannot arrive without a line
+// scripts alike. So are the verbatim shell commands the platform atlas and the message pipeline
+// print as their witnesses: `node scripts/verify-services.mjs` and
+// `node scripts/proof-message-queue.mjs` — program names, not sentences. They are named rather
+// than counted one by one, so a seventh untranslated value still cannot arrive without a line
 // here saying why.
-const ENGLISH_OK = new Set(["brand.name", "timing.xgColFor", "timing.xgColAgainst", "timing.xgColDiff", "platform.witnessCmd"]);
+const ENGLISH_OK = new Set(["brand.name", "timing.xgColFor", "timing.xgColAgainst", "timing.xgColDiff", "platform.witnessCmd", "messaging.witnessCmd"]);
 const stillEnglishBy = (enVal, cnVal) => cnVal === enVal && /[A-Za-z]{3,}/.test(String(enVal).replace(/\{\w+\}/g, ""));
 const stillEnglish = zhKeys.filter((k) => stillEnglishBy(en[k], D["zh-CN"][k]));
 const plantedEn = stillEnglishBy("Click here {n}", "Click here {n}")
   && !stillEnglishBy("完成 {n}", "完成 {n}")
   && !stillEnglishBy("Click here", "完成");
 ok(`a 简体中文 value that is still English is named, not waved through (${stillEnglish.join(", ") || "none"}; planted arrangements: ${plantedEn})`,
-  stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 5 && plantedEn);
+  stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 6 && plantedEn);
 
 // 37. The shapes a t() call takes that the checks above were never looking at. Check 4 reads
 //     `t("literal")` and check 16/24 audit declared dynamic sites, so between them every key a
@@ -4685,7 +4700,14 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1058: the platform atlas gains a cache-tier card and a Redis boundary line — five literal
   // t() calls (svcCache, svcCacheRole, kindCache, redisLine, cacheBoundary; redisLine interpolates):
   // 2491 -> 2496.
-  shapeCounts.literal === 2496 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // M1059: the message-pipeline observatory adds its header, eight stat tiles, ring/backoff/
+  // pressure/shard/timeline panels, the boundary cards' two TEMPLATE rows and three SVG tips.
+  // M1059: the message pipeline is fifty-eight literal t() calls + two interpolations (six
+  // placeholders) on the screen: 2491 -> 2549, template 109 -> 111.
+  // M1062: the observatory wires ringMigration (3->4 region expansion witness) and admitMessages
+  // (admission over the replayed fixture stream) onto the screen — two literal interpolating rows
+  // (migrateLine, admitLine): 2549 -> 2551, litVarSites 426 -> 428, template unchanged.
+  shapeCounts.literal === 2551 && shapeCounts.template === 111 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4840,7 +4862,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // front of the census: 411 -> 413.
   // M1057: the graph world line (c, e, m, k, b) and the graph line (d, s, c) hand over their
   // placeholders in front of the census: 413 -> 415.
-  litVarSites === 416 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1059: the observatory's interpolating lines (ringOwn, backoffMethod, pressureMethod,
+  // shardsMethod, timelineMore, capLine, rungTip, shardTip) hand their placeholders to the census.
+  litVarSites === 428 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));
@@ -6300,7 +6324,9 @@ for (const [path, src] of appSrc) {
 const sqPlant = [...`{ label: 'Model projection' }`.matchAll(SQ_FORM)].filter((m) => /[A-Za-z]{3,}/.test(m[2])).length;
 const tlPlant = [..."{ label: `Model projection` }".matchAll(TL_FORM)].filter((m) => /[A-Za-z]{3,}/.test(m[2])).length;
 ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} aria display attributes resolve through t() and the one forwarded label is pinned at its source (a planted aria bare string reads ${ariaPlant}), and the single-quote and no-interpolation forms of the display-prop class read ${sqHits.length} and ${tlHits.length} bare strings (planted shapes read ${sqPlant} and ${tlPlant})`,
-  ariaBare.length === 0 && ariaKeyed === 10 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+  // M1059: the observatory's three SVG role=img surfaces (backoff, pressure, ring) name their
+  // accessible label through t(), adding three keyed aria attributes: 10 -> 13.
+  ariaBare.length === 0 && ariaKeyed === 13 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English

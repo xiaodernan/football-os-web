@@ -5,7 +5,7 @@
 // modules, the compose ports and the gateway routes in step: a port that moves in a pom or in
 // docker-compose.yml without moving here is a red gate, not a stale diagram.
 
-export type ServiceId = "registry" | "config" | "gateway" | "league" | "discipline" | "cache";
+export type ServiceId = "registry" | "config" | "gateway" | "league" | "discipline" | "cache" | "messaging";
 
 export interface PlatformService {
   id: ServiceId;
@@ -44,6 +44,7 @@ export const PLATFORM_SERVICES: readonly PlatformService[] = [
   { id: "league", module: "league-service", appName: "league-service", port: 8081, dependsOn: DOMAIN_EDGES },
   { id: "discipline", module: "discipline-service", appName: "discipline-service", port: 8082, dependsOn: DOMAIN_EDGES },
   { id: "cache", module: "cache-service", appName: "football-os-cache", port: 8083, dependsOn: DOMAIN_EDGES },
+  { id: "messaging", module: "messaging-service", appName: "football-os-messaging", port: 8084, dependsOn: DOMAIN_EDGES },
 ];
 
 /** Two routes, both StripPrefix=1, both breaking the same leagueSummary circuit. The table route
@@ -78,6 +79,13 @@ export const GATEWAY_ROUTES: readonly GatewayRoute[] = [
     stripPrefix: 1,
     consumers: ["/leaders", "/data", "/run-in"],
   },
+  {
+    id: "messaging-pipeline",
+    path: "/api/messaging/**",
+    target: "messaging",
+    stripPrefix: 1,
+    consumers: ["/messaging"],
+  },
 ];
 
 /** The SPA does not call the gateway yet; the atlas prints this instead of a fake green dot. */
@@ -111,10 +119,23 @@ export const DISCIPLINE_CONTRACT = {
 } as const;
 
 /** The cache tier's Redis endpoint and the contract it fronts. The atlas prints this; the proof
- *  reads it. Redis is the one process the reactor depends on that is not one of these modules. */
+ *  reads it. Redis is one of two processes the reactor depends on that are not one of its modules. */
 export const REDIS = {
   image: "redis:7-alpine",
   port: 6379,
   /** The cache service's read-through target — the same frozen file the league service serves. */
   contractResource: "league-summary.json",
+} as const;
+
+/** The messaging tier's broker endpoint. RabbitMQ is the second out-of-reactor process; the
+ *  service binds a Spring Cloud Stream topic exchange to it with a dead-letter queue. The atlas
+ *  prints these; proof-services.mjs reads them and refuses a drift with the service's own yml.
+ *  The retry/water-mark policy itself lives in domain/queue.ts's QUEUE_POLICY — the pure fold is
+ *  the single source of truth for the NUMBERS, this is only the transport. */
+export const BROKER = {
+  image: "rabbitmq:3-management-alpine",
+  port: 5672,
+  managementPort: 15672,
+  exchange: "footballos.events",
+  dlq: "footballos.events.dlq",
 } as const;

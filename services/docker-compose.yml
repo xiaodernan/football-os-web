@@ -87,3 +87,27 @@ services:
       - redis
     ports:
       - "8083:8083"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    # The messaging tier's broker — the second process the reactor depends on that is not one of
+    # its modules. 5672 is AMQP (what the binder dials); 15672 is the management UI. Container name
+    # is what the service points at (SPRING_RABBITMQ_HOST=rabbitmq); the host stack dials localhost.
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  messaging-service:
+    build:
+      context: .
+      dockerfile: messaging-service/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_RABBITMQ_HOST: rabbitmq
+    depends_on:
+      - eureka-server
+      - config-server
+      - rabbitmq
+    ports:
+      - "8084:8084"

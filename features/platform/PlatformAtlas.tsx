@@ -1,7 +1,7 @@
 import { useI18n } from "@/i18n";
 import { CHIP_CLASS, Panel, SectionTitle } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
-import { GATEWAY_ROUTES, LEAGUE_CONTRACT, PLATFORM_LIVE, PLATFORM_SERVICES, CIRCUIT_BREAKER, REDIS, type ServiceId } from "@/domain/platform";
+import { GATEWAY_ROUTES, LEAGUE_CONTRACT, PLATFORM_LIVE, PLATFORM_SERVICES, CIRCUIT_BREAKER, REDIS, BROKER, type ServiceId } from "@/domain/platform";
 import leagueContract from "../../services/league-service/src/main/resources/league-summary.json";
 
 /**
@@ -20,6 +20,7 @@ export function PlatformAtlas() {
     league: { name: t("platform.svcLeague"), role: t("platform.svcLeagueRole") },
     discipline: { name: t("platform.svcDiscipline"), role: t("platform.svcDisciplineRole") },
     cache: { name: t("platform.svcCache"), role: t("platform.svcCacheRole") },
+    messaging: { name: t("platform.svcMessaging"), role: t("platform.svcMessagingRole") },
   };
 
   const kindFor = (id: ServiceId) =>
@@ -27,7 +28,8 @@ export function PlatformAtlas() {
       : id === "config" ? t("platform.kindConfig")
         : id === "gateway" ? t("platform.kindEdge")
           : id === "cache" ? t("platform.kindCache")
-            : t("platform.kindDomain");
+            : id === "messaging" ? t("platform.kindMessaging")
+              : t("platform.kindDomain");
 
   return (
     <div className="space-y-5">
@@ -124,6 +126,11 @@ export function PlatformAtlas() {
           <li className="rounded-lg border px-3 py-2">
             <span className="block">{t("platform.redisLine", { image: REDIS.image, port: REDIS.port })}</span>
             <span className="mt-1 block text-[11px] text-muted-foreground">{t("platform.cacheBoundary")}</span>
+          </li>
+          <li className="rounded-lg border px-3 py-2">
+            <span className="block">{t("platform.brokerLine", { image: BROKER.image, port: BROKER.port })}</span>
+            <span className="mt-1 block truncate font-mono text-[11px] text-muted-foreground">{t("platform.exchangeLine", { exchange: BROKER.exchange, dlq: BROKER.dlq })}</span>
+            <span className="mt-1 block text-[11px] text-muted-foreground">{t("platform.messagingBoundary")}</span>
           </li>
         </ul>
         <p className="mt-2 text-[11px] text-muted-foreground">

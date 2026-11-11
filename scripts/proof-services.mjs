@@ -22,7 +22,7 @@ const has = (p) => existsSync(resolve(root, p));
 // only. It also holds the honesty line: the SPA does not call any of these services.
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { PLATFORM_SERVICES, GATEWAY_ROUTES, PLATFORM_LIVE, LEAGUE_CONTRACT, DISCIPLINE_CONTRACT, CIRCUIT_BREAKER } = await server.ssrLoadModule("/domain/platform.ts");
+const { PLATFORM_SERVICES, GATEWAY_ROUTES, PLATFORM_LIVE, LEAGUE_CONTRACT, DISCIPLINE_CONTRACT, CIRCUIT_BREAKER, BROKER } = await server.ssrLoadModule("/domain/platform.ts");
 const { DICTIONARIES } = await server.ssrLoadModule("/i18n/dictionaries.ts");
 const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
 
@@ -38,6 +38,28 @@ const portIn = (yml, key) => {
 const nameIn = (yml) => (/^\s+name:\s*([\w-]+)\s*$/m.exec(yml) || [])[1];
 const routeBlock = (yml, id) => (new RegExp(`- id: ${id}[\\s\\S]*?(?=\\n\\s*- id:|$)`).exec(yml) || [])[0] || "";
 const composeBlock = (yml, module) => (new RegExp(`\\n  ${module}:\\n([\\s\\S]*?)(?=\\n  [\\w-]+:\\n|$)`).exec(yml) || [])[1] || "";
+// M1061: a structural read of the gateway's route tree. A regex over `- id:` lines cannot
+// tell a route nested under `spring.cloud.gateway.routes` from one that drifted two spaces
+// left — and Spring cannot see the latter at all. This tracks each list item's ancestor key
+// path using indentation only, the same hierarchy the YAML parser builds. M1061 caught exactly
+// this drift: three routes sat at 2 spaces instead of 8 and silently registered as nothing.
+const routeTree = (yml) => {
+  const stack = [], out = [];
+  for (const raw of yml.split("\n")) {
+    const clean = raw.replace(/#.*$/, "").replace(/[ \t]+$/, "");
+    if (!clean.trim()) continue;
+    const indent = clean.length - clean.trimStart().length;
+    const text = clean.trim();
+    while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop();
+    const parent = stack.map((s) => s.key).join(".");
+    const item = /^-\s+id:\s*(\S+)/.exec(text);
+    if (item) { out.push({ id: item[1], parent, indent }); continue; }
+    const key = /^([\w.-]+):/.exec(text);
+    if (key) stack.push({ indent, key: key[1] });
+  }
+  return out;
+};
+
 const walk = (dir, out = []) => {
   for (const entry of readdirSync(resolve(root, dir))) {
     const rel = `${dir}/${entry}`;
@@ -60,14 +82,22 @@ const plantCompose = composeBlock("\nservices:\n  demo:\n    ports:\n      - \"1
 ok("the compose reader reads one planted service block and stops at the next",
   plantCompose.includes("\"1234:1234\"") && !plantCompose.includes("other"));
 
+const plantedTree = routeTree("gateway:\n  routes:\n    - id: inside\n      uri: lb://IN\n  orphan:\n    - id: escaped\n");
+ok("the route-tree reader reports each item's real parent and can see a route that drifted out of the list",
+  plantedTree.length === 2 &&
+  plantedTree[0].id === "inside" && plantedTree[0].parent === "gateway.routes" &&
+  plantedTree[1].id === "escaped" && plantedTree[1].parent === "gateway.orphan");
+
 // ---- 1 · the descriptor ----------------------------------------------------------------
 const ids = PLATFORM_SERVICES.map((s) => s.id);
 const ports = PLATFORM_SERVICES.map((s) => s.port);
-ok(`the descriptor names six services in dependency order with unique ids and ports (${PLATFORM_SERVICES.map((s) => `${s.id}:${s.port}`).join(" ")})`,
+ok(`the descriptor names seven services in dependency order with unique ids and ports (${PLATFORM_SERVICES.map((s) => `${s.id}:${s.port}`).join(" ")})`,
   // M968: the discipline service joins the reactor — five services, one more domain reader.
   // M1058: the cache tier joins — six services, the first one with a real out-of-reactor dependency (Redis).
-  PLATFORM_SERVICES.length === 6 && new Set(ids).size === 6 && new Set(ports).size === 6 &&
-  ids.join(",") === "registry,config,gateway,league,discipline,cache" && ports.join(",") === "8761,8888,8087,8081,8082,8083");
+  // M1061: the messaging tier joins — seven services, the second with a real out-of-reactor dependency (RabbitMQ).
+  PLATFORM_SERVICES.length === 7 && new Set(ids).size === 7 && new Set(ports).size === 7 &&
+  ids.join(",") === "registry,config,gateway,league,discipline,cache,messaging" &&
+  ports.join(",") === "8761,8888,8087,8081,8082,8083,8084");
 ok("every non-registry service registers with the registry and none depends on itself",
   PLATFORM_SERVICES.filter((s) => s.id !== "registry").every((s) => s.dependsOn.includes("registry")) &&
   PLATFORM_SERVICES.every((s) => !s.dependsOn.includes(s.id)));
@@ -75,7 +105,7 @@ ok("the gateway descriptor and the circuit breaker agree with the gateway's own 
   CIRCUIT_BREAKER.name === "leagueSummary" &&
   CIRCUIT_BREAKER.fallbackPath === "/fallback" &&
   CIRCUIT_BREAKER.waitSeconds === 1 &&
-  GATEWAY_ROUTES.length === 4);
+  GATEWAY_ROUTES.length === 5);
 
 // ---- 2 · the reactor -------------------------------------------------------------------
 const parentPom = read("services/pom.xml");
@@ -98,7 +128,7 @@ for (const s of PLATFORM_SERVICES) {
   if (!/<groupId>com\.footballos<\/groupId>/.test(xml)) pomFails.push(`${s.module}: groupId`);
 }
 ok(`every module has a pom that names itself and points at the shared parent (${pomFails.join(" / ") || "clean"})`,
-  pomFails.length === 0 && PLATFORM_SERVICES.length === 6);
+  pomFails.length === 0 && PLATFORM_SERVICES.length === 7);
 
 // ---- 3 · the application classes -------------------------------------------------------
 const registrySrc = walk("services/eureka-server/src").filter((f) => f.endsWith(".java")).map(read).join("\n");
@@ -132,7 +162,7 @@ for (const s of PLATFORM_SERVICES) {
 ok(`each application.yml listens on the descriptor's port and registers under its app name (${ymlFails.join(" / ") || "clean"})`,
   ymlFails.length === 0);
 ok(`the registry is the services' eureka default zone (${PLATFORM_SERVICES.find((s) => s.id === "registry").port})`,
-  ["config-server", "gateway", "league-service", "discipline-service", "cache-service"].every((m) =>
+  ["config-server", "gateway", "league-service", "discipline-service", "cache-service", "messaging-service"].every((m) =>
     read(`services/${m}/src/main/resources/application.yml`).includes(`http://localhost:${PLATFORM_SERVICES[0].port}/eureka/`)));
 
 // ---- 4b · the actuator line: every service exposes health,info and nothing else ----------------------------
@@ -147,7 +177,7 @@ for (const s of PLATFORM_SERVICES) {
   if (/^\s*include:\s*.*(metrics|env|shutdown|beans|heapdump|loggers)/m.test(yml)) actuatorFails.push(`${s.module}: richer endpoint`);
 }
 ok(`every service exposes exactly health,info and nothing richer (${actuatorFails.join(" / ") || "clean"})`,
-  actuatorFails.length === 0 && PLATFORM_SERVICES.length === 6);
+  actuatorFails.length === 0 && PLATFORM_SERVICES.length === 7);
 
 // ---- 5 · the gateway's own routes ------------------------------------------------------
 const gatewayYml = read("services/gateway/src/main/resources/application.yml");
@@ -173,6 +203,11 @@ for (const r of GATEWAY_ROUTES) {
 }
 ok(`every descriptor route is written the same way in the gateway yml (${GATEWAY_ROUTES.map((r) => r.id).join(", ")}; ${routeFails.join(" / ") || "clean"})`,
   GATEWAY_ROUTES.length >= 1 && routeFails.length === 0);
+const gatewayTree = routeTree(gatewayYml);
+const misnested = gatewayTree.filter((r) => r.parent !== "spring.cloud.gateway.routes");
+ok(`every gateway route is nested under spring.cloud.gateway.routes, not merely present as a line (${gatewayTree.length} items, ${misnested.map((r) => r.id).join(" / ") || "clean"})`,
+  gatewayTree.length === GATEWAY_ROUTES.length && misnested.length === 0 &&
+  gatewayTree.map((r) => r.id).join(",") === GATEWAY_ROUTES.map((r) => r.id).join(","));
 ok("the gateway carries the resilience4j breaker the descriptor names, and its fallback path exists as a route in the gateway's own namespace",
   read("services/gateway/pom.xml").includes("spring-cloud-starter-circuitbreaker-reactor-resilience4j") &&
   read("services/gateway/src/main/java/com/footballos/gateway/FallbackRouter.java").includes(`"${CIRCUIT_BREAKER.fallbackPath}"`) &&
@@ -302,7 +337,7 @@ ok("the atlas renders both descriptor arrays and never types a port itself",
   SCREEN.includes("from \"@/domain/platform\"") &&
   SCREEN.includes("PLATFORM_SERVICES.map") && SCREEN.includes("GATEWAY_ROUTES.map") &&
   SCREEN.includes("LEAGUE_CONTRACT.path") &&
-  SCREEN.includes("PLATFORM_LIVE") && !/\b(8761|8888|8087|8081)\b/.test(SCREEN) &&
+  SCREEN.includes("PLATFORM_LIVE") && !/\b(8761|8888|8087|8081|8082|8083|8084)\b/.test(SCREEN) &&
   SCREEN.includes("t(\"platform.title\")") && SCREEN.includes("platform.boundaryTitle"));
 ok("the atlas reads the exported contract file itself, not a second copy of the counts",
   SCREEN.includes("services/league-service/src/main/resources/league-summary.json") &&
@@ -312,11 +347,11 @@ const appFiles = ["src", "features", "domain", "data", "lib", "ui", "store", "i1
   .flatMap((d) => walk(d)).filter((f) => /\.(ts|tsx)$/.test(f) && f !== SCREEN_PATH);
 const callers = appFiles.filter((f) => {
   const src = read(f);
-  return src.includes("localhost:8087") || src.includes("localhost:8081") || src.includes("localhost:8761") || src.includes("localhost:8888");
+  return src.includes("localhost:8087") || src.includes("localhost:8081") || src.includes("localhost:8761") || src.includes("localhost:8888") || src.includes("localhost:8084");
 });
 ok(`no app module reaches for a service port — the map is a descriptor, not a client (${callers.join(", ") || "none"})`,
   callers.length === 0 && appFiles.length > 100 && PLATFORM_LIVE === false &&
-  !/\b(8761|8888|8087|8081|8082|8083)\b/.test(SCREEN));
+  !/\b(8761|8888|8087|8081|8082|8083|8084)\b/.test(SCREEN));
 const APP = read("src/App.tsx");
 const SHELL = read("features/shell/AppShell.tsx");
 ok("the screen has a lazy route, a route branch and a sidebar entry",
@@ -332,7 +367,7 @@ for (const key of [...screenKeys, "nav.platform"]) {
   for (const id of localeIds) if (!(key in DICTIONARIES[id])) missingKeys.push(`${id}:${key}`);
 }
 ok(`every key the atlas reads exists in all ${localeIds.length} locales (${screenKeys.length} screen keys + nav.platform; ${missingKeys.join(" / ") || "clean"})`,
-  localeIds.length === 3 && screenKeys.length === 49 && missingKeys.length === 0);
+  localeIds.length === 3 && screenKeys.length === 55 && missingKeys.length === 0);
 ok("the interpolating rows hand their placeholders to every locale",
   localeIds.every((id) => /\{n\}/.test(DICTIONARIES[id]["platform.portLine"]) &&
     /\{n\}/.test(DICTIONARIES[id]["platform.stripPrefix"]) &&
@@ -373,6 +408,85 @@ ok("compose brings up Redis for the cache tier and the cache service waits on it
   composeBlock(compose, "redis").includes("image: redis:7-alpine") &&
   composeBlock(compose, "redis").includes('"6379:6379"') &&
   composeBlock(compose, "cache-service").includes("- redis"));
+
+// ---- 10 · the messaging tier and its one out-of-reactor broker (RabbitMQ) -----------------
+// domain/queue.ts holds the NUMBERS; the Java policy defaults and the yml must agree with it.
+// The Stream bindings are the wire twin of the pure fold: partition by key (per-key order), a
+// durable competing group with max-attempts -> DLQ (termination), and prefetch (backpressure).
+const { QUEUE_POLICY } = await server.ssrLoadModule("/domain/queue.ts");
+const MSG_POM = read("services/messaging-service/pom.xml");
+ok("the messaging module pulls in Spring Cloud Stream + the Rabbit binder, web and actuator, and has a Dockerfile",
+  MSG_POM.includes("<artifactId>messaging-service</artifactId>") &&
+  MSG_POM.includes("spring-cloud-stream") &&
+  MSG_POM.includes("spring-cloud-stream-binder-rabbit") &&
+  MSG_POM.includes("spring-boot-starter-web") &&
+  MSG_POM.includes("spring-boot-starter-actuator") &&
+  has("services/messaging-service/Dockerfile") &&
+  read("services/messaging-service/Dockerfile").includes("-pl messaging-service -am"));
+
+const MSG_YML = read("services/messaging-service/src/main/resources/application.yml");
+ok("the messaging yml binds three functional beans to a partitioned Rabbit topic with a dead-letter sink",
+  MSG_YML.includes("default-binder: rabbit") &&
+  MSG_YML.includes("definition: publishFixtures;processEvents;deadLetter") &&
+  MSG_YML.includes("publishFixtures-out-0:") &&
+  MSG_YML.includes("processEvents-in-0:") &&
+  MSG_YML.includes("deadLetter-in-0:") &&
+  MSG_YML.includes("partition-key-expression: payload.key") &&
+  MSG_YML.includes("partitioned: true") &&
+  MSG_YML.includes("republish-to-dlq: true") &&
+  MSG_YML.includes("group: footballos.pipeline") &&
+  MSG_YML.includes("destination: " + BROKER.exchange) &&
+  MSG_YML.includes("destination: " + BROKER.dlq) &&
+  MSG_YML.includes("dlq-name: " + BROKER.dlq) &&
+  MSG_YML.includes("prefetch: " + QUEUE_POLICY.highWater));
+
+// Three readers of one policy: the TypeScript fold, the Java defaults, the yml.
+const javaPolicy = read("services/messaging-service/src/main/java/com/footballos/messaging/DeliveryPolicy.java");
+const javaField = (name) => {
+  const i = javaPolicy.indexOf(name + " = ");
+  if (i < 0) return NaN;
+  const m = /^[0-9]+/.exec(javaPolicy.slice(i + name.length + 3));
+  return m ? Number(m[0]) : NaN;
+};
+const policyRows = [
+  ["base-delay", "baseDelay", QUEUE_POLICY.baseDelay],
+  ["cap-delay", "capDelay", QUEUE_POLICY.capDelay],
+  ["max-attempts", "maxAttempts", QUEUE_POLICY.maxAttempts],
+  ["high-water", "highWater", QUEUE_POLICY.highWater],
+  ["low-water", "lowWater", QUEUE_POLICY.lowWater],
+  ["shards", "shards", QUEUE_POLICY.shards],
+];
+const policyDrift = policyRows.filter(([k, j, t]) => portIn(MSG_YML, k) !== t || javaField(j) !== t);
+ok(`the yml, the Java defaults and the pure fold name one retry/water-mark policy (${policyRows.length} rows; ${policyDrift.map((r) => r[0]).join(" / ") || "clean"})`,
+  policyDrift.length === 0);
+ok("the broker's exchange and dead-letter queue are named identically in the descriptor, the yml and the Java defaults",
+  javaPolicy.includes('"' + BROKER.exchange + '"') && javaPolicy.includes('"' + BROKER.dlq + '"') &&
+  MSG_YML.includes("exchange: " + BROKER.exchange) && MSG_YML.includes("dlq: " + BROKER.dlq));
+
+const MSG_SRC = walk("services/messaging-service/src").filter((f) => f.endsWith(".java")).map(read).join("\n");
+ok("the messaging service has one entry point, three functional beans, a seen-set idempotency door and an observe surface that stays honest",
+  (MSG_SRC.match(/@SpringBootApplication/g) || []).length === 1 &&
+  MSG_SRC.includes("Supplier<MatchEvent> publishFixtures") &&
+  MSG_SRC.includes("Consumer<MatchEvent> processEvents") &&
+  MSG_SRC.includes("Consumer<MatchEvent> deadLetter") &&
+  MSG_SRC.includes("seen.add") && MSG_SRC.includes("StreamBridge") &&
+  ["/summary", "/stats", "/policy", "/publish"].every((p) => MSG_SRC.includes('"' + p + '"')) &&
+  MSG_SRC.includes('"live", false'));
+
+ok("compose brings up the broker the descriptor names and the messaging service waits on it in-network",
+  composeBlock(compose, "rabbitmq").includes("image: " + BROKER.image) &&
+  composeBlock(compose, "rabbitmq").includes('"' + BROKER.port + ":" + BROKER.port + '"') &&
+  composeBlock(compose, "rabbitmq").includes('"' + BROKER.managementPort + ":" + BROKER.managementPort + '"') &&
+  composeBlock(compose, "messaging-service").includes("- rabbitmq") &&
+  composeBlock(compose, "messaging-service").includes("SPRING_RABBITMQ_HOST: rabbitmq") &&
+  composeBlock(compose, "messaging-service").includes('"8084:8084"'));
+
+ok("the atlas reads the broker endpoint from the descriptor rather than a typed-in copy",
+  ["BROKER.image", "BROKER.port", "BROKER.exchange", "BROKER.dlq"].every((f) => SCREEN.includes(f)) &&
+  !SCREEN.includes("footballos.events") && !SCREEN.includes("rabbitmq:3-management"));
+ok("the messaging route's planned consumer is the queue observatory and PLATFORM_LIVE stays false",
+  GATEWAY_ROUTES.find((r) => r.id === "messaging-pipeline").consumers.join(",") === "/messaging" &&
+  PLATFORM_LIVE === false);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

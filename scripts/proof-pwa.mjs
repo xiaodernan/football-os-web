@@ -213,7 +213,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // baseline re-recorded in this commit (JS 589, CSS 12.6).
 // M1057: the leaders chunk crosses the 604 KB line as measured by the gate — 606 KB, pin 603 -> 606,
 // baseline re-recorded in the same commit (JS 594, CSS 12.6).
-const BUDGET_KB = 606;
+// M1059: the message pipeline adds a screen and two interactive SVGs — 618 KB, pin 606 -> 618,
+// baseline re-recorded in the same commit (JS 605, CSS 12.7).
+const BUDGET_KB = 618;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

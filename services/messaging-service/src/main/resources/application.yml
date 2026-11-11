@@ -1,0 +1,96 @@
+# Port pinned by domain/platform.ts (messaging: 8084) and read back by proof-services.mjs.
+# The messaging tier is the second service with a real out-of-reactor dependency: RabbitMQ. Its
+# binder config is the wire-level twin of the pure fold in domain/queue.ts — partitioning by the
+# message key keeps per-key order, consumer isolation Auto-requeues a NACK, max-attempts moves a
+# poison message to the dead-letter queue, and prefetch is the backpressure water mark (a consumer
+# will not pull more than `prefetch` unacked messages, so a slow fleet sheds load instead of flooding).
+server:
+  port: 8084
+
+spring:
+  application:
+    name: football-os-messaging
+  cloud:
+    function:
+      # The functional bean names: a publisher, a processing consumer and a dead-letter sink.
+      definition: publishFixtures;processEvents;deadLetter
+    stream:
+      default-binder: rabbit
+      bindings:
+        # The publisher emits one message per finished fixture, keyed by the home club.
+        publishFixtures-out-0:
+          destination: footballos.events
+          producer:
+            partition-key-expression: payload.key
+            partition-count: 8
+        # The processing consumer. `group` makes it durable + competing; partitioned so one key
+        # always lands on one consumer instance, which is what preserves per-key order.
+        processEvents-in-0:
+          destination: footballos.events
+          group: footballos.pipeline
+          consumer:
+            partitioned: true
+            concurrency: 4
+            max-attempts: 5
+            back-off-initial-interval: 20
+            back-off-max-interval: 640
+            back-off-multiplier: 2
+        # The dead-letter sink: a message that exhausted max-attempts lands here, not in an
+        # infinite retry loop. This is the termination guarantee the pure fold also has.
+        deadLetter-in-0:
+          destination: footballos.events.dlq
+          group: footballos.pipeline.dlq
+      rabbit:
+        bindings:
+          publishFixtures-out-0:
+            producer:
+              routing-key-expression: "'events.' + payload.key"
+              exchange-type: topic
+          processEvents-in-0:
+            consumer:
+              # prefetch is the QOS backpressure gate: at most this many unacked messages per
+              # consumer. It is the wire twin of the high-water mark in domain/queue.ts.
+              prefetch: 64
+              auto-bind-dlq: true
+              dlq-name: footballos.events.dlq
+              republish-to-dlq: true
+              durable-subscription: true
+        binder:
+          # In-network host is overridden by SPRING_RABBITMQ_HOST under compose; on the host stack
+          # it dials localhost:5672. The connection is a single AMQP channel pool over TCP.
+          hosts: localhost
+          port: 5672
+    config:
+      import: optional:configserver:http://localhost:8888
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+# The wire policy mirrors domain/queue.ts's QUEUE_POLICY. The proof reads these numbers out of the
+# yml and refuses a drift between the pure fold and the broker binding — one decision, two readers.
+footballos:
+  messaging:
+    exchange: footballos.events
+    dlq: footballos.events.dlq
+    base-delay: 20
+    cap-delay: 640
+    max-attempts: 5
+    high-water: 64
+    low-water: 16
+    shards: 8

@@ -64,6 +64,7 @@ const AcademyPage = lazy(() => import("@/features/academy/AcademyPage").then((m)
 const RecordsCabinet = lazy(() => import("@/features/records/RecordsCabinet").then((m) => ({ default: m.RecordsCabinet })));
 const FinanceBoard = lazy(() => import("@/features/finance/FinanceBoard").then((m) => ({ default: m.FinanceBoard })));
 const FormTable = lazy(() => import("@/features/analytics/FormTable").then((m) => ({ default: m.FormTable })));
+const QueueObservatory = lazy(() => import("@/features/messaging/QueueObservatory").then((m) => ({ default: m.QueueObservatory })));
 
 const FOOTBALL_PREFIXES = ["/football", "/players", "/clubs", "/competitions", "/matches", "/news", "/search"];
 function isFootballRoute(path: string) {
@@ -161,6 +162,7 @@ function Routes() {
   else if (path === "/streaks") inner = <Streaks />;
   else if (path === "/briefing") inner = <Briefing />;
   else if (path === "/form") inner = <FormTable />;
+  else if (path === "/messaging") inner = <QueueObservatory />;
   else if (path === "/simulation") inner = <SimulationLab />;
   else if (isFootballRoute(path)) inner = <FootballWorld />;
 

@@ -422,3 +422,9 @@ test("the platform atlas draws the four services and the breaker", async ({ page
   await expect(page.getByText("/api/league/table/**")).toBeVisible();
   await expect(page.getByText("node scripts/verify-services.mjs")).toBeVisible();
 });
+
+test("the message pipeline draws its fold and its badges", async ({ page }) => {
+  await page.goto("/#/messaging");
+  await expect(page.getByRole("heading", { name: "The message pipeline" })).toBeVisible();
+  await expect(page.getByText("analysis · not a live console")).toBeVisible();
+});
