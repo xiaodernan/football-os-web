@@ -30,9 +30,12 @@ spring:
     redis:
       time-to-live: 60s
       cache-null-values: false
-  cloud:
-    config:
-      import: optional:configserver:http://localhost:8888
+  config:
+    # Optional: the cache service still boots alone (stand-alone) when the config server is not
+    # running; when it is, it picks up the label from there instead of the default. This lives at
+    # the TOP of spring.* on purpose — Spring Boot 3's config-import machinery reads
+    # spring.config.import and nothing else; the old spring.cloud.config.import key was a lie.
+    import: optional:configserver:http://localhost:8888
 
 management:
   info:

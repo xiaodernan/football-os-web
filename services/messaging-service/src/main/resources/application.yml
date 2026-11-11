@@ -10,6 +10,11 @@ server:
 spring:
   application:
     name: football-os-messaging
+  # Config-server import. It lives at the TOP of spring.* on purpose: Spring Boot 3's
+  # config-import machinery reads spring.config.import and nothing else, and the old
+  # spring.cloud.config.import key used to live here —
+  config:
+    import: optional:configserver:http://localhost:8888
   cloud:
     function:
       # The functional bean names: a publisher, a processing consumer and a dead-letter sink.
@@ -60,8 +65,6 @@ spring:
           # it dials localhost:5672. The connection is a single AMQP channel pool over TCP.
           hosts: localhost
           port: 5672
-    config:
-      import: optional:configserver:http://localhost:8888
 
 management:
   info:

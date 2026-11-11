@@ -21,7 +21,10 @@ test-results/
 football-os/
 
 # Local agent/tool state (memory, session logs) — not part of the shipped app.
+# .workbuddy/ carries this workspace's cross-session memory; it is hidden from every census
+# (appTree's isHiddenName) but kept out of the product repository all the same, like -ai above.
 .workbuddy-ai/
+.workbuddy/
 
 # Maven build output for the Spring Cloud skeleton under services/ (M1036).
 services/**/target/

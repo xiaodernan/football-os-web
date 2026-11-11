@@ -15,6 +15,11 @@ import {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(resolve(root, p), "utf8");
 const has = (p) => existsSync(resolve(root, p));
+// YAML readers match on `\n` boundaries and multi-line literals (`instances:\n      name:`).
+// Git's autocrlf can check these files out as CRLF on Windows without changing a single byte of
+// meaning, so normalise ONLY the yml text before parsing. `read()` stays byte-exact: the frozen
+// contract comparisons below must see the original bytes, not a normalised copy.
+const readYml = (p) => read(p).replace(/\r\n/g, "\n");
 
 // M1036: the platform atlas — the Spring Cloud skeleton under services/ and the descriptor in
 // domain/platform.ts must agree row for row. This proof parses the poms, the application ymls,
@@ -153,7 +158,7 @@ const ymlFails = [];
 for (const s of PLATFORM_SERVICES) {
   const p = `services/${s.module}/src/main/resources/application.yml`;
   if (!has(p)) { ymlFails.push(`${s.module}: missing yml`); continue; }
-  const yml = read(p);
+  const yml = readYml(p);
   const port = portIn(yml, "port");
   const name = nameIn(yml);
   if (port !== s.port) ymlFails.push(`${s.module}: port ${port} != ${s.port}`);
@@ -163,7 +168,7 @@ ok(`each application.yml listens on the descriptor's port and registers under it
   ymlFails.length === 0);
 ok(`the registry is the services' eureka default zone (${PLATFORM_SERVICES.find((s) => s.id === "registry").port})`,
   ["config-server", "gateway", "league-service", "discipline-service", "cache-service", "messaging-service"].every((m) =>
-    read(`services/${m}/src/main/resources/application.yml`).includes(`http://localhost:${PLATFORM_SERVICES[0].port}/eureka/`)));
+    readYml(`services/${m}/src/main/resources/application.yml`).includes(`http://localhost:${PLATFORM_SERVICES[0].port}/eureka/`)));
 
 // ---- 4b · the actuator line: every service exposes health,info and nothing else ----------------------------
 const actuatorInclude = (yml) => {
@@ -172,7 +177,7 @@ const actuatorInclude = (yml) => {
 };
 const actuatorFails = [];
 for (const s of PLATFORM_SERVICES) {
-  const yml = read(`services/${s.module}/src/main/resources/application.yml`);
+  const yml = readYml(`services/${s.module}/src/main/resources/application.yml`);
   if (actuatorInclude(yml) !== "health,info") actuatorFails.push(`${s.module}: include ${actuatorInclude(yml) || "missing"}`);
   if (/^\s*include:\s*.*(metrics|env|shutdown|beans|heapdump|loggers)/m.test(yml)) actuatorFails.push(`${s.module}: richer endpoint`);
 }
@@ -180,7 +185,7 @@ ok(`every service exposes exactly health,info and nothing richer (${actuatorFail
   actuatorFails.length === 0 && PLATFORM_SERVICES.length === 7);
 
 // ---- 5 · the gateway's own routes ------------------------------------------------------
-const gatewayYml = read("services/gateway/src/main/resources/application.yml");
+const gatewayYml = readYml("services/gateway/src/main/resources/application.yml");
 const routeFails = [];
 for (const r of GATEWAY_ROUTES) {
   const target = PLATFORM_SERVICES.find((s) => s.id === r.target);
@@ -217,7 +222,7 @@ ok("the gateway carries the resilience4j breaker the descriptor names, and its f
   gatewayYml.includes("failure-rate-threshold: 50"));
 
 // ---- 6 · compose and Dockerfiles -------------------------------------------------------
-const compose = read("services/docker-compose.yml");
+const compose = readYml("services/docker-compose.yml");
 const composeFails = [];
 for (const s of PLATFORM_SERVICES) {
   const block = composeBlock(compose, s.module);
@@ -241,15 +246,15 @@ ok("the config server enables the config server and serves a native classpath re
   has("services/config-server/src/main/java/com/footballos/config/ConfigApplication.java") &&
   has("services/config-server/src/main/resources/config-repo/application.yml") &&
   read("services/config-server/src/main/java/com/footballos/config/ConfigApplication.java").includes("@EnableConfigServer") &&
-  read("services/config-server/src/main/resources/application.yml").includes("active: native") &&
-  read("services/config-server/src/main/resources/application.yml").includes("search-locations: classpath:/config-repo/") &&
-  read("services/config-server/src/main/resources/config-repo/application.yml").includes("contract-resource: league-summary.json") &&
-  read("services/config-server/src/main/resources/config-repo/application.yml").includes("tables-resource: league-tables.json") &&
-  read("services/config-server/src/main/resources/config-repo/application.yml").includes("label: Demo World R1"));
+  readYml("services/config-server/src/main/resources/application.yml").includes("active: native") &&
+  readYml("services/config-server/src/main/resources/application.yml").includes("search-locations: classpath:/config-repo/") &&
+  readYml("services/config-server/src/main/resources/config-repo/application.yml").includes("contract-resource: league-summary.json") &&
+  readYml("services/config-server/src/main/resources/config-repo/application.yml").includes("tables-resource: league-tables.json") &&
+  readYml("services/config-server/src/main/resources/config-repo/application.yml").includes("label: Demo World R1"));
 ok("the league service imports the optional config server and takes the resource name from its own property instead of a hard-coded string",
   read("services/league-service/pom.xml").includes("spring-cloud-starter-config") &&
   read("services/league-service/pom.xml").includes("spring-boot-starter-actuator") &&
-  read("services/league-service/src/main/resources/application.yml").includes("optional:configserver:http://localhost:8888") &&
+  readYml("services/league-service/src/main/resources/application.yml").includes("optional:configserver:http://localhost:8888") &&
   read("services/league-service/src/main/java/com/footballos/league/LeagueSummaryController.java").includes("@Value(\"${footballos.league.contract-resource:league-summary.json}\")"));
 ok("the tables controller takes its resource name from the same optional-import door, not a compiled-in constant",
   read("services/league-service/src/main/java/com/footballos/league/LeagueTableController.java")
@@ -311,7 +316,7 @@ ok("the league service carries a read-only table controller and the gateway rout
   leagueTableSrc.includes("@PathVariable") &&
   leagueTableSrc.includes("ResponseStatusException(HttpStatus.NOT_FOUND") &&
   !leagueTableSrc.includes("@PostMapping") &&
-  read("services/gateway/src/main/resources/application.yml").includes("- Path=/api/league/table/**"));
+  readYml("services/gateway/src/main/resources/application.yml").includes("- Path=/api/league/table/**"));
 ok("the league controller loads that resource through Jackson and keeps the counts in the JSON",
   leagueSrc.includes("new ClassPathResource(contractResource)") &&
   leagueSrc.includes("TypeReference<Map<String, Object>>") &&
@@ -321,14 +326,42 @@ ok("the league controller loads that resource through Jackson and keeps the coun
 // ---- 8 · the operator's half: the verifier and the runbook -----------------------------------
 const VERIFY_SRC = read("scripts/verify-services.mjs");
 const RUNBOOK_SRC = read("dev/platform-runbook.md");
-ok("the Spring Cloud stack has a runnable witness and a runbook that name the same four ports, the same lb target, the same canned fallback and the same config value the live run printed",
+// M1063: the witness and the runbook used to name the same four ports; the reactor then grew to
+// seven modules and two brokers and only the descriptor kept up. Both operator documents must now
+// name EVERY service port and the two out-of-reactor broker ports, or the human reading them is
+// looking at an stale topology — the exact drift this clause is here to refuse.
+const ALL_PORTS = PLATFORM_SERVICES.map((s) => String(s.port));
+ok(`the witness and the runbook name the same ${ALL_PORTS.length} service ports (${ALL_PORTS.join(",")}) plus both brokers, the same lb target, fallback and config value`,
   VERIFY_SRC.includes("lb://LEAGUE-SERVICE") && RUNBOOK_SRC.includes("lb://LEAGUE-SERVICE") &&
-  ["8761", "8888", "8081", "8087"].every((p) => VERIFY_SRC.includes(p) && RUNBOOK_SRC.includes(p)) &&
+  ALL_PORTS.every((p) => VERIFY_SRC.includes(p) && RUNBOOK_SRC.includes(p)) &&
+  ["6379", "5672"].every((p) => VERIFY_SRC.includes(p) || RUNBOOK_SRC.includes(p)) &&
   VERIFY_SRC.includes("league-service is quiet") && RUNBOOK_SRC.includes("league-service is quiet") &&
   VERIFY_SRC.includes("Demo World R1") && RUNBOOK_SRC.includes("Demo World R1") &&
   VERIFY_SRC.includes("scripts/verify-services.mjs") &&
   RUNBOOK_SRC.includes("PLATFORM_LIVE") && RUNBOOK_SRC.includes("health,info") &&
   /\/actuator\/health/.test(RUNBOOK_SRC));
+// The verifier's boot order is no longer trusted as a hand-typed list: it declares its DAG and
+// boot list as JSON literals and refuses to start unless lib/boot-order.mjs proves the order is a
+// valid topological order over the same edges the descriptor publishes.
+ok("the verifier drives its boot order from the shared topological-order algorithm and a declared DAG",
+  VERIFY_SRC.includes('from "./lib/boot-order.mjs"') &&
+  VERIFY_SRC.includes("topologicalOrder(TOPOLOGY)") && VERIFY_SRC.includes("assertBootOrder(") &&
+  /const TOPOLOGY = \[/.test(VERIFY_SRC) && /const BOOT_IDS = \[/.test(VERIFY_SRC) &&
+  VERIFY_SRC.includes("canonical.cyclic.length") && VERIFY_SRC.includes("chosen.ok"));
+// A positional kill means "league" only while the array keeps its exact order; the runbook itself
+// warned about stale java processes. The stop target must be named, not indexed.
+const verifyExec = VERIFY_SRC.split("\n").map((l) => l.replace(/\/\/.*$/, "")).join("\n");
+ok("the circuit test names the league service it stops rather than a positional index",
+  !/children\s*\[\s*\d+\s*\]\s*\.\s*kill/.test(verifyExec) &&
+  /children\.get\(["']league["']\)/.test(verifyExec));
+// The two broker-backed services are declared but honestly excluded from the host boot list, with
+// a contract-level witness in their place — a live broker is never claimed on this host.
+ok("the runbook and witness keep the honest external-broker boundary for cache and messaging",
+  /redis/i.test(RUNBOOK_SRC) && /rabbitmq/i.test(RUNBOOK_SRC) &&
+  VERIFY_SRC.includes("byte-identical frozen league contract") &&
+  VERIFY_SRC.includes("retry/water-mark policy") &&
+  /excluded|not booted|contract witness/i.test(VERIFY_SRC) &&
+  /not.*booted|contract witness|needs a live Redis|needs RabbitMQ/i.test(RUNBOOK_SRC));
 
 // ---- 7 · the screen reads the descriptor, and the app never calls a service -----------
 const SCREEN_PATH = "features/platform/PlatformAtlas.tsx";
@@ -382,7 +415,7 @@ ok("the cache module names itself, points at the parent, and pulls in Spring Dat
   CACHE_POM.includes("<artifactId>cache-service</artifactId>") &&
   CACHE_POM.includes("<groupId>com.footballos</groupId>") &&
   CACHE_POM.includes("spring-boot-starter-data-redis"));
-const cacheYml = read("services/cache-service/src/main/resources/application.yml");
+const cacheYml = readYml("services/cache-service/src/main/resources/application.yml");
 ok("the cache tier dials Redis (RESP over netty via Lettuce), honours a TTL, and exposes only health,info",
   cacheYml.includes("host: localhost") &&
   cacheYml.includes("port: 6379") &&
@@ -424,7 +457,7 @@ ok("the messaging module pulls in Spring Cloud Stream + the Rabbit binder, web a
   has("services/messaging-service/Dockerfile") &&
   read("services/messaging-service/Dockerfile").includes("-pl messaging-service -am"));
 
-const MSG_YML = read("services/messaging-service/src/main/resources/application.yml");
+const MSG_YML = readYml("services/messaging-service/src/main/resources/application.yml");
 ok("the messaging yml binds three functional beans to a partitioned Rabbit topic with a dead-letter sink",
   MSG_YML.includes("default-binder: rabbit") &&
   MSG_YML.includes("definition: publishFixtures;processEvents;deadLetter") &&

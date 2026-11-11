@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, CHIP_CLASS, PANEL_CLASS, Mini } from "@/ui/primitives";
-import { cn } from "@/lib/utils";
+import { cn, fmtGrouped, hashRingPoint } from "@/lib/utils";
 import { footballProvider } from "@/data/footballService";
 import { hashString } from "@/lib/rng";
 import {
@@ -31,7 +31,6 @@ import {
 
 const NODES = ["eu-west", "eu-central", "us-east"];
 const NODE_FILL = ["var(--color-primary)", "var(--color-info)", "var(--color-success)"];
-const fmt = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 export function QueueObservatory() {
   const { t } = useI18n();
@@ -110,13 +109,13 @@ export function QueueObservatory() {
 
       {/* The board, read straight off the fold. */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <Mini label={t("messaging.statDelivered")} value={fmt(board.delivered.length)} />
-        <Mini label={t("messaging.statTries")} value={fmt(board.attempts)} />
-        <Mini label={t("messaging.statRetries")} value={fmt(board.retries)} />
-        <Mini label={t("messaging.statThroughput")} value={fmt(throughput)} />
-        <Mini label={t("messaging.statDead")} value={fmt(board.deadLettered.length)} />
-        <Mini label={t("messaging.statDup")} value={fmt(board.duplicates.length)} />
-        <Mini label={t("messaging.statPeak")} value={fmt(board.peakDepth)} />
+        <Mini label={t("messaging.statDelivered")} value={fmtGrouped(board.delivered.length)} />
+        <Mini label={t("messaging.statTries")} value={fmtGrouped(board.attempts)} />
+        <Mini label={t("messaging.statRetries")} value={fmtGrouped(board.retries)} />
+        <Mini label={t("messaging.statThroughput")} value={fmtGrouped(throughput)} />
+        <Mini label={t("messaging.statDead")} value={fmtGrouped(board.deadLettered.length)} />
+        <Mini label={t("messaging.statDup")} value={fmtGrouped(board.duplicates.length)} />
+        <Mini label={t("messaging.statPeak")} value={fmtGrouped(board.peakDepth)} />
         <Mini label={t("messaging.statShards")} value={`${board.byShard.filter((n) => n > 0).length}/${board.byShard.length}`} />
       </div>
 
@@ -300,19 +299,17 @@ function RingViz({ ring, ringKeys, nodeColor }: {
 }) {
   const { t } = useI18n();
   const cx = 160, cy = 160, r = 128;
-  const angle = (h: number) => (h / 4294967296) * Math.PI * 2 - Math.PI / 2;
-  const pt = (h: number, radius: number) => ({ x: cx + radius * Math.cos(angle(h)), y: cy + radius * Math.sin(angle(h)) });
   return (
     <svg viewBox="0 0 320 320" className="mx-auto h-64 w-full max-w-[320px]" role="img" aria-label={t("messaging.ringTitle")}>
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--color-border)" strokeWidth="1.5" />
       {ring.points.map((h, i) => {
-        const p = pt(h, r);
+        const p = hashRingPoint(cx, cy, h, r);
         return <circle key={i} cx={p.x} cy={p.y} r="2" fill={nodeColor(ring.owners[i])} opacity="0.75" />;
       })}
       {ringKeys.map((key) => {
         const h = hashString(key);
-        const outer = pt(h, r);
-        const inner = pt(h, r - 22);
+        const outer = hashRingPoint(cx, cy, h, r);
+        const inner = hashRingPoint(cx, cy, h, r - 22);
         return (
           <g key={key}>
             <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke="var(--color-border)" strokeWidth="0.7" />

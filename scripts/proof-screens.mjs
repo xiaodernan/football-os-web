@@ -230,6 +230,15 @@ ok(`this file's own loads are split by how visible they are to that ratchet: ${o
 // ---------------------------------------------------------------------------
 const SHAPED = /\b[a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9_]+)+\b/g;
 const BROKEN = /undefined|NaN|\[object Object\]/g;
+// A dotted token whose LAST segment is a file extension is a path, not a key: the three observatory
+// witness lines print real commands (`node scripts/proof-cache.mjs`), and one of them (`cache.mjs`)
+// happens to start with a real dictionary namespace. No dictionary key ends in a file extension
+// (checked against all 3212 keys), so excluding them cannot release a genuine leak. `leaksOf` is the
+// single classifier both the render matrix and the plant below call, so the exemption is measured,
+// not assumed — the plant plants a real missing key in that same namespace and it still charges.
+const FILE_EXT = new Set(["mjs", "cjs", "js", "jsx", "ts", "tsx", "json", "css", "scss", "html", "yml", "yaml", "md", "svg", "png", "webp", "ico"]);
+const shapedOf = (text) => [...new Set(text.match(SHAPED) || [])];
+const leaksOf = (text) => shapedOf(text).filter((k) => NAMESPACES.has(k.split(".")[0]) && !KEYS.has(k) && !FILE_EXT.has(k.split(".").pop().toLowerCase()));
 const nodesOf = (html) => (html.match(/>([^<>]+)</g) || []).map((m) => m.slice(1, -1).replace(/&#x27;/g, "'").replace(/&amp;/g, "&").replace(/&gt;/g, ">").trim()).filter(Boolean);
 
 const renders = [];
@@ -247,10 +256,10 @@ for (const s of screens) {
     }
     const nodes = nodesOf(html);
     const text = nodes.join(" ");
-    const shaped = [...new Set(text.match(SHAPED) || [])];
+    const shaped = shapedOf(text);
     renders.push({
       screen: s.name, id: s.id, locale: loc, html, nodes,
-      leaks: shaped.filter((k) => NAMESPACES.has(k.split(".")[0]) && !KEYS.has(k)),
+      leaks: leaksOf(text),
       printed: shaped.filter((k) => KEYS.has(k)),
       shaped: shaped.length,
       broken: [...new Set(text.match(BROKEN) || [])],
@@ -611,9 +620,9 @@ ok(`NOT COVERED HERE, measured: the app root cannot be pinned from this harness 
 // ---------------------------------------------------------------------------
 const translate = DICTS ? (await tryLoad(() => server.ssrLoadModule("/i18n/index.tsx"))).mod.translate : null;
 const classify = (text) => {
-  const shaped = [...new Set(text.match(SHAPED) || [])];
+  const shaped = shapedOf(text);
   return {
-    leaks: shaped.filter((k) => NAMESPACES.has(k.split(".")[0]) && !KEYS.has(k)).length,
+    leaks: leaksOf(text).length,
     printed: shaped.filter((k) => KEYS.has(k)).length,
     broken: new Set(text.match(BROKEN) || []).size,
   };
@@ -632,6 +641,19 @@ ok(`the same classifier, pointed at planted rows, catches each one exactly once 
   plantedMissing.leaks === 1 && plantedMissing.printed === 0 && plantedPrinted.printed === 1 &&
   plantedBroken.broken === 3 && plantedClean.leaks + plantedClean.printed + plantedClean.broken === 0,
   JSON.stringify({ plantedMissing, plantedPrinted, plantedBroken, plantedClean }));
+
+// The file-extension exemption is itself planted: a filename that is ALSO a dictionary namespace
+// (`cache.mjs`, from the cache witness command) must not charge, while a genuine missing key in that
+// same namespace (`cache.planted_missing_row`, resolved through the shipped translate) still must.
+// Without the second half, a classifier that simply stopped reading `cache.*` would pass — the same
+// blind-spot shape M247 bans. The exemption is a suffix test, so it cannot swallow the prose tail.
+const plantedFileExt = classify(translate("en", "cache.planted_missing_row"));
+const plantedWitness = classify("node scripts/proof-cache.mjs");
+ok(`the file-extension exemption is a suffix, not a namespace blind spot: the cache witness command's ${JSON.stringify(shapedOf("node scripts/proof-cache.mjs"))} charge ${plantedWitness.leaks} (it is a path), while a real missing key under that same namespace through translate() (${translate("en", "cache.planted_missing_row")}) still charges ${plantedFileExt.leaks} and no dictionary key ends in an extension (0 of ${KEYS.size})`,
+  plantedWitness.leaks === 0 && plantedFileExt.leaks === 1 &&
+  shapedOf("node scripts/proof-cache.mjs").includes("cache.mjs") &&
+  [...KEYS].every((k) => !FILE_EXT.has(k.split(".").pop().toLowerCase())),
+  JSON.stringify({ plantedWitness, plantedFileExt }));
 
 // The clause above compares vectors. This one names the ROW: the reader's locale has to arrive as
 // the dictionary's own badge text, and the English row must be absent from the zh page (and the

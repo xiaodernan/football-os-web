@@ -142,7 +142,9 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[
 // M1056: 130 -> 131 — domain/rockets.ts joins it.
 // M1057: 131 -> 133 — domain/graph.ts and lib/structures.ts join the entry's closure.
 // M1059: 133 -> 135 — domain/queue.ts and features/messaging/QueueObservatory.tsx join it.
-const APP_FILES_PIN = 135;
+// M1064: 135 -> 137 — domain/cache.ts and features/cache/CacheObservatory.tsx join it.
+// M1064: 137 -> 138 — domain/ringMath.ts (the shared hash-ring floor) joins the reader's path.
+const APP_FILES_PIN = 138;
 
 // The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
 // stands alone must keep the two a reader reaches and drop the third. The planted files are

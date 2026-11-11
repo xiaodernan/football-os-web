@@ -303,3 +303,18 @@ export const ABSENT = "—";
 // translation and stay out of this fold; the scheduled-score placeholder `"– : –"` is a composite
 // of two dashes and a colon and is charged by name in `proof-absent-glyph`.
 export const SEPARATOR = "–";
+
+// The observatory floor — the two observatory screens were each spelling the same two local
+// tools and the same ring geometry inline. One door each now. `fmtGrouped` is the app's one
+// thousands-grouping door (`1,234,567`), deliberately NOT a `toLocaleString` — a reader's own
+// browser decides that grouping, and a test or a fixture can neither pin nor predict it; this
+// door prints the same string everywhere. `hashRingAngle` maps a 32-bit hash to a bearing on the
+// circle (zero at twelve o'clock, clockwise), the one convention both hash-ring diagrams read;
+// `hashRingPoint` places that bearing at a radius about (cx, cy). A third hand-stitched copy here
+// would have joined the same-rule census silently, so the screens import both.
+export const fmtGrouped = (n: number): string => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+export const hashRingAngle = (h: number): number => (h / 4294967296) * Math.PI * 2 - Math.PI / 2;
+export const hashRingPoint = (cx: number, cy: number, h: number, radius: number): { x: number; y: number } => ({
+  x: cx + radius * Math.cos(hashRingAngle(h)),
+  y: cy + radius * Math.sin(hashRingAngle(h)),
+});

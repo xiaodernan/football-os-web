@@ -215,7 +215,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // baseline re-recorded in the same commit (JS 594, CSS 12.6).
 // M1059: the message pipeline adds a screen and two interactive SVGs — 618 KB, pin 606 -> 618,
 // baseline re-recorded in the same commit (JS 605, CSS 12.7).
-const BUDGET_KB = 618;
+// M1064: the cache observatory adds a lazy screen + its domain fold — 628 KB across 67 assets,
+// pin 618 -> 628, baseline re-recorded in the same commit (JS 615, CSS 13).
+const BUDGET_KB = 628;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

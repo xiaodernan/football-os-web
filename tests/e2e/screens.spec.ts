@@ -428,3 +428,9 @@ test("the message pipeline draws its fold and its badges", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "The message pipeline" })).toBeVisible();
   await expect(page.getByText("analysis · not a live console")).toBeVisible();
 });
+
+test("the cache tier draws its fold and its six mechanisms", async ({ page }) => {
+  await page.goto("/#/cache");
+  await expect(page.getByRole("heading", { name: "The cache tier" })).toBeVisible();
+  await expect(page.getByText("analysis · not a live Redis console")).toBeVisible();
+});

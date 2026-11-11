@@ -7,16 +7,32 @@
 
 ## What the stack is
 
-| Module | artifactId | Port | Registers with Eureka | Serves |
+The reactor is **seven Maven modules plus two out-of-reactor broker processes**. Five modules boot
+on the host with plain `java -jar`; the other two need a broker this machine cannot start, so the
+host verifier witnesses them **by contract** rather than claiming a live boot. All seven modules
+and both brokers come up together only under compose / CI. `domain/platform.ts` is the descriptor
+every port and dependency edge is checked against (`proof-services.mjs`, `proof-boot-order.mjs`).
+
+| Module | artifactId | Port | Registers with Eureka | Serves | Host `verify-services.mjs` |
+|---|---|---|---|---|---|
+| `services/eureka-server` | `eureka-server` | **8761** | no — the registry never registers itself | the registry | boots |
+| `services/config-server` | `config-server` | **8888** | yes | a native classpath repository (`config-repo/application.yml`) | boots |
+| `services/league-service` | `league-service` | **8081** | yes | `GET /league/summary` — the frozen counts contract; `GET /league/table(/{comp})` — the frozen tables | boots |
+| `services/discipline-service` | `discipline-service` | **8082** | yes | `GET /discipline/clock(/{comp})` — the frozen card clocks | boots |
+| `services/gateway` | `gateway` | **8087** | yes | the edge: `/api/league/**`, `/api/discipline/**`, `/api/cache/**`, `/api/messaging/**` → `lb://` targets | boots (last, on purpose) |
+| `services/cache-service` | `cache-service` | **8083** | yes | `GET /cache/league/summary` — read-through Redis cache of the frozen league contract; `/stats` (honest `redisUp`), `POST /evict` | **contract witness** (needs Redis) |
+| `services/messaging-service` | `messaging-service` | **8084** | yes | `GET /messaging/summary\|/stats\|/policy`, `POST /publish` — Spring Cloud Stream over RabbitMQ | **contract witness** (needs RabbitMQ) |
+
+| External process | Image | Ports | Why the reactor needs it | Host verifier |
 |---|---|---|---|---|
-| `services/eureka-server` | `eureka-server` | **8761** | no — the registry never registers itself | the registry |
-| `services/config-server` | `config-server` | **8888** | yes | a native classpath repository (`config-repo/application.yml`) |
-| `services/league-service` | `league-service` | **8081** | yes | `GET /league/summary` — the frozen counts contract; `GET /league/table(/{comp})` — the frozen tables |
-| `services/gateway` | `gateway` | **8087** | yes | the edge: `/api/league/**` → `lb://LEAGUE-SERVICE` |
-| `services/discipline-service` | `discipline-service` | **8082** | yes | `GET /discipline/clock(/{comp})` — the frozen card clocks |
+| Redis | `redis:7-alpine` | **6379** | the cache tier's `StringRedisTemplate` (RESP over netty via Lettuce), TTL + read-through | not started — cache fronts the same frozen contract, checked byte-for-byte |
+| RabbitMQ | `rabbitmq:3-management-alpine` | **5672** / **15672** | the messaging tier's Stream binder (partition key, consumer group, retry back-off, DLQ, prefetch) | not started — the yml's retry/water-mark policy is checked against the pure fold |
 
 The gateway cannot live on 8080 on this machine — `com.docker.backend.exe` (Docker Desktop)
-binds that port (PID 19388 observed). Everything else is stock.
+binds that port. Everything else is stock. The gateway is booted **last** even though its only
+dependency is the registry: booting it before the domain services earns a Eureka/LB cache window
+where `lb://LEAGUE-SERVICE` resolves to nobody. `verify-services.mjs` keeps that operational order
+as a named decision and checks it is still a valid topological order every run.
 
 ## Build
 
@@ -24,11 +40,12 @@ binds that port (PID 19388 observed). Everything else is stock.
 mvn -DskipTests package -f services/pom.xml
 ```
 
-Four fat jars land in `services/*/target/` (roughly 47–58 MB each). The Dockerfiles in each
-module build the same reactor from the same poms (`docker build -f services/<module>/Dockerfile services/`),
-and `services/docker-compose.yml` wires the same four services with the same ports in
-dependency order — with the environment overrides below, which are mandatory inside containers
-(localhost would point each service at itself):
+**Seven** fat jars land in `services/*/target/` (roughly 47–61 MB each; messaging carries the
+Stream + Rabbit binder). The Dockerfiles in each module build the same reactor from the same poms
+(`docker build -f services/<module>/Dockerfile services/`), and `services/docker-compose.yml` wires
+all seven modules **plus `redis` and `rabbitmq`** with the same ports in dependency order — with
+the environment overrides below, which are mandatory inside containers (localhost would point each
+service at itself):
 
 ```sh
 docker compose -f services/docker-compose.yml up --build
@@ -42,28 +59,52 @@ docker compose -f services/docker-compose.yml up --build
 > impaired). `8080` on this host is also occupied by that Career OS backend, which is a second,
 > unrelated reason the gateway was moved to `8087`. The compose stack is therefore **statically
 > validated and structurally current but not container-executed on this machine** — treat the
-> Dockerfiles as correct-by-construction (all four poms copied, `-pl <module> -am`, one entrypoint)
-> and exercise the stack with `node scripts/verify-services.mjs`, which boots the four jars on the
-> host and is the runnable truth for this environment. If a registry-healthy machine is available,
+> Dockerfiles as correct-by-construction (all seven poms copied, `-pl <module> -am`, one entrypoint)
+> and exercise the stack with `node scripts/verify-services.mjs`, which boots the five broker-free
+> jars on the host, witnesses the cache/messaging tiers by contract, and is the runnable truth for
+> this environment. If a registry-healthy machine is available,
 > `docker compose -f services/docker-compose.yml up --build` is the one-command equivalent.
 
 ## Boot by hand (dependency order)
 
-```sh
-java -jar services/eureka-server/target/eureka-server-0.1.0.jar    # wait ~15s
-java -jar services/config-server/target/config-server-0.1.0.jar    # wait ~8s
-java -jar services/league-service/target/league-service-0.1.0.jar  # wait ~10s
-java -jar services/gateway/target/gateway-0.1.0.jar                 # wait ~8s
+The order is **derived from the `dependsOn` edges**, not memorised: `scripts/lib/boot-order.mjs`
+runs Kahn's algorithm over the seven-node DAG in `domain/platform.ts` and the verifier refuses to
+start if its chosen order puts any node before a dependency (or if the DAG has a cycle or a dangling
+edge). The canonical order is:
+
+```
+registry -> config -> gateway -> league -> discipline -> cache -> messaging
 ```
 
-Or run the whole verification in one command, which is what the runbook recommends:
+The host verifier keeps one deliberate deviation — **gateway last** — for the LB cache reason above;
+`assertBootOrder` confirms that deviation is still a valid topological order. The five broker-free
+jars, in the verifier's operational order:
+
+```sh
+java -jar services/eureka-server/target/eureka-server-0.1.0.jar    # registry, wait ~15s
+java -jar services/config-server/target/config-server-0.1.0.jar    # config,   wait ~8s
+java -jar services/league-service/target/league-service-0.1.0.jar  # league,   wait ~10s
+java -jar services/discipline-service/target/discipline-service-0.1.0.jar
+java -jar services/gateway/target/gateway-0.1.0.jar                # gateway LAST
+```
+
+`cache-service` (8083) additionally needs a live Redis on 6379 and `messaging-service` (8084) needs
+RabbitMQ on 5672; on this host those two are witnessed by contract, not booted. On a broker-healthy
+machine, bring them up with the compose stack instead:
+
+```sh
+docker compose -f services/docker-compose.yml up --build
+```
+
+Or run the whole host verification in one command, which is what the runbook recommends:
 
 ```sh
 node scripts/verify-services.mjs
 ```
 
-`verify-services.mjs` checks the jars exist, boots all four, and then walks the checklist
-below automatically.
+`verify-services.mjs` checks the jars exist, validates the topological order, boots the five
+broker-free services, witnesses cache/messaging by contract, and then walks the checklist below
+automatically.
 
 ## What "healthy" means here, in order
 
@@ -128,17 +169,19 @@ taskkill /IM java.exe /F
 ```
 
 ```sh
-# Unix: find and kill the four jars
+# Unix: find and kill the five host-booted jars (add cache/messaging if you started them under compose)
 pkill -f eureka-server-0.1.0.jar; pkill -f config-server-0.1.0.jar
-pkill -f league-service-0.1.0.jar; pkill -f gateway-0.1.0.jar
+pkill -f league-service-0.1.0.jar; pkill -f discipline-service-0.1.0.jar
+pkill -f gateway-0.1.0.jar
 ```
 
 ## Continuous integration
 
 `.github/workflows/spring-cloud-stack.yml` is the registry-healthy mirror of this runbook:
 on every push or pull request touching the service side it (1) builds the Maven reactor on
-ubuntu-latest with a cached Temurin JDK, (2) boots all four services with
-`node scripts/verify-services.mjs` — the same checklist this file walks by hand —
+ubuntu-latest with a cached Temurin JDK, (2) boots the five broker-free services and witnesses
+cache/messaging by contract with `node scripts/verify-services.mjs` — the same checklist this file
+walks by hand —
 (3) builds the web app and runs the full proof suite, and (4) installs Playwright chromium
 and runs the browser floor (`npx playwright test`). It is deliberately NOT executed by
 this author's local machine (no Actions access here); it is the same steps, aimed at a
@@ -147,7 +190,7 @@ that commit.
 
 `.github/workflows/spring-cloud-matrix.yml` is the same family with a narrower promise: a
 fail-fast-off matrix over ubuntu-latest and windows-latest (Temurin 21) builds the reactor
-on both OSs, then an ubuntu-latest job boots all four services and runs the same
+on both OSs, then an ubuntu-latest job boots the five broker-free services and runs the same
 `verify-services.mjs` checklist — service-side breakage that is OS-specific shows up on
 whichever OS it chokes on. It exercises the registry-to-artifact path CI runners legitimately
 provide; it does not, and cannot, prove anything about this author's impaired Docker Desktop.
@@ -165,14 +208,22 @@ provide; it does not, and cannot, prove anything about this author's impaired Do
   `/league/table/**`) read two dedicated frozen files; neither route reaches beyond them.
 - `PLATFORM_LIVE` in `domain/platform.ts` is false and stays false until something in the SPA
   is entitled to call the gateway.
-- The actuator surface on all four services is exactly `health,info`. Do not widen it "for
+- The actuator surface on all seven services is exactly `health,info`. Do not widen it "for
   debugging" — if a number is needed, export it into the contract, do not expose the endpoint.
+- The host verifier does **not** claim Redis or RabbitMQ is running. `cache-service` and
+  `messaging-service` are witnessed by their frozen contract and policy yml (byte-for-byte against
+  the league snapshot, and the six retry/water-mark numbers against `domain/queue.ts`); a live
+  broker round-trip belongs to the compose stack on a registry-healthy machine, not to this host.
+  `stats` on each service prints an honest liveness field (`redisUp` / a bounded retry) rather than
+  a green dot. `PLATFORM_LIVE` stays false whether or not a broker is up.
 
 ## Relationship to the gate
 
-`scripts/proof-services.mjs` reads the same four ymls, the poms, the compose file, the
-FallbackRouter and the descriptor, and refuses divergence between them. It does not run the
-stack; `scripts/verify-services.mjs` is the runnable witness for the behavior this file
-describes. If you change a port, a name, the breaker's name/fallback, or the controller's
-mapping, change **all** of: the yml, the poms, `domain/platform.ts`, the screen, the proofs,
-this runbook — or the gate goes red. That is the contract.
+`scripts/proof-services.mjs` reads all seven ymls, the poms, the compose file, the
+FallbackRouter and the descriptor, and refuses divergence between them; `scripts/proof-boot-order.mjs`
+reads the same dependency edges and proves the verifier's boot order is a valid topological order.
+Neither runs the stack; `scripts/verify-services.mjs` is the runnable witness for the behavior this
+file describes. If you change a port, a name, a dependency edge, the breaker's name/fallback, or a
+controller's mapping, change **all** of: the yml, the poms, `domain/platform.ts`, the screen, the
+proofs, this runbook, and the verifier's `TOPOLOGY`/`BOOT_IDS` — or the gate goes red. That is the
+contract.

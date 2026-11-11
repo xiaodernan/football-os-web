@@ -31,8 +31,8 @@
 // Re-running a fold with the same input is byte-identical, which is what makes it provable.
 
 import { MinHeap } from "@/lib/structures";
-import { hashString, makeRng } from "@/lib/rng";
-import { unique } from "./attributes";
+import { makeRng } from "@/lib/rng";
+import { shardOf } from "./ringMath";
 
 /** The defaults the atlas prints and the proof pins. A caller may override any of them; the
  *  proof measures the default policy so a change to one number has to be written down. */
@@ -118,66 +118,11 @@ export function backoffDelay(attempt: number, base: number, cap: number, seed: s
   return Math.floor(makeRng(`${seed}:${id}:${attempt}`)() * raw);
 }
 
-/** The modulo sharder: `hash(key) % shards`. Per-key order is free (one key, one shard); the cost
- *  is that adding a shard re-maps most keys. The consistent-hash ring below is the remedy and the
- *  proof prints both migration counts side by side. */
-export function shardOf(key: string, shards: number): number {
-  return hashString(key) % Math.max(1, Math.floor(shards));
-}
-
-// --- The consistent-hash ring ---------------------------------------------------------------
-/** A sorted ring of virtual-node hashes, each pointing at the physical node that owns it. */
-export interface HashRing {
-  readonly nodes: readonly string[];
-  /** Ascending vnode hashes — the search key. */
-  readonly points: readonly number[];
-  /** `owners[i]` is the physical node that placed `points[i]`. */
-  readonly owners: readonly string[];
-}
-
-/** Place `vnode` virtual points per physical node, then sort the whole ring once. Duplicated node
- *  names collapse (a node cannot own two disjoint slices of the ring). */
-export function buildHashRing(nodes: readonly string[], vnode: number): HashRing {
-  const uniqueNodes = unique(nodes);
-  const pts: number[] = [];
-  const own: string[] = [];
-  for (const node of uniqueNodes) {
-    for (let v = 0; v < Math.max(1, Math.floor(vnode)); v += 1) {
-      pts.push(hashString(`${node}#${v}`));
-      own.push(node);
-    }
-  }
-  const order = pts.map((_, i) => i).sort((a, b) => pts[a] - pts[b]);
-  return {
-    nodes: uniqueNodes,
-    points: order.map((i) => pts[i]),
-    owners: order.map((i) => own[i]),
-  };
-}
-
-/** Clockwise ownership: the first vnode point with hash ≥ the key's hash; wrap past the end.
- *  Lower-bound binary search makes a lookup O(log vnode·nodes) rather than a ring scan. An empty
- *  ring owns nothing and returns the empty string — an owner the caller can test for. */
-export function ringOwner(ring: HashRing, key: string): string {
-  if (ring.points.length === 0) return "";
-  const h = hashString(key);
-  let lo = 0;
-  let hi = ring.points.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (ring.points[mid] < h) lo = mid + 1;
-    else hi = mid;
-  }
-  return ring.owners[lo % ring.owners.length];
-}
-
-/** How many keys change hands when a ring is rebuilt — the expansion cost the modulo sharder
- *  cannot avoid and consistent hashing nearly eliminates. */
-export function ringMigration(from: HashRing, to: HashRing, keys: readonly string[]): number {
-  let moved = 0;
-  for (const key of keys) if (ringOwner(from, key) !== ringOwner(to, key)) moved += 1;
-  return moved;
-}
+// The shared hash-ring floor: shardOf, HashRing, buildRing, ringOwner, ringMigration.
+// HashRing the interface stays inside ringMath (its function signatures carry the type); only the
+// values are re-exported here — re-exporting the type name from this barrel would be a dead export,
+// since no consumer names it through `domain/queue` (proof-dead-exports charges it).
+export { shardOf, buildRing as buildHashRing, ringOwner, ringMigration } from "./ringMath";
 
 // --- Backpressure with hysteresis -----------------------------------------------------------
 export interface BackpressureResult {
