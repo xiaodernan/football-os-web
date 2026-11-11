@@ -2,12 +2,24 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `ceecf58 M1055: the reactor keeps its build context lean — the docker context refuses host junk`
-**总提交数**: 1391
-**开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历两次 origin/master 重写，均以 fetch + rebase 合入）
+**当前HEAD**: `b88f8f4 @M1063+M1064+M1065: 启动序拓扑真门 + 缓存领域内核与 /cache 可观测台 + 并轨收尾（177/177 proof, 3910 checks）` + 本提交（M1066 — 七服务 live boot + 诚实降级见证收口）
+**总提交数**: 1441
+**开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历一次 origin/master 重写——fetch + rebase 合入；本机 Docker Desktop registry 受损已记录在案，Compose 栈未容器执行）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑
+## 🚀 近期里程碑（M1056–M1066，最新在上）
+
+- **M1066 七服务真接 live + 诚实降级见证（honest degraded boot）**：`scripts/verify-services.mjs` 从 cache/messaging「契约级见证、不谎称实启」升级为**真实 live boot + 诚实降级见证**——`BOOT_IDS` 五→七（gateway 仍最后），broker 依赖带 `healthGated:false` 且 spawn-time 打 `SPRING_DATA_REDIS_PORT/SPRING_RABBITMQ_PORT=3999`（本机 6379/5672 被外部 Docker workload 占用、拒绝默认凭据，拨它才是假阳性）；缓存 `redisUp:false` 与 `/actuator/health` 503 交叉自洽、`/summary` 逐字节等于冻结契约（origin read-through）；messaging `live:false`+exchange/dlq/binder、`/policy rung3=80` 镜像纯 fold；新增两条 `lb://` 网关回环（`/api/cache/league/summary`·`/api/messaging/summary`）；`config-repo/application.yml` 缩进 bug 修复（`clocks-resource` 曾以 8 空格错挂 `league:` 标量键之后，`footballos.discipline.clocks-resource` 取不到、discipline 端 `@Value` 只靠默认值兜底；`proof-services` section 6a 新增结构化 pin 钉住正确父子关系并 planted 证明旧错缩进/错父键/错值全拒）；discipline gateway probe 单次 fetch 改 `fetchUntil`（LB 缓存窗）；`proof-boot-order` 5→7、`proof-services` section 6 升级、runbook 全链路改写；真跑 `VERIFY=0`、28 ok / 0 FAIL；**全套 177/177 · 3,910/3,910、E2E 140/140**。诚实保留：本机既无 Reactor 也无 Redis/RabbitMQ，两 broker 未在本机启动——witness 的是「broker DOWN 时服务诚实降级」；compose/CI 才拥有真 broker 双向。
+- **M1065 并轨收尾与门禁自洽**：共享哈希环 floor 抽 `domain/ringMath.ts`（cache/queue 同一真源）、`CacheMech`/HashRing 再导出 dead 化、屏幕千分位与环几何抽 `lib/utils.ts`（`fmtGrouped`/`hashRingAngle`/`hashRingPoint`）消 same-rule 副本；Spring Boot 3 `spring.config.import` 真修 + `@EnableConfigurationProperties(DeliveryPolicy)`；gzip 627 KB ≤ 628 pin。
+- **M1064 缓存内核（the cache tier, as a fold）**：`domain/cache.ts` 纯函数——LRU（Map O(1) vs 数组 O(n) foil）、LFU（MinHeap O(log n) vs 全量重排 O(n log n) foil）、TTL full-jitter 散点、Bloom admission、single-flight collapse、一致性哈希分片（扩容只搬 177/800，取模 599/800）；`/cache` 可观测台（analysis·not a live Redis console）；proof-cache 37/37。
+- **M1063 启动序成为真门**：`scripts/lib/boot-order.mjs` 纯函数（Kahn FIFO 稳定拓扑排序 + `assertBootOrder`）；verifier 手写数组废止、`children[2]` 脆弱索引改 Map 按名；proof-boot-order 21/21；runbook 重写为七服务诚实边界。
+- **M1062 门禁抓出两处真回归并当场修净**：chips（QueueObservatory 手写 panel wash 改 `PANEL_CLASS.panelMuted`）与 dead-exports（`ringMigration`/`admitMessages` 接入可观测台两面板）；175 proof 脚本首次全绿。
+- **M1061 消息服务（the messaging tier）**：reactor 补第六模块 `messaging-service`（Spring Cloud Stream + Rabbit binder，`publishFixtures`/`processEvents`/`deadLetter`）；`DeliveryPolicy`（镜像 `QUEUE_POLICY`，`rung3=80`）；gateway 三条路由缩进逃逸真缺陷（proof-services 新增缩进追踪 `routeTree` 结构读 + planted arm）；docker-compose 增 RabbitMQ(5672/15672)；proof-services 55/55。
+- **M1060 消息流可观测台**：`features/messaging/QueueObservatory.tsx`（`/messaging` lazy 路由 + nav.messaging）：8 Mini stat tiles、一致性哈希环/退避阶梯/高低水位滞回三张 SVG、分片柱状、投递时间线、六机制 boundary cards；全部数字读 `domain/queue.ts` 不重算；i18n 全三语；census 重录。
+- **M1059 消息队列领域内核**：`domain/queue.ts` 纯函数——`QUEUE_POLICY`（baseDelay 20/cap 640/maxAttempts 5/highWater 64/lowWater 16/shards 8/vnode 128）、指数阶梯 + full jitter（seed 可复现）、`MinHeap` 延迟队列/退避重试/毒消息 DLQ、seen-set 幂等、per-shard ledger；proof-message-queue 40/40。
+- **M1058 缓存层（the cache tier, Redis read-through）**：reactor 补第五模块 `cache-service`（Spring Data Redis 旁路 + Lettuce/netty；Redis 死则降级 origin read、`redisUp:false` 不谎报）；compose + redis:7-alpine；`/api/cache/**` gateway 第四路由；atlas 缓存层卡 + Redis 边界行；mvn package exit 0。
+- **M1057 图谱折叠（the fixture graph）**：`fixtureGraph(matches, clubs, limit=8)` PageRank + Union-Find（path halving）+ 加权聚类系数；`topK` 基于 `lib/structures.ts` MinHeap；`/leaders` 图谱面板；proof-structures 17/17、proof-fixture-graph 13/13。
+- **M1056 破局者（the breakthroughs）**：`domain/rockets.ts` — 赛季跨度/生涯突破折叠；`/leaders` breakthroughs 面板。
 
 - **M962 /streaks 连胜与不败纪录**：`streaks` 折叠按开球时间逐队走一遍赛果，得到最长连胜、最长不败、当前连胜与当前不败，联赛最佳与持有者；无事件记录也能读全部已结束比赛。独立证词 `proof-streaks`。
 - **M963 连胜的主客分侧**：抽出共享 `runsOf()`，整季 / 主场 / 客场三遍走同一段算术；每行加「主场 x胜/y不败 · 客场 …」。
@@ -102,9 +114,9 @@
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**171/171 脚本、3,751/3,751 检查**
-- E2E：**133/133**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部 55 条路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page six boards（openness · away wins · leaders · dynasties · coaching council · rescued results）、projection、streaks、injuries M999 ladder、xG family M1000、transfers、poll、club compare、edge reputation M1007、history、film room、learn、review、corner kings、outshine board、briefing、run-in、title race、watchlist、compare、scouting、value board、duel kings、world lethal board、manager OS、football AI、knowledge graph、tactical studio、data room、development、head-to-head、red card kings、most loaded yellows board、the season's five moments、leading foulers board、the balance sheet、the league rules、the world's trigger fingers、the youth academy、the squads by age、the cabinet of records、the tackling kings board、the workhorses board、the sharpest aim board、the metronomes board、the platform atlas draws the four services, the breaker and its witness、the last-gasp kings board、the taxmen board、the squanderers board、the monks board）
-- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,475、litVarSites 411
+- 全套证词：**177/177 脚本、3,910/3,910 检查**
+- E2E：**140/140**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page six boards（openness · away wins · leaders · dynasties · coaching council · rescued results）、projection、streaks、injuries M999 ladder、xG family M1000、transfers、poll、club compare、edge reputation M1007、history、film room、learn、review、corner kings、outshine board、briefing、run-in、title race、watchlist、compare、scouting、value board、duel kings、world lethal board、manager OS、football AI、knowledge graph、tactical studio、data room、development、head-to-head、red card kings、most loaded yellows board、the season's five moments、leading foulers board、the balance sheet、the league rules、the world's trigger fingers、the youth academy、the squads by age、the cabinet of records、the tackling kings board、the workhorses board、the sharpest aim board、the metronomes board、the platform atlas draws the four services, the breaker and its witness、the last-gasp kings board、the taxmen board、the squanderers board、the monks board、the message pipeline、the cache observatory）
+- 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,597、template 113、expression 34、computed 24、unknown 0、litVarSites 435、ariaKeyed 14、dup-value 154、excess-key 255；PWA 627 KB gzip（pin 628 KB，67 assets，baseline 同提交重录），不变量：PLATFORM_LIVE=false、SPA 不调用任何服务、纯分析层
 
 ## 🧭 下一步方向
 

@@ -7,10 +7,10 @@
 
 ## What the stack is
 
-The reactor is **seven Maven modules plus two out-of-reactor broker processes**. Five modules boot
-on the host with plain `java -jar`; the other two need a broker this machine cannot start, so the
-host verifier witnesses them **by contract** rather than claiming a live boot. All seven modules
-and both brokers come up together only under compose / CI. `domain/platform.ts` is the descriptor
+The reactor is **seven Maven modules plus two out-of-reactor broker processes**. All seven modules boot
+on the host with plain `java -jar` — the two broker-dependent ones boot against a dead port and
+**degrade honestly** instead of pretending. Only compose / CI brings all seven modules and both brokers
+up together. `domain/platform.ts` is the descriptor
 every port and dependency edge is checked against (`proof-services.mjs`, `proof-boot-order.mjs`).
 
 | Module | artifactId | Port | Registers with Eureka | Serves | Host `verify-services.mjs` |
@@ -20,13 +20,13 @@ every port and dependency edge is checked against (`proof-services.mjs`, `proof-
 | `services/league-service` | `league-service` | **8081** | yes | `GET /league/summary` — the frozen counts contract; `GET /league/table(/{comp})` — the frozen tables | boots |
 | `services/discipline-service` | `discipline-service` | **8082** | yes | `GET /discipline/clock(/{comp})` — the frozen card clocks | boots |
 | `services/gateway` | `gateway` | **8087** | yes | the edge: `/api/league/**`, `/api/discipline/**`, `/api/cache/**`, `/api/messaging/**` → `lb://` targets | boots (last, on purpose) |
-| `services/cache-service` | `cache-service` | **8083** | yes | `GET /cache/league/summary` — read-through Redis cache of the frozen league contract; `/stats` (honest `redisUp`), `POST /evict` | **contract witness** (needs Redis) |
-| `services/messaging-service` | `messaging-service` | **8084** | yes | `GET /messaging/summary\|/stats\|/policy`, `POST /publish` — Spring Cloud Stream over RabbitMQ | **contract witness** (needs RabbitMQ) |
+| `services/cache-service` | `cache-service` | **8083** | yes | `GET /cache/league/summary` — read-through Redis cache of the frozen league contract; `/stats` (honest `redisUp`), `POST /evict` | boots; degraded mode (`redisUp:false`, origin read) against a dead broker port, never the foreign stack |
+| `services/messaging-service` | `messaging-service` | **8084** | yes | `GET /messaging/summary\|/stats\|/policy`, `POST /publish` — Spring Cloud Stream over RabbitMQ | boots; binder reports DOWN, observe surfaces answer honestly (`live:false`) |
 
 | External process | Image | Ports | Why the reactor needs it | Host verifier |
 |---|---|---|---|---|
-| Redis | `redis:7-alpine` | **6379** | the cache tier's `StringRedisTemplate` (RESP over netty via Lettuce), TTL + read-through | not started — cache fronts the same frozen contract, checked byte-for-byte |
-| RabbitMQ | `rabbitmq:3-management-alpine` | **5672** / **15672** | the messaging tier's Stream binder (partition key, consumer group, retry back-off, DLQ, prefetch) | not started — the yml's retry/water-mark policy is checked against the pure fold |
+| Redis | `redis:7-alpine` | **6379** | the cache tier's `StringRedisTemplate` (RESP over netty via Lettuce), TTL + read-through | not started — this host's 6379 is a port another Docker Desktop workload publishes (this project's compose is not running), so the host verifier spawns the cache tier against a dead port instead of dialing a broker that isn't this reactor's |
+| RabbitMQ | `rabbitmq:3-management-alpine` | **5672** / **15672** | the messaging tier's Stream binder (partition key, consumer group, retry back-off, DLQ, prefetch) | not started — the same Docker Desktop publishes 5672 for another workload and it refuses default credentials; the verifier spawns the messaging tier against a dead port and the binder reports DOWN honestly |
 
 The gateway cannot live on 8080 on this machine — `com.docker.backend.exe` (Docker Desktop)
 binds that port. Everything else is stock. The gateway is booted **last** even though its only
@@ -60,8 +60,8 @@ docker compose -f services/docker-compose.yml up --build
 > unrelated reason the gateway was moved to `8087`. The compose stack is therefore **statically
 > validated and structurally current but not container-executed on this machine** — treat the
 > Dockerfiles as correct-by-construction (all seven poms copied, `-pl <module> -am`, one entrypoint)
-> and exercise the stack with `node scripts/verify-services.mjs`, which boots the five broker-free
-> jars on the host, witnesses the cache/messaging tiers by contract, and is the runnable truth for
+> and exercise the stack with `node scripts/verify-services.mjs`, which boots all seven jars on the
+> host (the two broker-dependent ones against a dead port, in degraded mode), and is the runnable truth for
 > this environment. If a registry-healthy machine is available,
 > `docker compose -f services/docker-compose.yml up --build` is the one-command equivalent.
 
@@ -77,20 +77,27 @@ registry -> config -> gateway -> league -> discipline -> cache -> messaging
 ```
 
 The host verifier keeps one deliberate deviation — **gateway last** — for the LB cache reason above;
-`assertBootOrder` confirms that deviation is still a valid topological order. The five broker-free
-jars, in the verifier's operational order:
+`assertBootOrder` confirms that deviation is still a valid topological order. All seven jars,
+in the verifier's operational order (gateway last, the broker pair against a dead port):
 
 ```sh
 java -jar services/eureka-server/target/eureka-server-0.1.0.jar    # registry, wait ~15s
 java -jar services/config-server/target/config-server-0.1.0.jar    # config,   wait ~8s
 java -jar services/league-service/target/league-service-0.1.0.jar  # league,   wait ~10s
 java -jar services/discipline-service/target/discipline-service-0.1.0.jar
+java -jar services/cache-service/target/cache-service-0.1.0.jar     # degraded: no Redis, origin reads
+java -jar services/messaging-service/target/messaging-service-0.1.0.jar  # degraded: no broker, live:false
 java -jar services/gateway/target/gateway-0.1.0.jar                # gateway LAST
 ```
 
-`cache-service` (8083) additionally needs a live Redis on 6379 and `messaging-service` (8084) needs
-RabbitMQ on 5672; on this host those two are witnessed by contract, not booted. On a broker-healthy
-machine, bring them up with the compose stack instead:
+`cache-service` (8083) serves the frozen contract from origin with `redisUp:false` when Redis is
+absent, and `messaging-service` (8084) binds against a dead broker and reports it on its observe
+surfaces — both boot, neither pretends. On this host those two processes must never dial 6379/5672
+because another Docker Desktop workload publishes both ports and refuses default credentials;
+`verify-services.mjs` spawns them with `SPRING_DATA_REDIS_PORT=3999` / `SPRING_RABBITMQ_PORT=3999`
+(a port nothing occupies) for exactly that reason. Delete those two spawn-time overrides on a host
+that runs its own Redis/RabbitMQ to watch the live-broker path instead. The compose stack is the
+one-command equivalent on a registry-healthy machine:
 
 ```sh
 docker compose -f services/docker-compose.yml up --build
@@ -102,9 +109,10 @@ Or run the whole host verification in one command, which is what the runbook rec
 node scripts/verify-services.mjs
 ```
 
-`verify-services.mjs` checks the jars exist, validates the topological order, boots the five
-broker-free services, witnesses cache/messaging by contract, and then walks the checklist below
-automatically.
+`verify-services.mjs` checks the jars exist, validates the topological order, boots all seven
+services (gateway last, the broker pair against a dead port in degraded mode), and then walks the checklist below
+automatically — including the two gateway round-trips `/api/cache/league/summary` and
+`/api/messaging/summary` through `lb://`.
 
 ## What "healthy" means here, in order
 
@@ -161,6 +169,23 @@ automatically.
    The status is 503 and the content-type is application/json. No `500`s, no hung threads —
    that is the entire point of the breaker.
 
+8. Broker-deprived witnesses (the honest degraded mode; run with `SPRING_DATA_REDIS_PORT=3999` and
+   `SPRING_RABBITMQ_PORT=3999` if you boot them by hand on this host, or against your own broker pair
+   if 6379/5672 belong to this reactor):
+   `GET http://localhost:8083/actuator/health` → 503 (`{"status":"DOWN"}`) **only because Redis is
+   absent**; anything else means something in this path drifted — the gateway, the contract, the
+   health wiring. `GET http://localhost:8083/cache/league/summary` → the frozen league summary
+   (byte-equal), served from origin; `GET http://localhost:8083/cache/league/stats` → `redisUp:false`,
+   counters as integers — the two endpoints must agree about the broker.
+   `GET http://localhost:8084/actuator/health` → 503 (`binders.rabbit.status=DOWN`; the foreign
+   RabbitMQ on 5672 refuses default credentials, or none is listening); `GET http://localhost:8084/messaging/summary`
+   → `{"exchange":"footballos.events","dlq":"footballos.events.dlq","live":false,...}`;
+   `GET http://localhost:8084/messaging/policy` → `{"baseDelay":20,"capDelay":640,"rung3":80,...}` —
+   the exact ladder `domain/queue.ts` runs under (`rawBackoff(3)===80`). Through the edge:
+   `GET http://localhost:8087/api/cache/league/summary` and `GET http://localhost:8087/api/messaging/summary`
+   → the same bodies, resolved through `lb://` the same way as the league routes
+   (`/api/cache/**`, `/api/messaging/**` with StripPrefix=1).
+
 ## Tear-down
 
 ```sh
@@ -169,9 +194,10 @@ taskkill /IM java.exe /F
 ```
 
 ```sh
-# Unix: find and kill the five host-booted jars (add cache/messaging if you started them under compose)
+# Unix: find and kill the seven host-booted jars
 pkill -f eureka-server-0.1.0.jar; pkill -f config-server-0.1.0.jar
 pkill -f league-service-0.1.0.jar; pkill -f discipline-service-0.1.0.jar
+pkill -f cache-service-0.1.0.jar; pkill -f messaging-service-0.1.0.jar
 pkill -f gateway-0.1.0.jar
 ```
 
@@ -179,8 +205,8 @@ pkill -f gateway-0.1.0.jar
 
 `.github/workflows/spring-cloud-stack.yml` is the registry-healthy mirror of this runbook:
 on every push or pull request touching the service side it (1) builds the Maven reactor on
-ubuntu-latest with a cached Temurin JDK, (2) boots the five broker-free services and witnesses
-cache/messaging by contract with `node scripts/verify-services.mjs` — the same checklist this file
+ubuntu-latest with a cached Temurin JDK, (2) boots all seven services and round-trips the broker-deprived
+tiers through the gateway with `node scripts/verify-services.mjs` — the same checklist this file
 walks by hand —
 (3) builds the web app and runs the full proof suite, and (4) installs Playwright chromium
 and runs the browser floor (`npx playwright test`). It is deliberately NOT executed by
@@ -190,7 +216,7 @@ that commit.
 
 `.github/workflows/spring-cloud-matrix.yml` is the same family with a narrower promise: a
 fail-fast-off matrix over ubuntu-latest and windows-latest (Temurin 21) builds the reactor
-on both OSs, then an ubuntu-latest job boots the five broker-free services and runs the same
+on both OSs, then an ubuntu-latest job boots all seven services and runs the same
 `verify-services.mjs` checklist — service-side breakage that is OS-specific shows up on
 whichever OS it chokes on. It exercises the registry-to-artifact path CI runners legitimately
 provide; it does not, and cannot, prove anything about this author's impaired Docker Desktop.
@@ -210,12 +236,14 @@ provide; it does not, and cannot, prove anything about this author's impaired Do
   is entitled to call the gateway.
 - The actuator surface on all seven services is exactly `health,info`. Do not widen it "for
   debugging" — if a number is needed, export it into the contract, do not expose the endpoint.
-- The host verifier does **not** claim Redis or RabbitMQ is running. `cache-service` and
-  `messaging-service` are witnessed by their frozen contract and policy yml (byte-for-byte against
-  the league snapshot, and the six retry/water-mark numbers against `domain/queue.ts`); a live
-  broker round-trip belongs to the compose stack on a registry-healthy machine, not to this host.
-  `stats` on each service prints an honest liveness field (`redisUp` / a bounded retry) rather than
-  a green dot. `PLATFORM_LIVE` stays false whether or not a broker is up.
+- The host verifier does **not** claim Redis or RabbitMQ is running, and does not dial the brokers that
+  are on this host. Another Docker Desktop workload publishes this machine's 6379 and 5672 and refuses
+  default credentials, so `verify-services.mjs` spawns the cache and messaging tiers against :3999 (a
+  dead port) and asserts the degraded-but-honest responses: the contract from origin with
+  `redisUp:false`, the messaging observe surface with `live:false`, the binder's health reporting DOWN.
+  A live broker round-trip belongs to the compose stack on a registry-healthy machine, or to a host
+  whose 6379/5672 belong to this reactor — delete the two spawn-time overrides in `BOOT_ENV` when that
+  is the case. `PLATFORM_LIVE` stays false whether or not a broker is up.
 
 ## Relationship to the gate
 

@@ -117,6 +117,19 @@ const waitFor = async (url, tries = 90) => {
   return false;
 };
 
+// For the broker-deprived services the liveness question is "does the surface it serves answer
+// 200", not "is the broker present".
+const waitUntil200 = async (url, tries = 60, sleepMs = 2000) => {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+      if (r.ok) return true;
+    } catch { /* not yet */ }
+    await new Promise((res) => setTimeout(res, sleepMs));
+  }
+  return false;
+};
+
 // The gateway's load balancer caches the registry; a freshly booted stack may need one cache
 // window (~35s default) before LEAGUE-SERVICE is visible to lb://. Poll instead of presuming.
 const fetchUntil = async (url, validate, tries = 24, sleepMs = 5000) => {
@@ -171,30 +184,49 @@ const pass = (msg) => console.log(`ok   ${msg}`);
 // Boot the host stack in the verified topological order.
 for (const id of BOOT_IDS) {
   const s = { id, ...DETAILS[id], health: `http://localhost:${DETAILS[id].port}/actuator/health` };
-  const child = spawn("java", ["-jar", jarPath(s)], { stdio: ["ignore", "pipe", "pipe"] });
+  const env = BOOT_ENV[id] ? { ...process.env, ...BOOT_ENV[id] } : process.env;
+  const child = spawn("java", ["-jar", jarPath(s)], { stdio: ["ignore", "pipe", "pipe"], env });
   wireLogs(child, s.id);
   children.set(s.id, child);
-  const up = await waitFor(s.health);
-  if (!up) fail(`${s.id} (${s.port}) did not report UP within the window`);
-  pass(`${s.id} answers actuator/health with UP on ${s.port}`);
+  // The broker-deprived services are not health-gated (their /actuator/health answers 503 by design,
+  // naming the missing broker honestly); instead the witness below polls the surface they serve.
+  const up = s.healthGated ? await waitFor(s.health) : await waitUntil200(`http://localhost:${s.port}/${id === "cache" ? "cache/league/summary" : "messaging/summary"}`);
+  if (!up) fail(`${s.id} (${s.port}) did not come up within the window`);
+  pass(`${s.id} is up on ${s.port}${s.healthGated ? " (actuator/health UP)" : " (broker-deprived surface answered 200)"}`);
 }
 
-// The two out-of-reactor services get a contract-level witness, not a claimed live boot: Redis
-// (cache, 8083) and RabbitMQ (messaging, 8084) cannot be started on this host, but the bytes and
-// policy they would serve/read are checkable right now, and drift here is exactly what a live boot
-// would later expose. proof-services.mjs holds the same two facts against the yml and the Java.
-const cacheContract = join(root, "services/cache-service/src/main/resources/league-summary.json");
-const leagueContractOnDisk = join(root, "services/league-service/src/main/resources/league-summary.json");
-if (readFileSync(cacheContract, "utf8") !== readFileSync(leagueContractOnDisk, "utf8")) {
-  fail("cache-service's frozen league-summary.json differs from league-service's — the read-through tier would serve a different world");
+// The two broker-deprived services are witnessed LIVE, not by contract: they booted (above) against a
+// dead broker, so this host sees the honest degraded mode. The checks below hold in both a brokerless
+// host (what this run proved) and a brokered one (delete BOOT_ENV — the same bytes answer).
+// Cache: the read-through serves the frozen contract from origin when Redis is unreachable, and its two
+// endpoints must agree with each other — /stats's redisUp false exactly when /actuator/health is 503.
+{
+  const cacheHealth = await fetch("http://localhost:8083/actuator/health", { signal: AbortSignal.timeout(8000) });
+  const stats = await fetch("http://localhost:8083/cache/league/stats", { signal: AbortSignal.timeout(8000) }).then((r) => r.json());
+  if (typeof stats?.redisUp !== "boolean") fail("the cache's stats endpoint did not report a boolean redisUp");
+  if ((cacheHealth.status === 200) !== stats.redisUp) {
+    fail(`the cache disagrees with itself: /actuator/health answers ${cacheHealth.status} but redisUp=${stats.redisUp}`);
+  }
+  pass(`the cache boots without Redis and tells the truth about it (health=${cacheHealth.status}, redisUp=${stats.redisUp})`);
+  const summary = await fetch("http://localhost:8083/cache/league/summary", { signal: AbortSignal.timeout(8000) }).then((r) => r.json());
+  const cacheContract = JSON.parse(readFileSync(join(root, "services/cache-service/src/main/resources/league-summary.json"), "utf8"));
+  if (JSON.stringify(summary) !== JSON.stringify(cacheContract)) fail("the cache's origin read diverges from the frozen contract on disk");
+  pass("the cache serves the frozen contract from origin with the broker deprived (read-through degraded mode)");
 }
-pass("cache-service fronts the byte-identical frozen league contract (contract witness; Redis not booted)");
-const messagingYml = readFileSync(join(root, "services/messaging-service/src/main/resources/application.yml"), "utf8");
-for (const [key, value] of [["base-delay", 20], ["cap-delay", 640], ["max-attempts", 5], ["high-water", 64], ["low-water", 16], ["shards", 8]]) {
-  if (!new RegExp(`^\\s*${key}:\\s*${value}\\s*$`, "m").test(messagingYml)) fail(`messaging-service yml ${key} is not ${value}`);
+// Messaging: the binder dials a dead port, the web surface still answers, and the payload must mirror
+// the shared policy the pure fold runs under — the same numbers proof-services.mjs checks in the yml.
+{
+  const summary = await fetch("http://localhost:8084/messaging/summary", { signal: AbortSignal.timeout(8000) }).then((r) => r.json());
+  if (summary?.exchange !== "footballos.events" || summary?.dlq !== "footballos.events.dlq" || summary?.binder !== "rabbit" || summary?.live !== false) {
+    fail(`the messaging summary did not carry the declared exchange/dlq/binder/live=false (got ${JSON.stringify(summary)})`);
+  }
+  pass("the messaging tier answers its observe surface with live=false, the declared exchange and DLQ");
+  const policy = await fetch("http://localhost:8084/messaging/policy", { signal: AbortSignal.timeout(8000) }).then((r) => r.json());
+  if (policy?.baseDelay !== 20 || policy?.capDelay !== 640 || policy?.maxAttempts !== 5 || policy?.highWater !== 64 || policy?.lowWater !== 16 || policy?.shards !== 8 || policy?.rung3 !== 80) {
+    fail(`the messaging policy drifted: ${JSON.stringify(policy)}`);
+  }
+  pass("the messaging tier serves the same retry/water-mark policy the pure fold runs under (rung3=80)");
 }
-pass("messaging-service yml carries the shared retry/water-mark policy (contract witness; RabbitMQ not booted)");
-
 // The config server must actually be serving the league's property — this is what M1040 opened
 // up, and it is the one piece that was invisible when everything was hard-coded.
 const configRoundTrip = await fetch("http://localhost:8888/league-service/default", {
@@ -214,14 +246,31 @@ pass("league-service /actuator/info prints world=Demo World R1, taken from the c
 
 // M968: the discipline service's frozen clocks, direct and through the gateway — the same
 // bytes both ways, an unknown competition a 404, exactly like the league table reads.
+// M1042's LB window bites the discipline probe too: a freshly booted gateway may resolve
+// DISCIPLINE-SERVICE to nobody for its first refresh, so the round-trip is retried until it lands.
 const discDirect = await fetch("http://localhost:8082/discipline/clock/ucl", { signal: AbortSignal.timeout(8000) });
 if (!discDirect.ok) fail(`discipline-service /discipline/clock/ucl did not answer 200 (got ${discDirect.status})`);
 else {
   const disc = await discDirect.json();
-  const discGw = await fetch("http://localhost:8087/api/discipline/clock/ucl", { signal: AbortSignal.timeout(8000) });
-  const gwBody = discGw.ok ? JSON.stringify(await discGw.json()) : null;
-  if (JSON.stringify(disc) !== gwBody) fail("the gateway's discipline clock differs from the direct read");
-  else pass("the discipline clock reads the same direct and through the gateway (ucl)");
+  const discProbe = await fetchUntil(
+    "http://localhost:8087/api/discipline/clock/ucl",
+    (r, text) => r.ok && text.length > 2,
+    18,
+    5000,
+  );
+  if (!discProbe || !discProbe.r || !discProbe.r.ok ||
+      JSON.stringify(JSON.parse(discProbe.text)) !== JSON.stringify(disc)) {
+    fail(`the gateway's discipline clock differs from the direct read (last probe: status ${discProbe?.r?.status ?? "n/a"})`);
+  } else pass("the discipline clock reads the same direct and through the gateway (ucl)");
+  const discMissProbe = await fetchUntil(
+    "http://localhost:8087/api/discipline/clock/nowhere",
+    (r) => r.status === 404,
+    12,
+    5000,
+  );
+  if (!discMissProbe || discMissProbe?.r?.status !== 404) {
+    fail(`an unknown competition through the gateway answered ${discMissProbe?.r?.status ?? "n/a"}, wanted 404`);
+  } else pass("an unknown competition through the gateway answers 404 from the discipline service");
   const discMiss = await fetch("http://localhost:8082/discipline/clock/nowhere", { signal: AbortSignal.timeout(8000) });
   if (discMiss.status !== 404) fail(`an unknown competition answered ${discMiss.status}, not 404`);
   else pass("an unknown competition reads 404 from the discipline service");
@@ -271,6 +320,46 @@ if (!tableUnknownProbe || tableUnknownProbe.r?.status !== 404) {
 }
 pass("an unknown competition through the gateway answers 404 from the league service");
 
+// The broker-deprived services through the gateway: the lb:// route strips exactly one prefix, so
+// /api/cache/league/summary arrives at the cache as /cache/league/summary, and /api/messaging/summary
+// at the messaging tier. Both answer with their honest degraded-mode payloads rather than a green.
+const cacheGwProbe = await fetchUntil(
+  "http://localhost:8087/api/cache/league/summary",
+  (r, text) => r.ok && text.includes('"generatedBy"'),
+  18,
+  5000,
+);
+if (!cacheGwProbe || !cacheGwProbe.r || !cacheGwProbe.r.ok) {
+  fail(`the gateway did not round-trip /api/cache/league/summary (last probe: status ${cacheGwProbe?.r?.status ?? "n/a"})`);
+} else if (JSON.stringify(JSON.parse(cacheGwProbe.text)) !== JSON.stringify(contract)) {
+  fail("the gateway's cache summary differs from the frozen contract on disk");
+}
+pass("the gateway round-trip (lb://football-os-cache) returns the frozen contract from the cache tier");
+
+const cacheStatsGw = await fetch("http://localhost:8087/api/cache/league/stats", { signal: AbortSignal.timeout(8000) });
+if (!cacheStatsGw.ok) fail(`the gateway did not round-trip /api/cache/league/stats (status ${cacheStatsGw.status})`);
+else {
+  const gwStats = await cacheStatsGw.json();
+  if (typeof gwStats?.redisUp !== "boolean") fail(`the gateway's cache stats did not carry a boolean redisUp (got ${JSON.stringify(gwStats)})`);
+  else pass(`the gateway round-trip carries the cache's honest redisUp=${gwStats.redisUp} through lb://`);
+}
+
+const msgGwProbe = await fetchUntil(
+  "http://localhost:8087/api/messaging/summary",
+  (r, text) => r.ok && text.includes('"dlq"'),
+  18,
+  5000,
+);
+if (!msgGwProbe || !msgGwProbe.r || !msgGwProbe.r.ok) {
+  fail(`the gateway did not round-trip /api/messaging/summary (last probe: status ${msgGwProbe?.r?.status ?? "n/a"})`);
+} else {
+  const msgSummary = JSON.parse(msgGwProbe.text);
+  if (msgSummary?.exchange !== "footballos.events" || msgSummary?.dlq !== "footballos.events.dlq" || msgSummary?.live !== false) {
+    fail(`the gateway's messaging summary drifted (got ${JSON.stringify(msgSummary)})`);
+  }
+  pass("the gateway round-trip (lb://football-os-messaging) returns the declared exchange with live=false");
+}
+
 const gatewayProbe = await fetchUntil(
   "http://localhost:8087/api/league/summary",
   (r, text) => r.ok && text.length > 2 && text.includes("\"digest\""),
@@ -302,5 +391,5 @@ if (canned < 3) fail(`the circuit did not answer with the canned 503 (${canned}/
 pass(`with the league service stopped, the circuit answers ${canned}/6 probes with the canned 503 from /fallback`);
 
 cleanup();
-console.log("\nverify-services: the host-bootable Spring Cloud stack boots in a verified topological order, registers, serves the frozen contract and answers its own failure mode; cache (Redis) and messaging (RabbitMQ) are witnessed by contract, not by a claimed live broker");
+console.log("\nverify-services: the Spring Cloud stack boots in a verified topological order, registers, serves the frozen contract, round-trips the broker-deprived tiers through the gateway and answers its own failure mode; on this host both brokers answered DOWN honestly (spawned against :3999 so the foreign stack on 6379/5672 was never dialed)");
 process.exit(0);

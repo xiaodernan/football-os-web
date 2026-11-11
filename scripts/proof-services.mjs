@@ -242,15 +242,22 @@ ok("the reactor's build context carries a .dockerignore that excludes every modu
   has("services/.dockerignore") && read("services/.dockerignore").includes("target/"));
 
 // ---- 6a · the config server and the league's config wiring -----------------------------------
-ok("the config server enables the config server and serves a native classpath repository whose two keys are what the league service reads",
+const CONFIG_REPO = readYml("services/config-server/src/main/resources/config-repo/application.yml");
+// M1066: the discipline clocks key must live under footballos.discipline, not drift back into the
+// league block on a bad indent (the exact regression this proof now pins — a wrong indent used to
+// hang `clocks-resource` under `league:` with 8 spaces, so @Value never saw it and only the default
+// saved the boot). Read the two-space `discipline:` sibling and its four-space child as adjacent.
+const DISCIPLINE_CLOCKS_WIRED = /^  discipline:\r?\n    clocks-resource: discipline-clocks\.json\s*$/m.test(CONFIG_REPO);
+ok("the config server enables the config server and serves a native classpath repository whose three keys are what the league and discipline services read",
   has("services/config-server/src/main/java/com/footballos/config/ConfigApplication.java") &&
   has("services/config-server/src/main/resources/config-repo/application.yml") &&
   read("services/config-server/src/main/java/com/footballos/config/ConfigApplication.java").includes("@EnableConfigServer") &&
   readYml("services/config-server/src/main/resources/application.yml").includes("active: native") &&
   readYml("services/config-server/src/main/resources/application.yml").includes("search-locations: classpath:/config-repo/") &&
-  readYml("services/config-server/src/main/resources/config-repo/application.yml").includes("contract-resource: league-summary.json") &&
-  readYml("services/config-server/src/main/resources/config-repo/application.yml").includes("tables-resource: league-tables.json") &&
-  readYml("services/config-server/src/main/resources/config-repo/application.yml").includes("label: Demo World R1"));
+  CONFIG_REPO.includes("contract-resource: league-summary.json") &&
+  CONFIG_REPO.includes("tables-resource: league-tables.json") &&
+  CONFIG_REPO.includes("label: Demo World R1") &&
+  DISCIPLINE_CLOCKS_WIRED);
 ok("the league service imports the optional config server and takes the resource name from its own property instead of a hard-coded string",
   read("services/league-service/pom.xml").includes("spring-cloud-starter-config") &&
   read("services/league-service/pom.xml").includes("spring-boot-starter-actuator") &&
@@ -354,14 +361,15 @@ const verifyExec = VERIFY_SRC.split("\n").map((l) => l.replace(/\/\/.*$/, "")).j
 ok("the circuit test names the league service it stops rather than a positional index",
   !/children\s*\[\s*\d+\s*\]\s*\.\s*kill/.test(verifyExec) &&
   /children\.get\(["']league["']\)/.test(verifyExec));
-// The two broker-backed services are declared but honestly excluded from the host boot list, with
-// a contract-level witness in their place — a live broker is never claimed on this host.
+// The two broker-backed services are declared, BOOT on this host and degrade honestly instead of
+// pretending — the verifier spawns them against a dead port (:3999) so this machine's foreign
+// 6379/5672 are never dialed, then asserts the degraded-but-honest answers: redisUp:false, the
+// live:false observe surface. A live broker round-trip is NOT claimed here; compose/CI own it.
 ok("the runbook and witness keep the honest external-broker boundary for cache and messaging",
   /redis/i.test(RUNBOOK_SRC) && /rabbitmq/i.test(RUNBOOK_SRC) &&
-  VERIFY_SRC.includes("byte-identical frozen league contract") &&
-  VERIFY_SRC.includes("retry/water-mark policy") &&
-  /excluded|not booted|contract witness/i.test(VERIFY_SRC) &&
-  /not.*booted|contract witness|needs a live Redis|needs RabbitMQ/i.test(RUNBOOK_SRC));
+  VERIFY_SRC.includes("SPRING_DATA_REDIS_PORT") && VERIFY_SRC.includes("SPRING_RABBITMQ_PORT") &&
+  VERIFY_SRC.includes("3999") && VERIFY_SRC.includes("redisUp") && VERIFY_SRC.includes("live=false") &&
+  /degraded/i.test(VERIFY_SRC) && /degraded/i.test(RUNBOOK_SRC) && /3999/.test(RUNBOOK_SRC));
 
 // ---- 7 · the screen reads the descriptor, and the app never calls a service -----------
 const SCREEN_PATH = "features/platform/PlatformAtlas.tsx";

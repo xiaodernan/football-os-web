@@ -126,8 +126,8 @@ try {
 } catch { /* a non-JSON literal is a failure of the shape, reported below */ }
 ok(`the verifier declares its dependency edges and chosen boot list as parseable JSON literals`,
   Array.isArray(parsedTopology) && Array.isArray(parsedBootIds) &&
-  parsedTopology.length === realEdges.length && parsedBootIds.length === 5 &&
-  new Set(parsedBootIds).size === 5);
+  parsedTopology.length === realEdges.length && parsedBootIds.length === 7 &&
+  new Set(parsedBootIds).size === 7);
 ok(`the verifier imports the shared boot-order module instead of carrying a private copy (2 shared calls, one DAG model)`,
   VERIFY.includes('from "./lib/boot-order.mjs"') &&
   VERIFY.includes("topologicalOrder(") && VERIFY.includes("assertBootOrder(") &&
@@ -136,14 +136,14 @@ ok(`the verifier's edges match domain/platform.ts row for row (${(parsedTopology
   parsedTopology !== null &&
   JSON.stringify(parsedTopology.map((e) => [e.id, [...(e.dependsOn ?? [])].sort()])) ===
   JSON.stringify(realEdges.map((e) => [e.id, [...e.dependsOn].sort()])));
-// The chosen order is validated against the booted sub-DAG, not all seven: cache/messaging are
-// declared but honestly excluded (they need an external broker), and every booted node's declared
-// dependencies must live inside the host-booted set.
+// The chosen order is validated against the booted sub-DAG — now all seven nodes live in it: the
+// broker-deprived pair boots against a dead :3999 (a spawn-time decision, not a config edit), and
+// every booted node's declared dependencies must live inside the host-booted set.
 const realBootEntries = realEdges.filter((e) => parsedBootIds !== null && parsedBootIds.includes(e.id));
 const realExcluded = realEdges.filter((e) => parsedBootIds !== null && !parsedBootIds.includes(e.id));
 const realDangling = parsedBootIds === null ? ["?"] : realBootEntries.flatMap((e) => e.dependsOn.filter((d) => realExcluded.some((x) => x.id === d)));
 ok(`the verifier's host boot order respects every descriptor edge, keeping all ${realEdges.length} topology nodes acyclic with every booted dependency in-host (${(parsedBootIds ?? []).join(",")})`,
-  parsedBootIds !== null && parsedBootIds.length === 5 && assertBootOrder(parsedBootIds, realBootEntries).ok && realDangling.length === 0 &&
+  parsedBootIds !== null && parsedBootIds.length === 7 && assertBootOrder(parsedBootIds, realBootEntries).ok && realDangling.length === 0 &&
   topologicalOrder(realEdges).cyclic.length === 0);
 // The gateway-last operational policy must survive: it is a decision, and the proof pins it rather
 // than letting a future cleanup "simplify" the array into the canonical order and lose LB patience.
@@ -161,13 +161,14 @@ const executable = VERIFY.split("\n").map((l) => l.replace(/\/\/.*$/, "")).join(
 const positionalKill = /children\s*\[\s*\d+\s*\]\s*\.\s*kill/.test(executable);
 ok(`the circuit test stops the league service by name, not by a positional index`,
   !positionalKill && /children\.get\(["']league["']\)/.test(executable));
-// The two out-of-reactor services must be declared (so the topology is complete) but honestly
-// excluded from the host boot list (no local broker witness is claimed). Match broker names
-// case-insensitively: the prose capitalises the product names.
-ok(`cache and messaging are in the topology but not claimed as host-booted (honest external-broker boundary)`,
+// The two out-of-reactor services now BOOT on this host but must be spawned against a dead port,
+// never localhost:6379/5672 (a foreign stack publishes both here and refuses default credentials);
+// the spawn-time override is what keeps the run honest — a claimed live broker is still a lie.
+ok(`cache and messaging boot, but only against a dead spawn-time port (honest degraded boundary)`,
   parsedTopology !== null && ["cache", "messaging"].every((id) => parsedTopology.some((e) => e.id === id)) &&
-  parsedBootIds !== null && ["cache", "messaging"].every((id) => !parsedBootIds.includes(id)) &&
-  /rabbitmq/i.test(VERIFY) && /redis/i.test(VERIFY));
+  parsedBootIds !== null && ["cache", "messaging"].every((id) => parsedBootIds.includes(id)) &&
+  VERIFY.includes("SPRING_DATA_REDIS_PORT") && VERIFY.includes("SPRING_RABBITMQ_PORT") &&
+  /3999/.test(VERIFY) && /redis/i.test(VERIFY) && /rabbitmq/i.test(VERIFY));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

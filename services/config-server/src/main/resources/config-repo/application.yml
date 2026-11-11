@@ -1,6 +1,7 @@
-# The native "repository" the config server serves. Two keys, both demo-shaped and both
-# honest: a world label the info endpoint prints and the resource name the league service
-# resolves its statement of truth through @Value. Nothing here carries production meaning.
+# The native "repository" the config server serves. Demo-shaped and honest: a world label the info
+# endpoint prints, the league contract/tables resource names the league service resolves through
+# @Value, and the discipline clocks resource name the discipline service resolves the same way.
+# Nothing here carries production meaning.
 footballos:
   world:
     label: Demo World R1
@@ -8,4 +9,5 @@ footballos:
   league:
     contract-resource: league-summary.json
     tables-resource: league-tables.json
-        clocks-resource: discipline-clocks.json
+  discipline:
+    clocks-resource: discipline-clocks.json
