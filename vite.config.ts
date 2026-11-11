@@ -6,6 +6,7 @@ const proxy = { "/functions/v1/app": "http://127.0.0.1:8000" };
 
 export default defineConfig({
   plugins: [react()],
+  base: process.env.BASE_PATH || '/',
   resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
   // M958: the E2E suite and the dev server meet on one dedicated port. strictPort turns a
   // squatter (another project bound to the same number on this machine) into a loud failure
