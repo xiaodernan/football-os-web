@@ -65,3 +65,25 @@ services:
       - config-server
     ports:
       - "8082:8082"
+
+  redis:
+    image: redis:7-alpine
+    # The cache tier's only real external dependency. The container name is what the cache
+    # service dials (SPRING_DATA_REDIS_HOST=redis); on the host stack it dials localhost:6379.
+    ports:
+      - "6379:6379"
+
+  cache-service:
+    build:
+      context: .
+      dockerfile: cache-service/Dockerfile
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_DATA_REDIS_HOST: redis
+    depends_on:
+      - eureka-server
+      - config-server
+      - redis
+    ports:
+      - "8083:8083"

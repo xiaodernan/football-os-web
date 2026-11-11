@@ -22,7 +22,7 @@
   <version>0.1.0</version>
   <packaging>pom</packaging>
   <name>Football OS Services</name>
-  <description>Spring Cloud skeleton: Eureka registry, config server, gateway, league service</description>
+  <description>Spring Cloud skeleton: Eureka registry, config server, gateway, league service, discipline service, cache service (Redis)</description>
 
   <modules>
     <module>eureka-server</module>
@@ -30,6 +30,7 @@
     <module>gateway</module>
     <module>league-service</module>
     <module>discipline-service</module>
+    <module>cache-service</module>
   </modules>
 
   <properties>

@@ -63,10 +63,11 @@ ok("the compose reader reads one planted service block and stops at the next",
 // ---- 1 · the descriptor ----------------------------------------------------------------
 const ids = PLATFORM_SERVICES.map((s) => s.id);
 const ports = PLATFORM_SERVICES.map((s) => s.port);
-ok(`the descriptor names four services in dependency order with unique ids and ports (${PLATFORM_SERVICES.map((s) => `${s.id}:${s.port}`).join(" ")})`,
+ok(`the descriptor names six services in dependency order with unique ids and ports (${PLATFORM_SERVICES.map((s) => `${s.id}:${s.port}`).join(" ")})`,
   // M968: the discipline service joins the reactor — five services, one more domain reader.
-  PLATFORM_SERVICES.length === 5 && new Set(ids).size === 5 && new Set(ports).size === 5 &&
-  ids.join(",") === "registry,config,gateway,league,discipline" && ports.join(",") === "8761,8888,8087,8081,8082");
+  // M1058: the cache tier joins — six services, the first one with a real out-of-reactor dependency (Redis).
+  PLATFORM_SERVICES.length === 6 && new Set(ids).size === 6 && new Set(ports).size === 6 &&
+  ids.join(",") === "registry,config,gateway,league,discipline,cache" && ports.join(",") === "8761,8888,8087,8081,8082,8083");
 ok("every non-registry service registers with the registry and none depends on itself",
   PLATFORM_SERVICES.filter((s) => s.id !== "registry").every((s) => s.dependsOn.includes("registry")) &&
   PLATFORM_SERVICES.every((s) => !s.dependsOn.includes(s.id)));
@@ -74,7 +75,7 @@ ok("the gateway descriptor and the circuit breaker agree with the gateway's own 
   CIRCUIT_BREAKER.name === "leagueSummary" &&
   CIRCUIT_BREAKER.fallbackPath === "/fallback" &&
   CIRCUIT_BREAKER.waitSeconds === 1 &&
-  GATEWAY_ROUTES.length === 3);
+  GATEWAY_ROUTES.length === 4);
 
 // ---- 2 · the reactor -------------------------------------------------------------------
 const parentPom = read("services/pom.xml");
@@ -97,7 +98,7 @@ for (const s of PLATFORM_SERVICES) {
   if (!/<groupId>com\.footballos<\/groupId>/.test(xml)) pomFails.push(`${s.module}: groupId`);
 }
 ok(`every module has a pom that names itself and points at the shared parent (${pomFails.join(" / ") || "clean"})`,
-  pomFails.length === 0 && PLATFORM_SERVICES.length === 5);
+  pomFails.length === 0 && PLATFORM_SERVICES.length === 6);
 
 // ---- 3 · the application classes -------------------------------------------------------
 const registrySrc = walk("services/eureka-server/src").filter((f) => f.endsWith(".java")).map(read).join("\n");
@@ -131,7 +132,7 @@ for (const s of PLATFORM_SERVICES) {
 ok(`each application.yml listens on the descriptor's port and registers under its app name (${ymlFails.join(" / ") || "clean"})`,
   ymlFails.length === 0);
 ok(`the registry is the services' eureka default zone (${PLATFORM_SERVICES.find((s) => s.id === "registry").port})`,
-  ["config-server", "gateway", "league-service"].every((m) =>
+  ["config-server", "gateway", "league-service", "discipline-service", "cache-service"].every((m) =>
     read(`services/${m}/src/main/resources/application.yml`).includes(`http://localhost:${PLATFORM_SERVICES[0].port}/eureka/`)));
 
 // ---- 4b · the actuator line: every service exposes health,info and nothing else ----------------------------
@@ -146,7 +147,7 @@ for (const s of PLATFORM_SERVICES) {
   if (/^\s*include:\s*.*(metrics|env|shutdown|beans|heapdump|loggers)/m.test(yml)) actuatorFails.push(`${s.module}: richer endpoint`);
 }
 ok(`every service exposes exactly health,info and nothing richer (${actuatorFails.join(" / ") || "clean"})`,
-  actuatorFails.length === 0 && PLATFORM_SERVICES.length === 5);
+  actuatorFails.length === 0 && PLATFORM_SERVICES.length === 6);
 
 // ---- 5 · the gateway's own routes ------------------------------------------------------
 const gatewayYml = read("services/gateway/src/main/resources/application.yml");
@@ -314,7 +315,8 @@ const callers = appFiles.filter((f) => {
   return src.includes("localhost:8087") || src.includes("localhost:8081") || src.includes("localhost:8761") || src.includes("localhost:8888");
 });
 ok(`no app module reaches for a service port — the map is a descriptor, not a client (${callers.join(", ") || "none"})`,
-  callers.length === 0 && appFiles.length > 100 && PLATFORM_LIVE === false);
+  callers.length === 0 && appFiles.length > 100 && PLATFORM_LIVE === false &&
+  !/\b(8761|8888|8087|8081|8082|8083)\b/.test(SCREEN));
 const APP = read("src/App.tsx");
 const SHELL = read("features/shell/AppShell.tsx");
 ok("the screen has a lazy route, a route branch and a sidebar entry",
@@ -330,7 +332,7 @@ for (const key of [...screenKeys, "nav.platform"]) {
   for (const id of localeIds) if (!(key in DICTIONARIES[id])) missingKeys.push(`${id}:${key}`);
 }
 ok(`every key the atlas reads exists in all ${localeIds.length} locales (${screenKeys.length} screen keys + nav.platform; ${missingKeys.join(" / ") || "clean"})`,
-  localeIds.length === 3 && screenKeys.length === 44 && missingKeys.length === 0);
+  localeIds.length === 3 && screenKeys.length === 49 && missingKeys.length === 0);
 ok("the interpolating rows hand their placeholders to every locale",
   localeIds.every((id) => /\{n\}/.test(DICTIONARIES[id]["platform.portLine"]) &&
     /\{n\}/.test(DICTIONARIES[id]["platform.stripPrefix"]) &&
@@ -338,6 +340,39 @@ ok("the interpolating rows hand their placeholders to every locale",
     /\{clubs\}/.test(DICTIONARIES[id]["platform.contractCounts"]) &&
     /\{finished\}/.test(DICTIONARIES[id]["platform.contractCounts"]) &&
     /\{digest\}/.test(DICTIONARIES[id]["platform.contractDigest"])));
+
+// ---- 9 · the cache tier and its one out-of-reactor dependency (Redis) -----------------
+const CACHE_POM = read("services/cache-service/pom.xml");
+ok("the cache module names itself, points at the parent, and pulls in Spring Data Redis (the networking client)",
+  CACHE_POM.includes("<artifactId>cache-service</artifactId>") &&
+  CACHE_POM.includes("<groupId>com.footballos</groupId>") &&
+  CACHE_POM.includes("spring-boot-starter-data-redis"));
+const cacheYml = read("services/cache-service/src/main/resources/application.yml");
+ok("the cache tier dials Redis (RESP over netty via Lettuce), honours a TTL, and exposes only health,info",
+  cacheYml.includes("host: localhost") &&
+  cacheYml.includes("port: 6379") &&
+  /^\s*include:\s*health,info\s*$/m.test(cacheYml) &&
+  cacheYml.includes("footballos:") &&
+  cacheYml.includes("ttl-seconds: 60") &&
+  cacheYml.includes("contract-resource: league-summary.json"));
+const cacheSrc = walk("services/cache-service/src").filter((f) => f.endsWith(".java")).map(read).join("\n");
+ok("the cache tier is read-through: a controller, the league cache path, a stats endpoint and an evict",
+  cacheSrc.includes("@RestController") &&
+  cacheSrc.includes('@RequestMapping("/cache/league")') &&
+  cacheSrc.includes('@GetMapping("/summary")') &&
+  cacheSrc.includes('@GetMapping("/stats")') &&
+  cacheSrc.includes("StringRedisTemplate") &&
+  cacheSrc.includes("readSummary") &&
+  cacheSrc.includes("evict") &&
+  /public\s+long\s+ttlSeconds\s*\(/.test(cacheSrc));
+const CACHE_RES = "services/cache-service/src/main/resources/league-summary.json";
+const LEAGUE_RES = "services/league-service/src/main/resources/league-summary.json";
+ok("the cache tier fronts the league service's frozen contract, byte-for-byte, so the two files are identical",
+  has(CACHE_RES) && has(LEAGUE_RES) && read(CACHE_RES).length > 0 && read(CACHE_RES) === read(LEAGUE_RES));
+ok("compose brings up Redis for the cache tier and the cache service waits on it",
+  composeBlock(compose, "redis").includes("image: redis:7-alpine") &&
+  composeBlock(compose, "redis").includes('"6379:6379"') &&
+  composeBlock(compose, "cache-service").includes("- redis"));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

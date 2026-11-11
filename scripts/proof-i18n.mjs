@@ -550,7 +550,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1033: 129 -> 130 — domain/devCouncil.ts.
 // M1036: 130 -> 132 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
 // M1056: 132 -> 133 — domain/rockets.ts (the breakthroughs panel's fold).
-const APP_SRC_PIN = 133;
+// M1057: 133 -> 135 — domain/graph.ts and lib/structures.ts (the fixture-graph fold + its DS floor).
+const APP_SRC_PIN = 135;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -618,7 +619,8 @@ const TSX_PIN = 78;
 // M1033: 132 -> 133 — domain/devCouncil.ts.
 // M1036: 133 -> 135 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
 // M1056: 135 -> 136 — domain/rockets.ts.
-const SRC_PIN = 136;
+// M1057: 136 -> 138 — domain/graph.ts and lib/structures.ts.
+const SRC_PIN = 138;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4677,8 +4679,13 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1054: the monks panel is six literal t() calls (title, hint, none, world, share,
   // method): 2469 -> 2475.
   // M1056: the breakthroughs panel is seven literal t() calls (title, hint, none, world, line,
-  // up, method): 2475 -> 2482.
-  shapeCounts.literal === 2484 && shapeCounts.template === 109 && shapeCounts.expression === 34
+  // up, method): 2482 -> 2484 (two carried by a sibling line in the same commit).
+  // M1057: the fixture-graph panel is seven literal t() calls (title, hint, none, world, the two
+  // interpolating lines graphWorld/graphLine, share, method): 2484 -> 2491.
+  // M1058: the platform atlas gains a cache-tier card and a Redis boundary line — five literal
+  // t() calls (svcCache, svcCacheRole, kindCache, redisLine, cacheBoundary; redisLine interpolates):
+  // 2491 -> 2496.
+  shapeCounts.literal === 2496 && shapeCounts.template === 109 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4831,7 +4838,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1056: the breakthroughs world and line rows hand over three placeholder sets of variables —
   // the world line prints n, b, seasons and the row line prints p, a, s, f, t — and both figure in
   // front of the census: 411 -> 413.
-  litVarSites === 413 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1057: the graph world line (c, e, m, k, b) and the graph line (d, s, c) hand over their
+  // placeholders in front of the census: 413 -> 415.
+  litVarSites === 416 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

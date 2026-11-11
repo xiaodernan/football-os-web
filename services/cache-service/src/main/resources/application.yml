@@ -1,0 +1,61 @@
+# Port pinned by domain/platform.ts (cache: 8083) and read back by proof-services.mjs.
+# The cache tier is the only service with a real dependency on another process: Redis. Everything
+# else in the reactor is self-contained; this one degrades to a direct origin read when Redis is
+# down, so the proof and the runbook can boot it without a running Redis and still get data.
+server:
+  port: 8083
+
+spring:
+  application:
+    name: football-os-cache
+  # Lettuce (the default Redis client under spring-boot-starter-data-redis) speaks RESP over a
+  # netty connection — non-blocking IO on the client side, a single TCP socket to Redis, and a
+  # connection pool reclaimed under pressure. The host/port below are the networking endpoint the
+  # cache tier dials; compose points them at the redis container.
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 1
+  # Spring's Redis cache abstraction is configured but unused directly — the controller does its
+  # own cache-aside so the hit/miss counters are observable. TTL is the expiry policy: a key older
+  # than this is gone, and the next read re-reads the origin. LRU-by-TTL, not LRU-by-recency,
+  # because the working set is one key.
+  cache:
+    type: redis
+    redis:
+      time-to-live: 60s
+      cache-null-values: false
+  cloud:
+    config:
+      import: optional:configserver:http://localhost:8888
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+# The contract-resource is the same frozen file the league service serves; the cache sits in front
+# of it. ttl-seconds is the key's lifetime in Redis — the proof reads it, the controller honours it.
+footballos:
+  cache:
+    contract-resource: league-summary.json
+    ttl-seconds: 60

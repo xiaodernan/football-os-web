@@ -48,6 +48,16 @@ spring:
         args:
           name: disciplineClocks
           fallbackUri: forward:/fallback
+  - id: cache-league
+    uri: lb://FOOTBALL-OS-CACHE
+    predicates:
+      - Path=/api/cache/**
+    filters:
+      - StripPrefix=1
+      - name: CircuitBreaker
+        args:
+          name: leagueSummary
+          fallbackUri: forward:/fallback
 
 info:
   app:

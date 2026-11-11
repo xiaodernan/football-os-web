@@ -6,6 +6,7 @@ import { Link } from "@/lib/router";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
 import { positionLabel } from "@/domain/rowText";
 import { leagueWall, records, scorelessStreaks, passingAccuracy, passingMetronomes, statsBlockKings, worldOutshine, worldLethal, lastGaspKings, worldCollapses, type RecordRow } from "@/domain/analytics";
+import { fixtureGraph } from "@/domain/graph";
 import { fmt2, SEPARATOR, cn, pctOf, signed, signed2 } from "@/lib/utils";
 
 interface ScorerRow {
@@ -54,6 +55,8 @@ export function LeagueLeaders() {
   const gaspPeak = gaspBoard.rows.length ? gaspBoard.rows[0].lastGasp : 1;
   // M1050: the squanderers — leads thrown away anywhere in the world.
   const squanderBoard = useMemo(() => worldCollapses(footballProvider.matches(), footballProvider.clubs()), []);
+  // M1057: the pitch as a graph — the finished results drawn as a network, not a table.
+  const graph = useMemo(() => fixtureGraph(footballProvider.matches(), footballProvider.clubs()), []);
   // M1010: the corner kings — most corners per match, no overall theme of who wins them.
   const cornerBoard = useMemo(() => statsBlockKings(footballProvider.matches(), footballProvider.clubs(), "corners"), []);
   const cornerPeak = cornerBoard.rows.length ? cornerBoard.rows[0].perMatch : 1;
@@ -784,6 +787,56 @@ export function LeagueLeaders() {
               ))}
             </ul>
             <p className="mt-3 text-xs text-muted-foreground">{t("leaders.lethalMethod")}</p>
+          </>
+        )}
+      </Panel>
+
+      {/* M1057: the graph read — the results as a network of clubs and meetings, with the
+          centre of the graph named rather than inferred from a table. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("leaders.graphTitle")} hint={t("leaders.graphHint")} />
+        {graph.centres.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("leaders.graphNone")}</p>
+        ) : (
+          <>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("leaders.graphWorld", { c: graph.clubs, e: graph.edges, m: graph.meetings, k: graph.components, b: graph.biggest })}
+            </p>
+            <ul className="mt-2 space-y-1">
+              {graph.centres.map((r, i) => {
+                const club = getClub(r.clubId);
+                return (
+                  <li
+                    key={r.clubId}
+                    className="grid items-center gap-3 rounded-lg border px-3 py-2 text-sm grid-cols-[2rem_1fr_auto] sm:grid-cols-[2rem_1fr_auto_minmax(90px,180px)]"
+                  >
+                    <span className="text-muted-foreground">{i + 1}</span>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Crest colors={club?.colors} short={club?.short} size={22} />
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{club?.name ?? r.clubId}</div>
+                        <div className="truncate text-[11px] text-muted-foreground">
+                          {t("leaders.graphLine", { d: r.degree, s: r.strength, c: fmt2(r.clustering) })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right tabular-nums">
+                      {fmt2(r.rank * 100)}
+                      <div className="text-xs text-muted-foreground">{t("leaders.graphShare")}</div>
+                    </div>
+                    <div className="hidden sm:block">
+                      <div className="h-2 w-full rounded-full bg-muted">
+                        <div
+                          className={cn("h-2 rounded-full", BAR_FILL.info)}
+                          style={{ width: pctOf(r.rank, graph.centres[0].rank) }}
+                        />
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">{t("leaders.graphMethod")}</p>
           </>
         )}
       </Panel>
