@@ -241,6 +241,101 @@ this host; a compose/CI stack on a registry-healthy machine still owns the canon
 round-trip. The static proof reads declarations, not a socket — the measured 2s degrade belongs to
 this live witness and the numbers above, not to the gate.
 
+## M1071 — the LIVE RabbitMQ witness (lossless transport, honest `live`, bounded degrade)
+
+Where M1070 gave the cache tier a live Redis, `verify-services.mjs` still proves only the honest
+**DOWN** floor for messaging: the tier boots against a dead `:3999`, the binder reports DOWN and
+`/messaging/summary` answers `live:false`. `scripts/verify-messaging-live.mjs` is the complementary
+**live** witness — it starts a project-owned RabbitMQ and drives a real `messaging-service` against
+it, so publish routing, delivery, the seen-set, the shard census, the DLQ sink and the outage path
+are all measured against a broker that actually answered. Like the Redis witness it is not part of
+`npm run proof` (it starts Docker + a jar); it is the runnable truth this section documents.
+
+**Why it exists — three real defects, all measured.** A dead-port witness cannot see a broker that
+answers, so it missed three production defects a live run exposed immediately:
+
+1. `/messaging/summary` hardcoded `"live", false` — a working broker (actuator UP, full
+   exchange/queue topology) still reported DOWN. Fixed to a **real AMQP probe**
+   (`createConnection().isOpen()`, failure swallowed into `false`); the witness proves the flag
+   flips **both ways** (UP→`true`, DOWN→`false`).
+2. `POST /publish` 500'd **every** call: `partition-key-expression: payload.key` was evaluated after
+   the JSON converter had turned the POJO payload into a `byte[]`, throwing
+   `SpelEvaluationException: EL1008E`. Fixed by carrying the key in a `MessageBuilder` **header**
+   (`setHeader("partitionKey", event.key())`) that survives serialization, and removing the custom
+   `routing-key-expression`.
+3. **7 of 8 messages silently dropped**: Rabbit's binder implements partitioning as **one queue per
+   partition** and needs **one consumer instance per partition** (`instanceIndex` decides which). A
+   single jar with `partition-count: 8` + `partitioned: true` consumed only `pipeline-0`, so
+   `sent:8 / delivered:1`. Fixed by removing broker-level partitioning entirely.
+
+A fourth, latent risk was closed too: an implicit **60s** AMQP connection timeout would park Tomcat
+workers on a broker outage (the M1070 avalanche again), so `spring.rabbitmq.connection-timeout: 2000`
+plus template receive/reply timeouts now bound it.
+
+**The architecture decision (direction A) — and its honest trade-off.** Keep the broker topology
+simple: **one shared durable group queue** (`group: footballos.pipeline`) with `concurrency: 4`
+competing consumers, `prefetch: 64` as the QoS back-pressure gate, `max-attempts: 5` with
+exponential back-off and `republish-to-dlq: true` into `footballos.events.dlq`. The 8-shard decision
+survives as a **deterministic consumer-side census** (`PipelineFunctions.shardOf()/byShard`), the
+wire twin of the pure fold in `domain/queue.ts` — so shard accounting is still real without physical
+partitions. Honest trade-off: a shared queue with concurrency does **not** guarantee per-key
+ordering; this pipeline is a commutative idempotent counter (the seen-set), so order carries no
+meaning here.
+
+```sh
+# build once, then run the live witness from the repo root
+mvn -DskipTests package -f services/pom.xml
+node scripts/verify-messaging-live.mjs           # reuses/leaves the RabbitMQ container
+node scripts/verify-messaging-live.mjs --clean   # removes the container at the end
+```
+
+**Port hygiene (non-negotiable on this host).** 5672/6379 belong to a foreign Docker Desktop
+workload (a Career OS stack) and are **never dialed**. The script starts `footballos-rabbit-live`
+bound **only** to `127.0.0.1:5673:5672` and `127.0.0.1:15673:15672` with a dedicated
+`footballos/footballos` user, spawns a fresh `messaging-service` jar with **only standard**
+`SPRING_RABBITMQ_HOST/PORT/USER/PASS` (no `SPRING_CLOUD_STREAM_RABBIT_BINDER_*` override — the
+witness proves the standard properties genuinely redirect the binder), reuses a surviving container,
+and restores it in a `finally`/SIGINT handler so a failed assertion never leaves the broker down.
+
+**A hypothesis falsified.** Before the live run it was suspected that `SPRING_RABBITMQ_PORT` could
+not reach the Spring Cloud Stream binder and that M1066's `:3999` override was misrouted. The live
+experiment disproved it: setting only the standard `SPRING_RABBITMQ_*` to `127.0.0.1:5673` moved the
+binder's **actual** AMQP connection to the project broker, which then declared the exchange and
+queue there. The witness-integrity family now pins "standard properties only", so this cannot
+silently regress into an env-crutch.
+
+**What it asserts (18 checks, all measured against the live broker):**
+
+| Phase | 断言 / response |
+|---|---|
+| boot | management API answers on the non-default **15673**; container publishes AMQP **only** at `127.0.0.1:5673` (foreign 5672/6379 never dialed) |
+| live → UP | `live=true` from a real AMQP probe; actuator health **UP** (was a hardcoded `false`) |
+| topology | the `footballos.events` exchange + shared group queue `footballos.pipeline` are really provisioned — no `-0` partition-only queue |
+| consumers | the shared queue has **4** competing consumers (`concurrency: 4`) |
+| publish | `POST /publish` → 200 `sent==requested` (was the EL1008E 500) |
+| losslessness | **all** published events consumed: `delivered=8, seen=8, duplicates=0` (was `delivered:1`, 7/8 dropped) |
+| shard census | the 8-shard **consumer-side** census is real (shards touched, events accounted) |
+| drain | shared queue drains to 0 after the burst — no unroutable backlog |
+| idempotency | re-publishing 2 known ids + 1 new id → `duplicates=2, delivered=9`, seen-set unchanged |
+| DLQ sink | a message on `footballos.events.dlq` is routed **and consumed** by `deadLetter` (`deadLettered 0→1`) |
+| live → DOWN | stop the container: `live=false` **honestly in ~14ms** (bound 8000ms; was a hardcoded false when UP and an implicit 60s outage), `/publish` → 200 `sent:0` in ~23ms (never a 500, never a parked worker), health → **503** agreeing with `live=false` |
+| DOWN → live | `live` flips back to `true` (bidirectional), a fresh event is accepted and delivered, all 8 shards representable again |
+
+**Measured on 2026-11-11 (this host):** broker-UP `live=true` / health UP; `delivered=8, seen=8`;
+duplicate burst `duplicates=2, delivered=9`; DLQ `deadLettered 0→1`; broker-DOWN `live=false` in
+**14ms**, `/publish` 200 `sent:0` in **23ms**, health 503; recovery `live=true` with a delivered
+event. `scripts/proof-messaging-resilience.mjs` **16/16** pins the static floor beneath this
+(six families, each with a planted arm: lossless transport, honest live probe, bounded degrade,
+consumer-side shard/idempotency semantics, witness integrity, population floor) — a reintroduced
+`payload.key` routing, physical partition, hardcoded `live`, or widened timeout/port reddens the
+gate on any machine without Docker.
+
+Honest limit: the live witness uses a **non-default port** because the default pair is spoken for on
+this host; a compose/CI stack on a registry-healthy machine still owns the canonical 5672/15672
+round-trip. The static proof reads declarations, not a socket — the measured 14ms degrade, the
+8/8 delivery and the DLQ consumption belong to `verify-messaging-live.mjs` and the numbers above,
+not to the gate. `PLATFORM_LIVE` stays false and the SPA still never calls the stack.
+
 ## Tear-down
 
 ```sh

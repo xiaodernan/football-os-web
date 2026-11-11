@@ -466,20 +466,40 @@ ok("the messaging module pulls in Spring Cloud Stream + the Rabbit binder, web a
   read("services/messaging-service/Dockerfile").includes("-pl messaging-service -am"));
 
 const MSG_YML = readYml("services/messaging-service/src/main/resources/application.yml");
-ok("the messaging yml binds three functional beans to a partitioned Rabbit topic with a dead-letter sink",
-  MSG_YML.includes("default-binder: rabbit") &&
-  MSG_YML.includes("definition: publishFixtures;processEvents;deadLetter") &&
-  MSG_YML.includes("publishFixtures-out-0:") &&
-  MSG_YML.includes("processEvents-in-0:") &&
-  MSG_YML.includes("deadLetter-in-0:") &&
-  MSG_YML.includes("partition-key-expression: payload.key") &&
-  MSG_YML.includes("partitioned: true") &&
-  MSG_YML.includes("republish-to-dlq: true") &&
-  MSG_YML.includes("group: footballos.pipeline") &&
-  MSG_YML.includes("destination: " + BROKER.exchange) &&
-  MSG_YML.includes("destination: " + BROKER.dlq) &&
-  MSG_YML.includes("dlq-name: " + BROKER.dlq) &&
-  MSG_YML.includes("prefetch: " + QUEUE_POLICY.highWater));
+// M1071: the explanatory comments above quote the REMOVED defects verbatim —
+// `partition-key-expression: payload.key`, `partition-count: 8`, `partitioned: true`. Spring never
+// parses a comment, so a raw `includes` would "find" a binding that is only prose and every negative
+// (must-not-exist) assertion would fail on the documentation. Read the CONFIGURATION lines only.
+const MSG_CFG = MSG_YML.split("\n").map((line) => line.replace(/#.*$/, "")).join("\n");
+ok("the messaging yml binds three functional beans to a shared durable Rabbit queue with a dead-letter sink",
+  MSG_CFG.includes("default-binder: rabbit") &&
+  MSG_CFG.includes("definition: publishFixtures;processEvents;deadLetter") &&
+  MSG_CFG.includes("publishFixtures-out-0:") &&
+  MSG_CFG.includes("processEvents-in-0:") &&
+  MSG_CFG.includes("deadLetter-in-0:") &&
+  // M1071: broker-level partitioning (partition-count:8 + partitioned:true) is GONE — a live
+  // witness proved a single instance consumed only partition-0 and silently dropped 7/8 messages
+  // (sent:8/delivered:1). One shared durable group queue + 4 competing consumers carries the
+  // at-least-once transport losslessly; the 8-shard decision lives in the consumer (shardOf/byShard).
+  !MSG_CFG.includes("partition-key-expression: payload.key") &&
+  !MSG_CFG.includes("partition-count:") &&
+  !MSG_CFG.includes("partitioned: true") &&
+  MSG_CFG.includes("group: footballos.pipeline") &&
+  MSG_CFG.includes("concurrency: 4") &&
+  MSG_CFG.includes("republish-to-dlq: true") &&
+  MSG_CFG.includes("destination: " + BROKER.exchange) &&
+  MSG_CFG.includes("destination: " + BROKER.dlq) &&
+  MSG_CFG.includes("dlq-name: " + BROKER.dlq) &&
+  MSG_CFG.includes("prefetch: " + QUEUE_POLICY.highWater) &&
+  // M1071: the broker outage must degrade in bounded time, not park a Tomcat worker for Lettuce's
+  // / Rabbit's implicit 60s. proof-messaging-resilience.mjs plants the removal of this bound.
+  MSG_CFG.includes("connection-timeout: 2000"));
+// The shard census is a CONSUMER-side semantic now, so it must still be read by the wire twin.
+ok("the 8-shard decision survives as a consumer-side census (Java shardOf/byShard), the wire twin of the pure fold",
+  QUEUE_POLICY.shards === 8 &&
+  /shardOf\(/.test(read("services/messaging-service/src/main/java/com/footballos/messaging/PipelineFunctions.java")) &&
+  read("services/messaging-service/src/main/java/com/footballos/messaging/PipelineFunctions.java").includes("byShard") &&
+  MSG_CFG.includes("shards: 8"));
 
 // Three readers of one policy: the TypeScript fold, the Java defaults, the yml.
 const javaPolicy = read("services/messaging-service/src/main/java/com/footballos/messaging/DeliveryPolicy.java");
@@ -497,12 +517,12 @@ const policyRows = [
   ["low-water", "lowWater", QUEUE_POLICY.lowWater],
   ["shards", "shards", QUEUE_POLICY.shards],
 ];
-const policyDrift = policyRows.filter(([k, j, t]) => portIn(MSG_YML, k) !== t || javaField(j) !== t);
+const policyDrift = policyRows.filter(([k, j, t]) => portIn(MSG_CFG, k) !== t || javaField(j) !== t);
 ok(`the yml, the Java defaults and the pure fold name one retry/water-mark policy (${policyRows.length} rows; ${policyDrift.map((r) => r[0]).join(" / ") || "clean"})`,
   policyDrift.length === 0);
 ok("the broker's exchange and dead-letter queue are named identically in the descriptor, the yml and the Java defaults",
   javaPolicy.includes('"' + BROKER.exchange + '"') && javaPolicy.includes('"' + BROKER.dlq + '"') &&
-  MSG_YML.includes("exchange: " + BROKER.exchange) && MSG_YML.includes("dlq: " + BROKER.dlq));
+  MSG_CFG.includes("exchange: " + BROKER.exchange) && MSG_CFG.includes("dlq: " + BROKER.dlq));
 
 const MSG_SRC = walk("services/messaging-service/src").filter((f) => f.endsWith(".java")).map(read).join("\n");
 ok("the messaging service has one entry point, three functional beans, a seen-set idempotency door and an observe surface that stays honest",
@@ -512,7 +532,10 @@ ok("the messaging service has one entry point, three functional beans, a seen-se
   MSG_SRC.includes("Consumer<MatchEvent> deadLetter") &&
   MSG_SRC.includes("seen.add") && MSG_SRC.includes("StreamBridge") &&
   ["/summary", "/stats", "/policy", "/publish"].every((p) => MSG_SRC.includes('"' + p + '"')) &&
-  MSG_SRC.includes('"live", false'));
+  // M1071: `live` is no longer a hardcoded false that lies when the broker is actually UP — it is
+  // derived from a real AMQP connection probe (brokerLive()), so a working tier reports live:true
+  // and an outage reports live:false. proof-messaging-resilience.mjs pins this with a planted arm.
+  MSG_SRC.includes('"live", brokerLive()') && MSG_SRC.includes("createConnection()"));
 
 ok("compose brings up the broker the descriptor names and the messaging service waits on it in-network",
   composeBlock(compose, "rabbitmq").includes("image: " + BROKER.image) &&

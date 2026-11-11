@@ -222,6 +222,8 @@ ok(`Redis RAM was genuinely lost across the stop (EXISTS=${existsLost}) and the 
   existsLost === "0" && existsBack === "1" && ttlBack > 0 && ttlBack <= 60 &&
   afterRecover.misses === beforeRecover.misses + 1 && bodyBack === expected);
 
-cleanup(0);
+// The exit code MUST reflect the tally — a FAIL that exits 0 is a green that lies (the discipline
+// proof-discipline.mjs holds every proof to). Print the tally first, then exit on the counted fails.
 console.log(`\n${pass}/${pass + fail} checks passed`);
 console.log("verify-redis-live: the cache tier read-through a REAL project-owned Redis (miss/hit/evict/TTL/sentinel), degraded in bounded time with honest redisUp=false + health 503 when it vanished, and repopulated after recovery — the 60s thread-pool avalanche stays fixed; the foreign host ports 6379/5672 were never dialed.");
+cleanup(fail ? 1 : 0);

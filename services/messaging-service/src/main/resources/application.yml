@@ -23,18 +23,26 @@ spring:
       default-binder: rabbit
       bindings:
         # The publisher emits one message per finished fixture, keyed by the home club.
+        # M1071: broker-level partitioning was REMOVED after a live witness exposed two defects.
+        # (1) `partition-key-expression: payload.key` was evaluated AFTER the JSON converter turned
+        #     the POJO into a byte[], raising EL1008E and 500ing EVERY /publish (sent:0).
+        # (2) Reading the key from a header fixed (1), but Rabbit's binder implements partitioning
+        #     as ONE QUEUE PER PARTITION and needs one CONSUMER INSTANCE PER PARTITION
+        #     (instanceIndex decides which). With a single jar only partition-0 had a queue, so
+        #     messages routed to footballos.events-1..7 were silently dropped: sent:8/delivered:1.
+        # The correct single-instance topology is ONE shared durable queue consumed by a competing
+        # group (`group` + `concurrency: 4`; at-least-once transport, no loss). The 8-shard decision
+        # stays a DETERMINISTIC CONSUMER-SIDE semantic in PipelineFunctions.shardOf()/byShard — the
+        # wire twin of domain/queue.ts's fold — so the shard census is still real. Honest trade-off:
+        # a shared queue with concurrency does not guarantee per-key ordering; this pipeline is a
+        # commutative idempotent counter (seen-set), so order carries no meaning here.
         publishFixtures-out-0:
           destination: footballos.events
-          producer:
-            partition-key-expression: payload.key
-            partition-count: 8
-        # The processing consumer. `group` makes it durable + competing; partitioned so one key
-        # always lands on one consumer instance, which is what preserves per-key order.
         processEvents-in-0:
           destination: footballos.events
           group: footballos.pipeline
           consumer:
-            partitioned: true
+            # partitioned REMOVED: one shared durable group queue, 4 competing consumers.
             concurrency: 4
             max-attempts: 5
             back-off-initial-interval: 20
@@ -49,7 +57,13 @@ spring:
         bindings:
           publishFixtures-out-0:
             producer:
-              routing-key-expression: "'events.' + payload.key"
+              # M1071: a CUSTOM routing-key-expression (`'events.' + payload.key`) was removed —
+              # after JSON serialization it both failed on byte[] and, once header-fed, produced a
+              # key that matched NO consumer binding, silently dropping every message. With no
+              # custom expression the non-partitioned producer uses the destination name as the
+              # routing key, which the shared `footballos.pipeline` group queue binds to exactly.
+              # A topic exchange is kept so the declared exchange type stays stable and the DLQ
+              # topology and routing vocabulary remain intact.
               exchange-type: topic
           processEvents-in-0:
             consumer:
@@ -63,8 +77,22 @@ spring:
         binder:
           # In-network host is overridden by SPRING_RABBITMQ_HOST under compose; on the host stack
           # it dials localhost:5672. The connection is a single AMQP channel pool over TCP.
+          # M1071: these are DEFAULTS only — the binder reads the standard spring.rabbitmq.* below
+          # when present (witnessed live: SPRING_RABBITMQ_PORT=5673 redirects the binder's actual
+          # connection without setting any SPRING_CLOUD_STREAM_RABBIT_BINDER_* property).
           hosts: localhost
           port: 5672
+  # M1071: the AMQP connection settings. `connection-timeout` is the BOUNded TCP handshake — without
+  # it the client defaults to 60s, and a broker outage parks a Tomcat worker for a whole minute
+  # (the same thread-pool avalanche the cache tier had with Lettuce, M1070). The live witness proves
+  # the /messaging/summary broker probe degrades promptly with live:false when RabbitMQ vanishes.
+  # These also carry the credentials the project-owned witness container requires; the reactor's
+  # compose overrides host/user/pass, and a host with guest/guest on 5672 needs no override.
+  rabbitmq:
+    connection-timeout: 2000
+    template:
+      receive-timeout: 2000
+      reply-timeout: 2000
 
 management:
   info:
