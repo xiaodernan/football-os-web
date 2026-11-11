@@ -53,6 +53,7 @@
   --sidebar-primary: #16a34a;
   --sidebar-primary-foreground: #04140a;
   --sidebar-accent: #e7f6ec;
+  --sidebar-accent-foreground: #0a0f0c;
   --sidebar-border: #dfe6e1;
   --grid-line: #0000000d;
   color-scheme: light;
@@ -88,6 +89,7 @@
   --sidebar-primary: #34e07a;
   --sidebar-primary-foreground: #04140a;
   --sidebar-accent: #10202a;
+  --sidebar-accent-foreground: #d5f5e4;
   --sidebar-border: #ffffff14;
   --grid-line: #ffffff08;
   color-scheme: dark;
@@ -122,6 +124,7 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

@@ -2,13 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: `b88f8f4 @M1063+M1064+M1065: 启动序拓扑真门 + 缓存领域内核与 /cache 可观测台 + 并轨收尾（177/177 proof, 3910 checks）` + 本提交（M1066 — 七服务 live boot + 诚实降级见证收口）
-**总提交数**: 1441
+**当前HEAD**: 本提交（M1068 配色对比度真门 + 接手并轨 WIP，179/179 proof）＋前序 `5e44e4f` M1067 复杂度斜率真门（178/178 proof, 3922 checks）、`2fb02b9` M1066 七服务 live boot + 诚实降级见证、`b88f8f4` M1063+M1064+M1065
+**总提交数**: 1444
 **开发状态**: 持续进行中，无阻塞问题（并发 lane 活跃，本周经历一次 origin/master 重写——fetch + rebase 合入；本机 Docker Desktop registry 受损已记录在案，Compose 栈未容器执行）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1066，最新在上）
+## 🚀 近期里程碑（M1056–M1068，最新在上）
 
+- **M1068 配色对比度成为真门（the accessibility floor）**：`scripts/proof-contrast.mjs` 10/10——解析 `src/globals.css` 浅/深两块 palette，WCAG 2.1 相对亮度算对比度：10 组 `*-foreground`/surface 全 ≥ 4.5:1（AA 正文，最暗 muted 5.25/5.13，含接手补的 sidebar-accent 配对 17.29/14.27）、4 个语义强调色 on background ≥ 2.9:1（浅最暗 warning 2.99、深 6.61）、浅深 29 个颜色角色对称；planted 把 muted-foreground 调到 1.12:1 必被 charge（门不读瞎）。接手并轨侧未 push 的 WIP `e370493`（初版 contrast proof 有 2 处 bug + 新增 dead token 令 `proof-theme-tokens 3/4`）：`reset --soft` 拆掉后修 proof 到 10/10、保留补的 `--sidebar-accent-foreground` 并给 `AppShell` XP 卡加 `text-sidebar-accent-foreground` 真读者令 theme-tokens 回 4/4、补 PLAN/status 条目。零 census 漂移（不新增 app 模块/路由/t()），套件 178→**179 脚本**，`proof-i18n 0 owing across 179`、planted 仍抓。诚实保留：静态 token 算术，不含组件叠加 opacity/overlay 的合成结果、不替代真机渲染与色盲模拟。
+- **M1067 复杂度斜率成为真门（the complexity slope gate）**：`scripts/proof-complexity.mjs` 12/12——墙钟不算、数比较/触达/下压次数（跨机器逐字节一致的成本度量）：`topK` vs 全排序 ratio 8.42→9.95→11.16→12.25 单调上升、LRU Map vs 数组 foil 每倍程精确 ×2、LFU 堆 vs 全量重排 ×2、MinHeap push 的 cmp/n 随 log2(n) 上浮（22.5→31.4，恒 <1.6，证明对数而非线性）；每条 foil 门先断言决策与优化版逐项一致。不碰 domain/lib/features/i18n、零 census 漂移；复杂度是对纯函数内核的**确定性步数测量**，非 profiling。
 - **M1066 七服务真接 live + 诚实降级见证（honest degraded boot）**：`scripts/verify-services.mjs` 从 cache/messaging「契约级见证、不谎称实启」升级为**真实 live boot + 诚实降级见证**——`BOOT_IDS` 五→七（gateway 仍最后），broker 依赖带 `healthGated:false` 且 spawn-time 打 `SPRING_DATA_REDIS_PORT/SPRING_RABBITMQ_PORT=3999`（本机 6379/5672 被外部 Docker workload 占用、拒绝默认凭据，拨它才是假阳性）；缓存 `redisUp:false` 与 `/actuator/health` 503 交叉自洽、`/summary` 逐字节等于冻结契约（origin read-through）；messaging `live:false`+exchange/dlq/binder、`/policy rung3=80` 镜像纯 fold；新增两条 `lb://` 网关回环（`/api/cache/league/summary`·`/api/messaging/summary`）；`config-repo/application.yml` 缩进 bug 修复（`clocks-resource` 曾以 8 空格错挂 `league:` 标量键之后，`footballos.discipline.clocks-resource` 取不到、discipline 端 `@Value` 只靠默认值兜底；`proof-services` section 6a 新增结构化 pin 钉住正确父子关系并 planted 证明旧错缩进/错父键/错值全拒）；discipline gateway probe 单次 fetch 改 `fetchUntil`（LB 缓存窗）；`proof-boot-order` 5→7、`proof-services` section 6 升级、runbook 全链路改写；真跑 `VERIFY=0`、28 ok / 0 FAIL；**全套 177/177 · 3,910/3,910、E2E 140/140**。诚实保留：本机既无 Reactor 也无 Redis/RabbitMQ，两 broker 未在本机启动——witness 的是「broker DOWN 时服务诚实降级」；compose/CI 才拥有真 broker 双向。
 - **M1065 并轨收尾与门禁自洽**：共享哈希环 floor 抽 `domain/ringMath.ts`（cache/queue 同一真源）、`CacheMech`/HashRing 再导出 dead 化、屏幕千分位与环几何抽 `lib/utils.ts`（`fmtGrouped`/`hashRingAngle`/`hashRingPoint`）消 same-rule 副本；Spring Boot 3 `spring.config.import` 真修 + `@EnableConfigurationProperties(DeliveryPolicy)`；gzip 627 KB ≤ 628 pin。
 - **M1064 缓存内核（the cache tier, as a fold）**：`domain/cache.ts` 纯函数——LRU（Map O(1) vs 数组 O(n) foil）、LFU（MinHeap O(log n) vs 全量重排 O(n log n) foil）、TTL full-jitter 散点、Bloom admission、single-flight collapse、一致性哈希分片（扩容只搬 177/800，取模 599/800）；`/cache` 可观测台（analysis·not a live Redis console）；proof-cache 37/37。
@@ -114,7 +116,7 @@
 
 - `npx tsc --noEmit` 退出码 0
 - `npm run build` 退出码 0
-- 全套证词：**177/177 脚本、3,910/3,910 检查**
+- 全套证词：**179/179 脚本、3,932/3,932 检查**（含 M1067 复杂度斜率门 ×12、M1068 配色对比度门 ×10）
 - E2E：**140/140**（onboarding、command-center、player-training、manager-match、coach CV、leads、timing、home-away、discipline、clock、state、all-routes 派生覆盖全部路由、screens 走读：wall、lethal read、match xG、sevResult、form、blank runs、world page six boards（openness · away wins · leaders · dynasties · coaching council · rescued results）、projection、streaks、injuries M999 ladder、xG family M1000、transfers、poll、club compare、edge reputation M1007、history、film room、learn、review、corner kings、outshine board、briefing、run-in、title race、watchlist、compare、scouting、value board、duel kings、world lethal board、manager OS、football AI、knowledge graph、tactical studio、data room、development、head-to-head、red card kings、most loaded yellows board、the season's five moments、leading foulers board、the balance sheet、the league rules、the world's trigger fingers、the youth academy、the squads by age、the cabinet of records、the tackling kings board、the workhorses board、the sharpest aim board、the metronomes board、the platform atlas draws the four services, the breaker and its witness、the last-gasp kings board、the taxmen board、the squanderers board、the monks board、the message pipeline、the cache observatory）
 - 国际化：en / zh-CN / zh-TW 三语字典完整；census literal 2,597、template 113、expression 34、computed 24、unknown 0、litVarSites 435、ariaKeyed 14、dup-value 154、excess-key 255；PWA 627 KB gzip（pin 628 KB，67 assets，baseline 同提交重录），不变量：PLATFORM_LIVE=false、SPA 不调用任何服务、纯分析层
 

@@ -149,7 +149,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Link>
 
       {info && (
-        <div className="mb-3 rounded-lg border border-sidebar-border bg-sidebar-accent/40 p-3">
+        <div className="mb-3 rounded-lg border border-sidebar-border bg-sidebar-accent/40 p-3 text-sidebar-accent-foreground">
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium">{state.profile?.displayName}</span>
             <span className="font-mono text-sidebar-primary">{t("common.level")} {info.level}</span>
