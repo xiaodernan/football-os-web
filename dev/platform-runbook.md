@@ -186,6 +186,61 @@ automatically — including the two gateway round-trips `/api/cache/league/summa
    → the same bodies, resolved through `lb://` the same way as the league routes
    (`/api/cache/**`, `/api/messaging/**` with StripPrefix=1).
 
+## M1070 — the LIVE Redis witness (read-through, eviction, bounded degrade)
+
+`verify-services.mjs` proves the honest **DOWN** floor: all seven jars boot, the cache tier serves
+origin with `redisUp:false` against a dead `:3999`. That is deliberately brokerless. `scripts/verify-redis-live.mjs`
+is the complementary **live** witness — it starts a project-owned Redis and drives a real
+cache-service against it, so read-through, eviction, TTL and the outage path are all measured against
+a broker that actually answered. It is not part of `npm run proof` (it starts Docker + a jar, ~1 min);
+like `verify-services.mjs` it is the runnable truth this section documents.
+
+**Why it exists — a real defect, measured.** Lettuce's DEFAULT command timeout is **60s**. With
+Redis down, every `/cache/league/summary` parked a Tomcat worker for that whole minute; a few
+concurrent misses exhausted the pool and the tier stopped answering **even after Redis came back**.
+Witnessed live before the fix: one degraded read took **61s** and the service stayed unresponsive
+post-recovery. `application.yml` now pins `spring.data.redis.timeout: 2s` and `connect-timeout: 2s`,
+and this script refuses to pass unless the degraded round-trip stays under an 8s budget.
+
+```sh
+# build once, then run the live witness from the repo root
+mvn -DskipTests package -f services/pom.xml
+node scripts/verify-redis-live.mjs           # leaves the Redis container running
+node scripts/verify-redis-live.mjs --clean   # removes the container at the end
+```
+
+**Port hygiene (non-negotiable on this host).** 6379/5672 belong to a foreign Docker Desktop
+workload (a Career OS stack) and are **never dialed**. The script starts `footballos-redis-live`
+bound **only** to `127.0.0.1:16379:6379` (`redis:7-alpine --save '' --appendonly no`), spawns a fresh
+`cache-service` jar with `SPRING_DATA_REDIS_PORT=16379` and **no timeout override** (so it is the
+packaged yml bounds under test, not an env crutch), reuses a surviving container, and kills its own
+jar + restores the container in a `finally`/SIGINT handler so a failed assertion never leaves the
+broker down.
+
+**What it asserts (17 checks, all measured against the live broker):**
+
+| Phase |断言 / response |
+|---|---|
+| boot | `redisUp:true`, `requests:0`, `ttl:60` from a fresh jar with no timeout env |
+| cold miss | `misses:1`, Redis `EXISTS=1`, `TYPE=string`, `TTL` in (0,60]; body = frozen contract byte-for-byte |
+| warm hit | `hits:1`, `hitRate:50`, origin untouched; a **planted sentinel key** is echoed verbatim — proof the bytes really come from Redis, not a re-read of origin |
+| evict | `POST /evict` → Redis `EXISTS=0`; next read re-misses and repopulates with a fresh bounded TTL |
+| TTL expiry | shorten the key to 1s via `redis-cli EXPIRE`; it vanishes and the next read re-misses origin, then re-stores at the full 60s policy TTL |
+| live → DOWN | stop the container: `/summary` still returns origin in **~2s** (was **61s**), `stats` stays responsive with `redisUp:false`, `/actuator/health` → 503 — honest, fast, no exhausted worker pool |
+| DOWN → live | RAM was genuinely lost across the stop (`EXISTS=0`); the next read re-misses into a fresh key; the service answered HTTP 200 immediately after recovery |
+
+**Measured on 2026-11-11 (this host):** degraded `/summary` **2029ms** (bound 8000ms; **30× faster**
+than the 61s pre-fix), degraded `/stats` 2037ms, health 503, `redisUp:false` throughout the outage,
+and `redisUp:true` + a repopulated key after recovery. `scripts/proof-redis-resilience.mjs` **16/16**
+pins the static floor beneath this (both bounded timeouts present + short, honest ping-derived
+`redisUp`, read-through shape, non-default witness port, 8s budget, no env override, finally-restore),
+each family with a planted arm so deleting a bound or widening a port/budget reddens the gate.
+
+Honest limit: the live witness uses a **non-default port** because the default pair is spoken for on
+this host; a compose/CI stack on a registry-healthy machine still owns the canonical 6379/5672
+round-trip. The static proof reads declarations, not a socket — the measured 2s degrade belongs to
+this live witness and the numbers above, not to the gate.
+
 ## Tear-down
 
 ```sh
@@ -244,6 +299,13 @@ provide; it does not, and cannot, prove anything about this author's impaired Do
   A live broker round-trip belongs to the compose stack on a registry-healthy machine, or to a host
   whose 6379/5672 belong to this reactor — delete the two spawn-time overrides in `BOOT_ENV` when that
   is the case. `PLATFORM_LIVE` stays false whether or not a broker is up.
+- The **one** broker this host does run is the M1070 live Redis witness: `verify-redis-live.mjs` starts
+  `footballos-redis-live` on `127.0.0.1:16379` (a project-owned non-default port, never the foreign
+  6379), points a real cache-service at it, and measures read-through/evict/TTL plus a bounded live→down
+  degrade (~2s, down from Lettuce's 61s default) and recovery. That container is a test fixture, not
+  the reactor's canonical broker; the default-port story remains compose/CI's. `proof-redis-resilience.mjs`
+  pins the static floor (bounded timeouts, honest `redisUp`, non-default witness port, 8s degrade budget).
+  Delete a timeout bound or point the witness at 6379 and the gate goes red.
 
 ## Relationship to the gate
 

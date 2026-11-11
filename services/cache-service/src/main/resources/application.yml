@@ -16,6 +16,16 @@ spring:
     redis:
       host: localhost
       port: 6379
+      # M1070: Lettuce's DEFAULT command timeout is 60s. When Redis vanishes, every
+      # cache read parks a Tomcat worker for that whole minute; a few concurrent
+      # misses exhaust the pool and the tier stops answering even AFTER Redis comes
+      # back (witnessed live: a single degraded read took 61s and the service stayed
+      # unresponsive post-recovery). Bound the RESP round-trip AND the TCP handshake
+      # so the origin fallback runs promptly and the degraded path stays O(1) in the
+      # number of dead-broker probes. Overridable via SPRING_DATA_REDIS_TIMEOUT /
+      # SPRING_DATA_REDIS_CONNECT_TIMEOUT for the live verifier.
+      timeout: 2s
+      connect-timeout: 2s
       lettuce:
         pool:
           max-active: 8
