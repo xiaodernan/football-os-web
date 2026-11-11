@@ -151,7 +151,8 @@ const DEAD_CEILING = 22;
 // M1036: 134 -> 136 — domain/platform.ts (the service descriptor) and
 // features/platform/PlatformAtlas.tsx (the atlas screen).
 // M1056: 136 -> 137 — domain/rockets.ts (the breakthroughs).
-const POP_PIN = 137;
+// M1057: 137 -> 139 — domain/graph.ts and lib/structures.ts.
+const POP_PIN = 139;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -187,7 +188,8 @@ const POP_PIN = 137;
 // M956: features 47 -> 48 (LeadRetention).
 // M1036: domain 39 -> 40 (platform.ts), features 54 -> 55 (PlatformAtlas.tsx).
 // M1056: domain 40 -> 41 (rockets.ts).
-const BY_DIR_PIN = { components: 15, data: 7, domain: 41, features: 55, functions: 2, i18n: 3, lib: 7, src: 3, store: 1, ui: 3 };
+// M1057: domain 41 -> 42 (graph.ts), lib 7 -> 8 (structures.ts).
+const BY_DIR_PIN = { components: 15, data: 7, domain: 42, features: 55, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.

@@ -155,7 +155,9 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1056: 135 -> 136 — domain/rockets.ts.
 // M1036: 133 -> 135 — domain/platform.ts and features/platform/PlatformAtlas.tsx.
 // M1056: 135 -> 136 — domain/rockets.ts (it ships in the reader's path).
-const APP_MODULE_PIN = 136;
+// M1057: 136 -> 138 — domain/graph.ts and lib/structures.ts join the reader's path
+// (each ships: the leaders screen imports the fold, the fold imports the heap/union-find floor).
+const APP_MODULE_PIN = 138;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");
