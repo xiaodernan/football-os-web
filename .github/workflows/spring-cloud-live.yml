@@ -1,0 +1,78 @@
+# M1074: the live witnesses join CI — the registry-healthy half this author's machine cannot run.
+#
+# The Spring Cloud stack's strongest proof is the two live witnesses on the host side:
+# verify-redis-live.mjs (real cache-aside read-through against a project-owned Redis on a
+# non-default port) and verify-messaging-live.mjs (real publish→consume against a project-owned
+# RabbitMQ, honest UP/DOWN probe). On the authoring machine both were proven BY HAND (ports
+# 16379/5673, --clean); on this runner both are proven by the same scripts with registry-healthy
+# Docker — the one thing the author's impaired Docker Desktop could not do.
+#
+# Run order is load-bearing: build the reactor first, then boot the services against real
+# brokers on non-default ports (never this machine's foreign 5672/6379, never clashing with the
+# canonical compose side). --clean guarantees the runner tears its own containers down.
+name: spring-cloud-live
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "services/**"
+      - "scripts/verify-services.mjs"
+      - "scripts/verify-redis-live.mjs"
+      - "scripts/verify-messaging-live.mjs"
+      - "scripts/verify-messaging-dlq-live.mjs"
+      - ".github/workflows/spring-cloud-live.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "services/**"
+      - "scripts/verify-services.mjs"
+      - "scripts/verify-redis-live.mjs"
+      - "scripts/verify-messaging-live.mjs"
+      - "scripts/verify-messaging-dlq-live.mjs"
+      - ".github/workflows/spring-cloud-live.yml"
+
+jobs:
+  live-witnesses:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Build the reactor
+        run: mvn -q -B -DskipTests package -f services/pom.xml
+
+      - name: Live Redis read-through witness
+        run: node scripts/verify-redis-live.mjs --clean
+
+      - name: Live RabbitMQ witness
+        run: node scripts/verify-messaging-live.mjs --clean
+
+      - name: Live RabbitMQ failure-semantics witness
+        run: node scripts/verify-messaging-dlq-live.mjs --clean
+
+      - name: Install the web dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build the web app
+        run: npm run build
+
+      - name: Run the full proof suite
+        run: npm run proof
+
+# This file has never been executed on the authoring machine — that machine's Docker Desktop cannot
+# pull a single new image (records in dev/platform-runbook.md and PLAN-LONGTERM.md). On THIS runner
+# the same two/three witnesses are the truth about the reactor against live brokers.

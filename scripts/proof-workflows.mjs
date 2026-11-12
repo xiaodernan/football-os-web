@@ -58,5 +58,26 @@ ok("the stack workflow orders node setup before npm ci and build before proof (b
   stack.indexOf("npm ci") < stack.indexOf("npm run build") &&
   stack.indexOf("npm run build") < stack.indexOf("npm run proof"));
 
+// M1074: the live witnesses joined CI on purpose — the author's Docker Desktop cannot pull a single
+// new image, so the strongest story (real Redis/RabbitMQ, honest UP/DOWN probes) only exists in
+// this file. The witness order (build -> redis -> messaging -> dlq) is load-bearing: a witness
+// that runs before the reactor builds its jars is a file that silently skips its stage. The honesty
+// line must survive (never executed on this authoring machine); the path filter must name files
+// that live in this repository; and the workflow must carry no credentials of its own.
+const live = read(".github/workflows/spring-cloud-live.yml");
+ok("the live-witness workflow boots both broker-dependent arms in order after the reactor builds, honestly named, against this repo's own paths, with no tokens",
+  live.includes("spring-cloud-live") && live.includes("on:") && live.includes("jobs:") &&
+  live.includes("ubuntu-latest") && live.includes("actions/checkout@v4") &&
+  live.includes("java-version: \"21\"") && live.includes("temurin") && live.includes("actions/setup-node") &&
+  live.indexOf("run: mvn") < live.indexOf("run: node scripts/verify-redis-live.mjs") &&
+  live.indexOf("run: node scripts/verify-redis-live.mjs") < live.indexOf("run: node scripts/verify-messaging-live.mjs") &&
+  live.indexOf("run: node scripts/verify-messaging-live.mjs") < live.indexOf("run: node scripts/verify-messaging-dlq-live.mjs") &&
+  live.indexOf("run: node scripts/verify-messaging-dlq-live.mjs") < live.indexOf("npm run proof") &&
+  live.includes("--clean") && live.includes("never been executed") &&
+  !/\$\{\{\s*(secrets|github\.token)\b/.test(live) &&
+  ["services/**", "scripts/verify-services.mjs", "scripts/verify-redis-live.mjs",
+    "scripts/verify-messaging-live.mjs", "scripts/verify-messaging-dlq-live.mjs",
+    ".github/workflows/spring-cloud-live.yml"].every((p) => live.includes(p)));
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);
