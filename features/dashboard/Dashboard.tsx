@@ -110,23 +110,28 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {profile ? `${t("nav.home")} · ${profile.displayName}` : t("nav.home")}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t("dash.subtitle")}</p>
-        </div>
-        {info && (
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="font-mono">{t("common.level")} {info.level}</Badge>
-            <Badge variant="outline" className="font-mono text-primary">{t("dash.xpBadge", { n: profile?.xp ?? 0 })}</Badge>
-            <Badge variant="outline" className="font-mono">🔥 {t("dash.streakDays", { n: state.streak.current })}</Badge>
+      <div className={cn("relative overflow-hidden rounded-2xl px-5 py-4", PANEL_CLASS.panelFaint)}>
+        <div aria-hidden className="fo-orb fo-orb-lime -left-24 -top-28 h-60 w-60" />
+        <div aria-hidden className="fo-orb fo-orb-cyan -right-24 -bottom-32 h-64 w-64" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {profile ? `${t("nav.home")} · ${profile.displayName}` : t("nav.home")}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t("dash.subtitle")}</p>
           </div>
-        )}
+          {info && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="font-mono">{t("common.level")} {info.level}</Badge>
+              <Badge variant="outline" className="font-mono text-primary">{t("dash.xpBadge", { n: profile?.xp ?? 0 })}</Badge>
+              <Badge variant="outline" className="font-mono">🔥 {t("dash.streakDays", { n: state.streak.current })}</Badge>
+            </div>
+          )}
+        </div>
       </div>
 
-      <Panel className="p-4">
+      <Panel className="fo-lift p-4">
         <SectionTitle title={t("dash.nextTitle")} hint={t("dash.nextHint")} />
         <div className="mt-2 flex flex-col gap-1.5">
           {steps.map((kind, i) => (
@@ -134,7 +139,7 @@ export function Dashboard() {
               key={kind}
               to={stepRoute(kind)}
               className={cn(
-                "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/50",
+                "fo-lift flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:border-primary/40 hover:bg-secondary/50",
                 i === 0 ? CHIP_CLASS.success : PANEL_CLASS.panelGhost,
               )}
             >
@@ -154,7 +159,7 @@ export function Dashboard() {
       {live.length > 0 && (
         <Panel className="p-0">
           <div className="flex items-center gap-2 border-b px-4 py-2 text-xs font-semibold uppercase tracking-widest text-destructive">
-            <span className={cn("fo-live-dot h-2 w-2 rounded-full", BAR_FILL.bad)} /> {t("dash.live")}
+            <span aria-hidden className={cn("fo-live-dot h-2 w-2 rounded-full", BAR_FILL.bad)} /> {t("dash.live")}
             {/* M294: the strip shows 4 of the world's in-play matches; the count and the
                 door to the full LIVE tab make the other 45 reachable from here. */}
             <Link to="/matches?status=LIVE" className="ml-auto normal-case tracking-normal hover:underline">
@@ -170,7 +175,7 @@ export function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {/* today's matches */}
-          <Panel className="p-4">
+          <Panel className="fo-lift p-4">
             <SectionTitle title={t("dash.today")} hint={t("dash.nextUpHint")} action={<Link to="/matches" className="text-xs text-primary hover:underline">{t("dash.allMatches")}</Link>} />
             {today.length ? (
               <div className="divide-y">
