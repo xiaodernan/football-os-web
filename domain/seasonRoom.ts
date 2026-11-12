@@ -45,7 +45,8 @@ export interface AlternateRuler {
   standardLeaderName: string;
   /** 1 = same club leads under both triplets; 0 = the title flips with the rule. */
   sameAsStandard: boolean;
-  /** standardPosition − alternatePosition. */
+  /** The alternate ruler's places moved down its OWN ladders: its standard position minus its
+   * rulesPosition — 0 for the unchanged ruler, ≥1 when the crown flips with the triplet. */
   sway: number;
 }
 
@@ -80,8 +81,7 @@ function alternateRulers(
   matches: readonly Match[],
   clubs: readonly Club[],
   rules: typeof TWO_ONE_ZERO_RULES | typeof ALL_OR_NOTHING_RULES,
-): AlternateRuler[] {
-  const standard = new Map(
+): AlternateRuler[] {  const standard = new Map(
     comps.map((c) => [c.id, customPointsTable(c.id, [...matches], [...clubs], STANDARD_RULES)]),
   );
   const alt = new Map(
@@ -102,7 +102,7 @@ function alternateRulers(
       rulerPoints: altLeader.rulesPoints,
       standardLeaderName: clubs.find((x) => x.id === stdLeader.clubId)?.name ?? stdLeader.clubId,
       sameAsStandard: altLeader.clubId === stdLeader.clubId,
-      sway: stdLeader.standardPosition - altLeader.rulesPosition,
+      sway: altLeader.standardPosition - altLeader.rulesPosition,
     });
   }
   return out.sort((a, b) => Math.abs(b.sway) - Math.abs(a.sway) || a.compId.localeCompare(b.compId));
