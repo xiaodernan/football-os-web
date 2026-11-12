@@ -406,9 +406,9 @@ export function ClubDetail({ id }: { id: string }) {
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <StatTile label={t("common.overall")} value={c.overall} />
-        <StatTile label={t("data.attack")} value={attack || ABSENT} />
-        <StatTile label={t("det.midfield")} value={midfield || ABSENT} />
-        <StatTile label={t("data.defence")} value={defense || ABSENT} />
+        <StatTile label={t("data.attack")} value={attack ? fmt2(attack) : ABSENT} />
+        <StatTile label={t("det.midfield")} value={midfield ? fmt2(midfield) : ABSENT} />
+        <StatTile label={t("data.defence")} value={defense ? fmt2(defense) : ABSENT} />
         <StatTile label={t("det.squad.size")} value={squad.length} />
       </div>
       <div className="grid gap-4 lg:grid-cols-3">

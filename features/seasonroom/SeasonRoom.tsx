@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
+import { Link } from "@/lib/router";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, PANEL_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { seasonSituation } from "@/domain/seasonRoom";
@@ -67,11 +68,13 @@ export function SeasonRoom() {
           {sit.standings.map((r) => (
             <div key={r.compId} className="fo-lift rounded-xl border border-border/50 p-3 transition hover:border-primary/40 hover:border-primary/60 hover:bg-card/70">
               <div className="flex items-center gap-3">
-                <Crest colors={getClub(r.leaderId)?.colors} short={getClub(r.leaderId)?.short} size={34} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold">{r.leaderName}</div>
-                  <div className="truncate text-[11px] uppercase tracking-widest text-muted-foreground">{r.compName} · {r.nation}</div>
-                </div>
+                <Link to={`/clubs/${r.leaderId}`} className="flex min-w-0 flex-1 items-center gap-3">
+                  <Crest colors={getClub(r.leaderId)?.colors} short={getClub(r.leaderId)?.short} size={34} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold hover:underline">{r.leaderName}</div>
+                    <div className="truncate text-[11px] uppercase tracking-widest text-muted-foreground">{r.compName} · {r.nation}</div>
+                  </div>
+                </Link>
                 <div className="text-right">
                   <div className="font-mono text-lg font-bold tabular-nums">{r.leaderPoints}</div>
                   <div className="text-[10px] text-muted-foreground">{t("srs.columnPoints")}</div>
@@ -108,7 +111,7 @@ export function SeasonRoom() {
               <tbody>
                 {sit.profitableFive.map((r) => (
                   <tr key={r.clubId} className="border-t">
-                    <td className="py-1.5 pr-3"><div className="flex min-w-0 items-center gap-2"><Crest colors={getClub(r.clubId)?.colors} short={getClub(r.clubId)?.short} size={20} /><span className="truncate">{r.clubName}</span></div></td>
+                    <td className="py-1.5 pr-3"><Link to={`/clubs/${r.clubId}`} className="flex min-w-0 items-center gap-2 hover:underline"><Crest colors={getClub(r.clubId)?.colors} short={getClub(r.clubId)?.short} size={20} /><span className="truncate">{r.clubName}</span></Link></td>
                     <td className="py-1.5 pr-3 text-right font-semibold tabular-nums text-success">{t("fin.netPlus", { v: fmtMoney(Math.abs(r.net)) })}</td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">{fmtMoney(r.squadValue)}</td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">{fmt2(r.wageRatio)}</td>
@@ -133,7 +136,7 @@ export function SeasonRoom() {
               <tbody>
                 {sit.insolventFive.map((r) => (
                   <tr key={r.clubId} className="border-t">
-                    <td className="py-1.5 pr-3"><div className="flex min-w-0 items-center gap-2"><Crest colors={getClub(r.clubId)?.colors} short={getClub(r.clubId)?.short} size={20} /><span className="truncate">{r.clubName}</span></div></td>
+                    <td className="py-1.5 pr-3"><Link to={`/clubs/${r.clubId}`} className="flex min-w-0 items-center gap-2 hover:underline"><Crest colors={getClub(r.clubId)?.colors} short={getClub(r.clubId)?.short} size={20} /><span className="truncate">{r.clubName}</span></Link></td>
                     <td className="py-1.5 pr-3 text-right font-semibold tabular-nums text-destructive">{t("fin.netMinus", { v: fmtMoney(Math.abs(r.net)) })}</td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">{fmtMoney(r.squadValue)}</td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">{fmt2(r.wageRatio)}</td>
@@ -156,11 +159,13 @@ export function SeasonRoom() {
                 <div key={r.compId} className={cn("rounded-lg p-2.5", PANEL_CLASS.panelMuted)}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
-                      <Crest colors={getClub(r.rulerId)?.colors} short={getClub(r.rulerId)?.short} size={22} />
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold">{r.rulerName}</div>
-                        <div className="truncate text-[11px] text-muted-foreground">{r.compName}</div>
-                      </div>
+                      <Link to={`/clubs/${r.rulerId}`} className="flex min-w-0 items-center gap-2 hover:underline">
+                        <Crest colors={getClub(r.rulerId)?.colors} short={getClub(r.rulerId)?.short} size={22} />
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-semibold">{r.rulerName}</div>
+                          <div className="truncate text-[11px] text-muted-foreground">{r.compName}</div>
+                        </div>
+                      </Link>
                     </div>
                     <div className="text-right text-[11px]">
                       <div className="font-mono font-semibold tabular-nums">{r.rulerPoints} {t("srs.columnPoints")}</div>
@@ -187,10 +192,10 @@ export function SeasonRoom() {
               </div>
               <div className="mt-1 flex items-center gap-2 text-[11px]">
                 <Crest colors={getClub(r.leaderId)?.colors} short={getClub(r.leaderId)?.short} size={16} />
-                <span className="truncate">{r.leaderName}</span>
+                <Link to={`/clubs/${r.leaderId}`} className="truncate hover:underline">{r.leaderName}</Link>
                 <span className="text-muted-foreground">+{r.gap}</span>
                 <Crest colors={getClub(r.runnerUpId)?.colors} short={getClub(r.runnerUpId)?.short} size={16} />
-                <span className="truncate text-muted-foreground">{r.runnerUpName} ({t("srs.pointsShort", { v: r.runnerUpPoints })})</span>
+                <Link to={`/clubs/${r.runnerUpId}`} className="truncate text-muted-foreground hover:underline">{r.runnerUpName} ({t("srs.pointsShort", { v: r.runnerUpPoints })})</Link>
               </div>
               <div aria-hidden className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted/70">
                 <div className="h-full rounded-full bg-warning/70" style={{ width: `${clamp(pct(safeDiv(r.gap, maxGap)), 4, 100)}%` }} />
