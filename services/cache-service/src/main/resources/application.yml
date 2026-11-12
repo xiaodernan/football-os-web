@@ -68,7 +68,12 @@ eureka:
 
 # The contract-resource is the same frozen file the league service serves; the cache sits in front
 # of it. ttl-seconds is the key's lifetime in Redis — the proof reads it, the controller honours it.
+# M1075: the second read-through — the frozen TABLES snapshot, one key, same TTL policy and the
+# same degrade story as the summary. The gateway already forwards /api/cache/** with StripPrefix=1,
+# so /api/cache/league/table/{comp} lands on this module with zero new route.
 footballos:
   cache:
     contract-resource: league-summary.json
     ttl-seconds: 60
+    tables-resource: league-tables.json
+    tables-ttl-seconds: 60

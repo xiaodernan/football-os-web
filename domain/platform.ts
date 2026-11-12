@@ -118,13 +118,17 @@ export const DISCIPLINE_CONTRACT = {
   exporter: "scripts/export-service-contract.mjs",
 } as const;
 
-/** The cache tier's Redis endpoint and the contract it fronts. The atlas prints this; the proof
- *  reads it. Redis is one of two processes the reactor depends on that are not one of its modules. */
+/** The cache tier's Redis endpoint and the contracts it fronts. The atlas prints these; the
+ *  proof reads them. Redis is one of two processes the reactor depends on that are not one of its
+ *  modules. Two frozen snapshots ride one broker: the counts contract and the league TABLES. */
 export const REDIS = {
   image: "redis:7-alpine",
   port: 6379,
   /** The cache service's read-through target — the same frozen file the league service serves. */
   contractResource: "league-summary.json",
+  /** The second read-through (M1075) — the same frozen file the league service's /table route serves. */
+  tablesResource: "league-tables.json",
+  tablesTtlSeconds: 60,
 } as const;
 
 /** The messaging tier's broker endpoint. RabbitMQ is the second out-of-reactor process; the

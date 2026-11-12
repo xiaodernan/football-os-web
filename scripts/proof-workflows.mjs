@@ -65,7 +65,7 @@ ok("the stack workflow orders node setup before npm ci and build before proof (b
 // line must survive (never executed on this authoring machine); the path filter must name files
 // that live in this repository; and the workflow must carry no credentials of its own.
 const live = read(".github/workflows/spring-cloud-live.yml");
-ok("the live-witness workflow boots both broker-dependent arms in order after the reactor builds, honestly named, against this repo's own paths, with no tokens",
+ok("the live-witness workflow boots both broker-dependent arms in order after the reactor builds, honestly named, against this repo's own paths, credential-free",
   live.includes("spring-cloud-live") && live.includes("on:") && live.includes("jobs:") &&
   live.includes("ubuntu-latest") && live.includes("actions/checkout@v4") &&
   live.includes("java-version: \"21\"") && live.includes("temurin") && live.includes("actions/setup-node") &&

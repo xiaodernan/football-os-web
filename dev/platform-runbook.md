@@ -422,6 +422,46 @@ The terminal DLQ route is **service-owned** (application-level `bridge.send`), d
 relying on Spring's `republish-to-dlq` binder recoverer, which this live run proved is not on the
 functional-consumer retry path. `PLATFORM_LIVE` stays false and the SPA never calls the stack.
 
+## M1075 — the tables read-through (second frozen resource, same honesty discipline)
+
+The cache tier used to front **one** frozen resource: `league-summary.json` (the counts contract).
+This milestone fronts **two**: the cache-service also serves `league-tables.json`, so the league's
+15 standard 3-1-0 tables ride through the same Redis instance as the summary:
+
+| Endpoint | Answers | Notes |
+|---|---|---|
+| `GET /cache/league/table` | `{generatedBy, dataset, leagues, competitions[]}` — the 15 competition ids | byte shape mirrors league-service's `/league/table` on both hit and miss |
+| `GET /cache/league/table/{competitionId}` | the frozen rows for one competition | 404 for an unknown competition, exactly like the league service |
+| `GET /cache/league/table/stats` | `{requests, hits, misses, hitRate, redisUp, key, ttlSeconds}` | separate census from summary — table hits/misses never pollute summary's numbers |
+| `POST /cache/league/table/evict` | drops `footballos:league:tables` from Redis | the manual half of invalidation |
+
+The implementation mirrors the counts contract exactly: `LeagueTablesCacheService`
+(`com.footballos.cache`) does one read-through cycle into `footballos:league:tables`, the `stats()`
+returns an independent counter set (so the summary witness stays byte-identical), and the
+classpath resource is a byte-copy of `services/league-service/src/main/resources/league-tables.json`
+— the service does not know or care that it is fronting the same file the league service serves;
+the proof pins the two copies identical. TTL is 60s (`footballos.cache.tables-ttl-seconds`).
+
+**Descriptor (domain/platform.ts):** `REDIS` now names both resources (`contractResource` and
+`tablesResource = league-tables.json`; `tablesTtlSeconds: 60`). The platform atlas renders both as
+`platform.redisTablesLine` and `platform.redisTablesBoundary` (three locales, i18n +2 keys each).
+
+**Honest caveat on this host.** The Career OS/specproof stacks hold 8081 (careeros-gateway),
+8761 (careeros-discovery), 6379 and 5672. On this machine `verify-services.mjs` and the live
+witnesses now REFUSE to run when a foreign process is already answering Spring actuator on a
+target port — a preflight port check refuses to witness another stack's answers, with the
+offending port named. The three live witnesses (redis, messaging, dlq) were run **on 2026-11-11**
+against project-owned non-default ports (`footballos-redis-live` on 16379, `footballos-rabbit-live`
+on 5673/15673); this host currently carries the foreign workload, so the CI mirror
+(`spring-cloud-live.yml`) is the runnable source of truth for live-witness verification going
+forward — registry-healthy runners honor the same `--clean` contract the author uses.
+
+The seven-service verifier (`scripts/verify-services.mjs`) was also upgraded this milestone: two
+new checks round-trip `/api/cache/league/table` and `/api/cache/league/table/ucl` through the
+gateway (lb://football-os-cache), direct-hit the same two endpoints on 8083 (ids-match and
+byte-equal), and confirm an unknown competition 404s — the breaker route `/api/cache/**` strips
+one segment, so the cache controller maps `/cache/league/table` on the path it receives.
+
 ## Tear-down
 
 ```sh

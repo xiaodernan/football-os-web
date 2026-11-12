@@ -106,6 +106,42 @@ for (const id of BOOT_IDS) {
   }
 }
 
+// A host with other stacks running (a Career OS stack on 8081/8761, a specproof stack owning 6379/5672)
+// can make a reactor boot "successfully" against a port the FOREIGN stack is ALREADY listening on — the
+// Java child then fails to bind ("Port 8081 already in use") while our probes answer 200 from the other
+// stack. The witness will not attest to anything it did not itself start. So probe every port first:
+// if it answers, refuse, loud and clear, with the offending port. The state is honest — compose/CI
+// remain the canonical live witness.
+const preflightPortCheck = async () => {
+  const offenders = [];
+  for (const id of BOOT_IDS) {
+    const url = `http://localhost:${DETAILS[id].port}/actuator/health`;
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(1500) });
+      if (r.ok) {
+        const body = await r.text();
+        if (body.includes('"status":"UP"')) {
+          offenders.push(`${DETAILS[id].port} (${id}) already answers Spring actuator — a foreign stack holds it`);
+        } else {
+          offenders.push(`${DETAILS[id].port} (${id}) answers non-Spring health (${r.status}) — foreign process holds it`);
+        }
+      } else if (r.status === 503 || r.status === 404) {
+        offenders.push(`${DETAILS[id].port} (${id}) answers ${r.status} — a foreign process holds it`);
+      }
+    } catch { /* port free — our child will own the socket */ }
+  }
+  // Deliberately not probing the broker ports: the broker children fail fast and are harmless
+  // on a hostile host; their witness output is about honest DOWN, not ownership of 6379/5672.
+  if (offenders.length) {
+    console.error(`FAIL port preflight refusal — this host is not clean: ${offenders.join("; ")}`);
+    console.error("the live witness will not attest to another stack's answers. Free the ports (or stop the");
+    console.error("foreign stack) and re-run, or rely on compose/CI as the canonical live witness.");
+    process.exit(2);
+  }
+  console.log(`ok   preflight: every target port is free — the boot will own ${BOOT_IDS.map((id) => DETAILS[id].port).join(",")}`);
+};
+await preflightPortCheck();
+
 const waitFor = async (url, tries = 90) => {
   for (let i = 0; i < tries; i++) {
     try {
@@ -227,6 +263,24 @@ for (const id of BOOT_IDS) {
   }
   pass("the messaging tier serves the same retry/water-mark policy the pure fold runs under (rung3=80)");
 }
+// The cache-table witness: direct probes, every assert reading the descriptor itself rather than a hard-coded shape, so a resource rename breaks the witness instead of sneaking through.
+{
+  const tablesDirect = await fetch("http://localhost:8083/cache/league/table", { signal: AbortSignal.timeout(8000) });
+  if (!tablesDirect.ok) fail(`the tables tier did not answer /cache/league/table (status ${tablesDirect.status})`);
+  const tablesJson = await tablesDirect.json();
+  const frozen = JSON.parse(readFileSync(join(root, "services/cache-service/src/main/resources/league-tables.json"), "utf8"));
+  const servedIds = tablesJson?.competitions?.slice().sort() ?? [];
+  const frozenIds = Object.keys(frozen.tables).sort();
+  if (JSON.stringify(servedIds) !== JSON.stringify(frozenIds)) fail(`the cache-table list served ${servedIds.length} competitions, drifted from the frozen file's ${frozenIds.length}`);
+  pass("the cache tier directly serves the frozen tables list (ids match the frozen file)");
+  const ucl = await fetch("http://localhost:8083/cache/league/table/ucl", { signal: AbortSignal.timeout(8000) });
+  const uclJson = await ucl.json();
+  if (JSON.stringify(uclJson) !== JSON.stringify(frozen.tables.ucl)) fail("the direct ucl table read diverges from the frozen tables file");
+  pass("the cache tier directly serves the frozen ucl rows (byte-equal to the file)");
+  const unknown = await fetch("http://localhost:8083/cache/league/table/notacompetition", { signal: AbortSignal.timeout(8000) });
+  if (unknown.status !== 404) fail(`a direct unknown competition answered ${unknown.status}, wanted 404`);
+  else pass("a direct unknown competition reads 404 from the cache tier");
+}
 // The config server must actually be serving the league's property — this is what M1040 opened
 // up, and it is the one piece that was invisible when everything was hard-coded.
 const configRoundTrip = await fetch("http://localhost:8888/league-service/default", {
@@ -335,6 +389,46 @@ if (!cacheGwProbe || !cacheGwProbe.r || !cacheGwProbe.r.ok) {
   fail("the gateway's cache summary differs from the frozen contract on disk");
 }
 pass("the gateway round-trip (lb://football-os-cache) returns the frozen contract from the cache tier");
+
+const tableGwProbe = await fetchUntil(
+  "http://localhost:8087/api/cache/league/table",
+  (r, text) => r.ok && text.includes('"generatedBy"'),
+  14,
+  5000,
+);
+if (!tableGwProbe || !tableGwProbe.r || !tableGwProbe.r.ok) {
+  fail(`the gateway did not round-trip /api/cache/league/table (last probe: status ${tableGwProbe?.r?.status ?? "n/a"})`);
+}
+const tablesBody = JSON.parse(tableGwProbe.text);
+if (!tablesBody?.generatedBy || !tablesBody?.dataset || !Array.isArray(tablesBody?.competitions) || tablesBody.competitions.length !== 15) {
+  fail(`the gateway's table-list payload drifted (competitions=${JSON.stringify(tablesBody?.competitions)})`);
+}
+pass("the gateway round-trip (lb://football-os-cache) returns the frozen tables list — 15 competitions");
+
+const tableUclProbe = await fetchUntil(
+  "http://localhost:8087/api/cache/league/table/ucl",
+  (r, text) => r.ok && text.includes('"competitionId"'),
+  14,
+  5000,
+);
+if (!tableUclProbe || !tableUclProbe.r || !tableUclProbe.r.ok) {
+  fail(`the gateway did not round-trip /api/cache/league/table/ucl (last probe: status ${tableUclProbe?.r?.status ?? "n/a"})`);
+}
+const cacheTableUcl = JSON.parse(tableUclProbe.text);
+const frozenTables = JSON.parse(readFileSync(join(root, "services/cache-service/src/main/resources/league-tables.json"), "utf8"));
+if (JSON.stringify(cacheTableUcl) !== JSON.stringify(frozenTables.tables.ucl)) fail("the gateway's ucl table rows differ from the frozen tables file");
+else pass("the gateway round-trip returns the frozen champions-league table rows (byte-equal to the tables file)");
+const tableUnknown = await fetch("http://localhost:8087/api/cache/league/table/notacompetition", { signal: AbortSignal.timeout(8000) });
+if (tableUnknown.status !== 404) fail(`an unknown competition through the table route answered ${tableUnknown.status}, wanted 404`);
+else pass("an unknown competition through /api/cache/league/table answers 404");
+
+const cacheStatsGw2 = await fetch("http://localhost:8087/api/cache/league/table/stats", { signal: AbortSignal.timeout(8000) });
+if (!cacheStatsGw2.ok) fail(`the gateway did not round-trip /api/cache/league/table/stats (status ${cacheStatsGw2.status})`);
+else {
+  const gwTabStats = await cacheStatsGw2.json();
+  if (typeof gwTabStats?.redisUp !== "boolean") fail(`the table stats did not carry a boolean redisUp (got ${JSON.stringify(gwTabStats)})`);
+  else pass(`the gateway round-trip carries the tables cache's honest redisUp=${gwTabStats.redisUp} through lb://`);
+}
 
 const cacheStatsGw = await fetch("http://localhost:8087/api/cache/league/stats", { signal: AbortSignal.timeout(8000) });
 if (!cacheStatsGw.ok) fail(`the gateway did not round-trip /api/cache/league/stats (status ${cacheStatsGw.status})`);

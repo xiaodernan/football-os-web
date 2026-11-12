@@ -1,0 +1,1322 @@
+{
+  "generatedBy": "scripts/export-service-contract.mjs",
+  "dataset": "football-os/world",
+  "leagues": 15,
+  "tables": {
+    "pl": {
+      "competitionId": "pl",
+      "name": "Premier League",
+      "played": 83,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "mci",
+          "played": 15,
+          "won": 12,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 18,
+          "ga": 2,
+          "points": 37
+        },
+        {
+          "position": 2,
+          "clubId": "che",
+          "played": 21,
+          "won": 6,
+          "drawn": 9,
+          "lost": 6,
+          "gf": 8,
+          "ga": 8,
+          "points": 27
+        },
+        {
+          "position": 3,
+          "clubId": "liv",
+          "played": 14,
+          "won": 7,
+          "drawn": 5,
+          "lost": 2,
+          "gf": 11,
+          "ga": 5,
+          "points": 26
+        },
+        {
+          "position": 4,
+          "clubId": "new",
+          "played": 18,
+          "won": 7,
+          "drawn": 5,
+          "lost": 6,
+          "gf": 10,
+          "ga": 8,
+          "points": 26
+        },
+        {
+          "position": 5,
+          "clubId": "mun",
+          "played": 16,
+          "won": 6,
+          "drawn": 7,
+          "lost": 3,
+          "gf": 9,
+          "ga": 4,
+          "points": 25
+        },
+        {
+          "position": 6,
+          "clubId": "ars",
+          "played": 11,
+          "won": 5,
+          "drawn": 4,
+          "lost": 2,
+          "gf": 9,
+          "ga": 5,
+          "points": 19
+        },
+        {
+          "position": 7,
+          "clubId": "bha",
+          "played": 19,
+          "won": 3,
+          "drawn": 10,
+          "lost": 6,
+          "gf": 6,
+          "ga": 10,
+          "points": 19
+        },
+        {
+          "position": 8,
+          "clubId": "avl",
+          "played": 18,
+          "won": 3,
+          "drawn": 8,
+          "lost": 7,
+          "gf": 5,
+          "ga": 14,
+          "points": 17
+        },
+        {
+          "position": 9,
+          "clubId": "tot",
+          "played": 17,
+          "won": 2,
+          "drawn": 10,
+          "lost": 5,
+          "gf": 4,
+          "ga": 6,
+          "points": 16
+        },
+        {
+          "position": 10,
+          "clubId": "whu",
+          "played": 17,
+          "won": 0,
+          "drawn": 5,
+          "lost": 12,
+          "gf": 0,
+          "ga": 18,
+          "points": 5
+        }
+      ]
+    },
+    "liga": {
+      "competitionId": "liga",
+      "name": "La Liga",
+      "played": 66,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "bar",
+          "played": 16,
+          "won": 10,
+          "drawn": 6,
+          "lost": 0,
+          "gf": 18,
+          "ga": 1,
+          "points": 36
+        },
+        {
+          "position": 2,
+          "clubId": "rma",
+          "played": 15,
+          "won": 11,
+          "drawn": 3,
+          "lost": 1,
+          "gf": 17,
+          "ga": 1,
+          "points": 36
+        },
+        {
+          "position": 3,
+          "clubId": "atm",
+          "played": 14,
+          "won": 9,
+          "drawn": 5,
+          "lost": 0,
+          "gf": 14,
+          "ga": 3,
+          "points": 32
+        },
+        {
+          "position": 4,
+          "clubId": "rso",
+          "played": 16,
+          "won": 3,
+          "drawn": 6,
+          "lost": 7,
+          "gf": 5,
+          "ga": 9,
+          "points": 15
+        },
+        {
+          "position": 5,
+          "clubId": "val",
+          "played": 18,
+          "won": 3,
+          "drawn": 5,
+          "lost": 10,
+          "gf": 4,
+          "ga": 18,
+          "points": 14
+        },
+        {
+          "position": 6,
+          "clubId": "sev",
+          "played": 15,
+          "won": 2,
+          "drawn": 6,
+          "lost": 7,
+          "gf": 2,
+          "ga": 8,
+          "points": 12
+        },
+        {
+          "position": 7,
+          "clubId": "ath",
+          "played": 14,
+          "won": 2,
+          "drawn": 5,
+          "lost": 7,
+          "gf": 5,
+          "ga": 10,
+          "points": 11
+        },
+        {
+          "position": 8,
+          "clubId": "vil",
+          "played": 11,
+          "won": 1,
+          "drawn": 7,
+          "lost": 3,
+          "gf": 2,
+          "ga": 7,
+          "points": 10
+        },
+        {
+          "position": 9,
+          "clubId": "bet",
+          "played": 13,
+          "won": 1,
+          "drawn": 5,
+          "lost": 7,
+          "gf": 2,
+          "ga": 12,
+          "points": 8
+        }
+      ]
+    },
+    "seriea": {
+      "competitionId": "seriea",
+      "name": "Serie A",
+      "played": 76,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "int",
+          "played": 17,
+          "won": 12,
+          "drawn": 5,
+          "lost": 0,
+          "gf": 19,
+          "ga": 0,
+          "points": 41
+        },
+        {
+          "position": 2,
+          "clubId": "juv",
+          "played": 20,
+          "won": 7,
+          "drawn": 8,
+          "lost": 5,
+          "gf": 10,
+          "ga": 6,
+          "points": 29
+        },
+        {
+          "position": 3,
+          "clubId": "nap",
+          "played": 16,
+          "won": 7,
+          "drawn": 7,
+          "lost": 2,
+          "gf": 8,
+          "ga": 3,
+          "points": 28
+        },
+        {
+          "position": 4,
+          "clubId": "mil",
+          "played": 15,
+          "won": 6,
+          "drawn": 6,
+          "lost": 3,
+          "gf": 10,
+          "ga": 3,
+          "points": 24
+        },
+        {
+          "position": 5,
+          "clubId": "rom",
+          "played": 19,
+          "won": 5,
+          "drawn": 7,
+          "lost": 7,
+          "gf": 8,
+          "ga": 10,
+          "points": 22
+        },
+        {
+          "position": 6,
+          "clubId": "ata",
+          "played": 19,
+          "won": 4,
+          "drawn": 7,
+          "lost": 8,
+          "gf": 7,
+          "ga": 11,
+          "points": 19
+        },
+        {
+          "position": 7,
+          "clubId": "fio",
+          "played": 17,
+          "won": 3,
+          "drawn": 6,
+          "lost": 8,
+          "gf": 4,
+          "ga": 14,
+          "points": 15
+        },
+        {
+          "position": 8,
+          "clubId": "laz",
+          "played": 14,
+          "won": 1,
+          "drawn": 10,
+          "lost": 3,
+          "gf": 1,
+          "ga": 4,
+          "points": 13
+        },
+        {
+          "position": 9,
+          "clubId": "tor",
+          "played": 15,
+          "won": 1,
+          "drawn": 4,
+          "lost": 10,
+          "gf": 1,
+          "ga": 17,
+          "points": 7
+        }
+      ]
+    },
+    "bundes": {
+      "competitionId": "bundes",
+      "name": "Bundesliga",
+      "played": 69,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "fcb",
+          "played": 16,
+          "won": 13,
+          "drawn": 3,
+          "lost": 0,
+          "gf": 18,
+          "ga": 1,
+          "points": 42
+        },
+        {
+          "position": 2,
+          "clubId": "bvb",
+          "played": 18,
+          "won": 8,
+          "drawn": 7,
+          "lost": 3,
+          "gf": 11,
+          "ga": 3,
+          "points": 31
+        },
+        {
+          "position": 3,
+          "clubId": "b04",
+          "played": 16,
+          "won": 6,
+          "drawn": 6,
+          "lost": 4,
+          "gf": 10,
+          "ga": 6,
+          "points": 24
+        },
+        {
+          "position": 4,
+          "clubId": "sge",
+          "played": 16,
+          "won": 6,
+          "drawn": 4,
+          "lost": 6,
+          "gf": 6,
+          "ga": 9,
+          "points": 22
+        },
+        {
+          "position": 5,
+          "clubId": "rbl",
+          "played": 15,
+          "won": 5,
+          "drawn": 5,
+          "lost": 5,
+          "gf": 5,
+          "ga": 5,
+          "points": 20
+        },
+        {
+          "position": 6,
+          "clubId": "vfb",
+          "played": 16,
+          "won": 3,
+          "drawn": 6,
+          "lost": 7,
+          "gf": 5,
+          "ga": 11,
+          "points": 15
+        },
+        {
+          "position": 7,
+          "clubId": "wob",
+          "played": 15,
+          "won": 2,
+          "drawn": 7,
+          "lost": 6,
+          "gf": 4,
+          "ga": 9,
+          "points": 13
+        },
+        {
+          "position": 8,
+          "clubId": "fcu",
+          "played": 12,
+          "won": 3,
+          "drawn": 3,
+          "lost": 6,
+          "gf": 3,
+          "ga": 7,
+          "points": 12
+        },
+        {
+          "position": 9,
+          "clubId": "bmg",
+          "played": 14,
+          "won": 0,
+          "drawn": 5,
+          "lost": 9,
+          "gf": 1,
+          "ga": 12,
+          "points": 5
+        }
+      ]
+    },
+    "ligue1": {
+      "competitionId": "ligue1",
+      "name": "Ligue 1",
+      "played": 68,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "psg",
+          "played": 12,
+          "won": 11,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 17,
+          "ga": 0,
+          "points": 34
+        },
+        {
+          "position": 2,
+          "clubId": "asm",
+          "played": 17,
+          "won": 8,
+          "drawn": 9,
+          "lost": 0,
+          "gf": 16,
+          "ga": 2,
+          "points": 33
+        },
+        {
+          "position": 3,
+          "clubId": "ol",
+          "played": 18,
+          "won": 7,
+          "drawn": 5,
+          "lost": 6,
+          "gf": 9,
+          "ga": 7,
+          "points": 26
+        },
+        {
+          "position": 4,
+          "clubId": "losc",
+          "played": 13,
+          "won": 4,
+          "drawn": 5,
+          "lost": 4,
+          "gf": 6,
+          "ga": 6,
+          "points": 17
+        },
+        {
+          "position": 5,
+          "clubId": "ren",
+          "played": 11,
+          "won": 4,
+          "drawn": 4,
+          "lost": 3,
+          "gf": 6,
+          "ga": 6,
+          "points": 16
+        },
+        {
+          "position": 6,
+          "clubId": "om",
+          "played": 15,
+          "won": 4,
+          "drawn": 4,
+          "lost": 7,
+          "gf": 7,
+          "ga": 10,
+          "points": 16
+        },
+        {
+          "position": 7,
+          "clubId": "nic",
+          "played": 15,
+          "won": 4,
+          "drawn": 4,
+          "lost": 7,
+          "gf": 5,
+          "ga": 9,
+          "points": 16
+        },
+        {
+          "position": 8,
+          "clubId": "str",
+          "played": 20,
+          "won": 2,
+          "drawn": 7,
+          "lost": 11,
+          "gf": 2,
+          "ga": 20,
+          "points": 13
+        },
+        {
+          "position": 9,
+          "clubId": "rcl",
+          "played": 15,
+          "won": 1,
+          "drawn": 7,
+          "lost": 7,
+          "gf": 2,
+          "ga": 10,
+          "points": 10
+        }
+      ]
+    },
+    "eredivisie": {
+      "competitionId": "eredivisie",
+      "name": "Eredivisie",
+      "played": 4,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "psv",
+          "played": 2,
+          "won": 1,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 1,
+          "ga": 0,
+          "points": 4
+        },
+        {
+          "position": 2,
+          "clubId": "fey",
+          "played": 3,
+          "won": 1,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 1,
+          "ga": 1,
+          "points": 4
+        },
+        {
+          "position": 3,
+          "clubId": "aja",
+          "played": 3,
+          "won": 1,
+          "drawn": 0,
+          "lost": 2,
+          "gf": 1,
+          "ga": 2,
+          "points": 3
+        }
+      ]
+    },
+    "liga1": {
+      "competitionId": "liga1",
+      "name": "Primeira Liga",
+      "played": 5,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "scp",
+          "played": 4,
+          "won": 2,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 2,
+          "ga": 2,
+          "points": 7
+        },
+        {
+          "position": 2,
+          "clubId": "slb",
+          "played": 3,
+          "won": 1,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 2,
+          "ga": 1,
+          "points": 4
+        },
+        {
+          "position": 3,
+          "clubId": "por",
+          "played": 3,
+          "won": 0,
+          "drawn": 2,
+          "lost": 1,
+          "gf": 0,
+          "ga": 1,
+          "points": 2
+        }
+      ]
+    },
+    "spl": {
+      "competitionId": "spl",
+      "name": "Saudi Pro League",
+      "played": 3,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "hil",
+          "played": 2,
+          "won": 2,
+          "drawn": 0,
+          "lost": 0,
+          "gf": 3,
+          "ga": 0,
+          "points": 6
+        },
+        {
+          "position": 2,
+          "clubId": "ahl",
+          "played": 1,
+          "won": 0,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 0,
+          "ga": 0,
+          "points": 1
+        },
+        {
+          "position": 3,
+          "clubId": "nsr",
+          "played": 3,
+          "won": 0,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 0,
+          "ga": 3,
+          "points": 1
+        }
+      ]
+    },
+    "mls": {
+      "competitionId": "mls",
+      "name": "Major League Soccer",
+      "played": 17,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "mia",
+          "played": 6,
+          "won": 3,
+          "drawn": 3,
+          "lost": 0,
+          "gf": 3,
+          "ga": 0,
+          "points": 12
+        },
+        {
+          "position": 2,
+          "clubId": "sea",
+          "played": 9,
+          "won": 2,
+          "drawn": 6,
+          "lost": 1,
+          "gf": 4,
+          "ga": 2,
+          "points": 12
+        },
+        {
+          "position": 3,
+          "clubId": "atl",
+          "played": 7,
+          "won": 1,
+          "drawn": 4,
+          "lost": 2,
+          "gf": 2,
+          "ga": 3,
+          "points": 7
+        },
+        {
+          "position": 4,
+          "clubId": "nyrb",
+          "played": 8,
+          "won": 1,
+          "drawn": 3,
+          "lost": 4,
+          "gf": 1,
+          "ga": 5,
+          "points": 6
+        },
+        {
+          "position": 5,
+          "clubId": "lag",
+          "played": 4,
+          "won": 0,
+          "drawn": 4,
+          "lost": 0,
+          "gf": 0,
+          "ga": 0,
+          "points": 4
+        }
+      ]
+    },
+    "brasileirao": {
+      "competitionId": "brasileirao",
+      "name": "Brasileirão Série A",
+      "played": 16,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "pal",
+          "played": 7,
+          "won": 4,
+          "drawn": 2,
+          "lost": 1,
+          "gf": 5,
+          "ga": 1,
+          "points": 14
+        },
+        {
+          "position": 2,
+          "clubId": "sao",
+          "played": 8,
+          "won": 3,
+          "drawn": 4,
+          "lost": 1,
+          "gf": 3,
+          "ga": 1,
+          "points": 13
+        },
+        {
+          "position": 3,
+          "clubId": "san",
+          "played": 7,
+          "won": 1,
+          "drawn": 3,
+          "lost": 3,
+          "gf": 1,
+          "ga": 4,
+          "points": 6
+        },
+        {
+          "position": 4,
+          "clubId": "cor",
+          "played": 7,
+          "won": 0,
+          "drawn": 5,
+          "lost": 2,
+          "gf": 0,
+          "ga": 3,
+          "points": 5
+        },
+        {
+          "position": 5,
+          "clubId": "fla",
+          "played": 3,
+          "won": 1,
+          "drawn": 0,
+          "lost": 2,
+          "gf": 2,
+          "ga": 2,
+          "points": 3
+        }
+      ]
+    },
+    "jleague": {
+      "competitionId": "jleague",
+      "name": "J1 League",
+      "played": 12,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "kaw",
+          "played": 6,
+          "won": 4,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 6,
+          "ga": 1,
+          "points": 13
+        },
+        {
+          "position": 2,
+          "clubId": "yfm",
+          "played": 6,
+          "won": 3,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 3,
+          "ga": 3,
+          "points": 10
+        },
+        {
+          "position": 3,
+          "clubId": "vis",
+          "played": 7,
+          "won": 1,
+          "drawn": 3,
+          "lost": 3,
+          "gf": 1,
+          "ga": 3,
+          "points": 6
+        },
+        {
+          "position": 4,
+          "clubId": "urd",
+          "played": 5,
+          "won": 0,
+          "drawn": 3,
+          "lost": 2,
+          "gf": 0,
+          "ga": 3,
+          "points": 3
+        }
+      ]
+    },
+    "superlig": {
+      "competitionId": "superlig",
+      "name": "Süper Lig",
+      "played": 10,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "fen",
+          "played": 5,
+          "won": 1,
+          "drawn": 4,
+          "lost": 0,
+          "gf": 2,
+          "ga": 0,
+          "points": 7
+        },
+        {
+          "position": 2,
+          "clubId": "bes",
+          "played": 4,
+          "won": 1,
+          "drawn": 3,
+          "lost": 0,
+          "gf": 2,
+          "ga": 0,
+          "points": 6
+        },
+        {
+          "position": 3,
+          "clubId": "gal",
+          "played": 5,
+          "won": 1,
+          "drawn": 3,
+          "lost": 1,
+          "gf": 2,
+          "ga": 2,
+          "points": 6
+        },
+        {
+          "position": 4,
+          "clubId": "tra",
+          "played": 6,
+          "won": 0,
+          "drawn": 4,
+          "lost": 2,
+          "gf": 0,
+          "ga": 4,
+          "points": 4
+        }
+      ]
+    },
+    "ucl": {
+      "competitionId": "ucl",
+      "name": "UEFA Champions League",
+      "played": 465,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "mci",
+          "played": 50,
+          "won": 28,
+          "drawn": 16,
+          "lost": 6,
+          "gf": 46,
+          "ga": 7,
+          "points": 100
+        },
+        {
+          "position": 2,
+          "clubId": "liv",
+          "played": 46,
+          "won": 22,
+          "drawn": 20,
+          "lost": 4,
+          "gf": 31,
+          "ga": 5,
+          "points": 86
+        },
+        {
+          "position": 3,
+          "clubId": "int",
+          "played": 41,
+          "won": 21,
+          "drawn": 16,
+          "lost": 4,
+          "gf": 33,
+          "ga": 9,
+          "points": 79
+        },
+        {
+          "position": 4,
+          "clubId": "rma",
+          "played": 41,
+          "won": 21,
+          "drawn": 15,
+          "lost": 5,
+          "gf": 30,
+          "ga": 7,
+          "points": 78
+        },
+        {
+          "position": 5,
+          "clubId": "ars",
+          "played": 44,
+          "won": 18,
+          "drawn": 18,
+          "lost": 8,
+          "gf": 27,
+          "ga": 13,
+          "points": 72
+        },
+        {
+          "position": 6,
+          "clubId": "mil",
+          "played": 42,
+          "won": 19,
+          "drawn": 14,
+          "lost": 9,
+          "gf": 24,
+          "ga": 13,
+          "points": 71
+        },
+        {
+          "position": 7,
+          "clubId": "fcb",
+          "played": 39,
+          "won": 15,
+          "drawn": 20,
+          "lost": 4,
+          "gf": 24,
+          "ga": 5,
+          "points": 65
+        },
+        {
+          "position": 8,
+          "clubId": "atm",
+          "played": 40,
+          "won": 15,
+          "drawn": 15,
+          "lost": 10,
+          "gf": 21,
+          "ga": 14,
+          "points": 60
+        },
+        {
+          "position": 9,
+          "clubId": "juv",
+          "played": 50,
+          "won": 14,
+          "drawn": 17,
+          "lost": 19,
+          "gf": 23,
+          "ga": 25,
+          "points": 59
+        },
+        {
+          "position": 10,
+          "clubId": "psg",
+          "played": 42,
+          "won": 12,
+          "drawn": 20,
+          "lost": 10,
+          "gf": 19,
+          "ga": 18,
+          "points": 56
+        },
+        {
+          "position": 11,
+          "clubId": "che",
+          "played": 46,
+          "won": 13,
+          "drawn": 17,
+          "lost": 16,
+          "gf": 17,
+          "ga": 27,
+          "points": 56
+        },
+        {
+          "position": 12,
+          "clubId": "bvb",
+          "played": 44,
+          "won": 13,
+          "drawn": 15,
+          "lost": 16,
+          "gf": 16,
+          "ga": 19,
+          "points": 54
+        },
+        {
+          "position": 13,
+          "clubId": "bar",
+          "played": 36,
+          "won": 12,
+          "drawn": 15,
+          "lost": 9,
+          "gf": 16,
+          "ga": 12,
+          "points": 51
+        },
+        {
+          "position": 14,
+          "clubId": "b04",
+          "played": 43,
+          "won": 10,
+          "drawn": 18,
+          "lost": 15,
+          "gf": 14,
+          "ga": 21,
+          "points": 48
+        },
+        {
+          "position": 15,
+          "clubId": "psv",
+          "played": 43,
+          "won": 8,
+          "drawn": 21,
+          "lost": 14,
+          "gf": 10,
+          "ga": 21,
+          "points": 45
+        },
+        {
+          "position": 16,
+          "clubId": "asm",
+          "played": 41,
+          "won": 9,
+          "drawn": 15,
+          "lost": 17,
+          "gf": 15,
+          "ga": 27,
+          "points": 42
+        },
+        {
+          "position": 17,
+          "clubId": "slb",
+          "played": 44,
+          "won": 7,
+          "drawn": 19,
+          "lost": 18,
+          "gf": 10,
+          "ga": 28,
+          "points": 40
+        },
+        {
+          "position": 18,
+          "clubId": "nap",
+          "played": 41,
+          "won": 7,
+          "drawn": 16,
+          "lost": 18,
+          "gf": 10,
+          "ga": 22,
+          "points": 37
+        },
+        {
+          "position": 19,
+          "clubId": "rbl",
+          "played": 43,
+          "won": 6,
+          "drawn": 19,
+          "lost": 18,
+          "gf": 8,
+          "ga": 25,
+          "points": 37
+        },
+        {
+          "position": 20,
+          "clubId": "om",
+          "played": 38,
+          "won": 4,
+          "drawn": 15,
+          "lost": 19,
+          "gf": 5,
+          "ga": 28,
+          "points": 27
+        },
+        {
+          "position": 21,
+          "clubId": "rso",
+          "played": 38,
+          "won": 4,
+          "drawn": 14,
+          "lost": 20,
+          "gf": 7,
+          "ga": 32,
+          "points": 26
+        },
+        {
+          "position": 22,
+          "clubId": "losc",
+          "played": 38,
+          "won": 3,
+          "drawn": 13,
+          "lost": 22,
+          "gf": 3,
+          "ga": 31,
+          "points": 22
+        }
+      ]
+    },
+    "uel": {
+      "competitionId": "uel",
+      "name": "UEFA Europa League",
+      "played": 105,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "mun",
+          "played": 21,
+          "won": 10,
+          "drawn": 9,
+          "lost": 2,
+          "gf": 16,
+          "ga": 5,
+          "points": 39
+        },
+        {
+          "position": 2,
+          "clubId": "tot",
+          "played": 20,
+          "won": 9,
+          "drawn": 8,
+          "lost": 3,
+          "gf": 14,
+          "ga": 4,
+          "points": 35
+        },
+        {
+          "position": 3,
+          "clubId": "ren",
+          "played": 20,
+          "won": 8,
+          "drawn": 8,
+          "lost": 4,
+          "gf": 12,
+          "ga": 6,
+          "points": 32
+        },
+        {
+          "position": 4,
+          "clubId": "rom",
+          "played": 20,
+          "won": 7,
+          "drawn": 8,
+          "lost": 5,
+          "gf": 10,
+          "ga": 7,
+          "points": 29
+        },
+        {
+          "position": 5,
+          "clubId": "ata",
+          "played": 22,
+          "won": 6,
+          "drawn": 10,
+          "lost": 6,
+          "gf": 10,
+          "ga": 9,
+          "points": 28
+        },
+        {
+          "position": 6,
+          "clubId": "vil",
+          "played": 18,
+          "won": 4,
+          "drawn": 11,
+          "lost": 3,
+          "gf": 7,
+          "ga": 6,
+          "points": 23
+        },
+        {
+          "position": 7,
+          "clubId": "ol",
+          "played": 21,
+          "won": 6,
+          "drawn": 5,
+          "lost": 10,
+          "gf": 8,
+          "ga": 14,
+          "points": 23
+        },
+        {
+          "position": 8,
+          "clubId": "ath",
+          "played": 15,
+          "won": 5,
+          "drawn": 5,
+          "lost": 5,
+          "gf": 5,
+          "ga": 8,
+          "points": 20
+        },
+        {
+          "position": 9,
+          "clubId": "vfb",
+          "played": 17,
+          "won": 4,
+          "drawn": 5,
+          "lost": 8,
+          "gf": 4,
+          "ga": 11,
+          "points": 17
+        },
+        {
+          "position": 10,
+          "clubId": "fen",
+          "played": 22,
+          "won": 3,
+          "drawn": 8,
+          "lost": 11,
+          "gf": 4,
+          "ga": 14,
+          "points": 17
+        },
+        {
+          "position": 11,
+          "clubId": "sge",
+          "played": 14,
+          "won": 3,
+          "drawn": 3,
+          "lost": 8,
+          "gf": 4,
+          "ga": 10,
+          "points": 12
+        }
+      ]
+    },
+    "libertadores": {
+      "competitionId": "libertadores",
+      "name": "Copa Libertadores",
+      "played": 16,
+      "rows": [
+        {
+          "position": 1,
+          "clubId": "fla",
+          "played": 9,
+          "won": 4,
+          "drawn": 3,
+          "lost": 2,
+          "gf": 6,
+          "ga": 2,
+          "points": 15
+        },
+        {
+          "position": 2,
+          "clubId": "sao",
+          "played": 8,
+          "won": 3,
+          "drawn": 3,
+          "lost": 2,
+          "gf": 4,
+          "ga": 3,
+          "points": 12
+        },
+        {
+          "position": 3,
+          "clubId": "pal",
+          "played": 7,
+          "won": 2,
+          "drawn": 5,
+          "lost": 0,
+          "gf": 3,
+          "ga": 0,
+          "points": 11
+        },
+        {
+          "position": 4,
+          "clubId": "cor",
+          "played": 8,
+          "won": 0,
+          "drawn": 3,
+          "lost": 5,
+          "gf": 0,
+          "ga": 8,
+          "points": 3
+        }
+      ]
+    }
+  }
+}

@@ -2,9 +2,11 @@
 //
 // proof-contrast.mjs (M1068) asks whether the reader can SEE the text. This gate asks whether the
 // motion a reader cannot opt out of is SAFE, and whether the decoration the reader cannot perceive
-// is honestly hidden from the accessibility tree. It parses the real `src/globals.css` and the real
-// `features/landing/Landing.tsx`; it needs no browser. Five contracts, each with a planted arm so
-// widening a threshold can never quietly blind the gate:
+// is honestly hidden from the accessibility tree. It parses the real `src/globals.css` and every
+// real TSX screen that paints self-closing `fo-*` decoration (the landing at M1069, the dashboard
+// at M1073, and any screen a later milestone adds — discovered, never hardcoded); it needs no
+// browser. Six contracts, each with a planted arm so widening a threshold can never quietly blind
+// the gate:
 //
 //   • photosensitivity (WCAG 2.3.1): every `infinite` animation runs SLOWER than 3 flashes/second,
 //     i.e. its period is >= 333ms. A 0.2s pulse (5Hz) is a seizure risk and must be charged.
@@ -31,8 +33,33 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CSS = readFileSync(resolve(root, "src/globals.css"), "utf8");
-const LANDING = readFileSync(resolve(root, "features/landing/Landing.tsx"), "utf8");
 const clean = CSS.replace(/\/\*[\s\S]*?\*\//g, ""); // strip comments: a commented-out glow reads nothing
+
+// M1073: discover EVERY screen that paints self-closing `fo-*` decoration. M1069 hardcoded the
+// landing; when the dashboard inherited the cinematic hero, its live-dot escaped the gate because
+// nothing re-pointed the reader. Discovery makes a NEW decorated screen enter this census the
+// moment it is written, with no edit to this file — that is the whole point of the gate.
+const SKIP = new Set(["node_modules", "dist", ".git", "vendor", "test-results"]);
+const SELF_CLOSING_RE = /<([A-Za-z][\w.]*)\b([^>]*?)\/>/g;
+const foDecorIn = (src) =>
+  [...src.matchAll(SELF_CLOSING_RE)]
+    .map((m) => ({ tag: m[1], attrs: m[2], fo: m[2].match(/fo-[a-z][\w-]*/g) ?? [] }))
+    .filter((e) => e.fo.length > 0);
+const walk = (dir) => {
+  let ents; try { ents = readdirSync(dir, { withFileTypes: true }); } catch { return []; }
+  return ents.flatMap((e) => {
+    const p = resolve(dir, e.name);
+    if (e.isDirectory()) return SKIP.has(e.name) ? [] : walk(p);
+    return /\.(ts|tsx|css)$/.test(e.name) ? [p] : [];
+  });
+};
+const APP_DIRS = ["src", "features", "components", "ui", "lib", "domain", "data", "i18n"];
+const decorScreens = APP_DIRS.flatMap((d) => walk(resolve(root, d)))
+  .filter((p) => p.endsWith(".tsx"))
+  .map((p) => ({ file: p, src: readFileSync(p, "utf8") }))
+  .filter((f) => foDecorIn(f.src).length > 0);
+const CINEMATIC = decorScreens.map((f) => f.src).join("\n"); // every decorated screen, one census
+const SCREEN_NAMES = decorScreens.map((f) => f.file.replace(root + "\\", "").replace(root + "/", "")).join(", ");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -108,23 +135,45 @@ ok(`the reduced-motion detector refuses ${weakRefused}/${RM_WEAK.length} planted
   weakRefused === RM_WEAK.length && rmDetector(RM_GOOD) && rmArmsOn === 3 && RM_UNIVERSAL);
 
 // --- 3 · decoration/meaning separation: hidden decor, visible words ----------------------------
-const SELF_CLOSING = [...LANDING.matchAll(/<([A-Za-z][\w.]*)\b([^>]*?)\/>/g)];
-const decor = SELF_CLOSING.map((m) => ({ tag: m[1], attrs: m[2], fo: m[2].match(/fo-[a-z][\w-]*/g) ?? [] })).filter((e) => e.fo.length > 0);
+// M1073: the census spans every discovered decorated screen, not one hardcoded hero.
+const decor = decorScreens.flatMap((f) => foDecorIn(f.src));
 const decorUnhidden = decor.filter((e) => !/\baria-hidden\b/.test(e.attrs)).map((e) => e.tag + "[" + e.fo.join(" ") + "]");
-ok(`all ${decor.length - decorUnhidden.length}/${decor.length} self-closing fo-* decorations are aria-hidden to the tree, ${decorUnhidden.length} exposed: ${decorUnhidden.join(", ") || "NONE"}`,
-  decor.length >= 6 && decorUnhidden.length === 0);
+ok(`all ${decor.length - decorUnhidden.length}/${decor.length} self-closing fo-* decorations across ${decorScreens.length} screens (${SCREEN_NAMES}) are aria-hidden to the tree, ${decorUnhidden.length} exposed: ${decorUnhidden.join(", ") || "NONE"}`,
+  decorScreens.length >= 2 && decor.length >= 10 && decorUnhidden.length === 0);
 // Every aria-hidden element keeps meaning in attributes alone: no t() message is written into one.
-const hiddenTags = [...LANDING.matchAll(/<[A-Za-z][\w.]*\b[^>]*\baria-hidden\b[^>]*\/?>/g)].map((m) => m[0]);
+const hiddenTags = [...CINEMATIC.matchAll(/<[A-Za-z][\w.]*\b[^>]*\baria-hidden\b[^>]*\/?>/g)].map((m) => m[0]);
 const hiddenWithWords = hiddenTags.filter((tag) => /\bt\s*\(/.test(tag)).length;
-ok(`all ${hiddenTags.length} aria-hidden tags carry their meaning in class/geometry alone with ${hiddenWithWords} swallowing a t() message in an attribute`,
-  hiddenTags.length >= 6 && hiddenWithWords === 0);
+ok(`all ${hiddenTags.length} aria-hidden tags across the decorated surfaces carry their meaning in class/geometry alone with ${hiddenWithWords} swallowing a t() message in an attribute`,
+  hiddenTags.length >= 8 && hiddenWithWords === 0);
 // Planted: strip an aria-hidden off an orb, and plant a t() inside a hidden span; both must charge.
 const plantedExposed = '<div className="fo-orb fo-orb-lime" />';
 const plantedSwallowBody = `{t("a.hidden.word")}`;
 const stripCharged = !/\baria-hidden\b/.test(plantedExposed) && /fo-orb/.test(plantedExposed);
 const swallowCharged = /\bt\s*\(/.test(plantedSwallowBody);
 ok(`the separation detector charges ${stripCharged ? 1 : 0}+${swallowCharged ? 1 : 0}/2 planted defects (an exposed orb, a swallowed message) against ${decor.length} shipped decor all hidden`,
-  stripCharged && swallowCharged && decor.length >= 6);
+  stripCharged && swallowCharged && decor.length >= 10);
+
+// M1073 · no blind screens: a BRAND-NEW decorated TSX that no human re-pointed the reader to must
+// still enter the census and be charged if its decor is exposed. We plant the source of such a
+// screen in memory, run the very same discovery+separation reader over it, and require a charge.
+// This is the defect class the old hardcoded LANDING reader had: the dashboard inherited the hero
+// and its live-dot escaped for a whole milestone. The gate must be blind to NO screen, present or
+// future. The positive pins come from the shipped population (>= 2 screens, >= 10 decor).
+const plantedFutureScreen = '<div className="relative"><div aria-hidden className="fo-orb fo-orb-lime h-60 w-60" /><div className="fo-grid absolute inset-0" /></div>';
+const plantedFutureDecor = foDecorIn(plantedFutureScreen);
+const plantedFutureUnhidden = plantedFutureDecor.filter((e) => !/\baria-hidden\b/.test(e.attrs));
+ok(`the discoverer reads a planted future screen's ${plantedFutureDecor.length} decor and charges its ${plantedFutureUnhidden.length} exposed one (${plantedFutureDecor.length >= 2 && plantedFutureUnhidden.length === 1 ? "CHARGED" : "BLIND"}) — no decorated screen escapes the ${decorScreens.length}-screen census`,
+  plantedFutureDecor.length >= 2 && plantedFutureUnhidden.length === 1 && decorScreens.length >= 2);
+// M1073 · the real regression that motivated discovery: a strip an aria-hidden off a shipped orb
+// must turn that screen from clean to exposed. Re-run the separation reader on the real sources
+// with one attribute removed; it must go red, proving the clean green is not a vacuous pass.
+const shippedOrb = "fo-orb fo-orb-lime";
+const withOrbHidden = `<div aria-hidden className="${shippedOrb} h-60 w-60" />`;
+const withOrbExposed = `<div className="${shippedOrb} h-60 w-60" />`;
+const regressionCharged = foDecorIn(withOrbHidden).filter((e) => !/\baria-hidden\b/.test(e.attrs)).length === 0
+  && foDecorIn(withOrbExposed).filter((e) => !/\baria-hidden\b/.test(e.attrs)).length === 1;
+ok(`stripping aria-hidden off a shipped orb turns the separation reader from clean to ${foDecorIn(withOrbExposed).filter((e) => !/\baria-hidden\b/.test(e.attrs)).length} exposed (${regressionCharged ? "CHARGED" : "BLIND"}) against ${decor.length} clean shipped decor`,
+  regressionCharged && decor.length >= 10 && decorUnhidden.length === 0);
 
 // --- 4 · compositor hygiene: no persistent will-change, yet the hover still animates ------------
 const willChangeRules = [...clean.matchAll(/([^{}]+)\{([^{}]*\bwill-change\s*:[^{}]*)\}/g)].map((m) => m[1].trim().replace(/\s+/g, " ") + "=" + (m[2].match(/will-change\s*:\s*([^;}]+)/) || [])[1]?.trim());
@@ -146,23 +195,19 @@ const declaredFo = new Set();
 for (const m of clean.matchAll(/\.(fo-[a-z][\w-]*)/g)) declaredFo.add(m[1]);
 for (const m of clean.matchAll(/@utility\s+(fo-[a-z][\w-]*)/g)) declaredFo.add(m[1]);
 for (const m of clean.matchAll(/@keyframes\s+(fo-[a-z][\w-]*)/g)) declaredFo.add(m[1]);
-const SKIP = new Set(["node_modules", "dist", ".git", "vendor", "test-results"]);
-const code = [];
-const walk = (dir) => {
-  let ents; try { ents = readdirSync(dir, { withFileTypes: true }); } catch { return; }
-  for (const e of ents) {
-    const p = resolve(dir, e.name);
-    if (e.isDirectory()) { if (!SKIP.has(e.name)) walk(p); }
-    else if (/\.(ts|tsx|css)$/.test(e.name)) code.push(readFileSync(p, "utf8"));
-  }
-};
-for (const d of ["src", "features", "components", "ui"]) walk(resolve(root, d));
-const allCode = [...code, CSS, LANDING].join("\n");
+const code = APP_DIRS.flatMap((d) => walk(resolve(root, d))).map((p) => readFileSync(p, "utf8"));
+const allCode = [...code, CSS, CINEMATIC].join("\n");
 const unreadFo = [...declaredFo].filter((name) => (allCode.match(new RegExp("(?<![\\w-])" + name + "(?![\\w-])", "g")) ?? []).length <= 1);
 ok(`all ${declaredFo.size} declared fo-* names have a reader past their own definition, ${unreadFo.length} unread: ${unreadFo.join(", ") || "NONE"}`,
   declaredFo.size >= 12 && unreadFo.length === 0);
+// M1073: the census must read a MULTI-screen cinematic surface, not one hero. The reader count
+// floor rises with the dashboard (1 -> 2 screens, 6 -> 10 decor), and every discovered screen must
+// contribute at least one decor — an empty/coincidental match cannot inflate the population.
+const perScreenDecor = decorScreens.map((f) => foDecorIn(f.src).length);
+ok(`the motion census reads ${decorScreens.length} decorated screens (${SCREEN_NAMES}) each contributing decor (${perScreenDecor.join("+")}=${decor.length}), above the 2-screen / 10-decor floor`,
+  decorScreens.length >= 2 && perScreenDecor.length >= 2 && perScreenDecor.every((n) => n >= 1) && decor.length >= 10);
 ok(`the motion census read a real cinematic surface — ${KEYFRAMES.length} keyframes, ${INFINITE.length} infinite, ${ANIMS.length} animations, ${decor.length} decor elements, ${declaredFo.size} fo-* names, each above its floor`,
-  KEYFRAMES.length >= 5 && INFINITE.length >= 5 && ANIMS.length >= 6 && decor.length >= 6 && declaredFo.size >= 12);
+  KEYFRAMES.length >= 5 && INFINITE.length >= 5 && ANIMS.length >= 6 && decor.length >= 10 && declaredFo.size >= 12);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);

@@ -408,7 +408,7 @@ for (const key of [...screenKeys, "nav.platform"]) {
   for (const id of localeIds) if (!(key in DICTIONARIES[id])) missingKeys.push(`${id}:${key}`);
 }
 ok(`every key the atlas reads exists in all ${localeIds.length} locales (${screenKeys.length} screen keys + nav.platform; ${missingKeys.join(" / ") || "clean"})`,
-  localeIds.length === 3 && screenKeys.length === 55 && missingKeys.length === 0);
+  localeIds.length === 3 && screenKeys.length === 57 && missingKeys.length === 0);
 ok("the interpolating rows hand their placeholders to every locale",
   localeIds.every((id) => /\{n\}/.test(DICTIONARIES[id]["platform.portLine"]) &&
     /\{n\}/.test(DICTIONARIES[id]["platform.stripPrefix"]) &&
@@ -449,6 +449,40 @@ ok("compose brings up Redis for the cache tier and the cache service waits on it
   composeBlock(compose, "redis").includes("image: redis:7-alpine") &&
   composeBlock(compose, "redis").includes('"6379:6379"') &&
   composeBlock(compose, "cache-service").includes("- redis"));
+
+// ---- 9b · the tables read-through (M1075): the second frozen resource the cache fronts -----------
+ok("the cache tier fronts league-tables.json the same way it fronts league-summary.json (descriptor-adjacent: yml, Java all carry the tables resource)",
+  readYml("services/cache-service/src/main/resources/application.yml").includes("tables-resource: league-tables.json") &&
+  readYml("services/cache-service/src/main/resources/application.yml").includes("tables-ttl-seconds: 60") &&
+  cacheSrc.includes("LeagueTablesCacheService") &&
+  cacheSrc.includes("/cache/league/table") &&
+  cacheSrc.includes("listJson") &&
+  cacheSrc.includes("readTablesJson") &&
+  cacheSrc.includes("tables-resource") &&
+  cacheSrc.length > 0);
+
+// ---- descriptor REDIS pin: the tables resource the atlas prints and the proofs pin --------------
+// REDIS.tablesResource must be the resource the cache service reads via its @Value, so the two
+// sides agree at declaration time — drift here reddens the gate exactly like the summary pin.
+const CACHE_TABLES_RES = "services/cache-service/src/main/resources/league-tables.json";
+const LEAGUE_TABLES_RES = "services/league-service/src/main/resources/league-tables.json";
+ok("the tables contract is byte-identical in both services — same frozen league-tables.json",
+  has(CACHE_TABLES_RES) && has(LEAGUE_TABLES_RES) &&
+  read(CACHE_TABLES_RES) === read(LEAGUE_TABLES_RES));
+const { REDIS } = await server.ssrLoadModule("/domain/platform.ts");
+ok("the descriptor names BOTH frozen resources the cache fronts (summary + tables), and the atlas renders both",
+  REDIS.contractResource === "league-summary.json" && REDIS.tablesResource === "league-tables.json" &&
+  read("features/platform/PlatformAtlas.tsx").includes("tablesResource") &&
+  read("features/platform/PlatformAtlas.tsx").includes("tablesTtlSeconds") &&
+  read("features/platform/PlatformAtlas.tsx").includes("platform.redisTablesLine") &&
+  read("features/platform/PlatformAtlas.tsx").includes("platform.redisTablesBoundary"));
+for (const localeId of localeIds) {
+  ok(`the tables read-through names the same resource and ttl in ${localeId}`,
+    /\{resource\}/.test(DICTIONARIES[localeId]["platform.redisTablesLine"]) &&
+    /\{ttl\}/.test(DICTIONARIES[localeId]["platform.redisTablesLine"]) &&
+    /footballos:league:tables/.test(DICTIONARIES[localeId]["platform.redisTablesLine"]) &&
+    typeof DICTIONARIES[localeId]["platform.redisTablesBoundary"] === "string" && DICTIONARIES[localeId]["platform.redisTablesBoundary"].length > 10);
+}
 
 // ---- 10 · the messaging tier and its one out-of-reactor broker (RabbitMQ) -----------------
 // domain/queue.ts holds the NUMBERS; the Java policy defaults and the yml must agree with it.

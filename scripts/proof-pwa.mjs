@@ -219,7 +219,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // pin 618 -> 628, baseline re-recorded in the same commit (JS 615, CSS 13).
 // M1072: the rules-swing panel adds a lazy-route surface — 629 KB across 67 assets,
 // pin 628 -> 629, baseline re-recorded in the same commit (JS 616, CSS 13.3).
-const BUDGET_KB = 629;
+// M1075: the atlas gains a second read-through row — 630 KB, pin 629 -> 630,
+// baseline re-recorded in the same commit (JS 617, CSS 13.3).
+const BUDGET_KB = 630;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

@@ -128,6 +128,10 @@ export function PlatformAtlas() {
             <span className="mt-1 block text-[11px] text-muted-foreground">{t("platform.cacheBoundary")}</span>
           </li>
           <li className="rounded-lg border px-3 py-2">
+            <span className="block">{t("platform.redisTablesLine", { resource: REDIS.tablesResource, ttl: REDIS.tablesTtlSeconds })}</span>
+            <span className="mt-1 block text-[11px] text-muted-foreground">{t("platform.redisTablesBoundary")}</span>
+          </li>
+          <li className="rounded-lg border px-3 py-2">
             <span className="block">{t("platform.brokerLine", { image: BROKER.image, port: BROKER.port })}</span>
             <span className="mt-1 block truncate font-mono text-[11px] text-muted-foreground">{t("platform.exchangeLine", { exchange: BROKER.exchange, dlq: BROKER.dlq })}</span>
             <span className="mt-1 block text-[11px] text-muted-foreground">{t("platform.messagingBoundary")}</span>
