@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, PANEL_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { seasonSituation } from "@/domain/seasonRoom";
-import { cn, fmt2, fmtMoney } from "@/lib/utils";
+import { cn, clamp, fmt2, fmtMoney, pct, safeDiv } from "@/lib/utils";
 
 /**
  * M1080 — the Season Command Room. One screen, four honest answers about the seeded world's
@@ -35,6 +35,7 @@ export function SeasonRoom() {
   }
 
   const gapable = [...sit.standings].filter((r) => r.gap > 0).sort((a, b) => a.gap - b.gap).slice(0, 6);
+  const maxGap = Math.max(1, ...gapable.map((r) => r.gap));
   // The two historic-triplet families, read outside JSX: their key names are dictionary lookups,
   // not interface prose, and the raw-UI census measures every literal between `>` and `<` as copy.
   const altFamilies = [
@@ -44,13 +45,18 @@ export function SeasonRoom() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+      {/* The cinema hero: the same glass idiom as the hub — pure decor, every word via the dictionary door. */}
+      <header className={cn("relative overflow-hidden rounded-2xl px-5 py-5", PANEL_CLASS.panelFaint)}>
+        <div aria-hidden className="fo-orb fo-orb-lime -left-20 -top-20 h-44 w-44" />
+        <div aria-hidden className="fo-orb fo-orb-cyan -right-16 -bottom-16 h-40 w-40" />
+        <div aria-hidden className="fo-orb fo-orb-violet left-1/3 top-1/2 h-36 w-36" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">{t("srs.title")}</h1>
+            <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold tracking-tight text-transparent">{t("srs.title")}</h1>
             <DemoBadge />
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">{t("srs.hint")}</p>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("srs.hint")}</p>
         </div>
       </header>
 
@@ -71,7 +77,12 @@ export function SeasonRoom() {
                   <div className="text-[10px] text-muted-foreground">{t("srs.columnPoints")}</div>
                 </div>
               </div>
-              <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+              <div className="mt-2 flex items-center gap-2">
+                <div aria-hidden className="h-1 flex-1 overflow-hidden rounded-full bg-muted/70">
+                  <div className="h-full rounded-full bg-primary/75" style={{ width: `${clamp(pct(safeDiv(r.gap, r.leaderPoints)), 4, 100)}%` }} />
+                </div>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
                 <span>{t("srs.fixtureShare", { n: r.playedFixtures, total: r.totalFixtures })}</span>
                 <span className="font-mono">+{r.gap} · {r.runnerUpName}</span>
               </div>
@@ -180,6 +191,9 @@ export function SeasonRoom() {
                 <span className="text-muted-foreground">+{r.gap}</span>
                 <Crest colors={getClub(r.runnerUpId)?.colors} short={getClub(r.runnerUpId)?.short} size={16} />
                 <span className="truncate text-muted-foreground">{r.runnerUpName} ({t("srs.pointsShort", { v: r.runnerUpPoints })})</span>
+              </div>
+              <div aria-hidden className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted/70">
+                <div className="h-full rounded-full bg-warning/70" style={{ width: `${clamp(pct(safeDiv(r.gap, maxGap)), 4, 100)}%` }} />
               </div>
             </div>
           ))}
