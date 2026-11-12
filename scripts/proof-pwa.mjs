@@ -221,7 +221,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // pin 628 -> 629, baseline re-recorded in the same commit (JS 616, CSS 13.3).
 // M1075: the atlas gains a second read-through row — 630 KB, pin 629 -> 630,
 // baseline re-recorded in the same commit (JS 617, CSS 13.3).
-const BUDGET_KB = 630;
+// M1078: the live LLM tie-in grows the AI chunk by enough to cross the 634 KB line as measured
+// by the gate — JS 620 KB, CSS 13.4 KB (67 assets), pin 630 -> 634, baseline re-recorded.
+const BUDGET_KB = 634;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

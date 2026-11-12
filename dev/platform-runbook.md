@@ -462,6 +462,160 @@ gateway (lb://football-os-cache), direct-hit the same two endpoints on 8083 (ids
 byte-equal), and confirm an unknown competition 404s — the breaker route `/api/cache/**` strips
 one segment, so the cache controller maps `/cache/league/table` on the path it receives.
 
+## M1076 — the cache wire twin (single-flight + seeded TTL jitter on the real Redis tier)
+
+M1064's `domain/cache.ts` defined two herd defences as pure folds and M1065's `/cache` observatory
+draws both: **`expiryWithJitter`** scatters each key's write-back into `[ttl, ttl+jitter]` so keys
+written together do not expire together (thundering herd), and **`singleFlight`** collapses N
+concurrent misses on one hot key into a single origin load (stampede / breakdown). Until M1076 the
+two cache-service read-throughs implemented *neither* — the M1058 shape was a bare
+`get → miss → origin → set(Duration.ofSeconds(ttlSeconds))`: a fixed TTL on every key and one
+origin read per caller. The picture and the wire had silently diverged (the same fold-vs-wire-twin
+gap M1072 closed for messaging). This milestone makes the wire honest.
+
+### What changed (both read-throughs, summary + tables)
+
+| Concern | Before (M1058/M1075) | After (M1076) |
+|---|---|---|
+| Write-back TTL | fixed `ttlSeconds` (all keys in one bucket) | `jitteredTtlSeconds()` = `ttl + ⌊mulberry32(fnv1a(seed:key:nowSecond))·(jitter+1)⌋` ∈ **[60, 84]s** |
+| Concurrent cold misses | one origin read **per caller** | one **owner** loads origin; siblings await its future and share the bytes |
+| `stats()` | `{requests, hits, misses, hitRate, redisUp, key, ttlSeconds}` (7) | + `{ttlJitterSeconds, originLoads, coalesced}` (10) — measured, not hardcoded |
+| Multi-node lock | n/a | **process-local** ledger; a fleet would move the lock to Redis `SET NX` (see honesty boundaries) |
+
+`CacheJitter.java` is a bitwise Java port of `lib/rng.ts`'s FNV-1a `hashString` + mulberry32, with
+`JITTER_SEED = "football-os" == CACHE_POLICY.seed`. It had to be exact: a dropped `| t` in the third
+mulberry step, or Java's *signed* `int >>> 0` (TS's `>>> 0` is a uint32, so the Java port needs
+`& 0xffffffffL`), would desync the wire draw from the fold and even yield negative TTLs. Both bugs
+were caught and fixed while writing the parity proof — a live reminder that a wire twin is only as
+honest as its least-obvious cast.
+
+**single-flight mechanics:** `ConcurrentHashMap<String, CompletableFuture<String>> inFlight`; the
+first miss installs `mine` via `putIfAbsent` and owns the origin read; siblings `owner.get(max(
+COALESCE_FLOOR_MS, originLatencyMs×4), MILLISECONDS)` then return the owner's bytes; the owner
+`complete`s on success, `completeExceptionally` on failure, and always `remove`s in `finally`. A
+timed-out/dead owner degrades to that caller's own origin read — no request parks forever. Normal
+(hit) traffic never enters the ledger, so the hit path costs no extra map lookup.
+
+**Production vs witness:** `origin-latency-ms: 0` by default — the frozen classpath snapshot has no
+real DB round-trip, so a normal cold read is sub-millisecond and concurrent misses would not
+reliably overlap. The live witness injects `FOOTBALLOS_CACHE_ORIGIN_LATENCY_MS=220` to model that
+round-trip and make the N→1 collapse deterministically observable. It never sleeps in production.
+
+### Run the live witness
+
+```sh
+# needs Docker; binds ONLY 127.0.0.1:16379, never the foreign host 6379/5672
+node scripts/verify-cache-parity-live.mjs           # leaves the Redis container running
+node scripts/verify-cache-parity-live.mjs --clean    # removes it afterwards
+```
+
+`verify-cache-parity-live.mjs` asserts **16/16** against the real jar: fresh tier reports the M1076
+census (`ttlJitter=24, originLoads=0, coalesced=0`); 8 repeated cold writes spread across **8
+distinct TTL buckets** inside `[60,84]` (a fixed-TTL build shows 1); **12 concurrent cold reads
+collapse to `originLoads +1 / coalesced +11`** in ~241ms (one 220ms origin read, not 12×) on
+**both** the summary and tables resources; the tables list projects all 15 frozen competition ids;
+and a dead broker still degrades to origin (`redisUp=false`, ~10ms) then re-establishes an honest
+`redisUp=true` after recovery. The container is restored in `finally`/SIGINT and `--clean` removes
+it. This is the fourth live witness; it is *not* part of `npm run proof`.
+
+`proof-cache-parity.mjs` (**24/24**, in the proof suite) is the portable floor: it re-derives the
+Java draw in JS and checks it **byte-for-byte** against the real `domain/cache.ts::expiryWithJitter`
+for 8 `(key, now)` pairs including negative/large `now`, pins both read-throughs' single-flight
+structure and measured counters, and plants six regressions (dropped `| t`, signed recast, removed
+owner door on each service, hardcoded counter, fixed-TTL witness) that the reader must charge.
+`proof-redis-resilience.mjs` grew 16→18 (write-back pin evolved to `jitteredTtlSeconds()` with a
+planted fixed-TTL arm; new M1076 census), and `verify-redis-live.mjs`'s TTL ceiling became the
+dynamic `ttlSeconds + ttlJitterSeconds` — the M1070 bounded-degrade contract is unchanged.
+
+The fourth live witness now runs in CI: `.github/workflows/spring-cloud-live.yml` boots it after
+`verify-redis-live --clean` (it reuses that project-owned container, so Redis tears its keys down
+first) and before the two messaging arms; both push and pull-request path filters name it.
+`proof-workflows.mjs` grew 11→12 to pin that order, the `--clean` flag and both filters — a
+four-arm witness chain whose honesty line ("never executed on the authoring machine") and
+credential-free promise still hold.
+
+## M1077 — the Football World hub, made cinematic
+
+An in-flight parallel lane left `FootballWorld.tsx` decorated and a draft PLAN entry behind, then
+stopped — the entry had collided with M1076's cache milestone and claimed its gates green without a
+browser walk-through. Per the standing "finish what the parallel lane left" mandate this milestone
+**takes over** that WIP: renumber it M1077, re-verify every gate on the settled tree and close the
+one asymmetric gap. `/football`'s hub was the flattest screen behind the FirewallRoutes (a bare
+`PageHeader`, four plain stat tiles, two plain panels); it now borrows the same treatment as M1069's
+landing and M1073's command centre — a two-orb (`fo-orb` lime/cyan) + `fo-grid` cinematic header
+(every decoration `aria-hidden`), four `.fo-lift` tile cards, two `.fo-lift` content panels. It is a
+pure className/JSX wrapper: zero `t()` changes, no new module/route/i18n key, seed world untouched.
+
+The take-over added `tests/e2e/screens.spec.ts` one hero walk-through (the `/#/football` `<h1>` is
+visible and reads "Football World"; both `.fo-orb` nodes are present but `aria-hidden="true"`), so
+all three decorated heroes — landing (2 guards), command centre (1, M1076), football hub (1) — have
+symmetric coverage. `proof-motion.mjs` discovers decorated screens dynamically, so its census rose
+from **2 to 3 screens** (Dashboard 4 + FootballWorld 3 + Landing 6 = 13 decor, all hidden) while its
+16/16 gates stay green — the floor is `>= 2`, so the extra screen widens the census rather than
+breaking it. Honest boundary unchanged: decoration only, no service call, `PLATFORM_LIVE` stays false.
+
+## M1078 — the live LLM tie-in, served from the client's own origin
+
+The user supplied a real OpenAI-compatible endpoint (`https://wkapi.pro/v1`, model `gpt-6-sol`) and
+asked for a real, working tie-in. The Football AI chat previously answered every question with a
+canned simulator (`askIntelligence` → seeded rows). M1078 adds a real model, grounded ONLY in the
+frozen world, through the **server**, not the browser.
+
+**Why a proxy, and why it is non-negotiable.** Vite inlines every `import.meta.env.VITE_*` into the
+public `dist/assets/*.js`. A `VITE_LLM_API_KEY` therefore publishes the key to any visitor. The
+parallel lane's first WIP did exactly that — measured live: `sk-4W8LRj` sat in
+`dist/assets/AiStudio-*.js`. This milestone refuses to ship that. The key lives only in a
+**non-VITE_** server env var (`LLM_API_KEY`), read by `scripts/llm-proxy.mjs`; the browser only ever
+POSTs to the same-origin `/api/llm/chat` route and cannot see the key, the provider host or any
+credential. Rebuild verified: **66 JS assets, zero `sk-` tokens**, while the bundle carries only the
+harmless same-origin path and model name.
+
+### Wiring
+
+```sh
+# .env (gitignored) — server-only secrets, NO VITE_ prefix
+LLM_API_KEY=...              # the OpenAI-compatible bearer key
+LLM_BASE_URL=https://wkapi.pro/v1
+LLM_MODEL=gpt-6-sol
+# public, non-secret build signals (safe in the bundle)
+VITE_LLM_ENABLED=true
+VITE_LLM_MODEL=gpt-6-sol
+```
+
+`vite.config.ts` loads the full env with `loadEnv(mode, root, "")` and mounts `llmProxyMiddleware`
+on **both** `configureServer` (dev, port 5199) and `configurePreviewServer` (preview). The middleware
+validates JSON, role/message bounds (`<=10` messages, `<=8000` chars each), caps the body at 64 KB,
+sets a 20 s `AbortController` timeout, normalises the base URL to `/v1`, and returns degraded
+`{ok:false,error}` on every failure — unconfigured key `503`, non-POST `405`, bad input `400`,
+model error/timeout `502`. It never echoes the key. `data/llm.ts` derives its no-wire gate from the
+public `VITE_LLM_ENABLED` boolean, so a disabled build spends zero network calls; any live failure
+degrades **visibly** (`ai.via.fallback`) to the deterministic local briefing.
+
+### The fifth live witness (not in `npm run proof` — needs the server key + network)
+
+```sh
+node scripts/verify-llm-live.mjs          # 13/13 against the REAL gpt-6-sol
+node scripts/verify-llm-live.mjs --clean  # same, no containers involved
+```
+
+It starts a real Node HTTP server on `127.0.0.1:8791` (project-owned, closed in `finally`), mounts
+the **exact** `llmProxyMiddleware` Vite mounts, and drives it browser-style. Measured 13/13: real
+200 answer in ~10.7 s, grounded (names a real top club / 89), an out-of-world probe GUARDED
+("I'm not briefed on real-world football"), the full degrade contract (503/400/405), zero key in
+responses, and a **bundle-artifact scan proving all 66 built JS assets carry no `sk-` token**. No
+key present → live legs report `UNVERIFIED` honestly (never a fabricated answer) while the degrade
+floor is still proven.
+
+`proof-llm.mjs` (**19/19**, in the proof suite) is the portable, network-free floor: it asserts the
+browser module never reads a VITE_ key / names an external host / carries a token (three planted
+defects the reader must charge), the no-wire gate precedes `fetch`, the proxy's degrade/timeout/
+key-hiding contract, vite's dev+preview mounting, briefing grounding (only real seed entities), and
+a `git ls-files` scan of 449 tracked files with zero `sk-` tokens. `proof-dead-exports.mjs` (which
+the parallel lane had left FAIL with two dead exports) is back to 4/4. Static hosts without the
+Node middleware (e.g. GH Pages) POST to a missing route and degrade to the offline briefing — the
+honest, secret-free public default. `PLATFORM_LIVE` stays false and the SPA never calls a reactor
+service.
+
 ## Tear-down
 
 ```sh
@@ -520,19 +674,29 @@ provide; it does not, and cannot, prove anything about this author's impaired Do
   A live broker round-trip belongs to the compose stack on a registry-healthy machine, or to a host
   whose 6379/5672 belong to this reactor — delete the two spawn-time overrides in `BOOT_ENV` when that
   is the case. `PLATFORM_LIVE` stays false whether or not a broker is up.
-- The **only** brokers this host runs for this project are the three LIVE witness fixtures, each on a
+- The **only** brokers this host runs for this project are the four LIVE witness fixtures, each on a
   project-owned non-default port, each a test fixture and **not** the reactor's canonical broker:
   `verify-redis-live.mjs` starts `footballos-redis-live` on `127.0.0.1:16379` (never the foreign 6379)
   and measures cache read-through/evict/TTL + bounded live→down degrade (~2s, down from Lettuce's 61s
-  default); `verify-messaging-live.mjs` and `verify-messaging-dlq-live.mjs` share
+  default); `verify-cache-parity-live.mjs` **reuses that same container** to measure the M1076 wire
+  twin — seeded TTL spread across buckets and 12 concurrent cold misses collapsing to one origin
+  load on both read-throughs; `verify-messaging-live.mjs` and `verify-messaging-dlq-live.mjs` share
   `footballos-rabbit-live` on `127.0.0.1:5673`/`15673` (never the foreign 5672/15672) and measure,
   respectively, lossless publish + honest `live` + bounded degrade, and transient recovery + poison
-  termination in the DLQ. Three static gates pin their floors (`proof-redis-resilience.mjs`,
-  `proof-messaging-resilience.mjs`, `proof-messaging-failure.mjs`): bounded timeouts, honest observe
-  surfaces, non-default witness ports, and the failure/DLQ contracts. Delete a bound, move a witness
-  to a default port, reorder the failure door before the seen-set, or remove the DLQ termination and
-  the matching gate goes red. The canonical 6379/5672/15672 story remains compose/CI's on a
-  registry-healthy machine, and `PLATFORM_LIVE` stays false regardless of any witness.
+  termination in the DLQ. Four static gates pin their floors (`proof-redis-resilience.mjs`,
+  `proof-cache-parity.mjs`, `proof-messaging-resilience.mjs`, `proof-messaging-failure.mjs`): bounded
+  timeouts, honest observe surfaces, non-default witness ports, the byte-identical Java↔TS seeded
+  draw, and the failure/DLQ contracts. Delete a bound, move a witness to a default port, desync the
+  mulberry32 port by one bit, reorder the failure door before the seen-set, or remove the DLQ
+  termination and the matching gate goes red. The canonical 6379/5672/15672 story remains compose/CI's
+  on a registry-healthy machine, and `PLATFORM_LIVE` stays false regardless of any witness.
+- The cache's single-flight ledger is **in-process** (`ConcurrentHashMap` of `CompletableFuture`):
+  correct for the shipped one-instance cache-service topology, but it is *not* a distributed lock. A
+  multi-node cache fleet would let two instances each own the same cold key, so the owner election
+  would have to move to a Redis `SET key:NX EX ttl` (or Redlock), with the same bounded-wait + degrade
+  fallbacks. The seeded TTL jitter **is** fleet-safe on its own — a per-key `seed:key:nowSecond` draw
+  scatters expiries across instances without shared state. The witness measures one instance; it does
+  not claim cross-node coalescing.
 
 ## Relationship to the gate
 

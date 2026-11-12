@@ -55,3 +55,22 @@ test("the onboarding walk completes and the profile follows the visitor into the
   await expect(page.getByText("E2E Striker").first()).toBeVisible();
   await expect(page.getByText(/Level 1/).first()).toBeVisible();
 });
+
+// M1073/M1076 — the command centre borrowed landing's cinematic hero, so it inherits the SAME
+// decoration contract proof-motion pins on the source: the two stadium-glow orbs are present in the
+// DOM but stay OUT of the accessibility tree, while the heading (home · displayName) is real
+// content. This walks the rendered dashboard after onboarding — the cold visitor's actual first
+// screen — which a source parse alone cannot confirm.
+test("the command centre hero keeps its heading visible and its orbs hidden from assistive tech", async ({ page }) => {
+  await completeOnboarding(page, "E2E Striker");
+  // The hero headline is content: "Home · E2E Striker" (nav.home · profile.displayName).
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("E2E Striker");
+  // Two lime/cyan glow orbs + the faint grid decorate this hero only; each is aria-hidden so a
+  // screen reader hears the heading, not the blur. React serialises the boolean as aria-hidden="true".
+  const orbs = page.locator(".fo-orb");
+  expect(await orbs.count()).toBeGreaterThanOrEqual(2);
+  for (let i = 0; i < await orbs.count(); i++) {
+    await expect(orbs.nth(i)).toHaveAttribute("aria-hidden", "true");
+  }
+});

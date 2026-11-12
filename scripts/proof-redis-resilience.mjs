@@ -112,16 +112,33 @@ ok(`the honesty detector credits the shipped real ping (honest=${honestyOk(SERVI
   honestyOk(SERVICE) && plantedHardcodeCharged && /out\.put\(\"redisUp\",\s*true\)/.test(plantedHardcode));
 
 // --- 3 · read-through shape: the three endpoints and the get→miss→origin→set-with-TTL path -----
+// M1076: the wire twin gained single-flight (AtomicLong counters replace `hits++`/`misses++`) and
+// TTL jitter (write-back is `Duration.ofSeconds(jitteredTtlSeconds())`, not the bare base ttl). The
+// reader accepts BOTH counter spellings and requires the jittered write-back, so a regression that
+// drops jitter back to a fixed base TTL is charged below by a planted arm — the floor is not lowered.
+const hitCounter = /hits\+\+|hits\.incrementAndGet\(\)/.test(SERVICE);
+const missCounter = /misses\+\+|misses\.incrementAndGet\(\)/.test(SERVICE);
 const getHitMissSet = /opsForValue\(\)\.get\(key\(\)\)/.test(SERVICE) &&
-  /if\s*\(cached\s*!=\s*null\)[\s\S]*?hits\+\+[\s\S]*?return\s+cached/.test(SERVICE) &&
-  /misses\+\+[\s\S]*?originJson\(\)[\s\S]*?opsForValue\(\)\.set\(key\(\),\s*fresh,\s*Duration\.ofSeconds\(ttlSeconds\)\)/.test(SERVICE);
+  /if\s*\(cached\s*!=\s*null\)[\s\S]*?hits(?:\+\+|\.incrementAndGet\(\))[\s\S]*?return\s+cached/.test(SERVICE) &&
+  /misses(?:\+\+|\.incrementAndGet\(\))[\s\S]*?originJson\(\)[\s\S]*?opsForValue\(\)\.set\(key\(\),\s*fresh,\s*Duration\.ofSeconds\(jitteredTtlSeconds\(\)\)\)/.test(SERVICE) &&
+  hitCounter && missCounter;
 const namespacedKey = /return\s+"footballos:league:summary"/.test(SERVICE);
 const endpoints = ["@GetMapping(\"/summary\")", "@GetMapping(\"/stats\")", "@PostMapping(\"/evict\")"].every((e) => CONTROLLER.includes(e));
-const census = ["requests", "hits", "misses", "hitRate", "redisUp", "key", "ttlSeconds"].every((k) => SERVICE.includes(`out.put("${k}"`));
-ok(`the service is genuinely read-through: get→hit-return→miss→origin→set-with-TTL (shape=${getHitMissSet}, namespaced key=${namespacedKey})`,
+const baseCensus = ["requests", "hits", "misses", "hitRate", "redisUp", "key", "ttlSeconds"].every((k) => SERVICE.includes(`out.put("${k}"`));
+ok(`the service is genuinely read-through: get→hit-return→miss→origin→set-with-JITTERED-TTL (shape=${getHitMissSet}, namespaced key=${namespacedKey})`,
   getHitMissSet && namespacedKey);
-ok(`the controller exposes summary/stats/evict (${endpoints ? "3/3" : "missing"}) and stats carries the ${["requests", "hits", "misses", "hitRate", "redisUp", "key", "ttlSeconds"].length}-field census the live witness asserts (census=${census})`,
-  endpoints && census);
+// M1076: the read-through floor now ALSO pins the jittered write-back and the measured single-flight
+// census. A planted drop back to a fixed `Duration.ofSeconds(ttlSeconds)` must be charged.
+const shapeOk = (src) => /misses(?:\+\+|\.incrementAndGet\(\))[\s\S]*?originJson\(\)[\s\S]*?opsForValue\(\)\.set\(key\(\),\s*fresh,\s*Duration\.ofSeconds\(jitteredTtlSeconds\(\)\)\)/.test(src);
+const plantedFixedTtl = SERVICE.replace("Duration.ofSeconds(jitteredTtlSeconds())", "Duration.ofSeconds(ttlSeconds)");
+const plantedFixedCharged = !shapeOk(plantedFixedTtl) && shapeOk(SERVICE);
+ok(`the write-back keeps its seeded jitter rather than a fixed TTL (planted fixed-TTL refused=${plantedFixedCharged})`,
+  plantedFixedCharged && /jitteredTtlSeconds\(\)/.test(SERVICE));
+const m1076Census = ["ttlJitterSeconds", "originLoads", "coalesced"].every((k) => SERVICE.includes(`out.put("${k}"`));
+ok(`stats carries the M1076 measured fields ttlJitterSeconds/originLoads/coalesced alongside the ${["requests", "hits", "misses", "hitRate", "redisUp", "key", "ttlSeconds"].length}-field base census (base=${baseCensus}, m1076=${m1076Census})`,
+  baseCensus && m1076Census);
+ok(`the controller exposes summary/stats/evict (${endpoints ? "3/3" : "missing"}) and stats carries the census the live witness asserts (census=${baseCensus})`,
+  endpoints && baseCensus);
 // compose must still wire the live-broker story for a registry-healthy host, with the bounded
 // bounds carried by the same yml (the image and the service dependency are the runnable truth).
 const composeWiresRedis = /redis:\s*\n[\s\S]*?image:\s*redis:7-alpine/.test(COMPOSE) && /cache-service[\s\S]*?- redis\b/.test(COMPOSE);

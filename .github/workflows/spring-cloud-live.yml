@@ -1,15 +1,18 @@
-# M1074: the live witnesses join CI — the registry-healthy half this author's machine cannot run.
+# M1074 + M1076: the live witnesses join CI — the registry-healthy half this author's machine cannot run.
 #
-# The Spring Cloud stack's strongest proof is the two live witnesses on the host side:
+# The Spring Cloud stack's strongest proof is its four LIVE witnesses on the host side:
 # verify-redis-live.mjs (real cache-aside read-through against a project-owned Redis on a
-# non-default port) and verify-messaging-live.mjs (real publish→consume against a project-owned
-# RabbitMQ, honest UP/DOWN probe). On the authoring machine both were proven BY HAND (ports
-# 16379/5673, --clean); on this runner both are proven by the same scripts with registry-healthy
-# Docker — the one thing the author's impaired Docker Desktop could not do.
+# non-default port), the cache wire-parity witness (M1076: single-flight collapse + seeded TTL
+# full jitter on a real jar, with an injected slow origin), verify-messaging-live.mjs (real
+# publish→consume against a project-owned RabbitMQ, honest UP/DOWN probe) and
+# verify-messaging-dlq-live.mjs (retry→DLQ failure semantics). On the authoring machine all four
+# were proven BY HAND (ports 16379/5673, --clean); on this runner all four are proven by the same
+# scripts with registry-healthy Docker — the one thing the author's impaired Docker Desktop could not do.
 #
 # Run order is load-bearing: build the reactor first, then boot the services against real
 # brokers on non-default ports (never this machine's foreign 5672/6379, never clashing with the
-# canonical compose side). --clean guarantees the runner tears its own containers down.
+# canonical compose side). The cache arms run before the broker arms and share one project-owned
+# Redis (16379) sequentially, each with --clean so neither inherits the other's keys or container.
 name: spring-cloud-live
 
 on:
@@ -19,6 +22,7 @@ on:
       - "services/**"
       - "scripts/verify-services.mjs"
       - "scripts/verify-redis-live.mjs"
+      - "scripts/verify-cache-parity-live.mjs"
       - "scripts/verify-messaging-live.mjs"
       - "scripts/verify-messaging-dlq-live.mjs"
       - ".github/workflows/spring-cloud-live.yml"
@@ -28,6 +32,7 @@ on:
       - "services/**"
       - "scripts/verify-services.mjs"
       - "scripts/verify-redis-live.mjs"
+      - "scripts/verify-cache-parity-live.mjs"
       - "scripts/verify-messaging-live.mjs"
       - "scripts/verify-messaging-dlq-live.mjs"
       - ".github/workflows/spring-cloud-live.yml"
@@ -58,6 +63,9 @@ jobs:
       - name: Live Redis read-through witness
         run: node scripts/verify-redis-live.mjs --clean
 
+      - name: Live cache wire-parity witness
+        run: node scripts/verify-cache-parity-live.mjs --clean
+
       - name: Live RabbitMQ witness
         run: node scripts/verify-messaging-live.mjs --clean
 
@@ -75,4 +83,4 @@ jobs:
 
 # This file has never been executed on the authoring machine — that machine's Docker Desktop cannot
 # pull a single new image (records in dev/platform-runbook.md and PLAN-LONGTERM.md). On THIS runner
-# the same two/three witnesses are the truth about the reactor against live brokers.
+# the same four witnesses are the truth about the reactor against live brokers.

@@ -132,15 +132,20 @@ const cleanup = (code) => {
 process.on("SIGINT", () => cleanup(130));
 if (!serviceUp) { console.error(`FAIL cache-service did not answer within ${UP_WINDOW_MS}ms`); dump(); cleanup(1); }
 const s0 = await stats();
-ok(`a fresh cache-service booted against the LIVE broker and reports redisUp=true (requests=${s0.requests}, ttl=${s0.ttlSeconds}s)`,
-  s0.redisUp === true && s0.requests === 0 && s0.ttlSeconds === 60 && s0.key === KEY);
+ok(`a fresh cache-service booted against the LIVE broker and reports redisUp=true (requests=${s0.requests}, ttl=${s0.ttlSeconds}s, jitter=${s0.ttlJitterSeconds}s)`,
+  s0.redisUp === true && s0.requests === 0 && s0.ttlSeconds === 60 && s0.key === KEY &&
+  s0.ttlJitterSeconds === 24 && typeof s0.originLoads === "number" && typeof s0.coalesced === "number");
 
 // --- 1 · cold read is a MISS that writes a real key with a real TTL ---------------------------
 const body1 = await summary();
 const s1 = await stats();
 const exists1 = redisCli("exists", KEY), ttl1 = Number(redisCli("ttl", KEY)), type1 = redisCli("type", KEY);
-ok(`the cold read MISSED and wrote a real Redis string key (misses=${s1.misses}, EXISTS=${exists1}, TYPE=${type1}, TTL=${ttl1}s)`,
-  s1.misses === 1 && s1.hits === 0 && s1.requests === 1 && exists1 === "1" && type1 === "string" && ttl1 > 0 && ttl1 <= 60);
+// M1076: the write-back TTL is now SEEDED-JITTERED into [ttl, ttl+jitter] = [60, 84]s. The exact
+// spread (distinct buckets over repeated writes) is the parity witness's job; here we only require
+// the single cold key to carry a bounded, non-negative TTL inside that window.
+const ttlCeiling = s0.ttlSeconds + s0.ttlJitterSeconds;
+ok(`the cold read MISSED and wrote a real Redis string key with a JITTERED TTL in [${s0.ttlSeconds}, ${ttlCeiling}]s (misses=${s1.misses}, EXISTS=${exists1}, TYPE=${type1}, TTL=${ttl1}s)`,
+  s1.misses === 1 && s1.hits === 0 && s1.requests === 1 && exists1 === "1" && type1 === "string" && ttl1 >= 30 && ttl1 <= ttlCeiling);
 ok(`the served body is the frozen origin contract byte-for-byte (${body1.length} bytes, ${JSON.parse(body1).snapshot.clubs} clubs)`,
   body1 === expected && JSON.parse(body1).snapshot.clubs === 73);
 
@@ -168,8 +173,8 @@ const s3 = await stats();
 const exists3 = redisCli("exists", KEY), ttl3 = Number(redisCli("ttl", KEY));
 ok(`POST /evict removed the real Redis key (EXISTS=${existsAfterEvict}) and the next read re-MISSED (misses=${s3.misses}, requests=${s3.requests})`,
   existsAfterEvict === "0" && s3.requests === beforeEvictReads + 1 && s3.misses === s3.requests - s3.hits && body3 === expected);
-ok(`the evicted key was repopulated with a fresh bounded TTL (EXISTS=${exists3}, TTL=${ttl3}s)`,
-  exists3 === "1" && ttl3 > 0 && ttl3 <= 60);
+ok(`the evicted key was repopulated with a fresh JITTERED TTL in [${s0.ttlSeconds}, ${ttlCeiling}]s (EXISTS=${exists3}, TTL=${ttl3}s)`,
+  exists3 === "1" && ttl3 >= 30 && ttl3 <= ttlCeiling);
 
 // --- 4 · TTL actually expires: a short-TTL key vanishes and forces a fresh origin read --------
 // Redis's own expiry is the policy (working set is one key), so we shorten THIS key's TTL via

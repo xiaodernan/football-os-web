@@ -4,6 +4,7 @@ import { useLocalStorage, useOnline } from "@/lib/hooks";
 import { useI18n } from "@/i18n";
 import { askIntelligence, buildGraph, type EvidenceFact, type KgGraph } from "@/data/intelligence";
 import { SUGGESTED_ASKS } from "@/data/ai";
+import { callLlm, LLM_CONFIG } from "@/data/llm";
 import { rowLine, asRowText, searchKindLabel, type RowText } from "@/domain/rowText";
 import type { SearchKind } from "@/domain/types";
 import { AI_CHAT_KEY } from "@/domain/localData";
@@ -15,7 +16,7 @@ import { cn, safeDiv } from "@/lib/utils";
 
 type ChatMsg =
   | { role: "user"; content: string; at: string }
-  | { role: "ai"; content: RowText[]; facts?: EvidenceFact[]; sources?: RowText[]; confidence?: number; at: string };
+  | { role: "ai"; content: RowText[]; facts?: EvidenceFact[]; sources?: RowText[]; confidence?: number; at: string; via?: "live" | "local" | "fallback" };
 
 // A suggested question is two things at once, and only one half ever justified English here: it is
 // a query the demo provider matches on Latin tokens (`data/intelligence.ts:246` strips everything
@@ -92,12 +93,31 @@ function Chat() {
   const send = async (text: string) => {
     const question = text.trim();
     if (!question || busy) return;
+    // Replay the last few messages as plain text so the model has conversational context.
+    const history = entries
+      .slice(-6)
+      .map((m) => (m.role === "user" ? { role: "user" as const, content: m.content } : { role: "assistant" as const, content: m.content.map((r) => rowLine(r, t)).join("\n") }));
     setLog((l) => [...l, { role: "user", content: question, at: new Date().toISOString() }]);
     setInput("");
     setBusy(true);
+    if (LLM_CONFIG.hasKey && online) {
+      const r = await callLlm(question, history);
+      if (r.ok) {
+        const lines = r.text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+        setLog((l) => [...l, { role: "ai", content: lines.map((l) => asRowText(l)), at: new Date().toISOString(), via: "live" }]);
+        setBusy(false);
+        requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
+        return;
+      }
+      const a = askIntelligence(question, locale);
+      setLog((l) => [...l, { role: "ai", content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, at: a.at, via: "fallback" }]);
+      setBusy(false);
+      requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
+      return;
+    }
     await new Promise((r) => setTimeout(r, 420));
     const a = askIntelligence(question, locale);
-    setLog((l) => [...l, { role: "ai", content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, at: a.at }]);
+    setLog((l) => [...l, { role: "ai", content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, at: a.at, via: "local" }]);
     setBusy(false);
     requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
   };
@@ -118,6 +138,12 @@ function Chat() {
           <div key={i} className="flex justify-end"><div className={cn("max-w-[80%] rounded-2xl rounded-br-sm px-3.5 py-2 text-sm", CHIP_CLASS.solidPrimarySoft)}>{m.content}</div></div>
         ) : (
           <div key={i} className="max-w-[92%] space-y-2">
+            {m.via && (
+              <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                <span className={cn("h-1.5 w-1.5 rounded-full", m.via === "live" ? BAR_FILL.info : m.via === "local" ? BAR_FILL.good : BAR_FILL.low)} />
+                {m.via === "live" ? t("ai.via.live", { model: LLM_CONFIG.model }) : m.via === "local" ? t("ai.via.local") : t("ai.via.fallback")}
+              </div>
+            )}
             <div className={cn("rounded-2xl rounded-bl-sm px-3.5 py-2 text-sm leading-relaxed", PANEL_CLASS.panelMuted)}>
               {Array.isArray(m.content)
                 ? m.content.map((r, j) => <p key={j} className={j ? "mt-1" : undefined}>{rowLine(r, t)}</p>)

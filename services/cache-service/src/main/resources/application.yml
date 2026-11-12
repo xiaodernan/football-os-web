@@ -77,3 +77,13 @@ footballos:
     ttl-seconds: 60
     tables-resource: league-tables.json
     tables-ttl-seconds: 60
+    # M1076: the write-back is the WIRE TWIN of domain/cache.ts expiryWithJitter + singleFlight.
+    # ttl-jitter-seconds scatters each key's expiry across [ttl, ttl+jitter] by a seeded
+    # mulberry32(seed:key:nowSecond) draw, so a fleet written in the same second does not expire
+    # together (thundering-herd defence). 24 mirrors CACHE_POLICY.jitter in domain/cache.ts.
+    ttl-jitter-seconds: 24
+    # origin-latency-ms is 0 in normal operation. The live parity witness injects a small positive
+    # value via FOOTBALLOS_CACHE_ORIGIN_LATENCY_MS so N concurrent cold misses reliably overlap the
+    # origin read and the single-flight ledger can be observed collapsing them. It models the real
+    # DB round-trip the frozen classpath stand-in has no latency for; production never sleeps.
+    origin-latency-ms: 0

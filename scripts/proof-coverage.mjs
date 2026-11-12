@@ -157,7 +157,8 @@ const DEAD_CEILING = 22;
 // M1064: 141 -> 143 — domain/cache.ts (the cache fold) and
 // features/cache/CacheObservatory.tsx (its screen).
 // M1064: 143 -> 144 — domain/ringMath.ts (the shared hash-ring floor).
-const POP_PIN = 144;
+// M1076: 144 -> 145 — data/llm.ts (the live LLM tie-in's fold) is a new data module.
+const POP_PIN = 145;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -197,7 +198,8 @@ const POP_PIN = 144;
 // M1059: domain 42 -> 43 (queue.ts), features 55 -> 56 (QueueObservatory.tsx).
 // M1064: domain 43 -> 44 (cache.ts), features 56 -> 57 (CacheObservatory.tsx).
 // M1064: domain 44 -> 45 (ringMath.ts).
-const BY_DIR_PIN = { components: 15, data: 7, domain: 45, features: 57, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 };
+// M1076: data 7 -> 8 — data/llm.ts.
+const BY_DIR_PIN = { components: 15, data: 8, domain: 45, features: 57, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.

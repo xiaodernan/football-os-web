@@ -562,7 +562,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1059: 135 -> 137 — domain/queue.ts and features/messaging/QueueObservatory.tsx.
 // M1064: 137 -> 139 — domain/cache.ts and features/cache/CacheObservatory.tsx.
 // M1064: 139 -> 140 — domain/ringMath.ts (the shared hash-ring floor the cache and queue folds both read).
-const APP_SRC_PIN = 140;
+// M1076: 140 -> 141 — data/llm.ts (the live LLM tie-in's fold, lazy-loaded through the AI studio).
+const APP_SRC_PIN = 141;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -637,7 +638,8 @@ const TSX_PIN = 80;
 // M1064: 140 -> 142 — domain/cache.ts and features/cache/CacheObservatory.tsx.
 // M1064: 142 -> 143 — domain/ringMath.ts (the shared hash-ring floor, in the reader's path once
 // both folds import it).
-const SRC_PIN = 143;
+// M1076: 143 -> 144 — data/llm.ts (the live LLM tie-in's fold; lazy-loaded through the AI studio).
+const SRC_PIN = 144;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4731,7 +4733,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // `t(arm.key)` into literal `t("rules.swingTwo")`/`t("rules.swingAll")` calls to keep the raw-UI
   // debt at zero — literal 2597 -> 2604. The removed expression returns the count to 34.
   // M1075 (atlas tables line): two literal call sites, redisTablesLine and redisTablesBoundary.
-  shapeCounts.literal === 2606 && shapeCounts.template === 113 && shapeCounts.expression === 34
+  shapeCounts.literal === 2609 && shapeCounts.template === 113 && shapeCounts.expression === 34
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4890,7 +4892,7 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // shardsMethod, timelineMore, capLine, rungTip, shardTip) hand their placeholders to the census.
   // M1072 (parallel front-end line): the rules-swing panel's swingComp ({comp}) and swingPlaces
   // ({std, alt}) literal rows each hand their placeholders to the census: 435 -> 437.
-  litVarSites === 438 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 439 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));

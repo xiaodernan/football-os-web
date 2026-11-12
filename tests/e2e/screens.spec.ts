@@ -441,3 +441,21 @@ test("the cache tier draws its fold and its six mechanisms", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "The cache tier" })).toBeVisible();
   await expect(page.getByText("analysis · not a live Redis console")).toBeVisible();
 });
+
+// M1077 — the Football World hub borrowed landing's cinematic hero (two stadium-glow orbs + a
+// faint grid) the same way the command centre did in M1073. proof-motion pins the aria-hidden
+// contract on the source across every decorated screen; this walks the rendered hub to confirm the
+// two orbs stay OUT of the accessibility tree while the h1 (fw.hub.title) remains real content.
+test("the football world hub keeps its heading visible and its orbs hidden from assistive tech", async ({ page }) => {
+  await page.goto("/#/football", { waitUntil: "domcontentloaded" });
+  const heading = page.getByRole("heading", { level: 1 });
+  await expect(heading).toBeVisible();
+  await expect(heading).toContainText("Football World");
+  // Two lime/cyan glow orbs + the grid decorate this hero only; React serialises the boolean
+  // aria-hidden as "true", so a screen reader hears the heading, not the blur.
+  const orbs = page.locator(".fo-orb");
+  expect(await orbs.count()).toBeGreaterThanOrEqual(2);
+  for (let i = 0; i < await orbs.count(); i++) {
+    await expect(orbs.nth(i)).toHaveAttribute("aria-hidden", "true");
+  }
+});

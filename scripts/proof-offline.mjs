@@ -52,10 +52,25 @@ ok(`the scan actually covers the shipped app (${appFiles.length} files)`, appFil
 // clauses: no call API anywhere, and the single registration guarded and pointed at a shell the
 // build actually ships. Dropping the registration reds the second clause, and a `fetch` returning
 // anywhere reds the first.
+//
+// M1078 earns its one exception: the live-LLM tie-in POSTs the visitor's question to the SAME-ORIGIN
+// /api/llm/chat proxy (no cross-site optin, no telemetry — this is the network the visitor opted
+// into by asking the question). The exception is still exactly one function call with an exact
+// path; any second fetch in the file, a different origin, or any other file doing network I/O
+// all redden the gate. We do not silently carve anything out.
+const LLM_EXCEPTION = "data/llm.ts";
 const NETWORK = /\bfetch\s*\(|XMLHttpRequest|\baxios\b|new\s+WebSocket|new\s+EventSource|sendBeacon/;
-const netHits = appFiles.filter((f) => NETWORK.test(readFileSync(f, "utf8"))).map((f) => f.replace(root, ""));
-ok(`no shipped source performs network I/O (${netHits.length})`, netHits.length === 0);
-for (const h of netHits.slice(0, 8)) console.log("       network call: " + h);
+const appText = (f) => readFileSync(f, "utf8");
+// M1078: count of .fetch( in the LLM-accept file must be EXACTLY one and call the documented path.
+const llmBody = NETWORK.test(appText(join(root, LLM_EXCEPTION)) || "") ? appText(join(root, LLM_EXCEPTION)) : "";
+const llmFetchCalls = (llmBody.match(/\bfetch\s*\(/g) ?? []).length;
+const llmPathOk = /["'`]\/api\/llm\/chat["'`]/.test(llmBody);
+const netHits = appFiles
+  .filter((f) => NETWORK.test(appText(f)))
+  .map((f) => f.replace(root, "").replace(/^[\\/]/, "").replace(/\\/g, "/"));
+const stray = netHits.filter((p) => p !== LLM_EXCEPTION);
+ok(`the one same-origin LLM proxy call is exactly one fetch at the documented path (fetch count ${llmFetchCalls}, path ok=${llmPathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
+  netHits.length === 1 && llmFetchCalls === 1 && llmPathOk && stray.length === 0);
 
 const SW_REGISTER = /navigator\s*\.\s*serviceWorker\s*\.\s*register\s*\(\s*["'`]([^"'`]+)["'`]/;
 const swSites = appFiles.flatMap((f) => {

@@ -189,12 +189,19 @@ function FootballHub() {
   const news = personalNews.items.slice(0, 6);
   return (
     <div className="space-y-6">
-      <PageHeader title={t("fw.hub.title")} hint={t("fw.hub.hint")} />
+      <div className={cn("relative overflow-hidden rounded-2xl px-5 py-5", PANEL_CLASS.panelFaint)}>
+        <div aria-hidden className="fo-orb fo-orb-lime -left-20 -top-20 h-44 w-44" />
+        <div aria-hidden className="fo-orb fo-orb-cyan right-[-4rem] -bottom-16 h-40 w-40" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative">
+          <PageHeader title={t("fw.hub.title")} hint={t("fw.hub.hint")} />
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Link to="/competitions"><StatTile label={t("fw.stat.competitions")} value={comps.length} /></Link>
-        <Link to="/clubs"><StatTile label={t("fw.stat.clubs")} value={footballProvider.clubs().length} /></Link>
-        <Link to="/players"><StatTile label={t("fw.stat.players")} value={footballProvider.players().length} /></Link>
-        <Link to="/matches"><StatTile label={t("fw.stat.matches")} value={footballProvider.matches().length} /></Link>
+        <Link to="/competitions" className="fo-lift"><StatTile label={t("fw.stat.competitions")} value={comps.length} /></Link>
+        <Link to="/clubs" className="fo-lift"><StatTile label={t("fw.stat.clubs")} value={footballProvider.clubs().length} /></Link>
+        <Link to="/players" className="fo-lift"><StatTile label={t("fw.stat.players")} value={footballProvider.players().length} /></Link>
+        <Link to="/matches" className="fo-lift"><StatTile label={t("fw.stat.matches")} value={footballProvider.matches().length} /></Link>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -207,11 +214,11 @@ function FootballHub() {
           <div className="grid gap-2 sm:grid-cols-2">{upcoming.map((m) => <MatchRow key={m.id} m={m} />)}</div>
         </div>
         <div className="space-y-4">
-          <Panel className="p-4">
+          <Panel className="fo-lift p-4">
             <SectionTitle title={t("fw.hub.trending")} action={<Link to="/players" className="text-xs text-primary">{t("fw.hub.all")}</Link>} />
             <div className="mt-1 divide-y">{trending.map((p) => <PlayerRowCompact key={p.id} p={p} />)}</div>
           </Panel>
-          <Panel className="p-4">
+          <Panel className="fo-lift p-4">
             <SectionTitle
               title={t("fw.hub.news")}
               hint={personalNews.orderedFor ? t("news.forClub", { club: personalNews.orderedFor, n: personalNews.matched }) : undefined}

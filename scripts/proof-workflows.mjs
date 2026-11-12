@@ -79,5 +79,19 @@ ok("the live-witness workflow boots both broker-dependent arms in order after th
     "scripts/verify-messaging-live.mjs", "scripts/verify-messaging-dlq-live.mjs",
     ".github/workflows/spring-cloud-live.yml"].every((p) => live.includes(p)));
 
+// M1076: the cache wire-parity witness became the FOURTH live arm. It must sit between the Redis
+// read-through witness (it reuses that project-owned container on 16379, so Redis must have torn its
+// keys/container down first) and the two messaging arms, carry --clean, and appear in BOTH path
+// filters so a services/ or witness-only change re-triggers the job. Three literal occurrences
+// (push paths + PR paths + the step) is a positive population floor: drop the step, move it after
+// messaging, or omit one filter and this gate goes red.
+const cacheParityStep = "run: node scripts/verify-cache-parity-live.mjs --clean";
+ok("the fourth live witness (cache wire parity) runs after Redis and before messaging, with --clean, and is named in both path filters",
+  live.includes(cacheParityStep) &&
+  live.indexOf("run: node scripts/verify-redis-live.mjs") < live.indexOf(cacheParityStep) &&
+  live.indexOf(cacheParityStep) < live.indexOf("run: node scripts/verify-messaging-live.mjs") &&
+  live.indexOf(cacheParityStep) < live.indexOf("npm run proof") &&
+  live.split("scripts/verify-cache-parity-live.mjs").length - 1 >= 3);
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);
