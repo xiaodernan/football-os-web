@@ -75,6 +75,8 @@ const CONSUMERS = [
   "features/injury/InjuryReport.tsx",
   // M1022: the balance sheet prints two rate figures (world wage share, per-row wage share).
   "features/finance/FinanceBoard.tsx",
+  // M1080: the season command room prints its wage-ratio cells through the door.
+  "features/seasonroom/SeasonRoom.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the
@@ -260,8 +262,7 @@ const doorBody = (src[HOME].match(/export const fmt2 = [^\n]*/) || [""])[0];
 ok(`the door body IS the toFixed call and it is the sole code-state plain site in lib/utils (home plain ${homeCensus.plain}, body "${doorBody.trim()}")`,
   homeCensus.plain === 1 && doorBody.trim() === "export const fmt2 = (v: number): string => v.toFixed(2);");
 
-// --- All twenty-six consumers read the door, and the USER SET is derived from the tree in BOTH
-// --- directions. M401 removed worldEngine's only fmt2 call (its private euro formatter quoted
+// --- Every consumer reads the door, and the USER SET is derived from the tree in BOTH directions. M401 removed worldEngine's only fmt2 call (its private euro formatter quoted
 // --- the billions at two decimals), so the file stopped reading the door entirely and left the
 // --- consumer list. The old clause could only see that direction -- it checked that every
 // --- listed consumer still used the door, and said nothing about a file that used the door
@@ -278,7 +279,11 @@ const treeReaders = carriers.filter((f) => f !== HOME && count(src[f], CALL_FMT2
 const listedReaders = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) > 0).sort();
 const unlisted = treeReaders.filter((f) => !CONSUMERS.includes(f));
 const stale = CONSUMERS.filter((f) => count(src[f], CALL_FMT2) === 0);
-ok(`all thirty-two consumers read the door, and the user set is EQUAL to the tree's own (imports ${importing.length}/32, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70; tree readers ${treeReaders.length}, unlisted ${unlisted.length} [${unlisted.join(",")}], stale rows ${stale.length} [${stale.join(",")}])`,
+ok(`all listed consumers read the door, and the user set is EQUAL to the tree's own (imports ${importing.length}/${CONSUMERS.length}, per-file calls ${perCall.map(([, n]) => n).join(",")}, total calls ${totalCalls}, floor 70; tree readers ${treeReaders.length}, unlisted ${unlisted.length} [${unlisted.join(",")}], stale rows ${stale.length} [${stale.join(",")}])`,
+  // M252 (parallel counts now lag the tree — census reads the tree, not this header; the
+  // comment keeps its own arithmetic honest): keep the header generic. The clause below
+  // compares the two sets for EQUALITY in both directions, so a dropped or unlisted reader
+  // is measured, not assumed.
   importing.length === CONSUMERS.length && perCall.every(([, n]) => n >= 1) && totalCalls >= 70 &&
   treeReaders.length === CONSUMERS.length && treeReaders.join(",") === listedReaders.join(",") &&
   unlisted.length === 0 && stale.length === 0);

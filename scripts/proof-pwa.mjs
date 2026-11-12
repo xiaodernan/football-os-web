@@ -223,7 +223,8 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // baseline re-recorded in the same commit (JS 617, CSS 13.3).
 // M1078: the live LLM tie-in grows the AI chunk by enough to cross the 634 KB line as measured
 // by the gate — JS 620 KB, CSS 13.4 KB (67 assets), pin 630 -> 634, baseline re-recorded.
-const BUDGET_KB = 634;
+// M1080: the season-room screen + fold grows JS by gzip 4 KB and adds 3 assets (70), pin 634 -> 638.
+const BUDGET_KB = 638;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

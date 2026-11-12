@@ -30,7 +30,7 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { llmProxyMiddleware, serverConfig, handleLlmRequest, PROXY_ROUTE } from "./llm-proxy.mjs";
+import { llmProxyMiddleware, serverConfig, handleLlmRequest, createLlmCache, llmCacheStats, PROXY_ROUTE } from "./llm-proxy.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const argv = process.argv.slice(2);
@@ -76,11 +76,15 @@ const post = async (path, body, init = {}) => {
     signal: AbortSignal.timeout(30000),
     ...init,
   });
-  return { status: r.status, text: await r.text() };
+  // M1079: surface the cache verdict header so the live witness can prove a real hit.
+  return { status: r.status, text: await r.text(), cache: r.headers.get("x-footballos-llm-cache") };
 };
 
 // The EXACT middleware the Vite dev/preview server mounts (vite.config.ts), on a real HTTP server.
-const server = createServer(llmProxyMiddleware(() => cfg));
+// M1079: the witness owns the cache explicitly so it can READ the measured stats after two asks —
+// proving the second identical question was served from memory with ZERO new model round-trip.
+const liveCache = createLlmCache();
+const server = createServer(llmProxyMiddleware(() => cfg, liveCache));
 await new Promise((res, rej) => { server.once("error", rej); server.listen(PORT, HOST, res); });
 ok(`the same-origin proxy listens ONLY on ${HOST}:${PORT} (project-owned non-default port)`, server.listening === true);
 
@@ -139,8 +143,51 @@ try {
     ok(`an out-of-world question still returns a non-empty, key-free answer (guarded=${guarded})`,
       oow.status === 200 && typeof oowBody.text === "string" && oowBody.text.length > 0 && !oow.text.includes(cfg.key.slice(0, 12)));
 
+    // ── M1079 · the cache wire twin, measured against the REAL model ────────────────────────
+    // The first grounded ask above was a cold MISS (fresh server, fresh cache). Asking the exact
+    // SAME question again must be served from server memory: a `hit` header, identical text, AND
+    // — the decisive part — the measured `stores` counter must NOT increase (zero new model call,
+    // zero new real tokens spent). This is the honest, runnable proof that the memoization is real
+    // and not a re-labelled model call.
+    const beforeHit = llmCacheStats(liveCache);
+    const tHit = ms();
+    const repeat = await post(PROXY_ROUTE, JSON.stringify(ask));
+    const dtHit = ms() - tHit;
+    let repeatBody = {};
+    try { repeatBody = JSON.parse(repeat.text); } catch { /* handled below */ }
+    const afterHit = llmCacheStats(liveCache);
+    ok(`a repeat of the SAME grounded question is a CACHE HIT (header=${repeat.cache}): 200, cached=true, text byte-identical`,
+      repeat.status === 200 && repeat.cache === "hit" && repeatBody.cached === true &&
+      typeof repeatBody.text === "string" && repeatBody.text === (JSON.parse(live.text).text || "").trim());
+    ok(`the hit spent ZERO new real model tokens: stores stayed ${beforeHit.stores}→${afterHit.stores}, misses ${beforeHit.misses}→${afterHit.misses}, hits ${beforeHit.hits}→${afterHit.hits}`,
+      afterHit.stores === beforeHit.stores && afterHit.misses === beforeHit.misses && afterHit.hits === beforeHit.hits + 1);
+    ok(`the served-from-memory hit is markedly faster than the cold model round-trip (${dtHit}ms < ${dt}ms)`,
+      dtHit >= 0 && dtHit < dt);
+    ok(`the cache hit response carries no server key in body or header`, !repeat.text.includes(cfg.key.slice(0, 12)));
+
+    // single-flight against the REAL pipeline: N simultaneous identical asks on a FRESH cache must
+    // collapse to ONE model call (one `stores`), with exactly one miss and N-1 coalesced siblings.
+    // This one is measured honestly — it spends one more real token batch, and it proves the herd
+    // defence on the wire (the stub proof alone cannot prove the shipped middleware is wired).
+    const sfCache = createLlmCache();
+    const sfServer = createServer(llmProxyMiddleware(() => cfg, sfCache));
+    await new Promise((res, rej) => { sfServer.once("error", rej); sfServer.listen(PORT + 1, HOST, res); });
+    try {
+      const sfBody = JSON.stringify(ask);
+      const sfBurst = await Promise.all(Array.from({ length: 4 }, () => fetch(`http://${HOST}:${PORT + 1}${PROXY_ROUTE}`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: sfBody, signal: AbortSignal.timeout(30000),
+      }).then(async (r) => ({ status: r.status, cache: r.headers.get("x-footballos-llm-cache"), text: await r.text() }))));
+      const sfStats = llmCacheStats(sfCache);
+      ok(`4 concurrent identical asks collapse to ONE real model call (stores=${sfStats.stores}, coalesced=${sfStats.coalesced})`,
+        sfStats.stores === 1 && sfStats.misses === 1 && sfStats.coalesced === 3 &&
+        sfBurst.filter((r) => r.cache === "coalesced").length === 3 &&
+        sfBurst.every((r) => r.status === 200 && /Manchester City|Real Madrid|Inter|89/i.test(r.text)));
+    } finally {
+      await new Promise((res) => sfServer.close(res));
+    }
+
     // key hygiene across every live response
-    ok(`no live response body leaked the server key prefix`, ![live, oow].some((r) => r.text.includes(cfg.key.slice(0, 12))));
+    ok(`no live response body leaked the server key prefix`, ![live, oow, repeat].some((r) => r.text.includes(cfg.key.slice(0, 12))));
   }
 
   // ── 3 · the browser bundle must not carry the key (build-artifact check, measured) ──────

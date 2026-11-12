@@ -162,9 +162,9 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1064: 140 -> 142 — domain/cache.ts (the cache fold) and
 // features/cache/CacheObservatory.tsx (its screen) join the reader's path.
 // M1064: 142 -> 143 — domain/ringMath.ts (the shared hash-ring floor) joins the reader's path.
-// M1076: 143 -> 145 — data/llm.ts plus one new module per the counts read by the reader.
-// Actually measured: APP_SRC_PIN expands by 1 (data/llm.ts) so 143 -> 144.
-const APP_MODULE_PIN = 144;
+// M1076: 143 -> 144 — data/llm.ts joins the reader's path.
+// M1080: 144 -> 146 — domain/seasonRoom.ts + features/seasonroom/SeasonRoom.tsx join the reader's path.
+const APP_MODULE_PIN = 146;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

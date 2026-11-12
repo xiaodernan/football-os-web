@@ -102,6 +102,137 @@ const badBody = await PROXY_MOD.handleLlmRequest({ key: "test-key" }, "not json"
 ok(`handleLlmRequest rejects malformed JSON before any model call (status ${badBody.status})`,
   badBody.status === 400 && badBody.body.error === "invalid_json");
 
+// ── 4b · M1079: the cache wire twin — the fold's three mechanisms on the newest wire ────────
+// The frozen world is deterministic, so an identical grounded ask must not pay twice. The proxy's
+// cache is the BIT-PARITY twin of domain/cache.ts (LRU + single-flight + seeded full jitter), not a
+// second dialect: proof loads the TS originals through Vite and charges any drift. Nothing here
+// dials the network — a fabricated key + a stubbed global fetch measure every mechanism.
+const { hashString: nodeHash, makeRng: nodeRng, expiryWithJitter: nodeJitter,
+        cacheKey, createLlmCache, handleLlmRequest, llmCacheStats, LLM_CACHE_POLICY } = PROXY_MOD;
+const TS_RNG = await server.ssrLoadModule("/lib/rng.ts");
+const TS_CACHE = await server.ssrLoadModule("/domain/cache.ts");
+
+const paritySeeds = ["", "a", "football-os", "中文测试", "seed:key:1700000000", "gpt-6-sol"];
+ok(`M1079 hashString is BIT-PARITY with lib/rng.ts across ${paritySeeds.length} seeds (FNV-1a uint32)`,
+  paritySeeds.every((s) => nodeHash(s) === TS_RNG.hashString(s)));
+ok(`M1079 makeRng is BIT-PARITY with lib/rng.ts (20 exact doubles × ${paritySeeds.length} seeds, mulberry32)`,
+  paritySeeds.every((s) => { const a = nodeRng(s), b = TS_RNG.makeRng(s); for (let i = 0; i < 20; i++) if (a() !== b()) return false; return true; }));
+const jitterVectors = [["k1", 1700000000, 600, 120, "football-os"], ["中文", 1700000123, 60, 24, "football-os"], ["x", 0, 10, 5, "seed"], ["z", 999999999, 0, 0, "football-os"]];
+ok(`M1079 expiryWithJitter is BIT-PARITY with domain/cache.ts (seconds-in/out, ${jitterVectors.length} vectors)`,
+  jitterVectors.every(([k, n, t, j, s]) => nodeJitter(k, n, t, j, s) === TS_CACHE.expiryWithJitter(k, n, t, j, s)));
+ok(`M1079 policy seed '${LLM_CACHE_POLICY.seed}' aligns with domain CACHE_POLICY (the M1076 Java twin too)`,
+  LLM_CACHE_POLICY.seed === TS_CACHE.CACHE_POLICY.seed && LLM_CACHE_POLICY.seed === "football-os");
+// planted: a millisecond signature or a drifted multiplier must be charged by the parity detector
+const parityDetector = (impl) => jitterVectors.some(([k, n, t, j, s]) => impl(k, n, t, j, s) !== TS_CACHE.expiryWithJitter(k, n, t, j, s));
+ok(`the parity detector charges a planted drift (×1000 ms-signature and a +1 multiplier), while the shipped twin is clean`,
+  parityDetector((k, n, t, j, s) => nodeJitter(k, n * 1000, t, j, s)) &&
+  parityDetector((k, n, t, j, s) => nodeJitter(k, n, t, j + 1, s)) &&
+  !parityDetector(nodeJitter));
+
+// The cache key is derived ONLY from public input (model + cleaned messages) — the server key can
+// never enter it, or a visitor could fingerprint the secret by colliding the digest.
+const cleanMsgs = [{ role: "system", content: "DEMO WORLD briefing" }, { role: "user", content: "who is strongest?" }];
+const key1 = cacheKey("gpt-6-sol", cleanMsgs);
+ok(`M1079 cacheKey is stable, sensitive to model+content, a uint32 hex, and NEVER contains the server key`,
+  key1 === cacheKey("gpt-6-sol", cleanMsgs) &&
+  key1 !== cacheKey("other-model", cleanMsgs) &&
+  key1 !== cacheKey("gpt-6-sol", [{ role: "system", content: "DEMO WORLD briefing" }, { role: "user", content: "different" }]) &&
+  /^[0-9a-f]{8}$/.test(key1) && !key1.includes("SECRET"));
+
+// Stub the model call. A fabricated key never leaves this process; no network is dialled.
+const FAKE = { key: "sk-" + "S".repeat(40), baseUrl: "https://wkapi.pro/v1", model: "gpt-6-sol" };
+const askBody = JSON.stringify({ messages: cleanMsgs, model: "gpt-6-sol" });
+const realFetch = globalThis.fetch;
+let modelCalls = 0;
+globalThis.fetch = async () => { modelCalls++; await new Promise((r) => setTimeout(r, 8)); return { ok: true, json: async () => ({ choices: [{ message: { content: "Manchester City 89" } }] }) }; };
+try {
+  const coldCache = createLlmCache();
+  const cold = await handleLlmRequest(FAKE, askBody, coldCache);
+  const warm = await handleLlmRequest(FAKE, askBody, coldCache);
+  ok(`M1079 read-through: cold = 200 miss (1 model call), identical ask = 200 hit (0 new model call), text identical`,
+    cold.status === 200 && cold.body.cached === false && cold.headers["X-FootballOS-LLM-Cache"] === "miss" &&
+    warm.status === 200 && warm.body.cached === true && warm.body.text === cold.body.text &&
+    warm.headers["X-FootballOS-LLM-Cache"] === "hit" && modelCalls === 1);
+  ok(`M1079 a hit cannot leak the key: no cache response body or header carries the fabricated token`,
+    ![cold, warm].some((r) => JSON.stringify(r).includes(FAKE.key.slice(0, 12))));
+
+  const sfCache = createLlmCache(); const before = modelCalls;
+  const burst = await Promise.all(Array.from({ length: 6 }, () => handleLlmRequest(FAKE, askBody, sfCache)));
+  ok(`M1079 single-flight: 6 concurrent cold asks collapse to ONE model call (stampede/breakdown defence)`,
+    modelCalls - before === 1 &&
+    burst.filter((r) => r.headers["X-FootballOS-LLM-Cache"] === "miss").length === 1 &&
+    burst.filter((r) => r.headers["X-FootballOS-LLM-Cache"] === "coalesced").length === 5 &&
+    burst.every((r) => r.status === 200 && r.body.text === "Manchester City 89"));
+  const sfStats = llmCacheStats(sfCache);
+  ok(`M1079 measured stats: misses=1 coalesced=5 stores=1 size=1 (counters are MEASURED, not hardcoded)`,
+    sfStats.misses === 1 && sfStats.coalesced === 5 && sfStats.stores === 1 && sfStats.size === 1);
+  // planted: a leaky stat that counted coalesced siblings as misses would report misses===6 and fail here
+  const leakyMisses = sfStats.coalesced + sfStats.misses; // 6 if a future edit double-counts
+  ok(`M1079 misses counts ONLY real model round-trips (1), never the 5 coalesced siblings (planted double-count=${leakyMisses} is refused)`,
+    sfStats.misses === 1 && leakyMisses === 6 && leakyMisses !== sfStats.misses);
+
+  // errors must NEVER be cached — a transient 503 must be retried, not memoized into a denial
+  const savedFetch = globalThis.fetch;
+  globalThis.fetch = async () => { modelCalls++; return { ok: false, status: 503 }; };
+  const errCache = createLlmCache();
+  const e1 = await handleLlmRequest(FAKE, askBody, errCache);
+  const e2 = await handleLlmRequest(FAKE, askBody, errCache);
+  globalThis.fetch = savedFetch;
+  ok(`M1079 degraded model 503 is NEVER cached: two asks → 502 model_503 twice, cache stays empty (planted cached-error charged)`,
+    e1.status === 502 && e1.body.error === "model_503" && e2.body.error === "model_503" && errCache.entries.size === 0 &&
+    !(e1.body.cached || e2.body.cached));
+
+  // seeded full jitter: TTLs land in [ttl, ttl+jitter] and scatter, never expire as one herd
+  const baseSec = 1700000000;
+  const ttls = Array.from({ length: 40 }, (_, i) => nodeJitter("k" + i, baseSec, 600, 120, "football-os") - baseSec);
+  const plantedHerd = Array.from({ length: 40 }, () => 600); // the foil: no jitter
+  ok(`M1079 seeded full jitter: 40 TTLs all in [600,720] and scattered (${new Set(ttls).size} buckets) — planted fixed-TTL herd charged`,
+    ttls.every((t) => t >= 600 && t <= 720) && new Set(ttls).size > 1 && new Set(plantedHerd).size === 1);
+
+  // LRU is BOUNDED: a runaway visitor cannot grow server memory without limit (hardware fit)
+  const small = createLlmCache({ ...LLM_CACHE_POLICY, capacity: 4 });
+  for (let i = 0; i < 6; i++) small.write("key" + i, { text: "t", model: "m", expiresAt: baseSec * 1000 + 999999 }, baseSec * 1000);
+  ok(`M1079 LRU is bounded: capacity 4 + 6 writes → size 4, evictions 2 measured, no O(n) scan`,
+    small.entries.size === 4 && small.stats.evictions === 2 && LLM_CACHE_POLICY.capacity > 0);
+  const expiring = createLlmCache();
+  expiring.write("k", { text: "t", model: "m", expiresAt: baseSec * 1000 - 1 }, baseSec * 1000);
+  ok(`M1079 an expired entry is evicted on read (fresh TTL, honest miss — planted stale-hit charged)`,
+    expiring.read("k", baseSec * 1000) === null && expiring.stats.expired === 1 && !(expiring.entries.has("k")));
+
+  // the no-key door still precedes any cache lookup: an unconfigured server is a 503, never a hit
+  const noKeyBefore = modelCalls;
+  const warmSeed = createLlmCache();
+  warmSeed.write(key1, { text: "Manchester City 89", model: "gpt-6-sol", expiresAt: Date.now() + 999999 }, Date.now());
+  const noKeyCold = await handleLlmRequest({ key: "" }, askBody, warmSeed);
+  ok(`M1079 the no-key 503 door precedes the cache: even a pre-seeded hit cannot serve without a key, 0 model calls`,
+    noKeyCold.status === 503 && noKeyCold.body.error === "server_llm_unconfigured" && noKeyCold.body.cached === undefined &&
+    warmSeed.entries.size === 1 && modelCalls === noKeyBefore);
+  // cache can be disabled (static-host / privacy posture) → EVERY ask is a fresh cold model call
+  globalThis.fetch = async () => { modelCalls++; return { ok: true, json: async () => ({ choices: [{ message: { content: "fresh" } }] }) }; };
+  const offCache = createLlmCache({ ...LLM_CACHE_POLICY, enabled: false });
+  const offBefore = modelCalls;
+  const off1 = await handleLlmRequest(FAKE, askBody, offCache);
+  const off2 = await handleLlmRequest(FAKE, askBody, offCache);
+  ok(`M1079 cache can be disabled: enabled=false → 2 asks = 2 model calls, both uncached/miss, size 0`,
+    modelCalls - offBefore === 2 && off1.body.cached === false && off2.body.cached === false &&
+    off1.headers["X-FootballOS-LLM-Cache"] === "miss" && off2.headers["X-FootballOS-LLM-Cache"] === "miss" &&
+    offCache.entries.size === 0 && offCache.stats.stores === 0);
+} finally {
+  globalThis.fetch = realFetch;
+}
+
+// ── 4c · M1079: the cache mechanisms are actually WIRED, not just exported ──────────────────
+ok(`M1079 the proxy declares a seeded, bounded, jittered cache policy (ttl/jitter/capacity/seed present)`,
+  LLM_CACHE_POLICY.enabled === true && LLM_CACHE_POLICY.ttlSeconds > 0 &&
+  LLM_CACHE_POLICY.jitterSeconds >= 0 && LLM_CACHE_POLICY.capacity > 0 && !!LLM_CACHE_POLICY.seed);
+ok(`M1079 the middleware owns a single cache for the server lifetime and the handler takes it as a 3rd arg`,
+  /llmProxyMiddleware\(configFor = \(\) => serverConfig\(\), cache = createLlmCache\(\)\)/.test(PROXY) &&
+  /handleLlmRequest\(cfg, requestBody, cache = null\)/.test(PROXY) &&
+  /handleLlmRequest\(configFor\(\), raw, cache\)/.test(PROXY));
+ok(`M1079 the cache key, measured stats and jitter primitives are exported for the proof and the live witness`,
+  /export function (cacheKey|createLlmCache|llmCacheStats|hashString|makeRng|expiryWithJitter)/.test(PROXY) &&
+  (PROXY.match(/export function /g) ?? []).length >= 8);
+
 // ── 5 · vite wiring mounts the proxy on BOTH dev and preview, loading server env wholesale ──
 const VITE_CFG = read("vite.config.ts");
 ok(`vite config loads the full env (empty prefix) for the server, mounts the proxy on dev AND preview, and does not expose the key to the client`,

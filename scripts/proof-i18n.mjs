@@ -563,7 +563,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1064: 137 -> 139 — domain/cache.ts and features/cache/CacheObservatory.tsx.
 // M1064: 139 -> 140 — domain/ringMath.ts (the shared hash-ring floor the cache and queue folds both read).
 // M1076: 140 -> 141 — data/llm.ts (the live LLM tie-in's fold, lazy-loaded through the AI studio).
-const APP_SRC_PIN = 141;
+// M1080: 141 -> 143 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
+const APP_SRC_PIN = 143;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -595,7 +596,7 @@ const APP_SRC_PIN = 141;
 // M1036: 77 -> 78 — PlatformAtlas.tsx is a new .tsx module.
 // M1059: 78 -> 79 — QueueObservatory.tsx is a new .tsx module.
 // M1064: 79 -> 80 — CacheObservatory.tsx is a new .tsx module.
-const TSX_PIN = 80;
+const TSX_PIN = 81;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -639,7 +640,8 @@ const TSX_PIN = 80;
 // M1064: 142 -> 143 — domain/ringMath.ts (the shared hash-ring floor, in the reader's path once
 // both folds import it).
 // M1076: 143 -> 144 — data/llm.ts (the live LLM tie-in's fold; lazy-loaded through the AI studio).
-const SRC_PIN = 144;
+// M1080: 144 -> 146 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
+const SRC_PIN = 146;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -3287,7 +3289,7 @@ const DUP_VALUES_PIN = 154;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
 // M970: the same "Pts" join pays its excess: 252 -> 254.
 // M1020: the same shared idiom join pays its excess: 254 -> 255.
-const DUP_EXCESS_KEYS_PIN = 255;
+const DUP_EXCESS_KEYS_PIN = 257;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4733,7 +4735,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // `t(arm.key)` into literal `t("rules.swingTwo")`/`t("rules.swingAll")` calls to keep the raw-UI
   // debt at zero — literal 2597 -> 2604. The removed expression returns the count to 34.
   // M1075 (atlas tables line): two literal call sites, redisTablesLine and redisTablesBoundary.
-  shapeCounts.literal === 2609 && shapeCounts.template === 113 && shapeCounts.expression === 34
+  shapeCounts.literal === 2641 && shapeCounts.template === 113 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4892,10 +4894,10 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // shardsMethod, timelineMore, capLine, rungTip, shardTip) hand their placeholders to the census.
   // M1072 (parallel front-end line): the rules-swing panel's swingComp ({comp}) and swingPlaces
   // ({std, alt}) literal rows each hand their placeholders to the census: 435 -> 437.
-  litVarSites === 439 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 444 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
-  exprWithObj.length === 0 && shapeCounts.expression === 34 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 35 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three
