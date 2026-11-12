@@ -336,6 +336,92 @@ round-trip. The static proof reads declarations, not a socket — the measured 1
 8/8 delivery and the DLQ consumption belong to `verify-messaging-live.mjs` and the numbers above,
 not to the gate. `PLATFORM_LIVE` stays false and the SPA still never calls the stack.
 
+## M1072 — the LIVE retry→DLQ failure witness (transient recovery, poison termination)
+
+M1071's `verify-messaging-live.mjs` published only **happy** messages. `scripts/verify-messaging-dlq-live.mjs`
+is the complementary live witness that injects **failures** onto the wire and measures the two
+properties that make a queue trustworthy: a transient fault **recovers** after its back-off ladder,
+and a permanent poison pill **terminates in the DLQ** instead of vanishing. It drives a real
+project-owned RabbitMQ and a real `messaging-service`; every number below is measured against a
+broker that actually answered. Like its siblings it is not part of `npm run proof` (it starts Docker
++ a jar); it is the runnable truth this section documents.
+
+**Two real defects, both caught only by a live run.** A fault-injection marker on the message body
+(`FAIL:n:` = NACK the first n tries; `POISON:` = NACK forever) makes the consumer fail on demand —
+the wire twin of the pure `FailurePlan` in `domain/queue.ts`:
+
+1. **Swallowed poison — the idempotency door ran before the failure door.** `processEvents()` used to
+   call `seen.add(id)` first. With an injectable failure, try 1 added the id to `seen` then threw;
+   the binder's retry drew try 2, which found the id in `seen`, counted it a **duplicate** and
+   returned **success**. So the ladder never advanced, `maxAttempts` was never reached, a `FAIL:2`
+   pill never recovered, and a poison pill was neither delivered nor dead-lettered — it silently
+   vanished. Live-measured on the defective order: `FAIL:2` → `faultAttempts=1`, `delivered` stuck.
+   **Fix:** the failure check now runs **before** `seen.add`, so a NACK'd try never occupies the
+   idempotency set — the wire twin of `deliverQueue()`, which adds to `seen` only on a successful
+   try.
+2. **Log-and-drop termination — the DLQ recoverer is on a different retry path.** After fix 1, a
+   `POISON` pill walked all **5** framework retries (`faultAttempts=5`, `deliveryAttempt=5` in the
+   log) but `deadLettered` stayed **0** and the message vanished into the global `errorChannel`'s
+   default `LoggingHandler`. `republish-to-dlq: true` did **not** rescue it: that is a *binder-level*
+   recoverer, and the functional-consumer `RetryTemplate` never passes through the binder's
+   republish interceptor. A second experiment — moving retry to the binder layer — was **worse**:
+   requeue redelivery spread attempts across consumer threads, the ledger stopped converging and one
+   pill took >30s. **Fix:** keep framework back-off (bounded, measured 578ms) and have
+   `processEvents()` itself **publish** the exhausted event through a new explicit `poison-out-0`
+   output binding to the deadLetter consumer's destination on the last try, then return — real,
+   observable termination owned by the service, independent of Spring's two disjoint retry
+   mechanisms.
+
+**Resulting topology.** One extra producer binding `poison-out-0 → footballos.events.dlq` shares the
+destination the `deadLetter-in-0` consumer group reads — one destination, two roles (poison out,
+dead-letter in), exactly the termination the pure fold has. `stats()` gains three **measurements**:
+`faultAttempts` (total NACK'd tries), `faultIds` (distinct ids that entered the ledger) and
+`routedToDlq` (exhausted pills the service routed itself). Together with `deadLettered` (sink
+consumption) they make termination observable rather than assumed.
+
+```sh
+# build once, then run the failure witness from the repo root
+mvn -DskipTests package -f services/pom.xml
+node scripts/verify-messaging-dlq-live.mjs           # reuses/leaves the RabbitMQ container
+node scripts/verify-messaging-dlq-live.mjs --clean   # removes the container at the end
+```
+
+**Port hygiene** is identical to M1071: `footballos-rabbit-live` bound **only** to
+`127.0.0.1:5673:5672` + `15673:15672`, dedicated `footballos/footballos` user, the foreign host
+5672/6379 never dialed, the jar spawned with ONLY standard `SPRING_RABBITMQ_*` with a refuses-default
+guard before touching Docker, container restored in a `finally`/SIGINT handler.
+
+**What it asserts (15 checks, all measured against the live broker):**
+
+| Phase | 断言 / response |
+|---|---|
+| boot | broker live, `maxAttempts=5`, shared queue with **4** competing consumers, empty fault ledger |
+| normal | 7 happy events still **lossless** (`delivered=7`, `faultAttempts=0`) — the failure path adds no cost |
+| transient | `FAIL:2` → NACKs twice, delivers on **try 3** (`delivered +1`, `faultAttempts +2`, ~430ms) — the swallowed-poison defect stayed fixed |
+| poison | `POISON` → walks all **5** tries, `routedToDlq 0→1`, `deadLettered 0→1`, `faultAttempts +5`, done in **867ms** (bound 8000ms) — no log-and-drop |
+| no phantom | the poison was neither delivered nor added to `seen` (`delivered 8→8`, `seen 8→8`, `duplicates=0`) |
+| broker echo | shared queue drained to 0 (no unacked poison), DLQ group queue drained to 0 after the sink consumed it |
+| **decisive** | re-publish the **same poison id** with a normal body → it **delivers** (`duplicates=0`) — proof a NACK'd try never occupied `seen` |
+| idempotency | ordinary duplicate ids still collapsed (delivered +1, `duplicates 0→1`) |
+| outage | broker DOWN → `live=false` in **72ms**, `/publish` 200 `sent:0`, health 503; recovery → `live=true` |
+
+**Measured on 2026-11-11 (this host):** normal 7/7 in 423ms; `FAIL:2` recovery in 430ms; `POISON`
+termination in 867ms with `routedToDlq=1`/`deadLettered=1`/`faultAttempts=7` (2 from the transient,
+5 from the poison); the poison id replay delivered cleanly with `duplicates=0`; broker-DOWN degrade
+72ms. `scripts/proof-messaging-failure.mjs` **21/21** pins the static floor (six families, each with
+a planted arm: failure-before-idempotency, bounded DLQ termination, observable counters, transient
+recovery off-by-one shape, witness integrity, M1071 non-regression + population floor) — moving
+`seen.add` above the failure door, removing the `bridge.send` termination, replaying a hardcoded
+counter, or an off-by-one `<` for `<=` all redden the gate on any machine without Docker.
+
+Honest limit: the live witness uses a **non-default port** (the default pair is spoken for on this
+host); a compose/CI stack on a registry-healthy machine still owns the canonical 5672/15672
+round-trip. The static proof reads declarations, not a socket — the measured retry counts, the
+867ms termination and the DLQ consumption belong to `verify-messaging-dlq-live.mjs`, not to the gate.
+The terminal DLQ route is **service-owned** (application-level `bridge.send`), deliberately not
+relying on Spring's `republish-to-dlq` binder recoverer, which this live run proved is not on the
+functional-consumer retry path. `PLATFORM_LIVE` stays false and the SPA never calls the stack.
+
 ## Tear-down
 
 ```sh
@@ -394,13 +480,19 @@ provide; it does not, and cannot, prove anything about this author's impaired Do
   A live broker round-trip belongs to the compose stack on a registry-healthy machine, or to a host
   whose 6379/5672 belong to this reactor — delete the two spawn-time overrides in `BOOT_ENV` when that
   is the case. `PLATFORM_LIVE` stays false whether or not a broker is up.
-- The **one** broker this host does run is the M1070 live Redis witness: `verify-redis-live.mjs` starts
-  `footballos-redis-live` on `127.0.0.1:16379` (a project-owned non-default port, never the foreign
-  6379), points a real cache-service at it, and measures read-through/evict/TTL plus a bounded live→down
-  degrade (~2s, down from Lettuce's 61s default) and recovery. That container is a test fixture, not
-  the reactor's canonical broker; the default-port story remains compose/CI's. `proof-redis-resilience.mjs`
-  pins the static floor (bounded timeouts, honest `redisUp`, non-default witness port, 8s degrade budget).
-  Delete a timeout bound or point the witness at 6379 and the gate goes red.
+- The **only** brokers this host runs for this project are the three LIVE witness fixtures, each on a
+  project-owned non-default port, each a test fixture and **not** the reactor's canonical broker:
+  `verify-redis-live.mjs` starts `footballos-redis-live` on `127.0.0.1:16379` (never the foreign 6379)
+  and measures cache read-through/evict/TTL + bounded live→down degrade (~2s, down from Lettuce's 61s
+  default); `verify-messaging-live.mjs` and `verify-messaging-dlq-live.mjs` share
+  `footballos-rabbit-live` on `127.0.0.1:5673`/`15673` (never the foreign 5672/15672) and measure,
+  respectively, lossless publish + honest `live` + bounded degrade, and transient recovery + poison
+  termination in the DLQ. Three static gates pin their floors (`proof-redis-resilience.mjs`,
+  `proof-messaging-resilience.mjs`, `proof-messaging-failure.mjs`): bounded timeouts, honest observe
+  surfaces, non-default witness ports, and the failure/DLQ contracts. Delete a bound, move a witness
+  to a default port, reorder the failure door before the seen-set, or remove the DLQ termination and
+  the matching gate goes red. The canonical 6379/5672/15672 story remains compose/CI's on a
+  registry-healthy machine, and `PLATFORM_LIVE` stays false regardless of any witness.
 
 ## Relationship to the gate
 

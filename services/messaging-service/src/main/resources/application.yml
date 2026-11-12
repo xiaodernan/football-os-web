@@ -38,6 +38,15 @@ spring:
         # commutative idempotent counter (seen-set), so order carries no meaning here.
         publishFixtures-out-0:
           destination: footballos.events
+        # M1072: the explicit poison -> DLQ producer. A framework-level RetryTemplate exhausts its
+        # ladder into the global errorChannel, whose default LoggingHandler log-and-DROPS the failed
+        # message; the binder's `republish-to-dlq` recoverer is NOT on that path. So on the last
+        # allowed try processEvents() itself publishes the exhausted event through THIS output
+        # binding to the SAME destination the deadLetter consumer group reads, giving a real,
+        # observable termination instead of a silent loss. One destination, two roles (poison out,
+        # dead-letter in) — exactly the DLQ topology the pure fold terminates into.
+        poison-out-0:
+          destination: footballos.events.dlq
         processEvents-in-0:
           destination: footballos.events
           group: footballos.pipeline

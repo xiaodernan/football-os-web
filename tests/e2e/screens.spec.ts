@@ -396,6 +396,13 @@ test("the league rules screen draws the table under different rules", async ({ p
   await expect(page.getByRole("heading", { name: "The table, under different rules" })).toBeVisible();
 });
 
+test("the league rules screen names the movers under each triplet", async ({ page }) => {
+  await page.goto("/#/league-rules");
+  await expect(page.getByRole("heading", { name: "The movers under each triplet" })).toBeVisible();
+  await expect(page.getByText("Win worth two draws (2-1-0)")).toBeVisible();
+  await expect(page.getByText("All-or-nothing (3-0-0)")).toBeVisible();
+});
+
 test("the form table ranks the clubs and the chips switch the competition", async ({ page }) => {
   await page.goto("/#/form");
   await expect(page.getByRole("heading", { name: "The last five, ranked" })).toBeVisible();

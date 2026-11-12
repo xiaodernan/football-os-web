@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, Crest } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, Crest, PANEL_CLASS } from "@/ui/primitives";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
-import { customPointsTable, STANDARD_RULES, TWO_ONE_ZERO_RULES, ALL_OR_NOTHING_RULES, type PointsRules } from "@/domain/league";
+import { customPointsTable, STANDARD_RULES, TWO_ONE_ZERO_RULES, ALL_OR_NOTHING_RULES, rulesSwingBoard, type PointsRules } from "@/domain/league";
 import { cn, SEPARATOR, signed } from "@/lib/utils";
 
 // M1023: the table, under different rules — the seed's own fixtures folded again under three
@@ -28,6 +28,9 @@ export function LeagueRules() {
   const rules: PointsRules = preset.rules;
   const board = useMemo(() => customPointsTable(compId, matches, clubs, rules), [compId, matches, clubs, rules]);
   const comp = competitions.find((c) => c.id === compId);
+  // M1072: the swing kings — the world's biggest table moves under each historic triplet, read
+  // straight off the seeded fixtures (the same walk under both triplets, one fold).
+  const swing = useMemo(() => rulesSwingBoard(competitions, matches, clubs), [competitions, matches, clubs]);
 
   return (
     <div className="space-y-5">
@@ -119,6 +122,42 @@ export function LeagueRules() {
             <p className="mt-3 text-xs text-muted-foreground">{t("rules.method")}</p>
           </>
         )}
+      </Panel>
+
+      <Panel className="p-5">
+        <SectionTitle title={t("rules.swingTitle")} hint={t("rules.swingHint")} />
+        <div className="mt-3 grid gap-4 md:grid-cols-2">
+          {[
+            { label: t("rules.swingTwo"), entries: swing.two },
+            { label: t("rules.swingAll"), entries: swing.all },
+          ].map((arm) => (
+            <div key={arm.label} className="space-y-2">
+              <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{arm.label}</div>
+              {arm.entries.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t("rules.swingNone")}</p>
+              ) : (
+                arm.entries.map((entry) => {
+                  const club = getClub(entry.moverId);
+                  return (
+                    <div key={entry.compId} className={cn("flex items-center justify-between gap-3 rounded-lg p-3", PANEL_CLASS.panelMuted)}>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Crest colors={club?.colors} short={club?.short} size={22} />
+                        <div className="min-w-0">
+                          <Link to={`/clubs/${entry.moverId}`} className="block truncate text-sm font-medium hover:underline">{club?.name ?? entry.moverId}</Link>
+                          <div className="truncate text-[11px] text-muted-foreground">{t("rules.swingComp", { comp: entry.compName })}</div>
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className="tabular-nums text-sm font-semibold">{signed(entry.sway)}</div>
+                        <div className="text-[10px] text-muted-foreground">{t("rules.swingPlaces", { std: entry.standardPosition, alt: entry.rulesPosition })}</div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          ))}
+        </div>
       </Panel>
     </div>
   );

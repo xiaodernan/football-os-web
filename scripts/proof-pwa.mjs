@@ -217,7 +217,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // baseline re-recorded in the same commit (JS 605, CSS 12.7).
 // M1064: the cache observatory adds a lazy screen + its domain fold — 628 KB across 67 assets,
 // pin 618 -> 628, baseline re-recorded in the same commit (JS 615, CSS 13).
-const BUDGET_KB = 628;
+// M1072: the rules-swing panel adds a lazy-route surface — 629 KB across 67 assets,
+// pin 628 -> 629, baseline re-recorded in the same commit (JS 616, CSS 13.3).
+const BUDGET_KB = 629;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

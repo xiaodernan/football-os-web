@@ -112,3 +112,59 @@ export function customPointsTable(compId: string, matches: Match[], clubs: Club[
   });
   return { rows, matches: sum(rows, (r) => r.played) / 2 };
 }
+
+// M1072: the rules-swing kings — the biggest table moves each competition makes when the
+// win/draw/loss triplet changes. The league table fold walks the fixtures twice
+// (standard triplet and the reader's), and the gap between the two ladders is the argument
+// the swing makes about how an era of football prices a win: "a win is worth two draws" is
+// not decoration, it re-orders real tables. This fold walks all of the competitions under
+// both historic triplets and names, per competition, the single club the triplet moves
+// furthest — because every table's story under different rules is really one name.
+export interface SwingEntry {
+  compId: string;
+  compName: string;
+  moverId: string;
+  /** standardPosition − rulesPosition — positive means the club climbs under the triplet. */
+  sway: number;
+  rulesPosition: number;
+  standardPosition: number;
+}
+export interface RulesSwingBoard {
+  two: SwingEntry[];
+  all: SwingEntry[];
+}
+
+/** Per competition, per triplet family: walk the custom table, track the club with the
+ *  widest position swing (max |sway|), keep them. Sorted by |sway| desc, tie by compId
+ *  asc — the world's biggest table-tugs, one card per rule family. */
+export function rulesSwingBoard(
+  competitions: readonly { id: string; name: string }[],
+  matches: readonly Match[],
+  clubs: readonly Club[],
+  limit = 4,
+): RulesSwingBoard {
+  const one = (rules: PointsRules): SwingEntry[] => {
+    const rows: SwingEntry[] = [];
+    for (const c of competitions) {
+      const t = customPointsTable(c.id, [...matches], [...clubs], rules);
+      if (t.rows.length === 0) continue;
+      // One name per competition: the club the triplet moves furthest. Ties (common in
+      // tiny tables) are decided by clubId asc — declared here, not discovered.
+      let mover = t.rows[0];
+      for (const r of t.rows) {
+        if (Math.abs(r.sway) > Math.abs(mover.sway)) mover = r;
+        else if (Math.abs(r.sway) === Math.abs(mover.sway) && r.clubId < mover.clubId) mover = r;
+      }
+      rows.push({
+        compId: c.id, compName: c.name,
+        moverId: mover.clubId, sway: mover.sway,
+        rulesPosition: mover.rulesPosition, standardPosition: mover.standardPosition,
+      });
+    }
+    return rows
+      .filter((r) => Math.abs(r.sway) > 0)
+      .sort((a, b) => Math.abs(b.sway) - Math.abs(a.sway) || a.compId.localeCompare(b.compId))
+      .slice(0, Math.max(1, Math.floor(limit)));
+  };
+  return { two: one(TWO_ONE_ZERO_RULES), all: one(ALL_OR_NOTHING_RULES) };
+}
