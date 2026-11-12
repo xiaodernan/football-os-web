@@ -391,6 +391,24 @@ test("the leaders screen draws the metronomes board", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "The metronomes" })).toBeVisible();
 });
 
+test("the season command room draws the champions, the money and the rewrites", async ({ page }) => {
+  await page.goto("/#/season-room");
+  await expect(page.getByRole("heading", { name: "The season, commanded" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The champions under 3-1-0" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The financial verdict" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The red ledger" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "If the rules were rewritten" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The closest crowns" })).toBeVisible();
+  // The hero tile of the frozen world: the UCL champion prints its points, and the profitable
+  // half prints the world's best-run club.
+  await expect(page.getByText("100").first()).toBeVisible();
+  await expect(page.getByText("Trabzonspor")).toBeVisible();
+  // The all-or-nothing rule genuinely flips the La Liga crown in the frozen world.
+  await expect(page.getByText("Real Madrid").first()).toBeVisible();
+  await expect(page.getByText("Win worth two draws (2-1-0)")).toBeVisible();
+  await expect(page.getByText("All-or-nothing (3-0-0)")).toBeVisible();
+});
+
 test("the league rules screen draws the table under different rules", async ({ page }) => {
   await page.goto("/#/league-rules");
   await expect(page.getByRole("heading", { name: "The table, under different rules" })).toBeVisible();
