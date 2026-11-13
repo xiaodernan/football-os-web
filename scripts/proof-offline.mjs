@@ -61,7 +61,9 @@ ok(`the scan actually covers the shipped app (${appFiles.length} files)`, appFil
 const LLM_EXCEPTION = "data/llm.ts";
 // M1098 earns the second carve: the cache observatory polls the SAME-ORIGIN /api/cache/ping probe
 // (the proxy's own counters on the dev/preview server — no cross-site optin, no telemetry).
-// The exception is still exactly one function call with an exact path; any second fetch in the
+// M1099 adds the third: the same-origin POST would have been the left-button verb, but the proxy
+// also accepts GET /api/cache/service (the Spring cache-service optional live wire).
+// Both exceptions are each exactly one function call with an exact path; any third fetch in the
 // file, a different origin, or any other file doing network I/O all redden the gate.
 const CACHE_EXCEPTION = "features/cache/CacheObservatory.tsx";
 const NETWORK = /\bfetch\s*\(|XMLHttpRequest|\baxios\b|new\s+WebSocket|new\s+EventSource|sendBeacon/;
@@ -75,10 +77,11 @@ const netHits = appFiles
   .map((f) => f.replace(root, "").replace(/^[\\/]/, "").replace(/\\/g, "/"));
 const cacheBody = NETWORK.test(appText(join(root, CACHE_EXCEPTION)) || "") ? appText(join(root, CACHE_EXCEPTION)) : "";
 const cacheFetchCalls = (cacheBody.match(/\bfetch\s*\(/g) ?? []).length;
-const cachePathOk = /["'`]\/api\/cache\/ping["'`]/.test(cacheBody);
+const cachePingPathOk = /["'`]\/api\/cache\/ping["'`]/.test(cacheBody);
+const cacheServicePathOk = /["'`]\/api\/cache\/service["'`]/.test(cacheBody);
 const stray = netHits.filter((p) => p !== LLM_EXCEPTION && p !== CACHE_EXCEPTION);
-ok(`the one same-origin LLM proxy call is exactly one fetch at the documented path (fetch count ${llmFetchCalls}, path ok=${llmPathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
-  netHits.length === 2 && llmFetchCalls === 1 && llmPathOk && cacheFetchCalls === 1 && cachePathOk && stray.length === 0);
+ok(`the two same-origin proxy calls are exactly one fetch at the documented path each (llm fetch count ${llmFetchCalls}, path ok=${llmPathOk}; cache fetch count ${cacheFetchCalls}, ping ok=${cachePingPathOk}, service ok=${cacheServicePathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
+  netHits.length === 2 && llmFetchCalls === 1 && llmPathOk && cacheFetchCalls === 2 && cachePingPathOk && cacheServicePathOk && stray.length === 0);
 
 const SW_REGISTER = /navigator\s*\.\s*serviceWorker\s*\.\s*register\s*\(\s*["'`]([^"'`]+)["'`]/;
 const swSites = appFiles.flatMap((f) => {

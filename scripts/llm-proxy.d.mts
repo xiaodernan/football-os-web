@@ -14,6 +14,7 @@ export interface LlmProxyResponse {
 
 export const PROXY_ROUTE: string;
 export const CACHE_PROBE_ROUTE: string;
+export const CACHE_SERVICE_ROUTE: string;
 export const PROMPT_CACHE_KEY: string;
 export const LLM_CACHE_POLICY: { enabled: boolean; ttlSeconds: number; jitterSeconds: number; capacity: number; seed: string };
 
@@ -25,6 +26,7 @@ export function createLlmCache(policy?: typeof LLM_CACHE_POLICY): unknown;
 export function llmCacheStats(cache: unknown): { hits: number; misses: number; coalesced: number; evictions: number; expired: number; stores: number; size: number };
 export function cachePingHandler(cache: unknown): { status: number; body: unknown; headers: Record<string, string> };
 export function cachePingMiddleware(cache: unknown): LlmMiddleware;
+export function cacheServiceMiddleware(env?: Record<string, string | undefined>): LlmMiddleware;
 
 export function normaliseBase(raw: string): string;
 

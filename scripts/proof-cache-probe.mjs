@@ -59,27 +59,35 @@ ok(`after one read the probe reports a real hit and stores>=1 (hits=${out2.body?
 
 // vite mounts the probe on BOTH dev and preview
 const VITE_CFG = read("vite.config.ts");
-ok(`vite.config mounts the LLM proxy AND the cache probe on BOTH dev and preview (configureServer + configurePreviewServer × cachePingMiddleware)`,
+ok(`vite.config mounts the LLM proxy AND the cache probe on BOTH dev and preview (configureServer + configurePreviewServer × cachePingMiddleware + cacheServiceMiddleware)`,
   /configureServer/.test(VITE_CFG) && /configurePreviewServer/.test(VITE_CFG) &&
   VITE_CFG.includes("cachePingMiddleware(llmCache)") && VITE_CFG.match(/cachePingMiddleware\(llmCache\)/g).length === 2 &&
+  VITE_CFG.includes("cacheServiceMiddleware(env)") && VITE_CFG.match(/cacheServiceMiddleware\(env\)/g).length === 2 &&
   /createLlmCache\(\)/.test(VITE_CFG));
 
 // d.mts alignment
 const DMTS = read("scripts/llm-proxy.d.mts");
-const exportsFound = ["CACHE_PROBE_ROUTE", "cachePingHandler", "cachePingMiddleware"].filter((s) => DMTS.includes(s));
-ok(`the .d.mts exports align with runtime (${exportsFound.length}/3)`, exportsFound.length === 3);
+const exportsFound = ["CACHE_PROBE_ROUTE", "CACHE_SERVICE_ROUTE", "cachePingHandler", "cachePingMiddleware", "cacheServiceMiddleware"].filter((s) => DMTS.includes(s));
+ok(`the .d.mts exports align with runtime (${exportsFound.length}/5)`, exportsFound.length === 5);
 
-// the screen carries the live-wireCount key (so the raw-UI census is armed, not asleep)
+// the screen carries exactly the two documented fetch calls and the full honest set of fallback keys
 const screenSrc = read("features/cache/CacheObservatory.tsx");
-ok(`the observatory screen carries an honest live-wire panel reading /api/cache/ping (fetch count 1, down/air-gap fallback preserved)`,
-  /\/api\/cache\/ping/.test(screenSrc) &&
-  (screenSrc.match(/fetch\s*\(/g) ?? []).length === 1 &&
-  screenSrc.includes("liveWireDown") && screenSrc.includes("liveWireCount"));
+const cachePingCalls = (screenSrc.match(/\/api\/cache\/ping/g) ?? []).length;
+const cacheServiceCalls = (screenSrc.match(/\/api\/cache\/service/g) ?? []).length;
+const totalFetchCalls = (screenSrc.match(/\bfetch\s*\(/g) ?? []).length;
+ok(`the observatory screen carries both live-wire fetches and their keys (${cachePingCalls} ping · ${cacheServiceCalls} service · ${totalFetchCalls} total fetches)`,
+  cachePingCalls >= 1 && cacheServiceCalls >= 1 && totalFetchCalls === 2 &&
+  screenSrc.includes("liveWireDown") && screenSrc.includes("liveWireCount") &&
+  screenSrc.includes("springLiveUnconfigured") && screenSrc.includes("springLiveDown") && screenSrc.includes("springLiveLine"));
 
 // the i18n dictionary carries the new keys in all three locales
 const dict = read("i18n/dictionaries.ts");
-ok(`cache.liveWireTitle / cache.liveWireDown / cache.liveWireEmpty / cache.liveWireCount resolve in all three locales`,
-  ["cache.liveWireTitle", "cache.liveWireDown", "cache.liveWireEmpty", "cache.liveWireCount"].every((k) => 3 === (dict.match(new RegExp(`"${k.replace(/\./g, "\\.")}":`, "g")) || []).length));
+ok(`cache.liveWire*/springLive* resolve in all three locales`,
+  [
+    "cache.liveWireTitle", "cache.liveWireDown", "cache.liveWireEmpty", "cache.liveWireCount",
+    "cache.springLiveTitle", "cache.springLiveHint", "cache.springLiveLoading",
+    "cache.springLiveUnconfigured", "cache.springLiveDown", "cache.springLiveLine",
+  ].every((k) => 3 === (dict.match(new RegExp(`"${k.replace(/\./g, "\\.")}":`, "g")) || []).length));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);

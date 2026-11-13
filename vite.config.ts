@@ -1,7 +1,7 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
-import { llmProxyMiddleware, serverConfig, createLlmCache, cachePingMiddleware } from "./scripts/llm-proxy.mjs";
+import { llmProxyMiddleware, serverConfig, createLlmCache, cachePingMiddleware, cacheServiceMiddleware } from "./scripts/llm-proxy.mjs";
 
 const proxy = { "/functions/v1/app": "http://127.0.0.1:8000" };
 
@@ -24,10 +24,12 @@ export default defineConfig(({ mode }) => {
     configureServer(server) {
       server.middlewares.use(llmProxyMiddleware(() => llmConfig, llmCache));
       server.middlewares.use(cachePingMiddleware(llmCache));
+      server.middlewares.use(cacheServiceMiddleware(env));
     },
     configurePreviewServer(server) {
       server.middlewares.use(llmProxyMiddleware(() => llmConfig, llmCache));
       server.middlewares.use(cachePingMiddleware(llmCache));
+      server.middlewares.use(cacheServiceMiddleware(env));
     },
   };
   return {

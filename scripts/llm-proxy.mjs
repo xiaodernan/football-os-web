@@ -361,3 +361,48 @@ export function cachePingMiddleware(cache = createLlmCache()) {
     res.end(JSON.stringify(out.body));
   };
 }
+
+// ─── M1099 · the Spring-cache healthy endpoint, proxied server-side ──────────────────
+// M1070's live witness against a running cache-service proves Spring's own machinery works. This
+// is the SAME service, if you choose to run it (or don't), surfaced to the browser so the
+// /cache observatory can report Spring's own measured stats — not mocked, not folded in.
+// The service is OPTIONAL: whichever way you call this, if it's not running, the envelope says
+// so honestly (never a fake "live" placeholder). Configure with CACHE_SERVICE_BASE (server-only,
+// never VITE_); the proxy sends GET /actuator/health and GET /cache/league/stats through.
+export const CACHE_SERVICE_ROUTE = "/api/cache/service";
+const normaliseServiceBase = (raw) => String(raw ?? "").trim().replace(/\/+$/, "");
+
+// Detect the live cache service — up to 1.2s per probe. Self-contained: no shared session, no
+// shared keys, no drift. If you don't run it, this returns null and the caller reports "down|unset".
+const probeService = async (base) => {
+  if (!base) return { ok: false, reason: "unconfigured", service: null, stats: null };
+  const url = normaliseServiceBase(base);
+  try {
+    const r = await fetch(`${url}/actuator/health`, { cache: "no-store", signal: AbortSignal.timeout(1200) });
+    if (!r.ok) return { ok: false, reason: "upstream_down", service: null, stats: null };
+    const r2 = await fetch(`${url}/cache/league/stats`, { cache: "no-store", signal: AbortSignal.timeout(1200) });
+    const stats = r2.ok ? await r2.json() : null;
+    return { ok: true, reason: "ok", service: "football-os-cache", stats };
+  } catch (err) {
+    return { ok: false, reason: err?.name === "AbortError" ? "timeout" : "unreachable", service: null, stats: null };
+  }
+};
+
+export function cacheServiceMiddleware(env = process.env) {
+  const base = env.CACHE_SERVICE_BASE || env.CACHE_SERVICE_URL || null;
+  return async function cacheService(req, res, next) {
+    const url = (req.url || "").split("?")[0];
+    if (url !== CACHE_SERVICE_ROUTE) return next?.();
+    if (req.method !== "GET") {
+      res.statusCode = 405;
+      res.setHeader("Allow", "GET");
+      res.end(JSON.stringify({ ok: false, error: "method_not_allowed" }));
+      return;
+    }
+    const probe = await probeService(base);
+    res.statusCode = probe.ok ? 200 : 503;
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(probe));
+  };
+}

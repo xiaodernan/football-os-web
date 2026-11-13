@@ -37,6 +37,7 @@ import {
 // the analysis; this one is what the current dev/preview proxy reports about itself. 200 + JSON
 // on mounts; 404/405/abort → the panel prints the down/air-gap word, never falls back to the fold.
 const CACHE_PING_URL = "/api/cache/ping";
+const CACHE_SERVICE_URL = "/api/cache/service";
 
 export function CacheObservatory() {
   const { t } = useI18n();
@@ -99,6 +100,26 @@ export function CacheObservatory() {
   const ringKeys = useMemo(() => resident.slice(0, 14), [resident]);
   const NODE_FILL = ["var(--color-primary)", "var(--color-info)", "var(--color-success)", "var(--color-warning)"];
   const nodeColor = (node: string) => NODE_FILL[Math.max(0, NODES.indexOf(node)) % NODE_FILL.length];
+
+  // M1099 · Spring cache-service live wire — polled only if you configured CACHE_SERVICE_BASE on this
+  // dev/preview server. 404 / 503 / unconfigured → the panel prints the honest "not armed" line.
+  const [live, setLive] = useState(null as null | { ok: boolean; enabled?: boolean; stats?: Record<string, number | string | boolean | null> | null; error?: string; reason?: string | null });
+  useEffect(() => {
+    let alive = true;
+    const tick = async () => {
+      try {
+        const r = await fetch(CACHE_SERVICE_URL, { cache: "no-store", signal: AbortSignal.timeout(1800) });
+        const body = await r.json();
+        if (alive) setLive({ ok: r.ok && body?.ok === true, stats: body?.stats ?? null, reason: body?.reason ?? null });
+      } catch {
+        if (alive) setLive({ ok: false });
+      }
+
+    };
+    void tick();
+    const iv = window.setInterval(tick, 10_000);
+    return () => { alive = false; window.clearInterval(iv); };
+  }, []);
 
   // M1098 · cache proof: the proxy's own counters right this instant, honestly served. The static
   // section above draws the domain fold; this one fetches `/api/cache/ping` for the REAL store.
@@ -298,6 +319,27 @@ export function CacheObservatory() {
                   <li>{t("cache.liveWireCount", { a: fmtGrouped(probe.stats.hits), b: fmtGrouped(probe.stats.misses), c: fmtGrouped(probe.stats.coalesced), d: fmtGrouped(probe.stats.evictions), e: fmtGrouped(probe.stats.expired), f: fmtGrouped(probe.stats.stores), g: fmtGrouped(probe.stats.size) })}</li>
                 </ul>
               )
+          )}
+        </div>
+      </Panel>
+
+      {/* M1099 · the Spring cache-service live wire — polled server-side via /api/cache/service.
+         The proxy sends /actuator/health + /cache/league/stats to the cache-service you configured in
+         CACHE_SERVICE_BASE. If you haven't booted the service (or you're on a static host), the panel
+         prints "not armed" — never a fabricated line. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("cache.springLiveTitle")} hint={t("cache.springLiveHint")} />
+        <div className="mt-3 text-sm">
+          {live === null && <div className="text-muted-foreground">{t("cache.springLiveLoading")}</div>}
+          {live?.ok === false && (
+            live.reason === "unconfigured"
+              ? <div className="text-muted-foreground">{t("cache.springLiveUnconfigured")}</div>
+              : <div className="text-muted-foreground">{t("cache.springLiveDown", { reason: live.reason ?? "" })}</div>
+          )}
+          {live?.ok === true && live.stats && (
+            <ul className="space-y-1 font-mono text-[12px]">
+              <li>{t("cache.springLiveLine", { r: String(live.stats.requests ?? "0"), h: String(live.stats.hits ?? "0"), m: String(live.stats.misses ?? "0"), p: String(live.stats.hitRate ?? "0"), x: String(live.stats.originLoads ?? "0"), c: String(live.stats.coalesced ?? "0") })}</li>
+            </ul>
           )}
         </div>
       </Panel>
