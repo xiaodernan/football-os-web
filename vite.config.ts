@@ -1,7 +1,7 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
-import { llmProxyMiddleware, serverConfig } from "./scripts/llm-proxy.mjs";
+import { llmProxyMiddleware, serverConfig, createLlmCache, cachePingMiddleware } from "./scripts/llm-proxy.mjs";
 
 const proxy = { "/functions/v1/app": "http://127.0.0.1:8000" };
 
@@ -12,14 +12,23 @@ export default defineConfig(({ mode }) => {
   // The API key therefore lives exclusively in this Node process and never in dist/assets/*.js.
   const env = loadEnv(mode, fileURLToPath(new URL(".", import.meta.url)), "");
   const llmConfig = serverConfig(env);
+  // One cache instance, shared by both middlewares on this server lifetime, so the observatory's
+  // cache probe can read the exact counters the LLM path ticks over.
+  const llmCache = createLlmCache();
   // M1078: the same-origin LLM proxy, mounted on BOTH dev and preview so a live witness and a
   // built app served by `vite preview` share ONE implementation. A static host (GH Pages) has no
   // Node middleware, so the browser's POST to /api/llm/chat fails and degrades to the local
   // deterministic briefing — the honest, secret-free default for a public deployment.
   const llmPlugin: Plugin = {
     name: "footballos-llm-proxy",
-    configureServer(server) { server.middlewares.use(llmProxyMiddleware(() => llmConfig)); },
-    configurePreviewServer(server) { server.middlewares.use(llmProxyMiddleware(() => llmConfig)); },
+    configureServer(server) {
+      server.middlewares.use(llmProxyMiddleware(() => llmConfig, llmCache));
+      server.middlewares.use(cachePingMiddleware(llmCache));
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(llmProxyMiddleware(() => llmConfig, llmCache));
+      server.middlewares.use(cachePingMiddleware(llmCache));
+    },
   };
   return {
     plugins: [react(), llmPlugin],

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, CHIP_CLASS, PANEL_CLASS, Mini } from "@/ui/primitives";
 import { cn, fmtGrouped, hashRingPoint, safeDiv } from "@/lib/utils";
@@ -32,6 +32,11 @@ import {
  * deterministic. The page says all of that out loud. The Java LeagueCacheService (M1058) is the
  * transport that would run these decisions against Redis; this board explains the decisions.
  */
+
+// M1098 — the live wire — the proxy's OWN counters, fetched honestly. The static panel above is
+// the analysis; this one is what the current dev/preview proxy reports about itself. 200 + JSON
+// on mounts; 404/405/abort → the panel prints the down/air-gap word, never falls back to the fold.
+const CACHE_PING_URL = "/api/cache/ping";
 
 export function CacheObservatory() {
   const { t } = useI18n();
@@ -94,6 +99,25 @@ export function CacheObservatory() {
   const ringKeys = useMemo(() => resident.slice(0, 14), [resident]);
   const NODE_FILL = ["var(--color-primary)", "var(--color-info)", "var(--color-success)", "var(--color-warning)"];
   const nodeColor = (node: string) => NODE_FILL[Math.max(0, NODES.indexOf(node)) % NODE_FILL.length];
+
+  // M1098 · cache proof: the proxy's own counters right this instant, honestly served. The static
+  // section above draws the domain fold; this one fetches `/api/cache/ping` for the REAL store.
+  const [probe, setProbe] = useState(null as null | { ok: boolean; stats?: Record<string, number>; error?: string });
+  useEffect(() => {
+    let alive = true;
+    const tick = async () => {
+      try {
+        const r = await fetch(CACHE_PING_URL, { cache: "no-store" });
+        const body = await r.json();
+        if (alive) setProbe(body);
+      } catch {
+        if (alive) setProbe({ ok: false, error: "down" });
+      }
+    };
+    void tick();
+    const iv = window.setInterval(tick, 10_000);
+    return () => { alive = false; window.clearInterval(iv); };
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -258,6 +282,24 @@ export function CacheObservatory() {
         </ul>
         <p className="mt-3 text-[11px] text-muted-foreground">{t("cache.witnessLine")}</p>
         <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">{t("cache.witnessCmd")}</p>
+      </Panel>
+
+      {/* M1098 · the live wire — the proxy's own counters, fetched honestly. Real-time on this dev/preview server. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("cache.liveWireTitle")} hint={t("cache.liveWireHint")} />
+        <div className="mt-3 text-sm">
+          {probe === null && <div className="text-muted-foreground">{t("cache.liveWireLoading")}</div>}
+          {probe?.ok === false && <div className="text-muted-foreground">{t("cache.liveWireDown")}</div>}
+          {probe?.ok === true && probe.stats && (
+            probe.stats.stores === 0
+              ? <div className="text-muted-foreground">{t("cache.liveWireEmpty")}</div>
+              : (
+                <ul className="space-y-1 font-mono text-[12px]">
+                  <li>{t("cache.liveWireCount", { a: fmtGrouped(probe.stats.hits), b: fmtGrouped(probe.stats.misses), c: fmtGrouped(probe.stats.coalesced), d: fmtGrouped(probe.stats.evictions), e: fmtGrouped(probe.stats.expired), f: fmtGrouped(probe.stats.stores), g: fmtGrouped(probe.stats.size) })}</li>
+                </ul>
+              )
+          )}
+        </div>
       </Panel>
     </div>
   );

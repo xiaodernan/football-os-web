@@ -59,6 +59,11 @@ ok(`the scan actually covers the shipped app (${appFiles.length} files)`, appFil
 // path; any second fetch in the file, a different origin, or any other file doing network I/O
 // all redden the gate. We do not silently carve anything out.
 const LLM_EXCEPTION = "data/llm.ts";
+// M1098 earns the second carve: the cache observatory polls the SAME-ORIGIN /api/cache/ping probe
+// (the proxy's own counters on the dev/preview server — no cross-site optin, no telemetry).
+// The exception is still exactly one function call with an exact path; any second fetch in the
+// file, a different origin, or any other file doing network I/O all redden the gate.
+const CACHE_EXCEPTION = "features/cache/CacheObservatory.tsx";
 const NETWORK = /\bfetch\s*\(|XMLHttpRequest|\baxios\b|new\s+WebSocket|new\s+EventSource|sendBeacon/;
 const appText = (f) => readFileSync(f, "utf8");
 // M1078: count of .fetch( in the LLM-accept file must be EXACTLY one and call the documented path.
@@ -68,9 +73,12 @@ const llmPathOk = /["'`]\/api\/llm\/chat["'`]/.test(llmBody);
 const netHits = appFiles
   .filter((f) => NETWORK.test(appText(f)))
   .map((f) => f.replace(root, "").replace(/^[\\/]/, "").replace(/\\/g, "/"));
-const stray = netHits.filter((p) => p !== LLM_EXCEPTION);
+const cacheBody = NETWORK.test(appText(join(root, CACHE_EXCEPTION)) || "") ? appText(join(root, CACHE_EXCEPTION)) : "";
+const cacheFetchCalls = (cacheBody.match(/\bfetch\s*\(/g) ?? []).length;
+const cachePathOk = /["'`]\/api\/cache\/ping["'`]/.test(cacheBody);
+const stray = netHits.filter((p) => p !== LLM_EXCEPTION && p !== CACHE_EXCEPTION);
 ok(`the one same-origin LLM proxy call is exactly one fetch at the documented path (fetch count ${llmFetchCalls}, path ok=${llmPathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
-  netHits.length === 1 && llmFetchCalls === 1 && llmPathOk && stray.length === 0);
+  netHits.length === 2 && llmFetchCalls === 1 && llmPathOk && cacheFetchCalls === 1 && cachePathOk && stray.length === 0);
 
 const SW_REGISTER = /navigator\s*\.\s*serviceWorker\s*\.\s*register\s*\(\s*["'`]([^"'`]+)["'`]/;
 const swSites = appFiles.flatMap((f) => {

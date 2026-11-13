@@ -136,6 +136,24 @@ export function llmCacheStats(cache) {
   return { ...cache.stats, size: cache.entries.size };
 }
 
+// ─── M1098 · the cache probe — a tiny read-only view of the proxy's own cache ─────────
+// The observatory screen already draws the domain fold; people asked "but what is the REAL cache
+// doing right this instant?" — this is that answer. It exposes NO secrets, NO paths, NO keys: just
+// the measured counters and the seeded policy integer numbers, safe for any endpoint that mounts
+// the proxy. A static host that cannot mount the proxy gets 404 and the screen degrades honestly.
+export const CACHE_PROBE_ROUTE = "/api/cache/ping";
+
+/** Produce the payload the way the LLM handler produces its { status, body, headers } triple. */
+export function cachePingHandler(cache = null) {
+  if (!cache) return { status: 200, body: { ok: true, cache: null }, headers: { "Cache-Control": "no-store", "Content-Type": "application/json" } };
+  const stats = llmCacheStats(cache);
+  return {
+    status: 200,
+    body: { ok: true, policy: cache.policy, stats, at: new Date().toISOString() },
+    headers: { "Cache-Control": "no-store", "Content-Type": "application/json" },
+  };
+}
+
 /** Normalise a provider base URL to end in exactly one /v1 (the user's endpoint requires it). */
 export function normaliseBase(raw) {
   const base = String(raw || DEFAULT_BASE).trim().replace(/\/+$/, "");
@@ -321,6 +339,23 @@ export function llmProxyMiddleware(configFor = () => serverConfig(), cache = cre
       return;
     }
     const out = await handleLlmRequest(configFor(), raw, cache);
+    res.statusCode = out.status;
+    for (const [k, v] of Object.entries(out.headers)) res.setHeader(k, v);
+    res.end(JSON.stringify(out.body));
+  };
+}
+
+export function cachePingMiddleware(cache = createLlmCache()) {
+  return async function cachePing(req, res, next) {
+    const url = (req.url || "").split("?")[0];
+    if (url !== CACHE_PROBE_ROUTE) return next?.();
+    if (req.method !== "GET") {
+      res.statusCode = 405;
+      res.setHeader("Allow", "GET");
+      res.end(JSON.stringify({ ok: false, error: "method_not_allowed" }));
+      return;
+    }
+    const out = cachePingHandler(cache);
     res.statusCode = out.status;
     for (const [k, v] of Object.entries(out.headers)) res.setHeader(k, v);
     res.end(JSON.stringify(out.body));

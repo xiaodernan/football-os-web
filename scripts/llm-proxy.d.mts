@@ -13,6 +13,7 @@ export interface LlmProxyResponse {
 }
 
 export const PROXY_ROUTE: string;
+export const CACHE_PROBE_ROUTE: string;
 export const PROMPT_CACHE_KEY: string;
 export const LLM_CACHE_POLICY: { enabled: boolean; ttlSeconds: number; jitterSeconds: number; capacity: number; seed: string };
 
@@ -22,6 +23,8 @@ export function expiryWithJitter(key: string, now: number, ttl: number, jitter: 
 export function cacheKey(model: string, messages: unknown[]): string;
 export function createLlmCache(policy?: typeof LLM_CACHE_POLICY): unknown;
 export function llmCacheStats(cache: unknown): { hits: number; misses: number; coalesced: number; evictions: number; expired: number; stores: number; size: number };
+export function cachePingHandler(cache: unknown): { status: number; body: unknown; headers: Record<string, string> };
+export function cachePingMiddleware(cache: unknown): LlmMiddleware;
 
 export function normaliseBase(raw: string): string;
 
@@ -31,4 +34,4 @@ export function serverConfig(env?: Record<string, string | undefined>): LlmServe
 
 export type LlmMiddleware = (req: any, res: any, next?: () => void) => Promise<void>;
 
-export function llmProxyMiddleware(configFor?: () => LlmServerConfig): LlmMiddleware;
+export function llmProxyMiddleware(configFor?: () => LlmServerConfig, cache?: unknown): LlmMiddleware;
