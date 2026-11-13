@@ -42,22 +42,35 @@ export function AiStudio({ initialTab = "chat" }: { initialTab?: AiTab }) {
   const [tab, setTab] = useState(initialTab);
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className={cn("grid h-10 w-10 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>✦</div>
-          <div>
-            <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("ai.title")}</h1>{<DemoBadge />}</div>
-            <p className="text-xs text-muted-foreground">{t("ai.subtitle")}</p>
+      {/* The cinema header: the same glass idiom as the hub — pure decor, every word via the dictionary door. */}
+      <header className={cn("relative overflow-hidden rounded-2xl px-5 py-4", PANEL_CLASS.panelFaint)}>
+        <div aria-hidden className="fo-orb fo-orb-violet -left-16 -top-16 h-40 w-40" />
+        <div aria-hidden className="fo-orb fo-orb-cyan -right-10 -bottom-12 h-36 w-36" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className={cn("grid h-10 w-10 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>✦</div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-xl font-bold text-transparent">{t("ai.title")}</h1>
+                <DemoBadge />
+                <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", LLM_CONFIG.hasKey ? CHIP_CLASS.info : CHIP_CLASS.muted)}>
+                  {LLM_CONFIG.hasKey && <span aria-hidden className="fo-live-dot inline-flex h-1.5 w-1.5 rounded-full bg-info" />}
+                  {LLM_CONFIG.hasKey ? t("ai.via.live", { model: LLM_CONFIG.model }) : t("ai.via.local")}
+                </span>
+              </div>
+              <p className="mt-0.5 max-w-xl text-xs text-muted-foreground">{t("ai.subtitle")}</p>
+            </div>
+          </div>
+          <div className="flex gap-1.5">
+            {TABS.map((k) => (
+              <button key={k} onClick={() => { setTab(k); navigate(k === "chat" ? "/ai" : "/knowledge"); }} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === k ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>
+                {k === "chat" ? t("ai.tab.chat") : t("ai.tab.graph")}
+              </button>
+            ))}
           </div>
         </div>
-        <div className="flex gap-1.5">
-          {TABS.map((k) => (
-            <button key={k} onClick={() => { setTab(k); navigate(k === "chat" ? "/ai" : "/knowledge"); }} className={cn("rounded-md border px-3 py-1.5 text-xs", tab === k ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>
-              {k === "chat" ? t("ai.tab.chat") : t("ai.tab.graph")}
-            </button>
-          ))}
-        </div>
-      </div>
+      </header>
       {tab === "chat" ? <Chat /> : <Graph />}
     </div>
   );
