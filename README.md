@@ -15482,6 +15482,38 @@ fifteen standard 3-1-0 league tables, one per competition.
   written for a healthy registry and have not been executed in the authoring environment;
   this project boots nothing remote.
 
+## The live Football AI tie-in (optional, server-side only)
+
+The Football AI chat is an honest deterministic simulator by default — asking it something prints
+the seeded-world answer locally, with zero network and zero secrets. If you own a real model key
+you may point it at one, and the request passes through ONE same-origin proxy, never straight
+from a visitor's browser; there is nothing for a visitor to steal.
+
+- Server-side env (read only by `scripts/llm-proxy.mjs`, never shipped to the browser):
+  - `LLM_API_KEY` — your OpenAI-compatible bearer key, any provider
+  - `LLM_BASE_URL` — base URL, the path MUST end in `/v1` (e.g. `https://wkapi.pro/v1`)
+  - `LLM_MODEL` — model name as you serve it (unrelated to the public build flag)
+- Public build-time env (the only things the bundle legitimately carries):
+  - `VITE_LLM_ENABLED=true` — arms `/api/llm/chat` from the chat screen AFTER the build; unset
+    or empty → nothing crosses the wire, the AI answers from the deterministic briefing
+  - `VITE_LLM_MODEL` — the model NAME only, shown in the UI chip (e.g. `gpt-6-sol`)
+- Hard limits: 10 messages per call, 8 KB body cap, 20 s timeout, no streaming; the failure
+  contract is honest everywhere — 503 (no server key), 400 (bad JSON/oversized), 405 (non-POST),
+  502 (model error) — and the key NEVER appears in any response or in `dist/` (`proof-llm` pins
+  `git ls-files` scanning for `sk-` tokens plus a dist sweep).
+- `/api/llm/chat` is mounted by Vite twice: `configureServer` (dev) and `configurePreviewServer`
+  (`vite preview`); the proxy itself is a plain Node handler and can be mounted elsewhere too
+  (`llm-proxy.mjs` + `llm-proxy.d.mts`).
+- **GH Pages / any static host has NO Node middleware** — the browser's POST fails, the chat
+  degrades visibly to the deterministic briefing. Nothing leaks, nothing breaks, no key was ever
+  on the public path. Verified locally with a credential-less build: zero console errors, the
+  screen shows `DETERMINISTIC BRIEFING`, no `LIVE` chip.
+- Verify the whole envelope once with your key in place:
+  - `node scripts/verify-llm-live.mjs` — the live witness, 18/18 checks against your model
+  - `node scripts/proof-llm.mjs` — the portable floor, no credentials, no network
+- The honesty boundary is unchanged: the demo world is frozen (15 leagues, 73 clubs, 610 players),
+  the model answers about it ONLY, and the web app never calls any Spring service itself.
+
 ## Deploying
 
 To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a

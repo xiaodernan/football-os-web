@@ -1637,7 +1637,7 @@ const en: Dict = {
   // answers in English only, so a translated prompt would be answered in a
   // different language than it was asked in.
   "ai.title": "Football AI",
-  "ai.subtitle": "Grounded in the seeded world — when VITE_LLM_API_KEY is set, answers come from a live model; otherwise a deterministic briefing. Either way, evidence & sources below each reply.",
+  "ai.subtitle": "Grounded in the seeded world — when the server holds an LLM key and it is enabled, answers come from a live model; otherwise a deterministic briefing. Either way, evidence & sources below each reply.",
   "ai.via.live": "live · {model}",
   "ai.via.local": "deterministic briefing",
   "ai.via.fallback": "model unreachable · deterministic briefing — retry",
@@ -4970,7 +4970,7 @@ const zhCN: Dict = {
   "tac.toastSaved": "阵型已保存到本设备",
   "tac.toastLoaded": "阵型已载入",
   "ai.title": "足球 AI",
-  "ai.subtitle": "回答均基于世界数据集——有 VITE_LLM_API_KEY 时走真模型；否则走确定性简报。每条回答下方都有证据与来源。",
+  "ai.subtitle": "回答均基于世界数据集——当服务端持有 LLM key 并启用时走真模型；否则走确定性简报。每条回答下方都有证据与来源。",
   "ai.via.live": "在线 · {model}",
   "ai.via.local": "确定性简报",
   "ai.via.fallback": "模型不可达 · 确定性简报——重试",
@@ -8031,7 +8031,7 @@ const zhTW: Dict = {
   "tac.toastSaved": "陣型已儲存到本裝置",
   "tac.toastLoaded": "陣型已載入",
   "ai.title": "足球 AI",
-  "ai.subtitle": "回答均基於世界資料集——有 VITE_LLM_API_KEY 時走真模型；否則走確定性簡報。每條回答下方都有證據與來源。",
+  "ai.subtitle": "回答均基於世界資料集——當服務端持有 LLM key 並啟用時走真模型；否則走確定性簡報。每條回答下方都有證據與來源。",
   "ai.via.live": "在線 · {model}",
   "ai.via.local": "確定性簡報",
   "ai.via.fallback": "模型不可達 · 確定性簡報——重試",
