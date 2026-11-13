@@ -39,10 +39,12 @@ ok("the matrix workflow builds on both runner families, fail-fast off, and the r
 ok("the stack workflow's job runs the mvn reactor before booting the stack",
   stack.indexOf("mvn") < stack.indexOf("node scripts/verify-services.mjs"));
 
-ok("the stack workflow's path filters only name files that exist inside this repo",
-  ["services/**", "scripts/verify-services.mjs", "scripts/export-service-contract.mjs",
-    "scripts/lib/world-contract.mjs", "scripts/proof-services.mjs", "domain/platform.ts",
-    ".github/workflows/spring-cloud-stack.yml"].every((p) => stack.includes(p)) &&
+// M1112: the stack's path filter is gone ON PURPOSE — the workflow runs the web build + full proof
+// suite, and while it was service-side-only scoped the frontend half of that suite never re-ran in
+// CI. Every master push now exercises it. The matrix keeps its service-side filter (it does not run
+// the web suite at all).
+ok("the stack workflow runs on every master push (no path filter), and the matrix's filter names only files in this repo",
+  !stack.includes("paths:") &&
   ["services/**", "pom.xml", "scripts/verify-services.mjs", ".github/workflows/spring-cloud-matrix.yml"].every((p) => matrix.includes(p)));
 
 ok("the workflows carry no secrets or tokens of their own, and each is big enough to boot",
@@ -65,33 +67,31 @@ ok("the stack workflow orders node setup before npm ci and build before proof (b
 // line must survive (never executed on this authoring machine); the path filter must name files
 // that live in this repository; and the workflow must carry no credentials of its own.
 const live = read(".github/workflows/spring-cloud-live.yml");
-ok("the live-witness workflow boots both broker-dependent arms in order after the reactor builds, honestly named, against this repo's own paths, credential-free",
+// M1112: the live witness workflow sheds its path filter for the same reason — it must boot the
+// reactor + brokers AND the full proof suite, so a frontend-side red can no longer hide from its
+// filter. The witness order (build -> redis -> parity -> messaging -> dlq) remains load-bearing.
+ok("the live-witness workflow boots both broker-dependent arms in order after the reactor builds, honestly named, against this repo's own scripts, credential-free, unfiltered on master",
   live.includes("spring-cloud-live") && live.includes("on:") && live.includes("jobs:") &&
   live.includes("ubuntu-latest") && live.includes("actions/checkout@v4") &&
   live.includes("java-version: \"21\"") && live.includes("temurin") && live.includes("actions/setup-node") &&
+  !live.includes("paths:") &&
   live.indexOf("run: mvn") < live.indexOf("run: node scripts/verify-redis-live.mjs") &&
   live.indexOf("run: node scripts/verify-redis-live.mjs") < live.indexOf("run: node scripts/verify-messaging-live.mjs") &&
   live.indexOf("run: node scripts/verify-messaging-live.mjs") < live.indexOf("run: node scripts/verify-messaging-dlq-live.mjs") &&
   live.indexOf("run: node scripts/verify-messaging-dlq-live.mjs") < live.indexOf("npm run proof") &&
   live.includes("--clean") && live.includes("never been executed") &&
-  !/\$\{\{\s*(secrets|github\.token)\b/.test(live) &&
-  ["services/**", "scripts/verify-services.mjs", "scripts/verify-redis-live.mjs",
-    "scripts/verify-messaging-live.mjs", "scripts/verify-messaging-dlq-live.mjs",
-    ".github/workflows/spring-cloud-live.yml"].every((p) => live.includes(p)));
+  !/\$\{\{\s*(secrets|github\.token)\b/.test(live));
 
-// M1076: the cache wire-parity witness became the FOURTH live arm. It must sit between the Redis
+// M1112: the cache wire-parity witness became the FOURTH live arm. It must sit between the Redis
 // read-through witness (it reuses that project-owned container on 16379, so Redis must have torn its
-// keys/container down first) and the two messaging arms, carry --clean, and appear in BOTH path
-// filters so a services/ or witness-only change re-triggers the job. Three literal occurrences
-// (push paths + PR paths + the step) is a positive population floor: drop the step, move it after
-// messaging, or omit one filter and this gate goes red.
+// keys/container down first) and the two messaging arms, carry --clean. The workflow shed its path
+// filters on purpose — the registry-healthy proof suite covers the whole tree now.
 const cacheParityStep = "run: node scripts/verify-cache-parity-live.mjs --clean";
-ok("the fourth live witness (cache wire parity) runs after Redis and before messaging, with --clean, and is named in both path filters",
+ok("the fourth live witness (cache wire parity) runs after Redis and before messaging, with --clean",
   live.includes(cacheParityStep) &&
   live.indexOf("run: node scripts/verify-redis-live.mjs") < live.indexOf(cacheParityStep) &&
   live.indexOf(cacheParityStep) < live.indexOf("run: node scripts/verify-messaging-live.mjs") &&
-  live.indexOf(cacheParityStep) < live.indexOf("npm run proof") &&
-  live.split("scripts/verify-cache-parity-live.mjs").length - 1 >= 3);
+  live.indexOf(cacheParityStep) < live.indexOf("npm run proof"));
 
 // M1101: the LLM-live workflow — the second LIVE witness's CI vehicle. Honest about the secret:
 // when secrets.LLM_API_KEY is set, the runner dials the real provider and proves the full

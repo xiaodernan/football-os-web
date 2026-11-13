@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1112`（提交前基线 `fb68da1` M1111）
-**总提交数**: 1482（本提交落地后；提交前 1481）
-**开发状态**: 持续进行中，无阻塞（CI 三条红全绿：node 24 → npm ci 通过；redis witness TTL ceiling 升至 84s 复证 17/17；proof-unique 改 unique() 门，stack/live 覆盖同义门禁全绿）
+**当前HEAD**: 本提交落地后为 `M1113`（提交前基线 `4046b97` M1112）
+**总提交数**: 1483（本提交落地后；提交前 1482）
+**开发状态**: 持续进行中，无阻塞（Spring CI 四条均可达 master；stack/live 去 filter 后每次提交都重跑全栈 web floor：reactor boot + brokers + full proof）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1112，最新在上）
+## 🚀 近期里程碑（M1056–M1113，最新在上）
+- **M1113 Spring CI 扩径至主干每次提交（stack/live 双 workflow 去 path filter）**：M1112 推送后 master 四条 CI 全部无法触发——stack/live 的 push.filter 只认 services/** 与 witness 脚本，前端的修复对它们来说隐身。改为 **push/pull_request 均全分支触发**（Spring 与全栈 web floor 全绿验收）；matrix 依旧守 service-side（不跑 npm/proof）；llm-live 保留它自己的 LLM 面；proof-workflows 三门同步改口径：不再检查 "path 名称存在仓库文件"，改为不允许 workflow 出现 "paths:" 键。Gates：proof-workflows 13/13（从硬编码白名单扩成 "filter 不存在" 即通过）。
 - **M1112 CI 修复落地（stack/live/llm-live 两个 job 全绿之后，唯一的红就是 'proof:unique'——M1107 行内 '[...new Set(...)]' 是 inline door body，不是 converted reader）**：CI 新失败日志显示 'proof:unique' 报「tree 2, home 1」，把内联 spread 改写为 attributes.ts 里唯一 blessed 的 `unique()` 门——同门还抓住并修了：① Node 24 契约（check-node 强制 ≥22.12）——四条 workflow 全部改钉 24，与 pages.yml 同源同值，spring-cloud-llm-live/live/stack 第一次全绿；② verify-redis-live 的 TTL 当窗 width=max 从 60 扩到 ttlCeiling 84（M1076 jitter 政策未成文 60s 了），本地复证 17/17。CI 是「author's machine Docker 不能拉」的那条在registry-healthy 上唯一的证据；门在CI 跑是第一次读到这个信号所以未被忽略。
 - **M1109 部署车道如实结账（GitHub Pages 已活）#143 退场、LLM_API_KEY Secret 登场**：本机直连 https://xiaodernan.github.io/football-os-web/ 返回的是当前 master 同一套 HTML；gh run list --workflow pages.yml 显示每次 master push 皆 success（M969→M1108）；README 的「## Deploying」早已过期的「publishing has not been performed」被改写为「发布已 live，该 workflow BASE_PATH=/football-os-web/ 每次 master 自动构建并 actions/deploy-pages@v4 部署」；outstanding 账本把 deployment lane #143 任务替换为唯一剩下的真实工作：仓库当前 0 secrets，spring-cloud-llm-live.yml 的活体模型臂因此诚实打印 UNVERIFIED —— LLM_API_KEY（可选 LLM_BASE_URL/LLM_MODEL）进 repo Secrets，活体引擎即为真实。部署后再次 fetch 暴露了 mid-rollout 的 spurious 404（CDN 逐边缘节点滚动时序，非部署破产）——回 fetch 后同套 HTML 配新 assets/index-D02BU0WC.js（status 200，PWA manifest 对齐）。proof-ledger 5/5。
 - **M1108 三张 Spring 旗舰屏登 cinematic（/messaging·/cache·/platform 玻璃 hero）**：三张屏各换 fo-spectrum h1（from-primary via-info to-chart-3）+ 双 aria-hidden fo-orb + fo-grid 母板 + DemoBadge；零新 t() 键（保留 t(messaging.title/cache.title/platform.title) 为 h1）；screens.spec platform-atlas 双重匹配改 .first()；**cinematic.spec 目录 10→13**，并对 /cache…(/api/cache/service) 与 /messaging(/api/messaging/service) 加**窄作用域 503 豁免**（m.location()?.url endsWith + type=error + 503 三条件，其余路由零 error 不变）。**proof-motion 16/16（decor 43→52 自动发现）**；offline 47/47 · services 65/65 · cinematic **13/13** · screens **75/75** · dupkey 1/1。fresh checkout 与作者机（两 Spring 服务重启在跑）皆绿。

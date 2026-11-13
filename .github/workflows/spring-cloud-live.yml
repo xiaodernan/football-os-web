@@ -13,29 +13,16 @@
 # brokers on non-default ports (never this machine's foreign 5672/6379, never clashing with the
 # canonical compose side). The cache arms run before the broker arms and share one project-owned
 # Redis (16379) sequentially, each with --clean so neither inherits the other's keys or container.
+# M1113: the path filter is gone on purpose — this workflow runs the FULL web proof suite after
+# the witnesses, and while it was service-side scoped the frontend half of that suite never ran
+# on a clean runner. Every master push/PR now gets it as well.
 name: spring-cloud-live
 
 on:
   push:
     branches: [master]
-    paths:
-      - "services/**"
-      - "scripts/verify-services.mjs"
-      - "scripts/verify-redis-live.mjs"
-      - "scripts/verify-cache-parity-live.mjs"
-      - "scripts/verify-messaging-live.mjs"
-      - "scripts/verify-messaging-dlq-live.mjs"
-      - ".github/workflows/spring-cloud-live.yml"
   pull_request:
     branches: [master]
-    paths:
-      - "services/**"
-      - "scripts/verify-services.mjs"
-      - "scripts/verify-redis-live.mjs"
-      - "scripts/verify-cache-parity-live.mjs"
-      - "scripts/verify-messaging-live.mjs"
-      - "scripts/verify-messaging-dlq-live.mjs"
-      - ".github/workflows/spring-cloud-live.yml"
 
 jobs:
   live-witnesses:

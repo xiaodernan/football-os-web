@@ -3,7 +3,10 @@
 # The Spring Cloud stack was proven live by scripts/verify-services.mjs (boot, register,
 # config round-trip, frozen-contract round-trip, ordered table route, breaker fallback).
 # This workflow runs the same checklist on a registry-healthy runner, then the full web
-# build + proof suite, on every push or PR that touches the service side of the repo.
+# build + proof suite, on EVERY push or PR to master. It used to be scoped to the service
+# side of the repo; the proof suite it runs is the whole tree's, so the frontend half of
+# the suite was simply never exercised on a clean runner. Same honesty line: never executed
+# in the authoring session.
 #
 # M1048: the same workflow now also runs the browser floor — the Playwright suite, the
 # web build, and the PWA budget gate — so a service-side change that silently breaks a
@@ -14,24 +17,8 @@ name: spring-cloud-stack
 on:
   push:
     branches: [master]
-    paths:
-      - "services/**"
-      - "scripts/verify-services.mjs"
-      - "scripts/export-service-contract.mjs"
-      - "scripts/lib/world-contract.mjs"
-      - "scripts/proof-services.mjs"
-      - "domain/platform.ts"
-      - ".github/workflows/spring-cloud-stack.yml"
   pull_request:
     branches: [master]
-    paths:
-      - "services/**"
-      - "scripts/verify-services.mjs"
-      - "scripts/export-service-contract.mjs"
-      - "scripts/lib/world-contract.mjs"
-      - "scripts/proof-services.mjs"
-      - "domain/platform.ts"
-      - ".github/workflows/spring-cloud-stack.yml"
 
 jobs:
   verify:
