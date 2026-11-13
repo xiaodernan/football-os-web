@@ -843,6 +843,8 @@
 
 - baa465c M968: 第五域服务 discipline-service——导出器冻结 15 个赛事牌钟（windows/redWindows/rows 含 drawn）为 discipline-clocks.json（可由种子重导出、字节一致）；新模块 pom/Application/ClockController（未知名 404）；网关第三路由 disciplineClocks 断路器；compose 第五成员；config-repo clocks-resource 键；描述符第五行第三路由；atlas 三语命名新服务；验证器直连/网关逐字一致 + 404；runbook 行；proof-services 39/39。Spring Cloud 平台现为五服务四路由。
 
+- 3f6aee4 M969b: 流式直通——代理流式分支（stream:true 询问以 NDJSON 帧转发上游 SSE，分块行缓冲，memo 命中=单帧即时，写回 M1079 memo）；data/llm.ts callLlmStream 浏览器读帧渐进回调；AiStudio 占位行随 delta 增长（降级仍可见）；实测两轮真实对话 15+48 delta、usage 在场、回答有据（第二轮诚实说快照未列追逐者）；proof-llm 47/47。
+
 下一条目：M790 候选清单四向全部落地（③射门扑救主客 M943、①红牌对全牌对照 M944、④按结果分侧 M945、②节律比 M946）。续选真实数据方向：
 ⑤ 队级节律（每队整季 goals-per-card，goalTiming+cardTiming 两折叠按 clubId 联结，无第三次扫场）；
 ⑥ 主客节律（goalVenueClock 与 cardTiming 的 homeWindows/awayWindows 逐窗比值，安全除法门同口径）；
