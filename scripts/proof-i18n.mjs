@@ -4735,7 +4735,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // `t(arm.key)` into literal `t("rules.swingTwo")`/`t("rules.swingAll")` calls to keep the raw-UI
   // debt at zero — literal 2597 -> 2604. The removed expression returns the count to 34.
   // M1075 (atlas tables line): two literal call sites, redisTablesLine and redisTablesBoundary.
-  shapeCounts.literal === 2641 && shapeCounts.template === 113 && shapeCounts.expression === 35
+  shapeCounts.literal === 2646 && shapeCounts.template === 113 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4894,7 +4894,7 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // shardsMethod, timelineMore, capLine, rungTip, shardTip) hand their placeholders to the census.
   // M1072 (parallel front-end line): the rules-swing panel's swingComp ({comp}) and swingPlaces
   // ({std, alt}) literal rows each hand their placeholders to the census: 435 -> 437.
-  litVarSites === 444 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 445 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 35 && exprObjPlant.args[1].trim().startsWith("{"));

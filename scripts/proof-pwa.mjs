@@ -224,7 +224,8 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1078: the live LLM tie-in grows the AI chunk by enough to cross the 634 KB line as measured
 // by the gate — JS 620 KB, CSS 13.4 KB (67 assets), pin 630 -> 634, baseline re-recorded.
 // M1080: the season-room screen + fold grows JS by gzip 4 KB and adds 3 assets (70), pin 634 -> 638.
-const BUDGET_KB = 638;
+// M1085: the drop-zone watch panel adds another lazy-route surface — 639 KB measured, pin 638 -> 639.
+const BUDGET_KB = 639;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

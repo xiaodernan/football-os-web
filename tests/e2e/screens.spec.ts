@@ -402,11 +402,14 @@ test("the season command room draws the champions, the money and the rewrites", 
   // The hero tile of the frozen world: the UCL champion prints its points, and the profitable
   // half prints the world's best-run club.
   await expect(page.getByText("100").first()).toBeVisible();
-  await expect(page.getByText("Trabzonspor")).toBeVisible();
+  await expect(page.getByText("Trabzonspor").first()).toBeVisible();
   // The all-or-nothing rule genuinely flips the La Liga crown in the frozen world.
   await expect(page.getByText("Real Madrid").first()).toBeVisible();
   await expect(page.getByText("Win worth two draws (2-1-0)")).toBeVisible();
   await expect(page.getByText("All-or-nothing (3-0-0)")).toBeVisible();
+  // The drop-zone watch names the Premier League's bottom three (frozen seed).
+  await expect(page.getByRole("heading", { name: "The drop zone watch" })).toBeVisible();
+  await expect(page.getByText("West Ham United")).toBeVisible();
 });
 
 test("the league rules screen draws the table under different rules", async ({ page }) => {

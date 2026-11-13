@@ -60,6 +60,18 @@ ok(`all-or-nothing flips the crown on the clubId tie-break (ruler A, 3 pts, std 
   all && all.rulerName === "A" && all.rulerPoints === 3 && all.sameAsStandard === false &&
   all.standardLeaderName === "C" && all.sway === 1);
 
+// ─── 2b · the drop-zone watch in the fixture ───────────────────────────────────────
+// T61: three clubs, same fixtures as above (C 4 pts, A 3, B 1); positions C1 A2 B3.
+// With nothing above the drop zone, offSafety is 0 for everyone — never a lie — and every
+// club is in the bottom three by construction.
+const watch = sit.bottomThree.find((r) => r.compId === "T61");
+ok(`the watch names the fixture world's bottom three, deepest trouble first (B pos 3, A pos 2, C pos 1)`,
+  watch && watch.clubs.map((c) => c.clubId).join(",") === "B,A,C" &&
+  watch.clubs.map((c) => c.rulesPosition).join(",") === "3,2,1" &&
+  watch.clubs.every((c) => c.offSafety === 0) && watch.clubs.every((c) => c.insolvent === true));
+ok(`a competition with zero played fixtures is skipped by the watch too`,
+  sit.bottomThree.every((r) => r.compId !== "T62"));
+
 // ─── 3 · the financial verdict in the fixture ──────────────────────────────────────
 const prof = sit.profitableFive, loss = sit.insolventFive;
 ok(`the five-ledger arm takes every fixture club into the right half and orders strictly`,
@@ -74,11 +86,12 @@ ok(`two reads of the same world produce byte-identical output`,
   JSON.stringify(sit.standings) === JSON.stringify(repeat.standings) &&
   JSON.stringify(sit.twoOneZero) === JSON.stringify(repeat.twoOneZero) &&
   JSON.stringify(sit.allOrNothing) === JSON.stringify(repeat.allOrNothing) &&
-  JSON.stringify(sit.profitableFive) === JSON.stringify(repeat.profitableFive));
+  JSON.stringify(sit.profitableFive) === JSON.stringify(repeat.profitableFive) &&
+  JSON.stringify(sit.bottomThree) === JSON.stringify(repeat.bottomThree));
 const empty = seasonSituation([], [], [], []);
 ok(`an empty world reports empty, never invents, and repeats exactly`,
   empty.standings.length === 0 && empty.twoOneZero.length === 0 && empty.allOrNothing.length === 0 &&
-  empty.profitableFive.length === 0 && empty.insolventFive.length === 0 &&
+  empty.profitableFive.length === 0 && empty.insolventFive.length === 0 && empty.bottomThree.length === 0 &&
   JSON.stringify(empty) === JSON.stringify(seasonSituation([], [], [], [])));
 
 // ─── 5 · the §-door parity in the shipped world ─────────────────────────────────────
@@ -110,6 +123,30 @@ for (const fam of ["twoOneZero", "allOrNothing"]) {
   }
   ok(`the ${fam} arm agrees with its own leg of the triplet (leader and points both)`, famOk);
 }
+// The drop-zone watch, closed against the same table it was read from: the bottom three by
+// rulesPosition descending, offSafety = first-safe-club's points − this club's points (0 for
+// tables shorter than four), and insolvent == membership of the five least solvent books.
+let watchOk = true;
+for (const w of world.bottomThree) {
+  const t = customPointsTable(w.compId, [...seededMatches], [...seededClubs], STANDARD_RULES);
+  const bottomByRules = [...t.rows].sort((a, b) => b.rulesPosition - a.rulesPosition).slice(0, 3);
+  if (w.clubs.map((c) => c.clubId).join(",") !== bottomByRules.map((r) => r.clubId).join(",")) watchOk = false;
+  for (const [i, crumb] of w.clubs.entries()) {
+    const r = bottomByRules[i];
+    if (r.clubId !== crumb.clubId || r.rulesPosition !== crumb.rulesPosition) watchOk = false;
+    if (r.rulesPoints !== crumb.points || r.played !== crumb.played) watchOk = false;
+    const safeRow = t.rows.length > 3 ? t.rows.find((x) => x.rulesPosition === t.rows.length - 3) : undefined;
+    if (crumb.offSafety !== (safeRow ? safeRow.rulesPoints - r.rulesPoints : 0)) watchOk = false;
+    const insolventSet = new Set(world.insolventFive.map((v) => v.clubId));
+    if (crumb.insolvent !== insolventSet.has(crumb.clubId)) watchOk = false;
+  }
+}
+ok(`the drop-zone watch closes on all ${world.bottomThree.length} seeded tables (order, positions, points, offSafety, insolvent flags)`, watchOk);
+const plWatch = world.bottomThree.find((w) => w.compId === "pl");
+ok(`the Premier League's watch names West Ham, Tottenham, Aston Villa with 14 / 3 / 2 points to safety`,
+  plWatch && plWatch.clubs.map((c) => c.clubId).join(",") === "whu,tot,avl" &&
+  plWatch.clubs.map((c) => c.points).join(",") === "5,16,17" &&
+  plWatch.clubs.map((c) => c.offSafety).join(",") === "14,3,2");
 
 // ─── 6 · independent recount: no doors, plain loops, same answers ───────────────────
 let matched = true, ordered = true, complete = true;
@@ -167,11 +204,13 @@ ok(`the screen renders the fold and reads money through the shared doors only`,
   screen.includes("seasonSituation(") && screen.includes("rules.swingTwo") && screen.includes("rules.swingAll") &&
   screen.includes("fin.netPlus") && screen.includes("fin.netMinus") && screen.includes("srs.fixtureShare") &&
   screen.includes("srs.stdLeaderTag") && screen.includes("srs.pointsShort") && screen.includes("srs.closest") &&
-  screen.includes("srs.closestHint") && !screen.includes("srs.allOrNothing") && !screen.includes("srs.columnSway"));
+  screen.includes("srs.closestHint") && screen.includes("srs.relegateTitle") && screen.includes("srs.relegateHint") &&
+  screen.includes("srs.relegateGap") && screen.includes("srs.relegateInsolvent") &&
+  !screen.includes("srs.allOrNothing") && !screen.includes("srs.columnSway"));
 const app = readFileSync(resolve(root, "src/App.tsx"), "utf8");
 const shell = readFileSync(resolve(root, "features/shell/AppShell.tsx"), "utf8");
 const dicts = readFileSync(resolve(root, "i18n/dictionaries.ts"), "utf8");
-const locales = ["srs.title", "srs.fixtureShare", "srs.stdLeaderTag", "srs.pointsShort", "srs.champs", "srs.alt", "srs.closest"];
+const locales = ["srs.title", "srs.fixtureShare", "srs.stdLeaderTag", "srs.pointsShort", "srs.champs", "srs.alt", "srs.closest", "srs.relegateTitle", "srs.relegateHint", "srs.relegateGap", "srs.relegateInsolvent"];
 ok(`the fold's keys resolve in all three locales, the route and the nav both name the screen`,
   app.includes('path === "/season-room"') && shell.includes('to: "/season-room"') &&
   locales.every((k) => 3 === (dicts.match(new RegExp(`"${k.replace(".", "\\.")}":`, "g")) || []).length));

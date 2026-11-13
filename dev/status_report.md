@@ -2,13 +2,14 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1084` 集大成提交（提交前基线 `a2cbd88` M1083）
-**总提交数**: 1452（本提交落地后；提交前 1451）
-**开发状态**: 持续进行中，无阻塞问题（本轮把 `/season-room` 的冠军/财务/改写/追队面板全部接到 `/clubs/:id` 深链，并修复俱乐部 detail 三块 line tiles 裸浮点（77.66666666666667）打印）
+**当前HEAD**: 本提交落地后为 `M1085` 集大成提交（提交前基线 `879513b` M1084）
+**总提交数**: 1453（本提交落地后；提交前 1452）
+**开发状态**: 持续进行中，无阻塞问题（本轮 `/season-room` 新增「降级区警戒」面板——每个赛事最危险的三支球队、距安全线积分、资不抵债标记；proof/E2E/gates 全绿）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1084，最新在上）
+## 🚀 近期里程碑（M1056–M1085，最新在上）
 
+- **M1085 `/season-room` 降级区警戒（the drop zone watch）**：fold `seasonSituation` 增第五产出 `bottomThree`——每个有已赛完场赛事的赛事印出最危险的三支球队（rulesPosition 降序＝最沉沦的排最前）、每队带「距离安全线 X 分」（`offSafety`：距降级区上界第一家俱乐部的积分差；表 < 4 行时恒为 0——不撒谎说假的安全指标）、以及种子世界五家最资不抵债俱乐部的身份匹配（insolvent 标记（本次冻结种子无人触发——红徽章不会出现是诚实结论，非功能缺失）。屏新增面板（15 个赛事网格、West Ham United 等全部下钻 `#/clubs/:id`，crest、两级事态，破产红 chips 走 `CHIP_CLASS.destructive`——修正接手期手写 `border-destructive/40` 被 proof-chips 拦下的 "written outside the palette"）。**实测**：pl=West Ham 5/14、Tottenham 16/3、Aston Villa 17/2；ucl=Lille 22/15。i18n +4 键×3（`srs.relegateTitle/Hint/Gap/Insolvent`，EN "{v} PTS to safety" 免单复数陷阱）；census 仅 literal 2641→**2646**、litVarSites 444→**445**；proof-season-room 17→**21/21**（fixture 手算 bottomThree + 15 个 seeded 表逐项对账 offSafety/insolvent/order、pl 钉量验证、空世界扩充底线）；screens E2E 单锚绿 13.5s、West Ham 可见；EN/zh-CN/zh-TW 全部可读。PWA **638→639 KB**（新懒路 surface；baseline 同提交重录）；全套 **proof 187/187 · 4110/4110**，`screens.spec.ts` **75/75**；tsc/build exit 0。诚实保留：种子冻结、PLATFORM_LIVE=false、SPA 不调用服务、本次种子下无任何人触犯 insolvent 标。
 - **M1084 `/season-room` 全部接入俱乐部深链 + 俱乐部 detail 裸浮点修复**：① 四个面板的俱乐部格全部可点（46 个 `#/clubs/:id` 链接——冠军卡 Crest+名称 → `/clubs/<id>`，金融裁决两表、记分法重读双列、最窄王冠双方均可点，hover underline）；实测从 UCL 王者下钻到 Manchester City detail（back control、SET AS MY CLUB、五格 StatTile、squad/season analytics 全渲染）。**② 顺带修到的真缺陷**：俱乐部 detail 的 attack/midfield/defence 三块 line tiles 直接打印 `lineMean` 的原始浮点——ATTACK `77.66666666666667`、MIDFIELD `77.66666666666667`、DEFENCE `75.75`；改走既有 `fmt2` 门（Details.tsx 本已 15 处消费者，**零新 census**），现在打印 `77.67 / 77.67 / 75.75`。Proof **187/187 · 4106/4106** 全绿；`screens.spec.ts` **75/75** 重跑绿；PWA 638 (JS 625)；tsc/build exit 0。诚实保留：零新模块、种子冻结、PLATFORM_LIVE=false。
 - **M1083 `/season-room` 电影化头条**：把用户反复点名的「前端魅力登峰造极」落到新屏——header 换成与 hub/landing 同构的电影头条（`relative overflow-hidden rounded-2xl` + `PANEL_CLASS.panelFaint` + 三个 aria-hidden `.fo-orb`（lime/cyan/violet）+ `.fo-grid` + `fo-spectrum` 渐变标题（from-primary via-info to-chart-3），+ DemoBadge；零新增 t() 键）；冠军卡增「领冠步幅 meter」（`pct(safeDiv(gap, leaderPoints))` 经 `clamp(…，4，100)` 门，aria-hidden，与 `+gap · 追队` 互为印证）；「最窄王冠」面板增相对 maxGap 的黄色 meter（`bg-warning/70`，aria-hidden）；所有 style 宽度均为无文字表达式。顺带修两处门规/准则问题：① 注释中出现的 `t()` 会被 raw-UI 扫描器判为 unknown t-call（注释 `/* … through t(). … */` 命中 `\bt\(`）——改写为 dictionary door；② 手写 `Math.max`+`Math.min` 双向钳制改 `clamp` 门（proof-clamp-feature **11/11**）。baseline 同提交重录；证明全套全绿：**proof 187/187 · 4106/4106**、i18n 390/390、PWA 638 保持（JS 625）；`season command room` 单测绿（18.2s）。誠實保留：零新模块/零 census 移动、种子冻结、PLATFORM_LIVE=false。
 - **M1082 `/season-room` 的 E2E 走读锚**：M1081 补了该 fold 的专属证明，本轮补齐 E2E 观测链的最后一环——`tests/e2e/screens.spec.ts` 新增走读「the season command room draws the champions, the money and the rewrites」：断言页面 heading「The season, commanded」与五个 section heading（The champions under 3-1-0 / The financial verdict / The red ledger / If the rules were rewritten / The closest crowns）逐项可见；断言 UCL 王者的 `100` 可见、防守条上利润最佳的 Trabzonspor 出现（`profitableFive` 首行）、Real Madrid 可见（ALL-OR-NOTHING 在种子世界真翻转 La Liga 冠军）、两个人历史记分法的族标签（`Win worth two draws (2-1-0)` / `All-or-nothing (3-0-0)`）均在；全程同冻结种子，零造数据。单跑 14.0s 绿；`screens.spec.ts` 全量 **75/75** 重跑绿；`all-routes` 派生网直通 59/59（M1081 已记，本轮未改）。

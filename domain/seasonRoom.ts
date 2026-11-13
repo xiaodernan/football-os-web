@@ -50,6 +50,31 @@ export interface AlternateRuler {
   sway: number;
 }
 
+// M1085 additions: the relegation end of the same fold — the three most endangered clubs in every
+// league, measured by the same door the champion cards use. The watch lists them DEEPEST trouble
+// first (rulesPosition descending), and each is charged one figure the reader cannot otherwise
+// see on this screen: how many points short of the first club safely above the drop zone this
+// club sits.
+export interface RelegationCrumb {
+  clubId: string;
+  clubName: string;
+  rulesPosition: number;
+  points: number;
+  played: number;
+  /** safe.points − this.points: how many points short of the first club above the drop zone.
+   * 0 when the table has fewer than four rows (everyone is in the zone) — never a lie. */
+  offSafety: number;
+  /** true when this club is one of the five least solvent books in the world. */
+  insolvent: boolean;
+}
+
+export interface RelegationWatch {
+  compId: string;
+  compName: string;
+  nation: string;
+  clubs: Readonly<RelegationCrumb[]>;
+}
+
 export interface SeasonVerdict {
   clubId: string;
   clubName: string;
@@ -73,6 +98,8 @@ export interface SeasonSituation {
   profitableFive: Readonly<SeasonVerdict[]>;
   /** The five least solvent clubs; buy the cheapest squad with the least wage drag. */
   insolventFive: Readonly<SeasonVerdict[]>;
+  /** The drop-zone watch, one card per competition with at least one finished fixture. */
+  bottomThree: Readonly<RelegationWatch[]>;
 }
 
 /** One crease of a league's table under a given triplet. */
@@ -117,10 +144,37 @@ export function seasonSituation(
 ): SeasonSituation {
   const byId = indexById(clubs);
 
-  const standings: StandingCard[] = [];
+  // One table per competition, read once — the same read serves the champion cards, the
+  // drop-zone watch and nothing else. (AlternateRulers re-reads with each triplet on purpose:
+  // those are different ladders.)
+  const tables = new Map<string, CustomPointsTable>();
   for (const c of competitions) {
-    const t: CustomPointsTable = customPointsTable(c.id, [...matches], [...clubs], STANDARD_RULES);
-    if (t.rows.length === 0) continue;
+    const t = customPointsTable(c.id, [...matches], [...clubs], STANDARD_RULES);
+    if (t.rows.length) tables.set(c.id, t);
+  }
+
+  const finance = clubFinance([...clubs], [...players]);
+  const financialVerdict: SeasonVerdict[] = finance.rows.map((r) => ({
+    clubId: r.clubId,
+    clubName: byId.get(r.clubId)?.name ?? r.clubId,
+    net: r.net,
+    squadValue: r.squadValue,
+    wageRatio: r.wageRatio,
+    revenue: r.revenue,
+    wages: r.wages,
+    amortize: r.amortize,
+    matchday: r.matchday,
+  }));
+
+  const profitableFive = [...financialVerdict].sort((a, b) => b.net - a.net || a.clubId.localeCompare(b.clubId)).slice(0, 5);
+  const insolventFive = [...financialVerdict].sort((a, b) => a.net - b.net || a.clubId.localeCompare(b.clubId)).slice(0, 5);
+  const insolvent = new Set(insolventFive.map((r) => r.clubId));
+
+  const standings: StandingCard[] = [];
+  const bottomThree: RelegationWatch[] = [];
+  for (const c of competitions) {
+    const t = tables.get(c.id);
+    if (!t) continue;
     const leader = t.rows.find((r) => r.rulesPosition === 1) ?? t.rows[0];
     const runnerUp = t.rows.find((r) => r.rulesPosition === 2) ?? t.rows[1] ?? leader;
     standings.push({
@@ -138,6 +192,24 @@ export function seasonSituation(
       playedFixtures: t.matches,
       totalFixtures: matches.filter((m) => m.competitionId === c.id).length,
     });
+    // The drop zone: the bottom three positions in this table, DEEPEST trouble first. A club's
+    // offSafety is the distance to the first club above the zone (0 when nobody is safe).
+    const safeRow = t.rows.length > 3 ? t.rows.find((r) => r.rulesPosition === t.rows.length - 3) : undefined;
+    const bottoms = [...t.rows].sort((a, b) => b.rulesPosition - a.rulesPosition).slice(0, 3);
+    bottomThree.push({
+      compId: c.id,
+      compName: c.name,
+      nation: c.nation,
+      clubs: bottoms.map((r) => ({
+        clubId: r.clubId,
+        clubName: byId.get(r.clubId)?.name ?? r.clubId,
+        rulesPosition: r.rulesPosition,
+        points: r.rulesPoints,
+        played: r.played,
+        offSafety: safeRow ? safeRow.rulesPoints - r.rulesPoints : 0,
+        insolvent: insolvent.has(r.clubId),
+      })),
+    });
   }
   standings.sort((a, b) =>
     b.leaderPoints - a.leaderPoints
@@ -145,27 +217,12 @@ export function seasonSituation(
     || b.played - a.played
     || a.compId.localeCompare(b.compId));
 
-  const finance = clubFinance([...clubs], [...players]);
-  const financialVerdict: SeasonVerdict[] = finance.rows.map((r) => ({
-    clubId: r.clubId,
-    clubName: byId.get(r.clubId)?.name ?? r.clubId,
-    net: r.net,
-    squadValue: r.squadValue,
-    wageRatio: r.wageRatio,
-    revenue: r.revenue,
-    wages: r.wages,
-    amortize: r.amortize,
-    matchday: r.matchday,
-  }));
-
-  const profitableFive = [...financialVerdict].sort((a, b) => b.net - a.net || a.clubId.localeCompare(b.clubId)).slice(0, 5);
-  const insolventFive = [...financialVerdict].sort((a, b) => a.net - b.net || a.clubId.localeCompare(b.clubId)).slice(0, 5);
-
   return {
     standings,
     twoOneZero: alternateRulers(competitions, matches, clubs, TWO_ONE_ZERO_RULES),
     allOrNothing: alternateRulers(competitions, matches, clubs, ALL_OR_NOTHING_RULES),
     profitableFive,
     insolventFive,
+    bottomThree,
   };
 }

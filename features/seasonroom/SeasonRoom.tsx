@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
 import { Link } from "@/lib/router";
-import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, PANEL_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { footballProvider, getClub } from "@/data/footballService";
 import { seasonSituation } from "@/domain/seasonRoom";
 import { cn, clamp, fmt2, fmtMoney, pct, safeDiv } from "@/lib/utils";
@@ -199,6 +199,32 @@ export function SeasonRoom() {
               </div>
               <div aria-hidden className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted/70">
                 <div className="h-full rounded-full bg-warning/70" style={{ width: `${clamp(pct(safeDiv(r.gap, maxGap)), 4, 100)}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+      {/* The drop zone watch — who goes down */}
+      <Panel className="p-5">
+        <SectionTitle title={t("srs.relegateTitle")} hint={t("srs.relegateHint")} />
+        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {sit.bottomThree.map((league) => (
+            <div key={league.compId} className="rounded-lg border border-border/50 p-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0 truncate text-sm font-semibold">{league.compName}</div>
+                <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{league.nation}</div>
+              </div>
+              <div className="mt-1.5 space-y-1.5">
+                {league.clubs.map((c) => (
+                  <Link key={c.clubId} to={`/clubs/${c.clubId}`} className="flex items-center justify-between gap-2 rounded-md px-1 py-1 text-[11px] hover:bg-secondary/40">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Crest colors={getClub(c.clubId)?.colors} short={getClub(c.clubId)?.short} size={18} />
+                      <span className="truncate">{c.clubName}</span>
+                      {c.insolvent && <span className={cn("rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest", CHIP_CLASS.destructive)}>{t("srs.relegateInsolvent")}</span>}
+                    </span>
+                    <span className="font-mono tabular-nums text-muted-foreground">{c.points} {t("srs.columnPoints")} · {t("srs.relegateGap", { v: c.offSafety })}</span>
+                  </Link>
+                ))}
               </div>
             </div>
           ))}
