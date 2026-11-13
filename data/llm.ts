@@ -95,31 +95,9 @@ export function windowHistory(history: ChatMessage[]): ChatMessage[] {
   return history.slice(Math.ceil(over / HISTORY_TRIM_BLOCK) * HISTORY_TRIM_BLOCK);
 }
 
-/** Call the same-origin server proxy. Returns { ok, text } or { ok:false, error } — never throws. */
-export async function callLlm(question: string, history: ChatMessage[] = []): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
-  if (!LLM_CONFIG.hasKey) return { ok: false, error: "no key configured" };
-  const messages: ChatMessage[] = [
-    { role: "system", content: WORLD_BRIEFING },
-    ...windowHistory(history),
-    { role: "user", content: question },
-  ];
-  try {
-    // Relative, same-origin URL. No key, no third-party host, no provider path in this bundle.
-    const r = await fetch(LLM_CONFIG.endpoint, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ messages, model: LLM_CONFIG.model }),
-      signal: AbortSignal.timeout(20000),
-    });
-    if (!r.ok) return { ok: false, error: `proxy ${r.status}` };
-    const body = await r.json();
-    const text: unknown = body?.text;
-    if (typeof text !== "string" || !text.trim()) return { ok: false, error: body?.error ?? "empty model response" };
-    return { ok: true, text: text.trim() };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "network error" };
-  }
-}
+/** The ONE live call path — callLlmStream below. The plain buffered envelope survives only as
+ * the degrade branch INSIDE the streaming reader (an older deploy). There is deliberately no
+ * second, un-streamed entry point: one path, one cache contract, nothing to drift. */
 
 // ── M969b · the streaming call — the model's own deltas reach the UI as they arrive ────────
 // The proxy's streaming branch answers newline-delimited JSON frames ({t:"delta",d} …

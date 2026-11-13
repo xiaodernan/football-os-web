@@ -34,7 +34,7 @@ const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } 
 // ── 1 · the module loads cleanly; config is built only from NON-secret public signals ──────
 const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom", logLevel: "error" });
 const DATA = await server.ssrLoadModule("/data/llm.ts");
-const { LLM_CONFIG, WORLD_BRIEFING, callLlm, windowHistory, HISTORY_CAP, HISTORY_TRIM_BLOCK } = DATA;
+const { LLM_CONFIG, WORLD_BRIEFING, callLlmStream, windowHistory, HISTORY_CAP, HISTORY_TRIM_BLOCK } = DATA;
 const LLM = read("data/llm.ts");
 
 ok(`LLM_CONFIG exposes only a same-origin endpoint, a boolean enable flag, and a model name (endpoint=${LLM_CONFIG.endpoint}, enabled=${LLM_CONFIG.enabled}, model=${LLM_CONFIG.model})`,
@@ -65,7 +65,7 @@ ok(`the smuggling detector charges all three planted defects (VITE_ key read, ex
 // enable flag, so "disabled" is provably a no-wire path regardless of what this machine's .env
 // happens to say. (A runtime call here would depend on the author's transient env — that is a
 // live-witness concern, not a frozen-world gate.)
-ok(`callLlm refuses before fetch when the live path is not armed, and the gate is the public enable flag`,
+ok(`callLlmStream refuses before fetch when the live path is not armed, and the gate is the public enable flag`,
   LLM.includes('if (!LLM_CONFIG.hasKey) return { ok: false, error: "no key configured" }') &&
   LLM.indexOf("if (!LLM_CONFIG.hasKey)") < LLM.indexOf("fetch(LLM_CONFIG.endpoint") &&
   /hasKey:\s*Boolean\(import\.meta\.env\.VITE_LLM_ENABLED\)/.test(LLM));

@@ -16,7 +16,8 @@
 //     the full degrade contract (it never fabricates a model answer). A static host with no proxy
 //     degrades the browser to the deterministic briefing — exactly what this degrade floor pins.
 //
-// PORT HYGIENE: binds ONLY 127.0.0.1:8791, a project-owned non-default port. It is an ephemeral
+// PORT HYGIENE: binds ONLY 127.0.0.1:8791 by default (LLM_WITNESS_PORT overrides that default when
+// the machine's 8791 is held by a foreign listener — the override never points at a foreign service), a project-owned non-default port. It is an ephemeral
 // in-process server, closed in finally and on SIGINT; no Docker, no broker, no default port is
 // ever touched. The third-party API host is contacted by the SERVER proxy only, exactly as in dev.
 //
@@ -36,7 +37,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const argv = process.argv.slice(2);
 const CLEAN = argv.includes("--clean");
 
-const PORT = 8791;                 // project-owned, non-default; NOT a broker, NOT the app's 5199
+const PORT = Number(process.env.LLM_WITNESS_PORT || 8791); // project-owned, non-default; NOT a broker, NOT the app's 5199
+// Env override exists because a busy multi-project machine may hold 8791 (a foreign listener is
+// never dialed — the witness refuses to boot then). The override must NOT point at a foreign
+// service either, so keep it local and non-default.
 const HOST = "127.0.0.1";
 const BASE = `http://${HOST}:${PORT}`;
 const TOP_CLUB = "Manchester City"; // a real entity from the frozen seed (proof-llm pins grounding)
