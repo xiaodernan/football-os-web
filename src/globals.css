@@ -183,6 +183,71 @@ body {
   animation: fo-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ── M970 · the polish layer — restraint is the point ─────────────────────────────────────
+   Every rule here is one transition or one glyph, not a redesign: the token system (PANEL_
+   CLASS, CHIP_CLASS, BAR_FILL) keeps owning colour and surface, and this layer only adds the
+   motion and the finishing touches a premium shell reads through. Nothing here animates more
+   than 300ms, nothing moves more than 2px, and everything respects prefers-reduced-motion. */
+
+/* The polish layer keeps ONE shadow token: the .fo-lift under "Six pillar cards plus the
+   trending row" further down the file. A duplicate @utility of the same name earlier in the
+   cascade was dead on arrival — layered utilities can never beat the unlayered plain rule below
+   — so it was deleted rather than left to rot. The shell's Panel now wears the same .fo-lift
+   the landing pillars wear. */
+
+/* The section tick: a two-pixel gradient bar that marks every section title's left edge. */
+@utility fo-tick {
+  position: relative;
+  padding-left: 0.65rem;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    translate: 0 -50%;
+    width: 3px;
+    height: 0.9em;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--primary), color-mix(in oklab, var(--primary) 40%, transparent));
+  }
+}
+
+/* Keyboard focus is a ring, never a surprise outline. */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--primary) 70%, transparent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection wears the brand, quietly. */
+::selection {
+  background: color-mix(in oklab, var(--primary) 30%, transparent);
+  color: var(--foreground);
+}
+
+/* The scrollbars: thin, quiet, and only the thumb answers the pointer. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
+}
+
+/* The stagger utility: grids that rise in sequence instead of as one block. */
+.fo-stagger > * {
+  animation: fo-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fo-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.fo-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.fo-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.fo-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.fo-stagger > *:nth-child(6) { animation-delay: 200ms; }
+.fo-stagger > *:nth-child(7) { animation-delay: 240ms; }
+.fo-stagger > *:nth-child(8) { animation-delay: 280ms; }
+
+/* The stagger utility's reduced-motion contract is the universal kill-switch at the bottom of
+   the file (three arms, universal selector) — a second class-scoped block would be the weaker
+   shape the motion gate refuses. */
+
 .fo-live-dot {
   animation: fo-pulse 1.2s ease-in-out infinite;
 }
@@ -213,10 +278,11 @@ body {
   animation: fo-sheen 3.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-/* Six pillar cards plus the trending row: a small lift and a glow ring on hover.
-   No persistent will-change on purpose — this class is reused by 11 cards, so pinning a
-   compositor hint on each would reserve 11 GPU layers for a 240ms hover the browser already
-   promotes on demand when it sees a transform transition. proof-motion guards this boundary. */
+/* The one lift the shell owns: the landing's pillar cards and (since M970) every Panel through
+   ui/primitives.tsx. A small translateY and a glow ring on hover; no persistent will-change on
+   purpose — Panel reuses this class everywhere, so pinning a compositor hint on each would
+   reserve a GPU layer for a 240ms hover the browser already promotes on demand when it sees a
+   transform transition. proof-motion guards this boundary. */
 .fo-lift { transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1), background-color 240ms ease, border-color 240ms ease, box-shadow 240ms ease; }
 .fo-lift:hover { transform: translateY(-3px); box-shadow: 0 18px 42px -18px #000000c8, 0 0 0 1px #34e07a2e; }
 

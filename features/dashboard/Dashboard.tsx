@@ -166,7 +166,7 @@ export function Dashboard() {
               {t("dash.liveAll", { n: liveAll.length })}
             </Link>
           </div>
-          <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-4">
+          <div className="fo-stagger grid gap-px sm:grid-cols-2 lg:grid-cols-4">
             {live.map((m) => <LiveCell key={m.id} m={m} />)}
           </div>
         </Panel>

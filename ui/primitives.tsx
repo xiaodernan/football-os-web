@@ -14,8 +14,10 @@ import type { LoadZone } from "@/domain/load";
 import type { Dna } from "@/domain/playerDna";
 
 export function Panel({ className, children }: { className?: string; children: ReactNode }) {
+  // M970: the shell's one luxury — every panel answers the pointer with the shared fo-lift
+  // utility (one pixel, one shadow, 180ms) instead of each screen hand-rolling its own hover.
   return (
-    <Card className={cn("relative overflow-hidden rounded-xl backdrop-blur", PANEL_CLASS.panelDeep, className)}>
+    <Card className={cn("relative overflow-hidden rounded-xl backdrop-blur fo-lift", PANEL_CLASS.panelDeep, className)}>
       {children}
     </Card>
   );
@@ -24,7 +26,7 @@ export function Panel({ className, children }: { className?: string; children: R
 export function SectionTitle({ title, hint, action }: { title: string; hint?: string; action?: ReactNode }) {
   return (
     <div className="mb-3 flex items-end justify-between gap-3">
-      <div>
+      <div className="fo-tick">
         <h2 className="text-sm font-semibold tracking-[0.14em] text-foreground/80 uppercase">{title}</h2>
         {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
       </div>

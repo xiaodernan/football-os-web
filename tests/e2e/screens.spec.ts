@@ -442,8 +442,10 @@ test("the form table ranks the clubs and the chips switch the competition", asyn
 test("the platform atlas draws the four services and the breaker", async ({ page }) => {
   await page.goto("/#/platform");
   await expect(page.getByRole("heading", { name: "The platform beneath the pitch" })).toBeVisible();
-  await expect(page.getByText("Football OS Config", { exact: true })).toBeVisible();
-  await expect(page.getByText("Eureka registry", { exact: true })).toBeVisible();
+  // M1104: the fleet probe panel deliberately repeats the seven service names in the live tiles,
+  // so the topology assertions below anchor on the first render (topology grid precedes the panel).
+  await expect(page.getByText("Football OS Config", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Eureka registry", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("No gateway is reachable from this build.")).toBeVisible();
   await expect(page.getByText(/frozen snapshot exported from this world/)).toBeVisible();
   await expect(page.getByText(/Resilience4j: leagueSummary/)).toBeVisible();
