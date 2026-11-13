@@ -120,3 +120,69 @@ export async function callLlm(question: string, history: ChatMessage[] = []): Pr
     return { ok: false, error: err instanceof Error ? err.message : "network error" };
   }
 }
+
+// ── M969b · the streaming call — the model's own deltas reach the UI as they arrive ────────
+// The proxy's streaming branch answers newline-delimited JSON frames ({t:"delta",d} …
+// {t:"end"}); this reader invokes onDelta per frame so the chat can render progressively,
+// and resolves with the assembled text. A proxy that answered the plain JSON envelope instead
+// (an older deploy, an error) is read as one final delta — the caller cannot tell and need
+// not care. Never throws: every failure resolves { ok:false }.
+export async function callLlmStream(
+  question: string,
+  history: ChatMessage[] = [],
+  onDelta: (delta: string) => void = () => {},
+): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
+  if (!LLM_CONFIG.hasKey) return { ok: false, error: "no key configured" };
+  const messages: ChatMessage[] = [
+    { role: "system", content: WORLD_BRIEFING },
+    ...windowHistory(history),
+    { role: "user", content: question },
+  ];
+  try {
+    const r = await fetch(LLM_CONFIG.endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ messages, model: LLM_CONFIG.model, stream: true }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!r.ok) return { ok: false, error: `proxy ${r.status}` };
+    const contentType = r.headers.get("content-type") ?? "";
+    // The plain JSON envelope: an error the proxy already degraded, or an older deploy.
+    if (contentType.includes("application/json")) {
+      const body = await r.json();
+      const text: unknown = body?.text;
+      if (typeof text !== "string" || !text.trim()) return { ok: false, error: body?.error ?? "empty model response" };
+      onDelta(text.trim());
+      return { ok: true, text: text.trim() };
+    }
+    const reader = r.body?.getReader();
+    if (!reader) return { ok: false, error: "no stream body" };
+    const decoder = new TextDecoder();
+    let buf = "";
+    let text = "";
+    let error: string | null = null;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() ?? "";
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t) continue;
+        try {
+          const frame = JSON.parse(t) as { t?: string; d?: string; ok?: boolean; error?: string };
+          if (frame.t === "delta" && typeof frame.d === "string" && frame.d) { text += frame.d; onDelta(frame.d); }
+          if (frame.t === "end") {
+            if (frame.ok === false && frame.error) error = frame.error;
+          }
+        } catch { /* a partial frame splits across chunks — the next read completes it */ }
+      }
+    }
+    if (error) return { ok: false, error };
+    if (!text.trim()) return { ok: false, error: "empty model response" };
+    return { ok: true, text: text.trim() };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "network error" };
+  }
+}

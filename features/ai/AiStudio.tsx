@@ -4,7 +4,7 @@ import { useLocalStorage, useOnline } from "@/lib/hooks";
 import { useI18n } from "@/i18n";
 import { askIntelligence, buildGraph, type EvidenceFact, type KgGraph } from "@/data/intelligence";
 import { SUGGESTED_ASKS } from "@/data/ai";
-import { callLlm, LLM_CONFIG } from "@/data/llm";
+import { callLlmStream, LLM_CONFIG } from "@/data/llm";
 import { rowLine, asRowText, searchKindLabel, type RowText } from "@/domain/rowText";
 import type { SearchKind } from "@/domain/types";
 import { AI_CHAT_KEY } from "@/domain/localData";
@@ -114,16 +114,26 @@ function Chat() {
     setInput("");
     setBusy(true);
     if (LLM_CONFIG.hasKey && online) {
-      const r = await callLlm(question, history);
+      // M969b: the live path STREAMS — a placeholder row grows with each model delta, so the
+      // answer renders as the model writes it instead of after a silent pause. A degraded
+      // swap to the local simulator stays visible as "fallback", exactly as before.
+      setLog((l) => [...l, { role: "ai", content: [], at: new Date().toISOString(), via: "live" }]);
+      let streamed = "";
+      const r = await callLlmStream(question, history, (delta) => {
+        streamed += delta;
+        const lines = streamed.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+        setLog((l) => l.map((m, i) => (i === l.length - 1 && m.role === "ai" && m.via === "live" ? { ...m, content: lines.map((line) => asRowText(line)) } : m)));
+        requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight }));
+      });
       if (r.ok) {
         const lines = r.text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
-        setLog((l) => [...l, { role: "ai", content: lines.map((l) => asRowText(l)), at: new Date().toISOString(), via: "live" }]);
+        setLog((l) => l.map((m, i) => (i === l.length - 1 && m.role === "ai" && m.via === "live" ? { ...m, content: lines.map((line) => asRowText(line)) } : m)));
         setBusy(false);
         requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
         return;
       }
       const a = askIntelligence(question, locale);
-      setLog((l) => [...l, { role: "ai", content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, at: a.at, via: "fallback" }]);
+      setLog((l) => l.map((m, i) => (i === l.length - 1 && m.role === "ai" && m.via === "live" ? { ...m, content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, via: "fallback" } : m)));
       setBusy(false);
       requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
       return;

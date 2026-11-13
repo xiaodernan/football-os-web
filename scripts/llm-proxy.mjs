@@ -298,6 +298,120 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
     { "X-FootballOS-LLM-Cache": "miss", "X-FootballOS-LLM-Usage-Cached": String(cachedTokens ?? 0) });
 }
 
+// ─── M969b · the streaming path — the model's own SSE reaches the browser ──────────────────
+// M1096 proved the upstream must be streamed (stream + prompt_cache_key = the warm lane);
+// M1078's handler buffered that stream server-side and handed the browser one JSON blob, so the
+// UI could only print a finished answer. This path forwards the model's deltas AS THEY ARRIVE:
+// the browser reads newline-delimited JSON frames ({t:"delta",d} … {t:"end"}), the same
+// envelope the witness reads upstream. A memo hit becomes a ONE-frame stream (the whole answer
+// lands at once — the UI renders instantly); a miss streams from the model and the assembled
+// text is written back, so a later identical ask still hits the M1079 memo. A streaming ask
+// never single-flights: the frames ARE the shared state.
+export const STREAM_CONTENT_TYPE = "application/x-ndjson";
+
+export async function handleLlmStream(cfg, requestBody, cache = null) {
+  const notStream = (status, body) => ({ status, body, headers: { "Cache-Control": "no-store", "Content-Type": "application/json" } });
+  if (!cfg?.key) return notStream(503, { ok: false, error: "server_llm_unconfigured" });
+  let payload;
+  try {
+    payload = typeof requestBody === "string" ? JSON.parse(requestBody) : requestBody;
+  } catch {
+    return notStream(400, { ok: false, error: "invalid_json" });
+  }
+  const messages = Array.isArray(payload?.messages) ? payload.messages : null;
+  if (!messages || messages.length === 0 || messages.length > MAX_MESSAGES) {
+    return notStream(400, { ok: false, error: "invalid_messages" });
+  }
+  const clean = messages
+    .filter((m) => m && (m.role === "system" || m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+    .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_CONTENT) }));
+  if (clean.length === 0) return notStream(400, { ok: false, error: "invalid_messages" });
+  const model = typeof payload?.model === "string" && payload.model.length <= 64 ? payload.model : (cfg.model || DEFAULT_MODEL);
+
+  const key = cacheKey(model, clean);
+  if (cache && cache.policy.enabled) {
+    const hit = cache.read(key, Date.now());
+    if (hit) {
+      return { status: 200, stream: true, contentType: STREAM_CONTENT_TYPE,
+        frames: [{ t: "delta", d: hit.text }, { t: "end", cached: true, model: hit.model }] };
+    }
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let upstream;
+  try {
+    upstream = await fetch(`${normaliseBase(cfg.baseUrl)}/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${cfg.key}` },
+      body: JSON.stringify({
+        model,
+        messages: clean,
+        max_tokens: 700,
+        temperature: 0.55,
+        stream: true,
+        prompt_cache_key: PROMPT_CACHE_KEY,
+      }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    return notStream(502, { ok: false, error: err?.name === "AbortError" ? "model_timeout" : "model_unreachable" });
+  }
+  if (!upstream.ok || !upstream.body) {
+    clearTimeout(timer);
+    return notStream(502, { ok: false, error: `model_${upstream.status}` });
+  }
+
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let text = "";
+  let usage = null;
+  const stream = new ReadableStream({
+    async start(controller) {
+      const reader = upstream.body.getReader();
+      const send = (frame) => controller.enqueue(encoder.encode(JSON.stringify(frame) + "\n"));
+      let buf = "";
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          // A frame can split across network chunks: carry the partial tail forward.
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() ?? "";
+          for (const line of lines) {
+            const t = line.trim();
+            if (!t.startsWith("data:")) continue;
+            const d = t.slice(5).trim();
+            if (d === "[DONE]") continue;
+            try {
+              const j = JSON.parse(d);
+              const delta = j?.choices?.[0]?.delta?.content;
+              if (typeof delta === "string" && delta) { text += delta; send({ t: "delta", d: delta }); }
+              if (j?.usage) usage = j.usage;
+            } catch { /* a partial frame splits mid-JSON — the next chunk completes it */ }
+          }
+        }
+        if (typeof text !== "string" || !text.trim()) {
+          send({ t: "end", ok: false, error: "empty_model_response" });
+        } else {
+          if (cache && cache.policy.enabled) {
+            cache.write(key, { text: text.trim(), model, expiresAt: cache.expiresAt(key, Date.now()) }, Date.now());
+          }
+          send({ t: "end", ok: true, usage: usage ?? null, model });
+        }
+      } catch (err) {
+        send({ t: "end", ok: false, error: err?.name === "AbortError" ? "model_timeout" : "model_unreachable" });
+      } finally {
+        clearTimeout(timer);
+        controller.close();
+      }
+    },
+  });
+  return { status: 200, stream, contentType: STREAM_CONTENT_TYPE, model };
+}
+
 /** Read the server-only config. Recognises the non-VITE_ names; ignores VITE_-prefixed keys. */
 export function serverConfig(env = process.env) {
   return {
@@ -336,6 +450,26 @@ export function llmProxyMiddleware(configFor = () => serverConfig(), cache = cre
     } catch {
       res.statusCode = 400;
       res.end(JSON.stringify({ ok: false, error: "read_failed" }));
+      return;
+    }
+    // M969b: an ask that opts into streaming gets the model's deltas as they arrive, framed
+    // as newline-delimited JSON; every other ask keeps the plain JSON envelope.
+    let wantsStream = false;
+    try { wantsStream = JSON.parse(raw)?.stream === true; } catch { /* the handler re-validates */ }
+    if (wantsStream) {
+      const out = await handleLlmStream(configFor(), raw, cache);
+      if (out.stream) {
+        res.statusCode = out.status;
+        res.setHeader("Cache-Control", "no-store");
+        res.setHeader("Content-Type", out.contentType);
+        res.setHeader("X-Accel-Buffering", "no");
+        for await (const chunk of out.stream) res.write(chunk);
+        res.end();
+        return;
+      }
+      res.statusCode = out.status;
+      for (const [k, v] of Object.entries(out.headers)) res.setHeader(k, v);
+      res.end(JSON.stringify(out.body));
       return;
     }
     const out = await handleLlmRequest(configFor(), raw, cache);

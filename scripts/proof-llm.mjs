@@ -94,7 +94,7 @@ ok(`the proxy validates roles, rejects bad JSON and maps non-2xx / empty answers
 ok(`the proxy normalises the base URL to end in /v1 (the user's endpoint requires it)`,
   /export function normaliseBase/.test(PROXY) && /\/v1\$/i.test(PROXY) && /chat\/completions/.test(PROXY));
 // exercise the core handler directly with a fabricated server key and a stubbed fetch — no network
-const PROXY_MOD = await import("../scripts/llm-proxy.mjs");
+const { handleLlmStream, ...PROXY_MOD } = await import("../scripts/llm-proxy.mjs");
 const noKey = await PROXY_MOD.handleLlmRequest({ key: "" }, { messages: [{ role: "user", content: "hi" }] });
 ok(`handleLlmRequest with no key returns 503 + server_llm_unconfigured (no fetch attempted)`,
   noKey.status === 503 && noKey.body.ok === false && noKey.body.error === "server_llm_unconfigured");
@@ -324,6 +324,40 @@ const reqN1 = [...windowHistory([...grown2, { role: "user", content: "m30" }]), 
 const common = reqN1.filter((m, i) => i < reqN.length && reqN[i].content === m.content).length;
 ok("M969 consecutive requests share the whole prior prompt (common prefix = all of request N except its trailing question, not just the briefing)",
   common === reqN.length - 1 && common === 30 && reqN.length === 31);
+// M969b - the streaming path forwards the model's own deltas as NDJSON frames.
+const sse = (frames) => new ReadableStream({
+  start(c) { for (const f of frames) c.enqueue(new TextEncoder().encode(f)); c.close(); },
+});
+const streamCache = createLlmCache();
+const streamDecoder = new TextDecoder();
+const upstreamFrames = [
+  'data: {"choices":[{"delta":{"content":"Man"}}]}\n\n',
+  'data: {"choices":[{"delta":{"content":"chester City"}}]}\n\n',
+  'data: {"choices":[{"delta":{"content":" 89"}}]}\n\n',
+  'data: [DONE]\n\n',
+];
+const realStreamFetch = globalThis.fetch;
+globalThis.fetch = async () => ({ ok: true, status: 200, body: sse(upstreamFrames) });
+const streamAsk = await handleLlmStream(FAKE, askBody, streamCache);
+const collected = [];
+for await (const chunk of streamAsk.stream) {
+  for (const line of streamDecoder.decode(chunk, { stream: true }).split("\n")) {
+    if (line.trim()) collected.push(JSON.parse(line));
+  }
+}
+ok("M969b the stream path forwards the deltas as frames and writes the assembled answer to the memo (deltas: " + collected.filter((f) => f.t === "delta").map((f) => f.d).join("|") + ")",
+  collected[0].t === "delta" && collected[0].d === "Man" &&
+  collected.filter((f) => f.t === "delta").length === 3 &&
+  collected[collected.length - 1].t === "end" && collected[collected.length - 1].ok === true &&
+  streamCache.entries.size === 1);
+globalThis.fetch = async () => { modelCalls++; return { ok: true, status: 200, body: sse(["data: {}\n\n"]) }; };
+const beforeHit = modelCalls;
+const hitFrames = await handleLlmStream(FAKE, askBody, streamCache);
+ok("M969b a memo hit streams the whole answer as ONE frame and makes zero model calls (calls before/after: " + beforeHit + "/" + modelCalls + ")",
+  Array.isArray(hitFrames.frames) && hitFrames.frames.length === 2 && hitFrames.frames[1].cached === true && modelCalls === beforeHit);
+globalThis.fetch = realStreamFetch;
+ok("M969b the middleware routes a stream:true ask to the streaming path over an ndjson content type",
+  PROXY.includes("handleLlmStream") && PROXY.includes("wantsStream") && PROXY.includes("application/x-ndjson"));
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);
