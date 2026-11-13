@@ -17,6 +17,27 @@ export const CACHE_PROBE_ROUTE: string;
 export const CACHE_SERVICE_ROUTE: string;
 export const SPRING_FLEET_ROUTE: string;
 export const SPRING_FLEET_SERVICES: readonly string[];
+export const MESSAGING_SERVICE_ROUTE: string;
+export const MESSAGING_SERVICE_NAME: string;
+export const MESSAGING_SERVICE_ENVS: readonly string[];
+export interface MessagingSummary {
+  exchange?: string;
+  dlq?: string;
+  shards?: number;
+  maxAttempts?: number;
+  binder?: string;
+  live?: boolean;
+  [k: string]: unknown;
+}
+export interface MessagingServiceBody {
+  ok: boolean;
+  at: string;
+  reason: string;
+  service?: string;
+  summary?: MessagingSummary | null;
+}
+export function messagingServiceHandler(env?: Record<string, string | undefined>, fetchImpl?: typeof fetch): Promise<{ status: number; body: MessagingServiceBody; headers: Record<string, string> }>;
+export function messagingServiceMiddleware(env?: Record<string, string | undefined>, fetchImpl?: typeof fetch): LlmMiddleware;
 export const PROMPT_CACHE_KEY: string;
 export const LLM_CACHE_POLICY: { enabled: boolean; ttlSeconds: number; jitterSeconds: number; capacity: number; seed: string };
 

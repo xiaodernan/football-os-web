@@ -615,3 +615,56 @@ export function springFleetMiddleware(env = process.env, fetchImpl) {
     res.end(JSON.stringify(out.body));
   };
 }
+
+// ─── M1107 · the Spring messaging-service observe surface, proxied server-side ─
+// M1066/M1071 proved the messaging tier honestly (live AMQP probe, DLQ, 8-shard census). This is
+// that same service's observe surface if you choose to run it, mounted so the /messaging fold can
+// render Spring's real /messaging/summary next to the seeded fold — never a mock. SERVER-ONLY opt-in
+// via MESSAGING_SERVICE_BASE (never VITE_). Unset → honest "unconfigured". The summary carries the
+// service's own broker probe (live:true/false) — the panel reports exactly what Spring said.
+export const MESSAGING_SERVICE_ROUTE = "/api/messaging/service";
+export const MESSAGING_SERVICE_NAME = "football-os-messaging";
+export const MESSAGING_SERVICE_ENVS = Object.freeze(["MESSAGING_SERVICE_BASE"]);
+const normaliseMessagingBase = (raw) => String(raw ?? "").trim().replace(/\/+$/, "");
+
+const probeMessaging = async (rawBase, fetchImpl) => {
+  const base = normaliseMessagingBase(rawBase);
+  if (!base) return { ok: false, reason: "unconfigured", summary: null };
+  const f = typeof fetchImpl === "function" ? fetchImpl : globalThis.fetch;
+  try {
+    const r = await f(`${base}/messaging/summary`, { cache: "no-store", signal: AbortSignal.timeout(1200) });
+    if (!r.ok) return { ok: false, reason: "upstream_down", summary: null };
+    const summary = await r.json().catch(() => null);
+    if (!summary || typeof summary !== "object") return { ok: false, reason: "bad_shape", summary: null };
+    return { ok: true, reason: "ok", service: MESSAGING_SERVICE_NAME, summary };
+  } catch (err) {
+    return { ok: false, reason: err?.name === "AbortError" || err?.name === "TimeoutError" ? "timeout" : "unreachable", summary: null };
+  }
+};
+
+/** Testable core: one bounded probe of the observe surface. `fetchImpl` is injectable for proofs. */
+export async function messagingServiceHandler(env = process.env, fetchImpl) {
+  const probe = await probeMessaging(env?.MESSAGING_SERVICE_BASE || env?.MESSAGING_SERVICE_URL, fetchImpl);
+  return {
+    status: probe.ok ? 200 : 503,
+    body: { ...probe, at: new Date().toISOString() },
+    headers: { "Cache-Control": "no-store", "Content-Type": "application/json" },
+  };
+}
+
+export function messagingServiceMiddleware(env = process.env, fetchImpl) {
+  return async function messagingService(req, res, next) {
+    const url = (req.url || "").split("?")[0];
+    if (url !== MESSAGING_SERVICE_ROUTE) return next?.();
+    if (req.method !== "GET") {
+      res.statusCode = 405;
+      res.setHeader("Allow", "GET");
+      res.end(JSON.stringify({ ok: false, error: "method_not_allowed" }));
+      return;
+    }
+    const out = await messagingServiceHandler(env, fetchImpl);
+    res.statusCode = out.status;
+    for (const [k, v] of Object.entries(out.headers)) res.setHeader(k, v);
+    res.end(JSON.stringify(out.body));
+  };
+}

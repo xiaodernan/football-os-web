@@ -234,7 +234,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // re-recorded in the same commit.
 // M1105: the parallel lane's streaming path lands end-to-end — 645 KB measured / 70 assets (JS 631,
 // CSS 13.9), pin 644 -> 645, baseline re-recorded in the same commit.
-const BUDGET_KB = 645;
+// M1107: the messaging live wire panel adds seven keys x3 and one panel — 646 KB measured / 70 assets
+// (JS 632, CSS 13.7), pin 645 -> 646, baseline re-recorded in the same commit.
+const BUDGET_KB = 646;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

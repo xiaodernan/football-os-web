@@ -4739,7 +4739,11 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // fleetUnconfigured, fleetNotArmed, fleetUp, fleetDown, fleetSummary, fleetBoundary); three of them
   // interpolate (fleetUp {ms}, fleetDown {reason}, fleetSummary {armed}{up}): literal 2660 -> 2669,
   // litVarSites 449 -> 452.
-  shapeCounts.literal === 2669 && shapeCounts.template === 113 && shapeCounts.expression === 35
+  // M1107 (messaging live wire): seven literal call sites on the messaging screen (springLiveTitle,
+  // springLiveHint, springLiveLoading, springLiveUnconfigured, springLiveDown, springLiveLine,
+  // springLiveBoundary); two of them interpolate (springLiveDown {reason}, springLiveLine six vars):
+  // literal 2669 -> 2676, litVarSites 452 -> 454.
+  shapeCounts.literal === 2676 && shapeCounts.template === 113 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4902,7 +4906,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1099: the Springwire panel's springLiveLine + springLiveDown keys carry seven + one: 447 -> 449.
   // M1104: the fleet panel's fleetUp ({ms}), fleetDown ({reason}) and fleetSummary ({armed} + {up})
   // literal rows each hand their placeholders to the census: 449 -> 452.
-  litVarSites === 452 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1107: the messaging panel's springLiveDown ({reason}) and springLiveLine (six vars) literal
+  // rows each hand their placeholders to the census: 452 -> 454.
+  litVarSites === 454 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 35 && exprObjPlant.args[1].trim().startsWith("{"));

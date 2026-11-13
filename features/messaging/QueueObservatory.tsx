@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, SectionTitle, CHIP_CLASS, PANEL_CLASS, Mini } from "@/ui/primitives";
 import { cn, fmtGrouped, hashRingPoint } from "@/lib/utils";
@@ -32,6 +32,9 @@ import {
 const NODES = ["eu-west", "eu-central", "us-east"];
 const NODE_FILL = ["var(--color-primary)", "var(--color-info)", "var(--color-success)"];
 
+/** The route constant lives before the component: one documented same-origin URL. */
+const MESSAGING_SERVICE_URL = "/api/messaging/service";
+
 export function QueueObservatory() {
   const { t } = useI18n();
 
@@ -51,7 +54,11 @@ export function QueueObservatory() {
 
   // The hash ring and a few real club keys placed on it.
   const ring = useMemo(() => buildHashRing(NODES, QUEUE_POLICY.vnode), []);
-  const ringKeys = useMemo(() => messages.slice(0, 14).map((m) => m.key), [messages]);
+  // De-duplicate the ring keys: the first slice of the message stream can carry the same home
+  // club twice (two of its matches are inside the window), and a ring is a ring of DISTINCT
+  // households — stacked dots at one circle point mean nothing, and React rightly flags a
+  // duplicate key.
+  const ringKeys = useMemo(() => [...new Set(messages.slice(0, 14).map((m) => m.key))], [messages]);
   const nodeColor = (node: string) => NODE_FILL[Math.max(0, NODES.indexOf(node))] ?? NODE_FILL[0];
 
   // Expansion witness: grow from 3 regions to 4. The consistent-hash ring moves only the keys on
@@ -93,6 +100,32 @@ export function QueueObservatory() {
 
   const shardPeak = Math.max(...board.byShard, 1);
   const throughput = board.delivered.length + board.deadLettered.length;
+
+  // M1107 · the Spring messaging-service live wire — polled only if you configured
+  // MESSAGING_SERVICE_BASE on this dev/preview server. The upstream answers /messaging/summary
+  // with its OWN broker probe (`live` is a real AMQP connection, not a self-report) — the panel
+  // renders exactly what Spring answered. Unset → the honest "not armed" line, never a fabricated live.
+  type ServiceWire = {
+    ok: boolean;
+    reason?: string | null;
+    summary?: { exchange?: string; dlq?: string; shards?: number; maxAttempts?: number; binder?: string; live?: boolean } | null;
+  } | null;
+  const [wire, setWire] = useState<ServiceWire>(null);
+  useEffect(() => {
+    let alive = true;
+    const tick = async () => {
+      try {
+        const r = await fetch(MESSAGING_SERVICE_URL, { cache: "no-store", signal: AbortSignal.timeout(1800) });
+        const body = await r.json();
+        if (alive) setWire({ ok: r.ok && body?.ok === true, reason: body?.reason ?? null, summary: body?.summary ?? null });
+      } catch {
+        if (alive) setWire({ ok: false, reason: "unreachable" });
+      }
+    };
+    void tick();
+    const iv = window.setInterval(tick, 10_000);
+    return () => { alive = false; window.clearInterval(iv); };
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -269,6 +302,34 @@ export function QueueObservatory() {
           </table>
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">{t("messaging.timelineMore", { n: board.delivered.length })}</p>
+      </Panel>
+
+      {/* M1107 · the Spring messaging-service live wire — polled server-side via /api/messaging/service.
+         The proxy sends /messaging/summary upstream; the upstream reports its OWN AMQP probe
+         (live:true/false), never a self-report. Unset → "not armed" is the truth. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("messaging.springLiveTitle")} hint={t("messaging.springLiveHint")} />
+        <div className="mt-3 text-sm">
+          {wire === null && <div className="text-muted-foreground">{t("messaging.springLiveLoading")}</div>}
+          {wire?.ok === false && (
+            wire.reason === "unconfigured"
+              ? <div className="text-muted-foreground">{t("messaging.springLiveUnconfigured")}</div>
+              : <div className="text-muted-foreground">{t("messaging.springLiveDown", { reason: wire.reason ?? "" })}</div>
+          )}
+          {wire?.ok === true && wire.summary && (
+            <div className="font-mono text-[12px]">
+              <span>{t("messaging.springLiveLine", {
+                live: String(Boolean(wire.summary.live)),
+                ex: String(wire.summary.exchange ?? ""),
+                dlq: String(wire.summary.dlq ?? ""),
+                sh: String(wire.summary.shards ?? ""),
+                ma: String(wire.summary.maxAttempts ?? ""),
+                b: String(wire.summary.binder ?? ""),
+              })}</span>
+            </div>
+          )}
+        </div>
+        <p className="mt-3 text-[11px] text-muted-foreground">{t("messaging.springLiveBoundary")}</p>
       </Panel>
 
       {/* Honest boundary: what each mechanism is and what this surface is not. */}

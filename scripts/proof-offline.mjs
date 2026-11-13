@@ -71,10 +71,14 @@ const CACHE_EXCEPTION = "features/cache/CacheObservatory.tsx";
 // cross-site optin, no telemetry). Exactly one function call with an exact path; any second fetch
 // in the file, a different origin, or any other file doing network I/O all redden the gate.
 const PLATFORM_EXCEPTION = "features/platform/PlatformAtlas.tsx";
+// M1107 earns the fourth carve: the messaging observatory polls the SAME-ORIGIN /api/messaging/service
+// (the Spring messaging-service observe surface on this dev/preview server — no cross-site optin,
+// no telemetry). Exactly one function call with an exact path.
+const MESSAGING_EXCEPTION = "features/messaging/QueueObservatory.tsx";
 const NETWORK = /\bfetch\s*\(|XMLHttpRequest|\baxios\b|new\s+WebSocket|new\s+EventSource|sendBeacon/;
 const appText = (f) => readFileSync(f, "utf8");
-// M1078 / M969b: count of .fetch( in the LLM-accept file must be exactly TWO — the plain ask and
-// the streaming reader — and both call LLM_CONFIG.endpoint (the same-origin proxy).
+// M1078 / M1105 / M1107: count of .fetch( in the LLM-accept file must be EXACTLY one — callLlmStream
+// is the ONE live call path (callLlm was deleted at M1105) — and it calls LLM_CONFIG.endpoint.
 const llmBody = NETWORK.test(appText(join(root, LLM_EXCEPTION)) || "") ? appText(join(root, LLM_EXCEPTION)) : "";
 const llmFetchCalls = (llmBody.match(/\bfetch\s*\(/g) ?? []).length;
 const llmPathOk = /["'`]\/api\/llm\/chat["'`]/.test(llmBody);
@@ -88,9 +92,12 @@ const cacheServicePathOk = /["'`]\/api\/cache\/service["'`]/.test(cacheBody);
 const platformBody = NETWORK.test(appText(join(root, PLATFORM_EXCEPTION)) || "") ? appText(join(root, PLATFORM_EXCEPTION)) : "";
 const platformFetchCalls = (platformBody.match(/\bfetch\s*\(/g) ?? []).length;
 const platformPathOk = /\/api\/spring\/fleet/.test(platformBody);
-const stray = netHits.filter((p) => p !== LLM_EXCEPTION && p !== CACHE_EXCEPTION && p !== PLATFORM_EXCEPTION);
-ok(`the three same-origin proxy calls reach only the documented path (llm fetch count ${llmFetchCalls}, path ok=${llmPathOk}; cache fetch count ${cacheFetchCalls}, ping ok=${cachePingPathOk}, service ok=${cacheServicePathOk}; platform fetch count ${platformFetchCalls}, fleet ok=${platformPathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
-  netHits.length === 3 && llmFetchCalls === 2 && llmPathOk && cacheFetchCalls === 2 && cachePingPathOk && cacheServicePathOk && platformFetchCalls === 1 && platformPathOk && stray.length === 0);
+const messagingBody = NETWORK.test(appText(join(root, MESSAGING_EXCEPTION)) || "") ? appText(join(root, MESSAGING_EXCEPTION)) : "";
+const messagingFetchCalls = (messagingBody.match(/\bfetch\s*\(/g) ?? []).length;
+const messagingPathOk = /["'`]\/api\/messaging\/service["'`]/.test(messagingBody);
+const stray = netHits.filter((p) => p !== LLM_EXCEPTION && p !== CACHE_EXCEPTION && p !== PLATFORM_EXCEPTION && p !== MESSAGING_EXCEPTION);
+ok(`the four same-origin proxy calls reach only the documented path (llm fetch count ${llmFetchCalls}, path ok=${llmPathOk}; cache fetch count ${cacheFetchCalls}, ping ok=${cachePingPathOk}, service ok=${cacheServicePathOk}; platform fetch count ${platformFetchCalls}, fleet ok=${platformPathOk}; messaging fetch count ${messagingFetchCalls}, wire ok=${messagingPathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
+  netHits.length === 4 && llmFetchCalls === 1 && llmPathOk && cacheFetchCalls === 2 && cachePingPathOk && cacheServicePathOk && platformFetchCalls === 1 && platformPathOk && messagingFetchCalls === 1 && messagingPathOk && stray.length === 0);
 
 const SW_REGISTER = /navigator\s*\.\s*serviceWorker\s*\.\s*register\s*\(\s*["'`]([^"'`]+)["'`]/;
 const swSites = appFiles.flatMap((f) => {

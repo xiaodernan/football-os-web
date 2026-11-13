@@ -15462,11 +15462,11 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 
 <!-- /gaps -->
 
-## The Spring Cloud stack, honestly wired in (M1098 · M1099 · M1101 · M1104)
+## The Spring Cloud stack, honestly wired in (M1098 · M1099 · M1101 · M1104 · M1107)
 
 The web app itself is a static SPA by default — PLATFORM_LIVE=false, the browser never dials a
-Spring service. Three additive **opt-in** server-side wires run on the dev / preview server when
-you explicitly configure them — never from a static host without a Node middleware — and all three
+Spring service. Four additive **opt-in** server-side wires run on the dev / preview server when
+you explicitly configure them — never from a static host without a Node middleware — and all four
 are "call through ONE server-side route, never straight from a visitor's browser":
 
 1. **The live LLM tie-in (M1078 · M1101)** — visitor asks the AI screen a question → the server
@@ -15495,6 +15495,13 @@ are "call through ONE server-side route, never straight from a visitor's browser
    up the way Spring says it. UNSET services come back `configured: false` and their tile prints
    "not armed" — the panel is a probe, not a fleet manager: it reads nothing but Spring's own word.
    It never restarts, never rolls back, never fakes a green.
+4. **The Spring messaging-service observe wire (M1107)** — the `/messaging` screen carries an opt-in
+   panel, polled every 10s through `GET /api/messaging/service`. The server calls the messaging-service
+   you arm via `MESSAGING_SERVICE_BASE` (server-only, never `VITE_`) for its own `GET /messaging/summary`
+   — whose `live` field is a real AMQP connection probe, not a self-report — and the panel renders
+   exactly what Spring answered: `exchange footballos.events · dlq footballos.events.dlq · 8 shards ·
+   maxAttempts 5 · binder rabbit · live=true|false`. A broker-deprived service reports `live=false`
+   honestly through the panel. Unset → the honest "not armed" line, never a fabricated live.
 
 The full seven-service reactor — Eureka registry (`8761`), config server (`8888`), league service
 (`8081`/`8080`/`8082`), discipline service, cache service (`8083`), messaging service, gateway

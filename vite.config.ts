@@ -1,7 +1,7 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
-import { llmProxyMiddleware, serverConfig, createLlmCache, cachePingMiddleware, cacheServiceMiddleware, springFleetMiddleware } from "./scripts/llm-proxy.mjs";
+import { llmProxyMiddleware, serverConfig, createLlmCache, cachePingMiddleware, cacheServiceMiddleware, springFleetMiddleware, messagingServiceMiddleware } from "./scripts/llm-proxy.mjs";
 
 const proxy = { "/functions/v1/app": "http://127.0.0.1:8000" };
 
@@ -26,12 +26,14 @@ export default defineConfig(({ mode }) => {
       server.middlewares.use(cachePingMiddleware(llmCache));
       server.middlewares.use(cacheServiceMiddleware(env));
       server.middlewares.use(springFleetMiddleware(env));
+      server.middlewares.use(messagingServiceMiddleware(env));
     },
     configurePreviewServer(server) {
       server.middlewares.use(llmProxyMiddleware(() => llmConfig, llmCache));
       server.middlewares.use(cachePingMiddleware(llmCache));
       server.middlewares.use(cacheServiceMiddleware(env));
       server.middlewares.use(springFleetMiddleware(env));
+      server.middlewares.use(messagingServiceMiddleware(env));
     },
   };
   return {
