@@ -2,13 +2,14 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1089` 集大成提交（提交前基线 `e12dbac` M1088）
-**总提交数**: 1457（本提交落地后；提交前 1456）
-**开发状态**: 持续进行中，无阻塞问题（本轮 `/records` 档案陈列室头条电影化：与 hub 同构玻璃头条 + fo-spectrum 渐变标题；records 屏纳入 decor census 6 屏 25/25 aria-hidden；proof 全套全绿）
+**当前HEAD**: 本提交落地后为 `M1090` 集大成提交（提交前基线 `06abe24` M1089）
+**总提交数**: 1458（本提交落地后；提交前 1457）
+**开发状态**: 持续进行中，无阻塞问题（本轮 `/onboarding` 首跑头条电影化：hub/records 同构玻璃头条 + fo-spectrum 品牌字标；decor census 升到 7 屏 / 28/28 aria-hidden；onboarding E2E 5/5；proof 全套全绿）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1089，最新在上）
+## 🚀 近期里程碑（M1056–M1090，最新在上）
 
+- **M1090 `/onboarding` 首跑玻璃头条（the first-run glass）**：用户点名「前端魅力登峰造极」。首跑屏 brand 行换成 hub/records 同构玻璃头条——`relative overflow-hidden rounded-2xl` + `PANEL_CLASS.panelFaint` + 两个 aria-hidden `.fo-orb`（lime/violet）+ `.fo-grid`，F 字标升 `fo-spectrum` 字组渐变；零新 t() key、零目录改动；decor census 升到 **7 屏 / 28/28 aria-hidden**；PWA 639 KB 保持（JS 626 CSS 13.5）；**proof 187/187 · 4110/4110** 全绿；onboarding E2E **5/5**（含 Player→Enter Football OS 全流程）。诚实保留：frozen seed、PLATFORM_LIVE=false。
 - **M1089 `/records` 蜡像博物馆头条（the cabinet cinema）**：用户点名「前端魅力登峰造极」。`/records` 十二折叠陈列室补此 hub/赛季决策室同构的电影头条——`relative overflow-hidden rounded-2xl` + `PANEL_CLASS.panelFaint` + 两个 aria-hidden `.fo-orb`（violet/cyan）+ `.fo-grid` + `fo-spectrum` 渐变 h1 + DemoBadge；零新 t() key（复用 `rec.title` + `rec.subtitle` 印出已读 1015 个比赛）。proof-records 20/20 保持、screens 双锚绿 8.9s、decor census 升级到 **6 屏 / 25/25 aria-hidden**；PWA 639（JS 626 CSS 13.5）保持；**全套 proof 187/187 · 4110/4110**。诚实保留：frozen seed、PLATFORM_LIVE=false、records 行仍只读已签 off 的折叠第一行。
 - **M1088 `/ai` 电影头条（the Football AI screen's cinema header）**：用户点名「前端魅力登峰造极」。header 换成与 hub/赛季决策室同构的电影头条——`relative overflow-hidden rounded-2xl` + `PANEL_CLASS.panelFaint` + 两个 aria-hidden `.fo-orb`（violet/cyan）+ `.fo-grid` + `fo-spectrum` 渐变 h1（from-primary via-info to-chart-3，Landing 已证零对比度违约）+ DemoBadge + 在线状态 chip（LIVE 时 `CHIP_CLASS.info`+`fo-live-dot`；否则 `CHIP_CLASS.muted`）。零新 t() key、零新文案键。顺带两扇自开自收的门：① header 自画 `border-info/40 bg-info/10 text-info` 被 proof-chips 判为「outside the palette」——改走 `CHIP_CLASS.info/muted`（**17/17**）；② 注释中残留的 `t()` 字样被 raw-UI census 判为 unknown t-call——改写 dictionary door；census literal 2646→**2648**、litVarSites 445→**446**（en 分支绿）。motion proof 22/22 decor aria-hidden；**JS gzip 625→626 KB**、baseline 同提交重录（cssGzipKB 13→**14**）；screens AI 两走读绿 13.8s；**全套 proof 187/187 · 4110/4110** 全绿。诚实保留：frozen seed、PLATFORM_LIVE=false、token 计费在用户账单、LIVE chip 反映的是构建时 `VITE_LLM_ENABLED` 而非服务器此刻的健康（data/llm.ts 注释诚实记录）。
 - **M1087 README 补 live tie-in 完整部署契约 + ai.subtitle 三语诚实修正**：README 增「The live Football AI tie-in (optional, server-side only)」一节（镜像 `## The platform beneath` 的诚实结构）——服务端-only `LLM_API_KEY`/`LLM_BASE_URL`/`LLM_MODEL`（永不出 `scripts/llm-proxy.mjs`）、公共 build-time 仅 `VITE_LLM_ENABLED`/`VITE_LLM_MODEL` 两非秘、GH Pages 无 Node middleware → 浏览器 POST 失败 → **可见降级确定性简报、零泄漏、零炸裂**（本改动期间以一次无凭据构建实测：零 console error、屏印 `DETERMINISTIC BRIEFING`、无 `LIVE · GPT-6-SOL` chip）、hard limits 10 条/8KB/20s/无流式、升降格契约 503/400/405/502、`proof-llm` 14 则 `sk-` 扫描（`git ls-files`+`dist` 双域，当前 461 tracked 0 token）、两处 mount 点（configureServer/PreviewServer）、验证命令长清单、诚实边界重声。**同时修正一句真过期复制**：三语 `ai.subtitle` 仍指向客户端直连时代的 `VITE_LLM_API_KEY`——改为「服务端持有 LLM key 且启用」如实描述（EN/zh-CN/zh-TW）。Proof **187/187 · 4110/4110** 全绿，PWA 639 保持，tsc/build exit 0。
