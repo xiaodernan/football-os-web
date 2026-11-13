@@ -1,0 +1,80 @@
+# M1101: the live LLM witness joins CI — carefully. The authoring machine CAN reach the configured
+# OpenAI-compatible provider with a real key, but the shipped CI runner must never dial a key
+# it doesn't own. So this workflow honestly exercises the live model when `secrets.LLM_API_KEY`
+# is configured on the repository and prints UNVERIFIED when it isn't (that's the correct,
+# honest result for a key-less checkout).
+#
+# Safety contract:
+#   · the key is read from a repository secret, never from a committed file, ever
+#   · this workflow never echoes the key, never logs the bearer, never prints checksums
+#   · only push to master and PR triggers it — never forks
+#   · the in-CI mode verifies whatever the real provider returns and reports PASS/FAIL/UNVERIFIED
+#   · the browser-bundle sk- scan gate is included for every build
+#
+# How to enable: repository → Settings → Secrets and variables → Actions → New repository secret
+#   name: LLM_API_KEY        value: <your OpenAI-compatible bearer key>
+#   name: LLM_BASE_URL       (optional; defaults to https://wkapi.pro/v1)
+#   name: LLM_MODEL          (optional; defaults to gpt-6-sol)
+#
+# If the secret is absent, the workflow still runs, prints "no key → UNVERIFIED", and the
+# proof-workflows gate still asserts the harness shape — it does NOT pretend to have run.
+
+name: spring-cloud-llm-live
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "scripts/llm-proxy.mjs"
+      - "scripts/llm-proxy.d.mts"
+      - "scripts/verify-llm-live.mjs"
+      - "scripts/proof-llm.mjs"
+      - "scripts/PROOF-LLM-*.md"
+      - "vite.config.ts"
+      - "package.json"
+      - ".env.example"
+      - ".github/workflows/spring-cloud-llm-live.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "scripts/llm-proxy.mjs"
+      - "scripts/llm-proxy.d.mts"
+      - "scripts/verify-llm-live.mjs"
+      - "scripts/proof-llm.mjs"
+      - "vite.config.ts"
+      - "package.json"
+      - ".env.example"
+      - ".github/workflows/spring-cloud-llm-live.yml"
+
+jobs:
+  llm-live:
+    runs-on: ubuntu-latest
+    env:
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+      LLM_MODEL: ${{ secrets.LLM_MODEL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install web dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: tsc · build the bundle
+        run: npx tsc --noEmit && npm run build
+
+      - name: Portable live LLM witness (bcrypt/.env driven)
+        run: node scripts/verify-llm-live.mjs
+
+      - name: Browser-bundle sk- scan (direct dist audit)
+        run: |
+          if grep -rnI --exclude-dir=node_modules -E 'sk-[A-Za-z0-9]{20,}' dist/; then
+            echo "FAIL: the bundle carries a key-like token"; exit 1
+          fi
+          echo "ok   the built browser bundle carries no sk- token"

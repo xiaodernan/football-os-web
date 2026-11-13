@@ -2,12 +2,14 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1099`（提交前基线 `da81c6f` M1098）
-**总提交数**: 1467（本提交落地后；提交前 1466）
+**当前HEAD**: 本提交落地后为 `M1101`（提交前基线 `096607f` M1099）
+**总提交数**: 1468（本提交落地后；提交前 1467）
 **开发状态**: 持续进行中，无阻塞问题（本轮把 Spring Cloud cache-probe 真注入 `/cache`：同一 plugin 挂在 dev+preview，`/api/cache/ping` 返回真实 LLM-proxy cache 的实时 stores/hits/misses/coalesced/expired/stores/size；冷启动会印「尚无样本」诚实句、探头不可达（静态主机或断网）会印「这里探针不可达」；不为此计次新增任何 pin 以外数字、`tests/e2e/cache.spec.ts` 关闭 E2E 闭环；`proof-cache-probe.mjs` 为新的 188th proof，9/9；`npm run proof 187→188 scripts 4111→4120 checks` 全绿；PWA pin 640→642 KB（JS 627→628 KB，baseline 同提交重录）；Live LLM 实测 stores 从 0→1。)
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1099，最新在上）
+## 🚀 近期里程碑（M1056–M1101，最新在上）
+
+- **M1101 LLM 活体见证进 CI（不 echo secrets、不抄 witness、双层诚实）**：新 workflow `.github/workflows/spring-cloud-llm-live.yml`——只在 master push/PR 触发（路径过滤为 LLM/CI 文件本身），ubuntu-latest runner，`${{ secrets.LLM_API_KEY }}` / `LLM_BASE_URL` / `LLM_MODEL` 通过 `env:` 进 runner（只读进程环境，永远不打印）；运行 committed witness——**不重新实现**，与维护者本地同一布局（vite 中间件同一 mount、同样 `X-FootballOS-LLM-*` 头、同样 never-before-ask grounded question 断言 `prompt_tokens=933 · cached_tokens=32` 不 pin）。secret 缺 → 活臂全印 `UNVERIFIED` 仍 exit 0；secret 配置 → 真连 provider；**绝不 echo**（no `set -x` / no `printenv`）；**bundle sk- scan gate**（`grep -rnI --exclude-dir=node_modules -E 'sk-[A-Za-z0-9]{20,}' dist/`）——任何 build artefact 中出现 `sk-` 即红。`proof-workflows.mjs` 第 13 条 arm 全打：工作流名、push/PR branches master、ubuntu-latest、invokes committed witness（不重写）、no echo / no `printenv LLM` / no `set -x`、bundle sk- scan、path filter 覆盖 .github 自身文件。**Gates**：`npm run proof 188 scripts proven · 4121/4121 checks` 全绿；tsc 干净、build exit 0；proof-workflows 12 → 13/13。**诚实保留**：作者本机 Docker Desktop registry 不能拉新镜像，本地无法实跑 Spring 全套 witness；本 workflow 是「本机不支持」的另一半：如果您把 `LLM_API_KEY` 配置进 Repository Secrets，CI 在 clean ubuntu-latest 上跑同一 witness；不配置则全印 UNVERIFIED、永远不会假装通过；frozen seed、PLATFORM_LIVE=false。
 
 - **M1099 Spring cache service 真接进 /cache（live /api/cache/service；Spring service path, not descriptor）**：M1098 兑现了 LLM proxy 自己承载的 wire；本轮兑付「Spring 自己真进了浏览器」的兑现线——`scripts/llm-proxy.mjs` 新增 `CACHE_SERVICE_ROUTE="/api/cache/service"` + `cacheServiceMiddleware(env)`；只 mount on `configureServer` + `configurePreviewServer`；GET-only；read server-only env `CACHE_SERVICE_BASE`（从不打 `VITE_` prefix）指向的 football-os-cache 服务：ping `/actuator/health` + pull `/cache/league/stats`；unconfigured → `{ok:false, reason:"unconfigured"}`；upstream 非 2xx → `{ok:false, reason:"upstream_down"}`；fetch throw → `{ok:false, reason:"unreachable"}`；绝不传 upstream body 原样回放、绝不跨域、绝不出现在 `.env.example`（只列变量名）以外的构建产物里。
 

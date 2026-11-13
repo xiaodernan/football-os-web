@@ -93,5 +93,29 @@ ok("the fourth live witness (cache wire parity) runs after Redis and before mess
   live.indexOf(cacheParityStep) < live.indexOf("npm run proof") &&
   live.split("scripts/verify-cache-parity-live.mjs").length - 1 >= 3);
 
+// M1101: the LLM-live workflow — the second LIVE witness's CI vehicle. Honest about the secret:
+// when secrets.LLM_API_KEY is set, the runner dials the real provider and proves the full
+// round-trip; when it isn't, the witness degrades to UNVERIFIED-but-green, never red-but-faked.
+// The workflow must (a) exist, (b) only run on master push/PR, (c) only invoke the committed
+// witness — never a reimplementation, (d) set env LLM_API_KEY/LLM_BASE_URL/LLM_MODEL from
+// secrets and never echo them, (e) never bake in a token, (f) include a bundle dist scan that
+// chemically excludes the key. A missing secret is an honest UNVERIFIED, never a failure.
+const llmWf = read(".github/workflows/spring-cloud-llm-live.yml");
+ok("the LLM-live workflow exists, drives the committed verifier, never echoes secrets, and guards the bundle sk-",
+  llmWf.includes("spring-cloud-llm-live") &&
+  llmWf.includes("on:") && llmWf.includes("push:") && llmWf.includes("pull_request:") &&
+  llmWf.includes("runs-on: ubuntu-latest") &&
+  llmWf.includes("node scripts/verify-llm-live.mjs") &&
+  llmWf.includes("${{ secrets.LLM_API_KEY }}") &&
+  (llmWf.includes("LLM_BASE_URL") || llmWf.includes("LLM_MODEL")) &&
+  !/echo.*LLM_API_KEY/.test(llmWf) &&
+  !/printenv.*LLM/.test(llmWf) &&
+  !/set -x\b/.test(llmWf) &&
+  llmWf.includes('grep -rnI --exclude-dir=node_modules -E') &&
+  llmWf.includes("dist/") &&
+  ["scripts/llm-proxy.mjs", "scripts/llm-proxy.d.mts", "scripts/verify-llm-live.mjs",
+    "scripts/proof-llm.mjs", "vite.config.ts", "package.json", ".env.example",
+    ".github/workflows/spring-cloud-llm-live.yml"].every((p) => llmWf.includes(p)));
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);
