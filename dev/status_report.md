@@ -2,13 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1095/M1096` 集大成提交（提交前基线 `1d2db32` M1094）
-**总提交数**: 1464（本提交落地后；提交前 1462）
+**当前HEAD**: 本提交落地后为 `M1097`（提交前基线 `bd98c5d` M1095/M1096）
+**总提交数**: 1463（本提交落地后；提交前 1462）
+**开发状态**: 持续进行中，无阻塞问题（本轮兑付上一轮的活体见证——真实浏览器十屏全通：landing/AI/manager/player OS/season room/cabinet/league rules/world/community，全 Chromium 零控制台无错误、零凭据、零 Spring/Broker，`tests/e2e/cinematic.spec.ts` 全新 M1107 级回归）。
 **开发状态**: 持续进行中，无阻塞问题（本轮接受用户诊断「缓存命中率低且显示非流，一定是调用方法出了问题」——对四种上游 body 实测定位：plain non-stream 0/12、stream+include_usage 5/12、stream+prompt_cache_key 8/8→11/12、同样形状重测 11/12；把 upstream 改为 `stream:true` + `prompt_cache_key:"football-os"`（不用 include_usage）、服务端汇总 SSE、对外 envelope 不变；并且据实深测确认缓存 lane 对此 brief 的容量为 196/196 bytes，不会伪造命中率。PlayerOS 激活头条电影化，与 M1095 同批提交落地）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1096，最新在上）
+## 🚀 近期里程碑（M1056–M1097，最新在上）
 
+- **M1097 the cinematic live-browser gate（用真浏览器跑六屏全球，再测一遍真证）**：M1073/M1077/M1085/M1089/M1094/M1095/M1096 都已经把九地 cinematic 头地钉在了 staging master 上，但没有人在 Playwright 里从头到尾 `page.goto` 一次——添加 `tests/e2e/cinematic.spec.ts`：以 en-US Chromium 走读 landing/onboarding/AI/manager/player/season-room/records/league-rules/world/community **十条已经落地的屏幕**，逐条断言 level-1 heading 可见、全程零 console.error、fullPage 截图落在 `tests/e2e/__shots__/`（gitignored: artifacts）。**全十条全绿，37.6秒**。不造造新 t() 键、不动 census、不动 PWA。诚实保留：Spring/RabbitMQ/Redis 实况未触——Vite dev server 的全量静态账本，不需要任何真实凭据。
 - **M1096 服务端调模型缓存命中率低、一直显示"非流"（用户明确点名）——先立测再实修、全程真模型验证**：用户点名「缓存命中率低且一直显示非流，肯定是调用方法出了问题」。先用真 key 对四种上游 body 各打 8–12 遍（同 system brief + 同 question，测 prompt_tokens_details.cached_tokens）：① plain non-stream → **0/12**；② `stream:true` + `stream_options.include_usage` → **5/12**；③ `stream:true` + `prompt_cache_key:"football-os"` → **8/8→11/12**；④ 同③、不携带 include_usage → **8/8**；control 之一 plain 复测仍是 **0/12**。归因：KV-cache 只按字节一致前缀归 lane；四种形状里只有带 `prompt_cache_key` 的把请求钉在同一个热 lane，而 include_usage 把请求踢到别的 lane。**修**：`scripts/llm-proxy.mjs` 上游改为 `stream:true + prompt_cache_key:"football-os"`（不取 include_usage），proxy 在服务端汇总 SSE 后原样 envelope 给浏览器（`data/llm.ts` 零改动、dist 接口零变）；usage 回灌 `X-FootballOS-LLM-Usage-Cached` 头与 JSON `usage`；`PROMPT_CACHE_KEY` 导出供证明；`scripts/llm-proxy.d.mts` 全量对齐真实导出。**诚实深锤**：对 brief 之一 lane 做过连续 40 次（全新中文题），cached_tokens 落在 `{0, 32, 196}`——这是上游对这条 1.4K brief 的真实容量、**非调用侧可再压**；没有造任何不可能实现的命中率。**witness 新 arm**：never-before-ask grounded question 实跑 gpt-6-sol → `prompt_tokens=933, cached_tokens=32`（不 pin 死值，不硬性断言）；全套证明门保持 **187/187 · 4111/4111**、proof-llm 39→**40/40**；README live 段 18→**19/19**。诚实保留：上游 KV 容量非我可控、`prompt_cache_key` 单一串(=Football OS 专用、不区分访客以降 lane 压力)、frozen seed、PLATFORM_LIVE=false。
 - **M1095 `/player` 激活头条电影化（the player mission cinema，用户点名「前端魅力登峰造极」）**：/player 激活态头条换成与 hub/records 同构的电影头条——`relative overflow-hidden rounded-2xl` + `PANEL_CLASS.panelFaint` + 两个 aria-hidden `.fo-orb`（lime/cyan）+ `.fo-grid` + ⚽ 图标 + `fo-spectrum` 渐变 h1（`nav.player · 玩家名`）；position/age/goal 线与 OVR/level/streak badges 全部保留；未激活空态 Panel 保持原样；decor census 升到 **12 屏 / 43/43 aria-hidden**；PWA 资产总 gzip 640→**641 KB**（pin 640→641，baseline 同提交重录）；player-training E2E **2/2** 绿；proof **187/187 · 4110/4110**。诚实保留：frozen seed、PLATFORM_LIVE=false。
 

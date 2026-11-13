@@ -13,6 +13,8 @@ dist/
 # Playwright's transient run artifacts: a failed run's screenshots and traces are
 # evidence for the run that made them, not for the next one.
 test-results/
+# The cinematic walk's screenshot lane — artifacts, not source.
+tests/e2e/__shots__/
 
 # A clone of this repository is a neighbour, not a directory of this one (M423). It was
 # committed once as a submodule pointer with no .gitmodules file, and every proof that walks
