@@ -15255,12 +15255,13 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 
 <!-- outstanding -->
 
-- `task` — **the deployment lane (#143)**: the app has never been published anywhere it can be
-  reached from a browser that isn't on this machine. `PROVENANCE.md` records asset attribution;
-  `## Deploying` says publishing has not been performed. When the time comes, the build must be
-  re-run under a fresh SHA, tested end-to-end in the deployment target, and `PROVENANCE.md` and
-  the `<!-- outstanding -->` block must be updated to reflect a site that this ledger no longer
-  lies to.
+- `task` — **the LLM_API_KEY repository secret (#143)**: the `spring-cloud-llm-live.yml` workflow
+  reads `LLM_API_KEY`/`LLM_BASE_URL`/`LLM_MODEL` exclusively from repository Secrets and refuses to
+  invent one. Until that secret exists, every live-model leg prints UNVERIFIED (and passes honestly,
+  because an unconfigured CI never claims a live dial it cannot perform). To make the model side of
+  CI real: repository → Settings → Secrets and variables → Actions → `LLM_API_KEY` (and optionally
+  `LLM_BASE_URL`, `LLM_MODEL`). Publishing itself is no longer outstanding: GitHub Pages is live at
+  `https://xiaodernan.github.io/football-os-web/` — every push to master rebuilds and redeploys it.
 
 <!-- /outstanding -->
 
@@ -15550,6 +15551,17 @@ from a visitor's browser; there is nothing for a visitor to steal.
 
 ## Deploying
 
-To host, follow the `sites-hosting` skill with `webDirectory: "dist"`. Publishing is a
-deliberate step and has **not** been performed for this project — it is currently local
-only. See `PROVENANCE.md` for asset and stylesheet attribution.
+The repo ships `.github/workflows/pages.yml` and GitHub Pages publish is **live** at
+**https://xiaodernan.github.io/football-os-web/** — every push to master builds with
+`BASE_PATH=/football-os-web/`, runs `npm ci`, the production build and `actions/deploy-pages@v4`.
+Verified live over plain HTTPS: the site serves the current `master` build's own `<title>` and
+PWA manifest, and the latest runs for the last milestones are all green on the `pages` workflow.
+
+What you still owe the CI side, and it is yours, not ours: the repository carries **zero** Actions
+Secrets today, so `spring-cloud-llm-live.yml`'s live model legs print UNVERIFIED rather than dial
+a key that is not configured. To let CI exercise the real provider on every push that touches the
+LLM lane: repository → Settings → Secrets and variables → Actions → `LLM_API_KEY` (and optionally
+`LLM_BASE_URL`, `LLM_MODEL`). The workflow never prints, hashes or otherwise exposes the key; it
+dials the provider with it exactly as your local `.env` does.
+
+See `PROVENANCE.md` for asset and stylesheet attribution.
