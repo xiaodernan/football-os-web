@@ -29,7 +29,6 @@ on:
       - "scripts/llm-proxy.d.mts"
       - "scripts/verify-llm-live.mjs"
       - "scripts/proof-llm.mjs"
-      - "scripts/PROOF-LLM-*.md"
       - "vite.config.ts"
       - "package.json"
       - ".env.example"
