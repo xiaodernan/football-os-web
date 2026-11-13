@@ -5,9 +5,9 @@ import { footballProvider, getClub } from "@/data/footballService";
 import {
   leagueWall, worldLethal, records, passingAccuracy, scorelessStreaks, statsBlockKings, redCardKings,
 } from "@/domain/analytics";
-import { DemoBadge, Panel, SectionTitle, Crest } from "@/ui/primitives";
+import { DemoBadge, Panel, SectionTitle, Crest, PANEL_CLASS } from "@/ui/primitives";
 import { sum } from "@/domain/attributes";
-import { SEPARATOR } from "@/lib/utils";
+import { cn, SEPARATOR } from "@/lib/utils";
 
 // M1030: the cabinet of records �?the world's best, grouped the way a historian files a shelf.
 // Every row on these shelves is the FIRST ROW of the fold the streak signed off and the screen
@@ -119,13 +119,20 @@ export function RecordsCabinet() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold tracking-tight">{t("rec.title")}</h1>
-          <DemoBadge />
+      {/* The archive vault: the hub's glass idiom as a museum of the frozen world — pure decor,
+          every word via the dictionary door. */}
+      <header className={cn("relative overflow-hidden rounded-2xl px-5 py-5", PANEL_CLASS.panelFaint)}>
+        <div aria-hidden className="fo-orb fo-orb-violet -left-16 -top-16 h-44 w-44" />
+        <div aria-hidden className="fo-orb fo-orb-cyan -right-10 -bottom-12 h-40 w-40" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold tracking-tight text-transparent">{t("rec.title")}</h1>
+            <DemoBadge />
+          </div>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("rec.subtitle", { m: record.matches })}</p>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">{t("rec.subtitle", { m: record.matches })}</p>
-      </div>
+      </header>
 
       <Panel className="p-5">
         <SectionTitle title={t("rec.attackArt")} hint={t("rec.attackHint")} />
