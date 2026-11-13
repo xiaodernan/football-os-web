@@ -224,7 +224,7 @@ const bodyBack = await summary();
 const afterRecover = await stats();
 const existsBack = redisCli("exists", KEY), ttlBack = Number(redisCli("ttl", KEY));
 ok(`Redis RAM was genuinely lost across the stop (EXISTS=${existsLost}) and the next read re-MISSED into a fresh key (EXISTS=${existsBack}, TTL=${ttlBack}s)`,
-  existsLost === "0" && existsBack === "1" && ttlBack > 0 && ttlBack <= 60 &&
+  existsLost === "0" && existsBack === "1" && ttlBack > 0 && ttlBack <= ttlCeiling &&
   afterRecover.misses === beforeRecover.misses + 1 && bodyBack === expected);
 
 // The exit code MUST reflect the tally — a FAIL that exits 0 is a green that lies (the discipline
