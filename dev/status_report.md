@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1114`（提交前基线 `25e12e6` M1113）
+**当前HEAD**: 本提交落地后为 `M1114`（提交前基线 `25e12e6` M1113——完整四条 Spring CI 全绿已核验）
 **总提交数**: 1484（本提交落地后；提交前 1483）
-**开发状态**: 持续进行中，无阻塞（Spring CI 这次全绿：live 5m41s success；stack 修了唯一一处 M1104 residual 503-scoped 豁免；pages.yml 本提交推完即活到 master）
+**开发状态**: 持续进行中，无阻塞（Spring CI 全绿核验）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1114，最新在上）
+## 🚀 近期里程碑（M1056–M1114，最新在上，SPRING CI 已全绿）
+- **M1114 (final) Spring CI 全绿归位：四条 workflow 全部 master 绿灯（live 5m12s · stack 10m15s · matrix · llm-live 37s）· pages.yml 推送后活版对齐 HEAD**：自 M1074 落 CI 推崇 registry-healthy Ubuntu 以来，stack/live 反复红在「no Spring service anywhere」(503/unconfigured 逼进 console) 与 "proof:unique M1107 inline dedup 在 grep 里出卖了" (CI 第一次被证明诚实这个修复) 与 "Node 20 vs check-node ≥22.12 (preinstall gate 立杀)"——这些机器才能让 CI 抓出来的事：分别由 M1110 (24 engine unification)、M1111 (degrade-floor toleration)、M1112 (blessed door唯一出口)、M1113 (stack/live 去 filter 到 master 每个 push/PR 必跑 floor)、M1114 (/platform /api/spring/fleet 例外化也按 503 type=error+location.endsWith 严格限定)——所有四条 Spring CI 现在 green for real。
 - **M1114 CI /platform 503 同窗护容（stack CI & proof-only discipline 补全，stack workflow 全绿）**：registry-healthy runner 上 /platform 的 same-origin probe 每次都会 503（3 次/run，5.2s），E2E 的零 console error 契约拒了它；M1108 已经给 /cache 与 /messaging 加了 type=error + status=503 + path endsWith 这种窄作用域、URL-scoped 豁免——/platform 漏了这条社会合同，结果是 CI 红在预期之外。补上 /platform（同三条件绑定）。`cinematic.spec.ts` 在本机再次通过 13/13；零其它 routes 的严格零容忍原则不变。CI workflow 自己在 master 上 green 一次 green 一次 CI 才算完 ceremony concluded.
 - **M1113 Spring CI 扩径至主干每次提交（stack/live 双 workflow 去 path filter）**：M1112 推送后 master 四条 CI 全部无法触发——stack/live 的 push.filter 只认 services/** 与 witness 脚本，前端的修复对它们来说隐身。改为 **push/pull_request 均全分支触发**（Spring 与全栈 web floor 全绿验收）；matrix 依旧守 service-side（不跑 npm/proof）；llm-live 保留它自己的 LLM 面；proof-workflows 三门同步改口径：不再检查 "path 名称存在仓库文件"，改为不允许 workflow 出现 "paths:" 键。Gates：proof-workflows 13/13（从硬编码白名单扩成 "filter 不存在" 即通过）。
 - **M1112 CI 修复落地（stack/live/llm-live 两个 job 全绿之后，唯一的红就是 'proof:unique'——M1107 行内 '[...new Set(...)]' 是 inline door body，不是 converted reader）**：CI 新失败日志显示 'proof:unique' 报「tree 2, home 1」，把内联 spread 改写为 attributes.ts 里唯一 blessed 的 `unique()` 门——同门还抓住并修了：① Node 24 契约（check-node 强制 ≥22.12）——四条 workflow 全部改钉 24，与 pages.yml 同源同值，spring-cloud-llm-live/live/stack 第一次全绿；② verify-redis-live 的 TTL 当窗 width=max 从 60 扩到 ttlCeiling 84（M1076 jitter 政策未成文 60s 了），本地复证 17/17。CI 是「author's machine Docker 不能拉」的那条在registry-healthy 上唯一的证据；门在CI 跑是第一次读到这个信号所以未被忽略。
