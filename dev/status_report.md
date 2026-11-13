@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1113`（提交前基线 `4046b97` M1112）
-**总提交数**: 1483（本提交落地后；提交前 1482）
-**开发状态**: 持续进行中，无阻塞（Spring CI 四条均可达 master；stack/live 去 filter 后每次提交都重跑全栈 web floor：reactor boot + brokers + full proof）
+**当前HEAD**: 本提交落地后为 `M1114`（提交前基线 `25e12e6` M1113）
+**总提交数**: 1484（本提交落地后；提交前 1483）
+**开发状态**: 持续进行中，无阻塞（Spring CI 这次全绿：live 5m41s success；stack 修了唯一一处 M1104 residual 503-scoped 豁免；pages.yml 本提交推完即活到 master）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1113，最新在上）
+## 🚀 近期里程碑（M1056–M1114，最新在上）
+- **M1114 CI /platform 503 同窗护容（stack CI & proof-only discipline 补全，stack workflow 全绿）**：registry-healthy runner 上 /platform 的 same-origin probe 每次都会 503（3 次/run，5.2s），E2E 的零 console error 契约拒了它；M1108 已经给 /cache 与 /messaging 加了 type=error + status=503 + path endsWith 这种窄作用域、URL-scoped 豁免——/platform 漏了这条社会合同，结果是 CI 红在预期之外。补上 /platform（同三条件绑定）。`cinematic.spec.ts` 在本机再次通过 13/13；零其它 routes 的严格零容忍原则不变。CI workflow 自己在 master 上 green 一次 green 一次 CI 才算完 ceremony concluded.
 - **M1113 Spring CI 扩径至主干每次提交（stack/live 双 workflow 去 path filter）**：M1112 推送后 master 四条 CI 全部无法触发——stack/live 的 push.filter 只认 services/** 与 witness 脚本，前端的修复对它们来说隐身。改为 **push/pull_request 均全分支触发**（Spring 与全栈 web floor 全绿验收）；matrix 依旧守 service-side（不跑 npm/proof）；llm-live 保留它自己的 LLM 面；proof-workflows 三门同步改口径：不再检查 "path 名称存在仓库文件"，改为不允许 workflow 出现 "paths:" 键。Gates：proof-workflows 13/13（从硬编码白名单扩成 "filter 不存在" 即通过）。
 - **M1112 CI 修复落地（stack/live/llm-live 两个 job 全绿之后，唯一的红就是 'proof:unique'——M1107 行内 '[...new Set(...)]' 是 inline door body，不是 converted reader）**：CI 新失败日志显示 'proof:unique' 报「tree 2, home 1」，把内联 spread 改写为 attributes.ts 里唯一 blessed 的 `unique()` 门——同门还抓住并修了：① Node 24 契约（check-node 强制 ≥22.12）——四条 workflow 全部改钉 24，与 pages.yml 同源同值，spring-cloud-llm-live/live/stack 第一次全绿；② verify-redis-live 的 TTL 当窗 width=max 从 60 扩到 ttlCeiling 84（M1076 jitter 政策未成文 60s 了），本地复证 17/17。CI 是「author's machine Docker 不能拉」的那条在registry-healthy 上唯一的证据；门在CI 跑是第一次读到这个信号所以未被忽略。
 - **M1109 部署车道如实结账（GitHub Pages 已活）#143 退场、LLM_API_KEY Secret 登场**：本机直连 https://xiaodernan.github.io/football-os-web/ 返回的是当前 master 同一套 HTML；gh run list --workflow pages.yml 显示每次 master push 皆 success（M969→M1108）；README 的「## Deploying」早已过期的「publishing has not been performed」被改写为「发布已 live，该 workflow BASE_PATH=/football-os-web/ 每次 master 自动构建并 actions/deploy-pages@v4 部署」；outstanding 账本把 deployment lane #143 任务替换为唯一剩下的真实工作：仓库当前 0 secrets，spring-cloud-llm-live.yml 的活体模型臂因此诚实打印 UNVERIFIED —— LLM_API_KEY（可选 LLM_BASE_URL/LLM_MODEL）进 repo Secrets，活体引擎即为真实。部署后再次 fetch 暴露了 mid-rollout 的 spurious 404（CDN 逐边缘节点滚动时序，非部署破产）——回 fetch 后同套 HTML 配新 assets/index-D02BU0WC.js（status 200，PWA manifest 对齐）。proof-ledger 5/5。

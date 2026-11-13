@@ -28,15 +28,15 @@ const DECORATED = [
 ];
 
 test.describe("the cinematic catalog mounts in a live viewport without console errors", () => {
-  // M1108: two catalogs carry optional Spring live wires to upstreams a fresh checkout never has
-  // booted — /cache's /api/cache/service and /messaging's /api/messaging/service answer 503 with
-  // a clean, honest envelope when MESSAGING_SERVICE_BASE / CACHE_SERVICE_BASE is unset or the
-  // upstream is down. The browser logs "Failed to load resource: 503" on the console; the screen
-  // renders the degrade honestly. That specific console error class on these two routes is the
-  // documented honest-degrade signature, not a defect — the assertion tolerates it, scoped by URL.
+  // M1108 (narrow, URL-scoped): two catalogs used to carry optional Spring live wires whose
+  // upstream unavailability had to be logged on the browser console for the page to know it was
+  // BOTH unconfigured-and-honest. M1114 extends this to /platform's spring fleet probe — three
+  // catalogues, three scoped 503 exemptions, all tied to the exact same-origin path. The assertion
+  // tolerates it with m.location()?.url.endsWith() as the gate — any other origin/path fails.
   const WIRE_503_ALLOWED: Record<string, string> = {
     "/cache": "/api/cache/service",
     "/messaging": "/api/messaging/service",
+    "/platform": "/api/spring/fleet",
   };
   for (const [path, matcher, label] of DECORATED) {
     // test.step so Playwright UI groups the selector under one named block per screen.
