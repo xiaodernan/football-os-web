@@ -98,17 +98,22 @@ try {
   ok(`a non-POST to the proxy route is refused with 405 + Allow: POST (got ${getRes.status})`,
     getRes.status === 405 && (getRes.headers.get("allow") || "").includes("POST"));
 
-  const badJson = await post(PROXY_ROUTE, "not-json");
+  // The mounted server boots with the REAL cfg: unconfigured, it answers 503 before validation —
+  // the key gate precedes everything, so the 400 arms are not reachable on a keyless deployment.
+  // Those legs therefore exercise the framework-agnostic core handler with an EXPLICIT FAKE key
+  // (validation happens there before any network call; the legs are deterministic and dial nothing).
+  const fakeKey = "fake-ci-degrade-key-deliberately-readable-as-fake";
+  const badJson = await handleLlmRequest({ ...cfg, key: fakeKey }, "not-json");
   ok(`malformed JSON degrades to 400 + invalid_json (status ${badJson.status})`,
-    badJson.status === 400 && JSON.parse(badJson.text).error === "invalid_json");
+    badJson.status === 400 && badJson.body.error === "invalid_json");
 
-  const empty = await post(PROXY_ROUTE, JSON.stringify({ messages: [] }));
+  const empty = await handleLlmRequest({ ...cfg, key: fakeKey }, { messages: [] });
   ok(`an empty message list degrades to 400 + invalid_messages (status ${empty.status})`,
-    empty.status === 400 && JSON.parse(empty.text).error === "invalid_messages");
+    empty.status === 400 && empty.body.error === "invalid_messages");
 
-  const many = await post(PROXY_ROUTE, JSON.stringify({ messages: Array.from({ length: 20 }, (_, i) => ({ role: "user", content: "x" + i })) }));
+  const many = await handleLlmRequest({ ...cfg, key: fakeKey }, { messages: Array.from({ length: 20 }, (_, i) => ({ role: "user", content: "x" + i })) });
   ok(`an oversized message list is bounded (400 + invalid_messages, status ${many.status})`,
-    many.status === 400 && JSON.parse(many.text).error === "invalid_messages");
+    many.status === 400 && many.body.error === "invalid_messages");
 
   // direct core handler with no key → 503, and the key is never echoed in any body
   const noKey = await handleLlmRequest({ key: "" }, { messages: [{ role: "user", content: "hi" }] });
