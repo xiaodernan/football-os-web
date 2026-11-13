@@ -60,7 +60,7 @@ function buildWorldBriefing(): string {
   const strongestLines = strongest.map((c) => c.name + " " + c.overall).join(", ");
   const bestLines = best.map((p) => {
     const club = byId.get(p.clubId);
-    return p.name + " (" + p.position + ", " + p.overall + " at " + (club?.short ?? "?") + ")";
+    return p.name + " (" + p.position + ", " + p.overall + ", age " + p.age + " at " + (club?.short ?? "?") + ")";
   }).join(", ");
   const comps = competitions.map((c) => c.name).sort().join(", ");
   return [

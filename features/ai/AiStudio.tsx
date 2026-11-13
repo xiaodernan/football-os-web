@@ -140,7 +140,14 @@ function Chat() {
           <div key={i} className="max-w-[92%] space-y-2">
             {m.via && (
               <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                <span className={cn("h-1.5 w-1.5 rounded-full", m.via === "live" ? BAR_FILL.info : m.via === "local" ? BAR_FILL.good : BAR_FILL.low)} />
+                {m.via === "live" ? (
+                  <span aria-hidden className="relative inline-flex h-2 w-2">
+                    <span aria-hidden className="absolute inline-flex h-full w-full animate-ping rounded-full bg-info/60" />
+                    <span aria-hidden className="fo-live-dot relative inline-flex h-2 w-2 rounded-full bg-info" />
+                  </span>
+                ) : (
+                  <span aria-hidden className={cn("h-1.5 w-1.5 rounded-full", m.via === "local" ? BAR_FILL.good : BAR_FILL.low)} />
+                )}
                 {m.via === "live" ? t("ai.via.live", { model: LLM_CONFIG.model }) : m.via === "local" ? t("ai.via.local") : t("ai.via.fallback")}
               </div>
             )}
