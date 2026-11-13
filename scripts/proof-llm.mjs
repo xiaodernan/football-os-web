@@ -1,4 +1,4 @@
-// M1078: the live LLM tie-in — proofs for the contract the browser↔proxy split promises.
+﻿// M1078: the live LLM tie-in — proofs for the contract the browser↔proxy split promises.
 //
 // The Football AI chat used to be a sealed simulator: askIntelligence replays seeded-dev rows
 // onto the screen with a fake 420ms pause. M1078 adds a LIVE path — a real model, grounded only
@@ -140,11 +140,18 @@ ok(`M1079 cacheKey is stable, sensitive to model+content, a uint32 hex, and NEVE
   /^[0-9a-f]{8}$/.test(key1) && !key1.includes("SECRET"));
 
 // Stub the model call. A fabricated key never leaves this process; no network is dialled.
+// ─── M1096 · the same SSE frame the real upstream emits, so the fake exercises the real parser ──
+// Two frames + [DONE]: a delta carrying the full seeded answer, a terminal usage frame whose
+// cached_tokens guides nothing except honesty of the envelope.
+const sseFrame = (text) =>
+  `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n` +
+  `data: ${JSON.stringify({ choices: [{ delta: {} }], usage: { prompt_tokens: 1424, prompt_tokens_details: { cached_tokens: 196 } } })}\n\n` +
+  "data: [DONE]\n\n";
 const FAKE = { key: "sk-" + "S".repeat(40), baseUrl: "https://wkapi.pro/v1", model: "gpt-6-sol" };
 const askBody = JSON.stringify({ messages: cleanMsgs, model: "gpt-6-sol" });
 const realFetch = globalThis.fetch;
 let modelCalls = 0;
-globalThis.fetch = async () => { modelCalls++; await new Promise((r) => setTimeout(r, 8)); return { ok: true, json: async () => ({ choices: [{ message: { content: "Manchester City 89" } }] }) }; };
+globalThis.fetch = async () => { modelCalls++; await new Promise((r) => setTimeout(r, 8)); return { ok: true, text: async () => sseFrame("Manchester City 89") }; };
 try {
   const coldCache = createLlmCache();
   const cold = await handleLlmRequest(FAKE, askBody, coldCache);
@@ -208,7 +215,7 @@ try {
     noKeyCold.status === 503 && noKeyCold.body.error === "server_llm_unconfigured" && noKeyCold.body.cached === undefined &&
     warmSeed.entries.size === 1 && modelCalls === noKeyBefore);
   // cache can be disabled (static-host / privacy posture) → EVERY ask is a fresh cold model call
-  globalThis.fetch = async () => { modelCalls++; return { ok: true, json: async () => ({ choices: [{ message: { content: "fresh" } }] }) }; };
+  globalThis.fetch = async () => { modelCalls++; return { ok: true, text: async () => sseFrame("fresh") }; };
   const offCache = createLlmCache({ ...LLM_CACHE_POLICY, enabled: false });
   const offBefore = modelCalls;
   const off1 = await handleLlmRequest(FAKE, askBody, offCache);
@@ -225,6 +232,13 @@ try {
 ok(`M1079 the proxy declares a seeded, bounded, jittered cache policy (ttl/jitter/capacity/seed present)`,
   LLM_CACHE_POLICY.enabled === true && LLM_CACHE_POLICY.ttlSeconds > 0 &&
   LLM_CACHE_POLICY.jitterSeconds >= 0 && LLM_CACHE_POLICY.capacity > 0 && !!LLM_CACHE_POLICY.seed);
+ok(`M1096 PROMPT_CACHE_KEY is exported, STABLE at "football-os", and the upstream call carries it with stream:true`,
+  PROXY_MOD.PROMPT_CACHE_KEY === "football-os" &&
+  PROXY_MOD.PROMPT_CACHE_KEY.length >= 8 &&
+  PROXY.includes("stream: true") &&
+  PROXY.includes("prompt_cache_key: PROMPT_CACHE_KEY") &&
+  !/stream_options/.test(PROXY));
+
 ok(`M1079 the middleware owns a single cache for the server lifetime and the handler takes it as a 3rd arg`,
   /llmProxyMiddleware\(configFor = \(\) => serverConfig\(\), cache = createLlmCache\(\)\)/.test(PROXY) &&
   /handleLlmRequest\(cfg, requestBody, cache = null\)/.test(PROXY) &&

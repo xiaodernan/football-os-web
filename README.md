@@ -15509,7 +15509,7 @@ from a visitor's browser; there is nothing for a visitor to steal.
   on the public path. Verified locally with a credential-less build: zero console errors, the
   screen shows `DETERMINISTIC BRIEFING`, no `LIVE` chip.
 - Verify the whole envelope once with your key in place:
-  - `node scripts/verify-llm-live.mjs` — the live witness, 18/18 checks against your model
+  - `node scripts/verify-llm-live.mjs` — the live witness, 19/19 checks against your model (it also pins one warm lane via `prompt_cache_key`, so identical repeated questions cost one model round-trip)
   - `node scripts/proof-llm.mjs` — the portable floor, no credentials, no network
 - The honesty boundary is unchanged: the demo world is frozen (15 leagues, 73 clubs, 610 players),
   the model answers about it ONLY, and the web app never calls any Spring service itself.

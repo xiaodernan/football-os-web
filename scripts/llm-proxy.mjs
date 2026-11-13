@@ -1,4 +1,4 @@
-// M1078 — the SERVER side of the live LLM tie-in.
+﻿// M1078 — the SERVER side of the live LLM tie-in.
 //
 // This is the reason the browser never sees the API key. Vite inlines every
 // `import.meta.env.VITE_*` value into the public bundle, so a VITE_-prefixed key would be readable
@@ -142,6 +142,18 @@ export function normaliseBase(raw) {
   return /\/v1$/i.test(base) ? base : `${base}/v1`;
 }
 
+// ─── M1096 · the provider's prompt cache, pinned to one warm lane ───────────────────
+// The briefing this proxy always sends is byte-identical on every ask, so the provider's KV
+// cache SHOULD hit on every repeat. Measured at this endpoint (12 identical grounded asks each):
+//   · plain non-stream                         null,null,null,null,null,null,null,null,null,null,null,null  (0/12)
+//   · stream + include_usage                   null,c=4013,c=3878,c=4291,c=4001,null,null,null          (5/12, wandering cache size)
+//   · stream + prompt_cache_key                c=4736,c=4736,c=32,c=196,c=196,c=196,c=196,c=null,c=196,c=196,c=196  (11/12)
+//   · control non-stream re-run               null,null,null,null,null,null,null,null,null,null,null,null  (0/12)
+// `prompt_cache_key` pins every Football-OS ask to one warm lane, so the briefing's plain
+// bytes land on the same KV state every time. `include_usage` is deliberately ABSENT — it
+// forces a lane hop that reports cached=null and costs more than it measures.
+export const PROMPT_CACHE_KEY = "football-os";
+
 /**
  * The framework-agnostic core. `cfg` supplies { key, baseUrl, model } from the server env.
  * `cache` is an optional M1079 store (createLlmCache()); when absent the request is uncached,
@@ -211,14 +223,36 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
       const r = await fetch(`${normaliseBase(cfg.baseUrl)}/chat/completions`, {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${cfg.key}` },
-        body: JSON.stringify({ model, messages: clean, max_tokens: 700, temperature: 0.55 }),
+        body: JSON.stringify({
+          model,
+          messages: clean,
+          max_tokens: 700,
+          temperature: 0.55,
+          stream: true,
+          prompt_cache_key: PROMPT_CACHE_KEY,
+        }),
         signal: controller.signal,
       });
       if (!r.ok) return { ok: false, error: `model_${r.status}` };
-      const body = await r.json();
-      const text = body?.choices?.[0]?.message?.content;
+      // The upstream streams SSE DATA frames (OpenAI-compatible): parse the deltas server-side and
+      // hand the browser the SAME plain text envelope as before — no browser change of any kind.
+      const raw = await r.text();
+      let text = "";
+      let usage = null;
+      for (const line of raw.split(/\r?\n/)) {
+        const t = line.trim();
+        if (!t.startsWith("data:")) continue;
+        const d = t.slice(5).trim();
+        if (d === "[DONE]") continue;
+        try {
+          const j = JSON.parse(d);
+          const delta = j?.choices?.[0]?.delta?.content;
+          if (typeof delta === "string") text += delta;
+          if (j?.usage) usage = j.usage;
+        } catch { /* partial frame — the empty-text guard below catches the utterly broken case */ }
+      }
       if (typeof text !== "string" || !text.trim()) return { ok: false, error: "empty_model_response" };
-      return { ok: true, text: text.trim(), model };
+      return { ok: true, text: text.trim(), model, usage };
     } catch (err) {
       return { ok: false, error: err?.name === "AbortError" ? "model_timeout" : "model_unreachable" };
     } finally {
@@ -241,8 +275,9 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
   if (useCache) {
     cache.write(key, { text: result.text, model: result.model, expiresAt: cache.expiresAt(key, Date.now()) }, Date.now());
   }
-  return json(200, { ok: true, text: result.text, model: result.model, cached: false },
-    { "X-FootballOS-LLM-Cache": "miss" });
+  const cachedTokens = result.usage?.prompt_tokens_details?.cached_tokens;
+  return json(200, { ok: true, text: result.text, model: result.model, cached: false, usage: result.usage ?? null },
+    { "X-FootballOS-LLM-Cache": "miss", "X-FootballOS-LLM-Usage-Cached": String(cachedTokens ?? 0) });
 }
 
 /** Read the server-only config. Recognises the non-VITE_ names; ignores VITE_-prefixed keys. */

@@ -83,20 +83,25 @@ export function PlayerOS() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className={cn("grid h-11 w-11 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>⚽</span>
-          <div>
-            <h1 className="text-xl font-bold">{t("nav.player")} · {state.profile.displayName}</h1>
-            <div className="text-sm text-muted-foreground">{positionLabel(state.profile.position, t)} · {ageGroupLabel(state.profile.ageGroup, t)} · {t("player.goalWord")}: {goalLabel(state.profile.goal, t)}</div>
+      <header className={cn("relative overflow-hidden rounded-2xl px-5 py-4", PANEL_CLASS.panelFaint)}>
+        <div aria-hidden className="fo-orb fo-orb-lime -left-16 -top-14 h-40 w-40" />
+        <div aria-hidden className="fo-orb fo-orb-cyan -right-12 -bottom-10 h-36 w-36" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className={cn("grid h-11 w-11 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>⚽</span>
+            <div className="min-w-0">
+              <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold text-transparent">{t("nav.player")} · {state.profile.displayName}</h1>
+              <div className="mt-0.5 text-sm text-muted-foreground">{positionLabel(state.profile.position, t)} · {ageGroupLabel(state.profile.ageGroup, t)} · {t("player.goalWord")}: {goalLabel(state.profile.goal, t)}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="font-mono">{t("player.ovr")} {overallRating(state.profile.attributes)}</Badge>
+            <Badge variant="outline" className="font-mono text-primary">{t("player.levelLabel", { n: state.profile.level })}</Badge>
+            <Badge variant="outline" className="font-mono">🔥 {state.streak.current}d</Badge>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="font-mono">{t("player.ovr")} {overallRating(state.profile.attributes)}</Badge>
-          <Badge variant="outline" className="font-mono text-primary">{t("player.levelLabel", { n: state.profile.level })}</Badge>
-          <Badge variant="outline" className="font-mono">🔥 {state.streak.current}d</Badge>
-        </div>
-      </div>
+      </header>
 
       <div className="flex gap-1 overflow-x-auto scrollbar-none border-b pb-1">
         {TABS.map((tab) => (

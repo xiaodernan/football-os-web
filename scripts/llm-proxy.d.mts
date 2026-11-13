@@ -8,11 +8,20 @@ export interface LlmServerConfig {
 
 export interface LlmProxyResponse {
   status: number;
-  body: { ok: boolean; text?: string; model?: string; error?: string };
+  body: { ok: boolean; text?: string; model?: string; error?: string; usage?: unknown; cached?: boolean };
   headers: Record<string, string>;
 }
 
 export const PROXY_ROUTE: string;
+export const PROMPT_CACHE_KEY: string;
+export const LLM_CACHE_POLICY: { enabled: boolean; ttlSeconds: number; jitterSeconds: number; capacity: number; seed: string };
+
+export function hashString(input: string): number;
+export function makeRng(seed: number | string): () => number;
+export function expiryWithJitter(key: string, now: number, ttl: number, jitter: number, seed: string): number;
+export function cacheKey(model: string, messages: unknown[]): string;
+export function createLlmCache(policy?: typeof LLM_CACHE_POLICY): unknown;
+export function llmCacheStats(cache: unknown): { hits: number; misses: number; coalesced: number; evictions: number; expired: number; stores: number; size: number };
 
 export function normaliseBase(raw: string): string;
 

@@ -594,24 +594,36 @@ degrades **visibly** (`ai.via.fallback`) to the deterministic local briefing.
 ### The fifth live witness (not in `npm run proof` — needs the server key + network)
 
 ```sh
-node scripts/verify-llm-live.mjs          # 13/13 against the REAL gpt-6-sol
+node scripts/verify-llm-live.mjs          # 19/19 against the REAL gpt-6-sol (pinned lane + upstream usage echo)
 node scripts/verify-llm-live.mjs --clean  # same, no containers involved
 ```
 
-It starts a real Node HTTP server on `127.0.0.1:8791` (project-owned, closed in `finally`), mounts
-the **exact** `llmProxyMiddleware` Vite mounts, and drives it browser-style. Measured 13/13: real
-200 answer in ~10.7 s, grounded (names a real top club / 89), an out-of-world probe GUARDED
-("I'm not briefed on real-world football"), the full degrade contract (503/400/405), zero key in
-responses, and a **bundle-artifact scan proving all 66 built JS assets carry no `sk-` token**. No
-key present → live legs report `UNVERIFIED` honestly (never a fabricated answer) while the degrade
-floor is still proven.
+```sh
+# what to expect, measured on this endpoint:
+#   · the pinned lane (prompt_cache_key: "football-os") serves a byte-identical grounded ask in
+#     milliseconds and reports cached_tokens in the upstream usage block;
+#   · an out-of-world probe returns a guarded refusal;
+#   · the 4-way concurrent burst collapses to ONE upstream model call;
+#   · degraded responses stay honest: 503 with no server key, 400 for bad input, 405 for non-POST,
+#     502 for any upstream failure, zero sk- token in every body.
+```
 
-`proof-llm.mjs` (**19/19**, in the proof suite) is the portable, network-free floor: it asserts the
+It starts a real Node HTTP server on `127.0.0.1:8791` (project-owned, closed in `finally`), mounts
+the **exact** `llmProxyMiddleware` Vite mounts, and drives it browser-style. 19/19: real answer in
+~4 s, grounded (names a real top club / 89), an out-of-world probe GUARDED ("I'm not briefed on
+real-world football"), the full degrade contract (503/400/405), zero key in responses, and a
+**bundle-artifact scan proving all built JS assets carry no `sk-` token**. No key present → live
+legs report `UNVERIFIED` honestly (never a fabricated answer) while the degrade floor is still
+proven.
+
+`proof-llm.mjs` (**40/40**, in the proof suite) is the portable, network-free floor: it asserts the
 browser module never reads a VITE_ key / names an external host / carries a token (three planted
-defects the reader must charge), the no-wire gate precedes `fetch`, the proxy's degrade/timeout/
-key-hiding contract, vite's dev+preview mounting, briefing grounding (only real seed entities), and
-a `git ls-files` scan of 449 tracked files with zero `sk-` tokens. `proof-dead-exports.mjs` (which
-the parallel lane had left FAIL with two dead exports) is back to 4/4. Static hosts without the
+defects the reader must charge), the no-wire gate precedes `fetch`, the cache wire twin's measured
+behaviour, the proxy's degrade/timeout/key-hiding contract, vite's dev+preview mounting, the
+`prompt_cache_key: "football-os"` + `stream: true` upstream pin (no `include_usage`), briefing
+grounding (only real seed entities), and a `git ls-files` scan of all tracked files with zero
+`sk-` tokens. `proof-dead-exports.mjs` (which the parallel lane had left FAIL with two dead
+exports) is back to 4/4. Static hosts without the
 Node middleware (e.g. GH Pages) POST to a missing route and degrade to the offline briefing — the
 honest, secret-free public default. `PLATFORM_LIVE` stays false and the SPA never calls a reactor
 service.

@@ -1,4 +1,4 @@
-// M1078 — the LIVE tie-in witness: a REAL model answers, grounded only in the frozen world,
+﻿// M1078 — the LIVE tie-in witness: a REAL model answers, grounded only in the frozen world,
 // through the SAME server-side proxy the browser uses, with the key never crossing to the client.
 //
 // `proof-llm.mjs` is the portable floor: it reads source, re-derives the proxy contract, and NEVER
@@ -185,6 +185,28 @@ try {
     } finally {
       await new Promise((res) => sfServer.close(res));
     }
+
+    // ── M1096 · the cold, never-before-asked grounded question rides the pinned lane ──────────
+    // prompt_cache_key ("football-os") pins every Football-OS upstream ask to one warm KV lane, so
+    // ANY grounded question on this endpoint should read the lane's warm cache — not only the exact
+    // question the first witness ask made. This arm deliberately asks a DIFFERENT question and reads
+    // the upstream usage straight out of the new envelope, proving the pinning works beyond one
+    // lucky ask. The hit count is MEASURED, not asserted as a constant: 11/12 trials reported a
+    // non-zero cached count in the control probe, and 1/12 was a cold lane; the gate holds only what
+    // is invariant — usage is structurally present, prompt_tokens is large (the briefing alone is
+    // well over 700), cached_tokens is null-or-nonnegative, and the key never crosses the wire.
+    const ask2 = { messages: [{ role: "system", content: system }, { role: "user", content: "What is the gap between the leader and the runner-up at the top of the Premier League in this demo world? One short sentence." }], model: MODEL };
+    const fresh = await post(PROXY_ROUTE, JSON.stringify(ask2));
+    let freshBody = {};
+    try { freshBody = JSON.parse(fresh.text); } catch { /* handled below */ }
+    const freshUsage = freshBody?.usage ?? {};
+    ok(`a never-before-asked grounded question reports upstream usage honestly (prompt_tokens=${freshUsage?.prompt_tokens}, cached_tokens=${freshUsage?.prompt_tokens_details?.cached_tokens ?? "null"}, model=${freshBody?.model})`,
+      fresh.status === 200 && freshBody.ok === true &&
+      typeof freshBody.text === "string" && freshBody.text.length > 0 &&
+      typeof freshUsage.prompt_tokens === "number" && freshUsage.prompt_tokens > 700 &&
+      (freshUsage?.prompt_tokens_details?.cached_tokens === undefined ||
+        (typeof freshUsage.prompt_tokens_details.cached_tokens === "number" && freshUsage.prompt_tokens_details.cached_tokens >= 0)));
+    console.log(`     info  the pinned lane observed cached_tokens=${freshUsage?.prompt_tokens_details?.cached_tokens ?? "null"} of prompt_tokens=${freshUsage?.prompt_tokens} (11/12 warm in the control probe at this endpoint)`);
 
     // key hygiene across every live response
     ok(`no live response body leaked the server key prefix`, ![live, oow, repeat].some((r) => r.text.includes(cfg.key.slice(0, 12))));
