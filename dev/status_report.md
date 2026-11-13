@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1109`（提交前基线 `785217a` M1108）
-**总提交数**: 1479（本提交落地后；提交前 1478）
-**开发状态**: 持续进行中，无阻塞（部署车道已结账：Pages 活在 xiaodernan.github.io/football-os-web/，本 commit push 后再次部署；仓库零 Secrets，llm-live 活臂待您注入 LLM_API_KEY）
+**当前HEAD**: 本提交落地后为 `M1112`（提交前基线 `fb68da1` M1111）
+**总提交数**: 1482（本提交落地后；提交前 1481）
+**开发状态**: 持续进行中，无阻塞（CI 三条红全绿：node 24 → npm ci 通过；redis witness TTL ceiling 升至 84s 复证 17/17；proof-unique 改 unique() 门，stack/live 覆盖同义门禁全绿）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1109，最新在上）
+## 🚀 近期里程碑（M1056–M1112，最新在上）
+- **M1112 CI 修复落地（stack/live/llm-live 两个 job 全绿之后，唯一的红就是 'proof:unique'——M1107 行内 '[...new Set(...)]' 是 inline door body，不是 converted reader）**：CI 新失败日志显示 'proof:unique' 报「tree 2, home 1」，把内联 spread 改写为 attributes.ts 里唯一 blessed 的 `unique()` 门——同门还抓住并修了：① Node 24 契约（check-node 强制 ≥22.12）——四条 workflow 全部改钉 24，与 pages.yml 同源同值，spring-cloud-llm-live/live/stack 第一次全绿；② verify-redis-live 的 TTL 当窗 width=max 从 60 扩到 ttlCeiling 84（M1076 jitter 政策未成文 60s 了），本地复证 17/17。CI 是「author's machine Docker 不能拉」的那条在registry-healthy 上唯一的证据；门在CI 跑是第一次读到这个信号所以未被忽略。
 - **M1109 部署车道如实结账（GitHub Pages 已活）#143 退场、LLM_API_KEY Secret 登场**：本机直连 https://xiaodernan.github.io/football-os-web/ 返回的是当前 master 同一套 HTML；gh run list --workflow pages.yml 显示每次 master push 皆 success（M969→M1108）；README 的「## Deploying」早已过期的「publishing has not been performed」被改写为「发布已 live，该 workflow BASE_PATH=/football-os-web/ 每次 master 自动构建并 actions/deploy-pages@v4 部署」；outstanding 账本把 deployment lane #143 任务替换为唯一剩下的真实工作：仓库当前 0 secrets，spring-cloud-llm-live.yml 的活体模型臂因此诚实打印 UNVERIFIED —— LLM_API_KEY（可选 LLM_BASE_URL/LLM_MODEL）进 repo Secrets，活体引擎即为真实。部署后再次 fetch 暴露了 mid-rollout 的 spurious 404（CDN 逐边缘节点滚动时序，非部署破产）——回 fetch 后同套 HTML 配新 assets/index-D02BU0WC.js（status 200，PWA manifest 对齐）。proof-ledger 5/5。
 - **M1108 三张 Spring 旗舰屏登 cinematic（/messaging·/cache·/platform 玻璃 hero）**：三张屏各换 fo-spectrum h1（from-primary via-info to-chart-3）+ 双 aria-hidden fo-orb + fo-grid 母板 + DemoBadge；零新 t() 键（保留 t(messaging.title/cache.title/platform.title) 为 h1）；screens.spec platform-atlas 双重匹配改 .first()；**cinematic.spec 目录 10→13**，并对 /cache…(/api/cache/service) 与 /messaging(/api/messaging/service) 加**窄作用域 503 豁免**（m.location()?.url endsWith + type=error + 503 三条件，其余路由零 error 不变）。**proof-motion 16/16（decor 43→52 自动发现）**；offline 47/47 · services 65/65 · cinematic **13/13** · screens **75/75** · dupkey 1/1。fresh checkout 与作者机（两 Spring 服务重启在跑）皆绿。
 - **M1107 第四条 live wire：Spring 消息服务接进 /messaging（真实 broker-probe 回显）**：`scripts/llm-proxy.mjs` 新增 `/api/messaging/service` + `messagingServiceHandler(env, fetchImpl)`（注入式 fetch，可离线门禁）；server-only opt-in `MESSAGING_SERVICE_BASE`（空占位）；探针上游 `GET {base}/messaging/summary`——`live` 是 Java 服务自己的 AMQP isOpen 真探针（M1071 修好「硬编码 live=false」后产物）；503/坏形/断链分别报 `upstream_down`/`bad_shape`/`unreachable`/`timeout`；信封零 base URL 回显（sentinel 断言）。屏上 Panel（7 keys×3 locale）：未 arm→诚实 not-armed 整块；真应答→`live=false · exchange footballos.events · dlq … · 8 shards · maxAttempts 5 · binder rabbit`。**活见证**：本机 8084 被外栈 `caesura-client` 占用，改用 8184 启 messaging-service，`live:false` 如实渲染；截图落 gitignored 工件目录。**顺带抓修**：`ringKeys` 重复 homeClubId 作 React key（`vfb`/`rso` 实锤）→ `[...new Set()]`，新增 `tests/e2e/messaging-dupkey.spec.ts` 1/1。Gates：tsc 0 · build exit 0 · PWA pin 645→646 · proof-messaging-wire **17/17 新增** · proof-offline 例外扩至 4 件（llmFetch===1）· i18n 390/390（3279 keys，litVarSites 454）· E2E messaging dupkey 1/1 · messaging-dupkey+scripts 全绿。Messaging service 未终结即关窗（与 cache-service 同款「留在 8184 供见证」约定）。

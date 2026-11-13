@@ -4,20 +4,8 @@ import { Panel, SectionTitle, CHIP_CLASS, PANEL_CLASS, Mini, DemoBadge } from "@
 import { cn, fmtGrouped, hashRingPoint } from "@/lib/utils";
 import { footballProvider } from "@/data/footballService";
 import { hashString } from "@/lib/rng";
-import {
-  QUEUE_POLICY,
-  MECH_KEYS,
-  matchMessages,
-  deliverQueue,
-  rawBackoff,
-  backoffDelay,
-  buildHashRing,
-  ringOwner,
-  ringMigration,
-  shardOf,
-  backpressureSignal,
-  admitMessages,
-} from "@/domain/queue";
+import { QUEUE_POLICY, MECH_KEYS, matchMessages, deliverQueue, rawBackoff, backoffDelay, buildHashRing, ringOwner, ringMigration, shardOf, backpressureSignal, admitMessages } from "@/domain/queue";
+import { unique } from "@/domain/attributes";
 
 /**
  * M1059: the message pipeline observatory — the delivery layer drawn from the same fold the proof
@@ -58,7 +46,7 @@ export function QueueObservatory() {
   // club twice (two of its matches are inside the window), and a ring is a ring of DISTINCT
   // households — stacked dots at one circle point mean nothing, and React rightly flags a
   // duplicate key.
-  const ringKeys = useMemo(() => [...new Set(messages.slice(0, 14).map((m) => m.key))], [messages]);
+  const ringKeys = useMemo(() => unique(messages.slice(0, 14).map((m) => m.key)), [messages]);
   const nodeColor = (node: string) => NODE_FILL[Math.max(0, NODES.indexOf(node))] ?? NODE_FILL[0];
 
   // Expansion witness: grow from 3 regions to 4. The consistent-hash ring moves only the keys on
