@@ -15255,10 +15255,12 @@ ledger cannot name a defect that is not there. A `task` entry names work no scan
 
 <!-- outstanding -->
 
-- `task` — **the live-browser pass (#142)**: the same 26-screen walk, with screenshots, in a real
-  viewport. `renderToStaticMarkup` never runs an effect, so the app root's hydration skeleton and
-  the Player OS's training counters cannot be gated from the harness — the proof suite measures
-  the tree, not the running app.
+- `task` — **the deployment lane (#143)**: the app has never been published anywhere it can be
+  reached from a browser that isn't on this machine. `PROVENANCE.md` records asset attribution;
+  `## Deploying` says publishing has not been performed. When the time comes, the build must be
+  re-run under a fresh SHA, tested end-to-end in the deployment target, and `PROVENANCE.md` and
+  the `<!-- outstanding -->` block must be updated to reflect a site that this ledger no longer
+  lies to.
 
 <!-- /outstanding -->
 
