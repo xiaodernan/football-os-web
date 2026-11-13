@@ -15462,27 +15462,44 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 
 <!-- /gaps -->
 
-## The platform beneath (optional, Spring Cloud)
+## The Spring Cloud stack, honestly wired in (M1098 · M1099 · M1101)
 
-The web app itself is a static SPA — nothing in it calls a service, and it boots without any
-backend. Next to it, in `services/`, lives a small Spring Cloud reactor: a Eureka registry, a
-Spring Cloud Config server (serving `world.label=Demo World R1`), a reactive API gateway
-with a Resilience4j circuit breaker, and a read-only league service that serves a frozen,
-byte-exact export of the same synthetic world the app simulates (the counts digest) plus the
-fifteen standard 3-1-0 league tables, one per competition.
+The web app itself is a static SPA by default — PLATFORM_LIVE=false, the browser never dials a
+Spring service. Two additive **opt-in** server-side wires do run on the dev / preview server when
+you explicitly configure them — never from a static host without a Node middleware — and both are
+"call through ONE server-side route, never straight from a visitor's browser":
 
-- Build: `mvn -DskipTests package -f services/pom.xml`
-- Verify everything live, from a cold machine: `node scripts/verify-services.mjs` —
-  it boots the four services, asserts config round-trip, the digest contract, both gateway
-  routes (ordered: the table route wins over the catch-all), and the canned 503 fallback.
-- What is and is not real, and how to boot each piece by hand: **`dev/platform-runbook.md`**
-- Ports: eureka `8761` / config `8888` / gateway `8087` / league `8081`
-- The screen `/platform` draws the same map — it is a descriptor, not a status board;
-  the SPA never calls these services and the web build never boots them.
-- CI: `.github/workflows/spring-cloud-stack.yml` (boot the stack + proof + browser floor) and
-  `.github/workflows/spring-cloud-matrix.yml` (the reactor on two runner OSs) — both are
-  written for a healthy registry and have not been executed in the authoring environment;
-  this project boots nothing remote.
+1. **The live LLM tie-in (M1078 · M1101)** — visitor asks the AI screen a question → the server
+   route `POST /api/llm/chat` forwards it to the provider of your choice (`LLM_API_KEY` + `LLM_BASE_URL` server-side, plus the public `VITE_LLM_ENABLED=true` build flag). The stream is
+   re-assembled server-side so the browser sees a plain `{ ok, text, model, cached, usage }` envelope;
+   no key ever crosses the wire; `prompt_cache_key` pins the system prompt onto one warm lane so
+   identical asks re-serve from a single cold model call, with the counters observable via the
+   `X-FootballOS-LLM-Cache` header. `scripts/verify-llm-live.mjs` 19/19 against a real provider.
+   When no key is configured, the chat degrades to the deterministic local briefing — never red,
+   never fake. CI `spring-cloud-llm-live.yml` is the sister witness: it runs the same script on a
+   clean Ubuntu runner when you configure the `LLM_API_KEY` secret, and prints UNVERIFIED when you
+   don't, exiting 0 either way.
+2. **The Spring cache-service live wire (M1099)** — the observatory screen `/cache` carries two
+   server-side polls: the in-process proxy's own hit/miss/coalesced/stores counters via
+   `GET /api/cache/ping` (`scripts/llm-proxy.mjs`, shared between `llmProxyMiddleware` and
+   `cachePingMiddleware`), plus, optionally, the **Spring Cloud cache tier's own stats** via
+   `GET /api/cache/service` → the upstream `/actuator/health` + `/cache/league/stats` of a
+   `football-os-cache` module bootable from `services/cache-service`. The Spring wire is opt-in
+   only, gated by environment flag `CACHE_SERVICE_BASE` on the server side, and the screen degrades
+   honestly to "not armed" / "unreachable" otherwise — never fabricates live numbers.
+
+The full seven-service reactor — Eureka registry (`8761`), config server (`8888`), league service
+(`8081`/`8080`/`8082`), discipline service, cache service (`8083`), messaging service, gateway
+(`8087`) with Resilience4j — can be booted when you have free ports for them. Verified end-to-end
+by `scripts/verify-services.mjs` (boot order + frozen digest contract + gateway-first-read
+rebuilt) and exercised in CI by `.github/workflows/spring-cloud-stack.yml` and
+`.github/workflows/spring-cloud-matrix.yml` on registry-healthy runners — the author's machine
+cannot pull new images and is deliberately not the source of truth for live witness runs.
+
+If you want the Spring stack up on a quarter-free machine: `mvn -q -DskipTests package -f services/pom.xml`,
+then `node scripts/verify-services.mjs` (it's idempotent, refuses live witness port-collisions, and
+is the same script CI runs) — or read **`dev/platform-runbook.md`** for the by-hand boot, the exact
+compose-vs-host port collisions, and the impaired-Docker-Registry disclosure.
 
 ## The live Football AI tie-in (optional, server-side only)
 
