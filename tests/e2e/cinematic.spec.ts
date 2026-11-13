@@ -22,14 +22,33 @@ const DECORATED = [
   ["/player", /\w+.*·\s*\w+/i, "/player mission cinematic hero"],
   ["/", /THE FOOTBALL OPERATING SYSTEM|Football OS/i, "/ landing root glass"],
   ["/onboarding", /what do you want/i, "/onboarding first-run glass"],
+  ["/messaging", /the message pipeline/i, "/messaging cinematic hero"],
+  ["/cache", /the cache tier|the cache/i, "/cache cinematic hero"],
+  ["/platform", /the platform beneath the pitch/i, "/platform cinematic hero"],
 ];
 
 test.describe("the cinematic catalog mounts in a live viewport without console errors", () => {
+  // M1108: two catalogs carry optional Spring live wires to upstreams a fresh checkout never has
+  // booted — /cache's /api/cache/service and /messaging's /api/messaging/service answer 503 with
+  // a clean, honest envelope when MESSAGING_SERVICE_BASE / CACHE_SERVICE_BASE is unset or the
+  // upstream is down. The browser logs "Failed to load resource: 503" on the console; the screen
+  // renders the degrade honestly. That specific console error class on these two routes is the
+  // documented honest-degrade signature, not a defect — the assertion tolerates it, scoped by URL.
+  const WIRE_503_ALLOWED: Record<string, string> = {
+    "/cache": "/api/cache/service",
+    "/messaging": "/api/messaging/service",
+  };
   for (const [path, matcher, label] of DECORATED) {
     // test.step so Playwright UI groups the selector under one named block per screen.
     test(label, async ({ page }) => {
       const errors: string[] = [];
-      page.on("console", (m) => { if (m.type() === "error") errors.push(m.text().slice(0, 200)); });
+      page.on("console", (m) => {
+        if (m.type() !== "error") return;
+        const locationUrl = m.location()?.url ?? "";
+        const wire = WIRE_503_ALLOWED[path];
+        if (wire && m.text().includes("503") && locationUrl.endsWith(wire)) return;
+        errors.push(m.text().slice(0, 200));
+      });
       page.on("pageerror", (e) => errors.push(`pageerror: ${String(e).slice(0, 200)}`));
 
       await page.goto(`/#${path}`, { waitUntil: "domcontentloaded" });

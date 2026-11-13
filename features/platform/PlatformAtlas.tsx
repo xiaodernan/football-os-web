@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n";
-import { CHIP_CLASS, Panel, SectionTitle } from "@/ui/primitives";
+import { CHIP_CLASS, Panel, SectionTitle, DemoBadge, PANEL_CLASS } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 import { GATEWAY_ROUTES, LEAGUE_CONTRACT, PLATFORM_LIVE, PLATFORM_SERVICES, CIRCUIT_BREAKER, REDIS, BROKER, type ServiceId } from "@/domain/platform";
 import leagueContract from "../../services/league-service/src/main/resources/league-summary.json";
@@ -60,18 +60,28 @@ export function PlatformAtlas() {
 
   return (
     <div className="space-y-5">
-      <Panel className="p-5">
-        <SectionTitle title={t("platform.title")} hint={t("platform.subtitle")} />
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <span className={cn(CHIP_CLASS.muted, "rounded-full px-2 py-0.5 text-[11px] uppercase tracking-widest")}>
-            {t("platform.descriptorBadge")}
-          </span>
-          <span className="text-[11px] uppercase tracking-widest text-primary">
-            {PLATFORM_LIVE ? t("platform.liveOn") : t("platform.liveOff")}
-          </span>
+      {/* Cinematic hero for the platform atlas — the descriptor stays the truth. */}
+      <header className={cn("relative overflow-hidden rounded-2xl px-5 py-4", PANEL_CLASS.panelFaint)}>
+        <div aria-hidden className="fo-orb fo-orb-lime -left-16 -top-14 h-40 w-40" />
+        <div aria-hidden className="fo-orb fo-orb-cyan -right-12 -bottom-10 h-36 w-36" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold text-transparent">{t("platform.title")}</h1>
+            <DemoBadge />
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("platform.subtitle")}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <span className={cn(CHIP_CLASS.muted, "rounded-full px-2 py-0.5 text-[11px] uppercase tracking-widest")}>
+              {t("platform.descriptorBadge")}
+            </span>
+            <span className="text-[11px] uppercase tracking-widest text-primary">
+              {PLATFORM_LIVE ? t("platform.liveOn") : t("platform.liveOff")}
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">{t("platform.liveLine")}</p>
         </div>
-        <p className="mt-3 text-sm text-muted-foreground">{t("platform.liveLine")}</p>
-      </Panel>
+      </header>
 
       <Panel className="p-5">
         <SectionTitle title={t("platform.topoTitle")} hint={t("platform.topoHint")} />

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, CHIP_CLASS, PANEL_CLASS, Mini } from "@/ui/primitives";
+import { Panel, SectionTitle, CHIP_CLASS, PANEL_CLASS, Mini, DemoBadge } from "@/ui/primitives";
 import { cn, fmtGrouped, hashRingPoint, safeDiv } from "@/lib/utils";
 import { footballProvider } from "@/data/footballService";
 import { hashString } from "@/lib/rng";
@@ -142,18 +142,28 @@ export function CacheObservatory() {
 
   return (
     <div className="space-y-5">
-      <Panel className="p-5">
-        <SectionTitle title={t("cache.title")} hint={t("cache.subtitle")} />
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <span className={cn(CHIP_CLASS.muted, "rounded-full px-2 py-0.5 text-[11px] uppercase tracking-widest")}>
-            {t("cache.analysisBadge")}
-          </span>
-          <span className="text-[11px] uppercase tracking-widest text-primary">
-            {t("cache.notLive")} · {String(PLATFORM_LIVE)}
-          </span>
+      {/* Cinematic hero for the cache tier — pure decor on the chrome, every word in the dictionary. */}
+      <header className={cn("relative overflow-hidden rounded-2xl px-5 py-4", PANEL_CLASS.panelFaint)}>
+        <div aria-hidden className="fo-orb fo-orb-cyan -left-16 -top-14 h-40 w-40" />
+        <div aria-hidden className="fo-orb fo-orb-violet -right-12 -bottom-10 h-36 w-36" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold text-transparent">{t("cache.title")}</h1>
+            <DemoBadge />
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("cache.subtitle")}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <span className={cn(CHIP_CLASS.muted, "rounded-full px-2 py-0.5 text-[11px] uppercase tracking-widest")}>
+              {t("cache.analysisBadge")}
+            </span>
+            <span className="text-[11px] uppercase tracking-widest text-primary">
+              {t("cache.notLive")} · {String(PLATFORM_LIVE)}
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">{t("cache.liveLine")}</p>
         </div>
-        <p className="mt-3 text-sm text-muted-foreground">{t("cache.liveLine")}</p>
-      </Panel>
+      </header>
 
       {/* The board, read straight off the fold. */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
