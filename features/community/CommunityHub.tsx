@@ -200,14 +200,23 @@ export function CommunityHub() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2">
-        <div className={cn("grid h-10 w-10 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>☍</div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2"><h1 className="text-xl font-bold">{t("comm.title")}</h1><DemoBadge /></div>
-          <p className="text-xs text-muted-foreground">{t("comm.subtitle")}</p>
+      {/* Glass header for the hub — pure decor, every word via the dictionary door. */}
+      <header className={cn("relative overflow-hidden rounded-2xl px-5 py-4", PANEL_CLASS.panelFaint)}>
+        <div aria-hidden className="fo-orb fo-orb-cyan -left-16 -top-14 h-40 w-40" />
+        <div aria-hidden className="fo-orb fo-orb-violet -right-12 -bottom-10 h-36 w-36" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative flex items-center gap-3">
+          <div className={cn("grid h-10 w-10 place-items-center rounded-xl", CHIP_CLASS.labelPrimary)}>☍</div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold text-transparent">{t("comm.title")}</h1>
+              <DemoBadge />
+            </div>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t("comm.subtitle")}</p>
+          </div>
+          <Button size="sm" onClick={() => setComposing(true)}>{t("comm.newThread")}</Button>
         </div>
-        <Button size="sm" onClick={() => setComposing(true)}>{t("comm.newThread")}</Button>
-      </div>
+      </header>
 
       <Panel className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

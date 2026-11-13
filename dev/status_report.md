@@ -2,13 +2,14 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1092` 集大成提交（提交前基线 `d23bf05` M1091）
-**总提交数**: 1460（本提交落地后；提交前 1459）
-**开发状态**: 持续进行中，无阻塞问题（本轮 `/league-rules` 玻璃头条：与 hub 同构电影头条 + fo-spectrum 渐变 h1；decor census 9 屏 34/34；league-rules E2E 2/2；proof 全套全绿）
+**当前HEAD**: 本提交落地后为 `M1093` 集大成提交（提交前基线 `4425b8e` M1092）
+**总提交数**: 1461（本提交落地后；提交前 1460）
+**开发状态**: 持续进行中，无阻塞问题（本轮 `/community` 玻璃头条：hub/records 同构电影头条 + fo-spectrum 渐变 h1；decor census 10 屏 37/37；proof 全套全绿）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1092，最新在上）
+## 🚀 近期里程碑（M1056–M1093，最新在上）
 
+- **M1093 `/community` 玻璃头条（the community cinema）**：用户点名「前端魅力登峰造极」。Community Hub 头换成与 hub/records 同构的电影头条——`relative overflow-hidden rounded-2xl` + `PANEL_CLASS.panelFaint` + 两个 aria-hidden `.fo-orb`（cyan/violet）+ `.fo-grid` + ☍ 图标 + `fo-spectrum` 渐变 h1 + New Thread 按钮保持在头条右侧；decor census 升到 **10 屏 / 37/37 aria-hidden**；PWA 640 保持（JS 627 KB）；community E2E 绿；**proof 187/187 · 4110/4110**。诚实保留：frozen seed、PLATFORM_LIVE=false、thread 数据完全本地。
 - **M1092 `/league-rules` 玻璃头条（the rules cinema）**：用户点名「前端魅力登峰造极」。League Rules 头换成与 hub/records 同构的电影头条——`relative overflow-hidden rounded-2xl` + `PANEL_CLASS.panelFaint` + 两个 aria-hidden `.fo-orb`（lime/cyan）+ `.fo-grid` + `fo-spectrum` 渐变 h1；座舱部件（chips 行/Rules 表/swing movers）全保持，零新 t() key；decor census 升到 **9 屏 / 34/34 aria-hidden**；PWA 640 保持（JS 626 KB）；league-rules E2E **2/2** 绿；**proof 187/187 · 4110/4110**。诚实保留：frozen seed、PLATFORM_LIVE=false。
 - **M1091 `/world` Dynamic World 玻璃头条（the dynamic world cinema）**：用户点名「前端魅力登峰造极」。Dynamic World 头（reset/advance 包裹）换成 hub/records 同构电影头条——`relative overflow-hidden rounded-2xl` + `PANEL_CLASS.panelFaint` + 两个 aria-hidden `.fo-orb`（violet/cyan）+ `.fo-grid` + `fo-spectrum` 渐变 h1，`world.title`/`world.subtitle` 不变，零新 t() key；decor census 升到 **8 屏 / 31/31 aria-hidden**；PWA **639→640 KB**（JS 626 KB 持平，预算如实收步并 baseline 同提交重录）；world 屏 E2E 6/6 绿；**proof 187/187 · 4110/4110**。诚实保留：frozen seed、PLATFORM_LIVE=false。
 - **M1090 `/onboarding` 首跑玻璃头条（the first-run glass）**：用户点名「前端魅力登峰造极」。首跑屏 brand 行换成 hub/records 同构玻璃头条——`relative overflow-hidden rounded-2xl` + `PANEL_CLASS.panelFaint` + 两个 aria-hidden `.fo-orb`（lime/violet）+ `.fo-grid`，F 字标升 `fo-spectrum` 字组渐变；零新 t() key、零目录改动；decor census 升到 **7 屏 / 28/28 aria-hidden**；PWA 639 KB 保持（JS 626 CSS 13.5）；**proof 187/187 · 4110/4110** 全绿；onboarding E2E **5/5**（含 Player→Enter Football OS 全流程）。诚实保留：frozen seed、PLATFORM_LIVE=false。
