@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1105`（提交前基线 `4e339ab`——并轨线已将 M1104 全部文件随 M969 一并落库，本提交在其之上收束）
-**总提交数**: 1473（本提交落地后；提交前 1472——并轨 4e339ab 为 1471→1472 计入）
+**当前HEAD**: 本提交落地后为 `M1105+attribution`（提交前基线 `1aab59c` M1105；线性：70af3cb → 4e339ab(并轨 M969+扫入 M1104) → 3f6aee4(并轨 M969b) → 200562c(并轨 PLAN) → 1aab59c(M1105 残部) → 本提交）
+**总提交数**: 1475（本提交落地后；提交前 1474——并轨 4e339ab 计入，1aab59c 1474 → 本提交 1475）
 **开发状态**: 持续进行中，无阻塞（本轮新增 Spring fleet 健康探针落到 `/platform`：`/api/spring/fleet` 共一路由逐服务 opt-in 装配——七个 `SPRING_<ID>_BASE` 皆空、全部 not-armed 是默认的诚实姿态；并行 `Promise.all` probe + 1.2s abort；信封零 base URL 回显；`proof-spring-fleet.mjs` 17/17；E2E `tests/e2e/fleet.spec.ts` 1/1；PWA pin 642→644 KB；README 前两节与当前形态对齐）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
