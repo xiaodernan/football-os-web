@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n";
 import { CHIP_CLASS, Panel, SectionTitle } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
@@ -9,7 +10,11 @@ import leagueContract from "../../services/league-service/src/main/resources/lea
  * domain/platform.ts. Every port, name and route comes from the descriptor; none is typed here,
  * so this screen cannot drift from the poms, the compose file or the gateway's own yml.
  * It is a map, not a status board: PLATFORM_LIVE is false and the page says so.
+ *
+ * M1104: the optional fleet panel IS a status board — the honest probe described above.
  */
+const SPRING_FLEET_URL = "/api/spring/fleet";
+
 export function PlatformAtlas() {
   const { t } = useI18n();
 
@@ -30,6 +35,28 @@ export function PlatformAtlas() {
           : id === "cache" ? t("platform.kindCache")
             : id === "messaging" ? t("platform.kindMessaging")
               : t("platform.kindDomain");
+
+  // M1104 · the Spring fleet probe — polled only if you armed SPRING_<ID>_BASE on this dev/preview
+  // server. The response NEVER carries a base URL; unset services come back configured:false and
+  // their tile prints "not armed". 503/unconfigured → the panel prints the honest unset line.
+  const [fleet, setFleet] = useState(null as null | { ok: boolean; reason?: string; services?: Array<{ id: ServiceId; configured: boolean; up: boolean | null; ms: number | null; reason?: string | null }> | null });
+  useEffect(() => {
+    let alive = true;
+    const tick = async () => {
+      try {
+        const r = await fetch(SPRING_FLEET_URL, { cache: "no-store", signal: AbortSignal.timeout(4000) });
+        const body = await r.json();
+        if (alive) setFleet({ ok: r.ok && body?.ok === true, reason: body?.reason ?? null, services: body?.services ?? null });
+      } catch {
+        if (alive) setFleet({ ok: false, reason: "unreachable" });
+      }
+    };
+    void tick();
+    const iv = window.setInterval(tick, 10_000);
+    return () => { alive = false; window.clearInterval(iv); };
+  }, []);
+  const armed = fleet?.services?.filter((s) => s.configured) ?? [];
+  const upCount = armed.filter((s) => s.up === true).length;
 
   return (
     <div className="space-y-5">
@@ -73,6 +100,48 @@ export function PlatformAtlas() {
           ))}
         </div>
         <p className="mt-3 text-xs text-muted-foreground">{t("platform.topoMethod")}</p>
+      </Panel>
+
+      {/* M1104 · the honest fleet probe — server-side only; tiles print what Spring's own health says. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("platform.fleetTitle")} hint={t("platform.fleetHint")} />
+        <div className="mt-3 text-sm">
+          {fleet === null && <div className="text-muted-foreground">{t("platform.fleetLoading")}</div>}
+          {fleet !== null && fleet.reason === "unconfigured" && (
+            <div className="text-muted-foreground">{t("platform.fleetUnconfigured")}</div>
+          )}
+          {fleet !== null && fleet.reason !== "unconfigured" && fleet.services && (
+            <>
+              <div className="mb-3 font-mono text-[11px] uppercase tracking-widest text-primary">
+                {t("platform.fleetSummary", { armed: armed.length, up: upCount })}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {fleet.services.map((service) => (
+                  <div key={service.id} className="rounded-lg border p-3">
+                    <div className="text-sm font-medium">{copy[service.id]?.name ?? service.id}</div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className={cn(
+                        "shrink-0 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest",
+                        !service.configured
+                          ? CHIP_CLASS.mutedSoft
+                          : service.up === true
+                            ? CHIP_CLASS.success
+                            : CHIP_CLASS.destructive,
+                      )}>
+                        {!service.configured
+                          ? t("platform.fleetNotArmed")
+                          : service.up === true
+                            ? t("platform.fleetUp", { ms: service.ms ?? 0 })
+                            : t("platform.fleetDown", { reason: service.reason ?? "" })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        <p className="mt-3 text-[11px] text-muted-foreground">{t("platform.fleetBoundary")}</p>
       </Panel>
 
       <Panel className="p-5">

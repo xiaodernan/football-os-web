@@ -34,7 +34,7 @@ const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } 
 // ── 1 · the module loads cleanly; config is built only from NON-secret public signals ──────
 const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom", logLevel: "error" });
 const DATA = await server.ssrLoadModule("/data/llm.ts");
-const { LLM_CONFIG, WORLD_BRIEFING, callLlm } = DATA;
+const { LLM_CONFIG, WORLD_BRIEFING, callLlm, windowHistory, HISTORY_CAP, HISTORY_TRIM_BLOCK } = DATA;
 const LLM = read("data/llm.ts");
 
 ok(`LLM_CONFIG exposes only a same-origin endpoint, a boolean enable flag, and a model name (endpoint=${LLM_CONFIG.endpoint}, enabled=${LLM_CONFIG.enabled}, model=${LLM_CONFIG.model})`,
@@ -302,6 +302,28 @@ const plantedCharged = tokenRe.test(plantedBlob);
 ok(`0 of ${tracked.length} tracked files carry an sk- token, and the scanner charges 1 planted leaking blob (planted=${plantedCharged ? "CHARGED" : "BLIND"})`,
   tracked.length >= 100 && committedKeys.length === 0 && plantedCharged);
 
+// M969 - the history window is GROWING and block-trimmed (the provider-cache prefix fix).
+// The provider's prompt cache matches the longest common prefix of consecutive requests. A
+// sliding window shifted the history every turn, so the only stable prefix was the system
+// briefing; a growing window keeps request N+1's prefix equal to all of request N.
+const growing = Array.from({ length: HISTORY_CAP }, (_, i) => ({ role: "user", content: "m" + i }));
+ok("M969 windowHistory is a no-op under the cap: " + HISTORY_CAP + " messages in, identity out (prefix stable turn over turn)",
+  windowHistory(growing) === growing && HISTORY_CAP >= 10 && HISTORY_TRIM_BLOCK >= 4);
+const over = [...growing, ...Array.from({ length: 6 }, (_, i) => ({ role: "user", content: "x" + i }))];
+const trimmed = windowHistory(over);
+ok("M969 over the cap the trim is BLOCK-ALIGNED: 6 over drops a whole block of " + HISTORY_TRIM_BLOCK + " in one step (overshooting by design), never one per turn",
+  (over.length - trimmed.length) === HISTORY_TRIM_BLOCK && trimmed.length === over.length - HISTORY_TRIM_BLOCK &&
+  trimmed[0].content === "m12");
+const oldSlide = over.slice(-6);
+ok("M969 the old sliding window is charged as the defect: 6 over it drops ALL " + (over.length - 6) + " old messages in one turn (the prompt rebuilds from the briefing alone)",
+  over.length - oldSlide.length === over.length - 6 && oldSlide[0].content === "x0" &&
+  (over.length - oldSlide.length) > HISTORY_TRIM_BLOCK * 2);
+const reqN = [...windowHistory(growing.slice(0, 30)), { role: "user", content: "qN" }];
+const grown2 = [...growing.slice(0, 30), { role: "assistant", content: "aN" }];
+const reqN1 = [...windowHistory([...grown2, { role: "user", content: "m30" }]), { role: "user", content: "qN1" }];
+const common = reqN1.filter((m, i) => i < reqN.length && reqN[i].content === m.content).length;
+ok("M969 consecutive requests share the whole prior prompt (common prefix = all of request N except its trailing question, not just the briefing)",
+  common === reqN.length - 1 && common === 30 && reqN.length === 31);
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();
 process.exit(fail ? 1 : 0);

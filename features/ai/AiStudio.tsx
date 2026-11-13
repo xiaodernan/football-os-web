@@ -106,9 +106,9 @@ function Chat() {
   const send = async (text: string) => {
     const question = text.trim();
     if (!question || busy) return;
-    // Replay the last few messages as plain text so the model has conversational context.
+    // M969: the FULL conversation goes to the window policy — a growing prefix is what makes
+    // the provider's prompt cache cover the whole history instead of just the briefing.
     const history = entries
-      .slice(-6)
       .map((m) => (m.role === "user" ? { role: "user" as const, content: m.content } : { role: "assistant" as const, content: m.content.map((r) => rowLine(r, t)).join("\n") }));
     setLog((l) => [...l, { role: "user", content: question, at: new Date().toISOString() }]);
     setInput("");

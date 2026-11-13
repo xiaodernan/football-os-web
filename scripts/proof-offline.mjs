@@ -66,6 +66,11 @@ const LLM_EXCEPTION = "data/llm.ts";
 // Both exceptions are each exactly one function call with an exact path; any third fetch in the
 // file, a different origin, or any other file doing network I/O all redden the gate.
 const CACHE_EXCEPTION = "features/cache/CacheObservatory.tsx";
+// M1104 earns the third carve: the platform atlas polls the SAME-ORIGIN /api/spring/fleet probe
+// (the server-side heap of per-service /actuator/health reads on this dev/preview server — no
+// cross-site optin, no telemetry). Exactly one function call with an exact path; any second fetch
+// in the file, a different origin, or any other file doing network I/O all redden the gate.
+const PLATFORM_EXCEPTION = "features/platform/PlatformAtlas.tsx";
 const NETWORK = /\bfetch\s*\(|XMLHttpRequest|\baxios\b|new\s+WebSocket|new\s+EventSource|sendBeacon/;
 const appText = (f) => readFileSync(f, "utf8");
 // M1078: count of .fetch( in the LLM-accept file must be EXACTLY one and call the documented path.
@@ -79,9 +84,12 @@ const cacheBody = NETWORK.test(appText(join(root, CACHE_EXCEPTION)) || "") ? app
 const cacheFetchCalls = (cacheBody.match(/\bfetch\s*\(/g) ?? []).length;
 const cachePingPathOk = /["'`]\/api\/cache\/ping["'`]/.test(cacheBody);
 const cacheServicePathOk = /["'`]\/api\/cache\/service["'`]/.test(cacheBody);
-const stray = netHits.filter((p) => p !== LLM_EXCEPTION && p !== CACHE_EXCEPTION);
-ok(`the two same-origin proxy calls are exactly one fetch at the documented path each (llm fetch count ${llmFetchCalls}, path ok=${llmPathOk}; cache fetch count ${cacheFetchCalls}, ping ok=${cachePingPathOk}, service ok=${cacheServicePathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
-  netHits.length === 2 && llmFetchCalls === 1 && llmPathOk && cacheFetchCalls === 2 && cachePingPathOk && cacheServicePathOk && stray.length === 0);
+const platformBody = NETWORK.test(appText(join(root, PLATFORM_EXCEPTION)) || "") ? appText(join(root, PLATFORM_EXCEPTION)) : "";
+const platformFetchCalls = (platformBody.match(/\bfetch\s*\(/g) ?? []).length;
+const platformPathOk = /\/api\/spring\/fleet/.test(platformBody);
+const stray = netHits.filter((p) => p !== LLM_EXCEPTION && p !== CACHE_EXCEPTION && p !== PLATFORM_EXCEPTION);
+ok(`the three same-origin proxy calls are exactly one fetch at the documented path each (llm fetch count ${llmFetchCalls}, path ok=${llmPathOk}; cache fetch count ${cacheFetchCalls}, ping ok=${cachePingPathOk}, service ok=${cacheServicePathOk}; platform fetch count ${platformFetchCalls}, fleet ok=${platformPathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
+  netHits.length === 3 && llmFetchCalls === 1 && llmPathOk && cacheFetchCalls === 2 && cachePingPathOk && cacheServicePathOk && platformFetchCalls === 1 && platformPathOk && stray.length === 0);
 
 const SW_REGISTER = /navigator\s*\.\s*serviceWorker\s*\.\s*register\s*\(\s*["'`]([^"'`]+)["'`]/;
 const swSites = appFiles.flatMap((f) => {

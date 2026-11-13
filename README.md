@@ -15462,12 +15462,12 @@ unrecorded milestone, and a gap this list names that has since been filled is a 
 
 <!-- /gaps -->
 
-## The Spring Cloud stack, honestly wired in (M1098 · M1099 · M1101)
+## The Spring Cloud stack, honestly wired in (M1098 · M1099 · M1101 · M1104)
 
 The web app itself is a static SPA by default — PLATFORM_LIVE=false, the browser never dials a
-Spring service. Two additive **opt-in** server-side wires do run on the dev / preview server when
-you explicitly configure them — never from a static host without a Node middleware — and both are
-"call through ONE server-side route, never straight from a visitor's browser":
+Spring service. Three additive **opt-in** server-side wires run on the dev / preview server when
+you explicitly configure them — never from a static host without a Node middleware — and all three
+are "call through ONE server-side route, never straight from a visitor's browser":
 
 1. **The live LLM tie-in (M1078 · M1101)** — visitor asks the AI screen a question → the server
    route `POST /api/llm/chat` forwards it to the provider of your choice (`LLM_API_KEY` + `LLM_BASE_URL` server-side, plus the public `VITE_LLM_ENABLED=true` build flag). The stream is
@@ -15487,6 +15487,14 @@ you explicitly configure them — never from a static host without a Node middle
    `football-os-cache` module bootable from `services/cache-service`. The Spring wire is opt-in
    only, gated by environment flag `CACHE_SERVICE_BASE` on the server side, and the screen degrades
    honestly to "not armed" / "unreachable" otherwise — never fabricates live numbers.
+3. **The Spring fleet health probe (M1104)** — the `/platform` screen carries an opt-in panel, polled
+   every 10s through `GET /api/spring/fleet`. The server probes each service you explicitly arm via
+   `SPRING_REGISTRY_BASE` / `SPRING_CONFIG_BASE` / `SPRING_GATEWAY_BASE` / `SPRING_LEAGUE_BASE` /
+   `SPRING_DISCIPLINE_BASE` / `SPRING_CACHE_BASE` / `SPRING_MESSAGING_BASE` (server-only, never `VITE_`)
+   against that service's own `{base}/actuator/health`, in **parallel** (one 1.2s abort per probe),
+   up the way Spring says it. UNSET services come back `configured: false` and their tile prints
+   "not armed" — the panel is a probe, not a fleet manager: it reads nothing but Spring's own word.
+   It never restarts, never rolls back, never fakes a green.
 
 The full seven-service reactor — Eureka registry (`8761`), config server (`8888`), league service
 (`8081`/`8080`/`8082`), discipline service, cache service (`8083`), messaging service, gateway

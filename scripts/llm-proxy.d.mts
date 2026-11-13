@@ -15,6 +15,8 @@ export interface LlmProxyResponse {
 export const PROXY_ROUTE: string;
 export const CACHE_PROBE_ROUTE: string;
 export const CACHE_SERVICE_ROUTE: string;
+export const SPRING_FLEET_ROUTE: string;
+export const SPRING_FLEET_SERVICES: readonly string[];
 export const PROMPT_CACHE_KEY: string;
 export const LLM_CACHE_POLICY: { enabled: boolean; ttlSeconds: number; jitterSeconds: number; capacity: number; seed: string };
 
@@ -27,6 +29,21 @@ export function llmCacheStats(cache: unknown): { hits: number; misses: number; c
 export function cachePingHandler(cache: unknown): { status: number; body: unknown; headers: Record<string, string> };
 export function cachePingMiddleware(cache: unknown): LlmMiddleware;
 export function cacheServiceMiddleware(env?: Record<string, string | undefined>): LlmMiddleware;
+export interface SpringFleetService {
+  id: string;
+  configured: boolean;
+  up: boolean | null;
+  ms: number | null;
+  reason: string;
+}
+export interface SpringFleetBody {
+  ok: boolean;
+  at: string;
+  reason: "unconfigured" | "ok" | "degraded";
+  services: SpringFleetService[];
+}
+export function springFleetHandler(env?: Record<string, string | undefined>, fetchImpl?: typeof fetch): Promise<{ status: number; body: SpringFleetBody; headers: Record<string, string> }>;
+export function springFleetMiddleware(env?: Record<string, string | undefined>, fetchImpl?: typeof fetch): LlmMiddleware;
 
 export function normaliseBase(raw: string): string;
 

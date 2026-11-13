@@ -406,3 +406,78 @@ export function cacheServiceMiddleware(env = process.env) {
     res.end(JSON.stringify(probe));
   };
 }
+
+// ─── M1104 · the Spring fleet health probe ─────────────────────────────────────
+// ONE route, the whole reactor, zero fabricated numbers. SERVER-ONLY, per-service opt-in:
+// each of the seven services is armed by ONE env var — SPRING_<ID>_BASE — and every armed
+// service is probed in PARALLEL with its own 1.2s abort (wall-clock is the slowest probe,
+// not the sum — the same "bound your blocking" lesson the witness scripts apply).
+// An UNSET service is reported as { configured: false, up: null } — the screen prints
+// "not armed". An ARMED service reports { configured: true, up, ms, reason } where
+// up = (health body status === "UP"). Spring's broker-deprived services answer 503 BY DESIGN
+// (no broker, no health); the probe reports exactly what Spring said — never an editorial.
+// The response NEVER echoes the env values; it carries only fixed ids, booleans, ms and reason.
+export const SPRING_FLEET_ROUTE = "/api/spring/fleet";
+export const SPRING_FLEET_SERVICES = Object.freeze(["registry", "config", "gateway", "league", "discipline", "cache", "messaging"]);
+const SPRING_FLEET_ENV = Object.freeze({
+  registry: "SPRING_REGISTRY_BASE",
+  config: "SPRING_CONFIG_BASE",
+  gateway: "SPRING_GATEWAY_BASE",
+  league: "SPRING_LEAGUE_BASE",
+  discipline: "SPRING_DISCIPLINE_BASE",
+  cache: "SPRING_CACHE_BASE",
+  messaging: "SPRING_MESSAGING_BASE",
+});
+const normaliseFleetBase = (raw) => String(raw ?? "").trim().replace(/\/+$/, "");
+
+const probeFleetHealth = async (id, rawBase, fetchImpl) => {
+  const base = normaliseFleetBase(rawBase);
+  if (!base) return { id, configured: false, up: null, ms: null, reason: "not_armed" };
+  const started = Date.now();
+  const f = typeof fetchImpl === "function" ? fetchImpl : globalThis.fetch;
+  try {
+    const r = await f(`${base}/actuator/health`, { cache: "no-store", signal: AbortSignal.timeout(1200) });
+    const body = await r.json().catch(() => null);
+    const ms = Date.now() - started;
+    const status = body && typeof body === "object" ? String(body.status ?? "") : "";
+    const up = r.ok && status === "UP";
+    return { id, configured: true, up, ms, reason: up ? "ok" : (status ? `status_${status.toLowerCase()}` : "upstream_down") };
+  } catch (err) {
+    const ms = Date.now() - started;
+    return { id, configured: true, up: false, ms, reason: err?.name === "AbortError" || err?.name === "TimeoutError" ? "timeout" : "unreachable" };
+  }
+};
+
+/** Testable core: probe every configured service in PARALLEL. `fetchImpl` is injectable for proofs. */
+export async function springFleetHandler(env = process.env, fetchImpl) {
+  const results = await Promise.all(
+    SPRING_FLEET_SERVICES.map((id) => probeFleetHealth(id, env?.[SPRING_FLEET_ENV[id]], fetchImpl)),
+  );
+  const armed = results.filter((r) => r.configured);
+  const anyArmed = armed.length > 0;
+  const allUp = armed.every((r) => r.up === true);
+  const body = {
+    ok: anyArmed && allUp,
+    at: new Date().toISOString(),
+    reason: !anyArmed ? "unconfigured" : allUp ? "ok" : "degraded",
+    services: results,
+  };
+  return { status: anyArmed ? 200 : 503, body, headers: { "Cache-Control": "no-store", "Content-Type": "application/json" } };
+}
+
+export function springFleetMiddleware(env = process.env, fetchImpl) {
+  return async function springFleet(req, res, next) {
+    const url = (req.url || "").split("?")[0];
+    if (url !== SPRING_FLEET_ROUTE) return next?.();
+    if (req.method !== "GET") {
+      res.statusCode = 405;
+      res.setHeader("Allow", "GET");
+      res.end(JSON.stringify({ ok: false, error: "method_not_allowed" }));
+      return;
+    }
+    const out = await springFleetHandler(env, fetchImpl);
+    res.statusCode = out.status;
+    for (const [k, v] of Object.entries(out.headers)) res.setHeader(k, v);
+    res.end(JSON.stringify(out.body));
+  };
+}

@@ -77,12 +77,30 @@ function buildWorldBriefing(): string {
 
 export const WORLD_BRIEFING = buildWorldBriefing();
 
+// ── M969 · the history window is GROWING, trimmed in blocks ────────────────────────────────
+// Provider prompt caches match the LONGEST COMMON PREFIX of consecutive requests. A sliding
+// window (the old `slice(-6)`) shifts the whole history every turn, so request N+1 diverged
+// from request N at its SECOND message and the cache could only ever reuse the system briefing.
+// A window that GROWS keeps request N+1's prefix equal to all of request N (system + every
+// prior turn), so the cached span covers the whole conversation and the cached-token count
+// climbs with it. When the cap finally bites, the trim is BLOCK-ALIGNED — a whole block drops
+// at once — so the prefix stays stable for many turns between trims instead of shifting one
+// message per turn.
+export const HISTORY_CAP = 40;
+export const HISTORY_TRIM_BLOCK = 12;
+
+export function windowHistory(history: ChatMessage[]): ChatMessage[] {
+  const over = history.length - HISTORY_CAP;
+  if (over <= 0) return history;
+  return history.slice(Math.ceil(over / HISTORY_TRIM_BLOCK) * HISTORY_TRIM_BLOCK);
+}
+
 /** Call the same-origin server proxy. Returns { ok, text } or { ok:false, error } — never throws. */
 export async function callLlm(question: string, history: ChatMessage[] = []): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
   if (!LLM_CONFIG.hasKey) return { ok: false, error: "no key configured" };
   const messages: ChatMessage[] = [
     { role: "system", content: WORLD_BRIEFING },
-    ...history.slice(-6),
+    ...windowHistory(history),
     { role: "user", content: question },
   ];
   try {

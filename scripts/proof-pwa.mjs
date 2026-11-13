@@ -229,7 +229,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // pin 639 -> 640, baseline re-recorded.
 // M1095: the player mission's cinematic header pushes one KB more — 641 KB measured, pin 640 -> 641.
 // M1098: the live-wire cache probe panel pushes one KB more — 642 KB measured, pin 641 -> 642.
-const BUDGET_KB = 642;
+// M1104: the fleet probe panel (seven tiles + one same-origin fetch + nine keys x3) grows the
+// shared chunk by two KB — 644 KB measured / 70 assets (JS 630, CSS 13.5), pin 642 -> 644, baseline
+// re-recorded in the same commit.
+const BUDGET_KB = 644;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
