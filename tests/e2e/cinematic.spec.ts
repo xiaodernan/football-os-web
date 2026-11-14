@@ -31,6 +31,7 @@ const DECORATED = [
   ["/derby-codex", /the derby codex/i, "/derby cinematic hero"],
   ["/prophet", /the prophet's slate/i, "/prophet cinematic hero"],
   ["/upsets", /the upsets/i, "/upsets cinematic hero"],
+  ["/tomorrow", /the chapter the world is waiting for/i, "/tomorrow cinematic hero"],
 ];
 
 test.describe("the cinematic catalog mounts in a live viewport without console errors", () => {

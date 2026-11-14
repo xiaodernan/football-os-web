@@ -1,5 +1,5 @@
 import type { Club, Match } from "./types";
-import { isFinished, outcomeOdds, teamMetrics, type TeamMetrics } from "./analytics";
+import { competitionMetrics, isFinished, outcomeOdds } from "./analytics";
 import { round2 } from "@/lib/utils";
 
 /**
@@ -20,35 +20,27 @@ export interface UpsetRow {
   away: number;
   mostLikelyScore: string;
   expectedTotalGoals: number;
-  /** The probability the model pinned to the outcome that actually happened. */
-  happenedProb: number;
   /** 1 / happenedProb, rounded through the shared round2 door — the "shock multiplier". */
   shock: number;
-  /** The outcome the model favoured. */
-  favoured: "home" | "draw" | "away";
-  /** The outcome that actually happened. */
-  happened: "home" | "draw" | "away";
 }
 
+type Outcome = "home" | "draw" | "away";
+
 export function upsetsBoard(matches: readonly Match[], clubs: readonly Club[], limit = 10): UpsetRow[] {
-  const cache = new Map<string, TeamMetrics[]>();
-  const metricsFor = (compId: string): TeamMetrics[] => {
-    if (!cache.has(compId)) cache.set(compId, teamMetrics(compId, matches as Match[], clubs as Club[]));
-    return cache.get(compId)!;
-  };
+  const read = competitionMetrics(matches, clubs);
   const out: UpsetRow[] = [];
   for (const m of matches) {
     if (!isFinished(m)) continue;
-    const metrics = metricsFor(m.competitionId);
-    const homeMetrics = metrics.find((x) => x.clubId === m.homeClubId);
-    const awayMetrics = metrics.find((x) => x.clubId === m.awayClubId);
+    const teamRows = read(m.competitionId);
+    const homeMetrics = teamRows.find((x) => x.clubId === m.homeClubId);
+    const awayMetrics = teamRows.find((x) => x.clubId === m.awayClubId);
     if (!homeMetrics || !awayMetrics) continue;
     if (homeMetrics.played === 0 || awayMetrics.played === 0) continue; // no rows from unmeasured sides
     const odds = outcomeOdds(homeMetrics, awayMetrics, homeMetrics.leagueAvg);
-    const actual: "home" | "draw" | "away" =
+    const actual: Outcome =
       m.homeGoals > m.awayGoals ? "home" : m.homeGoals === m.awayGoals ? "draw" : "away";
     const favoured = (Object.entries({ home: odds.home, draw: odds.draw, away: odds.away })
-      .sort(([, a], [, b]) => b - a)[0][0]) as "home" | "draw" | "away";
+      .sort(([, a], [, b]) => b - a)[0][0]) as Outcome;
     if (favoured === actual) continue; // the favourite won — no anthology for the expected
     out.push({
       match: m,
@@ -60,10 +52,7 @@ export function upsetsBoard(matches: readonly Match[], clubs: readonly Club[], l
       away: odds.away,
       mostLikelyScore: odds.mostLikelyScore,
       expectedTotalGoals: odds.expectedTotalGoals,
-      happenedProb: actual === "home" ? odds.home : actual === "draw" ? odds.draw : odds.away,
       shock: round2(1 / ((actual === "home" ? odds.home : actual === "draw" ? odds.draw : odds.away) || 0.001)),
-      favoured,
-      happened: actual,
     });
   }
   out.sort((a, b) =>

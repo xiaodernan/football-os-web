@@ -103,6 +103,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   { to: "/derby-codex", label: t("nav.derby"), icon: I.globe, match: ["/derby-codex"] },
   { to: "/prophet", label: t("nav.prophet"), icon: I.chart, match: ["/prophet"] },
   { to: "/upsets", label: t("nav.upsets"), icon: I.bolt, match: ["/upsets"] },
+  { to: "/tomorrow", label: t("nav.tomorrow"), icon: I.star, match: ["/tomorrow"] },
     { to: "/platform", label: t("nav.platform"), icon: I.server, match: ["/platform"] },
     { to: "/messaging", label: t("nav.messaging"), icon: I.server, match: ["/messaging"] },
     { to: "/cache", label: t("nav.cache"), icon: I.server, match: ["/cache"] },

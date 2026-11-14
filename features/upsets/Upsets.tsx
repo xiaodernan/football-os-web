@@ -45,7 +45,6 @@ export function Upsets() {
           {rows.map((r, i) => {
             const home = getClub(r.match.homeClubId);
             const away = getClub(r.match.awayClubId);
-            const wonSide = r.happened === "home" ? home : r.happened === "away" ? away : null;
             const pH = pct(r.home), pD = pct(r.draw), pA = pct(r.away);
             return (
               <li key={r.match.id}>
@@ -74,7 +73,7 @@ export function Upsets() {
                       </div>
                       <div className="mt-2 text-center text-[11px] uppercase tracking-widest text-muted-foreground">
                         {home?.short} <span aria-hidden="true" className="text-muted-foreground/60">{SEPARATOR}</span> {away?.short}
-                        {wonSide && (<span className="text-muted-foreground"> · <Link to={`/matches/${r.match.id}`} className="text-primary hover:underline">{t("upsets.saidRow", { score: r.mostLikelyScore })}</Link></span>)}
+                        <span className="text-muted-foreground"> · <Link to={`/matches/${r.match.id}`} className="text-primary hover:underline">{t("upsets.saidRow", { score: r.mostLikelyScore })}</Link></span>
                       </div>
                       {/* The odds band — the three outcomes at the moment the model read them, before the night happened */}
                       <div className="mt-3 flex h-3 w-full overflow-hidden rounded-full border">
@@ -86,6 +85,10 @@ export function Upsets() {
                         <span>{t("prophet.homeWin", { n: pH })}</span>
                         <span>{t("prophet.draw", { n: pD })}</span>
                         <span>{t("prophet.awayWin", { n: pA })}</span>
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-[10px] tabular-nums text-muted-foreground">
+                        <span>{t("prophet.expectedTotalGoals", { n: fmt2(r.expectedTotalGoals) })}</span>
+                        <span>{t("prophet.expectedGoals", { home: fmt2(r.homeLambda), away: fmt2(r.awayLambda) })}</span>
                       </div>
                     </div>
                     {/* The headline number — the shock multiplier, the night's true scandal */}

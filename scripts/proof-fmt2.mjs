@@ -85,6 +85,8 @@ const CONSUMERS = [
   "features/prophet/ProphetSlate.tsx",
   // M1124: the Upsets' shock multipliers print through the door.
   "features/upsets/Upsets.tsx",
+  // M1125: the chapter's combined overall and per-game figures print through the door.
+  "features/tomorrow/Tomorrow.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the

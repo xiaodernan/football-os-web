@@ -79,6 +79,15 @@ export function finishedCount(compId: string, matches: Match[]): number {
   return finishedFixtures(compId, matches).length;
 }
 
+/** A memoising reader for one competition's team metrics — one factory per fold, never two. */
+export function competitionMetrics(matches: readonly Match[], clubs: readonly Club[]): (compId: string) => TeamMetrics[] {
+  const cache = new Map<string, TeamMetrics[]>();
+  return (compId: string): TeamMetrics[] => {
+    if (!cache.has(compId)) cache.set(compId, teamMetrics(compId, matches as Match[], clubs as Club[]));
+    return cache.get(compId)!;
+  };
+}
+
 /** Compute per-club metrics for a competition from its finished matches. */
 export function teamMetrics(compId: string, matches: Match[], clubs: Club[]): TeamMetrics[] {
   const byId = indexById(clubs);

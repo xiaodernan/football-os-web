@@ -1,5 +1,5 @@
 import type { Club, Match } from "./types";
-import { byKickoff, outcomeOdds, teamMetrics, type TeamMetrics } from "./analytics";
+import { byKickoff, competitionMetrics, outcomeOdds } from "./analytics";
 
 /**
  * M1122 · the Prophet's Slate. The next fixtures in this world, told by the model's own Poisson
@@ -25,11 +25,7 @@ export interface ProphetRow {
 }
 
 export function prophetSlate(matches: readonly Match[], clubs: readonly Club[], limit = 8): ProphetRow[] {
-  const cache = new Map<string, TeamMetrics[]>();
-  const metricsFor = (compId: string): TeamMetrics[] => {
-    if (!cache.has(compId)) cache.set(compId, teamMetrics(compId, matches as Match[], clubs as Club[]));
-    return cache.get(compId)!;
-  };
+  const metrics = competitionMetrics(matches, clubs);
   const upcoming = matches
     .filter((m) => m.status === "SCHEDULED")
     .slice()
@@ -37,9 +33,9 @@ export function prophetSlate(matches: readonly Match[], clubs: readonly Club[], 
     .sort(byKickoff);
   const out: ProphetRow[] = [];
   for (const m of upcoming) {
-    const metrics = metricsFor(m.competitionId);
-    const homeMetrics = metrics.find((x) => x.clubId === m.homeClubId);
-    const awayMetrics = metrics.find((x) => x.clubId === m.awayClubId);
+    const teamRows = metrics(m.competitionId);
+    const homeMetrics = teamRows.find((x) => x.clubId === m.homeClubId);
+    const awayMetrics = teamRows.find((x) => x.clubId === m.awayClubId);
     if (!homeMetrics || !awayMetrics) continue; // honest skip: this club is absent from the competition's own fold
     const cold = homeMetrics.played === 0 || awayMetrics.played === 0;
     const odds = outcomeOdds(homeMetrics, awayMetrics, homeMetrics.leagueAvg);
