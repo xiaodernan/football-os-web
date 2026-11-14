@@ -9,8 +9,10 @@
 import { indexById, round2 } from "@/lib/utils";
 import type { Club, PlayerRef, PositionCode, PositionGroup } from "./types";
 
-// One predicate, spelled once — not reused as an export because consumers pass the whole pool.
-const isUnder21 = (p: PlayerRef): boolean => p.age <= 21;
+// One predicate, spelled once — the Under-21 wire. Exported so the Moonshots fold and the
+// academy line share the same cutoff, and so proof-thresholds has one site for `<= 21` instead
+// of two independent copies of the same number.
+export const isUnder21 = (p: PlayerRef): boolean => p.age <= 21;
 
 export interface AcademySupplyRow {
   clubId: string;

@@ -1,4 +1,5 @@
 import type { PlayerRef } from "./types";
+import { isUnder21 } from "./academy";
 
 /**
  * M1126 · the Moonshots. The young ceilings this world rolled: players under 21 ranked by the
@@ -14,7 +15,7 @@ export interface MoonshotRow {
 
 export function moonshots(players: readonly PlayerRef[], limit = 12): MoonshotRow[] {
   return players
-    .filter((p) => p.age <= 21)
+    .filter(isUnder21)
     .map((p) => ({ player: p, gap: p.potential - p.overall }))
     .sort((a, b) =>
       (b.gap - a.gap) ||
