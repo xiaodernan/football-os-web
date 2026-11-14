@@ -36,6 +36,7 @@ const DECORATED = [
   ["/programme", /the matchday programme/i, "/programme cinematic hero"],
   ["/letters", /the letterbox/i, "/letters cinematic hero"],
   ["/chalkboard", /the chalkboard cup/i, "/chalkboard cinematic hero"],
+  ["/pressroom", /the press room/i, "/pressroom cinematic hero"],
   ["/about", /the world's chronicle of itself/i, "/about cinematic hero"],
   ["/manual", /the football os manual/i, "/manual cinematic hero"],
 ];
