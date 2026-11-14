@@ -75,6 +75,7 @@ const About = lazy(() => import("@/features/about/About").then((m) => ({ default
 const Manual = lazy(() => import("@/features/manual/Manual").then((m) => ({ default: m.Manual })));
 const Programme = lazy(() => import("@/features/programme/Programme").then((m) => ({ default: m.Programme })));
 const Letterbox = lazy(() => import("@/features/letters/Letterbox").then((m) => ({ default: m.Letterbox })));
+const Chalkboard = lazy(() => import("@/features/chalkboard/Chalkboard").then((m) => ({ default: m.Chalkboard })));
 const FinanceBoard = lazy(() => import("@/features/finance/FinanceBoard").then((m) => ({ default: m.FinanceBoard })));
 const FormTable = lazy(() => import("@/features/analytics/FormTable").then((m) => ({ default: m.FormTable })));
 const QueueObservatory = lazy(() => import("@/features/messaging/QueueObservatory").then((m) => ({ default: m.QueueObservatory })));
@@ -158,6 +159,7 @@ function Routes() {
   else if (path === "/manual") inner = <Manual />;
   else if (path === "/programme") inner = <Programme />;
   else if (path === "/letters") inner = <Letterbox />;
+  else if (path === "/chalkboard") inner = <Chalkboard />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

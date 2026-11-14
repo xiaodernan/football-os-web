@@ -96,6 +96,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       { id: "manual", label: t("nav.manual"), group: "goto", run: nav("/manual") },
       { id: "programme", label: t("nav.programme"), group: "goto", run: nav("/programme") },
       { id: "letters", label: t("nav.letters"), group: "goto", run: nav("/letters") },
+      { id: "chalkboard", label: t("nav.chalkboard"), group: "goto", run: nav("/chalkboard") },
       { id: "profile", label: t("nav.profile"), group: "goto", run: nav("/profile") },
       { id: "review", label: t("nav.review"), group: "goto", run: nav("/review") },
       { id: "load", label: t("nav.load"), group: "goto", run: nav("/load") },

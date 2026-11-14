@@ -20,6 +20,9 @@ export const AI_CHAT_KEY = "football-os.ai.chat.v1";
 // cached epic instead of dialing the model again. The envelope carries the prompt version so a
 // template change invalidates the cache honestly.
 export const AI_EPIC_STORY_KEY = "football-os.epic.story.v1";
+// M1138: the Chalkboard Cup — the owner's five-question eye-vs-model duel. A device record,
+// not a social one: runs played, points scored, best total.
+export const CHALKBOARD_KEY = "football-os.chalkboard.v1";
 export const TACTICS_KEY = "football-os.tactics.v1";
 // M523: which parts of the coach résumé a visiting reader may see. A preference, not
 // activity: how you present your record survives a reset the way the theme does.
@@ -46,6 +49,7 @@ export const LOCAL_KEYS: KeySpec[] = [
   { key: WORLD_KEY, labelKey: "set.key.world", kind: "activity" },
   { key: AI_CHAT_KEY, labelKey: "set.key.ai", kind: "activity" },
   { key: AI_EPIC_STORY_KEY, labelKey: "set.key.epic", kind: "activity" },
+  { key: CHALKBOARD_KEY, labelKey: "set.key.chalkboard", kind: "activity" },
   { key: TACTICS_KEY, labelKey: "set.key.tactics", kind: "activity" },
   { key: COACH_KEY, labelKey: "set.key.coach", kind: "preference" },
   { key: FIXTURES_KEY, labelKey: "set.key.fixtures", kind: "activity" },
