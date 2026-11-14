@@ -564,7 +564,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1064: 139 -> 140 — domain/ringMath.ts (the shared hash-ring floor the cache and queue folds both read).
 // M1076: 140 -> 141 — data/llm.ts (the live LLM tie-in's fold, lazy-loaded through the AI studio).
 // M1080: 141 -> 143 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const APP_SRC_PIN = 145;
+const APP_SRC_PIN = 147;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -596,7 +596,7 @@ const APP_SRC_PIN = 145;
 // M1036: 77 -> 78 — PlatformAtlas.tsx is a new .tsx module.
 // M1059: 78 -> 79 — QueueObservatory.tsx is a new .tsx module.
 // M1064: 79 -> 80 — CacheObservatory.tsx is a new .tsx module.
-const TSX_PIN = 82;
+const TSX_PIN = 83;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -641,7 +641,7 @@ const TSX_PIN = 82;
 // both folds import it).
 // M1076: 143 -> 144 — data/llm.ts (the live LLM tie-in's fold; lazy-loaded through the AI studio).
 // M1080: 144 -> 146 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const SRC_PIN = 148;
+const SRC_PIN = 150;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -951,11 +951,20 @@ DYN_SITES.push(
   // M1064: the cache tier's boundary cards walk a second exported id list (domain/cache.ts's
   // MECH_KEYS). Two sites, one per text row, sharing the cache.mech.|key value space below.
   { path: "features/cache/CacheObservatory.tsx", expr: "key", prefix: "cache.mech.", suffix: ".title" },
+  // M1117: the World's epic chronicle's event list — every text node that reads an event kind
+  // interpolates the `e.type` of the fixture in sight. The same space is used for all six glyphs.
+  { path: "features/chronicle/Chronicle.tsx", expr: "e.type", prefix: "match.event.", suffix: "" },
   { path: "features/cache/CacheObservatory.tsx", expr: "key", prefix: "cache.mech.", suffix: ".body" },
 
 );
 
 const SPACES = new Map([
+  // M1117: the World's epic chronicle — six event-type codes the seed can emit on every fixture,
+  // one word each in the dictionary. The space is read out of domain/types.ts's MatchEventType.
+  ["match.event.|e.type", {
+    name: "match event kinds",
+    values: spaceOf("domain/types.ts", /export type MatchEventType =[\s\S]*?;/, /"([A-Z]+)"/g),
+  }],
   // M1059: the six mechanism ids are one exported list; both card rows (title/body) share it.
   ["messaging.mech.|key", { name: "pipeline mechanisms", values: MECH_KEYS }],
   ["cache.mech.|key", { name: "cache mechanisms", values: CACHE_MECH_KEYS }],
@@ -4742,7 +4751,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1115 (conditional GET panel): two literal t() sites (validatorLine, validatorBoundary).
   // M1116 (Hall of Legends): nineteen literal call sites across the legends screen; template t()
   // sites and dynamic position chips are counted apart and land in the template arm instead.
-  shapeCounts.literal === 2697 && shapeCounts.template === 113 && shapeCounts.expression === 35
+  shapeCounts.literal === 2715 && shapeCounts.template === 114 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -6021,7 +6030,11 @@ ok(`a switch-cases extractor reads the composer it names, not the file it lives 
   // `{searchKindLabel(r.type, t)}` reads the same field and is the fix, so a detector that charged
   // it would charge every converted screen — the read count is printed and pinned with the charge,
   // so `0 charged` can never come from `read nothing`.
-  const SK_TEXT_CHILD_PIN = 25;
+  // M1117: The World's epic chronicle screens a bare `e.type` through the balanced text-child walk.
+  // One real site (`t(`match.event.${e.type}`)`) plus the three enclosing expressions that contain it
+  // (the `chronicle !== null` ternary, the `epic && (` block and the events `.map(...)` expression)
+  // each match the kind-field test: 25 -> 29. None of the four is charged bare (all route through t()).
+  const SK_TEXT_CHILD_PIN = 29;
   const SK_ATTR = /\b(?:key|value|id)\s*=\s*\{[^=]{0,80}?\.(?:type|kind)\b/g;
   const SK_MEMBER = /^[A-Za-z_$][\w$]*(?:\??\.[A-Za-z_$][\w$]*)*$/;
   const SK_CHILD_KIND = /\.(?:type|kind)\b/;

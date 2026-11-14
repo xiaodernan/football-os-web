@@ -1,5 +1,6 @@
 import type { Match, MatchEvent, PlayerRef } from "./types";
 import { byOverall, tally } from "./attributes";
+import { indexById } from "@/lib/utils";
 
 /**
  * M1116 · the Hall of Legends. The one board that reads every finished fixture in the seed
@@ -41,7 +42,7 @@ export function legendsGoldenBoot(matches: readonly Match[], players: readonly P
     const k = `${p.name}|${p.clubId}`;
     if (!byNameClub.has(k)) byNameClub.set(k, p);
   }
-  const byPlayerId = new Map(players.map((p) => [p.id, p]));
+  const byPlayerId = indexById(players);
   const counts = tally(goalsInSeed(matches), ({ e, club }) => byNameClub.get(`${e.player}|${club}`)?.id ?? "");
   counts.delete("");
   return [...counts.entries()]

@@ -241,7 +241,8 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // re-recorded in the same commit.
 // M1116: the Hall of Legends — a new lazy screen with its own fold and cinematic header; ~3 KB JS
 // (634 -> 638) and one more asset (70 -> 71). total measured 651 KB, pin 648 -> 651.
-const BUDGET_KB = 651;
+// M1117: the World's epic chronicle screen added ~5 KB — features/chronicle + domain/chronicle — pin 651 -> 656 KB.
+const BUDGET_KB = 656;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

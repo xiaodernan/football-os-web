@@ -159,8 +159,9 @@ const DEAD_CEILING = 22;
 // M1064: 143 -> 144 — domain/ringMath.ts (the shared hash-ring floor).
 // M1076: 144 -> 145 — data/llm.ts.
 // M1080: 145 -> 147 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-// M1116: features/legends/Legends.tsx + domain/legends.ts become reachable; 147 -> 149.
-const POP_PIN = 149;
+// M1116: features/legends/Legends.tsx + domain/legends.ts -> 147 -> 149.
+// M1117: features/chronicle/Chronicle.tsx + domain/chronicle.ts -> 149 -> 151.
+const POP_PIN = 151;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -202,7 +203,7 @@ const POP_PIN = 149;
 // M1064: domain 44 -> 45 (ringMath.ts).
 // M1076: data 7 -> 8 — data/llm.ts.
 // M1080: domain 45 -> 46, features 57 -> 58 — domain/seasonRoom.ts + features/seasonroom/SeasonRoom.tsx.
-const BY_DIR_PIN = { components: 15, data: 8, domain: 47, features: 59, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 };
+const BY_DIR_PIN = { components: 15, data: 8, domain: 48, features: 60, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 };
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
@@ -225,7 +226,7 @@ const BY_DIR_PIN = { components: 15, data: 8, domain: 47, features: 59, function
 // M1059: 71 -> 72 — features/messaging/QueueObservatory.tsx sits two levels down.
 // M1064: 72 -> 73 — features/cache/CacheObservatory.tsx sits two levels down.
 // M1080: 73 -> 74 — features/seasonroom/SeasonRoom.tsx sits two levels down.
-const DEEP_PIN = 75;
+const DEEP_PIN = 76;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the
