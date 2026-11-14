@@ -4751,7 +4751,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1115 (conditional GET panel): two literal t() sites (validatorLine, validatorBoundary).
   // M1116 (Hall of Legends): nineteen literal call sites across the legends screen; template t()
   // sites and dynamic position chips are counted apart and land in the template arm instead.
-  shapeCounts.literal === 2715 && shapeCounts.template === 114 && shapeCounts.expression === 35
+  shapeCounts.literal === 2717 && shapeCounts.template === 114 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

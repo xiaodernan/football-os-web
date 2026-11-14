@@ -5,6 +5,8 @@ import { footballProvider, getClub } from "@/data/footballService";
 import { epicFixture, epicNeighbours, type EpicFixture } from "@/domain/chronicle";
 import { byMinute } from "@/domain/matchEngine";
 import { callLlmStream, LLM_CONFIG } from "@/data/llm";
+import { AI_EPIC_STORY_KEY } from "@/domain/localData";
+import { useLocalStorage } from "@/lib/hooks";
 import { DemoBadge, Panel, SectionTitle, Crest, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { cn, fmt2 } from "@/lib/utils";
 
@@ -39,30 +41,62 @@ const buildEventList = (events: Readonly<{ minute: number; type: string; player:
   return events.slice(0, 24).map((e) => `${e.minute}' ${e.type} — ${e.player}`).join("\n");
 };
 
+/**
+ * M1119 · the asking is cached. The world's epic is frozen, so the model's telling of it is
+ * answerable once per PROMPT_VERSION — anything less would spend the paid quota on a page refresh.
+ * The envelope persists in the registered store (football-os.epic.story.v1) so Settings can
+ * honour, export and erase the cache like every other store the app ships.
+ */
+const PROMPT_VERSION = 1;
+interface CachedStory {
+  version: number;
+  epicId: string;
+  text: string;
+}
+
 export function Chronicle() {
   const { t } = useI18n();
   const epic = useMemo(() => epicFixture(footballProvider.matches()), []);
   const neighbours = useMemo(() => (epic ? epicNeighbours(epic, footballProvider.matches(), 3) : []), [epic]);
+  const epicId = epic?.match.id ?? "";
 
-  const [chronicle, setChronicle] = useState<string | null>(null);
+  const [saved, setSaved] = useLocalStorage<CachedStory | null>(AI_EPIC_STORY_KEY, null);
+  const cachedForThisEpic = saved && saved.version === PROMPT_VERSION && saved.epicId === epicId ? saved : null;
+  const cachedText = cachedForThisEpic?.text ?? null;
+
+  const [chronicle, setChronicle] = useState<string | null>(cachedText);
+  const [fromCache, setFromCache] = useState(cachedText !== null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const tell = async () => {
+  const tell = () => {
+    setFromCache(false);
+    setChronicle("");
+    void tellAsk();
+  };
+
+  const tellAsk = async () => {
     if (!epic) return;
     const home = epic.match.stats?.home ?? { xg: 0, possession: 50, onTarget: 0 };
     const away = epic.match.stats?.away ?? { xg: 0, possession: 50, onTarget: 0 };
     const events = buildEventList(epic.match.events as Readonly<{ minute: number; type: string; player: string }[]> | undefined);
     const prompt = PROMPT_TEMPLATE(epic, home, away, events);
+    let buf = "";
     setChronicle("");
     setBusy(true);
     setError(null);
-    const result = await callLlmStream(prompt, [], (delta) => setChronicle((c) => (c ?? "") + delta));
+    const result = await callLlmStream(prompt, [], (delta) => { buf += delta; setChronicle(buf); });
     setBusy(false);
     if (!result.ok) {
+      // Honest degrade: you keep the telling you already paid for, and the cache survives.
       setError(result.error || "the chronicle is not armed — the LLM proxy is unreachable or no key is configured");
-      setChronicle(null);
+      setChronicle(cachedText);
+      setFromCache(cachedText !== null);
+      return;
     }
+    setChronicle(buf);
+    setFromCache(false);
+    setSaved({ version: PROMPT_VERSION, epicId, text: buf });
   };
 
   const home = epic ? getClub(epic.match.homeClubId) : null;
@@ -137,13 +171,22 @@ export function Chronicle() {
         <SectionTitle title={t("chronicle.chronicleTitle")} hint={t("chronicle.chronicleHint")} />
         {chronicle !== null ? (
           <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-4 sm:p-5">
-            <div className="mb-2 flex items-center gap-2">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
               <span className={cn(CHIP_CLASS.labelPrimary, "rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-widest")}>
                 {t("chronicle.aiArm")}
               </span>
               {busy && <span className="text-[10px] uppercase tracking-widest text-info">{t("chronicle.streaming")}</span>}
+              {fromCache && !busy && (
+                <>
+                  <span className={cn(CHIP_CLASS.mutedSoft, "rounded-md px-2 py-1 text-[10px] uppercase tracking-widest")}>{t("chronicle.cachedNote")}</span>
+                  <button type="button" onClick={tell} className="text-[11px] text-primary underline underline-offset-2 hover:text-primary/80">
+                    {t("chronicle.retell")}
+                  </button>
+                </>
+              )}
             </div>
             <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">{chronicle}</p>
+            {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
           </div>
         ) : error ? (
           <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-xs text-destructive">{error}</div>
