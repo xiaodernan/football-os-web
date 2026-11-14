@@ -6,6 +6,7 @@ import { selectChalkboardRun, chalkboardForecast } from "@/domain/chalkboard";
 import { CHALKBOARD_KEY, browserStore, readJson, writeJson } from "@/domain/localData";
 import { DemoBadge, Panel, Crest, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { cn, SEPARATOR } from "@/lib/utils";
+import { sum } from "@/domain/attributes";
 
 /**
  * M1138 · The Chalkboard Cup — the five-question duel between the visitor's eye
@@ -46,7 +47,7 @@ export function Chalkboard() {
 
   useEffect(() => { setPicks(calls.map(() => null)); }, [run, calls]);
 
-  const points = calls.reduce((acc, c, i) => acc + (picks[i] !== null ? [c.fc.homePct, c.fc.drawPct, c.fc.awayPct][picks[i]!] : 0), 0);
+  const points = sum(calls.map((c, i) => (picks[i] !== null ? [c.fc.homePct, c.fc.drawPct, c.fc.awayPct][picks[i]!] : 0)), (n) => n);
 
   useEffect(() => {
     if (!done) return;
@@ -61,8 +62,6 @@ export function Chalkboard() {
 
   const teamName = (id: string) => getClub(id)?.short ?? id;
   const compName = (id: string) => competitions.find((c) => c.id === id)?.name ?? id;
-  const best = Math.max(record.best, points);
-
   // The verdict band from the run total
   const band = points <= 150 ? 1 : points <= 240 ? 2 : points <= 330 ? 3 : points <= 410 ? 4 : 5;
 
@@ -129,7 +128,7 @@ export function Chalkboard() {
               <div className="mt-4 grid grid-cols-3 gap-2">
                 {([0, 1, 2] as const).map((choice) => {
                   const pct = [fc.homePct, fc.drawPct, fc.awayPct][choice];
-                  const label = choice === 0 ? teamName(match.homeClubId) : choice === 2 ? teamName(match.awayClubId) : t("chalkboard.draw");
+                  const label = [teamName(match.homeClubId), t("chalkboard.draw"), teamName(match.awayClubId)][choice];
                   const chosen = picked === choice;
                   return (
                     <button
@@ -140,7 +139,7 @@ export function Chalkboard() {
                       aria-pressed={chosen}
                       className={cn(
                         "fo-lift flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-xs font-semibold transition-colors",
-                        chosen ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted disabled:opacity-70",
+                        chosen ? CHIP_CLASS.optionOn : "border-border hover:bg-muted disabled:opacity-70",
                       )}
                     >
                       <span className="truncate">{label}</span>

@@ -4,7 +4,8 @@
 // order the visitor replays exactly while exploring, and only with real pre-match data.
 
 import type { Club, Match } from "./types";
-import { isFinished, teamMetrics, outcomeOdds, oddsPercents } from "./analytics";
+import { isFinished, teamMetrics, outcomeOdds, oddsPercents, hasFormSample } from "./analytics";
+import { clamp } from "@/lib/utils";
 
 /** A stable homebrew FNV-1a-style hash. Same family as lib/rng.ts's hashString — the quiz
  *  order must never depend on iteration order, or the run replays differently each visit. */
@@ -21,10 +22,10 @@ export const CHALKBOARD_PICK_COUNT = 5;
 
 /** Which finished fixtures the user will be quizzed on for run `run` (0-based). Stable for the
  *  same run index: two visits to one run replay the same five fixtures in the same order. */
-export function selectChalkboardRun(matches: readonly Match[], run: number, count = CHALKBOARD_PICK_COUNT): Match[] {
+export function selectChalkboardRun(matches: readonly Match[], run: number): Match[] {
   const played = matches.filter((m) => isFinished(m));
   const ranked = [...played].sort((a, b) => hash(`${a.id}:${run}`) - hash(`${b.id}:${run}`));
-  return ranked.slice(0, Math.max(0, Math.min(count, played.length)));
+  return ranked.slice(0, clamp(CHALKBOARD_PICK_COUNT, 0, played.length));
 }
 
 export interface ChalkCall {
@@ -48,7 +49,7 @@ export function chalkboardForecast(match: Match, matches: readonly Match[], club
   const metrics = teamMetrics(match.competitionId, matches as Match[], clubs as Club[]);
   const h = metrics.find((r) => r.clubId === match.homeClubId);
   const a = metrics.find((r) => r.clubId === match.awayClubId);
-  if (!h || !a || h.played < 2 || a.played < 2) return null;
+  if (!hasFormSample(h) || !hasFormSample(a)) return null;
   const odds = outcomeOdds(h, a);
   const pct = oddsPercents(odds);
   return {

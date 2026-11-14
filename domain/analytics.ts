@@ -257,6 +257,14 @@ export function outcomeOdds(home: TeamMetrics, away: TeamMetrics, leagueAvg?: nu
  * independently can leave 99% or 101% rows, which reads as a bug even when the
  * underlying model is fine 鈥?so the largest remainder absorbs the difference.
  */
+/** The smallest form sample a rate needs, once, for every caller that asks — a team with one
+ *  game has no rate, and the question never depends on which side of the pitch it was played from.
+ *  The bound is a named local, not a parameter, so exactly one value ever reaches it. */
+const FORM_SAMPLE_MIN = 2;
+export function hasFormSample(m: TeamMetrics | null | undefined): m is TeamMetrics {
+  return m != null && m.played >= FORM_SAMPLE_MIN;
+}
+
 export function oddsPercents(odds: { home: number; draw: number; away: number }): { home: number; draw: number; away: number } {
   const raw: [number, number, number] = [odds.home * 100, odds.draw * 100, odds.away * 100];
   const floor = raw.map(Math.floor) as [number, number, number];
