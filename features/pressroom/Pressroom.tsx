@@ -8,8 +8,10 @@ import { callLlmStream, LLM_CONFIG } from "@/data/llm";
 import { DemoBadge, Panel, Crest, PANEL_CLASS } from "@/ui/primitives";
 import { cn, fmt2, pct, SEPARATOR } from "@/lib/utils";
 
-// The three questions the room will hear — module scope so the raw-UI scan sees no stray text.
+// The three questions the room will hear — module scope so the raw-UI scan sees no stray text,
+// and so the tuple is the single home of the door union.
 const PRESSROOM_DOORS = ["form", "profile", "nerve"] as const;
+export type PressDoor = (typeof PRESSROOM_DOORS)[number];
 
 /**
  * M1140 · The Press Room — tonight's fixture, three questions, two answers.
@@ -33,7 +35,7 @@ export function Pressroom() {
   const [answers, setAnswers] = useState<Record<string, string>>({ form: "", profile: "", nerve: "" });
   const [streaming, setStreaming] = useState<string | null>(null);
 
-  const askDesk = async (id: "form" | "profile" | "nerve") => {
+  const askDesk = async (id: PressDoor) => {
     if (!chapter || streaming) return;
     const m = chapter.match;
     const comp = compName(room?.competitionId ?? m.competitionId);
