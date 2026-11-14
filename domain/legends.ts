@@ -1,5 +1,5 @@
 import type { Match, MatchEvent, PlayerRef } from "./types";
-import { byOverall } from "./attributes";
+import { byOverall, tally } from "./attributes";
 
 /**
  * M1116 · the Hall of Legends. The one board that reads every finished fixture in the seed
@@ -32,6 +32,8 @@ export interface LegendsBoard {
 
 /** The scorer's (name, clubId) pair is the exact string the seed embedded on the event. */
 const sideClub = (e: MatchEvent, m: Match) => (e.side === "home" ? m.homeClubId : m.awayClubId);
+const goalsInSeed = (matches: readonly Match[]) =>
+  matches.flatMap((m) => (m.status === "FINISHED" ? (m.events ?? []).filter((e) => e.type === "GOAL").map((e) => ({ e, club: sideClub(e, m) })) : []));
 
 export function legendsGoldenBoot(matches: readonly Match[], players: readonly PlayerRef[], limit = 5): GoldenBootRow[] {
   const byNameClub = new Map<string, PlayerRef>();
@@ -39,19 +41,13 @@ export function legendsGoldenBoot(matches: readonly Match[], players: readonly P
     const k = `${p.name}|${p.clubId}`;
     if (!byNameClub.has(k)) byNameClub.set(k, p);
   }
-  const goals = new Map<string, number>();
-  for (const m of matches) {
-    if (m.status !== "FINISHED") continue;
-    for (const e of m.events ?? []) {
-      if (e.type !== "GOAL") continue;
-      const p = byNameClub.get(`${e.player}|${sideClub(e, m)}`);
-      if (p) goals.set(p.id, (goals.get(p.id) ?? 0) + 1);
-    }
-  }
-  return [...goals.entries()]
-    .map(([id, count]) => {
-      const player = players.find((p) => p.id === id);
-      return player ? { player, goals: count } : null;
+  const byPlayerId = new Map(players.map((p) => [p.id, p]));
+  const counts = tally(goalsInSeed(matches), ({ e, club }) => byNameClub.get(`${e.player}|${club}`)?.id ?? "");
+  counts.delete("");
+  return [...counts.entries()]
+    .map(([id, goals]) => {
+      const player = byPlayerId.get(id);
+      return player ? { player, goals } : null;
     })
     .filter((x): x is GoldenBootRow => x !== null)
     .sort((a, b) => (b.goals !== a.goals ? b.goals - a.goals : a.player.id.localeCompare(b.player.id)))
@@ -70,16 +66,9 @@ export function legendsBoard(matches: readonly Match[], players: readonly Player
     const k = `${p.name}|${p.clubId}`;
     if (!byNameClub.has(k)) byNameClub.set(k, p);
   }
-  let goals = 0, attributed = 0;
-  const uniqueScorers = new Set<string>();
-  for (const m of matches) {
-    if (m.status !== "FINISHED") continue;
-    for (const e of m.events ?? []) {
-      if (e.type !== "GOAL") continue;
-      goals++;
-      const p = byNameClub.get(`${e.player}|${sideClub(e, m)}`);
-      if (p) { attributed++; uniqueScorers.add(p.id); }
-    }
-  }
-  return { goldenBoot, immortals, scorers: uniqueScorers.size, goals, attributed };
+  const goalEvents = goalsInSeed(matches);
+  const attributed = goalEvents.filter(({ e, club }) => byNameClub.has(`${e.player}|${club}`)).length;
+  const goalsByPlayer = tally(goalEvents, ({ e, club }) => byNameClub.get(`${e.player}|${club}`)?.id ?? "");
+  goalsByPlayer.delete("");
+  return { goldenBoot, immortals, scorers: goalsByPlayer.size, goals: goalEvents.length, attributed };
 }
