@@ -184,7 +184,7 @@ export function Chronicle() {
               const hc = getClub(n.match.homeClubId);
               const ac = getClub(n.match.awayClubId);
               return (
-                <Link key={n.match.id} to={`/match/${n.match.id}`} className="rounded-lg border px-3 py-2 hover:bg-muted transition-colors">
+                <Link key={n.match.id} to={`/matches/${n.match.id}`} className="rounded-lg border px-3 py-2 hover:bg-muted transition-colors">
                   <div className="flex items-center gap-2">
                     <Crest colors={hc?.colors} short={hc?.short} size={22} />
                     <span className="text-xs tabular-nums font-bold">{n.match.homeGoals}-{n.match.awayGoals}</span>
