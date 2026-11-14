@@ -72,6 +72,7 @@ const Upsets = lazy(() => import("@/features/upsets/Upsets").then((m) => ({ defa
 const Tomorrow = lazy(() => import("@/features/tomorrow/Tomorrow").then((m) => ({ default: m.Tomorrow })));
 const Moonshots = lazy(() => import("@/features/moonshots/Moonshots").then((m) => ({ default: m.Moonshots })));
 const About = lazy(() => import("@/features/about/About").then((m) => ({ default: m.About })));
+const Manual = lazy(() => import("@/features/manual/Manual").then((m) => ({ default: m.Manual })));
 const FinanceBoard = lazy(() => import("@/features/finance/FinanceBoard").then((m) => ({ default: m.FinanceBoard })));
 const FormTable = lazy(() => import("@/features/analytics/FormTable").then((m) => ({ default: m.FormTable })));
 const QueueObservatory = lazy(() => import("@/features/messaging/QueueObservatory").then((m) => ({ default: m.QueueObservatory })));
@@ -152,6 +153,7 @@ function Routes() {
   else if (path === "/tomorrow") inner = <Tomorrow />;
   else if (path === "/moonshots") inner = <Moonshots />;
   else if (path === "/about") inner = <About />;
+  else if (path === "/manual") inner = <Manual />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

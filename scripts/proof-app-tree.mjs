@@ -165,7 +165,7 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1076: 143 -> 144 — data/llm.ts joins the reader's path.
 // M1080: 144 -> 146 — domain/seasonRoom.ts + features/seasonroom/SeasonRoom.tsx join the reader's path.
 // M1117: features/chronicle/Chronicle.tsx + domain/chronicle.ts are born here; 148 -> 150.
-const APP_MODULE_PIN = 163;
+const APP_MODULE_PIN = 164;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

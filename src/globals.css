@@ -303,3 +303,14 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* The printed booklet: Ctrl/Cmd+P on the Manual screen yields a clean PDF; nav chrome vanishes, orbs dim, panels snap to white ink on a white page. */
+@media print {
+  html, body { background: #ffffff !important; color: #000000 !important; }
+  .fo-orb, .fo-grid, aside, header[class], nav[aria-label] { display: none !important; }
+  main, main section, main article, main header { break-inside: auto; }
+  h1, h2, h3 { color: #000000 !important; background: transparent !important; -webkit-print-color-adjust: exact; }
+  p, li { color: #111111 !important; }
+  a, a:visited { color: #0b3d1f !important; text-decoration: none !important; }
+  @page { margin: 18mm; }
+}
