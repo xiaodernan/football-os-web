@@ -87,6 +87,11 @@ export function Manual() {
           <li>{t("manual.welcomeStep2")}</li>
           <li>{t("manual.welcomeStep3")}</li>
         </ol>
+        <div className="mt-3">
+          <Link to="/onboarding" className="fo-lift inline-flex items-center rounded-lg border px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-muted">
+            {t("manual.onboardingCta")} →
+          </Link>
+        </div>
       </section>
 
       {/* Chapter 2 — the three modes */}
