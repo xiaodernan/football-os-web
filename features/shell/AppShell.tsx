@@ -110,6 +110,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   { to: "/tomorrow", label: t("nav.tomorrow"), icon: I.star, match: ["/tomorrow"] },
   { to: "/moonshots", label: t("nav.moonshots"), icon: I.bolt, match: ["/moonshots"] },
   { to: "/programme", label: t("nav.programme"), icon: I.book, match: ["/programme"] },
+  { to: "/letters", label: t("nav.letters"), icon: I.book, match: ["/letters"] },
   { to: "/about", label: t("nav.about"), icon: I.book, match: ["/about", "/manual"] },
   { to: "/manual", label: t("nav.manual"), icon: I.book, match: ["/manual"] },
     { to: "/platform", label: t("nav.platform"), icon: I.server, match: ["/platform"] },

@@ -89,6 +89,8 @@ const CONSUMERS = [
   "features/tomorrow/Tomorrow.tsx",
   // M1132: the programme's seven rate figures (league, venue pair, PPG cell, forecast button and
   // keyThree sentence) print through the door.
+  // M1135: the letters print venue-lethal rates and the world's conversion through the door.
+  "features/letters/Letterbox.tsx",
   "features/programme/Programme.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
