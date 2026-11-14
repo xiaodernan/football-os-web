@@ -83,6 +83,8 @@ const CONSUMERS = [
   "features/atlas/WorldAtlas.tsx",
   // M1122: the Prophet's λ/xG lines print through the door.
   "features/prophet/ProphetSlate.tsx",
+  // M1124: the Upsets' shock multipliers print through the door.
+  "features/upsets/Upsets.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the

@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1123`（提交前基线 `c34c04d` M1122）
-**总提交数**: 1500（本提交落地后；提交前 1499）
-**开发状态**: 持续进行中，无阻塞（M1123 落地——/football-world PageHeader / Transfer Centre / League Leaders 全部穿上 orb/spectrum/grid；pages 每推自动发布）
+**当前HEAD**: 本提交落地后为 `M1124`（提交前基线 `f4f24ba` M1122 repair；`0cc0787` M1123 的 stack/live rerun 仍在出伴）
+**总提交数**: 1502（本提交落地后；提交前 1501）
+**开发状态**: 持续进行中，无阻塞（M1124 落地——《冷门》屏 /upsets；M1122/M1123 的 Spring stack/live 遗留仍在 CI 队列出伴；pages.yml 每推自动发布）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1123，最新在上）
+## 🚀 近期里程碑（M1056–M1124，最新在上）
+- **M1124 The Upsets 落成（/upsets）——冷門的文稿集。为什么：the Prophet 说了明天，这块屏说说昨天世界狠狠打模型脸的夜晚**：`domain/upsets.ts` 新折叠——将每场完赛通过 `outcomeOdds()` 重新读一遍，按实际结果被模型判的概率倍数 $1/p$ 排序；排除 favourite 赢的夜，按 shock 值降序。种子顶位是 **2026-08-22 | OM 1-0 MCI**（p=0.043，shock 23.26×）· SLB 1-0 MCI（20.41×）· ASM 1-0 MCI（19.61×）……真实渲染出来后发现全部是「home 1-0 MCI」——种子里 MCI 被模型判强压（实则拜仁局场），所以冷门=主队 1-0 击穿曼城，页内如实记录。每行：实际比分 & 模型最有可能的比分，发比赛日，掊率带，「模型说了 {score}」直达比赛，shock 倍率是红色大数字。新增 7 个键 ×3 语言 + nav.upsets。门禁全绿：tsc 0 · build 0 · proof-i18n 391/391（literal 2765→2776、litVarSites 478→482，3374 键）· 本里程碑偏离出的两道门（raw-UI 的 Intl 选项、letter bar 的 `v` 字）已当场修掉 · cinematic 20/20 · 新 spec tests/e2e/upsets.spec.ts · PWA pin 662→**668 KB**（78 个文件）。frozen seed; PLATFORM_LIVE=false.**
 - **M1123 The cinematic sweeps land — /football-world PageHeader, /transfers TransferCentre and /leaders LeagueLeaders all get the orb/spectrum/grid hero treatment**：`PageHeader`（Football World 下所有子路由共用的页面 chrome——hub / matches / fixture / club / competition）从 flat 白底改成带 fo-orb lime/violet + fo-grid + fo-spectrum 渐变标题的 panelDeep hero；Transfer Centre 的头部同此；League Leaders 的裸 <Panel><SectionTitle> 换成同样的 h1+subtitle hero（两个键都是旧的，零新键）。palette 大门当场抓住三处走样的 `bg-card border-border/60`——全部改回命名 `PANEL_CLASS.panelDeep`。门禁全绿：tsc 0 · build 0 · chips 17/17 · dead-imports 4/4 · matchengine 44/44 · absent-glyph 12/12 · app-tree 13/13 · router 29/29 · PWA 665 KB 不动。Frozen seed; PLATFORM_LIVE=false.**
 - **M1122 The Prophet's Slate 落成（/prophet）—— 世界下一批比赛，由模型自己的泊松之眼来写**：`domain/prophet.ts` 新折叠——对每场未赛用 `outcomeOdds()`：每队以其 xG 对照该赛事平均，展开全部比分表并把截断尾部归一化；排序按 kickoff→id 定性；未测的队用 `unmeasured` 芯片诚实提示（此队未被量测，不是平局）。每张卡：发布元信息行（日期+赛事，直达比赛详情路由）→ 双 crest +主客标签 → 胜/平/负 三段 Poisson 比例条 → 最有可能的比分（原始 2-1）→ 预期总进球与每队 λ/xG（`fmt2` 走大门）→ 队标 `unmeasured`。底线方法行原文写着模型语汇：这是模型，不是承诺。新增 12 个键 ×3 语言 + nav.prophet。门禁全绿：proof-model-fields 5/5（两个未读的 lambda 直接渲染出来——门自己坚持真读）· proof-fmt2 12/12（新消费者入花名册）· proof-i18n 391/391（2764/114/35 全记录）· tsc 0 · build 0 · PWA 665 KB（77 个文件）· cinematic 19/19 含 /prophet。**同时说明 M1121 的两道收益人账已结**：live 红臂是恢复竞态（有界轮询修布，01d10df），stack 红臂是根自己误提交的 scratch-msg21.txt（当时清掉），cleanup 推送都已绿。frozen seed; PLATFORM_LIVE=false.**
 - **M1121 The Derby Codex 落成（/derby-codex）——并连带修好了 M1120 在 Spring stack 上的三扇红门**：M1120 CI 红臂的三笔账：(a) `proof-round2`——domain/atlas.ts 手内联了 `Math.round(x * 100) / 100` 两处（finishedShare/goalsPerMatch）；改走 `round2`/`pct` 大门（percent 直接按整数算、进球/场按门 round2 ）。(b) `proof-load` 89/89 绿。(c) `proof-clamp-feature`——WorldAtlas 手套 `Math.min(100, Math.max(0, n))` 改走 `clamp`。新屏 **The Derby Codex**（新路由 + nav 项）：完成比赛里共同出场次数最多的八对——Corinthians v São Paulo（6 次，Libertadores+Brasileirão）、Chelsea v Man City（5 次/7 球）、Leverkusen v BVB（5）等，每行显示：交手次数（按 id 定序定性）、W-D-L 三段比例条、合计进球、最大分差、共同登场的赛事名、以及上一次实星比赛的直达链接。`domain/derby.ts` 新折叠、一趟强 an 排序到结束，确定性决胜；没有任何一对是奉命算作德比的。10 个新键 ×3 语言。门禁全绿（tsc 0 · build 0 · proof-i18n 391/391 literal 2740→2751 · PWA 662 KB（76 个文件）· cinematic 18/18 含 /derby）。frozen seed; PLATFORM_LIVE=false.**
