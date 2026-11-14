@@ -4752,9 +4752,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1116 (Hall of Legends): nineteen literal call sites across the legends screen; template t()
   // sites and dynamic position chips are counted apart and land in the template arm instead.
   // M1122: the Prophet's Slate lands — one nav entry, one screen; the three odds lines, the
-  // mostLikely caption, the expectedTotalGoals row, the title/subtitle pair, the cold chip, the
-  // shared method + noSeed lines: literal 2751 -> 2764, litVarSites 473 -> 477.
-  shapeCounts.literal === 2764 && shapeCounts.template === 114 && shapeCounts.expression === 35
+  // mostLikely caption, expectedTotalGoals, expectedGoals λ/xG per side (the two extra rows
+  // were added AFTER the census was first tuned), title/subtitle pair, the cold chip and the
+  // shared method + noSeed lines: literal 2751 -> 2765, litVarSites 473 -> 478.
+  shapeCounts.literal === 2765 && shapeCounts.template === 114 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4921,8 +4922,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // rows each hand their placeholders to the census: 452 -> 454.
   // M1115: the platform atlas's validatorLine hands {n} and {algorithm} to the census: 454 -> 455.
   // M1122: the Prophet's three odds lines (homeWin {n}, draw {n}, awayWin {n}) and the
-  // expectedTotalGoals row ({n}): 473 -> 477.
-  litVarSites === 477 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // expectedTotalGoals row ({n}): 473 -> 478 (the expectedGoals λ/xG pair added after the first
+  // measurement).
+  litVarSites === 478 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 35 && exprObjPlant.args[1].trim().startsWith("{"));

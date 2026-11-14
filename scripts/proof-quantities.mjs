@@ -36,6 +36,8 @@ const SPLITS = {
   marketGrowth: "the run's market movement as a bare integer inside an evidence row (pct) beside the labelled tile (pctLabel)",
   fitness: "the bare decimal inside the ladder sentence (fmt2) beside the labelled fitness slots (pctLabel)",
   shift: "the metronome's weighted-minus-plain accuracy delta as a raw sign (signed2) beside the same figure handed a bare integer elsewhere (signed)",
+  home: "the xG the tactics board prints per venue (fmt2, Details.tsx xg.home) beside the same side's share on this Prophet slate's win band (pct, ProphetSlate) — two readings of the word 'home', not two readings of one answer",
+  away: "the xG the tactics board prints per venue (fmt2, Details.tsx xg.away) beside the same side's share on this Prophet slate's win band (pct, ProphetSlate) — two readings of the word 'away', not two readings of one answer",
 };
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
