@@ -3,6 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { epicFixture, epicNeighbours, type EpicFixture } from "@/domain/chronicle";
+import { byMinute } from "@/domain/matchEngine";
 import { callLlmStream, LLM_CONFIG } from "@/data/llm";
 import { DemoBadge, Panel, SectionTitle, Crest, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { cn, fmt2 } from "@/lib/utils";
@@ -35,7 +36,7 @@ Writers' notes:
 
 const buildEventList = (events: Readonly<{ minute: number; type: string; player: string }[]> | undefined): string => {
   if (!events?.length) return "(no events recorded by the seed)";
-  return events.slice(0, 24).map((e) => `${e.minute}' ${e.type === "GOAL" ? "GOAL" : e.type === "YELLOW" ? "YELLOW CARD" : e.type === "RED" ? "RED CARD" : e.type === "SAVE" ? "SAVE" : e.type} — ${e.player}`).join("\n");
+  return events.slice(0, 24).map((e) => `${e.minute}' ${e.type} — ${e.player}`).join("\n");
 };
 
 export function Chronicle() {
@@ -155,13 +156,13 @@ export function Chronicle() {
               type="button"
               onClick={tell}
               disabled={!LLM_CONFIG.hasKey || epic == null || busy}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className={cn("rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50", CHIP_CLASS.solidPrimarySoft)}
             >
               {busy ? t("chronicle.streaming") : t("chronicle.request")}
             </button>
             {epic && (
               <ol className="grid gap-2 text-xs text-muted-foreground">
-                {(epic.match.events ?? []).slice().sort((a, b) => a.minute - b.minute).map((e, i) => (
+                {(epic.match.events ?? []).slice().sort(byMinute).map((e, i) => (
                   <li key={i} className="grid grid-cols-[auto_auto_1fr] items-center gap-2 rounded-md border px-2 py-1">
                     <span className="tabular-nums font-mono text-[10px]">{e.minute}'</span>
                     <span className="text-[9px] uppercase tracking-widest">{t(`match.event.${e.type}`)}</span>

@@ -18,23 +18,19 @@ export interface EpicFixture {
   margin: number;
   /** Total goals in the match. */
   total: number;
-  /** The winning club's id — used for the card crest. */
-  winnerClubId: string;
-  /** The loser's id. */
-  loserClubId: string;
 }
 
 const isFinished = (m: Match): m is Match & { homeGoals: number; awayGoals: number } =>
   m.status === "FINISHED" && m.homeGoals != null && m.awayGoals != null;
 
+const toEpic = (m: Match & { homeGoals: number; awayGoals: number }): EpicFixture => ({
+  match: m,
+  margin: Math.abs(m.homeGoals - m.awayGoals),
+  total: m.homeGoals + m.awayGoals,
+});
+
 export function epicFixture(matches: readonly Match[]): EpicFixture | null {
-  const candidates = matches.filter(isFinished).map((m) => ({
-    match: m,
-    margin: Math.abs(m.homeGoals - m.awayGoals),
-    total: m.homeGoals + m.awayGoals,
-    winnerClubId: m.homeGoals >= m.awayGoals ? m.homeClubId : m.awayClubId,
-    loserClubId: m.homeGoals >= m.awayGoals ? m.awayClubId : m.homeClubId,
-  }));
+  const candidates = matches.filter(isFinished).map(toEpic);
   candidates.sort((a, b) =>
     (b.total - a.total) ||
     (b.margin - a.margin) ||
@@ -48,13 +44,7 @@ export function epicFixture(matches: readonly Match[]): EpicFixture | null {
 export function epicNeighbours(epic: EpicFixture, matches: readonly Match[], n: number): EpicFixture[] {
   const all = matches.filter(isFinished)
     .filter((m) => m.id !== epic.match.id)
-    .map((m) => ({
-      match: m,
-      margin: Math.abs(m.homeGoals - m.awayGoals),
-      total: m.homeGoals + m.awayGoals,
-      winnerClubId: m.homeGoals >= m.awayGoals ? m.homeClubId : m.awayClubId,
-      loserClubId: m.homeGoals >= m.awayGoals ? m.awayClubId : m.homeClubId,
-    }))
+    .map(toEpic)
     .sort((a, b) =>
       (b.total + b.margin) - (a.total + a.margin) ||
       a.match.kickoff.localeCompare(b.match.kickoff),

@@ -77,6 +77,8 @@ const CONSUMERS = [
   "features/finance/FinanceBoard.tsx",
   // M1080: the season command room prints its wage-ratio cells through the door.
   "features/seasonroom/SeasonRoom.tsx",
+  // M1117: the chronicle card prints the two xG figures through the door.
+  "features/chronicle/Chronicle.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the
