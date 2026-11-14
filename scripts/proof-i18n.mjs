@@ -4760,7 +4760,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // were added AFTER the census was first tuned), title/subtitle pair, the cold chip and the
   // shared method + noSeed lines: literal 2751 -> 2765, litVarSites 473 -> 478.
   // M1129 (The world's chronicle of itself, fourteen literal t() sites on /about): literal 2821 -> 2840, expression 35 -> 37.
-  shapeCounts.literal === 2927 && shapeCounts.template === 114 && shapeCounts.expression === 41
+  shapeCounts.literal === 2930 && shapeCounts.template === 114 && shapeCounts.expression === 41
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

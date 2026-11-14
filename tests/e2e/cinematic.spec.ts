@@ -44,10 +44,12 @@ test.describe("the cinematic catalog mounts in a live viewport without console e
   // BOTH unconfigured-and-honest. M1114 extends this to /platform's spring fleet probe — three
   // catalogues, three scoped 503 exemptions, all tied to the exact same-origin path. The assertion
   // tolerates it with m.location()?.url.endsWith() as the gate — any other origin/path fails.
+  // M1130: the chronicle's own fleet probe rides the same honest 503 lane — same-origin, no-telemetry.
   const WIRE_503_ALLOWED: Record<string, string> = {
     "/cache": "/api/cache/service",
     "/messaging": "/api/messaging/service",
     "/platform": "/api/spring/fleet",
+    "/about": "/api/spring/fleet",
   };
   for (const [path, matcher, label] of DECORATED) {
     // test.step so Playwright UI groups the selector under one named block per screen.

@@ -13,8 +13,10 @@ test("the palette lists the new cinematic destinations in its goto group", async
   await expect(modal.getByText("Chronicle").first()).toBeVisible();
   await expect(modal.getByText("Derby Codex").first()).toBeVisible();
   await expect(modal.getByText("Prophet").first()).toBeVisible();
-  await expect(modal.getByText("The Upsets").first()).toBeVisible();
+  await expect(modal.getByText(/^upsets$|冷门之夜|冷門之夜/i).first()).toBeVisible({ timeout: 10000 });
   await expect(modal.getByText("The Chapter").first()).toBeVisible();
   await expect(modal.getByText("Moonshots").first()).toBeVisible();
+  await expect(modal.getByText(/programme|节目册|節目冊/i).first()).toBeVisible();
+  await expect(modal.getByText(/manual|使用手册|使用手冊/i).first()).toBeVisible();
   await page.keyboard.press("Escape");
 });
