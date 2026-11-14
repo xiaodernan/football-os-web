@@ -67,6 +67,7 @@ const Legends = lazy(() => import("@/features/legends/Legends").then((m) => ({ d
 const Chronicle = lazy(() => import("@/features/chronicle/Chronicle").then((m) => ({ default: m.Chronicle })));
 const WorldAtlas = lazy(() => import("@/features/atlas/WorldAtlas").then((m) => ({ default: m.WorldAtlas })));
 const DerbyRoom = lazy(() => import("@/features/derby/DerbyRoom").then((m) => ({ default: m.DerbyRoom })));
+const ProphetSlate = lazy(() => import("@/features/prophet/ProphetSlate").then((m) => ({ default: m.ProphetSlate })));
 const FinanceBoard = lazy(() => import("@/features/finance/FinanceBoard").then((m) => ({ default: m.FinanceBoard })));
 const FormTable = lazy(() => import("@/features/analytics/FormTable").then((m) => ({ default: m.FormTable })));
 const QueueObservatory = lazy(() => import("@/features/messaging/QueueObservatory").then((m) => ({ default: m.QueueObservatory })));
@@ -142,6 +143,7 @@ function Routes() {
   else if (path === "/chronicle") inner = <Chronicle />;
   else if (path === "/atlas") inner = <WorldAtlas />;
   else if (path === "/derby-codex") inner = <DerbyRoom />;
+  else if (path === "/prophet") inner = <ProphetSlate />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

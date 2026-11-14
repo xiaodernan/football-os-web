@@ -81,6 +81,8 @@ const CONSUMERS = [
   "features/chronicle/Chronicle.tsx",
   // M1120: the atlas's goals-per-game tile prints through the door.
   "features/atlas/WorldAtlas.tsx",
+  // M1122: the Prophet's λ/xG lines print through the door.
+  "features/prophet/ProphetSlate.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the
