@@ -4,7 +4,7 @@ import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { atlasBoard } from "@/domain/atlas";
 import { DemoBadge, Panel, SectionTitle, Crest, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
-import { cn, fmtGrouped, fmt2, safeDiv } from "@/lib/utils";
+import { cn, fmtGrouped, fmt2, safeDiv, clamp } from "@/lib/utils";
 
 /**
  * M1120 · the World Atlas — the frozen world's own dimensions, stated honestly.
@@ -18,7 +18,7 @@ export function WorldAtlas() {
     () => atlasBoard(footballProvider.matches(), footballProvider.players(), footballProvider.clubs(), footballProvider.competitions()),
     [],
   );
-  const finishedPct = Math.min(100, Math.max(0, board.finishedShare));
+  const finishedPct = clamp(board.finishedShare, 0, 100);
   const convoy = [
     { id: "finished", n: board.finished, tone: "bg-primary", label: t("atlas.finished", { n: board.finished }) },
     { id: "live", n: board.live, tone: "bg-info", label: t("atlas.live", { n: board.live }) },

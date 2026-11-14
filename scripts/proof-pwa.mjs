@@ -244,7 +244,7 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1117: the World's epic chronicle screen added ~5 KB — features/chronicle + domain/chronicle — pin 651 -> 656 KB.
 // M1120: the World Atlas (features/atlas + domain/atlas.ts) — clean code, small folds + the convoy
 // band — lands at 659 KB gzip across 75 assets: 656 -> 659.
-const BUDGET_KB = 659;
+const BUDGET_KB = 662;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

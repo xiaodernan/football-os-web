@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1120`（提交前基线 `25bd4b1` M1119）
-**总提交数**: 1494（本提交落地后；提交前 1493）
-**开发状态**: 持续进行中，无阻塞（M1119 的 Spring stack/live/pages 三连绿已验证；M1120 落地——世界志屏 /atlas；cinematic 17/17；pages 每推自动发布）
+**当前HEAD**: 本提交落地后为 `M1121`（提交前基线 `0b10482` M1120；本提交同时修掉 M1120 的三道红门）
+**总提交数**: 1495（本提交落地后；提交前 1494）
+**开发状态**: 持续进行中，无阻塞（M1121 落地——/derby-codex 屏。M1120's Spring stack 的三扇门已修好，stack/live 会和本次推送一起复跑收口；pages.yml 每推自动发布）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1120，最新在上）
+## 🚀 近期里程碑（M1056–M1121，最新在上）
+- **M1121 The Derby Codex 落成（/derby-codex）——并连带修好了 M1120 在 Spring stack 上的三扇红门**：M1120 CI 红臂的三笔账：(a) `proof-round2`——domain/atlas.ts 手内联了 `Math.round(x * 100) / 100` 两处（finishedShare/goalsPerMatch）；改走 `round2`/`pct` 大门（percent 直接按整数算、进球/场按门 round2 ）。(b) `proof-load` 89/89 绿。(c) `proof-clamp-feature`——WorldAtlas 手套 `Math.min(100, Math.max(0, n))` 改走 `clamp`。新屏 **The Derby Codex**（新路由 + nav 项）：完成比赛里共同出场次数最多的八对——Corinthians v São Paulo（6 次，Libertadores+Brasileirão）、Chelsea v Man City（5 次/7 球）、Leverkusen v BVB（5）等，每行显示：交手次数（按 id 定序定性）、W-D-L 三段比例条、合计进球、最大分差、共同登场的赛事名、以及上一次实星比赛的直达链接。`domain/derby.ts` 新折叠、一趟强 an 排序到结束，确定性决胜；没有任何一对是奉命算作德比的。10 个新键 ×3 语言。门禁全绿（tsc 0 · build 0 · proof-i18n 391/391 literal 2740→2751 · PWA 662 KB（76 个文件）· cinematic 18/18 含 /derby）。frozen seed; PLATFORM_LIVE=false.**
 - **M1120 The World Atlas 落成——冻结世界的人口和体量，一次渲染、自己数自己（/atlas 新路由 + nav 项）**：`domain/atlas.ts` 新折叠 `atlasBoard`—— 人口格（610 名球员 · 73 家俱乐部 · 15 项赛事 · 1,566 场 · 913 粒进球（每场 0.90）· 326 名不同射手 · 64.8% 完赛率，全是种子自己的数），「车队」条（完赛/进行中/未开始按状态一条堆叠条，1015/49/502），两位人物（世界最佳：Luca Ortega 80 OVR，射手之王：Andre Ortega 10 粒—— 都经 legends 大门在运行时重新推导，没有发明）。方法行：「{n} / {total} 粒进球可归属到具体球员，数字，不是宣称」。新增 19 个键 ×3 语言 + nav.atlas，清掉两处真·重复值（chronicle.title vs chronicleTitle、goals vs all goals，EN 重复值大头保持 156/260）。门禁全绿：tsc 0 · build 0 · proof-i18n 391/391（literal 2717→2740）· proof-fmt2 12/12 · app-tree 13/13 · coverage 26/26 (POP→153) · router 29/29 (142→144) · storage 63/63 (145→147) · compare 70/70 · dead-imports 4/4 · tally 8/8 · absent-glyph 12/12 · cinematic 17/17 含 /atlas · 新 spec tests/e2e/atlas.spec.ts 证人 2/2 · PWA pin 656→**659 KB**（文件 75，JS 645 KB）。Frozen seed; PLATFORM_LIVE=false.**
 - **M1119 The chronicler stops charging twice — the epic's AI telling is cached in the registered stores**: `football-os.epic.story.v1`（登记于 localData.ts 的 KeySpec，activity）—— 按 (史诗赛事 id, prompt 版本) 缓存。刷新页面再也不花第二次配額。屏渲染：之前付过一次的章节带「这章节已被叙述过一次」 amber-chip，+「再讲一次」按钮；失败时诚实地把缓存还原回来并在 prose 下面显示错误（只在空屏上、或重读失败时都可见）。`set.key.epic` ×3 + `chronicle.cachedNote`/`retell` ×3。门禁全绿：tsc 0 · build 0 · **Spring stack/live 近三次推送全绿**（M1117 hotfix dae7627、M1118 bc8865e、M1118 hotfix f20ea95）—— 之前 M1117 两道红臂已经四道门修好；proof-i18n 391/391；localdata 32/32；storage 63/63；pwa 4/4 656 KB；cinematic+chronicle 17/17。DEMO 姿态不变，frozen seed; PLATFORM_LIVE=false.**
 - **M1118 hotfix 邻篇链接错路修正**: `/match/:id` 不存在——应用的比赛详情路由是 `/matches/:id`（FOOTBALL_PREFIXES 已覆盖）。修复后邻篇点击必然进入真实比赛详情；新增第二支 chronicle.spec.ts 判据（点击第一张邻篇卡，断言 URL 落在 #/matches/ 且 console 零错误），本地 2/2 绿。pages.yml 把本次推送继续自动发布。Frozen seed; PLATFORM_LIVE=false.

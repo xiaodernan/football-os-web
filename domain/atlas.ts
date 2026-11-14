@@ -1,6 +1,7 @@
 import type { Match, PlayerRef, Club, Competition } from "./types";
 import { legendsBoard } from "./legends";
 import { isFinished } from "./analytics";
+import { round2, pct } from "@/lib/utils";
 
 /**
  * M1120 · the world atlas — the frozen seed, measured once per render.
@@ -18,10 +19,10 @@ export interface AtlasBoard {
   finished: number;
   live: number;
   scheduled: number;
-  /** Finished fixtures as a percentage of all fixtures, 1dp; 0 when there are none. */
+  /** Finished fixtures as a percentage of all fixtures, integer; 0 when there are none. */
   finishedShare: number;
   goals: number;
-  /** Goals per finished fixture, 2dp; 0 when none have finished. */
+  /** Goals per finished fixture, rounded through the shared round2 door; 0 when none have finished. */
   goalsPerMatch: number;
   scorers: number;
   attributed: number;
@@ -50,9 +51,9 @@ export function atlasBoard(
     finished,
     live,
     scheduled,
-    finishedShare: fixtures === 0 ? 0 : Math.round((finished / fixtures) * 1000) / 10,
+    finishedShare: fixtures === 0 ? 0 : pct(finished / fixtures),
     goals: board.goals,
-    goalsPerMatch: finished === 0 ? 0 : Math.round((board.goals / finished) * 100) / 100,
+    goalsPerMatch: finished === 0 ? 0 : round2(board.goals / finished),
     scorers: board.scorers,
     attributed: board.attributed,
     best: board.immortals[0] ?? null,
