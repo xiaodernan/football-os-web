@@ -63,6 +63,7 @@ const LeagueRules = lazy(() => import("@/features/league/LeagueRules").then((m) 
 const AcademyPage = lazy(() => import("@/features/academy/AcademyPage").then((m) => ({ default: m.AcademyPage })));
 const RecordsCabinet = lazy(() => import("@/features/records/RecordsCabinet").then((m) => ({ default: m.RecordsCabinet })));
 const SeasonRoom = lazy(() => import("@/features/seasonroom/SeasonRoom").then((m) => ({ default: m.SeasonRoom })));
+const Legends = lazy(() => import("@/features/legends/Legends").then((m) => ({ default: m.Legends })));
 const FinanceBoard = lazy(() => import("@/features/finance/FinanceBoard").then((m) => ({ default: m.FinanceBoard })));
 const FormTable = lazy(() => import("@/features/analytics/FormTable").then((m) => ({ default: m.FormTable })));
 const QueueObservatory = lazy(() => import("@/features/messaging/QueueObservatory").then((m) => ({ default: m.QueueObservatory })));
@@ -134,6 +135,7 @@ function Routes() {
   else if (path === "/academy") inner = <AcademyPage />;
   else if (path === "/records") inner = <RecordsCabinet />;
   else if (path === "/season-room") inner = <SeasonRoom />;
+  else if (path === "/legends") inner = <Legends />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

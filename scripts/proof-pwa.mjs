@@ -239,7 +239,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1115: the Spring conditional-GET atlas panel (validatorLine + validatorBoundary ×3 locales + the ETag live wire view)
 // adds PlatformAtlas weight and pushes two KB more — 648 KB measured / 70 assets (JS 634, CSS 13.7), pin 646 -> 648, baseline
 // re-recorded in the same commit.
-const BUDGET_KB = 648;
+// M1116: the Hall of Legends — a new lazy screen with its own fold and cinematic header; ~3 KB JS
+// (634 -> 638) and one more asset (70 -> 71). total measured 651 KB, pin 648 -> 651.
+const BUDGET_KB = 651;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

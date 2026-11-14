@@ -25,6 +25,7 @@ const DECORATED = [
   ["/messaging", /the message pipeline/i, "/messaging cinematic hero"],
   ["/cache", /the cache tier|the cache/i, "/cache cinematic hero"],
   ["/platform", /the platform beneath the pitch/i, "/platform cinematic hero"],
+  ["/legends", /the hall of legends/i, "/legends cinematic hero"],
 ];
 
 test.describe("the cinematic catalog mounts in a live viewport without console errors", () => {

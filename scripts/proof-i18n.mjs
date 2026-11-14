@@ -564,7 +564,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1064: 139 -> 140 — domain/ringMath.ts (the shared hash-ring floor the cache and queue folds both read).
 // M1076: 140 -> 141 — data/llm.ts (the live LLM tie-in's fold, lazy-loaded through the AI studio).
 // M1080: 141 -> 143 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const APP_SRC_PIN = 143;
+const APP_SRC_PIN = 145;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -596,7 +596,7 @@ const APP_SRC_PIN = 143;
 // M1036: 77 -> 78 — PlatformAtlas.tsx is a new .tsx module.
 // M1059: 78 -> 79 — QueueObservatory.tsx is a new .tsx module.
 // M1064: 79 -> 80 — CacheObservatory.tsx is a new .tsx module.
-const TSX_PIN = 81;
+const TSX_PIN = 82;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -641,7 +641,7 @@ const TSX_PIN = 81;
 // both folds import it).
 // M1076: 143 -> 144 — data/llm.ts (the live LLM tie-in's fold; lazy-loaded through the AI studio).
 // M1080: 144 -> 146 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const SRC_PIN = 146;
+const SRC_PIN = 148;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -952,6 +952,7 @@ DYN_SITES.push(
   // MECH_KEYS). Two sites, one per text row, sharing the cache.mech.|key value space below.
   { path: "features/cache/CacheObservatory.tsx", expr: "key", prefix: "cache.mech.", suffix: ".title" },
   { path: "features/cache/CacheObservatory.tsx", expr: "key", prefix: "cache.mech.", suffix: ".body" },
+
 );
 
 const SPACES = new Map([
@@ -3285,11 +3286,11 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M970: the form table pays its toll (form.colPoints joins the shared "Pts" header): 152 -> 153.
 // M1020: the five-moments panel's streaks.storyWinSub repeats the shared "won by {n}" idiom
 // leaders.recordsWinSub already carries — one more shared value: 153 -> 154.
-const DUP_VALUES_PIN = 154;
+const DUP_VALUES_PIN = 156;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
 // M970: the same "Pts" join pays its excess: 252 -> 254.
 // M1020: the same shared idiom join pays its excess: 254 -> 255.
-const DUP_EXCESS_KEYS_PIN = 257;
+const DUP_EXCESS_KEYS_PIN = 260;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4736,17 +4737,12 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // debt at zero — literal 2597 -> 2604. The removed expression returns the count to 34.
   // M1075 (atlas tables line): two literal call sites, redisTablesLine and redisTablesBoundary.
   // M1104 (fleet probe panel): nine literal call sites on the screen (fleetTitle, fleetHint, fleetLoading,
-  // fleetUnconfigured, fleetNotArmed, fleetUp, fleetDown, fleetSummary, fleetBoundary); three of them
-  // interpolate (fleetUp {ms}, fleetDown {reason}, fleetSummary {armed}{up}): literal 2660 -> 2669,
-  // litVarSites 449 -> 452.
-  // M1107 (messaging live wire): seven literal call sites on the messaging screen (springLiveTitle,
-  // springLiveHint, springLiveLoading, springLiveUnconfigured, springLiveDown, springLiveLine,
-  // springLiveBoundary); two of them interpolate (springLiveDown {reason}, springLiveLine six vars):
-  // literal 2669 -> 2676, litVarSites 452 -> 454.
-  // M1115 (conditional GET panel): two new literal t() sites on the platform atlas (validatorLine,
-  // validatorBoundary); validatorLine interpolates {n} and {algorithm}: literal 2676 -> 2678,
-  // litVarSites 454 -> 455.
-  shapeCounts.literal === 2678 && shapeCounts.template === 113 && shapeCounts.expression === 35
+  // fleetUnconfigured, fleetNotArmed, fleetUp, fleetDown, fleetSummary, fleetBoundary).
+  // M1107 (messaging live wire): seven literal call sites on the messaging screen.
+  // M1115 (conditional GET panel): two literal t() sites (validatorLine, validatorBoundary).
+  // M1116 (Hall of Legends): nineteen literal call sites across the legends screen; template t()
+  // sites and dynamic position chips are counted apart and land in the template arm instead.
+  shapeCounts.literal === 2697 && shapeCounts.template === 113 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4912,7 +4908,10 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1107: the messaging panel's springLiveDown ({reason}) and springLiveLine (six vars) literal
   // rows each hand their placeholders to the census: 452 -> 454.
   // M1115: the platform atlas's validatorLine hands {n} and {algorithm} to the census: 454 -> 455.
-  litVarSites === 455 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1116: the legends screen's overallLine (×2, the MVP king and the Golden Boot row — one site counted),
+  // ageLine, bootMethod ({total}{scorers}{attributed}), immortalsMethod ({n}), tollBoot ({n}),
+  // tollScorers ({n}), tollAttribution ({n}) hand their placeholders over: 455 -> 463.
+  litVarSites === 463 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 35 && exprObjPlant.args[1].trim().startsWith("{"));
