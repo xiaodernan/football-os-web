@@ -87,6 +87,9 @@ const CONSUMERS = [
   "features/upsets/Upsets.tsx",
   // M1125: the chapter's combined overall and per-game figures print through the door.
   "features/tomorrow/Tomorrow.tsx",
+  // M1132: the programme's seven rate figures (league, venue pair, PPG cell, forecast button and
+  // keyThree sentence) print through the door.
+  "features/programme/Programme.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the

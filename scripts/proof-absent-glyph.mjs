@@ -227,7 +227,7 @@ const expectedUsers = [
   "features/film/FilmRoom.tsx", "features/football/Details.tsx",
   "features/football/FootballWorld.tsx", "features/load/LoadPage.tsx",
   "features/manager/ManagerOS.tsx", "features/manager/SquadPlanning.tsx", "features/onboarding/Onboarding.tsx",
-  "features/player/PlayerOS.tsx", "features/review/ReviewPage.tsx",
+  "features/player/PlayerOS.tsx", "features/programme/Programme.tsx", "features/review/ReviewPage.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/settings/SettingsPage.tsx",
   "features/sim/SimulationLab.tsx", "features/transfers/TransferCentre.tsx",
   // M525: the season report's rise/fall tiles fall back to the door.
@@ -267,7 +267,9 @@ const expectedPerUser = [
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],
   ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],
   ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1], ["features/onboarding/Onboarding.tsx", 2],
-  ["features/player/PlayerOS.tsx", 5], ["features/review/ReviewPage.tsx", 5],
+  // M1132: the programme's four ABSENT arms (form, GD, PPG cell, W-D-L cell) render no figure
+  // they cannot fold — the census charges them the shared toll.
+  ["features/player/PlayerOS.tsx", 5], ["features/programme/Programme.tsx", 4], ["features/review/ReviewPage.tsx", 5],
   ["features/scouting/ScoutingPanel.tsx", 3], ["features/settings/SettingsPage.tsx", 2],
   ["features/sim/SimulationLab.tsx", 1], ["features/transfers/TransferCentre.tsx", 2],
   ["features/world/DynamicWorld.tsx", 3],
