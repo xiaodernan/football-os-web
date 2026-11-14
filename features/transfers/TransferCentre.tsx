@@ -47,13 +47,16 @@ export function TransferCentre() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+      <header className={cn("relative overflow-hidden rounded-2xl px-5 py-5", PANEL_CLASS.panelDeep)}>
+        <div aria-hidden className="fo-orb fo-orb-lime -left-16 -top-16 h-40 w-40" />
+        <div aria-hidden className="fo-orb fo-orb-violet -right-14 -bottom-14 h-40 w-40" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight">{t("transfers.title")}</h1>
+            <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl tracking-tight">{t("transfers.title")}</h1>
             <DemoBadge />
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             {viewerClub ? (
               <>
                 {t("transfers.subtitleFor")}{" "}
@@ -68,7 +71,7 @@ export function TransferCentre() {
             )}
           </p>
         </div>
-      </div>
+      </header>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile label={t("transfers.statLinks")} value={all.length} sub={t("transfers.statLinksSub")} />

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useI18n } from "@/i18n";
-import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, BAR_FILL, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/router";
 import { footballProvider, getClub, getCompetition } from "@/data/footballService";
@@ -121,10 +121,21 @@ export function LeagueLeaders() {
 
   return (
     <div className="space-y-5">
-      <Panel className="p-5">
-        <SectionTitle title={t("leaders.title")} />
-        <p className="mt-1 text-sm text-muted-foreground">{t("leaders.subtitle")}</p>
-      </Panel>
+      {/* Cinematic hero — the authority cabinet, framed with the world's two poles under one roof */}
+      <header className={cn("relative overflow-hidden rounded-2xl px-5 py-5", PANEL_CLASS.panelDeep)}>
+        <div aria-hidden className="fo-orb fo-orb-lime -left-16 -top-16 h-40 w-40" />
+        <div aria-hidden className="fo-orb fo-orb-violet -right-14 -bottom-14 h-44 w-44" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
+              {t("leaders.title")}
+            </h1>
+            <DemoBadge />
+          </div>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("leaders.subtitle")}</p>
+        </div>
+      </header>
 
       <Panel className="p-5">
         <SectionTitle title={t("leaders.scorersTitle")} />

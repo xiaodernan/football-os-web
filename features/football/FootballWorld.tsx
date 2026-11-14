@@ -62,18 +62,23 @@ export function FootballWorld() {
 function PageHeader({ title, hint, back }: { title: string; hint?: string; back?: string }) {
   const { t } = useI18n();
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        {back && (
-          <Link to={back} className="text-xs text-muted-foreground hover:text-foreground">← {t("common.back")}</Link>
-        )}
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-          {DEMO_MODE && <DemoBadge />}
+    <header className={cn("relative overflow-hidden rounded-2xl px-5 py-5", PANEL_CLASS.panelDeep)}>
+      <div aria-hidden className="fo-orb fo-orb-lime -left-16 -top-16 h-36 w-36" />
+      <div aria-hidden className="fo-orb fo-orb-violet -right-12 -bottom-14 h-36 w-36" />
+      <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
+      <div className="relative flex flex-wrap items-end justify-between gap-3">
+        <div>
+          {back && (
+            <Link to={back} className="text-xs text-muted-foreground hover:text-foreground">← {t("common.back")}</Link>
+          )}
+          <div className="flex items-center gap-2">
+            <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold text-transparent tracking-tight">{title}</h1>
+            {DEMO_MODE && <DemoBadge />}
+          </div>
+          {hint && <p className="mt-1 text-sm text-muted-foreground max-w-2xl">{hint}</p>}
         </div>
-        {hint && <p className="mt-1 text-sm text-muted-foreground">{hint}</p>}
       </div>
-    </div>
+    </header>
   );
 }
 
