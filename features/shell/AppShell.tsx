@@ -56,6 +56,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
+  // The palette carries its own ⌘K/Ctrl+K listener so this shell owns only the
+  // controlled open state (and the button badge in the topbar).
+
+
   const primary: NavItem[] = [
     { to: "/", label: t("nav.home"), icon: I.grid, match: ["/"] },
     { to: "/football", label: t("nav.football"), icon: I.globe, match: ["/football", "/players", "/clubs", "/competitions", "/matches", "/news"] },

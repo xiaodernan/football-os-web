@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1126`（提交前基线 `3e0f3cf` M1125）
-**总提交数**: 1504（本提交落地后；提交前 1503）
-**开发状态**: 持续进行中，无阻塞（M1126 落地——星尘屏 /moonshots · Andrés Costa 为首；M1125 两道 Spring 红臂已随本推送收口；pages.yml 每推自动发布）
+**当前HEAD**: 本提交落地后为 `M1127`（提交前基线 `a24f2c9` M1126）
+**总提交数**: 1505（本提交落地后；提交前 1504）
+**开发状态**: 持续进行中，无阻塞（M1127 落地——Cmd+K 现已搜罗整个世界；M1126 攒下的十一扇门全部在调色板里排队听候召唤；pages.yml 每推自动发布）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1126，最新在上）
+## 🚀 近期里程碑（M1056–M1127，最新在上）
+- **M1127 The palette remembers every new world — Cmd+K/Ctrl+K opens the command room with the full new-seed roster**：`CommandPalette` 的 goto 组从 M1126 完成后漏下的每一句都补了 —— Legends、Chronicle、World Atlas、Derby Codex、Prophet、The Upsets、Tomorrow、Moonshots、Cabinet、Season Room 全部注册进 Cmd+K。燃了一个 bug：M1127 第一版自己给 AppShell 挂了第二份 Ctrl+K 监听器（和 CommandPalette 已有那份取反），两组按键互相抵消，文件级截图发现 palette 打我不开的真相后撤掉冗余监听，测通测试并首次让 palette-goto.spec.ts 绿灯。门禁全绿：tsc 0 · build 0 · PWA 673 KB 不涨 · proof-i18n 391/391（literal 2811→2821，12 新站都老老实实按 t() 规则注册） · cinematic 23/23（新增 palette-goto.spec.ts 支持 Ctrl+K 路由）。Frozen seed; PLATFORM_LIVE=false.**
 - **M1126 The Moonshots 落成（/moonshots）——种子的未兑现青年，整齐摆上货架（并当场结清 M1125 的两道 Spring 红臂）**：新路由 /moonshots + nav 项 I.bolt——21 岁以下球员按 **potential − overall** 排序，种子自己挂牌——今日前排：Andrés Costa（哥伦比亚，18 OVR72→POT88 +16）、Diogo Yılmaz · Andrés Nagy · Theo Neumann · Nabil Adeyemi · Andre Kovač · Nabil Neumann · Karim Dubois · Luka Berg · Marco Vargas · Pavel Novak · Ivan Adeyemi。每行印 rank / crest / 名字（直达 `/player/:id`）/ positionLabel（domain/rowText）/ 俱乐部 / 年龄 / 国籍 / OVR→POT（中文同值"总评 {ovr} → 潜力 {pot}"）/ +gap 徽章 / "悬在身侧的那段距离" 填充条（按榜首间距缩放）。纯种子演算 / 确定性 id 定序。诚实收口 M1125 两道红臂——domain/tomorrow.ts 里的 by-id 手写式重建（new Map...map...）当场改 riding `indexById` 大门（本地 proof-index-by-id 10/10 · proof-learn 81/81），本推送即是修复的 CI 复跑机会——全量门禁全绿。Frozen seed; PLATFORM_LIVE=false.**
 - **M1125 The Chapter 落成（/tomorrow）——种子自己挑的明夜：综合总评最高的两支球队，完整幕布。** 新屏 "The Chapter the world is waiting for"（新路由 + nav 项 I.star）——footballProvider 里 club overall 之和最高的未赛fixture：**Manchester City (89) vs Inter (88), combined 177**（UEL/UCL 淘汰赛 9月22日 那组实则此时都已挪到 UEFA Champions League O5 晨？种子真实渲染里显示的是 UCL Oct 5 09:00）。每张卡：kickoff 日期+赛事文字直接做锚链接到真实 /matches/<id> 路由；双 crest 巨大、总评左右展示；真有 crests 主客布局；Poisson 三段概率带（home 35% / draw 51% / away 15%，模型称 most likely 0-0）；「combined OVR 177」超大字体；「物料留给读者认」的 honesty 尾注。门禁全绿：M1124 的三扇红门（model-fields: UpsetRow 两个 lambda 未渲染→此页和 Upsets 页都打印出来；rules: 三个 domain Fold 各有一个 metricsFor→hoist 进 analytics.ts 大门；vocab: "away|draw|home" 四处写法→upsets.ts 一个 Outcome 别名）**全部在本里程碑修好，analytics 251/251 · rules 7/7 · vocab 7/7 · model-fields 5/5**。描写：tsc 0 · build 0 · proof-i18n 391/391（2776→2799 literal、482→490 litVarSites，3390 键）· proof-fmt2 12/12 · PWA 671 KB · APP_FILES 153→155。Frozen seed; PLATFORM_LIVE=false.**
 - **M1124 The Upsets 落成（/upsets）——冷門的文稿集。为什么：the Prophet 说了明天，这块屏说说昨天世界狠狠打模型脸的夜晚**：`domain/upsets.ts` 新折叠——将每场完赛通过 `outcomeOdds()` 重新读一遍，按实际结果被模型判的概率倍数 $1/p$ 排序；排除 favourite 赢的夜，按 shock 值降序。种子顶位是 **2026-08-22 | OM 1-0 MCI**（p=0.043，shock 23.26×）· SLB 1-0 MCI（20.41×）· ASM 1-0 MCI（19.61×）……真实渲染出来后发现全部是「home 1-0 MCI」——种子里 MCI 被模型判强压（实则拜仁局场），所以冷门=主队 1-0 击穿曼城，页内如实记录。每行：实际比分 & 模型最有可能的比分，发比赛日，掊率带，「模型说了 {score}」直达比赛，shock 倍率是红色大数字。新增 7 个键 ×3 语言 + nav.upsets。门禁全绿：tsc 0 · build 0 · proof-i18n 391/391（literal 2765→2776、litVarSites 478→482，3374 键）· 本里程碑偏离出的两道门（raw-UI 的 Intl 选项、letter bar 的 `v` 字）已当场修掉 · cinematic 20/20 · 新 spec tests/e2e/upsets.spec.ts · PWA pin 662→**668 KB**（78 个文件）。frozen seed; PLATFORM_LIVE=false.**

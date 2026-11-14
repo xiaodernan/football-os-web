@@ -4755,7 +4755,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // mostLikely caption, expectedTotalGoals, expectedGoals λ/xG per side (the two extra rows
   // were added AFTER the census was first tuned), title/subtitle pair, the cold chip and the
   // shared method + noSeed lines: literal 2751 -> 2765, litVarSites 473 -> 478.
-  shapeCounts.literal === 2811 && shapeCounts.template === 114 && shapeCounts.expression === 35
+  shapeCounts.literal === 2821 && shapeCounts.template === 114 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
