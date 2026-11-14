@@ -1,5 +1,6 @@
 import type { Club, Match } from "./types";
 import { competitionMetrics, outcomeOdds } from "./analytics";
+import { indexById } from "@/lib/utils";
 
 /**
  * M1125 · the chapter the world is waiting for. The scheduled fixture the seed's own club ratings
@@ -25,7 +26,7 @@ export interface Chapter {
 }
 
 export function tomorrowChapter(matches: readonly Match[], clubs: readonly Club[]): Chapter | null {
-  const byId = new Map(clubs.map((c) => [c.id, c]));
+  const byId = indexById(clubs);
   const read = competitionMetrics(matches, clubs);
   let best: Chapter | null = null;
   for (const m of matches) {
