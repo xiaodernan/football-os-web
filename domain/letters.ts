@@ -3,6 +3,7 @@
 // The fold takes the matches and the clubs and answers a shape the JSX renders through t().
 import type { Club, Match } from "./types";
 import { isFinished, worldUpsets, records, scorelessStreaks, worldLethal } from "./analytics";
+import { sum } from "./attributes";
 import { tomorrowChapter } from "./tomorrow";
 
 export interface LettersData {
@@ -67,7 +68,7 @@ export function worldLetters(matches: readonly Match[], clubs: readonly Club[]):
       }
     : null;
 
-  const goals = finished.reduce((acc, m) => acc + (m.homeGoals ?? 0) + (m.awayGoals ?? 0), 0);
+  const goals = sum(finished, (m) => (m.homeGoals ?? 0) + (m.awayGoals ?? 0));
 
   return {
     upset,
