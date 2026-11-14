@@ -1,0 +1,40 @@
+name: Football OS fact pack
+
+# A fact-every touch. Never invoked as part of CI; this regenerates docs/latest.json on a weekly
+# cadence and on any push that already re-cut the app. The personal page (xiaodernan.github.io)
+# fetches this file raw from master with a static fallback — see that repository for the widget.
+
+on:
+  schedule:
+    # Every Sunday 04:00 UTC — weekly re-cut, never hammered
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  latest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Regenerate docs/latest.json
+        run: node scripts/generate-latest-json.mjs
+      - name: Commit the fact pack if it moved
+        run: |
+          git config user.name "football-os-bot"
+          git config user.email "bot@football-os.web"
+          git add docs/latest.json
+          if git diff --staged --quiet; then
+            echo "no fact-pack change to commit"
+            exit 0
+          fi
+          git commit -m "fact pack regenerated weekly: $(node -e 'const d=require("./docs/latest.json"); console.log("total_commits=" + d.total_commits, "milestone=" + d.milestone, "assets=" + d.assets);')"
+          git push
