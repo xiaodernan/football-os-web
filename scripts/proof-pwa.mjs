@@ -242,7 +242,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1116: the Hall of Legends — a new lazy screen with its own fold and cinematic header; ~3 KB JS
 // (634 -> 638) and one more asset (70 -> 71). total measured 651 KB, pin 648 -> 651.
 // M1117: the World's epic chronicle screen added ~5 KB — features/chronicle + domain/chronicle — pin 651 -> 656 KB.
-const BUDGET_KB = 656;
+// M1120: the World Atlas (features/atlas + domain/atlas.ts) — clean code, small folds + the convoy
+// band — lands at 659 KB gzip across 75 assets: 656 -> 659.
+const BUDGET_KB = 659;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

@@ -65,6 +65,7 @@ const RecordsCabinet = lazy(() => import("@/features/records/RecordsCabinet").th
 const SeasonRoom = lazy(() => import("@/features/seasonroom/SeasonRoom").then((m) => ({ default: m.SeasonRoom })));
 const Legends = lazy(() => import("@/features/legends/Legends").then((m) => ({ default: m.Legends })));
 const Chronicle = lazy(() => import("@/features/chronicle/Chronicle").then((m) => ({ default: m.Chronicle })));
+const WorldAtlas = lazy(() => import("@/features/atlas/WorldAtlas").then((m) => ({ default: m.WorldAtlas })));
 const FinanceBoard = lazy(() => import("@/features/finance/FinanceBoard").then((m) => ({ default: m.FinanceBoard })));
 const FormTable = lazy(() => import("@/features/analytics/FormTable").then((m) => ({ default: m.FormTable })));
 const QueueObservatory = lazy(() => import("@/features/messaging/QueueObservatory").then((m) => ({ default: m.QueueObservatory })));
@@ -138,6 +139,7 @@ function Routes() {
   else if (path === "/season-room") inner = <SeasonRoom />;
   else if (path === "/legends") inner = <Legends />;
   else if (path === "/chronicle") inner = <Chronicle />;
+  else if (path === "/atlas") inner = <WorldAtlas />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

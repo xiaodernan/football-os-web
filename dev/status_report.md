@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1119`（提交前基线 `f20ea95` M1118 hotfix）
-**总提交数**: 1493（本提交落地后；提交前 1492）
-**开发状态**: 持续进行中，无阻塞（M1119 落地——大模型叙述者的配额被诚实缓存；M1117–M1118 三次推送 Spring stack/live 连续全绿；pages.yml 每推自动发布；4xx 计数不作废前面的两道红臂）
+**当前HEAD**: 本提交落地后为 `M1120`（提交前基线 `25bd4b1` M1119）
+**总提交数**: 1494（本提交落地后；提交前 1493）
+**开发状态**: 持续进行中，无阻塞（M1119 的 Spring stack/live/pages 三连绿已验证；M1120 落地——世界志屏 /atlas；cinematic 17/17；pages 每推自动发布）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1119，最新在上）
+## 🚀 近期里程碑（M1056–M1120，最新在上）
+- **M1120 The World Atlas 落成——冻结世界的人口和体量，一次渲染、自己数自己（/atlas 新路由 + nav 项）**：`domain/atlas.ts` 新折叠 `atlasBoard`—— 人口格（610 名球员 · 73 家俱乐部 · 15 项赛事 · 1,566 场 · 913 粒进球（每场 0.90）· 326 名不同射手 · 64.8% 完赛率，全是种子自己的数），「车队」条（完赛/进行中/未开始按状态一条堆叠条，1015/49/502），两位人物（世界最佳：Luca Ortega 80 OVR，射手之王：Andre Ortega 10 粒—— 都经 legends 大门在运行时重新推导，没有发明）。方法行：「{n} / {total} 粒进球可归属到具体球员，数字，不是宣称」。新增 19 个键 ×3 语言 + nav.atlas，清掉两处真·重复值（chronicle.title vs chronicleTitle、goals vs all goals，EN 重复值大头保持 156/260）。门禁全绿：tsc 0 · build 0 · proof-i18n 391/391（literal 2717→2740）· proof-fmt2 12/12 · app-tree 13/13 · coverage 26/26 (POP→153) · router 29/29 (142→144) · storage 63/63 (145→147) · compare 70/70 · dead-imports 4/4 · tally 8/8 · absent-glyph 12/12 · cinematic 17/17 含 /atlas · 新 spec tests/e2e/atlas.spec.ts 证人 2/2 · PWA pin 656→**659 KB**（文件 75，JS 645 KB）。Frozen seed; PLATFORM_LIVE=false.**
 - **M1119 The chronicler stops charging twice — the epic's AI telling is cached in the registered stores**: `football-os.epic.story.v1`（登记于 localData.ts 的 KeySpec，activity）—— 按 (史诗赛事 id, prompt 版本) 缓存。刷新页面再也不花第二次配額。屏渲染：之前付过一次的章节带「这章节已被叙述过一次」 amber-chip，+「再讲一次」按钮；失败时诚实地把缓存还原回来并在 prose 下面显示错误（只在空屏上、或重读失败时都可见）。`set.key.epic` ×3 + `chronicle.cachedNote`/`retell` ×3。门禁全绿：tsc 0 · build 0 · **Spring stack/live 近三次推送全绿**（M1117 hotfix dae7627、M1118 bc8865e、M1118 hotfix f20ea95）—— 之前 M1117 两道红臂已经四道门修好；proof-i18n 391/391；localdata 32/32；storage 63/63；pwa 4/4 656 KB；cinematic+chronicle 17/17。DEMO 姿态不变，frozen seed; PLATFORM_LIVE=false.**
 - **M1118 hotfix 邻篇链接错路修正**: `/match/:id` 不存在——应用的比赛详情路由是 `/matches/:id`（FOOTBALL_PREFIXES 已覆盖）。修复后邻篇点击必然进入真实比赛详情；新增第二支 chronicle.spec.ts 判据（点击第一张邻篇卡，断言 URL 落在 #/matches/ 且 console 零错误），本地 2/2 绿。pages.yml 把本次推送继续自动发布。Frozen seed; PLATFORM_LIVE=false.
 - **M1118 The World's epic is told LIVE — the full click→stream→verify loop proven against the real provider in a real viewport**: `tests/e2e/live-llm-chronicle.spec.ts`（默认跳过，只有 LLM_LIVE=1 时才开）——打开 /#/chronicle，点「请叙述者讲述」按钮，等待 NDJSON 流式 token 落到页面直到「叙述者正在写」消失，然后核验：叙事 >120 字符、不是错误串、console 零错误。本里程碑两次实测通过（12.2s / 19.6s），1283 个字符的模型亲手写下的史诗落入页面（Liverpool 3-0 West Ham，pl，2026-08-16，xG 1.31 vs 0.36）—— prompts 合约：只用种子里的事实、绝不引用真实世界、用古代抄写员的口吻。陪令 Chromium witness 截图（tests/e2e/__shots__/chronicle-live.png，不入库）。提交且默认跳过——CI 无 LLM_API_KEY，不会拨打模型、零 token 花费、零臆造。画面：epic 卡（胜方 crest × 比分 × xG/控球网格）+ 史诗叙述 +「邻篇」条（另外三个 3-0 史诗，其他赛事）。诚实记账：每次 witness 花费一次模型调用，本里程碑共花两次；模型写的就是模型写的——冻结世界的一个演示产物，不是任何真实往事的记录。Frozen seed; PLATFORM_LIVE=false.**

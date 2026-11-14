@@ -27,6 +27,7 @@ const DECORATED = [
   ["/platform", /the platform beneath the pitch/i, "/platform cinematic hero"],
   ["/legends", /the hall of legends/i, "/legends cinematic hero"],
   ["/chronicle", /the chronicle/i, "/chronicle cinematic hero"],
+  ["/atlas", /the world atlas/i, "/atlas cinematic hero"],
 ];
 
 test.describe("the cinematic catalog mounts in a live viewport without console errors", () => {

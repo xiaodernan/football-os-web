@@ -564,7 +564,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1064: 139 -> 140 — domain/ringMath.ts (the shared hash-ring floor the cache and queue folds both read).
 // M1076: 140 -> 141 — data/llm.ts (the live LLM tie-in's fold, lazy-loaded through the AI studio).
 // M1080: 141 -> 143 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const APP_SRC_PIN = 147;
+const APP_SRC_PIN = 149;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -596,7 +596,7 @@ const APP_SRC_PIN = 147;
 // M1036: 77 -> 78 — PlatformAtlas.tsx is a new .tsx module.
 // M1059: 78 -> 79 — QueueObservatory.tsx is a new .tsx module.
 // M1064: 79 -> 80 — CacheObservatory.tsx is a new .tsx module.
-const TSX_PIN = 83;
+const TSX_PIN = 84;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -641,7 +641,7 @@ const TSX_PIN = 83;
 // both folds import it).
 // M1076: 143 -> 144 — data/llm.ts (the live LLM tie-in's fold; lazy-loaded through the AI studio).
 // M1080: 144 -> 146 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const SRC_PIN = 150;
+const SRC_PIN = 152;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4751,7 +4751,11 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1115 (conditional GET panel): two literal t() sites (validatorLine, validatorBoundary).
   // M1116 (Hall of Legends): nineteen literal call sites across the legends screen; template t()
   // sites and dynamic position chips are counted apart and land in the template arm instead.
-  shapeCounts.literal === 2717 && shapeCounts.template === 114 && shapeCounts.expression === 35
+  // M1120: the World Atlas lands — one nav entry, one screen; the convoy chips (3, all carrying
+  // {n}), the two stat tiles for best/boot, eight population tiles, the method and noSeed lines
+  // and the legends.overallLine reuse: literal 2717 -> 2740 (the convoy labels moved into the
+  // component body, not out of the census), litVarSites 460 -> 468.
+  shapeCounts.literal === 2740 && shapeCounts.template === 114 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4917,10 +4921,10 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1107: the messaging panel's springLiveDown ({reason}) and springLiveLine (six vars) literal
   // rows each hand their placeholders to the census: 452 -> 454.
   // M1115: the platform atlas's validatorLine hands {n} and {algorithm} to the census: 454 -> 455.
-  // M1116: the legends screen's overallLine (×2, the MVP king and the Golden Boot row — one site counted),
-  // ageLine, bootMethod ({total}{scorers}{attributed}), immortalsMethod ({n}), tollBoot ({n}),
-  // tollScorers ({n}), tollAttribution ({n}) hand their placeholders over: 455 -> 463.
-  litVarSites === 463 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1119: the cached chronicle's two plain-string literal sites hand no placeholders; pin held at 460.
+  // M1120: the World Atlas's finished ({n}), live ({n}) and scheduled ({n}) chips and the method
+  // line's two placeholders ({n}{total}): 460 -> 468.
+  litVarSites === 468 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 35 && exprObjPlant.args[1].trim().startsWith("{"));
