@@ -1,8 +1,8 @@
 {
-  "head": "f991a56",
-  "total_commits": 1532,
-  "milestone": "M1140",
-  "milestone_full": "M1140",
+  "head": "f26e70a",
+  "total_commits": 1534,
+  "milestone": "M1141",
+  "milestone_full": "M1141",
   "pwa_kb": 702,
   "assets": 88,
   "screens": 66,
@@ -16,5 +16,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-14T22:44:15.841Z"
+  "generated_at": "2026-11-14T23:00:46.267Z"
 }
