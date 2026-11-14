@@ -143,3 +143,55 @@ export const BROKER = {
   exchange: "footballos.events",
   dlq: "footballos.events.dlq",
 } as const;
+
+
+
+/** The conditional-GET discipline (M1079), stated once for both languages.
+ *
+ *  An HTTP validator answers exactly one question — "are the bytes you already hold for this
+ *  Request-URI still the bytes I would send?" — so it is only honest on a body that cannot move
+ *  while the validator does. Every frozen world snapshot the reactor serves is hashed over its own
+ *  bytes (com.footballos.[league|discipline].ContractDigest, the two files being byte-identical
+ *  apart from their package line) and answered with that digest as a strong ETag; an If-None-Match
+ *  naming it gets a 304 and no body at all. Last-Modified is deliberately absent: a classpath
+ *  entry's timestamp belongs to the build, not to the document, so it would move while the bytes
+ *  did not.
+ *
+ *  The two rosters below are the whole population of the reactor's GET surface, and they are
+ *  reconciled against the Java by scripts/proof-http-validators.mjs in both directions: a handler
+ *  in `guarded` that stops checking the validator is red, a handler in `unguarded` that starts
+ *  borrowing one is red just as loudly, and a GET that appears in the source and in neither roster
+ *  is red too. Each unguarded reason names the mechanism that makes its body move, and the gate
+ *  reads that mechanism in the handler's own source. */
+export const HTTP_VALIDATORS = {
+  /** The prefix the digest is published with — the same `sha256-` spelling the contract's own
+   *  `digest` field uses, so one word names both. */
+  algorithm: "sha256-",
+  header: "ETag",
+  /** Reads of a frozen exported snapshot: guarded, and charged for guarding. */
+  guarded: [
+    { module: "league-service", controller: "LeagueSummaryController", handler: "summary",
+      route: "/league/summary", viaGateway: "/api/league/summary", resource: "league-summary.json" },
+    { module: "league-service", controller: "LeagueTableController", handler: "list",
+      route: "/league/table", viaGateway: "/api/league/table", resource: "league-tables.json" },
+    { module: "league-service", controller: "LeagueTableController", handler: "table",
+      route: "/league/table/{competitionId}", viaGateway: "/api/league/table/ucl", resource: "league-tables.json" },
+    { module: "discipline-service", controller: "DisciplineClockController", handler: "list",
+      route: "/discipline/clock", viaGateway: "/api/discipline/clock", resource: "discipline-clocks.json" },
+    { module: "discipline-service", controller: "DisciplineClockController", handler: "clock",
+      route: "/discipline/clock/{competitionId}", viaGateway: "/api/discipline/clock/ucl", resource: "discipline-clocks.json" },
+  ],
+  /** Reads that must NOT carry a validator. The WHY for each abstention is owned by
+   *  scripts/proof-http-validators.mjs (it names the exact handler call that makes the body
+   *  move, and accepts no reason the handler cannot honour). This file names only the roster. */
+  unguarded: [
+    { module: "cache-service", controller: "LeagueCacheController", handler: "summary" },
+    { module: "cache-service", controller: "LeagueCacheController", handler: "stats" },
+    { module: "cache-service", controller: "LeagueTablesController", handler: "list" },
+    { module: "cache-service", controller: "LeagueTablesController", handler: "table" },
+    { module: "cache-service", controller: "LeagueTablesController", handler: "stats" },
+    { module: "messaging-service", controller: "PipelineController", handler: "summary" },
+    { module: "messaging-service", controller: "PipelineController", handler: "stats" },
+    { module: "messaging-service", controller: "PipelineController", handler: "policy" },
+  ],
+} as const;

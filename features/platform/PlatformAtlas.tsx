@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n";
 import { CHIP_CLASS, Panel, SectionTitle, DemoBadge, PANEL_CLASS } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
-import { GATEWAY_ROUTES, LEAGUE_CONTRACT, PLATFORM_LIVE, PLATFORM_SERVICES, CIRCUIT_BREAKER, REDIS, BROKER, type ServiceId } from "@/domain/platform";
+import { GATEWAY_ROUTES, LEAGUE_CONTRACT, PLATFORM_LIVE, PLATFORM_SERVICES, CIRCUIT_BREAKER, HTTP_VALIDATORS, REDIS, BROKER, type ServiceId } from "@/domain/platform";
 import leagueContract from "../../services/league-service/src/main/resources/league-summary.json";
 
 /**
@@ -214,6 +214,16 @@ export function PlatformAtlas() {
             <span className="block">{t("platform.brokerLine", { image: BROKER.image, port: BROKER.port })}</span>
             <span className="mt-1 block truncate font-mono text-[11px] text-muted-foreground">{t("platform.exchangeLine", { exchange: BROKER.exchange, dlq: BROKER.dlq })}</span>
             <span className="mt-1 block text-[11px] text-muted-foreground">{t("platform.messagingBoundary")}</span>
+          </li>
+          <li className="rounded-lg border px-3 py-2">
+            <span className="block">{t("platform.validatorLine", {
+              n: HTTP_VALIDATORS.guarded.length,
+              algorithm: HTTP_VALIDATORS.algorithm,
+            })}</span>
+            <span className="mt-1 block truncate font-mono text-[11px] text-foreground">
+              {HTTP_VALIDATORS.guarded.map((e) => e.viaGateway).join(" · ")}
+            </span>
+            <span className="mt-1 block text-[11px] text-muted-foreground">{t("platform.validatorBoundary")}</span>
           </li>
         </ul>
         <p className="mt-2 text-[11px] text-muted-foreground">

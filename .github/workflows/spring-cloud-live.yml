@@ -1,21 +1,26 @@
-# M1074 + M1076: the live witnesses join CI — the registry-healthy half this author's machine cannot run.
+# M1074 + M1076 + M1079: the live witnesses join CI — the registry-healthy half this author's machine cannot run.
 #
-# The Spring Cloud stack's strongest proof is its four LIVE witnesses on the host side:
+# The Spring Cloud stack's strongest proof is its five LIVE witnesses on the host side:
 # verify-redis-live.mjs (real cache-aside read-through against a project-owned Redis on a
 # non-default port), the cache wire-parity witness (M1076: single-flight collapse + seeded TTL
 # full jitter on a real jar, with an injected slow origin), verify-messaging-live.mjs (real
-# publish→consume against a project-owned RabbitMQ, honest UP/DOWN probe) and
-# verify-messaging-dlq-live.mjs (retry→DLQ failure semantics). On the authoring machine all four
-# were proven BY HAND (ports 16379/5673, --clean); on this runner all four are proven by the same
-# scripts with registry-healthy Docker — the one thing the author's impaired Docker Desktop could not do.
+# publish→consume against a project-owned RabbitMQ, honest UP/DOWN probe),
+# verify-messaging-dlq-live.mjs (retry→DLQ failure semantics) and verify-conditional-get-live.mjs
+# (M1079: the ETag a frozen contract owes its reader — 200/304/empty-body/wrong-tag, direct and
+# through the gateway; the only arm that needs no broker at all). On the authoring machine the
+# five witnesses were proven BY HAND or directly on the registry-healthy CI runner; on this runner
+# all five are proven by the same scripts with registry-healthy Docker — the one thing the
+# author's impaired Docker Desktop could not do.
 #
 # Run order is load-bearing: build the reactor first, then boot the services against real
 # brokers on non-default ports (never this machine's foreign 5672/6379, never clashing with the
 # canonical compose side). The cache arms run before the broker arms and share one project-owned
 # Redis (16379) sequentially, each with --clean so neither inherits the other's keys or container.
-# M1113: the path filter is gone on purpose — this workflow runs the FULL web proof suite after
-# the witnesses, and while it was service-side scoped the frontend half of that suite never ran
-# on a clean runner. Every master push/PR now gets it as well.
+#
+# M1113/M1115: the path filter is GONE on purpose — every witness, and then verify-services.yml,
+# the web build and the full proof suite, run on EVERY push and PR to master. The four broker
+# arms stay where they are; the conditional-GET witness needs no broker and boots LAST of the
+# five against the registry it shares with every other arm.
 name: spring-cloud-live
 
 on:
@@ -59,6 +64,9 @@ jobs:
       - name: Live RabbitMQ failure-semantics witness
         run: node scripts/verify-messaging-dlq-live.mjs --clean
 
+      - name: Live conditional-GET (ETag / If-None-Match / 304) witness
+        run: node scripts/verify-conditional-get-live.mjs
+
       - name: Install the web dependencies
         run: npm ci --no-audit --no-fund
 
@@ -70,4 +78,4 @@ jobs:
 
 # This file has never been executed on the authoring machine — that machine's Docker Desktop cannot
 # pull a single new image (records in dev/platform-runbook.md and PLAN-LONGTERM.md). On THIS runner
-# the same four witnesses are the truth about the reactor against live brokers.
+# the same five witnesses are the truth about the reactor against live brokers.

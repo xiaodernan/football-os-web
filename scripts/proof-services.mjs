@@ -407,9 +407,10 @@ const missingKeys = [];
 for (const key of [...screenKeys, "nav.platform"]) {
   for (const id of localeIds) if (!(key in DICTIONARIES[id])) missingKeys.push(`${id}:${key}`);
 }
-// M1104: the screen gains nine fleet-probe keys (fleetTitle/Hint/Loading/Unconfigured/NotArmed/Up/Down/Summary/Boundary): 57 -> 66.
+// M1104: the screen gained nine fleet-probe keys (fleetTitle/Hint/Loading/Unconfigured/NotArmed/Up/Down/Summary/Boundary): 57 -> 66.
+// M1115: the screen gained the M1079 validator pair (validatorLine/validatorBoundary): 66 -> 68.
 ok(`every key the atlas reads exists in all ${localeIds.length} locales (${screenKeys.length} screen keys + nav.platform; ${missingKeys.join(" / ") || "clean"})`,
-  localeIds.length === 3 && screenKeys.length === 66 && missingKeys.length === 0);
+  localeIds.length === 3 && screenKeys.length === 68 && missingKeys.length === 0);
 ok("the interpolating rows hand their placeholders to every locale",
   localeIds.every((id) => /\{n\}/.test(DICTIONARIES[id]["platform.portLine"]) &&
     /\{n\}/.test(DICTIONARIES[id]["platform.stripPrefix"]) &&

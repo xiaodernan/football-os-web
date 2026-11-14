@@ -117,5 +117,16 @@ ok("the LLM-live workflow exists, drives the committed verifier, never echoes se
     "scripts/proof-llm.mjs", "vite.config.ts", "package.json", ".env.example",
     ".github/workflows/spring-cloud-llm-live.yml"].every((p) => llmWf.includes(p)));
 
+// M1079 / M1115: the conditional-GET witness became the FIFTH live arm — the one that needs no
+// broker at all. Since M1113 there is deliberately no path filter anywhere (every master push
+// runs the full gate), so this arm asserts the fifth witness is named and ordered correctly
+// against the existing witness sequence; it does not demand a filter it no longer carries.
+const cgStep = "run: node scripts/verify-conditional-get-live.mjs";
+ok("the fifth live witness (conditional GET) is named in the job and runs after the broker chain, before the web floor",
+  live.includes(cgStep) &&
+  live.indexOf("run: node scripts/verify-messaging-dlq-live.mjs") < live.indexOf(cgStep) &&
+  live.indexOf(cgStep) < live.indexOf("npm run proof") &&
+  !live.includes("paths:"));
+
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);

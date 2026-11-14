@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1114`（提交前基线 `25e12e6` M1113——完整四条 Spring CI 全绿已核验）
-**总提交数**: 1484（本提交落地后；提交前 1483）
-**开发状态**: 持续进行中，无阻塞（Spring CI 全绿核验）
+**当前HEAD**: 本提交落地后为 `M1115`（提交前基线 `26c657d` M1114）
+**总提交数**: 1485（本提交落地后；提交前 1484）
+**开发状态**: 持续进行中，无阻塞（接手 M1079 conditional-GET 收束 M1115：52/52 活体全绿；freeze-contract now returns 304s; proof 191/191 全绿; Maven rebuilt, CI re-deploy 可触发）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## 🚀 近期里程碑（M1056–M1114，最新在上，SPRING CI 已全绿）
+## 🚀 近期里程碑（M1056–M1115，最新在上）
+- **M1115 接手并轨 M1079 收束——冻结契约有了自己的 304（conditional GET 端到端落地；reactor rebuilt, 52/52 live checks; proof-http-validators 75/75）**：五个 frozen-contract GET 端点暴露 `WebRequest.checkNotModified` 强 ETag（sha256- 32 字符 digest over the classpath bytes），If-None-Match → 304 empty body，404 settled first, Last-Modified deliberately absent；两个 `ContractDigest` Java 类（league/discipline 两份 byte-identical twins）给契约算全字节 SHA-256；`proof-http-validators.mjs` 为 M1079 新增、75/75；`verify-conditional-get-live.mjs` 活例——booted with +100 port shift (8888 unused; 8081/8761 held by foreign stack), every endpoint re-verified, bytes saved printed = 10,190/10,190 = 100%; `.github/workflows/spring-cloud-live.yml` 增加 the fifth witness arm (M1115 命名, unfiltered since M1113); platform atlas 两个键三语新增（validatorLine/validatorBoundary）；proof-services screenKeys 66→68；i18n census literal 2676→2678 / litVarSites 454→455；PWA 646→648 KB, baseline 重录. This is the lane I closed while it was parked half-finished: no invented authorship.
 - **M1114 (final) Spring CI 全绿归位：四条 workflow 全部 master 绿灯（live 5m12s · stack 10m15s · matrix · llm-live 37s）· pages.yml 推送后活版对齐 HEAD**：自 M1074 落 CI 推崇 registry-healthy Ubuntu 以来，stack/live 反复红在「no Spring service anywhere」(503/unconfigured 逼进 console) 与 "proof:unique M1107 inline dedup 在 grep 里出卖了" (CI 第一次被证明诚实这个修复) 与 "Node 20 vs check-node ≥22.12 (preinstall gate 立杀)"——这些机器才能让 CI 抓出来的事：分别由 M1110 (24 engine unification)、M1111 (degrade-floor toleration)、M1112 (blessed door唯一出口)、M1113 (stack/live 去 filter 到 master 每个 push/PR 必跑 floor)、M1114 (/platform /api/spring/fleet 例外化也按 503 type=error+location.endsWith 严格限定)——所有四条 Spring CI 现在 green for real。
 - **M1114 CI /platform 503 同窗护容（stack CI & proof-only discipline 补全，stack workflow 全绿）**：registry-healthy runner 上 /platform 的 same-origin probe 每次都会 503（3 次/run，5.2s），E2E 的零 console error 契约拒了它；M1108 已经给 /cache 与 /messaging 加了 type=error + status=503 + path endsWith 这种窄作用域、URL-scoped 豁免——/platform 漏了这条社会合同，结果是 CI 红在预期之外。补上 /platform（同三条件绑定）。`cinematic.spec.ts` 在本机再次通过 13/13；零其它 routes 的严格零容忍原则不变。CI workflow 自己在 master 上 green 一次 green 一次 CI 才算完 ceremony concluded.
 - **M1113 Spring CI 扩径至主干每次提交（stack/live 双 workflow 去 path filter）**：M1112 推送后 master 四条 CI 全部无法触发——stack/live 的 push.filter 只认 services/** 与 witness 脚本，前端的修复对它们来说隐身。改为 **push/pull_request 均全分支触发**（Spring 与全栈 web floor 全绿验收）；matrix 依旧守 service-side（不跑 npm/proof）；llm-live 保留它自己的 LLM 面；proof-workflows 三门同步改口径：不再检查 "path 名称存在仓库文件"，改为不允许 workflow 出现 "paths:" 键。Gates：proof-workflows 13/13（从硬编码白名单扩成 "filter 不存在" 即通过）。

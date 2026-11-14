@@ -4743,7 +4743,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // springLiveHint, springLiveLoading, springLiveUnconfigured, springLiveDown, springLiveLine,
   // springLiveBoundary); two of them interpolate (springLiveDown {reason}, springLiveLine six vars):
   // literal 2669 -> 2676, litVarSites 452 -> 454.
-  shapeCounts.literal === 2676 && shapeCounts.template === 113 && shapeCounts.expression === 35
+  // M1115 (conditional GET panel): two new literal t() sites on the platform atlas (validatorLine,
+  // validatorBoundary); validatorLine interpolates {n} and {algorithm}: literal 2676 -> 2678,
+  // litVarSites 454 -> 455.
+  shapeCounts.literal === 2678 && shapeCounts.template === 113 && shapeCounts.expression === 35
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4908,7 +4911,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // literal rows each hand their placeholders to the census: 449 -> 452.
   // M1107: the messaging panel's springLiveDown ({reason}) and springLiveLine (six vars) literal
   // rows each hand their placeholders to the census: 452 -> 454.
-  litVarSites === 454 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1115: the platform atlas's validatorLine hands {n} and {algorithm} to the census: 454 -> 455.
+  litVarSites === 455 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   exprWithObj.length === 0 && shapeCounts.expression === 35 && exprObjPlant.args[1].trim().startsWith("{"));
