@@ -38,6 +38,27 @@ export function Landing() {
       </header>
 
       <section className="fo-radial relative overflow-hidden">
+        {/* The cinematic centrepiece — a spectral matchball under a lime corona, drawn, not imaged. */}
+        <svg aria-hidden className="pointer-events-none absolute right-[-2rem] top-1/2 h-72 w-72 -translate-y-1/2 opacity-90 sm:right-[-1rem] sm:h-96 sm:w-96 lg:right-4 lg:h-[28rem] lg:w-[28rem]" viewBox="0 0 320 320">
+          <defs>
+            <radialGradient id="fo-ball-glow" cx="50%" cy="46%" r="52%">
+              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.85" />
+              <stop offset="35%" stopColor="hsl(var(--info))" stopOpacity="0.38" />
+              <stop offset="100%" stopColor="transparent" />
+            </radialGradient>
+            <radialGradient id="fo-ball" cx="38%" cy="36%" r="72%">
+              <stop offset="0%" stopColor="#26262c" />
+              <stop offset="58%" stopColor="#101014" />
+              <stop offset="100%" stopColor="#050507" />
+            </radialGradient>
+          </defs>
+          <circle cx="160" cy="146" r="118" fill="url(#fo-ball-glow)" />
+          <circle cx="160" cy="152" r="62" fill="url(#fo-ball)" stroke="hsl(var(--primary))" strokeOpacity="0.7" strokeWidth="1.8" />
+          <polygon points="160,118 190,139 190,181 160,202 130,181 130,139" fill="none" stroke="hsl(var(--primary))" strokeOpacity="0.95" strokeWidth="1.4" />
+          <polygon points="160,132 180,146 180,174 160,188 140,174 140,146" fill="hsl(var(--primary))" fillOpacity="0.32" />
+          <line x1="160" y1="118" x2="160" y2="90" stroke="hsl(var(--primary))" strokeOpacity="0.7" strokeWidth="1" />
+          <circle cx="160" cy="152" r="101" fill="none" stroke="hsl(var(--primary))" strokeOpacity="0.18" strokeWidth="0.8" strokeDasharray="4 6" />
+        </svg>
         <div aria-hidden className="fo-orb fo-orb-lime -left-36 top-6 h-96 w-96" />
         <div aria-hidden className="fo-orb fo-orb-cyan right-[-10rem] top-40 h-[28rem] w-[28rem]" />
         <div aria-hidden className="fo-orb fo-orb-violet left-1/3 bottom-[-12rem] h-80 w-80" />
