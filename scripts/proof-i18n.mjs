@@ -564,7 +564,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1064: 139 -> 140 — domain/ringMath.ts (the shared hash-ring floor the cache and queue folds both read).
 // M1076: 140 -> 141 — data/llm.ts (the live LLM tie-in's fold, lazy-loaded through the AI studio).
 // M1080: 141 -> 143 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const APP_SRC_PIN = 159;
+const APP_SRC_PIN = 160;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -596,7 +596,7 @@ const APP_SRC_PIN = 159;
 // M1036: 77 -> 78 — PlatformAtlas.tsx is a new .tsx module.
 // M1059: 78 -> 79 — QueueObservatory.tsx is a new .tsx module.
 // M1064: 79 -> 80 — CacheObservatory.tsx is a new .tsx module.
-const TSX_PIN = 89;
+const TSX_PIN = 90;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -641,7 +641,7 @@ const TSX_PIN = 89;
 // both folds import it).
 // M1076: 143 -> 144 — data/llm.ts (the live LLM tie-in's fold; lazy-loaded through the AI studio).
 // M1080: 144 -> 146 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const SRC_PIN = 162;
+const SRC_PIN = 163;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4384,14 +4384,14 @@ ok(`every value carries the same set of template variables in all three locales,
 // `node scripts/proof-message-queue.mjs` — program names, not sentences. They are named rather
 // than counted one by one, so a seventh untranslated value still cannot arrive without a line
 // here saying why.
-const ENGLISH_OK = new Set(["brand.name", "timing.xgColFor", "timing.xgColAgainst", "timing.xgColDiff", "platform.witnessCmd", "messaging.witnessCmd", "cache.witnessCmd"]);
+const ENGLISH_OK = new Set(["brand.name", "timing.xgColFor", "timing.xgColAgainst", "timing.xgColDiff", "platform.witnessCmd", "messaging.witnessCmd", "cache.witnessCmd", "about.javaContractLine"]);
 const stillEnglishBy = (enVal, cnVal) => cnVal === enVal && /[A-Za-z]{3,}/.test(String(enVal).replace(/\{\w+\}/g, ""));
 const stillEnglish = zhKeys.filter((k) => stillEnglishBy(en[k], D["zh-CN"][k]));
 const plantedEn = stillEnglishBy("Click here {n}", "Click here {n}")
   && !stillEnglishBy("完成 {n}", "完成 {n}")
   && !stillEnglishBy("Click here", "完成");
 ok(`a 简体中文 value that is still English is named, not waved through (${stillEnglish.join(", ") || "none"}; planted arrangements: ${plantedEn})`,
-  stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 7 && plantedEn);
+  stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 8 && plantedEn);
 
 // 37. The shapes a t() call takes that the checks above were never looking at. Check 4 reads
 //     `t("literal")` and check 16/24 audit declared dynamic sites, so between them every key a
@@ -4755,7 +4755,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // mostLikely caption, expectedTotalGoals, expectedGoals λ/xG per side (the two extra rows
   // were added AFTER the census was first tuned), title/subtitle pair, the cold chip and the
   // shared method + noSeed lines: literal 2751 -> 2765, litVarSites 473 -> 478.
-  shapeCounts.literal === 2821 && shapeCounts.template === 114 && shapeCounts.expression === 35
+  // M1129 (The world's chronicle of itself, fourteen literal t() sites on /about): literal 2821 -> 2840, expression 35 -> 37.
+  shapeCounts.literal === 2840 && shapeCounts.template === 114 && shapeCounts.expression === 37
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4927,7 +4928,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   litVarSites === 494 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
-  exprWithObj.length === 0 && shapeCounts.expression === 35 && exprObjPlant.args[1].trim().startsWith("{"));
+  // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
+  exprWithObj.length === 0 && shapeCounts.expression === 37 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three
@@ -4952,7 +4954,7 @@ const filmKindKeys = [...filmKindBlock.matchAll(/"([A-Za-z0-9_.$-]+)"/g)].map((x
 // M776: foundKeys left the pin with the population. It is `scripts/browser-walk.spec.ts`'s collection
 // of raw keys found on the page — a test harness array, not a pool a screen hands to t(); the reader
 // cannot reach that spec, and the pool this clause audits is the pool the app renders.
-const POOL_FIELDS_PIN = ["bodyKeys", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
+const POOL_FIELDS_PIN = ["bodyKeys", "hintKey", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
 const poolFieldsGot = [...poolFields, ...poolArrFields].sort();
 const poolVars = [...poolKeys, ...filmKindKeys].filter((k) => L.some((loc) => phList(D[loc.id][k] ?? "").length > 0));
 const plantPool = L.some((loc) => phList((loc.id === "en" ? D.en["learn.l.xg.title"] + " {n}" : D[loc.id]["learn.l.xg.title"]) ?? "").length > 0);
