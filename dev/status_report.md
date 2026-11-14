@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1129`（提交前基线 `cc6a5f7` M1128 收尾）
+**当前HEAD**: 本提交落地后为 `M1129-hotfix`（提交前基线 `652f8db` M1129）
 **总提交数**: 1510（本提交落地后；提交前 1509）
 **开发状态**: 持续进行中，无阻塞（M1129 落地——/about 屏上线，写完自传的世界；pages.yml 每推自动发布处于绿态）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
 ## 🚀 近期里程碑（M1056–M1129，最新在上）
+- **M1129 hotfix The matchball orb now whispers aria-hidden — Spring arms walked red on M1128 for the same cause; one wording fix repairs both**: proof-motion ran red 14/16 on BOTH spring-cloud-stack and spring-cloud-live on the M1128 push — the two inline SVG matchball circles were counted as decorations by the canoe census but carried no aria-hidden — the same contract every $`fo-orb` in the cinematic suite honours. Fixed identically; local proof-motion 16/16; the M1129 push folds this in so Spring CI has a green hope on this lane again. frozen seed; PLATFORM_LIVE=false.**
 - **M1129 The Chronicle of Itself 落成（/about）——Football OS 自己写的自传**：新路由 + nav（I.book）——「前门即后门」——六个大板块：(a) cinematic fo-spectrum hero；(b) 实时数册——渲染时直接从 footballProvider 数出的 fixtures/clubs/players/competitions；(c)「世界的图集」16 章（全部已落地——Football World, Legends, Records, Season Room, Chronicle, Tomorrow, Moonshots, Derby Codex, Prophet, Upsets, Atlas, Transfers, Compare, AI, Knowledge, Platform）每幅挂着一句暗语 + 直链；(d)「草皮之下的平台」——Spring bedrock 面板 honest——`/api/spring/fleet` 四象限：探活中/服务在应答/哑火但诚实；永不臆测。(e)「这到底是什么」一段 honesty 文——冻结的种子，确定性的折叠，没有任何欺骗。**关于页是本产品第一份有自知之明的自传**。门禁全绿：tsc 0 · build 0 · proof-i18n 391/391（literal 2811→2840, expression 35→37, ENGLISH_OK +about.javaContractLine, POOL 囊 +hintKey）· PWA 679 KB · cinematic 23/23 · 新 spec about.spec.ts · PWA pin **679 KB**（文件 82，JS 665 KB）。Frozen seed; PLATFORM_LIVE=false.**
 - **M1128 The landing hero gains a cinematic inline matchball — zero new keys, zero new files**：`features/landing/Landing.tsx` 新增一只手绘 SVG——fo-ball-glow 的球形辉晕、hexagon 绿色笔画的六角形球心、一道横光和一道射线连成全世界入口的中心点。全部 aria-hidden、全部 inline，零新 i18n 键、零新组件、零新资源。CSS 侧仅凭 fo-orb lime/cyan/violet 之间的堆叠就能表达出这是「这世界的下午三点」氛围。Epoch 里唯一一次环境事故：`node_modules` 被外部清空，`npm install` 166 个包重建——然后一切门禁重跑都绿。PWA pin 673→674 KB 实测（81 files, JS 660 KB）并在脚本里 honestly pinned；cinematic 21/21 绿。Frozen seed; PLATFORM_LIVE=false.**
 - **M1127 The palette remembers every new world — Cmd+K/Ctrl+K opens the command room with the full new-seed roster**：`CommandPalette` 的 goto 组从 M1126 完成后漏下的每一句都补了 —— Legends、Chronicle、World Atlas、Derby Codex、Prophet、The Upsets、Tomorrow、Moonshots、Cabinet、Season Room 全部注册进 Cmd+K。燃了一个 bug：M1127 第一版自己给 AppShell 挂了第二份 Ctrl+K 监听器（和 CommandPalette 已有那份取反），两组按键互相抵消，文件级截图发现 palette 打我不开的真相后撤掉冗余监听，测通测试并首次让 palette-goto.spec.ts 绿灯。门禁全绿：tsc 0 · build 0 · PWA 673 KB 不涨 · proof-i18n 391/391（literal 2811→2821，12 新站都老老实实按 t() 规则注册） · cinematic 23/23（新增 palette-goto.spec.ts 支持 Ctrl+K 路由）。Frozen seed; PLATFORM_LIVE=false.**

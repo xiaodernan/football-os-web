@@ -52,12 +52,12 @@ export function Landing() {
               <stop offset="100%" stopColor="#050507" />
             </radialGradient>
           </defs>
-          <circle cx="160" cy="146" r="118" fill="url(#fo-ball-glow)" />
-          <circle cx="160" cy="152" r="62" fill="url(#fo-ball)" stroke="hsl(var(--primary))" strokeOpacity="0.7" strokeWidth="1.8" />
-          <polygon points="160,118 190,139 190,181 160,202 130,181 130,139" fill="none" stroke="hsl(var(--primary))" strokeOpacity="0.95" strokeWidth="1.4" />
-          <polygon points="160,132 180,146 180,174 160,188 140,174 140,146" fill="hsl(var(--primary))" fillOpacity="0.32" />
-          <line x1="160" y1="118" x2="160" y2="90" stroke="hsl(var(--primary))" strokeOpacity="0.7" strokeWidth="1" />
-          <circle cx="160" cy="152" r="101" fill="none" stroke="hsl(var(--primary))" strokeOpacity="0.18" strokeWidth="0.8" strokeDasharray="4 6" />
+          <circle cx="160" cy="146" r="118" fill="url(#fo-ball-glow)" aria-hidden="true" />
+          <circle cx="160" cy="152" r="62" fill="url(#fo-ball)" stroke="hsl(var(--primary))" strokeOpacity="0.7" strokeWidth="1.8" aria-hidden="true" />
+          <polygon points="160,118 190,139 190,181 160,202 130,181 130,139" fill="none" stroke="hsl(var(--primary))" strokeOpacity="0.95" strokeWidth="1.4" aria-hidden="true" />
+          <polygon points="160,132 180,146 180,174 160,188 140,174 140,146" fill="hsl(var(--primary))" fillOpacity="0.32" aria-hidden="true" />
+          <line x1="160" y1="118" x2="160" y2="90" stroke="hsl(var(--primary))" strokeOpacity="0.7" strokeWidth="1" aria-hidden="true" />
+          <circle cx="160" cy="152" r="101" fill="none" stroke="hsl(var(--primary))" strokeOpacity="0.18" strokeWidth="0.8" strokeDasharray="4 6" aria-hidden="true" />
         </svg>
         <div aria-hidden className="fo-orb fo-orb-lime -left-36 top-6 h-96 w-96" />
         <div aria-hidden className="fo-orb fo-orb-cyan right-[-10rem] top-40 h-[28rem] w-[28rem]" />
