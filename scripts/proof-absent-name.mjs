@@ -95,7 +95,9 @@ const FOLDED = [
 // up and read the door; they are charged apart because this unit folded no name fallbacks there.
 // M569: the venue split's two named lines and its competition-name hint do the same.
 // M571: the briefing's competition-name hint reads the door; it is charged apart for the same reason.
-const PRE_EXISTING = ["domain/scouting.ts", "features/manager/ManagerOS.tsx", "features/analytics/PointsScenario.tsx", "features/analytics/VenueSplit.tsx", "features/analytics/Briefing.tsx"];
+// M1132: the programme's streak line names the side and falls back to the door (h2h.streak side),
+// never the empty string — a name lookup riding the door since its first commit.
+const PRE_EXISTING = ["domain/scouting.ts", "features/manager/ManagerOS.tsx", "features/analytics/PointsScenario.tsx", "features/analytics/VenueSplit.tsx", "features/analytics/Briefing.tsx", "features/programme/Programme.tsx"];
 
 // --- 1. Plants: arm every scan, so a "zero"/"every" verdict is measured, never an empty set. ---
 const pNameEmpty = n("const x = getClub(id)?.name ?? \"\";", NAME_EMPTY);

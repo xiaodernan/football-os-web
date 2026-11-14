@@ -5,7 +5,7 @@ import { footballProvider, getClub, fixtureForecast } from "@/data/footballServi
 import { tomorrowChapter } from "@/domain/tomorrow";
 import { teamMetrics, headToHead, venueSplit } from "@/domain/analytics";
 import { DemoBadge, Panel, Crest, CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
-import { cn, fmt2, pct, SEPARATOR, ABSENT } from "@/lib/utils";
+import { cn, fmt2, pct, SEPARATOR, ABSENT, signed } from "@/lib/utils";
 
 /**
  * M1132 - The Matchday Programme: the night that's coming, set as a printable booklet.
@@ -60,7 +60,7 @@ export function Programme() {
   const pA = forecast ? pct(forecast.awayPct) : 0;
 
   const form = (f?: readonly string[]) => (f && f.length ? f.join(" ") : ABSENT);
-  const gd = (x?: { gf: number; ga: number }) => (x ? (x.gf - x.ga >= 0 ? `+${x.gf - x.ga}` : `${x.gf - x.ga}`) : ABSENT);
+  const gd = (x?: { gf: number; ga: number }) => (x ? signed(x.gf - x.ga) : ABSENT);
 
   return (
     <div className="space-y-5">
@@ -198,7 +198,7 @@ export function Programme() {
           {h2h.biggest && <span>{t("programme.h2hBiggest", { n: Math.abs(h2h.biggest.goalsA - h2h.biggest.goalsB) })}</span>}
           {h2h.streak && (h2h.streak.side === "draw"
             ? <span>{t("programme.h2hStreakDraw", { n: h2h.streak.length })}</span>
-            : <span>{t("programme.h2hStreakWon", { side: h2h.streak.side === "a" ? (home?.name ?? "") : (away?.name ?? ""), n: h2h.streak.length })}</span>)}
+            : <span>{t("programme.h2hStreakWon", { side: h2h.streak.side === "a" ? (home?.name ?? ABSENT) : (away?.name ?? ABSENT), n: h2h.streak.length })}</span>)}
         </div>
       </section>
 

@@ -269,7 +269,8 @@ const expectedPerUser = [
   ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1], ["features/onboarding/Onboarding.tsx", 2],
   // M1132: the programme's four ABSENT arms (form, GD, PPG cell, W-D-L cell) render no figure
   // they cannot fold — the census charges them the shared toll.
-  ["features/player/PlayerOS.tsx", 5], ["features/programme/Programme.tsx", 4], ["features/review/ReviewPage.tsx", 5],
+  // M1134: the streak line names each side and falls back to the door now too — 4 -> 6.
+  ["features/player/PlayerOS.tsx", 5], ["features/programme/Programme.tsx", 6], ["features/review/ReviewPage.tsx", 5],
   ["features/scouting/ScoutingPanel.tsx", 3], ["features/settings/SettingsPage.tsx", 2],
   ["features/sim/SimulationLab.tsx", 1], ["features/transfers/TransferCentre.tsx", 2],
   ["features/world/DynamicWorld.tsx", 3],

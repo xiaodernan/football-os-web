@@ -38,6 +38,7 @@ const SPLITS = {
   shift: "the metronome's weighted-minus-plain accuracy delta as a raw sign (signed2) beside the same figure handed a bare integer elsewhere (signed)",
   home: "the xG the tactics board prints per venue (fmt2, Details.tsx xg.home) beside the same side's share on this Prophet slate's win band (pct, ProphetSlate) — two readings of the word 'home', not two readings of one answer",
   away: "the xG the tactics board prints per venue (fmt2, Details.tsx xg.away) beside the same side's share on this Prophet slate's win band (pct, ProphetSlate) — two readings of the word 'away', not two readings of one answer",
+  drawPct: "a whole-number forecast read (pct, Programme.tsx, ManagerOS \`${width: pct?\`) beside a fraction scaled by the labelled door elsewhere (pctLabel, SimulationLab.tsx, ManagerOS.tsx) — pct assumes the 0-100 lattice, pctLabel assumes the 0-1 fraction; the same shape credibility and fatigue already document",
 };
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>
