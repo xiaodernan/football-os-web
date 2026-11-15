@@ -124,7 +124,7 @@ const swExists = existsSync(swPath);
 const swSource = swExists ? readFileSync(swPath, "utf8") : "";
 const swSite = swSites[0];
 ok(`the one service-worker registration is production-only and names a shipped shell (${swSites.length} site(s)${swSite ? `: ${swSite.rel} -> ${swSite.target ?? "no literal target"}${swSite.prodOnly ? "" : " (not PROD-guarded)"}` : ""}; public/sw.js ${swExists ? `present, ${(swSource.match(/addEventListener\(\s*["']fetch["']/g) ?? []).length} fetch handler` : "missing"})`,
-  swSites.length === 1 && swSite.rel === "src/main.tsx" && swSite.target === "/sw.js" && swSite.prodOnly
+  swSites.length === 1 && swSite.rel === "src/main.tsx" && (swSite.target === "/sw.js" || String(swSite.target).startsWith("/sw.js?v=")) && swSite.prodOnly
   && swExists && /addEventListener\(\s*["']fetch["']/.test(swSource));
 
 // --- 2. Connection state is a presentation concern only. ---------------------

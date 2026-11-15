@@ -38,6 +38,10 @@ export default defineConfig(({ mode }) => {
   };
   return {
     plugins: [react(), llmPlugin],
+    // M1148: a per-build stamp carried into the service-worker registration URL so a stale
+    // worker never serves a cached shell against this build's fresh chunk names again.
+    // (The stale-shell/404-chunk shape the user hit) 
+    define: { __BUILD_ID__: JSON.stringify(String(Date.now().toString(36))) },
     base: process.env.BASE_PATH || "/",
     resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
     // M958: the E2E suite and the dev server meet on one dedicated port. strictPort turns a

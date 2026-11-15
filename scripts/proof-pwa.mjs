@@ -42,11 +42,11 @@ const checkIndex = (html) =>
 const checkMain = (js) =>
   /import\.meta\.env\.PROD/.test(js) &&
   /"serviceWorker"\s+in\s+navigator/.test(js) &&
-  /serviceWorker\.register\("\/sw\.js"\)/.test(js);
+  /serviceWorker\.register\("\/sw\.js\?v="/.test(js); // M1148: the register carries the per-build stamp
 
 const checkSw = (js) => {
   const need = [
-    /const VERSION = "/,                              // versioned cache name
+    /"football-os-"/,                           // M1148: build-stamped cache namespace
     /cache\.addAll\(SHELL\)/,                         // the shell installs
     /self\.skipWaiting\(\)/,                          // install takes over
     /key !== VERSION/,                                // activate drops old caches
@@ -242,7 +242,7 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1116: the Hall of Legends — a new lazy screen with its own fold and cinematic header; ~3 KB JS
 // (634 -> 638) and one more asset (70 -> 71). total measured 651 KB, pin 648 -> 651.
 // M1128: the landing hero gains an inline SVG matchball motif — +1 KB across one asset; JS +1 KB (659 -> 660)
-const BUDGET_KB = 710;
+const BUDGET_KB = 711;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

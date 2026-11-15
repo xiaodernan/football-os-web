@@ -9,7 +9,17 @@
 //   3. Navigations are network-first with a cached-shell fallback, so an offline deep link
 //      still opens the app; static assets are stale-while-revalidate, so a cached asset paints
 //      immediately and refreshes behind the scene.
-const VERSION = "football-os-v1";
+// M1148: the worker's cache namespace carries the same per-build stamp the page registered with,
+// so every deploy wipes the previous namespace on activate instead of serving stale chunks to a
+// new shell. When the page registered without a stamp (older builds) it falls back to v1.
+const VERSION = (() => {
+  try {
+    const v = new URL(self.location.href).searchParams.get("v");
+    return v && /^[A-Za-z0-9_-]{1,32}$/.test(v) ? "football-os-" + v.slice(-12) : "football-os-v1";
+  } catch (_e) {
+    return "football-os-v1";
+  }
+})();
 const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon.svg"];
 
 const put = async (request, response) => {

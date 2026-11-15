@@ -8,7 +8,7 @@ import "./globals.css";
 // without it, and an unsupported browser is not an error.
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {
+    navigator.serviceWorker.register("/sw.js?v=" + __BUILD_ID__).catch(() => {
       // No SW is not a broken app; the offline shell is a bonus, not a dependency.
     });
   });

@@ -91,11 +91,14 @@ export function Link({
   children,
   className,
   onClick,
+  title,
 }: {
   to: string;
   children: ReactNode;
   className?: string;
   onClick?: () => void;
+  /** M1148: the inline teaching hint — a hover title, passed straight to the anchor. */
+  title?: string;
 }) {
   const { navigate } = useRouter();
   const handle = (e: MouseEvent) => {
@@ -105,7 +108,7 @@ export function Link({
     navigate(to);
   };
   return (
-    <a href={`#${to}`} className={className} onClick={handle}>
+    <a href={`#${to}`} className={className} onClick={handle} title={title}>
       {children}
     </a>
   );

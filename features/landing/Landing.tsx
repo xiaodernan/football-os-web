@@ -24,14 +24,17 @@ export function Landing() {
           <span className={cn("grid h-8 w-8 place-items-center rounded-lg text-lg font-black", CHIP_CLASS.solidPrimary)}>F</span>
           <span className="font-bold tracking-tight">{t("brand.name")}</span>
         </div>
-        <div className="flex items-center gap-3">
-          <Link to="/onboarding" className="text-sm text-muted-foreground hover:text-foreground">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+          <Link to="/onboarding" className="text-sm text-muted-foreground hover:text-foreground" title={t("landing.ctaEnterHint")}>
             {t("cta.enter")}
           </Link>
-          <Link to="/football">
+          <Link to="/football" title={t("landing.ctaExploreHint")}>
             <Button size="sm" variant="outline">
               {t("cta.explore")}
             </Button>
+          </Link>
+          <Link to="/manual" className="text-[11px] text-muted-foreground hover:text-foreground" title={t("landing.bookletCtaHint")}>
+            {t("landing.bookletCta")}
           </Link>
         </div>
         </div>
@@ -59,10 +62,10 @@ export function Landing() {
           <line x1="160" y1="118" x2="160" y2="90" stroke="hsl(var(--primary))" strokeOpacity="0.7" strokeWidth="1" aria-hidden="true" />
           <circle cx="160" cy="152" r="101" fill="none" stroke="hsl(var(--primary))" strokeOpacity="0.18" strokeWidth="0.8" strokeDasharray="4 6" aria-hidden="true" />
         </svg>
-        <div aria-hidden className="fo-orb fo-orb-lime -left-36 top-6 h-96 w-96" />
+        <div aria-hidden className="fo-orb fo-orb-lime -left-36 top-6 h-96 w-96 opacity-70" />
         <div aria-hidden className="fo-orb fo-orb-cyan right-[-10rem] top-40 h-[28rem] w-[28rem]" />
         <div aria-hidden className="fo-orb fo-orb-violet left-1/3 bottom-[-12rem] h-80 w-80" />
-        <div aria-hidden className="fo-grid absolute inset-0 opacity-60" />
+        <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
         <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-16 text-center sm:pt-24">
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border bg-card/50 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
             <span aria-hidden className={cn("fo-live-dot h-1.5 w-1.5 rounded-full", BAR_FILL.good)} /> {t("landing.statLine", { players: WORLD.players.length, clubs: WORLD.clubs.length, matches: WORLD.matches.length })}
@@ -74,15 +77,18 @@ export function Landing() {
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-base text-muted-foreground sm:text-lg">{t("landing.sub")}</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/onboarding">
+            <Link to="/onboarding" title={t("landing.ctaEnterHint")}>
               <Button size="lg" className="fo-sheen shadow-[0_0_40px_-8px] shadow-primary/60">
                 {t("cta.enter")} →
               </Button>
             </Link>
-            <Link to="/football">
+            <Link to="/football" title={t("landing.ctaExploreHint")}>
               <Button size="lg" variant="outline">
                 {t("cta.explore")}
               </Button>
+            </Link>
+            <Link to="/manual" title={t("landing.bookletCtaHint")} className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+              {t("landing.bookletCta")} →
             </Link>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useRouter } from "@/lib/router";
+import { useRouter, Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { positionGroupLabel } from "@/domain/rowText";
 import { useOs } from "@/store/useFootballOS";
@@ -192,6 +192,11 @@ export function Onboarding() {
         ) : (
           <Button onClick={finish} className="shadow-[0_0_30px_-10px] shadow-primary/70">{t("cta.enter")} →</Button>
         )}
+      </div>
+      <div className="mt-3 text-center print:hidden">
+        <Link to="/manual" title={t("onb.bookletCtaHint")} className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+          {t("onb.bookletCta")} →
+        </Link>
       </div>
     </div>
   );

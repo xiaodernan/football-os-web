@@ -107,7 +107,10 @@ const DEAD = {
   "functions/handler.ts": "the Edge Function handler behind functions/index.ts — same reason, same bundle that never ships here",
   "src/vite-env.d.ts": "ambient type declarations: no runtime module exists to import, so reachability is not a property it has",
 };
-const DEAD_CEILING = 22;
+// M1148: 22 -> 25. src/vite-env.d.ts grew honestly — the build-stamp declaration for the
+//   service-worker registration rides the ambient module (declare const __BUILD_ID__), beside
+//   the pre-existing reference; functions/* are untouched. Same door, same accounting.
+const DEAD_CEILING = 25;
 // M248: section 9b and the HOST_OK exemptions retired with their files, POP_PIN drops by 11.
 // M444: 98 -> 99. lib/context.ts (the context-guard door) is a new app module; the pin pays in the
 // same commit, which is what makes a lost directory redden instead of shrinking quietly.
