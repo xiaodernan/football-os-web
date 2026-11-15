@@ -21,6 +21,7 @@ interface NavItem {
 
 const I = {
   signal: "📡",
+  trek: "🗺️",
   compass: "🧭",
   grid: "▦",
   globe: "◎",
@@ -120,6 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   { to: "/dream-team", label: t("nav.dreamTeam"), icon: I.trophy, match: ["/dream-team"] },
   { to: "/journey", label: t("nav.journey"), icon: I.compass, match: ["/journey"] },
   { to: "/live-wire", label: t("nav.liveWire"), icon: I.signal, match: ["/live-wire"] },
+  { to: "/grand-tour", label: t("nav.grandTour"), icon: I.trek, match: ["/grand-tour"] },
   { to: "/about", label: t("nav.about"), icon: I.book, match: ["/about", "/manual"] },
   { to: "/manual", label: t("nav.manual"), icon: I.book, match: ["/manual"] },
     { to: "/platform", label: t("nav.platform"), icon: I.server, match: ["/platform"] },

@@ -113,6 +113,9 @@ export function isLiveWirePayload(v: unknown): v is LiveWirePayload {
   );
 }
 
+/** The wire's own load states, named once and shared by the wire surfaces. */
+export type WireStatus = "loading" | "ready" | "error";
+
 /** Same-origin fetch of the committed wire; rejects (honestly) on any shape drift. */
 export async function fetchLiveWire(): Promise<LiveWirePayload> {
   const res = await fetch(`${import.meta.env.BASE_URL}live-wire.json`, { cache: "no-cache" });

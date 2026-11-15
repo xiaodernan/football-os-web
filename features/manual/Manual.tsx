@@ -52,6 +52,7 @@ export function Manual() {
     { to: "/journey", label: t("nav.journey") },
     { to: "/library", label: t("nav.library") },
     { to: "/live-wire", label: t("nav.liveWire") },
+    { to: "/grand-tour", label: t("nav.grandTour") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },
     { to: "/platform", label: t("nav.platform") },

@@ -8,7 +8,7 @@ import { Panel, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, SEPARATOR, signed } from "@/lib/utils";
-import { fetchLiveWire, type LiveWireLeague, type LiveWirePayload, type LiveWireZone } from "@/data/liveWire";
+import { fetchLiveWire, type LiveWireLeague, type LiveWirePayload, type LiveWireZone, type WireStatus } from "@/data/liveWire";
 import { callLlmStream, LLM_CONFIG } from "@/data/llm";
 import { wireBriefFacts } from "@/domain/wireBrief";
 import { ZapIcon } from "lucide-react";
@@ -54,7 +54,7 @@ const buildWireSystem = (l: LiveWireLeague, generatedAt: string, locale: Locale)
 export function LiveWire() {
   const { t, locale } = useI18n();
   const [payload, setPayload] = useState<LiveWirePayload | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<WireStatus>("loading");
   const [attempt, setAttempt] = useState(0);
   const [leagueId, setLeagueId] = useState("de.1");
   const [brief, setBrief] = useState<{ status: "idle" | "streaming" | "ready" | "fold"; text: string; error?: string }>({ status: "idle", text: "" });

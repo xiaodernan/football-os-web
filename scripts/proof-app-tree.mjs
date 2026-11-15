@@ -167,7 +167,8 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1117: features/chronicle/Chronicle.tsx + domain/chronicle.ts are born here; 148 -> 150.
 // M1152 The Live Wire: features/livewire/LiveWire.tsx and data/liveWire.ts both join the reader population — 181 -> 183.
 // M1153 The Wire Brief: domain/wireBrief.ts joins the reader population — 183 -> 184.
-const APP_MODULE_PIN = 184;
+// M1155 The Grand Tour: features/grandtour/GrandTour.tsx + domain/grandTour.ts join — 184 -> 186.
+const APP_MODULE_PIN = 186;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

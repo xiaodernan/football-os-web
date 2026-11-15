@@ -99,6 +99,8 @@ const CONSUMERS = [
   "features/pressroom/Pressroom.tsx",
   // M1142: the dossier prints the five numbers and the tape rates through the door.
   "features/dossier/Dossier.tsx",
+  // M1155 The Grand Tour: the chase panel prints its drama quotient through the door (once per row).
+  "features/grandtour/GrandTour.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the

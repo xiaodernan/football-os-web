@@ -103,6 +103,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       { id: "ops", label: t("nav.ops"), group: "goto", run: nav("/ops") },
       { id: "library", label: t("nav.library"), group: "goto", run: nav("/library") },
       { id: "live-wire", label: t("nav.liveWire"), group: "goto", run: nav("/live-wire") },
+      { id: "grand-tour", label: t("nav.grandTour"), group: "goto", run: nav("/grand-tour") },
       { id: "journey", label: t("nav.journey"), group: "goto", run: nav("/journey") },
       { id: "profile", label: t("nav.profile"), group: "goto", run: nav("/profile") },
       { id: "review", label: t("nav.review"), group: "goto", run: nav("/review") },

@@ -225,7 +225,11 @@ const expectedUsers = [
   "features/analytics/Streaks.tsx", "features/analytics/VenueSplit.tsx",
   "features/compare/ClubCompare.tsx", "features/dashboard/Dashboard.tsx",
   "features/film/FilmRoom.tsx", "features/football/Details.tsx",
-  "features/football/FootballWorld.tsx", "features/load/LoadPage.tsx",
+  "features/football/FootballWorld.tsx",
+  // M1155 The Grand Tour: the chase row's leader, the card's leader and the second line all
+  // decline to print a placeholder where the committed wire itself carries none.
+  "features/grandtour/GrandTour.tsx",
+  "features/load/LoadPage.tsx",
   "features/manager/ManagerOS.tsx", "features/manager/SquadPlanning.tsx", "features/onboarding/Onboarding.tsx",
   "features/player/PlayerOS.tsx", "features/programme/Programme.tsx", "features/review/ReviewPage.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/settings/SettingsPage.tsx",
@@ -265,7 +269,10 @@ const expectedPerUser = [
   ["features/analytics/VenueSplit.tsx", 18],
   ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],
-  ["features/football/FootballWorld.tsx", 1], ["features/load/LoadPage.tsx", 3],
+  ["features/football/FootballWorld.tsx", 1],
+  // M1155 The Grand Tour: three doors read (chase leader, card leader, second line).
+  ["features/grandtour/GrandTour.tsx", 3],
+  ["features/load/LoadPage.tsx", 3],
   ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1], ["features/onboarding/Onboarding.tsx", 2],
   // M1132: the programme's four ABSENT arms (form, GD, PPG cell, W-D-L cell) render no figure
   // they cannot fold — the census charges them the shared toll.
