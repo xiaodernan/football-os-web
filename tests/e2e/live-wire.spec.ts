@@ -33,5 +33,12 @@ test("the /live-wire screen renders the committed CC0 wire, honestly labelled", 
   // at least one scoreline renders in the recent-results column (shape, not a hardcoded number)
   await expect(page.getByText(/\d+–\d+/).first()).toBeVisible();
 
+  // the seven wires: the tab strip is real and switchable (live data — assert interaction, not numbers)
+  await page.getByRole("tab", { name: /Premier League/i }).click();
+  await expect(page.getByRole("tab", { name: /Premier League/i })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByText("PTS").first()).toBeVisible();
+  await page.getByRole("tab", { name: /Bundesliga/i }).click();
+  await expect(page.getByRole("tab", { name: /Bundesliga/i })).toHaveAttribute("aria-selected", "true");
+
   expect(errors, `console errors on /live-wire: ${errors.join(" || ")}`).toHaveLength(0);
 });

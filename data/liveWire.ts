@@ -1,6 +1,6 @@
-// M1152 · The Live Wire — the same-origin reader for the real-world wire.
+// M1154 · The Live Wire — the same-origin reader for the real-world wire.
 // The payload is produced ONLY by CI (scripts/update-live-wire.mjs, weekly cron) from
-// OpenFootball's public-domain fixture file. The app never fetches the source directly,
+// OpenFootball's public-domain fixture files (CC0). The app never fetches the source directly,
 // never invents a number, and never folds it into the frozen seed world.
 
 export type LiveWireZone = "ucl" | "europa" | "playoff" | "relegation" | null;
@@ -38,16 +38,25 @@ export interface LiveWireUpcoming {
   away: string;
 }
 
-export interface LiveWirePayload {
-  generated_at: string;
+/** One league's folded truth — the unit a tab on the wire switches between. */
+export interface LiveWireLeague {
+  id: string;        // openfootball file stem, e.g. "de.1"
+  file: string;      // "2026-27/de.1.json"
+  url: string;       // the raw public-domain file this fold reads
+  league: string;    // proper noun from the source — never translated
   season: string;
-  league: string;
-  source: { name: string; file: string; url: string; license: string };
   totalFixtures: number;
   playedFixtures: number;
   table: LiveWireRow[];
   recent: LiveWireRecent[];
   upcoming: LiveWireUpcoming[];
+}
+
+export interface LiveWirePayload {
+  generated_at: string;
+  leagues: LiveWireLeague[];
+  /** The weekly CI provenance, same for every league. */
+  source: { name: string; license: string };
 }
 
 const isPair = (v: unknown): v is [number, number] =>
@@ -65,13 +74,13 @@ const isRow = (r: unknown): r is LiveWireRow => {
   );
 };
 
-/** Runtime guard — the wire arrives over the network; never trust its shape blindly. */
-export function isLiveWirePayload(v: unknown): v is LiveWirePayload {
+const isLeague = (v: unknown): v is LiveWireLeague => {
   if (typeof v !== "object" || v === null) return false;
   const p = v as Record<string, unknown>;
   return (
-    p.schema === "live-wire/v1" &&
-    typeof p.generated_at === "string" &&
+    typeof p.id === "string" &&
+    typeof p.file === "string" &&
+    typeof p.url === "string" &&
     typeof p.league === "string" &&
     typeof p.season === "string" &&
     typeof p.totalFixtures === "number" &&
@@ -85,6 +94,22 @@ export function isLiveWirePayload(v: unknown): v is LiveWirePayload {
       return typeof r?.home === "string" && typeof r?.away === "string" && isPair(r?.ft);
     }) &&
     Array.isArray(p.upcoming)
+  );
+};
+
+/** The SPA's runtime guard — the wire arrives over the network; never trust its shape blindly. */
+export function isLiveWirePayload(v: unknown): v is LiveWirePayload {
+  if (typeof v !== "object" || v === null) return false;
+  const p = v as Record<string, unknown>;
+  return (
+    p.schema === "live-wire/v2" &&
+    typeof p.generated_at === "string" &&
+    Array.isArray(p.leagues) &&
+    p.leagues.length >= 2 &&
+    p.leagues.every(isLeague) &&
+    typeof p.source === "object" &&
+    p.source !== null &&
+    typeof (p.source as Record<string, unknown>).license === "string"
   );
 }
 

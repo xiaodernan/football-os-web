@@ -1,539 +1,3976 @@
 {
-  "schema": "live-wire/v1",
-  "generated_at": "2026-11-15T14:12:17.169Z",
-  "season": "2026/27",
-  "league": "Deutsche Bundesliga 2026/27",
+  "schema": "live-wire/v2",
+  "generated_at": "2026-11-15T16:30:18.093Z",
   "source": {
     "name": "OpenFootball · football.json",
-    "file": "2026-27/de.1.json",
-    "url": "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/de.1.json",
     "license": "CC0-1.0"
   },
-  "totalFixtures": 306,
-  "playedFixtures": 36,
-  "table": [
+  "leagues": [
     {
-      "pos": 1,
-      "zone": "ucl",
-      "team": "Borussia Dortmund",
-      "played": 4,
-      "won": 4,
-      "drawn": 0,
-      "lost": 0,
-      "gf": 9,
-      "ga": 2,
-      "gd": 7,
-      "pts": 12,
-      "form": [
-        "W",
-        "W",
-        "W",
-        "W"
-      ]
-    },
-    {
-      "pos": 2,
-      "zone": "ucl",
-      "team": "FC Bayern München",
-      "played": 4,
-      "won": 3,
-      "drawn": 1,
-      "lost": 0,
-      "gf": 14,
-      "ga": 2,
-      "gd": 12,
-      "pts": 10,
-      "form": [
-        "W",
-        "D",
-        "W",
-        "W"
-      ]
-    },
-    {
-      "pos": 3,
-      "zone": "ucl",
-      "team": "SC Freiburg",
-      "played": 4,
-      "won": 3,
-      "drawn": 1,
-      "lost": 0,
-      "gf": 12,
-      "ga": 3,
-      "gd": 9,
-      "pts": 10,
-      "form": [
-        "W",
-        "W",
-        "W",
-        "D"
-      ]
-    },
-    {
-      "pos": 4,
-      "zone": "ucl",
-      "team": "FC Augsburg",
-      "played": 4,
-      "won": 2,
-      "drawn": 1,
-      "lost": 1,
-      "gf": 11,
-      "ga": 6,
-      "gd": 5,
-      "pts": 7,
-      "form": [
-        "W",
-        "W",
-        "D",
-        "L"
-      ]
-    },
-    {
-      "pos": 5,
-      "zone": "europa",
-      "team": "Bayer 04 Leverkusen",
-      "played": 4,
-      "won": 2,
-      "drawn": 1,
-      "lost": 1,
-      "gf": 10,
-      "ga": 5,
-      "gd": 5,
-      "pts": 7,
-      "form": [
-        "L",
-        "W",
-        "D",
-        "W"
-      ]
-    },
-    {
-      "pos": 6,
-      "zone": "europa",
-      "team": "1. FSV Mainz 05",
-      "played": 4,
-      "won": 2,
-      "drawn": 1,
-      "lost": 1,
-      "gf": 10,
-      "ga": 6,
-      "gd": 4,
-      "pts": 7,
-      "form": [
-        "D",
-        "W",
-        "L",
-        "W"
-      ]
-    },
-    {
-      "pos": 7,
-      "zone": null,
-      "team": "SV 07 Elversberg",
-      "played": 4,
-      "won": 2,
-      "drawn": 1,
-      "lost": 1,
-      "gf": 8,
-      "ga": 7,
-      "gd": 1,
-      "pts": 7,
-      "form": [
-        "W",
-        "W",
-        "L",
-        "D"
-      ]
-    },
-    {
-      "pos": 8,
-      "zone": null,
-      "team": "SV Werder Bremen",
-      "played": 4,
-      "won": 2,
-      "drawn": 1,
-      "lost": 1,
-      "gf": 8,
-      "ga": 8,
-      "gd": 0,
-      "pts": 7,
-      "form": [
-        "L",
-        "W",
-        "D",
-        "W"
-      ]
-    },
-    {
-      "pos": 9,
-      "zone": null,
-      "team": "RB Leipzig",
-      "played": 4,
-      "won": 2,
-      "drawn": 0,
-      "lost": 2,
-      "gf": 9,
-      "ga": 5,
-      "gd": 4,
-      "pts": 6,
-      "form": [
-        "W",
-        "L",
-        "W",
-        "L"
-      ]
-    },
-    {
-      "pos": 10,
-      "zone": null,
-      "team": "Eintracht Frankfurt",
-      "played": 4,
-      "won": 1,
-      "drawn": 2,
-      "lost": 1,
-      "gf": 9,
-      "ga": 10,
-      "gd": -1,
-      "pts": 5,
-      "form": [
-        "D",
-        "L",
-        "W",
-        "D"
-      ]
-    },
-    {
-      "pos": 11,
-      "zone": null,
-      "team": "FC Schalke 04",
-      "played": 4,
-      "won": 1,
-      "drawn": 2,
-      "lost": 1,
-      "gf": 3,
-      "ga": 4,
-      "gd": -1,
-      "pts": 5,
-      "form": [
-        "L",
-        "D",
-        "W",
-        "D"
-      ]
-    },
-    {
-      "pos": 12,
-      "zone": null,
-      "team": "SC Paderborn 07",
-      "played": 4,
-      "won": 1,
-      "drawn": 1,
-      "lost": 2,
-      "gf": 3,
-      "ga": 5,
-      "gd": -2,
-      "pts": 4,
-      "form": [
-        "D",
-        "L",
-        "L",
-        "W"
-      ]
-    },
-    {
-      "pos": 13,
-      "zone": null,
-      "team": "1. FC Köln",
-      "played": 4,
-      "won": 1,
-      "drawn": 1,
-      "lost": 2,
-      "gf": 6,
-      "ga": 9,
-      "gd": -3,
-      "pts": 4,
-      "form": [
-        "W",
-        "L",
-        "D",
-        "L"
-      ]
-    },
-    {
-      "pos": 14,
-      "zone": null,
-      "team": "TSG 1899 Hoffenheim",
-      "played": 4,
-      "won": 1,
-      "drawn": 0,
-      "lost": 3,
-      "gf": 7,
-      "ga": 10,
-      "gd": -3,
-      "pts": 3,
-      "form": [
-        "L",
-        "L",
-        "W",
-        "L"
-      ]
-    },
-    {
-      "pos": 15,
-      "zone": null,
-      "team": "VfB Stuttgart",
-      "played": 4,
-      "won": 1,
-      "drawn": 0,
-      "lost": 3,
-      "gf": 6,
-      "ga": 9,
-      "gd": -3,
-      "pts": 3,
-      "form": [
-        "L",
-        "W",
-        "L",
-        "L"
-      ]
-    },
-    {
-      "pos": 16,
-      "zone": "playoff",
-      "team": "Hamburger SV",
-      "played": 4,
-      "won": 1,
-      "drawn": 0,
-      "lost": 3,
-      "gf": 2,
-      "ga": 13,
-      "gd": -11,
-      "pts": 3,
-      "form": [
-        "L",
-        "L",
-        "L",
-        "W"
-      ]
-    },
-    {
-      "pos": 17,
-      "zone": "relegation",
-      "team": "1. FC Union Berlin",
-      "played": 4,
-      "won": 0,
-      "drawn": 1,
-      "lost": 3,
-      "gf": 4,
-      "ga": 17,
-      "gd": -13,
-      "pts": 1,
-      "form": [
-        "D",
-        "L",
-        "L",
-        "L"
-      ]
-    },
-    {
-      "pos": 18,
-      "zone": "relegation",
-      "team": "Borussia Mönchengladbach",
-      "played": 4,
-      "won": 0,
-      "drawn": 0,
-      "lost": 4,
-      "gf": 6,
-      "ga": 16,
-      "gd": -10,
-      "pts": 0,
-      "form": [
-        "L",
-        "L",
-        "L",
-        "L"
-      ]
-    }
-  ],
-  "recent": [
-    {
-      "round": "Matchday 4",
-      "date": "2026-09-20",
-      "time": "19:30",
-      "home": "SC Paderborn 07",
-      "away": "TSG 1899 Hoffenheim",
-      "ft": [
-        3,
-        1
+      "id": "de.1",
+      "file": "2026-27/de.1.json",
+      "url": "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/de.1.json",
+      "league": "Deutsche Bundesliga 2026/27",
+      "season": "2026/27",
+      "totalFixtures": 306,
+      "playedFixtures": 36,
+      "table": [
+        {
+          "pos": 1,
+          "zone": "ucl",
+          "team": "Borussia Dortmund",
+          "played": 4,
+          "won": 4,
+          "drawn": 0,
+          "lost": 0,
+          "gf": 9,
+          "ga": 2,
+          "gd": 7,
+          "pts": 12,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 2,
+          "zone": "ucl",
+          "team": "FC Bayern München",
+          "played": 4,
+          "won": 3,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 14,
+          "ga": 2,
+          "gd": 12,
+          "pts": 10,
+          "form": [
+            "W",
+            "D",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 3,
+          "zone": "ucl",
+          "team": "SC Freiburg",
+          "played": 4,
+          "won": 3,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 12,
+          "ga": 3,
+          "gd": 9,
+          "pts": 10,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 4,
+          "zone": "ucl",
+          "team": "FC Augsburg",
+          "played": 4,
+          "won": 2,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 11,
+          "ga": 6,
+          "gd": 5,
+          "pts": 7,
+          "form": [
+            "W",
+            "W",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 5,
+          "zone": "europa",
+          "team": "Bayer 04 Leverkusen",
+          "played": 4,
+          "won": 2,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 10,
+          "ga": 5,
+          "gd": 5,
+          "pts": 7,
+          "form": [
+            "L",
+            "W",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 6,
+          "zone": "europa",
+          "team": "1. FSV Mainz 05",
+          "played": 4,
+          "won": 2,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 10,
+          "ga": 6,
+          "gd": 4,
+          "pts": 7,
+          "form": [
+            "D",
+            "W",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 7,
+          "zone": null,
+          "team": "SV 07 Elversberg",
+          "played": 4,
+          "won": 2,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 8,
+          "ga": 7,
+          "gd": 1,
+          "pts": 7,
+          "form": [
+            "W",
+            "W",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 8,
+          "zone": null,
+          "team": "SV Werder Bremen",
+          "played": 4,
+          "won": 2,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 8,
+          "ga": 8,
+          "gd": 0,
+          "pts": 7,
+          "form": [
+            "L",
+            "W",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 9,
+          "zone": null,
+          "team": "RB Leipzig",
+          "played": 4,
+          "won": 2,
+          "drawn": 0,
+          "lost": 2,
+          "gf": 9,
+          "ga": 5,
+          "gd": 4,
+          "pts": 6,
+          "form": [
+            "W",
+            "L",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 10,
+          "zone": null,
+          "team": "Eintracht Frankfurt",
+          "played": 4,
+          "won": 1,
+          "drawn": 2,
+          "lost": 1,
+          "gf": 9,
+          "ga": 10,
+          "gd": -1,
+          "pts": 5,
+          "form": [
+            "D",
+            "L",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 11,
+          "zone": null,
+          "team": "FC Schalke 04",
+          "played": 4,
+          "won": 1,
+          "drawn": 2,
+          "lost": 1,
+          "gf": 3,
+          "ga": 4,
+          "gd": -1,
+          "pts": 5,
+          "form": [
+            "L",
+            "D",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 12,
+          "zone": null,
+          "team": "SC Paderborn 07",
+          "played": 4,
+          "won": 1,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 3,
+          "ga": 5,
+          "gd": -2,
+          "pts": 4,
+          "form": [
+            "D",
+            "L",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 13,
+          "zone": null,
+          "team": "1. FC Köln",
+          "played": 4,
+          "won": 1,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 6,
+          "ga": 9,
+          "gd": -3,
+          "pts": 4,
+          "form": [
+            "W",
+            "L",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 14,
+          "zone": null,
+          "team": "TSG 1899 Hoffenheim",
+          "played": 4,
+          "won": 1,
+          "drawn": 0,
+          "lost": 3,
+          "gf": 7,
+          "ga": 10,
+          "gd": -3,
+          "pts": 3,
+          "form": [
+            "L",
+            "L",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 15,
+          "zone": null,
+          "team": "VfB Stuttgart",
+          "played": 4,
+          "won": 1,
+          "drawn": 0,
+          "lost": 3,
+          "gf": 6,
+          "ga": 9,
+          "gd": -3,
+          "pts": 3,
+          "form": [
+            "L",
+            "W",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 16,
+          "zone": "playoff",
+          "team": "Hamburger SV",
+          "played": 4,
+          "won": 1,
+          "drawn": 0,
+          "lost": 3,
+          "gf": 2,
+          "ga": 13,
+          "gd": -11,
+          "pts": 3,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 17,
+          "zone": "relegation",
+          "team": "1. FC Union Berlin",
+          "played": 4,
+          "won": 0,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 4,
+          "ga": 17,
+          "gd": -13,
+          "pts": 1,
+          "form": [
+            "D",
+            "L",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 18,
+          "zone": "relegation",
+          "team": "Borussia Mönchengladbach",
+          "played": 4,
+          "won": 0,
+          "drawn": 0,
+          "lost": 4,
+          "gf": 6,
+          "ga": 16,
+          "gd": -10,
+          "pts": 0,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "L"
+          ]
+        }
       ],
-      "ht": [
-        2,
-        0
-      ]
-    },
-    {
-      "round": "Matchday 4",
-      "date": "2026-09-20",
-      "time": "17:30",
-      "home": "FC Schalke 04",
-      "away": "SV 07 Elversberg",
-      "ft": [
-        0,
-        0
+      "recent": [
+        {
+          "round": "Matchday 4",
+          "date": "2026-09-20",
+          "time": "19:30",
+          "home": "SC Paderborn 07",
+          "away": "TSG 1899 Hoffenheim",
+          "ft": [
+            3,
+            1
+          ],
+          "ht": [
+            2,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 4",
+          "date": "2026-09-20",
+          "time": "17:30",
+          "home": "FC Schalke 04",
+          "away": "SV 07 Elversberg",
+          "ft": [
+            0,
+            0
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 4",
+          "date": "2026-09-20",
+          "time": "15:30",
+          "home": "Bayer 04 Leverkusen",
+          "away": "RB Leipzig",
+          "ft": [
+            2,
+            0
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 4",
+          "date": "2026-09-19",
+          "time": "18:30",
+          "home": "VfB Stuttgart",
+          "away": "Borussia Dortmund",
+          "ft": [
+            0,
+            1
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 4",
+          "date": "2026-09-19",
+          "time": "15:30",
+          "home": "Eintracht Frankfurt",
+          "away": "SC Freiburg",
+          "ft": [
+            2,
+            2
+          ],
+          "ht": [
+            2,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 4",
+          "date": "2026-09-19",
+          "time": "15:30",
+          "home": "SV Werder Bremen",
+          "away": "FC Augsburg",
+          "ft": [
+            3,
+            2
+          ],
+          "ht": [
+            0,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 4",
+          "date": "2026-09-19",
+          "time": "15:30",
+          "home": "Borussia Mönchengladbach",
+          "away": "1. FSV Mainz 05",
+          "ft": [
+            3,
+            4
+          ],
+          "ht": [
+            1,
+            2
+          ]
+        },
+        {
+          "round": "Matchday 4",
+          "date": "2026-09-19",
+          "time": "15:30",
+          "home": "Hamburger SV",
+          "away": "1. FC Köln",
+          "ft": [
+            2,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 4",
+          "date": "2026-09-18",
+          "time": "20:30",
+          "home": "FC Bayern München",
+          "away": "1. FC Union Berlin",
+          "ft": [
+            7,
+            0
+          ],
+          "ht": [
+            3,
+            0
+          ]
+        }
       ],
-      "ht": [
-        0,
-        0
+      "upcoming": [
+        {
+          "round": "Matchday 5",
+          "date": "2026-10-09",
+          "time": "20:30",
+          "home": "Borussia Dortmund",
+          "away": "SV Werder Bremen"
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-10-10",
+          "time": "15:30",
+          "home": "1. FSV Mainz 05",
+          "away": "Bayer 04 Leverkusen"
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-10-10",
+          "time": "15:30",
+          "home": "SC Paderborn 07",
+          "away": "VfB Stuttgart"
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-10-10",
+          "time": "15:30",
+          "home": "1. FC Union Berlin",
+          "away": "SV 07 Elversberg"
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-10-10",
+          "time": "15:30",
+          "home": "TSG 1899 Hoffenheim",
+          "away": "Hamburger SV"
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-10-10",
+          "time": "15:30",
+          "home": "FC Augsburg",
+          "away": "FC Bayern München"
+        }
       ]
     },
     {
-      "round": "Matchday 4",
-      "date": "2026-09-20",
-      "time": "15:30",
-      "home": "Bayer 04 Leverkusen",
-      "away": "RB Leipzig",
-      "ft": [
-        2,
-        0
+      "id": "en.1",
+      "file": "2026-27/en.1.json",
+      "url": "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/en.1.json",
+      "league": "English Premier League 2026/27",
+      "season": "2026/27",
+      "totalFixtures": 380,
+      "playedFixtures": 50,
+      "table": [
+        {
+          "pos": 1,
+          "zone": "ucl",
+          "team": "Manchester City FC",
+          "played": 5,
+          "won": 5,
+          "drawn": 0,
+          "lost": 0,
+          "gf": 13,
+          "ga": 5,
+          "gd": 8,
+          "pts": 15,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 2,
+          "zone": "ucl",
+          "team": "Arsenal FC",
+          "played": 5,
+          "won": 4,
+          "drawn": 0,
+          "lost": 1,
+          "gf": 8,
+          "ga": 4,
+          "gd": 4,
+          "pts": 12,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 3,
+          "zone": "ucl",
+          "team": "Brighton & Hove Albion FC",
+          "played": 5,
+          "won": 3,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 16,
+          "ga": 5,
+          "gd": 11,
+          "pts": 10,
+          "form": [
+            "W",
+            "L",
+            "D",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 4,
+          "zone": "ucl",
+          "team": "Brentford FC",
+          "played": 5,
+          "won": 2,
+          "drawn": 3,
+          "lost": 0,
+          "gf": 10,
+          "ga": 4,
+          "gd": 6,
+          "pts": 9,
+          "form": [
+            "W",
+            "D",
+            "D",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 5,
+          "zone": "europa",
+          "team": "Leeds United FC",
+          "played": 5,
+          "won": 2,
+          "drawn": 3,
+          "lost": 0,
+          "gf": 7,
+          "ga": 3,
+          "gd": 4,
+          "pts": 9,
+          "form": [
+            "W",
+            "D",
+            "D",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 6,
+          "zone": "europa",
+          "team": "Liverpool FC",
+          "played": 5,
+          "won": 2,
+          "drawn": 3,
+          "lost": 0,
+          "gf": 7,
+          "ga": 4,
+          "gd": 3,
+          "pts": 9,
+          "form": [
+            "D",
+            "D",
+            "W",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 7,
+          "zone": null,
+          "team": "Everton FC",
+          "played": 5,
+          "won": 2,
+          "drawn": 3,
+          "lost": 0,
+          "gf": 6,
+          "ga": 3,
+          "gd": 3,
+          "pts": 9,
+          "form": [
+            "W",
+            "D",
+            "D",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 8,
+          "zone": null,
+          "team": "Hull City AFC",
+          "played": 5,
+          "won": 2,
+          "drawn": 2,
+          "lost": 1,
+          "gf": 6,
+          "ga": 4,
+          "gd": 2,
+          "pts": 8,
+          "form": [
+            "W",
+            "W",
+            "D",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 9,
+          "zone": null,
+          "team": "Newcastle United FC",
+          "played": 5,
+          "won": 2,
+          "drawn": 2,
+          "lost": 1,
+          "gf": 9,
+          "ga": 9,
+          "gd": 0,
+          "pts": 8,
+          "form": [
+            "D",
+            "W",
+            "D",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 10,
+          "zone": null,
+          "team": "Chelsea FC",
+          "played": 5,
+          "won": 2,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 10,
+          "ga": 12,
+          "gd": -2,
+          "pts": 7,
+          "form": [
+            "W",
+            "W",
+            "L",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 11,
+          "zone": null,
+          "team": "Ipswich Town FC",
+          "played": 5,
+          "won": 2,
+          "drawn": 0,
+          "lost": 3,
+          "gf": 7,
+          "ga": 11,
+          "gd": -4,
+          "pts": 6,
+          "form": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 12,
+          "zone": null,
+          "team": "Manchester United FC",
+          "played": 5,
+          "won": 1,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 8,
+          "ga": 8,
+          "gd": 0,
+          "pts": 5,
+          "form": [
+            "L",
+            "W",
+            "D",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 13,
+          "zone": null,
+          "team": "Nottingham Forest FC",
+          "played": 5,
+          "won": 1,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 4,
+          "ga": 5,
+          "gd": -1,
+          "pts": 5,
+          "form": [
+            "L",
+            "D",
+            "D",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 14,
+          "zone": null,
+          "team": "Sunderland AFC",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 6,
+          "ga": 10,
+          "gd": -4,
+          "pts": 4,
+          "form": [
+            "L",
+            "W",
+            "D",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 15,
+          "zone": null,
+          "team": "Crystal Palace FC",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 6,
+          "ga": 11,
+          "gd": -5,
+          "pts": 4,
+          "form": [
+            "L",
+            "L",
+            "W",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 16,
+          "zone": null,
+          "team": "Aston Villa FC",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 4,
+          "ga": 9,
+          "gd": -5,
+          "pts": 4,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 17,
+          "zone": null,
+          "team": "AFC Bournemouth",
+          "played": 5,
+          "won": 0,
+          "drawn": 3,
+          "lost": 2,
+          "gf": 6,
+          "ga": 8,
+          "gd": -2,
+          "pts": 3,
+          "form": [
+            "L",
+            "D",
+            "D",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 18,
+          "zone": "relegation",
+          "team": "Coventry City FC",
+          "played": 5,
+          "won": 1,
+          "drawn": 0,
+          "lost": 4,
+          "gf": 1,
+          "ga": 10,
+          "gd": -9,
+          "pts": 3,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 19,
+          "zone": "relegation",
+          "team": "Fulham FC",
+          "played": 5,
+          "won": 0,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 5,
+          "ga": 8,
+          "gd": -3,
+          "pts": 2,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "D",
+            "D"
+          ]
+        },
+        {
+          "pos": 20,
+          "zone": "relegation",
+          "team": "Tottenham Hotspur FC",
+          "played": 5,
+          "won": 0,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 2,
+          "ga": 8,
+          "gd": -6,
+          "pts": 2,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "D",
+            "L"
+          ]
+        }
       ],
-      "ht": [
-        1,
-        0
-      ]
-    },
-    {
-      "round": "Matchday 4",
-      "date": "2026-09-19",
-      "time": "18:30",
-      "home": "VfB Stuttgart",
-      "away": "Borussia Dortmund",
-      "ft": [
-        0,
-        1
+      "recent": [
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "16:30",
+          "home": "Fulham FC",
+          "away": "Manchester United FC",
+          "ft": [
+            1,
+            1
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "14:00",
+          "home": "Manchester City FC",
+          "away": "Sunderland AFC",
+          "ft": [
+            5,
+            3
+          ],
+          "ht": [
+            3,
+            2
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "14:00",
+          "home": "Leeds United FC",
+          "away": "Crystal Palace FC",
+          "ft": [
+            0,
+            0
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "14:00",
+          "home": "AFC Bournemouth",
+          "away": "Liverpool FC",
+          "ft": [
+            0,
+            1
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "17:30",
+          "home": "Nottingham Forest FC",
+          "away": "Coventry City FC",
+          "ft": [
+            0,
+            1
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "15:00",
+          "home": "Newcastle United FC",
+          "away": "Hull City AFC",
+          "ft": [
+            2,
+            1
+          ],
+          "ht": [
+            2,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "15:00",
+          "home": "Brighton & Hove Albion FC",
+          "away": "Arsenal FC",
+          "ft": [
+            3,
+            0
+          ],
+          "ht": [
+            2,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "15:00",
+          "home": "Everton FC",
+          "away": "Ipswich Town FC",
+          "ft": [
+            1,
+            0
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "12:30",
+          "home": "Tottenham Hotspur FC",
+          "away": "Aston Villa FC",
+          "ft": [
+            2,
+            3
+          ],
+          "ht": [
+            0,
+            1
+          ]
+        }
       ],
-      "ht": [
-        0,
-        0
+      "upcoming": [
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "12:30",
+          "home": "Arsenal FC",
+          "away": "Leeds United FC"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "15:00",
+          "home": "Sunderland AFC",
+          "away": "Brighton & Hove Albion FC"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "15:00",
+          "home": "Chelsea FC",
+          "away": "AFC Bournemouth"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "15:00",
+          "home": "Ipswich Town FC",
+          "away": "Fulham FC"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "15:00",
+          "home": "Aston Villa FC",
+          "away": "Brentford FC"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "17:30",
+          "home": "Manchester United FC",
+          "away": "Tottenham Hotspur FC"
+        }
       ]
     },
     {
-      "round": "Matchday 4",
-      "date": "2026-09-19",
-      "time": "15:30",
-      "home": "Eintracht Frankfurt",
-      "away": "SC Freiburg",
-      "ft": [
-        2,
-        2
+      "id": "es.1",
+      "file": "2026-27/es.1.json",
+      "url": "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/es.1.json",
+      "league": "Spain Primera División 2026/27",
+      "season": "2026/27",
+      "totalFixtures": 380,
+      "playedFixtures": 69,
+      "table": [
+        {
+          "pos": 1,
+          "zone": "ucl",
+          "team": "FC Barcelona",
+          "played": 7,
+          "won": 7,
+          "drawn": 0,
+          "lost": 0,
+          "gf": 31,
+          "ga": 7,
+          "gd": 24,
+          "pts": 21,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 2,
+          "zone": "ucl",
+          "team": "Club Atlético de Madrid",
+          "played": 7,
+          "won": 5,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 16,
+          "ga": 7,
+          "gd": 9,
+          "pts": 16,
+          "form": [
+            "W",
+            "L",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 3,
+          "zone": "ucl",
+          "team": "Real Betis Balompié",
+          "played": 7,
+          "won": 5,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 9,
+          "ga": 7,
+          "gd": 2,
+          "pts": 16,
+          "form": [
+            "L",
+            "W",
+            "W",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 4,
+          "zone": "ucl",
+          "team": "Real Madrid CF",
+          "played": 7,
+          "won": 5,
+          "drawn": 0,
+          "lost": 2,
+          "gf": 18,
+          "ga": 8,
+          "gd": 10,
+          "pts": 15,
+          "form": [
+            "W",
+            "L",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 5,
+          "zone": "europa",
+          "team": "Sevilla FC",
+          "played": 7,
+          "won": 4,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 10,
+          "ga": 9,
+          "gd": 1,
+          "pts": 13,
+          "form": [
+            "L",
+            "D",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 6,
+          "zone": "europa",
+          "team": "Deportivo Alavés",
+          "played": 7,
+          "won": 3,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 11,
+          "ga": 6,
+          "gd": 5,
+          "pts": 11,
+          "form": [
+            "W",
+            "W",
+            "L",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 7,
+          "zone": null,
+          "team": "RC Deportivo La Coruña",
+          "played": 7,
+          "won": 2,
+          "drawn": 4,
+          "lost": 1,
+          "gf": 10,
+          "ga": 8,
+          "gd": 2,
+          "pts": 10,
+          "form": [
+            "W",
+            "W",
+            "D",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 8,
+          "zone": null,
+          "team": "Real Sociedad de Fútbol",
+          "played": 7,
+          "won": 3,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 9,
+          "ga": 13,
+          "gd": -4,
+          "pts": 10,
+          "form": [
+            "W",
+            "D",
+            "W",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 9,
+          "zone": null,
+          "team": "Villarreal CF",
+          "played": 7,
+          "won": 2,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 13,
+          "ga": 12,
+          "gd": 1,
+          "pts": 8,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 10,
+          "zone": null,
+          "team": "Athletic Club",
+          "played": 6,
+          "won": 2,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 7,
+          "ga": 6,
+          "gd": 1,
+          "pts": 8,
+          "form": [
+            "L",
+            "W",
+            "W",
+            "D",
+            "D"
+          ]
+        },
+        {
+          "pos": 11,
+          "zone": null,
+          "team": "Getafe CF",
+          "played": 7,
+          "won": 2,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 4,
+          "ga": 7,
+          "gd": -3,
+          "pts": 8,
+          "form": [
+            "L",
+            "D",
+            "D",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 12,
+          "zone": null,
+          "team": "Rayo Vallecano de Madrid",
+          "played": 7,
+          "won": 2,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 11,
+          "ga": 16,
+          "gd": -5,
+          "pts": 8,
+          "form": [
+            "L",
+            "W",
+            "L",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 13,
+          "zone": null,
+          "team": "CA Osasuna",
+          "played": 7,
+          "won": 2,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 6,
+          "ga": 13,
+          "gd": -7,
+          "pts": 8,
+          "form": [
+            "W",
+            "L",
+            "L",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 14,
+          "zone": null,
+          "team": "RC Celta de Vigo",
+          "played": 7,
+          "won": 1,
+          "drawn": 4,
+          "lost": 2,
+          "gf": 8,
+          "ga": 6,
+          "gd": 2,
+          "pts": 7,
+          "form": [
+            "L",
+            "D",
+            "D",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 15,
+          "zone": null,
+          "team": "RCD Espanyol de Barcelona",
+          "played": 7,
+          "won": 2,
+          "drawn": 1,
+          "lost": 4,
+          "gf": 10,
+          "ga": 10,
+          "gd": 0,
+          "pts": 7,
+          "form": [
+            "L",
+            "D",
+            "W",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 16,
+          "zone": null,
+          "team": "Real Racing Club de Santander",
+          "played": 7,
+          "won": 2,
+          "drawn": 1,
+          "lost": 4,
+          "gf": 11,
+          "ga": 21,
+          "gd": -10,
+          "pts": 7,
+          "form": [
+            "W",
+            "L",
+            "W",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 17,
+          "zone": null,
+          "team": "Levante UD",
+          "played": 6,
+          "won": 1,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 8,
+          "ga": 12,
+          "gd": -4,
+          "pts": 5,
+          "form": [
+            "D",
+            "W",
+            "D",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 18,
+          "zone": "relegation",
+          "team": "Elche CF",
+          "played": 7,
+          "won": 1,
+          "drawn": 2,
+          "lost": 4,
+          "gf": 11,
+          "ga": 17,
+          "gd": -6,
+          "pts": 5,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 19,
+          "zone": "relegation",
+          "team": "Valencia CF",
+          "played": 7,
+          "won": 1,
+          "drawn": 1,
+          "lost": 5,
+          "gf": 4,
+          "ga": 13,
+          "gd": -9,
+          "pts": 4,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 20,
+          "zone": "relegation",
+          "team": "Málaga CF",
+          "played": 7,
+          "won": 0,
+          "drawn": 3,
+          "lost": 4,
+          "gf": 3,
+          "ga": 12,
+          "gd": -9,
+          "pts": 3,
+          "form": [
+            "L",
+            "D",
+            "D",
+            "L",
+            "L"
+          ]
+        }
       ],
-      "ht": [
-        2,
-        1
-      ]
-    },
-    {
-      "round": "Matchday 4",
-      "date": "2026-09-19",
-      "time": "15:30",
-      "home": "SV Werder Bremen",
-      "away": "FC Augsburg",
-      "ft": [
-        3,
-        2
+      "recent": [
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "21:00",
+          "home": "Valencia CF",
+          "away": "Real Sociedad de Fútbol",
+          "ft": [
+            2,
+            3
+          ],
+          "ht": [
+            0,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "18:30",
+          "home": "Villarreal CF",
+          "away": "Levante UD",
+          "ft": [
+            3,
+            1
+          ],
+          "ht": [
+            1,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "18:30",
+          "home": "RC Deportivo La Coruña",
+          "away": "Real Betis Balompié",
+          "ft": [
+            1,
+            1
+          ],
+          "ht": [
+            0,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "16:15",
+          "home": "Club Atlético de Madrid",
+          "away": "Real Madrid CF",
+          "ft": [
+            2,
+            1
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "14:00",
+          "home": "Getafe CF",
+          "away": "Málaga CF",
+          "ft": [
+            1,
+            0
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "21:00",
+          "home": "Sevilla FC",
+          "away": "FC Barcelona",
+          "ft": [
+            1,
+            3
+          ],
+          "ht": [
+            1,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "18:30",
+          "home": "RC Celta de Vigo",
+          "away": "Real Racing Club de Santander",
+          "ft": [
+            5,
+            0
+          ],
+          "ht": [
+            2,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "16:15",
+          "home": "Athletic Club",
+          "away": "Deportivo Alavés",
+          "ft": [
+            0,
+            0
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "14:00",
+          "home": "CA Osasuna",
+          "away": "Rayo Vallecano de Madrid",
+          "ft": [
+            1,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        }
       ],
-      "ht": [
-        0,
-        1
+      "upcoming": [
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-09",
+          "time": "21:00",
+          "home": "Málaga CF",
+          "away": "RCD Espanyol de Barcelona"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "14:00",
+          "home": "Rayo Vallecano de Madrid",
+          "away": "Athletic Club"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "16:15",
+          "home": "Deportivo Alavés",
+          "away": "Club Atlético de Madrid"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "18:30",
+          "home": "FC Barcelona",
+          "away": "Getafe CF"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "21:00",
+          "home": "Real Madrid CF",
+          "away": "Villarreal CF"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-11",
+          "time": "14:00",
+          "home": "Elche CF",
+          "away": "RC Celta de Vigo"
+        }
       ]
     },
     {
-      "round": "Matchday 4",
-      "date": "2026-09-19",
-      "time": "15:30",
-      "home": "Borussia Mönchengladbach",
-      "away": "1. FSV Mainz 05",
-      "ft": [
-        3,
-        4
+      "id": "it.1",
+      "file": "2026-27/it.1.json",
+      "url": "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/it.1.json",
+      "league": "Italian Serie A 2026/27",
+      "season": "2026/27",
+      "totalFixtures": 380,
+      "playedFixtures": 50,
+      "table": [
+        {
+          "pos": 1,
+          "zone": "ucl",
+          "team": "AS Roma",
+          "played": 5,
+          "won": 4,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 14,
+          "ga": 3,
+          "gd": 11,
+          "pts": 13,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 2,
+          "zone": "ucl",
+          "team": "FC Internazionale Milano",
+          "played": 5,
+          "won": 4,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 15,
+          "ga": 8,
+          "gd": 7,
+          "pts": 13,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 3,
+          "zone": "ucl",
+          "team": "SS Lazio",
+          "played": 5,
+          "won": 4,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 8,
+          "ga": 3,
+          "gd": 5,
+          "pts": 13,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 4,
+          "zone": "ucl",
+          "team": "Cagliari Calcio",
+          "played": 5,
+          "won": 4,
+          "drawn": 0,
+          "lost": 1,
+          "gf": 5,
+          "ga": 2,
+          "gd": 3,
+          "pts": 12,
+          "form": [
+            "W",
+            "L",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 5,
+          "zone": "europa",
+          "team": "AC Milan",
+          "played": 5,
+          "won": 3,
+          "drawn": 2,
+          "lost": 0,
+          "gf": 10,
+          "ga": 4,
+          "gd": 6,
+          "pts": 11,
+          "form": [
+            "W",
+            "W",
+            "D",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 6,
+          "zone": "europa",
+          "team": "Frosinone Calcio",
+          "played": 5,
+          "won": 3,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 9,
+          "ga": 4,
+          "gd": 5,
+          "pts": 10,
+          "form": [
+            "L",
+            "W",
+            "W",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 7,
+          "zone": null,
+          "team": "Juventus FC",
+          "played": 5,
+          "won": 3,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 8,
+          "ga": 4,
+          "gd": 4,
+          "pts": 10,
+          "form": [
+            "W",
+            "W",
+            "D",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 8,
+          "zone": null,
+          "team": "Como 1907",
+          "played": 5,
+          "won": 3,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 9,
+          "ga": 6,
+          "gd": 3,
+          "pts": 10,
+          "form": [
+            "D",
+            "W",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 9,
+          "zone": null,
+          "team": "SSC Napoli",
+          "played": 5,
+          "won": 2,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 7,
+          "ga": 6,
+          "gd": 1,
+          "pts": 7,
+          "form": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 10,
+          "zone": null,
+          "team": "US Sassuolo Calcio",
+          "played": 5,
+          "won": 2,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 9,
+          "ga": 9,
+          "gd": 0,
+          "pts": 7,
+          "form": [
+            "L",
+            "W",
+            "D",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 11,
+          "zone": null,
+          "team": "Atalanta BC",
+          "played": 5,
+          "won": 2,
+          "drawn": 0,
+          "lost": 3,
+          "gf": 5,
+          "ga": 7,
+          "gd": -2,
+          "pts": 6,
+          "form": [
+            "W",
+            "W",
+            "L",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 12,
+          "zone": null,
+          "team": "US Lecce",
+          "played": 5,
+          "won": 2,
+          "drawn": 0,
+          "lost": 3,
+          "gf": 5,
+          "ga": 10,
+          "gd": -5,
+          "pts": 6,
+          "form": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 13,
+          "zone": null,
+          "team": "Udinese Calcio",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 8,
+          "ga": 11,
+          "gd": -3,
+          "pts": 4,
+          "form": [
+            "D",
+            "W",
+            "L",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 14,
+          "zone": null,
+          "team": "Torino FC",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 5,
+          "ga": 8,
+          "gd": -3,
+          "pts": 4,
+          "form": [
+            "L",
+            "L",
+            "W",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 15,
+          "zone": null,
+          "team": "Parma Calcio 1913",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 4,
+          "ga": 7,
+          "gd": -3,
+          "pts": 4,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 16,
+          "zone": null,
+          "team": "AC Monza",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 8,
+          "ga": 12,
+          "gd": -4,
+          "pts": 4,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 17,
+          "zone": null,
+          "team": "ACF Fiorentina",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 6,
+          "ga": 12,
+          "gd": -6,
+          "pts": 4,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 18,
+          "zone": "relegation",
+          "team": "Bologna FC 1909",
+          "played": 5,
+          "won": 0,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 3,
+          "ga": 6,
+          "gd": -3,
+          "pts": 2,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 19,
+          "zone": "relegation",
+          "team": "Genoa CFC",
+          "played": 5,
+          "won": 0,
+          "drawn": 1,
+          "lost": 4,
+          "gf": 3,
+          "ga": 10,
+          "gd": -7,
+          "pts": 1,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 20,
+          "zone": "relegation",
+          "team": "Venezia FC",
+          "played": 5,
+          "won": 0,
+          "drawn": 0,
+          "lost": 5,
+          "gf": 4,
+          "ga": 13,
+          "gd": -9,
+          "pts": 0,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "L",
+            "L"
+          ]
+        }
       ],
-      "ht": [
-        1,
-        2
-      ]
-    },
-    {
-      "round": "Matchday 4",
-      "date": "2026-09-19",
-      "time": "15:30",
-      "home": "Hamburger SV",
-      "away": "1. FC Köln",
-      "ft": [
-        2,
-        1
+      "recent": [
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "20:45",
+          "home": "AC Milan",
+          "away": "US Lecce",
+          "ft": [
+            3,
+            0
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "18:00",
+          "home": "Juventus FC",
+          "away": "Atalanta BC",
+          "ft": [
+            2,
+            0
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "15:00",
+          "home": "Parma Calcio 1913",
+          "away": "Genoa CFC",
+          "ft": [
+            2,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "15:00",
+          "home": "Frosinone Calcio",
+          "away": "Como 1907",
+          "ft": [
+            2,
+            0
+          ],
+          "ht": [
+            2,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "12:30",
+          "home": "ACF Fiorentina",
+          "away": "SSC Napoli",
+          "ft": [
+            1,
+            1
+          ],
+          "ht": [
+            0,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "20:45",
+          "home": "Venezia FC",
+          "away": "SS Lazio",
+          "ft": [
+            0,
+            2
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "18:00",
+          "home": "AS Roma",
+          "away": "FC Internazionale Milano",
+          "ft": [
+            2,
+            2
+          ],
+          "ht": [
+            2,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "15:00",
+          "home": "Udinese Calcio",
+          "away": "Cagliari Calcio",
+          "ft": [
+            0,
+            1
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "15:00",
+          "home": "Bologna FC 1909",
+          "away": "Torino FC",
+          "ft": [
+            1,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        }
       ],
-      "ht": [
-        1,
-        0
+      "upcoming": [
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "15:00",
+          "home": "Genoa CFC",
+          "away": "ACF Fiorentina"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "18:00",
+          "home": "FC Internazionale Milano",
+          "away": "Parma Calcio 1913"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "20:45",
+          "home": "SSC Napoli",
+          "away": "Frosinone Calcio"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-11",
+          "time": "12:30",
+          "home": "Como 1907",
+          "away": "AS Roma"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-11",
+          "time": "15:00",
+          "home": "US Lecce",
+          "away": "Bologna FC 1909"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-11",
+          "time": "15:00",
+          "home": "SS Lazio",
+          "away": "AC Monza"
+        }
       ]
     },
     {
-      "round": "Matchday 4",
-      "date": "2026-09-18",
-      "time": "20:30",
-      "home": "FC Bayern München",
-      "away": "1. FC Union Berlin",
-      "ft": [
-        7,
-        0
+      "id": "fr.1",
+      "file": "2026-27/fr.1.json",
+      "url": "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/fr.1.json",
+      "league": "French Ligue 1 2026/27",
+      "season": "2026/27",
+      "totalFixtures": 306,
+      "playedFixtures": 45,
+      "table": [
+        {
+          "pos": 1,
+          "zone": "ucl",
+          "team": "AS Monaco FC",
+          "played": 5,
+          "won": 4,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 8,
+          "ga": 3,
+          "gd": 5,
+          "pts": 13,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 2,
+          "zone": "ucl",
+          "team": "Olympique Lyonnais",
+          "played": 5,
+          "won": 3,
+          "drawn": 2,
+          "lost": 0,
+          "gf": 10,
+          "ga": 2,
+          "gd": 8,
+          "pts": 11,
+          "form": [
+            "W",
+            "D",
+            "W",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 3,
+          "zone": "ucl",
+          "team": "Paris FC",
+          "played": 5,
+          "won": 3,
+          "drawn": 2,
+          "lost": 0,
+          "gf": 8,
+          "ga": 3,
+          "gd": 5,
+          "pts": 11,
+          "form": [
+            "D",
+            "W",
+            "W",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 4,
+          "zone": "ucl",
+          "team": "Lille OSC",
+          "played": 5,
+          "won": 3,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 8,
+          "ga": 4,
+          "gd": 4,
+          "pts": 10,
+          "form": [
+            "W",
+            "D",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 5,
+          "zone": "europa",
+          "team": "Stade Rennais FC 1901",
+          "played": 5,
+          "won": 3,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 8,
+          "ga": 9,
+          "gd": -1,
+          "pts": 10,
+          "form": [
+            "D",
+            "W",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 6,
+          "zone": "europa",
+          "team": "Paris Saint-Germain FC",
+          "played": 5,
+          "won": 2,
+          "drawn": 2,
+          "lost": 1,
+          "gf": 8,
+          "ga": 7,
+          "gd": 1,
+          "pts": 8,
+          "form": [
+            "D",
+            "D",
+            "L",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 7,
+          "zone": null,
+          "team": "Angers SCO",
+          "played": 5,
+          "won": 2,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 6,
+          "ga": 5,
+          "gd": 1,
+          "pts": 7,
+          "form": [
+            "L",
+            "W",
+            "L",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 8,
+          "zone": null,
+          "team": "RC Strasbourg Alsace",
+          "played": 5,
+          "won": 2,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 10,
+          "ga": 10,
+          "gd": 0,
+          "pts": 7,
+          "form": [
+            "L",
+            "W",
+            "W",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 9,
+          "zone": null,
+          "team": "Le Mans FC",
+          "played": 5,
+          "won": 1,
+          "drawn": 3,
+          "lost": 1,
+          "gf": 9,
+          "ga": 9,
+          "gd": 0,
+          "pts": 6,
+          "form": [
+            "D",
+            "L",
+            "D",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 10,
+          "zone": null,
+          "team": "AJ Auxerre",
+          "played": 5,
+          "won": 2,
+          "drawn": 0,
+          "lost": 3,
+          "gf": 7,
+          "ga": 12,
+          "gd": -5,
+          "pts": 6,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 11,
+          "zone": null,
+          "team": "Stade Brestois 29",
+          "played": 5,
+          "won": 1,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 7,
+          "ga": 8,
+          "gd": -1,
+          "pts": 5,
+          "form": [
+            "D",
+            "D",
+            "W",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 12,
+          "zone": null,
+          "team": "FC Lorient",
+          "played": 5,
+          "won": 1,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 5,
+          "ga": 6,
+          "gd": -1,
+          "pts": 5,
+          "form": [
+            "D",
+            "L",
+            "W",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 13,
+          "zone": null,
+          "team": "Toulouse FC",
+          "played": 5,
+          "won": 1,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 7,
+          "ga": 9,
+          "gd": -2,
+          "pts": 5,
+          "form": [
+            "L",
+            "D",
+            "L",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 14,
+          "zone": null,
+          "team": "OGC Nice",
+          "played": 5,
+          "won": 1,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 3,
+          "ga": 6,
+          "gd": -3,
+          "pts": 5,
+          "form": [
+            "D",
+            "L",
+            "D",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 15,
+          "zone": null,
+          "team": "Racing Club de Lens",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 9,
+          "ga": 9,
+          "gd": 0,
+          "pts": 4,
+          "form": [
+            "W",
+            "L",
+            "L",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 16,
+          "zone": "playoff",
+          "team": "ES Troyes AC",
+          "played": 5,
+          "won": 1,
+          "drawn": 1,
+          "lost": 3,
+          "gf": 4,
+          "ga": 11,
+          "gd": -7,
+          "pts": 4,
+          "form": [
+            "D",
+            "W",
+            "L",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 17,
+          "zone": "relegation",
+          "team": "Olympique de Marseille",
+          "played": 5,
+          "won": 1,
+          "drawn": 0,
+          "lost": 4,
+          "gf": 7,
+          "ga": 8,
+          "gd": -1,
+          "pts": 3,
+          "form": [
+            "W",
+            "L",
+            "L",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 18,
+          "zone": "relegation",
+          "team": "Le Havre AC",
+          "played": 5,
+          "won": 0,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 4,
+          "ga": 7,
+          "gd": -3,
+          "pts": 2,
+          "form": [
+            "L",
+            "D",
+            "L",
+            "D",
+            "L"
+          ]
+        }
       ],
-      "ht": [
-        3,
-        0
+      "recent": [
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "20:45",
+          "home": "Olympique de Marseille",
+          "away": "Paris Saint-Germain FC",
+          "ft": [
+            1,
+            2
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "17:15",
+          "home": "OGC Nice",
+          "away": "Lille OSC",
+          "ft": [
+            2,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-20",
+          "time": "15:00",
+          "home": "AJ Auxerre",
+          "away": "Stade Brestois 29",
+          "ft": [
+            2,
+            1
+          ],
+          "ht": [
+            0,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "20:45",
+          "home": "Olympique Lyonnais",
+          "away": "Stade Rennais FC 1901",
+          "ft": [
+            4,
+            0
+          ],
+          "ht": [
+            2,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "20:45",
+          "home": "Angers SCO",
+          "away": "ES Troyes AC",
+          "ft": [
+            2,
+            0
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "20:45",
+          "home": "Toulouse FC",
+          "away": "Le Havre AC",
+          "ft": [
+            3,
+            2
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "20:45",
+          "home": "Le Mans FC",
+          "away": "FC Lorient",
+          "ft": [
+            2,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-19",
+          "time": "17:15",
+          "home": "Paris FC",
+          "away": "RC Strasbourg Alsace",
+          "ft": [
+            2,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 5",
+          "date": "2026-09-18",
+          "time": "20:45",
+          "home": "AS Monaco FC",
+          "away": "Racing Club de Lens",
+          "ft": [
+            2,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        }
+      ],
+      "upcoming": [
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-09",
+          "time": "20:45",
+          "home": "Racing Club de Lens",
+          "away": "Olympique Lyonnais"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "17:15",
+          "home": "Lille OSC",
+          "away": "Le Havre AC"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "20:45",
+          "home": "Stade Brestois 29",
+          "away": "Angers SCO"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "20:45",
+          "home": "FC Lorient",
+          "away": "Paris FC"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "20:45",
+          "home": "Paris Saint-Germain FC",
+          "away": "Le Mans FC"
+        },
+        {
+          "round": "Matchday 6",
+          "date": "2026-10-10",
+          "time": "20:45",
+          "home": "AS Monaco FC",
+          "away": "Toulouse FC"
+        }
       ]
-    }
-  ],
-  "upcoming": [
-    {
-      "round": "Matchday 5",
-      "date": "2026-10-09",
-      "time": "20:30",
-      "home": "Borussia Dortmund",
-      "away": "SV Werder Bremen"
     },
     {
-      "round": "Matchday 5",
-      "date": "2026-10-10",
-      "time": "15:30",
-      "home": "1. FSV Mainz 05",
-      "away": "Bayer 04 Leverkusen"
+      "id": "nl.1",
+      "file": "2026-27/nl.1.json",
+      "url": "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/nl.1.json",
+      "league": "Netherlands Eredivisie 2026/27",
+      "season": "2026/27",
+      "totalFixtures": 306,
+      "playedFixtures": 63,
+      "table": [
+        {
+          "pos": 1,
+          "zone": "ucl",
+          "team": "AZ",
+          "played": 7,
+          "won": 6,
+          "drawn": 1,
+          "lost": 0,
+          "gf": 18,
+          "ga": 6,
+          "gd": 12,
+          "pts": 19,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 2,
+          "zone": "ucl",
+          "team": "Feyenoord Rotterdam",
+          "played": 7,
+          "won": 5,
+          "drawn": 2,
+          "lost": 0,
+          "gf": 25,
+          "ga": 7,
+          "gd": 18,
+          "pts": 17,
+          "form": [
+            "W",
+            "D",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 3,
+          "zone": "ucl",
+          "team": "PSV",
+          "played": 7,
+          "won": 5,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 24,
+          "ga": 10,
+          "gd": 14,
+          "pts": 16,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 4,
+          "zone": "ucl",
+          "team": "FC Twente '65",
+          "played": 7,
+          "won": 5,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 15,
+          "ga": 7,
+          "gd": 8,
+          "pts": 16,
+          "form": [
+            "W",
+            "D",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 5,
+          "zone": "europa",
+          "team": "AFC Ajax",
+          "played": 7,
+          "won": 4,
+          "drawn": 2,
+          "lost": 1,
+          "gf": 21,
+          "ga": 9,
+          "gd": 12,
+          "pts": 14,
+          "form": [
+            "W",
+            "L",
+            "W",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 6,
+          "zone": "europa",
+          "team": "Fortuna Sittard",
+          "played": 7,
+          "won": 4,
+          "drawn": 1,
+          "lost": 2,
+          "gf": 13,
+          "ga": 14,
+          "gd": -1,
+          "pts": 13,
+          "form": [
+            "L",
+            "W",
+            "W",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 7,
+          "zone": null,
+          "team": "SBV Excelsior",
+          "played": 7,
+          "won": 3,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 15,
+          "ga": 9,
+          "gd": 6,
+          "pts": 11,
+          "form": [
+            "W",
+            "W",
+            "D",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 8,
+          "zone": null,
+          "team": "FC Groningen",
+          "played": 7,
+          "won": 3,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 15,
+          "ga": 13,
+          "gd": 2,
+          "pts": 11,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 9,
+          "zone": null,
+          "team": "Go Ahead Eagles",
+          "played": 7,
+          "won": 2,
+          "drawn": 4,
+          "lost": 1,
+          "gf": 16,
+          "ga": 14,
+          "gd": 2,
+          "pts": 10,
+          "form": [
+            "W",
+            "L",
+            "D",
+            "D",
+            "D"
+          ]
+        },
+        {
+          "pos": 10,
+          "zone": null,
+          "team": "SC Heerenveen",
+          "played": 7,
+          "won": 2,
+          "drawn": 3,
+          "lost": 2,
+          "gf": 11,
+          "ga": 9,
+          "gd": 2,
+          "pts": 9,
+          "form": [
+            "L",
+            "D",
+            "L",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 11,
+          "zone": null,
+          "team": "NEC",
+          "played": 7,
+          "won": 2,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 12,
+          "ga": 13,
+          "gd": -1,
+          "pts": 8,
+          "form": [
+            "W",
+            "L",
+            "D",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 12,
+          "zone": null,
+          "team": "Sparta Rotterdam",
+          "played": 7,
+          "won": 1,
+          "drawn": 2,
+          "lost": 4,
+          "gf": 10,
+          "ga": 17,
+          "gd": -7,
+          "pts": 5,
+          "form": [
+            "D",
+            "L",
+            "D",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 13,
+          "zone": null,
+          "team": "Telstar 1963",
+          "played": 7,
+          "won": 1,
+          "drawn": 2,
+          "lost": 4,
+          "gf": 5,
+          "ga": 12,
+          "gd": -7,
+          "pts": 5,
+          "form": [
+            "L",
+            "D",
+            "L",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 14,
+          "zone": null,
+          "team": "SC Cambuur-Leeuwarden",
+          "played": 7,
+          "won": 1,
+          "drawn": 2,
+          "lost": 4,
+          "gf": 10,
+          "ga": 19,
+          "gd": -9,
+          "pts": 5,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 15,
+          "zone": null,
+          "team": "FC Utrecht",
+          "played": 7,
+          "won": 1,
+          "drawn": 2,
+          "lost": 4,
+          "gf": 11,
+          "ga": 24,
+          "gd": -13,
+          "pts": 5,
+          "form": [
+            "D",
+            "L",
+            "D",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 16,
+          "zone": "playoff",
+          "team": "PEC Zwolle",
+          "played": 7,
+          "won": 1,
+          "drawn": 1,
+          "lost": 5,
+          "gf": 6,
+          "ga": 20,
+          "gd": -14,
+          "pts": 4,
+          "form": [
+            "W",
+            "L",
+            "D",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 17,
+          "zone": "relegation",
+          "team": "ADO Den Haag",
+          "played": 7,
+          "won": 0,
+          "drawn": 2,
+          "lost": 5,
+          "gf": 7,
+          "ga": 17,
+          "gd": -10,
+          "pts": 2,
+          "form": [
+            "L",
+            "D",
+            "L",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 18,
+          "zone": "relegation",
+          "team": "Willem II Tilburg",
+          "played": 7,
+          "won": 0,
+          "drawn": 2,
+          "lost": 5,
+          "gf": 6,
+          "ga": 20,
+          "gd": -14,
+          "pts": 2,
+          "form": [
+            "D",
+            "L",
+            "D",
+            "L",
+            "L"
+          ]
+        }
+      ],
+      "recent": [
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "16:45",
+          "home": "NEC",
+          "away": "Go Ahead Eagles",
+          "ft": [
+            1,
+            1
+          ],
+          "ht": [
+            1,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "14:30",
+          "home": "AZ",
+          "away": "Telstar 1963",
+          "ft": [
+            1,
+            0
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "14:30",
+          "home": "FC Twente '65",
+          "away": "PSV",
+          "ft": [
+            3,
+            2
+          ],
+          "ht": [
+            1,
+            2
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "12:15",
+          "home": "Feyenoord Rotterdam",
+          "away": "FC Utrecht",
+          "ft": [
+            5,
+            0
+          ],
+          "ht": [
+            3,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "21:00",
+          "home": "Willem II Tilburg",
+          "away": "Fortuna Sittard",
+          "ft": [
+            0,
+            1
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "20:00",
+          "home": "AFC Ajax",
+          "away": "SBV Excelsior",
+          "ft": [
+            2,
+            2
+          ],
+          "ht": [
+            1,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "18:45",
+          "home": "Sparta Rotterdam",
+          "away": "SC Heerenveen",
+          "ft": [
+            0,
+            4
+          ],
+          "ht": [
+            0,
+            2
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "16:30",
+          "home": "ADO Den Haag",
+          "away": "SC Cambuur-Leeuwarden",
+          "ft": [
+            1,
+            1
+          ],
+          "ht": [
+            0,
+            1
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-18",
+          "time": "20:00",
+          "home": "FC Groningen",
+          "away": "PEC Zwolle",
+          "ft": [
+            3,
+            0
+          ],
+          "ht": [
+            2,
+            0
+          ]
+        }
+      ],
+      "upcoming": [
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-09",
+          "time": "20:00",
+          "home": "PSV",
+          "away": "SC Heerenveen"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "16:30",
+          "home": "Go Ahead Eagles",
+          "away": "Sparta Rotterdam"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "18:45",
+          "home": "Feyenoord Rotterdam",
+          "away": "AZ"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "20:00",
+          "home": "Fortuna Sittard",
+          "away": "FC Twente '65"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "21:00",
+          "home": "AFC Ajax",
+          "away": "NEC"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-11",
+          "time": "12:15",
+          "home": "FC Utrecht",
+          "away": "Willem II Tilburg"
+        }
+      ]
     },
     {
-      "round": "Matchday 5",
-      "date": "2026-10-10",
-      "time": "15:30",
-      "home": "SC Paderborn 07",
-      "away": "VfB Stuttgart"
-    },
-    {
-      "round": "Matchday 5",
-      "date": "2026-10-10",
-      "time": "15:30",
-      "home": "1. FC Union Berlin",
-      "away": "SV 07 Elversberg"
-    },
-    {
-      "round": "Matchday 5",
-      "date": "2026-10-10",
-      "time": "15:30",
-      "home": "TSG 1899 Hoffenheim",
-      "away": "Hamburger SV"
-    },
-    {
-      "round": "Matchday 5",
-      "date": "2026-10-10",
-      "time": "15:30",
-      "home": "FC Augsburg",
-      "away": "FC Bayern München"
+      "id": "pt.1",
+      "file": "2026-27/pt.1.json",
+      "url": "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/pt.1.json",
+      "league": "Portuguese Primeira Liga 2026/27",
+      "season": "2026/27",
+      "totalFixtures": 306,
+      "playedFixtures": 62,
+      "table": [
+        {
+          "pos": 1,
+          "zone": "ucl",
+          "team": "FC Porto",
+          "played": 7,
+          "won": 7,
+          "drawn": 0,
+          "lost": 0,
+          "gf": 18,
+          "ga": 3,
+          "gd": 15,
+          "pts": 21,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 2,
+          "zone": "ucl",
+          "team": "Sport Lisboa e Benfica",
+          "played": 7,
+          "won": 5,
+          "drawn": 1,
+          "lost": 1,
+          "gf": 22,
+          "ga": 7,
+          "gd": 15,
+          "pts": 16,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "L"
+          ]
+        },
+        {
+          "pos": 3,
+          "zone": "ucl",
+          "team": "Sporting Clube de Portugal",
+          "played": 7,
+          "won": 4,
+          "drawn": 3,
+          "lost": 0,
+          "gf": 17,
+          "ga": 8,
+          "gd": 9,
+          "pts": 15,
+          "form": [
+            "W",
+            "W",
+            "W",
+            "D",
+            "D"
+          ]
+        },
+        {
+          "pos": 4,
+          "zone": "ucl",
+          "team": "CD Santa Clara",
+          "played": 7,
+          "won": 4,
+          "drawn": 3,
+          "lost": 0,
+          "gf": 11,
+          "ga": 4,
+          "gd": 7,
+          "pts": 15,
+          "form": [
+            "W",
+            "D",
+            "W",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 5,
+          "zone": "europa",
+          "team": "FC Arouca",
+          "played": 7,
+          "won": 3,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 10,
+          "ga": 7,
+          "gd": 3,
+          "pts": 11,
+          "form": [
+            "L",
+            "W",
+            "D",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 6,
+          "zone": "europa",
+          "team": "Sporting Clube de Braga",
+          "played": 6,
+          "won": 3,
+          "drawn": 2,
+          "lost": 1,
+          "gf": 7,
+          "ga": 5,
+          "gd": 2,
+          "pts": 11,
+          "form": [
+            "W",
+            "W",
+            "L",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 7,
+          "zone": null,
+          "team": "Académico de Viseu FC",
+          "played": 7,
+          "won": 3,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 9,
+          "ga": 9,
+          "gd": 0,
+          "pts": 11,
+          "form": [
+            "D",
+            "L",
+            "W",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 8,
+          "zone": null,
+          "team": "CF Estrela da Amadora",
+          "played": 7,
+          "won": 2,
+          "drawn": 4,
+          "lost": 1,
+          "gf": 14,
+          "ga": 14,
+          "gd": 0,
+          "pts": 10,
+          "form": [
+            "W",
+            "D",
+            "W",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 9,
+          "zone": null,
+          "team": "Gil Vicente FC",
+          "played": 6,
+          "won": 2,
+          "drawn": 2,
+          "lost": 2,
+          "gf": 5,
+          "ga": 5,
+          "gd": 0,
+          "pts": 8,
+          "form": [
+            "W",
+            "D",
+            "L",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 10,
+          "zone": null,
+          "team": "FC Alverca",
+          "played": 7,
+          "won": 2,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 9,
+          "ga": 11,
+          "gd": -2,
+          "pts": 8,
+          "form": [
+            "L",
+            "D",
+            "L",
+            "W",
+            "W"
+          ]
+        },
+        {
+          "pos": 11,
+          "zone": null,
+          "team": "CS Marítimo",
+          "played": 7,
+          "won": 2,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 8,
+          "ga": 12,
+          "gd": -4,
+          "pts": 8,
+          "form": [
+            "D",
+            "L",
+            "L",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 12,
+          "zone": null,
+          "team": "Moreirense FC",
+          "played": 7,
+          "won": 2,
+          "drawn": 2,
+          "lost": 3,
+          "gf": 8,
+          "ga": 14,
+          "gd": -6,
+          "pts": 8,
+          "form": [
+            "W",
+            "L",
+            "L",
+            "W",
+            "D"
+          ]
+        },
+        {
+          "pos": 13,
+          "zone": null,
+          "team": "FC Famalicão",
+          "played": 7,
+          "won": 1,
+          "drawn": 4,
+          "lost": 2,
+          "gf": 9,
+          "ga": 7,
+          "gd": 2,
+          "pts": 7,
+          "form": [
+            "L",
+            "D",
+            "D",
+            "D",
+            "W"
+          ]
+        },
+        {
+          "pos": 14,
+          "zone": null,
+          "team": "Vitória Guimarães",
+          "played": 7,
+          "won": 1,
+          "drawn": 2,
+          "lost": 4,
+          "gf": 5,
+          "ga": 8,
+          "gd": -3,
+          "pts": 5,
+          "form": [
+            "W",
+            "L",
+            "D",
+            "L",
+            "D"
+          ]
+        },
+        {
+          "pos": 15,
+          "zone": null,
+          "team": "CD Nacional",
+          "played": 7,
+          "won": 1,
+          "drawn": 1,
+          "lost": 5,
+          "gf": 7,
+          "ga": 15,
+          "gd": -8,
+          "pts": 4,
+          "form": [
+            "L",
+            "L",
+            "L",
+            "L",
+            "L"
+          ]
+        },
+        {
+          "pos": 16,
+          "zone": "playoff",
+          "team": "Rio Ave FC",
+          "played": 7,
+          "won": 1,
+          "drawn": 1,
+          "lost": 5,
+          "gf": 5,
+          "ga": 15,
+          "gd": -10,
+          "pts": 4,
+          "form": [
+            "W",
+            "L",
+            "L",
+            "D",
+            "L"
+          ]
+        },
+        {
+          "pos": 17,
+          "zone": "relegation",
+          "team": "Casa Pia AC",
+          "played": 7,
+          "won": 1,
+          "drawn": 1,
+          "lost": 5,
+          "gf": 3,
+          "ga": 16,
+          "gd": -13,
+          "pts": 4,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "L",
+            "W"
+          ]
+        },
+        {
+          "pos": 18,
+          "zone": "relegation",
+          "team": "GD Estoril Praia",
+          "played": 7,
+          "won": 0,
+          "drawn": 2,
+          "lost": 5,
+          "gf": 3,
+          "ga": 10,
+          "gd": -7,
+          "pts": 2,
+          "form": [
+            "L",
+            "L",
+            "D",
+            "L",
+            "L"
+          ]
+        }
+      ],
+      "recent": [
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "20:30",
+          "home": "FC Porto",
+          "away": "Sport Lisboa e Benfica",
+          "ft": [
+            3,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "18:00",
+          "home": "GD Estoril Praia",
+          "away": "Casa Pia AC",
+          "ft": [
+            1,
+            2
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "18:00",
+          "home": "CD Santa Clara",
+          "away": "Sporting Clube de Braga",
+          "ft": [
+            0,
+            0
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "15:30",
+          "home": "CF Estrela da Amadora",
+          "away": "Académico de Viseu FC",
+          "ft": [
+            0,
+            2
+          ],
+          "ht": [
+            0,
+            2
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-20",
+          "time": "15:30",
+          "home": "Vitória Guimarães",
+          "away": "Moreirense FC",
+          "ft": [
+            1,
+            1
+          ],
+          "ht": [
+            0,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "20:30",
+          "home": "Sporting Clube de Portugal",
+          "away": "FC Arouca",
+          "ft": [
+            2,
+            2
+          ],
+          "ht": [
+            2,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "18:00",
+          "home": "FC Alverca",
+          "away": "Rio Ave FC",
+          "ft": [
+            1,
+            0
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "15:30",
+          "home": "Gil Vicente FC",
+          "away": "CS Marítimo",
+          "ft": [
+            1,
+            1
+          ],
+          "ht": [
+            1,
+            0
+          ]
+        },
+        {
+          "round": "Matchday 7",
+          "date": "2026-09-19",
+          "time": "15:30",
+          "home": "CD Nacional",
+          "away": "FC Famalicão",
+          "ft": [
+            0,
+            4
+          ],
+          "ht": [
+            0,
+            3
+          ]
+        }
+      ],
+      "upcoming": [
+        {
+          "round": "Matchday 2",
+          "date": "2026-08-16",
+          "time": null,
+          "home": "Sporting Clube de Braga",
+          "away": "Gil Vicente FC"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-09",
+          "time": "18:45",
+          "home": "Moreirense FC",
+          "away": "Gil Vicente FC"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-09",
+          "time": "20:15",
+          "home": "Sporting Clube de Braga",
+          "away": "Sporting Clube de Portugal"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "15:30",
+          "home": "Casa Pia AC",
+          "away": "CD Santa Clara"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "18:00",
+          "home": "CS Marítimo",
+          "away": "FC Porto"
+        },
+        {
+          "round": "Matchday 8",
+          "date": "2026-10-10",
+          "time": "20:30",
+          "home": "Académico de Viseu FC",
+          "away": "GD Estoril Praia"
+        }
+      ]
     }
   ]
 }

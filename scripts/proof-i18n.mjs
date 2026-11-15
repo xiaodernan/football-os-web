@@ -4785,7 +4785,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1149 The Pulse: the operator console adds 45 literal t() sites (its own dictionary keys) and one template site (the depth-bucket label read from the loop index). Literal 3062 -> 3107, template 116 -> 117, expression unchanged.
   // M1152 The Live Wire: literal sites across the screen, the shell nav, the palette goto, the manual link — 3130 -> 3166.
   // M1153 The Wire Brief: the brief panel adds eleven literal t() sites on the wire screen — 3166 -> 3173.
-shapeCounts.literal === 3173 && shapeCounts.template === 118 && shapeCounts.expression === 45
+  // M1154 Seven Wires: the tablist caption joins (t("liveWire.leagues")) — 3173 -> 3174.
+shapeCounts.literal === 3174 && shapeCounts.template === 118 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -6425,8 +6426,9 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
   // M1064: the cache tier's TTL scatter SVG names its accessible label through t(): 13 -> 14.
   // M1059: the observatory's three SVG role=img surfaces (backoff, pressure, ring) name their
   // accessible label through t(), adding three keyed aria attributes: 10 -> 13.
+  // M1154 Seven Wires: the league tablist names itself through t() too — 18 -> 19.
   // M1152 The Live Wire: its loading state names its aria label through t() too — 17 -> 18.
-  ariaBare.length === 0 && ariaKeyed === 18 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+  ariaBare.length === 0 && ariaKeyed === 19 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English

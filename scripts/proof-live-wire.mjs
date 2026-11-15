@@ -25,52 +25,59 @@ try { wire = JSON.parse(raw); } catch { /* handled below */ }
 ok("the wire is parseable JSON", wire !== null);
 ok("the SPA's runtime guard accepts the committed payload", wire !== null && isLiveWirePayload(wire) === true);
 
-const table = wire?.table ?? [];
-const recent = wire?.recent ?? [];
-const upcoming = wire?.upcoming ?? [];
+const leagues = wire?.leagues ?? [];
 
-// --- 2 · internal arithmetic: the fold must not contradict itself ------------------------------
-const playedCount = table.reduce((n, r) => n + (r?.played ?? 0), 0);
-ok(`sum of appearances equals twice the finished fixtures (${playedCount} == 2×${wire?.playedFixtures})`,
-  wire !== null && playedCount === 2 * wire.playedFixtures);
-ok("the table has ≥ 2 clubs and assigns positions 1..N exactly once",
-  table.length >= 2 && new Set(table.map((r) => r.pos)).size === table.length &&
-  table.every((r) => r.pos >= 1 && r.pos <= table.length));
-ok("every row satisfies played = w+d+l", table.every((r) => r.played === r.won + r.drawn + r.lost));
-ok("every row satisfies pts = 3w+d", table.every((r) => r.pts === r.won * 3 + r.drawn));
-ok("every row's gd equals gf−ga", table.every((r) => r.gd === r.gf - r.ga));
-const orderOk = table.every((row, i) => {
-  if (i === 0) return true;
-  const a = table[i - 1];
-  return a.pts > row.pts ||
-    (a.pts === row.pts && a.gd > row.gd) ||
-    (a.pts === row.pts && a.gd === row.gd && a.gf > row.gf) ||
-    (a.pts === row.pts && a.gd === row.gd && a.gf === row.gf && a.team <= row.team);
-});
-// sorted pts desc → gd desc → gf desc → team asc (the documented German tiebreak, then name)
-ok("the table is ordered by pts, then goal difference, then goals for, then name", orderOk);
-
-// --- 3 · zones and form stay inside their vocabularies ----------------------------------------
-const ZONES = new Set(["ucl", "europa", "playoff", "relegation", null]);
-ok("zones are only ucl/europa/playoff/relegation/—", table.every((r) => ZONES.has(r.zone)));
-ok("pos 1-4 wear ucl and pos 17-18 wear relegation (18-team format)",
-  table.slice(0, 4).every((r) => r.zone === "ucl") && table.slice(16).every((r) => r.zone === "relegation"));
-ok("form letters are only W/D/L, at most five per club",
-  table.every((r) => Array.isArray(r.form) && r.form.length <= 5 && r.form.every((l) => l === "W" || l === "D" || l === "L")));
+// --- 2 · internal arithmetic per league: the fold must not contradict itself -------------------
+ok("the wire carries all seven leagues, each with a unique id and its own file",
+  leagues.length === 7 && new Set(leagues.map((l) => l.id)).size === 7 &&
+  leagues.every((l) => typeof l.file === "string" && l.file.startsWith("2026-27/")));
+for (const lg of leagues) {
+  const table = lg.table ?? [];
+  const recent = lg.recent ?? [];
+  const upcoming = lg.upcoming ?? [];
+  const playedCount = table.reduce((n, r) => n + (r?.played ?? 0), 0);
+  ok(`[${lg.id}] sum of appearances equals twice the finished fixtures (${playedCount} == 2×${lg.playedFixtures})`,
+    wire !== null && playedCount === 2 * lg.playedFixtures);
+  ok(`[${lg.id}] the table assigns positions 1..N exactly once`,
+    table.length >= 2 && new Set(table.map((r) => r.pos)).size === table.length &&
+    table.every((r) => r.pos >= 1 && r.pos <= table.length));
+  ok(`[${lg.id}] every row satisfies played = w+d+l`, table.every((r) => r.played === r.won + r.drawn + r.lost));
+  ok(`[${lg.id}] every row satisfies pts = 3w+d`, table.every((r) => r.pts === r.won * 3 + r.drawn));
+  ok(`[${lg.id}] every row's gd equals gf−ga`, table.every((r) => r.gd === r.gf - r.ga));
+  const orderOk = table.every((row, i) => {
+    if (i === 0) return true;
+    const a = table[i - 1];
+    return a.pts > row.pts ||
+      (a.pts === row.pts && a.gd > row.gd) ||
+      (a.pts === row.pts && a.gd === row.gd && a.gf > row.gf) ||
+      (a.pts === row.pts && a.gd === row.gd && a.gf === row.gf && a.team <= row.team);
+  });
+  ok(`[${lg.id}] the table is ordered by pts, then goal difference, then goals for, then name`, orderOk);
+  const ZONES = new Set(["ucl", "europa", "playoff", "relegation", null]);
+  const relegationSlice = table.length === 18 ? table.slice(-2) : table.slice(-3);
+  const expectPlayoff = table.length === 18;
+  ok(`[${lg.id}] zones are only ucl/europa/playoff/relegation/none`, table.every((r) => ZONES.has(r.zone)));
+  ok(`[${lg.id}] pos 1-4 wear ucl; the bottom wears relegation honest to the format`,
+    table.slice(0, 4).every((r) => r.zone === "ucl") && relegationSlice.every((r) => r.zone === "relegation") &&
+    (expectPlayoff ? table[table.length - 3].zone === "playoff" : true));
+  ok(`[${lg.id}] form letters are only W/D/L, at most five per club`,
+    table.every((r) => Array.isArray(r.form) && r.form.length <= 5 && r.form.every((l) => l === "W" || l === "D" || l === "L")));
+  const iso = /^\d{4}-\d{2}-\d{2}$/;
+  const timeSort = (a, b) => `${a.date}T${a.time ?? "99:99"}`.localeCompare(`${b.date}T${b.time ?? "99:99"}`);
+  const recentOrdered = recent.every((m, i) => i === 0 || timeSort(recent[i - 1], m) >= 0);
+  ok(`[${lg.id}] recent results are recorded newest first (non-increasing date/time)`, recentOrdered);
+  ok(`[${lg.id}] every recent fixture carries a full-time score and the date is ISO`,
+    recent.every((m) => iso.test(m.date) && Array.isArray(m.ft) && m.ft.length >= 2));
+  const upcomingOrdered = upcoming.every((m, i) => i === 0 || timeSort(upcoming[i - 1], m) <= 0);
+  ok(`[${lg.id}] upcoming fixtures are soonest first (non-decreasing date/time)`, upcomingOrdered);
+  ok(`[${lg.id}] at least one fixture has been played (or the season is dormant) and every url points at its own file`,
+    lg.playedFixtures <= lg.totalFixtures && lg.totalFixtures >= 306 &&
+    lg.url.includes(lg.file) && typeof lg.url === "string");
+}
 
 // --- 4 · the ledger's two ends are honest ------------------------------------------------------
 const stamp = Date.parse(wire?.generated_at ?? "");
-ok("generated_at is a real timestamp no older than 400 days from CI's clock perspective", Number.isFinite(stamp) && Date.now() - stamp < 400 * 86_400_000);
-const iso = /^\d{4}-\d{2}-\d{2}$/;
-const timeSort = (a, b) => `${a.date}T${a.time ?? "99:99"}`.localeCompare(`${b.date}T${b.time ?? "99:99"}`);
-ok("summary recency: fewer finished fixtures than the calendar commits to",
-  wire !== null && wire.playedFixtures <= wire.totalFixtures && wire.totalFixtures >= 306);
-const recentOrdered = recent.every((m, i) => i === 0 || timeSort(recent[i - 1], m) >= 0);
-ok("recent results are recorded newest first (non-increasing date/time)", recentOrdered);
-ok("every recent fixture carries a full-time score and the date is ISO",
-  recent.every((m) => iso.test(m.date) && Array.isArray(m.ft) && m.ft.length >= 2));
-const upcomingOrdered = upcoming.every((m, i) => i === 0 || timeSort(upcoming[i - 1], m) <= 0);
-ok("upcoming fixtures are soonest first (non-decreasing date/time)", upcomingOrdered);
+ok("generated_at is a real timestamp inside the 400-day staleness bound", Number.isFinite(stamp) && Date.now() - stamp < 400 * 86_400_000);
 
 // --- 5 · the route is real everywhere a route can hide -----------------------------------------
 const appTsx = readFileSync("src/App.tsx", "utf8");
@@ -94,24 +101,26 @@ ok("the workflow runs the generator on a weekly cron", workflow.includes(weeklyC
 ok("the workflow commits only when the wire moved, with contents:write",
   workflow.includes("git diff --staged --quiet") && /contents:\s*write/.test(workflow));
 const gen = readFileSync("scripts/update-live-wire.mjs", "utf8");
-ok("the generator pulls the CC0 OpenFootball fixture file", gen.includes("raw.githubusercontent.com/openfootball/football.json/master/2026-27/de.1.json"));
-ok("the generator exits non-zero instead of committing a fold it cannot verify", /process\.exit\(1\)/.test(gen) && /refusing/.test(gen));
+ok("the generator pulls all seven CC0 OpenFootball fixture files (same season directory)",
+  gen.includes("master/2026-27") &&
+  ["de.1", "en.1", "es.1", "it.1", "fr.1", "nl.1", "pt.1"].every((id) => gen.includes(`"${id}"`)));
+ok("the generator exits non-zero instead of committing a fold it cannot verify", /process\.exit\(1\)/.test(gen) && /live-wire: FATAL/.test(gen));
 ok("the generator contains its full honesty kit (fetch retry, shape check, fold self-verification)",
   (gen.match(/fail\(/g) ?? []).length >= 6);
 ok("re-cuts fire on data movement only — the byte-stable guard keeps the clock from posing as news",
-  gen.includes("payload.generated_at = prev.generated_at"));
+  gen.includes("generated_at: prev.generated_at"));
 
 // --- 7 · the wire brief: honest twice over (an armed model, or the deterministic fold) -----------
-const facts = wire ? wireBriefFacts(wire) : null;
-ok("the fold facts exist — the fallback brief is computed from the artifact, never invented",
-  !!facts && Number.isFinite(facts.played) && facts.played === wire.playedFixtures && facts.total === wire.totalFixtures);
-ok("the fold never disagrees with the table it folds (gap, leader, gd, md)",
-  !!facts &&
-  facts.leader === wire.table[0].team &&
-  facts.second === wire.table[1].team &&
-  facts.leaderPts === wire.table[0].pts &&
-  facts.secondGap === wire.table[0].pts - wire.table[1].pts &&
-  facts.md === Number(/(\d+)\s*$/.exec(wire.recent[0]?.round ?? "")?.[1] ?? Number.NaN));
+const factsBundle = wire ? leagues.map((l) => ({ id: l.id, lg: l, facts: wireBriefFacts(l) })) : [];
+ok("the fold facts exist for every league — the fallback brief is computed, never invented",
+  factsBundle.length === 7 && factsBundle.every(({ lg, facts }) => !!facts && facts.played === lg.playedFixtures && facts.total === lg.totalFixtures && Number.isFinite(facts.md)));
+ok("the fold never disagrees with the table it folds (every league: gap, leader, gd, md)",
+  factsBundle.every(({ lg, facts }) => !!facts &&
+    facts.leader === lg.table[0].team &&
+    facts.second === lg.table[1].team &&
+    facts.leaderPts === lg.table[0].pts &&
+    facts.secondGap === lg.table[0].pts - lg.table[1].pts &&
+    facts.md === Number(/(\d+)\s*$/.exec(lg.recent[0]?.round ?? "")?.[1] ?? Number.NaN)));
 const liveSrc = readFileSync("features/livewire/LiveWire.tsx", "utf8");
 ok("the screen asks the armed model through the ONE streaming door (callLlmStream + LLM_CONFIG gate), lands the fold otherwise",
   /import \{ callLlmStream, LLM_CONFIG \} from "@\/data\/llm"/.test(liveSrc) &&
@@ -119,9 +128,10 @@ ok("the screen asks the armed model through the ONE streaming door (callLlmStrea
 ok("the brief never sends the model anything but the fold; the system prompt refuses invention outright",
   liveSrc.includes("Answer ONLY from the fold below. Never invent") && /ANSWER|Answer in \$\{LANG_NAME/.test(liveSrc));
 const dict7 = readFileSync("i18n/dictionaries.ts", "utf8");
-ok("all three locales coin the brief ask and the fold source caption",
+ok("all three locales coin the brief ask, the disclose and the tablist caption",
   (dict7.match(/"liveWire\.brief\.ask":/g) ?? []).length === 3 && (dict7.match(/"liveWire\.brief\.disclose":/g) ?? []).length === 3 &&
-  (dict7.match(/"liveWire\.fold\.source":/g) ?? []).length === 3 && (dict7.match(/"liveWire\.fold\.s1":/g) ?? []).length === 3);
+  (dict7.match(/"liveWire\.fold\.source":/g) ?? []).length === 3 && (dict7.match(/"liveWire\.fold\.s1":/g) ?? []).length === 3 &&
+  (dict7.match(/"liveWire\.leagues":/g) ?? []).length === 3);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

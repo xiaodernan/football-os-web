@@ -1,11 +1,12 @@
-// M1153 · The Wire Brief — deterministic fold facts behind the wire's briefing panel.
+// M1154 · The Wire Brief — deterministic fold facts behind the wire's briefing panel.
 // This is the stand-down answer when no model is on call: every value is computed from
 // the committed artifact, never estimated, never invented. The LLM path (when armed)
 // grounds on the same artifact instead — one wire, two voices, both honest.
 
-import type { LiveWirePayload } from "@/data/liveWire";
+import type { LiveWireLeague } from "@/data/liveWire";
 
 export interface WireBriefFacts {
+  league: string;
   total: number;
   played: number;
   md: number;
@@ -19,15 +20,16 @@ export interface WireBriefFacts {
   recentFt: string;
 }
 
-/** The facts the fold answer is built from; null when the wire carries no table. */
-export function wireBriefFacts(p: LiveWirePayload): WireBriefFacts | null {
-  const [first, second] = p.table;
+/** The facts the fold answer is built from; null when the wire section carries no table. */
+export function wireBriefFacts(l: LiveWireLeague): WireBriefFacts | null {
+  const [first, second] = l.table;
   if (!first || !second) return null;
-  const md = Number(/(\d+)\s*$/.exec(p.recent[0]?.round ?? "")?.[1] ?? 0);
-  const latest = p.recent[0] ?? null;
+  const md = Number(/(\d+)\s*$/.exec(l.recent[0]?.round ?? "")?.[1] ?? 0);
+  const latest = l.recent[0] ?? null;
   return {
-    total: p.totalFixtures,
-    played: p.playedFixtures,
+    league: l.league,
+    total: l.totalFixtures,
+    played: l.playedFixtures,
     md,
     leader: first.team,
     leaderPts: first.pts,

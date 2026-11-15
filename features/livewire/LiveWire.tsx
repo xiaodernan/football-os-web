@@ -1,6 +1,6 @@
-// M1152 · The Live Wire — the real Bundesliga, wired in honestly.
-// CI re-cuts public/live-wire.json weekly from OpenFootball's CC0 fixture file; this screen renders
-// exactly what the file carries. The frozen seeded world is a different universe on purpose — the two never mix.
+// M1154 · The Live Wire — seven top European leagues, wired in honestly.
+// CI re-cuts public/live-wire.json weekly (Sun 05:00 UTC) from OpenFootball's CC0 fixture files.
+// The frozen seeded world is a different universe on purpose; this wire walks the real one.
 
 import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n";
@@ -8,7 +8,7 @@ import { Panel, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, SEPARATOR, signed } from "@/lib/utils";
-import { fetchLiveWire, type LiveWirePayload, type LiveWireZone } from "@/data/liveWire";
+import { fetchLiveWire, type LiveWireLeague, type LiveWirePayload, type LiveWireZone } from "@/data/liveWire";
 import { callLlmStream, LLM_CONFIG } from "@/data/llm";
 import { wireBriefFacts } from "@/domain/wireBrief";
 import { ZapIcon } from "lucide-react";
@@ -33,21 +33,21 @@ const LANG_NAME: Record<Locale, string> = {
   "zh-TW": "Traditional Chinese",
 };
 
-// The system prompt is grounded only in the committed artifact; the model is forbidden inventions.
-const buildWireSystem = (p: LiveWirePayload, locale: Locale) => [
-  "You narrate the real German Bundesliga 2026/27 from ONE JSON artifact.",
-  `It carries the season as committed on ${p.generated_at.slice(0, 10)} by OpenFootball (CC0).`,
+// The system prompt is grounded only in the selected league's committed artifact; the model is forbidden inventions.
+const buildWireSystem = (l: LiveWireLeague, generatedAt: string, locale: Locale) => [
+  `You narrate the real ${l.league} ${l.season} from ONE JSON artifact.`,
+  `It carries the season as committed on ${generatedAt.slice(0, 10)} by OpenFootball (CC0).`,
   "Answer ONLY from the fold below. Never invent a club, result, date or player; never estimate a number.",
   "If the wire does not carry the answer, say exactly that.",
   `Answer in ${LANG_NAME[locale]}. Plain prose, at most 180 words. No lists.`,
   "FOLD:",
   JSON.stringify({
-    league: p.league,
-    season: p.season,
-    played: p.playedFixtures,
-    total: p.totalFixtures,
-    table: p.table.map((r) => [r.pos, r.team, r.pts, r.gd, r.form.join("")]),
-    recent: p.recent.map((m) => [m.round, m.date, `${m.home} ${m.ft.join("-")} ${m.away}`]),
+    league: l.league,
+    season: l.season,
+    played: l.playedFixtures,
+    total: l.totalFixtures,
+    table: l.table.map((r) => [r.pos, r.team, r.pts, r.gd, r.form.join("")]),
+    recent: l.recent.map((m) => [m.round, m.date, `${m.home} ${m.ft.join("-")} ${m.away}`]),
   }),
 ].join("\n");
 
@@ -56,13 +56,17 @@ export function LiveWire() {
   const [payload, setPayload] = useState<LiveWirePayload | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [attempt, setAttempt] = useState(0);
+  const [leagueId, setLeagueId] = useState("de.1");
   const [brief, setBrief] = useState<{ status: "idle" | "streaming" | "ready" | "fold"; text: string; error?: string }>({ status: "idle", text: "" });
 
+  const league: LiveWireLeague | null =
+    payload?.leagues.find((l) => l.id === leagueId) ?? payload?.leagues[0] ?? null;
+
   const askBrief = () => {
-    if (!payload || brief.status === "streaming") return;
-    const facts = wireBriefFacts(payload);
+    if (!payload || !league || brief.status === "streaming") return;
+    const facts = wireBriefFacts(league);
     if (!LLM_CONFIG.hasKey) {
-      setBrief({ status: "fold", text: foldLines(facts, t) });
+      setBrief({ status: "fold", text: foldLines(facts, t, league) });
       return;
     }
     setBrief({ status: "streaming", text: "" });
@@ -70,17 +74,17 @@ export function LiveWire() {
       "Give me the wireside brief.",
       [],
       (delta) => setBrief((s) => (s.status === "streaming" ? { ...s, text: s.text + delta } : s)),
-      { system: buildWireSystem(payload, locale) },
+      { system: buildWireSystem(league, payload.generated_at, locale) },
     ).then((r) => {
       if (r.ok) setBrief({ status: "ready", text: r.text });
-      else setBrief({ status: "fold", text: foldLines(facts, t), error: r.error });
+      else setBrief({ status: "fold", text: foldLines(facts, t, league), error: r.error });
     });
   };
 
-  const foldLines = (facts: ReturnType<typeof wireBriefFacts>, tr: typeof t): string => {
-    if (!facts || !payload) return "";
+  const foldLines = (facts: ReturnType<typeof wireBriefFacts>, tr: typeof t, l: LiveWireLeague): string => {
+    if (!facts) return "";
     return [
-      tr("liveWire.fold.s1", { played: facts.played, total: facts.total, season: payload.season }),
+      tr("liveWire.fold.s1", { played: facts.played, total: facts.total, league: l.league }),
       tr("liveWire.fold.s2", { leader: facts.leader, pts: facts.leaderPts, gd: facts.leaderGd, second: facts.second, gap: facts.secondGap }),
       tr("liveWire.fold.s3", { home: facts.recentHome, ft: facts.recentFt, away: facts.recentAway, md: facts.md }),
       tr("liveWire.fold.s4"),
@@ -95,6 +99,9 @@ export function LiveWire() {
       .catch(() => { if (!cancelled) setStatus("error"); });
     return () => { cancelled = true; };
   }, [attempt]);
+
+  const generatedAt = payload?.generated_at ?? "";
+  const hasPlayoff = league?.table.some((r) => r.zone === "playoff") ?? false;
 
   return (
     <div className="space-y-5">
@@ -113,11 +120,31 @@ export function LiveWire() {
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <span className={cn("rounded-md border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest", CHIP_CLASS.badgeSuccess)}>{t("liveWire.live")}</span>
-            {payload ? (
-              <span className={cn("rounded-md border px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest", CHIP_CLASS.badgePrimary)}>{payload.season}</span>
+            {league ? (
+              <span className={cn("rounded-md border px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest", CHIP_CLASS.badgePrimary)}>{league.season}</span>
             ) : null}
           </div>
         </div>
+
+        {payload && league ? (
+          <div role="tablist" aria-label={t("liveWire.leagues")} className="relative mt-4 flex flex-wrap gap-1.5">
+            {payload.leagues.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                role="tab"
+                aria-selected={l.id === league.id}
+                onClick={() => { setLeagueId(l.id); setBrief({ status: "idle", text: "" }); }}
+                className={cn(
+                  "rounded-md border px-2 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-colors",
+                  l.id === league.id ? "border-primary/60 bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                )}
+              >
+                {l.league}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </header>
 
       {status === "loading" ? (
@@ -136,16 +163,16 @@ export function LiveWire() {
         </Panel>
       ) : null}
 
-      {status === "ready" && payload ? (
+      {status === "ready" && payload && league ? (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] text-muted-foreground">
             <div className="font-mono tabular-nums">
-              {payload.playedFixtures}/{payload.totalFixtures} {t("liveWire.playedCaption")}
+              {league.playedFixtures}/{league.totalFixtures} {t("liveWire.playedCaption")}
               {" · "}
-              {t("liveWire.asOf", { at: payload.generated_at.slice(0, 10) })}
+              {t("liveWire.asOf", { at: generatedAt.slice(0, 10) })}
             </div>
             <div>
-              {payload.league} · {payload.source.license}
+              {league.league} · {payload.source.license}
             </div>
           </div>
 
@@ -168,7 +195,7 @@ export function LiveWire() {
                   </tr>
                 </thead>
                 <tbody>
-                  {payload.table.map((row) => (
+                  {league.table.map((row) => (
                     <tr key={row.team} className="border-t border-border/60">
                       <td className="px-2 py-2 font-mono tabular-nums">
                         <span className="inline-flex items-center gap-1.5">
@@ -200,7 +227,7 @@ export function LiveWire() {
                 <span className="uppercase tracking-widest">{t("liveWire.zoneGuide")}</span>
                 <span className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-success" />{t("liveWire.zone.ucl")}</span>
                 <span className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-info" />{t("liveWire.zone.europa")}</span>
-                <span className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-warning" />{t("liveWire.zone.playoff")}</span>
+                {hasPlayoff ? <span className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-warning" />{t("liveWire.zone.playoff")}</span> : null}
                 <span className="inline-flex items-center gap-1.5"><span aria-hidden className="h-2 w-2 rounded-full bg-destructive" />{t("liveWire.zone.relegation")}</span>
                 <span className="ml-auto">{t("liveWire.formCaption")}</span>
               </div>
@@ -210,9 +237,9 @@ export function LiveWire() {
               <Panel className="p-4">
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("liveWire.recent")}</div>
                 <ul className="mt-2 divide-y divide-border/60">
-                  {payload.recent.length === 0 ? (
+                  {league.recent.length === 0 ? (
                     <li className="py-3 text-xs text-muted-foreground">{t("liveWire.recentEmpty")}</li>
-                  ) : payload.recent.map((m, i) => {
+                  ) : league.recent.map((m, i) => {
                     const homeWins = m.ft[0] > m.ft[1];
                     const awayWins = m.ft[1] > m.ft[0];
                     return (
@@ -235,9 +262,9 @@ export function LiveWire() {
               <Panel className="p-4">
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("liveWire.upcoming")}</div>
                 <ul className="mt-2 divide-y divide-border/60">
-                  {payload.upcoming.length === 0 ? (
+                  {league.upcoming.length === 0 ? (
                     <li className="py-3 text-xs text-muted-foreground">{t("liveWire.upcomingEmpty")}</li>
-                  ) : payload.upcoming.map((m, i) => (
+                  ) : league.upcoming.map((m, i) => (
                     <li key={`${m.date}-${i}`} className="py-2 text-xs">
                       <div className="flex items-center justify-between gap-2">
                         <time dateTime={m.date} className="font-mono text-[10px] text-muted-foreground">{m.date.slice(5)}{m.time ? ` · ${m.time}` : ""}</time>
@@ -290,8 +317,8 @@ export function LiveWire() {
 
           <p className="text-center text-[10px] leading-relaxed text-muted-foreground">
             {t("liveWire.method")}{" "}
-            <a className="text-primary underline-offset-2 hover:underline" href={payload.source.url} target="_blank" rel="noreferrer">{t("liveWire.sourceLink")}</a>
-            <span className="ml-1 font-mono text-[9px] text-muted-foreground">{payload.source.name} · {payload.source.file}</span>
+            <a className="text-primary underline-offset-2 hover:underline" href={league.url} target="_blank" rel="noreferrer">{t("liveWire.sourceLink")}</a>
+            <span className="ml-1 font-mono text-[9px] text-muted-foreground">{payload.source.name} · {league.file}</span>
           </p>
         </>
       ) : null}
