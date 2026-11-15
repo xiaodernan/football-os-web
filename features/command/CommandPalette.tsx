@@ -101,6 +101,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       { id: "dossier", label: t("nav.dossier"), group: "goto", run: nav("/dossier") },
       { id: "dream-team", label: t("nav.dreamTeam"), group: "goto", run: nav("/dream-team") },
       { id: "ops", label: t("nav.ops"), group: "goto", run: nav("/ops") },
+      { id: "journey", label: t("nav.journey"), group: "goto", run: nav("/journey") },
       { id: "profile", label: t("nav.profile"), group: "goto", run: nav("/profile") },
       { id: "review", label: t("nav.review"), group: "goto", run: nav("/review") },
       { id: "load", label: t("nav.load"), group: "goto", run: nav("/load") },

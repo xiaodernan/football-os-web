@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PULSE_KEY, type VisitRecord } from "@/domain/pulse";
 import { browserStore, readJson, writeJson } from "@/domain/localData";
 import { last } from "@/domain/attributes";
+const Journey = lazy(() => import("@/features/journey/Journey").then((m) => ({ default: m.Journey })));
 
 // Route-level code splitting keeps the first paint lean; heavy, chart-backed
 // features load on demand.
@@ -186,6 +187,7 @@ function Routes() {
   else if (path === "/dossier") inner = <Dossier />;
   else if (path === "/dream-team") inner = <DreamXI />;
   else if (path === "/ops") inner = <Ops />;
+  else if (path === "/journey") inner = <Journey />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

@@ -49,9 +49,11 @@ export function Manual() {
     { to: "/pressroom", label: t("nav.pressroom") },
     { to: "/dossier", label: t("nav.dossier") },
     { to: "/dream-team", label: t("nav.dreamTeam") },
+    { to: "/journey", label: t("nav.journey") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },
     { to: "/platform", label: t("nav.platform") },
+    { to: "/ops", label: t("nav.ops") },
   ]), [t]);
 
   return (
