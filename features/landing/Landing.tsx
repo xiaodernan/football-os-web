@@ -95,6 +95,18 @@ export function Landing() {
         <div aria-hidden className="fo-fade-bottom pointer-events-none absolute inset-x-0 bottom-0 h-24" />
       </section>
 
+      {/* The quiet door to the real world — honesty that the demo world is not the only world */}
+      <section className="mx-auto -mt-10 mb-2 max-w-6xl px-6">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur">
+          <span className="flex items-center gap-2 text-primary"><span aria-hidden className="fo-live-dot h-1.5 w-1.5 rounded-full bg-primary" />{t("landing.real.kicker")}</span>
+          <Link to="/live-wire" title={t("landing.real.wireHint")} className="underline-offset-2 transition-colors hover:text-primary hover:underline">{t("landing.real.wire")}</Link>
+          <span aria-hidden className="text-muted-foreground/50">·</span>
+          <Link to="/grand-tour" title={t("landing.real.tourHint")} className="underline-offset-2 transition-colors hover:text-primary hover:underline">{t("landing.real.tour")}</Link>
+          <span aria-hidden className="text-muted-foreground/50">·</span>
+          <Link to="/dispatch" title={t("landing.real.dispatchHint")} className="underline-offset-2 transition-colors hover:text-primary hover:underline">{t("dispatch.print")}</Link>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {PILLARS.map((k) => (

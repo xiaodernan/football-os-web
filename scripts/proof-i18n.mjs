@@ -3325,11 +3325,13 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M1132: the Matchday Programme's keys pay their toll ("PPG" shared with mgr.ppg, "W-D-L" shared
 // with mgr.wdl, "GD" shared with data.th.gd/mgr.thGD/fw.table.gd, "goals" shared with
 // leaders.colGoals) — 156 -> 159.
+// The landing's real-world strip reuses dispatch.print verbatim — the English ratchet HOLDS at 159.
 const DUP_VALUES_PIN = 159;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
 // M970: the same "Pts" join pays its excess: 252 -> 254.
 // M1020: the same shared idiom join pays its excess: 254 -> 255.
 // M1132: the same four shared English values pay their excess end of the ratchet — 260 -> 263.
+// The landing's real-world strip contributes no new duplicate value (it reuses dispatch.print) — 263 holds.
 const DUP_EXCESS_KEYS_PIN = 263;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
@@ -4793,7 +4795,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1154 Seven Wires: the tablist caption joins (t("liveWire.leagues")) — 3173 -> 3174.
   // M1156 The Dispatch: the broadsheet literals — 3202 -> 3234.
   // M1157 The Prescription: the rx body sites' eight literal t() calls with exact inline vars — 3234 -> 3241; the rx severity template — 118 -> 119.
-shapeCounts.literal === 3241 && shapeCounts.template === 119 && shapeCounts.expression === 45
+  // M1159 The World Gate: seven literal t() sites on the landing strip — 3241 -> 3248.
+shapeCounts.literal === 3248 && shapeCounts.template === 119 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
