@@ -1,11 +1,11 @@
 {
-  "head": "b2d757b",
-  "total_commits": 1549,
-  "milestone": "M1148",
-  "milestone_full": "本提交落地后 M1148",
-  "pwa_kb": 711,
-  "assets": 90,
-  "screens": 68,
+  "head": "36146ad",
+  "total_commits": 1551,
+  "milestone": "M1149",
+  "milestone_full": "本提交落地后 M1149",
+  "pwa_kb": 718,
+  "assets": 91,
+  "screens": 69,
   "feature_surface": [
     "The Chronicle — the epic fixture, AI-narrated",
     "Hall of Legends — the world's greatest",
@@ -16,5 +16,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-15T07:13:44.723Z"
+  "generated_at": "2026-11-15T08:47:47.140Z"
 }
