@@ -6,7 +6,7 @@ import type { Club, Match, PlayerRef } from "./types";
 import { isFinished } from "./analytics";
 import { valueIndex } from "./scouting";
 import { sum, byOverall, byValueDesc, headroomOf } from "./attributes";
-import { round2 } from "@/lib/utils";
+import { round2, safeDiv } from "@/lib/utils";
 
 export interface ScoutDossier {
   player: PlayerRef;
@@ -55,7 +55,7 @@ export function scoutDossier(matches: readonly Match[], clubs: readonly Club[], 
     club: byId.get(prospect.clubId),
     appearances,
     goals: totalGoals,
-    goalsPerApp: round2(totalGoals / Math.max(1, appearances)),
+    goalsPerApp: round2(safeDiv(totalGoals, appearances)),
     gap: headroomOf(prospect.potential, prospect.overall),
     valueIndex: valueIndex(prospect),
   };
