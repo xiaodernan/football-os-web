@@ -350,11 +350,20 @@ ok("M969b the stream path forwards the deltas as frames and writes the assembled
   collected.filter((f) => f.t === "delta").length === 3 &&
   collected[collected.length - 1].t === "end" && collected[collected.length - 1].ok === true &&
   streamCache.entries.size === 1);
+// M1144: the memo hit no longer returns a `frames` array — it returns a single-frame NDJSON web
+// stream ({ t: "delta", d })({ t: "end", cached: true }), the same shape lib/llm-proxy hands the
+// browser on every streaming call. Read it the way the browser does.
 globalThis.fetch = async () => { modelCalls++; return { ok: true, status: 200, body: sse(["data: {}\n\n"]) }; };
 const beforeHit = modelCalls;
-const hitFrames = await handleLlmStream(FAKE, askBody, streamCache);
+const hitAsk = await handleLlmStream(FAKE, askBody, streamCache);
+const hitCollected = [];
+for await (const chunk of hitAsk.stream) {
+  for (const line of streamDecoder.decode(chunk, { stream: true }).split("\n")) {
+    if (line.trim()) hitCollected.push(JSON.parse(line));
+  }
+}
 ok("M969b a memo hit streams the whole answer as ONE frame and makes zero model calls (calls before/after: " + beforeHit + "/" + modelCalls + ")",
-  Array.isArray(hitFrames.frames) && hitFrames.frames.length === 2 && hitFrames.frames[1].cached === true && modelCalls === beforeHit);
+  hitAsk.stream && hitCollected.length === 2 && hitCollected[0].t === "delta" && hitCollected[1].t === "end" && hitCollected[1].cached === true && modelCalls === beforeHit);
 globalThis.fetch = realStreamFetch;
 ok("M969b the middleware routes a stream:true ask to the streaming path over an ndjson content type",
   PROXY.includes("handleLlmStream") && PROXY.includes("wantsStream") && PROXY.includes("application/x-ndjson"));

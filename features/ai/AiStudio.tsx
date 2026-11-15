@@ -83,6 +83,24 @@ function Chat() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
+  // M1144: the scroll engine. The streaming reader writes fresh deltas into the log, and without
+  // a guard EVERY delta pinned the viewport to the bottom — so a reader who scrolled up to revisit
+  // an earlier answer was yanked back to the live tail mid-word. The flag tracks whether the
+  // reader is currently pinned to the bottom (within a 40px slack); while it is false the chat
+  // never scrolls itself. A manual send re-pins the flag to true so the newly-sent question is
+  // visible again.
+  const atBottom = useRef(true);
+  const onScroll = () => {
+    const el = scroller.current;
+    if (!el) return;
+    const max = el.scrollHeight - el.clientHeight;
+    atBottom.current = max - el.scrollTop < 40;
+  };
+  const maybePin = (smooth: boolean) => {
+    const el = scroller.current;
+    if (!el || !atBottom.current) return;
+    el.scrollTo({ top: el.scrollHeight, ...(smooth ? { behavior: "smooth" as const } : {}) });
+  };
   // A log written before the chips and sources became rows stores plain strings. Normalising
   // them here — the boundary — keeps every read below a plain `rowLine` instead of a guard
   // at each site, and a value stored by an older visit stays exactly as it was written.
@@ -113,6 +131,7 @@ function Chat() {
     setLog((l) => [...l, { role: "user", content: question, at: new Date().toISOString() }]);
     setInput("");
     setBusy(true);
+    atBottom.current = true; // sending re-pins the viewport — the reader's own message is now visible
     if (LLM_CONFIG.hasKey && online) {
       // M969b: the live path STREAMS — a placeholder row grows with each model delta, so the
       // answer renders as the model writes it instead of after a silent pause. A degraded
@@ -123,32 +142,32 @@ function Chat() {
         streamed += delta;
         const lines = streamed.split(/\n+/).map((l) => l.trim()).filter(Boolean);
         setLog((l) => l.map((m, i) => (i === l.length - 1 && m.role === "ai" && m.via === "live" ? { ...m, content: lines.map((line) => asRowText(line)) } : m)));
-        requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight }));
+        requestAnimationFrame(() => maybePin(false));
       });
       if (r.ok) {
         const lines = r.text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
         setLog((l) => l.map((m, i) => (i === l.length - 1 && m.role === "ai" && m.via === "live" ? { ...m, content: lines.map((line) => asRowText(line)) } : m)));
         setBusy(false);
-        requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
+        requestAnimationFrame(() => maybePin(true));
         return;
       }
       const a = askIntelligence(question, locale);
       setLog((l) => l.map((m, i) => (i === l.length - 1 && m.role === "ai" && m.via === "live" ? { ...m, content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, via: "fallback" } : m)));
       setBusy(false);
-      requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
+      requestAnimationFrame(() => maybePin(true));
       return;
     }
     await new Promise((r) => setTimeout(r, 420));
     const a = askIntelligence(question, locale);
     setLog((l) => [...l, { role: "ai", content: a.answer, facts: a.facts, sources: a.sources, confidence: a.confidence, at: a.at, via: "local" }]);
     setBusy(false);
-    requestAnimationFrame(() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }));
+    requestAnimationFrame(() => maybePin(true));
   };
 
   return (
     <Panel className="flex h-[62vh] flex-col p-0">
       {!online && <div className={cn("border-b px-4 py-2 text-xs", CHIP_CLASS.info)}>{t("ai.offline")}</div>}
-      <div ref={scroller} className="flex-1 space-y-4 overflow-y-auto p-4">
+      <div ref={scroller} onScroll={onScroll} className="flex-1 space-y-4 overflow-y-auto p-4">
         {log.length === 0 && (
           <div className="space-y-3">
             <EmptyState title={t("ai.empty")} hint={t("ai.emptyHint")} icon="✦" />

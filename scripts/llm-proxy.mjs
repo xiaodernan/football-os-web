@@ -31,6 +31,7 @@
 //     from memory without a second model call. Errors and degraded responses are NEVER cached.
 
 export const PROXY_ROUTE = "/api/llm/chat";
+import { Readable } from "node:stream";
 const DEFAULT_BASE = "https://wkapi.pro/v1";
 const DEFAULT_MODEL = "gpt-6-sol";
 const MAX_MESSAGES = 10;
@@ -332,8 +333,17 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
   if (cache && cache.policy.enabled) {
     const hit = cache.read(key, Date.now());
     if (hit) {
-      return { status: 200, stream: true, contentType: STREAM_CONTENT_TYPE,
-        frames: [{ t: "delta", d: hit.text }, { t: "end", cached: true, model: hit.model }] };
+      const encoder = new TextEncoder();
+      const single = new ReadableStream({
+        start(controller) {
+          // One ndjson frame with the whole memo answer — the UI renders it instantly and
+          // cannot tell the difference from live streaming. Same bytes, same order.
+          controller.enqueue(encoder.encode(JSON.stringify({ t: "delta", d: hit.text }) + "\n"));
+          controller.enqueue(encoder.encode(JSON.stringify({ t: "end", cached: true, model: hit.model }) + "\n"));
+          controller.close();
+        },
+      });
+      return { status: 200, stream: single, contentType: STREAM_CONTENT_TYPE, model: hit.model };
     }
   }
 
@@ -463,7 +473,8 @@ export function llmProxyMiddleware(configFor = () => serverConfig(), cache = cre
         res.setHeader("Cache-Control", "no-store");
         res.setHeader("Content-Type", out.contentType);
         res.setHeader("X-Accel-Buffering", "no");
-        for await (const chunk of out.stream) res.write(chunk);
+        const nodeStream = Readable.fromWeb(out.stream);
+        for await (const chunk of nodeStream) res.write(chunk);
         res.end();
         return;
       }
