@@ -92,9 +92,12 @@ const CONSUMERS = [
   // M1135: the letters print venue-lethal rates and the world's conversion through the door.
   "features/letters/Letterbox.tsx",
   // M1140: the programme (M1132) pays its figures through the door too.
+  // M1140: the programme (M1132) pays its figures through the door too.
   "features/programme/Programme.tsx",
   // M1140: the press room prints league/attack/defence rates and the odds' lambda through the door.
   "features/pressroom/Pressroom.tsx",
+  // M1142: the dossier prints the five numbers and the tape rates through the door.
+  "features/dossier/Dossier.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the

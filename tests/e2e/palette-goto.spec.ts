@@ -20,5 +20,6 @@ test("the palette lists the new cinematic destinations in its goto group", async
   await expect(modal.getByText(/manual|使用手册|使用手冊/i).first()).toBeVisible();
   await expect(modal.getByText(/chalkboard|粉笔大赛|粉筆大賽/i).first()).toBeVisible();
   await expect(modal.getByText(/press room|媒体包厢|媒體包廂/i).first()).toBeVisible();
+  await expect(modal.getByText(/dossier|密报|密報/i).first()).toBeVisible();
   await page.keyboard.press("Escape");
 });
