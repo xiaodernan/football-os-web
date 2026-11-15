@@ -244,7 +244,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1128: the landing hero gains an inline SVG matchball motif — +1 KB across one asset; JS +1 KB (659 -> 660)
 // M1152 The Live Wire: the new lazy screen + its three-locale dictionary slice measures 730 KB across 94 assets
 // (JS 715 KB, CSS 15 KB); the pin moves 726 -> 730 and the baseline re-records in the same commit.
-const BUDGET_KB = 730;
+// M1153 The Wire Brief: the brief panel + fold joins the lazy chunk (JS 715 -> 717 KB, total 730 -> 732 KB), 94 assets
+// unchanged; the pin moves 730 -> 732 and the baseline re-records in the same commit.
+const BUDGET_KB = 732;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

@@ -7,8 +7,9 @@
 import { createServer } from "vite";
 import { readFileSync, existsSync } from "node:fs";
 
-const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
+const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error", optimizeDeps: { noDiscovery: true, include: [] } });
 const { isLiveWirePayload } = await server.ssrLoadModule("/data/liveWire.ts");
+const { wireBriefFacts } = await server.ssrLoadModule("/domain/wireBrief.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -99,6 +100,28 @@ ok("the generator contains its full honesty kit (fetch retry, shape check, fold 
   (gen.match(/fail\(/g) ?? []).length >= 6);
 ok("re-cuts fire on data movement only — the byte-stable guard keeps the clock from posing as news",
   gen.includes("payload.generated_at = prev.generated_at"));
+
+// --- 7 · the wire brief: honest twice over (an armed model, or the deterministic fold) -----------
+const facts = wire ? wireBriefFacts(wire) : null;
+ok("the fold facts exist — the fallback brief is computed from the artifact, never invented",
+  !!facts && Number.isFinite(facts.played) && facts.played === wire.playedFixtures && facts.total === wire.totalFixtures);
+ok("the fold never disagrees with the table it folds (gap, leader, gd, md)",
+  !!facts &&
+  facts.leader === wire.table[0].team &&
+  facts.second === wire.table[1].team &&
+  facts.leaderPts === wire.table[0].pts &&
+  facts.secondGap === wire.table[0].pts - wire.table[1].pts &&
+  facts.md === Number(/(\d+)\s*$/.exec(wire.recent[0]?.round ?? "")?.[1] ?? Number.NaN));
+const liveSrc = readFileSync("features/livewire/LiveWire.tsx", "utf8");
+ok("the screen asks the armed model through the ONE streaming door (callLlmStream + LLM_CONFIG gate), lands the fold otherwise",
+  /import \{ callLlmStream, LLM_CONFIG \} from "@\/data\/llm"/.test(liveSrc) &&
+  /LLM_CONFIG\.hasKey/.test(liveSrc) && /buildWireSystem/.test(liveSrc) && /wireBriefFacts/.test(liveSrc));
+ok("the brief never sends the model anything but the fold; the system prompt refuses invention outright",
+  liveSrc.includes("Answer ONLY from the fold below. Never invent") && /ANSWER|Answer in \$\{LANG_NAME/.test(liveSrc));
+const dict7 = readFileSync("i18n/dictionaries.ts", "utf8");
+ok("all three locales coin the brief ask and the fold source caption",
+  (dict7.match(/"liveWire\.brief\.ask":/g) ?? []).length === 3 && (dict7.match(/"liveWire\.brief\.disclose":/g) ?? []).length === 3 &&
+  (dict7.match(/"liveWire\.fold\.source":/g) ?? []).length === 3 && (dict7.match(/"liveWire\.fold\.s1":/g) ?? []).length === 3);
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

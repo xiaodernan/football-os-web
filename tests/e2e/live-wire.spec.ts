@@ -27,6 +27,9 @@ test("the /live-wire screen renders the committed CC0 wire, honestly labelled", 
   // the source link names OpenFootball and the file the wire reads
   await expect(page.getByRole("link", { name: /OpenFootball/i }).first()).toBeVisible();
 
+  // the wire brief affordance is armed on the screen (no live call happens here — see live-llm-chronicle for the paid path)
+  await expect(page.getByRole("button", { name: /wireside brief|电波快讯|電波快訊/ }).first()).toBeVisible();
+
   // at least one scoreline renders in the recent-results column (shape, not a hardcoded number)
   await expect(page.getByText(/\d+–\d+/).first()).toBeVisible();
 

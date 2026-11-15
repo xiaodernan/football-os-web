@@ -565,7 +565,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1076: 140 -> 141 — data/llm.ts (the live LLM tie-in's fold, lazy-loaded through the AI studio).
 // M1080: 141 -> 143 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
 // M1152: The Live Wire adds features/livewire/LiveWire.tsx and data/liveWire.ts (180).
-const APP_SRC_PIN = 180;
+// M1153: domain/wireBrief.ts joins the source population — 180 -> 181.
+const APP_SRC_PIN = 181;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -644,7 +645,8 @@ const TSX_PIN = 101;
 // M1076: 143 -> 144 — data/llm.ts (the live LLM tie-in's fold; lazy-loaded through the AI studio).
 // M1080: 144 -> 146 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
 // M1152: The Live Wire joins the reader population (183).
-const SRC_PIN = 183;
+// M1153: the wire-brief fold joins the reader population — 183 -> 184.
+const SRC_PIN = 184;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4782,7 +4784,8 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1129 (The world's chronicle of itself, fourteen literal t() sites on /about): literal 2821 -> 2840, expression 35 -> 37.
   // M1149 The Pulse: the operator console adds 45 literal t() sites (its own dictionary keys) and one template site (the depth-bucket label read from the loop index). Literal 3062 -> 3107, template 116 -> 117, expression unchanged.
   // M1152 The Live Wire: literal sites across the screen, the shell nav, the palette goto, the manual link — 3130 -> 3166.
-shapeCounts.literal === 3166 && shapeCounts.template === 118 && shapeCounts.expression === 45
+  // M1153 The Wire Brief: the brief panel adds eleven literal t() sites on the wire screen — 3166 -> 3173.
+shapeCounts.literal === 3173 && shapeCounts.template === 118 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

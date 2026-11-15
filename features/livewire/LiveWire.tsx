@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, SEPARATOR, signed } from "@/lib/utils";
 import { fetchLiveWire, type LiveWirePayload, type LiveWireZone } from "@/data/liveWire";
+import { callLlmStream, LLM_CONFIG } from "@/data/llm";
+import { wireBriefFacts } from "@/domain/wireBrief";
+import { ZapIcon } from "lucide-react";
+import type { Locale } from "@/i18n/dictionaries";
 
 const ZONE_DOT: Record<NonNullable<LiveWireZone>, string> = {
   ucl: "bg-success",
@@ -23,11 +27,65 @@ const FORM_CLASS: Record<string, string> = {
   L: CHIP_CLASS.destructive,
 };
 
+const LANG_NAME: Record<Locale, string> = {
+  en: "English",
+  "zh-CN": "Simplified Chinese",
+  "zh-TW": "Traditional Chinese",
+};
+
+// The system prompt is grounded only in the committed artifact; the model is forbidden inventions.
+const buildWireSystem = (p: LiveWirePayload, locale: Locale) => [
+  "You narrate the real German Bundesliga 2026/27 from ONE JSON artifact.",
+  `It carries the season as committed on ${p.generated_at.slice(0, 10)} by OpenFootball (CC0).`,
+  "Answer ONLY from the fold below. Never invent a club, result, date or player; never estimate a number.",
+  "If the wire does not carry the answer, say exactly that.",
+  `Answer in ${LANG_NAME[locale]}. Plain prose, at most 180 words. No lists.`,
+  "FOLD:",
+  JSON.stringify({
+    league: p.league,
+    season: p.season,
+    played: p.playedFixtures,
+    total: p.totalFixtures,
+    table: p.table.map((r) => [r.pos, r.team, r.pts, r.gd, r.form.join("")]),
+    recent: p.recent.map((m) => [m.round, m.date, `${m.home} ${m.ft.join("-")} ${m.away}`]),
+  }),
+].join("\n");
+
 export function LiveWire() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [payload, setPayload] = useState<LiveWirePayload | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [attempt, setAttempt] = useState(0);
+  const [brief, setBrief] = useState<{ status: "idle" | "streaming" | "ready" | "fold"; text: string; error?: string }>({ status: "idle", text: "" });
+
+  const askBrief = () => {
+    if (!payload || brief.status === "streaming") return;
+    const facts = wireBriefFacts(payload);
+    if (!LLM_CONFIG.hasKey) {
+      setBrief({ status: "fold", text: foldLines(facts, t) });
+      return;
+    }
+    setBrief({ status: "streaming", text: "" });
+    callLlmStream(
+      "Give me the wireside brief.",
+      [],
+      (delta) => setBrief((s) => (s.status === "streaming" ? { ...s, text: s.text + delta } : s)),
+      { system: buildWireSystem(payload, locale) },
+    ).then((r) => {
+      if (r.ok) setBrief({ status: "ready", text: r.text });
+      else setBrief({ status: "fold", text: foldLines(facts, t), error: r.error });
+    });
+  };
+
+  const foldLines = (facts: ReturnType<typeof wireBriefFacts>, tr: typeof t): string => {
+    if (!facts || !payload) return "";
+    return [
+      tr("liveWire.fold.s1", { played: facts.played, total: facts.total, season: payload.season }),
+      tr("liveWire.fold.s2", { leader: facts.leader, pts: facts.leaderPts, gd: facts.leaderGd, second: facts.second, gap: facts.secondGap }),
+      tr("liveWire.fold.s3", { home: facts.recentHome, ft: facts.recentFt, away: facts.recentAway, md: facts.md }),
+      tr("liveWire.fold.s4"),
+    ].join("\n");
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -192,6 +250,43 @@ export function LiveWire() {
               </Panel>
             </div>
           </div>
+
+          <Panel className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("liveWire.brief.title")}</div>
+                <p className="mt-0.5 max-w-xl text-[11px] text-muted-foreground">{t("liveWire.brief.disclose")}</p>
+              </div>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={askBrief} disabled={brief.status === "streaming"}>
+                <ZapIcon className="h-3.5 w-3.5" aria-hidden /> {t("liveWire.brief.ask")}
+              </Button>
+            </div>
+            {brief.status !== "idle" ? (
+              <div className="mt-3 border-t border-border pt-3 text-xs leading-relaxed">
+                {brief.status === "streaming" ? (
+                  <>
+                    <span className="sr-only">{t("liveWire.brief.streaming")}</span>
+                    <span className="whitespace-pre-wrap text-foreground">{brief.text}</span>
+                    <span aria-hidden className="animate-pulse">▌</span>
+                  </>
+                ) : null}
+                {brief.status === "ready" || brief.status === "fold" ? (
+                  <>
+                    {brief.status === "fold" ? (
+                      <>
+                        <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-warning">{t("liveWire.fold.source")}</div>
+                        {brief.error ? <div className="mb-2 font-mono text-[10px] text-muted-foreground">{t("liveWire.brief.error")} <span>{brief.error}</span></div> : null}
+                      </>
+                    ) : null}
+                    <span className="whitespace-pre-wrap text-foreground">{brief.text}</span>
+                    <div className="mt-2 text-right">
+                      <Button size="sm" variant="ghost" onClick={askBrief}>{t("liveWire.brief.again")}</Button>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+          </Panel>
 
           <p className="text-center text-[10px] leading-relaxed text-muted-foreground">
             {t("liveWire.method")}{" "}

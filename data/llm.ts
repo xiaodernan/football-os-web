@@ -105,14 +105,24 @@ export function windowHistory(history: ChatMessage[]): ChatMessage[] {
 // and resolves with the assembled text. A proxy that answered the plain JSON envelope instead
 // (an older deploy, an error) is read as one final delta — the caller cannot tell and need
 // not care. Never throws: every failure resolves { ok:false }.
+export interface CallOptions {
+  /**
+   * Replaces the default WORLD_BRIEFING system prompt for this one call — used by surfaces
+   * that need a ground truth OTHER than the frozen seed (e.g. the live Bundesliga artifact).
+   * The proxy, the key and the endpoint are unchanged; nothing leaves this module.
+   */
+  system?: string;
+}
+
 export async function callLlmStream(
   question: string,
   history: ChatMessage[] = [],
   onDelta: (delta: string) => void = () => {},
+  options: CallOptions = {},
 ): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
   if (!LLM_CONFIG.hasKey) return { ok: false, error: "no key configured" };
   const messages: ChatMessage[] = [
-    { role: "system", content: WORLD_BRIEFING },
+    { role: "system", content: options.system ?? WORLD_BRIEFING },
     ...windowHistory(history),
     { role: "user", content: question },
   ];
