@@ -30,7 +30,7 @@ const tryGit = (...args) => {
 
 const status = read("dev/status_report.md");
 const carve = (name) => {
-  const m = status.match(new RegExp(`(?:- )?\\*\\*${name}\\*\\*: (.*?)\\n`));
+  const m = status.match(new RegExp(`(?:- )?\\*\\*${name}\\*\\*: (.*?)\\r?\\n`));
   return m ? m[1].trim() : "";
 };
 const headLine = carve("当前HEAD");
