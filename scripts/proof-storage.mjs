@@ -150,7 +150,9 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[
 // M1152 The Live Wire: two new reader-reached app files (LiveWire.tsx + liveWire.ts) — 176 -> 178.
 // M1153: domain/wireBrief.ts is reader-reached — 178 -> 179.
 // M1155 The Grand Tour: GrandTour.tsx + domain/grandTour.ts join the reader population — 179 -> 181.
-const APP_FILES_PIN = 182;
+// M1156 The Dispatch: features/dispatch/Dispatch.tsx joins the reader population — 181 -> 182.
+// M1157 The Prescription: domain/prescription.ts joins the reader population — 182 -> 183.
+const APP_FILES_PIN = 183;
 
 // The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
 // stands alone must keep the two a reader reaches and drop the third. The planted files are

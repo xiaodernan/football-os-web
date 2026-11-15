@@ -19,6 +19,7 @@ test("the /ops console refuses a wrong passcode and opens on 123", async ({ page
   await expect(page.getByText(/session count|会话|會話/i).first()).toBeVisible({ timeout: 10000 });
   await expect(page.getByText(/top screens by visits|最常看的屏|最常看的屏/i).first()).toBeVisible({ timeout: 10000 });
   await expect(page.getByText(/the model's ledger|模型经济账|模型經濟帳/i).first()).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/the prescription|处方签|處方箋/i).first()).toBeVisible({ timeout: 10000 });
   expect(errors, `console errors on /ops: ${errors.join(" || ")}`).toHaveLength(0);
 });
 

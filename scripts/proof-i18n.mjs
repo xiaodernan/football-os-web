@@ -566,7 +566,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1080: 141 -> 143 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
 // M1152: The Live Wire adds features/livewire/LiveWire.tsx and data/liveWire.ts (180).
 // M1153: domain/wireBrief.ts joins the source population — 180 -> 181.
-const APP_SRC_PIN = 184;
+// M1157 The Prescription: domain/prescription.ts joins the source population — 184 -> 185.
+const APP_SRC_PIN = 185;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -646,7 +647,8 @@ const TSX_PIN = 103;
 // M1080: 144 -> 146 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
 // M1152: The Live Wire joins the reader population (183).
 // M1153: the wire-brief fold joins the reader population — 183 -> 184.
-const SRC_PIN = 187;
+// M1157 The Prescription: the fold joins the reader population — 187 -> 188.
+const SRC_PIN = 188;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -774,6 +776,7 @@ const DYN_SITES = [
   { path: "features/ai/AiStudio.tsx", expr: "a.id", prefix: "ai.sug.", suffix: "" },
   { path: "features/library/Library.tsx", expr: "hit.document.kind", prefix: "library.kind.", suffix: "" }, // M1151 The Library: the five document kinds walk in from the corpus fold
   { path: "features/ops/Ops.tsx", expr: "i", prefix: "ops.depth.bucket", suffix: "" }, // M1149: the session-depth bucket label reads its key from the loop index
+  { path: "features/ops/Ops.tsx", expr: "r.severity", prefix: "ops.rx.severity.", suffix: "" }, // M1157 The Prescription: severity chips read their key from the fold
 
   { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
   { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
@@ -1161,6 +1164,8 @@ claimByPrefix("group.", S_GROUP);
 claimByPrefix("prof.mode.", S_MODE);
 const S_PULSE_DEPTH = { name: "pulse session-depth buckets", values: ["0", "1", "2", "3"] };
 claimByPrefix("ops.depth.bucket", S_PULSE_DEPTH);
+const S_RX_SEV = { name: "prescription severity", values: ["now", "next", "watch"] };
+claimByPrefix("ops.rx.severity.", S_RX_SEV);
 claimByPrefix("onb.goal.", S_ONB_GOAL);
 claimByPrefix("onb.age.", S_ONB_AGE);
 // M217: the AI screen's suggested questions are keyed, and the id list is read out of the module
@@ -4786,8 +4791,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1152 The Live Wire: literal sites across the screen, the shell nav, the palette goto, the manual link — 3130 -> 3166.
   // M1153 The Wire Brief: the brief panel adds eleven literal t() sites on the wire screen — 3166 -> 3173.
   // M1154 Seven Wires: the tablist caption joins (t("liveWire.leagues")) — 3173 -> 3174.
-  // M1155 The Grand Tour: ~28 literal t() sites on the screen, the chase, the cards and the loudest-results ledger — 3174 -> 3202.
-shapeCounts.literal === 3234 && shapeCounts.template === 118 && shapeCounts.expression === 45
+  // M1156 The Dispatch: the broadsheet literals — 3202 -> 3234.
+  // M1157 The Prescription: the rx body sites' eight literal t() calls with exact inline vars — 3234 -> 3241; the rx severity template — 118 -> 119.
+shapeCounts.literal === 3241 && shapeCounts.template === 119 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4957,7 +4963,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // expectedTotalGoals row ({n}): 473 -> 478 (the expectedGoals λ/xG pair added after the first
   // measurement).
   // M1152 The Live Wire: its asOf caption interpolates {at} — 532 -> 533.
-litVarSites === 541 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+// M1157 The Prescription: the rx body sites are literal-with-vars — 541 -> 544.
+litVarSites === 544 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.

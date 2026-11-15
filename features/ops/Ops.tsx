@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import { useI18n, formatDate } from "@/i18n";
 import { PULSE_KEY, HIGH_BOUNCE_SHARE, syntheticCohort, foldPulse, type Cohort, type VisitRecord, type PulseFold } from "@/domain/pulse";
 import { fmt1, fmt2, pctOf } from "@/lib/utils";
+import { foldPrescription, type Prescription } from "@/domain/prescription";
 import { browserStore, readJson } from "@/domain/localData";
 import { Panel, PANEL_CLASS, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
@@ -67,10 +68,21 @@ export function Ops() {
 
   const dwellSec = (ms: number) => Math.round(ms / 1000);
 
-  const advBounce = fold.bounceRate >= 55;
-  const advDepth = fold.avgDepth < 2.5 && fold.sessions > 0;
-  const advDeadEnd = fold.sessions > 0 && fold.deadEndSessions / fold.sessions >= 0.2;
-  const advManualExit = (fold.exits.find((e) => e.path === "/manual")?.exits ?? 0) >= 3;
+  // The prescription is fold-cheap: one pass, ordered, honest.
+  const rx = foldPrescription(fold);
+  const rxBody = (r: Prescription): string => {
+    switch (r.id) {
+      case "rx.bounce": return t("ops.rx.bounce", { p: r.vars.p });
+      case "rx.depth": return t("ops.rx.depth", { d: r.vars.d });
+      case "rx.deadEnd": return t("ops.rx.deadEnd", { path: r.vars.path, n: r.vars.n, s: r.vars.s });
+      case "rx.manualExit": return t("ops.rx.manualExit", { n: r.vars.n });
+      case "rx.loop": return t("ops.rx.loop", { l: r.vars.l });
+      case "rx.bounceDoor": return t("ops.rx.bounceDoor", { path: r.vars.path, p: r.vars.p });
+      case "rx.fatigue": return t("ops.rx.fatigue", { s: r.vars.s });
+      case "rx.hold": return t("ops.rx.hold");
+      default: return t("ops.rx.hold");
+    }
+  };
 
   return (
     <div className="space-y-5 print:hidden">
@@ -91,7 +103,7 @@ export function Ops() {
       </header>
 
       {/* The six big numbers */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-7">
         {[
           { label: t("ops.tiles.sessions"), value: String(fold.sessions) },
           { label: t("ops.tiles.visits"), value: String(fold.visits) },
@@ -99,6 +111,7 @@ export function Ops() {
           { label: t("ops.tiles.depth"), value: fmt2(fold.avgDepth) },
           { label: t("ops.tiles.dwell"), value: `${dwellSec(fold.avgDwellMs)}s` },
           { label: t("ops.tiles.loop"), value: `${fmt1(fold.loopRate)}%` },
+          { label: t("ops.tiles.deadEnds"), value: String(fold.deadEndSessions) },
         ].map((cell) => (
           <div key={cell.label} className={cn("rounded-xl border p-3 text-center", PANEL_CLASS.panelQuiet)}>
             <div className="fo-spectrum font-mono text-2xl font-black tabular-nums">{cell.value}</div>
@@ -154,16 +167,26 @@ export function Ops() {
         </Panel>
       </div>
 
-      {/* What the numbers say */}
+      {/* The prescription — deep optimization prescribed from the fold's own numbers */}
       <Panel className="p-4">
-        <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.panel.advice")}</h2>
-        <ul className="mt-2 list-disc space-y-1.5 pl-5">
-          {advBounce ? <li className="text-xs leading-relaxed text-foreground/90">{t("ops.adv.bounce", { p: fmt1(fold.bounceRate) })}</li> : null}
-          {advDepth ? <li className="text-xs leading-relaxed text-foreground/90">{t("ops.adv.depth", { d: fmt2(fold.avgDepth) })}</li> : null}
-          {advDeadEnd ? <li className="text-xs leading-relaxed text-foreground/90">{t("ops.adv.deadEnd", { n: fold.deadEndSessions, s: fold.sessions })}</li> : null}
-          {advManualExit ? <li className="text-xs leading-relaxed text-foreground/90">{t("ops.adv.manual", { n: fold.exits.find((e) => e.path === "/manual")?.exits ?? 0 })}</li> : null}
-          {!advBounce && !advDepth && !advDeadEnd && !advManualExit ? <li className="text-xs text-muted-foreground">{t("ops.adv.quiet")}</li> : null}
-        </ul>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.rx.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("ops.rx.title")}</p>
+          </div>
+          <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.rx.tag")}</div>
+        </div>
+        <ol className="mt-3 grid gap-2">
+          {rx.map((r) => {
+            const tone = r.severity === "now" ? CHIP_CLASS.badgeWarning : r.severity === "next" ? CHIP_CLASS.badgeInfoStrong : CHIP_CLASS.muted;
+            return (
+              <li key={r.id} className={cn("flex flex-wrap items-start gap-3 rounded-lg p-3 text-xs", PANEL_CLASS.panelGhost)}>
+                <span className={cn("mt-0.5 w-12 shrink-0 rounded-md border px-1.5 py-1 text-center font-mono text-[9px] font-bold uppercase tracking-widest", tone)}>{t(`ops.rx.severity.${r.severity}`)}</span>
+                <span className="min-w-0 flex-1 leading-relaxed text-foreground/90">{rxBody(r)}</span>
+              </li>
+            );
+          })}
+        </ol>
       </Panel>
 
       {/* 14-day rhythm */}

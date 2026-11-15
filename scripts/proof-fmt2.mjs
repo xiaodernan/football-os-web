@@ -101,6 +101,8 @@ const CONSUMERS = [
   "features/dossier/Dossier.tsx",
   // M1155 The Grand Tour: the chase panel prints its drama quotient through the door (once per row).
   "features/grandtour/GrandTour.tsx",
+  // M1157 The Prescription: the fold's own numbers ride the door (avgDepth in the rx.depth body).
+  "domain/prescription.ts",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the
