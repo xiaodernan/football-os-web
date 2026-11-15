@@ -17,6 +17,7 @@ import { browserStore, readJson, writeJson } from "@/domain/localData";
 import { last } from "@/domain/attributes";
 const Journey = lazy(() => import("@/features/journey/Journey").then((m) => ({ default: m.Journey })));
 const Library = lazy(() => import("@/features/library/Library").then((m) => ({ default: m.Library })));
+const LiveWire = lazy(() => import("@/features/livewire/LiveWire").then((m) => ({ default: m.LiveWire })));
 
 // Route-level code splitting keeps the first paint lean; heavy, chart-backed
 // features load on demand.
@@ -190,6 +191,7 @@ function Routes() {
   else if (path === "/ops") inner = <Ops />;
   else if (path === "/journey") inner = <Journey />;
   else if (path === "/library") inner = <Library />;
+  else if (path === "/live-wire") inner = <LiveWire />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

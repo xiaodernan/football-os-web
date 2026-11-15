@@ -147,7 +147,8 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[
 // M1076: 138 -> 139 — data/llm.ts (the live LLM tie-in) joins the reader's path.
 // M1080: 139 -> 141 — domain/seasonRoom.ts fold + features/seasonroom/SeasonRoom.tsx join.
 // M1110: 143 -> 145.
-const APP_FILES_PIN = 176;
+// M1152 The Live Wire: two new reader-reached app files (LiveWire.tsx + liveWire.ts) — 176 -> 178.
+const APP_FILES_PIN = 178;
 
 // The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
 // stands alone must keep the two a reader reaches and drop the third. The planted files are

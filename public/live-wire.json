@@ -1,0 +1,539 @@
+{
+  "schema": "live-wire/v1",
+  "generated_at": "2026-11-15T14:12:17.169Z",
+  "season": "2026/27",
+  "league": "Deutsche Bundesliga 2026/27",
+  "source": {
+    "name": "OpenFootball · football.json",
+    "file": "2026-27/de.1.json",
+    "url": "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/de.1.json",
+    "license": "CC0-1.0"
+  },
+  "totalFixtures": 306,
+  "playedFixtures": 36,
+  "table": [
+    {
+      "pos": 1,
+      "zone": "ucl",
+      "team": "Borussia Dortmund",
+      "played": 4,
+      "won": 4,
+      "drawn": 0,
+      "lost": 0,
+      "gf": 9,
+      "ga": 2,
+      "gd": 7,
+      "pts": 12,
+      "form": [
+        "W",
+        "W",
+        "W",
+        "W"
+      ]
+    },
+    {
+      "pos": 2,
+      "zone": "ucl",
+      "team": "FC Bayern München",
+      "played": 4,
+      "won": 3,
+      "drawn": 1,
+      "lost": 0,
+      "gf": 14,
+      "ga": 2,
+      "gd": 12,
+      "pts": 10,
+      "form": [
+        "W",
+        "D",
+        "W",
+        "W"
+      ]
+    },
+    {
+      "pos": 3,
+      "zone": "ucl",
+      "team": "SC Freiburg",
+      "played": 4,
+      "won": 3,
+      "drawn": 1,
+      "lost": 0,
+      "gf": 12,
+      "ga": 3,
+      "gd": 9,
+      "pts": 10,
+      "form": [
+        "W",
+        "W",
+        "W",
+        "D"
+      ]
+    },
+    {
+      "pos": 4,
+      "zone": "ucl",
+      "team": "FC Augsburg",
+      "played": 4,
+      "won": 2,
+      "drawn": 1,
+      "lost": 1,
+      "gf": 11,
+      "ga": 6,
+      "gd": 5,
+      "pts": 7,
+      "form": [
+        "W",
+        "W",
+        "D",
+        "L"
+      ]
+    },
+    {
+      "pos": 5,
+      "zone": "europa",
+      "team": "Bayer 04 Leverkusen",
+      "played": 4,
+      "won": 2,
+      "drawn": 1,
+      "lost": 1,
+      "gf": 10,
+      "ga": 5,
+      "gd": 5,
+      "pts": 7,
+      "form": [
+        "L",
+        "W",
+        "D",
+        "W"
+      ]
+    },
+    {
+      "pos": 6,
+      "zone": "europa",
+      "team": "1. FSV Mainz 05",
+      "played": 4,
+      "won": 2,
+      "drawn": 1,
+      "lost": 1,
+      "gf": 10,
+      "ga": 6,
+      "gd": 4,
+      "pts": 7,
+      "form": [
+        "D",
+        "W",
+        "L",
+        "W"
+      ]
+    },
+    {
+      "pos": 7,
+      "zone": null,
+      "team": "SV 07 Elversberg",
+      "played": 4,
+      "won": 2,
+      "drawn": 1,
+      "lost": 1,
+      "gf": 8,
+      "ga": 7,
+      "gd": 1,
+      "pts": 7,
+      "form": [
+        "W",
+        "W",
+        "L",
+        "D"
+      ]
+    },
+    {
+      "pos": 8,
+      "zone": null,
+      "team": "SV Werder Bremen",
+      "played": 4,
+      "won": 2,
+      "drawn": 1,
+      "lost": 1,
+      "gf": 8,
+      "ga": 8,
+      "gd": 0,
+      "pts": 7,
+      "form": [
+        "L",
+        "W",
+        "D",
+        "W"
+      ]
+    },
+    {
+      "pos": 9,
+      "zone": null,
+      "team": "RB Leipzig",
+      "played": 4,
+      "won": 2,
+      "drawn": 0,
+      "lost": 2,
+      "gf": 9,
+      "ga": 5,
+      "gd": 4,
+      "pts": 6,
+      "form": [
+        "W",
+        "L",
+        "W",
+        "L"
+      ]
+    },
+    {
+      "pos": 10,
+      "zone": null,
+      "team": "Eintracht Frankfurt",
+      "played": 4,
+      "won": 1,
+      "drawn": 2,
+      "lost": 1,
+      "gf": 9,
+      "ga": 10,
+      "gd": -1,
+      "pts": 5,
+      "form": [
+        "D",
+        "L",
+        "W",
+        "D"
+      ]
+    },
+    {
+      "pos": 11,
+      "zone": null,
+      "team": "FC Schalke 04",
+      "played": 4,
+      "won": 1,
+      "drawn": 2,
+      "lost": 1,
+      "gf": 3,
+      "ga": 4,
+      "gd": -1,
+      "pts": 5,
+      "form": [
+        "L",
+        "D",
+        "W",
+        "D"
+      ]
+    },
+    {
+      "pos": 12,
+      "zone": null,
+      "team": "SC Paderborn 07",
+      "played": 4,
+      "won": 1,
+      "drawn": 1,
+      "lost": 2,
+      "gf": 3,
+      "ga": 5,
+      "gd": -2,
+      "pts": 4,
+      "form": [
+        "D",
+        "L",
+        "L",
+        "W"
+      ]
+    },
+    {
+      "pos": 13,
+      "zone": null,
+      "team": "1. FC Köln",
+      "played": 4,
+      "won": 1,
+      "drawn": 1,
+      "lost": 2,
+      "gf": 6,
+      "ga": 9,
+      "gd": -3,
+      "pts": 4,
+      "form": [
+        "W",
+        "L",
+        "D",
+        "L"
+      ]
+    },
+    {
+      "pos": 14,
+      "zone": null,
+      "team": "TSG 1899 Hoffenheim",
+      "played": 4,
+      "won": 1,
+      "drawn": 0,
+      "lost": 3,
+      "gf": 7,
+      "ga": 10,
+      "gd": -3,
+      "pts": 3,
+      "form": [
+        "L",
+        "L",
+        "W",
+        "L"
+      ]
+    },
+    {
+      "pos": 15,
+      "zone": null,
+      "team": "VfB Stuttgart",
+      "played": 4,
+      "won": 1,
+      "drawn": 0,
+      "lost": 3,
+      "gf": 6,
+      "ga": 9,
+      "gd": -3,
+      "pts": 3,
+      "form": [
+        "L",
+        "W",
+        "L",
+        "L"
+      ]
+    },
+    {
+      "pos": 16,
+      "zone": "playoff",
+      "team": "Hamburger SV",
+      "played": 4,
+      "won": 1,
+      "drawn": 0,
+      "lost": 3,
+      "gf": 2,
+      "ga": 13,
+      "gd": -11,
+      "pts": 3,
+      "form": [
+        "L",
+        "L",
+        "L",
+        "W"
+      ]
+    },
+    {
+      "pos": 17,
+      "zone": "relegation",
+      "team": "1. FC Union Berlin",
+      "played": 4,
+      "won": 0,
+      "drawn": 1,
+      "lost": 3,
+      "gf": 4,
+      "ga": 17,
+      "gd": -13,
+      "pts": 1,
+      "form": [
+        "D",
+        "L",
+        "L",
+        "L"
+      ]
+    },
+    {
+      "pos": 18,
+      "zone": "relegation",
+      "team": "Borussia Mönchengladbach",
+      "played": 4,
+      "won": 0,
+      "drawn": 0,
+      "lost": 4,
+      "gf": 6,
+      "ga": 16,
+      "gd": -10,
+      "pts": 0,
+      "form": [
+        "L",
+        "L",
+        "L",
+        "L"
+      ]
+    }
+  ],
+  "recent": [
+    {
+      "round": "Matchday 4",
+      "date": "2026-09-20",
+      "time": "19:30",
+      "home": "SC Paderborn 07",
+      "away": "TSG 1899 Hoffenheim",
+      "ft": [
+        3,
+        1
+      ],
+      "ht": [
+        2,
+        0
+      ]
+    },
+    {
+      "round": "Matchday 4",
+      "date": "2026-09-20",
+      "time": "17:30",
+      "home": "FC Schalke 04",
+      "away": "SV 07 Elversberg",
+      "ft": [
+        0,
+        0
+      ],
+      "ht": [
+        0,
+        0
+      ]
+    },
+    {
+      "round": "Matchday 4",
+      "date": "2026-09-20",
+      "time": "15:30",
+      "home": "Bayer 04 Leverkusen",
+      "away": "RB Leipzig",
+      "ft": [
+        2,
+        0
+      ],
+      "ht": [
+        1,
+        0
+      ]
+    },
+    {
+      "round": "Matchday 4",
+      "date": "2026-09-19",
+      "time": "18:30",
+      "home": "VfB Stuttgart",
+      "away": "Borussia Dortmund",
+      "ft": [
+        0,
+        1
+      ],
+      "ht": [
+        0,
+        0
+      ]
+    },
+    {
+      "round": "Matchday 4",
+      "date": "2026-09-19",
+      "time": "15:30",
+      "home": "Eintracht Frankfurt",
+      "away": "SC Freiburg",
+      "ft": [
+        2,
+        2
+      ],
+      "ht": [
+        2,
+        1
+      ]
+    },
+    {
+      "round": "Matchday 4",
+      "date": "2026-09-19",
+      "time": "15:30",
+      "home": "SV Werder Bremen",
+      "away": "FC Augsburg",
+      "ft": [
+        3,
+        2
+      ],
+      "ht": [
+        0,
+        1
+      ]
+    },
+    {
+      "round": "Matchday 4",
+      "date": "2026-09-19",
+      "time": "15:30",
+      "home": "Borussia Mönchengladbach",
+      "away": "1. FSV Mainz 05",
+      "ft": [
+        3,
+        4
+      ],
+      "ht": [
+        1,
+        2
+      ]
+    },
+    {
+      "round": "Matchday 4",
+      "date": "2026-09-19",
+      "time": "15:30",
+      "home": "Hamburger SV",
+      "away": "1. FC Köln",
+      "ft": [
+        2,
+        1
+      ],
+      "ht": [
+        1,
+        0
+      ]
+    },
+    {
+      "round": "Matchday 4",
+      "date": "2026-09-18",
+      "time": "20:30",
+      "home": "FC Bayern München",
+      "away": "1. FC Union Berlin",
+      "ft": [
+        7,
+        0
+      ],
+      "ht": [
+        3,
+        0
+      ]
+    }
+  ],
+  "upcoming": [
+    {
+      "round": "Matchday 5",
+      "date": "2026-10-09",
+      "time": "20:30",
+      "home": "Borussia Dortmund",
+      "away": "SV Werder Bremen"
+    },
+    {
+      "round": "Matchday 5",
+      "date": "2026-10-10",
+      "time": "15:30",
+      "home": "1. FSV Mainz 05",
+      "away": "Bayer 04 Leverkusen"
+    },
+    {
+      "round": "Matchday 5",
+      "date": "2026-10-10",
+      "time": "15:30",
+      "home": "SC Paderborn 07",
+      "away": "VfB Stuttgart"
+    },
+    {
+      "round": "Matchday 5",
+      "date": "2026-10-10",
+      "time": "15:30",
+      "home": "1. FC Union Berlin",
+      "away": "SV 07 Elversberg"
+    },
+    {
+      "round": "Matchday 5",
+      "date": "2026-10-10",
+      "time": "15:30",
+      "home": "TSG 1899 Hoffenheim",
+      "away": "Hamburger SV"
+    },
+    {
+      "round": "Matchday 5",
+      "date": "2026-10-10",
+      "time": "15:30",
+      "home": "FC Augsburg",
+      "away": "FC Bayern München"
+    }
+  ]
+}

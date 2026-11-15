@@ -40,6 +40,7 @@ const DECORATED = [
   ["/dossier", /the dossier/i, "/dossier cinematic hero"],
   ["/dream-team", /the dream xi/i, "/dream-team cinematic hero"],
   ["/library", /the library/i, "/library cinematic hero"],
+  ["/live-wire", /the live wire/i, "/live-wire cinematic hero"],
   ["/journey", /the journey/i, "/journey cinematic hero"],
   ["/about", /the world's chronicle of itself/i, "/about cinematic hero"],
   ["/manual", /the football os manual/i, "/manual cinematic hero"],

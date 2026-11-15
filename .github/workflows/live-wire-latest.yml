@@ -1,0 +1,39 @@
+name: Football OS live wire
+
+# M1152 — the weekly re-cut of the real-world wire (Bundesliga 2026/27, OpenFootball CC0).
+# Pulls the public-domain fixture file, folds the table deterministically, commits the single
+# artifact the /live-wire screen fetches same-origin. Never runs inline with app CI; on any
+# failure the workflow is red and the committed file is allowed to age instead of being faked.
+
+on:
+  schedule:
+    # Every Sunday 05:00 UTC — one hour after the fact pack — weekly, never hammered
+    - cron: "0 5 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  live-wire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Rebuild public/live-wire.json from the CC0 source
+        run: node scripts/update-live-wire.mjs
+      - name: Commit the wire if it moved
+        run: |
+          git config user.name "football-os-bot"
+          git config user.email "bot@football-os.web"
+          git add public/live-wire.json
+          if git diff --staged --quiet; then
+            echo "live wire unchanged — nothing to commit"
+            exit 0
+          fi
+          git commit -m "live wire re-cut: $(node -e 'const d=require("./public/live-wire.json"); console.log("played=" + d.playedFixtures + "/" + d.totalFixtures, "leader=" + d.table[0].team);')"
+          git push

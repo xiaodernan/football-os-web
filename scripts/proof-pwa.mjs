@@ -242,7 +242,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1116: the Hall of Legends — a new lazy screen with its own fold and cinematic header; ~3 KB JS
 // (634 -> 638) and one more asset (70 -> 71). total measured 651 KB, pin 648 -> 651.
 // M1128: the landing hero gains an inline SVG matchball motif — +1 KB across one asset; JS +1 KB (659 -> 660)
-const BUDGET_KB = 726;
+// M1152 The Live Wire: the new lazy screen + its three-locale dictionary slice measures 730 KB across 94 assets
+// (JS 715 KB, CSS 15 KB); the pin moves 726 -> 730 and the baseline re-records in the same commit.
+const BUDGET_KB = 730;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
