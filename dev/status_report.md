@@ -2,12 +2,13 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后为 `M1143`（提交前基线 `5c83541` fact-pack 自动刷新 — CI 实数 total_commits=1536）
-**总提交数**: 1538（本提交落地后；提交前 1537）
+**当前HEAD**: 本提交落地后为 `M1144`（提交前基线 `1efd33e` fact pack 自动刷新 — CI 实数 total_commits=1538）
+**总提交数**: 1541（本提交落地后；提交前 1540）
 **开发状态**: 持续进行中，无阻塞（M1130 落地——/manual 小册子+打印、personal page Football OS 实时卡片已上线，pages.yml 每推自动发布处于绿态）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
 ## 🚀 近期里程碑（M1056–M1130，最新在上）
+- **M1144 The div-guard repair**：M1143 push 后 spring-cloud-stack/live 红在 proof-div-guard（9/10）—— 我的 `Math.max(1, appearances)` 是手工的 guarded divide，exactly the safeDiv door（lib/utils: `safeDiv = (num, den) => num / Math.max(1, den)`）的职责。换门后 proof-div-guard 10/10。Frozen seed; PLATFORM_LIVE=false.**
 - **M1143 The M1142 discipline repair — every red gate re-proven green locally**：spring-cloud-stack/live 都在 M1142 推送上红在同一处：① proof-headroom——domain/scout.ts 内联的 Math.max(0, potential-overall) 改走 attributes.headroomOf 门;② proof-round2——`Math.round(totalGoals / appearances * 100) / 100` 改走 lib/utils.round2 门;③ proof-money——fmtMoney reader 集多了我六柱台屏（pin 14→15 outside / 15→16 total，按 M1142 同款 annotate 规则 bump）;④ proof-training——byValueDesc 排列序改 attributes 门排序（tier dup byOverall 之一步）`;⑤ proof-load——round2/round2 的 imports 与 domain/scout.ts 的 sum/headroomOf 同条线上——M1139 风格的扣子修好，所有门本地重跑全绿。tsc exit 0 · build exit 0 · PWA 706 KB byte-stable · sci cinematic 27/27。Frozen seed; PLATFORM_LIVE=false.**
 - **M1142 The Dossier lands（/dossier）——世界亲笔写给自己的唯一一封球探密报**：新 lazy 路由 + nav（I.scope）+ palette goto + cinematic 入册（27→28 行）。屏载：**envelope header**——fo-spectrum 大花（crest 居于中心；右上角「confidential」rotate 的警戒色）——「THE ONE SCOUT REPORT」；**六座丰碑**（grid-cols-6）overall / potential / headroom to potential（signed door）/ value（fmtMoney door）/ position（positionLabel composer）/ foot（footLabel composer）；**THE TAPE**——这台机器量出的出场数、进球数、场均进球（headToHead-record fold 选了 age ≤ 23 + overall max by byOverall door + FNV-样稳定排序）；**THE LAST PAGE**——live pane 复用 callLlmStream（/api/llm/chat，直播 Railway 则真是 live gpt-6-sol 流式回答；Pages 上真实地说「the model is asleep」）。fold 全从种子：prospect = under-23 with highest overall (by attributes.byOverall door), tie tallest value. 门禁：tsc 0 · build exit 0（PWA 重测 **706 KB** / 89 files / JS 691 KB，预算 699→702→702→706 per honest re-measure）· proof-i18n 393/393（literal 3023 · 3596 keys · SRC 173→ APP_SRC 170 → TSX 96 →signed to template door）· coverage 26/26 · app-tree 13/13 (173) · router 29/29 (165) · storage 63/63 (168) · fmt2 12/12（Dossier registered）· vocab 7/7 · compare 70/70 · signed 19/19 · sum 9/9 · chips 17/17。frozen seed; PLATFORM_LIVE=false.**
 - **M1141 M1140  vocabulary repair: one truth for the press room's door set**：spring-cloud-stack 在 M1140 推送上红在 proof-vocab 6/7——union "form"|"profile"|"nerve" 在 Pressroom.tsx 上手写了一遍，而 PRESSROOM_DOORS 里也有一份同词表——典型的双写。修法：PRESSROOM_DOORS 元组导出 type PressDoor，askDesk 只收 PressDoor——union 完全从 list 派生，词表唯一存放处。proof-vocab 7/7 重跑、M1140 双关都绿 local。门禁：vocab 7/7 · i18n 393/393 · tsc 0 · build exit 0 · PWA 702 KB samples stay honest。Frozen seed; PLATFORM_LIVE=false.**
