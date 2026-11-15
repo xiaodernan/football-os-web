@@ -179,6 +179,10 @@ const upcoming = fixtures
   .slice(0, 6)
   .map((f) => ({ round: f.round, date: f.date, time: f.time, home: f.home, away: f.away }));
 
+// Keep re-cuts honest about movement: if the only thing that changed is the clock, the file
+// is not "new" — the committed artifact should be byte-stable week to week when the fold did not
+// move, so the workflow's "commit only if it moved" check does not fire on a clock tick.
+// A data change (fixtures played, source edits) still rewrites the file and lets the commit land.
 const payload = {
   schema: "live-wire/v1",
   generated_at: new Date().toISOString(),
@@ -196,6 +200,18 @@ const payload = {
   recent,
   upcoming,
 };
+
+if (existsSync(OUT)) {
+  try {
+    const prev = JSON.parse(readFileSync(OUT, "utf8"));
+    const a = { ...prev, generated_at: null };
+    const b = { ...payload, generated_at: null };
+    if (JSON.stringify(a) === JSON.stringify(b)) {
+      payload.generated_at = prev.generated_at;
+      console.log("live-wire: no data movement — keeping the previous generated_at (byte-stable file)");
+    }
+  } catch { /* unparseable predecessor — overwrite honestly */ }
+}
 
 writeFileSync(OUT, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 const mb = (readFileSync(OUT).length / 1024).toFixed(1);

@@ -97,6 +97,8 @@ ok("the generator pulls the CC0 OpenFootball fixture file", gen.includes("raw.gi
 ok("the generator exits non-zero instead of committing a fold it cannot verify", /process\.exit\(1\)/.test(gen) && /refusing/.test(gen));
 ok("the generator contains its full honesty kit (fetch retry, shape check, fold self-verification)",
   (gen.match(/fail\(/g) ?? []).length >= 6);
+ok("re-cuts fire on data movement only — the byte-stable guard keeps the clock from posing as news",
+  gen.includes("payload.generated_at = prev.generated_at"));
 
 console.log(`\n${pass}/${pass + fail} checks passed`);
 await server.close();

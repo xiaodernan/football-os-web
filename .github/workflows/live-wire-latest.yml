@@ -36,4 +36,5 @@ jobs:
             exit 0
           fi
           git commit -m "live wire re-cut: $(node -e 'const d=require("./public/live-wire.json"); console.log("played=" + d.playedFixtures + "/" + d.totalFixtures, "leader=" + d.table[0].team);')"
+          git pull --rebase origin master
           git push
