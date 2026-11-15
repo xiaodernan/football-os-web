@@ -163,7 +163,7 @@ export function Chalkboard() {
       {done && (
         <section className={cn("rounded-2xl border p-6 text-center", PANEL_CLASS.panelQuiet)}>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("chalkboard.total")}</div>
-          <div className="fo-spectrum mt-1 font-mono text-5xl font-black tabular-nums">{points}</div>
+          <div className="fo-spectrum mt-1 bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text font-mono text-5xl font-black tabular-nums text-transparent">{points}</div>
           <div className="mt-2 inline-flex items-center gap-2">
             <span className="text-[11px] uppercase tracking-widest text-primary">{t(`chalkboard.rank.${band}`)}</span>
             <span className="text-[10px] text-muted-foreground">{t(`chalkboard.rank.hint.${band}`)}</span>

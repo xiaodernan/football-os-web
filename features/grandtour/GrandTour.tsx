@@ -117,7 +117,7 @@ export function GrandTour() {
                     <div className="truncate text-[10px] text-muted-foreground">{t("tour.second", { second: l.second || ABSENT, pts: l.secondPts })}</div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="fo-spectrum text-3xl font-black tabular-nums text-transparent">{l.leaderPts}</div>
+                    <div className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-3xl font-black tabular-nums text-transparent">{l.leaderPts}</div>
                     <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("data.th.pts")}</div>
                   </div>
                 </div>

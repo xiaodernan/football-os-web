@@ -178,7 +178,7 @@ export function LiveWire() {
 
           <div className="grid gap-4 lg:grid-cols-3">
             <Panel className="overflow-x-auto p-3 lg:col-span-2">
-              <table className="w-full min-w-[34rem] border-collapse text-xs">
+              <table className="w-full min-w-[18rem] border-collapse text-xs sm:min-w-[34rem]">
                 <thead>
                   <tr className="text-[10px] uppercase tracking-widest text-muted-foreground">
                     <th className="px-2 py-2 text-left">#</th>
@@ -187,8 +187,8 @@ export function LiveWire() {
                     <th className="px-2 py-2 text-right">{t("data.th.w")}</th>
                     <th className="px-2 py-2 text-right">{t("data.th.d")}</th>
                     <th className="px-2 py-2 text-right">{t("data.th.l")}</th>
-                    <th className="px-2 py-2 text-right">{t("fw.table.gf")}</th>
-                    <th className="px-2 py-2 text-right">{t("fw.table.ga")}</th>
+                    <th className="hidden px-2 py-2 text-right sm:table-cell">{t("fw.table.gf")}</th>
+                    <th className="hidden px-2 py-2 text-right sm:table-cell">{t("fw.table.ga")}</th>
                     <th className="px-2 py-2 text-right">{t("fw.table.gd")}</th>
                     <th className="px-2 py-2 text-right">{t("data.th.pts")}</th>
                     <th className="px-2 py-2 text-left">{t("data.form")}</th>
@@ -208,8 +208,8 @@ export function LiveWire() {
                       <td className="px-2 py-2 text-right font-mono tabular-nums">{row.won}</td>
                       <td className="px-2 py-2 text-right font-mono tabular-nums">{row.drawn}</td>
                       <td className="px-2 py-2 text-right font-mono tabular-nums">{row.lost}</td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">{row.gf}</td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">{row.ga}</td>
+                      <td className="hidden px-2 py-2 text-right font-mono tabular-nums sm:table-cell">{row.gf}</td>
+                      <td className="hidden px-2 py-2 text-right font-mono tabular-nums sm:table-cell">{row.ga}</td>
                       <td className="px-2 py-2 text-right font-mono tabular-nums">{signed(row.gd)}</td>
                       <td className="px-2 py-2 text-right font-mono font-bold tabular-nums text-foreground">{row.pts}</td>
                       <td className="px-2 py-2">

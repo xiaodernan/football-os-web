@@ -114,7 +114,7 @@ export function Ops() {
           { label: t("ops.tiles.deadEnds"), value: String(fold.deadEndSessions) },
         ].map((cell) => (
           <div key={cell.label} className={cn("rounded-xl border p-3 text-center", PANEL_CLASS.panelQuiet)}>
-            <div className="fo-spectrum font-mono text-2xl font-black tabular-nums">{cell.value}</div>
+            <div className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text font-mono text-2xl font-black tabular-nums text-transparent">{cell.value}</div>
             <div className="mt-1 text-[9px] uppercase tracking-widest text-muted-foreground">{cell.label}</div>
           </div>
         ))}

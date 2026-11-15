@@ -40,7 +40,7 @@ export function Journey() {
               <circle cx="70" cy="70" r={ringRadius} fill="none" stroke="hsl(var(--primary))" strokeWidth="10" strokeLinecap="round" strokeDasharray={`${dash} ${circumference}`} />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="fo-spectrum font-mono text-3xl font-black tabular-nums">{Math.round(fold.percent)}%</div>
+              <div className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text font-mono text-3xl font-black tabular-nums text-transparent">{Math.round(fold.percent)}%</div>
               <div className="text-[8px] uppercase tracking-widest text-muted-foreground">{t("journey.worldDone", { done: fold.doneStops, total: fold.totalStops, pct: fmt1(fold.percent) })}</div>
             </div>
           </div>
