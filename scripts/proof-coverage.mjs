@@ -167,7 +167,7 @@ const DEAD_CEILING = 25;
 // M1152 The Live Wire: features/livewire/ + data/liveWire.ts — POP_PIN 182 -> 184.
 // M1153: domain/wireBrief.ts joins the population — POP_PIN 184 -> 185.
 // M1155 The Grand Tour: domain/grandTour.ts + features/grandtour/ — POP_PIN 185 -> 187.
-const POP_PIN = 187;
+const POP_PIN = 188;
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -209,7 +209,7 @@ const POP_PIN = 187;
 // M1064: domain 44 -> 45 (ringMath.ts).
 // M1076: data 7 -> 8 — data/llm.ts.
 // M1080: domain 45 -> 46, features 57 -> 58 — domain/seasonRoom.ts + features/seasonroom/SeasonRoom.tsx.
-const BY_DIR_PIN = { components: 15, data: 10, domain: 63, features: 79, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 }; // M1152: data 9 -> 10, features 77 -> 78 · M1153: domain 61 -> 62 · M1155: domain 62 -> 63 (grandTour.ts), features 78 -> 79 (grandtour/)
+const BY_DIR_PIN = { components: 15, data: 10, domain: 63, features: 80, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 }; // M1152: data 9 -> 10, features 77 -> 78 · M1153: domain 61 -> 62 · M1155: domain 62 -> 63 (grandTour.ts), features 78 -> 79 (grandtour/)
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
@@ -233,7 +233,7 @@ const BY_DIR_PIN = { components: 15, data: 10, domain: 63, features: 79, functio
 // M1064: 72 -> 73 — features/cache/CacheObservatory.tsx sits two levels down.
 // M1080: 73 -> 74 — features/seasonroom/SeasonRoom.tsx sits two levels down.
 // M1152: features/livewire/LiveWire.tsx sits two levels down — 93 -> 94.
-const DEEP_PIN = 95;
+const DEEP_PIN = 96;
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
 // goes through this, so inventing a path can never kill the run with an ENOENT before the

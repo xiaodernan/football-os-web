@@ -566,7 +566,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1080: 141 -> 143 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
 // M1152: The Live Wire adds features/livewire/LiveWire.tsx and data/liveWire.ts (180).
 // M1153: domain/wireBrief.ts joins the source population — 180 -> 181.
-const APP_SRC_PIN = 183;
+const APP_SRC_PIN = 184;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -599,7 +599,7 @@ const APP_SRC_PIN = 183;
 // M1059: 78 -> 79 — QueueObservatory.tsx is a new .tsx module.
 // M1064: 79 -> 80 — CacheObservatory.tsx is a new .tsx module.
 // M1152: 100 -> 101, features/livewire/LiveWire.tsx is the 101st screen module in the census.
-const TSX_PIN = 102;
+const TSX_PIN = 103;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -646,7 +646,7 @@ const TSX_PIN = 102;
 // M1080: 144 -> 146 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
 // M1152: The Live Wire joins the reader population (183).
 // M1153: the wire-brief fold joins the reader population — 183 -> 184.
-const SRC_PIN = 186;
+const SRC_PIN = 187;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4787,7 +4787,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1153 The Wire Brief: the brief panel adds eleven literal t() sites on the wire screen — 3166 -> 3173.
   // M1154 Seven Wires: the tablist caption joins (t("liveWire.leagues")) — 3173 -> 3174.
   // M1155 The Grand Tour: ~28 literal t() sites on the screen, the chase, the cards and the loudest-results ledger — 3174 -> 3202.
-shapeCounts.literal === 3202 && shapeCounts.template === 118 && shapeCounts.expression === 45
+shapeCounts.literal === 3234 && shapeCounts.template === 118 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4957,7 +4957,7 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // expectedTotalGoals row ({n}): 473 -> 478 (the expectedGoals λ/xG pair added after the first
   // measurement).
   // M1152 The Live Wire: its asOf caption interpolates {at} — 532 -> 533.
-litVarSites === 538 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+litVarSites === 541 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
@@ -6430,7 +6430,7 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
   // M1154 Seven Wires: the league tablist names itself through t() too — 18 -> 19.
   // M1152 The Live Wire: its loading state names its aria label through t() too — 17 -> 18.
   // M1155 The Grand Tour: its chase panel names itself through t() too — 19 -> 20.
-  ariaBare.length === 0 && ariaKeyed === 20 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+  ariaBare.length === 0 && ariaKeyed === 21 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English
