@@ -567,7 +567,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1152: The Live Wire adds features/livewire/LiveWire.tsx and data/liveWire.ts (180).
 // M1153: domain/wireBrief.ts joins the source population — 180 -> 181.
 // M1157 The Prescription: domain/prescription.ts joins the source population — 184 -> 185.
-const APP_SRC_PIN = 185;
+const APP_SRC_PIN = 187;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -600,7 +600,7 @@ const APP_SRC_PIN = 185;
 // M1059: 78 -> 79 — QueueObservatory.tsx is a new .tsx module.
 // M1064: 79 -> 80 — CacheObservatory.tsx is a new .tsx module.
 // M1152: 100 -> 101, features/livewire/LiveWire.tsx is the 101st screen module in the census.
-const TSX_PIN = 103;
+const TSX_PIN = 104;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -648,7 +648,7 @@ const TSX_PIN = 103;
 // M1152: The Live Wire joins the reader population (183).
 // M1153: the wire-brief fold joins the reader population — 183 -> 184.
 // M1157 The Prescription: the fold joins the reader population — 187 -> 188.
-const SRC_PIN = 188;
+const SRC_PIN = 190;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -776,6 +776,7 @@ const DYN_SITES = [
   { path: "features/ai/AiStudio.tsx", expr: "a.id", prefix: "ai.sug.", suffix: "" },
   { path: "features/library/Library.tsx", expr: "hit.document.kind", prefix: "library.kind.", suffix: "" }, // M1151 The Library: the five document kinds walk in from the corpus fold
   { path: "features/ops/Ops.tsx", expr: "i", prefix: "ops.depth.bucket", suffix: "" }, // M1149: the session-depth bucket label reads its key from the loop index
+  { path: "features/sacred/Sacred.tsx", expr: "f", prefix: "longSeason.filter.", suffix: "" }, // M1160 The Long Season: the filter chips key their prefix from the fold
   { path: "features/ops/Ops.tsx", expr: "r.severity", prefix: "ops.rx.severity.", suffix: "" }, // M1157 The Prescription: severity chips read their key from the fold
 
   { path: "features/player/PlayerOS.tsx", expr: "cat", prefix: "attr.", suffix: "" },
@@ -1166,6 +1167,8 @@ const S_PULSE_DEPTH = { name: "pulse session-depth buckets", values: ["0", "1", 
 claimByPrefix("ops.depth.bucket", S_PULSE_DEPTH);
 const S_RX_SEV = { name: "prescription severity", values: ["now", "next", "watch"] };
 claimByPrefix("ops.rx.severity.", S_RX_SEV);
+const S_LS_FILTER = { name: "long season filter", values: ["all", "played", "upcoming"] };
+claimByPrefix("longSeason.filter.", S_LS_FILTER);
 claimByPrefix("onb.goal.", S_ONB_GOAL);
 claimByPrefix("onb.age.", S_ONB_AGE);
 // M217: the AI screen's suggested questions are keyed, and the id list is read out of the module
@@ -3325,13 +3328,13 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M1132: the Matchday Programme's keys pay their toll ("PPG" shared with mgr.ppg, "W-D-L" shared
 // with mgr.wdl, "GD" shared with data.th.gd/mgr.thGD/fw.table.gd, "goals" shared with
 // leaders.colGoals) — 156 -> 159.
-// The landing's real-world strip reuses dispatch.print verbatim — the English ratchet HOLDS at 159.
+// M1160 The Long Season: its two coined strings were initially duplicated by locale combos; after renaming, the ratchet holds at 159.
 const DUP_VALUES_PIN = 159;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
 // M970: the same "Pts" join pays its excess: 252 -> 254.
 // M1020: the same shared idiom join pays its excess: 254 -> 255.
 // M1132: the same four shared English values pay their excess end of the ratchet — 260 -> 263.
-// The landing's real-world strip contributes no new duplicate value (it reuses dispatch.print) — 263 holds.
+// M1160 The Long Season: excess keys hold at 263.
 const DUP_EXCESS_KEYS_PIN = 263;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
@@ -4796,7 +4799,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1156 The Dispatch: the broadsheet literals — 3202 -> 3234.
   // M1157 The Prescription: the rx body sites' eight literal t() calls with exact inline vars — 3234 -> 3241; the rx severity template — 118 -> 119.
   // M1159 The World Gate: seven literal t() sites on the landing strip — 3241 -> 3248.
-shapeCounts.literal === 3248 && shapeCounts.template === 119 && shapeCounts.expression === 45
+shapeCounts.literal === 3263 && shapeCounts.template === 120 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -6440,7 +6443,7 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
   // M1154 Seven Wires: the league tablist names itself through t() too — 18 -> 19.
   // M1152 The Live Wire: its loading state names its aria label through t() too — 17 -> 18.
   // M1155 The Grand Tour: its chase panel names itself through t() too — 19 -> 20.
-  ariaBare.length === 0 && ariaKeyed === 21 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+  ariaBare.length === 0 && ariaKeyed === 23 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English

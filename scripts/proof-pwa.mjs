@@ -245,10 +245,9 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1152 The Live Wire: the new lazy screen + its three-locale dictionary slice measures 730 KB across 94 assets
 // (JS 715 KB, CSS 15 KB); the pin moves 726 -> 730 and the baseline re-records in the same commit.
 // M1154 Seven Wires measures 732 KB (JS 718, CSS 15, 94 assets).
-// M1158 The Six Luminaries: the CI pages rebuild measured 741 KB gzip against a local 740 (same asset set —
-// gzip rounding at the margin). The pin now honours the CI rebuild — 739 -> 741 — so the gate is green on both sides,
-// and the baseline records 741 in the same commit.
-const BUDGET_KB = 741;
+// M1160 The Long Season: a new lazy route adds ~4 KB gzip (JS 726 -> 730) across 99 assets (was 98) —
+// 745 KB total; the pin moves 741 -> 745 and the baseline re-records in the same commit.
+const BUDGET_KB = 745;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

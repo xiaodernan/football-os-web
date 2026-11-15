@@ -54,6 +54,7 @@ export function Manual() {
     { to: "/live-wire", label: t("nav.liveWire") },
     { to: "/grand-tour", label: t("nav.grandTour") },
     { to: "/dispatch", label: t("nav.dispatch") },
+    { to: "/long-season", label: t("nav.longSeason") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },
     { to: "/platform", label: t("nav.platform") },

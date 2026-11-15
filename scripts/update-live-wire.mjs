@@ -151,13 +151,19 @@ const foldLeague = (id, file, raw) => {
     .map((f) => ({ round: f.round, date: f.date, time: f.time, home: f.home, away: f.away, ft: f.ft, ht: f.ht }));
   const upcoming = fixtures.filter((f) => f.ft === null).sort(order).slice(0, 6)
     .map((f) => ({ round: f.round, date: f.date, time: f.time, home: f.home, away: f.away }));
+  // M1160 · the whole season, folded honestly: every committed fixture (scores where they exist) —
+  // the same CC0 window the screen reads, so the page can show one calendar without holding another server.
+  const seasonFixtures = fixtures.map((f) => ({
+    round: f.round, date: f.date, time: f.time, home: f.home, away: f.away,
+    ...(f.ft ? { ft: f.ft } : {}),
+  }));
 
   return {
     id, file, url: `${BASE}/${id}.json`, league: leagueName,
     season: leagueName.match(/\d{4}\/\d{2}/)?.[0] ?? leagueName,
     totalFixtures: fixtures.length,
     playedFixtures: finished.length,
-    table: standings, recent, upcoming,
+    table: standings, recent, upcoming, seasonFixtures,
   };
 };
 
@@ -169,7 +175,7 @@ for (const [id, file] of LEAGUES) {
 }
 
 let payload = {
-  schema: "live-wire/v2",
+  schema: "live-wire/v3",
   generated_at: new Date().toISOString(),
   source: {
     name: "OpenFootball · football.json",

@@ -38,6 +38,16 @@ export interface LiveWireUpcoming {
   away: string;
 }
 
+/** A fixture as the season calendar folds it — score when committed, absent otherwise. */
+export interface LiveWireSeasonFixture {
+  round: string;
+  date: string;
+  time: string | null;
+  home: string;
+  away: string;
+  ft?: [number, number];
+}
+
 /** One league's folded truth — the unit a tab on the wire switches between. */
 export interface LiveWireLeague {
   id: string;        // openfootball file stem, e.g. "de.1"
@@ -50,6 +60,7 @@ export interface LiveWireLeague {
   table: LiveWireRow[];
   recent: LiveWireRecent[];
   upcoming: LiveWireUpcoming[];
+  seasonFixtures: LiveWireSeasonFixture[];
 }
 
 export interface LiveWirePayload {
@@ -93,7 +104,14 @@ const isLeague = (v: unknown): v is LiveWireLeague => {
       const r = m as Record<string, unknown>;
       return typeof r?.home === "string" && typeof r?.away === "string" && isPair(r?.ft);
     }) &&
-    Array.isArray(p.upcoming)
+    Array.isArray(p.upcoming) &&
+    Array.isArray(p.seasonFixtures) &&
+    (p.seasonFixtures as unknown[]).length === Number(p.totalFixtures) &&
+    (p.seasonFixtures as unknown[]).every((f) => {
+      const r = f as Record<string, unknown>;
+      return typeof r?.round === "string" && typeof r?.date === "string" &&
+        typeof r?.home === "string" && typeof r?.away === "string";
+    })
   );
 };
 
@@ -102,7 +120,7 @@ export function isLiveWirePayload(v: unknown): v is LiveWirePayload {
   if (typeof v !== "object" || v === null) return false;
   const p = v as Record<string, unknown>;
   return (
-    p.schema === "live-wire/v2" &&
+    p.schema === "live-wire/v3" &&
     typeof p.generated_at === "string" &&
     Array.isArray(p.leagues) &&
     p.leagues.length >= 2 &&
