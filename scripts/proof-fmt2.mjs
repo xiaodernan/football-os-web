@@ -44,6 +44,7 @@ const HOME = "lib/utils.ts";
 // for EQUALITY against the tree, so a file that stops reading the door reddens as a stale row
 // and a file that starts reading it without being listed reddens as an unlisted reader.
 const CONSUMERS = [
+  "features/ops/Ops.tsx", // M1149 The Pulse: two literal door calls (avgDepth tile, depth advice)
   "domain/career.ts", "domain/community.ts", "domain/filmInsights.ts", "domain/footprint.ts",
   "domain/load.ts", "domain/matchEngine.ts", "domain/review.ts", "domain/scouting.ts",
   "data/ai.ts", "data/footballSeed.ts", "data/intelligence.ts",

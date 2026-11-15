@@ -22,6 +22,8 @@ export const AI_CHAT_KEY = "football-os.ai.chat.v1";
 export const AI_EPIC_STORY_KEY = "football-os.epic.story.v1";
 // M1147: the user's fantasy eleven key.
 export const DREAM_XI_KEY = "football-os.dreamTeam.v1";
+// M1149: the visit trail behind The Pulse (巡检台). A ring of dwell timings, on-device only.
+export const PULSE_KEY = "football-os.pulse.v1";
 // M1138: the Chalkboard Cup — the owner's five-question eye-vs-model duel. A device record,
 // not a social one: runs played, points scored, best total.
 export const CHALKBOARD_KEY = "football-os.chalkboard.v1";
@@ -52,6 +54,7 @@ export const LOCAL_KEYS: KeySpec[] = [
   { key: AI_CHAT_KEY, labelKey: "set.key.ai", kind: "activity" },
   { key: AI_EPIC_STORY_KEY, labelKey: "set.key.epic", kind: "activity" },
   { key: DREAM_XI_KEY, labelKey: "set.key.dreamTeam", kind: "activity" },
+  { key: PULSE_KEY, labelKey: "set.key.pulse", kind: "activity" },
   { key: CHALKBOARD_KEY, labelKey: "set.key.chalkboard", kind: "activity" },
   { key: TACTICS_KEY, labelKey: "set.key.tactics", kind: "activity" },
   { key: COACH_KEY, labelKey: "set.key.coach", kind: "preference" },

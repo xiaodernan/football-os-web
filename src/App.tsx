@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { ThemeProvider } from "@/lib/theme";
 import { I18nProvider } from "@/i18n";
 import { RouterProvider, useRouter } from "@/lib/router";
@@ -12,6 +12,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { EmptyState } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PULSE_KEY, type VisitRecord } from "@/domain/pulse";
+import { browserStore, readJson, writeJson } from "@/domain/localData";
+import { last } from "@/domain/attributes";
 
 // Route-level code splitting keeps the first paint lean; heavy, chart-backed
 // features load on demand.
@@ -79,6 +82,7 @@ const Chalkboard = lazy(() => import("@/features/chalkboard/Chalkboard").then((m
 const Pressroom = lazy(() => import("@/features/pressroom/Pressroom").then((m) => ({ default: m.Pressroom })));
 const Dossier = lazy(() => import("@/features/dossier/Dossier").then((m) => ({ default: m.Dossier })));
 const DreamXI = lazy(() => import("@/features/dreamteam/DreamXI").then((m) => ({ default: m.DreamXI })));
+const Ops = lazy(() => import("@/features/ops/Ops").then((m) => ({ default: m.Ops })));
 const FinanceBoard = lazy(() => import("@/features/finance/FinanceBoard").then((m) => ({ default: m.FinanceBoard })));
 const FormTable = lazy(() => import("@/features/analytics/FormTable").then((m) => ({ default: m.FormTable })));
 const QueueObservatory = lazy(() => import("@/features/messaging/QueueObservatory").then((m) => ({ default: m.QueueObservatory })));
@@ -113,6 +117,21 @@ function BootFallback() {
 function Routes() {
   const { path } = useRouter();
   const { state, ready } = useOs();
+  // M1149: The Pulse — fold every visit into the device's own visit trail (localStorage, never the network).
+  // The previous record's dwell is resolved here, on this navigation; the visitor's door is never uploaded.
+  useEffect(() => {
+    const store = browserStore();
+    const now = Date.now();
+    const held = readJson<{ visits: VisitRecord[] }>(store, PULSE_KEY, { visits: [] }).value.visits;
+    const visits = [...held];
+    const closing = last(visits);
+    if (closing && closing.dwellMs === 0) {
+      visits.pop();
+      visits.push({ ...closing, dwellMs: now - closing.at });
+    }
+    visits.push({ path, at: now, dwellMs: 0 });
+    writeJson(store, PULSE_KEY, { visits: visits.slice(-400) });
+  }, [path]);
 
   // Hold rendering until the stored state has been read back. Without this gate a
   // returning user briefly sees the logged-out Landing / "set up your profile"
@@ -166,6 +185,7 @@ function Routes() {
   else if (path === "/pressroom") inner = <Pressroom />;
   else if (path === "/dossier") inner = <Dossier />;
   else if (path === "/dream-team") inner = <DreamXI />;
+  else if (path === "/ops") inner = <Ops />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

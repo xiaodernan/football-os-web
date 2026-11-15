@@ -47,14 +47,16 @@ const HOME = "lib/utils.ts";
 const CONSUMERS = [
   "domain/compare.ts", "domain/history.ts", "domain/review.ts",
   "features/film/FilmRoom.tsx", "features/football/Details.tsx", "features/player/PlayerOS.tsx",
-  "features/scouting/ScoutingPanel.tsx", "features/settings/SettingsPage.tsx",
+  "features/scouting/ScoutingPanel.tsx", "features/settings/SettingsPage.tsx",  "features/ops/Ops.tsx", // M1149 The Pulse: three literal door calls (bounce tile, loop tile, bounce advice)
+
   "features/watchlist/WatchlistBoard.tsx",
 ];
 // Exact per-file call pins — a call that moves files, not just a total that drifts, reddens below.
 const CALL_PINS = {
   "domain/compare.ts": 1, "domain/history.ts": 2, "domain/review.ts": 3,
   "features/film/FilmRoom.tsx": 1, "features/football/Details.tsx": 1, "features/player/PlayerOS.tsx": 1,
-  "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,
+  "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,  "features/ops/Ops.tsx": 3,
+
   "features/watchlist/WatchlistBoard.tsx": 1,
 };
 // The home's own internal call: the money door's B line, one call, no import.
@@ -251,7 +253,7 @@ const homeCalls = count(codeOf(HOME), CALL_FMT1);
 const homeImports = count(src[HOME], IMPORT_FMT1);
 const orphanCallers = treeCallers.filter((f) => f !== HOME && !CONSUMERS.includes(f));
 ok(`every consumer reads the door at their exact pinned counts, and the door's own HOME is a reader too (imports ${importing.length}/${CONSUMERS.length}, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned ${totalCalls}; the home calls it ${homeCalls}x and imports it ${homeImports}x; tree callers ${treeCallers.length}, orphans ${orphanCallers.length} [${orphanCallers.join(",")}])`,
-  importing.length === CONSUMERS.length && pinsHold && totalCalls === 16 &&
+  importing.length === CONSUMERS.length && pinsHold && totalCalls === 19 && // M1149: 16 -> 19 with Ops.tsx's three literal reads
   homeCalls === HOME_CALLS && homeImports === 0 && orphanCallers.length === 0 &&
   treeCallers.length === CONSUMERS.length + 1);
 
