@@ -165,7 +165,7 @@ const doorFile = HOME;
 // same door (never a private format) — the list is exactly the tree, and it moved 14 -> 15.
 const readersOutside = readers.filter((f) => f !== doorFile);
 ok(`every money reader reads the one door, and the world screen is one of them (${readers.length} readers [${readers.join(",")}]; ${readersOutside.length} outside the door's own file; the world screen among them: ${readers.includes(SCREEN) ? "yes" : "no"}; the value-handed reader domain/compare.ts: ${readers.includes("domain/compare.ts") ? "counted" : "MISSED"})`,
-  readers.includes(SCREEN) && readers.includes("domain/compare.ts") && readersOutside.length === 15 && readers.length === 16);
+  readers.includes(SCREEN) && readers.includes("domain/compare.ts") && readersOutside.length === 16 && readers.length === 17);
 
 // --- 9. The app's WORDS and the code agree: the two prose claims still name the one door, and
 // --- the module that used to carry the copy now says why it is gone. -------------------------

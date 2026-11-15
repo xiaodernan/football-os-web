@@ -564,7 +564,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1064: 139 -> 140 — domain/ringMath.ts (the shared hash-ring floor the cache and queue folds both read).
 // M1076: 140 -> 141 — data/llm.ts (the live LLM tie-in's fold, lazy-loaded through the AI studio).
 // M1080: 141 -> 143 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const APP_SRC_PIN = 170;
+const APP_SRC_PIN = 172;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -596,7 +596,7 @@ const APP_SRC_PIN = 170;
 // M1036: 77 -> 78 — PlatformAtlas.tsx is a new .tsx module.
 // M1059: 78 -> 79 — QueueObservatory.tsx is a new .tsx module.
 // M1064: 79 -> 80 — CacheObservatory.tsx is a new .tsx module.
-const TSX_PIN = 96;
+const TSX_PIN = 97;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -641,7 +641,7 @@ const TSX_PIN = 96;
 // both folds import it).
 // M1076: 143 -> 144 — data/llm.ts (the live LLM tie-in's fold; lazy-loaded through the AI studio).
 // M1080: 144 -> 146 — domain/seasonRoom.ts (fold) + features/seasonroom/SeasonRoom.tsx (screen).
-const SRC_PIN = 173;
+const SRC_PIN = 175;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4768,7 +4768,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // were added AFTER the census was first tuned), title/subtitle pair, the cold chip and the
   // shared method + noSeed lines: literal 2751 -> 2765, litVarSites 473 -> 478.
   // M1129 (The world's chronicle of itself, fourteen literal t() sites on /about): literal 2821 -> 2840, expression 35 -> 37.
-  shapeCounts.literal === 3023 && shapeCounts.template === 116 && shapeCounts.expression === 42
+  shapeCounts.literal === 3052 && shapeCounts.template === 116 && shapeCounts.expression === 43
     && shapeCounts.computed === 24 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4937,11 +4937,11 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1122: the Prophet's three odds lines (homeWin {n}, draw {n}, awayWin {n}) and the
   // expectedTotalGoals row ({n}): 473 -> 478 (the expectedGoals λ/xG pair added after the first
   // measurement).
-  litVarSites === 523 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 525 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
-  exprWithObj.length === 0 && shapeCounts.expression === 42 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 43 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three
@@ -6406,7 +6406,7 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
   // M1064: the cache tier's TTL scatter SVG names its accessible label through t(): 13 -> 14.
   // M1059: the observatory's three SVG role=img surfaces (backoff, pressure, ring) name their
   // accessible label through t(), adding three keyed aria attributes: 10 -> 13.
-  ariaBare.length === 0 && ariaKeyed === 15 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+  ariaBare.length === 0 && ariaKeyed === 16 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English
