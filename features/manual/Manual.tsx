@@ -50,6 +50,7 @@ export function Manual() {
     { to: "/dossier", label: t("nav.dossier") },
     { to: "/dream-team", label: t("nav.dreamTeam") },
     { to: "/journey", label: t("nav.journey") },
+    { to: "/library", label: t("nav.library") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },
     { to: "/platform", label: t("nav.platform") },

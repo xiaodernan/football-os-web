@@ -23,6 +23,7 @@ test("the palette lists the new cinematic destinations in its goto group", async
   await expect(modal.getByText(/dossier|密报|密報/i).first()).toBeVisible();
   await expect(modal.getByText(/dream xi|梦之队|夢之隊/i).first()).toBeVisible();
   await expect(modal.getByText(/journey|旅程|旅程/i).first()).toBeVisible();
+  await expect(modal.getByText(/the library|reading hall|读书室|讀書室/i).first()).toBeVisible();
   await expect(modal.getByText(/pulse|脉搏|脈搏/i).first()).toBeVisible();
   await page.keyboard.press("Escape");
 });
