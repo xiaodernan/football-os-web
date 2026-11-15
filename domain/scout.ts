@@ -5,7 +5,8 @@
 import type { Club, Match, PlayerRef } from "./types";
 import { isFinished } from "./analytics";
 import { valueIndex } from "./scouting";
-import { sum, byOverall } from "./attributes";
+import { sum, byOverall, byValueDesc, headroomOf } from "./attributes";
+import { round2 } from "@/lib/utils";
 
 export interface ScoutDossier {
   player: PlayerRef;
@@ -25,7 +26,7 @@ const SCOUT_MAX_AGE = 23;
 export function pickProspect(players: readonly PlayerRef[]): PlayerRef | null {
   const under = players.filter((p) => p.age <= SCOUT_MAX_AGE);
   if (under.length === 0) return null;
-  return [...under].sort((a, b) => byOverall(b, a) || b.value - a.value || a.id.localeCompare(b.id))[0];
+  return [...under].sort((a, b) => byOverall(b, a) || byValueDesc(b, a) || a.id.localeCompare(b.id))[0];
 }
 
 export function scoutDossier(matches: readonly Match[], clubs: readonly Club[], players: readonly PlayerRef[]): ScoutDossier | null {
@@ -54,8 +55,8 @@ export function scoutDossier(matches: readonly Match[], clubs: readonly Club[], 
     club: byId.get(prospect.clubId),
     appearances,
     goals: totalGoals,
-    goalsPerApp: appearances ? Math.round((totalGoals / appearances) * 100) / 100 : 0,
-    gap: Math.max(0, prospect.potential - prospect.overall),
+    goalsPerApp: round2(totalGoals / Math.max(1, appearances)),
+    gap: headroomOf(prospect.potential, prospect.overall),
     valueIndex: valueIndex(prospect),
   };
 }
