@@ -108,6 +108,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       { id: "long-season", label: t("nav.longSeason"), group: "goto", run: nav("/long-season") },
       { id: "curtain-up", label: t("nav.curtainUp"), group: "goto", run: nav("/curtain-up") },
       { id: "wire-ledger", label: t("nav.wireLedger"), group: "goto", run: nav("/wire-ledger") },
+      { id: "world-table", label: t("nav.worldTable"), group: "goto", run: nav("/world-table") },
       { id: "journey", label: t("nav.journey"), group: "goto", run: nav("/journey") },
       { id: "profile", label: t("nav.profile"), group: "goto", run: nav("/profile") },
       { id: "review", label: t("nav.review"), group: "goto", run: nav("/review") },

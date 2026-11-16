@@ -248,11 +248,11 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1162 Curtain Up: the next-round screen lazy chunk (4.53 KB raw / 1.64 KB gzip) — 747 KB across 100 assets
 // (JS 733 KB, CSS 15 KB); the pin moves 745 -> 747 and the baseline re-records in the same commit.
 // M1163 Ask the Wire: the desk adds ~1 KB gzip to the LiveWire chunk. M1164 The Ledger: the new lazy room adds
-// ~2 KB gzip across 102 assets. Measured on this tree: 752 KB (JS 737 KB, CSS 14.9 KB, 102 assets) on Windows Node,
-// and the runner's Ubuntu Node stamps +1 KB past the local figure on the identical build (748 vs 747 at M1162,
-// 749 vs 748 at M1163). The pin therefore carries 753 KB: the drama of this line is arithmetic, not vanity —
-// 747 -> 753 over three milestones, each kilobyte named.
-const BUDGET_KB = 753;
+// ~2 KB gzip across 102 assets. M1165 The World Table adds another ~2.6 KB lazy chunk (JS 740 ->740, assets
+// 102 -> 103). Measured on this tree: 755 KB (JS 740 KB, CSS 15 KB, 103 assets); the runner's Ubuntu Node stamps
+// +1 KB past the local figure on the identical build (748 vs 747 at M1162, 749 vs 748 at M1163, 752+1=753 at M1164).
+// The pin therefore carries 756 KB across all machines.
+const BUDGET_KB = 756;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

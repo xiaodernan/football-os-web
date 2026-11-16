@@ -19,7 +19,7 @@ export interface Chapter {
 
 export const CHAPTERS: readonly Chapter[] = [
   { id: "first", titleKey: "journey.ch.first", hintKey: "journey.ch.firstHint", stops: ["/onboarding", "/football", "/tomorrow"] },
-  { id: "watch", titleKey: "journey.ch.watch", hintKey: "journey.ch.watchHint", stops: ["/form", "/briefing", "/run-in", "/title-race", "/home-away", "/clock", "/chances", "/venue-split", "/live-wire", "/grand-tour", "/dispatch", "/long-season", "/curtain-up", "/wire-ledger"] },
+  { id: "watch", titleKey: "journey.ch.watch", hintKey: "journey.ch.watchHint", stops: ["/form", "/briefing", "/run-in", "/title-race", "/home-away", "/clock", "/chances", "/venue-split", "/live-wire", "/grand-tour", "/dispatch", "/long-season", "/curtain-up", "/wire-ledger", "/world-table"] },
   { id: "players", titleKey: "journey.ch.players", hintKey: "journey.ch.playersHint", stops: ["/players", "/watchlist", "/compare", "/scouting", "/value", "/scout", "/dossier", "/academy"] },
   { id: "epics", titleKey: "journey.ch.epics", hintKey: "journey.ch.epicsHint", stops: ["/chronicle", "/legends", "/atlas", "/derby-codex", "/prophet", "/upsets", "/moonshots", "/transfers"] },
   { id: "career", titleKey: "journey.ch.career", hintKey: "journey.ch.careerHint", stops: ["/manager", "/coach", "/player", "/development", "/season-room", "/league-rules", "/net", "/goals"] },

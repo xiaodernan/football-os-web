@@ -23,6 +23,7 @@ const Dispatch = lazy(() => import("@/features/dispatch/Dispatch").then((m) => (
 const Sacred = lazy(() => import("@/features/sacred/Sacred").then((m) => ({ default: m.Sacred })));
 const Curtain = lazy(() => import("@/features/curtain/Curtain").then((m) => ({ default: m.Curtain })));
 const Ledger = lazy(() => import("@/features/ledger/Ledger").then((m) => ({ default: m.Ledger })));
+const WorldTable = lazy(() => import("@/features/worldtable/WorldTable").then((m) => ({ default: m.WorldTable })));
 
 // Route-level code splitting keeps the first paint lean; heavy, chart-backed
 // features load on demand.
@@ -202,6 +203,7 @@ function Routes() {
   else if (path === "/long-season") inner = <Sacred />;
   else if (path === "/curtain-up") inner = <Curtain />;
   else if (path === "/wire-ledger") inner = <Ledger />;
+  else if (path === "/world-table") inner = <WorldTable />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

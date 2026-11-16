@@ -57,6 +57,7 @@ export function Manual() {
     { to: "/long-season", label: t("nav.longSeason") },
     { to: "/curtain-up", label: t("nav.curtainUp") },
     { to: "/wire-ledger", label: t("nav.wireLedger") },
+    { to: "/world-table", label: t("nav.worldTable") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },
     { to: "/platform", label: t("nav.platform") },
