@@ -7,9 +7,12 @@ import { useI18n } from "@/i18n";
 import { Panel, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn, SEPARATOR, signed } from "@/lib/utils";
+import { ABSENT, cn, SEPARATOR, signed } from "@/lib/utils";
 import { fetchLiveWire, type LiveWireLeague, type LiveWirePayload, type LiveWireZone, type WireStatus } from "@/data/liveWire";
 import { callLlmStream, LLM_CONFIG, type BriefStatus } from "@/data/llm";
+import {
+  askBuild, askCommit, askPreflight, askPrecommit, askRefused, askRetrieve, createAskDesk, verifyAskText, type AskTraceEntry,
+} from "@/domain/askDesk";
 import { wireBriefFacts } from "@/domain/wireBrief";
 import { retrieveAsk, type WireAskId } from "@/domain/wireRag";
 import { ZapIcon } from "lucide-react";
@@ -96,6 +99,7 @@ export function LiveWire() {
   const [leagueId, setLeagueId] = useState("de.1");
   const [brief, setBrief] = useState<{ status: BriefStatus; text: string; error?: string }>({ status: "idle", text: "" });
   const [askId, setAskId] = useState<WireAskId | null>(null);
+  const [askTrace, setAskTrace] = useState<readonly AskTraceEntry[] | null>(null);
 
   const league: LiveWireLeague | null =
     payload?.leagues.find((l) => l.id === leagueId) ?? payload?.leagues[0] ?? null;
@@ -103,6 +107,8 @@ export function LiveWire() {
   const askBrief = () => {
     if (!payload || !league || brief.status === "streaming") return;
     const facts = wireBriefFacts(league);
+    setAskTrace(null);
+    setAskId(null);
     if (!LLM_CONFIG.hasKey) {
       setBrief({ status: "fold", text: foldLines(facts, t, league) });
       return;
@@ -123,21 +129,48 @@ export function LiveWire() {
     if (!payload || !league || brief.status === "streaming") return;
     const ws = WIRE_ASKS.find((w) => w.id === id);
     if (!ws) return;
+    setAskId(id);
+    let desk = askPreflight(createAskDesk(payload, id, ws.ask, locale));
+    desk = askRetrieve(desk);
+    desk = askBuild(desk);
+    if (desk.status === "refused") {
+      setAskTrace(desk.trace);
+      setBrief({ status: "fold", text: foldAskAnswerText(payload, id, t) });
+      return;
+    }
     if (!LLM_CONFIG.hasKey) {
-      setBrief({ status: "fold", text: foldLines(wireBriefFacts(league), t, league) });
-      setAskId(id);
+      setAskTrace(desk.trace);
+      setBrief({ status: "fold", text: foldAskAnswerText(payload, id, t) });
       return;
     }
     setBrief({ status: "streaming", text: "" });
-    setAskId(id);
     callLlmStream(
       ws.ask,
       [],
       (delta) => setBrief((s) => (s.status === "streaming" ? { ...s, text: s.text + delta } : s)),
       { system: wireAskSystem(payload, ws, locale) },
     ).then((r) => {
-      if (r.ok) setBrief({ status: "ready", text: r.text });
-      else setBrief({ status: "fold", text: foldLines(wireBriefFacts(league), t, league), error: r.error });
+      if (r.ok) {
+        const refusals = verifyAskText(r.text, payload);
+        if (refusals.length === 0) {
+          const committed = askCommit(askPrecommit(desk, "pass"), r.text);
+          setAskTrace(committed.trace);
+          setBrief({ status: "ready", text: r.text });
+          return;
+        }
+        const folded = { error: refusals.slice(0, 2).map((code) => t(`liveWire.askViolation.${code}`)).join(" · ").slice(0, 180) };
+        const refused = askRefused(askPrecommit(desk, "refused"), foldAskAnswerText(payload, id, t));
+        setAskTrace(refused.trace);
+        setBrief({ status: "fold", text: foldAskAnswerText(payload, id, t), ...folded });
+        return;
+      }
+      const refused = askRefused(desk, foldAskAnswerText(payload, id, t));
+      setAskTrace(refused.trace);
+      setBrief({ status: "fold", text: foldAskAnswerText(payload, id, t), error: r.error });
+    }).catch(() => {
+      const refused = askRefused(desk, foldAskAnswerText(payload, id, t));
+      setAskTrace(refused.trace);
+      setBrief({ status: "fold", text: foldAskAnswerText(payload, id, t) });
     });
   };
 
@@ -149,6 +182,48 @@ export function LiveWire() {
       tr("liveWire.fold.s3", { home: facts.recentHome, ft: facts.recentFt, away: facts.recentAway, md: facts.md }),
       tr("liveWire.fold.s4"),
     ].join("\n");
+  };
+
+  const foldAskAnswerText = (p: LiveWirePayload, askIdLocal: WireAskId, tr: typeof t): string => {
+    const lane = retrieveAsk(p, askIdLocal) as { leagues?: Array<{ league: string }> };
+    const rows = (lane.leagues ?? []).map((l) => {
+      const league = p.leagues.find((x) => x.league === l.league);
+      if (askIdLocal === "nextRound") {
+        const fixtures = (league?.upcoming ?? [])
+          .slice(0, 3)
+          .map((f) => `${f.round} ${f.date} · ${f.home} v ${f.away}`)
+          .join(" · ");
+        return tr("liveWire.askFold.nextRound", { league: l.league, fixtures: fixtures || ABSENT });
+      }
+      if (askIdLocal === "titleChase") {
+        const lead = league?.table[0];
+        const second = league?.table[1];
+        return tr("liveWire.askFold.titleChase", {
+          league: l.league,
+          leader: lead?.team ?? ABSENT,
+          pts: lead?.pts ?? 0,
+          gd: lead?.gd ?? 0,
+          second: second?.team ?? ABSENT,
+          gap: lead && second ? lead.pts - second.pts : 0,
+        });
+      }
+      const lead = league?.table[0];
+      const attack = league
+        ? [...league.table]
+            .sort((a, b) => b.gf - a.gf)
+            .slice(0, 3)
+            .map((r) => `${r.team} ${r.gf}`)
+            .join(" · ")
+        : ABSENT;
+      return tr("liveWire.askFold.wonderTable", {
+        league: l.league,
+        leader: lead?.team ?? ABSENT,
+        pts: lead?.pts ?? 0,
+        gd: lead?.gd ?? 0,
+        attack,
+      });
+    });
+    return `${rows.join("\n")}\n${tr("liveWire.fold.s4")}`;
   };
 
   useEffect(() => {
@@ -397,6 +472,28 @@ export function LiveWire() {
                     </div>
                   </>
                 ) : null}
+              </div>
+            ) : null}
+            {askTrace ? (
+              <div className="mt-3 border-t border-border/60 pt-2">
+                <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("liveWire.askTrace.label")}</span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{askTrace.some((e) => e.verdict === "refused") ? t("liveWire.askTrace.foldAnswer") : t("liveWire.askTrace.verified")}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {askTrace.map((entry) => (
+                    <span
+                      key={entry.stage}
+                      title={t(`liveWire.askTrace.note.${entry.note}`)}
+                      className={cn(
+                        "rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                        entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning,
+                      )}
+                    >
+                      {t(`liveWire.askTrace.stage.${entry.stage}`)}
+                    </span>
+                  ))}
+                </div>
               </div>
             ) : null}
           </Panel>

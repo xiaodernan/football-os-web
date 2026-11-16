@@ -229,6 +229,9 @@ const expectedUsers = [
   // M1155 The Grand Tour: the chase row's leader, the card's leader and the second line all
   // decline to print a placeholder where the committed wire itself carries none.
   "features/grandtour/GrandTour.tsx",
+  // M1176 The Ask-Desk StateGraph: the fold answer's absent arms (next fixture, the two clubs,
+  // structural nothings) print the door rather than a dash literal — five reads, one import.
+  "features/livewire/LiveWire.tsx",
   "features/load/LoadPage.tsx",
   "features/manager/ManagerOS.tsx", "features/manager/SquadPlanning.tsx", "features/onboarding/Onboarding.tsx",
   "features/player/PlayerOS.tsx", "features/programme/Programme.tsx", "features/review/ReviewPage.tsx",
@@ -272,6 +275,9 @@ const expectedPerUser = [
   ["features/football/FootballWorld.tsx", 1],
   // M1155 The Grand Tour: three doors read (chase leader, card leader, second line).
   ["features/grandtour/GrandTour.tsx", 3],
+  // M1176 The Ask-Desk StateGraph: five ABSENT arms (next-Round fixtures, both table ladder
+  // positions, one between-the-lines nothing) print the door rather than a literal dash.
+  ["features/livewire/LiveWire.tsx", 5],
   ["features/load/LoadPage.tsx", 3],
   ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1], ["features/onboarding/Onboarding.tsx", 2],
   // M1132: the programme's four ABSENT arms (form, GD, PPG cell, W-D-L cell) render no figure
