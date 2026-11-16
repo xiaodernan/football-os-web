@@ -13,8 +13,8 @@
 #
 # How to enable: repository → Settings → Secrets and variables → Actions → New repository secret
 #   name: LLM_API_KEY        value: <your OpenAI-compatible bearer key>
-#   name: LLM_BASE_URL       (optional; defaults to https://wkapi.pro/v1)
-#   name: LLM_MODEL          (optional; defaults to gpt-6-sol)
+#   name: LLM_BASE_URL       (optional; defaults to https://api.aizzz.xyz/v1)
+#   name: LLM_MODEL          (optional; defaults to gpt-6.1-terra)
 #
 # If the secret is absent, the workflow still runs, prints "no key → UNVERIFIED", and the
 # proof-workflows gate still asserts the harness shape — it does NOT pretend to have run.

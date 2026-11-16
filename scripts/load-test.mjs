@@ -8,7 +8,7 @@
 //   phase C — burst pressure on the Spring fleet probe in its honest degraded mode
 //
 // WHAT IT DOES NOT PROVE: no load is driven into the live model beyond phase B's one cold call,
-// because this world is paid for in tokens and a burst that spends money tells you about wkapi.pro,
+// because this world is paid for in tokens and a burst that spends money tells you about the provider you pay,
 // not about this code. The report also honestly names Win32's per-process TCP ceiling where it lives.
 //
 // Run from the repo root:

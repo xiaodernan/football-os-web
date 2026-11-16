@@ -41,7 +41,7 @@ ok(`LLM_CONFIG exposes only a same-origin endpoint, a boolean enable flag, and a
   LLM_CONFIG.endpoint === "/api/llm/chat" &&
   typeof LLM_CONFIG.enabled === "boolean" &&
   typeof LLM_CONFIG.model === "string" && LLM_CONFIG.model.length >= 3 &&
-  LLM_CONFIG.model === (process.env.VITE_LLM_MODEL ?? "gpt-6-sol"));
+  LLM_CONFIG.model === (process.env.VITE_LLM_MODEL ?? "gpt-6.1-terra"));
 
 // ── 2 · the browser module CANNOT see the key: no VITE_ key read, no sk- literal, no external host ──
 // The whole security argument is source-level: what the client bundle can reference is bounded.

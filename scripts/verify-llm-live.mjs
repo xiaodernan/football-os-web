@@ -7,7 +7,7 @@
 //   · END-TO-END SAME-ORIGIN PATH: it starts a real Node HTTP server on a project-owned port,
 //     mounts the EXACT llmProxyMiddleware the Vite dev/preview server mounts, and POSTs to it the
 //     way the browser does. No Vite, no bundle — the wire path is exercised as shipped.
-//   · REAL MODEL: with the server-only LLM_API_KEY from .env, gpt-6-sol actually answers a question
+//   · REAL MODEL: with the server-only LLM_API_KEY from .env, gpt-6.1-terra actually answers a question
 //     about the seeded world (Manchester City / Real Madrid, 89 overall) — measured, not asserted
 //     from a fixture. A refusal of an out-of-world question is observed and reported honestly.
 //   · DEGRADE CONTRACT: unconfigured key → 503, bad JSON → 400, oversized/empty messages → 400,
@@ -44,7 +44,7 @@ const PORT = Number(process.env.LLM_WITNESS_PORT || 8791); // project-owned, non
 const HOST = "127.0.0.1";
 const BASE = `http://${HOST}:${PORT}`;
 const TOP_CLUB = "Manchester City"; // a real entity from the frozen seed (proof-llm pins grounding)
-const MODEL = "gpt-6-sol";
+const MODEL = "gpt-6.1-terra";
 
 if (PORT === 6379 || PORT === 5672 || PORT === 5199 || PORT === 8083) {
   console.error(`FAIL verify-llm-live targets a reserved/foreign port; got ${PORT}`);

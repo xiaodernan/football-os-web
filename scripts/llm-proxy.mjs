@@ -32,8 +32,8 @@
 
 export const PROXY_ROUTE = "/api/llm/chat";
 import { Readable } from "node:stream";
-const DEFAULT_BASE = "https://wkapi.pro/v1";
-const DEFAULT_MODEL = "gpt-6-sol";
+const DEFAULT_BASE = "https://api.aizzz.xyz/v1";
+const DEFAULT_MODEL = "gpt-6.1-terra";
 const MAX_MESSAGES = 10;
 const MAX_CONTENT = 8000;
 const TIMEOUT_MS = 20000;

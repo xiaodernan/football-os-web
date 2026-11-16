@@ -34,7 +34,7 @@ interface ChatMessage { role: "system" | "user" | "assistant"; content: string }
 export const LLM_CONFIG = {
   endpoint: "/api/llm/chat",
   enabled: Boolean(import.meta.env.VITE_LLM_ENABLED),
-  model: import.meta.env.VITE_LLM_MODEL ?? "gpt-6-sol",
+  model: import.meta.env.VITE_LLM_MODEL ?? "gpt-6.1-terra",
   hasKey: Boolean(import.meta.env.VITE_LLM_ENABLED), // legacy name kept for the UI gate; means "live path armed"
 } as const;
 
