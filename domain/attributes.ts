@@ -279,9 +279,11 @@ export const positionBand = (position: number, clubCount: number): PositionBand 
  *  own guard on the outside. rng's weighted-pick total keeps the fold inline on purpose: lib/rng.ts must
  *  stay dependency-free (proof-rng's cross-process fingerprint loads it through a bare Node), so it does
  *  not import this door. */
-export function sum<T>(xs: readonly T[], f: (x: T) => number): number {
-  return xs.reduce((s, x) => s + f(x), 0);
+export function sum<T>(xs: readonly T[], f: (x: T) => number): number {  return xs.reduce((s, x) => s + f(x), 0);
 }
+
+/** The shared trailing-number key for "Matchday N"/round labels — one place, used by every season fold. */
+export const roundNumber = (round: string): number => Number(/(\d+)\s*$/.exec(round)?.[1] ?? 0);
 
 /** Deduplicate a list, keeping the first occurrence of each value. The spread-over-a-fresh-Set dedup was
  *  written seven times in two spellings — the spread itself and the Array.from spelling — across

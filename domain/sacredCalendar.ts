@@ -2,7 +2,7 @@
 // Zero network at runtime; every fixture here is public-domain OpenFootball CC0 data folded
 // deterministically by CI — no LLM, no invention, no renaming of clubs.
 import type { LiveWirePayload } from "@/data/liveWire";
-import { sum } from "./attributes";
+import { sum, roundNumber } from "./attributes";
 
 export const SACRED_FILTERS = ["all", "played", "upcoming"] as const;
 export type SacredFilter = (typeof SACRED_FILTERS)[number];
@@ -49,8 +49,6 @@ export interface SacredBigWin {
   margin: number;
 }
 
-const roundOf = (round: string) => Number(/(\d+)\s*$/.exec(round)?.[1] ?? 0);
-
 export function foldSacredCalendar(p: LiveWirePayload, filter: SacredFilter = "all"): SacredFold {
   const leagues: SacredLeague[] = p.leagues.map((l) => {
     const byRound = new Map<string, SacredFixture[]>();
@@ -69,7 +67,7 @@ export function foldSacredCalendar(p: LiveWirePayload, filter: SacredFilter = "a
         played: fixtures.filter((f) => f.played).length,
         total: fixtures.length,
       }))
-      .sort((a, b) => roundOf(a.round) - roundOf(b.round) || a.round.localeCompare(b.round));
+      .sort((a, b) => roundNumber(a.round) - roundNumber(b.round) || a.round.localeCompare(b.round));
     return {
       id: l.id, league: l.league, season: l.season,
       totalFixtures: l.totalFixtures, playedFixtures: l.playedFixtures,

@@ -55,6 +55,7 @@ export function Manual() {
     { to: "/grand-tour", label: t("nav.grandTour") },
     { to: "/dispatch", label: t("nav.dispatch") },
     { to: "/long-season", label: t("nav.longSeason") },
+    { to: "/curtain-up", label: t("nav.curtainUp") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },
     { to: "/platform", label: t("nav.platform") },
