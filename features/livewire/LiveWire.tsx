@@ -10,9 +10,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn, SEPARATOR, signed } from "@/lib/utils";
 import { fetchLiveWire, type LiveWireLeague, type LiveWirePayload, type LiveWireZone, type WireStatus } from "@/data/liveWire";
 import { callLlmStream, LLM_CONFIG } from "@/data/llm";
+import { sum } from "@/domain/attributes";
 import { wireBriefFacts } from "@/domain/wireBrief";
 import { ZapIcon } from "lucide-react";
 import type { Locale } from "@/i18n/dictionaries";
+
+// Module-local chip classes — the league rail and the ask desk share one chip pair,
+// written once here so neither panel can drift away from the other.
+const CHIP_ACTIVE = "border-primary/60 bg-primary/10 text-primary";
+const CHIP_IDLE = "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground";
 
 const ZONE_DOT: Record<NonNullable<LiveWireZone>, string> = {
   ucl: "bg-success",
@@ -51,6 +57,48 @@ const buildWireSystem = (l: LiveWireLeague, generatedAt: string, locale: Locale)
   }),
 ].join("\n");
 
+// M1163 · Ask the Wire — three one-tap questions the armed model answers from the committed fold.
+// Each preset is designed so every number the reader needs is inside the artifact; nothing outside
+// it crosses the wire. Without a key or with a network blip, the fold-wire briefing lands as usual —
+// never a silent swap, never invented words.
+type WireAskId = "nextRound" | "titleChase" | "wonderTable";
+
+interface WireAsk {
+  id: WireAskId;
+  /** the user message sent to the model — written for the fold, not the imagination */
+  ask: string;
+}
+
+const WIRE_ASKS: readonly WireAsk[] = [
+  { id: "nextRound", ask: "Tell the reader what every league plays next — one league per paragraph — and why that fixture matters in the standings you see." },
+  { id: "titleChase", ask: "For every league in the file, name the first and second-place clubs, their points, and the one thing the file is NOT willing to say yet — the open question in that race." },
+  { id: "wonderTable", ask: "Tell the reader which of these clubs — across all seven leagues — has the strangest profile as the season stands. Use the numbers you see; do not invent a narrative the file cannot carry." },
+];
+
+// The system the model is imprisoned to: the committed fold beneath the reader's eyes,
+// plus the no-invention clause. The ask string carries the reader's question.
+const wireAskSystem = (p: LiveWirePayload, ask: WireAsk, locale: Locale): string => {
+  const fold = JSON.stringify({
+    leagues: p.leagues.map((l) => ({
+      league: l.league,
+      season: l.season,
+      top: l.table.slice(0, 5).map((r) => [r.pos, r.team, r.pts, r.gd, r.form.join("")]),
+      bottom: l.table.slice(-3).map((r) => [r.pos, r.team, r.pts]),
+      fixtures_played: l.playedFixtures,
+      upcoming: l.upcoming.slice(0, 3).map((f) => [f.round, f.date, `${f.home} v ${f.away}`]),
+    })),
+    totalFixtures: sum(p.leagues, (l) => l.totalFixtures),
+  });
+  return [
+    "You answer ONLY from the fold below. Never invent a match, club or result not in it; never estimate anything.",
+    `Answer in ${LANG_NAME[locale]}. Plain prose, no lists, at most 180 words.`,
+    "If the file cannot prove what the reader asks, say exactly that and stop.",
+    "FOLD:",
+    fold,
+    `ASK: ${ask.ask}`,
+  ].join("\n");
+};
+
 export function LiveWire() {
   const { t, locale } = useI18n();
   const [payload, setPayload] = useState<LiveWirePayload | null>(null);
@@ -58,6 +106,7 @@ export function LiveWire() {
   const [attempt, setAttempt] = useState(0);
   const [leagueId, setLeagueId] = useState("de.1");
   const [brief, setBrief] = useState<{ status: "idle" | "streaming" | "ready" | "fold"; text: string; error?: string }>({ status: "idle", text: "" });
+  const [askId, setAskId] = useState<WireAskId | null>(null);
 
   const league: LiveWireLeague | null =
     payload?.leagues.find((l) => l.id === leagueId) ?? payload?.leagues[0] ?? null;
@@ -78,6 +127,28 @@ export function LiveWire() {
     ).then((r) => {
       if (r.ok) setBrief({ status: "ready", text: r.text });
       else setBrief({ status: "fold", text: foldLines(facts, t, league), error: r.error });
+    });
+  };
+
+  const askWire = (id: WireAskId) => {
+    if (!payload || !league || brief.status === "streaming") return;
+    const ws = WIRE_ASKS.find((w) => w.id === id);
+    if (!ws) return;
+    if (!LLM_CONFIG.hasKey) {
+      setBrief({ status: "fold", text: foldLines(wireBriefFacts(league), t, league) });
+      setAskId(id);
+      return;
+    }
+    setBrief({ status: "streaming", text: "" });
+    setAskId(id);
+    callLlmStream(
+      ws.ask,
+      [],
+      (delta) => setBrief((s) => (s.status === "streaming" ? { ...s, text: s.text + delta } : s)),
+      { system: wireAskSystem(payload, ws, locale) },
+    ).then((r) => {
+      if (r.ok) setBrief({ status: "ready", text: r.text });
+      else setBrief({ status: "fold", text: foldLines(wireBriefFacts(league), t, league), error: r.error });
     });
   };
 
@@ -137,7 +208,7 @@ export function LiveWire() {
                 onClick={() => { setLeagueId(l.id); setBrief({ status: "idle", text: "" }); }}
                 className={cn(
                   "rounded-md border px-2 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-colors",
-                  l.id === league.id ? "border-primary/60 bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground",
+                  l.id === league.id ? CHIP_ACTIVE : CHIP_IDLE,
                 )}
               >
                 {l.league}
@@ -288,17 +359,43 @@ export function LiveWire() {
                 <ZapIcon className="h-3.5 w-3.5" aria-hidden /> {t("liveWire.brief.ask")}
               </Button>
             </div>
+            <div className="mt-2 border-t border-border pt-2">
+              <div className="flex flex-wrap items-baseline gap-x-2">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("liveWire.askDesk.kicker")}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-primary">{t("liveWire.askDesk.title")}</span>
+              </div>
+              <p className="mt-0.5 max-w-xl text-[9.5px] leading-relaxed text-muted-foreground">{t("liveWire.askDesk.subtitle")}</p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                {WIRE_ASKS.map((w) => (
+                  <button
+                    key={w.id}
+                    type="button"
+                    disabled={brief.status === "streaming"}
+                    onClick={() => askWire(w.id)}
+                    aria-pressed={askId === w.id}
+                    className={cn(
+                      "rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest transition-colors",
+                      askId === w.id ? CHIP_ACTIVE : CHIP_IDLE,
+                    )}
+                  >
+                    {t(`liveWire.askDesk.${w.id}.kicker`)}
+                  </button>
+                ))}
+              </div>
+            </div>
             {brief.status !== "idle" ? (
               <div className="mt-3 border-t border-border pt-3 text-xs leading-relaxed">
                 {brief.status === "streaming" ? (
                   <>
                     <span className="sr-only">{t("liveWire.brief.streaming")}</span>
+                    {askId ? <span className="mb-1 block font-mono text-[9px] uppercase tracking-widest text-primary">{t(`liveWire.askDesk.${askId}.kicker`)}</span> : null}
                     <span className="whitespace-pre-wrap text-foreground">{brief.text}</span>
                     <span aria-hidden className="animate-pulse">▌</span>
                   </>
                 ) : null}
                 {brief.status === "ready" || brief.status === "fold" ? (
                   <>
+                    {askId ? <span className="mb-1 block font-mono text-[9px] uppercase tracking-widest text-primary">{t(`liveWire.askDesk.${askId}.kicker`)}</span> : null}
                     {brief.status === "fold" ? (
                       <>
                         <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-warning">{t("liveWire.fold.source")}</div>

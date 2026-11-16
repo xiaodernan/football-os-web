@@ -775,6 +775,9 @@ const DYN_SITES = [
   // reads the reader's row and `data/ai.ts` sends the English row of that key.
   { path: "features/ai/AiStudio.tsx", expr: "a.id", prefix: "ai.sug.", suffix: "" },
   { path: "features/library/Library.tsx", expr: "hit.document.kind", prefix: "library.kind.", suffix: "" }, // M1151 The Library: the five document kinds walk in from the corpus fold
+  { path: "features/livewire/LiveWire.tsx", expr: "w.id", prefix: "liveWire.askDesk.", suffix: ".kicker" }, // M1163: the desk's preset chips key off the preset id
+  { path: "features/livewire/LiveWire.tsx", expr: "askId", prefix: "liveWire.askDesk.", suffix: ".kicker" }, // M1163: the streaming kicker (1 of 2)
+  { path: "features/livewire/LiveWire.tsx", expr: "askId", prefix: "liveWire.askDesk.", suffix: ".kicker" }, // M1163: the ready/fold kicker (2 of 2)
   { path: "features/ops/Ops.tsx", expr: "i", prefix: "ops.depth.bucket", suffix: "" }, // M1149: the session-depth bucket label reads its key from the loop index
   { path: "features/sacred/Sacred.tsx", expr: "f", prefix: "longSeason.filter.", suffix: "" }, // M1160 The Long Season: the filter chips key their prefix from the fold
   { path: "features/ops/Ops.tsx", expr: "r.severity", prefix: "ops.rx.severity.", suffix: "" }, // M1157 The Prescription: severity chips read their key from the fold
@@ -1169,6 +1172,13 @@ const S_RX_SEV = { name: "prescription severity", values: ["now", "next", "watch
 claimByPrefix("ops.rx.severity.", S_RX_SEV);
 const S_LS_FILTER = { name: "long season filter", values: ["all", "played", "upcoming"] };
 claimByPrefix("longSeason.filter.", S_LS_FILTER);
+// M1163: the three asks the desk offers — the value triple is read out of the screen itself,
+// so a fourth preset without a fourth row in three locales cannot pass unnoticed.
+const S_ASK_DESK = {
+  name: "ask-the-wire presets",
+  values: spaceOf("features/livewire/LiveWire.tsx", /const WIRE_ASKS[^=]*=[\s\S]*?\n\];/, /id:\s*"([a-zA-Z]+)"/g),
+};
+claimByPrefix("liveWire.askDesk.", S_ASK_DESK);
 claimByPrefix("onb.goal.", S_ONB_GOAL);
 claimByPrefix("onb.age.", S_ONB_AGE);
 // M217: the AI screen's suggested questions are keyed, and the id list is read out of the module
@@ -4799,7 +4809,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1156 The Dispatch: the broadsheet literals — 3202 -> 3234.
   // M1157 The Prescription: the rx body sites' eight literal t() calls with exact inline vars — 3234 -> 3241; the rx severity template — 118 -> 119.
   // M1159 The World Gate: seven literal t() sites on the landing strip — 3241 -> 3248.
-shapeCounts.literal === 3280 && shapeCounts.template === 120 && shapeCounts.expression === 45
+// M1163 Ask the Wire: +3 literal sites (desk kicker/title/subtitle) and +3 template sites
+// (the three askDesk dynamic kickers) — no expression sites, no creeps.
+shapeCounts.literal === 3283 && shapeCounts.template === 123 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

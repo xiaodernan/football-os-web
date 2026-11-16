@@ -247,7 +247,11 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1154 Seven Wires measures 732 KB (JS 718, CSS 15, 94 assets).
 // M1162 Curtain Up: the next-round screen lazy chunk (4.53 KB raw / 1.64 KB gzip) — 747 KB across 100 assets
 // (JS 733 KB, CSS 15 KB); the pin moves 745 -> 747 and the baseline re-records in the same commit.
-const BUDGET_KB = 747;
+// M1163 Ask the Wire: the desk adds ~1 KB gzip to the LiveWire chunk — measured 748 KB across 100 assets
+// (JS 734 KB, CSS 14.9 KB); CI's ubuntu Node had already read 748 at M1162 — the pin moves 747 -> 748 and the
+// baseline re-records in the same commit. The one-kilobyte platform delta between local Windows Node and the
+// runner is inside this number now: the budget is 748 for both.
+const BUDGET_KB = 748;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
