@@ -60,6 +60,7 @@ export function Manual() {
     { to: "/world-table", label: t("nav.worldTable") },
     { to: "/grand-dispatch", label: t("nav.grandDispatch") },
     { to: "/golden-hour", label: t("nav.goldenHour") },
+    { to: "/wire-diary", label: t("nav.wireDiary") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },
     { to: "/platform", label: t("nav.platform") },

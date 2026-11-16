@@ -26,6 +26,7 @@ const Ledger = lazy(() => import("@/features/ledger/Ledger").then((m) => ({ defa
 const WorldTable = lazy(() => import("@/features/worldtable/WorldTable").then((m) => ({ default: m.WorldTable })));
 const GrandDispatch = lazy(() => import("@/features/granddispatch/GrandDispatch").then((m) => ({ default: m.GrandDispatch })));
 const GoldenHour = lazy(() => import("@/features/goldenhour/GoldenHour").then((m) => ({ default: m.GoldenHour })));
+const WireDiary = lazy(() => import("@/features/wirediary/WireDiary").then((m) => ({ default: m.WireDiary })));
 
 // Route-level code splitting keeps the first paint lean; heavy, chart-backed
 // features load on demand.
@@ -208,6 +209,7 @@ function Routes() {
   else if (path === "/world-table") inner = <WorldTable />;
   else if (path === "/grand-dispatch") inner = <GrandDispatch />;
   else if (path === "/golden-hour") inner = <GoldenHour />;
+  else if (path === "/wire-diary") inner = <WireDiary />;
   else if (path === "/compare") inner = <ComparePage />;
   else if (path === "/watchlist") inner = <WatchlistBoard />;
   else if (path === "/profile") inner = <ProfilePage />;

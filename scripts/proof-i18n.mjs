@@ -572,7 +572,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1166 The Retrieval Art: 193 -> 194 (wireRag fold).
 // M1169 The Grand Dispatch: 194 -> 195 (the new screen).
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
-const APP_SRC_PIN = 197;
+// M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
+const APP_SRC_PIN = 199;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -609,7 +610,8 @@ const APP_SRC_PIN = 197;
 // M1165: +1 TSX (features/worldtable/WorldTable.tsx).
 // M1169 The Grand Dispatch: +1 TSX.
 // M1173 The Golden Hour: +1 TSX (GoldenHour.tsx).
-const TSX_PIN = 109;
+// M1175 The Wire Diary: +1 TSX (WireDiary.tsx).
+const TSX_PIN = 110;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -662,7 +664,8 @@ const TSX_PIN = 109;
 // M1166 The Retrieval Art: 196 -> 197 (the new module the reader reaches).
 // M1169 The Grand Dispatch: 197 -> 198 (the new module the reader reaches).
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
-const SRC_PIN = 200;
+// M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
+const SRC_PIN = 202;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -3353,13 +3356,15 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // with mgr.wdl, "GD" shared with data.th.gd/mgr.thGD/fw.table.gd, "goals" shared with
 // leaders.colGoals) — 156 -> 159.
 // M1160 The Long Season: its two coined strings were initially duplicated by locale combos; after renaming, the ratchet holds at 159.
-const DUP_VALUES_PIN = 159;
+// M1175 The Wire Diary: one shared English value joins the ratchet; 159 -> 160.
+const DUP_VALUES_PIN = 160;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
 // M970: the same "Pts" join pays its excess: 252 -> 254.
 // M1020: the same shared idiom join pays its excess: 254 -> 255.
 // M1132: the same four shared English values pay their excess end of the ratchet — 260 -> 263.
 // M1160 The Long Season: excess keys hold at 263.
-const DUP_EXCESS_KEYS_PIN = 263;
+// M1175 The Wire Diary: one shared English excess key joins the ratchet; 263 -> 264.
+const DUP_EXCESS_KEYS_PIN = 264;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4826,7 +4831,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M1163 Ask the Wire: +3 literal sites (desk kicker/title/subtitle) and +3 template sites
 // (the three askDesk dynamic kickers) — no expression sites, no creeps.
 // M1165 The World Table: the four keyed table headers add four literal t() sites — 3302 -> 3330.
-shapeCounts.literal === 3375 && shapeCounts.template === 123 && shapeCounts.expression === 45
+  // M1175 The Wire Diary: +18 literal t() sites at first (the screen's strings incl. printHint and aria reuse, plus nav entries in shell/palette/manual) — 3375 -> 3393.
+  // M1175 provenance line: the meta row also calls byModel/byFold at two more literal sites — 3393 -> 3395.
+  shapeCounts.literal === 3395 && shapeCounts.template === 123 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5001,7 +5008,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M1164 The Ledger: tiles meta + drift's {n} — litVar 545 -> 547.
 // M1165 The World Table: meta + rocket + slump variable-literal sites — 547 -> 550.
   // M1173 The Golden Hour: meta {fixtures}/{goals} + biggestShock's {delta} — litVar 551 -> 554.
-  litVarSites === 554 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1175 The Wire Diary: meta {diaryCount}/{by} hands its variables at one literal site — litVar 554 -> 555.
+  litVarSites === 555 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
@@ -6478,7 +6486,8 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
   ariaBare.length === 0 && // M1164 The Ledger: loading region aria + print button aria — 25 -> 27.
 // M1165 The World Table: loading region aria + print button aria — 27 -> 29.
 // M1173 The Golden Hour: loading region aria + print aria — 32 -> 34.
-ariaKeyed === 34 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+// M1175 The Wire Diary: loading region aria + print aria — 34 -> 36.
+ariaKeyed === 36 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English

@@ -85,6 +85,10 @@ const ABOUT_EXCEPTION = "features/about/About.tsx";
 // One fetch call, no options beyond no-cache, no credentials. The wire is GET-only and same-origin;
 // any second fetch in the file reddens the gate exactly like the other carves.
 const WIRE_EXCEPTION = "data/liveWire.ts";
+// M1175 earns the seventh carve: the wire diary reads the SAME-ORIGIN diary artifact (public/wire-diary.json,
+// cut at release time by the model from the CC0 fold and committed). One fetch call, no options beyond no-cache,
+// no credentials — the diary itself is the page; a second fetch in the file reddens the gate exactly like the other carves.
+const WIRE_DIARY_EXCEPTION = "domain/wireDiary.ts";
 const NETWORK = /\bfetch\s*\(|XMLHttpRequest|\baxios\b|new\s+WebSocket|new\s+EventSource|sendBeacon/;
 const appText = (f) => readFileSync(f, "utf8");
 // M1078 / M1105 / M1107: count of .fetch( in the LLM-accept file must be EXACTLY one — callLlmStream
@@ -111,9 +115,12 @@ const aboutPathOk = /\/api\/spring\/fleet/.test(aboutBody);
 const wireBody = NETWORK.test(appText(join(root, WIRE_EXCEPTION)) || "") ? appText(join(root, WIRE_EXCEPTION)) : "";
 const wireFetchCalls = (wireBody.match(/\bfetch\s*\(/g) ?? []).length;
 const wirePathOk = /live-wire\.json/.test(wireBody);
-const stray = netHits.filter((p) => p !== LLM_EXCEPTION && p !== CACHE_EXCEPTION && p !== PLATFORM_EXCEPTION && p !== MESSAGING_EXCEPTION && p !== ABOUT_EXCEPTION && p !== WIRE_EXCEPTION);
-ok(`the six same-origin proxy calls reach only the documented path (llm fetch count ${llmFetchCalls}, path ok=${llmPathOk}; cache fetch count ${cacheFetchCalls}, ping ok=${cachePingPathOk}, service ok=${cacheServicePathOk}; platform fetch count ${platformFetchCalls}, fleet ok=${platformPathOk}; messaging fetch count ${messagingFetchCalls}, wire ok=${messagingPathOk}; about fetch count ${aboutFetchCalls}, fleet ok=${aboutPathOk}; wire fetch count ${wireFetchCalls}, file ok=${wirePathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
-  netHits.length === 6 && llmFetchCalls === 1 && llmPathOk && cacheFetchCalls === 2 && cachePingPathOk && cacheServicePathOk && platformFetchCalls === 1 && platformPathOk && messagingFetchCalls === 1 && messagingPathOk && aboutFetchCalls === 1 && aboutPathOk && wireFetchCalls === 1 && wirePathOk && stray.length === 0);
+const wireDiaryBody = NETWORK.test(appText(join(root, WIRE_DIARY_EXCEPTION)) || "") ? appText(join(root, WIRE_DIARY_EXCEPTION)) : "";
+const wireDiaryFetchCalls = (wireDiaryBody.match(/\bfetch\s*\(/g) ?? []).length;
+const wireDiaryPathOk = /wire-diary\.json/.test(wireDiaryBody);
+const stray = netHits.filter((p) => p !== LLM_EXCEPTION && p !== CACHE_EXCEPTION && p !== PLATFORM_EXCEPTION && p !== MESSAGING_EXCEPTION && p !== ABOUT_EXCEPTION && p !== WIRE_EXCEPTION && p !== WIRE_DIARY_EXCEPTION);
+ok(`the seven same-origin proxy calls reach only the documented path (llm fetch count ${llmFetchCalls}, path ok=${llmPathOk}; cache fetch count ${cacheFetchCalls}, ping ok=${cachePingPathOk}, service ok=${cacheServicePathOk}; platform fetch count ${platformFetchCalls}, fleet ok=${platformPathOk}; messaging fetch count ${messagingFetchCalls}, wire ok=${messagingPathOk}; about fetch count ${aboutFetchCalls}, fleet ok=${aboutPathOk}; wire fetch count ${wireFetchCalls}, file ok=${wirePathOk}; wire diary fetch count ${wireDiaryFetchCalls}, file ok=${wireDiaryPathOk}, ${netHits.length} net site(s): ${netHits.join(", ") || "none"})`,
+  netHits.length === 7 && llmFetchCalls === 1 && llmPathOk && cacheFetchCalls === 2 && cachePingPathOk && cacheServicePathOk && platformFetchCalls === 1 && platformPathOk && messagingFetchCalls === 1 && messagingPathOk && aboutFetchCalls === 1 && aboutPathOk && wireFetchCalls === 1 && wirePathOk && wireDiaryFetchCalls === 1 && wireDiaryPathOk && stray.length === 0);
 
 const SW_REGISTER = /navigator\s*\.\s*serviceWorker\s*\.\s*register\s*\(\s*["'`]([^"'`]+)["'`]/;
 const swSites = appFiles.flatMap((f) => {
