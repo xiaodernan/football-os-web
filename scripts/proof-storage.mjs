@@ -156,7 +156,8 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[
 // M1165 The World Table: domain/worldTable.ts + features/worldtable/WorldTable.tsx.
 // M1166 The Retrieval Art: domain/wireRag.ts.
 // M1169 The Grand Dispatch: features/granddispatch/GrandDispatch.tsx.
-const APP_FILES_PIN = 193;
+// M1173 The Golden Hour: goldenHour.ts + GoldenHour.tsx.
+const APP_FILES_PIN = 195;
 
 // The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
 // stands alone must keep the two a reader reaches and drop the third. The planted files are

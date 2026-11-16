@@ -59,6 +59,7 @@ export function Manual() {
     { to: "/wire-ledger", label: t("nav.wireLedger") },
     { to: "/world-table", label: t("nav.worldTable") },
     { to: "/grand-dispatch", label: t("nav.grandDispatch") },
+    { to: "/golden-hour", label: t("nav.goldenHour") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },
     { to: "/platform", label: t("nav.platform") },

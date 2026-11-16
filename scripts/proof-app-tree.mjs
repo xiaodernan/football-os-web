@@ -174,7 +174,8 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1165 The World Table: domain/worldTable.ts + features/worldtable/ join the population.
 // M1166 The Retrieval Art: domain/wireRag.ts joins the population.
 // M1169 The Grand Dispatch: features/granddispatch/ joins the population.
-const APP_MODULE_PIN = 198;
+// M1173 The Golden Hour: features/goldenhour/ joins — APP_MODULE_PIN 198 -> 200.
+const APP_MODULE_PIN = 200;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

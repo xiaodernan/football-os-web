@@ -262,7 +262,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // comfortably inside; M1172 sets the pin to 780 KB — ~20 KB headroom for the next few milestone lazy
 // chunks. The pin is a ratchet, not a gauge: it moves only when a milestone proves deliberate bundle growth
 // and annotates every kilobyte; no milestone moves it.
-const BUDGET_KB = 780;
+// M1173 The Golden Hour lands the biggest lazy room yet — measured on this tree, local Windows Node:
+// 777 KB total (JS 762 KB, CSS 15 KB, 105 assets); prior +9 KB local→CI gap places CI near 785. The pin
+// therefore moves 780 -> 790: both machines clear it with margin; no kilobyte is added silently.
+const BUDGET_KB = 790;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

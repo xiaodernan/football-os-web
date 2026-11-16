@@ -106,7 +106,8 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => ROUTER_SCOPE.has(f.split("/")[0
 // M1165 The World Table: two new modules join the reached census.
 // M1166 The Retrieval Art: domain/wireRag.ts joins the reached census.
 // M1169 The Grand Dispatch: the new route joins the reached census.
-const ROUTER_POP_PIN = 190;
+// M1173 The Golden Hour: the new route joins the reached census.
+const ROUTER_POP_PIN = 192;
 ok(`the router census reads the reader's population, derived from the app's declared entries rather than from the walk alone (${APP_ENTRIES.length} entries [${APP_ENTRIES.join(", ")}], ${APP_FILES.length} reached in scope, ${UNREACHED_SCOPE.length} unreached in scope [${UNREACHED_SCOPE.join(", ") || "none"}])`,
   APP_ENTRIES.length === 2 && APP_ENTRIES.includes("src/main.tsx") && APP_ENTRIES.includes("functions/index.ts") &&
   APP_FILES.length === ROUTER_POP_PIN && UNREACHED_SCOPE.length === 1 && UNREACHED_SCOPE[0] === "src/vite-env.d.ts");

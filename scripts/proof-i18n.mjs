@@ -571,7 +571,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1165 The World Table: 191 -> 193 (worldTable fold + screen).
 // M1166 The Retrieval Art: 193 -> 194 (wireRag fold).
 // M1169 The Grand Dispatch: 194 -> 195 (the new screen).
-const APP_SRC_PIN = 195;
+// M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
+const APP_SRC_PIN = 197;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -607,7 +608,8 @@ const APP_SRC_PIN = 195;
 // M1164: +1 TSX (features/ledger/Ledger.tsx).
 // M1165: +1 TSX (features/worldtable/WorldTable.tsx).
 // M1169 The Grand Dispatch: +1 TSX.
-const TSX_PIN = 108;
+// M1173 The Golden Hour: +1 TSX (GoldenHour.tsx).
+const TSX_PIN = 109;
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -659,7 +661,8 @@ const TSX_PIN = 108;
 // M1165 The World Table: 194 -> 196 (the two new modules the reader reaches).
 // M1166 The Retrieval Art: 196 -> 197 (the new module the reader reaches).
 // M1169 The Grand Dispatch: 197 -> 198 (the new module the reader reaches).
-const SRC_PIN = 198;
+// M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
+const SRC_PIN = 200;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4823,7 +4826,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M1163 Ask the Wire: +3 literal sites (desk kicker/title/subtitle) and +3 template sites
 // (the three askDesk dynamic kickers) — no expression sites, no creeps.
 // M1165 The World Table: the four keyed table headers add four literal t() sites — 3302 -> 3330.
-shapeCounts.literal === 3351 && shapeCounts.template === 123 && shapeCounts.expression === 45
+shapeCounts.literal === 3375 && shapeCounts.template === 123 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -4997,7 +5000,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M1162 Curtain Up: the tiles.meta call passes three real vars — litVar sites 544 -> 545.
 // M1164 The Ledger: tiles meta + drift's {n} — litVar 545 -> 547.
 // M1165 The World Table: meta + rocket + slump variable-literal sites — 547 -> 550.
-litVarSites === 551 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1173 The Golden Hour: meta {fixtures}/{goals} + biggestShock's {delta} — litVar 551 -> 554.
+  litVarSites === 554 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
@@ -6473,7 +6477,8 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
   // M1161 print the season: the print button's aria-label names itself via t() — 23 -> 24.
   ariaBare.length === 0 && // M1164 The Ledger: loading region aria + print button aria — 25 -> 27.
 // M1165 The World Table: loading region aria + print button aria — 27 -> 29.
-ariaKeyed === 32 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+// M1173 The Golden Hour: loading region aria + print aria — 32 -> 34.
+ariaKeyed === 34 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English
