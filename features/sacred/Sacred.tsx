@@ -6,6 +6,7 @@ import { useI18n } from "@/i18n";
 import { PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { PrinterIcon } from "lucide-react";
 import { cn, SEPARATOR } from "@/lib/utils";
 import { fetchLiveWire, type LiveWirePayload, type WireStatus } from "@/data/liveWire";
 import { foldSacredBigWins, foldSacredCalendar, SACRED_FILTERS, type SacredFixture, type SacredFilter } from "@/domain/sacredCalendar";
@@ -73,6 +74,9 @@ export function Sacred() {
                 {t(`longSeason.filter.${f}`)}
               </button>
             ))}
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.print()} aria-label={t("longSeason.printHint")}>
+              <PrinterIcon className="h-3.5 w-3.5" aria-hidden /> {t("longSeason.print")}
+            </Button>
           </div>
         </div>
       </header>
@@ -133,7 +137,7 @@ export function Sacred() {
           </nav>
 
           {league && fold ? (
-            <section className="grid gap-2 md:grid-cols-2">
+            <section className="grid gap-2 md:grid-cols-2 print:grid-cols-3 print:gap-1">
               {(fold.leagues.find((x) => x.id === league.id)?.rounds ?? []).map((round) => (
                 <div key={round.round} className={cn("break-inside-avoid rounded-xl p-3", PANEL_CLASS.panelGhost)}>
                   <div className="mb-1.5 flex items-baseline justify-between gap-2 border-b border-border/40 pb-1">

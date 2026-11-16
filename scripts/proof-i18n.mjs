@@ -4799,7 +4799,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1156 The Dispatch: the broadsheet literals — 3202 -> 3234.
   // M1157 The Prescription: the rx body sites' eight literal t() calls with exact inline vars — 3234 -> 3241; the rx severity template — 118 -> 119.
   // M1159 The World Gate: seven literal t() sites on the landing strip — 3241 -> 3248.
-shapeCounts.literal === 3263 && shapeCounts.template === 120 && shapeCounts.expression === 45
+shapeCounts.literal === 3265 && shapeCounts.template === 120 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -6443,7 +6443,8 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
   // M1154 Seven Wires: the league tablist names itself through t() too — 18 -> 19.
   // M1152 The Live Wire: its loading state names its aria label through t() too — 17 -> 18.
   // M1155 The Grand Tour: its chase panel names itself through t() too — 19 -> 20.
-  ariaBare.length === 0 && ariaKeyed === 23 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+  // M1161 print the season: the print button's aria-label names itself via t() — 23 -> 24.
+  ariaBare.length === 0 && ariaKeyed === 24 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English
