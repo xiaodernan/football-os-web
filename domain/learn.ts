@@ -153,7 +153,72 @@ export const LESSONS: Lesson[] = [
     },
     tags: ["analytics", "engineering", "wire", "agents"],
   },
+  {
+    id: "foldmachine",
+    titleKey: "learn.l.foldmachine.title",
+    category: "analytics",
+    level: "Beginner",
+    minutes: 6,
+    summaryKey: "learn.l.foldmachine.summary",
+    bodyKeys: ["learn.l.foldmachine.p1", "learn.l.foldmachine.p2", "learn.l.foldmachine.p3"],
+    tryIt: { labelKey: "learn.l.foldmachine.tryIt", to: "/live-wire" },
+    quiz: {
+      qKey: "learn.l.foldmachine.q",
+      optionKeys: ["learn.l.foldmachine.o1", "learn.l.foldmachine.o2", "learn.l.foldmachine.o3", "learn.l.foldmachine.o4"],
+      answer: 0,
+    },
+    tags: ["analytics", "development", "wire", "fold"],
+  },
+  {
+    id: "ctxlock",
+    titleKey: "learn.l.ctxlock.title",
+    category: "analytics",
+    level: "Intermediate",
+    minutes: 5,
+    summaryKey: "learn.l.ctxlock.summary",
+    bodyKeys: ["learn.l.ctxlock.p1", "learn.l.ctxlock.p2", "learn.l.ctxlock.p3"],
+    tryIt: { labelKey: "learn.l.ctxlock.tryIt", to: "/live-wire" },
+    quiz: {
+      qKey: "learn.l.ctxlock.q",
+      optionKeys: ["learn.l.ctxlock.o1", "learn.l.ctxlock.o2", "learn.l.ctxlock.o3", "learn.l.ctxlock.o4"],
+      answer: 1,
+    },
+    tags: ["analytics", "wire", "llm", "fold"],
+  },
+  {
+    id: "cachingsub",
+    titleKey: "learn.l.cachingsub.title",
+    category: "analytics",
+    level: "Intermediate",
+    minutes: 5,
+    summaryKey: "learn.l.cachingsub.summary",
+    bodyKeys: ["learn.l.cachingsub.p1", "learn.l.cachingsub.p2", "learn.l.cachingsub.p3"],
+    tryIt: { labelKey: "learn.l.cachingsub.tryIt", to: "/live-wire" },
+    quiz: {
+      qKey: "learn.l.cachingsub.q",
+      optionKeys: ["learn.l.cachingsub.o1", "learn.l.cachingsub.o2", "learn.l.cachingsub.o3", "learn.l.cachingsub.o4"],
+      answer: 0,
+    },
+    tags: ["analytics", "wire", "cache", "llm"],
+  },
+  {
+    id: "tapestream",
+    titleKey: "learn.l.tapestream.title",
+    category: "analytics",
+    level: "Advanced",
+    minutes: 6,
+    summaryKey: "learn.l.tapestream.summary",
+    bodyKeys: ["learn.l.tapestream.p1", "learn.l.tapestream.p2", "learn.l.tapestream.p3"],
+    tryIt: { labelKey: "learn.l.tapestream.tryIt", to: "/live-wire" },
+    quiz: {
+      qKey: "learn.l.tapestream.q",
+      optionKeys: ["learn.l.tapestream.o1", "learn.l.tapestream.o2", "learn.l.tapestream.o3", "learn.l.tapestream.o4"],
+      answer: 1,
+    },
+    tags: ["analytics", "wire", "streaming", "llm"],
+  },
 ];
+
 
 // ---- "the lesson with this id" is asked in three places, and each asked by hand ----
 // The community hub, the history timeline and the learn hub all reached into the catalogue with

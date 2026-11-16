@@ -216,8 +216,8 @@ ok("recommendLessons: the analytics reason only appears at 12+ sessions", (() =>
 ok("recommendLessons: a career without sessions gets the manager-dial reason", recommendLessons([], sig({ hasCareer: true }), 9).find((p) => p.lesson.id === "press").reason.key === "learn.rec.careerDials");
 ok("recommendLessons: a career WITH sessions gets the linking reason instead", recommendLessons([], sig({ hasCareer: true, completedSessions: 4 }), 9).find((p) => p.lesson.id === "press").reason.key === "learn.rec.careerLink");
 ok("recommendLessons: results are ranked score-desc, then shorter, then by title", (() => {
-  const ids = recommendLessons([], sig({ hasCareer: true, watchlist: 3, filmClips: 2 }), 9).map((p) => p.lesson.id);
-  const picks2 = recommendLessons([], sig({ hasCareer: true, watchlist: 3, filmClips: 2 }), 9);
+  const ids = recommendLessons([], sig({ hasCareer: true, watchlist: 3, filmClips: 2 }), N).map((p) => p.lesson.id);
+  const picks2 = recommendLessons([], sig({ hasCareer: true, watchlist: 3, filmClips: 2 }), N);
   const sortedOk = picks2.every((p, i) => i === 0 || picks2[i - 1].score >= p.score);
   const tieOk = (() => {
     for (let i = 1; i < picks2.length; i++) {
