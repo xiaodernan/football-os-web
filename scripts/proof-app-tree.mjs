@@ -170,7 +170,8 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1155 The Grand Tour: features/grandtour/GrandTour.tsx + domain/grandTour.ts join — 184 -> 186.
 // M1156 The Dispatch: features/dispatch/Dispatch.tsx joins — 186 -> 187.
 // M1157 The Prescription: domain/prescription.ts joins — 187 -> 188.
-const APP_MODULE_PIN = 192;
+// M1164 The Ledger: domain/wireLedger.ts + features/ledger/ join the population.
+const APP_MODULE_PIN = 194;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");
