@@ -137,6 +137,22 @@ export const LESSONS: Lesson[] = [
     },
     tags: ["development", "player", "load"],
   },
+  {
+    id: "stategraph",
+    titleKey: "learn.l.stategraph.title",
+    category: "analytics",
+    level: "Advanced",
+    minutes: 6,
+    summaryKey: "learn.l.stategraph.summary",
+    bodyKeys: ["learn.l.stategraph.p1", "learn.l.stategraph.p2", "learn.l.stategraph.p3"],
+    tryIt: { labelKey: "learn.l.stategraph.tryIt", to: "/live-wire" },
+    quiz: {
+      qKey: "learn.l.stategraph.q",
+      optionKeys: ["learn.l.stategraph.o1", "learn.l.stategraph.o2", "learn.l.stategraph.o3", "learn.l.stategraph.o4"],
+      answer: 1,
+    },
+    tags: ["analytics", "engineering", "wire", "agents"],
+  },
 ];
 
 // ---- "the lesson with this id" is asked in three places, and each asked by hand ----

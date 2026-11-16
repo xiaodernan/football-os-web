@@ -252,7 +252,11 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // 102 -> 103). Measured on this tree: 755 KB (JS 740 KB, CSS 15 KB, 103 assets); the runner's Ubuntu Node stamps
 // +1 KB past the local figure on the identical build (748 vs 747 at M1162, 749 vs 748 at M1163, 752+1=753 at M1164).
 // The pin therefore carries 756 KB across all machines.
-const BUDGET_KB = 756;
+// M1168 The StateGraph lessons the wire: the Academy lesson data rides inside the lazy LearnHub
+// chunk (+~0.2 KB), each new enclosed key rides the dictionary (+0.02 KB); plus M1166 Ask-the-wire
+// RAG and M1122 StateGraph row. Measured on this tree: 758 KB (JS 743 KB, CSS 15 KB, 103 assets).
+// The pin therefore carries it.
+const BUDGET_KB = 758;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
