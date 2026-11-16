@@ -154,7 +154,8 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[
 // M1157 The Prescription: domain/prescription.ts joins the reader population — 182 -> 183.
 // M1164 The Ledger: domain/wireLedger.ts + features/ledger/Ledger.tsx.
 // M1165 The World Table: domain/worldTable.ts + features/worldtable/WorldTable.tsx.
-const APP_FILES_PIN = 191;
+// M1166 The Retrieval Art: domain/wireRag.ts.
+const APP_FILES_PIN = 192;
 
 // The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
 // stands alone must keep the two a reader reaches and drop the third. The planted files are

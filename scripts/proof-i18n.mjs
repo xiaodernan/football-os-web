@@ -569,7 +569,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1157 The Prescription: domain/prescription.ts joins the source population — 184 -> 185.
 // M1164 The Ledger: 189 -> 191 (wireLedger fold + ledger screen).
 // M1165 The World Table: 191 -> 193 (worldTable fold + screen).
-const APP_SRC_PIN = 193;
+// M1166 The Retrieval Art: 193 -> 194 (wireRag fold).
+const APP_SRC_PIN = 194;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -654,7 +655,8 @@ const TSX_PIN = 107;
 // M1157 The Prescription: the fold joins the reader population — 187 -> 188.
 // M1164 The Ledger: 192 -> 194 (the two new modules the reader reaches).
 // M1165 The World Table: 194 -> 196 (the two new modules the reader reaches).
-const SRC_PIN = 196;
+// M1166 The Retrieval Art: 196 -> 197 (the new module the reader reaches).
+const SRC_PIN = 197;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
