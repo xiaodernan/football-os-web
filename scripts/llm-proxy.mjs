@@ -32,6 +32,23 @@
 
 export const PROXY_ROUTE = "/api/llm/chat";
 import { Readable } from "node:stream";
+// M1167 honor the egress boundary — some providers refuse this network. One optional
+// server-side CONNECT proxy (LLM_UPSTREAM_PROXY) made per-request from the server's own env;
+// undici-only, never shipped to the browser, never logged: empty means direct fetch, as before.
+import { ProxyAgent, fetch as proxyFetch } from "undici";
+const upstreamProxyDispatchers = new Map();
+const upstreamDispatcher = (cfg) => {
+  const envProxy = ((cfg?.upstreamProxy ?? "") + "").trim();
+  if (!envProxy) return undefined;
+  if (!upstreamProxyDispatchers.has(envProxy)) {
+    try { upstreamProxyDispatchers.set(envProxy, new ProxyAgent(envProxy)); } catch { upstreamProxyDispatchers.set(envProxy, null); }
+  }
+  return upstreamProxyDispatchers.get(envProxy) ?? undefined;
+};
+const callUpstreamFetch = (url, init, cfg) => {
+  const dispatcher = upstreamDispatcher(cfg);
+  return dispatcher ? proxyFetch(url, { ...init, dispatcher }) : fetch(url, init);
+};
 const DEFAULT_BASE = "https://api.aizzz.xyz/v1";
 const DEFAULT_MODEL = "gpt-6.1-terra";
 const MAX_MESSAGES = 10;
@@ -239,7 +256,7 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
-      const r = await fetch(`${normaliseBase(cfg.baseUrl)}/chat/completions`, {
+      const r = await callUpstreamFetch(`${normaliseBase(cfg.baseUrl)}/chat/completions`, {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${cfg.key}` },
         body: JSON.stringify({
@@ -251,7 +268,7 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
           prompt_cache_key: PROMPT_CACHE_KEY,
         }),
         signal: controller.signal,
-      });
+      }, cfg);
       if (!r.ok) return { ok: false, error: `model_${r.status}` };
       // The upstream streams SSE DATA frames (OpenAI-compatible): parse the deltas server-side and
       // hand the browser the SAME plain text envelope as before — no browser change of any kind.
@@ -351,7 +368,7 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   let upstream;
   try {
-    upstream = await fetch(`${normaliseBase(cfg.baseUrl)}/chat/completions`, {
+    upstream = await callUpstreamFetch(`${normaliseBase(cfg.baseUrl)}/chat/completions`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${cfg.key}` },
       body: JSON.stringify({
@@ -363,7 +380,7 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
         prompt_cache_key: PROMPT_CACHE_KEY,
       }),
       signal: controller.signal,
-    });
+    }, cfg);
   } catch (err) {
     clearTimeout(timer);
     return notStream(502, { ok: false, error: err?.name === "AbortError" ? "model_timeout" : "model_unreachable" });
@@ -428,6 +445,9 @@ export function serverConfig(env = process.env) {
     key: env.LLM_API_KEY || "",
     baseUrl: env.LLM_BASE_URL || DEFAULT_BASE,
     model: env.LLM_MODEL || DEFAULT_MODEL,
+    // M1167 honor the egress boundary: an optional CONNECT proxy the server reads from its own
+    // env only. Never serialized into a cache key, never returned in any response, never logged.
+    upstreamProxy: env.LLM_UPSTREAM_PROXY || "",
   };
 }
 
@@ -679,3 +699,4 @@ export function messagingServiceMiddleware(env = process.env, fetchImpl) {
     res.end(JSON.stringify(out.body));
   };
 }
+

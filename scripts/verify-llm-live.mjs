@@ -36,6 +36,12 @@ import { llmProxyMiddleware, serverConfig, handleLlmRequest, createLlmCache, llm
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const argv = process.argv.slice(2);
 const CLEAN = argv.includes("--clean");
+// M1167 the server-side egress boundary: some OpenAI-compatible providers geo-refuse certain regions
+// outright (a 403 naming a country rule comes back before the request body is read), so a hosted CI
+// runner cannot dial the provider no matter what proxy it has — proven twice and documented in
+// dev/platform-runbook.md. The flag keeps CI honest: the degrade contract runs, the live legs are
+// printed UNVERIFIED rather than FAIL, and nothing is ever claimed to have been proven that wasn't.
+const DEGRADE_ONLY = argv.includes("--degrade-only");
 
 const PORT = Number(process.env.LLM_WITNESS_PORT || 8791); // project-owned, non-default; NOT a broker, NOT the app's 5199
 // Env override exists because a busy multi-project machine may hold 8791 (a foreign listener is
@@ -121,7 +127,10 @@ try {
     noKey.status === 503 && noKey.body.error === "server_llm_unconfigured");
 
   // ── 2 · the live path: real model through the real same-origin server ───────────────────
-  if (!HAS_KEY) {
+  if (DEGRADE_ONLY) {
+    note("live legs UNVERIFIED --degrade-only (the provider geo-refuses this egress by policy; the degrade contract above still proves the wiring; the live legs were run on the authoring machine against the real provider and are recorded in dev/status_report.md)");
+    unverified++;
+  } else if (!HAS_KEY) {
     note(`no server-only LLM_API_KEY in .env — live model legs UNVERIFIED (degrade floor above still proven)`);
   } else {
     const system = "You answer ONLY about the demo world below. Be brief.\nDEMO WORLD: 73 clubs, 15 leagues. Strongest clubs by overall: Manchester City 89, Real Madrid 89, Inter 88. If asked about real-world football outside this list, say you are not briefed on real football and do not guess.";
@@ -246,3 +255,4 @@ try {
 const total = pass + fail;
 console.log(`\n${pass}/${total} checks passed${unverified ? ` · ${unverified} UNVERIFIED (honest, no key fabricated)` : ""}${CLEAN ? " · --clean (no containers to remove)" : ""}`);
 process.exit(fail ? 1 : 0);
+
