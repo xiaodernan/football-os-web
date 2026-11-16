@@ -58,6 +58,7 @@ export function Manual() {
     { to: "/curtain-up", label: t("nav.curtainUp") },
     { to: "/wire-ledger", label: t("nav.wireLedger") },
     { to: "/world-table", label: t("nav.worldTable") },
+    { to: "/grand-dispatch", label: t("nav.grandDispatch") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },
     { to: "/platform", label: t("nav.platform") },

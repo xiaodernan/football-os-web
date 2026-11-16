@@ -255,8 +255,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1168 The StateGraph lessons the wire: the Academy lesson data rides inside the lazy LearnHub
 // chunk (+~0.2 KB), each new enclosed key rides the dictionary (+0.02 KB); plus M1166 Ask-the-wire
 // RAG and M1122 StateGraph row. Measured on this tree: 758 KB (JS 743 KB, CSS 15 KB, 103 assets).
-// The pin therefore carries it.
-const BUDGET_KB = 758;
+// M1169 The Grand Dispatch: a new lazy chunk rides on top — measured 761 KB (JS 746 KB, CSS 15 KB,
+// 104 assets) on this tree, and the runner's Ubuntu Node stamps +1 KB over local on this identical
+// build. The pin rises 758 -> 761 with the measurement.
+const BUDGET_KB = 761;
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, SEPARATOR, signed } from "@/lib/utils";
 import { fetchLiveWire, type LiveWireLeague, type LiveWirePayload, type LiveWireZone, type WireStatus } from "@/data/liveWire";
-import { callLlmStream, LLM_CONFIG } from "@/data/llm";
+import { callLlmStream, LLM_CONFIG, type BriefStatus } from "@/data/llm";
 import { wireBriefFacts } from "@/domain/wireBrief";
 import { retrieveAsk, type WireAskId } from "@/domain/wireRag";
 import { ZapIcon } from "lucide-react";
@@ -94,7 +94,7 @@ export function LiveWire() {
   const [status, setStatus] = useState<WireStatus>("loading");
   const [attempt, setAttempt] = useState(0);
   const [leagueId, setLeagueId] = useState("de.1");
-  const [brief, setBrief] = useState<{ status: "idle" | "streaming" | "ready" | "fold"; text: string; error?: string }>({ status: "idle", text: "" });
+  const [brief, setBrief] = useState<{ status: BriefStatus; text: string; error?: string }>({ status: "idle", text: "" });
   const [askId, setAskId] = useState<WireAskId | null>(null);
 
   const league: LiveWireLeague | null =

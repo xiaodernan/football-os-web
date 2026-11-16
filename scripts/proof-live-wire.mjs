@@ -123,7 +123,7 @@ ok("the fold never disagrees with the table it folds (every league: gap, leader,
     facts.md === Number(/(\d+)\s*$/.exec(lg.recent[0]?.round ?? "")?.[1] ?? Number.NaN)));
 const liveSrc = readFileSync("features/livewire/LiveWire.tsx", "utf8");
 ok("the screen asks the armed model through the ONE streaming door (callLlmStream + LLM_CONFIG gate), lands the fold otherwise",
-  /import \{ callLlmStream, LLM_CONFIG \} from "@\/data\/llm"/.test(liveSrc) &&
+  /import \{ callLlmStream, LLM_CONFIG(, type BriefStatus)? \} from "@\/data\/llm"/.test(liveSrc) &&
   /LLM_CONFIG\.hasKey/.test(liveSrc) && /buildWireSystem/.test(liveSrc) && /wireBriefFacts/.test(liveSrc));
 ok("the brief never sends the model anything but the fold; the system prompt refuses invention outright",
   liveSrc.includes("Answer ONLY from the fold below. Never invent") && /ANSWER|Answer in \$\{LANG_NAME/.test(liveSrc));

@@ -47,6 +47,7 @@ const DECORATED = [
   ["/curtain-up", /curtain up|the next round|升帐|升幕/i, "/curtain-up cinematic hero"],
   ["/wire-ledger", /ledger|账本|帳本/i, "/wire-ledger cinematic hero"],
   ["/world-table", /world table|elo board|最强榜|最強榜/i, "/world-table cinematic hero"],
+  ["/grand-dispatch", /grand dispatch|week in seven|特刊|发行日/i, "/grand-dispatch cinematic hero"],
   ["/journey", /the journey/i, "/journey cinematic hero"],
   ["/about", /the world's chronicle of itself/i, "/about cinematic hero"],
   ["/manual", /the football os manual/i, "/manual cinematic hero"],

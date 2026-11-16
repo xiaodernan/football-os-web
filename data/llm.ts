@@ -38,6 +38,12 @@ export const LLM_CONFIG = {
   hasKey: Boolean(import.meta.env.VITE_LLM_ENABLED), // legacy name kept for the UI gate; means "live path armed"
 } as const;
 
+// The four states an on-demand brief surface moves through: the reader asks, the model streams,
+// the answer is ready, or the model was not available and the deterministic fold stood in.
+// Declared once here (a value-independent type-only door) so every wire surface that prints an
+// "asking/folding/there" state imports it instead of spelling the union twice.
+export type BriefStatus = "idle" | "streaming" | "ready" | "fold";
+
 function buildWorldBriefing(): string {
   const provider = footballProvider;
   const clubs = provider.clubs();
