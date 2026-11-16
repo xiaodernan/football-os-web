@@ -1,6 +1,12 @@
 // M1157 · The Prescription — deep optimization, prescribed from the fold's own numbers.
 // The ops console shows the visitor behavioural truth; this fold says what it wants changed, in
 // order of urgency, with the evidence attached. Deterministic, no model, nothing invented.
+//
+// M1174 — Carried as a StateGraph: ordered rule nodes over immutable state (fold in, out come
+// prescriptions), then the canonical sort. One node per clause; each clause reads what the fold
+// carries and appends exactly one prescription — never mutates anything, never touches storage,
+// never calls anything outside this file. The engine is deliberately small (32-step cap, cycle
+// guard, one refusal lane); it is a principle, not a framework.
 
 import { sum } from "./attributes";
 import { fmt1, fmt2 } from "@/lib/utils";
@@ -32,65 +38,118 @@ export interface Prescription {
   vars: Record<string, string | number>;
 }
 
+export interface PrescriptionState {
+  readonly fold: PulseFold;
+  readonly items: readonly Prescription[];
+}
 
-/**
- * The one prescription fold. Called on the same PulseFold the console renders, so every clause
- * the prescription prints is checkable against the panel two rooms above it.
- */
-export function foldPrescription(fold: PulseFold): Prescription[] {
-  const out: Prescription[] = [];
-  const s = fold.sessions;
-  if (s === 0) return out;
+const push = (s: Readonly<PrescriptionState>, p: Prescription): PrescriptionState => ({ ...s, items: [...s.items, p] });
 
-  // 1 · the front door quivers — bounce share as percentage of sessions
-  if (fold.bounceRate >= RX_BOUNCE_NOW) {
-    out.push({ severity: "now", id: "rx.bounce", score: fold.bounceRate, vars: { p: fmt1(fold.bounceRate) } });
-  } else if (fold.bounceRate >= RX_BOUNCE_NEXT) {
-    out.push({ severity: "next", id: "rx.bounce", score: fold.bounceRate, vars: { p: fmt1(fold.bounceRate) } });
+// ---- The tiny typed state graph the fold rides on. State passed in/out; the only failure mode
+// is an unhandled throw, caught at the boundary and folded to `commit` — which is deterministic,
+// pure, and the same path as a clean run. No caller-visible semantics change.
+type Node<T> = (state: Readonly<T>) => T;
+type Edge<T> = (state: Readonly<T>) => string | null;
+interface Graph<T> {
+  readonly nodes: Readonly<Record<string, Node<T>>>;
+  readonly edgeOf: Readonly<Record<string, Edge<T>>>;
+  readonly start: string;
+  readonly refuseInto: string;
+}
+
+function run<T extends object>(spec: Graph<T>, initial: T): { ok: boolean; state: T } {
+  let state = initial as Readonly<T>;
+  let current = spec.start;
+  const seen = new Set<string>();
+  for (let i = 0; i < 32; i++) {
+    if (!(current in spec.nodes)) return { ok: false, state: state as T };
+    if (seen.has(current)) return { ok: false, state: state as T };
+    seen.add(current);
+    const edge = spec.edgeOf[current];
+    if (!edge) return { ok: false, state: state as T };
+    try { state = spec.nodes[current](state) as Readonly<T>; } catch { state = spec.nodes[spec.refuseInto]({ ...state, refusal: true } as unknown as Readonly<T>) as Readonly<T>; return { ok: false, state: state as T }; }
+    const next = edge(state);
+    if (next === null) return { ok: true, state: state as T };
+    current = next;
   }
+  return { ok: false, state: state as T };
+}
 
-  // 2 · the world fails its first three screens
-  if (fold.avgDepth < RX_DEPTH_FLOOR) {
-    out.push({ severity: "next", id: "rx.depth", score: (RX_DEPTH_FLOOR - fold.avgDepth) * RX_DEPTH_SCORE, vars: { d: fmt2(fold.avgDepth) } });
+const preflight = (s: Readonly<PrescriptionState>): PrescriptionState => (s.fold.sessions === 0 ? s : s);
+
+const bounce = (s: Readonly<PrescriptionState>): PrescriptionState => {
+  const r = s.fold.bounceRate;
+  if (r >= RX_BOUNCE_NOW) return push(s, { severity: "now", id: "rx.bounce", score: r, vars: { p: fmt1(r) } });
+  if (r >= RX_BOUNCE_NEXT) return push(s, { severity: "next", id: "rx.bounce", score: r, vars: { p: fmt1(r) } });
+  return s;
+};
+
+const depth = (s: Readonly<PrescriptionState>): PrescriptionState => {
+  if (s.fold.avgDepth < RX_DEPTH_FLOOR) {
+    return push(s, { severity: "next", id: "rx.depth", score: (RX_DEPTH_FLOOR - s.fold.avgDepth) * RX_DEPTH_SCORE, vars: { d: fmt2(s.fold.avgDepth) } });
   }
+  return s;
+};
 
-  // 3 · the heaviest dead-end — name it and count it
-  const topExit = fold.exits[0];
-  if (topExit && topExit.exits / s >= RX_DEAD_END_SHARE) {
-    out.push({ severity: "now", id: "rx.deadEnd", score: (topExit.exits / s) * 100, vars: { path: topExit.path, n: topExit.exits, s } });
+const deadEnd = (s: Readonly<PrescriptionState>): PrescriptionState => {
+  const topExit = s.fold.exits[0];
+  if (topExit && topExit.exits / s.fold.sessions >= RX_DEAD_END_SHARE) {
+    return push(s, { severity: "now", id: "rx.deadEnd", score: (topExit.exits / s.fold.sessions) * 100, vars: { path: topExit.path, n: topExit.exits, s: s.fold.sessions } });
   }
+  return s;
+};
 
-  // 4 · the manual exits — the world owes onboarding pressure
-  const manualExits = fold.exits.find((e) => e.path === "/manual")?.exits ?? 0;
+const manualExit = (s: Readonly<PrescriptionState>): PrescriptionState => {
+  const manualExits = s.fold.exits.find((e) => e.path === "/manual")?.exits ?? 0;
   if (manualExits >= RX_MANUAL_EXITS_MIN) {
-    out.push({ severity: "next", id: "rx.manualExit", score: manualExits, vars: { n: manualExits } });
+    return push(s, { severity: "next", id: "rx.manualExit", score: manualExits, vars: { n: manualExits } });
   }
+  return s;
+};
 
-  // 5 · the session runs in a loop
-  if (fold.loopRate >= RX_LOOP_MIN) {
-    out.push({ severity: "next", id: "rx.loop", score: fold.loopRate, vars: { l: fmt1(fold.loopRate) } });
+const loop = (s: Readonly<PrescriptionState>): PrescriptionState => {
+  if (s.fold.loopRate >= RX_LOOP_MIN) {
+    return push(s, { severity: "next", id: "rx.loop", score: s.fold.loopRate, vars: { l: fmt1(s.fold.loopRate) } });
   }
+  return s;
+};
 
-  // 6 · the door that swallows — a route whose bounce share is beyond saving stands named
-  const door = [...fold.perRoute]
+const swipe = (s: Readonly<PrescriptionState>): PrescriptionState => {
+  const door = [...s.fold.perRoute]
     .filter((r) => r.visits >= RX_DOOR_VISITS && r.bounceShare >= RX_DOOR_SHARE)
     .sort((a, b) => b.bounceShare - a.bounceShare || a.path.localeCompare(b.path))[0];
   if (door) {
-    out.push({ severity: "watch", id: "rx.bounceDoor", score: door.bounceShare, vars: { path: door.path, p: fmt1(door.bounceShare) } });
+    return push(s, { severity: "watch", id: "rx.bounceDoor", score: door.bounceShare, vars: { path: door.path, p: fmt1(door.bounceShare) } });
   }
+  return s;
+};
 
-  // 7 · the rhythm falls into the second half
-  const firstHalf = fold.trend.slice(0, Math.floor(fold.trend.length / 2));
-  const secondHalf = fold.trend.slice(Math.floor(fold.trend.length / 2));
+const fatigue = (s: Readonly<PrescriptionState>): PrescriptionState => {
+  const firstHalf = s.fold.trend.slice(0, Math.floor(s.fold.trend.length / 2));
+  const secondHalf = s.fold.trend.slice(Math.floor(s.fold.trend.length / 2));
   const before = sum(firstHalf, (d) => d.visits);
   const after = sum(secondHalf, (d) => d.visits);
   if (before > 0 && after < before * RX_SECOND_HALF_RATIO) {
-    out.push({ severity: "watch", id: "rx.fatigue", score: (1 - after / before) * 100, vars: { s: fmt1((after / before) * 100) } });
+    return push(s, { severity: "watch", id: "rx.fatigue", score: (1 - after / before) * 100, vars: { s: fmt1((after / before) * 100) } });
   }
+  return s;
+};
 
-  if (out.length === 0) {
-    out.push({ severity: "watch", id: "rx.hold", score: 0, vars: {} });
-  }
+const hold = (s: Readonly<PrescriptionState>): PrescriptionState =>
+  (s.items.length === 0 ? push(s, { severity: "watch", id: "rx.hold", score: 0, vars: {} }) : s);
 
-  return out.sort((a, b) => rank[a.severity] - rank[b.severity] || b.score - a.score).slice(0, 5);
+const commit = (s: Readonly<PrescriptionState>): PrescriptionState => {
+  const items = [...s.items].sort((a, b) => rank[a.severity] - rank[b.severity] || b.score - a.score).slice(0, 5);
+  return { ...s, items };
+};
+
+export function foldPrescription(fold: PulseFold): Prescription[] {
+  const nodes = { preflight, bounce, depth, deadEnd, manualExit, loop, swipe, fatigue, hold, commit } as const;
+  const order: (keyof typeof nodes)[] = ["preflight", "bounce", "depth", "deadEnd", "manualExit", "loop", "swipe", "fatigue", "hold", "commit"];
+  const edgeOf: Record<string, Edge<PrescriptionState>> = {};
+  for (let i = 0; i < order.length - 1; i++) edgeOf[order[i]] = () => order[i + 1];
+  edgeOf.commit = () => null;
+
+  const out = run<PrescriptionState>({ nodes, edgeOf, start: "preflight", refuseInto: "commit" }, { fold, items: [] });
+  return out.ok ? [...out.state.items] : [];
 }
