@@ -10,8 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn, SEPARATOR, signed } from "@/lib/utils";
 import { fetchLiveWire, type LiveWireLeague, type LiveWirePayload, type LiveWireZone, type WireStatus } from "@/data/liveWire";
 import { callLlmStream, LLM_CONFIG } from "@/data/llm";
-import { sum } from "@/domain/attributes";
 import { wireBriefFacts } from "@/domain/wireBrief";
+import { retrieveAsk, type WireAskId } from "@/domain/wireRag";
 import { ZapIcon } from "lucide-react";
 import type { Locale } from "@/i18n/dictionaries";
 
@@ -61,8 +61,6 @@ const buildWireSystem = (l: LiveWireLeague, generatedAt: string, locale: Locale)
 // Each preset is designed so every number the reader needs is inside the artifact; nothing outside
 // it crosses the wire. Without a key or with a network blip, the fold-wire briefing lands as usual —
 // never a silent swap, never invented words.
-type WireAskId = "nextRound" | "titleChase" | "wonderTable";
-
 interface WireAsk {
   id: WireAskId;
   /** the user message sent to the model — written for the fold, not the imagination */
@@ -78,17 +76,8 @@ const WIRE_ASKS: readonly WireAsk[] = [
 // The system the model is imprisoned to: the committed fold beneath the reader's eyes,
 // plus the no-invention clause. The ask string carries the reader's question.
 const wireAskSystem = (p: LiveWirePayload, ask: WireAsk, locale: Locale): string => {
-  const fold = JSON.stringify({
-    leagues: p.leagues.map((l) => ({
-      league: l.league,
-      season: l.season,
-      top: l.table.slice(0, 5).map((r) => [r.pos, r.team, r.pts, r.gd, r.form.join("")]),
-      bottom: l.table.slice(-3).map((r) => [r.pos, r.team, r.pts]),
-      fixtures_played: l.playedFixtures,
-      upcoming: l.upcoming.slice(0, 3).map((f) => [f.round, f.date, `${f.home} v ${f.away}`]),
-    })),
-    totalFixtures: sum(p.leagues, (l) => l.totalFixtures),
-  });
+  // M1166 · each preset retrieves only the artifact rows it can honestly answer from — never the same digest twice.
+  const fold = JSON.stringify(retrieveAsk(p, ask.id));
   return [
     "You answer ONLY from the fold below. Never invent a match, club or result not in it; never estimate anything.",
     `Answer in ${LANG_NAME[locale]}. Plain prose, no lists, at most 180 words.`,
