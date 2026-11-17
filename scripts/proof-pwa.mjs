@@ -265,7 +265,10 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1173 The Golden Hour lands the biggest lazy room yet — measured on this tree, local Windows Node:
 // 777 KB total (JS 762 KB, CSS 15 KB, 105 assets); prior +9 KB local→CI gap places CI near 785. The pin
 // therefore moves 780 -> 790: both machines clear it with margin; no kilobyte is added silently.
-const BUDGET_KB = 797; // M1180: 795 -> 797. proof-pwa CI (Ubuntu) measures 796 KB / 107 assets (JS 781 KB) on the same tree that prints 795 locally (JS 780 KB) — the known ~1-2 KB CI/local Node gzip gap, seen in every milestone since M1146; the digest's own cost accounts for the +1 KB. Pin sits two KB over CI's live reading, never at it.
+const BUDGET_KB = 800; // M1181: 797 -> 800. Two milestones shipped on top of the old 779-cut tree:
+// M1180's digest (administrative rewiring) plus M1181's librarian fold — real shipping weight, not bloat.
+// CI may read the same tree a kilobyte over local; the pin sits two KB over the CI value so a fair
+// run still prints inside it, never a wall.
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;

@@ -573,7 +573,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1169 The Grand Dispatch: 194 -> 195 (the new screen).
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
-const APP_SRC_PIN = 205; // M1180: +1 domain/deepDigest.ts (204 -> 205).
+const APP_SRC_PIN = 206; // M1181: +1 domain/librarian.ts (205 -> 206).
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -666,7 +666,7 @@ const TSX_PIN = 110;
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
 // M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
-const SRC_PIN = 208; // M1180 The Deep Digest: +1 domain/deepDigest.ts (207 -> 208).
+const SRC_PIN = 209; // M1181 The Librarian: +1 domain/librarian.ts (208 -> 209).
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -802,6 +802,9 @@ const DYN_SITES = [
   { path: "features/dossier/Dossier.tsx", expr: "entry.stage", prefix: "dossier.trace.stage.", suffix: "" }, // M1177 The Scout Studio
   { path: "features/dossier/Dossier.tsx", expr: "entry.note", prefix: "dossier.trace.note.", suffix: "" }, // M1177 The Scout Studio
   { path: "features/dossier/Dossier.tsx", expr: "v", prefix: "dossier.violation.", suffix: "" }, // M1177 The Scout Studio // M1176: the refusal error names the ask-desk violation code
+  { path: "features/manual/Manual.tsx", expr: "entry.stage", prefix: "manual.librarian.stage.", suffix: "" }, // M1181 The Librarian: the manual-desk trace strip
+  { path: "features/manual/Manual.tsx", expr: "entry.note", prefix: "manual.librarian.note.", suffix: "" }, // M1181 The Librarian
+  { path: "features/manual/Manual.tsx", expr: "v", prefix: "manual.librarian.violation.", suffix: "" }, // M1181 The Librarian // the refusal error names the librarian violation code
   { path: "features/learn/LearnHub.tsx", expr: "entry.stage", prefix: "learn.tutor.stage.", suffix: "" }, // M1179 The Tutor: the lesson-desk trace strip
   { path: "features/learn/LearnHub.tsx", expr: "entry.note", prefix: "learn.tutor.note.", suffix: "" }, // M1179 The Tutor
   { path: "features/learn/LearnHub.tsx", expr: "v", prefix: "learn.tutor.violation.", suffix: "" }, // M1179 The Tutor // the refusal error names the consult-fold violation code
@@ -1030,6 +1033,10 @@ const SPACES = new Map([
   ["dossier.trace.stage.|entry.stage", { name: "studio trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused"] }],
   ["dossier.trace.note.|entry.note", { name: "studio trace notes", values: ["prospectsOnFile", "tapeSealed", "commitOk", "foldOk", "precommitRefused"] }],
   ["dossier.violation.|v", { name: "studio violation codes", values: ["wrongPlayer", "otherClub", "wrongNumbers", "prediction"] }],
+  // M1181 The Librarian: the manual asks about itself — title opens the matched chapter; keywordKey lists the tokens the librarian scored.
+  ["manual.librarian.stage.|entry.stage", { name: "librarian trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
+  ["manual.librarian.note.|entry.note", { name: "librarian trace notes", values: ["bookInHand", "indexSealed", "commitOk", "foldOk", "precommitRefused"] }],
+  ["manual.librarian.violation.|v", { name: "librarian violation codes", values: ["offBook", "prediction"] }],
   // M1179 The Tutor: the lesson-desk trace strip, keyed off its own note/stage enums.
   ["learn.tutor.stage.|entry.stage", { name: "tutor trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
   ["learn.tutor.note.|entry.note", { name: "tutor trace notes", values: ["lessonInHand", "lessonSealed", "commitOk", "foldOk", "precommitRefused"] }],
@@ -3284,6 +3291,10 @@ const KEY_FIELD = /\b([A-Za-z_$][\w$]*Key)\s*:\s*(["'])((?:[^"'\\]|\\.)*)\2/g;
 // without a row here fails check 29, so this table cannot fall behind the code.
 const KEY_ROW_CONSUMERS = [
   { path: "domain/localData.ts", prop: "labelKey", consumer: "features/settings/SettingsPage.tsx" },
+  // M1181 The Librarian: keywordKey rides the librarian's own keyword lookup — features/manual/Manual.tsx actually calls t(...keywordKey) verbatim.
+  { path: "domain/librarian.ts", prop: "keywordKey", consumer: "features/manual/Manual.tsx" },
+  // M1181 The Librarian: titleKey rides the matched-chapter line the panel prints with t() next to the answer.
+  { path: "domain/librarian.ts", prop: "titleKey", consumer: "features/manual/Manual.tsx" },
   // M246: learn.ts holds the words as keys on its lesson rows; the Academy screen is the
   // only renderer of every one of them (title/summary on the cards, try-it and quiz in the detail).
   { path: "domain/learn.ts", prop: "titleKey", consumer: "features/learn/LearnHub.tsx" },
@@ -4866,7 +4877,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1178 The Consultation: +9 literal t() sites (the section's own chrome), +3 template sites
   // (the consult.stage/consult.note/violation trace chips), foldAnswer.intro adds its one more litVar.
   // M1176 The Ask-Desk StateGraph: +3 literals (label/verified/foldAnswer rail), +3 template sites (askTrace.stage, askTrace.note, askViolation).
-  shapeCounts.literal === 3438 && shapeCounts.template === 135 && shapeCounts.expression === 51
+  shapeCounts.literal === 3455 && shapeCounts.template === 138 && shapeCounts.expression === 54
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5043,11 +5054,11 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1173 The Golden Hour: meta {fixtures}/{goals} + biggestShock's {delta} — litVar 551 -> 554.
   // M1175 The Wire Diary: meta {diaryCount}/{by} hands its variables at one literal site — litVar 554 -> 555.
   // M1178 The Consultation: foldAnswer.intro passes its variables at one more literal site �� 558 -> 559.
-  litVarSites === 562 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 565 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
-  exprWithObj.length === 0 && shapeCounts.expression === 51 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 54 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three
@@ -5072,7 +5083,7 @@ const filmKindKeys = [...filmKindBlock.matchAll(/"([A-Za-z0-9_.$-]+)"/g)].map((x
 // M776: foundKeys left the pin with the population. It is `scripts/browser-walk.spec.ts`'s collection
 // of raw keys found on the page — a test harness array, not a pool a screen hands to t(); the reader
 // cannot reach that spec, and the pool this clause audits is the pool the app renders.
-const POOL_FIELDS_PIN = ["bodyKeys", "hintKey", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
+const POOL_FIELDS_PIN = ["bodyKeys", "hintKey", "keywordKey", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
 const poolFieldsGot = [...poolFields, ...poolArrFields].sort();
 const poolVars = [...poolKeys, ...filmKindKeys].filter((k) => L.some((loc) => phList(D[loc.id][k] ?? "").length > 0));
 const plantPool = L.some((loc) => phList((loc.id === "en" ? D.en["learn.l.xg.title"] + " {n}" : D[loc.id]["learn.l.xg.title"]) ?? "").length > 0);
@@ -6522,7 +6533,8 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
 // M1173 The Golden Hour: loading region aria + print aria — 32 -> 34.
 // M1175 The Wire Diary: loading region aria + print aria — 34 -> 36.
 // M1179 The Tutor: the ask input names itself through t() — 36 -> 37.
-ariaKeyed === 37 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+// M1181 The Librarian: the manual's ask input names itself through t() — 37 -> 38.
+ariaKeyed === 38 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English

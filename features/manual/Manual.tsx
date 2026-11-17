@@ -1,9 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
-import { DemoBadge, SectionTitle, PANEL_CLASS } from "@/ui/primitives";
+import { DemoBadge, SectionTitle, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
+import { callLlmStream, LLM_CONFIG } from "@/data/llm";
+import { DEEP_DIGEST } from "@/data/deepDigest";
+import {
+  createLibrarian, librarianBuild, librarianCommit, librarianPrecommit, librarianPreflight,
+  librarianRefused, pickBookChapter, verifyLibrarianText,
+  type LibrarianTraceEntry, type LibrarianViolation,
+} from "@/domain/librarian";
 
 // M1130 — the world's own operating manual: one long printable scroll that covers every real
 // surface (fan/player/manager, Football OS cinematic screens, the Spring atlas and the honest
@@ -28,9 +35,15 @@ const SECTION_IDS = [
 ] as const;
 
 export function Manual() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const players = footballProvider.players().length;
   const clubs = footballProvider.clubs().length;
+  const [libBusy, setLibBusy] = useState(false);
+  const [libTrace, setLibTrace] = useState<readonly LibrarianTraceEntry[] | null>(null);
+  const [libViolations, setLibViolations] = useState<readonly LibrarianViolation[] | null>(null);
+  const [libAnswer, setLibAnswer] = useState("");
+  const [libAsk, setLibAsk] = useState("");
+  const matchedChapter = useMemo(() => (libAsk.trim() ? pickBookChapter(libAsk.trim(), t) : null), [libAsk, t]);
 
   const chapterLinks = useMemo(() => ([
     { to: "/football", label: t("nav.football") },
@@ -66,6 +79,61 @@ export function Manual() {
     { to: "/platform", label: t("nav.platform") },
     { to: "/ops", label: t("nav.ops") },
   ]), [t]);
+
+  const foldLibrarianText = (): string =>
+    [
+      t("manual.librarian.foldAnswer.intro"),
+      t("manual.librarian.foldAnswer.promise"),
+    ].join(" ");
+
+  const askLibrarian = async () => {
+    if (libBusy) return;
+    const q = libAsk.trim();
+    if (!q) return;
+    const chapter = pickBookChapter(q, t);
+    let desk = librarianBuild(librarianPreflight(createLibrarian(chapter, q, locale)));
+    setLibTrace(desk.trace);
+    setLibViolations(null);
+    setLibAnswer("");
+    if (!LLM_CONFIG.hasKey) { setLibAnswer(t("manual.librarian.via.local")); return; }
+    setLibBusy(true);
+    const system = [
+      "You are the librarian of Football OS's embedded manual.",
+      "THE DEEP DIGEST IS BELOW; THIS IS THE ONLY WORLD YOU KNOW.",
+      "Answer ONLY from this digest and, if present, this JSON envelope.",
+      "If the manual cannot answer, say so and name the chapter that carries the closest adjacent class ('read the Modes chapter' etc.) — never quote outside the manual, never predict.",
+      "Keep the answer in the visitor's language.",
+      "",
+      "THE DEEP DIGEST:",
+      DEEP_DIGEST,
+      "",
+      "MANUAL_CHAPTER:",
+      chapter ? JSON.stringify({ question: q, locale, chapter: { id: chapter.id, body: chapter.bodyKeys.map((k) => t(k)) } }) : "no chapter matched",
+    ].join("\n");
+    const result = await callLlmStream(q, [], (d) => setLibAnswer((p) => p + d), { system });
+    if (result.ok) {
+      const refusals = verifyLibrarianText(result.text);
+      if (refusals.length === 0) {
+        const committed = librarianCommit(librarianPrecommit(desk, "pass"), result.text);
+        setLibTrace(committed.trace);
+        setLibViolations(null);
+        setLibAnswer(result.text);
+        setLibBusy(false);
+        return;
+      }
+      setLibViolations(refusals);
+      const refused = librarianRefused(librarianPrecommit(desk, "refused"), foldLibrarianText());
+      setLibTrace(refused.trace);
+      setLibAnswer(foldLibrarianText());
+      setLibBusy(false);
+      return;
+    }
+    setLibViolations(null);
+    const offline = librarianRefused(desk, foldLibrarianText());
+    setLibTrace(offline.trace);
+    setLibAnswer(foldLibrarianText());
+    setLibBusy(false);
+  };
 
   return (
     <div className="space-y-5 print:space-y-0">
@@ -167,6 +235,79 @@ export function Manual() {
       <section id="honesty" aria-labelledby="manual-honesty" className="rounded-xl border p-5 print:border-0 print:px-0">
         <SectionTitle title={t("manual.honestyTitle")} />
         <p className="mt-2 max-w-3xl text-sm leading-relaxed">{t("manual.honestyBody")}</p>
+      </section>
+
+      {/* The Librarian — ask the manual itself */}
+      <section aria-labelledby="manual-librarian" className="rounded-xl border p-5 print:hidden">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="manual-librarian" className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("manual.librarian.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("manual.librarian.title")}</p>
+          </div>
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", LLM_CONFIG.hasKey ? CHIP_CLASS.badgeInfoStrong : CHIP_CLASS.warning)}>
+            {LLM_CONFIG.hasKey && <span aria-hidden className="fo-live-dot inline-flex h-1.5 w-1.5 rounded-full bg-info" />}
+            {LLM_CONFIG.hasKey ? t("ai.via.live", { model: LLM_CONFIG.model }) : t("ai.via.local")}
+          </span>
+        </div>
+        {LLM_CONFIG.hasKey ? (
+          <>
+            <form onSubmit={(e) => { e.preventDefault(); void askLibrarian(); }} className="mt-3 flex flex-wrap gap-2">
+              <input
+                id="librarian-ask"
+                type="text"
+                value={libAsk}
+                onChange={(e) => setLibAsk(e.target.value)}
+                placeholder={t("manual.librarian.placeholder")}
+                maxLength={280}
+                aria-label={t("manual.librarian.placeholder")}
+                className="min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+              <button type="submit" disabled={libBusy || !libAsk.trim()} className="fo-lift rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted disabled:opacity-60">
+                {libBusy ? t("pressroom.answering") : t("manual.librarian.ask")}
+              </button>
+            </form>
+            {libAnswer && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{libAnswer}</p>}
+            {matchedChapter && (libTrace || libBusy) && (
+              <div className="mt-2 space-y-0.5">
+                <p className="text-[10px] uppercase tracking-widest text-primary">
+                  {t("manual.librarian.matched", { chapter: t(matchedChapter.titleKey) })}
+                </p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {t("manual.librarian.matchedOn", { keywords: t(matchedChapter.keywordKey).split("|").join(" · ") })}
+                </p>
+              </div>
+            )}
+            {libViolations && libViolations.length > 0 && (
+              <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">
+                {libViolations.map((v) => t(`manual.librarian.violation.${v}`)).join(" · ")}
+              </p>
+            )}
+            {libTrace && (
+              <div className="mt-4 border-t border-border/60 pt-3">
+                <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("manual.librarian.trace.label")}</span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{libTrace.some((e) => e.verdict === "refused") ? t("manual.librarian.trace.refused") : t("manual.librarian.trace.verified")}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {libTrace.map((entry) => (
+                    <span
+                      key={entry.stage}
+                      title={t(`manual.librarian.note.${entry.note}`)}
+                      className={cn(
+                        "rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                        entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning,
+                      )}
+                    >
+                      {t(`manual.librarian.stage.${entry.stage}`)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("manual.librarian.via.local")}</p>
+        )}
       </section>
 
       {/* Chapter 7 — print */}
