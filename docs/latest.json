@@ -1,10 +1,10 @@
 {
-  "head": "8b869f6",
-  "total_commits": 1610,
-  "milestone": "M1176",
-  "milestone_full": "本提交落地后 M1176",
-  "pwa_kb": 784,
-  "assets": 106,
+  "head": "ef08a75",
+  "total_commits": 1612,
+  "milestone": "M1177",
+  "milestone_full": "本提交落地后 M1177",
+  "pwa_kb": 787,
+  "assets": 107,
   "screens": 81,
   "feature_surface": [
     "The Chronicle — the epic fixture, AI-narrated",
@@ -16,5 +16,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-16T22:33:17.572Z"
+  "generated_at": "2026-11-17T07:58:50.663Z"
 }
