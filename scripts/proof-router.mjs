@@ -112,8 +112,8 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => ROUTER_SCOPE.has(f.split("/")[0
 // M1176 The Ask-Desk StateGraph: the pin moved 194 -> 196 by assumption ("+1" for domain/askDesk.ts).
 // Caught at this milestone's truth-check: the HEAD census measures **195** — the M1176 gate shipped red.
 // M1177 The Scout's Studio: measured **197** — domain/tracedFsm.ts and domain/scoutStudio.ts join the reader (the 195 HEAD set plus the two new modules).
-// M1178 The Consultation: measured 198 in scope — domain/consult.ts rides the /ops rail.
-const ROUTER_POP_PIN = 198;
+// M1179 The Tutor: measured 199 in scope — domain/tutor.ts rides the /learn rail.
+const ROUTER_POP_PIN = 199;
 ok(`the router census reads the reader's population, derived from the app's declared entries rather than from the walk alone (${APP_ENTRIES.length} entries [${APP_ENTRIES.join(", ")}], ${APP_FILES.length} reached in scope, ${UNREACHED_SCOPE.length} unreached in scope [${UNREACHED_SCOPE.join(", ") || "none"}])`,
   APP_ENTRIES.length === 2 && APP_ENTRIES.includes("src/main.tsx") && APP_ENTRIES.includes("functions/index.ts") &&
   APP_FILES.length === ROUTER_POP_PIN && UNREACHED_SCOPE.length === 1 && UNREACHED_SCOPE[0] === "src/vite-env.d.ts");

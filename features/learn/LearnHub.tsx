@@ -18,6 +18,11 @@ import {
   type Lesson,
   type Level,
 } from "@/domain/learn";
+import {
+  createTutor, tutorBuild, tutorCommit, tutorPrecommit, tutorPreflight, tutorRefused, verifyTutorText,
+  type TutorTraceEntry, type TutorViolation,
+} from "@/domain/tutor";
+import { callLlmStream, LLM_CONFIG } from "@/data/llm";
 import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { rowLine } from "@/domain/rowText";
 import { Button } from "@/components/ui/button";
@@ -210,10 +215,69 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
   onUndo: (id: string) => void;
   onBack: () => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [choice, setChoice] = useState<number | null>(null);
+  const [tutorBusy, setTutorBusy] = useState(false);
+  const [tutorTrace, setTutorTrace] = useState<readonly TutorTraceEntry[] | null>(null);
+  const [tutorViolations, setTutorViolations] = useState<readonly TutorViolation[] | null>(null);
+  const [tutorAnswer, setTutorAnswer] = useState("");
+  const [tutorAsk, setTutorAsk] = useState("");
   const correct = choice !== null && choice === lesson.quiz.answer;
   const done = isCompleted(record ?? undefined);
+
+  const tutorCorpus = {
+    id: lesson.id,
+    locale,
+    title: t(lesson.titleKey),
+    summary: t(lesson.summaryKey),
+    body: lesson.bodyKeys.map((k) => t(k)),
+    quizQuestion: t(lesson.quiz.qKey),
+    quizOptions: lesson.quiz.optionKeys.map((k) => t(k)),
+  } as const;
+
+  const foldTutorText = (): string =>
+    [
+      t("learn.tutor.foldAnswer.intro", { title: t(lesson.titleKey) }),
+      t("learn.tutor.foldAnswer.promise"),
+    ].join(" ");
+
+  const askTutor = async () => {
+    const q = tutorAsk.trim();
+    if (!q || tutorBusy) return;
+    let desk = tutorBuild(tutorPreflight(createTutor(tutorCorpus, locale)));
+    setTutorTrace(desk.trace);
+    setTutorViolations(null);
+    setTutorAnswer("");
+    if (!LLM_CONFIG.hasKey) { setTutorAnswer(t("learn.tutor.via.local")); return; }
+    setTutorBusy(true);
+    const system = JSON.stringify({
+      corpus: tutorCorpus,
+      commandment: "Teach ONLY from this corpus JSON. Never invent a fact, a figure, a name or a date that is not in here. If the student asks something outside it, say plainly that this page cannot answer and offer what the lesson does say. Answer in the visitor's language. Tight sentences; no futurology.",
+    });
+    const result = await callLlmStream(q, [], (d) => setTutorAnswer((p) => p + d), { system });
+    if (result.ok) {
+      const refusals = verifyTutorText(result.text, desk.corpus);
+      if (refusals.length === 0) {
+        const committed = tutorCommit(tutorPrecommit(desk, "pass"), result.text);
+        setTutorTrace(committed.trace);
+        setTutorViolations(null);
+        setTutorAnswer(result.text);
+        setTutorBusy(false);
+        return;
+      }
+      setTutorViolations(refusals);
+      const refused = tutorRefused(tutorPrecommit(desk, "refused"), foldTutorText());
+      setTutorTrace(refused.trace);
+      setTutorAnswer(foldTutorText());
+      setTutorBusy(false);
+      return;
+    }
+    setTutorViolations(null);
+    const offline = tutorRefused(desk, foldTutorText());
+    setTutorTrace(offline.trace);
+    setTutorAnswer(foldTutorText());
+    setTutorBusy(false);
+  };
 
   const answer = (i: number) => {
     if (choice !== null) return;
@@ -243,6 +307,68 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
           </Link>
         )}
       </Panel>
+      <Panel className="p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("learn.tutor.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("learn.tutor.title")}</p>
+          </div>
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", LLM_CONFIG.hasKey ? CHIP_CLASS.badgeInfoStrong : CHIP_CLASS.warning)}>
+            {LLM_CONFIG.hasKey && <span aria-hidden className="fo-live-dot inline-flex h-1.5 w-1.5 rounded-full bg-info" />}
+            {LLM_CONFIG.hasKey ? t("ai.via.live", { model: LLM_CONFIG.model }) : t("ai.via.local")}
+          </span>
+        </div>
+        {LLM_CONFIG.hasKey ? (
+          <>
+            <form onSubmit={(e) => { e.preventDefault(); void askTutor(); }} className="mt-3 flex flex-wrap gap-2">
+              <input
+                id="tutor-ask"
+                type="text"
+                value={tutorAsk}
+                onChange={(e) => setTutorAsk(e.target.value)}
+                placeholder={t("learn.tutor.placeholder")}
+                maxLength={280}
+                aria-label={t("learn.tutor.placeholder")}
+                className="min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+              <button type="submit" disabled={tutorBusy || !tutorAsk.trim()} className="fo-lift rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted disabled:opacity-60">
+                {tutorBusy ? t("pressroom.answering") : t("learn.tutor.ask")}
+              </button>
+            </form>
+            {tutorAnswer && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{tutorAnswer}</p>}
+            {tutorViolations && tutorViolations.length > 0 && (
+              <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">
+                {tutorViolations.map((v) => t(`learn.tutor.violation.${v}`)).join(" · ")}
+              </p>
+            )}
+            {tutorTrace && (
+              <div className="mt-4 border-t border-border/60 pt-3">
+                <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("learn.tutor.trace.label")}</span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{tutorTrace.some((e) => e.verdict === "refused") ? t("learn.tutor.trace.refused") : t("learn.tutor.trace.verified")}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {tutorTrace.map((entry) => (
+                    <span
+                      key={entry.stage}
+                      title={t(`learn.tutor.note.${entry.note}`)}
+                      className={cn(
+                        "rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                        entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning,
+                      )}
+                    >
+                      {t(`learn.tutor.stage.${entry.stage}`)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("learn.tutor.via.local")}</p>
+        )}
+      </Panel>
+
       <Panel className="p-5">
         <SectionTitle title={t("learn.checkTitle")} hint={t("learn.attemptNote")} />
         <p className="text-sm">{t(lesson.quiz.qKey)}</p>

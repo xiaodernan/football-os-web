@@ -573,7 +573,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1169 The Grand Dispatch: 194 -> 195 (the new screen).
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
-const APP_SRC_PIN = 203; // M1178: +1 domain/consult.ts (202 -> 203).
+const APP_SRC_PIN = 204; // M1179: +1 domain/tutor.ts (203 -> 204).
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -666,7 +666,7 @@ const TSX_PIN = 110;
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
 // M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
-const SRC_PIN = 206;
+const SRC_PIN = 207; // M1179 The Tutor: +1 domain/tutor.ts (206 -> 207).
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -802,6 +802,9 @@ const DYN_SITES = [
   { path: "features/dossier/Dossier.tsx", expr: "entry.stage", prefix: "dossier.trace.stage.", suffix: "" }, // M1177 The Scout Studio
   { path: "features/dossier/Dossier.tsx", expr: "entry.note", prefix: "dossier.trace.note.", suffix: "" }, // M1177 The Scout Studio
   { path: "features/dossier/Dossier.tsx", expr: "v", prefix: "dossier.violation.", suffix: "" }, // M1177 The Scout Studio // M1176: the refusal error names the ask-desk violation code
+  { path: "features/learn/LearnHub.tsx", expr: "entry.stage", prefix: "learn.tutor.stage.", suffix: "" }, // M1179 The Tutor: the lesson-desk trace strip
+  { path: "features/learn/LearnHub.tsx", expr: "entry.note", prefix: "learn.tutor.note.", suffix: "" }, // M1179 The Tutor
+  { path: "features/learn/LearnHub.tsx", expr: "v", prefix: "learn.tutor.violation.", suffix: "" }, // M1179 The Tutor // the refusal error names the consult-fold violation code
   { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.consult.stage.", suffix: "" }, // M1178 The Consultation: the fold's own trace strip
   { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.consult.note.", suffix: "" }, // M1178 The Consultation
   { path: "features/ops/Ops.tsx", expr: "v", prefix: "ops.consult.violation.", suffix: "" }, // M1178 The Consultation // the refusal error names the consult violation code
@@ -1027,6 +1030,10 @@ const SPACES = new Map([
   ["dossier.trace.stage.|entry.stage", { name: "studio trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused"] }],
   ["dossier.trace.note.|entry.note", { name: "studio trace notes", values: ["prospectsOnFile", "tapeSealed", "commitOk", "foldOk", "precommitRefused"] }],
   ["dossier.violation.|v", { name: "studio violation codes", values: ["wrongPlayer", "otherClub", "wrongNumbers", "prediction"] }],
+  // M1179 The Tutor: the lesson-desk trace strip, keyed off its own note/stage enums.
+  ["learn.tutor.stage.|entry.stage", { name: "tutor trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
+  ["learn.tutor.note.|entry.note", { name: "tutor trace notes", values: ["lessonInHand", "lessonSealed", "commitOk", "foldOk", "precommitRefused"] }],
+  ["learn.tutor.violation.|v", { name: "tutor violation codes", values: ["offLesson", "prediction"] }],
   // M1178 The Consultation: the fold's own trace strip, keyed off its own note/stage enums.
   ["ops.consult.stage.|entry.stage", { name: "consult trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
   ["ops.consult.note.|entry.note", { name: "consult trace notes", values: ["foldInHand", "envelopeSealed", "commitOk", "foldOk", "precommitRefused"] }],
@@ -4859,7 +4866,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1178 The Consultation: +9 literal t() sites (the section's own chrome), +3 template sites
   // (the consult.stage/consult.note/violation trace chips), foldAnswer.intro adds its one more litVar.
   // M1176 The Ask-Desk StateGraph: +3 literals (label/verified/foldAnswer rail), +3 template sites (askTrace.stage, askTrace.note, askViolation).
-  shapeCounts.literal === 3423 && shapeCounts.template === 132 && shapeCounts.expression === 45
+  shapeCounts.literal === 3438 && shapeCounts.template === 135 && shapeCounts.expression === 51
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5036,11 +5043,11 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1173 The Golden Hour: meta {fixtures}/{goals} + biggestShock's {delta} — litVar 551 -> 554.
   // M1175 The Wire Diary: meta {diaryCount}/{by} hands its variables at one literal site — litVar 554 -> 555.
   // M1178 The Consultation: foldAnswer.intro passes its variables at one more literal site �� 558 -> 559.
-  litVarSites === 560 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 562 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
-  exprWithObj.length === 0 && shapeCounts.expression === 45 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 51 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three
@@ -6514,7 +6521,8 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
 // M1165 The World Table: loading region aria + print button aria — 27 -> 29.
 // M1173 The Golden Hour: loading region aria + print aria — 32 -> 34.
 // M1175 The Wire Diary: loading region aria + print aria — 34 -> 36.
-ariaKeyed === 36 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+// M1179 The Tutor: the ask input names itself through t() — 36 -> 37.
+ariaKeyed === 37 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English
