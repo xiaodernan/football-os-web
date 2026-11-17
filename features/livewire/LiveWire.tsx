@@ -11,8 +11,12 @@ import { ABSENT, cn, SEPARATOR, signed } from "@/lib/utils";
 import { fetchLiveWire, type LiveWireLeague, type LiveWirePayload, type LiveWireZone, type WireStatus } from "@/data/liveWire";
 import { callLlmStream, LLM_CONFIG, type BriefStatus } from "@/data/llm";
 import {
-  askBuild, askCommit, askPreflight, askPrecommit, askRefused, askRetrieve, createAskDesk, verifyAskText, type AskTraceEntry,
+  askPreflight, askRetrieve, createAskDesk, verifyAskText, type AskTraceEntry,
+  ASK_BUILD_ENTRY, ASK_COMMIT_ENTRY, ASK_FOLD_ENTRY, ASK_PRECOMMIT_PASS, ASK_PRECOMMIT_REFUSED,
 } from "@/domain/askDesk";
+import {
+  fsmBuild, fsmCommit, fsmRefused, fsmPrecommit,
+} from "@/domain/tracedFsm";
 import { wireBriefFacts } from "@/domain/wireBrief";
 import { retrieveAsk, type WireAskId } from "@/domain/wireRag";
 import { ZapIcon } from "lucide-react";
@@ -132,7 +136,7 @@ export function LiveWire() {
     setAskId(id);
     let desk = askPreflight(createAskDesk(payload, id, ws.ask, locale));
     desk = askRetrieve(desk);
-    desk = askBuild(desk);
+    desk = fsmBuild(desk, ASK_BUILD_ENTRY, "model");
     if (desk.status === "refused") {
       setAskTrace(desk.trace);
       setBrief({ status: "fold", text: foldAskAnswerText(payload, id, t) });
@@ -153,22 +157,22 @@ export function LiveWire() {
       if (r.ok) {
         const refusals = verifyAskText(r.text, payload);
         if (refusals.length === 0) {
-          const committed = askCommit(askPrecommit(desk, "pass"), r.text);
+          const committed = fsmCommit(fsmPrecommit(desk, "pass", ASK_PRECOMMIT_PASS, ASK_PRECOMMIT_REFUSED), r.text, ASK_COMMIT_ENTRY);
           setAskTrace(committed.trace);
           setBrief({ status: "ready", text: r.text });
           return;
         }
         const folded = { error: refusals.slice(0, 2).map((code) => t(`liveWire.askViolation.${code}`)).join(" · ").slice(0, 180) };
-        const refused = askRefused(askPrecommit(desk, "refused"), foldAskAnswerText(payload, id, t));
+        const refused = fsmRefused(fsmPrecommit(desk, "refused", ASK_PRECOMMIT_REFUSED, ASK_PRECOMMIT_REFUSED), foldAskAnswerText(payload, id, t), ASK_FOLD_ENTRY);
         setAskTrace(refused.trace);
         setBrief({ status: "fold", text: foldAskAnswerText(payload, id, t), ...folded });
         return;
       }
-      const refused = askRefused(desk, foldAskAnswerText(payload, id, t));
+      const refused = fsmRefused(desk, foldAskAnswerText(payload, id, t), ASK_FOLD_ENTRY);
       setAskTrace(refused.trace);
       setBrief({ status: "fold", text: foldAskAnswerText(payload, id, t), error: r.error });
     }).catch(() => {
-      const refused = askRefused(desk, foldAskAnswerText(payload, id, t));
+      const refused = fsmRefused(desk, foldAskAnswerText(payload, id, t), ASK_FOLD_ENTRY);
       setAskTrace(refused.trace);
       setBrief({ status: "fold", text: foldAskAnswerText(payload, id, t) });
     });

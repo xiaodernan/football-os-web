@@ -175,8 +175,9 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1166 The Retrieval Art: domain/wireRag.ts joins the population.
 // M1169 The Grand Dispatch: features/granddispatch/ joins the population.
 // M1173 The Golden Hour: features/goldenhour/ joins — APP_MODULE_PIN 198 -> 200.
-// M1175 The Wire Diary: the fold + the screen join — APP_MODULE_PIN 200 -> 202.
-const APP_MODULE_PIN = 203; // M1176: +1 domain/askDesk.ts
+// M1176 The Ask-Desk StateGraph: domain/askDesk.ts joins — APP_MODULE_PIN 202 -> 203.
+// M1177 The Scout's Studio: two modules join — domain/tracedFsm.ts (the shared FSM definition point) and domain/scoutStudio.ts — APP_MODULE_PIN 203 -> 205.
+const APP_MODULE_PIN = 205;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

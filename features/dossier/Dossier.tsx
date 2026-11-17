@@ -4,6 +4,13 @@ import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
 import { scoutDossier } from "@/domain/scout";
 import { callLlmStream, LLM_CONFIG } from "@/data/llm";
+import {
+  createStudio, studioPreflight, verifyStudioText, type StudioTraceEntry, type StudioViolation,
+  STUDIO_BUILD_ENTRY, STUDIO_COMMIT_ENTRY, STUDIO_FOLD_ENTRY, STUDIO_PRECOMMIT_PASS, STUDIO_PRECOMMIT_REFUSED,
+} from "@/domain/scoutStudio";
+import {
+  fsmBuild, fsmCommit, fsmRefused, fsmPrecommit,
+} from "@/domain/tracedFsm";
 import { DemoBadge, Panel, Crest, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { positionLabel, footLabel } from "@/domain/rowText";
 import { cn, fmt2, fmtMoney, signed } from "@/lib/utils";
@@ -15,27 +22,94 @@ import { cn, fmt2, fmtMoney, signed } from "@/lib/utils";
  * the Railway deployment; static Pages honestly says the desk is asleep.
  */
 export function Dossier() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const matches = useMemo(() => footballProvider.matches(), []);
   const clubs = useMemo(() => footballProvider.clubs(), []);
   const players = useMemo(() => footballProvider.players(), []);
   const dossier = useMemo(() => scoutDossier(matches, clubs, players), [matches, clubs, players]);
   const [asking, setAsking] = useState(false);
   const [answer, setAnswer] = useState("");
+  const [studioTrace, setStudioTrace] = useState<readonly StudioTraceEntry[] | null>(null);
+  const [studioViolations, setStudioViolations] = useState<readonly StudioViolation[] | null>(null);
 
-  const askDesk = async () => {
-    if (!dossier || asking) return;
+  const foldStudioAnswerText = (): string => {
+    if (!dossier) return "";
     const { player } = dossier;
+    const positionWord = positionLabel(player.position, t).toLowerCase();
+    const clause = player.overall >= 82
+      ? t("dossier.foldAnswer.clause.prime")
+      : player.overall >= 68
+        ? t("dossier.foldAnswer.clause.starter")
+        : t("dossier.foldAnswer.clause.notYet");
+    const tape = dossier.goals >= 10
+      ? t("dossier.foldAnswer.tapeMany", { goals: dossier.goals, apps: dossier.appearances, perApp: fmt2(dossier.goalsPerApp) })
+      : dossier.appearances > 0
+        ? t("dossier.foldAnswer.tapeFew", { apps: dossier.appearances, perApp: fmt2(dossier.goalsPerApp) })
+        : t("dossier.foldAnswer.tapeEmpty");
+    return [
+      t("dossier.foldAnswer.intro", {
+        name: player.name,
+        age: player.age,
+        positionWord,
+        overall: player.overall,
+        potential: player.potential,
+        clause,
+      }),
+      tape,
+      t("dossier.foldAnswer.hold"),
+      t("dossier.foldAnswer.promise"),
+    ].join(" ");
+  };
+
+  const askStudio = async () => {
+    if (!dossier || asking) return;
+    const { player, club } = dossier;
     const positionWord = positionLabel(player.position, t);
     const question = `Write one honest 4-sentence portrait of ${player.name}, age ${player.age}, ${positionWord} at club "${dossier.club?.name}", overall ${player.overall}, potential ${player.potential} — drawn only from this data and nothing outside it. The world is synthetic; you may say 'the seed thinks' — never invent a fact, never predict a career outside his numbers; keep it warm but honest; end with one concrete reason a scout should fly to see him, or accept plainly that the numbers say not yet.`;
+
+    let desk = studioPreflight(createStudio(
+      { overall: player.overall, potential: player.potential, gap: dossier.gap, value: player.value, apps: dossier.appearances, goals: dossier.goals },
+      { name: player.name, club: club?.name ?? null, age: player.age, positionLabel: positionWord, foot: footLabel(player.foot, t) },
+      locale,
+    ));
+    desk = fsmBuild(desk, STUDIO_BUILD_ENTRY, "model");
+    if (desk.status === "refused") {
+      setStudioTrace(desk.trace);
+      setStudioViolations(["wrongNumbers"]);
+      setAnswer(foldStudioAnswerText());
+      return;
+    }
+
     if (!LLM_CONFIG.hasKey) {
+      setStudioTrace(desk.trace);
+      setStudioViolations(null);
       setAnswer(t("dossier.via.local"));
       return;
     }
     setAsking(true);
     setAnswer("");
     const result = await callLlmStream(question, [], (d) => setAnswer((p) => p + d));
-    if (!result.ok) setAnswer(`[${result.error}]`);
+    if (result.ok) {
+      const refusals = verifyStudioText(result.text, desk);
+      if (refusals.length === 0) {
+        const committed = fsmCommit(fsmPrecommit(desk, "pass", STUDIO_PRECOMMIT_PASS, STUDIO_PRECOMMIT_REFUSED), result.text, STUDIO_COMMIT_ENTRY);
+        setStudioTrace(committed.trace);
+        setStudioViolations(null);
+        setAnswer(result.text);
+        setAsking(false);
+        return;
+      }
+      setStudioViolations(refusals);
+      const refused = fsmRefused(fsmPrecommit(desk, "refused", STUDIO_PRECOMMIT_REFUSED, STUDIO_PRECOMMIT_REFUSED), foldStudioAnswerText(), STUDIO_FOLD_ENTRY);
+      setStudioTrace(refused.trace);
+      setAnswer(foldStudioAnswerText());
+      setAsking(false);
+      return;
+    }
+    setStudioViolations(null);
+    const offline = fsmRefused(desk, foldStudioAnswerText(), STUDIO_FOLD_ENTRY);
+    setStudioTrace(offline.trace);
+    setAnswer(foldStudioAnswerText());
     setAsking(false);
   };
 
@@ -132,13 +206,40 @@ export function Dossier() {
           <>
             <button
               type="button"
-              onClick={askDesk}
+              onClick={askStudio}
               disabled={asking}
               className="fo-lift mt-3 inline-flex items-center rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted disabled:opacity-60"
             >
               {asking ? t("pressroom.answering") : t("dossier.askTheDesk")}
             </button>
             {answer && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{answer}</p>}
+            {studioViolations && studioViolations.length > 0 && (
+              <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">
+                {studioViolations.map((v) => t(`dossier.violation.${v}`)).join(" · ")}
+              </p>
+            )}
+            {studioTrace && (
+              <div className="mt-4 border-t border-border/60 pt-3">
+                <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("dossier.trace.label")}</span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{studioTrace.some((e) => e.verdict === "refused") ? t("dossier.trace.refused") : t("dossier.trace.verified")}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {studioTrace.map((entry) => (
+                    <span
+                      key={entry.stage}
+                      title={t(`dossier.trace.note.${entry.note}`)}
+                      className={cn(
+                        "rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                        entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning,
+                      )}
+                    >
+                      {t(`dossier.trace.stage.${entry.stage}`)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("dossier.via.local")}</p>

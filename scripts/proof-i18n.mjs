@@ -573,7 +573,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1169 The Grand Dispatch: 194 -> 195 (the new screen).
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
-const APP_SRC_PIN = 200;
+const APP_SRC_PIN = 202;
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -665,7 +665,7 @@ const TSX_PIN = 110;
 // M1169 The Grand Dispatch: 197 -> 198 (the new module the reader reaches).
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
-const SRC_PIN = 203;
+const SRC_PIN = 205;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -797,7 +797,10 @@ const DYN_SITES = [
   { path: "features/livewire/LiveWire.tsx", expr: "askId", prefix: "liveWire.askDesk.", suffix: ".kicker" }, // M1163: the ready/fold kicker (2 of 2)
   { path: "features/livewire/LiveWire.tsx", expr: "entry.stage", prefix: "liveWire.askTrace.stage.", suffix: "" }, // M1176: the trace strip keys off the active stage
   { path: "features/livewire/LiveWire.tsx", expr: "entry.note", prefix: "liveWire.askTrace.note.", suffix: "" }, // M1176: the chip tooltip reads its note keyed off the same enum
-  { path: "features/livewire/LiveWire.tsx", expr: "code", prefix: "liveWire.askViolation.", suffix: "" }, // M1176: the refusal error names the ask-desk violation code
+  { path: "features/livewire/LiveWire.tsx", expr: "code", prefix: "liveWire.askViolation.", suffix: "" },
+  { path: "features/dossier/Dossier.tsx", expr: "entry.stage", prefix: "dossier.trace.stage.", suffix: "" }, // M1177 The Scout Studio
+  { path: "features/dossier/Dossier.tsx", expr: "entry.note", prefix: "dossier.trace.note.", suffix: "" }, // M1177 The Scout Studio
+  { path: "features/dossier/Dossier.tsx", expr: "v", prefix: "dossier.violation.", suffix: "" }, // M1177 The Scout Studio // M1176: the refusal error names the ask-desk violation code
   { path: "features/ops/Ops.tsx", expr: "i", prefix: "ops.depth.bucket", suffix: "" }, // M1149: the session-depth bucket label reads its key from the loop index
   { path: "features/sacred/Sacred.tsx", expr: "f", prefix: "longSeason.filter.", suffix: "" }, // M1160 The Long Season: the filter chips key their prefix from the fold
   { path: "features/ops/Ops.tsx", expr: "r.severity", prefix: "ops.rx.severity.", suffix: "" }, // M1157 The Prescription: severity chips read their key from the fold
@@ -1016,6 +1019,10 @@ const SPACES = new Map([
   // M1176: the ask-desk state machine's three census spaces — each read out of domain/askDesk.ts, never a hand copy.
   // M1176: the six stages a trace chip can render — deliberately the chipset of ASK_STAGES \ len("model"); the model stage carries the streaming door, no rail chip, so the key is never walked.
   ["liveWire.askTrace.stage.|entry.stage", { name: "ask-desk trace stages", values: ["preflight", "retrieve", "build", "precommit", "commit", "refused"] }],
+  // M1177 The Scout Studio: the studio step strip, keyed by its own note/stage enums.
+  ["dossier.trace.stage.|entry.stage", { name: "studio trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused"] }],
+  ["dossier.trace.note.|entry.note", { name: "studio trace notes", values: ["prospectsOnFile", "tapeSealed", "commitOk", "foldOk", "precommitRefused"] }],
+  ["dossier.violation.|v", { name: "studio violation codes", values: ["wrongPlayer", "otherClub", "wrongNumbers", "prediction"] }],
   ["liveWire.askViolation.|code", { name: "ask-desk violation codes", values: spaceOf("domain/askDesk.ts", /export type AskViolationCode =[\s\S]*?;/, /"([^"]+)"/g) }],
   ["liveWire.askTrace.note.|entry.note", { name: "ask-desk trace notes", values: spaceOf("domain/askDesk.ts", /export type AskNote =[\s\S]*?;/, /"([^"]+)"/g) }],
   ["course.|c.key", { name: "training courses", values: COURSE_KEYS }],
@@ -4842,7 +4849,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1175 The Wire Diary: +18 literal t() sites at first (the screen's strings incl. printHint and aria reuse, plus nav entries in shell/palette/manual) — 3375 -> 3393.
   // M1175 provenance line: the meta row also calls byModel/byFold at two more literal sites — 3393 -> 3395.
   // M1176 The Ask-Desk StateGraph: +3 literals (label/verified/foldAnswer rail), +3 template sites (askTrace.stage, askTrace.note, askViolation).
-  shapeCounts.literal === 3398 && shapeCounts.template === 126 && shapeCounts.expression === 45
+  shapeCounts.literal === 3410 && shapeCounts.template === 129 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5018,7 +5025,7 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M1165 The World Table: meta + rocket + slump variable-literal sites — 547 -> 550.
   // M1173 The Golden Hour: meta {fixtures}/{goals} + biggestShock's {delta} — litVar 551 -> 554.
   // M1175 The Wire Diary: meta {diaryCount}/{by} hands its variables at one literal site — litVar 554 -> 555.
-  litVarSites === 555 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 558 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.

@@ -1,20 +1,14 @@
-// M1176 · The Ask-Desk StateGraph — the wire's question engine as an explicit,
-// honest node machine. Six nodes, one refusal lane:
-//   preflight → retrieve → build → model → precommit → commit
-// Any failure collapses to the fold's own answer, and the screen says so.
-// The model's words are re-proven against the committed fold BEFORE the reader
-// sees them; a refusal never becomes a confident-looking paragraph in silence.
-// This module carries NO user-facing prose — violations and notes are keyed codes
-// the screen renders through i18n.
+// M1163 · Ask the Wire — the desk's FSM API. The shared bodies live once in tracedFsm.ts;
+// this file re-exports them under the wire-desk names so call sites read as wire verbs.
 import type { LiveWirePayload } from "@/data/liveWire";
 import type { WireAskId } from "./wireRag";
 import { retrieveAsk } from "./wireRag";
 import type { Locale } from "@/i18n/dictionaries";
+import type { Verdict as TraceVerdict } from "@/domain/tracedFsm";
+import { step } from "@/domain/tracedFsm";
 
 export type AskStage = "preflight" | "retrieve" | "build" | "model" | "precommit" | "commit" | "refused" | "done";
 export const ASK_STAGES: readonly AskStage[] = ["preflight", "retrieve", "build", "model", "precommit", "commit"];
-
-export type TraceVerdict = "pass" | "refused";
 
 export type AskNote =
   | "preflightOk"
@@ -41,6 +35,13 @@ export interface AskState {
   readonly trace: readonly AskTraceEntry[];
   readonly answer: string;
 }
+
+/** The wire desk's traced entry presets, declared once — the screens import, never re-spell. */
+export const ASK_BUILD_ENTRY = { stage: "build", verdict: "pass", note: "buildOk" } as const;
+export const ASK_COMMIT_ENTRY = { stage: "commit", verdict: "pass", note: "commitOk" } as const;
+export const ASK_FOLD_ENTRY = { stage: "refused", verdict: "refused", note: "foldOk" } as const;
+export const ASK_PRECOMMIT_PASS = { stage: "precommit", verdict: "pass", note: "commitOk" } as const;
+export const ASK_PRECOMMIT_REFUSED = { stage: "precommit", verdict: "refused", note: "precommitRefused" } as const;
 
 export const createAskDesk = (
   payload: LiveWirePayload,
@@ -158,9 +159,9 @@ export function verifyAskText(text: string, payload: LiveWirePayload): AskViolat
       if (CLUB_MARKER_RE.test(token)) out.add("clubToken");
     }
   }
-  for (const { re, violation, map } of [
-    { re: WINS_RE, violation: "figureNumber" as AskViolationCode, map: universe.wins },
-    { re: POINTS_RE, violation: "figureNumber" as AskViolationCode, map: universe.points },
+  for (const { re, map, violation } of [
+    { re: WINS_RE, map: universe.wins, violation: "figureNumber" as AskViolationCode },
+    { re: POINTS_RE, map: universe.points, violation: "figureNumber" as AskViolationCode },
   ]) {
     for (const m of text.matchAll(re)) {
       const n = Number(m[1]);
@@ -182,37 +183,19 @@ export function verifyAskText(text: string, payload: LiveWirePayload): AskViolat
   return [...out];
 }
 
-// ---- the state machine --------------------------------------------------
-
-const advance = (s: AskState, entry: AskTraceEntry, status: AskStage): AskState =>
-  ({ ...s, status, trace: [...s.trace, entry] });
-
 export const askPreflight = (s: AskState): AskState =>
   Array.isArray(s.payload?.leagues) && s.payload.leagues.length > 0
-    ? advance(s, { stage: "preflight", verdict: "pass", note: "preflightOk" }, "retrieve")
-    : advance({ ...s }, { stage: "preflight", verdict: "refused", note: "preflightMissing" }, "refused");
+    ? step(s, { stage: "preflight", verdict: "pass", note: "preflightOk" }, "retrieve")
+    : step({ ...s }, { stage: "preflight", verdict: "refused", note: "preflightMissing" }, "refused");
 
 export const askRetrieve = (s: AskState): AskState => {
   try {
     const lane = retrieveAsk(s.payload, s.askId) as { leagues?: unknown[] };
     return lane && Array.isArray(lane.leagues) && lane.leagues.length > 0
-      ? advance(s, { stage: "retrieve", verdict: "pass", note: "retrievalOk" }, "build")
-      : advance({ ...s }, { stage: "retrieve", verdict: "refused", note: "retrievalEmpty" }, "refused");
+      ? step(s, { stage: "retrieve", verdict: "pass", note: "retrievalOk" }, "build")
+      : step({ ...s }, { stage: "retrieve", verdict: "refused", note: "retrievalEmpty" }, "refused");
   } catch {
-    return advance({ ...s }, { stage: "retrieve", verdict: "refused", note: "retrievalEmpty" }, "refused");
+    return step({ ...s }, { stage: "retrieve", verdict: "refused", note: "retrievalEmpty" }, "refused");
   }
 };
 
-export const askBuild = (s: AskState): AskState =>
-  advance(s, { stage: "build", verdict: "pass", note: "buildOk" }, "model");
-
-export const askPrecommit = (s: AskState, verdict: TraceVerdict): AskState =>
-  verdict === "pass"
-    ? advance(s, { stage: "precommit", verdict: "pass", note: "commitOk" }, "commit")
-    : advance({ ...s }, { stage: "precommit", verdict: "refused", note: "precommitRefused" }, "refused");
-
-export const askCommit = (s: AskState, answer: string): AskState =>
-  advance({ ...s, answer }, { stage: "commit", verdict: "pass", note: "commitOk" }, "done");
-
-export const askRefused = (s: AskState, answer: string): AskState =>
-  advance({ ...s, answer }, { stage: "refused", verdict: "refused", note: "foldOk" }, "done");

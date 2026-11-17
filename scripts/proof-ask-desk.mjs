@@ -1,8 +1,10 @@
-// Proof for Ask the Wire (M1166, re-pinned at M1176 as the Ask-Desk StateGraph).
-// The desk rides the wire's exact streaming door; the retrieval round-trips the committed
-// artifact per preset so the model never sees more — or less — than needed. At M1176 the
-// flow is an explicit typed node machine with a refusal lane: precommit re-proves every
-// checkable claim in the model's answer against the fold before the reader sees it.
+// Proof for Ask the Wire (M1166, re-pinned at M1176/M1177 as the ask-desk StateGraph).
+// The desk rides the wire's exact streaming door; the retrieval round-trips the committed artifact
+// per preset so the model never sees more — or less — than needed. At M1176 the flow is an
+// explicit typed node machine with a refusal lane: precommit re-proves every checkable claim in
+// the model's answer against the fold before the reader sees it. The FSM's typed node bodies
+// live once in domain/tracedFsm.ts; this file re-exports its ask-desk-specific surface and
+// verifier.
 // Run: node scripts/proof-ask-desk.mjs
 import { readFileSync, existsSync } from "node:fs";
 
@@ -14,10 +16,18 @@ ok("the committed wire is live-wire/v3, required by every wireAskSystem branch",
   (() => { try { return JSON.parse(wire).schema === "live-wire/v3"; } catch { return false; } })());
 
 const desk = readFileSync("domain/askDesk.ts", "utf8");
-ok("domain/askDesk.ts ships the typed node machine — six stages, one refusal lane",
+const fsm = readFileSync("domain/tracedFsm.ts", "utf8");
+ok("domain/tracedFsm.ts ships the typed node machine — one body, both question engines consume it",
+  /export type Verdict = "pass" \| "refused"/.test(fsm) &&
+  /export interface TraceEntry/.test(fsm) && /export interface TraceState/.test(fsm) &&
+  /export function step</.test(fsm) && /export function fsmCommit</.test(fsm) && /export function fsmRefused</.test(fsm) && /export function fsmPrecommit</.test(fsm) &&
+  // generic arrow consts trip the JSX balance census (TraceState<E extends string…>), so the
+  // shared body declares its nodes as typed functions — the file must keep that shape.
+  !/export const step =/.test(fsm));
+
+ok("domain/askDesk.ts ships the wire's FSM surface on top of the shared body — six stages, one refusal lane",
   /export const ASK_STAGES/.test(desk) && /export type AskStage/.test(desk) &&
-  /export type TraceVerdict = "pass" \| "refused"/.test(desk) &&
-  /export interface AskState/.test(desk) && /export function verifyAskText/.test(desk));
+  /export interface AskState/.test(desk) && /export function verifyAskText/.test(desk) && /export type AskNote/.test(desk));
 
 ok("verifyAskText pins the ask desk to the fold itself — wins, points, ordinals bundled with dates and fixtures",
   /ISO_RE/.test(desk) && /SCORE_RE/.test(desk) && /MATCHDAY_RE/.test(desk) &&
@@ -54,16 +64,18 @@ ok("the fold handed to the model carries no totalFixtures arithmetic of its own 
 
 // ---- the trace strip (M1176) ----
 ok("LiveWire wires the fold guard BEFORE committing model output — pass lane reaches commit",
-  /verifyAskText\(r\.text, payload\)/.test(src) && /askPrecommit\(desk, \"pass\"/.test(src) &&
-  /askCommit\(/.test(src));
+  /verifyAskText\(r\.text, payload\)/.test(src) && /fsmPrecommit\(desk, "pass"/.test(src) &&
+  /fsmCommit\(/.test(src));
 ok("a refusal swaps the model's words for the fold's own answer — never a silent swap",
-  /askPrecommit\(desk, \"refused\"/.test(src) && /askRefused\(/.test(src) && /foldAskAnswerText\(payload, id, t\)/.test(src));
+  /fsmPrecommit\(desk, "refused"/.test(src) && /fsmRefused\(desk/.test(src) && /foldAskAnswerText\(payload, id, t\)/.test(src));
 ok("the fold answer stamps when model is out or the claims fail — honesty over drama",
   (src.match(/foldAskAnswerText\(payload, id, t\)/g) ?? []).length >= 4);
 ok("the trace renders as stage chips with t() keys, aria-labelled",
   /askTrace\.map/.test(src) && /liveWire\.askTrace\.stage\.\$\{entry\.stage\}/.test(src) && /entry\.note/.test(src));
 ok("paths that bypass precommit are impossible — the only exits from the desk runner are commit-or-refused",
   !/setAskTrace\(null\)[\s\S]{0,50}setBrief\(\{ status: "ready"/.test(src));
+ok("the shared fsmBuild/fsmCommit/fsmPrecommit/fsmRefused are imported from tracedFsm, not re-implemented",
+  /import \{\s*fsmBuild, fsmCommit, fsmRefused, fsmPrecommit,\s*\} from "@\/domain\/tracedFsm"/.test(src.replace(/\s+/g, " ")));
 
 // ---- the retrieval's chapters ----
 const rag = readFileSync("domain/wireRag.ts", "utf8");
