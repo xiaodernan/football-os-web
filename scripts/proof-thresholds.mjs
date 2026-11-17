@@ -130,7 +130,10 @@ const DECLARED = {
   ">= 70": { kind: "split", sites: 3, files: 3, why: "three different seventies: a news item's confidence is high at seventy, a transfer target's fit is seventy, and an attribute of seventy is a good badge" },
   "< 4": { kind: "split", sites: 3, files: 3, why: "three different fours: a community title needs four characters, the world table highlights its first four rows, and a scout row with fewer than four counts is a thin bar" },
   "< 23": { kind: "split", sites: 2, files: 2, why: "the age a market value or a seeded potential treats as young: the value curve's top band and the seed's potential boost are two different curves that start at the same age" },
-  ">= 4": { kind: "split", sites: 2, files: 2, why: "two different fours: an attack edge of four is a good edge in the match prep, and a review of four stars or better is a positive review" },
+  // M1182 The Tide: a percent-of-trend delta that opens the rising line, and a pre-existing
+  // ten-goals tape in the dossier. Two different decisions sharing one numeral — declared, not merged.
+  ">= 10": { kind: "split", sites: 2, files: 2, why: "two different tens: the tide's rising line is a ten-percent delta on the first-half vs second-half visit mean, and the dossier draws its ten-goals tape at ten — a percent of a fortnight and a count of goals are not one decision" },
+  ">= 4": { kind: "split", sites: 3, files: 3, why: "three different fours: an attack edge of four is a good edge in the match prep, a review of four stars or better is a positive review, and the tide needs four days of tail before it will read a drift — fewer days and the trend is not a sample, it is noise" },
   "> 4": { kind: "split", sites: 2, files: 2, why: "two different fives above four: a defence edge past four is a bad edge, and a seeded competition with more than four clubs is a league" },
   "< 60": { kind: "split", sites: 2, files: 2, why: "an hour's minutes: the community says minutes ago below sixty, and the dynamic world counts a minute below sixty" },
   "< 1024": { kind: "split", sites: 2, files: 1, why: "one formatter's own ladder — the settings page's byte formatter draws its two lines from the same kilobyte bound" },
@@ -185,13 +188,13 @@ const splitBad = splitEntries.filter((k) => {
   return rows.length !== DECLARED[k].sites || files !== DECLARED[k].files;
 });
 ok(`every split keeps its shape: the sites and the files are pinned, and the reason says why the decisions differ (${splitEntries.length} split(s), ${splitBad.length} changed [${splitBad.join(", ")}])`,
-  splitEntries.length === 13 && splitBad.length === 0,
+  splitEntries.length === 14 && splitBad.length === 0,
   `changed: ${splitBad.join(", ")}`);
 
 // Every declaration says WHY, in a sentence a reader can weigh.
 const thin = declaredKeys.filter((k) => typeof DECLARED[k].why !== "string" || DECLARED[k].why.length < 40);
 ok(`every declaration says why, in a sentence a reader can weigh (${declaredKeys.length} declarations, ${thin.length} too short [${thin.join(", ")}])`,
-  thin.length === 0 && declaredKeys.length === 19,
+  thin.length === 0 && declaredKeys.length === 20,
   `too short: ${thin.join(", ")}`);
 
 // The doors behave like the inline forms they replaced, on every sample a reader could meet.

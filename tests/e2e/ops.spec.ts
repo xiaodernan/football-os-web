@@ -23,6 +23,26 @@ test("the /ops console refuses a wrong passcode and opens on 123", async ({ page
   expect(errors, `console errors on /ops: ${errors.join(" || ")}`).toHaveLength(0);
 });
 
+test("the tide panel reads the fortnight on /ops", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text().slice(0, 200)); });
+  page.on("pageerror", (e) => errors.push(`pageerror: ${String(e).slice(0, 200)}`));
+
+  await page.goto("/#/ops", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { level: 1, name: /the pulse/i })).toBeVisible({ timeout: 20000 });
+
+  await page.getByLabel(/shared passcode/i).fill("123");
+  await page.getByRole("button", { name: /open the console/i }).click();
+
+  // The tide band renders with its kicker, sparkline image and a direction chip.
+  await expect(page.getByText(/the tide/i).first()).toBeVisible({ timeout: 10000 });
+  await expect(page.getByRole("img", { name: /fourteen-day traffic sparkline/i }).first()).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/ascending|steady|declining/i).first()).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/forecast/i).first()).toBeVisible({ timeout: 10000 });
+
+  expect(errors, `console errors on the tide panel: ${errors.join(" || ")}`).toHaveLength(0);
+});
+
 test("the command palette can goto /ops", async ({ page }) => {
   await completeOnboarding(page, "Ops Visitor");
   await page.keyboard.press("Control+k");

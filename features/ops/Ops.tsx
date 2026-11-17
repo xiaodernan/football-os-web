@@ -10,7 +10,7 @@
 import { useMemo, useState } from "react";
 import { useI18n, formatDate } from "@/i18n";
 import { PULSE_KEY, HIGH_BOUNCE_SHARE, syntheticCohort, foldPulse, type Cohort, type VisitRecord, type PulseFold } from "@/domain/pulse";
-import { fmt1, fmt2, pctOf } from "@/lib/utils";
+import { fmt1, fmt2, pctOf, round2, safeDiv, signed1 } from "@/lib/utils";
 import { foldPrescription, type Prescription } from "@/domain/prescription";
 import { browserStore, readJson } from "@/domain/localData";
 import { callLlmStream, LLM_CONFIG } from "@/data/llm";
@@ -19,6 +19,7 @@ import {
   consultPreflight, consultRefused, verifyConsultText,
   type ConsultTraceEntry, type ConsultViolation,
 } from "@/domain/consult";
+import { foldTide, type TideReading } from "@/domain/tide";
 import { DEEP_DIGEST } from "@/data/deepDigest";
 import { Panel, PANEL_CLASS, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
@@ -78,6 +79,14 @@ export function Ops() {
   }
 
   const dwellSec = (ms: number) => Math.round(ms / 1000);
+
+  // The forecast, the fold and the projection are the same pulse — one pass, no new data invented.
+  const tide: TideReading = foldTide(fold);
+  const tideMax = Math.max(1, ...fold.trend.map((d) => d.visits));
+  const TIDE_W = 280, TIDE_H = 48, TIDE_PAD = 4;
+  const tidePoints = fold.trend.slice(-14).map((d, i) =>
+    `${(round2(safeDiv(i, fold.trend.slice(-14).length - 1) * (TIDE_W - TIDE_PAD * 2) + TIDE_PAD))},${(round2(TIDE_H - TIDE_PAD - safeDiv(d.visits, tideMax) * (TIDE_H - TIDE_PAD * 2)))}`
+  ).join(" ");
 
   // The consultation: the fold's own prescription, narrated — by the model only when every
   // number it speaks traces back to this exact fold; refused otherwise, never a silent swap.
@@ -194,6 +203,40 @@ export function Ops() {
         ))}
       </div>
       <p className="text-center text-[10px] text-muted-foreground">{t("ops.sourceLine", { cohort: fold.cohort === "device" ? t("ops.cohort.device") : t("ops.cohort.synthetic"), bounce: fold.bounceSessions, sessions: fold.sessions, loops: fold.loopSessions })}</p>
+
+      {/* The tide — a fourteen-day ascending/quiet/falling verdict on real visits, projected forward honestly */}
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.tide.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("ops.tide.title")}</p>
+          </div>
+          <span className={cn("rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest", tide.cls === "rising" ? CHIP_CLASS.badgeInfoStrong : tide.cls === "falling" ? CHIP_CLASS.badgeWarning : CHIP_CLASS.muted)}>
+            {t(`ops.tide.direction.${tide.cls}`)} · {signed1(tide.deltaPct)}%
+          </span>
+        </div>
+        <div className="mt-3 flex flex-wrap items-end gap-4">
+          <svg role="img" aria-label={t("ops.tide.aria")} viewBox={`0 0 ${TIDE_W} ${TIDE_H}`} className="h-12 w-full max-w-md">
+            <polyline fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" className="text-primary/70" points={tidePoints} />
+          </svg>
+          <dl className="grid grid-cols-3 gap-3 font-mono text-[10px] leading-snug">
+            <div>
+              <dt className="uppercase tracking-widest text-muted-foreground">{t("ops.tide.firstHalf")}</dt>
+              <dd className="tabular-nums text-foreground">{fmt2(tide.firstHalfAvg)}</dd>
+            </div>
+            <div>
+              <dt className="uppercase tracking-widest text-muted-foreground">{t("ops.tide.secondHalf")}</dt>
+              <dd className="tabular-nums text-foreground">{fmt2(tide.secondHalfAvg)}</dd>
+            </div>
+            <div>
+              <dt className="uppercase tracking-widest text-muted-foreground">{t("ops.tide.dayCount")}</dt>
+              <dd className="tabular-nums text-foreground">{tide.dayCount}d</dd>
+            </div>
+          </dl>
+        </div>
+        <p className="mt-3 text-[11px] leading-relaxed text-foreground/90">{t(`ops.tide.recommendation.${tide.cls}`)}</p>
+        <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.tide.forecast", { d: tide.dayCount, d1: tide.forecast[0], d2: tide.forecast[1], d3: tide.forecast[2] })}</p>
+      </Panel>
 
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Top routes by visits */}

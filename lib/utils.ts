@@ -106,6 +106,13 @@ export const signed = (n: number): string => (n >= 0 ? "+" + n : String(n));
 // zero, so the ternary's non-negative arm wins and the pad is all this door adds over signed().
 export const signed2 = (v: number): string => `${v >= 0 ? "+" : ""}${v.toFixed(2)}`;
 
+// signed2's one-decimal twin: a delta printed at a FIXED one decimal with a leading `+`, the
+// idiom the fmt1 door pads to. Added because the words `fmt1` already own meaning nine other
+// cells point at (proof-fmt1 pins their exact call counts); an inline `${v >= 0 ? "+" : ""}${v.toFixed(1)}`
+// glued onto the longest-reader surface in the app would be M420's mistake a third time. The
+// carrier proof-signed pins its survival to this line, exactly as it pins signed2's to its own.
+export const signed1 = (v: number): string => `${v >= 0 ? "+" : ""}${v.toFixed(1)}`;
+
 // The app's parse-a-timestamp door: an ISO-ish string to epoch milliseconds, with a missing or
 // unparseable string floored to 0. domain/footprint, domain/history and the Profile record each
 // spelled this as a private `ts` helper (identical modulo history's shorter signature — its single

@@ -61,7 +61,7 @@ const CONSUMERS = [
 const CALL_PINS = {
   "domain/compare.ts": 1, "domain/history.ts": 2, "domain/review.ts": 3,
   "features/film/FilmRoom.tsx": 1, "features/football/Details.tsx": 1, "features/player/PlayerOS.tsx": 1,
-  "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,  "features/ops/Ops.tsx": 4, // M1178: 2 -> 4, the consultation intro's two door calls (bounceRate, loopRate) — the retired advice line was one of them (the tile still prints fmt1 twice)
+  "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,  "features/ops/Ops.tsx": 4, // M1182 did not engage the fmt1 door: the tide chip reads the one-decimal sibling signed1 instead (proof-signed pins it).
   "features/journey/Journey.tsx": 2,
   "features/watchlist/WatchlistBoard.tsx": 1,
   // M1157 The Prescription: five literal door calls (bounce now/next, loop, bounceDoor, fatigue).
@@ -239,11 +239,16 @@ const declByFile = carriers.filter((f) => count(src[f], DECL_FMT1) > 0);
 ok(`fmt1 is declared exactly once, in the lib/utils door (home ${count(src[HOME], DECL_FMT1)}, tree ${declByFile.join(",")})`,
   count(src[HOME], DECL_FMT1) === 1 && declByFile.length === 1 && declByFile[0] === HOME);
 
-// --- Reach guard: the door body IS the toFixed call and it is the sole code-state plain site. -----
+// --- Reach guard: the door body IS the toFixed call and lib/utils' only other code-state ------
+// --- plain `.toFixed(1)` site is the one-decimal sibling signed1's own body (added at M1182; ----
+// --- proof-signed pins that line to the byte, the way proof-fmt2 re-measures signed2's body). ----
 const homeCensus = census(src[HOME], ".toFixed(1)");
 const doorBody = (src[HOME].match(/export const fmt1 = [^\n]*/) || [""])[0];
-ok(`the door body IS the toFixed call and it is the sole code-state plain site in lib/utils (home plain ${homeCensus.plain}, body "${doorBody.trim()}")`,
-  homeCensus.plain === 1 && doorBody.trim() === "export const fmt1 = (v: number): string => v.toFixed(1);");
+const signed1Line = (src[HOME].match(/export const signed1[^\n]*/) || [""])[0];
+const siblingPlain = signed1Line ? 1 : 0;
+ok(`the door body IS the toFixed call and lib/utils' only two code-state plain sites are the door and the signed1 sibling (home plain ${homeCensus.plain}, sibling body reads ${siblingPlain}, body "${doorBody.trim()}")`,
+  homeCensus.plain === 1 + siblingPlain && doorBody.trim() === "export const fmt1 = (v: number): string => v.toFixed(1);" &&
+  signed1Line.trim() === 'export const signed1 = (v: number): string => `${v >= 0 ? "+" : ""}${v.toFixed(1)}`;');
 
 // --- Every consumer reads the door, at exactly their pinned call counts, and the door's own
 // --- HOME is a reader too: it CALLS the door (the money door's B line) but does not IMPORT it,
@@ -263,7 +268,7 @@ const homeCalls = count(codeOf(HOME), CALL_FMT1);
 const homeImports = count(src[HOME], IMPORT_FMT1);
 const orphanCallers = treeCallers.filter((f) => f !== HOME && !CONSUMERS.includes(f));
 ok(`every consumer reads the door at their exact pinned counts, and the door's own HOME is a reader too (imports ${importing.length}/${CONSUMERS.length}, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned ${totalCalls}; the home calls it ${homeCalls}x and imports it ${homeImports}x; tree callers ${treeCallers.length}, orphans ${orphanCallers.length} [${orphanCallers.join(",")}])`,
-  importing.length === CONSUMERS.length && pinsHold && totalCalls === 28 && // M1180: 27 -> 28 (the digest's one door call)
+  importing.length === CONSUMERS.length && pinsHold && totalCalls === 28 && // M1182: 28 holds; the tide chip went through the one-decimal sibling, not the door.
   homeCalls === HOME_CALLS && homeImports === 0 && orphanCallers.length === 0 &&
   treeCallers.length === CONSUMERS.length + 1);
 

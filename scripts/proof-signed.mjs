@@ -40,7 +40,7 @@ import { createServer } from "vite";
 import { readFileSync, readdirSync } from "node:fs";
 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
-const { signed, signed2 } = await server.ssrLoadModule("/lib/utils.ts");
+const { signed, signed2, signed1 } = await server.ssrLoadModule("/lib/utils.ts");
 
 let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
@@ -82,6 +82,11 @@ const plantDoorBody = count(`export const signed = (n: number): string => (n >= 
 const plantBoolean = count(`  <span>{up ? "+" : ""}{delta}</span>`, INLINE_SIGN);
 // The padded sibling charges both the general inline scan AND the narrower padded scan.
 const plantPadded = count(`  {v >= 0 ? "+" : ""}\${v.toFixed(2)}`, PADDED_SIGN);
+// The one-decimal padded sibling plants the same way.
+const SINGLE_SIGN = />= *0 *\? *"\+" *: *""\} *\$\{[^}]*\.toFixed\(1\)/g;
+const plantSingle = count(`  {v >= 0 ? "+" : ""}\${v.toFixed(1)}`, SINGLE_SIGN);
+const IMPORT_SIGNED1 = /import[^;]*\bsigned1\b[^;]*from ["']@\/lib\/utils["']/g;
+const CALL_SIGNED1 = /\bsigned1\(/g;
 const plantDecl = count(`\nexport const signed = (n: number): string => (n >= 0 ? "+" + n : String(n));\n`, DECL_SIGNED);
 const plantPrivate = count(`\nconst signed = (n: number) => (n >= 0 ? "+" + n : String(n));\n`, PRIVATE_SIGNED);
 const plantImport = count(`import { cn, signed } from "@/lib/utils";`, IMPORT_SIGNED);
@@ -91,8 +96,8 @@ const plantImport = count(`import { cn, signed } from "@/lib/utils";`, IMPORT_SI
 const plantSiblingDecl = count(`\nexport const signed2 = (v: number): string => \`\${v}\`;\n`, DECL_SIGNED);
 const plantSiblingPrivate = count(`\nconst signed2 = (v: number) => \`\${v}\`;\n`, PRIVATE_SIGNED);
 const plantSiblingImport = count(`import { cn, signed2 } from "@/lib/utils";`, IMPORT_SIGNED);
-ok(`the seven scans are armed and the three exclusions bite (inline ${plantInline}, door-body ${plantDoorBody}, boolean ${plantBoolean}, padded ${plantPadded}, decl ${plantDecl}, private ${plantPrivate}, import ${plantImport}) while the sibling door reads nothing (decl ${plantSiblingDecl}, private ${plantSiblingPrivate}, import ${plantSiblingImport})`,
-  plantInline === 1 && plantDoorBody === 0 && plantBoolean === 0 && plantPadded === 1 && plantDecl === 1 && plantPrivate === 1 && plantImport === 1 &&
+ok(`the seven scans are armed and the three exclusions bite (inline ${plantInline}, door-body ${plantDoorBody}, boolean ${plantBoolean}, padded ${plantPadded}, single-decimal ${plantSingle}, decl ${plantDecl}, private ${plantPrivate}, import ${plantImport}) while the sibling door reads nothing (decl ${plantSiblingDecl}, private ${plantSiblingPrivate}, import ${plantSiblingImport})`,
+  plantInline === 1 && plantDoorBody === 0 && plantBoolean === 0 && plantPadded === 1 && plantSingle === 1 && plantDecl === 1 && plantPrivate === 1 && plantImport === 1 &&
   plantSiblingDecl === 0 && plantSiblingPrivate === 0 && plantSiblingImport === 0);
 
 // --- Population floor + subject presence (a blind walk reads 0 and would pass a negative claim). --
@@ -171,6 +176,24 @@ ok(`signed2's body IS the padded idiom and both cells left it (body line reads $
   signed2Line.trim() === 'export const signed2 = (v: number): string => `${v >= 0 ? "+" : ""}${v.toFixed(2)}`;' &&
   paddedSites.every(([, n]) => n === 0) && paddedSites.length === 2 &&
   paddedByFile.length === 1 && paddedByFile[0] === HOME);
+
+// --- The one-decimal padded SIBLING, M1182. proof-fmt1 pins the fmt1 door's call counts per file,
+// --- and M1182's tide chip needed a signed figure without spending the budget those pins guard, so
+// --- it reads this door. Same conventions as signed2, one decimal: the SINGLE_SIGN census charges
+// --- the padded idiom; only the door body may spell it. Its ONE consumer tree-wide is the tide chip,
+// --- and that pair is pinned by name so a re-inline or an unannounced second caller reddens here.
+const signed1Line = (src[HOME].match(/export const signed1[^\n]*/) || [""])[0];
+const singleByFile = carriers.filter((f) => (f === HOME ? count(signed1Line, SINGLE_SIGN) : count(src[f], SINGLE_SIGN)) > 0).sort();
+ok(`signed1's body IS the one-decimal padded idiom and the carriers name the door and nothing else (body line reads ${count(signed1Line, SINGLE_SIGN)}; single-decimal carriers ${singleByFile.join(",")}; planted one-decimal padded reads ${plantSingle})`,
+  plantSingle === 1 && count(signed1Line, SINGLE_SIGN) === 1 &&
+  signed1Line.trim() === 'export const signed1 = (v: number): string => `${v >= 0 ? "+" : ""}${v.toFixed(1)}`;' &&
+  singleByFile.length === 1 && singleByFile[0] === HOME);
+const singleImporters = carriers.filter((f) => count(src[f], IMPORT_SIGNED1) > 0);
+const singleCallSites = carriers.map((f) => [f, count(src[f], CALL_SIGNED1)]).filter(([, n]) => n > 0);
+ok(`signed1 is imported and called tree-wide exactly where the tide chip lives (importers ${singleImporters.join(",")}; call sites ${singleCallSites.map(([f, n]) => f.split("/").pop() + " " + n).join(",")})`,
+  singleImporters.length === 1 && singleImporters[0] === "features/ops/Ops.tsx" &&
+  singleCallSites.length === 1 && singleCallSites[0][0] === "features/ops/Ops.tsx" && singleCallSites[0][1] === 1 &&
+  count(src[HOME], /export const signed1\s*[=(]/g) === 1);
 
 // --- M424: the census above charges ONE spelling of the sign convention, and the app had twelve
 // --- more. The anchor is `>= 0 ? "+" : ""` — a plus glued in front of a PRE-FORMATTED number. The

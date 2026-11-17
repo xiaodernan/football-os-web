@@ -573,7 +573,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1169 The Grand Dispatch: 194 -> 195 (the new screen).
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
-const APP_SRC_PIN = 206; // M1181: +1 domain/librarian.ts (205 -> 206).
+const APP_SRC_PIN = 207; // M1181: +1 domain/librarian.ts (205 -> 206).
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -666,7 +666,7 @@ const TSX_PIN = 110;
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
 // M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
-const SRC_PIN = 209; // M1181 The Librarian: +1 domain/librarian.ts (208 -> 209).
+const SRC_PIN = 210; // M1181 The Librarian: +1 domain/librarian.ts (208 -> 209).
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -808,6 +808,8 @@ const DYN_SITES = [
   { path: "features/learn/LearnHub.tsx", expr: "entry.stage", prefix: "learn.tutor.stage.", suffix: "" }, // M1179 The Tutor: the lesson-desk trace strip
   { path: "features/learn/LearnHub.tsx", expr: "entry.note", prefix: "learn.tutor.note.", suffix: "" }, // M1179 The Tutor
   { path: "features/learn/LearnHub.tsx", expr: "v", prefix: "learn.tutor.violation.", suffix: "" }, // M1179 The Tutor // the refusal error names the consult-fold violation code
+  { path: "features/ops/Ops.tsx", expr: "tide.cls", prefix: "ops.tide.recommendation.", suffix: "" }, // M1182 The Tide: the direction chip names its key off the recommendation enum
+  { path: "features/ops/Ops.tsx", expr: "tide.cls", prefix: "ops.tide.direction.", suffix: "" }, // M1182 The Tide
   { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.consult.stage.", suffix: "" }, // M1178 The Consultation: the fold's own trace strip
   { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.consult.note.", suffix: "" }, // M1178 The Consultation
   { path: "features/ops/Ops.tsx", expr: "v", prefix: "ops.consult.violation.", suffix: "" }, // M1178 The Consultation // the refusal error names the consult violation code
@@ -1033,6 +1035,9 @@ const SPACES = new Map([
   ["dossier.trace.stage.|entry.stage", { name: "studio trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused"] }],
   ["dossier.trace.note.|entry.note", { name: "studio trace notes", values: ["prospectsOnFile", "tapeSealed", "commitOk", "foldOk", "precommitRefused"] }],
   ["dossier.violation.|v", { name: "studio violation codes", values: ["wrongPlayer", "otherClub", "wrongNumbers", "prediction"] }],
+  // M1182 The Tide: verdict/recommendation chips tag their key off the tide enum, three values.
+  ["ops.tide.direction.|tide.cls", { name: "tide directions", values: ["rising", "steady", "falling"] }],
+  ["ops.tide.recommendation.|tide.cls", { name: "tide recommendations", values: ["rising", "steady", "falling"] }],
   // M1181 The Librarian: the manual asks about itself — title opens the matched chapter; keywordKey lists the tokens the librarian scored.
   ["manual.librarian.stage.|entry.stage", { name: "librarian trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
   ["manual.librarian.note.|entry.note", { name: "librarian trace notes", values: ["bookInHand", "indexSealed", "commitOk", "foldOk", "precommitRefused"] }],
@@ -3398,14 +3403,14 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // leaders.colGoals) — 156 -> 159.
 // M1160 The Long Season: its two coined strings were initially duplicated by locale combos; after renaming, the ratchet holds at 159.
 // M1175 The Wire Diary: one shared English value joins the ratchet; 159 -> 160.
-const DUP_VALUES_PIN = 160;
+const DUP_VALUES_PIN = 161;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
 // M970: the same "Pts" join pays its excess: 252 -> 254.
 // M1020: the same shared idiom join pays its excess: 254 -> 255.
 // M1132: the same four shared English values pay their excess end of the ratchet — 260 -> 263.
 // M1160 The Long Season: excess keys hold at 263.
 // M1175 The Wire Diary: one shared English excess key joins the ratchet; 263 -> 264.
-const DUP_EXCESS_KEYS_PIN = 264;
+const DUP_EXCESS_KEYS_PIN = 265;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4877,7 +4882,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1178 The Consultation: +9 literal t() sites (the section's own chrome), +3 template sites
   // (the consult.stage/consult.note/violation trace chips), foldAnswer.intro adds its one more litVar.
   // M1176 The Ask-Desk StateGraph: +3 literals (label/verified/foldAnswer rail), +3 template sites (askTrace.stage, askTrace.note, askViolation).
-  shapeCounts.literal === 3455 && shapeCounts.template === 138 && shapeCounts.expression === 54
+  shapeCounts.literal === 3462 && shapeCounts.template === 140 && shapeCounts.expression === 54
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5054,7 +5059,7 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1173 The Golden Hour: meta {fixtures}/{goals} + biggestShock's {delta} — litVar 551 -> 554.
   // M1175 The Wire Diary: meta {diaryCount}/{by} hands its variables at one literal site — litVar 554 -> 555.
   // M1178 The Consultation: foldAnswer.intro passes its variables at one more literal site �� 558 -> 559.
-  litVarSites === 565 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 566 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
@@ -6534,7 +6539,7 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
 // M1175 The Wire Diary: loading region aria + print aria — 34 -> 36.
 // M1179 The Tutor: the ask input names itself through t() — 36 -> 37.
 // M1181 The Librarian: the manual's ask input names itself through t() — 37 -> 38.
-ariaKeyed === 38 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+ariaKeyed === 39 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English
