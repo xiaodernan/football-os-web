@@ -177,7 +177,8 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1173 The Golden Hour: features/goldenhour/ joins — APP_MODULE_PIN 198 -> 200.
 // M1176 The Ask-Desk StateGraph: domain/askDesk.ts joins — APP_MODULE_PIN 202 -> 203.
 // M1177 The Scout's Studio: two modules join — domain/tracedFsm.ts (the shared FSM definition point) and domain/scoutStudio.ts — APP_MODULE_PIN 203 -> 205.
-const APP_MODULE_PIN = 205;
+// M1178 The Consultation: one domain module joins — domain/consult.ts — APP_MODULE_PIN 205 -> 206.
+const APP_MODULE_PIN = 206;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

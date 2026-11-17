@@ -573,7 +573,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1169 The Grand Dispatch: 194 -> 195 (the new screen).
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
-const APP_SRC_PIN = 202;
+const APP_SRC_PIN = 203; // M1178: +1 domain/consult.ts (202 -> 203).
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -665,7 +665,8 @@ const TSX_PIN = 110;
 // M1169 The Grand Dispatch: 197 -> 198 (the new module the reader reaches).
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
-const SRC_PIN = 205;
+// M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
+const SRC_PIN = 206;
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -801,6 +802,9 @@ const DYN_SITES = [
   { path: "features/dossier/Dossier.tsx", expr: "entry.stage", prefix: "dossier.trace.stage.", suffix: "" }, // M1177 The Scout Studio
   { path: "features/dossier/Dossier.tsx", expr: "entry.note", prefix: "dossier.trace.note.", suffix: "" }, // M1177 The Scout Studio
   { path: "features/dossier/Dossier.tsx", expr: "v", prefix: "dossier.violation.", suffix: "" }, // M1177 The Scout Studio // M1176: the refusal error names the ask-desk violation code
+  { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.consult.stage.", suffix: "" }, // M1178 The Consultation: the fold's own trace strip
+  { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.consult.note.", suffix: "" }, // M1178 The Consultation
+  { path: "features/ops/Ops.tsx", expr: "v", prefix: "ops.consult.violation.", suffix: "" }, // M1178 The Consultation // the refusal error names the consult violation code
   { path: "features/ops/Ops.tsx", expr: "i", prefix: "ops.depth.bucket", suffix: "" }, // M1149: the session-depth bucket label reads its key from the loop index
   { path: "features/sacred/Sacred.tsx", expr: "f", prefix: "longSeason.filter.", suffix: "" }, // M1160 The Long Season: the filter chips key their prefix from the fold
   { path: "features/ops/Ops.tsx", expr: "r.severity", prefix: "ops.rx.severity.", suffix: "" }, // M1157 The Prescription: severity chips read their key from the fold
@@ -1023,6 +1027,10 @@ const SPACES = new Map([
   ["dossier.trace.stage.|entry.stage", { name: "studio trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused"] }],
   ["dossier.trace.note.|entry.note", { name: "studio trace notes", values: ["prospectsOnFile", "tapeSealed", "commitOk", "foldOk", "precommitRefused"] }],
   ["dossier.violation.|v", { name: "studio violation codes", values: ["wrongPlayer", "otherClub", "wrongNumbers", "prediction"] }],
+  // M1178 The Consultation: the fold's own trace strip, keyed off its own note/stage enums.
+  ["ops.consult.stage.|entry.stage", { name: "consult trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
+  ["ops.consult.note.|entry.note", { name: "consult trace notes", values: ["foldInHand", "envelopeSealed", "commitOk", "foldOk", "precommitRefused"] }],
+  ["ops.consult.violation.|v", { name: "consult violation codes", values: ["wrongNumbers", "prediction"] }],
   ["liveWire.askViolation.|code", { name: "ask-desk violation codes", values: spaceOf("domain/askDesk.ts", /export type AskViolationCode =[\s\S]*?;/, /"([^"]+)"/g) }],
   ["liveWire.askTrace.note.|entry.note", { name: "ask-desk trace notes", values: spaceOf("domain/askDesk.ts", /export type AskNote =[\s\S]*?;/, /"([^"]+)"/g) }],
   ["course.|c.key", { name: "training courses", values: COURSE_KEYS }],
@@ -4848,8 +4856,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M1165 The World Table: the four keyed table headers add four literal t() sites — 3302 -> 3330.
   // M1175 The Wire Diary: +18 literal t() sites at first (the screen's strings incl. printHint and aria reuse, plus nav entries in shell/palette/manual) — 3375 -> 3393.
   // M1175 provenance line: the meta row also calls byModel/byFold at two more literal sites — 3393 -> 3395.
+  // M1178 The Consultation: +9 literal t() sites (the section's own chrome), +3 template sites
+  // (the consult.stage/consult.note/violation trace chips), foldAnswer.intro adds its one more litVar.
   // M1176 The Ask-Desk StateGraph: +3 literals (label/verified/foldAnswer rail), +3 template sites (askTrace.stage, askTrace.note, askViolation).
-  shapeCounts.literal === 3410 && shapeCounts.template === 129 && shapeCounts.expression === 45
+  shapeCounts.literal === 3423 && shapeCounts.template === 132 && shapeCounts.expression === 45
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5025,7 +5035,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M1165 The World Table: meta + rocket + slump variable-literal sites — 547 -> 550.
   // M1173 The Golden Hour: meta {fixtures}/{goals} + biggestShock's {delta} — litVar 551 -> 554.
   // M1175 The Wire Diary: meta {diaryCount}/{by} hands its variables at one literal site — litVar 554 -> 555.
-  litVarSites === 558 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1178 The Consultation: foldAnswer.intro passes its variables at one more literal site �� 558 -> 559.
+  litVarSites === 560 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.

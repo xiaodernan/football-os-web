@@ -3,6 +3,9 @@
 
 export type Verdict = "pass" | "refused";
 
+/** The studio-family FSM stages — spelled once, consumed by both engines as `StudioStage` / `ConsultStage`. */
+export type FsmStage = "preflight" | "build" | "model" | "precommit" | "commit" | "refused" | "done";
+
 export interface TraceEntry<E extends string, N extends string> {
   readonly stage: E;
   readonly verdict: Verdict;

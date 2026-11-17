@@ -2,11 +2,10 @@
 // The model may speak only what the seed itself knows about THIS prospect; anything it writes
 // outside that envelope is refused verbatim and the fold’s own paragraph substitutes.
 import type { Locale } from "@/i18n/dictionaries";
-import type { Verdict as TraceVerdict } from "@/domain/tracedFsm";
+import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
 import { step } from "@/domain/tracedFsm";
 
-export type StudioStage =
-  | "preflight" | "build" | "model" | "precommit" | "commit" | "refused" | "done";
+export type StudioStage = FsmStage;
 export type StudioNote = "prospectsOnFile" | "tapeSealed" | "commitOk" | "foldOk" | "precommitRefused";
 
 export interface StudioTraceEntry {

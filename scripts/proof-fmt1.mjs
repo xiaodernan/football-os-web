@@ -59,7 +59,7 @@ const CONSUMERS = [
 const CALL_PINS = {
   "domain/compare.ts": 1, "domain/history.ts": 2, "domain/review.ts": 3,
   "features/film/FilmRoom.tsx": 1, "features/football/Details.tsx": 1, "features/player/PlayerOS.tsx": 1,
-  "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,  "features/ops/Ops.tsx": 2, // M1157: 3 -> 2 — the retired advice line was one of them (the tile still prints fmt1 twice)
+  "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,  "features/ops/Ops.tsx": 4, // M1178: 2 -> 4, the consultation intro's two door calls (bounceRate, loopRate) — the retired advice line was one of them (the tile still prints fmt1 twice)
   "features/journey/Journey.tsx": 2,
   "features/watchlist/WatchlistBoard.tsx": 1,
   // M1157 The Prescription: five literal door calls (bounce now/next, loop, bounceDoor, fatigue).
@@ -259,7 +259,7 @@ const homeCalls = count(codeOf(HOME), CALL_FMT1);
 const homeImports = count(src[HOME], IMPORT_FMT1);
 const orphanCallers = treeCallers.filter((f) => f !== HOME && !CONSUMERS.includes(f));
 ok(`every consumer reads the door at their exact pinned counts, and the door's own HOME is a reader too (imports ${importing.length}/${CONSUMERS.length}, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned ${totalCalls}; the home calls it ${homeCalls}x and imports it ${homeImports}x; tree callers ${treeCallers.length}, orphans ${orphanCallers.length} [${orphanCallers.join(",")}])`,
-  importing.length === CONSUMERS.length && pinsHold && totalCalls === 25 && // M1150: 19 -> 21; M1157: 21 -> 25 (prescription adds five; ops advice retired one)
+  importing.length === CONSUMERS.length && pinsHold && totalCalls === 27 && // M1178: 25 -> 27 (the consultation's two door calls)
   homeCalls === HOME_CALLS && homeImports === 0 && orphanCallers.length === 0 &&
   treeCallers.length === CONSUMERS.length + 1);
 
