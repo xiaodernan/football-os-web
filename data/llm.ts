@@ -26,6 +26,7 @@
 import { footballProvider } from "./footballService";
 import leagueTables from "../services/league-service/src/main/resources/league-tables.json";
 import { byOverall } from "@/domain/attributes";
+import { DEEP_DIGEST } from "@/data/deepDigest";
 
 interface ChatMessage { role: "system" | "user" | "assistant"; content: string }
 
@@ -81,7 +82,7 @@ function buildWorldBriefing(): string {
   ].join("\n");
 }
 
-export const WORLD_BRIEFING = buildWorldBriefing();
+export const WORLD_BRIEFING = buildWorldBriefing() + "\n\n" + DEEP_DIGEST;
 
 // ── M969 · the history window is GROWING, trimmed in blocks ────────────────────────────────
 // Provider prompt caches match the LONGEST COMMON PREFIX of consecutive requests. A sliding

@@ -19,6 +19,7 @@ import {
   consultPreflight, consultRefused, verifyConsultText,
   type ConsultTraceEntry, type ConsultViolation,
 } from "@/domain/consult";
+import { DEEP_DIGEST } from "@/data/deepDigest";
 import { Panel, PANEL_CLASS, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +91,8 @@ export function Ops() {
       t("ops.consult.foldAnswer.promise"),
     ].join(" ");
 
-  const consultSystem = (): string => JSON.stringify({
+  const consultSystem = (): string =>
+    DEEP_DIGEST + "\n\n" + JSON.stringify({
     fold: {
       cohort: fold.cohort,
       visits: fold.visits,
@@ -105,7 +107,7 @@ export function Ops() {
       exits: fold.exits.slice(0, 5),
     },
     prescriptions: rx.map((r) => ({ id: r.id, severity: r.severity, vars: r.vars })),
-    commandment: "Answer ONLY from this fold JSON. Never invent a number, a route, a date or a cause that is not in here. If a claim has no anchor in the fold, omit the sentence. Answer in the visitor's language. Three tight sentences; no futurology.",
+    commandment: "Answer ONLY from THE DEEP DIGEST above and this fold JSON. Never invent a number, a route, a date or a cause that is not in here or the digest. If a claim has no anchor in the fold, omit the sentence. Answer in the visitor's language. Three tight sentences; no futurology.",
   });
 
   const askConsult = async () => {

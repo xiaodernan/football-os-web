@@ -65,7 +65,7 @@ export function Dossier() {
     if (!dossier || asking) return;
     const { player, club } = dossier;
     const positionWord = positionLabel(player.position, t);
-    const question = `Write one honest 4-sentence portrait of ${player.name}, age ${player.age}, ${positionWord} at club "${dossier.club?.name}", overall ${player.overall}, potential ${player.potential} — drawn only from this data and nothing outside it. The world is synthetic; you may say 'the seed thinks' — never invent a fact, never predict a career outside his numbers; keep it warm but honest; end with one concrete reason a scout should fly to see him, or accept plainly that the numbers say not yet.`;
+    const question = `Write one honest 4-sentence portrait of ${player.name}, age ${player.age}, ${positionWord} at club "${dossier.club?.name}", overall ${player.overall}, potential ${player.potential}, at EUR ${Math.round(player.value / 1_000_000)}m. THE DEEP DIGEST is the world beneath; every figure in your reply must be either that digest's own or the seed's for THIS prospect. Never invent a fact, never predict a career outside his numbers; keep it warm but honest; end with one concrete reason a scout should fly to see him, or accept plainly that the numbers say not yet.`;
 
     let desk = studioPreflight(createStudio(
       { overall: player.overall, potential: player.potential, gap: dossier.gap, value: player.value, apps: dossier.appearances, goals: dossier.goals },

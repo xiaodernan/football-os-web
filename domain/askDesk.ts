@@ -3,6 +3,7 @@
 import type { LiveWirePayload } from "@/data/liveWire";
 import type { WireAskId } from "./wireRag";
 import { retrieveAsk } from "./wireRag";
+import { DEEP_DIGEST_NUMBERS, WORLD_CLUB_NAMES } from "@/data/deepDigest";
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict } from "@/domain/tracedFsm";
 import { step } from "@/domain/tracedFsm";
@@ -156,6 +157,7 @@ export function verifyAskText(text: string, payload: LiveWirePayload): AskViolat
     for (const w of clause.matchAll(CLUB_TOKEN_RE)) {
       const token = w[0].trim();
       if (names.some((c) => c.includes(token))) continue;
+      if ([...WORLD_CLUB_NAMES].some((c) => token.includes(c) || c.includes(token))) continue;
       if (CLUB_MARKER_RE.test(token)) out.add("clubToken");
     }
   }
@@ -168,6 +170,7 @@ export function verifyAskText(text: string, payload: LiveWirePayload): AskViolat
       const named = clubsMentioned(text.slice(0, m.index ?? 0), universe);
       if (named.some((c) => map.get(c) === n)) continue;
       if (named.length === 0 && [...map.values()].includes(n)) continue;
+      if (DEEP_DIGEST_NUMBERS.has(String(Math.round(n)))) continue;
       out.add(violation);
     }
   }
@@ -177,6 +180,7 @@ export function verifyAskText(text: string, payload: LiveWirePayload): AskViolat
       if (!Number.isFinite(n)) continue;
       const named = clubsMentioned(text.slice(0, m.index ?? 0), universe);
       if (named.some((c) => universe.positions.get(c) === n)) continue;
+      if (DEEP_DIGEST_NUMBERS.has(String(Math.round(n)))) continue;
       out.add("ordinal");
     }
   }

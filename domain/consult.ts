@@ -9,6 +9,7 @@ import { round1 } from "@/domain/scouting";
 import type { PulseFold } from "@/domain/pulse";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
 import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
+import { DEEP_DIGEST_NUMBERS } from "@/data/deepDigest";
 
 export type ConsultStage = FsmStage;
 
@@ -91,6 +92,7 @@ export function verifyConsultText(text: string, fold: PulseFold): ConsultViolati
       String(round2(numeric)),
     ];
     if (candidates.some((c) => universe.has(c))) continue;
+    if (DEEP_DIGEST_NUMBERS.has(candidates[0]) || DEEP_DIGEST_NUMBERS.has(String(Math.round(Number(raw.replace(/,/g, "")))))) continue;
     out.add("wrongNumbers");
   }
   // Career-future futurology has no place in an operator's console either.

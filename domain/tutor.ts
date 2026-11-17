@@ -6,6 +6,7 @@
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
 import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
+import { DEEP_DIGEST_NUMBERS } from "@/data/deepDigest";
 
 export type TutorStage = FsmStage;
 export type TutorNote = "lessonInHand" | "lessonSealed" | "commitOk" | "foldOk" | "precommitRefused";
@@ -71,7 +72,10 @@ export function verifyTutorText(text: string, corpus: TutorCorpus): TutorViolati
     const raw = m[0].replace(/,/g, "");
     const n = Number(raw);
     if (!Number.isFinite(n)) continue;
-    if (!universe.has(raw) && !universe.has(String(Math.round(n)))) out.add("offLesson");
+    if (!universe.has(raw) && !universe.has(String(Math.round(n)))) {
+      if (DEEP_DIGEST_NUMBERS.has(raw) || DEEP_DIGEST_NUMBERS.has(String(Math.round(n)))) continue;
+      out.add("offLesson");
+    }
   }
   if (/\b(will|won't|never will|by the time|years from now|mark my words)\b/i.test(text)) out.add("prediction");
   return [...out];

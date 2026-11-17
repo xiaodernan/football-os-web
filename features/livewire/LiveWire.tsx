@@ -18,6 +18,7 @@ import {
   fsmBuild, fsmCommit, fsmRefused, fsmPrecommit,
 } from "@/domain/tracedFsm";
 import { wireBriefFacts } from "@/domain/wireBrief";
+import { DEEP_DIGEST } from "@/data/deepDigest";
 import { retrieveAsk, type WireAskId } from "@/domain/wireRag";
 import { ZapIcon } from "lucide-react";
 import type { Locale } from "@/i18n/dictionaries";
@@ -46,14 +47,17 @@ const LANG_NAME: Record<Locale, string> = {
   "zh-TW": "Traditional Chinese",
 };
 
-// The system prompt is grounded only in the selected league's committed artifact; the model is forbidden inventions.
+// The system the model is imprisoned to: the shared world digest (all fifteen tables, all
+// five-fifty players, all clubs), then the selected league's committed artifact; the model is forbidden inventions.
 const buildWireSystem = (l: LiveWireLeague, generatedAt: string, locale: Locale) => [
-  `You narrate the real ${l.league} ${l.season} from ONE JSON artifact.`,
-  `It carries the season as committed on ${generatedAt.slice(0, 10)} by OpenFootball (CC0).`,
-  "Answer ONLY from the fold below. Never invent a club, result, date or player; never estimate a number.",
-  "If the wire does not carry the answer, say exactly that.",
+  "You narrate the entire frozen world from THE DEEP DIGEST, plus ONE JSON artifact for this league.",
+  `The ${l.league} ${l.season} is committed on ${generatedAt.slice(0, 10)} by OpenFootball (CC0).`,
+  "Answer ONLY from the digest and this fold. Never invent a club, result, date or player; never estimate a number.",
+  "If the artifact does not carry the answer, say exactly that.",
   `Answer in ${LANG_NAME[locale]}. Plain prose, at most 180 words. No lists.`,
-  "FOLD:",
+  "THE DEEP DIGEST:",
+  DEEP_DIGEST,
+  "THE FOLD:",
   JSON.stringify({
     league: l.league,
     season: l.season,
@@ -86,9 +90,12 @@ const wireAskSystem = (p: LiveWirePayload, ask: WireAsk, locale: Locale): string
   // M1166 · each preset retrieves only the artifact rows it can honestly answer from — never the same digest twice.
   const fold = JSON.stringify(retrieveAsk(p, ask.id));
   return [
-    "You answer ONLY from the fold below. Never invent a match, club or result not in it; never estimate anything.",
+    "THE DEEP DIGEST is the world you speak from; below it the fold adds rows specific to this question.",
+    "THE DEEP DIGEST:",
+    DEEP_DIGEST,
+    "You answer ONLY from the digest or the fold below. Never invent a match, club or result; never estimate anything.",
     `Answer in ${LANG_NAME[locale]}. Plain prose, no lists, at most 180 words.`,
-    "If the file cannot prove what the reader asks, say exactly that and stop.",
+    "If neither the digest nor the fold can prove what the reader asks, say exactly that and stop.",
     "FOLD:",
     fold,
     `ASK: ${ask.ask}`,

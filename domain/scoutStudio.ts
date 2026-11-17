@@ -4,6 +4,7 @@
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
 import { step } from "@/domain/tracedFsm";
+import { DEEP_DIGEST_NUMBERS, WORLD_CLUB_NAMES } from "@/data/deepDigest";
 
 export type StudioStage = FsmStage;
 export type StudioNote = "prospectsOnFile" | "tapeSealed" | "commitOk" | "foldOk" | "precommitRefused";
@@ -61,6 +62,8 @@ export function verifyStudioText(text: string, state: StudioState): StudioViolat
   const otherClub = /\b([A-Z][A-Za-z ]{2,} (?:FC|CF|SC|AC|AS|UD|CD|CS|AFC|BSC))\b/g;
   for (const m of text.matchAll(otherClub)) {
     if (state.identity.club && m[0].includes(state.identity.club)) continue;
+    const tok = m[0];
+    if ([...WORLD_CLUB_NAMES].some((c) => tok.includes(c) || c.includes(tok))) continue;
     if (!state.identity.club) out.add("otherClub");
     else out.add("otherClub");
   }
@@ -69,8 +72,15 @@ export function verifyStudioText(text: string, state: StudioState): StudioViolat
   const gap = String(Math.abs(state.minutes.gap));
   const apps = String(state.minutes.apps);
   const goals = String(state.minutes.goals);
-  const citesSomethingReal = text.includes(overall) || text.includes(potential) || text.includes(apps) || text.includes(goals) || text.includes(gap);
-  if (!citesSomethingReal) out.add("wrongNumbers");
+  const citesSomethingReal =
+    text.includes(overall) || text.includes(potential) || text.includes(apps) || text.includes(goals) || text.includes(gap);
+  const digitsOf = text.match(/\d+(?:[\d,.]*\d)?/g) ?? [];
+  const citesDigestNumber = digitsOf.some((raw) => {
+    const n = Number(raw.replace(/,/g, ""));
+    if (!Number.isFinite(n)) return false;
+    return DEEP_DIGEST_NUMBERS.has(raw) || DEEP_DIGEST_NUMBERS.has(String(Math.round(n)));
+  });
+  if (!citesSomethingReal && !citesDigestNumber) out.add("wrongNumbers");
   if (/\b(career|years from now|by the time|ten years|final chapter)\b/i.test(text)) out.add("prediction");
   return [...out];
 }
