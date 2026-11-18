@@ -22,8 +22,7 @@ import {
   createTutor, tutorBuild, tutorCommit, tutorPrecommit, tutorPreflight, tutorRefused, verifyTutorText,
   type TutorTraceEntry, type TutorViolation,
 } from "@/domain/tutor";
-import { callLlmStream, LLM_CONFIG } from "@/data/llm";
-import { DEEP_DIGEST } from "@/data/deepDigest";
+import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
 import { Panel, SectionTitle, EmptyState, DemoBadge, CHIP_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { rowLine } from "@/domain/rowText";
 import { Button } from "@/components/ui/button";
@@ -251,10 +250,10 @@ function LessonDetail({ lesson, record, onAttempt, onLearned, onUndo, onBack }: 
     setTutorAnswer("");
     if (!LLM_CONFIG.hasKey) { setTutorAnswer(t("learn.tutor.via.local")); return; }
     setTutorBusy(true);
-    const system = DEEP_DIGEST + "\n\n" + JSON.stringify({
+    const system = withWorldBook(JSON.stringify({
       corpus: tutorCorpus,
-      commandment: "Teach from THE DEEP DIGEST above and this corpus JSON — both are true; you may answer with facts from either. Never invent a fact, figure, name or date that neither carries. If the student asks something outside both, say plainly that neither can answer and offer what the lesson does say. Answer in the visitor's language. Tight sentences; no futurology.",
-    });
+      commandment: "Teach from THE WORLD BOOK above and this corpus JSON — both are true; you may answer with facts from either. Never invent a fact, figure, name or date that neither carries. If the student asks something outside both, say plainly that neither can answer and offer what the lesson does say. Answer in the visitor's language. Tight sentences; no futurology.",
+    }));
     const result = await callLlmStream(q, [], (d) => setTutorAnswer((p) => p + d), { system });
     if (result.ok) {
       const refusals = verifyTutorText(result.text, desk.corpus);

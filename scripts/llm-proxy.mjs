@@ -52,7 +52,12 @@ const callUpstreamFetch = (url, init, cfg) => {
 const DEFAULT_BASE = "https://api.aizzz.xyz/v1";
 const DEFAULT_MODEL = "gpt-6.1-terra";
 const MAX_MESSAGES = 10;
-const MAX_CONTENT = 8000;
+// M1183 The World Book: 8000 → 327_680. Every ask in this app shares ONE byte-stable prefix
+// (THE WORLD BOOK, ~116 KB) — the old clamp silently amputated 75% of it on the way upstream,
+// which is precisely why the model never saw the wall behind the glance. The book is a budget,
+// not a ceiling: a message may not exceed ~320 KiB (≈80k tokens), history windows stay under it
+// as before, and the enforcing code below reads the intent, never a magic number.
+const MAX_CONTENT = 327_680;
 const TIMEOUT_MS = 20000;
 
 // M1079 cache defaults — a bounded, jittered, single-flight read-through over the model call.
@@ -185,10 +190,23 @@ export function normaliseBase(raw) {
 //   · stream + include_usage                   null,c=4013,c=3878,c=4291,c=4001,null,null,null          (5/12, wandering cache size)
 //   · stream + prompt_cache_key                c=4736,c=4736,c=32,c=196,c=196,c=196,c=196,c=null,c=196,c=196,c=196  (11/12)
 //   · control non-stream re-run               null,null,null,null,null,null,null,null,null,null,null,null  (0/12)
-// `prompt_cache_key` pins every Football-OS ask to one warm lane, so the briefing's plain
-// bytes land on the same KV state every time. `include_usage` is deliberately ABSENT — it
-// forces a lane hop that reports cached=null and costs more than it measures.
-export const PROMPT_CACHE_KEY = "football-os";
+// `prompt_cache_key` pins the ask to a warm KV lane. M1183 found the discipline that makes it
+// STABLE: a constant alone buckles every visitor of this family into one lane — perfect when they
+// all ride THE WORLD BOOK, poisonous when they don't (a mixed-prefix family + one key makes the
+// lane evict its neighbours). The lane is now CONTENT-DERIVED: `football-os-web:` + FNV-1a of the
+// briefing's first 4 KiB. Every demo door ships the same digest, so they hash identical → ONE warm
+// lane per briefing, deterministic across machines & sessions, self-loading on deploys, no cross-
+// family thrash, and unbriefed asks degrade to the family constant (cold once, never viral).
+// `include_usage` stays ABSENT — it forces a lane hop that reports cached=null.
+export const PROMPT_CACHE_KEY = "football-os-web";
+
+/** The lane this briefing asks the provider to keep warm. Content-derived, byte-deterministic. */
+export function laneKey(briefing, family = PROMPT_CACHE_KEY) {
+  const head = String(briefing ?? "").slice(0, 4096);
+  return head.length > 0 ? `${family}:${hashString(head).toString(16).padStart(8, "0")}` : family;
+}
+
+const systemBriefing = (clean) => clean?.find((m) => m.role === "system")?.content ?? "";
 
 /**
  * The framework-agnostic core. `cfg` supplies { key, baseUrl, model } from the server env.
@@ -265,7 +283,7 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
           max_tokens: 700,
           temperature: 0.55,
           stream: true,
-          prompt_cache_key: PROMPT_CACHE_KEY,
+          prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean)),
         }),
         signal: controller.signal,
       }, cfg);
@@ -377,7 +395,7 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
         max_tokens: 700,
         temperature: 0.55,
         stream: true,
-        prompt_cache_key: PROMPT_CACHE_KEY,
+        prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean)),
       }),
       signal: controller.signal,
     }, cfg);
@@ -471,7 +489,7 @@ export function llmProxyMiddleware(configFor = () => serverConfig(), cache = cre
     try {
       for await (const chunk of req) {
         raw += chunk;
-        if (raw.length > 64 * 1024) {
+        if (raw.length > 1024 * 1024) {
           res.statusCode = 413;
           res.end(JSON.stringify({ ok: false, error: "too_large" }));
           return;

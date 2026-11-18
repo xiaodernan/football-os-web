@@ -84,6 +84,14 @@ function buildWorldBriefing(): string {
 
 export const WORLD_BRIEFING = buildWorldBriefing() + "\n\n" + DEEP_DIGEST;
 
+/**
+ * THE ONE ENVELOPE. Every ask in this app rides the same byte-stable prefix: WORLD_BRIEFING first,
+ * the envelope second. Two doors that send two different first messages share NOTHING with the
+ * provider's prefix cache — one hash-identical family gives one warm lane, deterministically.
+ * The envelope is what changes between calls; the book in front of it never does.
+ */
+export const withWorldBook = (envelope: string): string => `${WORLD_BRIEFING}\n${envelope}`;
+
 // ── M969 · the history window is GROWING, trimmed in blocks ────────────────────────────────
 // Provider prompt caches match the LONGEST COMMON PREFIX of consecutive requests. A sliding
 // window (the old `slice(-6)`) shifts the whole history every turn, so request N+1 diverged

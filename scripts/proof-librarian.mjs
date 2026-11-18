@@ -37,8 +37,8 @@ ok("the trace rail renders chips keyed through t() with aria-safe title notes",
 ok("the streaming door is the ONE callLlmStream — no second fetch",
   !/(\bfetch\(|XMLHttpRequest|axios\.)/.test(manual.replace(/\/\/.*$/gm, "")));
 
-ok("the system prompt embeds both the world digest and the chapter envelope — both imprisonments at once",
-  /DEEP_DIGEST/.test(manual) && /MANUAL_CHAPTER/.test(manual));
+ok("the system prompt embeds both the world book and the chapter envelope — both imprisonments at once",
+  /withWorldBook/.test(manual) && /MANUAL_CHAPTER/.test(manual));
 
 // Planted refusal traps
 const plantedPrediction = "the model will certainly deliver a parade on open day";

@@ -13,14 +13,13 @@ import { PULSE_KEY, HIGH_BOUNCE_SHARE, syntheticCohort, foldPulse, type Cohort, 
 import { fmt1, fmt2, pctOf, round2, safeDiv, signed1 } from "@/lib/utils";
 import { foldPrescription, type Prescription } from "@/domain/prescription";
 import { browserStore, readJson } from "@/domain/localData";
-import { callLlmStream, LLM_CONFIG } from "@/data/llm";
+import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
 import {
   createConsult, consultBuild, consultCommit, consultPrecommit,
   consultPreflight, consultRefused, verifyConsultText,
   type ConsultTraceEntry, type ConsultViolation,
 } from "@/domain/consult";
 import { foldTide, type TideReading } from "@/domain/tide";
-import { DEEP_DIGEST } from "@/data/deepDigest";
 import { Panel, PANEL_CLASS, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
@@ -101,7 +100,7 @@ export function Ops() {
     ].join(" ");
 
   const consultSystem = (): string =>
-    DEEP_DIGEST + "\n\n" + JSON.stringify({
+    withWorldBook(JSON.stringify({
     fold: {
       cohort: fold.cohort,
       visits: fold.visits,
@@ -116,8 +115,8 @@ export function Ops() {
       exits: fold.exits.slice(0, 5),
     },
     prescriptions: rx.map((r) => ({ id: r.id, severity: r.severity, vars: r.vars })),
-    commandment: "Answer ONLY from THE DEEP DIGEST above and this fold JSON. Never invent a number, a route, a date or a cause that is not in here or the digest. If a claim has no anchor in the fold, omit the sentence. Answer in the visitor's language. Three tight sentences; no futurology.",
-  });
+    commandment: "Answer ONLY from THE WORLD BOOK above and this fold JSON. Never invent a number, a route, a date or a cause that is not in here or the book. If a claim has no anchor in the fold, omit the sentence. Answer in the visitor's language. Three tight sentences; no futurology.",
+  }));
 
   const askConsult = async () => {
     if (consultBusy) return;

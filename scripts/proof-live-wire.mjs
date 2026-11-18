@@ -123,10 +123,10 @@ ok("the fold never disagrees with the table it folds (every league: gap, leader,
     facts.md === Number(/(\d+)\s*$/.exec(lg.recent[0]?.round ?? "")?.[1] ?? Number.NaN)));
 const liveSrc = readFileSync("features/livewire/LiveWire.tsx", "utf8");
 ok("the screen asks the armed model through the ONE streaming door (callLlmStream + LLM_CONFIG gate), lands the fold otherwise",
-  /import \{ callLlmStream, LLM_CONFIG(, type BriefStatus)? \} from "@\/data\/llm"/.test(liveSrc) &&
+  /import \{ callLlmStream, LLM_CONFIG(, withWorldBook)?(, type BriefStatus)? \} from "@\/data\/llm"/.test(liveSrc) &&
   /LLM_CONFIG\.hasKey/.test(liveSrc) && /buildWireSystem/.test(liveSrc) && /wireBriefFacts/.test(liveSrc));
-ok("the brief never sends the model anything but the fold and the shared digest; the system prompt refuses invention outright",
-  liveSrc.includes("Answer ONLY from the digest and this fold") && liveSrc.includes("THE DEEP DIGEST:") && /Answer in \$\{LANG_NAME/.test(liveSrc));
+ok("the brief never sends the model anything but the fold and the shared world book; the system prompt refuses invention outright",
+  liveSrc.includes("Answer ONLY from the book and this fold") && liveSrc.includes("withWorldBook") && /Answer in \$\{LANG_NAME/.test(liveSrc));
 const dict7 = readFileSync("i18n/dictionaries.ts", "utf8");
 ok("all three locales coin the brief ask, the disclose and the tablist caption",
   (dict7.match(/"liveWire\.brief\.ask":/g) ?? []).length === 3 && (dict7.match(/"liveWire\.brief\.disclose":/g) ?? []).length === 3 &&

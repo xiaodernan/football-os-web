@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ABSENT, cn, SEPARATOR, signed } from "@/lib/utils";
 import { fetchLiveWire, type LiveWireLeague, type LiveWirePayload, type LiveWireZone, type WireStatus } from "@/data/liveWire";
-import { callLlmStream, LLM_CONFIG, type BriefStatus } from "@/data/llm";
+import { callLlmStream, LLM_CONFIG, withWorldBook, type BriefStatus } from "@/data/llm";
 import {
   askPreflight, askRetrieve, createAskDesk, verifyAskText, type AskTraceEntry,
   ASK_BUILD_ENTRY, ASK_COMMIT_ENTRY, ASK_FOLD_ENTRY, ASK_PRECOMMIT_PASS, ASK_PRECOMMIT_REFUSED,
@@ -18,7 +18,7 @@ import {
   fsmBuild, fsmCommit, fsmRefused, fsmPrecommit,
 } from "@/domain/tracedFsm";
 import { wireBriefFacts } from "@/domain/wireBrief";
-import { DEEP_DIGEST } from "@/data/deepDigest";
+
 import { retrieveAsk, type WireAskId } from "@/domain/wireRag";
 import { ZapIcon } from "lucide-react";
 import type { Locale } from "@/i18n/dictionaries";
@@ -47,16 +47,13 @@ const LANG_NAME: Record<Locale, string> = {
   "zh-TW": "Traditional Chinese",
 };
 
-// The system the model is imprisoned to: the shared world digest (all fifteen tables, all
-// five-fifty players, all clubs), then the selected league's committed artifact; the model is forbidden inventions.
-const buildWireSystem = (l: LiveWireLeague, generatedAt: string, locale: Locale) => [
-  "You narrate the entire frozen world from THE DEEP DIGEST, plus ONE JSON artifact for this league.",
+// The system the model is imprisoned to: the one shared prefix (THE WORLD BOOK, byte-stable across
+// deploys and sessions), then ONE JSON artifact for this league. Inventions are forbidden outright.
+const buildWireSystem = (l: LiveWireLeague, generatedAt: string, locale: Locale) => withWorldBook([
   `The ${l.league} ${l.season} is committed on ${generatedAt.slice(0, 10)} by OpenFootball (CC0).`,
-  "Answer ONLY from the digest and this fold. Never invent a club, result, date or player; never estimate a number.",
-  "If the artifact does not carry the answer, say exactly that.",
+  "Answer ONLY from the book and this fold. Never invent a club, result, date or player; never estimate a number.",
+  "If the fold cannot carry the answer, say exactly that.",
   `Answer in ${LANG_NAME[locale]}. Plain prose, at most 180 words. No lists.`,
-  "THE DEEP DIGEST:",
-  DEEP_DIGEST,
   "THE FOLD:",
   JSON.stringify({
     league: l.league,
@@ -66,7 +63,7 @@ const buildWireSystem = (l: LiveWireLeague, generatedAt: string, locale: Locale)
     table: l.table.map((r) => [r.pos, r.team, r.pts, r.gd, r.form.join("")]),
     recent: l.recent.map((m) => [m.round, m.date, `${m.home} ${m.ft.join("-")} ${m.away}`]),
   }),
-].join("\n");
+].join("\n"));
 
 // M1163 · Ask the Wire — three one-tap questions the armed model answers from the committed fold.
 // Each preset is designed so every number the reader needs is inside the artifact; nothing outside
@@ -89,17 +86,15 @@ const WIRE_ASKS: readonly WireAsk[] = [
 const wireAskSystem = (p: LiveWirePayload, ask: WireAsk, locale: Locale): string => {
   // M1166 · each preset retrieves only the artifact rows it can honestly answer from — never the same digest twice.
   const fold = JSON.stringify(retrieveAsk(p, ask.id));
-  return [
-    "THE DEEP DIGEST is the world you speak from; below it the fold adds rows specific to this question.",
-    "THE DEEP DIGEST:",
-    DEEP_DIGEST,
-    "You answer ONLY from the digest or the fold below. Never invent a match, club or result; never estimate anything.",
+  return withWorldBook([
+    "THE WORLD BOOK is the world you speak from; below it the fold adds rows specific to this question.",
+    "You answer ONLY from the book or the fold below. Never invent a match, club or result; never estimate anything.",
     `Answer in ${LANG_NAME[locale]}. Plain prose, no lists, at most 180 words.`,
-    "If neither the digest nor the fold can prove what the reader asks, say exactly that and stop.",
+    "If neither the book nor the fold can prove what the reader asks, say exactly that and stop.",
     "FOLD:",
     fold,
     `ASK: ${ask.ask}`,
-  ].join("\n");
+  ].join("\n"));
 };
 
 export function LiveWire() {

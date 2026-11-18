@@ -37,7 +37,7 @@ ok("the world meta line states the counts", dig.includes(String(compCount)) && d
 // The ledger + tape sections are real, named, counted.
 const ledgerBlock = dig.slice(dig.indexOf("THE LEDGER"), dig.indexOf("THE BIGGEST TAPE"));
 const ledgerLines = (ledgerBlock.match(/\n\s+\d{1,3}\. /g) ?? []).length;
-const tapeBlock = dig.slice(dig.indexOf("THE BIGGEST TAPE"));
+const tapeBlock = dig.slice(dig.indexOf("THE BIGGEST TAPE"), dig.indexOf("THE WIDE MARGINS"));
 const tapeLines = tapeBlock.split("\n").filter((l) => /MD\d+/.test(l));
 ok(`the ledger carries at least 60 attribute-vector lines (${ledgerLines.length ?? ledgerLines} found)`, ledgerLines >= 60);
 ok(`the biggest-tape section lists between 1 and 15 fixture lines (${tapeLines.length} found)`, tapeLines.length >= 1 && tapeLines.length <= 15);
@@ -49,6 +49,40 @@ const lines = dig.split("\n");
 const numbersInLines = lines.flatMap((l) => l.match(/\d+(?:[\d,.]*\d)?/g) ?? []);
 const missing = numbersInLines.filter((t) => { const n = Number(t.replace(/,/g, "")); if (!Number.isFinite(n)) return false; return !DEEP_DIGEST_NUMBERS.has(t) && !DEEP_DIGEST_NUMBERS.has(String(Math.round(n))); });
 ok(`every numeral anywhere in the digest is in the accepted set the imprisonment doors read (${missing.length} offenders, planted or real)`, missing.length === 0);
+
+// M1183 The World Book — the sections the LLM doors actually asked for, each re-derived in the gate like the digest itself.
+const fullBlock = dig.slice(dig.indexOf("THE FULL ROSTER"));
+ok(`THE FULL ROSTER names every seeded player (${playerCount} players; all named)`,
+  footballProvider.players().every((p) => fullBlock.includes(p.name)));
+
+const matches = footballProvider.matches();
+const playedAll = matches.filter((m) => m.status === "FINISHED" && m.homeGoals !== null && m.awayGoals !== null);
+const marginOf = (m) => Math.abs((m.homeGoals ?? 0) - (m.awayGoals ?? 0));
+const expectedWideLines = playedAll.filter((m) => marginOf(m) >= 2).length;
+const wideStart = dig.indexOf("THE WIDE MARGINS");
+const wideLines = dig.slice(wideStart).split("\n").filter((l) => /MD\d+/.test(l)).length;
+ok(`THE WIDE MARGINS carries every fixture with a margin of two or more (${wideLines} lines, recount ${expectedWideLines})`,
+  wideLines === expectedWideLines && wideLines >= 1);
+
+// THE GOLDEN BOOT — recompute the scorer fold and demand the leaders are inside.
+const boots = new Map();
+for (const m of playedAll) {
+  for (const e of m.events ?? []) {
+    if (e.type !== "GOAL") continue;
+    const club = e.side === "home" ? m.homeClubId : m.awayClubId;
+    const k = `${e.player}|${club}`;
+    boots.set(k, (boots.get(k) ?? 0) + 1);
+  }
+}
+const topGoals = boots.size ? Math.max(...boots.values()) : 0;
+const topScorers = [...boots.entries()].filter(([, n]) => n === topGoals).map(([k]) => k.split("|")[0]);
+ok(`THE GOLDEN BOOT names the seed's leader(s) (${topGoals} goals: ${topScorers.slice(0, 3).join(" / ")})`,
+  topScorers.length > 0 && topScorers.every((name) => dig.includes(name)));
+
+ok("THE SPRING PLANE names every service of the stack", ["gateway", "registry", "config", "league", "discipline", "cache", "messaging", "redis"]
+  .every((w) => dig.includes(w)));
+ok("THE MANUAL names the seven doors", ["welcome", "modes", "explore", "epics", "spring", "honesty", "print"]
+  .every((w) => dig.includes(w)));
 
 // Plants: two known-shipped contamination samples must be refused by the set logic.
 const plantedNumber = "999999999";

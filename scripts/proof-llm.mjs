@@ -232,11 +232,16 @@ try {
 ok(`M1079 the proxy declares a seeded, bounded, jittered cache policy (ttl/jitter/capacity/seed present)`,
   LLM_CACHE_POLICY.enabled === true && LLM_CACHE_POLICY.ttlSeconds > 0 &&
   LLM_CACHE_POLICY.jitterSeconds >= 0 && LLM_CACHE_POLICY.capacity > 0 && !!LLM_CACHE_POLICY.seed);
-ok(`M1096 PROMPT_CACHE_KEY is exported, STABLE at "football-os", and the upstream call carries it with stream:true`,
-  PROXY_MOD.PROMPT_CACHE_KEY === "football-os" &&
+ok(`M1096 PROMPT_CACHE_KEY is exported, STABLE at the "football-os-web" family constant and the lane is content-derived; the upstream call carries laneKey(...) with stream:true`,
+  PROXY_MOD.PROMPT_CACHE_KEY === "football-os-web" &&
   PROXY_MOD.PROMPT_CACHE_KEY.length >= 8 &&
+  typeof PROXY_MOD.laneKey === "function" &&
+  PROXY_MOD.laneKey("ABCXYZ").startsWith("football-os-web:") &&
+  PROXY_MOD.laneKey("ABCXYZ") === PROXY_MOD.laneKey("ABCXYZ") &&
+  PROXY_MOD.laneKey("ABCXYZ") !== PROXY_MOD.laneKey("ABCXYZ2") &&
+  PROXY_MOD.laneKey("") === "football-os-web" &&
   PROXY.includes("stream: true") &&
-  PROXY.includes("prompt_cache_key: PROMPT_CACHE_KEY") &&
+  PROXY.includes("prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean))") &&
   !/stream_options/.test(PROXY));
 
 ok(`M1079 the middleware owns a single cache for the server lifetime and the handler takes it as a 3rd arg`,

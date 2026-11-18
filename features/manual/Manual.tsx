@@ -4,8 +4,7 @@ import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
 import { DemoBadge, SectionTitle, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
-import { callLlmStream, LLM_CONFIG } from "@/data/llm";
-import { DEEP_DIGEST } from "@/data/deepDigest";
+import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
 import {
   createLibrarian, librarianBuild, librarianCommit, librarianPrecommit, librarianPreflight,
   librarianRefused, pickBookChapter, verifyLibrarianText,
@@ -97,19 +96,15 @@ export function Manual() {
     setLibAnswer("");
     if (!LLM_CONFIG.hasKey) { setLibAnswer(t("manual.librarian.via.local")); return; }
     setLibBusy(true);
-    const system = [
+    const system = withWorldBook([
       "You are the librarian of Football OS's embedded manual.",
-      "THE DEEP DIGEST IS BELOW; THIS IS THE ONLY WORLD YOU KNOW.",
-      "Answer ONLY from this digest and, if present, this JSON envelope.",
+      "Answer ONLY from THE WORLD BOOK above and, if present, this JSON envelope.",
       "If the manual cannot answer, say so and name the chapter that carries the closest adjacent class ('read the Modes chapter' etc.) — never quote outside the manual, never predict.",
       "Keep the answer in the visitor's language.",
       "",
-      "THE DEEP DIGEST:",
-      DEEP_DIGEST,
-      "",
       "MANUAL_CHAPTER:",
       chapter ? JSON.stringify({ question: q, locale, chapter: { id: chapter.id, body: chapter.bodyKeys.map((k) => t(k)) } }) : "no chapter matched",
-    ].join("\n");
+    ].join("\n"));
     const result = await callLlmStream(q, [], (d) => setLibAnswer((p) => p + d), { system });
     if (result.ok) {
       const refusals = verifyLibrarianText(result.text);

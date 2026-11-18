@@ -205,7 +205,7 @@ try {
     }
 
     // ── M1096 · the cold, never-before-asked grounded question rides the pinned lane ──────────
-    // prompt_cache_key ("football-os") pins every Football-OS upstream ask to one warm KV lane, so
+    // laneKey (M1183) derives prompt_cache_key as "football-os-web:" + FNV-1a(briefing bytes) — one warm lane, deterministically.
     // ANY grounded question on this endpoint should read the lane's warm cache — not only the exact
     // question the first witness ask made. This arm deliberately asks a DIFFERENT question and reads
     // the upstream usage straight out of the new envelope, proving the pinning works beyond one

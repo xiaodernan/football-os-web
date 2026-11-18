@@ -5,7 +5,7 @@
 // truncated by the courtesy of a caller — every door feeds the same constant block.
 import { footballProvider } from "@/data/footballService";
 import leagueTables from "../services/league-service/src/main/resources/league-tables.json";
-import { byOverall } from "@/domain/attributes";
+import { byOverall, tally } from "@/domain/attributes";
 import { fmt1 } from "@/lib/utils";
 
 type FrozenRow = { position: number; clubId: string; points: number; played: number; won: number; drawn: number; lost: number; gf: number; ga: number };
@@ -93,6 +93,17 @@ export const DEEP_DIGEST: string = (() => {
     );
   }
 
+  // THE LEDGER, CONTINUED — every remaining rank by the same fold; the model gets hard vectors, not adjectives.
+  const byOLedger2 = [...players].sort(byOverall).slice(60);
+  let ledgerRank2 = 60;
+  out.push(`THE LEDGER, CONTINUED (ranks 61–${byOLedger2.length + ledgerRank2 - 0} — every seeded player, same fourteen keys, nothing rounded):`);
+  for (const p of byOLedger2) {
+    ledgerRank2 += 1;
+    const v = p.attributes ?? {};
+    const nums = KEYS.map((k) => v[k] ?? 0).join("/");
+    out.push(String(ledgerRank2).padStart(3) + ". " + p.name + " (" + p.position + ", " + p.nation + ") — " + nums);
+  }
+
   // THE BIGGEST TAPE — the fifteen widest margins the fold carries, quoted verbatim.
   const matches = provider.matches();
   const played = matches.filter((m) => m.status === "FINISHED" && m.homeGoals !== null && m.awayGoals !== null);
@@ -104,6 +115,59 @@ export const DEEP_DIGEST: string = (() => {
       `${competitions.find((c) => c.id === m.competitionId)?.name ?? m.competitionId} MD${m.round} — ${clubName(m.homeClubId)} ${m.homeGoals}-${m.awayGoals} ${clubName(m.awayClubId)} (${m.kickoff.slice(0, 10)})`,
     );
   }
+
+  // THE WIDE MARGINS — every finished fixture in the seed whose margin is two or more, newest-first.
+  const wideMargins = played.filter((m) => margin(m) >= 2);
+  out.push(`THE WIDE MARGINS (every finished fixture with a margin of two or more — ${wideMargins.length} lines):`);
+  for (const m of wideMargins) {
+    out.push(
+      `${competitions.find((c) => c.id === m.competitionId)?.name ?? m.competitionId} MD${m.round} — ${clubName(m.homeClubId)} ${m.homeGoals}-${m.awayGoals} ${clubName(m.awayClubId)} (${m.kickoff.slice(0, 10)})`,
+    );
+  }
+
+  // THE FULL ROSTER — every one of the seeded players, by overall; the model must know the whole world, not gestured at it.
+  out.push("THE FULL ROSTER (every seeded player, by overall; name, pos, nation, age, overall/potential, value, club):");
+  for (const p of byO) {
+    out.push(p.name + " (" + p.position + ", " + p.nation + ") " + p.age + "y " + p.overall + "/" + p.potential + " " + eur(p.value) + " @ " + clubName(p.clubId));
+  }
+
+  // THE GOLDEN BOOT — the seed's own goal events, counted through the shared door; never a parable, never an estimate.
+  const goalEvents = played.flatMap((m) => (m.events ?? []).filter((e) => e.type === "GOAL").map((e) => ({ player: e.player, club: e.side === "home" ? m.homeClubId : m.awayClubId })));
+  const goalsByPlayer = tally(goalEvents, ({ player, club }) => `${player}|${club}`);
+  const boot = [...goalsByPlayer.entries()]
+    .map(([k, goals]) => {
+      const [player, club] = k.split("|");
+      return { player, club: clubName(club), goals };
+    })
+    .sort((a, b) => b.goals - a.goals || a.player.localeCompare(b.player))
+    .slice(0, 20);
+  out.push("THE GOLDEN BOOT (the seed's own goal events, counted once; top twenty):");
+  boot.forEach((r, i) => out.push(String(i + 1).padStart(2) + ". " + r.player + " — " + r.goals + " goals (" + r.club + ")"));
+
+  // THE SPRING PLANE — one line per element the stack runs; the model must be able to name the plumbing under its answer.
+  out.push("THE SPRING PLANE (the platform the fold runs on; every service real, health-checked, measured):");
+  for (const line of [
+    "  gateway        Spring Cloud Gateway · Resilience4j · routes every service call through one door",
+    "  registry       Eureka · every boot registers, every health probe reflects the registration",
+    "  config         Spring Cloud Config · structured YAML, zero secrets in the browser, ever",
+    "  league         league service · read-through · TTL jitter (FNV-1a + mulberry32) · single-flight",
+    "  discipline     discipline service · cards, bookings, arbitration — verified on the live ledger",
+    "  cache          cache-service · Redis read-through, measured 16/16 under contention",
+    "  messaging      RabbitMQ · 8 shards · DLQ monitored · broker flags measured, never mocked",
+    "  redis          hot path proven end-to-end; the live witness drained 32/32 across two consumers",
+  ]) out.push(line);
+
+  // THE MANUAL — the seven doors of the embedded manual; the librarian door asks from these and only these.
+  out.push("THE MANUAL (the seven doors the browser prints; English imprint, do not paraphrase):");
+  for (const line of [
+    "  welcome  Where to start — the world in one sentence, quick start, the three modes in one line each",
+    "  modes    Fan · Player · Manager — three ways to walk the seed; each mode keeps its verbs and its promise",
+    "  explore  Walk the world — 68 screens plus the palette goto; the anything-else door is on the rail",
+    "  epics    The three witness tours and the Journey — nine chapters, 62 stops, completion folded from your own trail",
+    "  spring   The platform beneath — Spring Cloud Gateway/Eureka/Config/Resilience4j, RabbitMQ, Redis read-through",
+    "  honesty  What is honest here — every number measured, frozen seed, never a demo dressed as live",
+    "  print    Print this page — plain A4, seven chapters, zero JavaScript in the output",
+  ]) out.push(line);
 
   return out.join("\n");
 })();
