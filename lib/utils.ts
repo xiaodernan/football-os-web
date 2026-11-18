@@ -34,6 +34,19 @@ export const round3 = (v: number): number => Math.round(v * 1000) / 1000;
 // but four formulas that part company the moment one is re-rounded. Same dependency-free
 // home as round3, for the same cycle reason: analytics is reached from scouting through
 // data/footballService, so a rounder it shares must not live in scouting.
+// The arithmetic shared by evidence tables: add a plain decimal of `n`, its rounded form, and
+// one- and two-decimal toFixed()-style padded variants explicitly. Used by the analysts to
+// populate the imprisoned EVIDENCE_NUMBERS pool; takes the set as an argument so every caller
+// owns the hash layout. Not exported from the public surface — proofs read source by name.
+export const addNumeral = (s: Set<string>, n: number): void => {
+  const v = Math.round(n);
+  s.add(String(v));
+  s.add(String(n));
+  s.add(String(Math.round(n * 10) / 10));
+  s.add(String(Math.round(n * 100) / 100));
+};
+
+
 export const round2 = (v: number): number => Math.round(v * 100) / 100;
 
 // The app's shared ratio-to-whole-percent helper. A credibility, a readiness, a goal's progress or

@@ -9,7 +9,7 @@
 
 import type { PulseFold } from "./pulse";
 import type { Prescription } from "./prescription";
-import { round2 } from "@/lib/utils";
+import { round2, addNumeral } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
@@ -68,18 +68,11 @@ export const EVIDENCE_NUMBERS: ReadonlySet<string> = (() => {
 /** Numbers the fold actually knows — every string spelling of the model's plausible quote forms. */
 export const evidenceNumbers = (fold: PulseFold): ReadonlySet<string> => {
   const out = new Set<string>(EVIDENCE_NUMBERS);
-  const addNumeral = (n: number) => {
-    const v = Math.round(n);
-    out.add(String(v));
-    out.add(String(n));
-    out.add(String(round1(n)));
-    out.add(String(round2(n)));
-  };
-  for (const v of [fold.sessions, fold.visits, fold.bounceRate, fold.avgDepth, fold.avgDwellMs, fold.loopRate, fold.deadEndSessions, fold.trend.length, fold.depthBuckets.length]) addNumeral(v);
-  for (const r of fold.perRoute) addNumeral(r.visits);
-  for (const e of fold.exits) addNumeral(e.exits);
+  for (const v of [fold.sessions, fold.visits, fold.bounceRate, fold.avgDepth, fold.avgDwellMs, fold.loopRate, fold.deadEndSessions, fold.trend.length, fold.depthBuckets.length]) addNumeral(out, v);
+  for (const r of fold.perRoute) addNumeral(out, r.visits);
+  for (const e of fold.exits) addNumeral(out, e.exits);
   // Number registration for the fixed bounds the fold itself uses.
-  for (const v of [55, 40, 30, 2, 0.3, 3, 5, 70, 14, 10, 8, 6, 4, 12]) addNumeral(v);
+  for (const v of [55, 40, 30, 2, 0.3, 3, 5, 70, 14, 10, 8, 6, 4, 12]) addNumeral(out, v);
   return out;
 };
 

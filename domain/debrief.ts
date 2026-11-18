@@ -4,7 +4,7 @@
 // Same streams; same lane; same refusal recovery; same imprisoned envelope.
 import type { PulseFold } from "./pulse";
 import type { Prescription } from "./prescription";
-import { round2 } from "@/lib/utils";
+import { round2, addNumeral } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
@@ -12,7 +12,9 @@ import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tr
 
 export type DebriefStage = FsmStage;
 export type DebriefNote = "monthSealed" | "envelopeSealed" | "commitOk" | "foldOk" | "precommitRefused";
-export type DebriefViolation = "offEvidence" | "prediction" | "tooManyNumbers";
+// The refusal codes are shared with The Analyst — one vocabulary, one source of truth.
+import type { AnalystViolation as DebriefViolation } from "./analyst";
+export type { DebriefViolation };
 
 export const DEBRIEF_BUILD_ENTRY = { stage: "build", verdict: "pass", note: "envelopeSealed" } as const;
 export const DEBRIEF_COMMIT_ENTRY = { stage: "commit", verdict: "pass", note: "commitOk" } as const;
@@ -83,12 +85,11 @@ export const DEBRIEF_NUMBER = (raw: string): number | null => {
 
 export const debriefEvidence = (fold: PulseFold): ReadonlySet<string> => {
   const out = new Set<string>(DEBRIEF_BASE_EVIDENCE);
-  const add = (n: number) => { const v = Math.round(n); out.add(String(v)); out.add(String(n)); out.add(String(round1(n))); out.add(String(round2(n))); };
-  for (const v of [fold.sessions, fold.visits, fold.bounceRate, fold.avgDepth, fold.avgDwellMs, fold.loopRate, fold.deadEndSessions]) add(v);
-  for (const r of fold.perRoute) add(r.visits);
-  for (const e of fold.exits) add(e.exits);
-  for (const d of fold.trend.slice(-14)) add(d.visits);
-  for (const v of [14, 30, 90, 365, 5, 3, 50, 70]) add(v);
+  for (const v of [fold.sessions, fold.visits, fold.bounceRate, fold.avgDepth, fold.avgDwellMs, fold.loopRate, fold.deadEndSessions]) addNumeral(out, v);
+  for (const r of fold.perRoute) addNumeral(out, r.visits);
+  for (const e of fold.exits) addNumeral(out, e.exits);
+  for (const d of fold.trend.slice(-14)) addNumeral(out, d.visits);
+  for (const v of [14, 30, 90, 365, 5, 3, 50, 70]) addNumeral(out, v);
   return out;
 };
 
