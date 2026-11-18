@@ -3432,14 +3432,19 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // leaders.colGoals) — 156 -> 159.
 // M1160 The Long Season: its two coined strings were initially duplicated by locale combos; after renaming, the ratchet holds at 159.
 // M1175 The Wire Diary: one shared English value joins the ratchet; 159 -> 160.
-const DUP_VALUES_PIN = 161;
+// M1194 The Gate Lane: the four FSM stage identifiers (preflight / build / model / precommit —
+// domain/tracedFsm.ts's own symbols) are shared with the existing English values of the same
+// names — named here, paid here: 161 -> 163.
+const DUP_VALUES_PIN = 163;
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
 // M970: the same "Pts" join pays its excess: 252 -> 254.
 // M1020: the same shared idiom join pays its excess: 254 -> 255.
 // M1132: the same four shared English values pay their excess end of the ratchet — 260 -> 263.
 // M1160 The Long Season: excess keys hold at 263.
 // M1175 The Wire Diary: one shared English excess key joins the ratchet; 263 -> 264.
-const DUP_EXCESS_KEYS_PIN = 265;
+// M1194 The Gate Lane: the same shared FSM stage identifiers pay the excess end of the ratchet
+// too — three keys ride values the dictionaries already carry — 265 -> 268, paid as measured.
+const DUP_EXCESS_KEYS_PIN = 268;
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4524,14 +4529,19 @@ ok(`every value carries the same set of template variables in all three locales,
 // `node scripts/proof-message-queue.mjs` — program names, not sentences. They are named rather
 // than counted one by one, so a seventh untranslated value still cannot arrive without a line
 // here saying why.
-const ENGLISH_OK = new Set(["brand.name", "timing.xgColFor", "timing.xgColAgainst", "timing.xgColDiff", "platform.witnessCmd", "messaging.witnessCmd", "cache.witnessCmd", "about.javaContractLine"]);
+// M1194: the four FSM stage identifiers of the gate lane diagram — preflight/build/model/
+// precommit are the traced FSM's own stage symbols (domain/tracedFsm.ts), printed as the graph
+// prints them, in every script. Named rather than waved through.
+const ENGLISH_OK = new Set(["brand.name", "timing.xgColFor", "timing.xgColAgainst", "timing.xgColDiff", "platform.witnessCmd", "messaging.witnessCmd", "cache.witnessCmd", "about.javaContractLine", "manual.gatelaneStagePreflight", "manual.gatelaneStageBuild", "manual.gatelaneStageModel", "manual.gatelaneStagePrecommit"]);
 const stillEnglishBy = (enVal, cnVal) => cnVal === enVal && /[A-Za-z]{3,}/.test(String(enVal).replace(/\{\w+\}/g, ""));
 const stillEnglish = zhKeys.filter((k) => stillEnglishBy(en[k], D["zh-CN"][k]));
 const plantedEn = stillEnglishBy("Click here {n}", "Click here {n}")
   && !stillEnglishBy("完成 {n}", "完成 {n}")
   && !stillEnglishBy("Click here", "完成");
 ok(`a 简体中文 value that is still English is named, not waved through (${stillEnglish.join(", ") || "none"}; planted arrangements: ${plantedEn})`,
-  stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 8 && plantedEn);
+  // M1194: the Gate Lane's four FSM stage identifiers joined the named set — 8 -> 12. The four
+  // names are domain/tracedFsm.ts's own stage symbols, printed as the graph prints them.
+  stillEnglish.every((k) => ENGLISH_OK.has(k)) && ENGLISH_OK.size === 12 && plantedEn);
 
 // 37. The shapes a t() call takes that the checks above were never looking at. Check 4 reads
 //     `t("literal")` and check 16/24 audit declared dynamic sites, so between them every key a
@@ -4915,7 +4925,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // (the latch.stage/latch.note/violation trace chips), +4 expression sites (the LATCH_FOLD_ANSWER_KEY fold-backs).
   // M1188 The Dispatch: +13 literal t() sites (same chrome, orderedLabel + ledgerNote included), +3 template sites
   // (the dispatch.stage/dispatch.note/violation chips), +4 expression sites (the DISPATCH_FOLD_ANSWER_KEY fold-backs).
-  shapeCounts.literal === 3508 && shapeCounts.template === 152 && shapeCounts.expression === 70
+// M1194 The Gate Lane: +9 literal t() sites on the manual (title, body, six stage/item lines,
+// and the svg aria-label) — 3508 -> 3517, then +8 SVG label sites when every visible word moved
+// through t() so the raw-UI-debt census stays at zero — 3517 -> 3525.
+  shapeCounts.literal === 3525 && shapeCounts.template === 152 && shapeCounts.expression === 70
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -6568,13 +6581,15 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
   // M1152 The Live Wire: its loading state names its aria label through t() too — 17 -> 18.
   // M1155 The Grand Tour: its chase panel names itself through t() too — 19 -> 20.
   // M1161 print the season: the print button's aria-label names itself via t() — 23 -> 24.
-  ariaBare.length === 0 && // M1164 The Ledger: loading region aria + print button aria — 25 -> 27.
+  // M1194 The Gate Lane: the lane diagram's svg names its role=img label through t() — 39 -> 40.
+  ariaBare.length === 0 &&
+// M1164 The Ledger: loading region aria + print button aria — 25 -> 27.
 // M1165 The World Table: loading region aria + print button aria — 27 -> 29.
 // M1173 The Golden Hour: loading region aria + print aria — 32 -> 34.
 // M1175 The Wire Diary: loading region aria + print aria — 34 -> 36.
 // M1179 The Tutor: the ask input names itself through t() — 36 -> 37.
 // M1181 The Librarian: the manual's ask input names itself through t() — 37 -> 38.
-ariaKeyed === 39 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+ariaKeyed === 40 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English

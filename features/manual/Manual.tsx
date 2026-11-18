@@ -232,6 +232,62 @@ export function Manual() {
         <p className="mt-2 max-w-3xl text-sm leading-relaxed">{t("manual.honestyBody")}</p>
       </section>
 
+      {/* Chapter 6.5 — the gate lane: the traced FSM every imprisoned door compiles */}
+      <section id="gatelane" aria-labelledby="manual-gatelane" className="rounded-xl border p-5 print:border-0 print:px-0">
+        <SectionTitle title={t("manual.gatelaneTitle")} />
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed">{t("manual.gatelaneBody")}</p>
+        <div className="mt-3 overflow-x-auto text-muted-foreground">
+          <svg viewBox="0 0 720 232" className="min-w-[680px] text-current" role="img" aria-label={t("manual.gatelaneSvgTitle")} fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">
+            <defs>
+              <marker id="gl-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="currentColor" opacity="0.75" />
+              </marker>
+            </defs>
+            {/* pipeline boxes */}
+            <g stroke="currentColor" strokeWidth="1.4" fill="none">
+              <rect x="4" y="34" width="118" height="46" rx="9" />
+              <rect x="139" y="34" width="118" height="46" rx="9" />
+              <rect x="274" y="34" width="118" height="46" rx="9" />
+              <rect x="409" y="34" width="118" height="46" rx="9" />
+            </g>
+            <g fill="currentColor" fontSize="12" fontWeight="700" textAnchor="middle" letterSpacing="1">
+              <text x="63" y="61">{t("manual.gatelaneStagePreflight")}</text>
+              <text x="198" y="61">{t("manual.gatelaneStageBuild")}</text>
+              <text x="333" y="61">{t("manual.gatelaneStageModel")}</text>
+              <text x="468" y="61">{t("manual.gatelaneStagePrecommit")}</text>
+            </g>
+            <g stroke="currentColor" strokeWidth="1.4" markerEnd="url(#gl-arrow)" opacity="0.75">
+              <path d="M122,57 L139,57" />
+              <path d="M257,57 L274,57" />
+              <path d="M392,57 L409,57" />
+            </g>
+            {/* commit / refused branch */}
+            <g stroke="currentColor" strokeWidth="1.4" fill="none">
+              <path d="M468,80 L468,118 L265,118 L265,160" markerEnd="url(#gl-arrow)" opacity="0.75" />
+              <path d="M468,80 L468,118 L600,118 L600,160" markerEnd="url(#gl-arrow)" opacity="0.75" />
+              <rect x="153" y="160" width="224" height="48" rx="9" />
+              <rect x="475" y="160" width="210" height="48" rx="9" strokeDasharray="5 4" />
+            </g>
+            <g fill="currentColor" fontSize="10.5" fontWeight="700" textAnchor="middle">
+              <text x="265" y="180">{t("manual.gatelaneCommitBranch")}</text>
+              <text x="580" y="180">{t("manual.gatelaneRefusedBranch")}</text>
+            </g>
+            <g fill="currentColor" fontSize="8.5" textAnchor="middle" opacity="0.8">
+              <text x="265" y="197">{t("manual.gatelaneCommitSub")}</text>
+              <text x="580" y="197">{t("manual.gatelaneRefusedSub")}</text>
+            </g>
+          </svg>
+        </div>
+        <ul className="mt-3 list-disc space-y-0.5 pl-5 text-xs">
+          <li>{t("manual.gatelaneItem1")}</li>
+          <li>{t("manual.gatelaneItem2")}</li>
+          <li>{t("manual.gatelaneItem3")}</li>
+          <li>{t("manual.gatelaneItem4")}</li>
+          <li>{t("manual.gatelaneItem5")}</li>
+          <li>{t("manual.gatelaneItem6")}</li>
+        </ul>
+      </section>
+
       {/* The Librarian — ask the manual itself */}
       <section aria-labelledby="manual-librarian" className="rounded-xl border p-5 print:hidden">
         <div className="flex flex-wrap items-end justify-between gap-3">

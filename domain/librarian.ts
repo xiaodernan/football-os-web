@@ -42,7 +42,7 @@ export interface BookChapter {
   readonly keywordKey: string;
 }
 
-/** The seven doors of the embedded manual. */
+/** The doors of the embedded manual — one imprisonable bucket per chapter. */
 export const BOOK_CHAPTERS: readonly BookChapter[] = [
   { id: "welcome", titleKey: "manual.welcomeTitle", bodyKeys: ["manual.welcomeTitle", "manual.welcomeBody", "manual.welcomeStep1", "manual.welcomeStep2", "manual.welcomeStep3", "manual.onboardingCta"],
     keywordKey: "manual.librarian.keywords.welcome" },
@@ -56,6 +56,8 @@ export const BOOK_CHAPTERS: readonly BookChapter[] = [
     keywordKey: "manual.librarian.keywords.spring" },
   { id: "honesty", titleKey: "manual.honestyTitle", bodyKeys: ["manual.honestyTitle", "manual.honestyBody"],
     keywordKey: "manual.librarian.keywords.honesty" },
+  { id: "gatelane", titleKey: "manual.gatelaneTitle", bodyKeys: ["manual.gatelaneTitle", "manual.gatelaneBody", "manual.gatelaneItem1", "manual.gatelaneItem2", "manual.gatelaneItem3", "manual.gatelaneItem4", "manual.gatelaneItem5", "manual.gatelaneItem6"],
+    keywordKey: "manual.librarian.keywords.gatelane" },
   { id: "print", titleKey: "manual.printTitle", bodyKeys: ["manual.printTitle", "manual.printBody"],
     keywordKey: "manual.librarian.keywords.print" },
   { id: "doors", titleKey: "manual.doorsTitle", bodyKeys: ["manual.doorsTitle", "manual.doorsBody"],

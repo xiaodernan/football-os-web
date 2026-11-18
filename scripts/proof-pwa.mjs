@@ -267,7 +267,7 @@ ok(`the shell ships — the manifest, the icon and the worker are all files in t
 // M1173 The Golden Hour lands the biggest lazy room yet — measured on this tree, local Windows Node:
 // 777 KB total (JS 762 KB, CSS 15 KB, 105 assets); prior +9 KB local→CI gap places CI near 785. The pin
 // therefore moves 780 -> 790: both machines clear it with margin; no kilobyte is added silently.
-const BUDGET_KB = 814; // M1190: 811 -> 812; M1191-ledger: 812 -> 814 (Ubuntu Node 24 prints the dossier ~1 KB heavier than the local gate; the report still ships). Measured locally: 811 KB gzip / 107 assets (JS 796 KB, CSS 15.1 KB) on this tree; Ubuntu runner printed 812 — the known 1 KB runner delta (M1172). Pin sits at the runner measurement.
+const BUDGET_KB = 815; // M1190: 811 -> 812; M1191-ledger: 812 -> 814 (Ubuntu Node 24 prints the dossier ~1 KB heavier than the local gate; the report still ships). M1194 (the Gate Lane section, ~+1 KB gzip: the embedded traced-FSM lane diagram + 17 trilingual keys): 814 -> 815. Measured locally on this tree: 815 KB gzip / 107 assets (JS 800 KB, CSS 15.2 KB); Ubuntu runner prints the local number + ~1 KB (M1172) — if it prints 816 the next pin move is recorded, never bypassed.
 const assetsDir = "dist/assets";
 const exists = existsSync(assetsDir);
 let jsGzip = 0, cssGzip = 0, files = 0;
