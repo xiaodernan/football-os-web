@@ -26,6 +26,13 @@ import {
   type AnalystTraceEntry, type AnalystViolation,
 } from "@/domain/analyst";
 import {
+  dispatchBuild, dispatchCommit, dispatchPrecommit,
+  dispatchPreflight, dispatchRefused, dispatchEnvelope, verifyDispatchText,
+  dispatchOrderIds,
+  DISPATCH_FOLD_ANSWER_KEY,
+  type DispatchTraceEntry, type DispatchViolation,
+} from "@/domain/dispatch";
+import {
   latchBuild, latchCommit, latchPrecommit,
   latchPreflight, latchRefused, latchEnvelope, verifyLatchText,
   LATCH_FOLD_ANSWER_KEY,
@@ -66,6 +73,11 @@ export function Ops() {
   const [latchTrace, setLatchTrace] = useState<readonly LatchTraceEntry[] | null>(null);
   const [latchViolations, setLatchViolations] = useState<readonly LatchViolation[] | null>(null);
   const [latchAnswer, setLatchAnswer] = useState("");
+  const [dispatchBusy, setDispatchBusy] = useState(false);
+  const [dispatchTrace, setDispatchTrace] = useState<readonly DispatchTraceEntry[] | null>(null);
+  const [dispatchViolations, setDispatchViolations] = useState<readonly DispatchViolation[] | null>(null);
+  const [dispatchAnswer, setDispatchAnswer] = useState("");
+  const [orderedRx, setOrderedRx] = useState<string | null>(null);
 
   const deviceFold = useMemo(() => {
     const held = readJson<{ visits: VisitRecord[] }>(browserStore(), PULSE_KEY, { visits: [] }).value.visits;
@@ -314,6 +326,54 @@ export function Ops() {
     setLatchBusy(false);
   };
 
+  // The dispatch: the model names ONE order id from the listed orders and says why in ONE sentence.
+  const dispatchSystem = (): string =>
+    withWorldBook(
+      `${dispatchEnvelope(fold, rx)}\n\nCOMMANDMENT: you will read the orders above and pick EXACTLY ONE of them — name its id verbatim (rx.bounce, rx.depth, rx.deadEnd, rx.manualExit, rx.loop, rx.bounceDoor, rx.fatigue or rx.hold) and the single metric with its value from THAT order's own vars. ONE sentence. Keep it in the visitor's language. Never invent a number absent from the envelope above; never predict; if you claim a number, it must already exist in the envelope above.`,
+    );
+
+  const askDispatch = async () => {
+    if (dispatchBusy) return;
+    let desk = dispatchBuild(dispatchPreflight({ fold, locale, status: "preflight", trace: [], answer: "" }, rx));
+    setDispatchTrace(desk.trace);
+    setDispatchViolations(null);
+    setDispatchAnswer("");
+    setOrderedRx(null);
+    if (!LLM_CONFIG.hasKey) { setDispatchAnswer(t("ops.dispatch.via.local")); return; }
+    setDispatchBusy(true);
+    const result = await callLlmStream(
+      "The dispatch: which ONE order should ship first, and why — name the order id and its own metric value.",
+      [],
+      (d) => setDispatchAnswer((p) => p + d),
+      { system: dispatchSystem() },
+    );
+    if (result.ok) {
+      const refusals = verifyDispatchText(result.text, desk.fold, rx);
+      if (refusals.length === 0) {
+        const committed = dispatchCommit(dispatchPrecommit(desk, "pass"), result.text);
+        setDispatchTrace(committed.trace);
+        setDispatchViolations(null);
+        setDispatchAnswer(result.text);
+        const picked = result.text.match(/rx\.[a-zA-Z]+/);
+        const known = picked && dispatchOrderIds(rx).includes(picked[0]) ? picked[0] : null;
+        if (known !== null) setOrderedRx(known);
+        setDispatchBusy(false);
+        return;
+      }
+      setDispatchViolations(refusals);
+      const refused = dispatchRefused(dispatchPrecommit(desk, "refused"), t(DISPATCH_FOLD_ANSWER_KEY));
+      setDispatchTrace(refused.trace);
+      setDispatchAnswer(t(DISPATCH_FOLD_ANSWER_KEY));
+      setDispatchBusy(false);
+      return;
+    }
+    setDispatchViolations(null);
+    const offline = dispatchRefused(desk, t(DISPATCH_FOLD_ANSWER_KEY));
+    setDispatchTrace(offline.trace);
+    setDispatchAnswer(t(DISPATCH_FOLD_ANSWER_KEY));
+    setDispatchBusy(false);
+  };
+
   const rxBody = (r: Prescription): string => {
     switch (r.id) {
       case "rx.bounce": return t("ops.rx.bounce", { p: r.vars.p });
@@ -339,8 +399,8 @@ export function Ops() {
           <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-3xl font-black tracking-tight text-transparent sm:text-5xl">{t("ops.title")}</h1>
           <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t("ops.subtitle")}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => setCohort("device")} className={cn("rounded-md border px-2.5 py-1 text-[10px] uppercase tracking-widest", cohort === "device" ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t("ops.cohort.device")}</button>
-            <button type="button" onClick={() => setCohort("seeded")} className={cn("rounded-md border px-2.5 py-1 text-[10px] uppercase tracking-widest", cohort === "seeded" ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t("ops.cohort.synthetic")}</button>
+            <button type="button" onClick={() => { setCohort("device"); setOrderedRx(null); }} className={cn("rounded-md border px-2.5 py-1 text-[10px] uppercase tracking-widest", cohort === "device" ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t("ops.cohort.device")}</button>
+            <button type="button" onClick={() => { setCohort("seeded"); setOrderedRx(null); }} className={cn("rounded-md border px-2.5 py-1 text-[10px] uppercase tracking-widest", cohort === "seeded" ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t("ops.cohort.synthetic")}</button>
             <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.cohort.noteFull")}</span>
           </div>
         </div>
@@ -461,6 +521,9 @@ export function Ops() {
               <li key={r.id} className={cn("flex flex-wrap items-start gap-3 rounded-lg p-3 text-xs", PANEL_CLASS.panelGhost)}>
                 <span className={cn("mt-0.5 w-12 shrink-0 rounded-md border px-1.5 py-1 text-center font-mono text-[9px] font-bold uppercase tracking-widest", tone)}>{t(`ops.rx.severity.${r.severity}`)}</span>
                 <span className="min-w-0 flex-1 leading-relaxed text-foreground/90">{rxBody(r)}</span>
+                {orderedRx === r.id && (
+                  <span className={cn("shrink-0 self-center rounded-md border px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-widest", CHIP_CLASS.badgeSuccess)}>{t("ops.dispatch.orderedLabel")}</span>
+                )}
               </li>
             );
           })}
@@ -688,6 +751,63 @@ export function Ops() {
           </>
         ) : (
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("ops.latch.via.local")}</p>
+        )}
+      </Panel>
+
+      {/* The dispatch — the model names ONE order from the fold's own prescription, the fold inks it */}
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.dispatch.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("ops.dispatch.title")}</p>
+          </div>
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", LLM_CONFIG.hasKey ? CHIP_CLASS.badgeInfoStrong : CHIP_CLASS.warning)}>
+            {LLM_CONFIG.hasKey && <span aria-hidden className="fo-live-dot inline-flex h-1.5 w-1.5 rounded-full bg-info" />}
+            {LLM_CONFIG.hasKey ? t("ai.via.live", { model: LLM_CONFIG.model }) : t("ai.via.local")}
+          </span>
+        </div>
+        {LLM_CONFIG.hasKey ? (
+          <>
+            <button
+              type="button"
+              onClick={askDispatch}
+              disabled={dispatchBusy}
+              className="fo-lift mt-3 inline-flex items-center rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted disabled:opacity-60"
+            >
+              {dispatchBusy ? t("pressroom.answering") : t("ops.dispatch.ask")}
+            </button>
+            {dispatchAnswer && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{dispatchAnswer}</p>}
+            {dispatchViolations && dispatchViolations.length > 0 && (
+              <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">
+                {dispatchViolations.map((v) => t(`ops.dispatch.violation.${v}`)).join(" · ")}
+              </p>
+            )}
+            {dispatchTrace && (
+              <div className="mt-4 border-t border-border/60 pt-3">
+                <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.dispatch.trace.label")}</span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{dispatchTrace.some((e) => e.verdict === "refused") ? t("ops.dispatch.trace.refused") : t("ops.dispatch.trace.verified")}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {dispatchTrace.map((entry) => (
+                    <span
+                      key={entry.stage}
+                      title={t(`ops.dispatch.note.${entry.note}`)}
+                      className={cn(
+                        "rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                        entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning,
+                      )}
+                    >
+                      {t(`ops.dispatch.stage.${entry.stage}`)}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.dispatch.ledgerNote")}</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("ops.dispatch.via.local")}</p>
         )}
       </Panel>
 
